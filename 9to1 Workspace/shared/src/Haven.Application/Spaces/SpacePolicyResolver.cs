@@ -9,7 +9,8 @@ public sealed record EffectiveSpacePolicy(
     IReadOnlyList<SpaceContextReference> Sources,
     IReadOnlyList<Guid> Ancestry,
     IReadOnlySet<SpaceCapabilityKind> DisabledCapabilityKinds = null!,
-    bool MemoryCategoryDisabled = false)
+    bool MemoryCategoryDisabled = false,
+    bool ModelsCategoryDisabled = false)
 {
     public IReadOnlySet<SpaceCapabilityKind> DisabledCapabilityKinds { get; init; } =
         DisabledCapabilityKinds ?? (IReadOnlySet<SpaceCapabilityKind>)new HashSet<SpaceCapabilityKind>();
@@ -43,6 +44,7 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         var rootDisabled = DisabledKinds(root.CapabilityCategoryPolicy);
         var rootCapabilities = ApplyCategoryPolicy(root.CapabilityBindings?.ToArray() ?? [], root.CapabilityCategoryPolicy, rootDisabled);
         var rootMemory = ApplyCategoryMemory(root.MemoryPolicy ?? new SpaceMemoryPolicy([SpaceMemoryScope.Conversation]), root.CapabilityCategoryPolicy);
+        var rootModelsDisabled = root.CapabilityCategoryPolicy?.Models == SpaceCapabilityCategoryState.Disabled;
         var rootModel = ApplyCategoryModel(root.ModelPolicy ?? new SpaceModelPolicy(root.ModelName), root.CapabilityCategoryPolicy);
         var effective = new EffectiveSpacePolicy(
             root.Id,
@@ -53,7 +55,8 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
             ReadableSources(root.ContextReferences),
             [root.Id],
             rootDisabled,
-            root.CapabilityCategoryPolicy?.Memory == SpaceCapabilityCategoryState.Disabled);
+            root.CapabilityCategoryPolicy?.Memory == SpaceCapabilityCategoryState.Disabled,
+            rootModelsDisabled);
 
         foreach (var child in chain.Skip(1))
             effective = Merge(effective, child);
@@ -66,8 +69,11 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         var inheritance = child.Inheritance ?? new SpaceInheritancePolicy();
         var ownModel = child.ModelPolicy ?? new SpaceModelPolicy(child.ModelName);
         var parentModel = inheritance.ModelPolicy ? parent.Model : new SpaceModelPolicy(null);
+        var modelsDisabled = parent.ModelsCategoryDisabled ||
+            child.CapabilityCategoryPolicy?.Models == SpaceCapabilityCategoryState.Disabled;
+        var rawDefault = ownModel.DefaultModelId ?? parentModel.DefaultModelId;
         var model = new SpaceModelPolicy(
-            ownModel.DefaultModelId ?? parentModel.DefaultModelId,
+            modelsDisabled ? null : rawDefault,
             (inheritance.ModelPolicy ? parentModel.RequiredCapabilities ?? [] : [])
                 .Concat(ownModel.RequiredCapabilities ?? []).Distinct(StringComparer.Ordinal).ToArray(),
             ownModel.ProviderConstraint ?? parentModel.ProviderConstraint);
@@ -126,7 +132,9 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
             foreach (var source in parent.Sources) sources[source.ContextId] = source;
         foreach (var source in ReadableSources(child.ContextReferences)) sources[source.ContextId] = source;
 
-        var mergedModel = ApplyCategoryModel(model, child.CapabilityCategoryPolicy);
+        var mergedModel = modelsDisabled
+            ? model with { DefaultModelId = null }
+            : ApplyCategoryModel(model, child.CapabilityCategoryPolicy);
         var mergedMemory = memoryDisabled
             ? new SpaceMemoryPolicy([], memory.DefaultScope)
             : ApplyCategoryMemory(memory, child.CapabilityCategoryPolicy);
@@ -137,7 +145,8 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
             sources.Values.OrderBy(item => item.AddedAt).ThenBy(item => item.ContextId).ToArray(),
             [.. parent.Ancestry, child.Id],
             disabled,
-            memoryDisabled);
+            memoryDisabled,
+            modelsDisabled);
     }
 
     private static IReadOnlyList<SpaceCapabilityBinding> ApplyCategoryPolicy(

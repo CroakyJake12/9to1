@@ -221,7 +221,41 @@ public sealed class SpacePolicyResolverTests
     }
 
     [Fact]
-    public async Task Models_disabled_is_not_reported_as_available()
+    public async Task Models_disabled_ancestor_blocks_child_and_grandchild_defaults()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Parent", cancellationToken: token);
+        parent = await registry.UpdateAsync(parent with
+        {
+            CapabilityCategoryPolicy = new SpaceCapabilityCategoryPolicy(Models: SpaceCapabilityCategoryState.Disabled),
+            ModelPolicy = new SpaceModelPolicy("parent-model")
+        }, parent.Revision, token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        child = await registry.UpdateAsync(child with
+        {
+            Inheritance = new SpaceInheritancePolicy(ModelPolicy: false),
+            ModelPolicy = new SpaceModelPolicy("child-model")
+        }, child.Revision, token);
+        var grandchild = await registry.CreateAsync("Grandchild", null, child.Id, token);
+        grandchild = await registry.UpdateAsync(grandchild with
+        {
+            Inheritance = new SpaceInheritancePolicy(ModelPolicy: false),
+            ModelPolicy = new SpaceModelPolicy("grandchild-model")
+        }, grandchild.Revision, token);
+
+        var childPolicy = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(child.Id, token);
+        var grandchildPolicy = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(grandchild.Id, token);
+
+        // Disabled ancestor model category: no descendant can regain a model default.
+        Assert.Null(childPolicy.Model.DefaultModelId);
+        Assert.Null(grandchildPolicy.Model.DefaultModelId);
+    }
+
+    [Fact]
+    public async Task Models_disabled_single_space_has_no_default()
     {
         using var files = new IsolatedSettingsFiles();
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
