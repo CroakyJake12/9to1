@@ -111,4 +111,54 @@ public sealed class SpaceBuilderControllerTests
             files.OpenRegistry().UpdateAsync(invalid, space.Revision, token));
     }
 
+
+    [Fact]
+    public async Task Attach_and_detach_capability_preserves_canonical_identity()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var space = await files.OpenRegistry().CreateAsync("Original", cancellationToken: token);
+        var controller = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await controller.LoadAsync(token));
+
+        var binding = new SpaceCapabilityBinding("pkg-1/skill-1", SpaceCapabilityKind.Skill, SpaceCapabilityOverride.Inherit, "1.2.3");
+        Assert.True(controller.AttachCapability(binding));
+        Assert.Single(controller.State.Draft.CapabilityBindings);
+        Assert.Equal("pkg-1/skill-1", controller.State.Draft.CapabilityBindings[0].CapabilityId);
+        Assert.Equal("1.2.3", controller.State.Draft.CapabilityBindings[0].VersionPin);
+
+        // Duplicate attach is idempotent.
+        Assert.True(controller.AttachCapability(binding));
+        Assert.Single(controller.State.Draft.CapabilityBindings);
+
+        Assert.True(controller.DetachCapability(SpaceCapabilityKind.Skill, "pkg-1/skill-1"));
+        Assert.Empty(controller.State.Draft.CapabilityBindings);
+
+        // Detach non-existent is a no-op success.
+        Assert.True(controller.DetachCapability(SpaceCapabilityKind.Skill, "nonexistent"));
+    }
+
+    [Fact]
+    public async Task Capability_bindings_survive_save_and_reopen()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var space = await files.OpenRegistry().CreateAsync("Original", cancellationToken: token);
+        var controller = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await controller.LoadAsync(token));
+
+        var binding = new SpaceCapabilityBinding("plugin-abc", SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Disabled, "2.0.0");
+        Assert.True(controller.AttachCapability(binding));
+        Assert.True(await controller.SaveAsync(token));
+
+        var reopened = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await reopened.LoadAsync(token));
+        Assert.Single(reopened.State.Draft.CapabilityBindings);
+        Assert.Equal("plugin-abc", reopened.State.Draft.CapabilityBindings[0].CapabilityId);
+        Assert.Equal(SpaceCapabilityOverride.Disabled, reopened.State.Draft.CapabilityBindings[0].Override);
+        Assert.Equal("2.0.0", reopened.State.Draft.CapabilityBindings[0].VersionPin);
+    }
+
 }

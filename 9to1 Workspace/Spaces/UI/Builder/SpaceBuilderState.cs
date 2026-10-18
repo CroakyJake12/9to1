@@ -7,13 +7,6 @@ using SpaceCapabilityCategoryState = Haven.Application.SpaceCapabilityCategorySt
 
 /// <summary>One policy rule for a specific resource inside a Space. Mandatory + Blocked is a
 /// validation failure, never a bypass.</summary>
-public sealed record SpaceBuilderResourceRule(
-    Guid ResourceId,
-    bool Mandatory,
-    bool Allowed,
-    bool Blocked,
-    string Source);
-
 /// <summary>Draft configuration for one canonical Space. Draft and Active are separate revisions
 /// of the SAME SpaceID; an invalid draft never displaces the last known-good active revision.</summary>
 public sealed record SpaceBuilderDraft(
@@ -22,18 +15,15 @@ public sealed record SpaceBuilderDraft(
     string IconKey,
     string Instructions,
     Haven.Application.SpaceCapabilityCategoryPolicy CategoryPolicy,
-    IReadOnlyList<SpaceBuilderResourceRule> SkillRules,
-    IReadOnlyList<SpaceBuilderResourceRule> PluginRules,
-    IReadOnlyList<SpaceBuilderResourceRule> AppRules,
-    IReadOnlyList<SpaceBuilderResourceRule> ModelRules)
+    IReadOnlyList<Haven.Application.SpaceCapabilityBinding> CapabilityBindings)
 {
     public static SpaceBuilderDraft Empty { get; } = new("", "", "", "",
-        new Haven.Application.SpaceCapabilityCategoryPolicy(), [], [], [], []);
+        new Haven.Application.SpaceCapabilityCategoryPolicy(), []);
 
     internal static SpaceBuilderDraft From(SpaceDefinition space) =>
         new(space.Name, space.Description, space.IconKey, space.Instructions,
             space.CapabilityCategoryPolicy ?? new Haven.Application.SpaceCapabilityCategoryPolicy(),
-            [], [], [], []);
+            space.CapabilityBindings?.ToArray() ?? []);
 }
 
 public sealed record SpaceBuilderState(

@@ -152,7 +152,8 @@ public sealed class SpaceBuilderController
             {
                 Name = saving.Draft.Name, Description = saving.Draft.Description,
                 IconKey = saving.Draft.IconKey, Instructions = saving.Draft.Instructions,
-                CapabilityCategoryPolicy = saving.Draft.CategoryPolicy
+                CapabilityCategoryPolicy = saving.Draft.CategoryPolicy,
+                CapabilityBindings = saving.Draft.CapabilityBindings
             }, saving.DraftRevision, cancellationToken).ConfigureAwait(false);
             Change(state =>
             {
@@ -181,6 +182,46 @@ public sealed class SpaceBuilderController
             throw;
         }
         finally { Change(state => state with { IsSaving = false }); }
+    }
+
+    /// <summary>Attaches a canonical capability binding to the draft. Does NOT install,
+    /// enable or invoke the capability globally; it only records the Space reference.</summary>
+    public bool AttachCapability(SpaceCapabilityBinding binding)
+    {
+        if (binding is null) throw new ArgumentNullException(nameof(binding));
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            if (_state.Draft.CapabilityBindings.Any(b => b.Kind == binding.Kind && b.CapabilityId == binding.CapabilityId)) return true;
+            var bindings = _state.Draft.CapabilityBindings.Append(binding).ToArray();
+            var draft = _state.Draft with { CapabilityBindings = bindings };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+                StatusMessage = "Capability attached. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
+    }
+
+    /// <summary>Removes a canonical capability binding from the draft. Does NOT uninstall
+    /// or delete the global capability.</summary>
+    public bool DetachCapability(SpaceCapabilityKind kind, string capabilityId)
+    {
+        SpaceBuilderState next;
+        lock (_gate)
+        {
+            if (!_state.CanEdit) return false;
+            var bindings = _state.Draft.CapabilityBindings
+                .Where(b => !(b.Kind == kind && b.CapabilityId == capabilityId)).ToArray();
+            if (bindings.Length == _state.Draft.CapabilityBindings.Count) return true;
+            var draft = _state.Draft with { CapabilityBindings = bindings };
+            _editVersion++;
+            next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
+                StatusMessage = "Capability detached. Save to persist." };
+        }
+        StateChanged?.Invoke(next);
+        return true;
     }
 
     private void Change(Func<SpaceBuilderState, SpaceBuilderState> update)
