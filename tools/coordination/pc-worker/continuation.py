@@ -83,7 +83,7 @@ class API:
     def request(self, operation, params=None, data=None):
         allowed = {'session.active', 'session.get', 'session.message.list',
                    'session.message.get', 'session.inbox.list', 'session.permission.list',
-                   'session.form.list', 'model.list', 'session.prompt',
+                   'session.form.list', 'model.list', 'agent.get', 'session.prompt',
                    'session.interrupt', 'session.inbox.cancel'}
         if operation not in allowed:
             raise ValueError('Unsupported operation')
@@ -264,9 +264,19 @@ class Continuation:
             raise ValueError('Session identity/workspace changed')
         snapshot = {'session': session, 'active': self.api.request('session.active')['data'],
                     'user': self.latest('user'), 'assistant': self.latest('assistant'),
+                    'compaction': self.latest('compaction'),
                     'inbox': self.call('session.inbox.list')['data'],
                     'permissions': self.call('session.permission.list')['data'],
                     'forms': self.call('session.form.list')['data']}
+        phase = self.inference_phase(snapshot)
+        if phase.get('type') == 'compaction' and phase.get('reason') == 'auto' and phase.get('status') in ('running', 'failed'):
+            try:
+                agent = self.api.request('agent.get', {'agentID': 'compaction', 'location[directory]': self.directory})
+                snapshot['compaction_agent'] = {'id': agent.get('data', {}).get('id'),
+                    'model': agent.get('data', {}).get('model'), 'directory': agent.get('location', {}).get('directory')}
+            except Exception as error:
+                # Missing optional proof forbids recovery but must not block STOP.
+                snapshot['compaction_agent'] = {'error_type': type(error).__name__}
         # Running modes need fresh evidence too; keep it separate from pinned
         # identity and dispatch receipts. Never retain arguments or output here.
         self.state['current_observation'] = {
@@ -279,7 +289,14 @@ class Continuation:
 
     def evidence(self, snapshot):
         assistant = snapshot['assistant']
-        return {'assistant_id': assistant.get('id'), 'finish': assistant.get('finish'),
+        phase = self.inference_phase(snapshot)
+        return {'phase_id': phase.get('id'), 'phase_type': phase.get('type'),
+                'phase_model_verified': self.phase_model_matches(snapshot),
+                'compaction_proof_error_type': snapshot.get('compaction_agent', {}).get('error_type'),
+                'phase_status': phase.get('status'), 'phase_created': phase.get('time', {}).get('created'),
+                'phase_error_type': phase.get('error', {}).get('type'),
+                'phase_error_status': phase.get('error', {}).get('status'),
+                'assistant_id': assistant.get('id'), 'finish': assistant.get('finish'),
                 'completed': assistant.get('time', {}).get('completed'),
                 'error_type': assistant.get('error', {}).get('type'),
                 'error_status': assistant.get('error', {}).get('status'),
@@ -412,8 +429,10 @@ class Continuation:
                     return self.observe_active_outage(snapshot)
                 return self.persist(blocked, **self.evidence(snapshot))
             assistant = snapshot['assistant']
+            phase = self.inference_phase(snapshot)
+            compaction = phase.get('type') == 'compaction'
             user = snapshot['user']
-            created = assistant.get('time', {}).get('created')
+            created = phase.get('time', {}).get('created')
             if (not isinstance(created, (int, float)) or not isinstance(user.get('time', {}).get('created'), (int, float))
                     or created < user['time']['created']):
                 return self.persist('awaiting_actual_response', **self.evidence(snapshot))
@@ -423,20 +442,30 @@ class Continuation:
                 # an older projection is never sufficient to dispatch again.
                 if user.get('id') not in self.config.get('approved_user_message_ids', []):
                     return self.persist('awaiting_dispatched_input', **self.evidence(snapshot))
-            if assistant.get('model') != self.model:
-                return self.persist('held_response_model_changed', **self.evidence(snapshot))
+            if compaction and phase.get('status') not in ('running', 'failed'):
+                return self.persist('held_compaction_outcome', **self.evidence(snapshot))
+            if not self.phase_model_matches(snapshot):
+                return self.persist('held_unverified_compaction' if compaction else 'held_response_model_changed', **self.evidence(snapshot))
             outage_recovery = self.owned_outage_matches(snapshot)
             if snapshot['session'].get('outcome') == 'interrupted' and not outage_recovery:
                 return self.persist('held_interrupted', **self.evidence(snapshot))
+            terminal_compaction = compaction and self.transient_terminal(snapshot)
+            if compaction and not outage_recovery and not (
+                    terminal_compaction and self.config.get('recovery', {}).get('enabled') is True):
+                return self.persist('held_compaction_outcome', **self.evidence(snapshot))
             completed = assistant.get('time', {}).get('completed')
-            if not outage_recovery and (not isinstance(completed, (int, float)) or completed < created):
+            if not outage_recovery and not terminal_compaction and (
+                    not isinstance(completed, (int, float)) or completed < created):
                 return self.persist('held_incomplete_response', **self.evidence(snapshot))
-            if not outage_recovery and snapshot['session'].get('time', {}).get('idle', -1) < completed:
+            # Failed compactions expose no completion timestamp. Their explicit
+            # failed status and inactive failed session must agree at the gate.
+            boundary_floor = created if terminal_compaction else completed
+            if not outage_recovery and snapshot['session'].get('time', {}).get('idle', -1) < boundary_floor:
                 return self.persist('awaiting_terminal_session_boundary', **self.evidence(snapshot))
-            boundary = assistant['id'] + (':outage:' + str(snapshot['session']['time']['idle']) if outage_recovery else '')
+            boundary = phase['id'] + (':outage:' + str(snapshot['session']['time']['idle']) if outage_recovery else '')
             if boundary == self.state.get('last_boundary'):
                 return self.persist('awaiting_new_response', **self.evidence(snapshot))
-            success = successful(assistant) and snapshot['session'].get('outcome') == 'succeeded'
+            success = not compaction and successful(assistant) and snapshot['session'].get('outcome') == 'succeeded'
             if self.config.get('max_dispatches') is not None:
                 limit = self.config['max_dispatches']
                 if not isinstance(limit, int) or limit < 1:
@@ -489,6 +518,8 @@ class Continuation:
                     return self.persist('deferred_control_changed')
                 fresh = self.snapshot()
                 if (self.admission_block(fresh) or self.evidence(fresh) != self.evidence(snapshot)
+                        or (terminal_compaction and (not self.transient_terminal(fresh)
+                            or self.generation_fingerprint(fresh) != self.generation_fingerprint(snapshot)))
                         or self.prompt_inputs(recovery) != prompt_inputs
                         or (self.config.get('coordinator_marker_path') and Path(self.config['coordinator_marker_path']).exists())
                         or (success and not successful(fresh['assistant']))):
@@ -534,7 +565,7 @@ class Continuation:
         return self.persist(mode)
 
     def transient_terminal(self, snapshot):
-        assistant = snapshot['assistant']
+        assistant = self.inference_phase(snapshot)
         error = assistant.get('error', {})
         status = error.get('status')
         types = self.config.get('recovery', {}).get('transient_error_types', [
@@ -542,14 +573,30 @@ class Continuation:
             'FetchError', 'ProviderConnectionError', 'ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT'])
         transient = ((isinstance(status, int) and (status >= 500 or status in (408, 425, 429)))
                      or (status is None and error.get('type') in types))
+        if assistant.get('type') == 'compaction':
+            created = assistant.get('time', {}).get('created')
+            idle = snapshot['session'].get('time', {}).get('idle')
+            owner_created = snapshot['user'].get('time', {}).get('created')
+            # An open error-type string or an old idle success is not evidence
+            # of a provider failure. Only known transport/HTTP failures qualify.
+            known_error = error.get('type') in types or error.get('type') in ('APIError', 'APICallError', 'HTTPError')
+            trusted_transient = (status in (408, 425, 429, 500, 502, 503, 504, 521, 522, 523, 524, 530)
+                                 or (status is None and error.get('type') in types))
+            return (assistant.get('status') == 'failed' and self.phase_model_matches(snapshot)
+                    and snapshot['session'].get('outcome') == 'failed' and self.sid not in snapshot['active']
+                    and isinstance(created, (int, float)) and isinstance(idle, (int, float)) and idle >= created
+                    and isinstance(owner_created, (int, float)) and created >= owner_created
+                    and known_error and trusted_transient
+                    and all(part.get('state', {}).get('status') in ('completed', 'error')
+                            for part in snapshot['assistant'].get('content', []) if part.get('type') == 'tool'))
         return (snapshot['session'].get('outcome') != 'interrupted' and assistant.get('finish') == 'error'
                 and bool(error) and transient and isinstance(assistant.get('time', {}).get('completed'), (int, float)))
 
     def outage_probe_candidate(self, snapshot):
-        assistant = snapshot['assistant']
+        assistant = self.inference_phase(snapshot)
         error = assistant.get('error', {})
         allowed = self.config.get('recovery', {}).get('outage_probe_error_types', ['APIError', 'APICallError'])
-        return (snapshot['session'].get('outcome') != 'interrupted' and assistant.get('finish') == 'error'
+        return (assistant.get('type') == 'assistant' and snapshot['session'].get('outcome') != 'interrupted' and assistant.get('finish') == 'error'
                 and error.get('type') in allowed and error.get('status') is None
                 and isinstance(assistant.get('time', {}).get('completed'), (int, float)))
 
@@ -563,7 +610,7 @@ class Continuation:
                 and (not active or self.config.get('recovery', {}).get('active_outage', {}).get('enabled') is True))
 
     def recover_provider(self, snapshot, retry_count, outage_recovery=False):
-        assistant = snapshot['assistant']
+        assistant = self.inference_phase(snapshot)
         error = assistant.get('error', {})
         status = error.get('status')
         if status in (401, 403):
@@ -612,21 +659,48 @@ class Continuation:
         return None
 
     @staticmethod
-    def generation_fingerprint(snapshot):
+    def inference_phase(snapshot):
         assistant = snapshot['assistant']
-        return hashlib.sha256(json.dumps({key: assistant.get(key) for key in
-            ('id', 'time', 'content', 'finish', 'error', 'retry')}, sort_keys=True).encode()).hexdigest()
+        compaction = snapshot.get('compaction', {})
+        created = compaction.get('time', {}).get('created')
+        if (compaction.get('type') == 'compaction' and isinstance(created, (int, float))
+                and created > assistant.get('time', {}).get('created', -1)):
+            return compaction
+        return assistant
+
+    def phase_model_matches(self, snapshot):
+        phase = self.inference_phase(snapshot)
+        if phase.get('type') == 'assistant':
+            return phase.get('model') == self.model
+        agent = snapshot.get('compaction_agent', {})
+        return (phase.get('reason') == 'auto' and phase.get('status') in ('running', 'failed')
+                and snapshot['session'].get('model') == self.model
+                and agent.get('id') == 'compaction' and agent.get('directory') == self.directory
+                and agent.get('model') == self.model)
+
+    @staticmethod
+    def generation_fingerprint(snapshot):
+        phase = Continuation.inference_phase(snapshot)
+        return hashlib.sha256(json.dumps({key: phase.get(key) for key in
+            ('id', 'type', 'time', 'content', 'finish', 'error', 'retry', 'status', 'reason', 'summary', 'recent')},
+            sort_keys=True).encode()).hexdigest()
 
     def generation_only(self, snapshot):
-        message = snapshot['assistant']
-        return (message.get('type') == 'assistant' and not message.get('time', {}).get('completed')
+        phase = self.inference_phase(snapshot)
+        running = (phase.get('type') == 'assistant' and not phase.get('time', {}).get('completed')) or (
+            phase.get('type') == 'compaction' and phase.get('reason') == 'auto' and phase.get('status') == 'running')
+        return (running and self.phase_model_matches(snapshot)
                 and self.known_queue(snapshot) and not snapshot['permissions'] and not snapshot['forms']
                 and all(part.get('state', {}).get('status') in ('completed', 'error')
-                        for part in message.get('content', []) if part.get('type') == 'tool'))
+                        for part in snapshot['assistant'].get('content', []) if part.get('type') == 'tool'))
 
     def owned_outage_matches(self, snapshot):
         receipt = self.state.get('outage_interrupt', {})
-        return (receipt.get('status') == 'confirmed' and receipt.get('session_id') == self.sid
+        phase = self.inference_phase(snapshot)
+        return (receipt.get('phase_id', receipt.get('assistant_id')) == phase.get('id')
+                and receipt.get('phase_type', 'assistant') == phase.get('type')
+                and self.phase_model_matches(snapshot)
+                and receipt.get('status') == 'confirmed' and receipt.get('session_id') == self.sid
                 and receipt.get('user_id') == snapshot['user'].get('id')
                 and receipt.get('assistant_id') == snapshot['assistant'].get('id')
                 and receipt.get('idle') == snapshot['session'].get('time', {}).get('idle')
@@ -636,8 +710,8 @@ class Continuation:
     def observe_active_outage(self, snapshot):
         if (not self.generation_only(snapshot)
                 or any(peer in snapshot['active'] for peer in self.config.get('other_programme_session_ids', []))
-                or snapshot['assistant'].get('model') != self.model
-                or snapshot['assistant'].get('time', {}).get('created', -1) < snapshot['user'].get('time', {}).get('created', 0)):
+                or not self.phase_model_matches(snapshot)
+                or self.inference_phase(snapshot).get('time', {}).get('created', -1) < snapshot['user'].get('time', {}).get('created', 0)):
             self.state.pop('active_outage_probe', None)
             return self.persist('running_tool_or_unqualified_generation')
         if self.state.get('outage_interrupt', {}).get('status') == 'intent':
@@ -676,11 +750,13 @@ class Continuation:
                 return self.persist('deferred_control_changed')
             fresh = self.snapshot()
             if (self.admission_block(fresh) != 'running' or not self.generation_only(fresh)
+                    or any(peer in fresh['active'] for peer in self.config.get('other_programme_session_ids', []))
                     or self.generation_fingerprint(fresh) != fingerprint
                     or fresh['user'].get('id') != snapshot['user'].get('id')):
                 return self.persist('deferred_active_state_changed')
             receipt = {'status': 'intent', 'session_id': self.sid, 'user_id': fresh['user']['id'],
-                       'assistant_id': fresh['assistant']['id'], 'fingerprint': fingerprint,
+                       'assistant_id': fresh['assistant']['id'], 'phase_id': self.inference_phase(fresh)['id'],
+                       'phase_type': self.inference_phase(fresh)['type'], 'fingerprint': fingerprint,
                        'network_observations': observation['failures'], 'at': self.now(),
                        'control_hash': hashlib.sha256(Path(self.config['control_path']).read_bytes()).hexdigest()}
             self.persist('outage_interrupt_intent', outage_interrupt=receipt)
@@ -694,7 +770,10 @@ class Continuation:
             after = self.snapshot()
             if (self.sid in after['active'] or after['session'].get('outcome') != 'interrupted'
                     or after['user'].get('id') != receipt['user_id']
-                    or after['assistant'].get('id') != receipt['assistant_id']):
+                    or after['assistant'].get('id') != receipt['assistant_id']
+                    or self.inference_phase(after).get('id') != receipt['phase_id']
+                    or self.inference_phase(after).get('type') != receipt['phase_type']
+                    or not self.phase_model_matches(after)):
                 return self.persist('held_ambiguous_outage_interrupt')
             receipt.update(status='confirmed', idle=after['session']['time'].get('idle'))
             return self.persist('outage_interrupted', outage_interrupt=receipt)

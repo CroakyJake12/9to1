@@ -70,5 +70,69 @@
       "ACTIVE-PROGRESS-PROPOSAL.md": "0a94bbe101c5e4795aff6583dc241714db0bcb6821e75a13364767e071fc870f"
     },
     "validation": "77/77 root suite passed; active-progress steering proposal is NOT IMPLEMENTED"
+  },
+  "historical_files_note": "The top-level files and test_receipt preserve the initial activation. current_files identifies this revision; subsequent patch receipts retain their own exact source identities.",
+  "current_files": {
+    "continuation.py": "d2e07388f99a48115423d87d93721d593e23b73da140cf32db2f752af30e4ffd",
+    "test_continuation.py": "11d1450b0a54d342b3b0cdedfc94c0195f8c9ba1b6987c8568c34c657987880b",
+    "CONTINUATION.md": "e66242adf4ad991395f9ed70b4b1765f187bc5d5d936f922ce2ba87fe360f90d",
+    "milestone-ledger.py": "8a8a1dadd7f3f7b0157afd5a8d629b53f37a4bd628036cff5b3b555c0ef97f5b",
+    "test_milestone_ledger.py": "812aed2b64a971e7cacaec5cba1250398a88e869cb87cded148b25c51793a32f",
+    "milestones.json": "04a44fb809f83beb4a36ae6548617234eb436c28b4b5d9390ff9542efd30f95b",
+    "canonical-inventory.json": "6701062262bc3a5b276fa34c0933600a693b9bb810bae2714ccaceded74cf75a",
+    "milestone-coverage.json": "65929e283a9d14a31618567f1668a0166a8ebb35867676bea9bc8b03f25af8ba",
+    "MILESTONES.md": "bedb0a88b5c377fa433e9e736a95bc7efa702e4db0d292d8251960c91cfabc8d",
+    "COMMIT-AND-MILESTONE-POLICY.md": "0dd838ef5a55c494950a4a0b3a40633a0c7ec96d419251cd2b0f3aac8a376d12",
+    "AUTONOMOUS-OPERATION.md": "a92d3a1117ee46e5f633042e166610d329e46a844b51c3bcb050f911217a5690"
+  },
+  "last_compaction_patch": {
+    "at": "2026-10-18T18:47:44.047943+00:00",
+    "purpose": "Observe and recover verified running/failed automatic-compaction provider outages while preserving exact ownership, queue and STOP semantics",
+    "files": {
+      "continuation.py": "d2e07388f99a48115423d87d93721d593e23b73da140cf32db2f752af30e4ffd",
+      "test_continuation.py": "11d1450b0a54d342b3b0cdedfc94c0195f8c9ba1b6987c8568c34c657987880b",
+      "CONTINUATION.md": "e66242adf4ad991395f9ed70b4b1765f187bc5d5d936f922ce2ba87fe360f90d"
+    },
+    "root_test_receipt": {
+      "at": "2026-10-18T18:46:50.533441+00:00",
+      "exit_code": 0,
+      "before": {
+        "continuation.py": "d2e07388f99a48115423d87d93721d593e23b73da140cf32db2f752af30e4ffd",
+        "test_continuation.py": "11d1450b0a54d342b3b0cdedfc94c0195f8c9ba1b6987c8568c34c657987880b"
+      },
+      "after": {
+        "continuation.py": "d2e07388f99a48115423d87d93721d593e23b73da140cf32db2f752af30e4ffd",
+        "test_continuation.py": "11d1450b0a54d342b3b0cdedfc94c0195f8c9ba1b6987c8568c34c657987880b"
+      },
+      "unchanged": true,
+      "scope": "87 isolated continuation tests; no live failure injection or product acceptance"
+    },
+    "root_milestone_suite": "12/12 pass exit 0; unchanged source, root-milestone-tests.log in cycle-20261018T182704Z",
+    "independent_review": {
+      "at": "2026-10-18T18:47:03.991351+00:00",
+      "verdict": "SCOPED_CODE_AND_TEST_REVIEW_ACCEPTED; NO MUST_FIX FOUND",
+      "source_sha256": "d2e07388f99a48115423d87d93721d593e23b73da140cf32db2f752af30e4ffd",
+      "test_sha256": "11d1450b0a54d342b3b0cdedfc94c0195f8c9ba1b6987c8568c34c657987880b",
+      "review_scope": "Entire production/test delta from accepted phase1 read; frozen hashes verified. Saved suite and negative-control output inspected, no test rerun or live mutation by reviewer.",
+      "boundary_checks": [
+        "Only newest auto failed compaction, inactive session with outcome failed and idle >= phase.created >= approved user created, effective agent/session model proof and settled assistant tools qualifies.",
+        "Exact allowlist transport/error statuses; unknown/auth/config/cancel/manual errors held. No invented model/completion fields.",
+        "Fresh dispatch-lock gate revalidates transient predicate, full generation fingerprint, evidence incl idle/owner, active peers/inbox/permissions and control.",
+        "Manual interrupted outcome never reclassified; STOP after durable prompt intent prevents dispatch.",
+        "Known inbox preserved; unknown items block. Once-per-phase dispatch boundary survives restart.",
+        "Backoff and loaded gateway proof precede same-session resume; HTTP429 probe Retry-After preserved. No compaction invocation or service restart introduced."
+      ],
+      "evidence": "Candidate87tests pass exit0; phase1 negative control fails expected prior held_compaction_outcome gate. Root separately executing exact frozen suite; no personal rerun claimed.",
+      "limits": [
+        "No physical PC reboot or real provider-failed-compaction recovery demonstrated.",
+        "Session/message snapshots remain non-atomic; conservative fresh gates mitigate, not transactional API guarantees.",
+        "Session idle >= phase creation is available schema boundary, not actual per-message completion timestamp.",
+        "Open schema error-type strings are handled only by reviewed allowlist; new/unclassified failures remain held.",
+        "This accepts only control patch semantics/tests, not product or full autonomous programme completion."
+      ]
+    },
+    "physical_pc_power_loss_tested": false,
+    "live_failed_compaction_recovery_tested": false,
+    "activation": "Pending runtime reload; see durable coordinator activation receipt"
   }
 }

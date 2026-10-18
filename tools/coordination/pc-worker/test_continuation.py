@@ -27,6 +27,8 @@ class API:
                         'outcome': 'succeeded', 'time': {'idle': 40}}
         self.user = {'id': 'msg_owner', 'type': 'user', 'time': {'created': 10}}
         self.assistant = assistant()
+        self.compaction = None
+        self.compaction_model = copy.deepcopy(MODEL)
         self.active = {}
         self.inbox = []
         self.permissions = []
@@ -50,7 +52,10 @@ class API:
             raise RuntimeError('Do not record API secret text')
         if operation == 'session.get': value = self.session
         elif operation == 'session.active': value = self.active
-        elif operation == 'session.message.list': value = [self.user if params['type'] == 'user' else self.assistant]
+        elif operation == 'session.message.list':
+            value = ([self.compaction] if self.compaction else []) if params['type'] == 'compaction' else [self.user if params['type'] == 'user' else self.assistant]
+        elif operation == 'agent.get':
+            return {'location': copy.deepcopy(self.session['location']), 'data': {'id': 'compaction', 'model': copy.deepcopy(self.compaction_model)}}
         elif operation == 'session.message.get': value = self.messages[params['messageID']]
         elif operation == 'session.inbox.list': value = self.inbox
         elif operation == 'session.permission.list': value = self.permissions
@@ -742,6 +747,253 @@ print(json.dumps({'mode':result,'prompts':len(api.prompts),'probes':api.gateway_
         self.api.fail = 'session.get'; self.clock += 5
         self.assertEqual('unavailable', self.worker.tick())
         self.assertEqual(observed, json.loads(self.worker.state_path.read_text())['current_observation'])
+
+    def active_compaction(self):
+        self.enable_recovery(active=True)
+        self.api.active = {SID: {'type': 'running'}}; self.api.session['outcome'] = None
+        self.api.compaction = {'id': 'msg_auto_compaction', 'type': 'compaction', 'time': {'created': 35},
+            'status': 'running', 'reason': 'auto', 'summary': 'Partial summary', 'recent': 'Retained recent work'}
+    def test_compaction_owned_outage_recovers_exact_phase_without_inventing_model_or_completion(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable', 'status': 530}
+        self.assertEqual('outage_interrupted', self.collect_outage())
+        receipt = self.worker.state['outage_interrupt']
+        self.assertEqual('msg_auto_compaction', receipt['phase_id']); self.assertEqual('compaction', receipt['phase_type'])
+        self.assertEqual('msg_assistant_1', receipt['assistant_id'])
+        self.assertNotIn('model', self.api.compaction); self.assertNotIn('completed', self.api.compaction['time'])
+        self.worker = self.new_worker()
+        self.assertEqual('provider_backoff', self.worker.tick()); self.clock += 30
+        self.api.gateway_result = {'kind': 'loaded'}
+        self.assertEqual('dispatched', self.worker.tick())
+        self.assertIn('msg_auto_compaction:outage:', self.worker.state['last_boundary'])
+        self.api.inbox.clear()
+        self.assertEqual('awaiting_new_response', self.new_worker().tick())
+        self.assertEqual(1, len(self.api.prompts)); self.assertTrue(self.api.prompts[0][2]['resume'])
+        self.assertEqual('compaction', self.worker.state['current_observation']['phase_type'])
+        self.assertFalse(any(c[0] == 'session.compact' for c in self.api.calls))
+    def test_compaction_progress_resets_outage_proof_and_healthy_endpoint_does_not_interrupt(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable', 'status': 503}
+        self.worker.tick(); self.clock += 60; self.assertEqual('observed_pc_outage', self.worker.tick())
+        self.api.compaction['summary'] = 'Actual new exposed summary progress'
+        self.clock += 30; self.assertEqual('running_generation_observed', self.worker.tick())
+        self.assertEqual([], self.worker.state['active_outage_probe']['failures'])
+        self.clock += 60; self.api.gateway_result = {'kind': 'loaded'}
+        self.assertEqual('running_generation_gateway_loaded', self.worker.tick())
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls)); self.assertFalse(self.api.prompts)
+    def test_compaction_older_than_new_assistant_or_new_owner_never_overrides_them(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        self.api.assistant = assistant('msg_new_assistant', created=40, completed=50)
+        for _ in range(5): self.worker.tick(); self.clock += 1000
+        self.assertEqual(0, self.api.gateway_calls)
+        self.assertEqual('assistant', self.worker.state['current_observation']['phase_type'])
+        self.api.assistant = assistant(); self.api.user['time']['created'] = 40
+        for _ in range(5): self.worker.tick(); self.clock += 1000
+        self.assertEqual(0, self.api.gateway_calls)
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+    def test_compaction_running_tool_or_pending_permission_never_probes_or_interrupts(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        self.api.assistant['content'] = [{'type': 'tool', 'state': {'status': 'running'}}]
+        for _ in range(5): self.worker.tick(); self.clock += 1000
+        self.assertEqual(0, self.api.gateway_calls)
+        self.api.assistant['content'] = []; self.api.permissions = [{'id': 'permission'}]
+        self.assertEqual('requires_owner_input', self.worker.tick())
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+    def test_compaction_requires_explicit_effective_agent_model_and_auto_reason(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        for model in (None, {'providerID': 'other', 'id': 'paid'}, {**MODEL, 'variant': 'different'}):
+            self.api.compaction_model = model
+            for _ in range(4): self.worker.tick(); self.clock += 1000
+        self.api.compaction_model = MODEL; self.api.compaction['reason'] = 'manual'
+        for _ in range(4): self.worker.tick(); self.clock += 1000
+        self.assertEqual(0, self.api.gateway_calls)
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+    def test_compaction_change_or_agent_model_change_during_third_probe_blocks_interrupt(self):
+        for change in ('phase', 'model'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory(dir=self.root) as case:
+                self.active_compaction(); config = copy.deepcopy(self.config)
+                config['dispatch_lock_path'] = str(Path(case) / 'dispatch.lock')
+                (Path(case) / 'config.json').write_text(json.dumps(config))
+                self.worker = module.Continuation(case, api=self.api, now=lambda: self.clock, execute=True)
+                self.api.gateway_calls = 0; self.api.gateway_result = {'kind': 'unavailable'}
+                original_probe = self.api.probe_gateway
+                def probe(*args):
+                    result = original_probe(*args)
+                    if self.api.gateway_calls == 3:
+                        if change == 'phase': self.api.assistant = assistant('msg_newer', created=40, completed=None, finish=None)
+                        else: self.api.compaction_model = {**MODEL, 'variant': 'changed'}
+                    return result
+                self.api.probe_gateway = probe
+                self.assertEqual('deferred_active_state_changed', self.collect_outage())
+                self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+                self.api = API()
+    def test_compaction_manual_stop_and_unknown_owner_never_auto_recover(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        self.api.active.clear(); self.api.session.update(outcome='interrupted')
+        self.assertEqual('held_interrupted', self.worker.tick()); self.assertFalse(self.api.prompts)
+        self.api.active = {SID: {'type': 'running'}}; self.api.session['outcome'] = None
+        self.api.user['id'] = 'msg_owner_stop'
+        self.assertEqual('held_unreviewed_owner_input', self.worker.tick()); self.assertEqual(0, self.api.gateway_calls)
+    def test_compaction_stop_between_durable_intent_and_call_prevents_interrupt(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        original = self.worker.persist
+        def persist(mode, **fields):
+            result = original(mode, **fields)
+            if mode == 'outage_interrupt_intent': self.control.write_text(json.dumps({'mode': 'STOP'}))
+            return result
+        self.worker.persist = persist
+        self.assertEqual('deferred_control_changed', self.collect_outage())
+        self.assertNotIn('outage_interrupt', self.worker.state)
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+    def test_unowned_unknown_compaction_failure_or_completion_never_replays_or_claims_success(self):
+        self.active_compaction(); self.api.active.clear()
+        self.api.compaction.update(status='failed', error={'type': 'UnknownError', 'message': 'Fixture unknown failure', 'status': 503})
+        self.api.session['outcome'] = 'failed'
+        self.assertEqual('held_compaction_outcome', self.worker.tick())
+        self.api.session['outcome'] = 'succeeded'  # A later idle event cannot erase failed phase evidence.
+        self.assertEqual('held_compaction_outcome', self.worker.tick())
+        self.api.compaction.pop('error'); self.api.compaction.update(status='completed', model=MODEL)
+        self.assertEqual('held_compaction_outcome', self.worker.tick())
+        self.assertEqual(0, self.api.gateway_calls); self.assertFalse(self.api.prompts)
+        self.assertNotIn('checkpoint_observation', self.worker.state)
+    def test_changed_compaction_id_after_owned_interruption_cannot_reuse_old_recovery_receipt(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        self.assertEqual('outage_interrupted', self.collect_outage())
+        self.api.compaction['id'] = 'msg_different_compaction'
+        self.assertEqual('held_interrupted', self.worker.tick()); self.assertFalse(self.api.prompts)
+
+    def test_peer_start_on_third_compaction_outage_probe_blocks_fresh_interrupt(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        original = self.api.probe_gateway
+        def probe(*args):
+            result = original(*args)
+            if self.api.gateway_calls == 3: self.api.active['ses_peer'] = {'type': 'running'}
+            return result
+        self.api.probe_gateway = probe
+        self.assertEqual('deferred_active_state_changed', self.collect_outage())
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+        self.assertFalse(self.api.prompts); self.assertNotIn('outage_interrupt', self.worker.state)
+    def test_compaction_known_queue_survives_owned_recovery_but_unknown_inbox_blocks_proof(self):
+        self.active_compaction(); self.api.gateway_result = {'kind': 'unavailable'}
+        self.api.inbox = [{'id': 'msg_queued_repair', 'type': 'user', 'payload': {'text': 'Approved existing work'}}]
+        for _ in range(4): self.worker.tick(); self.clock += 1000
+        self.assertEqual(0, self.api.gateway_calls)
+        self.config['approved_user_message_ids'].append('msg_queued_repair'); self.write_config()
+        self.assertEqual('outage_interrupted', self.collect_outage())
+        self.assertEqual('provider_backoff', self.worker.tick()); self.clock += 30
+        self.api.gateway_result = {'kind': 'loaded'}
+        self.assertEqual('dispatched', self.worker.tick())
+        self.assertEqual('msg_queued_repair', self.api.inbox[0]['id'])
+        self.assertEqual(2, len(self.api.inbox)); self.assertEqual(1, len(self.api.prompts))
+        self.assertEqual('awaiting_new_response', self.new_worker().tick())
+        self.assertEqual(1, len(self.api.prompts))
+
+    def test_unavailable_compaction_model_proof_blocks_recovery_but_does_not_block_explicit_stop(self):
+        self.active_compaction(); self.api.active['ses_unrelated'] = {'type': 'running'}
+        self.api.gateway_result = {'kind': 'unavailable'}
+        def reject_proof(operation, params, data):
+            if operation == 'agent.get': raise module.APIError('authentication')
+        self.api.hook = reject_proof
+        self.assertEqual('running_tool_or_unqualified_generation', self.worker.tick())
+        observed = self.worker.state['current_observation']
+        self.assertFalse(observed['phase_model_verified']); self.assertEqual('APIError', observed['compaction_proof_error_type'])
+        self.assertEqual(0, self.api.gateway_calls); self.assertFalse(self.api.prompts)
+        self.control.write_text(json.dumps({'mode': 'STOP'}))
+        self.assertEqual('stopped', self.worker.tick())
+        self.assertNotIn(SID, self.api.active); self.assertIn('ses_unrelated', self.api.active)
+        self.assertEqual(1, len([c for c in self.api.calls if c[0] == 'session.interrupt']))
+
+    def failed_compaction(self, error_type='APIError', status=503):
+        self.active_compaction(); self.api.active.clear(); self.api.session['outcome'] = 'failed'
+        self.api.compaction = {'id': 'msg_failed_compaction', 'type': 'compaction', 'time': {'created': 35},
+            'status': 'failed', 'reason': 'auto', 'error': {'type': error_type, 'message': 'Fixture-private error'}}
+        if status is not None: self.api.compaction['error']['status'] = status
+    def test_terminal_compaction_503_waits_for_loaded_gateway_and_resumes_exact_session_once_after_restart(self):
+        self.failed_compaction(); self.assertEqual('provider_backoff', self.worker.tick()); self.clock += 30
+        self.api.gateway_result = {'kind': 'unavailable', 'status': 530}
+        self.assertEqual('waiting_for_pc_model', self.worker.tick()); self.clock += 31
+        self.api.gateway_result = {'kind': 'loaded'}; self.worker = self.new_worker()
+        self.assertEqual('dispatched', self.worker.tick())
+        self.assertEqual('msg_failed_compaction', self.worker.state['last_boundary'])
+        self.assertEqual(SID, self.api.prompts[0][1]['sessionID']); self.assertTrue(self.api.prompts[0][2]['resume'])
+        self.api.inbox.clear(); self.assertEqual('awaiting_new_response', self.new_worker().tick())
+        self.assertEqual(1, len(self.api.prompts)); self.assertNotIn('model', self.api.compaction)
+        self.assertNotIn('completed', self.api.compaction['time'])
+        self.assertFalse(any(c[0] in ('session.compact', 'session.interrupt') for c in self.api.calls))
+        self.assertNotIn('Fixture-private', self.worker.state_path.read_text())
+    def test_terminal_compaction_exact_transport_type_without_status_is_supported(self):
+        self.failed_compaction('ConnectionError', None)
+        self.assertEqual('provider_backoff', self.worker.tick()); self.clock += 30
+        self.assertEqual('dispatched', self.worker.tick()); self.assertEqual(1, self.api.gateway_calls)
+    def test_terminal_compaction_unknown_auth_configuration_and_cancel_errors_remain_held(self):
+        for error_type, status in (('UnknownError', 503), ('APIError', None), ('TransportError', 401),
+                ('APIError', 403), ('HTTPError', 400), ('HTTPError', 501), ('AbortError', 503),
+                ('AuthenticationError', 503), ('PermissionDeniedError', 503)):
+            with self.subTest(error_type=error_type, status=status):
+                self.failed_compaction(error_type, status)
+                self.assertEqual('held_compaction_outcome', self.worker.tick())
+        self.assertEqual(0, self.api.gateway_calls); self.assertFalse(self.api.prompts)
+    def test_terminal_compaction_requires_failed_idle_boundary_and_does_not_accept_synthetic_success(self):
+        self.failed_compaction()
+        for outcome, idle in (('succeeded', 40), ('interrupted', 40), (None, 40), ('failed', 34), ('failed', None)):
+            with self.subTest(outcome=outcome, idle=idle):
+                self.api.session.update(outcome=outcome); self.api.session['time']['idle'] = idle
+                expected = 'held_interrupted' if outcome == 'interrupted' else 'held_compaction_outcome'
+                self.assertEqual(expected, self.worker.tick())
+        self.assertEqual(0, self.api.gateway_calls); self.assertFalse(self.api.prompts)
+    def test_terminal_compaction_model_manual_reason_and_running_tools_cannot_recover(self):
+        self.failed_compaction(); self.api.compaction['reason'] = 'manual'
+        self.assertEqual('held_unverified_compaction', self.worker.tick())
+        self.api.compaction['reason'] = 'auto'; self.api.compaction_model = None
+        self.assertEqual('held_unverified_compaction', self.worker.tick())
+        self.api.compaction_model = MODEL
+        self.api.assistant['content'] = [{'type': 'tool', 'state': {'status': 'running'}}]
+        self.assertEqual('held_compaction_outcome', self.worker.tick())
+        self.assertEqual(0, self.api.gateway_calls); self.assertFalse(self.api.prompts)
+    def test_terminal_compaction_known_queue_is_preserved_and_unknown_queue_blocks(self):
+        self.failed_compaction(); self.api.inbox = [{'id': 'msg_repair', 'type': 'user'}]
+        self.assertEqual('pending_inbox', self.worker.tick()); self.assertEqual(0, self.api.gateway_calls)
+        self.config['approved_user_message_ids'].append('msg_repair'); self.write_config()
+        self.assertEqual('provider_backoff', self.worker.tick()); self.clock += 30
+        self.assertEqual('dispatched', self.worker.tick())
+        self.assertEqual('msg_repair', self.api.inbox[0]['id']); self.assertEqual(2, len(self.api.inbox))
+        self.assertEqual('awaiting_new_response', self.new_worker().tick()); self.assertEqual(1, len(self.api.prompts))
+    def test_terminal_compaction_rate_limit_probe_delay_is_honored(self):
+        self.failed_compaction('HTTPError', 429); self.worker.tick(); self.clock += 30
+        self.api.gateway_result = {'kind': 'rate_limit', 'status': 429, 'retry_after_seconds': 600}
+        self.assertEqual('waiting_for_pc_model', self.worker.tick()); self.clock += 599
+        self.assertEqual('provider_backoff', self.worker.tick()); self.assertEqual(1, self.api.gateway_calls)
+        self.clock += 1; self.api.gateway_result = {'kind': 'loaded'}
+        self.assertEqual('dispatched', self.worker.tick()); self.assertEqual(2, self.api.gateway_calls)
+    def test_terminal_compaction_fresh_phase_tools_model_owner_peer_or_idle_change_blocks_dispatch(self):
+        changes = {
+            'phase': lambda: self.api.compaction.update(id='msg_other_compaction'),
+            'error': lambda: self.api.compaction['error'].update(message='Changed failure payload'),
+            'tool': lambda: self.api.assistant.update(content=[{'type': 'tool', 'state': {'status': 'running'}}]),
+            'model': lambda: setattr(self.api, 'compaction_model', {**MODEL, 'variant': 'changed'}),
+            'user': lambda: self.api.user.update(id='msg_owner_stop'),
+            'peer': lambda: self.api.active.update(ses_peer={'type': 'running'}),
+            'manual_cancel': lambda: self.api.session.update(outcome='interrupted'),
+            'idle': lambda: self.api.session['time'].update(idle=41),
+            'newer_assistant': lambda: setattr(self.api, 'assistant', assistant('msg_newer', created=36, completed=39)),
+        }
+        for name, change in changes.items():
+            with self.subTest(change=name):
+                self.api = API(); self.worker.state_path.unlink(missing_ok=True); self.worker = self.new_worker()
+                self.failed_compaction(); self.worker.tick(); self.clock += 30
+                original = self.api.probe_gateway
+                def probe(*args):
+                    result = original(*args); change(); return result
+                self.api.probe_gateway = probe
+                self.assertEqual('deferred_state_changed', self.worker.tick()); self.assertFalse(self.api.prompts)
+    def test_terminal_compaction_stop_after_persisted_prompt_intent_prevents_dispatch(self):
+        self.failed_compaction(); self.worker.tick(); self.clock += 30
+        original = self.worker.persist
+        def persist(mode, **fields):
+            result = original(mode, **fields)
+            if mode == 'dispatch_intent': self.control.write_text(json.dumps({'mode': 'STOP'}))
+            return result
+        self.worker.persist = persist
+        self.assertEqual('deferred_control_changed', self.worker.tick()); self.assertFalse(self.api.prompts)
+        self.assertNotIn('pending', self.worker.state); self.assertEqual('stopped', self.worker.tick())
 
 
 if __name__ == '__main__': unittest.main(verbosity=2)
