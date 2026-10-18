@@ -46,7 +46,8 @@ public sealed partial class BrowseNativeUiTests
             window.Show(); await Observe(window.InitializeAsync(), window);
             var firstId = chrome.State.SelectedTabId;
             var oldFirst = Rows(workspace).Single();
-            Assert.Contains("Firefox", oldFirst.Label);
+            Assert.Contains("Firefox", oldFirst.Description);
+            Assert.DoesNotContain("Firefox", oldFirst.Label);
             await Click(window, workspace, Find(window, "BrowseNewTabButton"));
             Assert.Equal(2, chrome.State.Tabs.Count);
             Assert.NotEqual(firstId, chrome.State.SelectedTabId);
@@ -56,7 +57,7 @@ public sealed partial class BrowseNativeUiTests
             await workspace.DispatchAsync("9to1.Browse.SelectTab", oldFirst.Target);
             Assert.Same(command, workspace.OriginalCommand);
             Assert.NotEqual(firstId, chrome.State.SelectedTabId);
-            var actualRow = window.GetLogicalDescendants().OfType<Button>().Single(button => Equals(button.Content, current.Label));
+            var actualRow = TabButton(window, workspace, current.Key);
             await Click(window, workspace, actualRow);
             Assert.Equal(firstId, chrome.State.SelectedTabId);
             Assert.False(workspace.TryGetItemValue(oldFirst, "Target", out _));
@@ -86,7 +87,7 @@ public sealed partial class BrowseNativeUiTests
             var current = Rows(workspace).Single(row => row.Key == oldRow.Key);
             Assert.NotSame(oldRow.Target, current.Target);
             Assert.Contains("Current native title", current.Label);
-            var actualRow = window.GetLogicalDescendants().OfType<Button>().Single(button => Equals(button.Content, current.Label));
+            var actualRow = TabButton(window, workspace, current.Key);
             await Click(window, workspace, actualRow);
             Assert.Equal(originalId, chrome.State.SelectedTabId);
             Assert.Same(originalHost, chrome.ObserveOriginalEngine(originalId));
@@ -193,7 +194,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.True(workspace.TrySetValue("FindQuery", "second query"));
             await Click(window, workspace, Find(window, "BrowseFindNextButton"));
             var row = Rows(workspace).Single(item => item.Key == first.ToString("D"));
-            var button = window.GetLogicalDescendants().OfType<Button>().Single(item => Equals(item.Content, row.Label));
+            var button = TabButton(window, workspace, row.Key);
             await Click(window, workspace, button);
             Assert.True(workspace.TryGetValue("FindQuery", out var restored)); Assert.Equal("first query", restored);
             Assert.True(workspace.TryGetValue("Zoom", out var zoom)); Assert.Equal("110%", zoom);
@@ -264,7 +265,8 @@ public sealed partial class BrowseNativeUiTests
             var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window);
             Assert.NotNull(point);
             Assert.InRange(point.Value.X, 0, width); Assert.InRange(point.Value.Y, 0, height);
-            Assert.True(button.Bounds.Width >= 44 && button.Bounds.Height >= 24);
+            // Compact desktop chrome retains a 32px square target; pointer activation is exercised below.
+            Assert.True(button.Bounds.Width >= 32 && button.Bounds.Height >= 32);
             window.MouseMove(point.Value); window.MouseDown(point.Value, MouseButton.Left); window.MouseUp(point.Value, MouseButton.Left);
             var loader = Assert.IsType<CuiControlLoader>(typeof(CuiSceneHost).GetField("_contentLoader", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window.SceneHost));
             await Observe(loader.WhenActionsIdleAsync(), window);
@@ -300,6 +302,15 @@ public sealed partial class BrowseNativeUiTests
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
     }
 
+    private static Button TabButton(BrowseNativeWindow window, BrowseNativeWorkspace workspace, string key)
+    {
+        // Titles legitimately repeat. Match the issued row's order, then prove its stable ID by clicking.
+        var rows = Rows(workspace);
+        var index = Array.FindIndex(rows, row => row.Key == key);
+        Assert.InRange(index, 0, rows.Length - 1);
+        return window.GetLogicalDescendants().OfType<Button>()
+            .Where(button => button.Name == "BrowseTabButton").ElementAt(index);
+    }
     private static BrowseNativeWorkspace.TabRow[] Rows(BrowseNativeWorkspace workspace)
     { Assert.True(workspace.TryGetValue("Tabs", out var value)); return Assert.IsType<BrowseNativeWorkspace.TabRow[]>(value); }
     private static CuiControlLoader Loader(BrowseNativeWindow window) => Assert.IsType<CuiControlLoader>(
@@ -376,7 +387,9 @@ public sealed partial class BrowseNativeUiTests
         public Task GoBackAsync(CancellationToken token) => Task.CompletedTask;
         public Task GoForwardAsync(CancellationToken token) => Task.CompletedTask;
         public Task ReloadAsync(CancellationToken token) => Task.CompletedTask;
-        public Task StopAsync(CancellationToken token) => Task.CompletedTask;
+        public int StopCalls { get; private set; }
+        public Task StopAsync(CancellationToken token)
+        { token.ThrowIfCancellationRequested(); StopCalls++; State = State with { IsLoading = false }; StateChanged?.Invoke(this, State); return Task.CompletedTask; }
         public Task<string?> ExecuteScriptAsync(string script, CancellationToken token)
         { token.ThrowIfCancellationRequested(); return Task.FromResult<string?>(script.Contains("'zoomed'", StringComparison.Ordinal) ? "zoomed" : "found"); }
         public Task OpenDeveloperToolsAsync(CancellationToken token) => Task.CompletedTask;

@@ -42,7 +42,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.InRange(nav.Bounds.Height, 32, 48);
             double? rowY = null;
             double previousRight = 0;
-            foreach (var id in new[] { "BrowseBackButton", "BrowseForwardButton", "BrowseReloadButton", "BrowseStopButton",
+            foreach (var id in new[] { "BrowseBackButton", "BrowseForwardButton", "BrowseReloadButton",
                 "BrowseAddressBox", "BrowseNavigateButton", "BrowseBookmarkButton", "BrowseMoreButton" })
             {
                 var control = Named(id); var origin = control.TranslatePoint(default, window)!.Value;
@@ -55,7 +55,17 @@ public sealed partial class BrowseNativeUiTests
             await Click(window, workspace, Find(window, "BrowseChromiumTabButton")); Layout();
             Assert.True(workspace.TrySetValue("Address", "https://layout.example/"));
             await Click(window, workspace, Find(window, "BrowseNavigateButton")); Layout();
-            var engine = Assert.Single(factory.Hosts); var parent = engine.OriginalNativeView.Parent;
+            var engine = Assert.Single(factory.Hosts);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Control>(), item => item.Name == "BrowseReloadButton" && item.IsEffectivelyVisible);
+            var stop = Find(window, "BrowseStopButton");
+            Assert.True(stop.IsEffectivelyVisible);
+            var stopOrigin = stop.TranslatePoint(default, window)!.Value;
+            Assert.InRange(stopOrigin.X, 0, width - stop.Bounds.Width);
+            await Pointer(stop); Layout();
+            Assert.Equal(1, engine.StopCalls);
+            Assert.True(Named("BrowseReloadButton").IsEffectivelyVisible);
+            Assert.DoesNotContain(window.GetVisualDescendants().OfType<Control>(), item => item.Name == "BrowseStopButton" && item.IsEffectivelyVisible);
+            var parent = engine.OriginalNativeView.Parent;
             Assert.NotNull(parent); var tabId = chrome.State.SelectedTabId;
             var panel = Named("BrowseToolsPanel");
             var scroll = Assert.IsType<ScrollViewer>(Assert.IsType<CuiContainerControl>(panel).Child);

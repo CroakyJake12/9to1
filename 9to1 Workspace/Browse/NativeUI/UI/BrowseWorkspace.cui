@@ -1,31 +1,38 @@
 <Cui id="9to1.Browse.Workspace" version="1">
   <Actions>
     <Action name="SelectTab" command="9to1.Browse.SelectTab" parameter="{Binding tab.Target}" />
+    <Action name="CloseTabRow" command="9to1.Browse.CloseTabRow" parameter="{Binding tab.Target}" />
     <Action name="OpenBookmark" command="9to1.Browse.OpenBookmark" parameter="{Binding bookmark.Target}" />
     <Action name="OpenHistory" command="9to1.Browse.OpenHistory" parameter="{Binding visit.Target}" />
     <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
   <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
-    <Container id="BrowseLayout" Type="Grid" Margin="6" RowSizes="Auto Auto 1fr Auto" ColumnSizes="1fr" CellGap="4">
-      <Container id="BrowseTabStrip" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="4">
+    <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr Auto" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiBackgroundBrush}">
+      <Container id="BrowseTabStrip" Type="Grid" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs">
         <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
-            <Button action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" Selected="{Binding tab.Selected}" Interactive="{Binding Can.SelectTab}" MaxWidth="240" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14" />
+            <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8">
+              <Button id="BrowseTabButton" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Selected="{Binding tab.Selected}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
+              <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="15" Background="Transparent" Color="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="8">×</Button>
+            </Container>
           </Repeat>
         </Container>
-        <Button id="BrowseNewTabButton" action="9to1.Browse.NewTab" Column="1" Interactive="{Binding Can.NewTab}" AccessibleName="New tab" Height="32" MinHeight="32" MinWidth="44" Padding="6 2" FontSize="14">+</Button>
-        <Button id="BrowseCloseTabButton" action="9to1.Browse.CloseTab" Column="2" Interactive="{Binding Can.CloseTab}" AccessibleName="Close selected tab" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">×</Button>
+          <Button id="BrowseNewTabButton" Column="1" action="9to1.Browse.NewTab" Interactive="{Binding Can.NewTab}" AccessibleName="New tab" Tooltip="New tab (Ctrl+T)" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">+</Button>
       </Container>
-      <Container id="BrowseNavigationBar" Type="Grid" Row="1" ColumnSizes="Auto Auto Auto Auto 1fr Auto Auto Auto" CellGap="2">
-        <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Interactive="{Binding CanBack}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">←</Button>
-        <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" AccessibleName="Go forward" Interactive="{Binding CanForward}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">→</Button>
-        <Button id="BrowseReloadButton" action="9to1.Browse.Reload" Column="2" AccessibleName="Reload page" Interactive="{Binding Can.Reload}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">↻</Button>
-        <Button id="BrowseStopButton" action="9to1.Browse.Stop" Column="3" AccessibleName="Stop loading" Interactive="{Binding Can.Stop}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">×</Button>
-        <Input Type="Text" id="BrowseAddressBox" Column="4" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" Height="32" MinHeight="32" MinWidth="80" Padding="8 2" FontSize="14" />
-        <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="5" AccessibleName="Go to address" Interactive="{Binding Can.Navigate}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">Go</Button>
-        <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="6" AccessibleName="Bookmark page" Interactive="{Binding Can.Bookmark}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">☆</Button>
-        <Button id="BrowseMoreButton" action="9to1.Browse.ToggleTools" Column="7" AccessibleName="Browser tools" Selected="{Binding ToolsOpen}" Interactive="{Binding Can.ToggleTools}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">⋯</Button>
+      <Container id="BrowseNavigationBar" Type="Grid" Row="1" ColumnSizes="Auto Auto Auto 1fr Auto Auto" CellGap="4" Padding="8 4 8 6" Background="{Resource CuiPanelBrush}">
+        <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Tooltip="Go back (Alt+Left)" Interactive="{Binding CanBack}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">←</Button>
+        <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" AccessibleName="Go forward" Tooltip="Go forward (Alt+Right)" Interactive="{Binding CanForward}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">→</Button>
+        <Container Type="Overlay" Column="2">
+          <Button id="BrowseReloadButton" action="9to1.Browse.Reload" IsVisible="{Binding IsNotLoading}" AccessibleName="Reload page" Tooltip="Reload page" Interactive="{Binding Can.Reload}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">↻</Button>
+          <Button id="BrowseStopButton" action="9to1.Browse.Stop" IsVisible="{Binding IsLoading}" AccessibleName="Stop loading" Tooltip="Stop loading" Interactive="{Binding Can.Stop}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">×</Button>
+        </Container>
+        <Container Type="Grid" Column="3" ColumnSizes="1fr Auto" Background="{Resource CuiInputSurfaceBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="16">
+          <Input Type="Text" id="BrowseAddressBox" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" Height="32" MinHeight="32" MinWidth="64" Padding="12 4" FontSize="13" Background="Transparent" BorderWidth="0" CornerRadius="16" />
+          <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="1" AccessibleName="Go to address" Tooltip="Go to address" Interactive="{Binding Can.Navigate}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="16" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="16">→</Button>
+        </Container>
+        <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="4" AccessibleName="Bookmark page" Tooltip="Bookmark page" Interactive="{Binding Can.Bookmark}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">☆</Button>
+        <Button id="BrowseMoreButton" action="9to1.Browse.ToggleTools" Column="5" AccessibleName="Browser tools" Tooltip="Browser tools" Selected="{Binding ToolsOpen}" Interactive="{Binding Can.ToggleTools}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">⋯</Button>
       </Container>
       <Container id="BrowseContentViewport" Type="Grid" Row="2" ColumnSizes="1fr Auto" RowSizes="1fr" MinHeight="180">
         <Object Type="browse.engine" id="BrowseEngineView" MinHeight="180" AccessibleName="Original native browser engine surface" />
@@ -85,6 +92,7 @@
           </Container>
           <Container Type="Wrap" CellGap="4">
             <Button id="BrowsePrivateTabButton" action="9to1.Browse.NewPrivateTab" Interactive="{Binding Can.NewPrivateTab}">Private tab</Button>
+            <Button id="BrowseCloseTabButton" action="9to1.Browse.CloseTab" Interactive="{Binding Can.CloseTab}" AccessibleName="Close selected tab">Close selected tab</Button>
             <Button id="BrowseReopenTabButton" action="9to1.Browse.ReopenClosedTab" Interactive="{Binding Can.ReopenClosedTab}" AccessibleName="Reopen closed tab">Reopen tab</Button>
             <Button id="BrowseDiscardAddressButton" action="9to1.Browse.DiscardAddress" Interactive="{Binding Can.DiscardAddress}" AccessibleName="Discard address draft">Discard draft</Button>
           </Container>
@@ -128,7 +136,7 @@
           <Text Text="{Binding PopupStatus}" TextWrapping="Wrap" />
         </Container>
       </Container>
-      <Text Row="3" Text="{Binding Status}" FontSize="12" AccessibleName="Browse operation status" />
+      <Text Row="3" Text="{Binding Status}" FontSize="11" AccessibleName="Browse operation status" />
     </Container>
   </Page>
 </Cui>

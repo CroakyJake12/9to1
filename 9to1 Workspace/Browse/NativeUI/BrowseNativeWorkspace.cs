@@ -89,6 +89,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         {
             "Tabs" => _tabRows,
             "ToolsOpen" => _toolsOpen,
+            "IsLoading" => selected.IsLoading,
+            "IsNotLoading" => !selected.IsLoading,
             "IsWebPage" => selected.Address.IsWeb,
             "IsNativePage" => selected.NativePage != BrowserNativePage.None,
             "IsHistory" => selected.NativePage == BrowserNativePage.History,
@@ -150,6 +152,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.FirefoxTab" or "9to1.Browse.ChromiumTab" or "9to1.Browse.ResetTabEngine" => tab.Address.IsWeb,
             "9to1.Browse.ReopenClosedTab" => _chrome.CanReopenClosedTab,
             "9to1.Browse.CloseTab" => tab.IsCloseable,
+            "9to1.Browse.CloseTabRow" => _snapshot.Tabs.Any(item => item.IsCloseable),
             "9to1.Browse.ShowDownloadInFiles" => _originalDownloadFilesService is not null,
             "9to1.Browse.RegisterDownloadDestination" => _originalDownloadFilesService is not null && _downloadDestinations.Length > 0,
             "9to1.Browse.RetryDownloadRegistration" => CanRetryOriginalDownloadRegistration,
@@ -168,8 +171,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
-        if (command == "9to1.Browse.SelectTab" && !IsCurrentTabTarget(parameter))
+        if ((command is "9to1.Browse.SelectTab" or "9to1.Browse.CloseTabRow") && !IsCurrentTabTarget(parameter))
         { _status = "The tab row changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
+        if (command == "9to1.Browse.CloseTabRow" &&
+            !_chrome.State.Tabs.Any(tab => tab.Id == ((TabSelection)parameter!).TabId && tab.IsCloseable))
+            return ValueTask.CompletedTask;
         if ((command == "9to1.Browse.OpenBookmark" && !IsCurrentSavedTarget(parameter, SavedEntryKind.Bookmark)) ||
             (command == "9to1.Browse.OpenHistory" && !IsCurrentSavedTarget(parameter, SavedEntryKind.History)))
         { _status = "The saved entry changed. Open its current row again."; Changed(); return ValueTask.CompletedTask; }
@@ -213,6 +219,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.NewTab": await Operation(() => _chrome.NewTabAsync(false, token)); _addressDraft = false; break;
                 case "9to1.Browse.NewPrivateTab": await Operation(() => _chrome.NewTabAsync(true, token)); _addressDraft = false; break;
                 case "9to1.Browse.CloseTab": await Operation(() => _chrome.CloseTabAsync(tabId, token)); _addressDraft = false; break;
+                case "9to1.Browse.CloseTabRow":
+                    if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before closing; use its current close control."; break; }
+                    var closingTarget = (TabSelection)parameter!;
+                    if (!_chrome.State.Tabs.Any(tab => tab.Id == closingTarget.TabId && tab.IsCloseable)) break;
+                    await Operation(() => _chrome.CloseTabAsync(closingTarget.TabId, token));
+                    if (closingTarget.TabId == tabId) _addressDraft = false;
+                    break;
                 case "9to1.Browse.ReopenClosedTab": await Operation(() => _chrome.ReopenClosedTabAsync(token)); _addressDraft = false; break;
                 case "9to1.Browse.SelectTab":
                     if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before selection; select its current row again."; break; }
@@ -400,13 +413,18 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private void IssueCurrentRows()
     {
         var actualRows = _snapshot.Tabs.Select(tab => (tab.Id, Key: tab.Id.ToString("D"),
-            Label: (tab.Id == _snapshot.SelectedTabId ? "● " : string.Empty) + tab.Title +
-            (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty) +
-            (!tab.Address.IsWeb ? (tab.IsHome ? " · Home" : " · " + tab.Address.Authority) : tab.Engine == BrowseEngineKind.Chromium ? " · Chromium" : " · Firefox"))).ToArray();
+            Label: tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
+            Description: tab.Title + " · " + (tab.Address.IsWeb
+                ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
+                : tab.IsHome ? "Home" : tab.Address.Authority),
+            Selected: tab.Id == _snapshot.SelectedTabId, CanClose: tab.IsCloseable)).ToArray();
         if (_tabRows.Length == actualRows.Length && _tabRows.Zip(actualRows).All(pair =>
-            pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label)) return;
+            pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label &&
+            pair.First.Description == pair.Second.Description && pair.First.Selected == pair.Second.Selected &&
+            pair.First.CanClose == pair.Second.CanClose)) return;
         var epoch = checked(++_rowEpoch);
-        _tabRows = actualRows.Select(row => new TabRow(new TabSelection(this, row.Id, epoch), row.Key, row.Label, row.Id == _snapshot.SelectedTabId)).ToArray();
+        _tabRows = actualRows.Select(row => new TabRow(new TabSelection(this, row.Id, epoch), row.Key, row.Label, row.Selected)
+            { Description = row.Description, CanClose = row.CanClose }).ToArray();
     }
     private bool IsCurrentTabTarget(object? parameter) => parameter is TabSelection target &&
         ReferenceEquals(target.Owner, this) && target.Epoch == _rowEpoch &&
@@ -416,7 +434,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (TryGetDownloadDestinationItem(item, path, out value)) return true;
         value = null;
         if (item is TabRow row && _tabRows.Any(current => ReferenceEquals(current, row)))
-            value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected, _ => null };
+            value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
+                "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label, _ => null };
         else if (item is SavedEntryRow saved && _bookmarkRows.Concat(_historyRows).Concat(_downloadRows).Any(current => ReferenceEquals(current, saved)))
             value = path switch { "Key" => saved.Key, "Label" => saved.Label, "Detail" => saved.Detail, "Target" => saved.Target, _ => null };
         return value is not null;
@@ -455,5 +474,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     public sealed record SavedEntryRow(object Target, string Key, string Label, string Detail);
     public bool TrySetItemValue(object item, string path, object? value) => false;
-    public sealed record TabRow(object Target, string Key, string Label, bool Selected);
+    public sealed record TabRow(object Target, string Key, string Label, bool Selected)
+    {
+        public string Description { get; init; } = Label;
+        public bool CanClose { get; init; }
+    }
 }
