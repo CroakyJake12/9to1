@@ -1,4 +1,7 @@
 <Cui id="spaces.builder" version="1">
+  <Actions>
+    <Action name="RemoveCapability" command="space-builder.capability.remove" parameter="{Binding cap.id}" />
+  </Actions>
   <Theme Name="user_preference">
     <Page id="space-builder-editor" role="main" accessible-name="Space Builder">
       <Container Type="Vertical Stack" Padding="24" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
@@ -38,7 +41,7 @@
               <Text id="space-builder-capability-kind" text="{Binding cap.kind}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-capability-id" text="{Binding cap.id}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-capability-version" text="{Binding cap.version}" foreground="{Resource CuiTextSoftBrush}" />
-              <Button id="space-builder-capability-remove" content="Remove" action="space-builder.capability.remove" Interactive="{Binding builder.canEdit}" accessible-name="Remove attached capability" />
+              <Button id="space-builder-capability-remove" action="RemoveCapability" content="Remove" Interactive="{Binding builder.canEdit}" accessible-name="Remove attached capability" />
             </Container>
           </Repeat>
           <If Condition="{Binding builder.hasNoCapabilities}">
