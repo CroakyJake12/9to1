@@ -113,5 +113,12 @@
     <Compile Include="NativeAssistantGeneratedUiInteractionCallbackTests.cs" />
     <Compile Include="NativeAssistantGeneratedUiInteractionFirstUseTests.HomeCallbackCustody.cs" />
     <Compile Include="CanonicalCompatibleTaskContextCompositionTests.AssistantDevOwners.cs" />
+    <!-- Current Chat model-availability/discovery-refusal boundaries: the ACTUAL typed
+         classification, the lifetime terminal-payload contract, and the Spaces failed-retirement
+         decision/presentation. These own no alternate rig or state graph. -->
+    <Compile Include="ModelProviderDiscoveryAvailabilityTests.cs" />
+    <Compile Include="ChatModelDiscoveryPolicyTests.cs" />
+    <Compile Include="NewChatOriginalWorkLifetimeTests.cs" />
+    <Compile Include="SpacesBrowseAppContentSessionRetirementTests.cs" />
   </ItemGroup>
 </Project>

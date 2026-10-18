@@ -513,5 +513,38 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
                     if (!owner.IsAcknowledgedOriginalSpeechSource(observation.Source)) Add(destination, observation.Cause);
             }
         }
+
+        /// <summary>Enrols and awaits an actual terminal operation without deciding its
+        /// disposition, exposing its COMPLETE terminal payload. The caller owns the typed
+        /// outcome, so a completed provider read is never silently converted into a
+        /// retirement-blocking cause by this owner, while the actual task is still enrolled
+        /// so close joins a genuinely live read. <see cref="TerminalObservation{T}.Causes"/>
+        /// carries every direct fault, never only the first caught exception, so a mixed
+        /// settlement cannot erase siblings. A caller that finds any unexpected, cancellation
+        /// or cleanup cause MUST retain/keep it blocking with its exact identity.</summary>
+        internal async Task<TerminalObservation<T>> ObserveTerminalAsync<T>(Task<T> actual)
+        {
+            ArgumentNullException.ThrowIfNull(actual);
+            Enrol(actual);
+            try
+            {
+                return new TerminalObservation<T>(true, await actual.ConfigureAwait(false), []);
+            }
+            catch (Exception caught)
+            {
+                // Preserve every direct fault; a single caught exception is not permission
+                // to erase the direct siblings the actual task also settled with.
+                IReadOnlyList<Exception> causes = actual.Exception is { InnerExceptions.Count: > 0 } group
+                    ? group.InnerExceptions.ToArray()
+                    : [caught];
+                return new TerminalObservation<T>(false, default, causes);
+            }
+            finally { lock (_gate) if (_joinedStages.Add(actual)) Interlocked.Decrement(ref _pendingStageCount); }
+        }
     }
+
+    /// <summary>The COMPLETE terminal payload of one observed operation. <see cref="Causes"/>
+    /// carries every direct fault the actual task settled with, never only the first caught
+    /// exception, so a mixed expected/unexpected settlement cannot erase siblings.</summary>
+    internal readonly record struct TerminalObservation<T>(bool Succeeded, T? Value, IReadOnlyList<Exception> Causes);
 }

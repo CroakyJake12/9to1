@@ -1,5 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -35,6 +38,7 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     private SpacesHomePage? _spacesPage;
     private Action<SpacesHomeViewState>? _stateChangedHandlerSpaces;
     private NewChatPage? _chatPage;
+    private CuiSceneHost? _retiredDiagnosticHost;
     private volatile Control? _page;
     private volatile AppContentAddress _address;
     private volatile bool _published;
@@ -58,6 +62,11 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
     public bool CanRetireOriginalView => _close is { IsCompletedSuccessfully: true };
     public Task? OriginalInitialization => _initialization;
     public Task? OriginalClose => _close;
+
+    /// <summary>The canonical CUI failure presentation retained after a failed retirement.
+    /// It is owned by this session and stays live in the same tab; the disposed Chat/Spaces
+    /// views are never republished in its place. Null until a retirement actually fails.</summary>
+    internal CuiSceneHost? RetiredDiagnosticHost => _retiredDiagnosticHost;
 
     public Control OriginalNativeView
     {
@@ -210,13 +219,93 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
             _chatPage = null;
             _chatsBySpace.Clear();
             _spacesPage = null;
-            _root.Content = null;
+            // Only a clean retirement may drop the root to an empty tab. A failed retirement
+            // presents the SAME canonical CUI failure surface the rest of the shell uses: the
+            // disposed Chat/Spaces controls are never republished as live, the retirement never
+            // becomes clean, and every retained cause stays in the thrown aggregate.
+            if (RequiresFailedRetirementPresentation(failures))
+                await PresentFailedRetirementAsync(failures);
+            else
+                _root.Content = null;
             _page = null;
         }).ConfigureAwait(false);
         _commandSerial.Dispose();
         _lifetime.Dispose();
         if (failures.Count > 0)
             throw new AggregateException("The original Spaces work did not retire cleanly.", failures);
+    }
+
+    /// <summary>A clean retirement may drop to an empty tab; a failed retirement must keep a
+    /// canonical, owned CUI failure presentation so the tab never silently becomes clean.
+    /// Exposed for the bounded retirement-decision test.</summary>
+    internal static bool RequiresFailedRetirementPresentation(IReadOnlyList<Exception> failures)
+    {
+        ArgumentNullException.ThrowIfNull(failures);
+        return failures.Count > 0;
+    }
+
+    /// <summary>Presents the canonical CUI unavailable scene for a failed Spaces retirement.
+    /// The host owns the scene loader/action/cleanup lifetime and the canonical presentation
+    /// binds the accessible user-facing text. The exact <see cref="Exception"/> objects stay in
+    /// the caller's aggregate; only their message text is surfaced here. If even that canonical
+    /// presentation cannot settle, the exact cause is retained and the tab drops to empty —
+    /// it never republishes the disposed views and never becomes a clean retirement.</summary>
+    private async Task PresentFailedRetirementAsync(List<Exception> failures)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var host = new CuiSceneHost();
+        _retiredDiagnosticHost = host;
+        try
+        {
+            await host.ShowAsync(BuildFailedRetirementScene(failures)).ConfigureAwait(true);
+        }
+        catch (Exception error)
+        {
+            failures.Add(error);
+            _root.Content = null;
+            return;
+        }
+        _root.Content = host;
+    }
+
+    /// <summary>Builds the canonical CUI failure scene for a failed Spaces retirement. Exposed
+    /// so the bounded test can assert the exact accessible text and the non-ready readiness
+    /// handshake without constructing the heavy native page.</summary>
+    internal static CuiNativeScene BuildFailedRetirementScene(IReadOnlyList<Exception> failures)
+    {
+        ArgumentNullException.ThrowIfNull(failures);
+        if (failures.Count == 0)
+            throw new ArgumentException("A failed retirement presentation requires at least one retained cause.", nameof(failures));
+        var detail = string.Join(
+            Environment.NewLine + Environment.NewLine,
+            failures.Select(error => error.Message));
+        var message = "This Spaces tab did not retire cleanly. The original view is no longer live; "
+            + "the retained failure is kept here for diagnosis."
+            + Environment.NewLine + Environment.NewLine + detail;
+        return new CuiNativeScene("spaces.retirement", "Spaces", "Spaces",
+            FailedRetirementDocument, UnavailableSceneBindings.Instance, UnavailableSceneBindings.Instance,
+            new FailedRetirementReadiness(message));
+    }
+
+    private static readonly CuiDocument FailedRetirementDocument = new CuiRichParser().Parse(
+        "<Cui><Container Type=\"Vertical Stack\"><Text id=\"spaces-retirement\" text=\"Spaces retirement\" /></Container></Cui>");
+
+    /// <summary>The canonical host substitutes its own accessible availability text for any
+    /// non-ready scene, so this supplies only the typed readiness handshake.</summary>
+    private sealed class FailedRetirementReadiness(string message) : ICuiSceneReadiness
+    {
+        public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken) =>
+            new(new CuiSceneAvailability(CuiSceneAvailabilityState.Unavailable, "spaces-retirement-failed", message));
+    }
+
+    /// <summary>Bindings/dispatch for an unavailable canonical scene. The canonical host never
+    /// consults them for a non-ready scene, and this diagnostic admits no actions.</summary>
+    private sealed class UnavailableSceneBindings : ICuiBindingContext, ICuiActionDispatcher
+    {
+        internal static UnavailableSceneBindings Instance { get; } = new();
+        public bool TryGetValue(string path, out object? value) { value = null; return false; }
+        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
+            ValueTask.FromException(new InvalidOperationException("A failed-retirement diagnostic admits no actions."));
     }
 
     private void OnSpacesStateChanged(SpacesHomeViewState state)

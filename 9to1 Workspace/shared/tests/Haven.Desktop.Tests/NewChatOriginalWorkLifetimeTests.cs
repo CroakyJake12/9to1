@@ -1,3 +1,6 @@
+using System.Net;
+using System.Net.Sockets;
+using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
 using Xunit;
 
@@ -354,6 +357,88 @@ public sealed class NewChatOriginalWorkLifetimeTests
             Assert.Same(close, owner.CloseAndDrainAsync());
         }
         finally { registration.Dispose(); }
+    }
+
+    [Fact]
+    public async Task ObserveTerminal_exposes_the_complete_direct_payload_of_a_mixed_settlement()
+    {
+        var expected = new HttpRequestException("Connection refused (127.0.0.1:11434)",
+            new SocketException((int)SocketError.ConnectionRefused));
+        var invariant = new InvalidOperationException("mixed sibling invariant");
+        var read = new TaskCompletionSource<int>();
+        read.SetException([expected, invariant]);
+        var owner = new NewChatOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        Task<DesktopOriginalWorkLifetime.TerminalObservation<int>>? observation = null;
+        var actual = owner.RunAsync(original => observation = original.ObserveTerminalAsync(read.Task));
+
+        await actual;
+        var terminal = await observation!;
+        Assert.False(terminal.Succeeded);
+        Assert.Equal(0, terminal.Value);
+        // Every direct fault is exposed with its exact identity; a single caught exception is
+        // not permission to erase the expected provider cause or its unexpected sibling.
+        Assert.Collection(terminal.Causes,
+            item => Assert.Same(expected, item), item => Assert.Same(invariant, item));
+    }
+
+    [Fact]
+    public async Task ObserveTerminal_keeps_one_direct_cause_exact_and_leaves_close_clean()
+    {
+        var cause = new IOException("sole direct cause");
+        var read = new TaskCompletionSource<int>();
+        read.SetException(cause);
+        var owner = new NewChatOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        Task<DesktopOriginalWorkLifetime.TerminalObservation<int>>? observation = null;
+        var actual = owner.RunAsync(original => observation = original.ObserveTerminalAsync(read.Task));
+
+        await actual;
+        var terminal = await observation!;
+        Assert.False(terminal.Succeeded);
+        Assert.Same(cause, Assert.Single(terminal.Causes));
+        // Observation alone never converts a completed read into a retirement-blocking cause.
+        await owner.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Observed_terminal_read_stays_enrolled_and_close_joins_the_same_held_operation()
+    {
+        var read = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var owner = new NewChatOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        var actual = owner.RunAsync(async original =>
+        {
+            var observation = await original.ObserveTerminalAsync(read.Task);
+            Assert.True(observation.Succeeded);
+            Assert.Equal(7, observation.Value);
+        });
+        var close = owner.CloseAndDrainAsync();
+        Assert.False(actual.IsCompleted);
+        Assert.False(close.IsCompleted); // Close joins the SAME genuinely live provider read.
+        read.SetResult(7);
+        await actual;
+        await close;
+    }
+
+    [Fact]
+    public async Task Retained_unexpected_terminal_cause_keeps_the_same_owner_close_blocking()
+    {
+        var expected = new HttpRequestException("Connection refused (127.0.0.1:11434)",
+            new SocketException((int)SocketError.ConnectionRefused));
+        var invariant = new InvalidOperationException("unexpected invariant sibling");
+        var read = new TaskCompletionSource<int>();
+        read.SetException([expected, invariant]);
+        var owner = new NewChatOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        var actual = owner.RunAsync(async original =>
+        {
+            var observation = await original.ObserveTerminalAsync(read.Task);
+            Assert.False(observation.Succeeded);
+            foreach (var cause in observation.Causes) original.Retain(cause); // The blocking policy.
+        });
+
+        await actual;
+        Assert.True(actual.IsCompletedSuccessfully);
+        var close = await Assert.ThrowsAsync<AggregateException>(() => owner.CloseAndDrainAsync());
+        Assert.Collection(close.InnerExceptions,
+            item => Assert.Same(expected, item), item => Assert.Same(invariant, item));
     }
 
     private sealed class HeldOriginalStream : IAsyncEnumerable<int>, IAsyncEnumerator<int>

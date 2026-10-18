@@ -7,6 +7,7 @@
  * Maintenance: Preserve the layer boundary, nullability annotations, cancellation flow, and existing public signatures when changing this file.
  */
 
+using System.Net.Sockets;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -214,6 +215,33 @@ public interface IOllamaClient
     Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken);
     Task PullModelAsync(string model, IProgress<double>? progress, CancellationToken cancellationToken) => Task.FromException(new NotSupportedException("This model provider does not support model installation."));
     Task DeleteModelAsync(string model, CancellationToken cancellationToken) => Task.FromException(new NotSupportedException("This model provider does not support model removal."));
+}
+
+/// <summary>Narrow, typed classification for the ACTUAL model-provider discovery transport
+/// boundary. Only a demonstrably expected provider condition - a concrete non-success HTTP
+/// status or a real transport-level connectivity failure - is an availability observation.
+/// Serialization/parse faults, invariant/programmer faults and cancellation are never
+/// availability and keep their existing refusal and retirement semantics. The canonical
+/// shared Dulche/default runtime owns the same distinction through
+/// <c>DulcheErrorCode.ProviderUnavailable</c> at its own typed boundary; the current direct
+/// provider-client route is a baseline that remains that wider, still-open gate.</summary>
+public static class ModelProviderDiscoveryAvailability
+{
+    /// <summary>True only for an actual provider connectivity or HTTP-status failure. The
+    /// exact exception instance is preserved as the caller's reported degraded cause.</summary>
+    public static bool IsExpectedUnavailable(Exception error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        if (error is not HttpRequestException http) return false;
+        return http.StatusCode is not null || HasTransportCause(http);
+    }
+
+    private static bool HasTransportCause(Exception error)
+    {
+        for (var cause = error.InnerException; cause is not null; cause = cause.InnerException)
+            if (cause is SocketException) return true;
+        return false;
+    }
 }
 
 /// <summary>

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.Json;
 using Avalonia.Automation;
@@ -81,6 +82,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private string? _registeredContextOverride;
     private EffortLevel? _effortOverride;
     private ModelDescriptor? _selectedModel;
+    private IReadOnlyList<ModelDescriptor> _admittedCatalogue = Array.Empty<ModelDescriptor>();
     private string? _pendingInstruction;
     private bool _pendingInstructionPreservesDraft;
     private ChatMentionQuery? _activeMention;
@@ -93,6 +95,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private bool _disposed;
     private long _sendStartTick;
     private string? _projectionStatus;
+    private ChatModelAvailability _modelAvailability = ChatModelAvailability.Unknown;
+    private Exception? _modelAvailabilityCause;
     private ChatCanonicalPermissionWaitingObservation? _canonicalPermissionWaiting;
     private long _canonicalPermissionWaitingGeneration;
 
@@ -199,6 +203,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;
+    /// <summary>Truthful availability of configured model discovery. Unavailable is a
+    /// terminal degraded observation that survives Fresh/Restore; model-backed actions
+    /// remain honestly disabled while unrelated draft/navigation work continues.</summary>
+    public ChatModelAvailability ModelAvailability => _modelAvailability;
+    /// <summary>The exact actual discovery cause retained for inspection when
+    /// <see cref="ModelAvailability"/> is Unavailable. Never a retirement failure.</summary>
+    public Exception? ModelAvailabilityCause => _modelAvailabilityCause;
     public Guid ConversationId => _conversation.Id;
     public Conversation CurrentConversation => _conversation;
     public bool IsTemporary => _conversation.IsTemporary;
@@ -282,11 +293,20 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         DemandOriginalChatCurrent();
         ArgumentNullException.ThrowIfNull(model);
-        _selectedModel = model;
+        // A ModelDescriptor argument carries no current discovery provenance. Bind the
+        // selection to the CURRENT successful catalogue snapshot: a name still offered by the
+        // latest discovery adopts that exact snapshot entry, while a removed/stale descriptor
+        // from an older picker is recorded as the user's configuration only and can never
+        // promote Unknown/Discovering/Unavailable or become actionable on raw identity alone.
+        var admitted = AdmittedCatalogueEntry(model);
+        _selectedModel = admitted ?? model;
         _preferences.SetModelDefaults(model.Name, _preferences.DefaultEffort);
-        SetProjectionStatus(null);
+        RestoreModelAvailabilityStatus();
         ModelChanged?.Invoke(this, EventArgs.Empty);
-        RefreshVisualState();
+        // Choosing a working model changes only the model-backed send gate: the transcript is
+        // unchanged and RestoreModelAvailabilityStatus already published the projection, so a
+        // transcript re-sync here would queue unrelated background scroll publication work.
+        PublishOriginalModelGateVisual();
         TrySubmitPendingInstruction();
     }
 
@@ -294,25 +314,90 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task RefreshModelsOriginalBodyAsync()
     {
-        try
+        var original = RequireChatOriginal();
+        _modelAvailability = ChatModelAvailability.Discovering;
+        // Publish the truthful held state through the SAME owned page work BEFORE awaiting the
+        // provider. An enabled Send control must not remain visually enabled during a held
+        // retry merely because the backend would still refuse to dispatch. This publishes ONLY
+        // the send gate: the full RefreshVisualState also re-syncs the transcript, which would
+        // queue unrelated background scroll publication work on a retry that changed no message.
+        await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(PublishOriginalModelGateVisual));
+        // Baseline direct provider route: the canonical shared Dulche/default runtime
+        // catalogue (DulcheErrorCode.ProviderUnavailable at its own typed boundary) remains
+        // the wider, still-open gate. Only a demonstrably expected provider connectivity or
+        // HTTP-status failure is a terminal availability observation; every other fault,
+        // including cancellation, keeps its existing refusal and retirement semantics.
+        var outcome = await original.ObserveTerminalAsync(_ollama.GetModelsAsync(original.Token)).ConfigureAwait(false);
+        if (!outcome.Succeeded)
         {
-            var models = await AwaitChatOriginalAsync(_ollama.GetModelsAsync(RequireChatOriginal().Token)).ConfigureAwait(false);
+            // Classify the COMPLETE terminal payload. Any unexpected, cancellation or
+            // cleanup sibling keeps the whole settlement blocking with its exact identity;
+            // a mixture is not permission to erase it behind an expected transport cause.
+            var decision = ChatModelDiscoveryPolicy.Classify(outcome.Causes);
+            if (decision.Blocking)
+            {
+                foreach (var cause in decision.Causes) original.Retain(cause);
+                ExceptionDispatchInfo.Capture(decision.Causes[0]).Throw();
+            }
+
+            _modelAvailability = ChatModelAvailability.Unavailable;
+            _modelAvailabilityCause = decision.Cause;
             await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
             {
-                var selectedName = _selectedModel?.Name ?? _preferences.DefaultModel;
-                _selectedModel = models.FirstOrDefault(model => model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase)) ?? models.FirstOrDefault();
-                SetProjectionStatus(_selectedModel is null ? "No local model is available." : null);
-                ModelChanged?.Invoke(this, EventArgs.Empty);
-                RefreshVisualState();
-                TrySubmitPendingInstruction();
+                SetProjectionStatus(ModelUnavailableStatus);
+                PublishOriginalModelGateVisual();
             }));
+            return;
         }
-        catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
+
+        var models = outcome.Value ?? [];
+        await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
         {
-            RetainHandledOriginalChatCause(exception);
-            await AwaitChatOriginalAsync(SetStatusAsync("Local models are unavailable. Start Ollama, then try again."));
-        }
+            // Bind every later selection/admission to THIS successful catalogue snapshot.
+            // An older picker's removed descriptor is no longer a member and stays unusable.
+            _admittedCatalogue = models;
+            var selectedName = _selectedModel?.Name ?? _preferences.DefaultModel;
+            _selectedModel = models.FirstOrDefault(model => model.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase)) ?? models.FirstOrDefault();
+            _modelAvailability = _selectedModel is null ? ChatModelAvailability.Unavailable : ChatModelAvailability.Available;
+            _modelAvailabilityCause = null;
+            SetProjectionStatus(_selectedModel is null ? NoLocalModelStatus : null);
+            ModelChanged?.Invoke(this, EventArgs.Empty);
+            // A catalogue read changes only the model-backed send gate. The transcript is
+            // unchanged, so re-syncing it here would queue unrelated background scroll
+            // publication work; SetProjectionStatus already published the projection.
+            PublishOriginalModelGateVisual();
+            TrySubmitPendingInstruction();
+        }));
     }
+
+    private const string ModelUnavailableStatus =
+        "Local models are unavailable. Connect a configured model provider, then try again.";
+
+    private const string NoLocalModelStatus = "No local model is available.";
+
+    /// <summary>Restores the terminal model-availability status without clearing a
+    /// truthful unavailable observation. Transient projection status is still reset;
+    /// only the persisted degraded availability survives Fresh/Restore.</summary>
+    private void RestoreModelAvailabilityStatus() =>
+        SetProjectionStatus(_modelAvailability == ChatModelAvailability.Unavailable ? ModelUnavailableStatus : null);
+
+    /// <summary>Model-backed actions require a retained selection that is STILL a member of
+    /// the latest successfully admitted catalogue snapshot, plus POSITIVE current availability.
+    /// A held retry (Discovering), a degraded read (Unavailable) and a removed/stale descriptor
+    /// handed back by an older picker all keep refusal semantics, while the selected
+    /// configuration and composer draft are preserved.</summary>
+    private bool CanUseSelectedModel =>
+        _modelAvailability == ChatModelAvailability.Available && _selectedModel is { } selected &&
+        AdmittedCatalogueEntry(selected) is not null;
+
+    /// <summary>The latest successfully admitted catalogue snapshot; empty until a discovery
+    /// read actually succeeds, so no selection is actionable before a real admission.</summary>
+    private ModelDescriptor? AdmittedCatalogueEntry(ModelDescriptor model) =>
+        _admittedCatalogue.FirstOrDefault(entry =>
+            entry.Name.Equals(model.Name, StringComparison.OrdinalIgnoreCase));
+
+    private void SetModelGateStatus(string connectingStatus) => SetProjectionStatus(
+        _modelAvailability == ChatModelAvailability.Unavailable ? ModelUnavailableStatus : connectingStatus);
 
     public void Submit(string instruction) => _ = SubmitOriginalInstructionAsync(instruction);
 
@@ -445,9 +530,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private async Task CompactContextOriginalBodyAsync()
     {
         if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.compact-context"))) return;
-        if (_selectedModel is null)
+        if (!CanUseSelectedModel)
         {
-            SetProjectionStatus("Choose an available model before compacting context.");
+            SetModelGateStatus("Choose an available model before compacting context.");
             return;
         }
 
@@ -469,7 +554,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         {
             summary = await AwaitChatOriginalAsync(_ollama.CompleteAsync(
                 new OllamaChatRequest(
-                    _selectedModel.Name,
+                    _selectedModel!.Name,
                     [new OllamaMessage("user", "Summarise this conversation context for a future assistant. Preserve requirements, decisions, named files, unresolved questions, errors, and verified evidence. Do not invent facts.\n\n" + transcript)],
                     EffortLevel.Medium,
                     Options: _preferences.GenerationOptions with { Temperature = 0.2 }),
@@ -1060,11 +1145,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
 
         var preservedDraft = _scene.Instruction.Text;
-        if (_selectedModel is null)
+        if (!CanUseSelectedModel)
         {
             _pendingInstruction = text;
             _pendingInstructionPreservesDraft = true;
-            SetProjectionStatus("Connecting to the selected local model…");
+            SetModelGateStatus("Connecting to the selected local model…");
             return;
         }
         SetDraft(text);
@@ -1088,13 +1173,16 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             return; // No Cancel/new Send or provider callback is a same-run continuation.
         }
         if (!await AwaitChatOriginalAsync(EnsureConversationMayActAsync("chat.send"))) return;
-        if (_selectedModel is null)
+        if (!CanUseSelectedModel)
         {
             _pendingInstruction = instruction;
             _pendingInstructionPreservesDraft = false;
-            SetProjectionStatus("Connecting to the selected local model…");
+            SetModelGateStatus("Connecting to the selected local model…");
             return;
         }
+        // Exact admitted model snapshot: a held retry or a later degraded refresh must not
+        // swap the admitted model mid-send across awaits.
+        var admittedModel = _selectedModel!;
 
         if (_dual is { IsActive: true })
         {
@@ -1111,7 +1199,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                     : "A dual comparison is already running.");
                 return;
             }
-            await AwaitChatOriginalAsync(RunDualComparisonAsync(instruction));
+            await AwaitChatOriginalAsync(RunDualComparisonAsync(instruction, admittedModel));
             return;
         }
 
@@ -1186,7 +1274,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             }
             if (originalConversation.Mode == HavenMode.Tasks)
             {
-                var actualModel = _selectedModel ?? throw new InvalidOperationException("The original Tasks model selection is unavailable.");
+                var actualModel = admittedModel;
                 var actualEffort = _effortOverride ?? _preferences.DefaultEffort;
                 var actualAgentName = _activeAgent?.Name ?? "Haven";
                 var actualAgentInstructions = _activeAgent?.Instructions ?? string.Empty;
@@ -1221,7 +1309,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 await RequireChatOriginal().ReadStreamAsync(_sessions.SendAsync(
                                originalConversation,
                                instruction,
-                               _selectedModel,
+                               admittedModel,
                                _effortOverride ?? _preferences.DefaultEffort,
                                [],
                                _activeAgent?.Name ?? "Haven",
@@ -1371,12 +1459,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     /// session-only and non-streaming: both sides render once from CompleteAsync results and are never
     /// written to conversation storage; per-side failures stay visible on their own labelled block.
     /// </summary>
-    private Task RunDualComparisonAsync(string instruction) => RunChatNestedOriginalAsync(() => RunDualComparisonOriginalBodyAsync(instruction));
+    private Task RunDualComparisonAsync(string instruction, ModelDescriptor admittedModel) => RunChatNestedOriginalAsync(() => RunDualComparisonOriginalBodyAsync(instruction, admittedModel));
 
-    private async Task RunDualComparisonOriginalBodyAsync(string instruction)
+    private async Task RunDualComparisonOriginalBodyAsync(string instruction, ModelDescriptor admittedModel)
     {
         var controller = _dual!;
-        var primaryKey = _selectedModel!.Name;
+        var primaryKey = admittedModel.Name;
         CancellationTokenSource? originalSendCancellation = null;
         try
         {
@@ -2187,7 +2275,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _pendingInstruction = null;
         _pendingInstructionPreservesDraft = false;
         ClearGeneratedSurfaces();
-        SetProjectionStatus(null);
+        RestoreModelAvailabilityStatus();
         RefreshAttachmentStatus();
         RefreshResponseControls();
         _ = RefreshContextEntriesAsync();
@@ -2362,7 +2450,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             SetProjectionStatus("Same-task recovery is unavailable until the original Task/Run owner supplies a safe recovery operation. The pending recovery was not dispatched as a new task.");
             return;
         }
-        if (_selectedModel is null || _isSending || string.IsNullOrWhiteSpace(_pendingInstruction)) return;
+        if (!CanUseSelectedModel || _isSending || string.IsNullOrWhiteSpace(_pendingInstruction)) return;
         var pending = _pendingInstruction;
         var restoreDraft = _pendingInstructionPreservesDraft ? _scene.Instruction.Text : null;
         _scene.Instruction.Text = pending;
@@ -2385,9 +2473,20 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private void RefreshVisualState()
     {
         DemandOriginalChatCurrent();
-        _scene.SetSending(_isSending, _selectedModel is not null);
+        _scene.SetSending(_isSending, CanUseSelectedModel);
         DemandOriginalChatCurrent();
         RefreshMessages();
+        DemandOriginalChatCurrent();
+    }
+
+    /// <summary>Publishes ONLY the truthful model-backed send gate. Discovery admission uses
+    /// this instead of <see cref="RefreshVisualState"/> so a held retry cannot leave an enabled
+    /// Send control visible, without re-syncing the transcript for a catalog read that changed
+    /// no message.</summary>
+    private void PublishOriginalModelGateVisual()
+    {
+        DemandOriginalChatCurrent();
+        _scene.SetSending(_isSending, CanUseSelectedModel);
         DemandOriginalChatCurrent();
     }
 

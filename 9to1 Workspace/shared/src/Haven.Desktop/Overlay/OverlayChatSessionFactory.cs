@@ -18,6 +18,19 @@ internal sealed class OverlayChatSessionFactory(
     public Task<NewChatPage> CreateNewAsync(CancellationToken cancellationToken) =>
         CreatePageAsync(page => page.StartFreshConversationAsync(), cancellationToken);
 
+    /// <summary>Creates the same real production page but joins the caller's own observation of
+    /// the construction discovery AFTER that exact original settles and BEFORE Fresh replaces the
+    /// initial conversation target. The two real steps stay unchanged; an owner that must observe
+    /// the construction publication itself (a held-retry visual-gate assertion) joins here instead
+    /// of racing a background publication against the target replacement.</summary>
+    internal Task<NewChatPage> CreateNewWithConstructionJoinAsync(
+        Func<NewChatPage, Task> joinConstruction,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(joinConstruction);
+        return CreatePageAsync(page => page.StartFreshConversationAsync(), cancellationToken, joinConstruction);
+    }
+
     public async Task<NewChatPage?> RestoreAsync(Guid conversationId, CancellationToken cancellationToken)
     {
         Dispatcher.UIThread.VerifyAccess();
@@ -29,7 +42,8 @@ internal sealed class OverlayChatSessionFactory(
 
     private async Task<NewChatPage> CreatePageAsync(
         Func<NewChatPage, Task> selectConversation,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Func<NewChatPage, Task>? joinConstruction = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         cancellationToken.ThrowIfCancellationRequested();
@@ -39,6 +53,8 @@ internal sealed class OverlayChatSessionFactory(
             // Construction starts original model discovery bound to the initial conversation.
             // Join it before Fresh/Load replaces that target; keep all UI work on this dispatcher.
             await page.OriginalInitialization.WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (joinConstruction is not null) await joinConstruction(page);
             cancellationToken.ThrowIfCancellationRequested();
             await selectConversation(page);
             cancellationToken.ThrowIfCancellationRequested();
