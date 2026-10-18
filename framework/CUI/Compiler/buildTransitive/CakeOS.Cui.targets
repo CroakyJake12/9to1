@@ -27,6 +27,8 @@
       <_CuiRootFiles Include="%(CuiSourceRoot.Identity)/**/*"
                      Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);**/bin/**;**/obj/**" />
       <_CuiDeclaredSource Include="@(_CuiRootFiles);@(Cui);@(CuiMarkup);@(AvaloniaXaml);@(AvaloniaResource);@(EmbeddedResource);@(Content);@(None);@(Compile)" />
+      <!-- Explicit project inputs are always validated, including paths named bin
+           or obj. Only implicit discovery excludes generated output directories. -->
       <_CuiLegacySource Include="@(_CuiDeclaredSource)"
                         Condition="'%(Extension)' == '.axaml' or '%(Extension)' == '.xaml' or '%(Extension)' == '.hui'" />
     </ItemGroup>

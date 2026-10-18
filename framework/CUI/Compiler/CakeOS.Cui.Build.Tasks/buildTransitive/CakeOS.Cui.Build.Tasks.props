@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <CuiBuildTasksLocation Condition="'$(CuiBuildTasksLocation)' == ''">$(MSBuildThisFileDirectory)../tools/netstandard2.0/CakeOS.Cui.Build.Tasks.dll</CuiBuildTasksLocation>
+  </PropertyGroup>
+</Project>

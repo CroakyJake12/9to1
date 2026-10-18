@@ -14,4 +14,7 @@
     <PackageReference Include="Microsoft.Build.Framework" VersionOverride="15.1.548" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" VersionOverride="15.1.548" PrivateAssets="All" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="buildTransitive/CakeOS.Cui.Build.Tasks.props" Pack="true" PackagePath="buildTransitive/CakeOS.Cui.Build.Tasks.props" />
+  </ItemGroup>
 </Project>

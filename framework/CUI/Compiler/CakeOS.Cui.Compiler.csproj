@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <PackageId>CakeOS.Cui</PackageId>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -7,6 +8,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyName>CakeOS.Cui.Compiler</AssemblyName>
     <RootNamespace>CakeOS.Cui.Compiler</RootNamespace>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeCuiCompilerToolchain</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
@@ -21,4 +23,25 @@
     <None Include="buildTransitive/CakeOS.Cui.props" Pack="true" PackagePath="buildTransitive/CakeOS.Cui.props" />
     <None Include="buildTransitive/CakeOS.Cui.targets" Pack="true" PackagePath="buildTransitive/CakeOS.Cui.targets" />
   </ItemGroup>
+  <!-- The task references this compiler, so it cannot be a normal reverse project
+       reference. Pack runs after this project's build. Build the tool against those
+       completed outputs, then collect files at target execution time (a clean-tree
+       evaluation-time glob would otherwise produce a package with no compiler). -->
+  <Target Name="IncludeCuiCompilerToolchain">
+    <MSBuild Projects="../Build.Tasks/CakeOS.Cui.Build.Compiler.csproj;CakeOS.Cui.Build.Tasks/CakeOS.Cui.Build.Tasks.csproj"
+             Targets="Restore;Build" BuildInParallel="false"
+             Properties="Configuration=$(Configuration);BuildProjectReferences=false"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained"
+             Condition="'$(NoBuild)' != 'true'" />
+    <Error Condition="!Exists('../Build.Tasks/bin/$(Configuration)/net10.0/CakeOS.Cui.Build.Compiler.dll')"
+           Text="CUI package requires the $(Configuration) compiler task. Run pack without --no-build to build it." />
+    <Error Condition="!Exists('CakeOS.Cui.Build.Tasks/bin/$(Configuration)/netstandard2.0/CakeOS.Cui.Build.Tasks.dll')"
+           Text="CUI package requires the $(Configuration) resource task. Run pack without --no-build to build it." />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="../Build.Tasks/bin/$(Configuration)/net10.0/**/*"
+                              PackagePath="tools/compiler/%(RecursiveDir)" />
+      <TfmSpecificPackageFile Include="CakeOS.Cui.Build.Tasks/bin/$(Configuration)/netstandard2.0/CakeOS.Cui.Build.Tasks.dll"
+                              PackagePath="tools/legacy/" />
+    </ItemGroup>
+  </Target>
 </Project>
