@@ -129,6 +129,20 @@ public sealed partial class App : Avalonia.Application
             desktop.Exit += OnDesktopExit;
 
             var preferences = _services.GetRequiredService<UserPreferencesService>();
+            if (preferences.RecoveryState != UserPreferenceRecoveryState.None)
+            {
+                var recoveryWindow = new Window
+                {
+                    Title = "9to1 Haven",
+                    Width = 640,
+                    Height = 320,
+                    MinWidth = 480,
+                    MinHeight = 240
+                };
+                UnifiedWorkspaceHost.ShowPreferenceRecovery(recoveryWindow, preferences.Diagnostic ??
+                    "Preference recovery was required; a safe Professional fallback is in use.");
+                recoveryWindow.Show();
+            }
             preferences.ApplyAppearance(preferences.Appearance, save: false);
             // Linux uses the Browse-based unified host now that the Home composition runs.
             if (ValidateOriginalInitialProductDeclaration(typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()) is null)

@@ -100,7 +100,7 @@ public sealed partial class UserPreferencesService
             _preferences = Load();
             const int currentAppearanceVersion = 2;
             if (_preferences.HavenUiAppearanceVersion > currentAppearanceVersion || !Enum.IsDefined(_preferences.HavenUiAppearance))
-                throw new InvalidDataException("The saved native appearance version is unsupported; preferences were preserved.");
+                throw new NotSupportedException("The saved native appearance version is unsupported; preferences were preserved.");
             var migrated = _preferences.HavenUiAppearanceVersion < currentAppearanceVersion;
             if (migrated)
             {
@@ -127,7 +127,7 @@ public sealed partial class UserPreferencesService
             ApplyCore(_preferences.HavenUiAppearance, save: migrated);
             return;
         }
-        catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or IOException or UnauthorizedAccessException or NotSupportedException)
         {
             // Corrupt, unreadable or incompatible preference data must not abort startup.
             // Preserve the durable file bytes and expose a typed diagnostic/recovery state.
@@ -141,7 +141,7 @@ public sealed partial class UserPreferencesService
                 System.Text.Json.JsonException => UserPreferenceRecoveryState.Corrupt,
                 IOException => UserPreferenceRecoveryState.Unreadable,
                 UnauthorizedAccessException => UserPreferenceRecoveryState.Unreadable,
-                ArgumentException => UserPreferenceRecoveryState.Incompatible,
+                NotSupportedException => UserPreferenceRecoveryState.Incompatible,
                 _ => UserPreferenceRecoveryState.Corrupt
             };
         }

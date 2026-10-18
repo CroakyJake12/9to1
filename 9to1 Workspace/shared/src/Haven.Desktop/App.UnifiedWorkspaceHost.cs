@@ -132,6 +132,53 @@ public sealed partial class App
                 };
         }
 
+        internal static void ShowPreferenceRecovery(Window window, string diagnostic)
+        {
+            ArgumentNullException.ThrowIfNull(window);
+            if (!Dispatcher.UIThread.CheckAccess()) throw new InvalidOperationException("Preference recovery presentation requires the UI thread.");
+            var application = Avalonia.Application.Current ?? throw new InvalidOperationException("Avalonia application is unavailable.");
+            if (!application.Resources.TryGetResource("CuiBackgroundBrush", application.ActualThemeVariant, out _))
+                CuiNativeHost.InitialisePrimitiveTheme(application, "Home", CakeOS.Cui.Themes.CuiAppearance.Dark);
+            var model = new CuiViewModel();
+            model.Set("Message", diagnostic);
+            model.Set("Guidance", "The original preferences file was preserved. 9to1 is using a safe Professional fallback; unrelated workflows remain available.");
+            var handlerAlreadyAttached = window.Tag is CuiControlLoader;
+            if (window.Tag is CuiControlLoader existingLoader) existingLoader.Dispose();
+            window.Tag = null;
+            using var stream = typeof(UnifiedWorkspaceHost).Assembly.GetManifestResourceStream("Haven.Desktop.PreferenceRecovery.cui")
+                ?? throw new InvalidDataException("The preference recovery CUI document is missing.");
+            using var reader = new StreamReader(stream);
+            var parser = new CuiRichParser();
+            var document = parser.Parse(reader.ReadToEnd(), "PreferenceRecovery.cui");
+            if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            {
+                throw new InvalidDataException("The preference recovery CUI document is invalid: " +
+                    string.Join("; ", parser.Diagnostics.Diagnostics));
+            }
+            var loader = new CuiControlLoader();
+            loader.SetBindingContext(model);
+            loader.SetActionDispatcher(model);
+            var loaded = loader.TryLoad(document);
+            if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
+            {
+                loader.Dispose();
+                throw new InvalidDataException("The canonical preference-recovery CUI did not produce a usable control: " +
+                    string.Join("; ", loaded.Diagnostics));
+            }
+            loader.WireBindings(loaded.Root);
+            window.Tag = loader;
+            window.Content = loaded.Root;
+            if (!handlerAlreadyAttached)
+                window.Closed += (_, _) =>
+                {
+                    if (window.Tag is CuiControlLoader ownedLoader)
+                    {
+                        ownedLoader.Dispose();
+                        window.Tag = null;
+                    }
+                };
+        }
+
         internal void ShowStartupFailureForHost(string correlationId, Exception exception)
         {
             Dispatcher.UIThread.VerifyAccess();
