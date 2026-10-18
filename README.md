@@ -6,12 +6,12 @@ contains the operating system integration, shared application sources, Android h
 > **Migration status:** CUI consolidation is active and incomplete. Existing
 > AXAML and HUI sources remain migration inputs until their CUI replacements
 > pass runtime and parity verification. See
-> [`docs/MASTER-MIGRATION-STATUS.md`](docs/MASTER-MIGRATION-STATUS.md); source
+> [the coordination ledger](docs/development/unified-host-tasks.md); source
 > presence or a successful build is not treated as product verification.
 
 ## Current State
 
-The repository is **not yet a production-ready ecosystem**. `docs/MASTER-MIGRATION-STATUS.md` is the authoritative evidence ledger. A source tree, test project, HUI scene, AXAML page, or package recipe does not establish CUI parity or platform verification.
+The repository is **not yet a production-ready ecosystem**. The [coordination ledger](docs/development/unified-host-tasks.md) records bounded implementation results and remaining verification work; it does not replace the full product specification. A source tree, test project, HUI scene, AXAML page, or package recipe does not establish CUI parity or platform verification.
 
 ## Repository map
 
@@ -35,7 +35,15 @@ accessibility and platform architecture of an explicitly pinned Avalonia source
 fork while replacing normal application AXAML authoring with CUI project,
 compiler, resource and runtime support.
 
-`framework/CUI/` contains the first active CUI boundary. It loads authored `.cui` documents and explicitly rejects `.axaml` and `.hui` inputs. The Home slice at `9to1 Workspace/Home/UI/Home.cui` is the first authored CUI surface. The CUI loader is currently parser-only and has no renderer, compiler, DevTools, resource system, or vendored Avalonia fork. Current constraints and provenance are documented in `docs/cui/README.md` and `docs/architecture/cui.md`.
+`framework/CUI/` includes the [.cui compiler](framework/CUI/Compiler/CuiCompiler.cs),
+[resource build tasks](framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CuiResourceBundle.cs),
+and a [runtime loader](framework/CUI/Runtime/CuiControlLoader.cs) that creates live
+Avalonia control trees. Its [DevTools](framework/CUI/DevTools/src/CuiLiveTreeInspector.cs)
+inspect those trees, and the [vendored Avalonia source](framework/CUI/vendor/Avalonia/)
+provides the underlying rendering and platform implementation. These source paths
+establish the implementation owners; they do not establish complete application
+migration, native behaviour, design parity, or production readiness. Current constraints
+and provenance are documented in `docs/cui/README.md` and `docs/architecture/cui.md`.
 
 ## Products
 
