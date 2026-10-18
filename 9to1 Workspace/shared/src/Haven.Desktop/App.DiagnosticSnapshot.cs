@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.VisualTree;
-using System.Runtime.CompilerServices;
 using CakeOS.Cui.Runtime;
 
 namespace Haven.Desktop;
@@ -19,6 +18,7 @@ public sealed partial class App
     private Avalonia.Threading.DispatcherTimer? _diagnosticPoller;
     private EventHandler? _diagnosticPollerTick;
     private CancellationTokenSource? _diagnosticSnapshotCts;
+    private Task? _diagnosticCaptureTask;
 
     private void TryRunDiagnosticSnapshot()
     {
@@ -42,32 +42,22 @@ public sealed partial class App
                 File.AppendAllText(Path.Combine(outputDir, "diagnostic-trigger-error.txt"), ex.ToString() + "\n");
                 return;
             }
-            _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            _diagnosticCaptureTask = _originalAppWork.RunAsync(async original =>
             {
-                try { await WriteSnapshotAsync(outputDir, token); }
-                catch (Exception ex)
+                await original.AwaitAsync(Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    Directory.CreateDirectory(outputDir);
-                    await File.WriteAllTextAsync(Path.Combine(outputDir, "diagnostic-error.txt"), ex.ToString());
-                }
+                    try { await WriteSnapshotAsync(outputDir, token); }
+                    catch (Exception ex)
+                    {
+                        Directory.CreateDirectory(outputDir);
+                        await File.WriteAllTextAsync(Path.Combine(outputDir, "diagnostic-error.txt"), ex.ToString());
+                    }
+                })).ConfigureAwait(false);
             });
         };
         _diagnosticPoller = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _diagnosticPoller.Tick += _diagnosticPollerTick;
         _diagnosticPoller.Start();
-
-        // Initial snapshot after 5 seconds.
-        _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            await Task.Delay(TimeSpan.FromSeconds(5), token);
-            if (token.IsCancellationRequested) return;
-            try { await WriteSnapshotAsync(outputDir, token); }
-            catch (Exception ex)
-            {
-                Directory.CreateDirectory(outputDir);
-                await File.WriteAllTextAsync(Path.Combine(outputDir, "diagnostic-error.txt"), ex.ToString());
-            }
-        });
     }
 
     private void StopDiagnosticPoller()
@@ -91,9 +81,10 @@ public sealed partial class App
     {
         if (token.IsCancellationRequested) return;
         Directory.CreateDirectory(outputDir);
+        var captureId = Guid.NewGuid().ToString("N");
         var snapshot = new Dictionary<string, object?>();
+        snapshot["captureId"] = captureId;
         snapshot["timestamp"] = DateTimeOffset.UtcNow;
-        snapshot["captureId"] = Guid.NewGuid().ToString("N");
         snapshot["assembly"] = typeof(App).Assembly.FullName;
         snapshot["assemblyLocation"] = typeof(App).Assembly.Location;
         snapshot["executable"] = Environment.ProcessPath;
@@ -119,13 +110,12 @@ public sealed partial class App
         catch (Exception ex) { snapshot["spacesResourceError"] = ex.ToString(); }
 
         var controls = new List<Dictionary<string, object?>>();
-        var visited = new HashSet<int>(); // deduplicate by object identity
+        var visited = new HashSet<Control>(ReferenceEqualityComparer.Instance);
         if (Avalonia.Application.Current is Avalonia.Application app
             && app.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
             && desktop.MainWindow is { } window)
         {
             WalkControl(window, controls, visited);
-            // Popup roots discovered via public APIs only
             foreach (var popup in window.GetVisualDescendants().OfType<Popup>())
             {
                 if (popup.IsOpen && popup.Child is Control popupChild)
@@ -134,20 +124,16 @@ public sealed partial class App
         }
         snapshot["controls"] = controls;
         snapshot["controlCount"] = controls.Count;
-        snapshot["partialCoverage"] = visited.Count < 1000 ? "complete" : "truncated";
 
-        // Atomic write with unique capture ID
-        var captureId = Guid.NewGuid().ToString("N");
         var path = Path.Combine(outputDir, $"diagnostic-snapshot-{captureId}.json");
         var tmpPath = path + ".tmp";
         await File.WriteAllTextAsync(tmpPath, JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true }), token);
         File.Move(tmpPath, path, overwrite: false);
     }
 
-    private static void WalkControl(Control control, List<Dictionary<string, object?>> controls, HashSet<int> visited)
+    private static void WalkControl(Control control, List<Dictionary<string, object?>> controls, HashSet<Control> visited)
     {
-        var identity = RuntimeHelpers.GetHashCode(control);
-        if (!visited.Add(identity)) return; // deduplicate by object identity
+        if (!visited.Add(control)) return;
 
         var entry = new Dictionary<string, object?>();
         entry["type"] = control.GetType().FullName;
@@ -198,6 +184,67 @@ public sealed partial class App
             }
             catch (Exception ex) { avaloniaDiags[prop.Name] = new { error = ex.Message }; }
         }
+        // GetValueStoreDiagnostic: use reflection since API differs between Avalonia versions.
+        try
+        {
+            var vsd = Avalonia.Diagnostics.AvaloniaObjectExtensions.GetValueStoreDiagnostic(control);
+            if (vsd is not null)
+            {
+                var vsdType = vsd.GetType();
+                var framesProp = vsdType.GetProperty("AppliedFrames") ?? vsdType.GetProperty("Frames");
+                if (framesProp is not null)
+                {
+                    var framesVal = framesProp.GetValue(vsd);
+                    if (framesVal is System.Collections.IEnumerable enumerable)
+                    {
+                        var frames = new List<Dictionary<string, object?>>();
+                        foreach (var frame in enumerable)
+                        {
+                            var frameType = frame.GetType();
+                            var frameEntry = new Dictionary<string, object?>();
+                            foreach (var propName in new[] { "Source", "Type", "IsActive", "Priority" })
+                            {
+                                var prop = frameType.GetProperty(propName);
+                                if (prop is not null)
+                                    frameEntry[propName.ToLowerInvariant()] = prop.GetValue(frame)?.ToString();
+                            }
+                            // Values
+                            var valuesProp = frameType.GetProperty("Values");
+                            if (valuesProp is not null)
+                            {
+                                var vals = valuesProp.GetValue(frame);
+                                if (vals is System.Collections.IEnumerable valEnum)
+                                {
+                                    var values = new Dictionary<string, string?>();
+                                    foreach (var v in valEnum)
+                                    {
+                                        var vType = v.GetType();
+                                        var propProp = vType.GetProperty("Property");
+                                        var valProp = vType.GetProperty("Value");
+                                        var propName = propProp?.GetValue(v)?.ToString() ?? "?";
+                                        values[propName] = valProp?.GetValue(v)?.ToString();
+                                    }
+                                    frameEntry["values"] = values;
+                                }
+                            }
+                            frames.Add(frameEntry);
+                        }
+                        avaloniaDiags["valueStoreFrames"] = frames;
+                    }
+                    else
+                    {
+                        avaloniaDiags["valueStoreFrames"] = "AppliedFrames property exists but is not enumerable";
+                    }
+                }
+                else
+                {
+                    // Record all public properties for diagnosis
+                    var propNames = vsdType.GetProperties().Select(p => p.Name).ToArray();
+                    avaloniaDiags["valueStoreProperties"] = propNames;
+                }
+            }
+        }
+        catch (Exception ex) { avaloniaDiags["valueStoreError"] = ex.ToString(); }
         entry["avaloniaDiagnostics"] = avaloniaDiags;
 
         // CUI non-mutating store lookup
@@ -214,6 +261,8 @@ public sealed partial class App
                 }
                 catch (Exception ex) { cuiDiags[propName] = new { error = ex.Message }; }
             }
+            try { cuiDiags["inspect"] = store.Inspect().Select(p => new { p.Name, value = p.Value?.ToString(), source = p.Source, level = p.Level.ToString() }).ToArray(); }
+            catch (Exception ex) { cuiDiags["inspectError"] = ex.Message; }
             entry["cuiDiagnostics"] = cuiDiags;
         }
         else
