@@ -1,9 +1,74 @@
 <Cui id="home.apps" version="1">
+  <!--
+    Canonical CUI Home app launcher.
+
+    Every entry is registered product state projected by HomeAppsCuiBindings: the enabled modes the
+    shared route policy still admits as standalone applications, each with its real name, description
+    and IconKey. There is no example or illustrative data here, and no decorative control: each tile
+    is one Button that opens its own app directly in the same Haven tab.
+
+    The catalogue is expressed with <Repeat Panel="Wrap">, not with items/item-template/
+    empty-template on a Container. Repeat owns its own structural panel, and without an explicit
+    Panel it defaults to a single Vertical Stack, which cannot wrap tiles into the available width.
+    Each Repeat carries a stable Key bound to the canonical mode identity, so filtering the search
+    query keeps each tile's control instead of rebuilding the launcher.
+
+    The body is a three-row Grid, so every child states its intended Row. CuiContainerControl.AddChild
+    otherwise applies a default row of zero, which would stack the search field, the results and the
+    status line on top of each other.
+
+    Empty and no-match states use <If Condition="..."> over a projected availability value inside the
+    results row, rather than an empty-template attribute. Tile spacing uses Margin: CellGap belongs to
+    a grid, stack or wrap Container, and CuiControlLoader rejects it on the Repeat element itself.
+
+    Attributes deliberately absent, with the reason:
+      * touch-target - CUI has no touch-target property. Touch sizing must come from the shared
+        control templates; until then this is an accessibility gap, not a preference.
+      * variant / accent - not CUI Button properties. Emphasis comes from the theme layer.
+      * font-family - the CUI default interface family resolved by the host, not per-document.
+      * WrapPanel / ListBox / StackPanel as elements - forbidden donor elements. Wrapping comes from
+        the registered Repeat Panel="Wrap", and the search field is the canonical Input Type="Text".
+  -->
+  <Actions>
+    <Action name="OpenApp" command="home.open-app" parameter="{Binding app.key}" />
+  </Actions>
   <Theme Name="user_preference">
-    <Page AccessibleName="Installed apps">
-      <Container Type="Grid" RowSizes="1fr Auto" CellGap="8">
-        <Input id="home-app-list" Type="List" AccessibleName="Available apps" />
-        <Button id="home-open-app" Row="1" Content="Open app" AccessibleName="Open selected app" />
+    <Page id="home-apps-page" role="main" accessible-name="Apps">
+      <Container id="home-apps-body" Type="Grid" RowSizes="Auto 1fr Auto" CellGap="12" Padding="16">
+        <Container id="home-apps-search-row" Type="Horizontal Stack" Row="0" CellGap="8">
+          <Input id="home-app-search" Type="Text" Value="{Binding apps.query, mode=TwoWay}"
+                 accessible-name="Search apps" Tooltip="Filter the installed apps"
+                 Width="320" MinWidth="160" MaxWidth="480" HorizontalAlignment="Left" />
+          <Button id="home-apps-clear" action="home.clear-app-query" accessible-name="Clear app search"
+                  Tooltip="Clear the app search" Width="32" Height="32" Padding="8"
+                  IsVisible="{Binding apps.hasQuery}">
+            <Image id="home-apps-clear-icon" Source="icon:close" Width="16" Height="16" />
+          </Button>
+          <Text id="home-apps-count" Text="{Binding apps.countLabel}" accessible-name="Installed app count" />
+        </Container>
+        <Container id="home-apps-results" Type="Vertical Stack" Row="1" CellGap="12"
+                   VerticalScrolling="True" HorizontalScrolling="False">
+          <Repeat id="home-app-tiles" Panel="Wrap"
+                  Source="{Binding apps.visible}" As="app" Key="{Binding app.key}">
+            <Container id="home-app-tile-row" role="listitem" Type="Vertical Stack">
+              <Button id="home-app-tile" action="OpenApp" accessible-name="{Binding app.openLabel}"
+                      Tooltip="{Binding app.description}" Width="148" Height="112" Padding="10" Margin="0 0 12 12">
+                <Container id="home-app-tile-body" Type="Vertical Stack" CellGap="6">
+                  <Image id="home-app-tile-icon" Source="{Binding app.iconSource}" Width="32" Height="32"
+                         HorizontalAlignment="Center" accessible-name="{Binding app.name}" />
+                  <Text id="home-app-tile-name" Text="{Binding app.name}" TextAlignment="Center" />
+                </Container>
+              </Button>
+            </Container>
+          </Repeat>
+          <If Condition="{Binding apps.hasNoVisibleApps}">
+            <Container id="home-apps-empty" Type="Vertical Stack" CellGap="4" Padding="4">
+              <Text id="home-apps-empty-title" Text="{Binding apps.emptyTitle}" />
+              <Text id="home-apps-empty-detail" Text="{Binding apps.emptyDetail}" />
+            </Container>
+          </If>
+        </Container>
+        <Text id="home-apps-status" Row="2" Text="{Binding apps.status}" accessible-name="Apps status" />
       </Container>
     </Page>
   </Theme>

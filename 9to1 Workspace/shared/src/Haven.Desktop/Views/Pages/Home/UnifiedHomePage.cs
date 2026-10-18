@@ -28,13 +28,14 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private readonly bool _aiAvailable;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly CuiControlLoader _loader = new();
-    private readonly CuiControlLoader _appsLoader = new();
+    private readonly CuiControlLoader _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly Border _viewport = new();
     private readonly TextBlock _heading = new(), _status = new();
     private readonly TextBox _search = new();
     private readonly ComboBox _searchMode = new() { ItemsSource = new[] { "Search", "AI" }, SelectedIndex = 0 };
-    private readonly ListBox _apps = new();
-    private readonly Button _openApp = new() { Content = "Open app" };
+    private readonly HomeAppsCuiBindings _appsBindings;
+    private HomeAppsViewState _appsState = HomeAppsViewState.Empty;
+    private IReadOnlyList<HomeAppItem> _appsCatalogue = [];
     private CuiContainerControl? _root, _sidebar, _main, _searchRow;
     private NewDashboardPage? _dashboard;
     private HomeDiscoverPage? _discover;
@@ -57,6 +58,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _createDiscover = createDiscover; _queue = queue; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
         _section = request.Address.Authority == "newtab" ? "newtab" : "apps";
         _work = new(StopAsync, CleanupAsync);
+        _appsBindings = new(() => _appsState, DispatchAppsCommandAsync);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
             ?? throw new InvalidDataException("The shared Home document is missing.");
         using var reader = new StreamReader(stream);
@@ -81,13 +83,6 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (!_aiAvailable)
             Set(_searchMode, "ItemsSource", new object[] { "Search", new ComboBoxItem { Content = "AI (unavailable)", IsEnabled = false } });
         Content = loaded.Root;
-        _apps.ItemTemplate = new FuncDataTemplate<ModeDefinition>((mode, _) => new TextBlock
-        {
-            Text = mode is null ? string.Empty : $"{mode.Name}\n{mode.Description}",
-            TextWrapping = TextWrapping.Wrap
-        });
-        _openApp.Click += OnOpenApp;
-        _apps.DoubleTapped += OnOpenApp;
         _search.KeyDown += OnSearchKey;
         SizeChanged += OnHomeSizeChanged;
     }
@@ -106,7 +101,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
 
     public bool? IsActionAvailable(string command) => IsAlive && command is
         "home.apps" or "home.dashboard" or "home.models" or "home.newtab" or "home.submit" or
-        "home.library" or "home.events" or "home.mesh" or "home.settings" or "home.account" or "home.notifications";
+        "home.library" or "home.events" or "home.mesh" or "home.settings" or "home.account" or
+        "home.notifications" or "home.open-app" or "home.set-app-query" or "home.clear-app-query";
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
@@ -124,11 +120,22 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                     else Queue(AppContentAddress.Parse("browse://newtab"), original, true);
                     break;
                 case "home.submit": await SubmitAsync(original, linked.Token); break;
+                case "home.open-app":
+                    if (TryResolveAppRoute(parameter as string, out var appAddress)) Queue(appAddress, original);
+                    else UpdateAppsState("That app is no longer in this profile. Open it again from the current list.");
+                    break;
+                case "home.set-app-query": SetAppsQuery(parameter as string); break;
+                case "home.clear-app-query": SetAppsQuery(string.Empty); break;
                 case "home.mesh": Queue(AppContentAddress.Parse("9to1://mesh"), original); break;
                 default: Queue(AppContentAddress.Parse("9to1://home/" + command[5..]), original); break;
             }
         }));
     }
+
+    private static string HeadingFor(string section) => section switch
+    {
+        "newtab" => "New Tab", "models" => "Models / Discover", "dashboard" => "Dashboard", _ => "Apps"
+    };
 
     private async Task SelectAsync(string section, DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
@@ -136,20 +143,41 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         var generation = ++_selection;
         original.BindPublicationGuard(() => IsAlive && generation == _selection);
         original.DemandPublication();
+        var previous = _section;
         _dashboard?.Deactivate(); _discover?.Deactivate(); _section = section;
         Set(_searchRow!, "IsVisible", section == "newtab");
-        Set(_heading, "Text", section switch { "newtab" => "New Tab", "models" => "Models / Discover", "dashboard" => "Dashboard", _ => "Apps" });
+        if (section != "apps") Set(_heading, "Text", HeadingFor(section));
         Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
         if (section == "apps")
         {
-            _appsView ??= BuildAppsView();
-            _viewport.Child = _appsView;
+            // The authored launcher is built before any heading or content change. If publication
+            // fails, the previous section keeps its own content AND its own label, and the actual
+            // parser/loader diagnostic is reported rather than leaving a Dashboard under an
+            // "Apps" heading while the real cause stays invisible.
+            Control built;
+            try { built = _appsView ??= BuildAppsView(); }
+            catch (Exception failure)
+            {
+                _section = previous;
+                Set(_heading, "Text", HeadingFor(previous));
+                Set(_status, "Text", "The Apps launcher could not be published: " + failure.Message);
+                original.Retain(failure);
+                return;
+            }
+            _viewport.Child = built;
+            Set(_heading, "Text", "Apps");
             var modes = await original.AwaitAsync(_modes.GetModesAsync(token));
             if (!IsAlive || generation != _selection) return;
             original.DemandPublication();
-            _apps.ItemsSource = modes.Where(mode => mode.IsEnabled && !HavenAppRoutePolicy.IsDeprecatedStandalone(mode))
-                .OrderBy(mode => mode.Name, StringComparer.OrdinalIgnoreCase).ToArray();
-            Set(_status, "Text", _apps.ItemCount == 0 ? "No apps are available in this profile." : "Choose an app to open it in a tab.");
+            // Canonical catalogue ownership: only enabled modes the shared route policy still admits
+            // as standalone applications are projected, each with its registered identity, name and
+            // icon key. Obsolete standalone identities stay resolvable through the route policy and
+            // are never deleted here.
+            _appsCatalogue = modes.Where(mode => mode.IsEnabled && !HavenAppRoutePolicy.IsDeprecatedStandalone(mode))
+                .OrderBy(mode => mode.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(mode => new HomeAppItem(mode.Key, mode.Name, mode.Description, mode.IconKey))
+                .ToArray();
+            UpdateAppsState();
         }
         else if (section == "models")
         {
@@ -190,26 +218,50 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
 
     private Control BuildAppsView()
     {
-        using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.UnifiedApps.cui")
-            ?? throw new InvalidDataException("The Home apps document is missing.");
-        using var reader = new StreamReader(stream);
-        var parser = new CuiRichParser();
-        var document = parser.Parse(reader.ReadToEnd(), "UnifiedHomeApps.cui");
-        if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The Home apps document is invalid.");
-        _appsLoader.BindAuthoredControl("home-app-list", _ => _apps);
-        _appsLoader.BindAuthoredControl("home-open-app", _ => _openApp);
+        var document = HomeAppsCuiDocument.Parse();
+        // The authored launcher is rendered from the document itself. The search field, the wrapped
+        // icon tiles and the empty states are CUI elements bound through HomeAppsCuiBindings, so no
+        // legacy list control is substituted for the authored surface. The loader owns a bounded
+        // registry, so its Image sources resolve only through the canonical symbolic icon catalog.
+        _appsLoader.SetBindingContext(_appsBindings);
+        _appsLoader.SetActionDispatcher(_appsBindings);
         var loaded = _appsLoader.TryLoad(document);
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The Home apps document could not be rendered.");
+            throw new InvalidDataException("The Home apps document could not be rendered: " + string.Join("; ",
+                loaded.Diagnostics.Where(item => item.Severity == CuiDiagnosticSeverity.Error)
+                    .Select(item => item.Code + " " + item.Message)));
         _appsLoader.WireBindings(loaded.Root);
         return loaded.Root;
     }
 
-    private void OnOpenApp(object? sender, Avalonia.Interactivity.RoutedEventArgs args)
+    private ValueTask DispatchAppsCommandAsync(string command, object? parameter, CancellationToken token) =>
+        IsAlive ? DispatchAsync(command, parameter, token) : ValueTask.CompletedTask;
+
+    private void UpdateAppsState(string? status = null)
     {
-        if (!IsAlive || _apps.SelectedItem is not ModeDefinition mode) return;
-        StartNavigation(AppContentAddress.Parse("9to1://" + mode.Key));
+        var query = _appsState.Query;
+        _appsState = new HomeAppsViewState(_appsCatalogue, HomeAppsViewState.Filter(_appsCatalogue, query), query,
+            status ?? (_appsCatalogue.Count == 0
+                ? "No apps are available in this profile."
+                : "Select an app to open it in this tab."));
+        _appsBindings.Refresh();
+    }
+
+    private void SetAppsQuery(string? query)
+    {
+        var text = (query ?? string.Empty).Trim();
+        _appsState = _appsState with { Query = text, Visible = HomeAppsViewState.Filter(_appsCatalogue, text) };
+        _appsBindings.Refresh();
+    }
+
+    private bool TryResolveAppRoute(string? key, out AppContentAddress address)
+    {
+        address = AppContentAddress.Parse("9to1://home/apps");
+        if (string.IsNullOrWhiteSpace(key)) return false;
+        var app = _appsCatalogue.FirstOrDefault(entry => entry.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
+        if (app is null) return false;
+        address = AppContentAddress.Parse("9to1://" + app.Key);
+        return true;
     }
     private void OnDashboardApp(object? sender, ModeDefinition mode)
     {
@@ -324,7 +376,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     {
         Dispatcher.UIThread.VerifyAccess();
         if (!_stopped) throw new InvalidOperationException("The original Home children must finish closing before detachment.");
-        _openApp.Click -= OnOpenApp; _apps.DoubleTapped -= OnOpenApp; _search.KeyDown -= OnSearchKey;
+        _search.KeyDown -= OnSearchKey;
         SizeChanged -= OnHomeSizeChanged;
         if (_dashboard is not null)
         {

@@ -101,6 +101,9 @@
     <Compile Include="../../../../apps/Web/Accounts/AccountBrowserBindings.cs" Link="Accounts/Shared/AccountBrowserBindings.cs" />
     <Compile Include="../../../../apps/Web/Services/IAccountBrowserTransport.cs" Link="Accounts/Shared/IAccountBrowserTransport.cs" />
     <EmbeddedResource Include="../../../../apps/Web/Accounts/Accounts.cui" LogicalName="Haven.Desktop.NativeCake.Accounts.cui" />
+    <!-- SAME bounded canonical icon resolver the browser and Spaces CUI surfaces register; the
+         desktop does not grow a second, wider image-source path. -->
+    <Compile Include="../../../../apps/Web/BrowserCanonicalIcons.cs" Link="Controls\BrowserCanonicalIcons.cs" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Remove="App.axaml" />
