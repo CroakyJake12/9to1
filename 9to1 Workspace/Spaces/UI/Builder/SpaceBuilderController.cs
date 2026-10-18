@@ -106,7 +106,7 @@ public sealed class SpaceBuilderController
             {
                 _baseline = SpaceBuilderDraft.From(space);
                 _editVersion++;
-                return state with { DraftRevision = space.Revision, ActiveRevision = space.Revision,
+                return state with { DraftRevision = space.Revision, ActiveRevision = null,
                     Draft = _baseline, IsLoaded = true, IsReadOnly = space.IsBuiltIn,
                     HasChanges = false, HasConflict = false,
                     StatusMessage = space.IsBuiltIn ? "Built-in Space configuration is protected." : "Space Builder configuration loaded." };
