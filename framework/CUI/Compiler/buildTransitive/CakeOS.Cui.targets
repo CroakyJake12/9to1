@@ -1,9 +1,59 @@
 <Project>
-  <Target Name="ValidateCuiProjectItems" BeforeTargets="PrepareForBuild" Condition="'@(Cui)' != ''">
-    <Error
-      Condition="'%(Cui.Extension)' != '.cui' and '%(Cui.Extension)' != '.CUI' and '%(Cui.Extension)' != '.cui-theme' and '%(Cui.Extension)' != '.cui-prefab'"
-      Code="CUI0001"
-      File="%(Cui.Identity)"
-      Text="CUI project items must use .cui, .cui-theme or .cui-prefab. Legacy .axaml and .hui inputs are not accepted." />
+  <PropertyGroup>
+    <_CuiSourceTaskProject>$(MSBuildThisFileDirectory)../../Build.Tasks/CakeOS.Cui.Build.Compiler.csproj</_CuiSourceTaskProject>
+    <CuiCompilerTaskAssembly Condition="'$(CuiCompilerTaskAssembly)' == ''">$(MSBuildThisFileDirectory)../../Build.Tasks/bin/$(Configuration)/net10.0/CakeOS.Cui.Build.Compiler.dll</CuiCompilerTaskAssembly>
+    <_CuiBuildCompilerDependsOn Condition="'$(CuiUsePrebuiltCompiler)' != 'true'">ResolveProjectReferences</_CuiBuildCompilerDependsOn>
+  </PropertyGroup>
+  <!-- Build infrastructure is a build-only dependency, never application code-behind.
+       The task project itself does not import these targets, avoiding recursion. -->
+  <ItemGroup Condition="Exists('$(_CuiSourceTaskProject)') and '$(CuiUsePrebuiltCompiler)' != 'true'">
+    <ProjectReference Include="$(_CuiSourceTaskProject)" ReferenceOutputAssembly="false" Private="false" PrivateAssets="all" />
+  </ItemGroup>
+  <UsingTask TaskName="CakeOS.Cui.Build.CompileCuiSourcesTask" AssemblyFile="$(CuiCompilerTaskAssembly)" />
+
+  <Target Name="DiscoverCuiSources" Condition="'$(EnableDefaultCuiItems)' != 'false'">
+    <ItemGroup>
+      <Cui Include="%(CuiSourceRoot.Identity)/**/*.cui;%(CuiSourceRoot.Identity)/**/*.cui-theme;%(CuiSourceRoot.Identity)/**/*.cui-prefab"
+           Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);**/bin/**;**/obj/**" />
+      <!-- Keep authored resource/copy metadata: existing runtime hosts may still
+           consume the original .cui alongside the compiled representation. -->
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ValidateCuiProjectItems" BeforeTargets="PrepareForBuild" DependsOnTargets="DiscoverCuiSources">
+    <ItemGroup>
+      <!-- Explicit imports define the application boundary. Referenced donor projects
+           retain their private XAML machinery and are not recursively scanned. -->
+      <_CuiRootFiles Include="%(CuiSourceRoot.Identity)/**/*"
+                     Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);**/bin/**;**/obj/**" />
+      <_CuiDeclaredSource Include="@(_CuiRootFiles);@(Cui);@(CuiMarkup);@(AvaloniaXaml);@(EmbeddedResource);@(Content);@(None);@(Compile)" />
+      <_CuiLegacySource Include="@(_CuiDeclaredSource)"
+                        Condition="'%(Extension)' == '.axaml' or '%(Extension)' == '.xaml' or '%(Extension)' == '.hui'" />
+    </ItemGroup>
+    <Error Condition="'@(_CuiLegacySource)' != ''" Code="CUIB001" File="%(_CuiLegacySource.Identity)"
+           Text="CUI application projects reject .axaml, .xaml and .hui source. Use canonical CUI." />
+    <Error Condition="'%(Cui.Extension)' != '.cui' and '%(Cui.Extension)' != '.cui-theme' and '%(Cui.Extension)' != '.cui-prefab' and '@(Cui)' != ''"
+           Code="CUIB001" File="%(Cui.Identity)" Text="CUI project items must use .cui, .cui-theme or .cui-prefab." />
+    <Error Condition="'$(MSBuildRuntimeType)' != 'Core' or $([System.Environment]::Version.Major) &lt; 10" Code="CUIB010"
+           Text="Canonical CUI compilation requires .NET SDK 10 or newer MSBuild; full-framework MSBuild is not supported." />
+  </Target>
+
+  <!-- Deliberately run on every compilation: removed inputs, changed imports, compiler
+       binaries and property changes must not reuse a previously valid artifact. -->
+  <Target Name="CompileCuiSources" BeforeTargets="AssignTargetPaths;CoreCompile"
+          DependsOnTargets="ValidateCuiProjectItems;$(_CuiBuildCompilerDependsOn)">
+    <Error Condition="!Exists('$(CuiCompilerTaskAssembly)')" Code="CUIB011"
+           Text="Canonical CUI compiler task is missing at $(CuiCompilerTaskAssembly). Build the CUI toolchain or supply CuiCompilerTaskAssembly." />
+    <PropertyGroup>
+      <CuiCompilationArtifact Condition="'$(CuiCompilationArtifact)' == ''">$(IntermediateOutputPath)Cui/compilation.cuic.json</CuiCompilationArtifact>
+    </PropertyGroup>
+    <CakeOS.Cui.Build.CompileCuiSourcesTask Sources="@(Cui);@(CuiMarkup)" ProjectDirectory="$(MSBuildProjectDirectory)"
+                                         OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)">
+      <Output TaskParameter="CompiledArtifacts" ItemName="_CuiCompiledArtifact" />
+    </CakeOS.Cui.Build.CompileCuiSourcesTask>
+    <ItemGroup>
+      <FileWrites Include="@(_CuiCompiledArtifact)" />
+      <EmbeddedResource Include="@(_CuiCompiledArtifact)" LogicalName="CUI.Compilation.v1" />
+    </ItemGroup>
   </Target>
 </Project>

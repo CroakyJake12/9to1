@@ -56,7 +56,7 @@ public sealed class CuiResourceBundleTests : IDisposable
     }
 
     [Fact]
-    public void OrdinaryXmlIsValidAndIsEmbeddedUnchanged()
+    public void BytePackagingDoesNotClaimSemanticValidity()
     {
         var path = WriteResource("panel.cui", "<Cui><Stack gap=\"8\"><Text>Hello</Text></Stack></Cui>");
 
@@ -82,15 +82,13 @@ public sealed class CuiResourceBundleTests : IDisposable
     }
 
     [Fact]
-    public void MalformedSyntaxWarnsButTheOriginalBytesAreStillEmbedded()
+    public void BytePackagingPreservesMalformedInputWithoutPretendingToCompileIt()
     {
         var path = WriteResource("broken.cui", "<Cui><Text (Definition</Text></Cui>");
 
         var entries = CuiResourceBundle.Collect(_root, new[] { path }, _log);
 
-        var warning = Assert.Single(_log.Warnings);
-        Assert.Contains("invalid CUI syntax", warning);
-        Assert.Contains("broken.cui", warning);
+        Assert.Empty(_log.Warnings);
 
         var roundTrip = Assert.Single(ReadBundle(WriteBundle(entries)));
         Assert.Equal("broken.cui", roundTrip.LogicalName);
@@ -98,13 +96,13 @@ public sealed class CuiResourceBundleTests : IDisposable
     }
 
     [Fact]
-    public void UnclosedElementWarnsAndIsStillEmbedded()
+    public void BytePackagingDoesNotRunADuplicateParser()
     {
         var path = WriteResource("unclosed.cui", "<Cui><Text>Open</Paragraph></Cui>");
 
         var entries = CuiResourceBundle.Collect(_root, new[] { path }, _log);
 
-        Assert.Single(_log.Warnings);
+        Assert.Empty(_log.Warnings);
         Assert.Equal(File.ReadAllBytes(path), Assert.Single(entries).Data);
     }
 
@@ -120,14 +118,13 @@ public sealed class CuiResourceBundleTests : IDisposable
     }
 
     [Fact]
-    public void WrongRootElementStillWarns()
+    public void BytePackagingDoesNotApplyAnObsoleteRootRule()
     {
         var path = WriteResource("bar.cui-prefab", "<Cui><Prefab (Definition) ID=\"AIBar\"/></Cui>");
 
         var entries = CuiResourceBundle.Collect(_root, new[] { path }, _log);
 
-        var warning = Assert.Single(_log.Warnings);
-        Assert.Contains("<Prefab> root element", warning);
+        Assert.Empty(_log.Warnings);
         Assert.Equal(File.ReadAllBytes(path), Assert.Single(entries).Data);
     }
 

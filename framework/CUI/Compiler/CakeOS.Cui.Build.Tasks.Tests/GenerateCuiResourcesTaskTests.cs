@@ -39,6 +39,23 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
         Assert.Equal(File.ReadAllBytes(inside), entry.Data);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void LegacyPostCompileNeverClaimsValidation(bool skip, bool assemblyExists)
+    {
+        var assembly = Path.Combine(_prefix, "application.dll");
+        if (assemblyExists) File.WriteAllBytes(assembly, [1, 2, 3]);
+        var task = new CompileCuiMarkupTask
+        {
+            BuildEngine = _engine, AssemblyFile = assembly, References = [],
+            ProjectDirectory = _prefix, SkipXamlCompilation = skip,
+        };
+        Assert.False(task.Execute());
+        Assert.Contains("canonical .NET 10 toolchain", Assert.Single(_engine.RecordedErrors));
+    }
+
     [Fact]
     public void RootWithTrailingSeparatorIsTheSameBoundary()
     {
@@ -153,7 +170,7 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
     }
 
     [Fact]
-    public void ExistingWarningsAreNotPromotedIntoErrorsAndTheBundleIsStillGenerated()
+    public void PackagingPreservesBytesAndOnlyReportsPathWarnings()
     {
         var root = Path.Combine(_prefix, "repo");
         var sibling = Path.Combine(_prefix, "repo-other");
@@ -167,10 +184,9 @@ public sealed class GenerateCuiResourcesTaskTests : IDisposable
         var entries = RunTask(root, inside, malformed, outside);
 
         Assert.Equal(3, entries.Count);
-        Assert.Equal(2, _engine.RecordedWarnings.Count);
+        Assert.Single(_engine.RecordedWarnings);
         Assert.Empty(_engine.RecordedErrors);
-        Assert.Contains("invalid CUI syntax", _engine.RecordedWarnings[0]);
-        Assert.Contains("outside the CUI resource root", _engine.RecordedWarnings[1]);
+        Assert.Contains("outside the CUI resource root", _engine.RecordedWarnings[0]);
         Assert.Equal(File.ReadAllBytes(malformed), entries[1].Data);
         Assert.Equal(File.ReadAllBytes(outside), entries[2].Data);
     }

@@ -51,13 +51,13 @@ public sealed class CuiResourceEntry
 
 /// <summary>
 /// Collects and writes the CUI resource bundle. Original resource bytes are embedded
-/// unchanged; the canonical lexical form is only inspected for validation, so a
-/// malformed resource still warns and is still embedded. A resource is root-relative
+/// unchanged. This byte-packaging API does not validate CUI; the build graph must
+/// run the canonical compiler before bundling application markup. A resource is root-relative
 /// only when it crosses a real normalized directory boundary, so a similarly prefixed
 /// sibling such as C:/repo-other is never treated as inside C:/repo. A logical name is
 /// the bundle identity, so a second resource mapping to an already claimed dot-separated
 /// logical name is reported as an error instead of silently shadowing the first one.
-/// Only duplicate identities are errors; existing validation warnings stay warnings.
+/// Duplicate identities are errors; outside-root paths retain an explicit warning.
 /// Write stages the complete bundle in the destination directory, flushes and closes it,
 /// then promotes it over the destination, so a serialization, I/O or replacement failure
 /// never truncates a previously valid bundle; the failed staging file is removed and the
@@ -65,8 +65,6 @@ public sealed class CuiResourceEntry
 /// </summary>
 public static class CuiResourceBundle
 {
-    private static readonly CuiLexicalValidator Validator = new CuiLexicalValidator();
-
     public static List<CuiResourceEntry> Collect(string root, IEnumerable<string> fullPaths, ICuiResourceLog log)
     {
         var entries = new List<CuiResourceEntry>();
@@ -89,8 +87,6 @@ public static class CuiResourceBundle
 
             var logicalName = relativePath.Replace('\\', '.').Replace('/', '.');
             var data = File.ReadAllBytes(fullPath);
-
-            ValidateResource(relativePath, data, log);
 
             if (firstSourceByLogicalName.TryGetValue(logicalName, out var firstSource))
             {
@@ -234,29 +230,4 @@ public static class CuiResourceBundle
         return relativePath.Length > 0;
     }
 
-    private static void ValidateResource(string relativePath, byte[] data, ICuiResourceLog log)
-    {
-        var expectedRoot = ExpectedRoot(Path.GetExtension(relativePath));
-
-        // Binary resources (fonts, images) are embedded without lexical validation.
-        if (expectedRoot is null) return;
-
-        var result = Validator.Validate(Encoding.UTF8.GetString(data));
-        if (!result.IsValid)
-        {
-            log.LogWarning($"CUI resource '{relativePath}' has invalid CUI syntax: {result.Error}");
-            return;
-        }
-
-        if (result.RootLocalName != expectedRoot)
-            log.LogWarning($"CUI resource '{relativePath}' does not have a <{expectedRoot}> root element.");
-    }
-
-    private static string? ExpectedRoot(string extension) => extension.ToLowerInvariant() switch
-    {
-        ".cui" => "Cui",
-        ".cui-theme" => "Theme",
-        ".cui-prefab" => "Prefab",
-        _ => null,
-    };
 }

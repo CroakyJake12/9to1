@@ -40,8 +40,8 @@ public class GenerateCuiResourcesTask : Task
 }
 
 /// <summary>
-/// MSBuild task that compiles .cui files and post-processes the assembly.
-/// Replaces Avalonia's CompileAvaloniaXamlTask for CUI markup.
+/// Legacy task entrypoint retained for binary compatibility. It reports the required
+/// canonical build-target migration instead of pretending to compile an assembly.
 /// </summary>
 public class CompileCuiMarkupTask : Task
 {
@@ -59,25 +59,11 @@ public class CompileCuiMarkupTask : Task
 
     public override bool Execute()
     {
-        if (SkipXamlCompilation)
-        {
-            Log.LogMessage(MessageImportance.Normal, "CUI compilation skipped (SkipXamlCompilation=true).");
-            return true;
-        }
-
-        // CUI files are loaded at runtime, not compiled into IL like AXAML.
-        // The CUI runtime reads the embedded .cui XML and instantiates Avalonia controls.
-        // This task validates the .cui files are well-formed and properly embedded.
-
-        if (!File.Exists(AssemblyFile))
-        {
-            Log.LogWarning($"Assembly not found: {AssemblyFile}. CUI post-compilation skipped.");
-            return true;
-        }
-
-        Log.LogMessage(MessageImportance.High,
-            $"CUI post-compilation: assembly '{AssemblyFile}' validated. " +
-            "CUI markup is loaded at runtime through the CuiRuntime loader.");
-        return true;
+        // Preserve the old task's binary/API shape for existing project imports, but
+        // never equate an assembly's existence (or a donor skip flag) with compilation.
+        Log.LogError("CUI", "CUIB012", null, ProjectDirectory, 0, 0, 0, 0,
+            "The legacy CUI post-compilation task cannot validate application source. " +
+            "Import CakeOS.Cui.targets and run CompileCuiSources with the canonical .NET 10 toolchain.");
+        return false;
     }
 }

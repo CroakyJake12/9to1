@@ -1,4 +1,5 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildThisFileDirectory)../../../../Compiler/buildTransitive/CakeOS.Cui.targets" />
   <PropertyGroup>
     <CuiReportImportance Condition="'$(CuiReportImportance)' == ''">low</CuiReportImportance>
     <EnableCuiCompilation Condition="'$(EnableCuiCompilation)' == ''">true</EnableCuiCompilation>
@@ -19,20 +20,17 @@
       <_LegacyAxBlob Include="**\*.axaml" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
       <_LegacyHuiBlob Include="**\*.hui" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
     </ItemGroup>
-    <Warning
+    <Error
       Condition="'@(_LegacyAxBlob)' != ''"
       Code="CUI1001"
       Text="Legacy .axaml files are not supported by the CUI framework. Migrate to .cui: @(_LegacyAxBlob)" />
-    <Warning
+    <Error
       Condition="'@(_LegacyHuiBlob)' != ''"
       Code="CUI1002"
       Text="Legacy .hui files are not supported by the CUI framework. Migrate to .cui: @(_LegacyHuiBlob)" />
   </Target>
 
   <UsingTask TaskName="GenerateCuiResourcesTask"
-             AssemblyFile="$(CuiBuildTasksLocation)" />
-
-  <UsingTask TaskName="CompileCuiMarkupTask"
              AssemblyFile="$(CuiBuildTasksLocation)" />
 
   <Target Name="AddCuiResources"
@@ -56,7 +54,7 @@
           BeforeTargets="CoreCompile;CoreResGen"
           Inputs="@(CuiMarkup);@(AvaloniaResource)"
           Outputs="$(CuiResourcesTemporaryFilePath)"
-          DependsOnTargets="$(BuildCuiResourcesDependsOn)"
+          DependsOnTargets="$(BuildCuiResourcesDependsOn);CompileCuiSources"
           Condition="('@(CuiMarkup->Count())' > 0) or ('@(AvaloniaResource->Count())' > 0)">
     <GenerateCuiResourcesTask
       Output="$(CuiResourcesTemporaryFilePath)"
@@ -69,9 +67,6 @@
   </Target>
 
   <Target Name="AvaloniaPrepareCoreCompile" BeforeTargets="CoreCompile">
-    <PropertyGroup>
-      <TargetsTriggeredByCompilation>$(TargetsTriggeredByCompilation);CompileCuiMarkup</TargetsTriggeredByCompilation>
-    </PropertyGroup>
     <ItemGroup>
       <CustomAdditionalCompileInputs Include="@(CuiMarkup)" />
       <CustomAdditionalCompileInputs Include="@(AvaloniaResource)" />
@@ -79,12 +74,5 @@
   </Target>
 
   <Target Name="CompileCuiMarkup"
-          Condition="'@(CuiMarkup)' != '' AND $(DesignTimeBuild) != true">
-    <CompileCuiMarkupTask
-      AssemblyFile="@(IntermediateAssembly)"
-      References="@(ReferencePathWithRefAssemblies)"
-      RefAssemblyFile="@(IntermediateRefAssembly)"
-      ProjectDirectory="$(MSBuildProjectDirectory)"
-      SkipXamlCompilation="false" />
-  </Target>
+          DependsOnTargets="CompileCuiSources" />
 </Project>
