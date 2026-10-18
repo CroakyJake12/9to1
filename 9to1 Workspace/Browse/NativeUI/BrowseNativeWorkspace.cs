@@ -21,6 +21,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         public BrowseNativeWorkspace Owner { get; } = owner;
         public CommandInvocation? Parent { get; } = parent;
         public volatile bool Active = true;
+
+        /// <summary>The exact outer action task this invocation is. The creator binds it as
+        /// soon as the driver task exists, before the driver can reach any operation. Every
+        /// operation the driver directly awaits records a causal edge from this task, which is
+        /// how the chrome proves an admission's own propagation chain instead of treating any
+        /// task that happened to be pending at the witness as part of it.</summary>
+        public Task? Self;
     }
     private bool IsInsideOriginalCommand()
     {
@@ -183,7 +190,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         { _status = "The download or Files folder changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         lock (_sourceGate) CheckAdmission(_originalCommands);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _busy = true; var original = RunAsync(start.Task, command, parameter, token);
+        _busy = true;
+        var prior = LogicalDriver.Value;
+        var invocation = new CommandInvocation(this, prior);
+        var original = RunAsync(start.Task, command, parameter, token, invocation);
+        invocation.Self = original;
         _originalCommand = original;
         lock (_sourceGate) Retain(_originalCommands, original);
         Exception? notificationFailure = null;
@@ -191,9 +202,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         finally { if (notificationFailure is null) start.SetResult(); else start.SetException(notificationFailure); }
         return new(original);
     }
-    private async Task RunAsync(Task start, string command, object? parameter, CancellationToken token)
+    private async Task RunAsync(Task start, string command, object? parameter, CancellationToken token,
+        CommandInvocation invocation)
     {
-        var prior = LogicalDriver.Value; var invocation = new CommandInvocation(this, prior); LogicalDriver.Value = invocation;
+        var prior = LogicalDriver.Value; LogicalDriver.Value = invocation;
         var failures = new List<Exception>();
         try
         {
@@ -292,6 +304,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         lock (_sourceGate) CheckAdmission(_originalOperations);
         var original = start() ?? throw new InvalidOperationException("Browse did not produce its original operation task.");
         lock (_sourceGate) Retain(_originalOperations, original);
+        // This is the exact await the current driver performs, so the driver's action task is
+        // a genuine propagation source of this operation. Only such a declared edge can join
+        // an admission's propagation chain; a source that merely overlapped in time cannot.
+        if (LogicalDriver.Value is { } invocation && invocation.Self is { } action)
+            _chrome.LinkAdmissionPropagation(action, original);
         await original;
     }
     private void OnChromeRetirementStarted(object? sender, EventArgs args)
@@ -343,19 +360,26 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         // Admission is checked before producing a new source. Always retain a
         // source that already exists, including a source produced reentrantly.
         PruneAdmissionRefusals(sources);
-        // The chrome accounts only the actions in flight when it witnesses a no-effect
-        // admission, so this declares the exact task the workspace is running.
-        _chrome.DeclareAdmissionPropagation(original);
         sources.Add(original);
     }
     /// <summary>A native admission this chrome's own composition owner proved it had not
     /// registered created no session, owner or view here, so it must not permanently
     /// retain a workspace source or consume unresolved-source capacity. The exact refusal
     /// stays failed and inspectable in the chrome's admission ledger; the chrome withdraws
-    /// only that retirement obligation, so a mixed or unwitnessed graph is retained.</summary>
+    /// only that retirement obligation, so a mixed or unwitnessed graph is retained. This
+    /// only ever applies to a source whose own await lineage reaches the refused
+    /// admission, never to a source that merely happened to be pending at the witness.</summary>
     private void PruneAdmissionRefusals(List<Task> sources)
     {
-        sources.RemoveAll(task => task.IsCompletedSuccessfully || _chrome.TryRetireAdmissionSource(task));
+        for (var index = sources.Count - 1; index >= 0; index--)
+            if (sources[index].IsCompletedSuccessfully || _chrome.TryRetireAdmissionSource(sources[index]))
+            {
+                var retired = sources[index];
+                sources.RemoveAt(index);
+                // This action source is no longer retained, so its declared await
+                // lineage is withdrawn with it.
+                _chrome.UnlinkAdmissionPropagation(retired);
+            }
     }
     public bool CanAdmitClose()
     {

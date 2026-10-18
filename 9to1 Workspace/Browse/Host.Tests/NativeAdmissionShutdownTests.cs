@@ -269,6 +269,60 @@ public sealed class NativeAdmissionShutdownTests
         });
     }
 
+    // Negative control for the observed temporal-overlap risk: an unrelated retained
+    // operation that is already pending when the chrome witnesses a missing-binding refusal
+    // is not that admission's propagation chain, so forwarding the captured refusal after a
+    // real effect must leave it a genuine close cause. Driven through the real workspace
+    // retention path: the originating loader's action-settlement source.
+    [AvaloniaFact]
+    public async Task Unrelated_operation_pending_at_the_witness_stays_a_real_close_cause()
+    {
+        var files = new FilesFactory();
+        await using var rig = await Rig.CreateAsync((Files, files));
+        await RunBoundedAsync(rig, async rig =>
+        {
+            var chrome = rig.Chrome!; var workspace = rig.Workspace!;
+            var selectedTabId = chrome.State.SelectedTabId;
+
+            // Real retention path: the loader's actual action-settlement source is retained in
+            // the workspace operation history and stays pending across the witness below.
+            var loader = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            Assert.True(workspace.QueueNavigation(new(selectedTabId,
+                AppContentAddress.Parse("9to1://files/first"), false), loader.Task));
+            Assert.Contains(loader.Task, workspace.OriginalOperations);
+
+            // The missing-binding admission happens while that unrelated operation is pending.
+            var refusal = await Record.ExceptionAsync(() => chrome.NavigateAsync("9to1://boards"))
+                .AsTask().WaitAsync(Bound);
+            Assert.NotNull(refusal);
+            Assert.Equal(RefusalMessage, refusal!.Message);
+            Assert.True(ReferenceEquals(Assert.Single(chrome.AdmissionRefusals).Refusal, refusal));
+
+            // Fixture fact first: the unrelated operation really took an effect, and it is the
+            // one now carrying the captured refusal.
+            TakeEffect();
+            Assert.True(loader.TrySetException(refusal));
+            var driver = workspace.OriginalCommand!;
+            Assert.NotNull(await Record.ExceptionAsync(() => driver).AsTask().WaitAsync(Bound));
+            Assert.True(HasCause(driver, refusal), Graph(driver.Exception));
+
+            // The admission's own chain is retired, so any later close failure can only come
+            // from the unrelated sources, which stay retained.
+            await chrome.NavigateAsync("9to1://files/second").WaitAsync(Bound);
+            Assert.Empty(Faulted(chrome.OriginalNativeSources));
+            Assert.Contains(loader.Task, workspace.OriginalOperations);
+            Assert.Contains(driver, workspace.OriginalCommands);
+
+            var close = rig.Host.CloseAndDrainAsync();
+            rig.AssertedFailedClose = close;
+            var first = await Record.ExceptionAsync(() => close).AsTask().WaitAsync(Bound);
+            Assert.NotNull(first);
+            Assert.True(close.IsFaulted);
+            Assert.True(HasCause(close, refusal), Graph(close.Exception));
+            Assert.Same(close, rig.Host.CloseAndDrainAsync());
+        });
+    }
+
     // Negative control for the observed mixed-graph risk: classification uses the source's
     // complete original fault graph, in either fault order, and a genuine sibling keeps the
     // whole source blocking. The terminal failed close task identity is preserved.

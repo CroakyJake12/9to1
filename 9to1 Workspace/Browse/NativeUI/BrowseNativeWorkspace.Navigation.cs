@@ -16,7 +16,10 @@ public sealed partial class BrowseNativeWorkspace
         lock (_sourceGate) { CheckAdmission(_originalCommands); Retain(_originalOperations, originalSourceSettlement); }
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _busy = true;
-        var driver = RunQueuedNavigationAsync(start.Task, intent, originalSourceSettlement);
+        var prior = LogicalDriver.Value;
+        var invocation = new CommandInvocation(this, prior);
+        var driver = RunQueuedNavigationAsync(start.Task, intent, originalSourceSettlement, invocation);
+        invocation.Self = driver;
         _originalCommand = driver;
         lock (_sourceGate) Retain(_originalCommands, driver);
         try { _status = "Opening…"; Changed(); start.SetResult(); }
@@ -31,9 +34,10 @@ public sealed partial class BrowseNativeWorkspace
         catch (Exception failure) { System.Diagnostics.Trace.TraceError("Browse retained queued native navigation failure: {0}", failure); }
     }
 
-    private async Task RunQueuedNavigationAsync(Task start, BrowseNavigationIntent intent, Task originalSourceSettlement)
+    private async Task RunQueuedNavigationAsync(Task start, BrowseNavigationIntent intent, Task originalSourceSettlement,
+        CommandInvocation invocation)
     {
-        var prior = LogicalDriver.Value; var invocation = new CommandInvocation(this, prior); LogicalDriver.Value = invocation;
+        var prior = LogicalDriver.Value; LogicalDriver.Value = invocation;
         var failures = new List<Exception>();
         try
         {

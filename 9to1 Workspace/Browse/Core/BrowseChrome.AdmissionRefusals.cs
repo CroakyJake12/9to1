@@ -37,25 +37,42 @@ public sealed partial class BrowseChrome
 {
     private readonly List<BrowseAdmissionRefusalRecord> _admissionRefusals = [];
 
-    // The witness is not just an exception instance: it is the exact live content
-    // admission that produced it, plus the action tasks that were already in flight for
-    // this chrome at that moment. Retirement is only ever considered for that admission's
-    // own propagation chain, so a later bound factory or owner that forwards, rethrows or
+    // The witness is not just an exception instance: it is the exact live content admission
+    // that produced it. Retirement is only ever considered for that admission's own
+    // propagation chain, so a later bound factory or owner that forwards, rethrows or
     // aggregates the same refusal keeps its full obligation.
-    private readonly List<(BrowseAdmissionRefusalRecord Record, ContentTransition? Fence, Task[] Actions)> _admissionProvenance = [];
-    private readonly List<Task> _declaredActions = [];
+    private readonly List<(BrowseAdmissionRefusalRecord Record, ContentTransition? Fence)> _admissionProvenance = [];
 
-    /// <summary>Declares the exact outer action task a caller is running against this chrome,
-    /// so a witnessed no-effect admission can account its own propagation chain. Only tasks
-    /// in flight at the moment of the witness become part of that admission's chain.</summary>
-    public void DeclareAdmissionPropagation(Task action)
+    // Causal lineage, not temporal overlap. An edge records that one outer action task
+    // directly awaits one specific inner operation task, asserted only by the caller that
+    // actually performs that await. Membership in an admission's propagation chain is proved
+    // by following those edges until a task the admission's own content fence retained is
+    // reached. A task that merely happened to be pending at the witness has no such edge and
+    // keeps its full retirement obligation.
+    private readonly Dictionary<Task, List<Task>> _propagationEdges = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Records that an outer action task directly drives an inner operation task.
+    /// Only the caller that actually awaits the inner task may assert this edge, and the owner
+    /// that later drops the outer source unlinks it. An edge can only ever widen the chain of
+    /// a task its owner genuinely awaits, so it cannot be claimed for an unrelated source.</summary>
+    public void LinkAdmissionPropagation(Task outerAction, Task drivenOperation)
     {
-        ArgumentNullException.ThrowIfNull(action);
+        ArgumentNullException.ThrowIfNull(outerAction); ArgumentNullException.ThrowIfNull(drivenOperation);
+        if (ReferenceEquals(outerAction, drivenOperation)) return;
         lock (_nativeSourceGate)
         {
-            _declaredActions.RemoveAll(declared => declared.IsCompleted);
-            if (!_declaredActions.Contains(action, ReferenceEqualityComparer.Instance)) _declaredActions.Add(action);
+            if (!_propagationEdges.TryGetValue(outerAction, out var driven))
+                _propagationEdges[outerAction] = driven = [];
+            if (!driven.Contains(drivenOperation, ReferenceEqualityComparer.Instance)) driven.Add(drivenOperation);
         }
+    }
+
+    /// <summary>Withdraws an outer action's declared lineage once its owner no longer retains
+    /// that source. Losing an edge only ever makes retirement more conservative.</summary>
+    public void UnlinkAdmissionPropagation(Task outerAction)
+    {
+        ArgumentNullException.ThrowIfNull(outerAction);
+        lock (_nativeSourceGate) _propagationEdges.Remove(outerAction);
     }
 
     /// <summary>Native admissions this chrome's own composition owner refused before
@@ -67,15 +84,17 @@ public sealed partial class BrowseChrome
     /// <summary>
     /// Withdraws the retirement obligation of one retained source, and only when that
     /// source belongs to the propagation chain of a specific admission this chrome
-    /// witnessed: the source must be a task the chrome retained for that exact live
-    /// content admission (or an enclosing one), and the source's COMPLETE original fault
-    /// graph (task.Exception, including every sibling) must contain nothing but that
-    /// admission's own refusal. The refusal stays failed and inspectable in the ledger;
-    /// the source leaves the retirement sets so it cannot permanently block close or
-    /// consume bounded unresolved-source capacity.
-    /// A later task that rethrows, wraps or aggregates a captured refusal, a genuine
-    /// sibling, a hand-made wrapper, a pinned contract source and any other fault all
-    /// return false and keep their full retirement obligation.
+    /// witnessed: the source must either be a task the chrome retained for that exact live
+    /// content admission (or an enclosing one), or an outer action whose declared await
+    /// lineage reaches such a task, and the source's COMPLETE original fault graph
+    /// (task.Exception, including every sibling) must contain nothing but that admission's
+    /// own refusal. The refusal stays failed and inspectable in the ledger; the source
+    /// leaves the retirement sets so it cannot permanently block close or consume bounded
+    /// unresolved-source capacity.
+    /// A later task that rethrows, wraps or aggregates a captured refusal, an unrelated
+    /// source that was merely pending at the witness, a genuine sibling, a hand-made
+    /// wrapper, a pinned contract source and any other fault all return false and keep
+    /// their full retirement obligation.
     /// </summary>
     public bool TryRetireAdmissionSource(Task source)
     { lock (_nativeSourceGate) return TryRetireAdmissionSourceLocked(source); }
@@ -94,9 +113,8 @@ public sealed partial class BrowseChrome
     {
         if (source is not { IsFaulted: true } || source.Exception is not { } graph) return false;
         if (_contractSources.Contains(source)) return false;
-        foreach (var (record, fence, actions) in _admissionProvenance)
-            if ((IsOwnedByAdmissionChain(fence, source) || actions.Contains(source, ReferenceEqualityComparer.Instance))
-                && IsExactRefusalGraph(graph, record.Refusal)) return true;
+        foreach (var (record, fence) in _admissionProvenance)
+            if (IsOwnedByAdmissionChain(fence, source) && IsExactRefusalGraph(graph, record.Refusal)) return true;
         return false;
     }
 
@@ -106,9 +124,9 @@ public sealed partial class BrowseChrome
     /// so the chrome itself establishes that no session was returned. The proof must be the
     /// composition-issued type, must name this exact chrome-minted request and must come
     /// from this chrome's own factory. The chrome also records which live content admission
-    /// was executing, which is the only propagation chain retirement may later consider.
-    /// Returns false for every other fault, which then keeps its ordinary conservative
-    /// handling.
+    /// was executing; that fence, and only the lineage that reaches it, is the propagation
+    /// chain retirement may later consider. Returns false for every other fault, which then
+    /// keeps its ordinary conservative handling.
     /// </summary>
     private bool TryWitnessAdmissionRefusal(Exception failure, BrowseAppContentRequest request)
     {
@@ -122,15 +140,31 @@ public sealed partial class BrowseChrome
                 if (ReferenceEquals(existing.Record.Refusal, refusal)) return true;
             var record = new BrowseAdmissionRefusalRecord(request, refusal);
             _admissionRefusals.Add(record);
-            _admissionProvenance.Add((record, fence, _declaredActions.Where(action => !action.IsCompleted).ToArray()));
+            _admissionProvenance.Add((record, fence));
         }
         return true;
     }
 
-    private static bool IsOwnedByAdmissionChain(ContentTransition? fence, Task source)
+    /// <summary>True only for the admission's own retained tasks and for outer actions whose
+    /// asserted await lineage reaches one of them. Reachability is walked forward through the
+    /// declared edges, so temporal overlap alone never joins the chain.</summary>
+    private bool IsOwnedByAdmissionChain(ContentTransition? fence, Task source)
     {
+        var retained = new HashSet<Task>(ReferenceEqualityComparer.Instance);
         for (; fence is not null; fence = fence.Parent)
-            if (fence.Retained.Contains(source, ReferenceEqualityComparer.Instance)) return true;
+            foreach (var task in fence.Retained) retained.Add(task);
+        if (retained.Count == 0) return false;
+        var seen = new HashSet<Task>(ReferenceEqualityComparer.Instance);
+        var pending = new Stack<Task>();
+        pending.Push(source);
+        while (pending.Count != 0)
+        {
+            var current = pending.Pop();
+            if (!seen.Add(current)) continue;
+            if (retained.Contains(current)) return true;
+            if (_propagationEdges.TryGetValue(current, out var driven))
+                foreach (var inner in driven) pending.Push(inner);
+        }
         return false;
     }
 
