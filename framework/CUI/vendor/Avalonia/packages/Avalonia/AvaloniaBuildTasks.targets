@@ -52,8 +52,6 @@
 
   <Target Name="GenerateCuiResources"
           BeforeTargets="CoreCompile;CoreResGen"
-          Inputs="@(CuiMarkup);@(AvaloniaResource)"
-          Outputs="$(CuiResourcesTemporaryFilePath)"
           DependsOnTargets="$(BuildCuiResourcesDependsOn);CompileCuiSources"
           Condition="('@(CuiMarkup->Count())' > 0) or ('@(AvaloniaResource->Count())' > 0)">
     <GenerateCuiResourcesTask

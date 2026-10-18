@@ -26,7 +26,7 @@
            retain their private XAML machinery and are not recursively scanned. -->
       <_CuiRootFiles Include="%(CuiSourceRoot.Identity)/**/*"
                      Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);**/bin/**;**/obj/**" />
-      <_CuiDeclaredSource Include="@(_CuiRootFiles);@(Cui);@(CuiMarkup);@(AvaloniaXaml);@(EmbeddedResource);@(Content);@(None);@(Compile)" />
+      <_CuiDeclaredSource Include="@(_CuiRootFiles);@(Cui);@(CuiMarkup);@(AvaloniaXaml);@(AvaloniaResource);@(EmbeddedResource);@(Content);@(None);@(Compile)" />
       <_CuiLegacySource Include="@(_CuiDeclaredSource)"
                         Condition="'%(Extension)' == '.axaml' or '%(Extension)' == '.xaml' or '%(Extension)' == '.hui'" />
     </ItemGroup>
