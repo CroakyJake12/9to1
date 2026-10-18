@@ -104,6 +104,16 @@ public sealed partial class OdsAwareMessageAttachmentService(
         inner.BuildPromptContextAsync(conversationId, attachmentIds, options, cancellationToken);
 
     /// <summary>
+    /// Removes only an unclaimed attachment still owned by the expected current branch.
+    /// </summary>
+    public Task<bool> TryDeletePendingAsync(
+        Guid attachmentId,
+        Guid conversationId,
+        Guid branchId,
+        CancellationToken cancellationToken) =>
+        inner.TryDeletePendingAsync(attachmentId, conversationId, branchId, cancellationToken);
+
+    /// <summary>
     /// Performs delete asynchronously so I/O does not block the caller's thread.
     /// </summary>
     public Task DeleteAsync(Guid attachmentId, CancellationToken cancellationToken) => inner.DeleteAsync(attachmentId, cancellationToken);
