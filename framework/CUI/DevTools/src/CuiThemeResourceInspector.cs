@@ -144,9 +144,12 @@ public sealed class CuiThemeResourceInspection
             return CuiThemeResourceInspector.PrecedenceDefinitionDefault;
 
         var theme = _effectiveTheme.GetValueOrDefault(elementId);
+        var type = component.Properties.FirstOrDefault(pair =>
+            pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
         if (CustomThemes is not null && theme is not null && CustomThemes.TryResolve(theme, out var resolved) && resolved is not null &&
             resolved.Rules.Any(rule => string.Equals(rule.Key.ElementName, component.Type, StringComparison.OrdinalIgnoreCase) &&
-                rule.Value.ContainsKey(canonical)))
+                (rule.Key.TypeName is null || string.Equals(rule.Key.TypeName, type?.Value, StringComparison.Ordinal)) &&
+                rule.Value.Keys.Any(name => EqualsCanonical(name, canonical))))
             return CuiThemeResourceInspector.PrecedenceInheritedTheme;
 
         return CuiThemeResourceInspector.PrecedenceBuiltInDefault;
@@ -257,9 +260,11 @@ public sealed class CuiThemeResourceInspector
                 var theme = inheritedTheme;
                 var source = inheritedSource;
 
-                var isThemeScope = component.IsThemeScope
+                // A Theme definition declares reusable presentation; it does not
+                // activate that theme merely by appearing in the document.
+                var isThemeScope = !component.IsDefinition && (component.IsThemeScope
                                     || (string.Equals(component.Type, "Theme", StringComparison.OrdinalIgnoreCase)
-                                        && component.Name is not null);
+                                        && component.Name is not null));
 
                 if (isThemeScope)
                 {
@@ -344,9 +349,9 @@ public sealed class CuiThemeResourceInspector
         }
 
         findings.Add(Finding(ThemeNameResolution, scope.Span,
-            $"Theme scope '{name}' is not a built-in theme, a declared custom theme or the reserved user_preference reference, so it falls back to the global default.",
+            $"Theme scope '{name}' is unavailable or incompatible, so it falls back to Professional.",
             "Declare the theme in a .cui-theme file, use a built-in name, or use user_preference to follow the Home-managed preference."));
-        return (CuiThemeCatalog.Name(globalDefault), "unresolved-fallback");
+        return (CuiThemeCatalog.Name(CuiTheme.Professional), "unresolved-fallback");
     }
 
     private static List<CuiResourceInspection> ResolveResources(CuiDocument document, List<CuiThemeResourceFinding> findings)

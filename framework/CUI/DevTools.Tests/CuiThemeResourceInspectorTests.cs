@@ -45,15 +45,21 @@ public sealed class CuiThemeResourceInspectorTests
         Assert.Empty(inspection.Findings);
     }
 
-    [Fact]
-    public void Unknown_theme_name_reports_the_documented_fallback()
+    [Theory]
+    [InlineData(CuiTheme.Professional)]
+    [InlineData(CuiTheme.Glow)]
+    [InlineData(CuiTheme.Bubble)]
+    public void Unknown_theme_name_reports_Professional_independently_of_the_global_preference(CuiTheme global)
     {
         var document = Parse("<Cui>\n    <DefaultTheme value=\"Sunset\">\n        <Text id=\"a\">a</Text>\n    </DefaultTheme>\n</Cui>\n");
-        var inspection = Inspector.Inspect(document);
+        var inspection = Inspector.Inspect(document, globalDefault: global);
 
         var finding = Assert.Single(inspection.Findings, item => item.Rule.Code == "CUIT001");
         Assert.Contains("Sunset", finding.Diagnostic.Message);
-        Assert.Equal("Glow", inspection.EffectiveThemeAt(new ElementId("id:a")));
+        Assert.Contains("Professional", finding.Diagnostic.Message);
+        Assert.Equal("Professional", inspection.EffectiveThemeAt(new ElementId("id:a")));
+        Assert.Equal(CuiThemeScope.Resolve("Sunset", new(), globalDefault: global).Theme.Name,
+            inspection.EffectiveThemeAt(new ElementId("id:a")));
     }
 
     [Fact]
@@ -86,14 +92,105 @@ public sealed class CuiThemeResourceInspectorTests
     }
 
     [Fact]
-    public void Canonical_theme_element_that_the_model_does_not_flag_as_a_scope_is_reported()
+    public void Canonical_Theme_creates_a_scope_without_a_false_parser_gap_warning()
     {
         var document = Parse("<Cui>\n    <Theme Name=\"Glow\">\n        <Text id=\"a\">a</Text>\n    </Theme>\n</Cui>\n");
         var inspection = Inspector.Inspect(document);
 
-        var finding = Assert.Single(inspection.Findings, item => item.Rule.Code == "CUIT009");
-        Assert.Contains("does not flag it as one", finding.Diagnostic.Message);
+        Assert.True(Assert.Single(document.Components).IsThemeScope);
+        var scope = Assert.Single(inspection.Scopes);
+        Assert.Equal("Glow", scope.AuthoredThemeName);
+        Assert.Equal("built-in", scope.ResolutionSource);
+        Assert.Empty(inspection.Findings);
         Assert.Equal("Glow", inspection.EffectiveThemeAt(new ElementId("id:a")));
+    }
+
+    [Fact]
+    public void Canonical_nested_Theme_returns_to_its_parent_and_does_not_leak_to_siblings()
+    {
+        var document = Parse("""
+            <Cui>
+                <Theme Name="Glow">
+                    <Text ID="a">a</Text>
+                    <Theme Name="Bubble"><Text ID="b">b</Text></Theme>
+                    <Text ID="c">c</Text>
+                </Theme>
+                <Text ID="outside">outside</Text>
+            </Cui>
+            """);
+        var inspection = Inspector.Inspect(document, globalDefault: CuiTheme.Professional);
+
+        Assert.Equal(2, inspection.Scopes.Count);
+        Assert.Equal("Glow", inspection.EffectiveThemeAt(new("id:a")));
+        Assert.Equal("Bubble", inspection.EffectiveThemeAt(new("id:b")));
+        Assert.Equal("Glow", inspection.EffectiveThemeAt(new("id:c")));
+        Assert.Equal("Professional", inspection.EffectiveThemeAt(new("id:outside")));
+        Assert.Empty(inspection.Findings);
+    }
+
+    [Fact]
+    public void A_Theme_definition_is_not_an_active_scope()
+    {
+        var document = Parse("""
+            <Cui>
+                <Theme (Definition) Name="Rainbow" Inherits="Professional">
+                    <Text (Definition) Color="Green" />
+                </Theme>
+                <Text ID="outside">outside</Text>
+            </Cui>
+            """);
+        var inspection = Inspector.Inspect(document, globalDefault: CuiTheme.Glow);
+
+        Assert.Empty(inspection.Scopes);
+        Assert.DoesNotContain(inspection.Findings, finding => finding.Rule.Code is "CUIT001" or "CUIT009");
+        Assert.Equal("Glow", inspection.EffectiveThemeAt(new("id:outside")));
+    }
+
+    [Theory]
+    [InlineData("Color", "Foreground")]
+    [InlineData("Foreground", "Color")]
+    [InlineData("color", "foreground")]
+    public void Inherited_theme_precedence_uses_registered_property_aliases(string authored, string queried)
+    {
+        var catalog = new CuiThemeDefinitionCatalog();
+        catalog.Add(new("Base", "Professional", [new("Text", null,
+            new Dictionary<string, object?> { [authored] = "Green" })]));
+        catalog.Add(new("Child", "Base", [new("Text", null,
+            new Dictionary<string, object?> { ["Opacity"] = "0.8" })]));
+        var document = Parse("<Cui><Theme Name=\"Child\"><Text ID=\"t\">x</Text></Theme></Cui>");
+
+        Assert.Equal(CuiThemeResourceInspector.PrecedenceInheritedTheme,
+            Inspector.Inspect(document, catalog).PrecedenceLevelOf(new("id:t"), queried));
+    }
+
+    [Theory]
+    [InlineData("Emphasis", CuiThemeResourceInspector.PrecedenceInheritedTheme)]
+    [InlineData("Other", CuiThemeResourceInspector.PrecedenceBuiltInDefault)]
+    [InlineData("emphasis", CuiThemeResourceInspector.PrecedenceBuiltInDefault)]
+    [InlineData(null, CuiThemeResourceInspector.PrecedenceBuiltInDefault)]
+    public void A_type_specific_theme_rule_only_matches_the_authored_element_Type(string? type, string expected)
+    {
+        var catalog = new CuiThemeDefinitionCatalog();
+        catalog.Add(new("Rainbow", "Professional", [new("Text", "Emphasis",
+            new Dictionary<string, object?> { ["Foreground"] = "Green" })]));
+        var typeAttribute = type is null ? "" : $" Type=\"{type}\"";
+        var document = Parse($"<Cui><Theme Name=\"Rainbow\"><Text ID=\"t\"{typeAttribute}>x</Text></Theme></Cui>");
+
+        Assert.Equal(expected, Inspector.Inspect(document, catalog).PrecedenceLevelOf(new("id:t"), "Color"));
+    }
+
+    [Fact]
+    public void Invalid_custom_theme_inheritance_reports_Professional_fallback()
+    {
+        var catalog = new CuiThemeDefinitionCatalog();
+        catalog.Add(new("Broken", "Missing", []));
+        var document = Parse("<Cui><Theme Name=\"Broken\"><Text ID=\"t\">x</Text></Theme></Cui>");
+
+        var inspection = Inspector.Inspect(document, catalog, CuiTheme.Bubble);
+
+        Assert.Equal("Professional", inspection.EffectiveThemeAt(new("id:t")));
+        Assert.Equal("unresolved-fallback", Assert.Single(inspection.Scopes).ResolutionSource);
+        Assert.Contains("Professional", Assert.Single(inspection.Findings).Diagnostic.Message);
     }
 
     [Fact]
