@@ -262,11 +262,20 @@ class Continuation:
         session = self.call('session.get')['data']
         if session.get('id') != self.sid or session.get('location', {}).get('directory') != self.directory:
             raise ValueError('Session identity/workspace changed')
-        return {'session': session, 'active': self.api.request('session.active')['data'],
-                'user': self.latest('user'), 'assistant': self.latest('assistant'),
-                'inbox': self.call('session.inbox.list')['data'],
-                'permissions': self.call('session.permission.list')['data'],
-                'forms': self.call('session.form.list')['data']}
+        snapshot = {'session': session, 'active': self.api.request('session.active')['data'],
+                    'user': self.latest('user'), 'assistant': self.latest('assistant'),
+                    'inbox': self.call('session.inbox.list')['data'],
+                    'permissions': self.call('session.permission.list')['data'],
+                    'forms': self.call('session.form.list')['data']}
+        # Running modes need fresh evidence too; keep it separate from pinned
+        # identity and dispatch receipts. Never retain arguments or output here.
+        self.state['current_observation'] = {
+            'observed_at': self.now(), 'session_id': self.sid, **self.evidence(snapshot),
+            'active': self.sid in snapshot['active'],
+            'tools': [{'id': part.get('id'), 'name': part.get('name'),
+                       'status': part.get('state', {}).get('status')}
+                      for part in snapshot['assistant'].get('content', []) if part.get('type') == 'tool']}
+        return snapshot
 
     def evidence(self, snapshot):
         assistant = snapshot['assistant']

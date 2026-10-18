@@ -59,5 +59,16 @@
   },
   "physical_pc_reboot_tested": false,
   "semantic_spec_review": "PARTIAL; exhaustive mechanical coverage only; every full applicable section must be read and tested per milestone",
-  "private_runtime_config_excluded": true
+  "private_runtime_config_excluded": true,
+  "last_observation_patch": {
+    "at": "2026-10-18T18:05:00.096136+00:00",
+    "purpose": "Fresh active observation without dispatch/recovery change",
+    "files": {
+      "continuation.py": "2aeab2019f36a9c765cca1d3c0b659f0d79c7d49ec33e1dcd16f8540bae17557",
+      "test_continuation.py": "8667abbf2ea5e088edae1b1570041297224fcbc472e4c407ded613fee38a9d84",
+      "CONTINUATION.md": "63583c9a990947829bd9581a3a02fe224f5c6bf064a9e326a1d8433fef33232c",
+      "ACTIVE-PROGRESS-PROPOSAL.md": "0a94bbe101c5e4795aff6583dc241714db0bcb6821e75a13364767e071fc870f"
+    },
+    "validation": "77/77 root suite passed; active-progress steering proposal is NOT IMPLEMENTED"
+  }
 }

@@ -718,5 +718,30 @@ print(json.dumps({'mode':result,'prompts':len(api.prompts),'probes':api.gateway_
                 self.assertEqual('deferred_control_changed', worker.tick())
                 self.assertFalse(api.prompts); self.assertNotIn('pending', worker.state)
 
+    def test_running_modes_persist_fresh_observation_without_advancing_dispatch_or_exposing_content(self):
+        self.enable_recovery(active=True); self.active_generation()
+        self.worker.state.update(assistant_id='old_assistant', user_id='old_user', last_boundary='unchanged_boundary')
+        self.assertEqual('running_generation_observed', self.worker.tick())
+        first = json.loads(self.worker.state_path.read_text())['current_observation']
+        self.assertEqual('msg_assistant_1', first['assistant_id']); self.assertEqual('msg_owner', first['user_id'])
+        self.api.user = {'id': 'msg_new_owner', 'type': 'user', 'time': {'created': 60}}
+        self.config['approved_user_message_ids'].append('msg_new_owner'); self.write_config()
+        self.api.assistant = assistant('msg_new_assistant', created=70, completed=None, finish=None, content=[
+            {'type': 'tool', 'id': 'call_current', 'name': 'shell',
+             'state': {'status': 'running', 'input': {'command': 'fixture-private-input'},
+                       'content': 'fixture-private-output'}}])
+        self.clock += 5
+        self.assertEqual('running_tool_or_unqualified_generation', self.worker.tick())
+        saved = json.loads(self.worker.state_path.read_text()); observed = saved['current_observation']
+        self.assertEqual('msg_new_assistant', observed['assistant_id']); self.assertEqual('msg_new_owner', observed['user_id'])
+        self.assertEqual(self.clock, observed['observed_at']); self.assertTrue(observed['active'])
+        self.assertEqual([{'id': 'call_current', 'name': 'shell', 'status': 'running'}], observed['tools'])
+        self.assertEqual(MODEL, saved['model']); self.assertEqual('unchanged_boundary', saved['last_boundary'])
+        self.assertEqual([], saved['dispatched']); self.assertFalse(self.api.prompts)
+        self.assertNotIn('fixture-private', json.dumps(observed))
+        self.api.fail = 'session.get'; self.clock += 5
+        self.assertEqual('unavailable', self.worker.tick())
+        self.assertEqual(observed, json.loads(self.worker.state_path.read_text())['current_observation'])
+
 
 if __name__ == '__main__': unittest.main(verbosity=2)
