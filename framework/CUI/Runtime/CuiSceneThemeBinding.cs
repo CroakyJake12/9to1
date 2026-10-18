@@ -13,6 +13,7 @@ internal sealed class CuiSceneThemeBinding : IDisposable
     private readonly CuiNativeScene _scene;
     private readonly Func<bool>? _canPublish;
     private readonly Action<ResourceDictionary>? _updated;
+    private CuiThemeResolution? _appliedPreference;
     private bool _disposed;
     public ResourceDictionary Resources { get; } = new();
 
@@ -22,33 +23,49 @@ internal sealed class CuiSceneThemeBinding : IDisposable
         _scene = scene;
         _canPublish = canPublish;
         _updated = updated;
-        Resources.MergedDictionaries.Add(CreateSnapshot());
+        _appliedPreference = scene.ThemePreference?.Current;
+        Resources.MergedDictionaries.Add(CreateSnapshot(_appliedPreference));
         if (scene.ThemePreference is { } context) context.Changed += PreferenceChanged;
     }
 
-    private ResourceDictionary CreateSnapshot()
+    private ResourceDictionary CreateSnapshot(CuiThemeResolution? resolution)
     {
-        var resolution = _scene.ThemePreference?.Current;
         var appearance = _scene.Appearance ?? resolution?.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
         return CuiSceneVisualResources.Create(_scene.Surface, appearance, resolution, CuiSceneVisualResources.AccentAppId(_scene));
     }
 
-    private void PreferenceChanged(object? sender, EventArgs args)
+    // Called after exact scene ownership is admitted as well as on Home events.
+    // Changes observed before admission cannot publish, but must not be lost.
+    public void SynchronizeCurrent()
     {
         void Publish()
         {
             if (_disposed || _canPublish?.Invoke() == false) return;
+            var resolution = _scene.ThemePreference?.Current;
+            if (ReferenceEquals(resolution, _appliedPreference)) return;
             // Build off-tree and replace one provider: observers never see a
             // partially populated palette. Failed callbacks remain owned by the
             // canonical context's retry/error tracking, not a detached UI task.
-            var snapshot = CreateSnapshot();
+            var snapshot = CreateSnapshot(resolution);
             if (_disposed || _canPublish?.Invoke() == false) return;
-            Resources.MergedDictionaries[0] = snapshot;
-            if (!_disposed && _canPublish?.Invoke() != false) _updated?.Invoke(Resources);
+            var previous = _appliedPreference;
+            _appliedPreference = resolution; // Reentrant newer updates retain their own identity.
+            try
+            {
+                Resources.MergedDictionaries[0] = snapshot;
+                if (!_disposed && _canPublish?.Invoke() != false) _updated?.Invoke(Resources);
+            }
+            catch
+            {
+                if (ReferenceEquals(_appliedPreference, resolution)) _appliedPreference = previous;
+                throw;
+            }
         }
         if (Dispatcher.UIThread.CheckAccess()) Publish();
         else Dispatcher.UIThread.Invoke(Publish);
     }
+
+    private void PreferenceChanged(object? sender, EventArgs args) => SynchronizeCurrent();
 
     public void Dispose()
     {

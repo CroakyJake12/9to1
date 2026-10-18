@@ -140,11 +140,21 @@ public static class CuiSurfacePaletteCatalog
     public static CuiPalette For(string surface, CuiAppearance appearance, CuiTheme themeOverride, string? accentColour) =>
         ForCore(surface, appearance, themeOverride, accentColour is null ? null : ColourAnchors(accentColour));
 
-    private static CuiPalette ForCore(string surface, CuiAppearance appearance, CuiTheme theme, CuiAccentAnchorSet? accentOverride)
+    /// <summary>
+    /// Resolves an app-owned scope without substituting its surface. App identity
+    /// selects the default accent; explicit Home overrides still take precedence.
+    /// </summary>
+    public static CuiPalette For(string surface, CuiAppearance appearance, CuiTheme themeOverride,
+        string? accentColour, string? owningAppId) =>
+        ForCore(surface, appearance, themeOverride, accentColour is null ? null : ColourAnchors(accentColour), owningAppId);
+
+    private static CuiPalette ForCore(string surface, CuiAppearance appearance, CuiTheme theme,
+        CuiAccentAnchorSet? accentOverride, string? owningAppId = null)
     {
         if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));
         var hue = Hues.TryGetValue(surface, out var configured) ? configured : Hues["Home"];
-        var appColour = CuiAppAccentCatalog.Find(surface)?.Colour;
+        var appColour = (owningAppId is null ? null : CuiAppAccentCatalog.Find(owningAppId)?.Colour)
+            ?? CuiAppAccentCatalog.Find(surface)?.Colour;
         var anchors = accentOverride ?? (appColour is null ? null : ColourAnchors(appColour));
         var accent = anchors?.Primary ?? Color.Parse(hue.Accent);
         var secondary = anchors?.Secondary ?? Color.Parse(hue.Secondary);

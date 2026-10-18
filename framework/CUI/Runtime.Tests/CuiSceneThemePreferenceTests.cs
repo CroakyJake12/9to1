@@ -201,6 +201,121 @@ public sealed class CuiSceneThemePreferenceTests
             ValueTask.FromException<CuiSceneAvailability>(new InvalidOperationException("Replacement readiness failed"));
     }
 
+    [Theory]
+    [InlineData("RequestedThemeVariant")]
+    [InlineData("Background")]
+    [InlineData("Foreground")]
+    [InlineData("Content")]
+    public async Task Home_change_during_guarded_initial_publication_reconciles_chrome_and_controls(string property)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var source = new Source("Glow", "publication-profile");
+            using var context = new CuiThemePreferenceContext(source);
+            using var host = new CuiSceneHost();
+            var changed = false;
+            host.PropertyChanged += (_, args) =>
+            {
+                if (changed || args.Property.Name != property) return;
+                changed = true;
+                source.Change("Professional", CuiAppearance.Bright);
+            };
+            try
+            {
+                await host.ShowAsync(Scene(context, true)).WaitAsync(Bound);
+                Assert.True(changed);
+                Assert.Equal("Professional", context.Current.Theme.Name);
+                Assert.Equal("Professional", Resource<string>(host, "CuiEffectiveThemeName"));
+                var input = Assert.IsType<CuiContainerControl>(host.Content).AuthoredChildren.OfType<TextBox>().Single();
+                Assert.Equal("Professional", Resource<string>(input, "CuiEffectiveThemeName"));
+                var palette = CuiSurfacePaletteCatalog.For("Spaces", CuiAppearance.Bright, CuiTheme.Professional, null);
+                Assert.Equal(palette.TideBase, Assert.IsAssignableFrom<ISolidColorBrush>(host.Background).Color);
+                Assert.Equal(palette.Text, Assert.IsAssignableFrom<ISolidColorBrush>(host.Foreground).Color);
+                Assert.Equal(Avalonia.Styling.ThemeVariant.Light, host.GetValue(ThemeVariantScope.RequestedThemeVariantProperty));
+                Assert.Equal("Keep this actual draft", input.Text);
+                Assert.Equal(0, context.ObserverFailureCount);
+                return true;
+            }
+            finally { await host.CloseOriginalAsync().WaitAsync(Bound); }
+        }, CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData("picture", "Imagine")]
+    [InlineData("wave", "Imagine")]
+    [InlineData("motion", "Imagine")]
+    [InlineData("app.write", "Home")]
+    public async Task Owning_app_defaults_and_Home_overrides_reach_chrome_and_controls(string appId, string surface)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var source = new Source("Professional", "app-accent-profile");
+            using var context = new CuiThemePreferenceContext(source);
+            using var host = new CuiSceneHost();
+            await host.ShowAsync(Scene(context, false) with { AppId = appId, Surface = surface }).WaitAsync(Bound);
+            var root = Assert.IsType<CuiContainerControl>(host.Content);
+            var input = root.AuthoredChildren.OfType<TextBox>().Single();
+            var owner = Assert.IsType<CuiAppAccentCatalog.AppAccent>(CuiAppAccentCatalog.Find(appId));
+            AssertAccent(owner.Surface, null);
+
+            ChangeAccent(new(CuiAccentOverrideMode.AllApps, "#123456"));
+            AssertAccent(surface, "#123456");
+            ChangeAccent(new(CuiAccentOverrideMode.IndividualApps, individualApps:
+                new Dictionary<string, string> { [owner.AppId] = "#654321", ["app.other"] = "#FF0000" }));
+            AssertAccent(surface, "#654321");
+            ChangeAccent(new(CuiAccentOverrideMode.IndividualApps, individualApps:
+                new Dictionary<string, string> { ["app.other"] = "#FF0000" }));
+            AssertAccent(owner.Surface, null);
+
+            // Default app anchors are not a user override of an authored custom fill.
+            var custom = CuiCustomThemeContract.CreateDefault("Authored accent roles");
+            var saved = CuiCustomThemeContract.SerializeLibrary([custom]);
+            source.Current = source.Current with { CustomThemesJson = saved };
+            source.Change(custom.Name, CuiAppearance.Dark);
+            AssertCustom(custom.PrimaryAccent);
+            ChangeAccent(new(CuiAccentOverrideMode.AllApps, "#123456"));
+            AssertCustom(custom.PrimaryAccent with { Colour = custom.PrimaryAccent.Colour with { Hex = "#123456" } });
+            ChangeAccent(new(CuiAccentOverrideMode.IndividualApps, individualApps:
+                new Dictionary<string, string> { [owner.AppId] = "#654321" }));
+            AssertCustom(custom.PrimaryAccent with { Colour = custom.PrimaryAccent.Colour with { Hex = "#654321" } });
+            ChangeAccent(CuiAccentPreference.Default);
+            AssertCustom(custom.PrimaryAccent);
+            Assert.Equal(saved, source.Current.CustomThemesJson);
+            Assert.Equal(0, context.ObserverFailureCount);
+            return true;
+
+            void ChangeAccent(CuiAccentPreference preference)
+            {
+                source.Current = source.Current with { Accent = preference };
+                source.Change(source.Current.Name, CuiAppearance.Dark);
+            }
+            void AssertAccent(string expectedSurface, string? explicitAccent)
+            {
+                var expected = new ResourceDictionary();
+                CuiThemeResourceApplier.ApplyToResources(expected,
+                    CuiSurfacePaletteCatalog.For(expectedSurface, CuiAppearance.Dark, CuiTheme.Professional, explicitAccent));
+                var colour = Resource<Color>(expected, "CuiAccentPrimaryColor");
+                Assert.Equal(colour, Resource<Color>(host, "CuiAccentPrimaryColor"));
+                Assert.Equal(colour, Resource<Color>(input, "CuiAccentPrimaryColor"));
+                Assert.Same(root, host.Content);
+                Assert.Equal("Keep this actual draft", input.Text);
+            }
+            void AssertCustom(CuiCustomFill primary)
+            {
+                foreach (var control in new Control[] { host, input })
+                {
+                    Assert.Equal(primary, Resource<CuiCustomFill>(control, "CuiAccentPrimaryFill"));
+                    Assert.Equal(custom.SecondaryAccent, Resource<CuiCustomFill>(control, "CuiAccentSecondaryFill"));
+                    Assert.Equal(custom.TertiaryAccent, Resource<CuiCustomFill>(control, "CuiAccentTertiaryFill"));
+                }
+                Assert.Same(root, host.Content);
+                Assert.Equal("Keep this actual draft", input.Text);
+            }
+        }, CancellationToken.None);
+    }
+
     private static CuiNativeScene Scene(CuiThemePreferenceContext context, bool guarded)
     {
         var bindings = new CuiViewModel();

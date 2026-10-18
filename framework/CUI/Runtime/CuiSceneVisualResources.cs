@@ -20,7 +20,7 @@ public static class CuiSceneVisualResources
         var accent = resolution?.EffectiveAccent.ResolveColour(appId ?? string.Empty);
         var theme = resolution?.Theme.BaseTheme ?? CuiSurfacePaletteCatalog.ActiveTheme;
         CuiThemeResourceApplier.ApplyToResources(resources,
-            CuiSurfacePaletteCatalog.For(surface, appearance, theme, accent), resolution?.Accessibility);
+            CuiSurfacePaletteCatalog.For(surface, appearance, theme, accent, appId), resolution?.Accessibility);
         if (resolution?.Theme.CustomTheme is { } custom)
             CuiCustomThemeResourceApplier.ApplyToResources(resources,
                 CuiCustomThemeAccentResolver.Resolve(custom, accent), resolution.Accessibility);

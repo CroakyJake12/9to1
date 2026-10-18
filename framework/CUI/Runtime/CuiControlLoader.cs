@@ -140,7 +140,7 @@ public sealed class CuiControlLoader : IDisposable
         var explicitAccent = resolution.EffectiveAccent.ResolveColour(_accentAppId ?? string.Empty);
         var palette = CuiSurfacePaletteCatalog.For(_currentSurface,
             _appearance ?? resolution.Appearance ?? CuiThemeScopeApplier.DetectAppearance(), resolution.Theme.BaseTheme,
-            explicitAccent);
+            explicitAccent, _accentAppId);
         var key = new ThemeResourceKey(palette, resolution.Accessibility, resolution.Theme.Name, resolution.Theme.CustomFingerprint, explicitAccent);
         // Editing a named draft changes the shared catalog. Scopes whose effective
         // palette and custom definition are unchanged retain their resource owners.

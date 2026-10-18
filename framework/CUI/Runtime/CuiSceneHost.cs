@@ -400,6 +400,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             if (_visualResources is not null) Resources.MergedDictionaries.Remove(_visualResources);
             _visualResources = nextTheme.Resources;
             Resources.MergedDictionaries.Add(_visualResources);
+            nextTheme.SynchronizeCurrent();
             ApplySceneChrome(_visualResources, () => !_disposed && ReferenceEquals(_themeBinding, nextTheme));
             Content = root;
             Diagnostics = diagnostics;
@@ -546,6 +547,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             _themeBinding = publication.ThemeBinding;
             _contentLoader = next; _contentRoot = root; // Exact assigned Content custody before its notification.
             transferred = true;
+            Publish(publication.ThemeBinding.SynchronizeCurrent);
             Publish(() => Content = root);
             Publish(() => Diagnostics = loaded.Diagnostics);
             Publish(() => Availability = availability);
