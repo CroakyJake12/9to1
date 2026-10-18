@@ -1,0 +1,52 @@
+{
+  "pid": 2318427,
+  "exe": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/v2-pc-implementation/9to1 Workspace/shared/src/Haven.Desktop/bin/x64/Debug/net10.0/Haven",
+  "window": "0x180001b",
+  "method": "AT-SPI",
+  "action": "click",
+  "before": {
+    "name": "Go to address",
+    "role": "button",
+    "path": [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      3,
+      0,
+      0,
+      1,
+      0
+    ],
+    "states": [
+      "enabled",
+      "focusable",
+      "sensitive",
+      "showing",
+      "visible"
+    ],
+    "actions": [
+      "click"
+    ],
+    "screen_rect": [
+      3158,
+      380,
+      56,
+      64
+    ]
+  },
+  "accepted": true
+}

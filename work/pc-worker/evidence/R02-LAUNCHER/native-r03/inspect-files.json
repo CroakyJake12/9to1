@@ -1,0 +1,1274 @@
+{
+  "pid": 2303823,
+  "exe": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/v2-pc-implementation/9to1 Workspace/shared/src/Haven.Desktop/bin/x64/Debug/net10.0/Haven",
+  "window": "0x180001b",
+  "method": "AT-SPI",
+  "action": "inspect",
+  "controls": [
+    {
+      "name": "9to1",
+      "role": "frame",
+      "path": [],
+      "states": [
+        "active",
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        480,
+        294,
+        2880,
+        1840
+      ]
+    },
+    {
+      "name": "Home",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        496,
+        302,
+        400,
+        64
+      ]
+    },
+    {
+      "name": "Home",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        520,
+        310,
+        352,
+        48
+      ]
+    },
+    {
+      "name": "Files",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        904,
+        302,
+        344,
+        64
+      ]
+    },
+    {
+      "name": "Files",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        928,
+        310,
+        296,
+        48
+      ]
+    },
+    {
+      "name": "Close Files",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "states": [
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        1248,
+        302,
+        56,
+        64
+      ]
+    },
+    {
+      "name": "×",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        1256,
+        310,
+        40,
+        48
+      ]
+    },
+    {
+      "name": "New tab",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "states": [
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        3280,
+        302,
+        64,
+        64
+      ]
+    },
+    {
+      "name": "+",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        3288,
+        310,
+        48,
+        48
+      ]
+    },
+    {
+      "name": "Go back",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        496,
+        380,
+        56,
+        64
+      ]
+    },
+    {
+      "name": "←",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        504,
+        388,
+        40,
+        48
+      ]
+    },
+    {
+      "name": "Go forward",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        560,
+        380,
+        56,
+        64
+      ]
+    },
+    {
+      "name": "→",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        568,
+        388,
+        40,
+        48
+      ]
+    },
+    {
+      "name": "Reload page",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        624,
+        380,
+        56,
+        64
+      ]
+    },
+    {
+      "name": "↻",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        632,
+        388,
+        40,
+        48
+      ]
+    },
+    {
+      "name": "Search or enter web address",
+      "role": "entry",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "editable",
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "single-line",
+        "visible"
+      ],
+      "actions": [],
+      "text": "9to1://files",
+      "screen_rect": [
+        690,
+        380,
+        2468,
+        64
+      ]
+    },
+    {
+      "name": "Go to address",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        3,
+        0,
+        0,
+        1,
+        0
+      ],
+      "states": [
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        3158,
+        380,
+        56,
+        64
+      ]
+    },
+    {
+      "name": "→",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        3,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        3166,
+        388,
+        40,
+        48
+      ]
+    },
+    {
+      "name": "Bookmark page",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        4,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        3224,
+        380,
+        56,
+        64
+      ]
+    },
+    {
+      "name": "☆",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        3232,
+        388,
+        40,
+        48
+      ]
+    },
+    {
+      "name": "Browser tools",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        5,
+        0
+      ],
+      "states": [
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        3288,
+        380,
+        56,
+        64
+      ]
+    },
+    {
+      "name": "⋯",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        3296,
+        388,
+        40,
+        48
+      ]
+    },
+    {
+      "name": "FilesWorkspaceSetupPage",
+      "role": "unknown",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        480,
+        458,
+        2880,
+        1649
+      ]
+    },
+    {
+      "name": "Set up Files",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        528,
+        506,
+        2784,
+        59
+      ]
+    },
+    {
+      "name": "Choose an empty folder for your Files workspace. Files will create its storage and app folders there. Existing folders and files are never imported or replaced by this setup.",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        528,
+        589,
+        2784,
+        35
+      ]
+    },
+    {
+      "name": "Choose an empty Files workspace folder",
+      "role": "button",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "states": [
+        "enabled",
+        "focusable",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [
+        "click"
+      ],
+      "screen_rect": [
+        528,
+        648,
+        2784,
+        80
+      ]
+    },
+    {
+      "name": "Choose an empty folder",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        558,
+        670,
+        2724,
+        36
+      ]
+    },
+    {
+      "name": "TextBlock",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        528,
+        752,
+        2784,
+        35
+      ]
+    },
+    {
+      "name": "Files",
+      "role": "label",
+      "path": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0
+      ],
+      "states": [
+        "enabled",
+        "sensitive",
+        "showing",
+        "visible"
+      ],
+      "actions": [],
+      "screen_rect": [
+        480,
+        2107,
+        2880,
+        27
+      ]
+    }
+  ]
+}
