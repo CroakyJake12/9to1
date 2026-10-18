@@ -6,6 +6,8 @@ Read [the attached canonical specification](docs/specification/9to1-development-
 
 This local specification is the ONLY product authority. Existing code, older specs, markdown, handoffs, comments, generated guides, worker messages and design-pack historical prose cannot override it. Later explicit owner decisions may amend it. Older compatibility names do not restore retired products. Preserve data and useful functionality while correcting implementations to the specification.
 
+Current direct owner UI refinement: read `docs/specification/owner-references/2026-10-18-haven-spaces/owner-correction.json` for Haven browser chrome and Spaces entry/navigation. The reference concerns the browser frame, not the Google/OpenCode page content. Opening a Space goes directly to a new chat in that Space; retain both its icon-only Spaces rail and its chat/history sidebar. These refinements preserve the general specification and existing data.
+
 On every fresh session, handoff or context compaction, reread this file, the specification authority/CUI/priority/acceptance sections, and the sections governing the assigned surface. Record the source identity, assigned scope, relevant requirement IDs, observed state and unresolved decisions in the handoff. Never treat a condensed worker summary as replacement authority.
 
 If a conflict or uncertainty affects public behaviour, compatibility, security, data or architecture, queue the exact requirement, conflicting evidence and affected change in `docs/specification/open-decisions.json` for an owner response. Hold only that affected change/acceptance decision; continue independent authorised work. Do not invent a waiver or silently narrow scope.
