@@ -999,9 +999,32 @@ print(json.dumps({'mode':result,'prompts':len(api.prompts),'probes':api.gateway_
         original_read = module.read
         def fixture_read(path):
             return {'password': 'fixture-credential'} if str(path) == self.config['service_config'] else original_read(path)
+        def reply(args, **kwargs):
+            output = kwargs.get('stdout')
+            if output is not None and hasattr(output, 'write'):
+                output.write(body)
+                output.flush()
+                return subprocess.CompletedProcess([], returncode, stdout=None, stderr=stderr)
+            return subprocess.CompletedProcess([], returncode, stdout=body, stderr=stderr)
         with mock.patch.object(module, 'read', side_effect=fixture_read), mock.patch.object(module.subprocess, 'run',
-                return_value=subprocess.CompletedProcess([], returncode, stdout=body, stderr=stderr)):
+                side_effect=reply):
             return module.API(self.config).request(operation, {'sessionID': SID}, data)
+    def test_large_cli_response_survives_immediate_exit_without_pipe_drain(self):
+        # Reproduce the real failure class: nonblocking buffered output followed
+        # by immediate process exit drops the rest when stdout is a full pipe.
+        cli = self.root / 'fixture-cli'
+        cli.write_text("#!/usr/bin/env python3\nimport os,json\n"
+            "payload=json.dumps({'data': [{'id':'msg_large', 'text':'x'*350000}]}).encode()\n"
+            "os.set_blocking(1, False)\n"
+            "while payload:\n"
+            " try: payload=payload[os.write(1,payload):]\n"
+            " except BlockingIOError: break\n"
+            "os._exit(0)\n")
+        cli.chmod(0o700)
+        auth = self.root / 'auth.json'; auth.write_text('{"password":"fixture-credential"}')
+        config = {**self.config, 'opencode': str(cli), 'service_config': str(auth), 'directory': str(self.root)}
+        response = module.API(config).request('session.message.list', {'sessionID': SID, 'limit': 1})
+        self.assertEqual([{'id': 'msg_large', 'text': 'x' * 350000}], response['data'])
     def test_read_api_blank_invalid_and_missing_envelope_backoff_then_recover_without_epoch(self):
         for body, error_type in (('', 'MissingDataEnvelope'), ('{fixture-private', 'JSONDecodeError'),
                 ('{}', 'MissingDataEnvelope'), ('{"data":null}', 'InvalidDataShape'),

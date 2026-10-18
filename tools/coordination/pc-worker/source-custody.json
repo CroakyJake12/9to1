@@ -73,9 +73,9 @@
   },
   "historical_files_note": "The top-level files and test_receipt preserve the initial activation. current_files identifies this revision; subsequent patch receipts retain their own exact source identities.",
   "current_files": {
-    "continuation.py": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
-    "test_continuation.py": "c0ab1c2b6536de5e0012ed802be633c96bd3e2ff9bddf9df83666d3d2b4bc29e",
-    "CONTINUATION.md": "023bc5e10c1d54b3fc698d73e4f5646c52926271ba6888381dae4cc22577ca03",
+    "continuation.py": "81edfd451a898399ae5c5b6bfd72f251046ad30e772d12e107d1c4888a4afdf7",
+    "test_continuation.py": "34fa22844ea1a7c96f9d987a6d2afb4e44f6f87735f6e1f77ec7db72326455c6",
+    "CONTINUATION.md": "e01beda351652aaf3b00830bef4b2a88cbb3c0fe6a7311bccacdd2f4d62a7c72",
     "milestone-ledger.py": "8a8a1dadd7f3f7b0157afd5a8d629b53f37a4bd628036cff5b3b555c0ef97f5b",
     "test_milestone_ledger.py": "812aed2b64a971e7cacaec5cba1250398a88e869cb87cded148b25c51793a32f",
     "milestones.json": "04a44fb809f83beb4a36ae6548617234eb436c28b4b5d9390ff9542efd30f95b",
@@ -85,7 +85,7 @@
     "COMMIT-AND-MILESTONE-POLICY.md": "0dd838ef5a55c494950a4a0b3a40633a0c7ec96d419251cd2b0f3aac8a376d12",
     "AUTONOMOUS-OPERATION.md": "29292d66b2f4fbad38f0dd0aa6f10996a2dafe8a9c3becff1d6850f2a6be71eb",
     "worker-access.py": "c53e104e37cba1c814e8c7b7b5fa1f5d34c286c6f707b5eddf729c5138d0de15",
-    "worker-access.json": "950a617cff8826dad9a6a89a16249d3ddfbffa67b45798a3c33b80bb2e5d4e8c",
+    "worker-access.json": "210f127ad5715c9565fb73b83c87dec42fbafa58cfb3d15596d0059b755a0230",
     "test_worker_access.py": "76fde3ed6a601f71c48a845819ac87e46e54f86ef76947b473d816679cdc93d7",
     "START-AND-RECOVERY.md": "47155b9ca74210495684f38707087380cbee132f4e7de1b73d3a91c9fc201c2d"
   },
@@ -430,5 +430,82 @@
       "desktop_validation_exit": 0,
       "desktop_trusted": true
     }
+  },
+  "cli_output_capture_patch": {
+    "at": "2026-10-18T20:31:47.938737+00:00",
+    "reason": "Observed intermittent CLI pipe truncation for large completed compaction; same supported command once with private file stdout",
+    "comparison_receipt": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/cycle-20261018T202334Z/cli-output-comparison.json",
+    "validation": {
+      "at": "2026-10-18T20:30:36.389599+00:00",
+      "tests": {
+        "passed": 133,
+        "failed": 0,
+        "exit_code": 0
+      },
+      "old_source_negative_control_exit": 1,
+      "scope": "101 continuation and32 helper tests, isolated local fixture; no production mutation/model calls",
+      "source_hashes": {
+        "continuation.py": "81edfd451a898399ae5c5b6bfd72f251046ad30e772d12e107d1c4888a4afdf7",
+        "test_continuation.py": "34fa22844ea1a7c96f9d987a6d2afb4e44f6f87735f6e1f77ec7db72326455c6",
+        "tests.log": "cd8d5efc8e39029b4f69d2844d98b4d91f812384d7efb84b40d021c7e9bcf2e2",
+        "before-test.log": "03eaa98757c46c9b86cb168961753bfe214d36b9f23d67beb8e4d468f282c1ad"
+      }
+    },
+    "independent_review": {
+      "reviewer": "astra_home_native_acceptance",
+      "verdict": "SCOPED_ACCEPTED",
+      "hashes": {
+        "continuation.py": "81edfd451a898399ae5c5b6bfd72f251046ad30e772d12e107d1c4888a4afdf7",
+        "test_continuation.py": "34fa22844ea1a7c96f9d987a6d2afb4e44f6f87735f6e1f77ec7db72326455c6",
+        "tests.log": "cd8d5efc8e39029b4f69d2844d98b4d91f812384d7efb84b40d021c7e9bcf2e2",
+        "before-test.log": "03eaa98757c46c9b86cb168961753bfe214d36b9f23d67beb8e4d468f282c1ad"
+      },
+      "must_fix_findings": [],
+      "reviewed": [
+        "Full production/test delta against live continuation baseline",
+        "API.request allowlist/credentials/error/schema surrounding integration",
+        "Actual pipe/file comparison receipt, saved133-test success and old-source negative-control traceback"
+      ],
+      "findings": [
+        "Only stdout capture transport changes; supported CLI command, environment authentication, operation allowlist, timeout and protocol validation preserved.",
+        "Exactly one subprocess invocation per request; no fallback invocation or replay of uncertain mutating commands.",
+        "TemporaryFile context closes anonymous/private file on success, timeout or exception; no response body logged or durable named response artifact introduced.",
+        "subprocess timeout still raises sanitized APIError after child cleanup; stderr remains privately classified.",
+        "Observed pipe failure is intermittent: first196608-byte invalid response, second pipe response full329765; two file captures identically valid. Do not claim every pipe request truncates."
+      ],
+      "evidence": {
+        "saved_tests": "133passed exit0 per validation; old-source regression fails invalid_response exit1",
+        "independent_rerun": false
+      },
+      "limits": [
+        "No live CLI/service/model actions or runtime edits.",
+        "Fixture checks large response completeness, not physical reboot or product acceptance."
+      ]
+    },
+    "live_read": {
+      "at": "2026-10-18T20:31:00.468774+00:00",
+      "source_sha256": "81edfd451a898399ae5c5b6bfd72f251046ad30e772d12e107d1c4888a4afdf7",
+      "session_id": "ses_eb01533adffev5jMYgJVLFXfZP",
+      "active": true,
+      "assistant_id": "msg_150b5b822001iZ4MgnTdMnri2C",
+      "tools": [
+        {
+          "id": "call_c89e68c24fc04e4582396d97",
+          "name": "shell",
+          "status": "streaming"
+        }
+      ],
+      "compaction_id": "msg_1509e83770017fEfrPi6Cz0YMB",
+      "compaction_status": "completed",
+      "compaction_read_success": true,
+      "inbox_ids": [],
+      "permission_count": 0,
+      "form_count": 0,
+      "gateway": {
+        "kind": "loaded"
+      },
+      "no_dispatch_or_state_write": true
+    },
+    "activation_receipt": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/cycle-20261018T202334Z/cli-output-activation.json"
   }
 }

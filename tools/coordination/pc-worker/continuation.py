@@ -16,6 +16,7 @@ import socket
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 import subprocess
+import tempfile
 import time
 from urllib.parse import urlparse
 from urllib import error as urlerror, request as urlrequest
@@ -105,19 +106,25 @@ class API:
         env = os.environ.copy()
         env['OPENCODE_PASSWORD'] = read(self.config['service_config'])['password']
         try:
-            result = subprocess.run(args, cwd=self.config['directory'], env=env,
-                                    capture_output=True, text=True, timeout=30)
+            # The installed CLI can exit before a large pipe write is drained.
+            # A private, automatically closed regular file preserves the complete
+            # supported CLI response without replaying a possibly mutating call.
+            with tempfile.TemporaryFile(mode='w+', encoding='utf-8') as output:
+                result = subprocess.run(args, cwd=self.config['directory'], env=env,
+                                        stdout=output, stderr=subprocess.PIPE, text=True, timeout=30)
+                output.seek(0)
+                response_text = output.read()
         except subprocess.TimeoutExpired:
             raise APIError('transport', operation, 'TimeoutExpired') from None
         if result.returncode or 'Error:' in result.stderr:
-            diagnostic = result.stdout + result.stderr  # Classified privately; never logged.
+            diagnostic = response_text + result.stderr  # Classified privately; never logged.
             if re.search(r'UnauthorizedError|ForbiddenError|\b(?:401|403)\b', diagnostic):
                 raise APIError('authentication', operation)
             if re.search(r'InvalidRequestError|SessionNotFoundError|LocationNotFoundError', diagnostic):
                 raise APIError('configuration', operation)
             raise APIError('transport', operation)
         try:
-            response = json.loads(result.stdout) if result.stdout.strip() else {}
+            response = json.loads(response_text) if response_text.strip() else {}
         except (ValueError, TypeError) as error:
             raise APIError('invalid_response', operation, type(error).__name__) from None
         read_shapes = {'session.active': dict, 'session.get': dict, 'session.message.list': list,
