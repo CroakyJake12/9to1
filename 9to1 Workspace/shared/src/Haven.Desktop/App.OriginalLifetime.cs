@@ -293,7 +293,8 @@ public sealed partial class App
     private void OnOriginalUnexpectedPrimaryWindowClosed(object? sender, EventArgs args)
     {
         if (_actualWindowClosure is null)
-            _actualShutdownFailure ??= new InvalidOperationException("The native primary window closed without the actual original host drain. Clean remains unacknowledged.");
+            ReportOriginalShutdownFailure(_actualShutdownFailure ??= new InvalidOperationException(
+                "The native primary window closed without the actual original host drain. Clean remains unacknowledged."));
     }
     private void RequestOriginalDocumentClosePreflight()
     {
@@ -498,11 +499,20 @@ public sealed partial class App
         catch (Exception error)
         {
             _actualShutdownFailure = error;
-            System.Diagnostics.Debug.WriteLine("[9to1 original shutdown] " + error);
+            ReportOriginalShutdownFailure(error);
             if (error is OperationCanceledException)
                 throw new AggregateException("The actual native shutdown retains its uncertain cancellation cause.", error);
             throw; // SAME failed original remains inspectable, never retried or described as no effect.
         }
+    }
+    // A retained shutdown failure has to be diagnosable outside a debugger: Debug.WriteLine never
+    // reaches an apphost log, so the SAME retained original is also written to the process error
+    // stream. This adds no recovery authority, retries nothing and never relabels the failure.
+    private void ReportOriginalShutdownFailure(Exception failure)
+    {
+        System.Diagnostics.Debug.WriteLine("[9to1 original shutdown] " + failure);
+        try { Console.Error.WriteLine("[9to1 original shutdown] " + failure); }
+        catch (Exception diagnosticFailure) { System.Diagnostics.Debug.WriteLine("[9to1 original shutdown diagnostic] " + diagnosticFailure); }
     }
     private void DemandOriginalDesktopBorrowerJoins(IReadOnlyList<object> actualOwners)
     {

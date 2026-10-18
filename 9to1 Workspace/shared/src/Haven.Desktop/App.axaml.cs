@@ -351,8 +351,8 @@ public sealed partial class App : Avalonia.Application
         // must already have joined originals/provider and issued its final writer.
         if (_actualShutdownSequence?.OriginalShutdown is not { IsCompletedSuccessfully: true } ||
             _actualWindowClosure is not { IsCompletedSuccessfully: true })
-            _actualShutdownFailure ??= new InvalidOperationException(
-                "Desktop exited without the actual original pre-close drain; clean shutdown was not acknowledged.");
+            ReportOriginalShutdownFailure(_actualShutdownFailure ??= new InvalidOperationException(
+                "Desktop exited without the actual original pre-close drain; clean shutdown was not acknowledged."));
     }
 
     private void AttachUpdateServices()
