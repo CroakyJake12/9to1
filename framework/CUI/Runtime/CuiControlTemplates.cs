@@ -92,8 +92,15 @@ public static class CuiControlTemplates
     private static ContentPresenter Presenter(TemplatedControl owner, INameScope scope, string name = "PART_ContentPresenter", string property = "Content")
     {
         var presenter = Name(new ContentPresenter(), name, scope);
-        Bind(presenter, ContentPresenter.ContentProperty, owner, property);
-        Bind(presenter, ContentPresenter.ContentTemplateProperty, owner, property == "Header" ? "HeaderTemplate" : "ContentTemplate");
+        // A retiring template must release its visual content when its templated
+        // parent is removed. A Binding with Source=owner survives that removal
+        // and leaves the same Control parented by the old presenter on retemplate.
+        var content = AvaloniaPropertyRegistry.Instance.FindRegistered(owner, property)
+            ?? throw new InvalidOperationException($"No canonical template content property '{property}'.");
+        var contentTemplate = AvaloniaPropertyRegistry.Instance.FindRegistered(owner, property == "Header" ? "HeaderTemplate" : "ContentTemplate")
+            ?? throw new InvalidOperationException("No canonical content-template property.");
+        presenter.Bind(ContentPresenter.ContentProperty, new TemplateBinding(content));
+        presenter.Bind(ContentPresenter.ContentTemplateProperty, new TemplateBinding(contentTemplate));
         Bind(presenter, ContentPresenter.PaddingProperty, owner, "Padding");
         Bind(presenter, ContentPresenter.HorizontalContentAlignmentProperty, owner, "HorizontalContentAlignment");
         Bind(presenter, ContentPresenter.VerticalContentAlignmentProperty, owner, "VerticalContentAlignment");

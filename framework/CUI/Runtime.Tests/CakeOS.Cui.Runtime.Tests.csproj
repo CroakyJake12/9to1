@@ -19,6 +19,8 @@
   <ItemGroup>
     <ProjectReference Include="../Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
+    <!-- Reproduce mounted CUI retirement inside the existing desktop Fluent host. -->
+    <ProjectReference Include="../vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../../../9to1 Workspace/Home/UI/Home.cui" LogicalName="9T.W2.Home.cui" />
