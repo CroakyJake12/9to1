@@ -54,9 +54,9 @@ public sealed partial class SpaceBuilderPage
         {
             var path = command switch
             {
-                "space-builder.close.save" => "decision.canSave",
-                "space-builder.close.discard" => "decision.canDiscard",
-                "space-builder.close.cancel" => "decision.canCancel",
+                "space-details.close.save" => "decision.canSave",
+                "space-details.close.discard" => "decision.canDiscard",
+                "space-details.close.cancel" => "decision.canCancel",
                 _ => null
             };
             return path is not null && TryGetValue(path, out var value) ? value as bool? : null;
