@@ -256,11 +256,11 @@ public sealed class CuiThemeDefinitionCatalog
 
         public bool Equals(CuiThemeRuleKey x, CuiThemeRuleKey y) =>
             string.Equals(x.ElementName, y.ElementName, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(x.TypeName, y.TypeName, StringComparison.OrdinalIgnoreCase);
+            && string.Equals(x.TypeName, y.TypeName, StringComparison.Ordinal);
 
         public int GetHashCode(CuiThemeRuleKey key) => HashCode.Combine(
             StringComparer.OrdinalIgnoreCase.GetHashCode(key.ElementName),
-            key.TypeName is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(key.TypeName));
+            key.TypeName is null ? 0 : StringComparer.Ordinal.GetHashCode(key.TypeName));
     }
 }
 

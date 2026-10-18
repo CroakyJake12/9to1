@@ -397,6 +397,10 @@ public sealed class CuiThemeTests
             new("Button", "Primary", new Dictionary<string, object?>
             {
                 ["Foreground"] = "white"
+            }),
+            new("button", "primary", new Dictionary<string, object?>
+            {
+                ["foreground"] = "black"
             })
         ]));
         catalog.Add(new CuiThemeDefinition("Ocean", "Rainbow",
@@ -413,6 +417,45 @@ public sealed class CuiThemeTests
         Assert.Equal(8d, resolved.Rules[new("BUTTON", null)]["padding"]);
         Assert.Equal("navy", resolved.Rules[new("Button", null)]["background"]);
         Assert.Equal("white", resolved.Rules[new("Button", "Primary")]["foreground"]);
+        Assert.Equal("black", resolved.Rules[new("BUTTON", "primary")]["Foreground"]);
+        Assert.False(resolved.Rules.ContainsKey(new("Button", "PRIMARY")));
+        Assert.Equal(3, resolved.Rules.Count);
+        Assert.Throws<NotSupportedException>(() =>
+            ((IDictionary<string, object?>)resolved.Rules[new("Button", "Primary")])["Foreground"] = "red");
+        Assert.Equal("white", catalog.Resolve("ocean").Rules[new("button", "Primary")]["FOREGROUND"]);
+    }
+
+    [Fact]
+    public void Parsed_theme_rules_keep_registered_authored_Type_names_case_sensitive()
+    {
+        var registry = new CuiControlRegistry();
+        var upper = new Avalonia.Controls.TextBlock();
+        var lower = new Avalonia.Controls.TextBlock();
+        registry.RegisterControlType("AuthoredLabel", _ => upper);
+        registry.RegisterControlType("authoredlabel", _ => lower);
+        Assert.False(registry.IsRegisteredRuntimeType("AUTHOREDLABEL"));
+        using var loader = new CuiControlLoader(registry);
+        var (root, diagnostics) = loader.LoadMarkup("""
+            <Cui>
+              <Theme Definition="True" Name="CaseRules" Inherits="Professional">
+                <text Definition="True" Type="AuthoredLabel" oPaCiTy="0.25" />
+                <Text Definition="True" Type="authoredlabel" Opacity="0.75" />
+              </Theme>
+              <Theme Name="CaseRules">
+                <Page>
+                  <Text ID="upper" Type="AuthoredLabel">Upper type</Text>
+                  <Text ID="lower" Type="authoredlabel">Lower type</Text>
+                </Page>
+              </Theme>
+            </Cui>
+            """);
+
+        Assert.Empty(diagnostics);
+        var page = Assert.IsType<Avalonia.Controls.Panel>(root);
+        Assert.Same(upper, page.Children[0]);
+        Assert.Same(lower, page.Children[1]);
+        Assert.Equal(.25d, upper.Opacity);
+        Assert.Equal(.75d, lower.Opacity);
     }
 
     [Fact]
