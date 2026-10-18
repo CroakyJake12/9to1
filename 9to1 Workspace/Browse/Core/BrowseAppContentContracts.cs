@@ -59,3 +59,26 @@ public interface IBrowseAppContentSession
     /// </summary>
     Task CloseAndDrainAsync();
 }
+
+/// <summary>Optional reversible preparation. Capability is not authorization. Legacy
+/// bool participants remain supported without claiming a frozen edit boundary.</summary>
+public interface IBrowseAppContentClosePreparationParticipant
+{
+    bool SupportsReversibleClosePreparation { get; }
+    /// <summary>The actual originating command and loader actions must settle before
+    /// this task yields a preparation. Null is an ordinary veto. The external caller
+    /// owns abort on every path that does not accept irreversible retirement.</summary>
+    Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IBrowseAppContentClosePreparation
+{
+    IBrowseAppContentSession Session { get; }
+    bool IsCurrent { get; }
+    /// <summary>Idempotent retained restoration task; never reverses an accepted close.</summary>
+    Task AbortAsync();
+    /// <summary>Synchronously validates the private preparation and seals mutation
+    /// admission before returning the SAME Session.OriginalClose task. Stale/foreign/
+    /// aborted preparations refuse before caching any irreversible close.</summary>
+    Task BeginClose();
+}

@@ -18,6 +18,7 @@ public sealed partial class BrowseChrome
         public Exception? CloseContractFailure;
         public EventHandler? Changed;
         public bool Published;
+        public ContentCloseAttempt? Preparation;
     }
 
     private static bool IsHomeAddress(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
@@ -36,8 +37,11 @@ public sealed partial class BrowseChrome
     { ThrowIfDisposed(); return RequireTab(tabId).AppOwner?.Session; }
     public bool HasAppContent => _tabs.Any(tab => tab.AppOwner is not null);
 
+    private readonly HashSet<Task> _contractSources = [];
+    private void PinContractSource(Task? source)
+    { if (source is not null) lock (_nativeSourceGate) { _contractSources.Add(source); _originalNativeSources.Add(source); } }
     private void RetainAppSource(Task source)
-    { lock (_nativeSourceGate) { _originalNativeSources.RemoveAll(task => task.IsCompletedSuccessfully); _originalNativeSources.Add(source); } }
+    { lock (_nativeSourceGate) { _originalNativeSources.RemoveAll(task => task.IsCompletedSuccessfully && !_contractSources.Contains(task)); _originalNativeSources.Add(source); } }
 
     private Task<BrowseChromeSnapshot> RetainNativeAdmission(Func<Task<BrowseChromeSnapshot>> operation, CancellationToken token)
     {
@@ -77,9 +81,12 @@ public sealed partial class BrowseChrome
         owner.ReportedInitialization = session.OriginalInitialization;
         if (owner.ReportedInitialization is not null) RetainAppSource(owner.ReportedInitialization);
         if (!ReferenceEquals(owner.Initialization, owner.ReportedInitialization))
+        {
+            PinContractSource(owner.Initialization); PinContractSource(owner.ReportedInitialization);
             throw new InvalidOperationException("The app did not retain its original initialization task.");
+        }
         await owner.Initialization.ConfigureAwait(false);
-        token.ThrowIfCancellationRequested();
+        DemandContentAdmission(token);
         if (_nativeRetiring || _disposed || !_tabs.Contains(tab) || !session.IsPublicationCurrent)
             throw new UnauthorizedAccessException("The original app admission changed before publication.");
         if (session.Address.Namespace != address.Namespace || session.Address.Authority != address.Authority)
@@ -124,23 +131,27 @@ public sealed partial class BrowseChrome
         Publish();
     }
 
-    private async Task<bool> PrepareContentCloseAsync(TabRuntime tab, CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-        if (tab.AppOwner is not { } owner || owner.Close is not null) return true;
-        var original = owner.Session.TryPrepareToCloseAsync(token) ?? throw new InvalidOperationException("The app supplied no close preparation task.");
-        RetainAppSource(original);
-        return await original.ConfigureAwait(false);
-    }
-
-    /// <summary>Runs unsaved-work preflight before window retirement withdraws admission.
-    /// False leaves all tab owners and commands usable.</summary>
+    /// <summary>A bool-only observer cannot own a reversible lease. Acquire and
+    /// abort it before returning, keeping the legacy caller safely retryable.</summary>
     public async Task<bool> TryPrepareToCloseAsync(CancellationToken token = default)
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
-        foreach (var tab in _tabs.ToArray())
-            if (!await PrepareContentCloseAsync(tab, token).ConfigureAwait(false)) return false;
-        return true;
+        var entries = new List<ContentCloseAttempt>();
+        var failures = new List<Exception>();
+        var accepted = true;
+        try
+        {
+            foreach (var tab in _tabs.ToArray())
+            {
+                var entry = await AcquireContentCloseAsync(tab, token).ConfigureAwait(false);
+                if (entry is null) { accepted = false; break; }
+                entries.Add(entry);
+            }
+        }
+        catch (Exception failure) { failures.Add(failure); }
+        foreach (var entry in entries) await AbortContentCloseAsync(entry, failures).ConfigureAwait(false);
+        ThrowCloseCauses(failures);
+        return accepted;
     }
 
     private async Task ReleaseContentAsync(TabRuntime tab, AppContentOwner? retainedOwner = null, bool preservePendingHosts = false)
@@ -188,7 +199,7 @@ public sealed partial class BrowseChrome
             catch (Exception failure) { failures.Add(failure); }
         }
         foreach (var source in pendingJoins.Distinct())
-            try { await source.ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); }
+            try { await source.ConfigureAwait(false); } catch (Exception failure) { AddCloseCauses(failures, source, failure); }
         foreach (var owner in owners)
             if (owner.Close is { IsCompletedSuccessfully: true } && owner.CloseContractFailure is null)
             {

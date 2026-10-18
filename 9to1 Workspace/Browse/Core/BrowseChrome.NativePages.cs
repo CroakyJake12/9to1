@@ -7,7 +7,10 @@ public sealed partial class BrowseChrome
 {
     /// <summary>Opens an actual built-in CUI page in a canonical tab, retaining
     /// existing page renderers and their original download sources in other tabs.</summary>
-    public async Task<BrowseChromeSnapshot> OpenNativePageAsync(BrowserNativePage page, CancellationToken token = default)
+    public Task<BrowseChromeSnapshot> OpenNativePageAsync(BrowserNativePage page, CancellationToken token = default) =>
+        RetainContentTransition(() => OpenNativePageCoreAsync(page, token), token);
+
+    private async Task<BrowseChromeSnapshot> OpenNativePageCoreAsync(BrowserNativePage page, CancellationToken token)
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
         var address = AppContentAddress.Parse(BrowserNativePages.Address(page).AbsoluteUri);
@@ -21,18 +24,14 @@ public sealed partial class BrowseChrome
         return Publish();
     }
 
-    private async Task<BrowseChromeSnapshot> NavigateNativePageAsync(BrowserNativePage page, CancellationToken token)
-    {
-        var tab = SelectedRuntime();
-        tab.NavigationCancellation?.Cancel();
-        ++tab.NavigationGeneration;
-        if (!await PrepareContentCloseAsync(tab, token).ConfigureAwait(false)) return Publish();
-        await ReleaseContentAsync(tab).ConfigureAwait(false);
-        ApplyNativePage(tab, page);
-        await SaveTabsAsync(token).ConfigureAwait(false);
-        _status = tab.Status;
-        return Publish();
-    }
+    private Task<BrowseChromeSnapshot> NavigateNativePageAsync(BrowserNativePage page, CancellationToken token) =>
+        RetainContentTransition(async () =>
+        {
+            var tab = SelectedRuntime();
+            tab.NavigationCancellation?.Cancel(); ++tab.NavigationGeneration;
+            await ReplaceAppContentAsync(tab, AppContentAddress.Parse(BrowserNativePages.Address(page).AbsoluteUri), token).ConfigureAwait(false);
+            _status = tab.Status; return Publish();
+        }, token);
 
     private static void ApplyNativePage(TabRuntime tab, BrowserNativePage page)
     {

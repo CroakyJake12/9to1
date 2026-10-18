@@ -18,8 +18,7 @@ public sealed partial class BrowseChrome
     }
 
     public Task<BrowseChromeSnapshot> ReopenClosedTabAsync(CancellationToken token = default) =>
-        _closedTabs.Count > 0 && !_closedTabs[^1].Address.IsWeb
-            ? RetainNativeAdmission(() => ReopenClosedTabCoreAsync(token), token) : ReopenClosedTabCoreAsync(token);
+        RetainContentTransition(() => ReopenClosedTabCoreAsync(token), token, _closedTabs.Count > 0 && !_closedTabs[^1].Address.IsWeb);
 
     private async Task<BrowseChromeSnapshot> ReopenClosedTabCoreAsync(CancellationToken token)
     {

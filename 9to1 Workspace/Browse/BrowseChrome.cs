@@ -221,7 +221,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    public async Task<BrowseChromeSnapshot> SetSiteEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default)
+    public Task<BrowseChromeSnapshot> SetSiteEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default) =>
+        RetainContentTransition(() => SetSiteEngineCoreAsync(engine, cancellationToken), cancellationToken);
+
+    private async Task<BrowseChromeSnapshot> SetSiteEngineCoreAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
         cancellationToken.ThrowIfCancellationRequested();
@@ -240,11 +243,18 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    public Task<BrowseChromeSnapshot> SetSelectedTabEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default) =>
-        SetTabEngineAsync(SelectedRuntime(), engine, cancellationToken);
+    public Task<BrowseChromeSnapshot> SetSelectedTabEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default)
+    {
+        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested();
+        if (!Enum.IsDefined(engine)) throw new ArgumentOutOfRangeException(nameof(engine));
+        var tab = SelectedRuntime();
+        if (!tab.Address.IsWeb) throw new InvalidOperationException("Native Browse pages do not use a web engine.");
+        return RetainContentTransition(() => SetTabEngineAsync(tab, engine, cancellationToken), cancellationToken);
+    }
 
     private async Task<BrowseChromeSnapshot> SetTabEngineAsync(TabRuntime tab, BrowseEngineKind engine, CancellationToken cancellationToken, bool persistTabOverride = true, Uri? initialAddress = null)
     {
+        using var transition = AdmitContentTransition();
         ThrowIfCannotAccept();
         cancellationToken.ThrowIfCancellationRequested();
         if (!Enum.IsDefined(engine)) throw new ArgumentOutOfRangeException(nameof(engine));
@@ -323,8 +333,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     }
 
     public Task<BrowseChromeSnapshot> NewTabAsync(bool isPrivate, CancellationToken cancellationToken = default) =>
-        _internalContentFactory is null ? NewTabCoreAsync(isPrivate, cancellationToken)
-            : RetainNativeAdmission(() => NewTabCoreAsync(isPrivate, cancellationToken), cancellationToken);
+        RetainContentTransition(() => NewTabCoreAsync(isPrivate, cancellationToken), cancellationToken, _internalContentFactory is not null);
 
     private async Task<BrowseChromeSnapshot> NewTabCoreAsync(bool isPrivate, CancellationToken cancellationToken)
     {
@@ -355,14 +364,23 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    public async Task<BrowseChromeSnapshot> CloseTabAsync(Guid tabId, CancellationToken cancellationToken = default)
+    public Task<BrowseChromeSnapshot> CloseTabAsync(Guid tabId, CancellationToken cancellationToken = default) =>
+        RetainContentTransition(() => CloseTabCoreAsync(tabId, cancellationToken), cancellationToken);
+
+    private async Task<BrowseChromeSnapshot> CloseTabCoreAsync(Guid tabId, CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
         cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
         if (tab.IsHome) { _status = "Home stays available in this window."; return Publish(); }
-        if (!await PrepareContentCloseAsync(tab, cancellationToken).ConfigureAwait(false))
+        var preparation = await AcquireContentCloseAsync(tab, cancellationToken).ConfigureAwait(false);
+        if (preparation is null)
         { _status = "Finish or save the app's pending work before closing this tab."; return Publish(); }
+        Exception? preparationFailure = null;
+        try
+        {
+        cancellationToken.ThrowIfCancellationRequested();
+        BeginContentClose(preparation);
         var index = _tabs.IndexOf(tab);
         var wasSelected = tab.Id == _selectedTabId;
         BrowseEngineKind? engineOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var explicitEngine) ? explicitEngine : null;
@@ -404,6 +422,9 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
         RememberClosedTab(tab, index, engineOverride);
         return Publish();
+        }
+        catch (Exception error) { preparationFailure = error; throw; }
+        finally { await FinishContentAttemptAsync(preparation, preparationFailure).ConfigureAwait(false); }
     }
 
     public Task<BrowseChromeSnapshot> NavigateAsync(string value, CancellationToken cancellationToken = default)
@@ -433,8 +454,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         if (address.Namespace == AppContentNamespace.Cui || address.Namespace == AppContentNamespace.Browse &&
             !IsOwnedCanvas(address) && !BrowserNativePages.TryResolve(address.Value, out _))
             throw new NotSupportedException("The content route is not registered in this host.");
-        return address.IsWeb ? OpenContentCoreAsync(address, openInNewTab, sourceTabId, cancellationToken)
-            : RetainNativeAdmission(() => OpenContentCoreAsync(address, openInNewTab, sourceTabId, cancellationToken), cancellationToken);
+        return RetainContentTransition(() => OpenContentCoreAsync(address, openInNewTab, sourceTabId, cancellationToken), cancellationToken, !address.IsWeb);
     }
     private async Task<BrowseChromeSnapshot> OpenContentCoreAsync(AppContentAddress address, bool openInNewTab,
         Guid? sourceTabId, CancellationToken cancellationToken)
@@ -462,19 +482,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         }
         return await RunNavigationAsync(source, async (tab, token) =>
         {
-            if (!await PrepareContentCloseAsync(tab, token).ConfigureAwait(false))
-            { tab.Status = "Finish or save the app's pending work before navigating."; return; }
-            if (!address.IsWeb)
+            if (!tab.Address.IsWeb || !address.IsWeb)
             {
-                if (BrowserNativePages.TryResolve(address.Value, out var page))
-                { await ReleaseContentAsync(tab).ConfigureAwait(false); ApplyNativePage(tab, page); }
-                else
-                {
-                    var owner = await InitializeAppOwnerAsync(tab, address, token).ConfigureAwait(false);
-                    await ReleaseContentAsync(tab, owner).ConfigureAwait(false);
-                    ApplyAppContent(tab, address, owner);
-                }
-                await SaveTabsAsync(token).ConfigureAwait(false); return;
+                await ReplaceAppContentAsync(tab, address, token).ConfigureAwait(false);
+                return;
             }
             var web = address.WebUri!;
             var assessment = BrowserNativeRequestPolicy.AssessTopLevel(web);
@@ -582,7 +593,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    public async Task<BrowserPopupAssessment> HandlePopupAsync(Uri requestedAddress, CancellationToken cancellationToken = default)
+    public Task<BrowserPopupAssessment> HandlePopupAsync(Uri requestedAddress, CancellationToken cancellationToken = default) =>
+        RetainContentTransition(() => HandlePopupCoreAsync(requestedAddress, cancellationToken), cancellationToken);
+
+    private async Task<BrowserPopupAssessment> HandlePopupCoreAsync(Uri requestedAddress, CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
         cancellationToken.ThrowIfCancellationRequested();
@@ -643,7 +657,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    public async Task<BrowseChromeSnapshot> ReportCrashAsync(Guid tabId, string reason)
+    public Task<BrowseChromeSnapshot> ReportCrashAsync(Guid tabId, string reason) =>
+        RetainContentTransition(() => ReportCrashCoreAsync(tabId, reason), default);
+
+    private async Task<BrowseChromeSnapshot> ReportCrashCoreAsync(Guid tabId, string reason)
     {
         ThrowIfCannotAccept();
         var tab = RequireTab(tabId);
@@ -654,7 +671,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    public async Task<BrowseChromeSnapshot> RecoverSelectedTabAsync(CancellationToken cancellationToken = default)
+    public Task<BrowseChromeSnapshot> RecoverSelectedTabAsync(CancellationToken cancellationToken = default) =>
+        RetainContentTransition(() => RecoverSelectedTabCoreAsync(cancellationToken), cancellationToken);
+
+    private async Task<BrowseChromeSnapshot> RecoverSelectedTabCoreAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfCannotAccept();
         var tab = SelectedRuntime();
@@ -691,13 +711,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     }
 
     private Task<BrowseChromeSnapshot> RunNavigationAsync(TabRuntime tab,
-        Func<TabRuntime, CancellationToken, Task> operation, CancellationToken cancellationToken)
-    {
-        ThrowIfCannotAccept(); cancellationToken.ThrowIfCancellationRequested();
-        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var original = RunNavigationCoreAsync(start.Task, tab, operation, cancellationToken);
-        RetainAppSource(original); start.SetResult(); return original;
-    }
+        Func<TabRuntime, CancellationToken, Task> operation, CancellationToken cancellationToken) =>
+        RetainContentTransition(() => RunNavigationCoreAsync(Task.CompletedTask, tab, operation, cancellationToken), cancellationToken, blocksRetirement: true);
 
     private async Task<BrowseChromeSnapshot> RunNavigationCoreAsync(Task start, TabRuntime tab,
         Func<TabRuntime, CancellationToken, Task> operation, CancellationToken cancellationToken)
@@ -711,15 +726,18 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         tab.NavigationCancellation?.Dispose();
         tab.NavigationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var generation = ++tab.NavigationGeneration;
+        var navigationToken = tab.NavigationCancellation.Token;
         try
         {
-            await operation(tab, tab.NavigationCancellation.Token).ConfigureAwait(false);
+            await operation(tab, navigationToken).ConfigureAwait(false);
             if (generation != tab.NavigationGeneration) return State;
             await ObserveCompletedNavigationAsync(tab, cancellationToken).ConfigureAwait(false);
             _status = tab.Status;
             return Publish();
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException error) when (!cancellationToken.IsCancellationRequested &&
+            navigationToken.IsCancellationRequested && error.CancellationToken == navigationToken &&
+            (generation != tab.NavigationGeneration || _nativeRetiring))
         {
             return State;
         }
@@ -747,6 +765,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         string? profileId = null,
         bool restoring = false)
     {
+        using var transition = AdmitContentTransition();
         address = AppContentRouteMigration.Canonicalize(address);
         var session = new BrowserSessionService(new TabPaths(StandardProfileDirectory));
         var tab = new TabRuntime(id, title, address, privacy, group, session,
@@ -788,6 +807,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
 
     private async Task AttachHostAsync(TabRuntime tab, CancellationToken cancellationToken)
     {
+        using var transition = AdmitContentTransition();
         var host = await CreateEngineHostAsync(tab, tab.Address.WebUri ?? throw new InvalidOperationException("A web renderer requires a real web address."), tab.Engine, cancellationToken).ConfigureAwait(false);
         AttachAcquiredHost(tab, host);
     }
@@ -800,8 +820,10 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             : StandardProfileDirectory;
         var profile = Path.Combine(profileRoot, "engines", engine.ToString().ToLowerInvariant());
         Directory.CreateDirectory(profile);
-        return await _engineFactory.CreateAsync(
-            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, address, engine), cancellationToken).ConfigureAwait(false);
+        var actual = _engineFactory.CreateAsync(
+            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, address, engine), cancellationToken);
+        RetainContentSource(actual);
+        return await actual.ConfigureAwait(false);
     }
 
     private void AttachAcquiredHost(TabRuntime tab, IBrowseEngineTab host)
@@ -974,6 +996,13 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     /// <summary>Rejects an original callback joining its own retirement without starting close.</summary>
     public void DemandExternalOriginalRetirementJoin()
     {
+        lock (_nativeSourceGate)
+        {
+            if (_executingContentTransition.Value is { } content && _contentTransitions.Contains(content) ||
+                _executingWindowPreparation.Value is { } preparation && ReferenceEquals(_windowPreparation, preparation) ||
+                _executingWindowCommit.Value is { } commit && ReferenceEquals(_windowPreparation, commit))
+                throw new InvalidOperationException("An admitted content/preparation callback must return before its external owner joins Browse retirement.");
+        }
         for (var notification = LogicalRetirementNotification.Value; notification is not null; notification = notification.Parent)
             if (notification.Active && ReferenceEquals(notification.Owner, this))
                 throw new InvalidOperationException("A retirement observer cannot join its own original close.");
@@ -988,6 +1017,13 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         {
             if (_originalChromeClose is not null) return new(_originalChromeClose);
             if (_pendingExternalClose is not null) return new(_pendingExternalClose);
+            if (HasAppContent && _tabs.Any(tab => tab.AppOwner?.Session is
+                IBrowseAppContentClosePreparationParticipant { SupportsReversibleClosePreparation: true }))
+            {
+                var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _pendingExternalClose = PrepareStrongExternalCloseAsync(gate.Task);
+                gate.SetResult(); return new(_pendingExternalClose);
+            }
             if (HasAppContent)
             {
                 var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -1029,6 +1065,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
     {
         await start.ConfigureAwait(false);
         var failures = new List<Exception>();
+        Task[] activeTransitions;
+        lock (_nativeSourceGate) activeTransitions = _originalContentTransitions.Where(actual => !actual.IsCompleted).ToArray();
         var priorNotification = LogicalRetirementNotification.Value;
         var notification = new RetirementNotification(this, priorNotification);
         LogicalRetirementNotification.Value = notification;
@@ -1046,7 +1084,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 Task[] originals; lock (_nativeSourceGate) originals = _originalNativeSources.Where(source => !joined.Contains(source)).Distinct().ToArray();
                 if (originals.Length == 0) return;
                 foreach (var source in originals)
-                { joined.Add(source); try { await source.ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); } }
+                { joined.Add(source); try { await source.ConfigureAwait(false); } catch (Exception failure) { AddCloseCauses(failures, source, failure); } }
             }
         }
         var releases = new List<Task>();
@@ -1056,7 +1094,9 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             try { releases.Add(ReleaseContentAsync(tab)); } catch (Exception failure) { failures.Add(failure); }
         }
         foreach (var release in releases)
-            try { await release.ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); }
+            try { await release.ConfigureAwait(false); } catch (Exception failure) { AddCloseCauses(failures, release, failure); }
+        foreach (var active in activeTransitions)
+            try { await active.ConfigureAwait(false); } catch (Exception failure) { AddCloseCauses(failures, active, failure); }
         await DrainOriginalSourcesAsync().ConfigureAwait(false);
         // An admitted source may acquire its final native owner while cancellation
         // settles. Close those exact late acquisitions before the terminal drain.

@@ -46,14 +46,23 @@ public sealed partial class BrowseChrome
         lock (_nativeSourceGate)
         {
             if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
-            _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully);
+            _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully && !_contractSources.Contains(source));
             if (_originalNativeSources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved original native callbacks.");
+            ContentTransition admission;
+            try { admission = AdmitContentTransition(); }
+            catch (Exception refusal)
+            {
+                // This actual callback was refused by the reversible barrier. Keep
+                // its explicit admission fault; never silently drop acquired work.
+                _originalNativeSources.Add(Task.FromException(refusal));
+                return;
+            }
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var driver = RunOriginalNativeCallbackAsync(start.Task, callback);
+            var driver = RunOriginalNativeCallbackAsync(start.Task, callback, admission);
             _originalNativeSources.Add(driver); start.SetResult();
         }
     }
-    private async Task RunOriginalNativeCallbackAsync(Task start, Func<Task> callback)
+    private async Task RunOriginalNativeCallbackAsync(Task start, Func<Task> callback, ContentTransition admission)
     {
         var prior = LogicalNativeSource.Value; LogicalNativeSource.Value = this;
         try
@@ -63,7 +72,7 @@ public sealed partial class BrowseChrome
             lock (_nativeSourceGate) _originalNativeSources.Add(original);
             await original.ConfigureAwait(false);
         }
-        finally { LogicalNativeSource.Value = prior; }
+        finally { LogicalNativeSource.Value = prior; admission.Dispose(); }
     }
     private void CaptureOriginalPageCommit(TabRuntime tab, IBrowseEngineTab original, BrowserSnapshot snapshot)
     {
@@ -73,7 +82,7 @@ public sealed partial class BrowseChrome
         lock (_nativeSourceGate)
         {
             if (_nativeRetiring || _disposed || !ReferenceEquals(tab.Host, original) || !_tabs.Contains(tab)) return;
-            _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully);
+            _originalNativeSources.RemoveAll(source => source.IsCompletedSuccessfully && !_contractSources.Contains(source));
             if (_originalNativeSources.Count >= 128) throw new InvalidOperationException("Browse retains unresolved native history sources.");
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             tab.HasOriginalCommittedPage = true;

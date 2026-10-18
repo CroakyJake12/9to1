@@ -18,7 +18,10 @@ public sealed partial class BrowseChrome
             ?? throw new ArgumentException("The original saved history entry is no longer present.", nameof(originalEntryId));
         return NavigateAsync(original.Address, token);
     }
-    public async Task<BrowseChromeSnapshot> ResetSelectedTabEngineAsync(CancellationToken token = default)
+    public Task<BrowseChromeSnapshot> ResetSelectedTabEngineAsync(CancellationToken token = default) =>
+        RetainContentTransition(() => ResetSelectedTabEngineCoreAsync(token), token);
+
+    private async Task<BrowseChromeSnapshot> ResetSelectedTabEngineCoreAsync(CancellationToken token)
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
         var tab = SelectedRuntime();
@@ -36,7 +39,10 @@ public sealed partial class BrowseChrome
         return Publish();
     }
 
-    public async Task<BrowseChromeSnapshot> ResetSiteEngineAsync(CancellationToken token = default)
+    public Task<BrowseChromeSnapshot> ResetSiteEngineAsync(CancellationToken token = default) =>
+        RetainContentTransition(() => ResetSiteEngineCoreAsync(token), token);
+
+    private async Task<BrowseChromeSnapshot> ResetSiteEngineCoreAsync(CancellationToken token)
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
         var originalTab = SelectedRuntime(); EnsureWebAddress(originalTab.Address);
