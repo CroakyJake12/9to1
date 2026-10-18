@@ -125,6 +125,7 @@ internal sealed partial class SpacesBrowseAppContentSession
     private async Task<bool> PrepareEditorAsync(SessionPreparation candidate, SpaceDetailsPage page, CancellationToken token)
     {
         Control? priorView = null;
+        PublishedBuilderRoute? priorBuilder = null;
         PublishedDetailsRoute? priorDetails = null;
         PublishedChatRoute? priorChat = null;
         Haven.Core.AppContentAddress? priorAddress = null;
@@ -143,7 +144,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                     if ((page.State.HasChanges || page.State.HasConflict) && !ReferenceEquals(_publishedDetailsRoute?.Page, page))
                     {
                         priorView = _root.Content as Control;
-                        priorDetails = _publishedDetailsRoute; priorChat = _publishedChatRoute; priorAddress = _address;
+                        priorBuilder = _publishedBuilderRoute; priorDetails = _publishedDetailsRoute; priorChat = _publishedChatRoute; priorAddress = _address;
                         SetRootContent(page);
                         _publishedDetailsRoute = new(page, Haven.Core.AppContentAddress.Parse($"9to1://spaces/details/{page.State.SpaceId:D}"));
                         _publishedChatRoute = null; _address = _publishedDetailsRoute.Address;
@@ -188,7 +189,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                             var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page.CurrentConversation));
                             var restoredAddress = restoredChat?.Address ?? priorAddress!;
                             SetRootContent(priorView);
-                            _publishedDetailsRoute = priorDetails; _publishedChatRoute = restoredChat; _address = restoredAddress;
+                            _publishedBuilderRoute = priorBuilder; _publishedDetailsRoute = priorDetails; _publishedChatRoute = restoredChat; _address = restoredAddress;
                             candidate.Epoch = ++_routeEpoch;
                         }
                         PublishStateChanged();

@@ -31,6 +31,7 @@ internal sealed partial class SpacesBrowseAppContentSession
 
     private async Task OpenBuilderOnUiAsync(Guid id, CancellationToken token)
     {
+        await DemandDetailsHomeAdmissionAsync(token);
         var registry = _services.GetRequiredService<SpaceRegistry>();
         var space = await registry.ReadExistingAsync(id, token)
             ?? throw new InvalidOperationException("The requested Space builder is unavailable.");
@@ -47,8 +48,9 @@ internal sealed partial class SpacesBrowseAppContentSession
             {
                 if (!_buildersBySpace.TryGetValue(id, out page) || page.OriginalClose is not null)
                 {
-                    page = new SpaceBuilderPage(registry, id, SpacesHomePage.ImmediateReadinessInstance,
-                        settlement => QueueHomeReturnForBuilder(page!, settlement));
+                    var extensions = _services.GetService<Haven.Application.ExtensionManager>();
+                page = new SpaceBuilderPage(registry, id, SpacesHomePage.ImmediateReadinessInstance,
+                        settlement => QueueHomeReturnForBuilder(page!, settlement), extensions);
                     lock (_gate) _ownedBuilders.Add(page);
                     acquired = true;
                     await page.ActivateAsync(token);
@@ -67,6 +69,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                     SetRootContent(page);
                     _publishedBuilderRoute = new(page, AppContentAddress.Parse($"9to1://spaces/builder/{id:D}"));
                     _publishedChatRoute = null;
+                    _publishedDetailsRoute = null;
                     _address = _publishedBuilderRoute.Address;
                     _routeEpoch++;
                     _buildersBySpace[id] = page;
@@ -168,28 +171,34 @@ internal sealed partial class SpacesBrowseAppContentSession
 
     private void BeginBuilderRetirement(List<Exception> failures)
     {
-        foreach (var page in _ownedBuilders.Where(p => p.OriginalClose is null).ToArray())
+        foreach (var page in _ownedBuilders.ToArray())
         {
-            try { page.DemandExternalOriginalRetirementJoin(); }
-            catch (Exception error) { failures.Add(error); }
+            try
+            {
+                if (page.OriginalClose is { } original)
+                    lock (_gate) RecordBuilderClose(page, original);
+                else
+                    lock (_gate) RecordBuilderClose(page, page.CloseAndDrainAsync());
+            }
+            catch (Exception cause) { failures.Add(cause); }
         }
     }
 
     private async Task JoinBuilderRetirementAsync(List<Exception> failures)
     {
-        SpaceBuilderPage[] pages; Dictionary<SpaceBuilderPage, Task> closes;
-        lock (_gate) { pages = _ownedBuilders.Where(p => p.OriginalClose is null).ToArray(); closes = new(_builderCloses); }
-        foreach (var page in pages)
+        KeyValuePair<SpaceBuilderPage, Task>[] originals;
+        lock (_gate) { originals = _builderCloses.ToArray(); }
+        foreach (var (page, original) in originals)
         {
-            try
-            {
-                var close = page.CloseAndDrainAsync();
-                lock (_gate) _builderCloses[page] = close;
-                await close;
-                if (close.IsCompletedSuccessfully)
-                    lock (_gate) { _ownedBuilders.Remove(page); _builderCloses.Remove(page); }
-            }
-            catch (Exception error) { failures.Add(error); }
+            try { await original.ConfigureAwait(false); }
+            catch (Exception cause) { AddActualCauses(failures, original, cause); }
+            if (original.IsCompletedSuccessfully)
+                lock (_gate)
+                {
+                    _ownedBuilders.Remove(page); _builderCloses.Remove(page);
+                    foreach (var key in _buildersBySpace.Where(pair => ReferenceEquals(pair.Value, page)).Select(pair => pair.Key).ToArray())
+                        _buildersBySpace.Remove(key);
+                }
         }
     }
 }

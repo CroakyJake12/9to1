@@ -122,7 +122,7 @@ internal sealed partial class SpacesBrowseAppContentSession
         switch (action.Kind)
         {
             case SpacesActionKind.Open:
-                await WithCurrentDetailsPreparationAsync(() => ExecuteChatOnUiAsync(action, token), token);
+                await WithCurrentEditorPreparationAsync(() => ExecuteChatOnUiAsync(action, token), token);
                 break;
             case SpacesActionKind.EditDetails:
                 if (action.Context.Scope.RegisteredSpaceId is not { } id ||
@@ -178,7 +178,7 @@ internal sealed partial class SpacesBrowseAppContentSession
         if (space.Id != id || space.IsArchived || space.IsBuiltIn || space.Origin != SpaceOrigin.UserCreated)
             throw new InvalidOperationException("Only an active user-created Space has editable details.");
         if (_publishedDetailsRoute?.Page is { } current && current.State.SpaceId == id) return;
-        await WithCurrentDetailsPreparationAsync(async () =>
+        await WithCurrentEditorPreparationAsync(async () =>
         {
             SpaceDetailsPage? page = null;
             var acquired = false;
@@ -307,7 +307,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 {
                     DemandAlive(); linked.Token.ThrowIfCancellationRequested();
                     if (_routeEpoch != epoch) throw new InvalidOperationException("The original Details route changed before returning.");
-                    await WithCurrentDetailsPreparationAsync(async () =>
+                    await WithCurrentEditorPreparationAsync(async () =>
                     {
                         var home = _spacesPage ?? throw new InvalidOperationException("The original Spaces Home is unavailable.");
                         await home.ActivateAsync(linked.Token);
