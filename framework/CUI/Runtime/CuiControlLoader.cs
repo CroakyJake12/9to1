@@ -432,6 +432,10 @@ public sealed class CuiControlLoader : IDisposable
         if (!CuiProjectItems.IsCuiSourceFamily(document.SourceName))
             throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR051", CuiDiagnosticSeverity.Error, "Production CUI loading rejects non-CUI/AXAML/HUI application input.", document.Span));
         document = CuiThemeCreatorComponents.Compose(CuiAppComponents.Compose(document));
+        // Validate executable declarations before retiring the previous control lineage.
+        // Unsupported event semantics must not turn into ignored or visual components.
+        if (CuiActionEventContract.Validate(document).FirstOrDefault() is { } eventError)
+            throw new CuiRuntimeLoadException(eventError);
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -641,7 +645,8 @@ public sealed class CuiControlLoader : IDisposable
             EventHandler<RoutedEventArgs> handler = (_, args) =>
             {
                 // A submenu click bubbles through its parent; dispatch only the clicked item.
-                if (control is not MenuItem || ReferenceEquals(args.Source, control)) ObserveActionDispatch(control, contextMenuOwner);
+                var originOnly = control is MenuItem || TryGetActionInvocation(control, out var current) && current.OriginOnly;
+                if (!originOnly || ReferenceEquals(args.Source, control)) ObserveActionDispatch(control, contextMenuOwner);
             };
             if (control is Button button) button.Click += handler;
             else if (control is MenuItem item) item.Click += handler;
@@ -816,7 +821,7 @@ public sealed class CuiControlLoader : IDisposable
         _currentLayer = layer;
         try
         {
-            foreach (var child in component.Children.Where(child => !child.IsDefinition))
+            foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
             {
                 var childControl = LoadComponent(child);
                 AddChild(control, childControl);
@@ -2204,6 +2209,13 @@ public sealed class CuiControlLoader : IDisposable
 
     private void ApplyActionTag(Control control, CuiComponent component)
     {
+        var ownedEvent = CuiActionEventContract.OwnedAction(component);
+        if (ownedEvent is not null && CuiActionEventContract.HasCompetingActionRoutes(component))
+            throw new CuiRuntimeLoadException(new("CUIE004", CuiDiagnosticSeverity.Error,
+                "The effective Button contains competing direct and ActionEvent routes after Definition merging.", ownedEvent.Span));
+        if (ownedEvent is not null && control is not (Button or MenuItem))
+            throw new CuiRuntimeLoadException(new("CUIE003", CuiDiagnosticSeverity.Error,
+                "The registered Button implementation cannot execute the owned click ActionEvent.", ownedEvent.Span));
         // The parser routes action="Cmd" into CuiComponent.Actions (not Properties),
         // so honor it here; WireBindingsRecursive dispatches via control.Tag.
         string? reference = control.Tag as string;
@@ -2213,6 +2225,7 @@ public sealed class CuiControlLoader : IDisposable
         if (string.IsNullOrWhiteSpace(reference)
             && component.Actions.TryGetValue("on:click", out var clickRef))
             reference = clickRef.Name;
+        if (ownedEvent is not null) reference = ownedEvent.Name;
 
         if (string.IsNullOrWhiteSpace(reference))
             return;
@@ -2228,7 +2241,7 @@ public sealed class CuiControlLoader : IDisposable
         }
         var liveParameter = _documentActions.TryGetValue(reference, out var boundDefinition)
             ? boundDefinition.Parameter as CuiBindingValue : null;
-        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter);
+        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null);
     }
 
     private bool TryGetActionInvocation(Control control, out CuiActionInvocation invocation)
@@ -2245,7 +2258,7 @@ public sealed class CuiControlLoader : IDisposable
     }
 
     private sealed record CuiActionInvocation(string Command, object? Parameter,
-        ICuiBindingContext? ParameterContext = null, CuiBindingValue? LiveParameter = null)
+        ICuiBindingContext? ParameterContext = null, CuiBindingValue? LiveParameter = null, bool OriginOnly = false)
     {
         internal object? ResolveCurrentParameter() => LiveParameter is not null
             ? ParameterContext is not null && ParameterContext.TryGetValue(LiveParameter.Path, out var current)

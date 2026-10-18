@@ -186,6 +186,8 @@ public sealed class CuiCompiler
             _declaredThemes.UnionWith(outerThemes);
         }
         CuiDefinitionDependencies.Validate(document, diagnostics);
+        foreach (var diagnostic in CuiActionEventContract.Validate(document))
+            diagnostics.Error(diagnostic.Code, diagnostic.Message, diagnostic.Span);
 
         if (diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
@@ -577,7 +579,8 @@ public sealed class CuiCompiler
             var properties = new Dictionary<string, CuiCompiledProperty>(StringComparer.OrdinalIgnoreCase);
             foreach (var (name, value) in component.Properties)
             {
-                var languageType = _registry.TryGetProperty(name, out var descriptor)
+                var languageType = CuiActionEventContract.IsActionEvent(component) && name.Equals("Bubble", StringComparison.OrdinalIgnoreCase)
+                    ? "boolean" : _registry.TryGetProperty(name, out var descriptor)
                     ? descriptor.LanguageType
                     : "unresolved";
                 properties[name] = new CuiCompiledProperty(name, languageType, value);
