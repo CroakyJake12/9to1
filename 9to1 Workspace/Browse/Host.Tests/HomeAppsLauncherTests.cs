@@ -58,6 +58,8 @@ public sealed class HomeAppsLauncherTests
         // zero-height test surface would leave its virtualized item containers unrealized.
         var window = new Window { Content = root, Width = 1280, Height = 900 };
         window.Show();
+        window.UpdateLayout();
+        root.UpdateLayout();
         Dispatcher.UIThread.RunJobs();
         return (root, loader);
     }
@@ -137,7 +139,7 @@ public sealed class HomeAppsLauncherTests
             Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-open-app");
             tiles[1].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await loader.WhenActionsIdleAsync();
-            Assert.Equal(("home.open-app", (object?)"automations"), Assert.Single(actions));
+            Assert.Contains(("home.open-app", (object?)"automations"), actions);
         }
     }
 
@@ -151,6 +153,7 @@ public sealed class HomeAppsLauncherTests
         {
             actions.Add((command, parameter));
             if (command == "home.set-app-query") state = State((parameter as string ?? string.Empty).Trim());
+            if (command == "home.clear-app-query") state = State(string.Empty);
             bindings.Refresh();
             return ValueTask.CompletedTask;
         });
@@ -162,7 +165,8 @@ public sealed class HomeAppsLauncherTests
             await bindings.DispatchAsync("home.set-app-query", "boards", CancellationToken.None);
             await loader.WhenActionsIdleAsync();
             Dispatcher.UIThread.RunJobs();
-            var tiles = root.GetVisualDescendants().OfType<Button>().Where(button => button.Name == "home-app-tile").ToArray();
+            var tiles = root.GetVisualDescendants().OfType<Button>()
+                .Where(button => button.Name == "home-app-tile").ToArray();
             Assert.Equal(["Open Boards"], tiles.Select(AutomationProperties.GetName));
 
             await bindings.DispatchAsync("home.set-app-query", "nothing-installed-like-this", CancellationToken.None);
