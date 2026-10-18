@@ -54,21 +54,23 @@ public sealed class SpaceBuilderController
         return true;
     }
 
-    public bool SetCategoryState(SpaceBuilderCategory category, SpaceBuilderCategoryState state)
+    public bool SetCategoryState(SpaceBuilderCategory category, Haven.Application.SpaceCapabilityCategoryState state)
     {
         SpaceBuilderState next;
         lock (_gate)
         {
             if (!_state.CanEdit) return false;
-            var draft = category switch
+            var policy = _state.Draft.CategoryPolicy;
+            policy = category switch
             {
-                SpaceBuilderCategory.Skills => _state.Draft with { Skills = state },
-                SpaceBuilderCategory.Plugins => _state.Draft with { Plugins = state },
-                SpaceBuilderCategory.Apps => _state.Draft with { Apps = state },
-                SpaceBuilderCategory.Models => _state.Draft with { Models = state },
-                SpaceBuilderCategory.Memory => _state.Draft with { Memory = state },
+                SpaceBuilderCategory.Skills => policy with { Skills = state },
+                SpaceBuilderCategory.Plugins => policy with { Plugins = state },
+                SpaceBuilderCategory.Apps => policy with { Apps = state },
+                SpaceBuilderCategory.Models => policy with { Models = state },
+                SpaceBuilderCategory.Memory => policy with { Memory = state },
                 _ => throw new ArgumentOutOfRangeException(nameof(category))
             };
+            var draft = _state.Draft with { CategoryPolicy = policy };
             if (draft == _state.Draft) return true;
             _editVersion++;
             next = _state = _state with { Draft = draft, HasChanges = draft != _baseline,
@@ -148,15 +150,16 @@ public sealed class SpaceBuilderController
             var saved = await _registry.UpdateAsync(current with
             {
                 Name = saving.Draft.Name, Description = saving.Draft.Description,
-                IconKey = saving.Draft.IconKey, Instructions = saving.Draft.Instructions
+                IconKey = saving.Draft.IconKey, Instructions = saving.Draft.Instructions,
+                CapabilityCategoryPolicy = saving.Draft.CategoryPolicy
             }, saving.DraftRevision, cancellationToken).ConfigureAwait(false);
             Change(state =>
             {
                 _baseline = SpaceBuilderDraft.From(saved);
                 var draft = _editVersion == editVersion ? _baseline : state.Draft;
-                return state with { DraftRevision = saved.Revision, ActiveRevision = saved.Revision,
+                return state with { DraftRevision = saved.Revision,
                     Draft = draft, HasChanges = draft != _baseline, HasConflict = false,
-                    StatusMessage = draft == _baseline ? "Space Builder configuration saved." : "Earlier changes saved. Your latest edits are still unsaved." };
+                    StatusMessage = draft == _baseline ? "Space Builder draft saved. Activation is not implemented." : "Earlier changes saved. Your latest edits are still unsaved." };
             });
             return true;
         }

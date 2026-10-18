@@ -101,6 +101,20 @@ public sealed record SpaceGeneratedSurface(
     string TemplateKey,
     string InputsJson);
 
+public enum SpaceCapabilityCategoryState
+{
+    Inherited = 0,
+    Enabled = 1,
+    Disabled = 2
+}
+
+public sealed record SpaceCapabilityCategoryPolicy(
+    SpaceCapabilityCategoryState Skills = SpaceCapabilityCategoryState.Inherited,
+    SpaceCapabilityCategoryState Plugins = SpaceCapabilityCategoryState.Inherited,
+    SpaceCapabilityCategoryState Apps = SpaceCapabilityCategoryState.Inherited,
+    SpaceCapabilityCategoryState Models = SpaceCapabilityCategoryState.Inherited,
+    SpaceCapabilityCategoryState Memory = SpaceCapabilityCategoryState.Inherited);
+
 public sealed record SpaceDefinition(
     Guid Id,
     string Name,
@@ -126,6 +140,7 @@ public sealed record SpaceDefinition(
     SpaceContextPolicy? ContextPolicy = null,
     SpaceMemoryPolicy? MemoryPolicy = null,
     IReadOnlyList<SpaceCapabilityBinding>? CapabilityBindings = null,
+    SpaceCapabilityCategoryPolicy? CapabilityCategoryPolicy = null,
     SpaceInheritancePolicy? Inheritance = null,
     IReadOnlyList<SpaceContextReference>? ContextReferences = null,
     IReadOnlyList<SpaceShareGrant>? Shares = null)

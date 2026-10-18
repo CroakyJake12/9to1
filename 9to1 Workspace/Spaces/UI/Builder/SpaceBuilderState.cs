@@ -2,14 +2,8 @@ using Haven.Application;
 
 namespace HavenOS.Apps.Spaces.Builder;
 
-/// <summary>Policy gate for an entire resource category in a UserCreated Space. Available does
-/// not imply permission granted; effective state is resolved against Home/Dulche policy.</summary>
-public enum SpaceBuilderCategoryState
-{
-    Inherited,
-    Enabled,
-    Disabled
-}
+/// <summary>Alias to the canonical category state so the Builder does not invent a second owner.</summary>
+using SpaceCapabilityCategoryState = Haven.Application.SpaceCapabilityCategoryState;
 
 /// <summary>One policy rule for a specific resource inside a Space. Mandatory + Blocked is a
 /// validation failure, never a bypass.</summary>
@@ -27,26 +21,19 @@ public sealed record SpaceBuilderDraft(
     string Description,
     string IconKey,
     string Instructions,
-    SpaceBuilderCategoryState Skills,
-    SpaceBuilderCategoryState Plugins,
-    SpaceBuilderCategoryState Apps,
-    SpaceBuilderCategoryState Models,
-    SpaceBuilderCategoryState Memory,
+    Haven.Application.SpaceCapabilityCategoryPolicy CategoryPolicy,
     IReadOnlyList<SpaceBuilderResourceRule> SkillRules,
     IReadOnlyList<SpaceBuilderResourceRule> PluginRules,
     IReadOnlyList<SpaceBuilderResourceRule> AppRules,
     IReadOnlyList<SpaceBuilderResourceRule> ModelRules)
 {
     public static SpaceBuilderDraft Empty { get; } = new("", "", "", "",
-        SpaceBuilderCategoryState.Inherited, SpaceBuilderCategoryState.Inherited,
-        SpaceBuilderCategoryState.Inherited, SpaceBuilderCategoryState.Inherited,
-        SpaceBuilderCategoryState.Inherited, [], [], [], []);
+        new Haven.Application.SpaceCapabilityCategoryPolicy(), [], [], [], []);
 
     internal static SpaceBuilderDraft From(SpaceDefinition space) =>
         new(space.Name, space.Description, space.IconKey, space.Instructions,
-            SpaceBuilderCategoryState.Inherited, SpaceBuilderCategoryState.Inherited,
-            SpaceBuilderCategoryState.Inherited, SpaceBuilderCategoryState.Inherited,
-            SpaceBuilderCategoryState.Inherited, [], [], [], []);
+            space.CapabilityCategoryPolicy ?? new Haven.Application.SpaceCapabilityCategoryPolicy(),
+            [], [], [], []);
 }
 
 public sealed record SpaceBuilderState(
