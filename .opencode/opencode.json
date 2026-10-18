@@ -1,17 +1,42 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "agent": {
+  "model": "homepc/strata-dynamic#high",
+  "default_agent": "build",
+  "agents": {
     "build": {
-      "mode": "primary",
-      "model": "openai/gpt-6-sol"
+      "model": "homepc/strata-dynamic#high",
+      "permissions": [
+        {
+          "action": "task",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "agent",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "subagent",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
     },
     "general": {
-      "mode": "subagent",
-      "model": "openai/gpt-6-luna"
+      "disabled": true
     },
     "explore": {
-      "mode": "subagent",
-      "model": "openai/gpt-6-luna"
+      "disabled": true
+    },
+    "title": {
+      "disabled": true
+    },
+    "summary": {
+      "model": "homepc/strata-dynamic#high"
+    },
+    "compaction": {
+      "model": "homepc/strata-dynamic#high"
     }
   }
 }
