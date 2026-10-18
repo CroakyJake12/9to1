@@ -79,6 +79,12 @@ public sealed partial class UserPreferencesService
     private Preferences _preferences;
     private JsonObject _preferenceBaseline = new();
 
+    /// <summary>Typed recovery state for corrupt, unreadable or incompatible preference data.</summary>
+    public UserPreferenceRecoveryState RecoveryState { get; private set; } = UserPreferenceRecoveryState.None;
+
+    /// <summary>Diagnostic message describing preference recovery, when recovery occurred.</summary>
+    public string? Diagnostic { get; private set; }
+
     /// <summary>
     /// Stores legacy theme ids locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -88,34 +94,64 @@ public sealed partial class UserPreferencesService
     {
         _path = Path.Combine(paths.DataDirectory, "preferences.json");
         var hasExistingPreferences = File.Exists(_path);
-        _preferences = Load();
-        const int currentAppearanceVersion = 2;
-        if (_preferences.HavenUiAppearanceVersion > currentAppearanceVersion || !Enum.IsDefined(_preferences.HavenUiAppearance))
-            throw new InvalidDataException("The saved native appearance version is unsupported; preferences were preserved.");
-        var migrated = _preferences.HavenUiAppearanceVersion < currentAppearanceVersion;
-        if (migrated)
+        var loadFailed = false;
+        try
         {
-            var previousTheme = hasExistingPreferences && _preferences.HavenUiAppearanceVersion == 0
-                ? BuiltInThemes.FirstOrDefault(item =>
-                    item.Id.Equals(_preferences.ThemeId, StringComparison.OrdinalIgnoreCase))
-                : null;
-            _preferences = _preferences with
+            _preferences = Load();
+            const int currentAppearanceVersion = 2;
+            if (_preferences.HavenUiAppearanceVersion > currentAppearanceVersion || !Enum.IsDefined(_preferences.HavenUiAppearance))
+                throw new InvalidDataException("The saved native appearance version is unsupported; preferences were preserved.");
+            var migrated = _preferences.HavenUiAppearanceVersion < currentAppearanceVersion;
+            if (migrated)
             {
-                // Migration preserves an existing explicit appearance. It does not
-                // replace the user's selection with a release-specific default.
-                HavenUiAppearance = previousTheme is not null
-                    ? previousTheme.Light ? HavenUiAppearance.Bright : HavenUiAppearance.SuperDark
-                    : hasExistingPreferences ? _preferences.HavenUiAppearance : HavenUiAppearance.SuperDark,
-                HavenUiAppearanceVersion = currentAppearanceVersion,
-                ThemeId = "haven-ui"
+                var previousTheme = hasExistingPreferences && _preferences.HavenUiAppearanceVersion == 0
+                    ? BuiltInThemes.FirstOrDefault(item =>
+                        item.Id.Equals(_preferences.ThemeId, StringComparison.OrdinalIgnoreCase))
+                    : null;
+                _preferences = _preferences with
+                {
+                    // Migration preserves an existing explicit appearance. It does not
+                    // replace the user's selection with a release-specific default.
+                    HavenUiAppearance = previousTheme is not null
+                        ? previousTheme.Light ? HavenUiAppearance.Bright : HavenUiAppearance.SuperDark
+                        : hasExistingPreferences ? _preferences.HavenUiAppearance : HavenUiAppearance.SuperDark,
+                    HavenUiAppearanceVersion = currentAppearanceVersion,
+                    ThemeId = "haven-ui"
+                };
+            }
+            else if (LegacyThemeIds.Contains(_preferences.ThemeId))
+            {
+                _preferences = _preferences with { ThemeId = "haven-ui" };
+            }
+
+            ApplyCore(_preferences.HavenUiAppearance, save: migrated);
+            return;
+        }
+        catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            // Corrupt, unreadable or incompatible preference data must not abort startup.
+            // Preserve the durable file bytes and expose a typed diagnostic/recovery state.
+            loadFailed = true;
+            _preferences = Preferences.Default;
+            _preferenceBaseline = new JsonObject();
+            Diagnostic = error.Message;
+            RecoveryState = error switch
+            {
+                InvalidDataException => UserPreferenceRecoveryState.Corrupt,
+                System.Text.Json.JsonException => UserPreferenceRecoveryState.Corrupt,
+                IOException => UserPreferenceRecoveryState.Unreadable,
+                UnauthorizedAccessException => UserPreferenceRecoveryState.Unreadable,
+                ArgumentException => UserPreferenceRecoveryState.Incompatible,
+                _ => UserPreferenceRecoveryState.Corrupt
             };
         }
-        else if (LegacyThemeIds.Contains(_preferences.ThemeId))
-        {
-            _preferences = _preferences with { ThemeId = "haven-ui" };
-        }
 
-        ApplyCore(_preferences.HavenUiAppearance, save: migrated);
+        if (loadFailed)
+        {
+            _preferenceBaseline = new JsonObject();
+            _preferences = Preferences.Default;
+            ApplyCore(_preferences.HavenUiAppearance, save: false);
+        }
     }
 
     /// <summary>Raised after the canonical HavenUI colour appearance changes.</summary>
@@ -158,13 +194,9 @@ public sealed partial class UserPreferencesService
         // CuiThemeCatalog.Parse falls back to Professional and accepts every legacy name.
         var theme = CuiThemeCatalog.Parse(themeName);
 
-        // CUI is the authority, so publish the resolved theme onto CUI's own active state.
-        // Previously nothing wrote this from the preference path: ActiveTheme was only ever
-        // set by Boards, meaning the user's chosen theme never reached the CUI palette that
-        // owns the neutral surfaces.
-        CuiSurfacePaletteCatalog.ActiveTheme = theme;
-
         _preferences = _preferences with { HavenUiThemeName = CuiThemeCatalog.Name(theme) };
+        // Publication (including CUI active theme) happens only after successful persistence
+        // inside ApplyCore; a failed save cannot leave live presentation uncommitted.
         ApplyCore(_preferences.HavenUiAppearance, save);
     }
 
@@ -202,15 +234,7 @@ public sealed partial class UserPreferencesService
             AccentColourName = parsed is null ? null : AccentColourCatalog.Name(parsed.Value)
         };
 
-        // Publish onto CUI's accent state too. HavenAccentColour and CuiAccentColour are the
-        // same thirteen named colours in the same numeric order (Red = 0 .. Monotone = 12), so
-        // this is an exact mapping, not an approximation. Owner ruling 2026-10-14: the accent
-        // selector accepts ANY colour, which is what CuiSurfacePaletteCatalog's continuous
-        // string overload provides; this named path remains for the discrete preset swatches.
-        CuiSurfacePaletteCatalog.OverrideAccent = _preferences.OverrideAccentColour;
-        CuiSurfacePaletteCatalog.AccentOverride = parsed is null
-            ? null
-            : (CuiAccentColour)(int)parsed.Value;
+        // CUI accent state is published by ApplyCore after successful persistence.
 
         ApplyCore(_preferences.HavenUiAppearance, save);
     }
@@ -240,11 +264,23 @@ public sealed partial class UserPreferencesService
 
     private void ApplyCore(HavenUiAppearance appearance, bool save)
     {
+        // Persist first so a failed save cannot leave already-published global
+        // palette/resource state claiming an uncommitted preference.
+        if (save) Save();
+
+        // Publish CUI global theme/accent state after successful persistence.
+        CuiSurfacePaletteCatalog.ActiveTheme = CuiThemeCatalog.Parse(_preferences.HavenUiThemeName);
+        var parsedAccent = AccentColourCatalog.Parse(_preferences.AccentColourName);
+        CuiSurfacePaletteCatalog.OverrideAccent = _preferences.OverrideAccentColour && parsedAccent is not null;
+        CuiSurfacePaletteCatalog.AccentOverride = _preferences.OverrideAccentColour && parsedAccent is not null
+            ? (CuiAccentColour)(int)parsedAccent.Value
+            : null;
+
         // Publish personalisation into the shared state consulted by every
         // palette resolution (surfaces, tidal background, generated UI).
         HavenPersonalisation.Theme = Theme;
         HavenPersonalisation.OverrideAccent = _preferences.OverrideAccentColour;
-        HavenPersonalisation.Accent = AccentColourCatalog.Parse(_preferences.AccentColourName);
+        HavenPersonalisation.Accent = parsedAccent;
         HavenPersonalisation.FontFamilyName = _preferences.FontFamilyName;
         HavenUiFont.SetUserFamily(_preferences.FontFamilyName);
         HavenPersonalisation.UserAvatarEnabled = _preferences.UserAvatarEnabled;
@@ -262,7 +298,6 @@ public sealed partial class UserPreferencesService
             HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Home, appearance));
         }
 
-        if (save) Save();
         AppearanceChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -835,4 +870,12 @@ public sealed partial class UserPreferencesService
         /// </summary>
         public IReadOnlyList<HavenThemePreset> CustomThemes { get; init; } = [];
     }
+}
+
+public enum UserPreferenceRecoveryState
+{
+    None,
+    Corrupt,
+    Incompatible,
+    Unreadable
 }

@@ -109,9 +109,31 @@ public static class HomeNativePreferenceFile
     private static void PutTheme(JsonObject document, HomeThemePreference preference)
     {
         var serialized = JsonSerializer.SerializeToNode(preference, Json)!.AsObject();
-        var envelope = document[ThemeKey] as JsonObject ?? new();
-        foreach (var pair in serialized) envelope[pair.Key] = pair.Value?.DeepClone();
-        if (document[ThemeKey] is null) document[ThemeKey] = envelope;
+        var envelope = document[ThemeKey] as JsonObject;
+        if (envelope is null)
+        {
+            envelope = new JsonObject();
+            document[ThemeKey] = envelope;
+        }
+        // Replace known typed fields while preserving compatible additive members.
+        // Nested structured records (scope/accessibility/accent) merge their known
+        // fields instead of replacing the whole object, so unknown siblings survive.
+        // Known collections/dictionaries such as accent.individualApps are replaced
+        // as complete values, allowing deliberate removals to take effect.
+        foreach (var pair in serialized)
+        {
+            if (pair.Key is "scope" or "accessibility" or "accent" &&
+                pair.Value is JsonObject sourceNested &&
+                envelope[pair.Key] is JsonObject targetNested)
+            {
+                foreach (var nested in sourceNested)
+                    targetNested[nested.Key] = nested.Value?.DeepClone();
+            }
+            else
+            {
+                envelope[pair.Key] = pair.Value?.DeepClone();
+            }
+        }
         document[RevisionKey] = preference.Revision;
     }
 

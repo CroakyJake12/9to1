@@ -57,6 +57,9 @@ internal sealed class NativeHomeThemePreferences : ICuiThemePreferenceSource, IA
             if (_closing) return;
             if (!result.Succeeded || result.Value is null)
                 throw new UnauthorizedAccessException(result.Diagnostic ?? result.Code);
+            // Recheck current authority/scope after the asynchronous read and before
+            // publishing; a revoked actor must not receive the observed value.
+            if (!await _backend.CanAccessAsync(_scope, false, linked.Token).ConfigureAwait(false)) return;
             var resolved = result.Value;
             var value = resolved.Preference;
             var access = value.Accessibility;
