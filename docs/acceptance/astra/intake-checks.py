@@ -2,10 +2,12 @@
 """Synthetic custody-validator tests only; no product test or acceptance proof."""
 import copy
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import intake
 
@@ -15,6 +17,13 @@ class CustodyControls(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="astra-custody-self-test-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        # Synthetic repositories must not inherit machine-wide clean filters.
+        # Local filters remain enabled so the malicious-filter regression below
+        # still exercises the unchanged production custody guard.
+        environment = patch.dict(os.environ, {
+            "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"})
+        environment.start()
+        self.addCleanup(environment.stop)
         self.source = self.root / "synthetic-source"
         self.source.mkdir()
         self.command("init", "--quiet")
@@ -28,18 +37,17 @@ class CustodyControls(unittest.TestCase):
         self.revision = self.command("rev-parse", "HEAD").strip()
         self.artifact = self.file("synthetic-package.bin", "synthetic bytes; not a product package\n")
         self.log = self.file("synthetic-workflow.txt", "synthetic asserted observation; no product ran\n")
-        citation = [{"spec_id": "development", "locator": "Synthetic section; manual review required"}]
+        citation = [{"spec_id": intake.SPEC_ID, "locator": "Synthetic section; manual review required"}]
         self.candidate = {
-            "schema_version": 1, "candidate_id": "synthetic-validator-self-test",
+            "schema_version": 2, "candidate_id": "synthetic-validator-self-test",
             "delivery_index_entry": "synthetic local fixture",
             "source": {"repository": self.repository, "revision": self.revision,
                        "checkout": str(self.source),
                        "source_files": [self.source_record("synthetic-product.py")]},
-            "specs": [dict(id=identity, document_id=document_id, revision="synthetic-provider-revision",
-                           revision_evidence=self.file(f"{identity}-revision.json", json.dumps({
-                               "documentId": document_id, "revisionId": "synthetic-provider-revision"})),
-                           **self.file(f"{identity}.txt", "Synthetic spec text; identity not authenticated\n"))
-                      for identity, document_id in intake.SPEC_IDS.items()],
+            "specs": [{"id": intake.SPEC_ID, "revision": intake.SPEC_SHA256,
+                       "sha256": intake.SPEC_SHA256,
+                       "path": str(Path(__file__).resolve().parents[2] / "specification" /
+                                   "9to1-development-specification-v2.md")}],
             "locks": [dict(role=role, **self.source_record(name))
                       for role, name in (("dependencies", "dependencies.lock"), ("donors", "donors.lock"))],
             "scope": {"claims": [{"id": "synthetic-journey", "description": "Synthetic self-test claim",
@@ -52,7 +60,7 @@ class CustodyControls(unittest.TestCase):
         }
         self.report = {
             "report_id": "synthetic-smoke-report", "issuer": "Synthetic independent fixture",
-            "issuer_role": "Smoke Tester", "independent": True,
+            "issuer_role": "Acceptance", "independent": True,
             "candidate_id": self.candidate["candidate_id"], "source_revision": self.revision,
             "source_repository": self.repository,
             "tested_artifacts": [{"id": "synthetic-package", "platform": "synthetic-platform",
@@ -208,7 +216,7 @@ class CustodyControls(unittest.TestCase):
             **self.file("supplemental.txt", "supplemental synthetic instructions\n")))
         self.candidate["scope"]["claims"][0]["spec_citations"] = [
             {"spec_id": "supplemental", "locator": "synthetic section"}]
-        self.rejected("Scope row lacks an authoritative specification citation")
+        self.rejected("Only the attached v2 specification is authoritative")
 
     def test_nonobject_hashed_smoke_report_rejected(self):
         self.candidate["smoke"].update(self.file("smoke-report.json", "[]"))
@@ -218,15 +226,39 @@ class CustodyControls(unittest.TestCase):
         self.candidate["artifacts"] = ["not an artifact record"]
         self.rejected("Invalid artifacts")
 
-    def test_report_without_independent_tester_rejected(self):
+    def test_acceptance_report_without_independent_tester_rejected(self):
         self.report["independent"] = False
         self.refresh_report()
-        self.rejected("Independent Smoke Tester declaration missing")
+        self.rejected("Acceptance reviewer must be independent")
 
-    def test_spec_revision_metadata_for_other_snapshot_rejected(self):
-        self.candidate["specs"][0]["revision_evidence"] = self.file("development-revision.json", json.dumps({
-            "documentId": intake.SPEC_IDS["development"], "revisionId": "another-revision"}))
-        self.rejected("Specification revision evidence mismatch")
+    def test_implementation_smoke_is_admitted_only_to_pending_independent_review(self):
+        self.report.update(issuer_role="Implementation", independent=False)
+        self.refresh_report()
+        result = self.run_validator()
+        self.assertEqual(intake.PENDING, result["status"])
+        self.assertTrue(result["manual_review_required"])
+
+    def test_spec_revision_for_other_snapshot_rejected(self):
+        self.candidate["specs"][0]["revision"] = "1" * 64
+        self.rejected("Specification identity differs")
+
+    def test_self_consistent_replacement_spec_is_not_authority(self):
+        replacement = self.file("replacement-spec.txt", "Unapproved replacement product contract\n")
+        self.candidate["specs"][0].update(replacement, revision=replacement["sha256"])
+        self.rejected("Specification identity differs")
+
+    def test_attached_spec_bytes_checked_even_when_identity_fields_match(self):
+        replacement = self.file("replacement-spec.txt", "Modified contract\n")
+        self.candidate["specs"][0]["path"] = replacement["path"]
+        self.rejected("File hash mismatch")
+
+    def test_old_web_spec_id_is_not_authority(self):
+        self.candidate["specs"][0]["id"] = "development"
+        self.rejected("Only the attached v2 specification is authoritative")
+
+    def test_legacy_manifest_requires_explicit_migration(self):
+        self.candidate["schema_version"] = 1
+        self.rejected("migrate legacy custody records")
 
     def web_fixture(self):
         platform = self.candidate["scope"]["platform_matrix"][0]

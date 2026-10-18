@@ -9,10 +9,8 @@ import re
 import subprocess
 
 PENDING = "CUSTODY_INTEGRITY_OK_PENDING_MANUAL_REVIEW"
-SPEC_IDS = {
-    "development": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
-    "postrelease": "1yZCIP-ogTPLBfqcnc5EFMsL2FO5DoLYBTbGGPTk7Aks",
-}
+SPEC_ID = "9to1-development-v2"
+SPEC_SHA256 = "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96"
 
 
 def require(condition, message):
@@ -115,7 +113,7 @@ def citations(record, specs):
     for item in rows(record, "spec_citations"):
         identity = value(item, "spec_id")
         require(identity in specs, "Unknown scope specification")
-        authoritative = authoritative or identity in SPEC_IDS
+        authoritative = authoritative or identity == SPEC_ID
         value(item, "locator")
     require(authoritative, "Scope row lacks an authoritative specification citation")
 
@@ -124,7 +122,8 @@ def inspect(manifest_path):
     base = manifest_path.resolve().parent
     candidate = json.loads(manifest_path.read_text())
     require(isinstance(candidate, dict), "Manifest must be a JSON object")
-    require(candidate.get("schema_version") == 1, "Unsupported schema_version")
+    require(candidate.get("schema_version") == 2,
+            "Unsupported schema_version: migrate legacy custody records to the attached v2 specification")
     candidate_id = value(candidate, "candidate_id")
     value(candidate, "delivery_index_entry")
     source = candidate["source"]
@@ -136,17 +135,12 @@ def inspect(manifest_path):
     for item in rows(candidate, "specs"):
         identity = value(item, "id")
         require(identity not in specs, "Duplicate specification")
-        value(item, "revision")
+        require(identity == SPEC_ID, "Only the attached v2 specification is authoritative")
+        require(value(item, "revision") == SPEC_SHA256 and item.get("sha256") == SPEC_SHA256,
+                "Specification identity differs from the attached v2 bytes")
         checked_file(item, base)
-        revision_path = checked_file(item["revision_evidence"], base)
-        revision_record = json.loads(revision_path.read_text())
-        require(isinstance(revision_record, dict), "Specification revision evidence must be an object")
-        require(revision_record.get("documentId") == value(item, "document_id")
-                and revision_record.get("revisionId") == item["revision"],
-                "Specification revision evidence mismatch")
-        specs[identity] = value(item, "document_id")
-    for identity, document_id in SPEC_IDS.items():
-        require(specs.get(identity) == document_id, f"Missing authoritative {identity} specification")
+        specs[identity] = SPEC_SHA256
+    require(set(specs) == {SPEC_ID}, "Missing attached v2 specification")
 
     lock_roles = set()
     for item in rows(candidate, "locks"):
@@ -201,8 +195,11 @@ def inspect(manifest_path):
     require(isinstance(report, dict), "Smoke report must be a JSON object")
     require(report.get("report_id") == value(smoke, "report_id"), "Smoke report identity mismatch")
     require(report.get("issuer") == value(smoke, "issuer"), "Smoke report issuer mismatch")
-    require(report.get("issuer_role") == "Smoke Tester" and report.get("independent") is True,
-            "Independent Smoke Tester declaration missing")
+    require(report.get("issuer_role") in {"Implementation", "Acceptance"}
+            and type(report.get("independent")) is bool,
+            "Smoke issuer role and independence declaration missing")
+    require(report["issuer_role"] != "Acceptance" or report["independent"] is True,
+            "Acceptance reviewer must be independent")
     require(report.get("candidate_id") == candidate_id, "Smoke candidate mismatch")
     require(report.get("source_revision") == source["revision"]
             and report.get("source_repository") == source["repository"], "Smoke source mismatch")
