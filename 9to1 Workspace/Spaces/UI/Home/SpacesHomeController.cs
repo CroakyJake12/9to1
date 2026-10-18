@@ -488,6 +488,19 @@ public sealed class SpacesHomeController
         }
     }
 
+    /// <summary>Observes a separately retained queued action failure only while the exact
+    /// admitted selection is still current. Publishing status does not settle or waive that task.</summary>
+    public bool ReportQueuedActionFailure(SpacesHomeSelection expectedSelection, SpacesAction action, Exception failure)
+    {
+        ArgumentNullException.ThrowIfNull(expectedSelection);
+        ArgumentNullException.ThrowIfNull(action);
+        ArgumentNullException.ThrowIfNull(failure);
+        if (!ReferenceEquals(State.Selection, expectedSelection) || expectedSelection.Id != action.Context.Scope.RegisteredSpaceId)
+            return false;
+        PublishStatus($"The queued Space action failed: {failure.Message}");
+        return true;
+    }
+
     public async Task EditDetailsAsync(Guid spaceId, CancellationToken cancellationToken = default)
     {
         var selection = State;

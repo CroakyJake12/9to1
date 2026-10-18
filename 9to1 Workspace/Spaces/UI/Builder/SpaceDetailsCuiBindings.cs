@@ -13,14 +13,20 @@ public sealed class SpaceDetailsCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Action<SpaceDetailsField, string> _edit;
     private readonly Func<string, object?, CancellationToken, ValueTask> _dispatch;
     private readonly Func<bool> _isCurrent;
+    private readonly Func<bool> _canGoBack;
 
     public SpaceDetailsCuiBindings(Func<SpaceDetailsState> state, Action<SpaceDetailsField, string> edit,
         Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent = null)
+        : this(state, edit, dispatch, isCurrent, null) { }
+
+    public SpaceDetailsCuiBindings(Func<SpaceDetailsState> state, Action<SpaceDetailsField, string> edit,
+        Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent, Func<bool>? canGoBack)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _isCurrent = isCurrent ?? (() => true);
+        _canGoBack = canGoBack ?? (() => false);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -39,6 +45,7 @@ public sealed class SpaceDetailsCuiBindings : ICuiWritableBindingContext, ICuiAc
             "details.canSave" => _isCurrent() && state.CanSave,
             "details.canDiscard" => _isCurrent() && state.CanDiscard,
             "details.canReload" => _isCurrent() && state.CanReload,
+            "details.canGoBack" => _isCurrent() && _canGoBack(),
             "details.status" => state.StatusMessage,
             _ => null
         };
@@ -66,6 +73,7 @@ public sealed class SpaceDetailsCuiBindings : ICuiWritableBindingContext, ICuiAc
         "space-details.save" => _isCurrent() && _state().CanSave,
         "space-details.discard" => _isCurrent() && _state().CanDiscard,
         "space-details.reload" => _isCurrent() && _state().CanReload,
+        "space-details.back" => _isCurrent() && _canGoBack(),
         _ => null
     };
 

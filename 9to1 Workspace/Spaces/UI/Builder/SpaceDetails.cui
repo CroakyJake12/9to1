@@ -15,6 +15,9 @@
           <Input id="space-details-instructions" Type="Text" AcceptsReturn="True" MinHeight="120" Value="{Binding details.instructions, mode=TwoWay}" accessible-name="Space custom instructions" />
         </Container>
         <Container Type="Wrap" CellGap="8">
+          <If Condition="{Binding details.canGoBack}">
+            <Button id="space-details-back" content="Back to Spaces" action="space-details.back" Interactive="{Binding details.canGoBack}" accessible-name="Back to Spaces" />
+          </If>
           <Button id="space-details-save" content="Save" action="space-details.save" Interactive="{Binding details.canSave}" accessible-name="Save Space details" />
           <Button id="space-details-discard" content="Discard changes" action="space-details.discard" Interactive="{Binding details.canDiscard}" accessible-name="Discard unsaved details and reload" />
           <Button id="space-details-reload" content="Reload" action="space-details.reload" Interactive="{Binding details.canReload}" accessible-name="Reload saved Space details" />

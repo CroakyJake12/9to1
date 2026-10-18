@@ -43,7 +43,7 @@
   </Actions>
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
-      <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr">
+      <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}">
         <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="280 1fr" CellGap="16">
           <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="280" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10">
             <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />

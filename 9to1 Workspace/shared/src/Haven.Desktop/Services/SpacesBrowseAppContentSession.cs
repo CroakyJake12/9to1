@@ -19,7 +19,7 @@ namespace Haven.Desktop.Services;
 
 /// <summary>A distinct Spaces view owner per Haven tab, reusing the canonical
 /// Spaces Home page and its services.</summary>
-internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppContentSession
+internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppContentSession, IBrowseAppContentClosePreparationParticipant
 {
     private readonly BrowseAppContentRequest _request;
     private readonly IServiceProvider _services;
@@ -30,7 +30,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private readonly SemaphoreSlim _commandSerial = new(1, 1);
     private readonly Dictionary<Guid, NewChatPage> _chatsBySpace = [];
     private readonly List<NewChatPage> _ownedChats = [];
-    private static readonly AsyncLocal<SpacesBrowseAppContentSession?> ExecutingCommand = new();
+    private sealed class CommandExecution(SpacesBrowseAppContentSession owner)
+    {
+        internal readonly SpacesBrowseAppContentSession Owner = owner;
+        internal Task? Original;
+        internal bool Active;
+    }
+    private static readonly AsyncLocal<CommandExecution?> ExecutingCommand = new();
     private Task? _initialization;
     private Task? _close;
     private Task<bool>? _preparation;
@@ -124,7 +130,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             }
             var registry = _services.GetRequiredService<SpaceRegistry>();
             var navigationHost = new HavenSpacesActionHost(this);
-            var page = new SpacesHomePage(registry, navigationHost, SpacesHomePage.ImmediateReadinessInstance);
+            var page = new SpacesHomePage(registry, navigationHost, SpacesHomePage.ImmediateReadinessInstance,
+                queueNavigation: QueueSpaceAction);
             _spacesPage = page;
             try
             {
@@ -138,10 +145,11 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 // Saved Chat routes carry a canonical ConversationId, including the
                 // existing legacy workspace migration. Restore it before publishing
                 // a generic Spaces location over the saved target.
-                if (!await TryRestoreRequestedConversationAsync(token))
+                if (!await TryRestoreRequestedDetailsAsync(token) && !await TryRestoreRequestedConversationAsync(token))
                 {
                     UpdateAddress(page.Controller.State.Selection?.Id);
-                    _root.Content = page;
+                    SetRootContent(page);
+                    _routeEpoch++;
                 }
                 _page = _root;
                 _published = true;
@@ -153,7 +161,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 _spacesPage = null;
                 throw;
             }
-            StateChanged?.Invoke(this, EventArgs.Empty);
+            PublishStateChanged();
         }).ConfigureAwait(false);
     }
 
@@ -175,12 +183,10 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     {
         await gate.ConfigureAwait(false);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
-        return await OnUiAsync(async () =>
-        {
-            linked.Token.ThrowIfCancellationRequested();
-            if (_closing || !_published || _spacesPage is null) return false;
-            return await _spacesPage.TryPrepareToCloseAsync(linked.Token);
-        }).ConfigureAwait(false);
+        var preparation = await PrepareCloseAsync(linked.Token).ConfigureAwait(false);
+        if (preparation is null) return false;
+        await preparation.AbortAsync().ConfigureAwait(false);
+        return true; // Compatibility observation never leaves a hidden mutation freeze.
     }
 
     public Task CloseAndDrainAsync()
@@ -203,6 +209,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         await gate.ConfigureAwait(false);
         List<Exception> failures = [];
         try { _lifetime.Cancel(); } catch (Exception error) { failures.Add(error); }
+        // Cancel/retire actual editor owners BEFORE joining a pending decision/save preparation.
+        // A preparation may be waiting for the same page cancellation or real save source.
+        BeginDetailsRetirement(failures);
         if (_initialization is { } initialization)
             try { await initialization.ConfigureAwait(false); }
             catch (OperationCanceledException) when (initialization.IsCanceled && _token.IsCancellationRequested) { }
@@ -215,6 +224,15 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             catch (OperationCanceledException) when (command.IsCanceled && _token.IsCancellationRequested) { }
             catch (Exception error) { failures.Add(error); }
         }
+        Task[] preparations;
+        lock (_gate) preparations = _detailsPreparations.ToArray();
+        foreach (var preparation in preparations)
+            try { await preparation.ConfigureAwait(false); }
+            catch (OperationCanceledException) when (preparation.IsCanceled && _token.IsCancellationRequested) { }
+            catch (Exception error) { AddActualCauses(failures, preparation, error); }
+        // A command acquired before retirement may have produced an owner late.
+        BeginDetailsRetirement(failures);
+        await JoinDetailsRetirementAsync(failures).ConfigureAwait(false);
         await OnUiAsync(async () =>
         {
             foreach (var chat in _ownedChats.ToArray())
@@ -228,7 +246,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             if (_spacesPage is IAsyncDisposable spacesDisposable)
                 try { await spacesDisposable.DisposeAsync(); }
                 catch (Exception error) { failures.Add(error); }
-            lock (_gate) { _chatPage = null; _publishedChatRoute = null; }
+            lock (_gate) { _chatPage = null; _publishedChatRoute = null; _publishedDetailsRoute = null; }
             _chatsBySpace.Clear();
             _spacesPage = null;
             // Only a clean retirement may drop the root to an empty tab. A failed retirement
@@ -238,7 +256,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             if (RequiresFailedRetirementPresentation(failures))
                 await PresentFailedRetirementAsync(failures);
             else
-                _root.Content = null;
+                SetRootContent(null);
             _page = null;
         }).ConfigureAwait(false);
         _commandSerial.Dispose();
@@ -274,10 +292,10 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         catch (Exception error)
         {
             failures.Add(error);
-            _root.Content = null;
+            SetRootContent(null);
             return;
         }
-        _root.Content = host;
+        SetRootContent(host);
     }
 
     /// <summary>Builds the canonical CUI failure scene for a failed Spaces retirement. Exposed
@@ -327,14 +345,16 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             if (_closing || !_published) return;
             UpdateAddress(state.Selection?.Id);
         }
-        StateChanged?.Invoke(this, EventArgs.Empty);
+        PublishStateChanged();
     }
 
     private void UpdateAddress(Guid? selectedSpaceId)
     {
         lock (_gate)
         {
-            if (_publishedChatRoute is { } chat)
+            if (_publishedDetailsRoute is { } details)
+                _address = details.Address;
+            else if (_publishedChatRoute is { } chat)
                 _address = chat.Address;
             else if (selectedSpaceId is { } id && id != Guid.Empty)
                 _address = AppContentAddress.Parse($"9to1://spaces/selected/{id:D}");
@@ -348,7 +368,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private void PublishChatPage(NewChatPage chat)
     {
         Dispatcher.UIThread.VerifyAccess();
-        _root.Content = chat;
+        SetRootContent(chat);
+        _publishedDetailsRoute = null;
+        _routeEpoch++;
         _chatPage = chat;
         _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
         _address = _publishedChatRoute.Address;
@@ -368,9 +390,27 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         _token.ThrowIfCancellationRequested();
     }
 
+    private void PublishStateChanged() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+    {
+        StateChanged?.Invoke(this, EventArgs.Empty);
+        return true;
+    });
+
+    private void SetRootContent(Control? content)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+        {
+            _root.Content = content;
+            return true;
+        });
+    }
+
     private void DemandExternalJoin()
     {
-        if (ReferenceEquals(ExecutingCommand.Value, this))
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        if (ExecutingCommand.Value is { } execution && ReferenceEquals(execution.Owner, this) &&
+            Volatile.Read(ref execution.Active) && execution.Original is { IsCompleted: false })
             throw new InvalidOperationException("An active Spaces command cannot join its own retirement.");
     }
 
@@ -380,15 +420,19 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         {
             DemandAlive();
             caller.ThrowIfCancellationRequested();
+            if (_activeDetailsPreparation is not null)
+                throw new InvalidOperationException("Abort the exact Spaces close preparation before navigating.");
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var actual = ExecuteCommandDriverAsync(start.Task, action, caller);
+            var execution = new CommandExecution(this);
+            var actual = ExecuteCommandDriverAsync(start.Task, action, caller, execution);
+            execution.Original = actual;
             _commands.Add(actual);
             start.SetResult();
             return actual;
         }
     }
 
-    private async Task ExecuteCommandDriverAsync(Task start, SpacesAction action, CancellationToken caller)
+    private async Task ExecuteCommandDriverAsync(Task start, SpacesAction action, CancellationToken caller, CommandExecution execution)
     {
         await start.ConfigureAwait(false);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
@@ -398,12 +442,12 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             await OnUiAsync(async () =>
             {
                 var previous = ExecutingCommand.Value;
-                ExecutingCommand.Value = this;
-                try { await ExecuteChatOnUiAsync(action, linked.Token); }
+                ExecutingCommand.Value = execution; Volatile.Write(ref execution.Active, true);
+                try { await ExecuteActionOnUiAsync(action, linked.Token); }
                 finally { ExecutingCommand.Value = previous; }
             }).ConfigureAwait(false);
         }
-        finally { _commandSerial.Release(); }
+        finally { Volatile.Write(ref execution.Active, false); _commandSerial.Release(); }
     }
 
     private async Task ExecuteChatOnUiAsync(SpacesAction action, CancellationToken token)
@@ -423,7 +467,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 DemandAlive();
                 PublishChatPage(existing);
             }
-            StateChanged?.Invoke(this, EventArgs.Empty);
+            PublishStateChanged();
             return;
         }
         var factory = new OverlayChatSessionFactory(_services,
@@ -449,7 +493,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 ObserveConversationRoute(page);
                 published = true;
             }
-            StateChanged?.Invoke(this, EventArgs.Empty);
+            PublishStateChanged();
         }
         finally
         {
@@ -461,8 +505,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         }
     }
 
-    private sealed class HavenSpacesActionHost(SpacesBrowseAppContentSession owner) : ISpacesActionHost
+    private sealed class HavenSpacesActionHost(SpacesBrowseAppContentSession owner) : ISpacesActionHost, ISpacesActionSupport
     {
+        public bool SupportsAction(SpacesActionKind action) => action is SpacesActionKind.Open or SpacesActionKind.EditDetails;
         public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default) =>
             owner.ExecuteCommandAsync(action, cancellationToken);
     }

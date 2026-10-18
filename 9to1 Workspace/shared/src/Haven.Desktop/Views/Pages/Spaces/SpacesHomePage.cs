@@ -25,7 +25,7 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 /// the originating page original and the actual CUI loader pipeline; Root owns downstream
 /// navigation independently. Without the callback, the supplied host is invoked directly.
 /// </summary>
-public sealed class SpacesHomePage : UserControl, IActivatablePage,
+public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, ICuiRepeatItemBindingContext,
     IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard,
     INotifyPropertyChanged, IDisposable, IAsyncDisposable
@@ -87,35 +87,49 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
     public Task ActivateAsync(CancellationToken cancellationToken)
     {
         long generation;
-        lock (_gate) { _work.DemandAdmission(); _active = true; generation = ++_generation; }
-        return _work.RunAsync(async original =>
+        lock (_gate)
         {
-            original.BindPublicationGuard(() => IsCurrent(generation));
-            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-            using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
-            original.DemandPublication();
-            await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
-
-            Task? showJoin = null;
-            var dispatcher = Dispatcher.UIThread.InvokeAsync(() =>
+            _work.DemandAdmission();
+            if (_homeCloseLease is not null) throw new InvalidOperationException("Abort the Home preparation before activation.");
+            _active = true; generation = ++_generation;
+            return RunHomeOriginal(async original =>
             {
+                original.BindPublicationGuard(() => IsCurrent(generation));
+                using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+                using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
                 original.DemandPublication();
-                var show = InvokeOriginalSource(() => _host.ShowAsync(new("spaces.home", "Spaces", "Spaces",
-                    Document, this, this, _readiness) { IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
-                _exactOriginalShow = show;
-                showJoin = original.AwaitAsync(show);
-            }).GetTask();
-            try { await original.AwaitAsync(dispatcher).ConfigureAwait(false); }
-            catch (Exception error) { original.Capture(dispatcher, error); }
-            if (showJoin is not null)
-                try { await original.AwaitAsync(showJoin).ConfigureAwait(false); }
-                catch (Exception error) { original.Capture(showJoin, error); }
-            else original.Retain(new InvalidOperationException("No Spaces Home Show was acquired."));
-            original.ThrowRetained();
-        });
+                await RefreshOriginalAsync(original, generation, scope.Token).ConfigureAwait(false);
+
+                Task? showJoin = null;
+                var dispatcher = Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    original.DemandPublication();
+                    var show = InvokeOriginalSource(() => _host.ShowAsync(new("spaces.home", "Spaces", "Spaces",
+                        Document, this, this, _readiness) { IsPublicationCurrent = () => IsCurrent(generation) }, scope.Token));
+                    _exactOriginalShow = show;
+                    showJoin = original.AwaitAsync(show);
+                }).GetTask();
+                try { await original.AwaitAsync(dispatcher).ConfigureAwait(false); }
+                catch (Exception error) { original.Capture(dispatcher, error); }
+                if (showJoin is not null)
+                    try { await original.AwaitAsync(showJoin).ConfigureAwait(false); }
+                    catch (Exception error) { original.Capture(showJoin, error); }
+                else original.Retain(new InvalidOperationException("No Spaces Home Show was acquired."));
+                original.ThrowRetained();
+            });
+        }
     }
 
-    public void Deactivate() { lock (_gate) { _active = false; _generation++; } }
+    public void Deactivate()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_gate)
+        {
+            if (_active && _exactOriginalShow is { } shown)
+                _homeLastPipeline = _host.CaptureOriginalActionSettlement(shown);
+            _active = false; _generation++;
+        }
+    }
 
     private async Task RefreshOriginalAsync(DesktopOriginalWorkLifetime.Original original, long generation, CancellationToken token)
     {
@@ -136,14 +150,14 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
         {
             if (!_active || _work.IsRetiring) return;
             generation = _generation;
+            _ = RunHomeOriginal(async original =>
+            {
+                original.BindPublicationGuard(() => IsCurrent(generation));
+                using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    original.RunAcceptedPublicationCallback(_bindings.Refresh)).GetTask()).ConfigureAwait(false);
+            });
         }
-        _ = _work.RunAsync(async original =>
-        {
-            original.BindPublicationGuard(() => IsCurrent(generation));
-            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
-                original.RunAcceptedPublicationCallback(_bindings.Refresh)).GetTask()).ConfigureAwait(false);
-        });
     }
 
     private void OnBindingsPropertyChanged(object? sender, PropertyChangedEventArgs args) =>
@@ -152,28 +166,41 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
     private bool IsCurrent(long generation)
     { lock (_gate) return !_work.IsRetiring && _active && _generation == generation; }
 
-    public bool TryGetValue(string path, out object? value) => _bindings.TryGetValue(path, out value);
-    public bool TrySetValue(string path, object? value) => _bindings.TrySetValue(path, value);
-    public bool TryGetItemValue(object item, string path, out object? value) => _bindings.TryGetItemValue(item, path, out value);
-    public bool TrySetItemValue(object item, string path, object? value) => _bindings.TrySetItemValue(item, path, value);
-
-    public bool? IsActionAvailable(string command) => _bindings.IsActionAvailable(command);
-
-    public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+    public bool TryGetValue(string path, out object? value)
     {
-        if (_bindings.IsActionAvailable(command) != true)
-            throw new InvalidOperationException($"Spaces Home command '{command}' is unavailable.");
+        if (path == "spaces.canMutate") { lock (_gate) value = CanAdmitHomeMutation(); return true; }
+        return _bindings.TryGetValue(path, out value);
+    }
+    public bool TrySetValue(string path, object? value)
+    { lock (_gate) return CanAdmitHomeMutation() && _bindings.TrySetValue(path, value); }
+    public bool TryGetItemValue(object item, string path, out object? value) => _bindings.TryGetItemValue(item, path, out value);
+    public bool TrySetItemValue(object item, string path, object? value)
+    { lock (_gate) return CanAdmitHomeMutation() && _bindings.TrySetItemValue(item, path, value); }
 
-        long generation;
-        lock (_gate) generation = _generation;
-        await _work.RunAsync(async original =>
+    public bool? IsActionAvailable(string command)
+    { lock (_gate) return CanAdmitHomeMutation() && _bindings.IsActionAvailable(command) == true; }
+
+    public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
         {
-            original.BindPublicationGuard(() => IsCurrent(generation));
-            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-            using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
-            original.DemandPublication();
-            await DispatchOriginalAsync(original, generation, command, parameter, scope.Token).ConfigureAwait(false);
-        });
+            // A loader action queued before the reversible boundary may arrive later.
+            // It acquires no mutation original while paused, and does not poison that loader.
+            if (_homeCloseLease is not null) return ValueTask.CompletedTask;
+            if (!CanAdmitHomeMutation() || _bindings.IsActionAvailable(command) != true)
+                throw new InvalidOperationException($"Spaces Home command '{command}' is unavailable.");
+            var generation = _generation;
+            var actual = RunHomeOriginal(async original =>
+            {
+                original.BindPublicationGuard(() => IsCurrent(generation));
+                using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+                using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
+                original.DemandPublication();
+                await DispatchOriginalAsync(original, generation, command, parameter, scope.Token).ConfigureAwait(false);
+            });
+            _latestOriginalMutation = actual;
+            return new(actual);
+        }
     }
 
     private async Task DispatchOriginalAsync(DesktopOriginalWorkLifetime.Original original, long generation,
@@ -265,12 +292,12 @@ public sealed class SpacesHomePage : UserControl, IActivatablePage,
         _work.DemandExternalClose();
     }
 
-    public void RequestRetirement() => _work.RequestRetirement();
+    public void RequestRetirement() { lock (_gate) _work.RequestRetirement(); }
 
     public Task CloseAndDrainAsync()
     {
         DemandExternalOriginalRetirementJoin();
-        return _work.CloseAndDrainAsync();
+        lock (_gate) return _work.CloseAndDrainAsync();
     }
 
     private Task StopOriginalPresentationAsync()

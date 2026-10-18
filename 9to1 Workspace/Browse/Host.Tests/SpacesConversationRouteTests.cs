@@ -225,6 +225,7 @@ public sealed class SpacesConversationRouteTests
             var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
             var spaces = Assert.IsType<SpacesHomePage>(root.Content);
             await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
             var chat = Assert.IsType<NewChatPage>(root.Content);
             chat.SetDraft("Unsent close-boundary fixture");
             Assert.True(await session.TryPrepareToCloseAsync().WaitAsync(Bound));
@@ -260,24 +261,26 @@ public sealed class SpacesConversationRouteTests
         await session.CloseAndDrainAsync().WaitAsync(Bound);
     }
 
-    private sealed class Rig : IDisposable
+    internal sealed class Rig : IDisposable
     {
         internal Conversation? Row = new(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Saved fixture", null, null,
             false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);
-        internal readonly SpaceRegistry Spaces = new(new Settings());
+        internal readonly SpaceRegistry Spaces;
+        internal Func<Guid, Task<IReadOnlyList<ChatMessage>>>? ReadMessages;
         internal readonly ChatMessage SavedMessage;
         internal int ConversationWrites, ModelReads;
         private readonly ServiceProvider _services;
         internal HomeNativeWindowsComposition? Home { get; }
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-space-route-" + Guid.NewGuid().ToString("N"));
-        internal Rig(bool withHome = false, bool allowConversationWrites = false)
+        internal Rig(bool withHome = false, bool allowConversationWrites = false, IVersionedSettingsStore? settings = null)
         {
             Directory.CreateDirectory(_directory);
+            Spaces = new(settings ?? new Settings());
             SavedMessage = new(Guid.NewGuid(), Row!.Id, MessageRole.User, "Persisted history fixture", null, null, null, DateTimeOffset.UnixEpoch);
             var conversations = Proxy<IConversationRepository>((name, args) => name switch
             {
                 "GetAsync" => Task.FromResult(Row is { } row && row.Id == (Guid)args![0]! ? row : null),
-                "GetMessagesAsync" => Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = Row!.Id }]),
+                "GetMessagesAsync" => ReadMessages?.Invoke((Guid)args![0]!) ?? Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = Row!.Id }]),
                 "GetContextEntriesAsync" => Task.FromResult<IReadOnlyList<ConversationContextEntry>>([]),
                 "UpsertConversationAsync" => allowConversationWrites ? RecordConversationWrite((Conversation)args![0]!) : RecordUnexpectedWrite(),
                 _ => throw Unexpected(name)
@@ -327,8 +330,8 @@ public sealed class SpacesConversationRouteTests
         private Task RecordUnexpectedWrite() { ConversationWrites++; throw Unexpected("Creating or modifying a saved conversation during restore"); }
         private Task RecordConversationWrite(Conversation conversation) { ConversationWrites++; Row = conversation; return Task.CompletedTask; }
         private Task<IReadOnlyList<ModelDescriptor>> Models() { ModelReads++; return Task.FromResult<IReadOnlyList<ModelDescriptor>>([]); }
-        internal SpacesBrowseAppContentSession Session(string address, Guid? tabId = null, string profileId = "profile") => new(
-            new BrowseAppContentRequest(tabId ?? Guid.NewGuid(), AppContentAddress.Parse(address), profileId, BrowserTabPrivacy.Standard), _services, CancellationToken.None);
+        internal SpacesBrowseAppContentSession Session(string address, Guid? tabId = null, string profileId = "profile", BrowserTabPrivacy privacy = BrowserTabPrivacy.Standard) => new(
+            new BrowseAppContentRequest(tabId ?? Guid.NewGuid(), AppContentAddress.Parse(address), profileId, privacy), _services, CancellationToken.None);
         public void Dispose() { _services.Dispose(); Directory.Delete(_directory, true); }
     }
 

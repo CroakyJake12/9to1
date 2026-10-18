@@ -126,7 +126,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
                 _address = _publishedChatRoute.Address;
             }
-            StateChanged?.Invoke(this, EventArgs.Empty);
+            PublishStateChanged();
         };
         _conversationRouteHandlers.Add(chat, handler);
         chat.ConversationStateChanged += handler;

@@ -19,7 +19,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
     {
         "spaces.create", "spaces.open", "spaces.rename", "spaces.move", "spaces.fork",
         "spaces.archive", "spaces.add-context", "spaces.clear-search", "spaces.select", "spaces.set-rename-draft",
-        "spaces.confirm-rename", "spaces.cancel-rename",
+        "spaces.confirm-rename", "spaces.cancel-rename", "spaces.set-query",
         "spaces.select-move-parent",
         "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details"
     };
@@ -61,6 +61,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         var snapshot = _snapshot;
         value = path switch
         {
+            "spaces.canMutate" => true, // The native owner overrides this with its actual reversible admission gate.
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,

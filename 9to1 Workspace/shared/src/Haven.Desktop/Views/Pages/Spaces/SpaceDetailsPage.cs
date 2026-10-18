@@ -11,7 +11,8 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 
 /// <summary>A retained canonical details content surface. The caller supplies actual Home
 /// readiness and authorization. This page grants no resource access and owns no registry.
-/// It is not yet a navigation, standalone product, or umbrella close integration.</summary>
+/// Its session owns routing and umbrella preparation. Standalone/web delivery and the full
+/// Builder remain separate acceptance requirements.</summary>
 public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalRetirementParticipant,
     IDesktopOriginalRetirementJoinGuard, IDisposable, IAsyncDisposable
 {
@@ -21,6 +22,7 @@ public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalReti
     private readonly ICuiSceneReadiness _readiness;
     private readonly CuiSceneHost _editorHost;
     private readonly DesktopOriginalWorkLifetime _work;
+    private readonly Func<Task, bool>? _queueBack;
     private Task? _activation;
     private Task? _editorClose;
     private Task<CuiSceneAvailability>? _editorShow;
@@ -34,15 +36,19 @@ public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalReti
     private readonly List<Decision> _decisions = [];
 
     public SpaceDetailsPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness)
+        : this(registry, spaceId, readiness, null) { }
+
+    public SpaceDetailsPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness, Func<Task, bool>? queueBack)
     {
         Dispatcher.UIThread.VerifyAccess();
         _controller = new(registry, spaceId);
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
+        _queueBack = queueBack;
         var document = SpaceDetailsCuiDocument.Load();
         _editorHost = new();
         _work = new(StopAsync, CleanupAsync);
         _bindings = new(() => _controller.State, (field, value) => TryEdit(field, value),
-            DispatchEditorAsync, CanMutate);
+            DispatchEditorAsync, CanMutate, () => _queueBack is not null);
         _controller.StateChanged += OnStateChanged;
         Document = document;
         Content = _editorHost;
@@ -138,6 +144,26 @@ public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalReti
 
     private async ValueTask DispatchEditorAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command == "space-details.back")
+        {
+            lock (_gate)
+            {
+                if (!CanMutate() || _queueBack is null) throw new InvalidOperationException("This editor cannot return to Spaces.");
+            }
+            await _work.RunAsync(async original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                Task? pipeline = null;
+                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    original.DemandPublication();
+                    pipeline = _editorHost.CaptureOriginalActionSettlement(_editorShow!);
+                }).GetTask()).ConfigureAwait(false);
+                var settlement = Task.WhenAll(pipeline!, original.Task);
+                if (!_queueBack(settlement)) throw new InvalidOperationException("The session refused the return to Spaces.");
+            }).ConfigureAwait(false);
+            return;
+        }
         var actual = command switch
         {
             "space-details.save" => SaveAsync(token),

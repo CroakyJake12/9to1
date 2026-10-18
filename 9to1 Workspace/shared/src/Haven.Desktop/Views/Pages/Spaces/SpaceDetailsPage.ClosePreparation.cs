@@ -8,7 +8,7 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 public sealed partial class SpaceDetailsPage
 {
     /// <summary>A reversible page-only preparation, not an umbrella permission or save receipt.
-    /// The future host must abort every acquired page lease when another participant vetoes.</summary>
+    /// The encompassing host must abort every acquired page lease when another participant vetoes.</summary>
     public sealed class ClosePreparation
     {
         internal ClosePreparation(SpaceDetailsPage owner, SpaceDetailsState state, long epoch)
@@ -20,6 +20,7 @@ public sealed partial class SpaceDetailsPage
         public Guid SpaceId => Accepted.SpaceId;
         public long? Revision => Accepted.LoadedRevision;
         public SpaceDetailsDraft Draft => Accepted.Draft;
+        public bool IsCurrent { get { lock (Owner._gate) return Owner.IsExactLease(this) && !Owner._work.IsRetiring; } }
     }
 
     public Task<ClosePreparation?> PrepareCloseAsync(CancellationToken caller = default)
@@ -162,6 +163,20 @@ public sealed partial class SpaceDetailsPage
         }
         await RefreshBindingsAsync().ConfigureAwait(false);
         lock (_gate) return _live && !_work.IsRetiring;
+    }
+
+    /// <summary>External synchronous acceptance after the actual decision command and CUI
+    /// pipeline settled. Validation and irreversible admission seal share this page's gate.</summary>
+    public Task BeginClosePrepared(ClosePreparation lease)
+    {
+        ArgumentNullException.ThrowIfNull(lease);
+        DemandExternalOriginalRetirementJoin();
+        lock (_gate)
+        {
+            if (!IsExactLease(lease) || !lease.Settlement.IsCompletedSuccessfully)
+                throw new InvalidOperationException("The exact details preparation and original settlement are not current and successful.");
+            return _work.CloseAndDrainAsync();
+        }
     }
 
     public async Task<bool> CommitCloseAsync(ClosePreparation lease)
