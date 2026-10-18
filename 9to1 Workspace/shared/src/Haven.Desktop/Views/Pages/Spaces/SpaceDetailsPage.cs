@@ -146,22 +146,27 @@ public sealed partial class SpaceDetailsPage : UserControl, IDesktopOriginalReti
     {
         if (command == "space-details.back")
         {
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            Task back;
             lock (_gate)
             {
                 if (!CanMutate() || _queueBack is null) throw new InvalidOperationException("This editor cannot return to Spaces.");
-            }
-            await _work.RunAsync(async original =>
-            {
-                original.BindPublicationGuard(IsPresentationCurrent);
-                Task? pipeline = null;
-                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                back = _work.RunAsync(async original =>
                 {
-                    original.DemandPublication();
-                    pipeline = _editorHost.CaptureOriginalActionSettlement(_editorShow!);
-                }).GetTask()).ConfigureAwait(false);
-                var settlement = Task.WhenAll(pipeline!, original.Task);
-                if (!_queueBack(settlement)) throw new InvalidOperationException("The session refused the return to Spaces.");
-            }).ConfigureAwait(false);
+                    await start.Task.ConfigureAwait(false);
+                    original.BindPublicationGuard(IsPresentationCurrent);
+                    Task? pipeline = null;
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        original.DemandPublication();
+                        pipeline = _editorHost.CaptureOriginalActionSettlement(_editorShow!);
+                    }).GetTask()).ConfigureAwait(false);
+                    var settlement = Task.WhenAll(pipeline!, original.Task);
+                    if (!_queueBack(settlement)) throw new InvalidOperationException("The session refused the return to Spaces.");
+                });
+            }
+            start.SetResult(); // Actual callbacks run after atomic owner admission releases its gate.
+            await back.ConfigureAwait(false);
             return;
         }
         var actual = command switch
