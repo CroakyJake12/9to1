@@ -2287,9 +2287,11 @@ public sealed class CuiControlLoader : IDisposable
                         fstc.FontSize = fs;
                     break;
                 case "fontweight":
-                    if (control is TextBlock fwTb && Enum.TryParse<Avalonia.Media.FontWeight>(resolved, true, out var fw))
+                    if (!Enum.TryParse<Avalonia.Media.FontWeight>(resolved, true, out var fw))
+                        throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR041", CuiDiagnosticSeverity.Error, "FontWeight requires a supported named or numeric weight.", sourceSpan));
+                    if (control is TextBlock fwTb)
                         fwTb.FontWeight = fw;
-                    else if (control is Avalonia.Controls.Primitives.TemplatedControl fwTc && Enum.TryParse(resolved, true, out fw))
+                    else if (control is Avalonia.Controls.Primitives.TemplatedControl fwTc)
                         fwTc.FontWeight = fw;
                     break;
                 case "fontstyle":

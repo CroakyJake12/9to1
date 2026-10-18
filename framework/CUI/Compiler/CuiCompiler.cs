@@ -478,7 +478,8 @@ public sealed class CuiCompiler
                     || value.StartsWith("transparent", StringComparison.OrdinalIgnoreCase)
                     || value.All(char.IsLetter),
         "text" or "content" or "symbol" or "brush" or "thickness" or "grid-definitions"
-            or "font-family" or "font-weight" or "font-style" or "text-decoration" => true,
+            or "font-family" or "font-style" or "text-decoration" => true,
+        "font-weight" => Enum.TryParse<Avalonia.Media.FontWeight>(value, true, out _),
         "grid-sizes" => CuiGridSizes.IsValid(value),
         _ => true
     };
