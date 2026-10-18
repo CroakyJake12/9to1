@@ -19,6 +19,9 @@
     <ProjectReference Include="..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
+    <ProjectReference Include="..\shared\src\Haven.UI\Haven.UI.csproj" />
+    <!-- Single maintained vector adapter, shared with the canonical web host. -->
+    <Compile Include="..\..\apps\Web\BrowserCanonicalIcons.cs" Link="UI\Home\BrowserCanonicalIcons.cs" />
     <ProjectReference Include="..\Dev\HavenOS.Dev.csproj" />
     <EmbeddedResource Include="UI\Tasks\SpaceTaskWidget.cui" LogicalName="HavenOS.Apps.Spaces.UI.Tasks.SpaceTaskWidget.cui" />
     <EmbeddedResource Include="UI\Chat\ChatSpace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatSpace.cui" />

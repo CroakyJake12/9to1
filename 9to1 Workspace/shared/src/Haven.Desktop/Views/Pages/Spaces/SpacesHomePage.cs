@@ -57,7 +57,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
 
         Document = SpacesHomeCuiDocument.Load();
-        _host = new CuiSceneHost();
+        _host = new CuiSceneHost(SpacesHomeCuiDocument.CreateControlRegistry());
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
 
         var queuedNavigationHost = new QueuedSpacesActionHost(this, navigationHost, _work, queueNavigation);

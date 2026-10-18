@@ -49,6 +49,9 @@ public sealed record SpacesHomeItem(
     /// binding render the intended label instead of the record's CLR format.
     /// </summary>
     public override string ToString() => Name;
+
+    // Canonical registry/catalog identity; names never choose a Space's icon.
+    public string IconKey { get; init; } = "sparkles";
 }
 
 public sealed record SpacesHomeContextReference(
@@ -642,7 +645,7 @@ public sealed class SpacesHomeController
             registeredSpace?.ParentSpaceId ?? def.ParentSpaceId,
             registeredSpace?.Position ?? def.Position,
             registeredSpace?.Revision ?? def.Revision,
-            !def.IsBuiltIn);
+            !def.IsBuiltIn) { IconKey = registeredSpace?.IconKey ?? def.IconKey };
     }
 
     private static SpacesHomeItem ToHomeItem(SpaceDefinition space) =>
@@ -655,7 +658,7 @@ public sealed class SpacesHomeController
             space.ParentSpaceId,
             space.Position,
             space.Revision,
-            !space.IsBuiltIn);
+            !space.IsBuiltIn) { IconKey = space.IconKey };
 
     private static IReadOnlyList<SpacesHomeMoveCandidate> BuildMoveParentOptions(
         IReadOnlyList<SpaceDefinition> registered,

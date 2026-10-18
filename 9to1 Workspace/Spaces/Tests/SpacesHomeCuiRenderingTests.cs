@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Automation;
+using Avalonia.Media;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -25,12 +27,12 @@ public sealed class SpacesHomeCuiRenderingTests
         {
             BuiltIns =
             [
-                new SpacesHomeItem(SpaceRegistry.ChatSpaceId, "Chat", "General chat", "spaces.chat", true, null, 0, 1, false),
-                new SpacesHomeItem(SpaceRegistry.StudySpaceId, "Study", "Study space", "spaces.study", true, null, 1, 1, false)
+                new SpacesHomeItem(SpaceRegistry.ChatSpaceId, "Chat", "General chat", "spaces.chat", true, null, 0, 1, false) { IconKey = "chat" },
+                new SpacesHomeItem(SpaceRegistry.StudySpaceId, "Study", "Study space", "spaces.study", true, null, 1, 1, false) { IconKey = "book" }
             ],
             CustomSpaces =
             [
-                new SpacesHomeItem(Guid.NewGuid(), "Recipes", "Dinner plans", "spaces.custom.1", false, null, 0, 1, true)
+                new SpacesHomeItem(Guid.NewGuid(), "Recipes", "Dinner plans", "spaces.custom.1", false, null, 0, 1, true) { IconKey = "unknown-user-icon" }
             ],
             Selection = selection,
             MoveParentOptions =
@@ -42,7 +44,7 @@ public sealed class SpacesHomeCuiRenderingTests
         };
 
     [Fact]
-    public async Task Authored_spaces_home_renders_built_in_and_custom_space_names()
+    public async Task Authored_spaces_home_renders_icon_rail_with_accessible_names_and_preserved_actions()
     {
         using var lifetime = new CancellationTokenSource();
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
@@ -51,9 +53,11 @@ public sealed class SpacesHomeCuiRenderingTests
             var state = StateWithSelection(new SpacesHomeSelection(
                 SpaceRegistry.ChatSpaceId, "Chat", "General chat", true, false, false, null,
                 "Default", "Ask", "Conversation", [], [], false, false, false));
-            var bindings = new SpacesHomeCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+            var actions = new List<(string Command, object? Parameter)>();
+            var bindings = new SpacesHomeCuiBindings(() => state, (command, parameter, _) =>
+            { actions.Add((command, parameter)); return ValueTask.CompletedTask; });
 
-            using var loader = new CuiControlLoader();
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
             loader.SetBindingContext(bindings);
             loader.SetActionDispatcher(bindings);
             Window? window = null;
@@ -70,10 +74,23 @@ public sealed class SpacesHomeCuiRenderingTests
 
                 var texts = root.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToArray();
                 var rendered = string.Join(" | ", texts);
-                Assert.Contains("Chat", rendered);
-                Assert.Contains("Study", rendered);
-                Assert.Contains("Recipes", rendered);
+                Assert.Contains("Chat", rendered); // Selected-Space content remains labelled outside the rail.
                 Assert.Contains("Spaces", rendered);
+                var rail = Assert.Single(root.GetVisualDescendants().OfType<Control>(), control => control.Name == "spaces-sidebar");
+                Assert.Equal(72, rail.Bounds.Width);
+                Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible && !string.IsNullOrEmpty(text.Text));
+                var buttons = rail.GetVisualDescendants().OfType<Button>().Where(button => button.Name is "first-party-space-open" or "open-custom-space").ToArray();
+                Assert.Equal(3, buttons.Length);
+                Assert.Equal(new[] { "Open Chat", "Open Study", "Open Recipes" }, buttons.Select(AutomationProperties.GetName));
+                Assert.All(buttons, button => Assert.IsType<DrawingImage>(Assert.Single(button.GetVisualDescendants().OfType<Image>()).Source));
+                Assert.Equal("Recipes\nDinner plans", ToolTip.GetTip(buttons[2]));
+                Assert.Equal(true, CuiPropertyPresentation.For(buttons[0]).Resolve("Selected").Value);
+                Assert.Equal(false, CuiPropertyPresentation.For(buttons[2]).Resolve("Selected").Value);
+                buttons[2].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                Assert.Equal(("spaces.select", (object?)state.CustomSpaces[0].Id), Assert.Single(actions));
+                Assert.Contains(root.GetVisualDescendants().OfType<TextBox>(), input => input.Name == "spaces-search");
+                Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBox>(), input => input.Name == "spaces-search");
                 Assert.DoesNotContain("Create a Space to keep related conversations and work together", texts);
                 Assert.Contains("No sources added", texts);
                 Assert.Contains("No extra capabilities enabled", texts);
@@ -85,7 +102,7 @@ public sealed class SpacesHomeCuiRenderingTests
                 window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
                 var emptyTexts = root.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToArray();
                 Assert.Contains("Create a Space to keep related conversations and work together", emptyTexts);
-                Assert.DoesNotContain("Recipes", emptyTexts);
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "open-custom-space");
             }
             finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
             return true;
@@ -108,7 +125,7 @@ public sealed class SpacesHomeCuiRenderingTests
                 true, true, false));
             var bindings = new SpacesHomeCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
 
-            using var loader = new CuiControlLoader();
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
             loader.SetBindingContext(bindings);
             loader.SetActionDispatcher(bindings);
             Window? window = null;
@@ -196,7 +213,7 @@ public sealed class SpacesHomeCuiRenderingTests
     [Fact]
     public void Bindings_resolve_repeat_item_properties()
     {
-        var item = new SpacesHomeItem(Guid.NewGuid(), "Alpha", "Summary", "spaces.custom.a", false, null, 0, 1, true);
+        var item = new SpacesHomeItem(Guid.NewGuid(), "Alpha", "Summary", "spaces.custom.a", false, null, 0, 1, true) { IconKey = "book" };
         var state = SpacesHomeViewState.Empty with { CustomSpaces = [item] };
         var bindings = new SpacesHomeCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
 
@@ -206,6 +223,15 @@ public sealed class SpacesHomeCuiRenderingTests
         Assert.Equal("Alpha", name);
         Assert.True(bindings.TryGetItemValue(item, "canEdit", out var canEdit));
         Assert.True((bool)canEdit!);
+        Assert.True(bindings.TryGetItemValue(item, "iconSource", out var source));
+        Assert.Equal("icon:book", source);
+        Assert.True(bindings.TryGetItemValue(item, "tooltip", out var tip));
+        Assert.Equal("Alpha\nSummary", tip);
+        var malformed = item with { IconKey = "not/a/url" };
+        state = state with { CustomSpaces = [malformed] }; bindings.Refresh();
+        Assert.True(bindings.TryGetItemValue(malformed, "iconSource", out source));
+        Assert.Equal("icon:unknown", source);
+        Assert.Equal("not/a/url", malformed.IconKey); // Projection never rewrites saved custom configuration.
         Assert.False(bindings.TryGetItemValue(item, "unknown", out _));
     }
 
@@ -263,7 +289,7 @@ public sealed class SpacesHomeCuiRenderingTests
             var actions = new List<(string Command, object? Parameter)>();
             var bindings = new SpacesHomeCuiBindings(() => state, (command, parameter, _) =>
             { actions.Add((command, parameter)); return ValueTask.CompletedTask; });
-            using var loader = new CuiControlLoader();
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
             loader.SetBindingContext(bindings);
             loader.SetActionDispatcher(bindings);
             Window? window = null;

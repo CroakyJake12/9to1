@@ -64,7 +64,7 @@ public sealed class SpacesHomeNativeRenderingTests
 
         controller.StateChanged += _ => bindings.Refresh();
 
-        var loader = new CuiControlLoader();
+        var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
         loader.SetBindingContext(bindings);
         loader.SetActionDispatcher(bindings);
         var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
@@ -142,7 +142,10 @@ public sealed class SpacesHomeNativeRenderingTests
                 var rendered = string.Join(" | ", texts);
                 Assert.Contains("Spaces", rendered);
                 Assert.Contains("Chat", rendered);
-                Assert.Contains("Your Spaces", rendered);
+                var rail = Assert.Single(root.GetVisualDescendants().OfType<Control>(), item => item.Name == "spaces-sidebar");
+                Assert.Equal(72, rail.Bounds.Width);
+                Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBlock>(), item => item.IsEffectivelyVisible && !string.IsNullOrEmpty(item.Text));
+                Assert.Contains(rail.GetVisualDescendants().OfType<Button>(), item => AutomationProperties.GetName(item) == "Open Study");
 
                 var createButton = FindButton(root, "create-space");
                 Assert.True(createButton.Bounds.Width >= 44 && createButton.Bounds.Height >= 24,
@@ -215,7 +218,7 @@ public sealed class SpacesHomeNativeRenderingTests
             await controller.LoadAsync();
             Dispatcher.UIThread.RunJobs();
 
-            using var loader = new CuiControlLoader();
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
             loader.SetBindingContext(bindings);
             loader.SetActionDispatcher(bindings);
             var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
@@ -251,7 +254,7 @@ public sealed class SpacesHomeNativeRenderingTests
     }
 
     [Fact]
-    public async Task Pointer_row_actions_select_and_rename_the_actual_row_identity_not_the_previous_selection()
+    public async Task Pointer_space_icons_and_selected_actions_preserve_actual_space_identity()
     {
         using var lifetime = new CancellationTokenSource();
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
@@ -275,8 +278,9 @@ public sealed class SpacesHomeNativeRenderingTests
                 Assert.Equal(beta.Id, Assert.IsType<Guid>(calls.Last(item => item.Command == "spaces.select").Parameter));
                 Assert.Equal(beta.Id, await registry.GetCurrentSpaceIdAsync());
 
-                // The row being renamed deliberately differs from the current selection.
-                await ClickAsync(window, loader, Row("rename-custom-space", "Rename Alpha"));
+                // Management belongs to the selected pane; select the actual icon target first.
+                await ClickAsync(window, loader, Row("open-custom-space", "Open Alpha"));
+                await ClickAsync(window, loader, FindButton(root, "start-rename"));
                 Assert.Equal(alpha.Id, Assert.IsType<Guid>(calls.Last(item => item.Command == "spaces.rename").Parameter));
                 Assert.Equal(alpha.Id, controller.State.PendingRenameSpaceId);
                 Assert.Equal(alpha.Id, controller.State.Selection!.Id);
@@ -287,7 +291,7 @@ public sealed class SpacesHomeNativeRenderingTests
                 Assert.False(controller.State.Selection.IsRenaming);
                 Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "rename-input");
                 Assert.Equal("Alpha", (await registry.GetAsync(alpha.Id))!.Name);
-                await ClickAsync(window, loader, Row("rename-custom-space", "Rename Alpha"));
+                await ClickAsync(window, loader, FindButton(root, "start-rename"));
                 var rename = FindTextBox(root, "rename-input");
                 rename.Focus(); rename.SelectAll(); window.KeyTextInput("Alpha renamed");
                 await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
@@ -299,7 +303,8 @@ public sealed class SpacesHomeNativeRenderingTests
                 Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "rename-input");
                 Assert.Equal("Open Alpha renamed", AutomationProperties.GetName(Row("open-custom-space", "Open Alpha renamed")));
 
-                await ClickAsync(window, loader, Row("archive-custom-space", "Archive Beta"));
+                await ClickAsync(window, loader, Row("open-custom-space", "Open Beta"));
+                await ClickAsync(window, loader, FindButton(root, "archive-space"));
                 Assert.Equal(beta.Id, Assert.IsType<Guid>(calls.Last(item => item.Command == "spaces.archive").Parameter));
                 Assert.True((await registry.GetAsync(beta.Id))!.IsArchived);
                 Assert.False((await registry.GetAsync(alpha.Id))!.IsArchived);
@@ -326,7 +331,7 @@ public sealed class SpacesHomeNativeRenderingTests
         {
             var registry = new SpaceRegistry(new MemorySettingsStore());
             var spaces = new List<SpaceDefinition>();
-            for (var index = 1; index <= 8; index++)
+            for (var index = 1; index <= 12; index++)
                 spaces.Add(await registry.CreateAsync($"Viewport Space {index}"));
             await registry.SetCurrentSpaceIdAsync(spaces[0].Id);
             var target = spaces[^1];

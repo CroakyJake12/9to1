@@ -39,6 +39,12 @@ public sealed class SpacesHomeControllerTests
         Assert.Equal(custom.Id, controller.State.PendingRenameSpaceId);
         Assert.True(controller.State.Selection?.IsRenaming);
         Assert.Equal("New Space", controller.State.RenameDraft);
+        var canonical = await registry.GetAsync(custom.Id);
+        Assert.NotNull(canonical);
+        await registry.UpdateAsync(canonical! with { IconKey = "book" }, canonical!.Revision);
+        await controller.LoadAsync();
+        Assert.Equal("book", Assert.Single(controller.State.CustomSpaces).IconKey);
+        Assert.Equal("book", (await registry.GetAsync(custom.Id))!.IconKey);
     }
 
     [Fact]

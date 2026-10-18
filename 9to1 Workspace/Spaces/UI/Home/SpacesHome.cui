@@ -44,49 +44,38 @@
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
       <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}">
-        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="280 1fr" CellGap="16">
-          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="280" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10">
-            <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-            <Input id="spaces-search" Type="Text" accessible-name="Search Spaces" placeholdertext="Find a Space" Value="{Binding spaces.query}" action="spaces.clear-search" />
-            <Button id="create-space" action="spaces.create" content="New Space" accessible-name="Create a custom Space" />
-            <Text id="first-party-heading" text="First-party" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
-
+        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="72 1fr" CellGap="16">
+          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="72" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8">
+            <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" Tooltip="Create a custom Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+              <Image id="create-space-icon" Source="icon:plus" Width="24" Height="24" />
+            </Button>
             <Repeat id="first-party-spaces" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
               <Container id="first-party-space" Type="Vertical Stack">
-                <Button id="first-party-space-open" action="SelectRow" accessible-name="{Binding space.openLabel}">
-                  <Container id="first-party-space-content" Type="Vertical Stack">
-                    <Text id="first-party-space-name" text="{Binding space.name}" />
-                    <Text id="first-party-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
-                  </Container>
+                <Button id="first-party-space-open" action="SelectRow" accessible-name="{Binding space.openLabel}" Tooltip="{Binding space.tooltip}" Selected="{Binding space.isSelected}" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+                  <Image id="first-party-space-icon" Source="{Binding space.iconSource}" Width="24" Height="24" />
                 </Button>
               </Container>
             </Repeat>
-
-            <Text id="custom-spaces-heading" text="Your Spaces" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
-
+            <Container id="spaces-rail-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
             <Repeat id="custom-spaces" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
               <Container id="custom-space-row" role="listitem" accessible-name="{Binding space.customLabel}" Type="Vertical Stack">
-                <Button id="open-custom-space" action="SelectRow" accessible-name="{Binding space.openLabel}">
-                  <Container id="custom-space-content" Type="Vertical Stack">
-                    <Text id="custom-space-name" text="{Binding space.name}" />
-                    <Text id="custom-space-summary" text="{Binding space.summary}" foreground="{Resource CuiTextSoftBrush}" />
-                  </Container>
+                <Button id="open-custom-space" action="SelectRow" accessible-name="{Binding space.openLabel}" Tooltip="{Binding space.tooltip}" Selected="{Binding space.isSelected}" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+                  <Image id="custom-space-icon" Source="{Binding space.iconSource}" Width="24" Height="24" />
                 </Button>
-                <Container id="custom-space-actions" accessible-name="{Binding space.actionsLabel}" Type="Wrap">
-                  <Button id="rename-custom-space" action="RenameRow" content="Rename" accessible-name="{Binding space.renameLabel}" />
-                  <Button id="move-custom-space" action="MoveRow" content="Move" accessible-name="{Binding space.moveLabel}" />
-                  <Button id="fork-custom-space" action="ForkRow" content="Copy" accessible-name="{Binding space.forkLabel}" />
-                  <Button id="archive-custom-space" action="ArchiveRow" content="Archive" accessible-name="{Binding space.archiveLabel}" />
-                </Container>
               </Container>
             </Repeat>
+          </Container>
+
+          <Container id="space-details" accessible-name="Selected Space" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10">
+            <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+            <Container id="spaces-search-controls" Type="Grid" RowSizes="Auto" ColumnSizes="24 1fr" CellGap="8">
+              <Image id="spaces-search-icon" Source="icon:search" Width="20" Height="20" VerticalAlignment="Center" />
+              <Input Column="1" id="spaces-search" Type="Text" accessible-name="Search Spaces" placeholdertext="Find a Space" Value="{Binding spaces.query}" action="spaces.clear-search" />
+            </Container>
             <If Condition="!{Binding spaces.hasCustomSpaces}">
               <Text id="custom-spaces-empty-text" text="Create a Space to keep related conversations and work together" foreground="{Resource CuiTextSoftBrush}" />
             </If>
             <Text id="spaces-status" text="{Binding status.message}" role="status" accessible-name="Spaces status" />
-          </Container>
-
-          <Container id="space-details" accessible-name="Selected Space" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10">
             <If Condition="{Binding selection.isRenaming}">
               <Container id="rename-controls" Type="Vertical Stack" CellGap="8">
                 <Input id="rename-input" Type="Text" Value="{Binding spaces.renameDraft, mode=TwoWay}" accessible-name="Rename Space" />

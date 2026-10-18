@@ -150,6 +150,10 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         {
             value = path.Equals("id", StringComparison.OrdinalIgnoreCase) ? homeItem.Id
                 : path.Equals("name", StringComparison.OrdinalIgnoreCase) ? homeItem.Name
+                : path.Equals("iconSource", StringComparison.OrdinalIgnoreCase) ? IconSource(homeItem.IconKey)
+                : path.Equals("isSelected", StringComparison.OrdinalIgnoreCase) ? snapshot.Selection?.Id == homeItem.Id
+                : path.Equals("tooltip", StringComparison.OrdinalIgnoreCase) ?
+                    string.IsNullOrWhiteSpace(homeItem.Summary) ? homeItem.Name : $"{homeItem.Name}\n{homeItem.Summary}"
                 : path.Equals("openLabel", StringComparison.OrdinalIgnoreCase) ? $"Open {homeItem.Name}"
                 : path.Equals("customLabel", StringComparison.OrdinalIgnoreCase) ? $"{homeItem.Name}, custom Space"
                 : path.Equals("actionsLabel", StringComparison.OrdinalIgnoreCase) ? $"Actions for {homeItem.Name}"
@@ -196,6 +200,15 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
     }
 
     public bool TrySetItemValue(object item, string path, object? value) => false;
+
+    private static string IconSource(string? key)
+    {
+        // The existing resolver accepts bounded symbolic keys. Unknown or malformed
+        // custom keys use the catalog's visible fallback without rewriting user data.
+        var symbolic = key?.Trim() ?? string.Empty;
+        return symbolic.Length is > 0 and <= 64 && symbolic.All(character => char.IsAsciiLetterOrDigit(character) || character == '-')
+            ? "icon:" + symbolic : "icon:unknown";
+    }
 
     private static readonly object Unresolved = new();
 }
