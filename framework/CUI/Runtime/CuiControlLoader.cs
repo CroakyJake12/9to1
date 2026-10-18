@@ -1455,21 +1455,20 @@ public sealed class CuiControlLoader : IDisposable
                 .Select(child => ExpandEffectiveComponent(child, definitions, templates, path)).ToArray());
     }
 
-    private static CuiDiagnostic? ValidateFontWeightLiterals(CuiDocument document)
+    private CuiDiagnostic? ValidateFontWeightLiterals(CuiDocument document)
     {
-        foreach (var component in EnumerateComponents(document.Components))
+        var components = EnumerateComponents(document.Components)
+            .Concat(document.Templates.Values.SelectMany(template => EnumerateComponents(template.Content)));
+        foreach (var component in components)
         {
-            if (component.Properties.TryGetValue("FontWeight", out var value)
-                && value is CuiLiteralValue literal
-                && !Enum.TryParse<Avalonia.Media.FontWeight>(literal.Value, true, out _))
-                return new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error,
-                    $"Invalid CUI FontWeight: '{literal.Value}' is not a supported named or numeric weight.", literal.Span);
-        }
-        foreach (var template in document.Templates.Values)
-        {
-            foreach (var component in EnumerateComponents(template.Content))
+            // Resolve property identity through the same typed registry used by
+            // ApplyProperties, including its case and alias rules. An exact key
+            // lookup would reject an aliased invalid value only after the previous
+            // live lineage had already been retired.
+            foreach (var (propertyName, value) in component.Properties)
             {
-                if (component.Properties.TryGetValue("FontWeight", out var value)
+                if (_controlRegistry.TryGetProperty(propertyName, out var descriptor)
+                    && descriptor.LanguageType == "font-weight"
                     && value is CuiLiteralValue literal
                     && !Enum.TryParse<Avalonia.Media.FontWeight>(literal.Value, true, out _))
                     return new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error,
