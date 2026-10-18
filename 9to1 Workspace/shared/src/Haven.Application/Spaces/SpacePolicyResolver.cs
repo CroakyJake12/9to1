@@ -75,16 +75,19 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         var memory = new SpaceMemoryPolicy(allowedMemory, defaultMemory);
 
         var capabilities = new Dictionary<(SpaceCapabilityKind Kind, string Id), SpaceCapabilityBinding>();
-        if (inheritance.Plugins || inheritance.Skills || inheritance.Agents)
+        foreach (var binding in parent.Capabilities)
         {
-            foreach (var binding in parent.Capabilities)
-            {
-                if (!IsInherited(binding.Kind, inheritance)) continue;
-                capabilities[(binding.Kind, binding.CapabilityId)] = binding;
-            }
+            // Availability inheritance is optional; an explicit ancestor exclusion
+            // remains a restriction even when this category is not inherited.
+            if (binding.Override != SpaceCapabilityOverride.Disabled && !IsInherited(binding.Kind, inheritance)) continue;
+            capabilities[(binding.Kind, binding.CapabilityId)] = binding;
         }
         foreach (var binding in child.CapabilityBindings ?? [])
-            capabilities[(binding.Kind, binding.CapabilityId)] = binding;
+        {
+            var key = (binding.Kind, binding.CapabilityId);
+            if (capabilities.TryGetValue(key, out var inherited) && inherited.Override == SpaceCapabilityOverride.Disabled) continue;
+            capabilities[key] = binding;
+        }
 
         var sources = new Dictionary<Guid, SpaceContextReference>();
         if (inheritance.Sources)
