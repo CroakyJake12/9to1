@@ -16,6 +16,9 @@ internal sealed class OverlayWorkspaceWindow : Window
 {
     private readonly NewChatPage? _chatPage;
     private bool _closingFromController;
+    private bool _nativeCloseRequested;
+    internal bool OriginalNativeClosed { get; private set; }
+    internal Control OriginalPage => (Control?)_chatPage ?? GoPage!;
 
     public OverlayWorkspaceWindow(OverlaySessionState session, NewChatPage chatPage)
         : this(session, chatPage, null)
@@ -86,12 +89,20 @@ internal sealed class OverlayWorkspaceWindow : Window
         ShellScene.SubmitRequested += (_, text) => SubmitRequested?.Invoke(this, text);
         PositionChanged += (_, _) => PublishGeometry();
         SizeChanged += (_, _) => PublishGeometry();
+        Closing += (_, args) =>
+        {
+            if (_closingFromController) return;
+            args.Cancel = true;
+            if (_nativeCloseRequested) return;
+            _nativeCloseRequested = true;
+            NativeCloseRequested?.Invoke(this, EventArgs.Empty);
+        };
         Closed += (_, _) =>
         {
-            if (!_closingFromController) NativeCloseRequested?.Invoke(this, EventArgs.Empty);
+            OriginalNativeClosed = true;
             ShellScene.Dispose();
-            _chatPage?.Dispose();
-            GoPage?.Dispose();
+            // The controller joined the actual page close before native destruction.
+            // Closed is no longer a fire-and-forget page retirement source.
         };
     }
 
@@ -203,8 +214,12 @@ internal sealed class OverlayWorkspaceWindow : Window
     public void CloseFromController()
     {
         if (_closingFromController) return;
+        var actual = ((Haven.Desktop.Services.IDesktopOriginalRetirementParticipant)OriginalPage).CloseAndDrainAsync();
+        if (!actual.IsCompletedSuccessfully)
+            throw new InvalidOperationException("The actual Overlay page must finish its original close before native destruction.");
         _closingFromController = true;
         Close();
+        if (!OriginalNativeClosed) throw new InvalidOperationException("The actual Overlay native window refused its owning close.");
     }
 
     private void OnDragDelta(HavenPoint delta)
