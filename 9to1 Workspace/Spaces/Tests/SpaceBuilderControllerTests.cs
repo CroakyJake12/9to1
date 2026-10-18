@@ -83,4 +83,32 @@ public sealed class SpaceBuilderControllerTests
         Assert.True(second.State.HasConflict);
         Assert.Equal("Second draft", second.State.Draft.Name);
     }
+
+    [Fact]
+    public async Task Invalid_category_state_is_rejected()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var space = await files.OpenRegistry().CreateAsync("Original", cancellationToken: token);
+        var controller = new SpaceBuilderController(files.OpenRegistry(), space.Id);
+        Assert.True(await controller.LoadAsync(token));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            controller.SetCategoryState(SpaceBuilderCategory.Skills, (Haven.Application.SpaceCapabilityCategoryState)999));
+    }
+
+    [Fact]
+    public async Task Invalid_persisted_category_state_fails_validation()
+    {
+        using var files = new SpaceDetailsTestFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var space = await files.OpenRegistry().CreateAsync("Original", cancellationToken: token);
+        // Bypass typed validation by constructing a definition with an invalid enum cast.
+        var invalid = space with { CapabilityCategoryPolicy = new Haven.Application.SpaceCapabilityCategoryPolicy(
+            (Haven.Application.SpaceCapabilityCategoryState)999) };
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            files.OpenRegistry().UpdateAsync(invalid, space.Revision, token));
+    }
+
 }

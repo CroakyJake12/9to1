@@ -720,6 +720,11 @@ public sealed partial class SpaceRegistry
             throw new ArgumentException("Space share grants must be valid and unique.");
         if (space.Inheritance is null || space.ExamplePairs is null || space.Files is null)
             throw new ArgumentException("Space configuration collections and inheritance policy are required.");
+        if (space.CapabilityCategoryPolicy is { } categoryPolicy &&
+            (!Enum.IsDefined(categoryPolicy.Skills) || !Enum.IsDefined(categoryPolicy.Plugins) ||
+             !Enum.IsDefined(categoryPolicy.Apps) || !Enum.IsDefined(categoryPolicy.Models) ||
+             !Enum.IsDefined(categoryPolicy.Memory)))
+            throw new ArgumentException("Space capability category policy contains an unknown state.");
         if (space.LayoutDocument is { } layout) ValidateLayout(layout);
         if (space.ParentSpaceId is { } parent) ValidateParent(peers.Append(space).ToArray(), space.Id, parent);
     }

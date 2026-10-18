@@ -56,6 +56,7 @@ public sealed class SpaceBuilderController
 
     public bool SetCategoryState(SpaceBuilderCategory category, Haven.Application.SpaceCapabilityCategoryState state)
     {
+        if (!Enum.IsDefined(state)) throw new ArgumentOutOfRangeException(nameof(state));
         SpaceBuilderState next;
         lock (_gate)
         {
