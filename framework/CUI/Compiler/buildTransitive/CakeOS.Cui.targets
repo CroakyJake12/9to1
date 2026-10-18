@@ -47,12 +47,33 @@
     <PropertyGroup>
       <CuiCompilationArtifact Condition="'$(CuiCompilationArtifact)' == ''">$(IntermediateOutputPath)Cui/compilation.cuic.json</CuiCompilationArtifact>
     </PropertyGroup>
-    <CakeOS.Cui.Build.CompileCuiSourcesTask Sources="@(Cui);@(CuiMarkup)" ProjectDirectory="$(MSBuildProjectDirectory)"
-                                         OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)">
+    <ItemGroup>
+      <_CuiPackagedSource Include="@(EmbeddedResource)" CuiItemType="EmbeddedResource" />
+      <_CuiPackagedSource Include="@(Content)" CuiItemType="Content" />
+      <_CuiPackagedSource Include="@(None)" CuiItemType="None" />
+      <_CuiPackagedSource Include="@(AvaloniaResource)" CuiItemType="AvaloniaResource" />
+      <_CuiPackagedSource Include="@(CuiMarkup)" CuiItemType="CuiMarkup" />
+      <_CuiPackagedSource Remove="@(_CuiPackagedSource)" Condition="'%(Extension)' != '.cui' and '%(Extension)' != '.cui-theme' and '%(Extension)' != '.cui-prefab'" />
+    </ItemGroup>
+    <CakeOS.Cui.Build.CompileCuiSourcesTask Sources="@(Cui);@(CuiMarkup);@(_CuiPackagedSource)" ProjectDirectory="$(MSBuildProjectDirectory)"
+                                         OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)" ResourcesToSnapshot="@(_CuiPackagedSource)">
       <Output TaskParameter="CompiledArtifacts" ItemName="_CuiCompiledArtifact" />
+      <Output TaskParameter="SnapshotResources" ItemName="_CuiSnapshotResource" />
+      <Output TaskParameter="SourceSnapshots" ItemName="_CuiSourceSnapshot" />
     </CakeOS.Cui.Build.CompileCuiSourcesTask>
     <ItemGroup>
-      <FileWrites Include="@(_CuiCompiledArtifact)" />
+      <FileWrites Include="@(_CuiCompiledArtifact);@(_CuiSourceSnapshot)" />
+      <!-- Package the exact compiled bytes, preserving authored resource/copy identities. -->
+      <EmbeddedResource Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'EmbeddedResource'" />
+      <Content Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'Content'" />
+      <None Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'None'" />
+      <AvaloniaResource Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'AvaloniaResource'" />
+      <CuiMarkup Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'CuiMarkup'" />
+      <EmbeddedResource Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'EmbeddedResource'" />
+      <Content Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'Content'" />
+      <None Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'None'" />
+      <AvaloniaResource Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'AvaloniaResource'" />
+      <CuiMarkup Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'CuiMarkup'" />
       <EmbeddedResource Include="@(_CuiCompiledArtifact)" LogicalName="CUI.Compilation.v1" />
     </ItemGroup>
   </Target>

@@ -21,11 +21,16 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     [Required] public string ProjectDirectory { get; set; } = "";
     [Required] public string OutputFile { get; set; } = "";
     public string[] RequiredCapabilities { get; set; } = [];
+    public ITaskItem[] ResourcesToSnapshot { get; set; } = [];
     [Output] public ITaskItem[] CompiledArtifacts { get; private set; } = [];
+    [Output] public ITaskItem[] SnapshotResources { get; private set; } = [];
+    [Output] public ITaskItem[] SourceSnapshots { get; private set; } = [];
 
     public override bool Execute()
     {
         CompiledArtifacts = [];
+        SnapshotResources = [];
+        SourceSnapshots = [];
         try
         {
             var root = Path.GetFullPath(BuildPath(ProjectDirectory));
@@ -81,19 +86,33 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             var bytesOut = JsonSerializer.SerializeToUtf8Bytes(artifact, JsonOptions());
             var destination = Path.GetFullPath(BuildPath(OutputFile), root);
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            var snapshots = new Dictionary<string, string>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+            foreach (var input in inputs)
+            {
+                var snapshot = Path.Combine(Path.GetDirectoryName(destination)!, "sources", Hash(input.Bytes) + Path.GetExtension(input.Path).ToLowerInvariant());
+                Publish(snapshot, input.Bytes);
+                snapshots.Add(input.Path, snapshot);
+            }
+            var mappedResources = ResourcesToSnapshot.Select(item =>
+            {
+                var original = Path.GetFullPath(BuildPath(item.ItemSpec), root);
+                if (!snapshots.TryGetValue(original, out var snapshot))
+                    throw new ArgumentException($"Packaged CUI source '{original}' was not compiled.");
+                var mapped = new TaskItem(snapshot, item.CloneCustomMetadata());
+                mapped.SetMetadata("CuiOriginalFullPath", original);
+                var relative = Path.GetRelativePath(root, original).Replace('\\', '/');
+                var link = mapped.GetMetadata("Link");
+                if (string.IsNullOrEmpty(link)) mapped.SetMetadata("Link", relative);
+                if (string.IsNullOrEmpty(mapped.GetMetadata("TargetPath")))
+                    mapped.SetMetadata("TargetPath", !string.IsNullOrEmpty(link) ? link : relative.StartsWith("../", StringComparison.Ordinal) ? Path.GetFileName(original) : relative);
+                return (ITaskItem)mapped;
+            }).ToArray();
             // Failed compilation never publishes partial/current-success artifacts. A previous
             // artifact remains identifiable by its source hashes and is not returned to MSBuild.
-            if (!File.Exists(destination) || !File.ReadAllBytes(destination).AsSpan().SequenceEqual(bytesOut))
-            {
-                var staging = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
-                try
-                {
-                    File.WriteAllBytes(staging, bytesOut);
-                    File.Move(staging, destination, overwrite: true);
-                }
-                finally { if (File.Exists(staging)) File.Delete(staging); }
-            }
+            Publish(destination, bytesOut);
             CompiledArtifacts = [new TaskItem(destination)];
+            SnapshotResources = mappedResources;
+            SourceSnapshots = snapshots.Values.Distinct(StringComparer.Ordinal).Select(path => (ITaskItem)new TaskItem(path)).ToArray();
             Log.LogMessage(MessageImportance.High, "CUI compiled {0} source(s): {1}", inputs.Count, destination);
             return true;
         }
@@ -119,6 +138,19 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         Log.LogError("CUI", code, null, path, 1, 1, 1, 1, message);
 
     private static string BuildPath(string value) => value.Replace('\\', Path.DirectorySeparatorChar);
+
+    private static void Publish(string destination, byte[] bytes)
+    {
+        if (File.Exists(destination) && File.ReadAllBytes(destination).AsSpan().SequenceEqual(bytes)) return;
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        var staging = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllBytes(staging, bytes);
+            File.Move(staging, destination, overwrite: true);
+        }
+        finally { if (File.Exists(staging)) File.Delete(staging); }
+    }
 
     private static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 

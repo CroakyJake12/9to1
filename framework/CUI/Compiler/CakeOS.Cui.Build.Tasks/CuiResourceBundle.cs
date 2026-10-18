@@ -65,23 +65,27 @@ public sealed class CuiResourceEntry
 /// </summary>
 public static class CuiResourceBundle
 {
-    public static List<CuiResourceEntry> Collect(string root, IEnumerable<string> fullPaths, ICuiResourceLog log)
+    public static List<CuiResourceEntry> Collect(string root, IEnumerable<string> fullPaths, ICuiResourceLog log) =>
+        CollectSources(root, System.Linq.Enumerable.Select(fullPaths, path => new CuiResourceSource(path, path)), log);
+
+    public static List<CuiResourceEntry> CollectSources(string root, IEnumerable<CuiResourceSource> sources, ICuiResourceLog log)
     {
         var entries = new List<CuiResourceEntry>();
         var normalizedRoot = NormalizeRoot(root);
         var firstSourceByLogicalName = new Dictionary<string, string>(StringComparer.Ordinal);
 
-        foreach (var fullPath in fullPaths)
+        foreach (var source in sources)
         {
+            var fullPath = source.FullPath;
             if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath))
             {
                 log.LogMessage(MessageImportance.Low, $"Skipping missing CUI resource: {fullPath}");
                 continue;
             }
 
-            if (!TryGetRelativePath(normalizedRoot, fullPath, out var relativePath))
+            if (!TryGetRelativePath(normalizedRoot, source.IdentityPath, out var relativePath))
             {
-                relativePath = Path.GetFullPath(fullPath);
+                relativePath = Path.GetFullPath(source.IdentityPath);
                 log.LogWarning($"CUI resource '{relativePath}' is outside the CUI resource root '{normalizedRoot}' and is embedded under its full path.");
             }
 
@@ -230,4 +234,16 @@ public static class CuiResourceBundle
         return relativePath.Length > 0;
     }
 
+}
+
+/// <summary>A source snapshot can retain its original stable resource identity.</summary>
+public sealed class CuiResourceSource
+{
+    public CuiResourceSource(string fullPath, string identityPath)
+    {
+        FullPath = fullPath;
+        IdentityPath = identityPath;
+    }
+    public string FullPath { get; }
+    public string IdentityPath { get; }
 }

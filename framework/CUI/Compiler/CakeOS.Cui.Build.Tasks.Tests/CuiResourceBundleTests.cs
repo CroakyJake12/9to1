@@ -41,6 +41,19 @@ public sealed class CuiResourceBundleTests : IDisposable
     }
 
     [Fact]
+    public void SnapshotBytesKeepTheOriginalResourceIdentity()
+    {
+        var original = WriteResource("UI/Page.cui", "<Page/>");
+        var snapshot = WriteResource("obj/Cui/sources/hash.cui", "<Page/>");
+        File.WriteAllText(original, "changed after compilation");
+        var entries = CuiResourceBundle.CollectSources(_root, [new CuiResourceSource(snapshot, original)], _log);
+        var entry = Assert.Single(entries);
+        Assert.Equal("UI.Page.cui", entry.LogicalName);
+        Assert.Equal(File.ReadAllBytes(snapshot), entry.Data);
+        Assert.Empty(_log.Warnings);
+    }
+
+    [Fact]
     public void QuotedLiteralDefinitionIsNotTreatedAsTheDefinitionModifier()
     {
         var literal = new CuiLexicalValidator().Validate("<Cui><Text Name=\"(Definition)\">Shared</Text></Cui>");

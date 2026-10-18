@@ -27,9 +27,10 @@ public class GenerateCuiResourcesTask : Task
     public override bool Execute()
     {
         var log = new MsBuildResourceLog(Log);
-        var entries = CuiResourceBundle.Collect(
+        var entries = CuiResourceBundle.CollectSources(
             Root,
-            Resources.Select(item => item.GetMetadata("FullPath")),
+            Resources.Select(item => new CuiResourceSource(item.GetMetadata("FullPath"),
+                string.IsNullOrEmpty(item.GetMetadata("CuiOriginalFullPath")) ? item.GetMetadata("FullPath") : item.GetMetadata("CuiOriginalFullPath"))),
             log);
 
         if (log.HasErrors) return false;
