@@ -436,6 +436,11 @@ public sealed class CuiControlLoader : IDisposable
         // Unsupported event semantics must not turn into ignored or visual components.
         if (CuiActionEventContract.Validate(document).FirstOrDefault() is { } eventError)
             throw new CuiRuntimeLoadException(eventError);
+        // Validate the effective Definition/Prefab/template composition as well. Raw
+        // declarations can look harmless until inherited Action and direct caller
+        // routes are merged, so reject conflicts before any prior lineage is retired.
+        if (ValidateEffectiveActionEventComposition(document) is { } effectiveEventError)
+            throw new CuiRuntimeLoadException(effectiveEventError);
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -1315,6 +1320,160 @@ public sealed class CuiControlLoader : IDisposable
             CuiDiagnosticSeverity.Error,
             $"Cyclic definition dependency: {string.Join(" -> ", _definitionPath.Concat(new[] { key }))}.",
             instance.Span));
+
+    /// <summary>
+    /// Side-effect-free validation of the effective Definition/Prefab/template
+    /// composition. Expands inherited routes without invoking custom factories or
+    /// mutating loader state, then reuses the shared ActionEvent contract.
+    /// </summary>
+    private CuiDiagnostic? ValidateEffectiveActionEventComposition(CuiDocument document)
+    {
+        var definitions = new Dictionary<string, CuiComponent>(StringComparer.Ordinal);
+        foreach (var definition in document.Components.SelectMany(DefinitionsOutsideTheme))
+        {
+            if (CuiLanguageVocabulary.IsForbiddenElement(definition.Type))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR054", CuiDiagnosticSeverity.Error,
+                    "A Definition cannot re-export a forbidden donor element.", definition.Span));
+            if (definition.Type.Equals("Theme", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (CuiLanguageVocabulary.VisualElements.Contains(definition.Type))
+            {
+                if (definition.Name is not null) definitions[definition.Name] = definition;
+                // Type-scoped defaults are applied as properties during normal loading;
+                // they do not replace a component or merge its ActionEvent routes.
+            }
+            else
+            {
+                definitions[definition.Name ?? definition.Type] = definition;
+            }
+        }
+
+        // Type definitions are keyed separately in the runtime; expose them by
+        // their declared name when present so effective validation can resolve
+        // inherited routes that use a named Definition.
+        // (No additional action required: named definitions already collected.)
+
+        var effectiveTemplates = new Dictionary<string, CuiTemplateDefinition>(StringComparer.Ordinal);
+        foreach (var (name, template) in document.Templates)
+        {
+            var expandedContent = template.Content
+                .Select(child => ExpandEffectiveComponent(child, definitions, document.Templates, new HashSet<string>(StringComparer.Ordinal)))
+                .ToArray();
+            effectiveTemplates[name] = template with { Content = expandedContent };
+        }
+
+        var effectiveComponents = document.Components
+            .Select(component => component.IsDefinition
+                ? component
+                : ExpandEffectiveComponent(component, definitions, document.Templates, new HashSet<string>(StringComparer.Ordinal)))
+            .ToArray();
+
+        var effectiveDocument = document with
+        {
+            Components = effectiveComponents,
+            Templates = effectiveTemplates,
+        };
+
+        return CuiActionEventContract.Validate(effectiveDocument).FirstOrDefault();
+    }
+
+    private bool TryResolveDefinitionForValidation(string name, Dictionary<string, CuiComponent> definitions) =>
+        !_controlRegistry.TryResolveElement(name, out _) && definitions.ContainsKey(name);
+
+    private CuiComponent ExpandEffectiveComponent(
+        CuiComponent component,
+        Dictionary<string, CuiComponent> definitions,
+        IReadOnlyDictionary<string, CuiTemplateDefinition> templates,
+        HashSet<string> path)
+    {
+        if (component.IsThemeScope)
+        {
+            return RebuildEffectiveComponent(component,
+                component.Children.Where(child => !child.IsDefinition)
+                    .Select(child => ExpandEffectiveComponent(child, definitions, templates, path)).ToArray(),
+                component.ElseChildren.Where(child => !child.IsDefinition)
+                    .Select(child => ExpandEffectiveComponent(child, definitions, templates, path)).ToArray());
+        }
+
+        if (!component.IsDefinition && TryResolveDefinitionForValidation(component.Type, definitions))
+        {
+            var definition = definitions[component.Type];
+            var key = definition.Name ?? definition.Type;
+            // Mirror the runtime's finite caller-child handling: a caller-supplied
+            // child list is not a definition dependency, so it must not be treated
+            // as a cycle.
+            var trackDependency = component.Children.Count == 0
+                || !CuiLanguageVocabulary.VisualElements.Contains(definition.Type);
+            if (trackDependency && !path.Add(key))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR060", CuiDiagnosticSeverity.Error,
+                    $"Cyclic definition dependency: {string.Join(" -> ", path.Concat(new[] { key }))}.", component.Span));
+            var effective = MergeDefinitionInstance(definition, component);
+            var expanded = ExpandEffectiveComponent(effective, definitions, templates, path);
+            if (trackDependency) path.Remove(key);
+            return expanded;
+        }
+
+        if (!component.IsDefinition && templates.TryGetValue(component.Type, out var template))
+        {
+            if (!path.Add(template.Name))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR060", CuiDiagnosticSeverity.Error,
+                    $"Cyclic template dependency: {string.Join(" -> ", path.Concat(new[] { template.Name }))}.", component.Span));
+            var children = template.Content
+                .Select(child => WithTemplateInputs(child, component, template))
+                .Select(child => ExpandEffectiveComponent(child, definitions, templates, path))
+                .ToArray();
+            var host = new CuiComponent(
+                "Container",
+                component.Name,
+                component.Classes,
+                component.Properties,
+                component.Actions,
+                children,
+                component.Condition,
+                component.List,
+                component.Span,
+                component.DefaultTheme,
+                component.Repeat,
+                Array.Empty<CuiComponent>(),
+                component.Groups,
+                isDefinition: false,
+                component.PropertyRegion)
+            {
+                Text = component.Text,
+                TextParts = component.TextParts,
+            };
+            path.Remove(template.Name);
+            return host;
+        }
+
+        return RebuildEffectiveComponent(component,
+            component.Children.Where(child => !child.IsDefinition)
+                .Select(child => ExpandEffectiveComponent(child, definitions, templates, path)).ToArray(),
+            component.ElseChildren.Where(child => !child.IsDefinition)
+                .Select(child => ExpandEffectiveComponent(child, definitions, templates, path)).ToArray());
+    }
+
+    private static CuiComponent RebuildEffectiveComponent(CuiComponent source, CuiComponent[] children, CuiComponent[] elseChildren) =>
+        new CuiComponent(
+            source.Type,
+            source.Name,
+            source.Classes,
+            source.Properties,
+            source.Actions,
+            children,
+            source.Condition,
+            source.List,
+            source.Span,
+            source.DefaultTheme,
+            source.Repeat,
+            elseChildren,
+            source.Groups,
+            source.IsDefinition,
+            source.PropertyRegion)
+        {
+            Text = source.Text,
+            TextParts = source.TextParts,
+        };
 
     private static bool IsSharedStatePrefab(CuiComponent definition) =>
         definition.Type.Equals("Prefab", StringComparison.OrdinalIgnoreCase)
