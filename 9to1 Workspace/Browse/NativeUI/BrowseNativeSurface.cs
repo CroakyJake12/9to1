@@ -19,12 +19,16 @@ public interface IBrowseNativeEngineTab : IBrowseEngineTab
 public static class BrowseNativeSurface
 {
     public static CuiNativeScene CreateScene(BrowseNativeWorkspace workspace, ICuiSceneReadiness originalReadiness, CuiAppearance? appearance = null)
+        => CreateScene(workspace, originalReadiness, appearance, themePreference: null);
+
+    public static CuiNativeScene CreateScene(BrowseNativeWorkspace workspace, ICuiSceneReadiness originalReadiness,
+        CuiAppearance? appearance, CuiThemePreferenceContext? themePreference)
     {
         ArgumentNullException.ThrowIfNull(workspace); ArgumentNullException.ThrowIfNull(originalReadiness);
         var registry = new CuiControlRegistry();
         registry.RegisterObjectRenderer("browse.engine", _ => new BrowseEngineViewport(workspace));
         return new("browse", "Browse", "Browse", BrowseNativeWorkspace.LoadDocument(), workspace, workspace, originalReadiness)
-            { ControlRegistry = registry, Appearance = appearance, IsPublicationCurrent = () => workspace.IsOriginalPublicationCurrent };
+            { ControlRegistry = registry, Appearance = appearance, ThemePreference = themePreference, IsPublicationCurrent = () => workspace.IsOriginalPublicationCurrent };
     }
     public static BrowseNativeWindow CreateWindow(BrowseNativeWorkspace workspace, ICuiSceneReadiness originalReadiness, CuiAppearance? appearance = null)
         => new(workspace, CreateScene(workspace, originalReadiness, appearance));

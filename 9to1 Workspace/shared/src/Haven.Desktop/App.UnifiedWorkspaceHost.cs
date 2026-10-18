@@ -56,6 +56,7 @@ public sealed partial class App
         private readonly object _gate = new();
         private readonly HashSet<Task> _sources = new(ReferenceEqualityComparer.Instance);
         private CuiSceneHost? _scene;
+        private NativeHomeThemePreferences? _homeTheme;
         private CuiControlLoader? _startupLoadingLoader;
         private Task? _initialization, _close, _pendingClose, _workspaceClose, _sceneClose, _sessionClose;
         private readonly List<Task> _closeAttempts = [];
@@ -192,6 +193,12 @@ public sealed partial class App
             var availability = await CheckAsync(currentToken);
             if (availability.State != CuiSceneAvailabilityState.Ready) throw new InvalidOperationException(availability.Message);
             DemandCurrent();
+            _homeTheme = new NativeHomeThemePreferences(_services.GetRequiredService<UserPreferencesService>().HomeThemePreferencePath,
+                new HomeThemeScope(HomeDataScope.DeviceLocal, _actor.ProfileId), UserPreferencesService.ProjectLegacyHomeTheme,
+                async lifetime => IsCurrent && await ObserveActorAsync(lifetime).ConfigureAwait(false) == _actor,
+                callback => Dispatcher.UIThread.Post(callback));
+            await Track(_homeTheme.RefreshAsync(currentToken));
+            currentToken.ThrowIfCancellationRequested(); DemandCurrent();
             var coordinator = _services.GetRequiredService<WorkspaceSessionCoordinator>();
             var restored = await Track(coordinator.LoadAsync(currentToken));
             currentToken.ThrowIfCancellationRequested(); DemandCurrent();
@@ -238,7 +245,7 @@ public sealed partial class App
             _chrome = await _chromeCreation;
             DemandCurrent();
             _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent);
-            var scene = BrowseNativeSurface.CreateScene(_workspace, this);
+            var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, _homeTheme.Context);
             _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
             _scene = new CuiSceneHost(scene.ControlRegistry); Content = _scene;
             _sceneInitialization = Track(_scene.ShowAsync(scene, currentToken));
@@ -349,6 +356,7 @@ public sealed partial class App
             catch (Exception failure) { System.Diagnostics.Trace.TraceError("Unified Browse retained keyboard failure: {0}", failure); }
         }
 
+        private Task Track(Task actual) { lock (_gate) _sources.Add(actual); return actual; }
         private Task<T> Track<T>(Task<T> actual) { lock (_gate) _sources.Add(actual); return actual; }
         private void DemandCurrent()
         {
@@ -449,6 +457,9 @@ public sealed partial class App
                 {
                     try { _sceneClose ??= _scene?.CloseOriginalAsync(); } catch (Exception error) { AddAppCause(failures, error); }
                     await Join(_sceneClose);
+                    if (_sceneClose is null or { IsCompletedSuccessfully: true })
+                        try { if (_homeTheme is not null) await _homeTheme.DisposeAsync(); }
+                        catch (Exception error) { AddAppCause(failures, error); }
                     try { if (_session is not null) _sessionClose = _session.SealAndDrainAsync(); }
                     catch (Exception error) { AddAppCause(failures, error); }
                     await Join(_sessionClose);

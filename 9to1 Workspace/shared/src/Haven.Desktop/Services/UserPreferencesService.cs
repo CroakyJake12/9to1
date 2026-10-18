@@ -8,6 +8,8 @@
  */
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using HavenOS.Home.Core;
 using Avalonia;
 using Avalonia.Media;
 using CakeOS.Cui.Themes;
@@ -75,6 +77,7 @@ public sealed partial class UserPreferencesService
     /// Stores preferences locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private Preferences _preferences;
+    private JsonObject _preferenceBaseline = new();
 
     /// <summary>
     /// Stores legacy theme ids locally so this component can preserve the dependency, cache, or state between member calls.
@@ -87,6 +90,8 @@ public sealed partial class UserPreferencesService
         var hasExistingPreferences = File.Exists(_path);
         _preferences = Load();
         const int currentAppearanceVersion = 2;
+        if (_preferences.HavenUiAppearanceVersion > currentAppearanceVersion || !Enum.IsDefined(_preferences.HavenUiAppearance))
+            throw new InvalidDataException("The saved native appearance version is unsupported; preferences were preserved.");
         var migrated = _preferences.HavenUiAppearanceVersion < currentAppearanceVersion;
         if (migrated)
         {
@@ -96,13 +101,11 @@ public sealed partial class UserPreferencesService
                 : null;
             _preferences = _preferences with
             {
-                // Version 2 is the from-scratch Haven visual release. Existing
-                // version-1 light-shell preferences migrate once to the deck's
-                // canonical dark presentation; the four-position control remains
-                // available and subsequent user choices are preserved.
+                // Migration preserves an existing explicit appearance. It does not
+                // replace the user's selection with a release-specific default.
                 HavenUiAppearance = previousTheme is not null
                     ? previousTheme.Light ? HavenUiAppearance.Bright : HavenUiAppearance.SuperDark
-                    : HavenUiAppearance.SuperDark,
+                    : hasExistingPreferences ? _preferences.HavenUiAppearance : HavenUiAppearance.SuperDark,
                 HavenUiAppearanceVersion = currentAppearanceVersion,
                 ThemeId = "haven-ui"
             };
@@ -671,30 +674,24 @@ public sealed partial class UserPreferencesService
     /// </summary>
     private Preferences Load()
     {
-        try
-        {
-            if (!File.Exists(_path)) return Preferences.Default;
-            return JsonSerializer.Deserialize<Preferences>(File.ReadAllText(_path), JsonOptions) ?? Preferences.Default;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-        {
-            return Preferences.Default;
-        }
+        _preferenceBaseline = HomeNativePreferenceFile.Read(_path);
+        return _preferenceBaseline.Deserialize<Preferences>(JsonOptions) ?? Preferences.Default;
     }
 
-    /// <summary>
-    /// Performs the save step owned by this component.
-    /// </summary>
     private void Save()
     {
+        var proposed = JsonSerializer.SerializeToNode(_preferences, JsonOptions)!.AsObject();
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-            var temporary = _path + ".tmp";
-            File.WriteAllText(temporary, JsonSerializer.Serialize(_preferences, JsonOptions));
-            File.Move(temporary, _path, true);
+            var committed = HomeNativePreferenceFile.MergeLegacy(_path, _preferenceBaseline, proposed, ProjectLegacyHomeTheme);
+            _preferenceBaseline = committed;
+            _preferences = committed.Deserialize<Preferences>(JsonOptions) ?? throw new InvalidDataException("Native preferences could not be observed after save.");
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        catch
+        {
+            _preferences = _preferenceBaseline.Deserialize<Preferences>(JsonOptions) ?? Preferences.Default;
+            throw;
+        }
     }
 
     /// <summary>
@@ -734,8 +731,8 @@ public sealed partial class UserPreferencesService
         public HavenUiAppearance HavenUiAppearance { get; init; } = HavenUiAppearance.SuperDark;
         /// <summary>Distinguishes migrated preference files from theme-only legacy files.</summary>
         public int HavenUiAppearanceVersion { get; init; }
-        /// <summary>Canonical theme name; unknown values resolve to Glow at read time.</summary>
-        public string HavenUiThemeName { get; init; } = "Glow";
+        /// <summary>Saved theme identity; unsupported names are preserved and Home resolves an explicit Professional fallback.</summary>
+        public string HavenUiThemeName { get; init; } = "Professional";
         /// <summary>Whether a semantic accent palette overrides surface accent hues.</summary>
         public bool OverrideAccentColour { get; init; }
         /// <summary>Persisted accent palette name, or null when following surface hues.</summary>
