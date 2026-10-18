@@ -152,9 +152,13 @@ public sealed class CuiControlRegistry
             throw new ArgumentException($"A CUI control type named '{typeName}' is already registered.", nameof(typeName));
     }
 
-    /// <summary>Register a typed renderer for an Object component's Type property.</summary>
+    /// <summary>Register a typed renderer while preserving the existing host binary contract.</summary>
+    public void RegisterObjectRenderer(string objectType, Func<CuiComponent, Control> factory) =>
+        RegisterObjectRenderer(objectType, factory, null);
+
+    /// <summary>Register a typed renderer with additional registered CUI property capabilities.</summary>
     public void RegisterObjectRenderer(string objectType, Func<CuiComponent, Control> factory,
-        IEnumerable<string>? additionalProperties = null)
+        IEnumerable<string>? additionalProperties)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(objectType);
         ArgumentNullException.ThrowIfNull(factory);
