@@ -11,48 +11,63 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Haven.Desktop.Services;
 
 /// <summary>Creates normal Haven windows and chrome-free pop-ups while moving the same tab session.</summary>
-public sealed class WorkspaceWindowService(
+public sealed partial class WorkspaceWindowService(
     IServiceProvider services,
     WorkspaceSessionCoordinator sessions,
-    NotificationService notifications)
+    NotificationService notifications) : IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard, IAsyncDisposable
 {
     private readonly List<Window> _windows = [];
 
-    public void OpenInNewWindow(MainView source, WorkspaceTabViewModel tab)
+    public void OpenInNewWindow(MainView source, WorkspaceTabViewModel tab) =>
+        RunWindowSource(() => OpenInNewWindowCore(source, tab));
+
+    private void OpenInNewWindowCore(MainView source, WorkspaceTabViewModel tab)
     {
-        var moved = source.DetachTabForMove(tab);
-        var shell = services.GetRequiredService<MainView>();
+        var moved = RetainDetachedTab(source.DetachTabForMove(tab));
+        if (OriginalWindowWork.IsRetiring) return;
+        var shell = RetainShell(AcquireWindowSource(() => services.GetRequiredService<MainView>()));
+        if (OriginalWindowWork.IsRetiring) return;
         shell.ApplyEdition(source.Edition);
+        if (OriginalWindowWork.IsRetiring) return;
         shell.AttachTransferredTab(moved, replaceExisting: true);
+        ReleaseTransferredTab(moved);
+        if (OriginalWindowWork.IsRetiring) return;
         sessions.Register(shell, WorkspaceWindowKind.Normal);
         var window = CreateMainWindow();
         window.DataContext = shell;
+        if (OriginalWindowWork.IsRetiring) return;
         window.Title = moved.Title;
 
-        window.Closed += (_, _) => { _windows.Remove(window); sessions.Unregister(shell); };
+        window.Closed += (_, _) => ObserveWindowClosed(() => { _windows.Remove(window); sessions.Unregister(shell); });
         _windows.Add(window);
         window.Show();
+        if (OriginalWindowWork.IsRetiring) return;
         _ = InitializeSecondaryShellAsync(shell);
     }
 
-    public void OpenInPopUp(MainView source, WorkspaceTabViewModel tab)
+    public void OpenInPopUp(MainView source, WorkspaceTabViewModel tab) =>
+        RunWindowSource(() => OpenInPopUpCore(source, tab));
+
+    private void OpenInPopUpCore(MainView source, WorkspaceTabViewModel tab)
     {
-        var moved = source.DetachTabForMove(tab);
+        var moved = RetainDetachedTab(source.DetachTabForMove(tab));
+        if (OriginalWindowWork.IsRetiring) return;
         var windowId = Guid.NewGuid();
         var layoutId = Guid.NewGuid();
         var paneId = Guid.NewGuid();
         var host = new ContentControl { Content = moved.Page };
         AutomationProperties.SetName(host, $"{moved.Title} pop-up surface");
-        var window = new Window
+        var window = RetainWindow(new Window());
+        ConfigureWindow(() =>
         {
-            Title = moved.Title,
-            Width = 960,
-            Height = 720,
-            MinWidth = 420,
-            MinHeight = 320,
-            Content = host,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
+            window.Title = moved.Title;
+            window.Width = 960;
+            window.Height = 720;
+            window.MinWidth = 420;
+            window.MinHeight = 320;
+            window.Content = host;
+            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        });
         sessions.RegisterPopUp(
             windowId,
             () => source.CreateTabSnapshot(moved),
@@ -65,66 +80,83 @@ public sealed class WorkspaceWindowService(
                 moved.SessionId,
                 SerializeWindowBounds(window),
                 DateTimeOffset.UtcNow));
-        window.PositionChanged += (_, _) => sessions.QueueSave();
-        window.SizeChanged += (_, _) => sessions.QueueSave();
-        window.Closed += (_, _) =>
+        WireWindowGeometry(window);
+        RetainPopup(window, host, moved, source);
+        window.Closed += (_, _) => ObserveWindowClosed(() =>
         {
             sessions.UnregisterPopUp(windowId);
             host.Content = null;
             _windows.Remove(window);
-            if (!source.IsDisposed) source.AttachTransferredTab(moved, replaceExisting: false);
+            if (OriginalWindowWork.IsRetiring) return;
+            if (!source.IsDisposed)
+            {
+                source.AttachTransferredTab(moved, replaceExisting: false);
+                ReleaseTransferredTab(moved);
+            }
             else
             {
-                var shell = services.GetRequiredService<MainView>();
+                var shell = RetainShell(AcquireWindowSource(() => services.GetRequiredService<MainView>()));
+                if (OriginalWindowWork.IsRetiring) return;
                 shell.ApplyEdition(source.Edition);
+                if (OriginalWindowWork.IsRetiring) return;
                 shell.AttachTransferredTab(moved, replaceExisting: true);
+                ReleaseTransferredTab(moved);
                 sessions.Register(shell, WorkspaceWindowKind.Normal);
                 var fallback = CreateMainWindow();
                 fallback.DataContext = shell;
+                if (OriginalWindowWork.IsRetiring) return;
                 fallback.Title = moved.Title;
-                fallback.Closed += (_, _) => { _windows.Remove(fallback); sessions.Unregister(shell); };
+                fallback.Closed += (_, _) => ObserveWindowClosed(() => { _windows.Remove(fallback); sessions.Unregister(shell); });
                 _windows.Add(fallback);
                 fallback.Show();
+                if (OriginalWindowWork.IsRetiring) return;
                 _ = InitializeSecondaryShellAsync(shell);
             }
-        };
+        });
         _windows.Add(window);
         if (TopLevel.GetTopLevel(source) is Window owner) window.Show(owner); else window.Show();
     }
 
-    public async Task RestoreAdditionalWindowsAsync(
-        WorkspaceSessionSnapshot snapshot,
-        HavenShellEdition edition,
-        CancellationToken cancellationToken)
+    public Task RestoreAdditionalWindowsAsync(
+        WorkspaceSessionSnapshot snapshot, HavenShellEdition edition, CancellationToken cancellationToken) =>
+        OriginalWindowWork.RunAsync(original => RestoreAdditionalWindowsCoreAsync(original, snapshot, edition, cancellationToken));
+
+    private async Task RestoreAdditionalWindowsCoreAsync(DesktopOriginalWorkLifetime.Original original,
+        WorkspaceSessionSnapshot snapshot, HavenShellEdition edition, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         foreach (var saved in snapshot.Windows.Where(item => item.Kind != WorkspaceWindowKind.Main))
         {
+            if (OriginalWindowWork.IsRetiring) return;
             cancellationToken.ThrowIfCancellationRequested();
             if (saved.OrderedTabIds.Count == 0) continue;
 
-            var shell = services.GetRequiredService<MainView>();
+            var shell = RetainShell(AcquireWindowSource(() => services.GetRequiredService<MainView>()));
+            if (OriginalWindowWork.IsRetiring) return;
             shell.ApplyEdition(edition);
+            if (OriginalWindowWork.IsRetiring) return;
             try
             {
-                await shell.RestoreWorkspaceWindowAsync(snapshot, saved, cancellationToken);
+                await JoinWindowOriginalAsync(AcquireWindowSource(() => shell.RestoreWorkspaceWindowAsync(snapshot, saved, cancellationToken)));
             }
             catch
             {
-                shell.Dispose();
+                await DrainWindowChildAsync(shell);
                 continue;
             }
 
+            if (OriginalWindowWork.IsRetiring) return;
             if (shell.SelectedTab is not { } selected)
             {
-                shell.Dispose();
+                await DrainWindowChildAsync(shell);
                 continue;
             }
 
             if (saved.Kind == WorkspaceWindowKind.PopUp)
             {
-                var moved = shell.DetachTabForMove(selected);
-                shell.Dispose();
+                var moved = RetainDetachedTab(shell.DetachTabForMove(selected));
+                await DrainWindowChildAsync(shell);
+                if (OriginalWindowWork.IsRetiring) return;
                 RestorePersistedPopUp(moved, saved);
                 continue;
             }
@@ -132,10 +164,11 @@ public sealed class WorkspaceWindowService(
             sessions.Register(shell, WorkspaceWindowKind.Normal, queueSave: false);
             var window = CreateMainWindow();
             window.DataContext = shell;
+            if (OriginalWindowWork.IsRetiring) return;
             window.Title = selected.Title;
             ApplyWindowBounds(window, saved.BoundsJson);
 
-            window.Closed += (_, _) => { _windows.Remove(window); sessions.Unregister(shell); };
+            window.Closed += (_, _) => ObserveWindowClosed(() => { _windows.Remove(window); sessions.Unregister(shell); });
             _windows.Add(window);
             window.Show();
             _ = InitializeSecondaryShellAsync(shell);
@@ -143,18 +176,17 @@ public sealed class WorkspaceWindowService(
     }
     private void RestorePersistedPopUp(WorkspaceTabViewModel moved, WorkspaceWindowSnapshot saved)
     {
+        RetainDetachedTab(moved);
+        if (OriginalWindowWork.IsRetiring) return;
         var host = new ContentControl { Content = moved.Page };
         AutomationProperties.SetName(host, $"{moved.Title} pop-up surface");
-        var window = new Window
+        var window = RetainWindow(new Window());
+        ConfigureWindow(() =>
         {
-            Title = moved.Title,
-            Width = 960,
-            Height = 720,
-            MinWidth = 420,
-            MinHeight = 320,
-            Content = host,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen
-        };
+            window.Title = moved.Title; window.Width = 960; window.Height = 720;
+            window.MinWidth = 420; window.MinHeight = 320; window.Content = host;
+            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        });
 
         ApplyWindowBounds(window, saved.BoundsJson);
         sessions.RegisterPopUp(
@@ -169,15 +201,14 @@ public sealed class WorkspaceWindowService(
                 SerializeWindowBounds(window),
                 DateTimeOffset.UtcNow));
 
-        window.PositionChanged += (_, _) => sessions.QueueSave();
-        window.SizeChanged += (_, _) => sessions.QueueSave();
-        window.Closed += (_, _) =>
+        WireWindowGeometry(window);
+        RetainPopup(window, host, moved, null);
+        window.Closed += (_, _) => ObserveWindowClosed(() =>
         {
             sessions.UnregisterPopUp(saved.Id);
             host.Content = null;
             _windows.Remove(window);
-            moved.Dispose();
-        };
+        });
         _windows.Add(window);
         window.Show();
     }
@@ -209,21 +240,26 @@ public sealed class WorkspaceWindowService(
             // Old or corrupt geometry falls back to normal startup sizing.
         }
     }
-    private async Task InitializeSecondaryShellAsync(MainView shell)
+    private Task InitializeSecondaryShellAsync(MainView shell) => OriginalWindowWork.RunAsync(async original =>
     {
         try
         {
-            await shell.InitializeSecondaryWindowAsync(CancellationToken.None);
+            // The actual shell retains its own scoped sources; this service joins
+            // the complete initialization original before retiring that shell.
+            await JoinWindowOriginalAsync(AcquireWindowSource(() => shell.InitializeSecondaryWindowAsync(CancellationToken.None)));
         }
         catch (Exception ex)
         {
-            notifications.Show(
-                "Window initialization failed",
-                SensitiveTextRedactor.Redact(ex.Message),
-                ToastKind.Error,
-                TimeSpan.FromSeconds(12));
+            if (!OriginalWindowWork.IsRetiring)
+                AcquireWindowSource(() =>
+                {
+                    notifications.Show("Window initialization failed", SensitiveTextRedactor.Redact(ex.Message),
+                        ToastKind.Error, TimeSpan.FromSeconds(12));
+                    return true;
+                });
+            // AwaitAsync has already retained all actual source failures for close.
         }
-    }
+    });
 
     private static string SerializeWindowBounds(Window window) => JsonSerializer.Serialize(new WindowBoundsState(
         window.Position.X, window.Position.Y, window.Width, window.Height));
@@ -233,9 +269,9 @@ public sealed class WorkspaceWindowService(
     private MainWindow CreateMainWindow()
     {
 #if ANDROID
-        return new MainWindow();
+        return RetainWindow(new MainWindow());
 #else
-        return new MainWindow(services.GetRequiredService<UserPreferencesService>());
+        return RetainWindow(new MainWindow(services.GetRequiredService<UserPreferencesService>()));
 #endif
     }
 }
