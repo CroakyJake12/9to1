@@ -4,8 +4,27 @@
              xmlns:controls="using:Haven.Desktop.Controls"
              xmlns:topRail="using:Haven.Desktop.Views.Shell.TopRail"
              xmlns:sidebar="using:Haven.Desktop.Views.Shell.Sidebar"
+             xmlns:vm="using:Haven.Desktop.ViewModels"
+             xmlns:views="using:Haven.Desktop.Views"
+             xmlns:pages="using:Haven.Desktop.Views.Pages.WorkspaceEditor"
+             xmlns:studio="using:Haven.Desktop.Views.Pages.StudioProject"
              x:Class="Haven.Desktop.Views.Shell.MainView"
              x:Name="MainViewRoot">
+
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="{x:Type vm:ChatGroupPageViewModel}"><views:ChatGroupView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:PlanPageViewModel}"><views:PlanView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:CatalogPageViewModel}"><views:CatalogView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:TrainingPageViewModel}"><views:TrainingView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:LessonSettingsPageViewModel}"><views:LessonSettingsView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:WorkspaceHomePageViewModel}"><views:WorkspaceHomeView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ProjectCreatorPageViewModel}"><views:ProjectCreatorView /></DataTemplate>
+    <DataTemplate DataType="{x:Type studio:StudioProjectPage}"><views:StudioProjectHavenView /></DataTemplate>
+    <DataTemplate DataType="{x:Type pages:WorkspaceEditorPage}"><views:WorkspaceEditorView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ArchivePageViewModel}"><views:ArchiveView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ActivityLogPageViewModel}"><views:ActivityLogView /></DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ModeLibraryPageViewModel}"><views:ModeLibraryView /></DataTemplate>
+  </UserControl.DataTemplates>
 
   <!-- The active New Haven shell is intentionally edge-to-edge. Pages share
        the window tide; there is no inherited light workspace card around them. -->

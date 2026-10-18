@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Browser;
@@ -28,7 +29,9 @@ public sealed partial class App : Avalonia.Application
 
     public override void Initialize()
     {
-        AvaloniaXamlLoader.Load(this);
+        // CUI owns the primitive shell presentation; do not load donor Fluent theme
+        // or application AXAML resources.
+        CuiNativeHost.InitialisePrimitiveTheme(this, "Home");
         #if DEBUG
             // Avalonia's developer-tools service is process-wide. Headless tests create
             // multiple isolated App instances in one process, so attaching per instance

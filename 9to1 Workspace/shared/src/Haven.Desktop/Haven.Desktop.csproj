@@ -59,7 +59,6 @@
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Controls.WebView" />
     <!-- Wraps Avalonia's existing CoreWebView2 COM handle without importing WebView2's WPF/WinForms assemblies. -->
     <PackageReference Include="Microsoft.Web.WebView2" GeneratePathProperty="true" ExcludeAssets="all" Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'" />
@@ -101,5 +100,9 @@
     <Compile Include="../../../../apps/Web/Accounts/AccountBrowserBindings.cs" Link="Accounts/Shared/AccountBrowserBindings.cs" />
     <Compile Include="../../../../apps/Web/Services/IAccountBrowserTransport.cs" Link="Accounts/Shared/IAccountBrowserTransport.cs" />
     <EmbeddedResource Include="../../../../apps/Web/Accounts/Accounts.cui" LogicalName="Haven.Desktop.NativeCake.Accounts.cui" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Remove="App.axaml" />
+    <AvaloniaXaml Remove="App.axaml" />
   </ItemGroup>
 </Project>
