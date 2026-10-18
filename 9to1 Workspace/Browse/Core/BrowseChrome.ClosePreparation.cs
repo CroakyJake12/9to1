@@ -165,6 +165,7 @@ public sealed partial class BrowseChrome
             if (!IsCurrent(attempt)) throw new BrowseCloseVetoException();
             if (attempt.Owner is not { } owner) { attempt.Accepted = true; return; }
             if (owner.Close is not null) { attempt.Accepted = true; return; }
+            var failures = new List<Exception>();
             try
             {
                 owner.Close = attempt.Lease is { } lease ? lease.BeginClose() : owner.Session.CloseAndDrainAsync();
@@ -172,35 +173,40 @@ public sealed partial class BrowseChrome
                 attempt.Accepted = true;
                 RetainAppSource(owner.Close);
             }
-            catch (Exception error)
+            catch (Exception failure) { failures.Add(failure); }
+            // Observe the reported original even when Begin or a later event
+            // accessor fails. A throwing callback may already have acquired work.
+            try
             {
-                // A throwing callback may already have published irreversible work.
-                owner.CloseContractFailure = error;
-                try
+                owner.ReportedClose = owner.Session.OriginalClose;
+                if (owner.ReportedClose is { } reported)
                 {
-                    if (owner.Session.OriginalClose is { } acquired)
-                    { owner.Close = acquired; attempt.Accepted = true; RetainAppSource(acquired); }
-                }
-                catch (Exception observation) { owner.CloseContractFailure = new AggregateException(error, observation); }
-                throw;
-            }
-            finally
-            {
-                if (attempt.Accepted)
-                {
-                    owner.Published = false;
-                    if (owner.Changed is not null) owner.Session.StateChanged -= owner.Changed;
-                    ClearAttempt(attempt);
+                    RetainAppSource(reported);
+                    if (owner.Close is null) { owner.Close = reported; attempt.Accepted = true; }
                 }
             }
-            owner.ReportedClose = owner.Session.OriginalClose;
-            if (owner.ReportedClose is not null) RetainAppSource(owner.ReportedClose);
-            if (!ReferenceEquals(owner.Close, owner.ReportedClose))
+            catch (Exception observation) { failures.Add(observation); }
+            if (attempt.Accepted)
             {
-                PinContractSource(owner.Close); PinContractSource(owner.ReportedClose);
-                throw owner.CloseContractFailure = new InvalidOperationException("The app did not retain its original close task.");
+                if (!ReferenceEquals(owner.Close, owner.ReportedClose))
+                {
+                    PinContractSource(owner.Close); PinContractSource(owner.ReportedClose);
+                    failures.Add(new InvalidOperationException("The app did not retain its original close task."));
+                }
+                owner.Published = false;
+                try { if (owner.Changed is not null) owner.Session.StateChanged -= owner.Changed; }
+                catch (Exception cleanup) { failures.Add(cleanup); }
+                finally { ClearAttempt(attempt); }
+                foreach (var failure in failures) RecordCloseFailure(owner, failure);
             }
+            ThrowCloseCauses(failures);
         }
+    }
+    private static void RecordCloseFailure(AppContentOwner owner, Exception failure)
+    {
+        if (ReferenceEquals(owner.CloseContractFailure, failure)) return;
+        owner.CloseContractFailure = owner.CloseContractFailure is { } prior
+            ? new AggregateException("Original owner close/cleanup causes remain retained.", prior, failure) : failure;
     }
     private async Task FinishContentAttemptAsync(ContentCloseAttempt attempt, Exception? primary = null)
     {
@@ -467,10 +473,13 @@ public sealed partial class BrowseChrome
         catch (Exception error) { failure = error; }
         var failures = new List<Exception>();
         if (failure is not null) failures.Add(failure);
+        try
+        {
         if (!published)
         {
             foreach (var acquired in tab.AppOwners.Where(owner => !previousOwners.Contains(owner)).ToArray())
-                await CloseUnpublishedAppOwnerAsync(tab, acquired, failures).ConfigureAwait(false);
+                try { await CloseUnpublishedAppOwnerAsync(tab, acquired, failures).ConfigureAwait(false); }
+                catch (Exception unexpected) { failures.Add(unexpected); }
             if (engine is not null && !ReferenceEquals(tab.Host, engine))
             {
                 try
@@ -483,8 +492,15 @@ public sealed partial class BrowseChrome
                 catch (Exception error) { failures.Add(error); }
             }
         }
-        await AbortContentCloseAsync(attempt, failures).ConfigureAwait(false);
-        await JoinAcceptedContentCloseAsync(attempt, failures).ConfigureAwait(false);
+        }
+        catch (Exception cleanup) { failures.Add(cleanup); }
+        finally
+        {
+            // Candidate cleanup never owns the right to skip restoring the old
+            // unaccepted owner, even when a getter/event accessor itself throws.
+            await AbortContentCloseAsync(attempt, failures).ConfigureAwait(false);
+            await JoinAcceptedContentCloseAsync(attempt, failures).ConfigureAwait(false);
+        }
         // Only this privately issued post-source admission check can acknowledge
         // normal navigation retirement/supersession. Faulted raw OCEs are unrelated.
         if (failures.Count == 1 && failure is ContentAdmissionCanceledException && token.IsCancellationRequested)
@@ -520,10 +536,20 @@ public sealed partial class BrowseChrome
         foreach (var actual in new[] { owner.Close, owner.ReportedClose, owner.Initialization, owner.ReportedInitialization }.OfType<Task>().Distinct())
             try { await actual.ConfigureAwait(false); } catch (Exception error) { AddCloseCauses(failures, actual, error); }
         if (owner.CloseContractFailure is { } contractFailure) failures.Add(contractFailure);
-        if (owner.Close is { IsCompletedSuccessfully: true } && owner.CloseContractFailure is null && owner.Session.CanRetireOriginalView)
+        if (owner.Close is { IsCompletedSuccessfully: true } && owner.CloseContractFailure is null)
         {
-            if (owner.Changed is not null) owner.Session.StateChanged -= owner.Changed;
-            tab.AppOwners.Remove(owner);
+            var canRetire = false;
+            try { canRetire = owner.Session.CanRetireOriginalView; }
+            catch (Exception observation) { failures.Add(observation); RecordCloseFailure(owner, observation); }
+            if (canRetire)
+            {
+                try
+                {
+                    if (owner.Changed is not null) owner.Session.StateChanged -= owner.Changed;
+                    tab.AppOwners.Remove(owner);
+                }
+                catch (Exception cleanup) { failures.Add(cleanup); RecordCloseFailure(owner, cleanup); }
+            }
         }
     }
 

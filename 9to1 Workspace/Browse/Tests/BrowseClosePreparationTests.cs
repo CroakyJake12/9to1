@@ -299,6 +299,95 @@ public sealed partial class BrowseNativeOwnershipTests
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Strong_failed_candidate_cleanup_observation_cannot_skip_old_lease_abort(bool unsubscribe)
+    {
+        var apps = new PreparedFactory(); var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), appContentFactory: apps);
+        await chrome.NavigateAsync("9to1://write/a"); var original = apps.Sessions[0];
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        apps.NextInitialization = held.Task;
+        var navigation = chrome.NavigateAsync("9to1://write/new");
+        var cleanupCause = new IOException("Exact acquired candidate cleanup observation failed");
+        Exception? assertionFailure = null;
+        try
+        {
+            var candidate = await apps.NextCreated.Task.WaitAsync(PreparationBound);
+            await candidate.InitializationEntered.Task.WaitAsync(PreparationBound);
+            if (unsubscribe) candidate.RemoveFailure = cleanupCause;
+            else candidate.CanRetireFailure = cleanupCause;
+            original.ChangeAddress(AppContentAddress.Parse("9to1://write/owner-correction"));
+            held.SetResult();
+            var failure = await Assert.ThrowsAnyAsync<Exception>(() => navigation.WaitAsync(PreparationBound));
+            Assert.True(HasExact(failure, cleanupCause));
+            Assert.True(HasType<BrowseCloseVetoException>(failure)); // Keep the actual primary and cleanup sibling.
+            Assert.True(candidate.OriginalClose!.IsCompletedSuccessfully);
+            Assert.False(original.Frozen); Assert.True(original.Edit());
+            Assert.Equal(1, original.Aborts); Assert.Null(original.OriginalClose);
+            Assert.Same(original, chrome.ObserveOriginalAppContent(chrome.State.SelectedTabId));
+        }
+        catch (Exception error) { assertionFailure = error; throw; }
+        finally
+        {
+            held.TrySetResult();
+            Exception? cleanup = null;
+            try { await navigation.WaitAsync(PreparationBound); } catch (Exception error) { cleanup = error; }
+            try { await chrome.DisposeAsync().AsTask().WaitAsync(PreparationBound); }
+            catch (Exception error)
+            {
+                if (assertionFailure is not null)
+                    throw new AggregateException("Regression assertion and actual attempted cleanup remain visible.", assertionFailure, error);
+                Assert.True(HasExact(error, cleanupCause));
+            }
+            Assert.NotNull(cleanup);
+        }
+    }
+
+    [Fact]
+    public async Task Strong_throwing_begin_unsubscribe_still_observes_and_joins_reported_original_close()
+    {
+        var apps = new PreparedFactory(); var chrome = await BrowseChrome.CreateAsync(new PreservedPaths(), appContentFactory: apps);
+        await chrome.NavigateAsync("9to1://write/a"); var owner = apps.Sessions[0];
+        var cleanupCause = new IOException("Exact BeginClose event removal failed");
+        owner.MismatchClose = true; owner.RemoveFailure = cleanupCause;
+        var close = chrome.CloseTabAsync(chrome.State.SelectedTabId);
+        Exception? assertionFailure = null;
+        try
+        {
+            await owner.CloseEntered.Task.WaitAsync(PreparationBound);
+            await owner.RemovalEntered.Task.WaitAsync(PreparationBound);
+            // This is the actual reported-task getter, not a silence delay. Old
+            // finally-unsubscribe throws before this source is observed at all.
+            await owner.CloseObserved.Task.WaitAsync(PreparationBound);
+            owner.ReturnedCloseGate.TrySetResult();
+            Assert.False(close.IsCompleted);
+            owner.ReportedCloseGate.TrySetResult();
+            var failure = await Assert.ThrowsAnyAsync<Exception>(() => close.WaitAsync(PreparationBound));
+            Assert.True(HasExact(failure, cleanupCause));
+            Assert.True(owner.ReturnedClose!.IsCompletedSuccessfully);
+            Assert.True(owner.OriginalClose!.IsCompletedSuccessfully);
+            Assert.Contains(owner.ReturnedClose, chrome.OriginalNativeSources);
+            Assert.Contains(owner.OriginalClose, chrome.OriginalNativeSources);
+        }
+        catch (Exception error) { assertionFailure = error; throw; }
+        finally
+        {
+            owner.ReturnedCloseGate.TrySetResult(); owner.ReportedCloseGate.TrySetResult();
+            try { await close.WaitAsync(PreparationBound); } catch (Exception) { }
+            try { await chrome.DisposeAsync().AsTask().WaitAsync(PreparationBound); }
+            catch (Exception error)
+            {
+                if (assertionFailure is not null) throw new AggregateException("Regression and cleanup remain visible.", assertionFailure, error);
+                Assert.True(HasExact(error, cleanupCause));
+            }
+        }
+    }
+
+    private static bool HasType<T>(Exception actual) where T : Exception => actual is T ||
+        actual is AggregateException group && group.InnerExceptions.Any(HasType<T>) ||
+        actual.InnerException is { } inner && HasType<T>(inner);
+
     private static bool HasExact(Exception actual, Exception expected) => ReferenceEquals(actual, expected) ||
         actual is AggregateException aggregate && aggregate.InnerExceptions.Any(error => HasExact(error, expected)) ||
         actual.InnerException is { } inner && HasExact(inner, expected);
@@ -325,7 +414,7 @@ public sealed partial class BrowseNativeOwnershipTests
         internal bool Frozen;
         internal int Aborts, Closes;
         internal Func<bool>? Preparing;
-        internal Exception? AbortFailure, BeginFailure, CloseFailure;
+        internal Exception? AbortFailure, BeginFailure, CloseFailure, CanRetireFailure, RemoveFailure;
         internal bool ForceStale, MismatchClose;
         internal IBrowseAppContentSession? ClaimedSession;
         internal Task? ReturnedClose;
@@ -337,14 +426,38 @@ public sealed partial class BrowseNativeOwnershipTests
         internal TaskCompletionSource InitializationEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal TaskCompletionSource PreparationEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public AppContentAddress Address { get; private set; } = address;
-        internal void ChangeAddress(AppContentAddress next) { Address = next; StateChanged?.Invoke(this, EventArgs.Empty); }
+        internal void ChangeAddress(AppContentAddress next) { Address = next; _stateChanged?.Invoke(this, EventArgs.Empty); }
         public string Title => "Instrumented participant";
         public string IconKey => "test";
-        public event EventHandler? StateChanged;
+        private EventHandler? _stateChanged;
+        public event EventHandler? StateChanged
+        {
+            add => _stateChanged += value;
+            remove
+            {
+                _stateChanged -= value;
+                if (RemoveFailure is { } failure)
+                { RemoveFailure = null; RemovalEntered.TrySetResult(); throw failure; }
+            }
+        }
         public bool IsPublicationCurrent => OriginalInitialization is { IsCompletedSuccessfully: true } && OriginalClose is null;
-        public bool CanRetireOriginalView => OriginalClose is { IsCompletedSuccessfully: true };
+        public bool CanRetireOriginalView
+        {
+            get
+            {
+                if (CanRetireFailure is { } failure) { CanRetireFailure = null; throw failure; }
+                return OriginalClose is { IsCompletedSuccessfully: true };
+            }
+        }
         public Task? OriginalInitialization { get; private set; }
-        public Task? OriginalClose { get; private set; }
+        private Task? _originalClose;
+        internal TaskCompletionSource CloseObserved { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource RemovalEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task? OriginalClose
+        {
+            get { if (_originalClose is not null) CloseObserved.TrySetResult(); return _originalClose; }
+            private set => _originalClose = value;
+        }
         public Task InitializeAsync(CancellationToken cancellationToken = default)
         { InitializationEntered.TrySetResult(); return OriginalInitialization ??= Initialization; }
         public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default) => throw new InvalidOperationException("Strong participant must use its actual reversible preparation.");
