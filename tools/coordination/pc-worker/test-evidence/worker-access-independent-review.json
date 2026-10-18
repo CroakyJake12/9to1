@@ -1,0 +1,36 @@
+{
+  "reviewer": "astra_home_native_acceptance",
+  "verdict": "SCOPED_ACCEPTED",
+  "hashes": {
+    "worker-access.py": "c53e104e37cba1c814e8c7b7b5fa1f5d34c286c6f707b5eddf729c5138d0de15",
+    "test_worker_access.py": "76fde3ed6a601f71c48a845819ac87e46e54f86ef76947b473d816679cdc93d7",
+    "START-AND-RECOVERY.md": "47155b9ca74210495684f38707087380cbee132f4e7de1b73d3a91c9fc201c2d",
+    "tests-final.log": "18c01674ac5424fc972135693d06bc6ef05812d28841139e0f8c4c3ded4e1ca1"
+  },
+  "must_fix_findings": [],
+  "resolved": [
+    "Inactive None outcome uses safe fallback string and model-readiness summary.",
+    "Explicit service start checks unchanged control bytes, prior exclusive health, absent endpoint/process and final policy.",
+    "Known repaired API/config/auth park receives narrowly recorded epoch advance only after validated readiness; unknown park and provider backoff remain held."
+  ],
+  "reviewed": [
+    "Full helper source37b and final changed gates",
+    "Final six added regressions plus prior26 test coverage and key fixture implementation",
+    "Guide claims compared against helper explicit resume, Status, opening and pending ambiguity behavior"
+  ],
+  "evidence": {
+    "saved_tests": "32 passed, tests-final.exit0; root separately reruns exact fixture suite",
+    "independent_test_run": false
+  },
+  "preserved": [
+    "Active worker no-op, unknown inbox/tool/permissions holds, approved queued instructions retained.",
+    "Own durable marker and exact prompt ID prevent ambiguous resend; replaced owner marker not deleted.",
+    "STOP/PAUSE not cleared before identity/model/readiness validation; owner fields retained.",
+    "No continuation-state writes, no live shared-service restart, no credentials returned."
+  ],
+  "limits": [
+    "No real dialogs, live resume, model requests, installation or reboot exercised by reviewer.",
+    "Guide startup facts rely on coordinator and supplied PC setup evidence; physical reboot explicitly unverified.",
+    "Scoped helper acceptance only, not product acceptance."
+  ]
+}

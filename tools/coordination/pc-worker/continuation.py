@@ -25,6 +25,14 @@ def read(path):
     return json.loads(Path(path).read_text())
 
 
+def linux_boot_id():
+    try:
+        identity = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+        return identity if re.fullmatch(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', identity) else None
+    except OSError:
+        return None  # No verified boot identity means no cold-boot exception.
+
+
 def save(path, value):
     path = Path(path)
     temporary = path.with_suffix(path.suffix + '.tmp')
@@ -231,6 +239,7 @@ class Continuation:
         self.api = api or API(self.config)
         self.now = now
         self.execute = execute
+        self.boot_id = linux_boot_id()
         self.state_path = self.root / 'continuation-state.json'
         self.state = read(self.state_path) if self.state_path.exists() else {
             'session_id': self.sid, 'model': self.model, 'directory': self.directory,
@@ -425,7 +434,9 @@ class Continuation:
         try:
             snapshot = self.snapshot()
             self.state.update(api_failures=0, next_probe=0,
-                              last_healthy_service={'at': self.now(), 'active': list(snapshot['active'])})
+                              last_healthy_service={'at': self.now(), 'active': list(snapshot['active']),
+                                  'boot_id': self.boot_id,
+                                  'control_hash': hashlib.sha256(Path(self.config['control_path']).read_bytes()).hexdigest()})
             if control['mode'] != 'RUN':
                 return self.halt(control, snapshot)
             if self.config.get('enabled') is not True:
@@ -569,7 +580,8 @@ class Continuation:
                 return self.park('held_configuration_unavailable', **details)
             count = min(1000000, self.state.get('api_failures', 0) + 1)
             self.state.update(api_failures=count, next_probe=self.now() + backoff(count, 5, 300))
-            if not self.state.get('pending'):
+            if (not self.state.get('pending')
+                    or self.cold_boot_start_authorized(self.state.get('last_healthy_service', {}))):
                 try:
                     self.recover_service(control)
                 except Exception as recovery_error:
@@ -801,15 +813,22 @@ class Continuation:
                 and self.config.get('service_recovery', {}).get('enabled') is True
                 and self.config.get('service_recovery', {}).get('exclusive_ownership_verified') is True)
 
+    def cold_boot_start_authorized(self, last):
+        return (self.config.get('service_recovery', {}).get('cold_boot_recovery') is True
+                and self.boot_id is not None and last.get('boot_id') is not None
+                and last['boot_id'] != self.boot_id
+                and last.get('control_hash') == hashlib.sha256(Path(self.config['control_path']).read_bytes()).hexdigest())
+
     def recover_service(self, control):
         policy = self.config.get('service_recovery', {})
         if (not policy.get('enabled') or not self.execute or control.get('mode') != 'RUN'
                 or self.config.get('enabled') is not True):
             return
         last = self.state.get('last_healthy_service')
+        cold_boot = bool(last and self.cold_boot_start_authorized(last))
         if (policy.get('exclusive_ownership_verified') is not True or not last
                 or set(last['active']) - {self.sid}
-                or self.now() - last['at'] > 600
+                or (self.now() - last['at'] > 600 and not cold_boot)
                 or self.now() < self.state.get('service_start_after', 0)):
             self.state['service_recovery_status'] = 'held_ownership_or_backoff'
             return
@@ -818,12 +837,19 @@ class Continuation:
             return
         # Supported start only. A failed API/authentication request never justifies a restart.
         with lock(self.config['dispatch_lock_path']):
-            if self.reload().get('mode') != 'RUN' or not self.service_recovery_enabled():
+            if (self.reload().get('mode') != 'RUN' or not self.service_recovery_enabled()
+                    or (cold_boot and not self.cold_boot_start_authorized(last))):
                 self.state['service_recovery_status'] = 'deferred_control_changed'
                 return
+            if cold_boot and (not self.api.local_service_unavailable() or not self.api.opencode_process_absent()):
+                self.state['service_recovery_status'] = 'held_not_proven_absent'
+                return
             self.state['service_start_after'] = self.now() + 300
-            self.persist('service_start_intent')
-            if self.reload().get('mode') != 'RUN' or not self.service_recovery_enabled():
+            receipt = {'session_id': self.sid, 'kind': 'cold_boot' if cold_boot else 'recent_health',
+                       'previous_boot_id': last.get('boot_id'), 'current_boot_id': self.boot_id, 'at': self.now()}
+            self.persist('service_start_intent', service_start_receipt=receipt)
+            if (self.reload().get('mode') != 'RUN' or not self.service_recovery_enabled()
+                    or (cold_boot and not self.cold_boot_start_authorized(last))):
                 self.state['service_recovery_status'] = 'deferred_control_changed'
                 return
             self.api.start_service()

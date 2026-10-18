@@ -73,9 +73,9 @@
   },
   "historical_files_note": "The top-level files and test_receipt preserve the initial activation. current_files identifies this revision; subsequent patch receipts retain their own exact source identities.",
   "current_files": {
-    "continuation.py": "6c9acee82e910ee92dc610bd1d8ab4b7c65301e9632c0d2b24e11aa1fd3d5dca",
-    "test_continuation.py": "461e801673de342101f9894f2463cb242a542e355c7d3994bf9487a5eed6b83d",
-    "CONTINUATION.md": "a0c5bda601179984ef6c4f45b2d0c7ff6e3ef8ea89e55287663a4d50be0ce3dc",
+    "continuation.py": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
+    "test_continuation.py": "c0ab1c2b6536de5e0012ed802be633c96bd3e2ff9bddf9df83666d3d2b4bc29e",
+    "CONTINUATION.md": "023bc5e10c1d54b3fc698d73e4f5646c52926271ba6888381dae4cc22577ca03",
     "milestone-ledger.py": "8a8a1dadd7f3f7b0157afd5a8d629b53f37a4bd628036cff5b3b555c0ef97f5b",
     "test_milestone_ledger.py": "812aed2b64a971e7cacaec5cba1250398a88e869cb87cded148b25c51793a32f",
     "milestones.json": "04a44fb809f83beb4a36ae6548617234eb436c28b4b5d9390ff9542efd30f95b",
@@ -83,7 +83,11 @@
     "milestone-coverage.json": "65929e283a9d14a31618567f1668a0166a8ebb35867676bea9bc8b03f25af8ba",
     "MILESTONES.md": "bedb0a88b5c377fa433e9e736a95bc7efa702e4db0d292d8251960c91cfabc8d",
     "COMMIT-AND-MILESTONE-POLICY.md": "0dd838ef5a55c494950a4a0b3a40633a0c7ec96d419251cd2b0f3aac8a376d12",
-    "AUTONOMOUS-OPERATION.md": "a92d3a1117ee46e5f633042e166610d329e46a844b51c3bcb050f911217a5690"
+    "AUTONOMOUS-OPERATION.md": "29292d66b2f4fbad38f0dd0aa6f10996a2dafe8a9c3becff1d6850f2a6be71eb",
+    "worker-access.py": "c53e104e37cba1c814e8c7b7b5fa1f5d34c286c6f707b5eddf729c5138d0de15",
+    "worker-access.json": "950a617cff8826dad9a6a89a16249d3ddfbffa67b45798a3c33b80bb2e5d4e8c",
+    "test_worker_access.py": "76fde3ed6a601f71c48a845819ac87e46e54f86ef76947b473d816679cdc93d7",
+    "START-AND-RECOVERY.md": "47155b9ca74210495684f38707087380cbee132f4e7de1b73d3a91c9fc201c2d"
   },
   "last_compaction_patch": {
     "at": "2026-10-18T18:47:44.047943+00:00",
@@ -190,5 +194,241 @@
     },
     "runtime_activation_receipt": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/cycle-20261018T185549Z/api-response-activation.json",
     "historical_incident_cause_proven": false
+  },
+  "cold_boot_patch": {
+    "validation": {
+      "at_utc": "2026-10-18T19:34:20.564828+00:00",
+      "base": {
+        "continuation.py": "6c9acee82e910ee92dc610bd1d8ab4b7c65301e9632c0d2b24e11aa1fd3d5dca",
+        "test_continuation.py": "461e801673de342101f9894f2463cb242a542e355c7d3994bf9487a5eed6b83d"
+      },
+      "patched": {
+        "continuation.py": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
+        "test_continuation.py": "c0ab1c2b6536de5e0012ed802be633c96bd3e2ff9bddf9df83666d3d2b4bc29e"
+      },
+      "tests": {
+        "count": 100,
+        "passed": 100,
+        "failed": 0,
+        "skipped": 0,
+        "exit_code": 0,
+        "log_sha256": "9fe17ea813516b051d456a1bc2143d4039c14ce8e588a134d14ae628cbaea32c"
+      },
+      "negative_control": {
+        "expected_failures": 1,
+        "exit_code": 1,
+        "log_sha256": "a75bc0ba31c51e0ebf5cdc161034623d9daae9f059d94af4a9bd205b5ebacaa3"
+      },
+      "syntax_exit": 0,
+      "artifacts": {
+        "cold-boot.patch": "07b4120fe65885d1883d91d06ac29ff79b3ff366ca58456b0b1228aba2a8fc26",
+        "README.md": "cbdfb29b33117ee9c6e39047e572f33026901435030fffe63fb4c62d4311a1aa"
+      },
+      "runtime_changed": false,
+      "live_boot_or_service_or_inference_test": false
+    },
+    "independent_review": {
+      "reviewer": "astra_home_native_acceptance",
+      "verdict": "SCOPED_SOURCE_REVIEW_ACCEPTED",
+      "files": {
+        "continuation.py": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
+        "test_continuation.py": "c0ab1c2b6536de5e0012ed802be633c96bd3e2ff9bddf9df83666d3d2b4bc29e",
+        "tests-1.log": "9fe17ea813516b051d456a1bc2143d4039c14ce8e588a134d14ae628cbaea32c"
+      },
+      "reviewed": [
+        "Full production diff against live6c9acee8",
+        "tick control and pending reconciliation, service recovery complete changed region",
+        "Six new cold-boot test methods and saved100-test OK summary"
+      ],
+      "findings": [],
+      "boundaries": [
+        "Optional policy only; valid current Linux boot ID plus persisted different prior boot and exact control bytes required to relax600-second health age.",
+        "Existing enabled/exclusive ownership/prior active-session restrictions retained; fresh absence under dispatch lock and final control/policy revalidation.",
+        "Pending dispatch service start permits exact-ID reconciliation only, no resend; interrupted session remains held.",
+        "Missing boot proof/control change/STOP/PAUSE/default disabled all remain conservative."
+      ],
+      "limits": [
+        "No physical reboot or live service start tested by reviewer.",
+        "Tests inject boot IDs; actual kernel identity reader inspected, not exercised by new fixture cases.",
+        "Saved100-test success inspected, no independent rerun.",
+        "Cold boot service restoration does not promise automatic resumption of interrupted model generation."
+      ]
+    },
+    "activation": {
+      "at": "2026-10-18T19:37:16.341220+00:00",
+      "source_hashes": {
+        "continuation.py": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
+        "test_continuation.py": "c0ab1c2b6536de5e0012ed802be633c96bd3e2ff9bddf9df83666d3d2b4bc29e"
+      },
+      "root_tests": {
+        "run": 100,
+        "failed": 0,
+        "skipped": 0,
+        "exit_code": 0
+      },
+      "control_mode": "RUN",
+      "session_id": "ses_eb01533adffev5jMYgJVLFXfZP",
+      "active_sessions": [
+        "ses_eb01533adffev5jMYgJVLFXfZP"
+      ],
+      "config_enabled": true,
+      "shared_service_restarted": false,
+      "physical_reboot_tested": false,
+      "post_activation": {
+        "mode": "running_tool_or_unqualified_generation",
+        "current_observation": {
+          "observed_at": 1792352242.8598137,
+          "session_id": "ses_eb01533adffev5jMYgJVLFXfZP",
+          "phase_id": "msg_15083f8f4001Eu08a3hjykFCkC",
+          "phase_type": "assistant",
+          "phase_model_verified": true,
+          "compaction_proof_error_type": null,
+          "phase_status": null,
+          "phase_created": 1792352188667,
+          "phase_error_type": null,
+          "phase_error_status": null,
+          "assistant_id": "msg_15083f8f4001Eu08a3hjykFCkC",
+          "finish": null,
+          "completed": null,
+          "error_type": null,
+          "error_status": null,
+          "retry_attempt": null,
+          "user_id": "msg_pc18f8d0870fb8405ea085c996",
+          "idle": null,
+          "outcome": null,
+          "model": {
+            "id": "strata-dynamic",
+            "providerID": "homepc",
+            "variant": "high"
+          },
+          "active": true,
+          "tools": [
+            {
+              "id": "call_5d959b97af124c46bb63935e",
+              "name": "shell",
+              "status": "running"
+            }
+          ]
+        },
+        "cold_boot_receipt_seeded": true,
+        "active_sessions": [
+          "ses_eb01533adffev5jMYgJVLFXfZP"
+        ],
+        "unit": "ActiveState=active\nMainPID=2140073\nNRestarts=0\n",
+        "checked_at": "2026-10-18T19:37:24.679012+00:00"
+      }
+    }
+  },
+  "worker_access": {
+    "validation": {
+      "at": "2026-10-18T19:43:58.867590+00:00",
+      "scope": "isolated helper; no live actions",
+      "tests": {
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "true_exit": 0
+      },
+      "hashes": {
+        "worker-access.py": "c53e104e37cba1c814e8c7b7b5fa1f5d34c286c6f707b5eddf729c5138d0de15",
+        "test_worker_access.py": "76fde3ed6a601f71c48a845819ac87e46e54f86ef76947b473d816679cdc93d7",
+        "worker-access.json": "950a617cff8826dad9a6a89a16249d3ddfbffa67b45798a3c33b80bb2e5d4e8c",
+        "tests-final.log": "18c01674ac5424fc972135693d06bc6ef05812d28841139e0f8c4c3ded4e1ca1",
+        "tests-final.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "runtime_baseline": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
+      "limitations": [
+        "No physical laptop or PC reboot tested.",
+        "No actual model inference, resume, service start/restart or live config changes performed.",
+        "An uncertain dispatch retains its own marker and exact ID; never blindly retried.",
+        "Shared local dispatch lock requires all cooperating dispatchers; V2 has no atomic conditional prompt operation.",
+        "Existing coordinator holds, unknown owner input, forms/permissions and ambiguous dispatch require review."
+      ]
+    },
+    "independent_review": {
+      "reviewer": "astra_home_native_acceptance",
+      "verdict": "SCOPED_ACCEPTED",
+      "hashes": {
+        "worker-access.py": "c53e104e37cba1c814e8c7b7b5fa1f5d34c286c6f707b5eddf729c5138d0de15",
+        "test_worker_access.py": "76fde3ed6a601f71c48a845819ac87e46e54f86ef76947b473d816679cdc93d7",
+        "START-AND-RECOVERY.md": "47155b9ca74210495684f38707087380cbee132f4e7de1b73d3a91c9fc201c2d",
+        "tests-final.log": "18c01674ac5424fc972135693d06bc6ef05812d28841139e0f8c4c3ded4e1ca1"
+      },
+      "must_fix_findings": [],
+      "resolved": [
+        "Inactive None outcome uses safe fallback string and model-readiness summary.",
+        "Explicit service start checks unchanged control bytes, prior exclusive health, absent endpoint/process and final policy.",
+        "Known repaired API/config/auth park receives narrowly recorded epoch advance only after validated readiness; unknown park and provider backoff remain held."
+      ],
+      "reviewed": [
+        "Full helper source37b and final changed gates",
+        "Final six added regressions plus prior26 test coverage and key fixture implementation",
+        "Guide claims compared against helper explicit resume, Status, opening and pending ambiguity behavior"
+      ],
+      "evidence": {
+        "saved_tests": "32 passed, tests-final.exit0; root separately reruns exact fixture suite",
+        "independent_test_run": false
+      },
+      "preserved": [
+        "Active worker no-op, unknown inbox/tool/permissions holds, approved queued instructions retained.",
+        "Own durable marker and exact prompt ID prevent ambiguous resend; replaced owner marker not deleted.",
+        "STOP/PAUSE not cleared before identity/model/readiness validation; owner fields retained.",
+        "No continuation-state writes, no live shared-service restart, no credentials returned."
+      ],
+      "limits": [
+        "No real dialogs, live resume, model requests, installation or reboot exercised by reviewer.",
+        "Guide startup facts rely on coordinator and supplied PC setup evidence; physical reboot explicitly unverified.",
+        "Scoped helper acceptance only, not product acceptance."
+      ]
+    },
+    "root_tests": {
+      "count": 32,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "installation_at": "2026-10-18T19:45:14.748510+00:00",
+    "physical_reboot_tested": false,
+    "live_resume_tested": false,
+    "live_status_check": {
+      "checked_at": "2026-10-18T19:46:00.068306+00:00",
+      "command": "9to1-worker status",
+      "exit_code": 0,
+      "worker_active": true,
+      "monitor_active": true,
+      "service": "available",
+      "pc_model": "loaded",
+      "pending_requests": 0,
+      "last_monitor_observation": {
+        "observed_at": 1792352759.1131477,
+        "session_id": "ses_eb01533adffev5jMYgJVLFXfZP",
+        "phase_id": "msg_1508ca06b001wQ1GHcwz1wVvU6",
+        "phase_type": "assistant",
+        "phase_model_verified": true,
+        "compaction_proof_error_type": null,
+        "phase_status": null,
+        "phase_created": 1792352755834,
+        "phase_error_type": null,
+        "phase_error_status": null,
+        "assistant_id": "msg_1508ca06b001wQ1GHcwz1wVvU6",
+        "finish": null,
+        "completed": null,
+        "error_type": null,
+        "error_status": null,
+        "retry_attempt": null,
+        "user_id": "msg_pc18f8d0870fb8405ea085c996",
+        "idle": null,
+        "outcome": null,
+        "model": {
+          "id": "strata-dynamic",
+          "providerID": "homepc",
+          "variant": "high"
+        },
+        "active": true,
+        "tools": []
+      },
+      "desktop_validation_exit": 0,
+      "desktop_trusted": true
+    }
   }
 }

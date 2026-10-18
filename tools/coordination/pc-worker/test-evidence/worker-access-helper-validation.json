@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-18T19:43:58.867590+00:00",
+  "scope": "isolated helper; no live actions",
+  "tests": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "true_exit": 0
+  },
+  "hashes": {
+    "worker-access.py": "c53e104e37cba1c814e8c7b7b5fa1f5d34c286c6f707b5eddf729c5138d0de15",
+    "test_worker_access.py": "76fde3ed6a601f71c48a845819ac87e46e54f86ef76947b473d816679cdc93d7",
+    "worker-access.json": "950a617cff8826dad9a6a89a16249d3ddfbffa67b45798a3c33b80bb2e5d4e8c",
+    "tests-final.log": "18c01674ac5424fc972135693d06bc6ef05812d28841139e0f8c4c3ded4e1ca1",
+    "tests-final.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "runtime_baseline": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
+  "limitations": [
+    "No physical laptop or PC reboot tested.",
+    "No actual model inference, resume, service start/restart or live config changes performed.",
+    "An uncertain dispatch retains its own marker and exact ID; never blindly retried.",
+    "Shared local dispatch lock requires all cooperating dispatchers; V2 has no atomic conditional prompt operation.",
+    "Existing coordinator holds, unknown owner input, forms/permissions and ambiguous dispatch require review."
+  ]
+}

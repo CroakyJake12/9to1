@@ -1,0 +1,18 @@
+{
+  "continuation_module": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway/continuation.py",
+  "continuation_sha256": "d034de8cc9be6166e8cd202592008449cdda5619a9430455ceb440032625acb6",
+  "loop_root": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway/worker-loop",
+  "identity": {
+    "session_id": "ses_eb01533adffev5jMYgJVLFXfZP",
+    "model": {
+      "id": "strata-dynamic",
+      "providerID": "homepc",
+      "variant": "high"
+    },
+    "directory": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/v2-pc-implementation",
+    "server": "http://127.0.0.1:49374"
+  },
+  "worker_url": "http://127.0.0.1:49374/server/aHR0cDovLzEyNy4wLjAuMTo0OTM3NA/session/ses_eb01533adffev5jMYgJVLFXfZP",
+  "unit": "9to1-pc-worker-continuation.service",
+  "guide_path": "/home/jacob/Documents/9to1 Worker - Start and Recovery.html"
+}

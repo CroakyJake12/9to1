@@ -1094,5 +1094,61 @@ print(json.dumps({'mode':result,'prompts':len(api.prompts),'probes':api.gateway_
         self.clock += 30; self.assertEqual('held_ambiguous_outage_interrupt', self.new_worker().tick())
         self.assertEqual(1, len([c for c in self.api.calls if c[0] == 'session.interrupt'])); self.assertFalse(self.api.prompts)
 
+    def prepare_cold_boot(self):
+        self.config['service_recovery'] = {'enabled': True, 'exclusive_ownership_verified': True, 'cold_boot_recovery': True}
+        self.write_config(); self.api.active = {SID: {'type': 'running'}}
+        self.worker.boot_id = 'fixture-boot-before'; self.assertEqual('running', self.worker.tick())
+        self.clock += 12 * 3600; self.api.fail = 'session.get'; self.api.active.clear()
+        self.worker = self.new_worker(); self.worker.boot_id = 'fixture-boot-after'
+    def test_cold_boot_starts_only_absent_exclusive_service_after_long_shutdown_and_preserves_interrupted_outcome(self):
+        self.prepare_cold_boot(); self.assertEqual('unavailable', self.worker.tick())
+        self.assertEqual(1, self.api.service_starts); self.assertEqual('cold_boot', self.worker.state['service_start_receipt']['kind'])
+        self.clock += 5; self.api.fail = None; self.api.session['outcome'] = 'interrupted'
+        self.assertEqual('held_interrupted', self.worker.tick()); self.assertFalse(self.api.prompts)
+    def test_cold_boot_exception_requires_new_boot_enabled_policy_and_exclusive_prior_health(self):
+        for change in ('same_boot', 'unknown_boot', 'missing_prior_boot', 'disabled', 'unrelated_prior_session'):
+            with self.subTest(change=change):
+                self.api = API(); self.worker.state_path.unlink(missing_ok=True); self.worker = self.new_worker()
+                self.prepare_cold_boot()
+                if change == 'same_boot': self.worker.boot_id = 'fixture-boot-before'
+                elif change == 'unknown_boot': self.worker.boot_id = None
+                elif change == 'missing_prior_boot': self.worker.state['last_healthy_service'].pop('boot_id')
+                elif change == 'disabled': self.config['service_recovery']['cold_boot_recovery'] = False; self.write_config()
+                else: self.worker.state['last_healthy_service']['active'].append('ses_unrelated')
+                self.assertEqual('unavailable', self.worker.tick()); self.assertEqual(0, self.api.service_starts)
+    def test_cold_boot_control_change_stop_and_pause_never_start_service(self):
+        for control in ({'mode': 'STOP'}, {'mode': 'PAUSE'}, {'mode': 'RUN', 'reason': 'New owner instructions'}):
+            with self.subTest(control=control):
+                self.control.write_text(json.dumps({'mode': 'RUN'})); self.api = API()
+                self.worker.state_path.unlink(missing_ok=True); self.worker = self.new_worker(); self.prepare_cold_boot()
+                self.control.write_text(json.dumps(control))
+                self.worker.tick(); self.assertEqual(0, self.api.service_starts); self.assertFalse(self.api.prompts)
+    def test_cold_boot_process_appearing_at_locked_gate_prevents_service_start(self):
+        self.prepare_cold_boot(); observations = iter([True, False])
+        self.api.opencode_process_absent = lambda: next(observations)
+        self.assertEqual('unavailable', self.worker.tick()); self.assertEqual(0, self.api.service_starts)
+        self.assertEqual('held_not_proven_absent', self.worker.state['service_recovery_status'])
+    def test_cold_boot_flag_revoked_after_start_intent_prevents_start(self):
+        self.prepare_cold_boot(); original = self.worker.persist
+        def persist(mode, **fields):
+            result = original(mode, **fields)
+            if mode == 'service_start_intent':
+                self.config['service_recovery']['cold_boot_recovery'] = False; self.write_config()
+            return result
+        self.worker.persist = persist; self.worker.tick()
+        self.assertEqual(0, self.api.service_starts); self.assertEqual('deferred_control_changed', self.worker.state['service_recovery_status'])
+    def test_cold_boot_pending_prompt_can_start_service_only_to_reconcile_without_resend(self):
+        self.prepare_cold_boot()
+        pending = {'message_id': 'msg_saved_intent', 'boundary': 'msg_saved_boundary', 'retry_count': 0,
+                   'prompt_sha256': 'fixture', 'at': self.clock - 43200}
+        self.worker.state['pending'] = pending
+        self.assertEqual('held_ambiguous_dispatch', self.worker.tick()); self.assertEqual(1, self.api.service_starts)
+        self.assertEqual(pending, self.worker.state['pending']); self.assertFalse(self.api.prompts)
+        self.api.fail = None; self.clock += 5
+        self.api.messages['msg_saved_intent'] = {'id': 'msg_saved_intent', 'type': 'user',
+            'metadata': {'pc_continuation_boundary': 'msg_saved_boundary'}}
+        self.assertEqual('dispatch_reconciled', self.worker.tick()); self.assertFalse(self.api.prompts)
+        self.assertNotIn('pending', self.worker.state)
+
 
 if __name__ == '__main__': unittest.main(verbosity=2)
