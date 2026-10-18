@@ -1374,6 +1374,8 @@ public sealed class CuiControlLoader : IDisposable
             Templates = effectiveTemplates,
         };
 
+        if (ValidateFontWeightLiterals(effectiveDocument) is { } fontWeightError)
+            return fontWeightError;
         return CuiActionEventContract.Validate(effectiveDocument).FirstOrDefault();
     }
 
@@ -1451,6 +1453,40 @@ public sealed class CuiControlLoader : IDisposable
                 .Select(child => ExpandEffectiveComponent(child, definitions, templates, path)).ToArray(),
             component.ElseChildren.Where(child => !child.IsDefinition)
                 .Select(child => ExpandEffectiveComponent(child, definitions, templates, path)).ToArray());
+    }
+
+    private static CuiDiagnostic? ValidateFontWeightLiterals(CuiDocument document)
+    {
+        foreach (var component in EnumerateComponents(document.Components))
+        {
+            if (component.Properties.TryGetValue("FontWeight", out var value)
+                && value is CuiLiteralValue literal
+                && !Enum.TryParse<Avalonia.Media.FontWeight>(literal.Value, true, out _))
+                return new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error,
+                    $"Invalid CUI FontWeight: '{literal.Value}' is not a supported named or numeric weight.", literal.Span);
+        }
+        foreach (var template in document.Templates.Values)
+        {
+            foreach (var component in EnumerateComponents(template.Content))
+            {
+                if (component.Properties.TryGetValue("FontWeight", out var value)
+                    && value is CuiLiteralValue literal
+                    && !Enum.TryParse<Avalonia.Media.FontWeight>(literal.Value, true, out _))
+                    return new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error,
+                        $"Invalid CUI FontWeight: '{literal.Value}' is not a supported named or numeric weight.", literal.Span);
+            }
+        }
+        return null;
+    }
+
+    private static IEnumerable<CuiComponent> EnumerateComponents(IEnumerable<CuiComponent> components)
+    {
+        foreach (var component in components)
+        {
+            yield return component;
+            foreach (var child in EnumerateComponents(component.Children)) yield return child;
+            foreach (var child in EnumerateComponents(component.ElseChildren)) yield return child;
+        }
     }
 
     private static CuiComponent RebuildEffectiveComponent(CuiComponent source, CuiComponent[] children, CuiComponent[] elseChildren) =>
@@ -2288,7 +2324,7 @@ public sealed class CuiControlLoader : IDisposable
                     break;
                 case "fontweight":
                     if (!Enum.TryParse<Avalonia.Media.FontWeight>(resolved, true, out var fw))
-                        throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR041", CuiDiagnosticSeverity.Error, "FontWeight requires a supported named or numeric weight.", sourceSpan));
+                        throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error, "Invalid CUI FontWeight: a supported named or numeric weight is required.", sourceSpan));
                     if (control is TextBlock fwTb)
                         fwTb.FontWeight = fw;
                     else if (control is Avalonia.Controls.Primitives.TemplatedControl fwTc)
