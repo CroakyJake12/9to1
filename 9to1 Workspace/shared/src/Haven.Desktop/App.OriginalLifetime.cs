@@ -183,6 +183,7 @@ public sealed partial class App
     }
     private Task StopOriginalAppSourcesAsync()
     {
+        StopDiagnosticSnapshot();
         // Stop admission/subscriptions only. Diagnostics/provider remain borrowed
         // until final save, prepared audit and ALL actual child originals settle.
         _originalAppWork.RunCloseCallback(DetachExceptionHooks);
