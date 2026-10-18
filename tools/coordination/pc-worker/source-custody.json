@@ -1,0 +1,63 @@
+{
+  "created_at": "2026-10-18T17:20:12.463792+00:00",
+  "runtime_directory": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway",
+  "runtime_service": "9to1-pc-worker-continuation.service",
+  "runtime_session": "ses_eb01533adffev5jMYgJVLFXfZP",
+  "files": {
+    "continuation.py": "e1fc0c3a7f59eee7f172a61774ab9869fe4a69c225dd7007f7231b0bf8d24236",
+    "test_continuation.py": "1f2cd4f91171182e973115847b4e62dbd5b6473260b70599e99439e0f4a3daee",
+    "CONTINUATION.md": "460d0db454949903c750fb4b4b851b6dae546e60acfbd8f6ad54c9aca1e17d24",
+    "milestone-ledger.py": "8a8a1dadd7f3f7b0157afd5a8d629b53f37a4bd628036cff5b3b555c0ef97f5b",
+    "test_milestone_ledger.py": "812aed2b64a971e7cacaec5cba1250398a88e869cb87cded148b25c51793a32f",
+    "milestones.json": "04a44fb809f83beb4a36ae6548617234eb436c28b4b5d9390ff9542efd30f95b",
+    "canonical-inventory.json": "6701062262bc3a5b276fa34c0933600a693b9bb810bae2714ccaceded74cf75a",
+    "milestone-coverage.json": "65929e283a9d14a31618567f1668a0166a8ebb35867676bea9bc8b03f25af8ba",
+    "MILESTONES.md": "bedb0a88b5c377fa433e9e736a95bc7efa702e4db0d292d8251960c91cfabc8d",
+    "COMMIT-AND-MILESTONE-POLICY.md": "0dd838ef5a55c494950a4a0b3a40633a0c7ec96d419251cd2b0f3aac8a376d12",
+    "AUTONOMOUS-OPERATION.md": "a92d3a1117ee46e5f633042e166610d329e46a844b51c3bcb050f911217a5690"
+  },
+  "test_receipt": {
+    "at": "2026-10-18T17:19:08.524916+00:00",
+    "exit_code": 0,
+    "scope": "continuation fake service and real process restart; temporary-git ledger fixtures; not physical PC power-loss nor product acceptance",
+    "source_hashes": {
+      "continuation.py": "e1fc0c3a7f59eee7f172a61774ab9869fe4a69c225dd7007f7231b0bf8d24236",
+      "test_continuation.py": "1f2cd4f91171182e973115847b4e62dbd5b6473260b70599e99439e0f4a3daee",
+      "milestone-ledger.py": "8a8a1dadd7f3f7b0157afd5a8d629b53f37a4bd628036cff5b3b555c0ef97f5b",
+      "test_milestone_ledger.py": "812aed2b64a971e7cacaec5cba1250398a88e869cb87cded148b25c51793a32f"
+    },
+    "log": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway/test-evidence/root-final-autonomy-tests.log"
+  },
+  "independent_revocation_review": {
+    "created_utc": "2026-10-18T17:19:21.891858+00:00",
+    "source_sha256": "e1fc0c3a7f59eee7f172a61774ab9869fe4a69c225dd7007f7231b0bf8d24236",
+    "source_unchanged_during_checks": true,
+    "tests_sha256": "1f2cd4f91171182e973115847b4e62dbd5b6473260b70599e99439e0f4a3daee",
+    "scope": "Follow-up only: final authorization revocation at outage interrupt and supported service-start gates, plus recovery prompt revocation. Uses unchanged implementer tests independently executed with fake API and isolated temporary config. No live worker/provider/config/process actions.",
+    "supersedes_findings": [
+      "LOOP-RACE-01",
+      "LOOP-RACE-02"
+    ],
+    "source_review": "Both outage gates reload RUN and recovery_enabled(active=True). Both service-start gates reload RUN and service_recovery_enabled including overall enabled, service enabled and exclusive ownership. Invalidated outage intent is removed.",
+    "test_methods": [
+      "test_outage_revocation_on_third_probe_or_persisted_intent_prevents_interrupt",
+      "test_service_recovery_revocation_after_absence_or_persisted_intent_prevents_start",
+      "test_provider_recovery_revocation_at_probe_or_dispatch_intent_prevents_prompt"
+    ],
+    "test_methods_run": 3,
+    "mutation_subcases": 14,
+    "breakdown": {
+      "outage_interrupt": 6,
+      "service_start": 6,
+      "provider_prompt": 2
+    },
+    "success": true,
+    "failures": 0,
+    "errors": 0,
+    "full_test_log": "test_outage_revocation_on_third_probe_or_persisted_intent_prevents_interrupt (independent_revocation_tests.Tests.test_outage_revocation_on_third_probe_or_persisted_intent_prevents_interrupt) ... ok\ntest_service_recovery_revocation_after_absence_or_persisted_intent_prevents_start (independent_revocation_tests.Tests.test_service_recovery_revocation_after_absence_or_persisted_intent_prevents_start) ... ok\ntest_provider_recovery_revocation_at_probe_or_dispatch_intent_prevents_prompt (independent_revocation_tests.Tests.test_provider_recovery_revocation_at_probe_or_dispatch_intent_prevents_prompt) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.009s\n\nOK\n",
+    "verdict": "PASS scoped revocation repairs; earlier activation and live power-cycle limitations remain; does not accept entire autonomous programme."
+  },
+  "physical_pc_reboot_tested": false,
+  "semantic_spec_review": "PARTIAL; exhaustive mechanical coverage only; every full applicable section must be read and tested per milestone",
+  "private_runtime_config_excluded": true
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=9to1 single PC worker continuation
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=/home/jacob/Documents/Codex/2026-10-17/new-chat
+ExecStart=/usr/bin/python3 "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway/continuation.py" --root "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway/worker-loop" --execute
+Restart=on-failure
+RestartSec=15
+UMask=0077
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,10189 @@
+{
+  "scope": "mechanical coverage and dependency validation, not semantic acceptance",
+  "milestones": 90,
+  "line_count": 16937,
+  "unmapped_lines": [],
+  "headings": 1446,
+  "unmapped_headings": [],
+  "all_dependencies_exist": true,
+  "dependency_cycles": false,
+  "section_map": [
+    {
+      "line": 1,
+      "heading": "9to1 Development Specification v2",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 5,
+      "heading": "Authority and scope",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 13,
+      "heading": "Product identities and ownership",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 24,
+      "heading": "Development priority and dependency order",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 45,
+      "heading": "CUI application-authoring mandate",
+      "milestones": [
+        "R03",
+        "F01"
+      ]
+    },
+    {
+      "line": 57,
+      "heading": "Completion and acceptance",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 65,
+      "heading": "Design references",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 71,
+      "heading": "General engineering, privacy and acceptance contracts",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 73,
+      "heading": "Technical specification contract",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 75,
+      "heading": "Normative requirement language",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 87,
+      "heading": "Required technical structure for product specifications",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 104,
+      "heading": "State and data invariants",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 116,
+      "heading": "API and error contract",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 126,
+      "heading": "Unspecified behaviour and exceptions",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 134,
+      "heading": "Application-level acceptance and anti-substitution contract",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 154,
+      "heading": "Definition of implementation-complete",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 162,
+      "heading": "Privacy and data-protection baseline",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 204,
+      "heading": "App APIs and automation permissions",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 206,
+      "heading": "API parity requirement",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 228,
+      "heading": "Home permission broker",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 236,
+      "heading": "Prompt actions",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 250,
+      "heading": "Accept and Trust",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 256,
+      "heading": "Accept and Always Trust",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 272,
+      "heading": "Caller identity and trust binding",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 278,
+      "heading": "Risk classification and sensitive actions",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 284,
+      "heading": "Revocation, expiry and failure behaviour",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 290,
+      "heading": "Audit and transparency",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 296,
+      "heading": "Implementation rule",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 300,
+      "heading": "Development Rules",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 302,
+      "heading": "Agentic Work Operating Contract",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 306,
+      "heading": "1. Overview",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 321,
+      "heading": "2. General Agentic Work",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 323,
+      "heading": "2.1 Policy and Terms Compliance",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 327,
+      "heading": "2.2 Duty to Perform Requested Work",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 337,
+      "heading": "3. Robustness and Usefulness",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 339,
+      "heading": "3.1 Robust Work",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 362,
+      "heading": "3.2 Useful Work",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 366,
+      "heading": "4. Fitness for Purpose",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 370,
+      "heading": "4.1 Subjective Test",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 382,
+      "heading": "4.2 Objective Test",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 394,
+      "heading": "5. Accessibility",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 413,
+      "heading": "6. Professional Quality",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 435,
+      "heading": "7. Originality and Human-Like Design",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 452,
+      "heading": "8. Substantive Contribution",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 463,
+      "heading": "9. Feature Completeness",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 487,
+      "heading": "10. Existing Work and Regression Protection",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 503,
+      "heading": "11. Source-Control Safety",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 523,
+      "heading": "12. Repository and Environment Authority",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 527,
+      "heading": "13. No Fabricated Implementation",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 542,
+      "heading": "14. Validation and Testing",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 560,
+      "heading": "15. Visual Quality Assurance",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 593,
+      "heading": "16. Error Handling and Recovery",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 607,
+      "heading": "17. Data Integrity",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 628,
+      "heading": "18. Security and Privacy",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 649,
+      "heading": "19. External Side Effects",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 665,
+      "heading": "20. Dependencies and Third-Party Software",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 679,
+      "heading": "21. Donor and Upstream Applications",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 697,
+      "heading": "22. Architecture and Maintainability",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 711,
+      "heading": "23. Performance",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 726,
+      "heading": "24. Platform Compatibility",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 730,
+      "heading": "25. Delegation and Parallel Agents",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 743,
+      "heading": "26. Autonomous Operation",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 757,
+      "heading": "27. Loop and Failure Detection",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 770,
+      "heading": "28. Scope Management",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 774,
+      "heading": "29. Ambiguity",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 792,
+      "heading": "30. Evidence-Based Completion",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 806,
+      "heading": "31. Documentation",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 810,
+      "heading": "32. No Placeholder Debt",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 826,
+      "heading": "33. Integration Requirement",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 844,
+      "heading": "34. Consistency Across Product Surfaces",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 861,
+      "heading": "35. Realistic User Workflow Testing",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 883,
+      "heading": "36. Completion Before Expansion",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 887,
+      "heading": "37. Definition of Done",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 906,
+      "heading": "9to1-specific agentic rules",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 915,
+      "heading": "Source & Donor Apps",
+      "milestones": [
+        "F01"
+      ]
+    },
+    {
+      "line": 985,
+      "heading": "Cross-app delivery and acceptance",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 987,
+      "heading": "TF-X01 \u2014 Embeds, Boards pages and conversational editing",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 995,
+      "heading": "TF-X02 \u2014 Canonical API action catalogue",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 1009,
+      "heading": "TF-X03 \u2014 Platforms, responsive behaviour and resource limits",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 1019,
+      "heading": "TF-X04 \u2014 Acceptance matrix and release evidence",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 1031,
+      "heading": "TF-X05 \u2014 Open naming decision and implementation defaults",
+      "milestones": [
+        "F01",
+        "I01"
+      ]
+    },
+    {
+      "line": 1077,
+      "heading": "Haven and shared platform services",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1097,
+      "heading": "Product role and ownership",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1105,
+      "heading": "Home shell and navigation",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1111,
+      "heading": "Dashboard",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1145,
+      "heading": "Apps surface and package management",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1155,
+      "heading": "Library",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1163,
+      "heading": "Events",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1171,
+      "heading": "Discover",
+      "milestones": [
+        "R03",
+        "H02"
+      ]
+    },
+    {
+      "line": 1191,
+      "heading": "Universal Model Picker",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1195,
+      "heading": "Compact picker and full manager",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1201,
+      "heading": "Simple defaults and capability categories",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1213,
+      "heading": "Active and Background routes",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1219,
+      "heading": "Ordered Model Routes",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1227,
+      "heading": "Eligibility-first routing",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1235,
+      "heading": "Conditions that are not model fallback",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1239,
+      "heading": "Fallback privacy and control",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1245,
+      "heading": "Routing transparency",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1249,
+      "heading": "Selection inheritance and overrides",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1255,
+      "heading": "Reasoning and capability validation",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1259,
+      "heading": "Aliases and model identity",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1263,
+      "heading": "Local model lifecycle",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1267,
+      "heading": "Provider support",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1271,
+      "heading": "Resource awareness",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1275,
+      "heading": "Administrator and managed-profile policy",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1279,
+      "heading": "Universal Model Picker acceptance requirements",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1288,
+      "heading": "Dulche runtime control",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1296,
+      "heading": "Permission and trust broker",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1302,
+      "heading": "Mesh",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1314,
+      "heading": "Action Graph renderer",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1322,
+      "heading": "Persistent contextual AI bar",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1328,
+      "heading": "Floating compose @ invocation menu",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1344,
+      "heading": "Cross-app execution visualisation",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1356,
+      "heading": "AI conversation presentation settings",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1366,
+      "heading": "Shared Productivity Engine",
+      "milestones": [
+        "H03"
+      ]
+    },
+    {
+      "line": 1434,
+      "heading": "Settings",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1440,
+      "heading": "Home-managed CUI theme preference",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1446,
+      "heading": "Account and subscription surface",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1452,
+      "heading": "Notifications",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1458,
+      "heading": "Shared search and Go indexing",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1466,
+      "heading": "Service registry and compatibility handshake",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1474,
+      "heading": "Startup, background lifecycle and recovery",
+      "milestones": [
+        "R01",
+        "H01"
+      ]
+    },
+    {
+      "line": 1482,
+      "heading": "Home data/state model",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1488,
+      "heading": "Home API",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1558,
+      "heading": "Security boundary",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1566,
+      "heading": "Platform behaviour",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1574,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1580,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "H02"
+      ]
+    },
+    {
+      "line": 1605,
+      "heading": "Node Graph Framework",
+      "milestones": [
+        "H04"
+      ]
+    },
+    {
+      "line": 1639,
+      "heading": "Donor authority and parity",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1649,
+      "heading": "Web engine architecture",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1661,
+      "heading": "Automatic upstream maintenance",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1667,
+      "heading": "CUI and URI namespace contract",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1677,
+      "heading": "Native 9to1 app surfaces in tabs",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1687,
+      "heading": "Profiles and workspaces",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1699,
+      "heading": "Tabs, groups and placement",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1711,
+      "heading": "Split View",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1719,
+      "heading": "New Tab canvas",
+      "milestones": [
+        "R04",
+        "H06"
+      ]
+    },
+    {
+      "line": 1729,
+      "heading": "Search and AI entry",
+      "milestones": [
+        "R04",
+        "H06"
+      ]
+    },
+    {
+      "line": 1739,
+      "heading": "Dulche browser experience",
+      "milestones": [
+        "R04",
+        "H06"
+      ]
+    },
+    {
+      "line": 1747,
+      "heading": "Permissioned autonomous browsing",
+      "milestones": [
+        "R04",
+        "H06"
+      ]
+    },
+    {
+      "line": 1757,
+      "heading": "Extensions and CUI extension surfaces",
+      "milestones": [
+        "R04",
+        "H06"
+      ]
+    },
+    {
+      "line": 1765,
+      "heading": "Site Enhancer",
+      "milestones": [
+        "R04",
+        "H06"
+      ]
+    },
+    {
+      "line": 1773,
+      "heading": "Files, drag/drop and cross-app integration",
+      "milestones": [
+        "R04",
+        "H06"
+      ]
+    },
+    {
+      "line": 1781,
+      "heading": "Security and origin isolation",
+      "milestones": [
+        "H05"
+      ]
+    },
+    {
+      "line": 1787,
+      "heading": "Recovery and degraded states",
+      "milestones": [
+        "R01",
+        "H01"
+      ]
+    },
+    {
+      "line": 1810,
+      "heading": "CUI language, presentation and shared editor framework",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 1812,
+      "heading": "Purpose, design philosophy and framework boundary",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 1828,
+      "heading": "Donor, source and compatibility contract",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 1838,
+      "heading": "Core language vocabulary",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 1860,
+      "heading": "Basic markup and Container types",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 1889,
+      "heading": "Comments, whitespace and escaping",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 1901,
+      "heading": "(Definition), custom elements and custom Types",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 1923,
+      "heading": "Themes and inherited theme structure",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 1947,
+      "heading": "CUI-owned theme implementation and renderer isolation",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 1957,
+      "heading": "Home user-preference theme binding",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 1977,
+      "heading": "Default typography",
+      "milestones": [
+        "R04",
+        "F03"
+      ]
+    },
+    {
+      "line": 1983,
+      "heading": "Prefabs and reusable shared CUI",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2003,
+      "heading": "Prefab inputs and instantiation",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2014,
+      "heading": "Variables and variable-reference syntax",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2042,
+      "heading": "Live versus static references",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2050,
+      "heading": "Live dependency relationships",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2060,
+      "heading": "ID/Name and Group addressing",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2085,
+      "heading": "ID and Group scope",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2091,
+      "heading": "Property declarations and shorthand",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2116,
+      "heading": "Property-target mutation directives",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2134,
+      "heading": "Text and Children runtime content",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2152,
+      "heading": "Active, Hidden and Interactive",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2169,
+      "heading": "Parent lifecycle and independent activation",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2184,
+      "heading": "Lifecycle events",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2190,
+      "heading": "Layout property model",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2208,
+      "heading": "Grid and stack behaviour",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2220,
+      "heading": "Absolute positioning and coordinate system",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2236,
+      "heading": "Coordinate recalibration and inherited axes",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2244,
+      "heading": "Layering and rendering depth",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2258,
+      "heading": "Modal behaviour",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2262,
+      "heading": "Anchor and runtime placement",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2282,
+      "heading": "Style and property precedence",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2294,
+      "heading": "Style rules and ActionEvent",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2315,
+      "heading": "Event target syntax",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2328,
+      "heading": "Temporary versus Once events",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2334,
+      "heading": "Event source, propagation and cancellation",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2342,
+      "heading": "Typed actions and asynchronous work",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2352,
+      "heading": "Input and two-way value flow",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2366,
+      "heading": "Conditional UI",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2383,
+      "heading": "Repeated UI",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2395,
+      "heading": "Property catalogue and transform support",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2407,
+      "heading": "Effect versus Background backdrop processing",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2417,
+      "heading": "Blur, Refract and chained backdrop modifiers",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2437,
+      "heading": "Gradients",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2449,
+      "heading": "Animation and Keyframes",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2478,
+      "heading": "Theme, Definition and property interaction",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2484,
+      "heading": "Runtime loading and element methods",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2490,
+      "heading": "Imports and project file discovery",
+      "milestones": [
+        "F02"
+      ]
+    },
+    {
+      "line": 2500,
+      "heading": "Accessibility, focus and keyboard semantics",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2514,
+      "heading": "Localisation and directionality",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2518,
+      "heading": "Security and dynamic CUI",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2527,
+      "heading": "Error boundaries and failure behaviour",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2535,
+      "heading": "Hot reload and developer tooling",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2541,
+      "heading": "Testing and semantic selectors",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2547,
+      "heading": "Performance and rendering",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2558,
+      "heading": "Platform and Home runtime integration",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2566,
+      "heading": "Language/runtime versioning",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2572,
+      "heading": "CUI compiler pipeline",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2578,
+      "heading": "Acceptance criteria",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2614,
+      "heading": "C. FLOATING INTERACTION SURFACES AND VISUAL LANGUAGE",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2626,
+      "heading": "D. REFRESH, STARTUP AND CROSS-APP PERFORMANCE",
+      "milestones": [
+        "F03"
+      ]
+    },
+    {
+      "line": 2642,
+      "heading": "Shared application lifecycle, launch and modular packaging",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2644,
+      "heading": "Home runtime dependency",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2656,
+      "heading": "Persistent contextual AI bar",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2678,
+      "heading": "Chat bar \u2014 expanded-mode formatting and emoji controls",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2686,
+      "heading": "Chat-bar control acceptance",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2690,
+      "heading": "Cross-app invocation and compose contract",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2702,
+      "heading": "Launch Screens",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2744,
+      "heading": "Web Apps",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2759,
+      "heading": "Modularity",
+      "milestones": [
+        "F04"
+      ]
+    },
+    {
+      "line": 2783,
+      "heading": "Shared models, settings and resource controls",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 2795,
+      "heading": "Model settings, reasoning and usage limits",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 2970,
+      "heading": "Dulche, nodes and agentic runtime",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 2972,
+      "heading": "Dulche",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 2974,
+      "heading": "Framework role",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 2978,
+      "heading": "Voice",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 2982,
+      "heading": "Voice API",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3012,
+      "heading": "Translate",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3018,
+      "heading": "Translation Sets and variants",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3026,
+      "heading": "Conversational Translate Space rendering",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3034,
+      "heading": "Conversational refinement and agentic actions",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3042,
+      "heading": "Structured artifacts and semantic preservation",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3052,
+      "heading": "Segments, provenance and incremental updates",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3060,
+      "heading": "Glossaries and protected terminology",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3066,
+      "heading": "Text, image, document and media translation",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3074,
+      "heading": "Model routing and privacy",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3080,
+      "heading": "Translation jobs and recovery",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3086,
+      "heading": "Canonical Dulche Translate API",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3136,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3140,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 3159,
+      "heading": "Agents",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3167,
+      "heading": "Canonical Agent identity and Den persistence",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3175,
+      "heading": "Availability scopes and cascading",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3185,
+      "heading": "Availability versus permission",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3197,
+      "heading": "Agent presentation API and acceptance",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3201,
+      "heading": "Surface integration and Agent picker",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3209,
+      "heading": "Scoped surface Agents",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3217,
+      "heading": "Agent invocation interfaces",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3223,
+      "heading": "Quick Actions",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3233,
+      "heading": "Default model resolution",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3239,
+      "heading": "Plugins, Connectors, Skills and Knowledge",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3245,
+      "heading": "Agent memory",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3253,
+      "heading": "Tasks, work queues and runs",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3261,
+      "heading": "Run states and controls",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3269,
+      "heading": "Blockers and approvals",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3275,
+      "heading": "Agent-to-Agent delegation",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3283,
+      "heading": "Action Graph, outputs and operational visibility",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3291,
+      "heading": "Lifecycle, recovery and budgets",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3297,
+      "heading": "Canonical Dulche Agent API",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3355,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3359,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 3383,
+      "heading": "Action Graph",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3389,
+      "heading": "Action Graph API",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3403,
+      "heading": "Shared rendering",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3409,
+      "heading": "Runtime",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3411,
+      "heading": "Purpose",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3415,
+      "heading": "Endpoint lifecycle",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3449,
+      "heading": "Multi-endpoint scope",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3465,
+      "heading": "Endpoint configuration",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3485,
+      "heading": "Capabilities",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3491,
+      "heading": "Tool registry, semantic capability discovery and feasibility resolution",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3529,
+      "heading": "Subagents and parallelisation",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3697,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3715,
+      "heading": "Model resolution",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 3719,
+      "heading": "Dulche Den",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3751,
+      "heading": "Model discovery and acquisition",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3771,
+      "heading": "Model replacement",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3787,
+      "heading": "API authority and compatibility",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3791,
+      "heading": "Requests, sessions and endpoints",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3803,
+      "heading": "Result contract and metric availability",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3809,
+      "heading": "Response content and identity",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3827,
+      "heading": "Timing and tokens",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3839,
+      "heading": "Model parameters, location and storage",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3849,
+      "heading": "Logs, blockers and errors",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3859,
+      "heading": "Streaming and delivery",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3867,
+      "heading": "Response controls and queues",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3897,
+      "heading": "Lifecycle, configuration and resources",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3909,
+      "heading": "Providers, permissions and Generative UI",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3919,
+      "heading": "Acquisition, replacement and observability",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3929,
+      "heading": "Persistent request execution",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3947,
+      "heading": "Context compaction and Context Summarisation",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3969,
+      "heading": "Computer Use",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 3989,
+      "heading": "Thinking logs, work state and ETA",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 4011,
+      "heading": "Problem detection, autoreview and recovery",
+      "milestones": [
+        "F06"
+      ]
+    },
+    {
+      "line": 4033,
+      "heading": "Dulche Den",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4035,
+      "heading": "Purpose",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4039,
+      "heading": "Model catalogue",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4043,
+      "heading": "Cross-app state",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4047,
+      "heading": "Den privacy, encryption and consent \u2014 mandatory security contract",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4065,
+      "heading": "Storage structure and portability",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4071,
+      "heading": "Identity, namespaces and model records",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4079,
+      "heading": "Sessions, context and checkpoints",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4087,
+      "heading": "Persistent Memory",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4093,
+      "heading": "Scopes",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4097,
+      "heading": "Creation and retrieval",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4103,
+      "heading": "Memory Frequency",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4113,
+      "heading": "Temporary chats in Spaces",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4121,
+      "heading": "Management and lifecycle",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4125,
+      "heading": "Persistent Memory acceptance requirements",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4133,
+      "heading": "Permissions and secrets",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4139,
+      "heading": "Concurrent writes and recovery",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4145,
+      "heading": "Synchronisation and conflicts",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4151,
+      "heading": "Lifecycle and storage policy",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4157,
+      "heading": "Compatibility and migration",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4163,
+      "heading": "Supporting APIs and acceptance",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4169,
+      "heading": "Generative UI",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4173,
+      "heading": "Rendering and trust boundary",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4179,
+      "heading": "Templates",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4195,
+      "heading": "Primitive composition",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4201,
+      "heading": "State and interaction",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4207,
+      "heading": "Progressive conversational evolution",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4213,
+      "heading": "Typed actions and side effects",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4219,
+      "heading": "Data binding and semantic objects",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4225,
+      "heading": "Ephemeral and saved artifacts",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4229,
+      "heading": "Third-party visual examples and assets",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4235,
+      "heading": "Accessibility and visual consistency",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4239,
+      "heading": "Failure and fallback",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4243,
+      "heading": "Result contract and acceptance",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4254,
+      "heading": "Background Learning",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4258,
+      "heading": "Eligible learning classes",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4266,
+      "heading": "Usage and project learning",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4272,
+      "heading": "Interest Knowledge Banks",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4280,
+      "heading": "Structured learned state",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4286,
+      "heading": "Selective retrieval",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4290,
+      "heading": "Privacy and cloud boundaries",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4298,
+      "heading": "User controls",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4302,
+      "heading": "Relationship to Persistent Memory",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4308,
+      "heading": "Background Learning acceptance requirements",
+      "milestones": [
+        "F07"
+      ]
+    },
+    {
+      "line": 4317,
+      "heading": "MCP Support",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4321,
+      "heading": "Identity and lifecycle",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4327,
+      "heading": "Capability discovery and schemas",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4333,
+      "heading": "Permissions and execution",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4339,
+      "heading": "Canonical MCP API",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4369,
+      "heading": "Tool Builder integration and acceptance",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4373,
+      "heading": "Plugins and web integrations \u2014 WebMCP and site-hosted MCP servers",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4381,
+      "heading": "Web integration API and acceptance",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4385,
+      "heading": "Skills + Plugins",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4389,
+      "heading": "Common package contract",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4395,
+      "heading": "Lifecycle, trust and permissions",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4405,
+      "heading": "Skill model",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4411,
+      "heading": "Built-in Persistent skill",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4425,
+      "heading": "Plugin model",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4433,
+      "heading": "Dependencies and persistence",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4439,
+      "heading": "Canonical Skill API",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4457,
+      "heading": "Canonical Plugin API",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4479,
+      "heading": "Tool Builder integration and acceptance",
+      "milestones": [
+        "F08"
+      ]
+    },
+    {
+      "line": 4483,
+      "heading": "Dulche multi-engine inference runtime",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 4487,
+      "heading": "Runtime abstraction and dispatcher",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 4493,
+      "heading": "Automatic selection",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 4499,
+      "heading": "Manual engine selection",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 4513,
+      "heading": "Strata fork",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 4519,
+      "heading": "Fallback and failure behaviour",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 4525,
+      "heading": "Pre-release acceptance",
+      "milestones": [
+        "F05"
+      ]
+    },
+    {
+      "line": 4533,
+      "heading": "Shared conversation actions, composer, peer review and Dulche context",
+      "milestones": [
+        "F09"
+      ]
+    },
+    {
+      "line": 4723,
+      "heading": "Spaces and Space Builder",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4725,
+      "heading": "Product role",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4731,
+      "heading": "Built-in Space types",
+      "milestones": [
+        "S02"
+      ]
+    },
+    {
+      "line": 4763,
+      "heading": "User-created Spaces and nesting",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4771,
+      "heading": "Sidebar and navigation",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4781,
+      "heading": "Plugins \u2014 custom sidebar elements and per-Space visibility",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4791,
+      "heading": "Plugin sidebar \u2014 supplied concept mockup clarification",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4799,
+      "heading": "Plugin sidebar API and acceptance",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4803,
+      "heading": "Canonical Space and conversation model",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4809,
+      "heading": "Conversation branching and history",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4815,
+      "heading": "Stop and resume",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4825,
+      "heading": "Model selection",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4831,
+      "heading": "Sources and context",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4841,
+      "heading": "Context budgeting and retrieval",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4847,
+      "heading": "Canonical artifact editing",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4853,
+      "heading": "Shared Productivity Engine",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4859,
+      "heading": "Plugins, Skills and Agents",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 4867,
+      "heading": "Shared node-editor framework",
+      "milestones": [
+        "S08"
+      ]
+    },
+    {
+      "line": 4873,
+      "heading": "Built-in Space Events & Extensions editor",
+      "milestones": [
+        "S08"
+      ]
+    },
+    {
+      "line": 4885,
+      "heading": "User-created Space full graph editor",
+      "milestones": [
+        "S08"
+      ]
+    },
+    {
+      "line": 4895,
+      "heading": "Graph-editor AI bar",
+      "milestones": [
+        "S08"
+      ]
+    },
+    {
+      "line": 4903,
+      "heading": "Custom sidebar surfaces",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 4913,
+      "heading": "Long-running work and Action Graph",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 4921,
+      "heading": "Agents and Subagents",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 4927,
+      "heading": "Memory and Dulche Den",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 4933,
+      "heading": "Web access and source provenance",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 4939,
+      "heading": "Search, organisation and sharing",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 4947,
+      "heading": "Study structured state",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 4951,
+      "heading": "Tasks structured state",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 4957,
+      "heading": "Spaces API",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5037,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5041,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5076,
+      "heading": "Spaces interface and core Space workflows",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5078,
+      "heading": "Mockup Scope And Cui Themes",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5082,
+      "heading": "What Spaces Is",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5088,
+      "heading": "Assistants And Specialists",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5094,
+      "heading": "Chat Groups",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5104,
+      "heading": "Chat Type And Location Dropdown",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5124,
+      "heading": "Professional Chat, Composer, Tools And Request Work",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5132,
+      "heading": "Chat Voice Mode = Floating Pill Over Canonical Voice & Vision",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5140,
+      "heading": "Floating Summary And Optional Tabs",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5158,
+      "heading": "Acceptance",
+      "milestones": [
+        "R02",
+        "S01"
+      ]
+    },
+    {
+      "line": 5162,
+      "heading": "Tasks Space",
+      "milestones": [
+        "S03"
+      ]
+    },
+    {
+      "line": 5225,
+      "heading": "Assistants Space and Teams",
+      "milestones": [
+        "S04"
+      ]
+    },
+    {
+      "line": 5294,
+      "heading": "Research Space and shared send behaviour",
+      "milestones": [
+        "S05"
+      ]
+    },
+    {
+      "line": 5352,
+      "heading": "Shopping Space",
+      "milestones": [
+        "S06"
+      ]
+    },
+    {
+      "line": 5414,
+      "heading": "Custom Space Builder",
+      "milestones": [
+        "S07"
+      ]
+    },
+    {
+      "line": 5526,
+      "heading": "Spaces QOL",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5530,
+      "heading": "User Interface",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5532,
+      "heading": "Mini Sidebar",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5546,
+      "heading": "Horizontal Tabs",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5566,
+      "heading": "Main Sidebar",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5611,
+      "heading": "Usage",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5623,
+      "heading": "Local/Cloud Chats",
+      "milestones": [
+        "S01"
+      ]
+    },
+    {
+      "line": 5667,
+      "heading": "Study Space",
+      "milestones": [
+        "S09"
+      ]
+    },
+    {
+      "line": 5702,
+      "heading": "Revision Bank",
+      "milestones": [
+        "S09"
+      ]
+    },
+    {
+      "line": 5901,
+      "heading": "Voice & Vision",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5903,
+      "heading": "Product role",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5909,
+      "heading": "Session-first modern interface",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5915,
+      "heading": "Starting and continuing sessions",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5921,
+      "heading": "Multimodal session model",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5927,
+      "heading": "Voice modes",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5931,
+      "heading": "Conversational mode",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5935,
+      "heading": "Monologue mode",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5941,
+      "heading": "Live Listener mode",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5949,
+      "heading": "Live Listener ephemeral audio and privacy",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5959,
+      "heading": "Live Listener notes and actions",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5967,
+      "heading": "Live Translate mode",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5991,
+      "heading": "Text input during Voice",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 5997,
+      "heading": "Interruption, stop and resume",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6003,
+      "heading": "Floating voice pill",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6009,
+      "heading": "Transcript and captions",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6015,
+      "heading": "Audio devices and processing",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6021,
+      "heading": "Universal Model Picker integration and named voices",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6029,
+      "heading": "Vision sources",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6035,
+      "heading": "Screenshots, screen sharing and camera",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6043,
+      "heading": "Adaptive visual sampling",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6047,
+      "heading": "Semantic context before pixels",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6053,
+      "heading": "Privacy and local/cloud boundaries",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6059,
+      "heading": "AI Overlay",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6067,
+      "heading": "Overlay automation execution",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6075,
+      "heading": "Overlay continuity",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6081,
+      "heading": "Voice tools and consequential actions",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6085,
+      "heading": "AI-assisted dictation",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6095,
+      "heading": "Background/session continuity",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6101,
+      "heading": "Accessibility",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6105,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "V01"
+      ]
+    },
+    {
+      "line": 6165,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6169,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "V02"
+      ]
+    },
+    {
+      "line": 6204,
+      "heading": "Build",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6228,
+      "heading": "Source development workspace",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6230,
+      "heading": "Product role and engineering principle",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6238,
+      "heading": "Canonical workspace and project model",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6246,
+      "heading": "New Project workflow and project catalogue",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6256,
+      "heading": "9to1 Extension project type",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6266,
+      "heading": "Editor and navigation",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6274,
+      "heading": "Language intelligence and parsing",
+      "milestones": [
+        "B01"
+      ]
+    },
+    {
+      "line": 6282,
+      "heading": "Toolchain Manager and built-in/provisionable toolchains",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6292,
+      "heading": "Missing compiler/runtime indication",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6300,
+      "heading": "Build pipeline and tasks",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6308,
+      "heading": "Run configurations and target-aware Run",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6316,
+      "heading": "Operating-system and kernel project support",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6324,
+      "heading": "Virtual machine provider and OS preview",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6334,
+      "heading": "Low-level OS debugging",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6342,
+      "heading": "Debugger",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6348,
+      "heading": "Testing and Test Explorer",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6354,
+      "heading": "Problems and diagnostics",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6360,
+      "heading": "Terminal integration",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6374,
+      "heading": "Diff and review editor",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6382,
+      "heading": "AI ChangeSet model",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6390,
+      "heading": "AI review workflow",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6398,
+      "heading": "Structured AI coding and agentic development",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6408,
+      "heading": "Symbol-aware editing and refactoring",
+      "milestones": [
+        "B02"
+      ]
+    },
+    {
+      "line": 6414,
+      "heading": "Package and dependency management",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6422,
+      "heading": "NuGet and .NET dependency support",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6430,
+      "heading": "Other package ecosystems",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6438,
+      "heading": "Dependency integrity and reproducibility",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6446,
+      "heading": "Native 9to1 extension platform",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6454,
+      "heading": "Extension permissions, isolation and trust",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6462,
+      "heading": "Extension development host and inspector",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6470,
+      "heading": "Discover distribution and private extensions",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6486,
+      "heading": "AI Studio integration",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6500,
+      "heading": "Visual CUI Builder",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6508,
+      "heading": "Visual CUI layout, properties and bindings",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6516,
+      "heading": "CUI states, component authoring and accessibility",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6524,
+      "heading": "Two-way source and visual round-trip",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6532,
+      "heading": "Live split view and preview providers",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6540,
+      "heading": "Hot reload and last-valid preview",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6548,
+      "heading": "Interactive preview and source inspection",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6556,
+      "heading": "Visual diff and AI preview validation",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6564,
+      "heading": "Remote, container and reproducible environments",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6572,
+      "heading": "Workspace trust and execution security",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6580,
+      "heading": "API and HTTP developer tooling",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6586,
+      "heading": "Notebook and interactive execution",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6592,
+      "heading": "Database developer handoff",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6596,
+      "heading": "Persistent AI bar and context",
+      "milestones": [
+        "B03"
+      ]
+    },
+    {
+      "line": 6664,
+      "heading": "Automation and events",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6670,
+      "heading": "Accessibility",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6678,
+      "heading": "Performance and large-workspace behaviour",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6686,
+      "heading": "Recovery and failure behaviour",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6694,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6702,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "B04"
+      ]
+    },
+    {
+      "line": 6738,
+      "heading": "Build and source-collaboration workspace",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6740,
+      "heading": "Product role",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6744,
+      "heading": "Donors",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6752,
+      "heading": "Project and storage model",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6787,
+      "heading": "Source lineage",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6829,
+      "heading": "Cascade semantics",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6847,
+      "heading": "Active domain",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6859,
+      "heading": "Project sidebar",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6887,
+      "heading": "Local and remote state",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6901,
+      "heading": "Conflict handling",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6928,
+      "heading": "Roots",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6944,
+      "heading": "Freeze",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6964,
+      "heading": "Subroots",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 6984,
+      "heading": "Files-backed storage",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7012,
+      "heading": "GitHub-backed storage",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7034,
+      "heading": "Sweeping and pruning",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7050,
+      "heading": "Public collaboration",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7066,
+      "heading": "Gitea/Gitnuro donor parity",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7091,
+      "heading": "Domain identity and effective source",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7099,
+      "heading": "Domain creation, hierarchy guards and reparenting",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7109,
+      "heading": "Materialisation and concurrency model",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7117,
+      "heading": "Commit history for Branches, Twigs, Leaves and Subroots",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7125,
+      "heading": "Promotion and Change Requests",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7137,
+      "heading": "Review, approvals and merge strategy",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7145,
+      "heading": "Cascade implementation and update state",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7153,
+      "heading": "Deletion, rename and tombstone inheritance",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7161,
+      "heading": "Conflict objects and resolver",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7169,
+      "heading": "Root authority model",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7177,
+      "heading": "Subroot lifecycle",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7185,
+      "heading": "Freeze lifecycle and permissions",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7193,
+      "heading": "Files and GitHub dual-authority/synchronisation",
+      "milestones": [
+        "B05"
+      ]
+    },
+    {
+      "line": 7203,
+      "heading": "Git compatibility and advanced Git operations",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7211,
+      "heading": "Mixed public/private projection",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7219,
+      "heading": "Team permissions and sensitive operations",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7227,
+      "heading": "CI, build and test checks",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7235,
+      "heading": "Releases, tags and packages",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7243,
+      "heading": "GitHub mirroring, backup and restore",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7259,
+      "heading": "Issues and Boards integration",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7265,
+      "heading": "Automations and webhooks",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7271,
+      "heading": "Public discovery, contributions and moderation",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7279,
+      "heading": "Sweep, prune, retention and purge",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7289,
+      "heading": "Audit log",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7295,
+      "heading": "Large repositories, binary data and LFS",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7303,
+      "heading": "Metadata schema migration and disaster recovery",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7311,
+      "heading": "Dulche and AI-assisted source control",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7399,
+      "heading": "Autocommit",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7409,
+      "heading": "Accessibility",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7417,
+      "heading": "Performance and resilience",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7425,
+      "heading": "Recovery and typed failures",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7431,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7439,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "B06"
+      ]
+    },
+    {
+      "line": 7479,
+      "heading": "Visual site and application workspace",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7481,
+      "heading": "Product role and ownership principle",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7489,
+      "heading": "Primary donor: cakemods site plugin",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7497,
+      "heading": "Donor parity audit",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7505,
+      "heading": "Canonical SiteProject model",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7513,
+      "heading": "New Site and framework/project creation",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7521,
+      "heading": "Visual Page Editor",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7529,
+      "heading": "Component and section model",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7537,
+      "heading": "Reusable components and sections",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7545,
+      "heading": "Editor-shell and public-route context ownership",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7553,
+      "heading": "Layout and page composition",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7561,
+      "heading": "Responsive design and breakpoints",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7569,
+      "heading": "Design system and tokens",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7577,
+      "heading": "Themes and component variants",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7585,
+      "heading": "Visual source round-trip and code-defined constructs",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7595,
+      "heading": "Pages, routes and navigation",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7603,
+      "heading": "Preview fidelity and asset manifest",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7611,
+      "heading": "Live preview and last-valid render",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7635,
+      "heading": "Full shared Node Graph Framework",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7643,
+      "heading": "Simple interaction UI and graph parity",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7659,
+      "heading": "Node execution contexts and trust boundaries",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7667,
+      "heading": "Node debugger and runtime inspection",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7675,
+      "heading": "Component state and node-driven animation",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7683,
+      "heading": "Native CMS and content collections",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7691,
+      "heading": "CMS relationships and dynamic content",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7699,
+      "heading": "Dynamic routes and page templates",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7707,
+      "heading": "Rich content authoring",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7713,
+      "heading": "Data integration",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7721,
+      "heading": "Forms integration",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7729,
+      "heading": "Files and asset management",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7737,
+      "heading": "Image/media optimisation",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7745,
+      "heading": "SEO and discoverability",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7753,
+      "heading": "Accessibility diagnostics and guardrails",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7761,
+      "heading": "Performance and web-quality diagnostics",
+      "milestones": [
+        "B07"
+      ]
+    },
+    {
+      "line": 7769,
+      "heading": "Domains, redirects and HTTPS",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7777,
+      "heading": "Deployment environments",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7785,
+      "heading": "Deployment providers and build pipeline",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7793,
+      "heading": "Deployment history, rollback and publishing safeguards",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7801,
+      "heading": "Custom code, scripts and server functions",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7809,
+      "heading": "Environment variables and secrets",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7817,
+      "heading": "Authentication and member areas",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7825,
+      "heading": "Localisation and site search",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7831,
+      "heading": "Analytics, scripts and consent",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7839,
+      "heading": "Collaboration and revisions",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7847,
+      "heading": "Dulche AI authoring and visual QA",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7857,
+      "heading": "Shared extension system",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7875,
+      "heading": "AI name and domain verification",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7887,
+      "heading": "Custom domains and provider connections",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7911,
+      "heading": "External hosting and deployment authority",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7923,
+      "heading": "Hosting, URL and domain API additions",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7927,
+      "heading": "9to1.Sites.ReserveSlug(siteID, slug);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7929,
+      "heading": "9to1.Sites.ChangeSlug(siteID, slug, options?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7931,
+      "heading": "9to1.Sites.VerifyPublicName(target, options?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7933,
+      "heading": "9to1.Sites.GetPublicNameVerification(verificationID);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7935,
+      "heading": "9to1.Sites.BeginDomainVerification(siteID, domain, options?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7937,
+      "heading": "9to1.Sites.VerifyDomain(domainBindingID, options?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7939,
+      "heading": "9to1.Sites.ConnectDomainProvider(provider, scopes, options?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7941,
+      "heading": "9to1.Sites.ConfigureDomainRecords(domainBindingID, options?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7943,
+      "heading": "9to1.Sites.GetHostingState(siteID, environmentID?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 7945,
+      "heading": "9to1.Sites.ChangeHostingProvider(siteID, providerID, options?);",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 8011,
+      "heading": "Automation and typed events",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 8017,
+      "heading": "Security and abuse boundaries",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 8025,
+      "heading": "Performance and large-site behaviour",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 8033,
+      "heading": "Recovery and failure behaviour",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 8041,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 8049,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "B08"
+      ]
+    },
+    {
+      "line": 8088,
+      "heading": "Automations",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8090,
+      "heading": "Product role and execution boundary",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8096,
+      "heading": "Landing page: Home and Library",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8104,
+      "heading": "Canonical entities",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8112,
+      "heading": "Draft and Active revisions",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8118,
+      "heading": "Graph editor and simple creation",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8124,
+      "heading": "Node search and connector interaction",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8132,
+      "heading": "Trigger model",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8144,
+      "heading": "Node families",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8164,
+      "heading": "Device-level actions",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8179,
+      "heading": "Third-party app and service actions",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8187,
+      "heading": "Natural-language graph creation and editing",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8193,
+      "heading": "Data, variables and nullability",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8199,
+      "heading": "Durable Wait and resume",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8205,
+      "heading": "Approval nodes",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8211,
+      "heading": "Permissions, connections and secret handling",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8217,
+      "heading": "Execution location and device targeting",
+      "milestones": [
+        "S2-AUTO1"
+      ]
+    },
+    {
+      "line": 8225,
+      "heading": "Run lifecycle and operational state",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8233,
+      "heading": "Run history and execution inspection",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8241,
+      "heading": "Error handling, retry and idempotency",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8249,
+      "heading": "Loop and cascade protection",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8255,
+      "heading": "Calling other Automations",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8259,
+      "heading": "Test, validate and run",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8268,
+      "heading": "Sharing, teams and run-as identity",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8274,
+      "heading": "Compatibility and migration",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8280,
+      "heading": "Persistent contextual AI bar",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8286,
+      "heading": "Automations API",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8328,
+      "heading": "Persistence and recovery",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8334,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8340,
+      "heading": "Performance and resource behaviour",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8346,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8352,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-AUTO2"
+      ]
+    },
+    {
+      "line": 8375,
+      "heading": "Write",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8377,
+      "heading": "Product role",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8385,
+      "heading": "Donor parity and objective word-processor behaviour",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8391,
+      "heading": "Launch and file entry",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8395,
+      "heading": "Editor shell",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8401,
+      "heading": "Floating contextual toolbar",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8411,
+      "heading": "Pinned toolbar actions",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8417,
+      "heading": "Universal Insert (+)",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8423,
+      "heading": "Eye / visibility controls",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8429,
+      "heading": "Floating document statistics",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8435,
+      "heading": "Sections sidebar",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8449,
+      "heading": "View modes",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8463,
+      "heading": "Locked and Unlocked layout",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8475,
+      "heading": "Styles and custom styles",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8485,
+      "heading": "Tables",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8499,
+      "heading": "Images, drawings and positioned objects",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8505,
+      "heading": "References and document structure",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8511,
+      "heading": "Review, comments and collaboration",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8517,
+      "heading": "Native format and foreign document formats",
+      "milestones": [
+        "S2-WRITE1"
+      ]
+    },
+    {
+      "line": 8523,
+      "heading": "PDF opening and editing",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8537,
+      "heading": "Persistent AI bar in Write",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8547,
+      "heading": "Agents, sources and Translate integration",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8555,
+      "heading": "Embedded 9to1 artifacts and interoperability",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8561,
+      "heading": "Navigation, search and long-document performance",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8567,
+      "heading": "Recovery, persistence and accessibility",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8573,
+      "heading": "Canonical Write API",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8643,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8647,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8659,
+      "heading": "Normative status and release-stage boundary",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8663,
+      "heading": "A. HEADER, EDITING TOOLBAR AND COMMAND HIERARCHY",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8679,
+      "heading": "B. PROPERTIES INSPECTOR, SECTIONS, CANVAS AND START SCREEN",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8707,
+      "heading": "C. EVIDENCE-BASED WRITE ACCEPTANCE",
+      "milestones": [
+        "S2-WRITE2"
+      ]
+    },
+    {
+      "line": 8757,
+      "heading": "Present",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8759,
+      "heading": "Purpose, ownership and conformance",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8774,
+      "heading": "Normative applicability and capability negotiation",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8784,
+      "heading": "Landing page, file lifecycle and persistence",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8794,
+      "heading": "Canonical data model and identity",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8866,
+      "heading": "Authoring shell and slide navigation",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8878,
+      "heading": "Conventional object editing and layout",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8893,
+      "heading": "Themes, masters, layouts and templates",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8903,
+      "heading": "Speaker notes and notes workflow",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8930,
+      "heading": "Word, character and speaking statistics",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8963,
+      "heading": "Search, proofing, comments and collaboration",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 8972,
+      "heading": "Actions runtime and state model",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 9020,
+      "heading": "Transitions builder",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 9030,
+      "heading": "Interactive and reusable components",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 9074,
+      "heading": "Generative UI",
+      "milestones": [
+        "S2-PRESENT1"
+      ]
+    },
+    {
+      "line": 9100,
+      "heading": "Runnable code, media, 3D and live ink",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9125,
+      "heading": "Slideshow runtime and Presenter View",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9156,
+      "heading": "Rehearsal, timings and recording",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9165,
+      "heading": "AI-aware authoring and live presentation",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9174,
+      "heading": "Video, audio, podcast, print and static export",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9190,
+      "heading": "Import/export compatibility contract",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9225,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9238,
+      "heading": "Security, permissions and external side effects",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9247,
+      "heading": "Typed Present API and mutation semantics",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9289,
+      "heading": "Release acceptance criteria",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9317,
+      "heading": "A. PRESENT HEADER, WORKSPACE AND DIRECT EDITING UI",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9331,
+      "heading": "B. PRESENT POINTER HIERARCHY AND MANIPULATION ENGINE",
+      "milestones": [
+        "S2-PRESENT2"
+      ]
+    },
+    {
+      "line": 9379,
+      "heading": "Boards",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9381,
+      "heading": "Product role and donor contract",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9389,
+      "heading": "Visual shell",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9399,
+      "heading": "Landing page",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9407,
+      "heading": "Sidebar and board switching",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9419,
+      "heading": "Canonical Board and Page model",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9429,
+      "heading": "Shared Productivity Engine",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9435,
+      "heading": "Edit and View modes",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9445,
+      "heading": "Locked and Unlocked layout modes",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9457,
+      "heading": "Free drawing and ink",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9465,
+      "heading": "Floating contextual formatting island",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9481,
+      "heading": "Persistent AI bar",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9487,
+      "heading": "Block system and AppFlowy block parity",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9501,
+      "heading": "Graph block",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9511,
+      "heading": "Enhanced image formatting",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9515,
+      "heading": "Enhanced table formatting",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9519,
+      "heading": "Cross-app parity blocks",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9525,
+      "heading": "Write and Canvas page types",
+      "milestones": [
+        "S2-BOARDS1"
+      ]
+    },
+    {
+      "line": 9533,
+      "heading": "Chat page type",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9541,
+      "heading": "Scoped Chat page type",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9549,
+      "heading": "Chat source subpages",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9557,
+      "heading": "Data-backed structured items",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9563,
+      "heading": "Board document-space coordinates",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9569,
+      "heading": "Embedded artifact ownership and lifecycle",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9575,
+      "heading": "Collaboration and concurrency",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9581,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9587,
+      "heading": "Performance and resource behaviour",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9593,
+      "heading": "Persistence, history and recovery",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9603,
+      "heading": "Boards API",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9671,
+      "heading": "Permissions and risk",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9677,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9683,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-BOARDS2"
+      ]
+    },
+    {
+      "line": 9718,
+      "heading": "Canvas",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9720,
+      "heading": "Purpose, ownership and boundaries",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9728,
+      "heading": "Donor and upstream contract",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9739,
+      "heading": "Supported platforms and capability negotiation",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9749,
+      "heading": "Canonical artifact model and identity",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9831,
+      "heading": "Document mode and page-type model",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9842,
+      "heading": "Persistence, autosave and recovery",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9852,
+      "heading": "Launch screen and document lifecycle",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9860,
+      "heading": "Primary Canvas shell",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9880,
+      "heading": "Contextual tool-options host",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9908,
+      "heading": "Select and Pan",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9916,
+      "heading": "Pen system and preset pens",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9960,
+      "heading": "Eraser",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 9968,
+      "heading": "Insert catalogue and parity",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 10047,
+      "heading": "Tools family",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 10055,
+      "heading": "Top-right quick-settings pill",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 10073,
+      "heading": "Smart Pen",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 10083,
+      "heading": "Input, stylus and gesture contract",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 10093,
+      "heading": "Layers, ordering and object manipulation",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 10102,
+      "heading": "Shared Productivity Engine and cross-app object semantics",
+      "milestones": [
+        "S2-CANVAS1"
+      ]
+    },
+    {
+      "line": 10111,
+      "heading": "Files and Boards integration",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10121,
+      "heading": "Dulche contextual AI",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10153,
+      "heading": "Spaces and Automations integration",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10168,
+      "heading": "Collaboration and conflict semantics",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10178,
+      "heading": "Undo, redo and history",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10187,
+      "heading": "Import and export",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10197,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10207,
+      "heading": "Security and permissions",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10216,
+      "heading": "Typed Canvas API",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10256,
+      "heading": "Performance and resource constraints",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10266,
+      "heading": "Failure and recovery behaviour",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10274,
+      "heading": "Release acceptance criteria",
+      "milestones": [
+        "S2-CANVAS2"
+      ]
+    },
+    {
+      "line": 10306,
+      "heading": "Data",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10308,
+      "heading": "Product role and data paradigms",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10316,
+      "heading": "Shared engines, donor source and implementation authority",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10326,
+      "heading": "Canonical Data project model",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10334,
+      "heading": "Workbook and spreadsheet model",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10344,
+      "heading": "Rich native cells and multiple values",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10354,
+      "heading": "Nested cells, nested tables and hierarchical data",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10362,
+      "heading": "Multidimensional and 3D analytical data",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10372,
+      "heading": "Multiple views over one canonical dataset",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10378,
+      "heading": "Formula engine and calculation",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10388,
+      "heading": "Tables, records and stable row identity",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10396,
+      "heading": "Relational schema and field design",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10404,
+      "heading": "Primary keys, candidate keys and indexes",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10412,
+      "heading": "Foreign keys and sheet/table relationships",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10420,
+      "heading": "Relationship designer and ER diagrams",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10428,
+      "heading": "Referential integrity and cascade behaviour",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10436,
+      "heading": "Normalisation and denormalisation",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10444,
+      "heading": "Lookups and related-record navigation",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10450,
+      "heading": "Data sources and connections",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10458,
+      "heading": "SQL workspace",
+      "milestones": [
+        "S2-DATA1"
+      ]
+    },
+    {
+      "line": 10466,
+      "heading": "Persistent AI / SQL bar switcher",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10474,
+      "heading": "Native SQL execution records and results",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10482,
+      "heading": "Read-only and mutating SQL classification",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10490,
+      "heading": "Protected live-database SQL execution",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10500,
+      "heading": "DDL and dependency impact",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10506,
+      "heading": "Manual SQL versus AI-proposed SQL",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10514,
+      "heading": "Visual query builder",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10520,
+      "heading": "Transformation pipelines",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10528,
+      "heading": "Refresh and stale-data semantics",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10536,
+      "heading": "Visualise mode from the persistent eye icon",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10544,
+      "heading": "Adaptive visualisation inference",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10552,
+      "heading": "Visualisation catalogue and specialised views",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10560,
+      "heading": "Multi-sheet and multi-source Visualise comparison",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10568,
+      "heading": "Visualise interaction, saved objects and cross-app reuse",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10576,
+      "heading": "Charts, pivots and analytical sheets",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10584,
+      "heading": "Cross-app conversion into Data",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10592,
+      "heading": "Write, Present, Boards and Canvas conversion semantics",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10602,
+      "heading": "Snapshot versus linked conversion",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10610,
+      "heading": "Data profiling and quality inspection",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10616,
+      "heading": "Files and source identity",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10624,
+      "heading": "Import/export and compatibility boundaries",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10632,
+      "heading": "Forms and other 9to1 integrations",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10640,
+      "heading": "AI context, provenance and analysis",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10648,
+      "heading": "AI mutation approval and live-database protection",
+      "milestones": [
+        "S2-DATA2"
+      ]
+    },
+    {
+      "line": 10658,
+      "heading": "Data API",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10720,
+      "heading": "Automation and integration events",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10726,
+      "heading": "Collaboration and revision conflicts",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10732,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10740,
+      "heading": "Performance and large-data behaviour",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10748,
+      "heading": "Recovery and failure behaviour",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10756,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10764,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-DATA3"
+      ]
+    },
+    {
+      "line": 10800,
+      "heading": "Files",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10802,
+      "heading": "Product role and donor-first implementation",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10810,
+      "heading": "Authority and ownership boundaries",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10818,
+      "heading": "Canonical identity and item model",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10826,
+      "heading": "Locations and provider abstraction",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10834,
+      "heading": "Desktop shell, tabs and views",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10840,
+      "heading": "Folder colour customisation",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10848,
+      "heading": "Native 9to1 creation and project integration",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10858,
+      "heading": "9to1 Drive integration",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10866,
+      "heading": "Rapid push-based sync architecture",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10876,
+      "heading": "Optimistic local operations",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10882,
+      "heading": "Sync and availability state",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10890,
+      "heading": "Manual sync and sync-on-demand",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10896,
+      "heading": "Offline-first behaviour",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10904,
+      "heading": "Real-time filesystem collaboration",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10914,
+      "heading": "Transfers",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10924,
+      "heading": "Version history and durable revisions",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10930,
+      "heading": "Trash, delete and recovery",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10936,
+      "heading": "Sharing and ACLs",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10946,
+      "heading": "Search, metadata and previews",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10954,
+      "heading": "Open routing, context actions and drag/drop",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10962,
+      "heading": "AI bar and privacy",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10970,
+      "heading": "Operation journal, undo and change feed",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10978,
+      "heading": "Properties and sync diagnostics",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10984,
+      "heading": "Safety and filesystem edge cases",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 10990,
+      "heading": "Files API",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 11070,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 11074,
+      "heading": "Platform behaviour",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 11078,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-FILES1"
+      ]
+    },
+    {
+      "line": 11107,
+      "heading": "Files \u2014 native organisation types",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11109,
+      "heading": "TF-F01 \u2014 Shared Files organisation shell and operations",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11121,
+      "heading": "TF-F02 \u2014 Folder",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11127,
+      "heading": "TF-F03 \u2014 Project",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11137,
+      "heading": "TF-F04 \u2014 Sheet",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11149,
+      "heading": "TF-F05 \u2014 Tree",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11159,
+      "heading": "TF-F06 \u2014 Smart",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11169,
+      "heading": "TF-F07 \u2014 Timeline",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11179,
+      "heading": "TF-F08 \u2014 Pipeline",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11189,
+      "heading": "TF-F09 \u2014 Catalogue",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11199,
+      "heading": "TF-F10 \u2014 Stash",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11209,
+      "heading": "TF-F11 \u2014 Matrix",
+      "milestones": [
+        "S2-FILES2"
+      ]
+    },
+    {
+      "line": 11219,
+      "heading": "Accounts, web services, cloud storage and integrations",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11221,
+      "heading": "CAKE ID and authentication",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11231,
+      "heading": "9to1 welcome and first-run flow",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11235,
+      "heading": "Step 1 \u2014 Welcome",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11239,
+      "heading": "Step 2 \u2014 Sign In?",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11243,
+      "heading": "Step 3 \u2014 Local model discovery",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11251,
+      "heading": "Completion and repeat behaviour",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11255,
+      "heading": "Profiles \u2014 customisation and Jacob's reserved account",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11263,
+      "heading": "Profile customisation \u2014 required and optional fields",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11283,
+      "heading": "Profile API, provisioning and acceptance",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11287,
+      "heading": "Subscription model",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11297,
+      "heading": "Price thresholds",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11319,
+      "heading": "Preset configurations",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11331,
+      "heading": "Canonical subscription state",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11347,
+      "heading": "Free hosted-site inactivity",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11351,
+      "heading": "Custom resource allocation",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11367,
+      "heading": "Business add-ons \u2014 pricing, seats and resource billing",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11377,
+      "heading": "Entitlements and usage API",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11413,
+      "heading": "Server-authoritative enforcement",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11421,
+      "heading": "Personal API access",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11427,
+      "heading": "Web subscription behaviour",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11433,
+      "heading": "Business features \u2014 functional specification",
+      "milestones": [
+        "S2-ACCOUNTS1"
+      ]
+    },
+    {
+      "line": 11493,
+      "heading": "External App Integrations",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11497,
+      "heading": "Core connection model",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11503,
+      "heading": "Connect once, reuse through authorised capabilities",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11509,
+      "heading": "Provider scope versus 9to1 permission",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11515,
+      "heading": "Typed capability contracts",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11523,
+      "heading": "Authentication and credential storage",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11531,
+      "heading": "Scope escalation",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11535,
+      "heading": "Remote identity and canonical 9to1 entities",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11543,
+      "heading": "Live, cached, imported and synchronised state",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11549,
+      "heading": "Sync, webhooks and change feeds",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11555,
+      "heading": "Offline and queued-operation behaviour",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11561,
+      "heading": "Conflicts and versioning",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11567,
+      "heading": "Connection health and failure states",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11573,
+      "heading": "Rate limits and reliability",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11577,
+      "heading": "Connection management UI",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11583,
+      "heading": "Dulche and Agent access",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11589,
+      "heading": "Relationship to Plugins and MCP",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11595,
+      "heading": "Provider SDK and extension",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11601,
+      "heading": "Disconnect and revocation",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11607,
+      "heading": "Security invariants",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11615,
+      "heading": "External App Integrations acceptance requirements",
+      "milestones": [
+        "S2-ACCOUNTS2"
+      ]
+    },
+    {
+      "line": 11772,
+      "heading": "Canonical plans and resource configuration",
+      "milestones": [
+        "S2-CLOUD"
+      ]
+    },
+    {
+      "line": 11780,
+      "heading": "Checkout and activation",
+      "milestones": [
+        "S2-CLOUD"
+      ]
+    },
+    {
+      "line": 11790,
+      "heading": "Webhooks and reconciliation",
+      "milestones": [
+        "S2-CLOUD"
+      ]
+    },
+    {
+      "line": 11800,
+      "heading": "Customer management and lifecycle",
+      "milestones": [
+        "S2-CLOUD"
+      ]
+    },
+    {
+      "line": 11879,
+      "heading": "Release exit gate",
+      "milestones": [
+        "S2-CLOUD"
+      ]
+    },
+    {
+      "line": 11887,
+      "heading": "Planner",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11889,
+      "heading": "Product role and boundary",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11895,
+      "heading": "Donor and upstream contract",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11899,
+      "heading": "Primary views and navigation",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11905,
+      "heading": "Agenda",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11911,
+      "heading": "Canonical entity model",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11925,
+      "heading": "PlannerEvent",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11931,
+      "heading": "PlannerTask",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11939,
+      "heading": "Time zones, all-day values and daylight saving",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11945,
+      "heading": "Recurrence and occurrence identity",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11953,
+      "heading": "Reminders and Home notifications",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11959,
+      "heading": "Optional sidebar module: Schedule",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11971,
+      "heading": "Optional sidebar module: Countdown",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11979,
+      "heading": "Optional sidebar module: Assignments",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11985,
+      "heading": "Assignment progress and completion",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 11995,
+      "heading": "Team assignments",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12001,
+      "heading": "Assignment Automations and extension workflows",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12009,
+      "heading": "Cross-app typed references",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12015,
+      "heading": "Maps and travel integration",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12021,
+      "heading": "Mail integration",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12027,
+      "heading": "Meetings, attendees and external side effects",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12033,
+      "heading": "External calendars and provider capability model",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12041,
+      "heading": "Search, filtering and global discovery",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12047,
+      "heading": "Import and export",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12053,
+      "heading": "Persistent AI bar",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12059,
+      "heading": "Automations integration",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12065,
+      "heading": "Planner API",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12133,
+      "heading": "Persistence, sync, history and recovery",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12141,
+      "heading": "Permissions and risk",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12147,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12153,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12159,
+      "heading": "Performance and resource behaviour",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12165,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12171,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12193,
+      "heading": "Planner Burrows",
+      "milestones": [
+        "S2-PLANNER"
+      ]
+    },
+    {
+      "line": 12213,
+      "heading": "Connect and Mail",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12215,
+      "heading": "Product role and donor strategy",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12225,
+      "heading": "Architecture and canonical entities",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12233,
+      "heading": "Conversations, organisations and hierarchy",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12241,
+      "heading": "Mail mode",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12247,
+      "heading": "Native messaging encryption and privacy",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12261,
+      "heading": "Disappearing messages",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12271,
+      "heading": "SMS and RCS",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12279,
+      "heading": "Voice and video calling",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12291,
+      "heading": "Recording, transcription and AI participation",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12305,
+      "heading": "Contact and communication privacy controls",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12313,
+      "heading": "Reporting and Trust & Safety",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12323,
+      "heading": "Moderation AI",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12335,
+      "heading": "Severe-offence ban threshold",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12349,
+      "heading": "Appeals",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12355,
+      "heading": "Ban-evasion and alternate-account detection",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12369,
+      "heading": "AI and encrypted communication boundary",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12383,
+      "heading": "Connect Agent-channel API and acceptance",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12387,
+      "heading": "Connect API and events",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12395,
+      "heading": "Failure and recovery",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12401,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-CONNECT"
+      ]
+    },
+    {
+      "line": 12405,
+      "heading": "Mail",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12407,
+      "heading": "Product role and donor strategy",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12417,
+      "heading": "Modern CUI shell and responsive layout",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12429,
+      "heading": "Sidebar and navigation",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12437,
+      "heading": "Account and provider model",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12447,
+      "heading": "Message, thread and folder identity",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12457,
+      "heading": "Message rendering and privacy",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12465,
+      "heading": "Compose and drafts",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12475,
+      "heading": "Attachments and Files integration",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12483,
+      "heading": "Sync, push and offline behaviour",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12493,
+      "heading": "Send pipeline, Outbox and Undo Send",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12501,
+      "heading": "Scheduled send",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12507,
+      "heading": "Search and smart views",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12513,
+      "heading": "Rules and automation integration",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12519,
+      "heading": "Snooze, archive and delete semantics",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12525,
+      "heading": "Signatures, aliases and contacts",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12531,
+      "heading": "Notifications",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12537,
+      "heading": "Persistent AI bar and AI action boundary",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12547,
+      "heading": "Security, phishing and remote-content safety",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12555,
+      "heading": "OpenPGP, S/MIME and advanced mail features",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12561,
+      "heading": "Print and export",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12565,
+      "heading": "Mail API",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12625,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12629,
+      "heading": "Platform behaviour",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12633,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-MAIL"
+      ]
+    },
+    {
+      "line": 12658,
+      "heading": "Cards",
+      "milestones": [
+        "S2-CARDS"
+      ]
+    },
+    {
+      "line": 12716,
+      "heading": "Forms",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12718,
+      "heading": "Product role and runtime principle",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12726,
+      "heading": "Canonical project model",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12734,
+      "heading": "Builder workspace and preview",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12742,
+      "heading": "Core field and component types",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12750,
+      "heading": "Table input and repeating structured responses",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12758,
+      "heading": "Native modes: Form, Test and Quiz",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12770,
+      "heading": "Custom modes and state-machine runtime",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12778,
+      "heading": "Marking engine and multiple accepted answers",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12788,
+      "heading": "Regex validation and marking",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12796,
+      "heading": "AI, human and hybrid marking",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12806,
+      "heading": "Partial credit, grading and feedback",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12814,
+      "heading": "LaTeX and visual mathematics editor",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12824,
+      "heading": "Graph plotter and graph-response questions",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12834,
+      "heading": "Question banks, randomisation, attempts and timing",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12842,
+      "heading": "Forms and Data bidirectional integration",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12850,
+      "heading": "Data schema synchronisation policies",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12858,
+      "heading": "Full node editor and logic graph",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12866,
+      "heading": "Form events, conditions and actions",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12876,
+      "heading": "Appearance, theme and layout system",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12886,
+      "heading": "Reusable components and templates",
+      "milestones": [
+        "S2-FORMS1"
+      ]
+    },
+    {
+      "line": 12892,
+      "heading": "Publishing, versions and response compatibility",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12900,
+      "heading": "Response model, save/resume and editing",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12908,
+      "heading": "Multiplayer live-session runtime",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12916,
+      "heading": "Joining, teams and host control",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12924,
+      "heading": "Multiplayer quiz, knockout and game-show modes",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12934,
+      "heading": "Conversational and interview modes",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12942,
+      "heading": "Multiplayer timing, reconnection and fairness",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12950,
+      "heading": "Anti-cheat and assessment integrity",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12966,
+      "heading": "Live scoring and AI/human judging",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12974,
+      "heading": "Scoreboards and participant views",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12980,
+      "heading": "Privacy, abuse prevention and public access",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12988,
+      "heading": "AI-assisted authoring, design and logic",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 12996,
+      "heading": "Persistent AI bar and context",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13002,
+      "heading": "Forms API",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13066,
+      "heading": "Automation and typed events",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13072,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13082,
+      "heading": "Performance and realtime behaviour",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13090,
+      "heading": "Recovery and failure behaviour",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13098,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13106,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-FORMS2"
+      ]
+    },
+    {
+      "line": 13140,
+      "heading": "AI Studio",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13142,
+      "heading": "Product role",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13148,
+      "heading": "Navigation and landing page",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13158,
+      "heading": "Project model",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13166,
+      "heading": "Build \u2014 Harness Builder",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13178,
+      "heading": "Harness advanced graph",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13184,
+      "heading": "Build \u2014 Agent Builder",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13196,
+      "heading": "Plugins / Connectors",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13200,
+      "heading": "Skills",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13204,
+      "heading": "Knowledge / Files",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13208,
+      "heading": "More Options",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13218,
+      "heading": "Instructions and assistant",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13224,
+      "heading": "Agent advanced logic, preview and revisions",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13234,
+      "heading": "Visual animated-avatar builder",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13240,
+      "heading": "Build \u2014 Tool Builder",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13246,
+      "heading": "Skill Builder",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13252,
+      "heading": "Plugin Builder",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13258,
+      "heading": "MCP Builder",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13264,
+      "heading": "Shared builder assistant",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13270,
+      "heading": "Test & Debug \u2014 Playground",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13278,
+      "heading": "Test & Debug \u2014 Evaluations",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13290,
+      "heading": "Test & Debug \u2014 Test Suites",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13298,
+      "heading": "Test & Debug \u2014 Replay & Debugger",
+      "milestones": [
+        "S2-AISTUDIO1"
+      ]
+    },
+    {
+      "line": 13306,
+      "heading": "Resources \u2014 Schema Builder",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13314,
+      "heading": "Resources \u2014 Model Router Builder",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13320,
+      "heading": "Resources \u2014 Generative UI Builder",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13328,
+      "heading": "Resources \u2014 Run Profiles",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13334,
+      "heading": "Context Inspector",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13340,
+      "heading": "Permission Simulator",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13346,
+      "heading": "Dependency Inspector",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13352,
+      "heading": "Comparison view",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13358,
+      "heading": "Documentation Generator",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13364,
+      "heading": "Templates",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13370,
+      "heading": "Validation, install and deployment boundaries",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13376,
+      "heading": "AI Studio API",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13446,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13450,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-AISTUDIO2"
+      ]
+    },
+    {
+      "line": 13478,
+      "heading": "Picture",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13480,
+      "heading": "Product role and editing-first boundary",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13486,
+      "heading": "Shared-engine reuse and fast feature parity",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13499,
+      "heading": "Canonical Picture document model",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13507,
+      "heading": "Automatic composition mode and manual layers",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13515,
+      "heading": "Layer and composition semantics",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13523,
+      "heading": "Selection and semantic object extraction",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13531,
+      "heading": "Object-first editing",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13539,
+      "heading": "Raster editing",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13552,
+      "heading": "Vector creation and editing",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13568,
+      "heading": "Text objects",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13574,
+      "heading": "Drawing and painting",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13580,
+      "heading": "AI editing and generative operations",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13588,
+      "heading": "Generative image creation",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13594,
+      "heading": "Sketch-to-image",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13600,
+      "heading": "Generative region editing",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13606,
+      "heading": "AI-assisted composition",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13610,
+      "heading": "Non-destructive adjustments and edit stack",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13616,
+      "heading": "Variants and revision history",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13622,
+      "heading": "Smart/linked assets",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13628,
+      "heading": "Crop, canvas and artboards",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13634,
+      "heading": "Effects, blend and masks",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13640,
+      "heading": "Presets",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13646,
+      "heading": "Comparison and preview",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13652,
+      "heading": "File formats and import",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13660,
+      "heading": "Animated and multi-frame images",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13664,
+      "heading": "Colour management and HDR",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13670,
+      "heading": "Metadata and privacy",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13676,
+      "heading": "Save, export and flattening",
+      "milestones": [
+        "S2-PICTURE1"
+      ]
+    },
+    {
+      "line": 13684,
+      "heading": "Files and canonical asset identity",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13690,
+      "heading": "Cross-app interoperability",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13696,
+      "heading": "Persistent AI bar",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13702,
+      "heading": "Picture API",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13768,
+      "heading": "Automation and Spaces integration",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13774,
+      "heading": "Collaboration and conflict handling",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13780,
+      "heading": "Security and generated content",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13786,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13792,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13798,
+      "heading": "Performance and resource behaviour",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13806,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13812,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-PICTURE2"
+      ]
+    },
+    {
+      "line": 13835,
+      "heading": "Wave",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13837,
+      "heading": "Product role and native-generation principle",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13845,
+      "heading": "Shared media/audio engine",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13853,
+      "heading": "Canonical project model",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13863,
+      "heading": "Main workspace and transport",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13876,
+      "heading": "Recording",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13882,
+      "heading": "Waveform and clip editing",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13893,
+      "heading": "Multitrack, mixer, routing and buses",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13901,
+      "heading": "Effects and parameter automation",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13916,
+      "heading": "Spectral editing and repair",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13930,
+      "heading": "Audio enhancement and denoising tools",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13936,
+      "heading": "Music Sequencer",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13946,
+      "heading": "Native instruments and sampling",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13954,
+      "heading": "AI music generation",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13962,
+      "heading": "Sound Effects Builder",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13985,
+      "heading": "Text to Speech",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 13995,
+      "heading": "Other generated native components",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14001,
+      "heading": "Transcription and transcript-based editing",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14007,
+      "heading": "Custom censorship",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14013,
+      "heading": "Audio separation and derived stems",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14021,
+      "heading": "Markers, regions and chapters",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14025,
+      "heading": "Podcast, narration and spoken-word workflows",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14031,
+      "heading": "Motion and Present interoperability",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14037,
+      "heading": "Files and storage identity",
+      "milestones": [
+        "S2-WAVE1"
+      ]
+    },
+    {
+      "line": 14043,
+      "heading": "Import and export",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14051,
+      "heading": "Persistent AI bar",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14057,
+      "heading": "Wave API",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14127,
+      "heading": "Automation and integration events",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14133,
+      "heading": "Collaboration and revision conflicts",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14139,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14145,
+      "heading": "Performance and realtime safety",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14153,
+      "heading": "Recovery and failure behaviour",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14161,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14167,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-WAVE2"
+      ]
+    },
+    {
+      "line": 14192,
+      "heading": "Motion",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14194,
+      "heading": "Product role and native project principle",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14200,
+      "heading": "Shared engines and dependency boundaries",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14208,
+      "heading": "Canonical project model",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14220,
+      "heading": "Main workspace and contextual editing",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14228,
+      "heading": "Timeline and non-linear editing",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14238,
+      "heading": "Source media, proxies, preview and cache",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14246,
+      "heading": "Viewer, transforms and visual composition",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14254,
+      "heading": "Animation and keyframes",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14262,
+      "heading": "Advanced node editor",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14272,
+      "heading": "Motion graph types and reusable graph assets",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14280,
+      "heading": "Custom transitions",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14288,
+      "heading": "Procedural animation and property drivers",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14296,
+      "heading": "Masks, tracking and rotoscoping",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14304,
+      "heading": "Colour pipeline",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14310,
+      "heading": "Effects, titles and graphics",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14318,
+      "heading": "Captions and transcript-based editing",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14326,
+      "heading": "Audio and Wave interoperability",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14334,
+      "heading": "AI-assisted editing",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14342,
+      "heading": "Generative and model-backed video workflows",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14350,
+      "heading": "Media analysis and indexing",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14356,
+      "heading": "Files, asset identity and offline media",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14364,
+      "heading": "Import, export and render queue",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14372,
+      "heading": "Persistent AI bar",
+      "milestones": [
+        "S2-MOTION1"
+      ]
+    },
+    {
+      "line": 14378,
+      "heading": "Motion API",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14446,
+      "heading": "Automation and integration events",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14452,
+      "heading": "Collaboration and revision conflicts",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14458,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14466,
+      "heading": "Performance and realtime preview safety",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14474,
+      "heading": "Recovery and failure behaviour",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14482,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14490,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-MOTION2"
+      ]
+    },
+    {
+      "line": 14517,
+      "heading": "Games",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14519,
+      "heading": "Product role and ambition",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14529,
+      "heading": "CUI-native editor",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14537,
+      "heading": "Canonical scene graph and purposeful components",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14547,
+      "heading": "Shared graph infrastructure with Automations",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14561,
+      "heading": "Intuitive API design contract",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14573,
+      "heading": "Shared and individual state semantics",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14587,
+      "heading": "Multiplayer/replication intent",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14595,
+      "heading": "Declarative keybind system",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14615,
+      "heading": "Prebuilt object and gameplay library",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14653,
+      "heading": "Component inspector generation",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14661,
+      "heading": "Component events and state",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14667,
+      "heading": "Component versioning and project safety",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14673,
+      "heading": "Rendering and graphics engine",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14685,
+      "heading": "Landscape, world and procedural tools",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14695,
+      "heading": "Material and shader tools",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14703,
+      "heading": "Integrated Blender-derived modelling",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14715,
+      "heading": "Asset pipeline and cross-app integration",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14723,
+      "heading": "Dulche in Games",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14731,
+      "heading": "Build, run, debug and export",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14739,
+      "heading": "Relationship with Play",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14745,
+      "heading": "Games API families",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14753,
+      "heading": "Failure and recovery",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14761,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-GAMES"
+      ]
+    },
+    {
+      "line": 14765,
+      "heading": "Play",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14767,
+      "heading": "Product role",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14773,
+      "heading": "Game definitions and matches",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14781,
+      "heading": "Contestants",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14791,
+      "heading": "Contestant selection and automatic filling",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14797,
+      "heading": "Isolation, visibility and fairness",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14807,
+      "heading": "Canonical game state and rules",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14815,
+      "heading": "Typed game actions",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14823,
+      "heading": "Rounds, turns and timing",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14831,
+      "heading": "Judging and scoring",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14841,
+      "heading": "Tools and capability profiles",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14849,
+      "heading": "Teams and collaboration",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14855,
+      "heading": "Spectator mode",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14861,
+      "heading": "Game creation and quick starts",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14869,
+      "heading": "UI and Generative UI",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14875,
+      "heading": "Voice, images and multimodality",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14881,
+      "heading": "Checkpoints, reconnect and replay",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14887,
+      "heading": "Play and Experiences interoperability",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14891,
+      "heading": "Canonical Play API",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14945,
+      "heading": "Failure behaviour",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14949,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-PLAY"
+      ]
+    },
+    {
+      "line": 14968,
+      "heading": "Mini Computer",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 14970,
+      "heading": "Product role and shared virtualisation engine",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 14978,
+      "heading": "Built-in default provider: 9to1 VirtualBox fork",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 14986,
+      "heading": "VirtualBox licensing and excluded separately licensed components",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 14994,
+      "heading": "Provider abstraction and optional connected providers",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15004,
+      "heading": "Provider capability matrix",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15012,
+      "heading": "Canonical VirtualMachine model",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15020,
+      "heading": "VM lifecycle states",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15028,
+      "heading": "New VM wizard",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15036,
+      "heading": "Guest/ISO detection",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15044,
+      "heading": "Curated ISO Browser",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15052,
+      "heading": "ISO acquisition policies",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15066,
+      "heading": "ISO download, integrity and provenance",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15076,
+      "heading": "ISO Browser user flow",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15084,
+      "heading": "Media library and cleanup",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15092,
+      "heading": "Unattended installation",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15100,
+      "heading": "Interactive VM viewer",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15108,
+      "heading": "Power and state controls",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15116,
+      "heading": "Snapshots",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15126,
+      "heading": "Cloning and linked clones",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15134,
+      "heading": "Virtual disks and block storage",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15144,
+      "heading": "Storage controllers and boot order",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15152,
+      "heading": "CPU and memory configuration",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15160,
+      "heading": "Firmware, Secure Boot and TPM",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15168,
+      "heading": "Networking",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15176,
+      "heading": "Virtual network manager",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15184,
+      "heading": "USB and device passthrough",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15192,
+      "heading": "Display and graphics",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15200,
+      "heading": "Audio and microphone",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15206,
+      "heading": "Clipboard and drag/drop trust policy",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15214,
+      "heading": "Shared folders",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15222,
+      "heading": "Guest integrations",
+      "milestones": [
+        "S2-MINI1"
+      ]
+    },
+    {
+      "line": 15230,
+      "heading": "Import and export",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15238,
+      "heading": "Templates and reusable machine profiles",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15246,
+      "heading": "First-party guest templates",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15254,
+      "heading": "Files and storage architecture",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15262,
+      "heading": "Resource references and deduplication",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15270,
+      "heading": "Terminal integration",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15286,
+      "heading": "Ephemeral development VMs",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15294,
+      "heading": "OS/kernel debugging integration",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15302,
+      "heading": "Headless operation",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15310,
+      "heading": "Provider and host virtualisation status",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15318,
+      "heading": "Resource monitoring",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15326,
+      "heading": "AI / Dulche integration",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15334,
+      "heading": "Safety and high-risk operations",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15342,
+      "heading": "Mini Computer API",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15422,
+      "heading": "Automation and typed events",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15428,
+      "heading": "Extension system",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15436,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15444,
+      "heading": "Performance and scalability",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15452,
+      "heading": "Recovery and failure behaviour",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15462,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15472,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-MINI2"
+      ]
+    },
+    {
+      "line": 15510,
+      "heading": "Other independent apps and shared capabilities",
+      "milestones": [
+        "S2-ADMIN"
+      ]
+    },
+    {
+      "line": 15602,
+      "heading": "Terminal",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15604,
+      "heading": "Product role and core invariant",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15612,
+      "heading": "Canonical session model",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15620,
+      "heading": "Persistent AI / Command mode switcher",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15630,
+      "heading": "Command Mode",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15638,
+      "heading": "$Ask non-executing AI assistance",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15650,
+      "heading": "AI Mode natural-language execution",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15658,
+      "heading": "AI execution verification and dangerous-command protection",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15670,
+      "heading": "Home permission-broker integration",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15678,
+      "heading": "Real PTY and shell behaviour",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15686,
+      "heading": "Shell profiles and discovery",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15694,
+      "heading": "Tabs, panes and window layouts",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15702,
+      "heading": "Working directory and path semantics",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15710,
+      "heading": "Shell integration protocol",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15718,
+      "heading": "Command and output history",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15726,
+      "heading": "Streaming output and semantic links",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15734,
+      "heading": "Rich Terminal-native output",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15742,
+      "heading": "Long-running processes and jobs",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15750,
+      "heading": "Persistent scheduling",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15760,
+      "heading": "Elevation and privileged sessions",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15768,
+      "heading": "Environment providers",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15776,
+      "heading": "SSH and remote terminals",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15784,
+      "heading": "Container, WSL and VM terminals",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15808,
+      "heading": "First-class Data integration",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15816,
+      "heading": "First-class integration with all 9to1 apps",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15826,
+      "heading": "9to1 command-line bridge",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15834,
+      "heading": "Package and tool installation",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15842,
+      "heading": "Error assistance and diagnostics",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15850,
+      "heading": "Search, scrollback and large output",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15858,
+      "heading": "Clipboard and multiline paste safety",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15866,
+      "heading": "Secrets, privacy and AI-context filtering",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15874,
+      "heading": "Command risk metadata and audit",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15882,
+      "heading": "Completion, aliases and snippets",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15890,
+      "heading": "Dulche context and behaviour",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15898,
+      "heading": "Terminal API",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15950,
+      "heading": "Automation and typed events",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15956,
+      "heading": "Extension system",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15964,
+      "heading": "Accessibility",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15972,
+      "heading": "Performance and resilience",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15980,
+      "heading": "Recovery and typed failures",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15988,
+      "heading": "Platform capability behaviour",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 15996,
+      "heading": "Acceptance requirements",
+      "milestones": [
+        "S2-TERMINAL"
+      ]
+    },
+    {
+      "line": 16032,
+      "heading": "Maps",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16036,
+      "heading": "Primary donor and default provider stack",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16053,
+      "heading": "Canonical geospatial entities",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16061,
+      "heading": "Search / AI interaction",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16075,
+      "heading": "Saved places and personal landmarks",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16085,
+      "heading": "Community POIs and landmark presets",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16103,
+      "heading": "Routing and route planning",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16111,
+      "heading": "Saved custom routes / Custom Journeys",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16127,
+      "heading": "Navigation to arbitrary/custom destinations",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16133,
+      "heading": "Live information and dynamic routing",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16139,
+      "heading": "Location permissions and privacy",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16147,
+      "heading": "Offline operation",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16153,
+      "heading": "CUI embeds and cross-app composition",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16161,
+      "heading": "Dulche integration",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16167,
+      "heading": "Automations and extensions",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16173,
+      "heading": "Safety, provenance and disclaimer",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16183,
+      "heading": "Maps acceptance requirements",
+      "milestones": [
+        "S2-MAPS"
+      ]
+    },
+    {
+      "line": 16197,
+      "heading": "Launcher",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16201,
+      "heading": "Lawnchair donor authority",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16205,
+      "heading": "Core launcher surfaces",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16218,
+      "heading": "Extreme customisation",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16231,
+      "heading": "Applications and stable identity",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16237,
+      "heading": "Widgets",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16241,
+      "heading": "Dulche integration",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16247,
+      "heading": "Search and Go integration",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16251,
+      "heading": "Profiles and OS boundaries",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16255,
+      "heading": "Launcher acceptance requirements",
+      "milestones": [
+        "S2-LAUNCHER"
+      ]
+    },
+    {
+      "line": 16264,
+      "heading": "Shelf",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16268,
+      "heading": "Core model",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16283,
+      "heading": "Collections and organisation",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16291,
+      "heading": "Discovery and target import",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16297,
+      "heading": "Search / AI",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16303,
+      "heading": "Launching and actions",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16309,
+      "heading": "Cross-device and missing-target behaviour",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16313,
+      "heading": "Extensions",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16317,
+      "heading": "Shelf acceptance requirements",
+      "milestones": [
+        "S2-SHELF"
+      ]
+    },
+    {
+      "line": 16326,
+      "heading": "Link",
+      "milestones": [
+        "S2-LINK"
+      ]
+    },
+    {
+      "line": 16328,
+      "heading": "TF-L01 \u2014 Link shell, documents and shared content",
+      "milestones": [
+        "S2-LINK"
+      ]
+    },
+    {
+      "line": 16336,
+      "heading": "TF-L02 \u2014 Flow reading and authoring UI",
+      "milestones": [
+        "S2-LINK"
+      ]
+    },
+    {
+      "line": 16350,
+      "heading": "TF-L03 \u2014 Binder overview, containers and navigation",
+      "milestones": [
+        "S2-LINK"
+      ]
+    },
+    {
+      "line": 16364,
+      "heading": "Prototype",
+      "milestones": [
+        "S2-PROTOTYPE"
+      ]
+    },
+    {
+      "line": 16366,
+      "heading": "TF-P01 \u2014 Product boundary and editor layout",
+      "milestones": [
+        "S2-PROTOTYPE"
+      ]
+    },
+    {
+      "line": 16374,
+      "heading": "TF-P02 \u2014 Typed model, logic and execution",
+      "milestones": [
+        "S2-PROTOTYPE"
+      ]
+    },
+    {
+      "line": 16384,
+      "heading": "TF-P03 \u2014 Safety, reuse and acceptance",
+      "milestones": [
+        "S2-PROTOTYPE"
+      ]
+    },
+    {
+      "line": 16394,
+      "heading": "Paths",
+      "milestones": [
+        "S2-PATHS"
+      ]
+    },
+    {
+      "line": 16396,
+      "heading": "TF-H01 \u2014 Authoring, steps and route UI",
+      "milestones": [
+        "S2-PATHS"
+      ]
+    },
+    {
+      "line": 16406,
+      "heading": "TF-H02 \u2014 Reader experience and durable progress",
+      "milestones": [
+        "S2-PATHS"
+      ]
+    },
+    {
+      "line": 16416,
+      "heading": "TF-H03 \u2014 Integration and acceptance",
+      "milestones": [
+        "S2-PATHS"
+      ]
+    },
+    {
+      "line": 16422,
+      "heading": "Replay",
+      "milestones": [
+        "S2-REPLAY"
+      ]
+    },
+    {
+      "line": 16424,
+      "heading": "TF-R01 \u2014 Explicit capture and source selection",
+      "milestones": [
+        "S2-REPLAY"
+      ]
+    },
+    {
+      "line": 16432,
+      "heading": "TF-R02 \u2014 Semantic timeline and playback UI",
+      "milestones": [
+        "S2-REPLAY"
+      ]
+    },
+    {
+      "line": 16442,
+      "heading": "TF-R03 \u2014 Review, sharing, failure and acceptance",
+      "milestones": [
+        "S2-REPLAY"
+      ]
+    },
+    {
+      "line": 16450,
+      "heading": "Variants",
+      "milestones": [
+        "S2-VARIANTS"
+      ]
+    },
+    {
+      "line": 16452,
+      "heading": "TF-V01 \u2014 Integrated variant UI and branch identity",
+      "milestones": [
+        "S2-VARIANTS"
+      ]
+    },
+    {
+      "line": 16460,
+      "heading": "TF-V02 \u2014 Comparison, selective merge and conflicts",
+      "milestones": [
+        "S2-VARIANTS"
+      ]
+    },
+    {
+      "line": 16468,
+      "heading": "TF-V03 \u2014 Required owning-app comparison semantics",
+      "milestones": [
+        "S2-VARIANTS"
+      ]
+    },
+    {
+      "line": 16478,
+      "heading": "9to1 OS distribution",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16480,
+      "heading": "Platform foundation and donor authority",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16490,
+      "heading": "Desktop shell and Windows-style interaction model",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16494,
+      "heading": "Window management and quality-of-life",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16503,
+      "heading": "Taskbar framework",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16509,
+      "heading": "Taskbar Layers",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16519,
+      "heading": "Desktop Spaces, Virtual Desktops and Desktop Pages",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16521,
+      "heading": "Naming and conceptual separation",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16527,
+      "heading": "Desktop Spaces",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16535,
+      "heading": "Virtual Desktops",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16539,
+      "heading": "Desktop Pages and Widgets",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16545,
+      "heading": "Customisation Framework",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16551,
+      "heading": "Configuration scopes and precedence",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16555,
+      "heading": "Visual and behavioural scope",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16567,
+      "heading": "Safe application and recovery",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16573,
+      "heading": "Quick Settings and system flyouts",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16583,
+      "heading": "Dulche and AI-native OS integration",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16587,
+      "heading": "AI settings",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16593,
+      "heading": "AI-aware RAM optimisation",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16601,
+      "heading": "GUI-first administration",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16613,
+      "heading": "Terminal safety and privileged destructive operations",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16621,
+      "heading": "Multiple users and administrator policy",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16631,
+      "heading": "First-party apps and deep OS integration",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16641,
+      "heading": "Setup and first-run experience",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16649,
+      "heading": "Recovery environments",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16657,
+      "heading": "Setup/recovery acceptance requirements",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16664,
+      "heading": "System updates, recovery and backups",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16672,
+      "heading": "Software and package management",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16680,
+      "heading": "System diagnostics and storage management",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16682,
+      "heading": "System Log and crash diagnostics",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16688,
+      "heading": "Disk Management",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16692,
+      "heading": "Task Manager and other donor-backed utilities",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16698,
+      "heading": "9to1-OS acceptance requirements",
+      "milestones": [
+        "S2-OS1"
+      ]
+    },
+    {
+      "line": 16711,
+      "heading": "Go",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16715,
+      "heading": "Default surface",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16721,
+      "heading": "Search and AI modes",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16727,
+      "heading": "Universal provider model",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16733,
+      "heading": "Canonical identity",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16737,
+      "heading": "Ranking and context",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16741,
+      "heading": "Typed actions",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16747,
+      "heading": "Filters and previews",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16751,
+      "heading": "Indexing, privacy and freshness",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16757,
+      "heading": "Scoped reuse",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16761,
+      "heading": "Performance and failure isolation",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16765,
+      "heading": "Go acceptance requirements",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16773,
+      "heading": "Universal Model Picker",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16781,
+      "heading": "OS resource and policy integration",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16787,
+      "heading": "Shared-routing invariant",
+      "milestones": [
+        "S2-OS2"
+      ]
+    },
+    {
+      "line": 16791,
+      "heading": "Wine/WinBoat Framework",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16795,
+      "heading": "Compatibility backends",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16801,
+      "heading": "Automatic package routing",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16809,
+      "heading": "Per-application framework defaults",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16817,
+      "heading": "Windows: Wine path",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16825,
+      "heading": "Windows: WinBoat-style environment path",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16831,
+      "heading": "Android/APK compatibility path",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16841,
+      "heading": "Unified installation experience",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16847,
+      "heading": "Native-feeling OS integration",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16853,
+      "heading": "Filesystem and host permissions",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16859,
+      "heading": "Graphics, gaming and input",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16863,
+      "heading": "Resource and lifecycle management",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16869,
+      "heading": "Snapshots, repair and updates",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16877,
+      "heading": "Diagnostics and recovery",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16883,
+      "heading": "Managed-user policy",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16889,
+      "heading": "Compatibility Framework acceptance requirements",
+      "milestones": [
+        "S2-OS3"
+      ]
+    },
+    {
+      "line": 16899,
+      "heading": "Explicitly deferred scope",
+      "milestones": [
+        "S2-EXCLUSIONS"
+      ]
+    },
+    {
+      "line": 16903,
+      "heading": "Training Lab",
+      "milestones": [
+        "S2-EXCLUSIONS"
+      ]
+    },
+    {
+      "line": 16909,
+      "heading": "Open product and release decisions",
+      "milestones": [
+        "S2-DECISIONS"
+      ]
+    }
+  ]
+}
