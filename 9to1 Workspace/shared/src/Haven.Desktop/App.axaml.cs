@@ -180,6 +180,7 @@ public sealed partial class App : Avalonia.Application
         }
 #endif
 
+        TryRunDiagnosticSnapshot();
         base.OnFrameworkInitializationCompleted();
     }
 
