@@ -58,7 +58,10 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<Services.AvatarStore>();
         collection.AddSingleton<Services.OllamaWakeService>();
         collection.AddSingleton<ProjectCreationService>();
-        collection.AddSingleton<NotificationService>();
+        // The borrower exists before the native window opens; storage migration
+        // runs in the owned startup original, so defer its first repository read.
+        collection.AddSingleton(services => new NotificationService(
+            services.GetRequiredService<HavenNotificationService>(), refreshOnConstruction: false));
         collection.AddSingleton<ComputerUseOverlayCoordinator>();
 #if !ANDROID
         collection.AddSingleton<Haven.Desktop.Overlay.OverlayWorkspaceRegistry>();
@@ -219,7 +222,9 @@ public sealed partial class App : Avalonia.Application
 
             var lifecycle = services.GetRequiredService<IApplicationLifecycle>();
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => lifecycle.CrashRecoveryAsync(CancellationToken.None)));
-            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => lifecycle.StartupAsync(CancellationToken.None)));
+            var storageStartup = AcquireOriginalAppSynchronous(original, () => lifecycle.StartupAsync(CancellationToken.None));
+            if (!await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                () => services.GetRequiredService<NotificationService>().RefreshAfterStorageStartupAsync(original, storageStartup)))) return;
 #if !ANDROID
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, StartOriginalWindowsHomeAsync));
 #endif

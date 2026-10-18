@@ -48,6 +48,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />
+    <Compile Include="NotificationServiceStorageStartupTests.cs" />
     <Compile Include="UnifiedHomeContentTests.cs;DesktopOriginalShutdownSequenceTests.cs" />
     <Compile Include="FilesWorkspaceSetupTests.cs" />
     <Compile Include="DesktopBorrowerOriginalLifetimeTests.cs" />

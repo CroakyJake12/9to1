@@ -29,6 +29,7 @@ public sealed partial class NotificationService : IDisposable, IAsyncDisposable,
     /// </summary>
     private int _disposed;
     private readonly HavenNotificationService? _backend;
+    private int _storageReady;
     private readonly Dictionary<Guid, ToastNotification> _local = [];
     private readonly CancellationTokenSource _lifetime = new();
 
@@ -41,9 +42,14 @@ public sealed partial class NotificationService : IDisposable, IAsyncDisposable,
     {
     }
 
-    public NotificationService(HavenNotificationService? backend)
+    public NotificationService(HavenNotificationService? backend) : this(backend, refreshOnConstruction: true)
+    {
+    }
+
+    internal NotificationService(HavenNotificationService? backend, bool refreshOnConstruction)
     {
         _backend = backend;
+        _storageReady = refreshOnConstruction ? 1 : 0;
         _originalWork = new(() => Task.CompletedTask, CleanupOriginalNotificationsAsync);
         _cleanupTimer = new System.Timers.Timer(1000)
         {
@@ -55,7 +61,7 @@ public sealed partial class NotificationService : IDisposable, IAsyncDisposable,
         if (_backend is not null)
         {
             _backend.Changed += OnBackendChanged;
-            StartRefresh();
+            if (refreshOnConstruction) _ = StartRefresh();
         }
     }
 
@@ -129,12 +135,31 @@ public sealed partial class NotificationService : IDisposable, IAsyncDisposable,
         foreach (var item in Notifications.Where(notification => notification.ExpiresAt <= now).ToList()) Notifications.Remove(item);
     }
 
-    private void OnBackendChanged(object? sender, Haven.Core.HavenNotification notification) => StartRefresh();
+    private void OnBackendChanged(object? sender, Haven.Core.HavenNotification notification)
+    { if (Volatile.Read(ref _storageReady) != 0) _ = StartRefresh(); }
 
-    private void StartRefresh()
+    // The native App creates its borrower graph before storage startup. Its first
+    // repository read belongs after the actual awaited migration/startup source.
+    internal async Task<bool> RefreshAfterStorageStartupAsync(
+        DesktopOriginalWorkLifetime.Original startupOriginal, Task storageStartup)
     {
-        if (_backend is null) return;
-        _ = StartOriginal(async original =>
+        await startupOriginal.AwaitAsync(storageStartup);
+        Task? refresh = null;
+        startupOriginal.RunAcceptedPublicationCallback(() =>
+        {
+            Volatile.Write(ref _storageReady, 1);
+            refresh = StartRefresh(refuseRetired: true)
+                ?? throw new InvalidOperationException("The native notification backend is unavailable.");
+        });
+        if (refresh is null) return false; // Permanent App retirement admitted no new repository work.
+        await startupOriginal.AwaitAsync(refresh);
+        return true;
+    }
+
+    private Task? StartRefresh(bool refuseRetired = false)
+    {
+        if (_backend is null) return null;
+        return StartOriginal(async original =>
         {
             Task<IReadOnlyList<Haven.Core.HavenNotification>>? recent = null;
             original.RunAcceptedPublicationCallback(() => recent = _backend.GetRecentAsync(100, false, _lifetime.Token));
@@ -146,7 +171,7 @@ public sealed partial class NotificationService : IDisposable, IAsyncDisposable,
                 .ThenByDescending(item => item.UpdatedAt)
                 .Select(Map).ToArray());
             if (mapped is not null) await original.AwaitAsync(PublishOriginalAsync(original, () => Rebuild(mapped)));
-        });
+        }, refuseRetired);
     }
 
     private void Rebuild(IReadOnlyList<ToastNotification> backend)
