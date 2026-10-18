@@ -29,6 +29,10 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private bool _activated;
     private long _editEpoch;
     private int _controllerOperations;
+    private ClosePreparation? _lease;
+    private Task<ClosePreparation?>? _preparation;
+    private Decision? _decision;
+    private readonly List<Decision> _decisions = [];
 
     public SpaceBuilderPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness)
         : this(registry, spaceId, readiness, null) { }
@@ -152,6 +156,31 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
 
     private async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token)
     {
+        if (command == "space-builder.back")
+        {
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            Task back;
+            lock (_gate)
+            {
+                if (!CanMutate() || _queueBack is null) throw new InvalidOperationException("This builder cannot return to Spaces.");
+                back = _work.RunAsync(async original =>
+                {
+                    await start.Task.ConfigureAwait(false);
+                    original.BindPublicationGuard(IsPresentationCurrent);
+                    Task? pipeline = null;
+                    await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        original.DemandPublication();
+                        pipeline = _host.CaptureOriginalActionSettlement(_show!);
+                    }).GetTask()).ConfigureAwait(false);
+                    var settlement = Task.WhenAll(pipeline!, original.Task);
+                    if (!_queueBack(settlement)) throw new InvalidOperationException("The session refused the return to Spaces.");
+                });
+            }
+            start.SetResult();
+            await back.ConfigureAwait(false);
+            return;
+        }
         var actual = command switch
         {
             "space-builder.save" => SaveAsync(token),
