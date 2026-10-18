@@ -1,0 +1,218 @@
+using Avalonia.Controls;
+using Avalonia.Threading;
+using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
+using Haven.Application;
+using Haven.Core;
+using Haven.Desktop.Services;
+using HavenOS.Apps.Spaces.Builder;
+
+namespace Haven.Desktop.Views.Pages.Spaces;
+
+/// <summary>Retained canonical Space Builder content surface. Borrowed SpaceRegistry;
+/// hosts the authored SpaceBuilder.cui through SpaceBuilderController and
+/// SpaceBuilderCuiBindings. Incremental: Advanced/Expert are not yet implemented.</summary>
+public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalRetirementParticipant,
+    IDesktopOriginalRetirementJoinGuard, IDisposable, IAsyncDisposable
+{
+    private readonly object _gate = new();
+    private readonly SpaceBuilderController _controller;
+    private readonly SpaceBuilderCuiBindings _bindings;
+    private readonly ICuiSceneReadiness _readiness;
+    private readonly CuiSceneHost _host;
+    private readonly DesktopOriginalWorkLifetime _work;
+    private readonly Func<Task, bool>? _queueBack;
+    private Task? _activation;
+    private Task? _hostClose;
+    private Task<CuiSceneAvailability>? _show;
+    private bool _live = true;
+    private bool _activated;
+    private long _editEpoch;
+    private int _controllerOperations;
+
+    public SpaceBuilderPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness)
+        : this(registry, spaceId, readiness, null) { }
+
+    public SpaceBuilderPage(SpaceRegistry registry, Guid spaceId, ICuiSceneReadiness readiness, Func<Task, bool>? queueBack)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        _controller = new(registry, spaceId);
+        _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
+        _queueBack = queueBack;
+        var document = SpaceBuilderCuiDocument.Load();
+        _host = new CuiSceneHost();
+        _work = new(StopAsync, CleanupAsync);
+        _bindings = new(() => _controller.State,
+            (field, value) => TryEdit(field, value),
+            (category, state) => TrySetCategory(category, state),
+            DispatchAsync, CanMutate, () => _queueBack is not null);
+        _controller.StateChanged += OnStateChanged;
+        Document = document;
+        Content = _host;
+    }
+
+    public CuiDocument Document { get; }
+    public SpaceBuilderState State => _controller.State;
+    public Task? OriginalClose => _work.OriginalClose;
+    internal CuiSceneHost Host => _host;
+    internal Task<CuiSceneAvailability>? Show => _show;
+
+    private bool IsPresentationCurrent() => Volatile.Read(ref _live);
+    private bool CanMutate()
+    {
+        lock (_gate) return _live && _activated && !_work.IsRetiring;
+    }
+
+    public Task ActivateAsync(CancellationToken token = default)
+    {
+        lock (_gate)
+        {
+            _work.DemandAdmission();
+            return _activation ??= _work.RunAsync(async original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, original.Token);
+                await original.AwaitAsync(Source(() => _controller.LoadAsync(linked.Token))).ConfigureAwait(false);
+                Task<CuiSceneAvailability>? show = null;
+                var dispatch = Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    original.DemandPublication();
+                    lock (_gate) _activated = true;
+                    _bindings.Refresh();
+                    show = _show = Source(() => _host.ShowAsync(new("spaces.builder", "Space Builder", "Space Builder",
+                        Document, _bindings, _bindings, _readiness) { IsPublicationCurrent = IsPresentationCurrent }, linked.Token));
+                }).GetTask();
+                try { await original.AwaitAsync(dispatch).ConfigureAwait(false); }
+                catch (Exception error) { original.Capture(dispatch, error); }
+                if (show is not null)
+                    try { await original.AwaitAsync(show).ConfigureAwait(false); }
+                    catch (Exception error) { original.Capture(show, error); }
+                original.ThrowRetained();
+            });
+        }
+    }
+
+    public bool TryEdit(SpaceBuilderField field, string value)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate()) return false;
+            var accepted = false;
+            _work.RunSynchronous(original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                original.DemandPublication();
+                accepted = Source(() => _controller.SetField(field, value));
+                if (accepted) _editEpoch++;
+            });
+            return accepted;
+        }
+    }
+
+    public bool TrySetCategory(SpaceBuilderCategory category, SpaceCapabilityCategoryState state)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate()) return false;
+            var accepted = false;
+            _work.RunSynchronous(original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                original.DemandPublication();
+                accepted = Source(() => _controller.SetCategoryState(category, state));
+                if (accepted) _editEpoch++;
+            });
+            return accepted;
+        }
+    }
+
+    public Task<bool> SaveAsync(CancellationToken token = default) => RunControllerAsync(_controller.SaveAsync, token);
+    public Task<bool> DiscardChangesAsync(CancellationToken token = default) => RunControllerAsync(_controller.DiscardChangesAsync, token);
+    public Task<bool> ReloadAsync(CancellationToken token = default) => RunControllerAsync(_controller.LoadAsync, token);
+
+    private Task<bool> RunControllerAsync(Func<CancellationToken, Task<bool>> operation, CancellationToken caller)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate()) return Task.FromResult(false);
+            _controllerOperations++;
+            try { return _work.RunAsync(async original =>
+            {
+                try
+                {
+                    original.BindPublicationGuard(IsPresentationCurrent);
+                    using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, original.Token);
+                    return await original.AwaitAsync(Source(() => operation(linked.Token))).ConfigureAwait(false);
+                }
+                finally { lock (_gate) _controllerOperations--; }
+            }); }
+            catch { _controllerOperations--; throw; }
+        }
+    }
+
+    private async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token)
+    {
+        var actual = command switch
+        {
+            "space-builder.save" => SaveAsync(token),
+            "space-builder.discard" => DiscardChangesAsync(token),
+            "space-builder.reload" => ReloadAsync(token),
+            _ => throw new InvalidOperationException("This Space Builder command is not owned by this page.")
+        };
+        await actual.ConfigureAwait(false);
+    }
+
+    private void OnStateChanged(SpaceBuilderState state) => RefreshBindings();
+
+    private void RefreshBindings() => _ = RefreshBindingsAsync();
+
+    private Task RefreshBindingsAsync()
+    {
+        lock (_gate)
+        {
+            if (!_live || _work.IsRetiring) return Task.CompletedTask;
+            return _work.RunAsync(async original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+                    original.RunAcceptedPublicationCallback(() => _bindings.Refresh())).GetTask()).ConfigureAwait(false);
+            });
+        }
+    }
+
+    private T Source<T>(Func<T> acquire) => CloudflareOriginalExecutionGuard.InvokeOriginal(this, acquire);
+
+    public void DemandExternalOriginalRetirementJoin()
+    {
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        _work.DemandExternalClose();
+    }
+
+    public Task CloseAndDrainAsync()
+    {
+        DemandExternalOriginalRetirementJoin();
+        lock (_gate) return _work.CloseAndDrainAsync();
+    }
+    public void RequestRetirement() { lock (_gate) _work.RequestRetirement(); }
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
+
+    private Task StopAsync()
+    {
+        lock (_gate)
+        {
+            Volatile.Write(ref _live, false);
+            _controller.StateChanged -= OnStateChanged;
+            return _hostClose ??= Source(_host.CloseOriginalAsync);
+        }
+    }
+
+    private async Task CleanupAsync()
+    {
+        List<Exception> failures = [];
+        if (_hostClose is { } hostClose)
+            try { await hostClose.ConfigureAwait(false); } catch (Exception error) { failures.Add(error); }
+        if (failures.Count > 0) throw new AggregateException("The Space Builder surface did not close cleanly.", failures);
+        await Source(() => Dispatcher.UIThread.InvokeAsync(() => Content = null).GetTask()).ConfigureAwait(false);
+    }
+}

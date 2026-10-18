@@ -1,0 +1,42 @@
+<Cui id="spaces.builder" version="1">
+  <Theme Name="user_preference">
+    <Page id="space-builder-editor" role="main" accessible-name="Space Builder">
+      <Container Type="Vertical Stack" Padding="24" CellGap="12" VerticalScrolling="True" HorizontalScrolling="False">
+        <Text text="Space Builder" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+        <Text text="Basic, Advanced and Expert editing for one Space and revision. Advanced and Expert are not yet implemented." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        <Container Type="Vertical Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
+          <Text text="Name" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-name" Type="Text" Value="{Binding builder.name, mode=TwoWay}" accessible-name="Space name" />
+          <Text text="Description" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-description" Type="Text" AcceptsReturn="True" Value="{Binding builder.description, mode=TwoWay}" accessible-name="Space description" />
+          <Text text="Icon" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-icon" Type="Text" Value="{Binding builder.icon, mode=TwoWay}" placeholdertext="For example, book" accessible-name="Space icon" />
+          <Text text="Custom instructions" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-instructions" Type="Text" AcceptsReturn="True" MinHeight="120" Value="{Binding builder.instructions, mode=TwoWay}" accessible-name="Space custom instructions" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text text="Capability categories" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Inherited / Enabled / Disabled. Disabled restricts; Enabled never grants permission beyond policy." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        </Container>
+        <Container Type="Vertical Stack" CellGap="6">
+          <Text text="Skills" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-category-skills" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.skills, mode=TwoWay}" accessible-name="Skills category state" />
+          <Text text="Plugins" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-category-plugins" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.plugins, mode=TwoWay}" accessible-name="Plugins category state" />
+          <Text text="Apps" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-category-apps" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.apps, mode=TwoWay}" accessible-name="Apps category state" />
+          <Text text="Models" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-category-models" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.models, mode=TwoWay}" accessible-name="Models category state" />
+          <Text text="Memory" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-category-memory" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.memory, mode=TwoWay}" accessible-name="Memory category state" />
+        </Container>
+        <Container Type="Wrap" CellGap="8">
+          <Button id="space-builder-save" content="Save" action="space-builder.save" Interactive="{Binding builder.canSave}" accessible-name="Save Space Builder configuration" />
+          <Button id="space-builder-discard" content="Discard changes" action="space-builder.discard" Interactive="{Binding builder.canDiscard}" accessible-name="Discard unsaved changes and reload" />
+          <Button id="space-builder-reload" content="Reload" action="space-builder.reload" Interactive="{Binding builder.canReload}" accessible-name="Reload saved Space Builder configuration" />
+        </Container>
+        <Text id="space-builder-status" text="{Binding builder.status}" role="status" accessible-name="Space Builder status" foreground="{Resource CuiTextSoftBrush}" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

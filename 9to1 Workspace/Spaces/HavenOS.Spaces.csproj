@@ -24,6 +24,7 @@
     <EmbeddedResource Include="UI\Chat\ChatSpace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatSpace.cui" />
     <EmbeddedResource Include="UI\Home\SpacesHome.cui" LogicalName="HavenOS.Apps.Spaces.UI.Home.SpacesHome.cui" />
     <EmbeddedResource Include="UI\Builder\SpaceDetails.cui" LogicalName="HavenOS.Apps.Spaces.UI.Builder.SpaceDetails.cui" />
+    <EmbeddedResource Include="UI\Builder\SpaceBuilder.cui" LogicalName="HavenOS.Apps.Spaces.UI.Builder.SpaceBuilder.cui" />
     <None Update="UI\Chat\ChatSpace.cui" CopyToOutputDirectory="PreserveNewest" />
     <None Update="UI\Home\SpacesHome.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
