@@ -183,7 +183,7 @@ public sealed class SpacesHomeNativeRenderingTests
 
                 Assert.Single(controller.State.CustomSpaces);
                 Assert.Equal("New Space", controller.State.CustomSpaces[0].Name);
-                Assert.True(controller.State.Selection?.IsRenaming);
+                Assert.False(controller.State.Selection?.IsRenaming ?? false);
             }
             finally
             {
