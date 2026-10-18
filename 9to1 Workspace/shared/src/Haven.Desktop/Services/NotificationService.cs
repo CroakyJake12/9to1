@@ -17,7 +17,8 @@ namespace Haven.Desktop.Services;
 /// <summary>
 /// Represents notification service and keeps its related state and behavior together.
 /// </summary>
-public sealed class NotificationService : IDisposable
+public sealed partial class NotificationService : IDisposable, IAsyncDisposable,
+    IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard
 {
     /// <summary>
     /// Stores cleanup timer locally so this component can preserve the dependency, cache, or state between member calls.
@@ -43,6 +44,7 @@ public sealed class NotificationService : IDisposable
     public NotificationService(HavenNotificationService? backend)
     {
         _backend = backend;
+        _originalWork = new(() => Task.CompletedTask, CleanupOriginalNotificationsAsync);
         _cleanupTimer = new System.Timers.Timer(1000)
         {
             AutoReset = true,
@@ -53,7 +55,7 @@ public sealed class NotificationService : IDisposable
         if (_backend is not null)
         {
             _backend.Changed += OnBackendChanged;
-            _ = RefreshBackendAsync();
+            StartRefresh();
         }
     }
 
@@ -72,54 +74,48 @@ public sealed class NotificationService : IDisposable
             CreatedAt = DateTimeOffset.UtcNow,
             ExpiresAt = DateTimeOffset.UtcNow + (duration ?? TimeSpan.FromSeconds(5))
         };
-        Dispatcher.UIThread.Post(() =>
+        _ = StartOriginal(original => PublishOriginalAsync(original, () =>
         {
-            if (Volatile.Read(ref _disposed) == 0)
+            _local[toast.Id] = toast;
+            Rebuild(Notifications.Where(item => !item.IsLocal).ToArray());
+        }), refuseRetired: true);
+    }
+
+    public void Dismiss(Guid id)
+    {
+        _ = StartOriginal(async original =>
+        {
+            var publication = PublishOriginalAsync(original, () =>
             {
-                _local[toast.Id] = toast;
-                Rebuild(Notifications.Where(item => !item.IsLocal).ToArray());
+                var item = Notifications.FirstOrDefault(notification => notification.Id == id);
+                _local.Remove(id);
+                if (item is not null) Notifications.Remove(item);
+            });
+            Task? dismiss = null;
+            try
+            {
+                if (_backend is not null)
+                    original.RunAcceptedPublicationCallback(() => dismiss = _backend.DismissAsync(id, _lifetime.Token));
+            }
+            finally
+            {
+                try { await original.AwaitAsync(publication); }
+                finally { if (dismiss is not null) await AwaitOriginalBackendAsync(original, dismiss); }
             }
         });
     }
 
-    /// <summary>
-    /// Performs the dismiss step owned by this component.
-    /// </summary>
-    public void Dismiss(Guid id)
-    {
-        if (Volatile.Read(ref _disposed) == 1) return;
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (Volatile.Read(ref _disposed) == 1) return;
-            var item = Notifications.FirstOrDefault(notification => notification.Id == id);
-            _local.Remove(id);
-            if (item is not null) Notifications.Remove(item);
-        });
-        if (_backend is not null) _ = _backend.DismissAsync(id, _lifetime.Token);
-    }
-
-    /// <summary>
-    /// Performs the dispose step owned by this component.
-    /// </summary>
-    public void Dispose()
-    {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
-        _cleanupTimer.Stop();
-        _cleanupTimer.Elapsed -= OnCleanupElapsed;
-        _cleanupTimer.Dispose();
-        if (_backend is not null) _backend.Changed -= OnBackendChanged;
-        _lifetime.Cancel();
-        _lifetime.Dispose();
-        Dispatcher.UIThread.Post(Notifications.Clear);
-    }
+    // Synchronous disposal requests the SAME retirement; only the external async
+    // host may claim that its accepted backend and dispatcher originals drained.
+    public void Dispose() => RequestRetirement();
+    public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
 
     /// <summary>
     /// Handles the cleanup elapsed event raised by the UI or runtime.
     /// </summary>
     private void OnCleanupElapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
-        if (Volatile.Read(ref _disposed) == 1) return;
-        Dispatcher.UIThread.Post(CleanupExpired);
+        _ = StartOriginal(original => PublishOriginalAsync(original, CleanupExpired));
     }
 
     /// <summary>
@@ -133,24 +129,24 @@ public sealed class NotificationService : IDisposable
         foreach (var item in Notifications.Where(notification => notification.ExpiresAt <= now).ToList()) Notifications.Remove(item);
     }
 
-    private void OnBackendChanged(object? sender, Haven.Core.HavenNotification notification) => _ = RefreshBackendAsync();
+    private void OnBackendChanged(object? sender, Haven.Core.HavenNotification notification) => StartRefresh();
 
-    private async Task RefreshBackendAsync()
+    private void StartRefresh()
     {
-        if (_backend is null || Volatile.Read(ref _disposed) == 1) return;
-        try
+        if (_backend is null) return;
+        _ = StartOriginal(async original =>
         {
-            var recent = await _backend.GetRecentAsync(100, false, _lifetime.Token).ConfigureAwait(false);
-            var mapped = _backend.Live.Concat(recent)
+            Task<IReadOnlyList<Haven.Core.HavenNotification>>? recent = null;
+            original.RunAcceptedPublicationCallback(() => recent = _backend.GetRecentAsync(100, false, _lifetime.Token));
+            if (recent is null || !await AwaitOriginalBackendAsync(original, recent)) return;
+            ToastNotification[]? mapped = null;
+            original.RunAcceptedPublicationCallback(() => mapped = _backend.Live.Concat(recent.Result)
                 .Where(item => !item.IsDismissed)
                 .OrderByDescending(item => item.IsLive)
                 .ThenByDescending(item => item.UpdatedAt)
-                .Select(Map)
-                .ToArray();
-            Dispatcher.UIThread.Post(() => Rebuild(mapped));
-        }
-        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
-        catch { /* The bell may retain its last complete state if persistence is temporarily unavailable. */ }
+                .Select(Map).ToArray());
+            if (mapped is not null) await original.AwaitAsync(PublishOriginalAsync(original, () => Rebuild(mapped)));
+        });
     }
 
     private void Rebuild(IReadOnlyList<ToastNotification> backend)
