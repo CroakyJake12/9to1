@@ -139,6 +139,105 @@ public sealed class SpacePolicyResolverTests
 
     // A path fixture only. Persistence, serialization, leases and registry writes
     // are the real VersionedAtomicSettingsStore/SpaceRegistry implementations.
+
+[Fact]
+    public async Task Disabled_category_ancestor_removes_and_blocks_child_resources()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Restricted parent", cancellationToken: token);
+        parent = await registry.UpdateAsync(parent with
+        {
+            CapabilityCategoryPolicy = new SpaceCapabilityCategoryPolicy(Skills: SpaceCapabilityCategoryState.Disabled),
+            CapabilityBindings = [new("parent-skill", SpaceCapabilityKind.Skill, SpaceCapabilityOverride.Enabled, "v1")]
+        }, parent.Revision, token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        // Child tries to add a new skill and re-enable the parent's skill, with inheritance off.
+        child = await registry.UpdateAsync(child with
+        {
+            Inheritance = new SpaceInheritancePolicy(Skills: false),
+            CapabilityBindings = [
+                new("parent-skill", SpaceCapabilityKind.Skill, SpaceCapabilityOverride.Enabled, "child-v"),
+                new("new-skill", SpaceCapabilityKind.Skill, SpaceCapabilityOverride.Enabled, "new-v")]
+        }, child.Revision, token);
+
+        var policy = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(child.Id, token);
+        // Disabled category removes ALL skills, including new ones.
+        Assert.DoesNotContain(policy.Capabilities, b => b.Kind == SpaceCapabilityKind.Skill);
+        // The disabled category kind is tracked in provenance.
+        Assert.Contains(SpaceCapabilityKind.Skill, policy.DisabledCapabilityKinds);
+    }
+
+    [Fact]
+    public async Task Explicit_disabled_ancestor_tombstone_is_retained()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Parent", cancellationToken: token);
+        parent = await registry.UpdateAsync(parent with
+        {
+            CapabilityBindings = [new("blocked-plugin", SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Disabled, "tombstone")]
+        }, parent.Revision, token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        child = await registry.UpdateAsync(child with
+        {
+            Inheritance = new SpaceInheritancePolicy(Plugins: true),
+            CapabilityBindings = [new("blocked-plugin", SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Enabled, "child-override")]
+        }, child.Revision, token);
+
+        var policy = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(child.Id, token);
+        // Explicit disabled tombstone is retained; child cannot re-enable.
+        var tombstone = Assert.Single(policy.Capabilities, b => b.CapabilityId == "blocked-plugin");
+        Assert.Equal(SpaceCapabilityOverride.Disabled, tombstone.Override);
+    }
+
+    [Fact]
+    public async Task Memory_category_disabled_cannot_be_restored_by_child()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Parent", cancellationToken: token);
+        parent = await registry.UpdateAsync(parent with
+        {
+            CapabilityCategoryPolicy = new SpaceCapabilityCategoryPolicy(Memory: SpaceCapabilityCategoryState.Disabled),
+            MemoryPolicy = new SpaceMemoryPolicy([SpaceMemoryScope.Conversation], SpaceMemoryScope.Conversation)
+        }, parent.Revision, token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        child = await registry.UpdateAsync(child with
+        {
+            Inheritance = new SpaceInheritancePolicy(MemoryPolicy: false),
+            MemoryPolicy = new SpaceMemoryPolicy([SpaceMemoryScope.Conversation, SpaceMemoryScope.Space], SpaceMemoryScope.Conversation)
+        }, child.Revision, token);
+
+        var policy = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(child.Id, token);
+        // Memory disabled by ancestor: child gets no scopes.
+        Assert.Empty(policy.Memory.AllowedScopes ?? []);
+    }
+
+    [Fact]
+    public async Task Models_disabled_is_not_reported_as_available()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var space = await registry.CreateAsync("Space", cancellationToken: token);
+        space = await registry.UpdateAsync(space with
+        {
+            CapabilityCategoryPolicy = new SpaceCapabilityCategoryPolicy(Models: SpaceCapabilityCategoryState.Disabled),
+            ModelPolicy = new SpaceModelPolicy("test-model")
+        }, space.Revision, token);
+
+        var policy = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(space.Id, token);
+        Assert.Null(policy.Model.DefaultModelId);
+    }
+
     private sealed class IsolatedSettingsFiles : IAppPaths, IDisposable
     {
         public IsolatedSettingsFiles()

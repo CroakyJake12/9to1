@@ -7,7 +7,13 @@ public sealed record EffectiveSpacePolicy(
     SpaceMemoryPolicy Memory,
     IReadOnlyList<SpaceCapabilityBinding> Capabilities,
     IReadOnlyList<SpaceContextReference> Sources,
-    IReadOnlyList<Guid> Ancestry);
+    IReadOnlyList<Guid> Ancestry,
+    IReadOnlySet<SpaceCapabilityKind> DisabledCapabilityKinds = null!,
+    bool MemoryCategoryDisabled = false)
+{
+    public IReadOnlySet<SpaceCapabilityKind> DisabledCapabilityKinds { get; init; } =
+        DisabledCapabilityKinds ?? (IReadOnlySet<SpaceCapabilityKind>)new HashSet<SpaceCapabilityKind>();
+}
 
 /// <summary>Resolves inherited Space policy without granting capabilities or opening app data.</summary>
 public sealed class SpacePolicyResolver(SpaceRegistry registry)
@@ -33,20 +39,22 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         }
 
         chain.Reverse();
-        var rootCapabilities = ApplyCategoryPolicy(
-            chain[0].CapabilityBindings?.ToArray() ?? [],
-            chain[0].CapabilityCategoryPolicy);
-        var rootMemory = ApplyCategoryMemory(
-            chain[0].MemoryPolicy ?? new SpaceMemoryPolicy([SpaceMemoryScope.Conversation]),
-            chain[0].CapabilityCategoryPolicy);
+        var root = chain[0];
+        var rootDisabled = DisabledKinds(root.CapabilityCategoryPolicy);
+        var rootCapabilities = ApplyCategoryPolicy(root.CapabilityBindings?.ToArray() ?? [], root.CapabilityCategoryPolicy, rootDisabled);
+        var rootMemory = ApplyCategoryMemory(root.MemoryPolicy ?? new SpaceMemoryPolicy([SpaceMemoryScope.Conversation]), root.CapabilityCategoryPolicy);
+        var rootModel = ApplyCategoryModel(root.ModelPolicy ?? new SpaceModelPolicy(root.ModelName), root.CapabilityCategoryPolicy);
         var effective = new EffectiveSpacePolicy(
-            chain[0].Id,
-            chain[0].ModelPolicy ?? new SpaceModelPolicy(chain[0].ModelName),
-            chain[0].ContextPolicy ?? new SpaceContextPolicy(),
+            root.Id,
+            rootModel,
+            root.ContextPolicy ?? new SpaceContextPolicy(),
             rootMemory,
             rootCapabilities,
-            ReadableSources(chain[0].ContextReferences),
-            [chain[0].Id]);
+            ReadableSources(root.ContextReferences),
+            [root.Id],
+            rootDisabled,
+            root.CapabilityCategoryPolicy?.Memory == SpaceCapabilityCategoryState.Disabled);
+
         foreach (var child in chain.Skip(1))
             effective = Merge(effective, child);
 
@@ -81,56 +89,92 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         var memory = new SpaceMemoryPolicy(allowedMemory, defaultMemory);
 
         var capabilities = new Dictionary<(SpaceCapabilityKind Kind, string Id), SpaceCapabilityBinding>();
+        // Carry ancestor disabled categories forward (restrictive, even with inheritance off).
+        var disabled = new HashSet<SpaceCapabilityKind>(parent.DisabledCapabilityKinds);
+        var childDisabled = DisabledKinds(child.CapabilityCategoryPolicy);
+        foreach (var k in childDisabled) disabled.Add(k);
+        var memoryDisabled = parent.MemoryCategoryDisabled ||
+            child.CapabilityCategoryPolicy?.Memory == SpaceCapabilityCategoryState.Disabled;
+
         foreach (var binding in parent.Capabilities)
         {
-            // Availability inheritance is optional; an explicit ancestor exclusion
-            // remains a restriction even when this category is not inherited.
-            if (binding.Override != SpaceCapabilityOverride.Disabled && !IsInherited(binding.Kind, inheritance)) continue;
+            // Ancestor exclusion remains a restriction even when this category is not inherited.
+            if (binding.Override == SpaceCapabilityOverride.Disabled)
+            {
+                capabilities[(binding.Kind, binding.CapabilityId)] = binding;
+                continue;
+            }
+            if (disabled.Contains(binding.Kind)) continue; // category disabled by ancestor or self
+            if (!IsInherited(binding.Kind, inheritance)) continue;
             capabilities[(binding.Kind, binding.CapabilityId)] = binding;
         }
         foreach (var binding in child.CapabilityBindings ?? [])
         {
             var key = (binding.Kind, binding.CapabilityId);
+            // Preserve explicit ancestor exclusion (tombstone) — never overwrite with enabled.
             if (capabilities.TryGetValue(key, out var inherited) && inherited.Override == SpaceCapabilityOverride.Disabled) continue;
+            // Category disabled: reject new resources of that kind.
+            if (disabled.Contains(binding.Kind)) continue;
             capabilities[key] = binding;
         }
+
+        // Apply child category policy: Disabled removes all of that kind (including inherited).
+        var filtered = capabilities.Values.Where(b => !disabled.Contains(b.Kind)).ToArray();
 
         var sources = new Dictionary<Guid, SpaceContextReference>();
         if (inheritance.Sources)
             foreach (var source in parent.Sources) sources[source.ContextId] = source;
         foreach (var source in ReadableSources(child.ContextReferences)) sources[source.ContextId] = source;
 
-        var mergedCapabilities = ApplyCategoryPolicy(
-            capabilities.Values.ToArray(),
-            child.CapabilityCategoryPolicy);
-        var mergedMemory = ApplyCategoryMemory(memory, child.CapabilityCategoryPolicy);
+        var mergedModel = ApplyCategoryModel(model, child.CapabilityCategoryPolicy);
+        var mergedMemory = memoryDisabled
+            ? new SpaceMemoryPolicy([], memory.DefaultScope)
+            : ApplyCategoryMemory(memory, child.CapabilityCategoryPolicy);
+
         return new EffectiveSpacePolicy(
-            child.Id, model, context, mergedMemory,
-            mergedCapabilities.OrderBy(item => item.Kind).ThenBy(item => item.CapabilityId, StringComparer.Ordinal).ToArray(),
+            child.Id, mergedModel, context, mergedMemory,
+            filtered.OrderBy(item => item.Kind).ThenBy(item => item.CapabilityId, StringComparer.Ordinal).ToArray(),
             sources.Values.OrderBy(item => item.AddedAt).ThenBy(item => item.ContextId).ToArray(),
-            [.. parent.Ancestry, child.Id]);
+            [.. parent.Ancestry, child.Id],
+            disabled,
+            memoryDisabled);
     }
 
     private static IReadOnlyList<SpaceCapabilityBinding> ApplyCategoryPolicy(
         IReadOnlyList<SpaceCapabilityBinding> capabilities,
-        SpaceCapabilityCategoryPolicy? policy)
+        SpaceCapabilityCategoryPolicy? policy,
+        HashSet<SpaceCapabilityKind> disabled)
     {
-        if (policy is null) return capabilities;
-        var disabled = new HashSet<SpaceCapabilityKind>();
-        if (policy.Skills == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Skill);
-        if (policy.Plugins == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Plugin);
-        if (policy.Apps == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.ConnectedApp);
-        if (policy.Apps == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Mcp);
-        if (policy.Apps == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Agent);
         if (disabled.Count == 0) return capabilities;
         return capabilities.Where(b => !disabled.Contains(b.Kind)).ToArray();
+    }
+
+    private static SpaceModelPolicy ApplyCategoryModel(SpaceModelPolicy model, SpaceCapabilityCategoryPolicy? policy)
+    {
+        if (policy is null || policy.Models != SpaceCapabilityCategoryState.Disabled) return model;
+        // Disabled models category: restrict to no default model.
+        return model with { DefaultModelId = null };
     }
 
     private static SpaceMemoryPolicy ApplyCategoryMemory(SpaceMemoryPolicy memory, SpaceCapabilityCategoryPolicy? policy)
     {
         if (policy is null || policy.Memory != SpaceCapabilityCategoryState.Disabled) return memory;
-        // Disabled memory category restricts to no scopes.
         return new SpaceMemoryPolicy([], memory.DefaultScope);
+    }
+
+    private static HashSet<SpaceCapabilityKind> DisabledKinds(SpaceCapabilityCategoryPolicy? policy)
+    {
+        var set = new HashSet<SpaceCapabilityKind>();
+        if (policy is null) return set;
+        if (policy.Skills == SpaceCapabilityCategoryState.Disabled) set.Add(SpaceCapabilityKind.Skill);
+        if (policy.Plugins == SpaceCapabilityCategoryState.Disabled) set.Add(SpaceCapabilityKind.Plugin);
+        if (policy.Apps == SpaceCapabilityCategoryState.Disabled)
+        {
+            set.Add(SpaceCapabilityKind.ConnectedApp);
+            set.Add(SpaceCapabilityKind.Mcp);
+            set.Add(SpaceCapabilityKind.Agent);
+        }
+        return set;
     }
 
     private static IReadOnlyList<SpaceContextReference> ReadableSources(IReadOnlyList<SpaceContextReference>? sources) =>
