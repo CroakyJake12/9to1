@@ -7,11 +7,12 @@ namespace HavenOS.Apps.Spaces.Builder;
 
 /// <summary>Host supplies synchronous draft edits and owns/awaits asynchronous commands.</summary>
 public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiActionDispatcher,
-    ICuiActionAvailability, INotifyPropertyChanged
+    ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
 {
     private readonly Func<SpaceBuilderState> _state;
     private readonly Action<SpaceBuilderField, string> _edit;
     private readonly Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> _setCategory;
+    private readonly Action<SpaceCapabilityKind, string> _detachCapability;
     private readonly Func<string, object?, CancellationToken, ValueTask> _dispatch;
     private readonly Func<bool> _isCurrent;
     private readonly Func<bool> _canGoBack;
@@ -19,16 +20,19 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
 
     public SpaceBuilderCuiBindings(Func<SpaceBuilderState> state, Action<SpaceBuilderField, string> edit,
         Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> setCategory,
+        Action<SpaceCapabilityKind, string> detachCapability,
         Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent = null)
-        : this(state, edit, setCategory, dispatch, isCurrent, null) { }
+        : this(state, edit, setCategory, detachCapability, dispatch, isCurrent, null) { }
 
     public SpaceBuilderCuiBindings(Func<SpaceBuilderState> state, Action<SpaceBuilderField, string> edit,
         Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> setCategory,
+        Action<SpaceCapabilityKind, string> detachCapability,
         Func<string, object?, CancellationToken, ValueTask> dispatch, Func<bool>? isCurrent, Func<bool>? canGoBack)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _edit = edit ?? throw new ArgumentNullException(nameof(edit));
         _setCategory = setCategory ?? throw new ArgumentNullException(nameof(setCategory));
+        _detachCapability = detachCapability ?? throw new ArgumentNullException(nameof(detachCapability));
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _isCurrent = isCurrent ?? (() => true);
         _canGoBack = canGoBack ?? (() => false);
@@ -56,6 +60,13 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.description" => state.Draft.Description,
             "builder.icon" => state.Draft.IconKey,
             "builder.instructions" => state.Draft.Instructions,
+            "builder.capabilities" => state.Draft.CapabilityBindings.Select(b => new
+            {
+                id = b.CapabilityId,
+                kind = b.Kind.ToString(),
+                version = b.VersionPin ?? "(unpinned)"
+            }).ToArray(),
+            "builder.hasNoCapabilities" => state.Draft.CapabilityBindings.Count == 0,
             "builder.category.options" => CategoryOptions,
             "builder.category.skills" => CategoryIndex(SpaceBuilderCategory.Skills),
             "builder.category.plugins" => CategoryIndex(SpaceBuilderCategory.Plugins),
@@ -89,7 +100,6 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             _edit(field.Value, text);
             return true;
         }
-        // Category select: value is the selected index.
         SpaceBuilderCategory? cat = path switch
         {
             "builder.category.skills" => SpaceBuilderCategory.Skills,
@@ -107,12 +117,29 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         return false;
     }
 
+    public bool TryGetItemValue(object item, string path, out object? value)
+    {
+        value = null;
+        if (item is null) return false;
+        var type = item.GetType();
+        var prop = type.GetProperty(path, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+        if (prop is not null)
+        {
+            value = prop.GetValue(item);
+            return true;
+        }
+        return false;
+    }
+
+    public bool TrySetItemValue(object item, string path, object? value) => false;
+
     public bool? IsActionAvailable(string command) => command switch
     {
         "space-builder.save" => _isCurrent() && _state().CanSave,
         "space-builder.discard" => _isCurrent() && _state().CanDiscard,
         "space-builder.reload" => _isCurrent() && _state().CanReload,
         "space-builder.back" => _isCurrent() && _canGoBack(),
+        "space-builder.capability.remove" => _isCurrent() && _state().CanEdit,
         _ => null
     };
 
@@ -120,6 +147,12 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     {
         if (IsActionAvailable(command) != true)
             throw new InvalidOperationException("This Space Builder command is unavailable.");
+        if (command == "space-builder.capability.remove" && parameter is string capId)
+        {
+            var kind = _state().Draft.CapabilityBindings.FirstOrDefault(b => b.CapabilityId == capId)?.Kind ?? SpaceCapabilityKind.Plugin;
+            _detachCapability(kind, capId);
+            return;
+        }
         await _dispatch(command, parameter, cancellationToken);
     }
 }

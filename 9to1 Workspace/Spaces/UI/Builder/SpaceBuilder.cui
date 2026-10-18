@@ -30,6 +30,21 @@
           <Text text="Memory" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-memory" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.memory, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Memory category state" />
         </Container>
+        <Container Type="Vertical Stack" CellGap="4">
+          <Text text="Attached capabilities" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Canonical IDs and pinned versions. Attached references do not install or grant permissions." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Repeat id="space-builder-capabilities" Source="{Binding builder.capabilities}" As="cap" Key="{Binding cap.id}">
+            <Container id="space-builder-capability-row" Type="Horizontal Stack" CellGap="8">
+              <Text id="space-builder-capability-kind" text="{Binding cap.kind}" foreground="{Resource CuiTextBrush}" />
+              <Text id="space-builder-capability-id" text="{Binding cap.id}" foreground="{Resource CuiTextBrush}" />
+              <Text id="space-builder-capability-version" text="{Binding cap.version}" foreground="{Resource CuiTextSoftBrush}" />
+              <Button id="space-builder-capability-remove" content="Remove" action="space-builder.capability.remove" Interactive="{Binding builder.canEdit}" accessible-name="Remove attached capability" />
+            </Container>
+          </Repeat>
+          <If Condition="{Binding builder.hasNoCapabilities}">
+            <Text id="space-builder-no-capabilities" text="No capabilities attached." foreground="{Resource CuiTextSoftBrush}" />
+          </If>
+        </Container>
         <Container Type="Wrap" CellGap="8">
           <If Condition="{Binding builder.canGoBack}">
             <Button id="space-builder-back" content="Back to Spaces" action="space-builder.back" Interactive="{Binding builder.canGoBack}" accessible-name="Back to Spaces" />

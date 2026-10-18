@@ -49,6 +49,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         _bindings = new(() => _controller.State,
             (field, value) => TryEdit(field, value),
             (category, state) => TrySetCategory(category, state),
+            (kind, id) => TryDetachCapability(kind, id),
             DispatchAsync, CanMutate, () => _queueBack is not null);
         _controller.StateChanged += OnStateChanged;
         Document = document;
@@ -107,6 +108,23 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
                 original.BindPublicationGuard(IsPresentationCurrent);
                 original.DemandPublication();
                 accepted = Source(() => _controller.SetField(field, value));
+                if (accepted) _editEpoch++;
+            });
+            return accepted;
+        }
+    }
+
+    public bool TryDetachCapability(SpaceCapabilityKind kind, string capabilityId)
+    {
+        lock (_gate)
+        {
+            if (!CanMutate()) return false;
+            var accepted = false;
+            _work.RunSynchronous(original =>
+            {
+                original.BindPublicationGuard(IsPresentationCurrent);
+                original.DemandPublication();
+                accepted = Source(() => _controller.DetachCapability(kind, capabilityId));
                 if (accepted) _editEpoch++;
             });
             return accepted;
