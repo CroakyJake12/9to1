@@ -29,7 +29,7 @@ public sealed partial class SpaceBuilderPage
         lock (_gate)
         {
             _work.DemandAdmission();
-            if (_preparation is not null && (!_preparation.IsCompleted || _lease is not null)) return _preparation;
+            if (_preparation is not null && (!_preparation.IsCompleted || (_lease is not null && IsExactLease(_lease)))) return _preparation;
             return _preparation = _work.RunAsync(async original =>
             {
                 try { return await PrepareCoreAsync(original, caller).ConfigureAwait(false); }
@@ -157,7 +157,8 @@ public sealed partial class SpaceBuilderPage
         ArgumentNullException.ThrowIfNull(lease);
         lock (_gate)
         {
-            if (!IsExactLease(lease) || _work.IsRetiring) return false;
+            // An owned stale token releases its own freeze, but never somebody else's/newer lease.
+            if (!ReferenceEquals(_lease, lease) || _work.IsRetiring) return false;
             _lease = null;
             _preparation = null;
         }

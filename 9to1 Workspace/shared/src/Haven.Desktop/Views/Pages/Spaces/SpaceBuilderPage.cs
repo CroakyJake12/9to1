@@ -64,7 +64,7 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     private bool IsPresentationCurrent() => Volatile.Read(ref _live);
     private bool CanMutate()
     {
-        lock (_gate) return _live && _activated && !_work.IsRetiring;
+        lock (_gate) return _live && _activated && !_work.IsRetiring && _lease is null;
     }
 
     public Task ActivateAsync(CancellationToken token = default)
