@@ -206,10 +206,28 @@ internal sealed partial class OverlayWorkspaceController
             catch (Exception cause) { AddControllerCause(failures, cause); }
         ThrowControllerCauses(failures);
         foreach (var pair in _windows.ToArray())
-            try { ControllerSource(() => { pair.Value.CloseFromController(); return true; }); _windows.Remove(pair.Key); }
+            try { ControllerSource(() => { pair.Value.CloseFromController(); return true; }); PruneHealthyClosedOverlay(pair.Value); }
             catch (Exception cause) { AddControllerCause(failures, cause); }
         ThrowControllerCauses(failures);
     }
+    private void PruneHealthyClosedOverlay(OverlayWorkspaceWindow window)
+    {
+        // A physical Closed event alone is no child retirement receipt. This is
+        // the exact coalesced task obtained from the real page by owning close.
+        if (!window.OriginalNativeClosed || window.OriginalPageClose?.IsCompletedSuccessfully != true) return;
+        lock (_originalGate)
+        {
+            if (_windows.TryGetValue(window.SessionId, out var current) && ReferenceEquals(current, window))
+                _windows.Remove(window.SessionId);
+            _windowBorrowers.Remove(window);
+            _windowDrains.Remove(window);
+            if (!_windows.ContainsKey(window.SessionId)) _closingSessions.Remove(window.SessionId);
+            var page = window.OriginalPage;
+            if (!_windows.Values.Any(other => ReferenceEquals(other.OriginalPage, page)))
+                _originalPages.Remove(page);
+        }
+    }
+
     private async Task CleanupSessionArtifactsForRetirementAsync(Guid id)
     {
         var current = _registry.Snapshot.Sessions.FirstOrDefault(session => session.Id == id)?.Context;

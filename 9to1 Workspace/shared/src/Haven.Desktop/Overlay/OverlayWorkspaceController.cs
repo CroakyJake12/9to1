@@ -787,7 +787,7 @@ internal sealed partial class OverlayWorkspaceController : IAsyncDisposable, IDe
         if (_windows.TryGetValue(sessionId, out var window))
         {
             ControllerSource(() => { window.CloseFromController(); return true; });
-            _windows.Remove(sessionId);
+            PruneHealthyClosedOverlay(window);
         }
     }
 

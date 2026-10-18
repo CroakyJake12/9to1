@@ -18,6 +18,7 @@ internal sealed class OverlayWorkspaceWindow : Window
     private bool _closingFromController;
     private bool _nativeCloseRequested;
     internal bool OriginalNativeClosed { get; private set; }
+    internal Task? OriginalPageClose { get; private set; }
     internal Control OriginalPage => (Control?)_chatPage ?? GoPage!;
 
     public OverlayWorkspaceWindow(OverlaySessionState session, NewChatPage chatPage)
@@ -213,8 +214,13 @@ internal sealed class OverlayWorkspaceWindow : Window
 
     public void CloseFromController()
     {
-        if (_closingFromController) return;
+        if (_closingFromController)
+        {
+            if (!OriginalNativeClosed) throw new InvalidOperationException("The original Overlay native close remains unresolved.");
+            return;
+        }
         var actual = ((Haven.Desktop.Services.IDesktopOriginalRetirementParticipant)OriginalPage).CloseAndDrainAsync();
+        OriginalPageClose = actual;
         if (!actual.IsCompletedSuccessfully)
             throw new InvalidOperationException("The actual Overlay page must finish its original close before native destruction.");
         _closingFromController = true;
@@ -259,6 +265,9 @@ internal sealed class OverlayWorkspaceWindow : Window
     private static bool Contains(PixelRect area, PixelPoint point) =>
         point.X >= area.X && point.X < area.Right && point.Y >= area.Y && point.Y < area.Bottom;
 
-    private void PublishGeometry() => GeometryChanged?.Invoke(this, CaptureGeometry());
+    private void PublishGeometry()
+    {
+        if (!_closingFromController && !OriginalNativeClosed) GeometryChanged?.Invoke(this, CaptureGeometry());
+    }
 }
 #endif

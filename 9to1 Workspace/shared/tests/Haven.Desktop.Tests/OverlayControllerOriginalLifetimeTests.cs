@@ -156,6 +156,69 @@ public sealed class OverlayControllerOriginalLifetimeTests
         finally { File.Delete(filePath); }
     }
 
+    [AvaloniaFact]
+    public async Task Repeated_healthy_overlay_closes_release_only_the_completed_window_and_page_custody()
+    {
+        var settings = new Settings(); settings.Read.SetResult(null);
+        var registry = new OverlayWorkspaceRegistry(settings);
+        var controller = Controller(registry, new());
+        try
+        {
+            for (var iteration = 0; iteration < 5; iteration++)
+            {
+                var session = await registry.OpenSessionAsync("go", "Bounded Overlay", null, null, Token);
+                var page = new GoPage(new HavenEventBus());
+                var window = Mount(controller, session, page);
+                Assert.Equal(1, CustodyCount(controller, "_originalPages"));
+                window.Close();
+                await WaitUntilAsync(() => window.OriginalNativeClosed);
+                Assert.True(window.OriginalPageClose!.IsCompletedSuccessfully);
+                Assert.Equal(0, CustodyCount(controller, "_originalPages"));
+                Assert.Equal(0, CustodyCount(controller, "_windowBorrowers"));
+                Assert.Equal(0, CustodyCount(controller, "_windowDrains"));
+                Assert.Equal(0, CustodyCount(controller, "_closingSessions"));
+            }
+        }
+        finally { await controller.CloseAndDrainAsync().WaitAsync(Bound, Token); }
+    }
+
+    [AvaloniaFact]
+    public async Task Failed_overlay_page_close_retains_window_page_and_pending_owner_custody()
+    {
+        var (controller, page, window, id) = await MountAsync();
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        page.RetainOriginalParentBorrower(held.Task, () => { });
+        window.Close();
+        await WaitUntilAsync(() => CustodyCount(controller, "_windowDrains") == 1);
+        Assert.Equal(1, CustodyCount(controller, "_originalPages"));
+        Assert.False(window.OriginalNativeClosed);
+        var cause = new IOException("Real held Go original failed.");
+        held.SetException(cause);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => controller.CloseAndDrainAsync().WaitAsync(Bound, Token));
+        Assert.Contains(cause, AllCauses(failure));
+        Assert.False(window.OriginalNativeClosed);
+        Assert.Equal(1, CustodyCount(controller, "_originalPages"));
+        Assert.Equal(1, CustodyCount(controller, "_windowDrains"));
+        Assert.Equal(1, CustodyCount(controller, "_closingSessions"));
+        Assert.NotNull(window.Content);
+        window.Hide(); // Preserve genuine failed custody; hide only the headless fixture.
+    }
+
+    private static int CustodyCount(OverlayWorkspaceController controller, string name)
+    {
+        var container = typeof(OverlayWorkspaceController).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(controller)!;
+        return (int)container.GetType().GetProperty("Count")!.GetValue(container)!;
+    }
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        for (var attempt = 0; attempt < 100; attempt++)
+        {
+            if (condition()) return;
+            await Task.Delay(10, Token);
+        }
+        Assert.True(condition());
+    }
+
     [Fact]
     public async Task Linux_unavailable_hotkey_joins_no_native_thread_and_keeps_same_disposal()
     {
@@ -184,6 +247,11 @@ public sealed class OverlayControllerOriginalLifetimeTests
         var session = await registry.OpenSessionAsync("go", "Test Overlay", null, null, Token);
         var controller = Controller(registry, new());
         var page = new GoPage(new HavenEventBus());
+        var window = Mount(controller, session, page);
+        return (controller, page, window, session.Id);
+    }
+    private static OverlayWorkspaceWindow Mount(OverlayWorkspaceController controller, OverlaySessionState session, GoPage page)
+    {
         // Actual production mount/wiring; skip unrelated external catalogue discovery.
         var method = typeof(OverlayWorkspaceController).GetMethod("Mount", BindingFlags.Instance | BindingFlags.NonPublic,
             [typeof(OverlaySessionState), typeof(GoPage)])!;
@@ -191,7 +259,7 @@ public sealed class OverlayControllerOriginalLifetimeTests
         var windows = (Dictionary<Guid, OverlayWorkspaceWindow>)typeof(OverlayWorkspaceController)
             .GetField("_windows", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(controller)!;
         var window = windows[session.Id]; window.ShowAndActivate();
-        return (controller, page, window, session.Id);
+        return window;
     }
     private static IEnumerable<Exception> AllCauses(Exception error)
     {
