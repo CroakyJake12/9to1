@@ -605,7 +605,15 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task StartFreshConversationOriginalBodyAsync(Guid? chatGroupId = null)
     {
+        // Flush the outgoing conversation's exact draft snapshot BEFORE Fresh replaces it; a
+        // real write failure aborts the transition, and a new conversation starts empty.
+        var outgoing = CaptureOriginalDraftTransition();
+        await FlushOriginalConversationDraftAsync(outgoing);
+        if (Volatile.Read(ref _originalComposerRevision) == outgoing.Revision &&
+            string.Equals(_scene.Instruction.Text, outgoing.ComposerText, StringComparison.Ordinal))
+            ClearOriginalComposerDraft();
         ResetToFreshConversation(_modeDefinition?.BaseMode ?? HavenMode.Chat, chatGroupId, null);
+        CommitOriginalDraftTransitionOwnership(_conversation, outgoing);
         await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
         NotifyFreshConversationReady();
     }
@@ -614,7 +622,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task StartFreshConversationOriginalBodyAsync(HavenMode mode, Guid? containerId, Guid? lessonId = null, Guid? spaceId = null)
     {
+        var outgoing = CaptureOriginalDraftTransition();
+        await FlushOriginalConversationDraftAsync(outgoing);
+        if (Volatile.Read(ref _originalComposerRevision) == outgoing.Revision &&
+            string.Equals(_scene.Instruction.Text, outgoing.ComposerText, StringComparison.Ordinal))
+            ClearOriginalComposerDraft();
         ResetToFreshConversation(mode, containerId, lessonId, spaceId);
+        CommitOriginalDraftTransitionOwnership(_conversation, outgoing);
         await AwaitChatOriginalAsync(_conversations.UpsertConversationAsync(_conversation, RequireChatOriginal().Token));
         NotifyFreshConversationReady();
     }
@@ -633,10 +647,48 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public Task LoadConversationAsync(Conversation conversation) => AdmitOriginalConversationLoad(conversation);
 
-    private async Task LoadConversationOriginalBodyAsync(Conversation conversation)
+    private async Task LoadConversationOriginalBodyAsync(Conversation conversation, OriginalDraftTransition? outgoing)
     {
         DemandOriginalChatPublication();
         RetireOriginalInitialTaskPresentationsForNewTarget();
+        // The composer text belongs to the conversation that was current before this admitted
+        // transition. Its exact snapshot/revision was captured AT ADMISSION (before any target
+        // change). Durability is acknowledged BEFORE the replacement commits; a real write
+        // failure aborts the transition with the outgoing text, composer and target intact.
+        _originalDraftRestoreConversationId = conversation.Id;
+        _originalDraftRestoreRevision = outgoing?.Revision ?? Volatile.Read(ref _originalComposerRevision);
+        if (outgoing is { } outbound)
+        {
+            try
+            {
+                // Durability of the outgoing text/attachments is acknowledged BEFORE any
+                // replacement commits. A real write failure aborts the whole transition.
+                await FlushOriginalConversationDraftAsync(outbound);
+            }
+            catch
+            {
+                // Abort as a real transition failure: restore the exact outgoing target and
+                // composer ownership, and leave the composer text untouched, so a failed draft
+                // write can never leave the page pointing at a chat whose draft was never made
+                // durable.
+                if (_conversation.Id == conversation.Id)
+                {
+                    _conversation = outbound.Outgoing.Target;
+                    _originalDraftInputOwner = outbound.Outgoing.Target;
+                    ++_originalPresentationGeneration;
+                    _originalDraftRestoreConversationId = outbound.Outgoing.Target.Id;
+                }
+                throw;
+            }
+            // Only text the flush genuinely ACKNOWLEDGED may be cleared, and ownership only moves
+            // to the incoming conversation when the composer really is empty: newer typing (or a
+            // failed send's restored text) keeps its own outgoing owner.
+            if (outbound.Outgoing.Target.Id != conversation.Id &&
+                Volatile.Read(ref _originalComposerRevision) == outbound.Revision &&
+                string.Equals(_scene.Instruction.Text, outbound.ComposerText, StringComparison.Ordinal))
+                ClearOriginalComposerDraft();
+            CommitOriginalDraftTransitionOwnership(conversation, outbound);
+        }
         _activeAgent = null;
         _activeInstructions.Clear();
         _chatActionModeOverride = null;
@@ -995,6 +1047,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var snapshot = await AwaitChatOriginalAsync(_safety.GetSnapshotAsync(_conversation.Id, RequireChatOriginal().Token));
         _safetyLocked = snapshot.State == ConversationSafetyState.Locked;
         _scene.SetSafetyLocked(_safetyLocked);
+        // The safety lock is ONE dimension of the send gate. Reassert the model-availability
+        // dimension immediately: SetSafetyLocked's draft-text rule must never re-enable Send
+        // while the selected model is not positively available.
+        PublishOriginalModelGateVisual();
         if (_safetyLocked)
             SetProjectionStatus("This conversation is safety-locked after three confirmed safety flags. Sending, editing, branching and regeneration are disabled; deletion remains available.");
     }
@@ -1081,7 +1137,37 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
     }
 
-    private void OnComposerEditCompleted(object? sender, EventArgs e) => RunOriginalChatNotification(() => OnComposerEditCompletedOriginalBody(sender, e));
+    private void OnComposerEditCompleted(object? sender, EventArgs e)
+    {
+        // Every real TEXT change is the canonical draft trigger for THIS conversation.
+        // Instruction invalidation is NOT an edit signal: the SAME element also raises it for
+        // caret, focus, state and motion updates, so a caret move over the send's own
+        // programmatic clear must never be mistaken for a user deletion. The
+        // revision/target/snapshot are captured OUTSIDE the notification original, so the raw
+        // draft write never inherits a presentation publication demand; restore/clear
+        // publications are recorded as observed text rather than saved.
+        var text = _scene.Instruction.Text ?? string.Empty;
+        if (_suppressOriginalDraftSave)
+        {
+            // A programmatic publication (send clear, draft restore, recovery text) is observed
+            // so the next REAL change is compared against it, but it is never itself an edit.
+            _originalComposerText = text;
+        }
+        else if (!string.Equals(text, _originalComposerText, StringComparison.Ordinal))
+        {
+            _originalComposerText = text;
+            if (!_originalWork.IsRetiring)
+            {
+                Interlocked.Increment(ref _originalComposerRevision);
+                // A queue-while-sending clear is not a user deletion either: the queued text
+                // has NOT been sent, so the canonical draft must keep it instead of deleting it.
+                var clearingForQueuedSend = string.IsNullOrWhiteSpace(text) && _scene.HasQueuedComposerMessages;
+                if (!clearingForQueuedSend)
+                    _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, text, _pendingAttachmentIds));
+            }
+        }
+        RunOriginalChatNotification(() => OnComposerEditCompletedOriginalBody(sender, e));
+    }
 
     private void OnComposerEditCompletedOriginalBody(object? sender, EventArgs e)
     {
@@ -1205,11 +1291,36 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
         CancellationTokenSource? originalSendCancellation = null;
         NewChatOriginalInitialTaskObservation? initialTaskObservation = null;
+        // The GENUINELY COMMITTED canonical user message. The real owning session acknowledges
+        // this only after its actual conversation write and user-message write both succeeded;
+        // the earlier UserMessage stream event is presentation-only and is never acceptance.
+        Guid? committedUserMessageId = null;
+        var sendRevision = Volatile.Read(ref _originalComposerRevision);
+        var draftOwner = OriginalDraftInputOwner;
+        // The exact canonical draft identity this send consumes, captured BEFORE its own clear.
+        // Both the accepted retirement and the attachment association use THIS snapshot, so a
+        // newer draft typed or attached while the response streams is never retired or
+        // mis-associated with an older user message.
+        var acceptedSend = CaptureOriginalAcceptedSend(draftOwner, sendRevision,
+            _scene.Instruction.Text, _pendingAttachmentIds);
+        void RestoreUnsentOriginalInstructionIfUnchanged()
+        {
+            // A refused/aborted admission must not lose the text, but newer typing wins — and the
+            // composer must still belong to the conversation that sent it: after a real
+            // transition the unsent text stays durable in ITS OWN canonical draft instead of
+            // being published into a different conversation's composer.
+            if (Volatile.Read(ref _originalComposerRevision) != sendRevision) return;
+            if (OriginalDraftInputOwner.Id != acceptedSend.Target.Id) return;
+            RestoreUnsentOriginalInstruction(instruction);
+        }
         try
         {
         _pendingInstruction = null;
         _redoMessages.Clear();
-        _scene.Instruction.Text = string.Empty;
+        // The send's own programmatic clear is NOT a user edit: it must not queue an autosave
+        // that deletes the canonical draft before the user message is actually accepted.
+        _originalSendInFlight = true;
+        PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
         DemandOriginalChatPublication();
         _bus.Fire("Chat.Composer.Send.Click");
         DemandOriginalChatPublication();
@@ -1230,7 +1341,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             originalConversation = _conversation;
         }
 
-            Guid? emittedUserMessageId = null;
             var sendReportedFailure = false;
             var deltaBuffer = new StringBuilder();
             Guid? bufferedMessageId = null;
@@ -1265,9 +1375,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                     nextDeltaFlushAt = Environment.TickCount64 + 50;
                     return;
                 }
-                if (streamEvent.Kind == ChatStreamEventKind.UserMessage && streamEvent.Message is not null)
-                    emittedUserMessageId = streamEvent.Message.Id;
-                else if (streamEvent.Kind is ChatStreamEventKind.PreflightFailed or ChatStreamEventKind.PermissionRequired)
+                // The UserMessage event is PRESENTATION ONLY: the session yields it before the
+                // actual conversation/message writes, so it is never accepted-input evidence.
+                if (streamEvent.Kind is ChatStreamEventKind.PreflightFailed or ChatStreamEventKind.PermissionRequired)
                     sendReportedFailure = true;
                 await AwaitChatOriginalAsync(FlushDeltasAsync());
                 await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() => ApplyOriginalObservedStreamEvent(streamEvent)));
@@ -1306,7 +1416,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             }
             else
             {
-                await RequireChatOriginal().ReadStreamAsync(_sessions.SendAsync(
+                await RequireChatOriginal().ReadStreamAsync(_sessions.SendWithCommittedInputAsync(
                                originalConversation,
                                instruction,
                                admittedModel,
@@ -1328,26 +1438,44 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                                browserPermission: _preferences.BrowserPermission,
                                availableCapabilities: ActiveCapabilitiesForCurrentChat(),
                                taskExecutionIntent: originalConversation.Mode == HavenMode.Tasks
-                                   ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation), PublishOriginalStreamEventAsync).ConfigureAwait(false);
+                                   ? TaskRunExecutionIntent.CanonicalAgenticTask : TaskRunExecutionIntent.OrdinaryConversation,
+                               userInputCommitted: (committedInput, _) =>                               {
+                                   // Genuine acceptance from the real owner of the actual writes:
+                                   // retire exactly the consumed draft identity (a newer draft
+                                   // typed or attached since is preserved) and record the message.
+                                   committedUserMessageId = committedInput.Id;
+                                   return RetireCommittedSendDraftAsync(acceptedSend);
+                               }), PublishOriginalStreamEventAsync).ConfigureAwait(false);
             }
-            await AwaitChatOriginalAsync(FlushDeltasAsync());
-            if (!sendReportedFailure && emittedUserMessageId is { } userMessageId)
-                await AwaitChatOriginalAsync(AssociatePendingAttachmentsWithUserMessageAsync(userMessageId, RequireChatOriginal().Token));
-            if (CanonicalPermissionWaiting is null)
+            if (!_originalWork.IsRetiring)
+                await AwaitChatOriginalAsync(FlushDeltasAsync());
+            if (!sendReportedFailure && committedUserMessageId is { } userMessageId && acceptedSend.Consumed.AttachmentIds.Length != 0)
+                await AwaitChatOriginalAsync(AssociatePendingAttachmentsWithUserMessageAsync(userMessageId, acceptedSend, RequireChatOriginal().Token));
+            // A refused preflight or a FAILED write after the presentation-only event never
+            // owned a committed user message: keep the unsent text in the composer and in the
+            // canonical draft instead of losing it to the send's clear.
+            if (sendReportedFailure && committedUserMessageId is null)
+                RestoreUnsentOriginalInstructionIfUnchanged();
+            if (!_originalWork.IsRetiring && CanonicalPermissionWaiting is null)
                 await AwaitChatOriginalAsync(SetStatusAsync(string.Empty));
         }
         catch (OperationCanceledException originalCaughtCause)
         {
             RetainHandledOriginalChatCause(originalCaughtCause);
-            await AwaitChatOriginalAsync(SetStatusAsync("Response stopped."));
+            if (committedUserMessageId is null) RestoreUnsentOriginalInstructionIfUnchanged();
+            if (!_originalWork.IsRetiring)
+                await AwaitChatOriginalAsync(SetStatusAsync("Response stopped."));
         }
         catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
         {
             RetainHandledOriginalChatCause(exception);
-            await AwaitChatOriginalAsync(SetStatusAsync("9to1 could not complete that response: " + exception.Message));
+            if (committedUserMessageId is null) RestoreUnsentOriginalInstructionIfUnchanged();
+            if (!_originalWork.IsRetiring)
+                await AwaitChatOriginalAsync(SetStatusAsync("9to1 could not complete that response: " + exception.Message));
         }
         finally
         {
+            _originalSendInFlight = false;
             if (initialTaskObservation is not null)
                 await RequireChatOriginal().AwaitAsync(FinishOriginalInitialTaskObservationAsync(initialTaskObservation));
             await RequireChatOriginal().AwaitAsync(FinishOriginalSendAsync(originalSendCancellation));
@@ -1470,7 +1598,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         {
         _pendingInstruction = null;
         _redoMessages.Clear();
-        _scene.Instruction.Text = string.Empty;
+        // The dual-comparison send is SESSION ONLY: it persists no canonical user message, so
+        // its programmatic clear must not delete the canonical draft. The text is restored
+        // below and keeps owning its draft.
+        _originalSendInFlight = true;
+        PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
         DemandOriginalChatPublication();
         _bus.Fire("Chat.Composer.Send.Click");
         DemandOriginalChatPublication();
@@ -1520,6 +1652,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         finally
         {
+            _originalSendInFlight = false;
+            // The dual comparison consumed no canonical user message: the typed text keeps
+            // owning its canonical draft instead of being silently deleted by the send clear.
+            RestoreUnsentOriginalInstruction(instruction);
             await RequireChatOriginal().AwaitAsync(FinishOriginalSendAsync(originalSendCancellation));
         }
     }
@@ -1705,13 +1841,19 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private void ScrollToEndIfFollowing(bool wasFollowing)
     {
-        if (wasFollowing && !_originalWork.IsRetiring)
-            _ = RunChatOriginalAsync(async () => await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(() =>
-            {
-                DemandOriginalChatPublication();
-                _scene.ScrollToEnd();
-                DemandOriginalChatPublication();
-            }, DispatcherPriority.Background)));
+        if (!wasFollowing || _originalWork.IsRetiring) return;
+        // The queued scroll is a presentation follow-up for the conversation that owned it at
+        // admission. If a newer Load/Fresh transition legitimately replaced that conversation
+        // before the background callback ran, the scroll settles with NO EFFECT — it is a normal
+        // replacement, not a fault, and it must never publish onto the new target. Any other
+        // failure (including a refusal from a terminal original) is still retained exactly.
+        _ = RunChatOriginalAsync(async () =>
+        {
+            var original = RequireChatOriginal();
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(
+                () => original.RunAcceptedPublicationCallback(_scene.ScrollToEnd),
+                DispatcherPriority.Background).GetTask()).ConfigureAwait(false);
+        });
     }
 
     private static IReadOnlyList<ToolActivity> ReadToolActivities(ChatMessage message)
@@ -2251,6 +2393,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         DemandOriginalChatCurrent();
         ++_originalPresentationGeneration;
         _conversation = CreateConversation(mode, containerId, lessonId, spaceId);
+        // The brand-new conversation owns the composer from here; a caller that flushed an
+        // outgoing snapshot commits the real outgoing/incoming ownership explicitly afterwards.
+        _originalDraftInputOwner = null;
         RecordOriginalConversationTransition();
         _activeAgent = null;
         _activeInstructions.Clear();
@@ -2268,6 +2413,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _redoMessages.Clear();
         _safetyLocked = false;
         _scene.SetSafetyLocked(false);
+        // Reassert the model-availability dimension the safety publish just ignored.
+        PublishOriginalModelGateVisual();
         _streamingMessages.Clear();
         _thinkingContent.Clear();
         _thinkingStartTick.Clear();

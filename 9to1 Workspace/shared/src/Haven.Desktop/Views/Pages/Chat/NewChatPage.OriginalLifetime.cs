@@ -46,16 +46,26 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     {
         ArgumentNullException.ThrowIfNull(conversation);
         OriginalConversationTarget? target = null;
+        OriginalDraftTransition? outgoing = null;
         return _originalWork.RunAsync(original =>
         {
             BindOriginalConversationTarget(original, target ?? throw new InvalidOperationException("No original Load target was admitted."));
             original.DemandPublication();
-            return LoadConversationOriginalBodyAsync(conversation);
+            return LoadConversationOriginalBodyAsync(conversation, outgoing);
         }, actual =>
         {
             // Plain owner state is assigned during the SAME original admission, before
             // the start gate; an earlier queued Load cannot later replace a newer target.
+            // The exact outgoing conversation AND composer snapshot/revision are captured here,
+            // BEFORE replacement, so the draft flush can never be redirected onto the
+            // already-admitted new target and a late transition cannot overwrite newer typing.
+            outgoing = CaptureOriginalDraftTransition();
             target = new(conversation.Id, ++_originalPresentationGeneration);
+            // The composer's unsent text still belongs to the OUTGOING conversation until that
+            // conversation's draft flush is genuinely acknowledged: replacing the target here
+            // must not move ownership, or text typed during a held flush would be autosaved
+            // under the incoming conversation id.
+            _originalDraftInputOwner ??= _conversation;
             _conversation = conversation;
             _originalContextTransitions.Add(actual, target);
         });
@@ -72,6 +82,10 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     /// its tab/window owner joins CloseAndDrainAsync later with UI and borrowed services alive.</summary>
     public void RequestRetirement()
     {
+        // The pre-seal draft flush is admitted BEFORE the permanent admission seal. Its raw
+        // durability write is joined by the SAME close, so typed text survives retirement
+        // without a cancelled debounce or a fake clean receipt.
+        DemandOriginalDraftRetirementAsync();
         _originalWork.RequestRetirement();
         _disposed = true;
     }
@@ -87,10 +101,19 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
     public Task CloseAndDrainAsync()
     {
         DemandExternalOriginalRetirementJoin();
+        // Both retirement entry paths share ONE pre-seal flush owner: the final snapshot is
+        // admitted before the permanent seal and joined by the SAME close, and repeated close
+        // requests reuse the identical acknowledgement instead of queueing duplicate writes.
+        DemandOriginalDraftRetirementAsync();
         var original = _originalWork.CloseAndDrainAsync();
         _disposed = true;
         return original;
     }
+
+    /// <summary>Joins the SAME page originals admitted so far, without retiring the page.
+    /// Production creation calls this so its own construction publication settles before a real
+    /// Fresh/Load replaces the conversation target; it is not a close and waives no fault.</summary>
+    public Task JoinAdmittedOriginalWorkAsync() => _originalWork.JoinAdmittedOriginalsAsync();
 
     public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
 

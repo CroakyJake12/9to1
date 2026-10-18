@@ -188,6 +188,37 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
         DemandExternalClose();
         return AcquireClose();
     }
+
+    /// <summary>Settles the SAME originals admitted so far WITHOUT retiring them. Production
+    /// creation uses this to join its own construction publication before a real Fresh/Load
+    /// replacement; every exact fault is reported, never waived. This is not a close. A caller
+    /// that is itself inside an admitted original REFUSES: excluding its own chain would claim a
+    /// settlement that did not happen.</summary>
+    internal async Task JoinAdmittedOriginalsAsync()
+    {
+        Original[] snapshot;
+        lock (_gate) snapshot = _originals.ToArray();
+        if (FindLiveExecutingOriginal() is not null)
+        {
+            var refusal = new InvalidOperationException(
+                "An admitted original cannot claim external settlement of its own chain.");
+            lock (_gate) Add(_admissionFailures, refusal);
+            throw refusal;
+        }
+        var failures = new List<Exception>();
+        foreach (var original in snapshot)
+        {
+            try { await original.Task; }
+            catch (Exception error) { Capture(failures, original.Task, error); }
+            foreach (var stage in original.UnjoinedStages)
+                try { await stage; } catch (Exception error) { Capture(failures, stage, error); }
+            original.CollectRetained(failures); // A handled/success-returning body is not no-fault proof.
+        }
+        // Actual admission faults (capacity or protocol) are SAME-cohort failures: a join that
+        // reported only the admitted originals would claim a settlement that excluded them.
+        lock (_gate) foreach (var error in _admissionFailures) Add(failures, error);
+        Throw(failures, "Admitted chat work failed before the conversation transition.");
+    }
     internal void RunCloseCallback(Action callback)
     {
         ArgumentNullException.ThrowIfNull(callback);

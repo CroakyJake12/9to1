@@ -272,6 +272,52 @@ public sealed partial class ChatSessionService(
             computerUseRequest, executionContext, taskExecutionIntent, originalCustody);
     }
 
+    /// <summary>SAME ordinary send as <see cref="SendAsync(Conversation, string, ModelDescriptor,
+    /// EffortLevel, IReadOnlyCollection{ActiveCapability}, string, string, DuoMode, string?, string?,
+    /// string?, IReadOnlyList{string}?, CancellationToken, IReadOnlyCollection{ActivePrompt}?,
+    /// string?, GenerationOptions?, PermissionMode, PermissionMode, PermissionMode,
+    /// IReadOnlyCollection{ToolCapability}?, IReadOnlyCollection{ActiveCapability}?,
+    /// ComputerUseRequest?, ProviderExecutionContext?, TaskRunExecutionIntent)"/> with ONE extra
+    /// explicit evidence callback. The prior public overloads keep their exact previous CLR
+    /// signatures, so a distinct name is used instead of appending an optional argument to an
+    /// already-published signature.</summary>
+    public IAsyncEnumerable<ChatStreamEvent> SendWithCommittedInputAsync(
+        Conversation conversation,
+        string prompt,
+        ModelDescriptor model,
+        EffortLevel effort,
+        IReadOnlyCollection<ActiveCapability> capabilities,
+        string agentName,
+        string agentInstructions,
+        DuoMode duoMode,
+        string? workspaceRoot,
+        string? projectContext,
+        string? projectInstructions,
+        IReadOnlyList<string>? images,
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<ActivePrompt>? prompts = null,
+        string? registeredContext = null,
+        GenerationOptions? generationOptions = null,
+        PermissionMode filePermission = PermissionMode.FullAccess,
+        PermissionMode commandPermission = PermissionMode.FullAccess,
+        PermissionMode browserPermission = PermissionMode.FullAccess,
+        IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
+        ComputerUseRequest? computerUseRequest = null,
+        ProviderExecutionContext? executionContext = null,
+        TaskRunExecutionIntent taskExecutionIntent = TaskRunExecutionIntent.OrdinaryConversation,
+        Func<ChatMessage, CancellationToken, Task>? userInputCommitted = null)
+    {
+        var originalCustody = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask
+            ? taskCoordinator?.CreateOriginalInvocationCustody() : null;
+        return CreateOriginalSend(conversation, prompt, model, effort, capabilities, agentName,
+            agentInstructions, duoMode, workspaceRoot, projectContext, projectInstructions, images,
+            cancellationToken, prompts, registeredContext, generationOptions, filePermission,
+            commandPermission, browserPermission, explicitCapabilities, availableCapabilities,
+            computerUseRequest, executionContext, taskExecutionIntent, originalCustody,
+            userInputCommitted: userInputCommitted);
+    }
+
     private IAsyncEnumerable<ChatStreamEvent> CreateOriginalSend(
         Conversation conversation, string prompt, ModelDescriptor model, EffortLevel effort,
         IReadOnlyCollection<ActiveCapability> capabilities, string agentName, string agentInstructions,
@@ -288,7 +334,8 @@ public sealed partial class ChatSessionService(
         Guid? expectedBranchId = null,
         ChatMessage? existingUserInput = null,
         IReadOnlyList<Guid>? branchAttachmentIds = null,
-        Func<ChatMessage, CancellationToken, Task>? branchInputAccepted = null)
+        Func<ChatMessage, CancellationToken, Task>? branchInputAccepted = null,
+        Func<ChatMessage, CancellationToken, Task>? userInputCommitted = null)
     {
         if (originalCustody is not null)
         {
@@ -318,7 +365,7 @@ public sealed partial class ChatSessionService(
                     duoMode, workspaceRoot, projectContext, projectInstructions, images, originalToken, prompts, registeredContext,
                     generationOptions, filePermission, commandPermission, browserPermission, explicitCapabilities,
                     availableCapabilities, computerUseRequest, context, taskExecutionIntent, custody, ordinaryOriginal, expectedBranchId, existingUserInput,
-                    branchAttachmentIds, branchInputAccepted);
+                    branchAttachmentIds, branchInputAccepted, userInputCommitted);
                 return custody is null ? original : ObserveOriginalSendAsync(original, custody, originalToken);
             }
             return custody is null ? CreateBody(token)
@@ -438,7 +485,8 @@ public sealed partial class ChatSessionService(
         Guid? expectedBranchId = null,
         ChatMessage? existingUserInput = null,
         IReadOnlyList<Guid>? branchAttachmentIds = null,
-        Func<ChatMessage, CancellationToken, Task>? branchInputAccepted = null)
+        Func<ChatMessage, CancellationToken, Task>? branchInputAccepted = null,
+        Func<ChatMessage, CancellationToken, Task>? userInputCommitted = null)
     {
         if (!Enum.IsDefined(taskExecutionIntent)) throw new ArgumentOutOfRangeException(nameof(taskExecutionIntent));
         var canonicalIntent = taskExecutionIntent == TaskRunExecutionIntent.CanonicalAgenticTask;
@@ -698,7 +746,24 @@ public sealed partial class ChatSessionService(
                 // earlier UserMessage event keeps its legacy presentation-only semantics.
                 if (branchInputAccepted is not null)
                     await branchInputAccepted(userMessage, cancellationToken).ConfigureAwait(false);
+                // The SAME genuine committed-input acknowledgement for an ordinary send: it is
+                // invoked only after the actual conversation AND user-message writes both
+                // succeeded, so a failed write after the presentation-only UserMessage event
+                // can never be reported to the owner as an accepted input.
+                if (userInputCommitted is not null)
+                    await userInputCommitted(userMessage, cancellationToken).ConfigureAwait(false);
             }
+        }
+
+        // An ordinary page can retire while its already-acquired input writes finish.
+        // Their genuine acknowledgement above still runs; after it, an already-requested
+        // stop must not acquire NEW model/provider work. No acquired task failure is waived,
+        // and the same await-using tracker/iterator cleanup still has to finish successfully.
+        if (!canonicalIntent && ordinaryOriginal is null && cancellationToken.IsCancellationRequested)
+        {
+            try { execution.Cancel(); }
+            finally { execution.Changed -= PublishExecution; }
+            yield break;
         }
 
         // Haven owns the Generative UI registry, so a capability-status answer

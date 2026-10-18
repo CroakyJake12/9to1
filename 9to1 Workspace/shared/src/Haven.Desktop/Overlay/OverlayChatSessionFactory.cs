@@ -54,9 +54,19 @@ internal sealed class OverlayChatSessionFactory(
             // Join it before Fresh/Load replaces that target; keep all UI work on this dispatcher.
             await page.OriginalInitialization.WaitAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
+            // Settle every construction original (including the discovery publication) BEFORE the
+            // real Fresh/Load replaces the conversation target. This is the production admission
+            // itself; a background publication never races the target replacement.
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (joinConstruction is not null) await joinConstruction(page);
             cancellationToken.ThrowIfCancellationRequested();
             await selectConversation(page);
+            cancellationToken.ThrowIfCancellationRequested();
+            // Settle the transition's OWN admitted publications (transcript, scroll, draft
+            // restore) before the caller receives the page, so a stale queued publication can
+            // never race the next target replacement or an external close.
+            await page.JoinAdmittedOriginalWorkAsync().WaitAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             await PopulateCatalogueAsync(page, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();

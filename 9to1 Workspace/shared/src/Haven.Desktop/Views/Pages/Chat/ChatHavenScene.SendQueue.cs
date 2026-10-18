@@ -9,6 +9,16 @@ internal sealed partial class ChatHavenScene
     private DispatcherTimer? _queuedSendPump;
     private bool _queuedSendingEnabled;
 
+    /// <summary>True while at least one typed message is parked in the in-memory send queue.
+    /// A queue-while-sending composer clear must not be read as a user deletion of the
+    /// canonical draft, because the queued text has not been sent yet.</summary>
+    internal bool HasQueuedComposerMessages => _queuedComposerMessages.Count > 0;
+
+    /// <summary>The SAME unsent inputs still parked in this owner's in-memory queue, oldest
+    /// first. They have not been sent, so the canonical draft must be able to preserve them
+    /// across a close/reopen instead of deleting them with the empty composer.</summary>
+    internal IReadOnlyList<string> QueuedComposerMessages => _queuedComposerMessages.ToArray();
+
     /// <summary>
     /// Replaces the streaming send-button handler with a queue-aware variant while preserving
     /// the existing empty-composer Stop behavior. The hook is installed once during Chat wiring.

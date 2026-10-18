@@ -167,6 +167,9 @@ public sealed class OverlayChatInitializationTests
     {
         using var rig = new Rig();
         NewChatPage? page = null;
+        HeldModelRead? held = null;
+        Task? refresh = null;
+        Exception? originalFailure = null;
         var creating = rig.Factory.CreateNewWithConstructionJoinAsync(
             DrainBackgroundPageOriginalsAsync, CancellationToken.None);
         try
@@ -179,9 +182,9 @@ public sealed class OverlayChatInitializationTests
 
             // A newer successful catalogue no longer offers the older picker's model.
             var replacement = Model("qwen2");
-            var held = new HeldModelRead();
+            held = new HeldModelRead();
             rig.NextModelRead = held;
-            var refresh = page.RefreshModelsAsync();
+            refresh = page.RefreshModelsAsync();
             await held.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
             held.Result.SetResult([replacement]);
             await refresh.WaitAsync(TimeSpan.FromSeconds(10));
@@ -207,6 +210,86 @@ public sealed class OverlayChatInitializationTests
             await DrainBackgroundPageOriginalsAsync(page);
             await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
+        catch (Exception failure)
+        {
+            originalFailure = failure;
+            throw;
+        }
+        finally
+        {
+            rig.Models.TrySetResult([]);
+            // Release the SAME read even if entry/refresh assertions fail, then independently
+            // join it and the acquired page. Cleanup failures retain the original assertion.
+            held?.Result.TrySetResult([]);
+            var refreshFailure = refresh is null ? null
+                : await Record.ExceptionAsync(() => refresh.WaitAsync(TimeSpan.FromSeconds(10)));
+            var closeFailure = await Record.ExceptionAsync(async () =>
+            {
+                page ??= await creating.WaitAsync(TimeSpan.FromSeconds(10));
+                if (page is not null) await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            });
+            if (refreshFailure is not null || closeFailure is not null)
+                throw new AggregateException("Catalogue test work or cleanup failed.",
+                    new[] { originalFailure, refreshFailure, closeFailure }.OfType<Exception>());
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Configured_unavailable_endpoint_stays_honest_across_fresh_restore_and_closes_cleanly()
+    {
+        using var rig = new Rig();
+        NewChatPage? page = null;
+        var refused = new HttpRequestException("Connection refused (127.0.0.1:11434)",
+            new SocketException((int)SocketError.ConnectionRefused));
+        // The configured provider endpoint fails before the page is constructed. This is the
+        // settled failed read from a complete terminal observation, not a close/cancellation
+        // fault: it must be reported honestly and must not become a retirement failure.
+        rig.Models.TrySetException(refused);
+        var creating = rig.Factory.CreateNewWithConstructionJoinAsync(
+            DrainBackgroundPageOriginalsAsync, CancellationToken.None);
+        try
+        {
+            page = await creating.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            Assert.Same(refused, page.ModelAvailabilityCause);
+            Assert.False(SendEnabled(page));
+
+            // Model-backed work is refused while the draft and navigation stay usable.
+            page.SetDraft("offline draft");
+            Assert.Equal("offline draft", ComposerText(page));
+            Assert.False(SendEnabled(page));
+            await page.SubmitOriginalInstructionAsync("offline draft").WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.Delay(200);
+            Assert.False(page.IsSending);
+            Assert.False(page.HasStarted);
+            Assert.Equal("offline draft", ComposerText(page));
+            var drafting = page.CurrentConversation;
+            await WaitUntilAsync(() => rig.Drafts.Draft(drafting.Id)?.Content == "offline draft");
+
+            // Fresh preserves the unavailable observation and the exact cause. The outgoing
+            // draft moves to the canonical store (never silently discarded) and the new
+            // conversation starts empty.
+            await page.StartFreshConversationAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            Assert.Same(refused, page.ModelAvailabilityCause);
+            Assert.Equal(string.Empty, ComposerText(page));
+            Assert.Equal("offline draft", rig.Drafts.Draft(drafting.Id)?.Content);
+            Assert.False(SendEnabled(page));
+
+            // Loading the drafting conversation restores its canonical text even though no model
+            // is available. The safety publish on load must not re-enable Send from that text.
+            await page.LoadConversationAsync(drafting).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(drafting.Id, page.ConversationId);
+            Assert.Equal("offline draft", ComposerText(page));
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            Assert.Same(refused, page.ModelAvailabilityCause);
+            Assert.False(SendEnabled(page));
+
+            // A truthful unavailable observation is inspectable but does not block a clean
+            // physical retirement: the failed read was fully settled and classified.
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
         finally
         {
             rig.Models.TrySetResult([]);
@@ -215,8 +298,527 @@ public sealed class OverlayChatInitializationTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Typed_text_draft_persists_and_restores_in_the_same_conversation()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        try
+        {
+            page.SetDraft("half-written thought");
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id)?.Content == "half-written thought");
+            var saved = rig.Drafts.Draft(conversation.Id)!;
+            Assert.Equal(conversation.Id, saved.ConversationId);
+            Assert.NotNull(saved.BranchId);
+            Assert.NotEqual(Guid.Empty, saved.BranchId!.Value);
+
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+
+            // A SECOND real page opening the SAME conversation restores the canonical draft and
+            // keeps the existing conversation identifier. A second page on this rig performs one
+            // more real model read, which this test explicitly expects.
+            rig.ExpectLaterModelRead([Model("llama3")]);
+            var restored = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+            try
+            {
+                await restored.LoadConversationAsync(conversation).WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.Equal(conversation.Id, restored.ConversationId);
+                Assert.Equal("half-written thought", ComposerText(restored));
+            }
+            finally
+            {
+                await DrainBackgroundPageOriginalsAsync(restored);
+                await restored.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            }
+        }
+        finally
+        {
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_draft_write_is_joined_by_close_never_cancelled_or_falsely_clean()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? closing = null;
+        try
+        {
+            rig.Drafts.HoldSave(held);
+            page.SetDraft("held draft");
+            await WaitUntilAsync(() => rig.Drafts.SaveCount > 0);
+
+            // The real durability write is still held open. The REAL shell retirement order is
+            // exercised here: the page requests retirement and returns, and the external owner
+            // joins CloseAndDrainAsync afterwards. Close must JOIN that SAME write rather than
+            // cancel it, and must not report a clean receipt while it is still pending.
+            page.RequestRetirement();
+            closing = page.CloseAndDrainAsync();
+            await Task.Delay(100);
+            Assert.False(closing.IsCompleted);
+            Assert.Null(rig.Drafts.Draft(conversation.Id));
+
+            held.TrySetResult();
+            await closing.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal("held draft", rig.Drafts.Draft(conversation.Id)?.Content);
+        }
+        finally
+        {
+            held.TrySetResult();
+            rig.Drafts.ReleaseHeldSave();
+            if (closing is not null) await closing.WaitAsync(TimeSpan.FromSeconds(10));
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Failed_draft_write_retains_its_real_cause_and_never_closes_clean()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        try
+        {
+            var failure = new IOException("draft store offline");
+            rig.Drafts.FailSave(failure);
+            page.SetDraft("must not be silently lost");
+            await WaitUntilAsync(() => rig.Drafts.SaveCount > 0);
+
+            var error = await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(error);
+            Assert.Contains(failure, AllCauses(error!));
+        }
+        finally
+        {
+            await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_older_draft_write_cannot_overwrite_the_newer_user_text()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            // The OLDER snapshot is held open while the user keeps typing. Every canonical draft
+            // mutation shares ONE ordering chain, so the older write can never land after (and
+            // overwrite) the newer user text.
+            rig.Drafts.HoldSave(held);
+            page.SetDraft("older text");
+            await WaitUntilAsync(() => rig.Drafts.SaveCount == 1);
+            page.SetDraft("newer text");
+            await Task.Delay(100);
+            Assert.Equal(1, rig.Drafts.SaveCount);          // the newer snapshot waits its turn
+            Assert.Null(rig.Drafts.Draft(conversation.Id)); // nothing has landed yet
+
+            rig.Drafts.ReleaseHeldSave();
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id)?.Content == "newer text");
+            Assert.Equal("newer text", rig.Drafts.Draft(conversation.Id)!.Content);
+            Assert.Equal(2, rig.Drafts.SaveCount); // the older write landed FIRST, then the newer one
+        }
+        finally
+        {
+            rig.Drafts.ReleaseHeldSave();
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Refused_send_keeps_the_unsent_text_and_its_canonical_draft()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        try
+        {
+            page.SetDraft("unsent text");
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id)?.Content == "unsent text");
+            Assert.True(SendEnabled(page));
+
+            // A genuine send whose admission fails BEFORE any canonical user message is accepted:
+            // the configured store/provider call is not available in this rig. The send's own
+            // programmatic composer clear must not delete the canonical draft, and the text must
+            // come back to the composer instead of being lost.
+            rig.UnexpectedIo.Clear();
+            await page.SubmitOriginalInstructionAsync("unsent text").WaitAsync(TimeSpan.FromSeconds(10));
+            await DrainBackgroundPageOriginalsAsync(page);
+            await Task.Delay(200);
+
+            Assert.False(page.IsSending);
+            // The send really ran: it cleared its own composer and reached the real storage
+            // boundary, which this rig refuses before any accepted user message exists.
+            Assert.NotEmpty(rig.UnexpectedIo);
+            Assert.Null(rig.Drafts.Deleted);
+            Assert.Equal("unsent text", rig.Drafts.Draft(conversation.Id)?.Content);
+            Assert.Equal("unsent text", ComposerText(page));
+        }
+        finally
+        {
+            await DrainBackgroundPageOriginalsAsync(page);
+            await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Conversation_transition_flushes_only_the_outgoing_conversation_draft()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var outgoing = page.CurrentConversation;
+        try
+        {
+            page.SetDraft("text for the first chat");
+            await WaitUntilAsync(() => rig.Drafts.Draft(outgoing.Id)?.Content == "text for the first chat");
+
+            await page.LoadConversationAsync(rig.Saved).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(rig.Saved.Id, page.ConversationId);
+            // The outgoing draft is flushed under its OWN conversation; the incoming target is
+            // never polluted by a write redirected after the replacement.
+            Assert.Equal("text for the first chat", rig.Drafts.Draft(outgoing.Id)?.Content);
+            Assert.Null(rig.Drafts.Draft(rig.Saved.Id));
+            Assert.Equal(string.Empty, ComposerText(page));
+        }
+        finally
+        {
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Accepted_send_retires_exactly_the_draft_its_commit_consumed()
+    {
+        using var rig = new Rig();
+        rig.AcceptMessages = true;
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        var held = new HeldConversationWrite();
+        try
+        {
+            page.SetDraft("text that will be accepted");
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id)?.Content == "text that will be accepted");
+
+            // The real committed-input acknowledgement only fires after the actual conversation
+            // and message writes both succeed. Hold the conversation write so the retirement is
+            // decided by the genuine post-write acknowledgement, not by the send's own clear.
+            rig.NextConversationWrite = held;
+            await page.SubmitOriginalInstructionAsync("text that will be accepted").WaitAsync(TimeSpan.FromSeconds(10));
+            await held.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Null(rig.Drafts.Deleted); // The send's own clear is not a deletion.
+            held.Released.TrySetResult();
+
+            await WaitUntilAsync(() => rig.Drafts.Deleted == conversation.Id);
+            Assert.Single(rig.AddedMessages);
+            Assert.Equal("text that will be accepted", rig.AddedMessages[0].Content);
+            Assert.Null(rig.Drafts.Draft(conversation.Id));
+            // The accepted input owns the text now: it must NOT be resurrected as an unsent draft.
+            Assert.Equal(string.Empty, ComposerText(page));
+        }
+        finally
+        {
+            held.Released.TrySetResult();
+            await DrainBackgroundPageOriginalsAsync(page);
+            await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.Null(rig.Drafts.Draft(conversation.Id));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Accepted_send_joins_the_actual_held_draft_branch_resolution_before_retiring_it()
+    {
+        using var rig = new Rig();
+        rig.AcceptMessages = true;
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        var branch = rig.Drafts.SelectBranch(conversation.Id);
+        var resolving = new HeldConversationWrite();
+        var committing = new HeldConversationWrite();
+        const string input = "Can you generate UI?";
+        try
+        {
+            // The real autosave has acquired its actual branch read but has NOT resolved it.
+            // The send must capture consumption during that interval, not only after Save entry.
+            rig.Drafts.HoldCurrentBranch(resolving);
+            page.SetDraft(input);
+            await resolving.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Null(rig.Drafts.Draft(conversation.Id, branch));
+            rig.NextConversationWrite = committing;
+            await page.SubmitOriginalInstructionAsync(input).WaitAsync(TimeSpan.FromSeconds(10));
+            await committing.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+            resolving.Released.TrySetResult();
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id, branch)?.Content == input);
+            Assert.Null(rig.Drafts.Deleted);
+            committing.Released.TrySetResult();
+            await WaitUntilAsync(() => rig.Drafts.Deleted == conversation.Id);
+            await DrainBackgroundPageOriginalsAsync(page);
+            Assert.Equal(input, Assert.Single(rig.AddedMessages, message => message.Role == MessageRole.User).Content);
+            Assert.Null(rig.Drafts.Draft(conversation.Id, branch));
+            Assert.Equal(string.Empty, ComposerText(page));
+        }
+        finally
+        {
+            resolving.Released.TrySetResult();
+            committing.Released.TrySetResult();
+            try { await DrainBackgroundPageOriginalsAsync(page); }
+            finally { await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Newer_draft_typed_while_an_accepted_send_commits_is_never_retired()
+    {
+        using var rig = new Rig();
+        rig.AcceptMessages = true;
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        var held = new HeldConversationWrite();
+        try
+        {
+            page.SetDraft("sent text A");
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id)?.Content == "sent text A");
+
+            rig.NextConversationWrite = held;
+            await page.SubmitOriginalInstructionAsync("sent text A").WaitAsync(TimeSpan.FromSeconds(10));
+            await held.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+            // The user types a NEWER draft while the accepted send is still committing. The
+            // commit's identity fence (conversation + revision + captured attachments) must refuse
+            // to retire it: an older send can never delete newer user data.
+            page.SetDraft("newer draft B");
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id)?.Content == "newer draft B");
+            held.Released.TrySetResult();
+
+            await WaitUntilAsync(() => rig.AddedMessages.Count == 1);
+            await Task.Delay(100);
+            Assert.Null(rig.Drafts.Deleted);
+            Assert.Equal("newer draft B", rig.Drafts.Draft(conversation.Id)?.Content);
+            Assert.Equal("newer draft B", ComposerText(page));
+        }
+        finally
+        {
+            held.Released.TrySetResult();
+            await DrainBackgroundPageOriginalsAsync(page);
+            await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Queued_unsent_message_survives_close_in_its_canonical_draft()
+    {
+        using var rig = new Rig();
+        rig.AcceptMessages = true;
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        var held = new HeldConversationWrite();
+        try
+        {
+            page.SetDraft("first sent text");
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id)?.Content == "first sent text");
+
+            rig.NextConversationWrite = held;
+            await page.SubmitOriginalInstructionAsync("first sent text").WaitAsync(TimeSpan.FromSeconds(10));
+            await held.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+            // The user types the next message while the first response is still in flight and
+            // presses Send: the REAL queue-aware control parks it in the in-memory queue and
+            // clears the composer. That queued text has NOT been sent, so it must survive the
+            // close in the canonical draft instead of being deleted with the empty composer.
+            page.SetDraft("queued unsent text");
+            InvokeSendControl(page);
+            await WaitUntilAsync(() => ComposerText(page).Length == 0);
+            Assert.Equal("queued unsent text", rig.Drafts.Draft(conversation.Id)?.Content);
+
+            // Close while the first input's REAL conversation commit is still held. Retirement
+            // seals the queue before that send can finish and dispatch another queued message.
+            // The same close must join the held commit; no provider fault is waived as clean.
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.SystemIdle);
+            page.RequestRetirement();
+            var closing = page.CloseAndDrainAsync();
+            Assert.False(closing.IsCompleted);
+            held.Released.TrySetResult();
+            await WaitUntilAsync(() => rig.AddedMessages.Count == 1);
+
+            await closing.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Single(rig.AddedMessages);
+            Assert.Null(rig.Drafts.Deleted);
+            Assert.Equal("queued unsent text", rig.Drafts.Draft(conversation.Id)?.Content);
+
+            // A SECOND real page opening the SAME conversation restores the queued text from the
+            // canonical draft: the in-memory queue was disposed, but its recoverable text was not.
+            rig.ExpectLaterModelRead([Model("llama3")]);
+            var restored = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+            try
+            {
+                await restored.LoadConversationAsync(conversation).WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.Equal(conversation.Id, restored.ConversationId);
+                Assert.Equal("queued unsent text", ComposerText(restored));
+            }
+            finally
+            {
+                await DrainBackgroundPageOriginalsAsync(restored);
+                await restored.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            }
+        }
+        finally
+        {
+            held.Released.TrySetResult();
+            await Record.ExceptionAsync(() => page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Typing_during_a_held_outgoing_flush_stays_owned_by_the_outgoing_conversation()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var outgoing = page.CurrentConversation;
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? loading = null;
+        try
+        {
+            page.SetDraft("outgoing text");
+            await WaitUntilAsync(() => rig.Drafts.Draft(outgoing.Id)?.Content == "outgoing text");
+
+            // The outgoing draft flush of the incoming Load is held open. The composer is still
+            // the OUTGOING conversation's composer while the page already points at the incoming
+            // conversation, so typing now must be autosaved under the OUTGOING id.
+            // An unchanged, already-acknowledged snapshot may legitimately deduplicate. Admit
+            // an actual NEW save and observe its entry before Load joins that exact held write.
+            rig.Drafts.HoldSave(held, entered);
+            page.SetDraft("outgoing text awaiting acknowledgement");
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            loading = page.LoadConversationAsync(rig.Saved);
+            Assert.False(loading.IsCompleted);
+
+            page.SetDraft("typed during the held flush");
+            await Task.Delay(100);
+
+            rig.Drafts.ReleaseHeldSave();
+            await loading.WaitAsync(TimeSpan.FromSeconds(10));
+            await WaitUntilAsync(() => rig.Drafts.Draft(outgoing.Id)?.Content == "typed during the held flush");
+
+            Assert.Equal(rig.Saved.Id, page.ConversationId);
+            Assert.Equal("typed during the held flush", rig.Drafts.Draft(outgoing.Id)?.Content);
+            Assert.Null(rig.Drafts.Draft(rig.Saved.Id));
+            // Newer typing wins: it is neither cleared nor published under the incoming id.
+            Assert.Equal("typed during the held flush", ComposerText(page));
+
+            // A LATER selection of that same outgoing conversation keeps the newer text durable.
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.LoadConversationAsync(outgoing).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(outgoing.Id, page.ConversationId);
+            Assert.Equal("typed during the held flush", ComposerText(page));
+            Assert.Equal("typed during the held flush", rig.Drafts.Draft(outgoing.Id)?.Content);
+        }
+        finally
+        {
+            held.TrySetResult();
+            rig.Drafts.ReleaseHeldSave();
+            try
+            {
+                if (loading is not null) await loading.WaitAsync(TimeSpan.FromSeconds(10));
+            }
+            finally
+            {
+                try { await DrainBackgroundPageOriginalsAsync(page); }
+                finally { await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+            }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Equal_text_after_a_held_unresolved_save_is_written_to_the_new_actual_branch()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var conversation = page.CurrentConversation;
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task? loading = null;
+        try
+        {
+            // Fresh has not resolved a branch yet. The real text edit captures an unresolved
+            // mutation, then its canonical storage write resolves A and remains genuinely held.
+            rig.Drafts.HoldSave(held, entered);
+            page.SetDraft("same text on two branches");
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var branchA = rig.Drafts.CurrentBranch(conversation.Id)!.Value;
+            Assert.Null(rig.Drafts.Draft(conversation.Id, branchA));
+            rig.Drafts.ReleaseHeldSave();
+            await WaitUntilAsync(() => rig.Drafts.Draft(conversation.Id, branchA)?.Content == "same text on two branches");
+            await DrainBackgroundPageOriginalsAsync(page);
+
+            // Another canonical branch becomes current. Loading the SAME conversation uses
+            // the real branch read/restore path, retaining its existing conversation identity.
+            var branchB = rig.Drafts.SelectBranch(conversation.Id);
+            await page.LoadConversationAsync(conversation).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(conversation.Id, page.ConversationId);
+            Assert.Equal("same text on two branches", ComposerText(page));
+            Assert.Null(rig.Drafts.Draft(conversation.Id, branchB));
+            await DrainBackgroundPageOriginalsAsync(page);
+
+            // A second genuine outgoing flush now targets B. It must not reuse the completed
+            // unresolved mutation that wrote A merely because its text/attachments are equal.
+            held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            rig.Drafts.HoldSave(held, entered);
+            loading = page.LoadConversationAsync(conversation);
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(loading.IsCompleted);
+            Assert.Null(rig.Drafts.Draft(conversation.Id, branchB));
+            Assert.Equal("same text on two branches", rig.Drafts.Draft(conversation.Id, branchA)?.Content);
+            rig.Drafts.ReleaseHeldSave();
+            await loading.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal("same text on two branches", rig.Drafts.Draft(conversation.Id, branchB)?.Content);
+            Assert.Equal(conversation.Id, page.ConversationId);
+        }
+        finally
+        {
+            held.TrySetResult();
+            rig.Drafts.ReleaseHeldSave();
+            try
+            {
+                if (loading is not null) await loading.WaitAsync(TimeSpan.FromSeconds(10));
+            }
+            finally
+            {
+                try { await DrainBackgroundPageOriginalsAsync(page); }
+                finally { await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+            }
+        }
+    }
+
     private static ModelDescriptor Model(string name) =>
         new(name, 1024, "llama", "1B", "Q4_0", new HashSet<ToolCapability>(), DateTimeOffset.UnixEpoch);
+
+    /// <summary>Invokes the REAL send control exactly as a click does: the same Invoked event the
+    /// scene's queue-aware handler owns. No second owner, no fake page and no direct call into a
+    /// test-only method.</summary>
+    private static void InvokeSendControl(NewChatPage page) =>
+        typeof(Haven.UI.HavenElement).GetMethod("Invoke", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(Scene(page).SendButton, null);
 
     /// <summary>One later GetModelsAsync read the test explicitly arms and releases.</summary>
     private sealed class HeldModelRead
@@ -276,8 +878,8 @@ public sealed class OverlayChatInitializationTests
     /// original is created lazily on the dispatcher. Flush that background work and join the SAME
     /// admitted originals until no page original is still pending, so a close never races a
     /// scroll that was still waiting for its dispatcher callback. This reuses the existing settle
-    /// observation, adds no second owner and no fake page, and still surfaces every actual
-    /// failure a joined original produces.</summary>
+    /// observation and adds no second owner or fake page. Only pending tasks are joined here;
+    /// already-completed or retained causes still require the real external close to inspect.</summary>
     private static async Task DrainBackgroundPageOriginalsAsync(NewChatPage page)
     {
         for (var pass = 0; pass != 8; pass++)
@@ -299,10 +901,42 @@ public sealed class OverlayChatInitializationTests
         public readonly TaskCompletionSource ModelsEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public readonly TaskCompletionSource ModelsCancelled = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public readonly Conversation Saved = new(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Saved", null, null, false, false, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
+        public readonly DraftStore Drafts = new();
         public int ConversationSelections;
         public OverlayChatSessionFactory Factory { get; }
+        /// <summary>The ARMED next conversation write, if any, so a test can hold the exact real
+        /// storage boundary that an accepted send's committed input must pass.</summary>
+        public HeldConversationWrite? NextConversationWrite;
+        /// <summary>When true the real conversation repository accepts the accepted send's user
+        /// message write, so the page reaches a GENUINE committed-input acknowledgement. It stays
+        /// false by default: an unavailable message-write boundary is the honest control for a
+        /// send that fails AFTER the presentation-only event but BEFORE acceptance.</summary>
+        public bool AcceptMessages;
+        /// <summary>The exact user messages this rig's repository accepted, in order.</summary>
+        public readonly List<ChatMessage> AddedMessages = [];
         // The ARMED next GetModelsAsync read, if any, so a test can hold a later retry open.
         public HeldModelRead? NextModelRead;
+        private readonly Queue<IReadOnlyList<ModelDescriptor>> _expectedLaterModelReads = new();
+        private readonly object _readGate = new();
+        /// <summary>Every unexpected external I/O method the page actually attempted, in order.
+        /// Proves a send advanced past its own composer clear to the real storage/provider gate.</summary>
+        public readonly List<string> UnexpectedIo = [];
+        /// <summary>Records and returns the exact refusal for one unexpected external I/O call.</summary>
+        private InvalidOperationException RecordUnexpected(string name)
+        { lock (_readGate) UnexpectedIo.Add(name); return Unexpected(name); }
+        /// <summary>Makes exactly ONE later GetModelsAsync read expected (a SECOND real page
+        /// constructed on this same rig) and settles it with the supplied list.</summary>
+        public void ExpectLaterModelRead(IReadOnlyList<ModelDescriptor> models)
+        { lock (_readGate) _expectedLaterModelReads.Enqueue(models); }
+        private bool TryDequeueExpectedLaterRead(out IReadOnlyList<ModelDescriptor> models)
+        {
+            lock (_readGate)
+            {
+                if (_expectedLaterModelReads.Count == 0) { models = []; return false; }
+                models = _expectedLaterModelReads.Dequeue();
+                return true;
+            }
+        }
         private int _modelReadCount;
         private readonly ServiceProvider _services;
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-chat-initialization-" + Guid.NewGuid().ToString("N"));
@@ -314,13 +948,18 @@ public sealed class OverlayChatInitializationTests
             {
                 "GetAsync" => Task.FromResult<Conversation?>(Saved),
                 "GetMessagesAsync" => SelectHistory(),
-                "UpsertConversationAsync" => SelectFresh(),
+                "GetContextMessagesAsync" => SelectHistory(),
+                "UpsertConversationAsync" => UpsertConversationAsync(),
+                "AddMessageAsync" => AddMessageAsync((ChatMessage)args![0]!),
                 "GetContextEntriesAsync" => Task.FromResult<IReadOnlyList<ConversationContextEntry>>([]),
-                _ => throw Unexpected(name)
+                _ => throw RecordUnexpected(name)
             });
             var ollama = Proxy<IOllamaClient>((name, args) =>
             {
-                if (name != "GetModelsAsync") throw Unexpected(name);
+                if (name != "GetModelsAsync")
+                {
+                    throw RecordUnexpected(name);
+                }
                 var token = (CancellationToken)args![0]!;
                 if (Interlocked.Increment(ref _modelReadCount) == 1)
                 {
@@ -330,16 +969,23 @@ public sealed class OverlayChatInitializationTests
                 }
                 // A later retry is explicitly armed by the test that wants to hold it open;
                 // an unarmed extra read is unexpected provider I/O.
-                var held = NextModelRead ?? throw Unexpected("GetModelsAsync (unarmed later read)");
-                NextModelRead = null;
-                token.Register(() => held.Cancelled.TrySetResult());
-                held.Entered.TrySetResult();
-                return held.Result.Task;
+                if (NextModelRead is not null)
+                {
+                    var held = NextModelRead;
+                    NextModelRead = null;
+                    token.Register(() => held.Cancelled.TrySetResult());
+                    held.Entered.TrySetResult();
+                    return held.Result.Task;
+                }
+                if (TryDequeueExpectedLaterRead(out var expected))
+                    return Task.FromResult(expected);
+                throw Unexpected("GetModelsAsync (unarmed later read)");
             });
             var safety = Proxy<IConversationSafetyService>((name, args) => name switch
             {
                 "GetSnapshotAsync" => Task.FromResult(new ConversationSafetySnapshot((Guid)args![0]!, 0, ConversationSafetyState.Active, null, 0)),
-                _ => throw Unexpected(name)
+                "EnsureMayActAsync" => Task.CompletedTask,
+                _ => throw RecordUnexpected(name)
             });
             var paths = Proxy<IAppPaths>((name, _) => name == "get_DataDirectory" ? _directory : throw Unexpected(name));
             var locals = new GenUiLocalActionRegistry();
@@ -347,6 +993,7 @@ public sealed class OverlayChatInitializationTests
             var services = new ServiceCollection()
                 .AddSingleton(new HavenEventBus())
                 .AddSingleton(conversations).AddSingleton(ollama).AddSingleton(safety)
+                .AddSingleton(Proxy<IConversationProductionRepository>(Drafts.Invoke))
                 .AddSingleton(Proxy<IConversationVersioningService>())
                 .AddSingleton(new UserPreferencesService(paths))
                 .AddSingleton(new ChatSessionService(conversations, ollama, new CapabilityPreflightService(), safety,
@@ -370,9 +1017,140 @@ public sealed class OverlayChatInitializationTests
                 ? Task.FromResult<IReadOnlyList<ModeDefinition>>([]) : throw Unexpected(name));
             Factory = new OverlayChatSessionFactory(_services, conversations, capabilities, catalog, modes);
         }
+        private async Task UpsertConversationAsync()
+        {
+            HeldConversationWrite? held;
+            lock (_readGate) { held = NextConversationWrite; NextConversationWrite = null; }
+            if (held is not null)
+            {
+                held.Entered.TrySetResult();
+                await held.Released.Task;
+            }
+            ConversationSelections++;
+        }
+
+        private Task AddMessageAsync(ChatMessage message)
+        {
+            if (!AcceptMessages) throw RecordUnexpected("AddMessageAsync");
+            lock (_readGate) AddedMessages.Add(message);
+            return Task.CompletedTask;
+        }
+
         private Task SelectFresh() { ConversationSelections++; return Task.CompletedTask; }
         private Task<IReadOnlyList<ChatMessage>> SelectHistory() { ConversationSelections++; return Task.FromResult<IReadOnlyList<ChatMessage>>([]); }
         public void Dispose() { _services.Dispose(); Directory.Delete(_directory, recursive: true); }
+    }
+
+    /// <summary>One conversation write the test explicitly arms and releases: the real storage
+    /// boundary the canonical committed-input acknowledgement sits behind.</summary>
+    public sealed class HeldConversationWrite
+    {
+        public readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public readonly TaskCompletionSource Released = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    /// <summary>The canonical draft/attachment surface the real page reaches through
+    /// IConversationProductionRepository. It records exactly what the page wrote, can hold one
+    /// real write open and can fail one write, so held/failed persistence and transition routing
+    /// are exercised against the page's real save/restore/close handling.</summary>
+    private sealed class DraftStore
+    {
+        private readonly object _gate = new();
+        private readonly Dictionary<Guid, Guid> _branches = [];
+        private readonly Dictionary<(Guid ConversationId, Guid BranchId), ConversationDraft> _drafts = [];
+        public TaskCompletionSource? HeldSave;
+        private TaskCompletionSource? _heldSaveEntered;
+        private HeldConversationWrite? _heldCurrentBranch;
+        public Exception? SaveFailure;
+        public int SaveCount;
+        /// <summary>The conversation id of the LAST canonical draft deletion the page issued, if
+        /// any. Proves a pre-acceptance composer clear never removed an unsent draft.</summary>
+        public Guid? Deleted;
+
+        public ConversationDraft? Draft(Guid conversationId, Guid? branchId = null)
+        {
+            lock (_gate)
+                return _drafts.GetValueOrDefault((conversationId, branchId ?? _branches.GetValueOrDefault(conversationId)));
+        }
+
+        public Guid? CurrentBranch(Guid conversationId) { lock (_gate) return _branches.TryGetValue(conversationId, out var id) ? id : null; }
+        public Guid SelectBranch(Guid conversationId) { lock (_gate) return _branches[conversationId] = Guid.NewGuid(); }
+        public void HoldSave(TaskCompletionSource held, TaskCompletionSource? entered = null)
+        { lock (_gate) { HeldSave = held; _heldSaveEntered = entered; } }
+        public void HoldCurrentBranch(HeldConversationWrite held) { lock (_gate) _heldCurrentBranch = held; }
+        public void FailSave(Exception failure) { lock (_gate) SaveFailure = failure; }
+        public void ReleaseHeldSave() { TaskCompletionSource? held; lock (_gate) { held = HeldSave; HeldSave = null; } held?.TrySetResult(); }
+
+        public object? Invoke(string name, object?[]? args) => name switch
+        {
+            "GetCurrentBranchAsync" => CurrentAsync((Guid)args![0]!),
+            "EnsureRootBranchAsync" => Task.FromResult(Ensure((Guid)args![0]!)),
+            "GetDraftAsync" => Task.FromResult(Draft((Guid)args![0]!, args[1] as Guid?)),
+            "SaveDraftAsync" => SaveAsync((ConversationDraft)args![0]!),
+            "DeleteDraftAsync" => DeleteAsync((Guid)args![0]!, args[1] as Guid?),
+            "GetAttachmentsAsync" => Task.FromResult<IReadOnlyList<MessageAttachment>>([]),
+            _ => throw Unexpected(name)
+        };
+
+        private ConversationBranch? Current(Guid conversationId)
+        {
+            lock (_gate) return _branches.TryGetValue(conversationId, out var id) ? Branch(id, conversationId) : null;
+        }
+
+        private async Task<ConversationBranch?> CurrentAsync(Guid conversationId)
+        {
+            HeldConversationWrite? held;
+            ConversationBranch? actual;
+            lock (_gate) { held = _heldCurrentBranch; _heldCurrentBranch = null; actual = Current(conversationId); }
+            if (held is not null)
+            {
+                held.Entered.TrySetResult();
+                await held.Released.Task;
+            }
+            return actual;
+        }
+
+        private ConversationBranch Ensure(Guid conversationId)
+        {
+            lock (_gate)
+            {
+                if (!_branches.TryGetValue(conversationId, out var id))
+                {
+                    id = Guid.NewGuid();
+                    _branches[conversationId] = id;
+                }
+                return Branch(id, conversationId);
+            }
+        }
+
+        private static ConversationBranch Branch(Guid id, Guid conversationId) =>
+            new(id, conversationId, null, null, "main", ConversationBranchReason.Root, true, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);
+
+        private async Task SaveAsync(ConversationDraft draft)
+        {
+            Interlocked.Increment(ref SaveCount);
+            Task? held;
+            lock (_gate) { held = HeldSave?.Task; _heldSaveEntered?.TrySetResult(); }
+            if (held is not null) await held;
+            lock (_gate)
+            {
+                if (SaveFailure is { } failure) throw failure;
+                _drafts[(draft.ConversationId, draft.BranchId ?? Guid.Empty)] = draft;
+            }
+        }
+
+        private Task DeleteAsync(Guid conversationId, Guid? branchId)
+        {
+            lock (_gate)
+            {
+                Deleted = conversationId;
+                foreach (var key in _drafts.Keys
+                    .Where(key => key.ConversationId == conversationId && (branchId is null || key.BranchId == branchId))
+                    .ToArray())
+                    _drafts.Remove(key);
+            }
+            return Task.CompletedTask;
+        }
     }
 
     private static InvalidOperationException Unexpected(string name) => new("Unexpected external I/O: " + name);
