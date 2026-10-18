@@ -78,7 +78,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         && string.Equals(app.Key, binding.AppKey, StringComparison.OrdinalIgnoreCase)
         && HavenAppRoutePolicy.Resolve(app).Kind == binding.RouteKind;
 
-    private sealed class RegisteredSession : IBrowseNativeAppContentSession
+    private sealed class RegisteredSession : IBrowseNativeAppContentSession, IBrowseAppContentClosePreparationParticipant
     {
         private readonly NativeAppContentRegistry _registry;
         private readonly BrowseAppContentRequest _request;
@@ -187,6 +187,203 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             }).ConfigureAwait(false);
         }
 
+        // The optional token belongs to this exact wrapper and inner owner. It is
+        // never an app registration, a permission grant or a reusable bool receipt.
+        private Task<IBrowseAppContentClosePreparation?>? _strongPreparation;
+        private RegisteredPreparation? _activePreparation;
+        private Task? _acceptedOwnerClose;
+
+        public bool SupportsReversibleClosePreparation
+        {
+            get
+            {
+                lock (_gate)
+                    return _inner is { } inner && IsExactOwnerCurrent(inner, WithinOriginal(() => inner.Address))
+                        && WithinOriginal(() => inner is IBrowseAppContentClosePreparationParticipant { SupportsReversibleClosePreparation: true });
+            }
+        }
+
+        private bool IsExactOwnerCurrent(IBrowseNativeAppContentSession inner, AppContentAddress address) =>
+            !_retiring && _published && _close is null && _registry._hostIsCurrent()
+            && _initialization is { IsCompletedSuccessfully: true }
+            && ReferenceEquals(_inner, inner) && ReferenceEquals(_createdOwner, inner)
+            && WithinOriginal(() => inner.IsPublicationCurrent && inner.Address == address && IsOwnedAddress(address));
+
+        public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
+        {
+            DemandExternalJoin();
+            lock (_gate)
+            {
+                if (_strongPreparation is { } existing && (!existing.IsCompletedSuccessfully || _activePreparation is not null))
+                    return existing;
+                if (!SupportsReversibleClosePreparation)
+                    throw new InvalidOperationException("The exact initialized native owner does not support reversible preparation.");
+                var inner = _inner!;
+                var attempt = new RegisteredPreparation(this, inner, WithinOriginal(() => inner.Address));
+                _activePreparation = attempt;
+                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _strongPreparation = PrepareRegisteredAsync(start.Task, attempt, cancellationToken);
+                Retain(_strongPreparation); start.SetResult(); return _strongPreparation;
+            }
+        }
+
+        private async Task<IBrowseAppContentClosePreparation?> PrepareRegisteredAsync(Task start,
+            RegisteredPreparation attempt, CancellationToken token)
+        {
+            await start.ConfigureAwait(false);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
+            token = linked.Token;
+            var failures = new List<Exception>();
+            try
+            {
+                return await OnUiAsync(async () =>
+                {
+                    using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+                    token.ThrowIfCancellationRequested();
+                    lock (_gate)
+                        if (!ReferenceEquals(_activePreparation, attempt) || !IsExactOwnerCurrent(attempt.Inner, attempt.Address))
+                            throw new InvalidOperationException("The exact native owner changed before preparation.");
+                    var participant = (IBrowseAppContentClosePreparationParticipant)attempt.Inner;
+                    var actual = WithinOriginal(() => participant.PrepareCloseAsync(token))
+                        ?? throw new InvalidOperationException("No actual inner preparation task was returned.");
+                    attempt.Preparation = actual; _ = Retain(actual);
+                    try { attempt.InnerLease = await actual; }
+                    catch (Exception error) { AddOriginalCauses(failures, actual, error); ThrowRegisteredCauses(failures); }
+                    if (attempt.InnerLease is null)
+                    {
+                        lock (_gate) if (ReferenceEquals(_activePreparation, attempt)) _activePreparation = null;
+                        return null;
+                    }
+                    // Register the acquired lease before inspecting any of its getters.
+                    token.ThrowIfCancellationRequested();
+                    lock (_gate)
+                    {
+                        if (!ReferenceEquals(_activePreparation, attempt) || !IsExactOwnerCurrent(attempt.Inner, attempt.Address)
+                            || !WithinOriginal(() => ReferenceEquals(attempt.InnerLease.Session, attempt.Inner) && attempt.InnerLease.IsCurrent))
+                            throw new InvalidOperationException("The acquired preparation is foreign or no longer current.");
+                    }
+                    return (IBrowseAppContentClosePreparation)attempt;
+                }).ConfigureAwait(false);
+            }
+            catch (Exception error)
+            {
+                if (!failures.Any(cause => ReferenceEquals(cause, error))) failures.Add(error);
+                try { await AbortRegistered(attempt).ConfigureAwait(false); }
+                catch (Exception cleanup) { AddOriginalCauses(failures, attempt.Abort, cleanup); }
+                ThrowRegisteredCauses(failures); throw;
+            }
+        }
+
+        private sealed class RegisteredPreparation(RegisteredSession owner, IBrowseNativeAppContentSession inner,
+            AppContentAddress address) : IBrowseAppContentClosePreparation
+        {
+            internal readonly RegisteredSession Owner = owner;
+            internal readonly IBrowseNativeAppContentSession Inner = inner;
+            internal readonly AppContentAddress Address = address;
+            internal IBrowseAppContentClosePreparation? InnerLease;
+            internal Task? Preparation, Abort;
+            internal readonly List<Task> CloseSources = [];
+            internal readonly List<Exception> BeginFailures = [];
+            internal bool Aborting, Accepted;
+            public IBrowseAppContentSession Session => Owner;
+            public bool IsCurrent { get { lock (Owner._gate) return Owner.IsPreparationCurrent(this); } }
+            public Task AbortAsync() { Owner.DemandExternalJoin(); return Owner.AbortRegistered(this); }
+            public Task BeginClose() { Owner.DemandExternalJoin(); return Owner.BeginRegistered(this); }
+        }
+        private bool IsPreparationCurrent(RegisteredPreparation attempt) =>
+            ReferenceEquals(_activePreparation, attempt) && !attempt.Aborting && !attempt.Accepted
+            && _strongPreparation is { IsCompletedSuccessfully: true }
+            && IsExactOwnerCurrent(attempt.Inner, attempt.Address)
+            && attempt.InnerLease is { } inner && WithinOriginal(() => ReferenceEquals(inner.Session, attempt.Inner) && inner.IsCurrent);
+
+        private Task AbortRegistered(RegisteredPreparation attempt)
+        {
+            lock (_gate)
+            {
+                if (attempt.Abort is { } original) return original;
+                if (attempt.Accepted) throw new InvalidOperationException("An accepted native retirement cannot be rolled back.");
+                attempt.Aborting = true;
+                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                attempt.Abort = AbortRegisteredAsync(start.Task, attempt);
+                Retain(attempt.Abort); start.SetResult(); return attempt.Abort;
+            }
+        }
+        private async Task AbortRegisteredAsync(Task start, RegisteredPreparation attempt)
+        {
+            await start.ConfigureAwait(false);
+            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            if (attempt.InnerLease is { } inner)
+            {
+                var actual = WithinOriginal(inner.AbortAsync)
+                    ?? throw new InvalidOperationException("No actual inner abort task was returned.");
+                _ = Retain(actual); var failures = new List<Exception>();
+                try { await actual.ConfigureAwait(false); }
+                catch (Exception error) { AddOriginalCauses(failures, actual, error); }
+                ThrowRegisteredCauses(failures);
+            }
+            lock (_gate) if (ReferenceEquals(_activePreparation, attempt)) _activePreparation = null;
+        }
+
+        private Task BeginRegistered(RegisteredPreparation attempt)
+        {
+            lock (_gate)
+            {
+                if (attempt.Accepted) return _close!;
+                if (!IsPreparationCurrent(attempt)) throw new InvalidOperationException("The exact registered preparation is stale or aborted.");
+                // This async source executes acquisition synchronously before its first
+                // await. Its original phase stays live for actual asynchronous child
+                // callbacks, without leaking that phase into the external caller.
+                _acceptedOwnerClose = BeginPreparedOwnerAsync(attempt);
+                Retain(_acceptedOwnerClose);
+                if (!attempt.Accepted)
+                {
+                    ThrowRegisteredCauses(attempt.BeginFailures);
+                    throw new InvalidOperationException("The native owner did not accept retirement.");
+                }
+                _closeStartedFor = attempt.Inner;
+                _retiring = true; _published = false;
+                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _close = CloseDriverAsync(start.Task); start.SetResult(); return _close;
+            }
+        }
+        private async Task BeginPreparedOwnerAsync(RegisteredPreparation attempt)
+        {
+            using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+            Task? returned = null, reported = null;
+            void Capture(Task task) { attempt.CloseSources.Add(task); Retain(task); attempt.Accepted = true; }
+            try
+            {
+                returned = WithinOriginal(attempt.InnerLease!.BeginClose)
+                    ?? throw new InvalidOperationException("No actual prepared inner close task was returned.");
+                Capture(returned); _actualClose = returned;
+            }
+            catch (Exception failure) { attempt.BeginFailures.Add(failure); }
+            try { reported = WithinOriginal(() => attempt.Inner.OriginalClose); if (reported is not null) Capture(reported); }
+            catch (Exception observation)
+            {
+                attempt.BeginFailures.Add(observation);
+                // Retain any original exposed by a subsequent supported observation;
+                // the first getter failure remains a failure, never a clean receipt.
+                try { reported = WithinOriginal(() => attempt.Inner.OriginalClose); if (reported is not null) Capture(reported); }
+                catch (Exception recoveryObservation) { attempt.BeginFailures.Add(recoveryObservation); }
+            }
+            if (!ReferenceEquals(returned, reported))
+                attempt.BeginFailures.Add(new InvalidOperationException("Retain the same actual prepared inner close task."));
+            var failures = new List<Exception>(attempt.BeginFailures);
+            foreach (var actual in attempt.CloseSources.Distinct())
+                try { await actual.ConfigureAwait(false); } catch (Exception error) { AddOriginalCauses(failures, actual, error); }
+            ThrowRegisteredCauses(failures);
+        }
+        private static void AddOriginalCauses(List<Exception> failures, Task? actual, Exception caught)
+        {
+            foreach (var cause in actual?.Exception is { } raw ? raw.InnerExceptions : [caught])
+                if (!failures.Any(prior => ReferenceEquals(prior, cause))) failures.Add(cause);
+        }
+        private static void ThrowRegisteredCauses(List<Exception> failures)
+        {
+            if (failures.Count > 0) throw new AggregateException("Actual registered preparation, abort or close did not settle cleanly.", failures);
+        }
+
         public Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
         {
             DemandExternalJoin();
@@ -194,6 +391,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             {
                 if (_close is not null) return _preparation ??= Task.FromResult(false);
                 if (_preparation is not null && !_preparation.IsCompletedSuccessfully) return _preparation;
+                if (_activePreparation is not null) return Task.FromResult(false);
                 var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 _preparation = PrepareDriverAsync(start.Task, cancellationToken);
                 start.SetResult(); return _preparation;
@@ -205,6 +403,15 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             await start.ConfigureAwait(false);
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
             token = linked.Token;
+            if (SupportsReversibleClosePreparation)
+            {
+                var lease = await PrepareCloseAsync(token).ConfigureAwait(false);
+                if (lease is null) return false;
+                // A bool caller cannot own a retained token. Join its real abort
+                // before reporting compatibility success, leaving edits admitted.
+                await lease.AbortAsync().ConfigureAwait(false);
+                return true;
+            }
             return await OnUiAsync(async () =>
             {
                 using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
@@ -239,7 +446,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 {
                     if (task is null) return;
                     try { await task; }
-                    catch (Exception error) { if (!failures.Contains(error)) failures.Add(error); }
+                    catch (Exception error) { AddOriginalCauses(failures, task, error); }
                 }
                 try { WithinOriginal(() => { _lifetime.Cancel(); return true; }); }
                 catch (Exception error) { failures.Add(error); }
@@ -247,6 +454,12 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 // before starting that close can wait forever on the cancellation we withheld.
                 BeginOwnerClose();
                 await Join(_preparation);
+                await Join(_strongPreparation);
+                if (_activePreparation is { Accepted: false } abandoned)
+                {
+                    try { await Join(AbortRegistered(abandoned)); }
+                    catch (Exception error) { AddOriginalCauses(failures, abandoned.Abort, error); }
+                }
                 await Join(_initialization);
                 // A factory already entering acquisition when retirement began may publish
                 // its owner late. It is still retained and must receive its original close.
@@ -254,7 +467,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 if (_inner is { } native)
                     try { WithinOriginal(() => { native.StateChanged -= OnInnerChanged; return true; }); }
                     catch (Exception error) { failures.Add(error); }
-                Task[] originals; lock (_gate) originals = _actualTasks.ToArray();
+                Task[] originals; lock (_gate) originals = _actualTasks.Concat(_acceptedOwnerClose is { } accepted ? [accepted] : []).Distinct().ToArray();
                 foreach (var actual in originals) await Join(actual);
                 try { _lifetime.Dispose(); } catch (Exception error) { failures.Add(error); }
                 if (failures.Count > 0) throw new AggregateException("Native app initialization or retirement did not complete cleanly.", failures);
@@ -292,7 +505,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 catch (Exception observation) { failures.Add(observation); }
             }
             foreach (var actual in originals)
-                try { await actual; } catch (Exception error) { if (!failures.Contains(error)) failures.Add(error); }
+                try { await actual; } catch (Exception error) { AddOriginalCauses(failures, actual, error); }
             if (failures.Count > 0) throw new AggregateException("The native owner's original close did not settle cleanly.", failures);
         }
 

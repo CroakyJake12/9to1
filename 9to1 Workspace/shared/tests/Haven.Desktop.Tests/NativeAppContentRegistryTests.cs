@@ -334,6 +334,300 @@ public sealed class NativeAppContentRegistryTests
         await Assert.ThrowsAsync<AggregateException>(() => session.CloseAndDrainAsync());
     }
 
+    private static readonly TimeSpan StrongBound = TimeSpan.FromSeconds(8);
+    private static IBrowseAppContentClosePreparationParticipant Strong(IBrowseAppContentSession session) =>
+        Assert.IsAssignableFrom<IBrowseAppContentClosePreparationParticipant>(session);
+    private static bool HasCause(Exception error, Exception cause) => ReferenceEquals(error, cause) ||
+        error is AggregateException group && group.InnerExceptions.Any(inner => HasCause(inner, cause)) ||
+        error.InnerException is { } nested && HasCause(nested, cause);
+
+    [AvaloniaFact]
+    public async Task Reversible_wrapper_preserves_exact_inner_and_wrapper_originals_without_second_preflight()
+    {
+        var request = Request(); var owner = new StrongOwner(request.Address);
+        var session = Registry(new(), new(_ => owner)).CreateSession(request);
+        var participant = Strong(session);
+        Assert.False(participant.SupportsReversibleClosePreparation);
+        await session.InitializeAsync(); Assert.True(participant.SupportsReversibleClosePreparation);
+        Assert.True(await session.TryPrepareToCloseAsync());
+        Assert.False(owner.Frozen); Assert.Equal(1, owner.Aborts); Assert.Null(session.OriginalClose);
+        var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await participant.PrepareCloseAsync());
+        Assert.Same(session, preparation.Session); Assert.True(preparation.IsCurrent); Assert.True(owner.Frozen);
+        owner.OnBegin = () => Assert.True(session.IsPublicationCurrent);
+        Exception? actualCallbackRefusal = null;
+        owner.CloseBody = async () =>
+        {
+            await Task.Yield();
+            actualCallbackRefusal = Record.Exception((Action)(() => session.CloseAndDrainAsync()));
+        };
+        var close = preparation.BeginClose();
+        Assert.Same(close, session.OriginalClose); Assert.Same(close, preparation.BeginClose());
+        Assert.Same(close, session.CloseAndDrainAsync()); await close.WaitAsync(StrongBound);
+        Assert.IsType<InvalidOperationException>(actualCallbackRefusal);
+        Assert.Equal(1, owner.Begins); Assert.Equal(1, owner.Closes); Assert.Equal(2, owner.Prepares);
+        Assert.True(session.CanRetireOriginalView); Assert.False(participant.SupportsReversibleClosePreparation);
+    }
+
+    [AvaloniaTheory]
+    [InlineData("foreign")]
+    [InlineData("stale")]
+    [InlineData("aborted")]
+    public async Task Reversible_foreign_stale_and_aborted_preparation_never_caches_wrapper_close(string kind)
+    {
+        var request = Request(); var owner = new StrongOwner(request.Address);
+        var session = Registry(new(), new(_ => owner)).CreateSession(request); await session.InitializeAsync();
+        var participant = Strong(session);
+        if (kind == "foreign")
+        {
+            owner.ClaimedSession = new NativeOwner(request.Address);
+            await Assert.ThrowsAnyAsync<Exception>(() => participant.PrepareCloseAsync().WaitAsync(StrongBound));
+        }
+        else
+        {
+            var lease = (await participant.PrepareCloseAsync())!;
+            if (kind == "stale") owner.Revision++;
+            else { var abort = lease.AbortAsync(); Assert.Same(abort, lease.AbortAsync()); await abort.WaitAsync(StrongBound); }
+            Assert.False(lease.IsCurrent);
+            Assert.IsType<InvalidOperationException>(Record.Exception((Action)(() => lease.BeginClose())));
+            await lease.AbortAsync().WaitAsync(StrongBound);
+        }
+        Assert.Null(session.OriginalClose); Assert.Null(owner.OriginalClose); Assert.False(owner.Frozen);
+        Assert.True(session.IsPublicationCurrent); Assert.Equal(0, owner.Begins); Assert.Equal(1, owner.Aborts);
+        await Record.ExceptionAsync(() => session.CloseAndDrainAsync().WaitAsync(StrongBound));
+        Assert.Equal(1, owner.Closes);
+    }
+
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Reversible_preparation_revalidates_after_actual_acquisition_and_aborts_on_host_or_cancellation_change(bool cancel)
+    {
+        var request = Request(); var owner = new StrongOwner(request.Address); var current = true;
+        var session = Registry(new(), new(_ => owner), () => current).CreateSession(request); await session.InitializeAsync();
+        using var cancellation = new CancellationTokenSource();
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        owner.BeforeYield = () => held.Task; var prepare = Strong(session).PrepareCloseAsync(cancellation.Token);
+        try
+        {
+            await owner.PrepareEntered.Task.WaitAsync(StrongBound);
+            if (cancel) cancellation.Cancel(); else current = false;
+            held.TrySetResult();
+            await Assert.ThrowsAnyAsync<Exception>(() => prepare.WaitAsync(StrongBound));
+            Assert.Equal(1, owner.Aborts); Assert.False(owner.Frozen); Assert.Null(session.OriginalClose);
+        }
+        finally
+        {
+            held.TrySetResult(); current = true;
+            await Record.ExceptionAsync(() => prepare.WaitAsync(StrongBound));
+            await Record.ExceptionAsync(() => session.CloseAndDrainAsync().WaitAsync(StrongBound));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Reversible_actual_origin_and_loader_settle_before_yield_and_cannot_join_wrapper_retirement()
+    {
+        var request = Request(); var owner = new StrongOwner(request.Address);
+        var session = Registry(new(), new(_ => owner)).CreateSession(request); await session.InitializeAsync();
+        var origin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var loader = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var loaderEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Exception? refusal = null;
+        owner.BeforeYield = async () =>
+        {
+            await origin.Task;
+            refusal = Record.Exception((Action)(() => session.CloseAndDrainAsync()));
+            loaderEntered.TrySetResult(); await loader.Task;
+        };
+        var preparation = Strong(session).PrepareCloseAsync();
+        try
+        {
+            await owner.PrepareEntered.Task.WaitAsync(StrongBound); Assert.False(preparation.IsCompleted);
+            origin.TrySetResult(); await loaderEntered.Task.WaitAsync(StrongBound);
+            Assert.IsType<InvalidOperationException>(refusal); Assert.Null(session.OriginalClose); Assert.False(preparation.IsCompleted);
+            loader.TrySetResult(); var lease = (await preparation.WaitAsync(StrongBound))!;
+            Assert.True(owner.PrepareOriginal!.IsCompletedSuccessfully); Assert.True(lease.IsCurrent);
+            await lease.AbortAsync().WaitAsync(StrongBound); Assert.False(owner.Frozen);
+        }
+        finally
+        {
+            origin.TrySetResult(); loader.TrySetResult();
+            await Record.ExceptionAsync(() => preparation.WaitAsync(StrongBound));
+            await Record.ExceptionAsync(() => session.CloseAndDrainAsync().WaitAsync(StrongBound));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Reversible_raw_prepare_and_abort_fault_siblings_remain_actual_failures()
+    {
+        var request = Request(); var owner = new StrongOwner(request.Address);
+        var session = Registry(new(), new(_ => owner)).CreateSession(request); await session.InitializeAsync();
+        var oce = new OperationCanceledException("faulted original, not caller cancellation");
+        var io = new IOException("second actual prepare fault");
+        var raw = new TaskCompletionSource<IBrowseAppContentClosePreparation?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        owner.PrepareOverride = raw.Task;
+        var preparation = Strong(session).PrepareCloseAsync(); raw.SetException([oce, io]);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => preparation.WaitAsync(StrongBound));
+        Assert.True(HasCause(failure, oce)); Assert.True(HasCause(failure, io)); Assert.True(raw.Task.IsFaulted);
+        var closeFailure = await Assert.ThrowsAnyAsync<Exception>(() => session.CloseAndDrainAsync().WaitAsync(StrongBound));
+        Assert.True(HasCause(closeFailure, oce)); Assert.True(HasCause(closeFailure, io));
+
+        var secondOwner = new StrongOwner(request.Address);
+        var second = Registry(new(), new(_ => secondOwner)).CreateSession(request); await second.InitializeAsync();
+        var lease = (await Strong(second).PrepareCloseAsync())!;
+        var abortIo = new IOException("actual abort second sibling");
+        var abort = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); secondOwner.AbortOriginal = abort.Task;
+        var actualAbort = lease.AbortAsync(); abort.SetException([oce, abortIo]);
+        var abortFailure = await Assert.ThrowsAnyAsync<Exception>(() => actualAbort.WaitAsync(StrongBound));
+        Assert.True(HasCause(abortFailure, oce)); Assert.True(HasCause(abortFailure, abortIo));
+        Assert.Same(actualAbort, lease.AbortAsync()); Assert.Null(second.OriginalClose);
+        var retirement = await Assert.ThrowsAnyAsync<Exception>(() => second.CloseAndDrainAsync().WaitAsync(StrongBound));
+        Assert.True(HasCause(retirement, abortIo));
+    }
+
+    [AvaloniaTheory]
+    [InlineData("mismatch")]
+    [InlineData("getter")]
+    [InlineData("begin")]
+    public async Task Reversible_accepted_close_keeps_all_acquired_originals_and_cleanup_faults(string kind)
+    {
+        var request = Request(); var owner = new StrongOwner(request.Address);
+        var session = Registry(new(), new(_ => owner)).CreateSession(request); await session.InitializeAsync();
+        var lease = (await Strong(session).PrepareCloseAsync())!;
+        var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reported = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackFailure = new IOException("actual " + kind + " failure");
+        var removalFailure = new IOException("actual unsubscribe failure");
+        owner.CloseBody = () => returned.Task; owner.UnsubscribeFailure = removalFailure;
+        if (kind is "mismatch" or "getter") owner.ReportedClose = reported.Task;
+        if (kind == "getter") owner.CloseGetterFailure = callbackFailure;
+        if (kind == "begin") owner.AfterBeginFailure = callbackFailure;
+        var close = lease.BeginClose();
+        try
+        {
+            Assert.Same(close, session.OriginalClose); Assert.Same(close, session.CloseAndDrainAsync());
+            await owner.Removed.Task.WaitAsync(StrongBound); Assert.False(close.IsCompleted);
+            var rawOne = new IOException("actual first raw close fault");
+            var rawTwo = new OperationCanceledException("actual faulted raw close sibling");
+            if (kind == "mismatch") returned.TrySetException([rawOne, rawTwo]); else returned.TrySetResult();
+            if (kind is "mismatch" or "getter") Assert.False(close.IsCompleted);
+            reported.TrySetResult();
+            var failure = await Assert.ThrowsAnyAsync<Exception>(() => close.WaitAsync(StrongBound));
+            Assert.True(HasCause(failure, removalFailure));
+            if (kind != "mismatch") Assert.True(HasCause(failure, callbackFailure));
+            if (kind == "mismatch")
+            { Assert.True(returned.Task.IsFaulted); Assert.True(HasCause(failure, rawOne)); Assert.True(HasCause(failure, rawTwo)); }
+            else Assert.True(returned.Task.IsCompletedSuccessfully);
+            Assert.True(reported.Task.IsCompletedSuccessfully);
+            Assert.Equal(1, owner.Begins); Assert.Equal(1, owner.Closes); Assert.False(session.CanRetireOriginalView);
+        }
+        finally
+        {
+            returned.TrySetResult(); reported.TrySetResult();
+            await Record.ExceptionAsync(() => close.WaitAsync(StrongBound));
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Reversible_actual_Chrome_sibling_veto_aborts_wrapper_lease_and_restores_live_edits()
+    {
+        var first = new StrongOwner(AppContentAddress.Parse("9to1://files/first"));
+        var second = new StrongOwner(AppContentAddress.Parse("9to1://files/second")) { AllowPreparation = false };
+        var factory = new Factory(r => r.Address.ResourceSegments.Single() == "first" ? first : second);
+        var paths = new StrongPaths(); var chrome = await BrowseChrome.CreateAsync(paths, appContentFactory: Registry(new(), factory), homeProfileId: "original-profile");
+        Exception? primary = null;
+        try
+        {
+            await chrome.NavigateAsync("9to1://files/first"); await chrome.OpenContentAsync(AppContentAddress.Parse("9to1://files/second"), true);
+            var cohort = await chrome.PrepareCloseAsync(); Assert.Null(cohort);
+            Assert.False(first.Frozen); Assert.True(first.Edit()); Assert.Equal(1, first.Aborts);
+            Assert.Null(first.OriginalClose); Assert.Null(second.OriginalClose); Assert.Null(chrome.OriginalClose);
+            second.AllowPreparation = true;
+            var retry = (await chrome.PrepareCloseAsync())!; await retry.AbortAsync().WaitAsync(StrongBound);
+            Assert.True(first.Edit()); Assert.True(second.Edit());
+        }
+        catch (Exception failure) { primary = failure; throw; }
+        finally
+        {
+            try { await chrome.DisposeAsync().AsTask().WaitAsync(StrongBound); }
+            catch (Exception cleanup)
+            {
+                if (primary is not null) throw new AggregateException("Actual cohort assertion and attempted retirement both remain visible.", primary, cleanup);
+                throw;
+            }
+            finally { Directory.Delete(paths.DataDirectory, true); }
+        }
+    }
+
+    private sealed class StrongPaths : IAppPaths
+    {
+        public string DataDirectory { get; } = Path.Combine(Path.GetTempPath(), "registry-strong-" + Guid.NewGuid().ToString("N"));
+        public string DatabasePath => Path.Combine(DataDirectory, "haven.db");
+        public string BrowserProfileDirectory => Path.Combine(DataDirectory, "browser");
+        public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+        public string LogsDirectory => Path.Combine(DataDirectory, "logs");
+        public string LegacyStatePath => Path.Combine(DataDirectory, "legacy.json");
+    }
+    private sealed class StrongOwner(AppContentAddress address) : IBrowseNativeAppContentSession, IBrowseAppContentClosePreparationParticipant
+    {
+        public AppContentAddress Address => address;
+        public string Title => "Real boundary owner"; public string IconKey => "files";
+        public Control OriginalNativeView { get; } = new Border();
+        public bool IsPublicationCurrent => OriginalInitialization is { IsCompletedSuccessfully: true } && _close is null;
+        public bool CanRetireOriginalView => _close is { IsCompletedSuccessfully: true };
+        public Task? OriginalInitialization { get; private set; }
+        private Task? _close, _returnedClose;
+        public Task? OriginalClose
+        {
+            get { if (CloseGetterFailure is { } failure) { CloseGetterFailure = null; throw failure; } return _close; }
+        }
+        public Exception? CloseGetterFailure, UnsubscribeFailure, AfterBeginFailure;
+        public Task? ReportedClose, AbortOriginal, PrepareOverride;
+        public Func<Task>? BeforeYield, CloseBody; public Action? OnBegin;
+        public IBrowseAppContentSession? ClaimedSession;
+        public bool Frozen, AllowPreparation = true; public int Revision, Prepares, Aborts, Begins, Closes;
+        public Task? PrepareOriginal;
+        public readonly TaskCompletionSource PrepareEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public readonly TaskCompletionSource Removed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public event EventHandler? StateChanged
+        {
+            add { }
+            remove { Removed.TrySetResult(); if (UnsubscribeFailure is { } failure) throw failure; }
+        }
+        public Task InitializeAsync(CancellationToken token = default) => OriginalInitialization ??= Task.CompletedTask;
+        public bool SupportsReversibleClosePreparation => true;
+        public bool Edit() => !Frozen && _close is null;
+        public Task<bool> TryPrepareToCloseAsync(CancellationToken token = default) => throw new InvalidOperationException("Strong owner must receive actual preparation");
+        public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken token = default)
+        {
+            Prepares++; Frozen = true; PrepareEntered.TrySetResult();
+            return (Task<IBrowseAppContentClosePreparation?>)(PrepareOriginal = PrepareOverride ?? PrepareBodyAsync());
+        }
+        private async Task<IBrowseAppContentClosePreparation?> PrepareBodyAsync()
+        { if (BeforeYield is { } before) await before(); if (!AllowPreparation) { Frozen = false; return null; } return new Lease(this, Revision); }
+        public Task CloseAndDrainAsync()
+        {
+            if (_returnedClose is null) { Closes++; _returnedClose = CloseBody?.Invoke() ?? Task.CompletedTask; _close = ReportedClose ?? _returnedClose; }
+            return _returnedClose;
+        }
+        private sealed class Lease(StrongOwner owner, int revision) : IBrowseAppContentClosePreparation
+        {
+            private Task? _abort; private bool _accepted, _aborted;
+            public IBrowseAppContentSession Session => owner.ClaimedSession ?? owner;
+            public bool IsCurrent => !_aborted && !_accepted && owner.Frozen && owner.Revision == revision && owner._close is null;
+            public Task AbortAsync()
+            { if (_abort is not null) return _abort; _aborted = true; owner.Frozen = false; owner.Aborts++; return _abort = owner.AbortOriginal ?? Task.CompletedTask; }
+            public Task BeginClose()
+            {
+                if (_accepted) return owner._returnedClose!;
+                if (!IsCurrent) throw new InvalidOperationException("Exact boundary lease is stale");
+                owner.OnBegin?.Invoke(); owner.Begins++; _accepted = true;
+                var actual = owner.CloseAndDrainAsync();
+                if (owner.AfterBeginFailure is { } failure) throw failure;
+                return actual;
+            }
+        }
+    }
+
     private sealed class Factory(Func<BrowseAppContentRequest, IBrowseAppContentSession> create) : IBrowseAppContentFactory
     {
         public int Calls;
