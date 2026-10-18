@@ -193,7 +193,20 @@ public sealed class SpaceBuilderController
         lock (_gate)
         {
             if (!_state.CanEdit) return false;
-            if (_state.Draft.CapabilityBindings.Any(b => b.Kind == binding.Kind && b.CapabilityId == binding.CapabilityId)) return true;
+            var existing = _state.Draft.CapabilityBindings.FirstOrDefault(b => b.Kind == binding.Kind && b.CapabilityId == binding.CapabilityId);
+            if (existing is not null)
+            {
+                if (existing.Override == binding.Override && existing.VersionPin == binding.VersionPin) return true; // already attached, no change
+                // Update override/version on re-attach.
+                var updated = _state.Draft.CapabilityBindings.Select(b =>
+                    b.Kind == binding.Kind && b.CapabilityId == binding.CapabilityId ? binding : b).ToArray();
+                var updatedDraft = _state.Draft with { CapabilityBindings = updated };
+                _editVersion++;
+                next = _state = _state with { Draft = updatedDraft, HasChanges = updatedDraft != _baseline,
+                    StatusMessage = "Capability updated. Save to persist." };
+                StateChanged?.Invoke(next);
+                return true;
+            }
             var bindings = _state.Draft.CapabilityBindings.Append(binding).ToArray();
             var draft = _state.Draft with { CapabilityBindings = bindings };
             _editVersion++;
