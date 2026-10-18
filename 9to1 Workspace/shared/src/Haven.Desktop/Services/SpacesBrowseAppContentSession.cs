@@ -145,7 +145,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 // Saved Chat routes carry a canonical ConversationId, including the
                 // existing legacy workspace migration. Restore it before publishing
                 // a generic Spaces location over the saved target.
-                if (!await TryRestoreRequestedDetailsAsync(token) && !await TryRestoreRequestedConversationAsync(token))
+                if (!await TryRestoreRequestedBuilderAsync(token) && !await TryRestoreRequestedDetailsAsync(token) && !await TryRestoreRequestedConversationAsync(token))
                 {
                     UpdateAddress(page.Controller.State.Selection?.Id);
                     SetRootContent(page);
@@ -212,6 +212,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         // Cancel/retire actual editor owners BEFORE joining a pending decision/save preparation.
         // A preparation may be waiting for the same page cancellation or real save source.
         BeginDetailsRetirement(failures);
+        BeginBuilderRetirement(failures);
         if (_initialization is { } initialization)
             try { await initialization.ConfigureAwait(false); }
             catch (OperationCanceledException) when (initialization.IsCanceled && _token.IsCancellationRequested) { }
@@ -232,7 +233,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             catch (Exception error) { AddActualCauses(failures, preparation, error); }
         // A command acquired before retirement may have produced an owner late.
         BeginDetailsRetirement(failures);
+        BeginBuilderRetirement(failures);
         await JoinDetailsRetirementAsync(failures).ConfigureAwait(false);
+        await JoinBuilderRetirementAsync(failures).ConfigureAwait(false);
         await OnUiAsync(async () =>
         {
             foreach (var chat in _ownedChats.ToArray())
@@ -243,10 +246,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             }
             if (_spacesPage is not null && _stateChangedHandlerSpaces is not null)
                 _spacesPage.Controller.StateChanged -= _stateChangedHandlerSpaces;
+            foreach (var builder in _ownedBuilders.ToArray())
+                try { await builder.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+            lock (_gate) { _ownedBuilders.Clear(); _buildersBySpace.Clear(); _builderCloses.Clear(); }
             if (_spacesPage is IAsyncDisposable spacesDisposable)
                 try { await spacesDisposable.DisposeAsync(); }
                 catch (Exception error) { failures.Add(error); }
-            lock (_gate) { _chatPage = null; _publishedChatRoute = null; _publishedDetailsRoute = null; }
+            lock (_gate) { _chatPage = null; _publishedChatRoute = null; _publishedDetailsRoute = null; _publishedBuilderRoute = null; }
             _chatsBySpace.Clear();
             _spacesPage = null;
             // Only a clean retirement may drop the root to an empty tab. A failed retirement
