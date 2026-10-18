@@ -103,10 +103,107 @@ public sealed class DesktopBorrowerOriginalLifetimeTests
         Assert.Contains(a, causes); Assert.Contains(b, causes);
         Assert.False(closed);
         Assert.Same(page, ((ContentControl)window.Content!).Content);
+        Assert.Equal(1, OwnedCount(service, "_originalChildren"));
+        Assert.Equal(1, OwnedCount(service, "_originalWindows"));
+        Assert.Equal(1, OwnedCount(service, "_originalPopups"));
+        Assert.Equal(1, OwnedCount(service, "_originalChildCloses"));
         // A failed child is intentionally retained. Hide only this headless fixture;
         // do not manufacture a successful production close by releasing its content.
         window.Hide();
         await sessions.SaveNowAndCancelPendingAsync(TestContext.Current.CancellationToken);
+    }
+
+    [AvaloniaFact]
+    public async Task Repeated_successful_persisted_popups_release_only_their_retired_child_and_closed_window_custody()
+    {
+        var sessions = new WorkspaceSessionCoordinator(new Repository());
+        var service = new WorkspaceWindowService(new CallbackServices(() => throw new InvalidOperationException()), sessions, null!);
+        try
+        {
+            for (var iteration = 0; iteration < 5; iteration++)
+            {
+                var page = new HeldPage(); page.Settled.SetResult();
+                var tab = new WorkspaceTabViewModel("chat", "Bounded popup", page, true, HavenSurface.Home);
+                typeof(WorkspaceWindowService).GetMethod("RestorePersistedPopUp", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(service, [tab, SavedWindow(tab.SessionId, WorkspaceWindowKind.PopUp)]);
+                var window = Assert.Single((List<Window>)typeof(WorkspaceWindowService).GetField("_windows", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(service)!);
+                var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                window.Closed += (_, _) => closed.TrySetResult();
+                Assert.Equal(1, OwnedCount(service, "_originalChildren"));
+                window.Close();
+                await closed.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
+                Assert.True(page.Settled.Task.IsCompletedSuccessfully);
+                Assert.Equal(0, OwnedCount(service, "_originalChildren"));
+                Assert.Equal(0, OwnedCount(service, "_originalWindows"));
+                Assert.Equal(0, OwnedCount(service, "_originalPopups"));
+                Assert.Equal(0, OwnedCount(service, "_originalChildCloses"));
+            }
+        }
+        finally
+        {
+            await service.CloseAndDrainAsync().WaitAsync(Bound, TestContext.Current.CancellationToken);
+            await sessions.SaveNowAndCancelPendingAsync(TestContext.Current.CancellationToken);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_normal_window_factory_releases_custody_only_after_resources_and_native_callback_succeed()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "9to1-window-custody-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var preferences = new UserPreferencesService(new Paths(directory));
+        var service = new WorkspaceWindowService(new CallbackServices(() => preferences), null!, null!);
+        try
+        {
+            for (var iteration = 0; iteration < 5; iteration++)
+            {
+                // Use the actual maintained native window factory, with no legacy
+                // MainView/application revival or alternate page owner graph.
+                var window = (MainWindow)typeof(WorkspaceWindowService).GetMethod("CreateMainWindow", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(service, null)!;
+                Assert.Null(window.OriginalWindowResourcesClose); // Getter creates no task/admission.
+                Assert.Equal(1, OwnedCount(service, "_originalWindows"));
+                window.Show(); window.Close();
+                await window.OriginalNativeClosedCallback.WaitAsync(Bound, TestContext.Current.CancellationToken);
+                Assert.True(window.OriginalWindowResourcesClose!.IsCompletedSuccessfully);
+                Assert.Equal(0, OwnedCount(service, "_originalWindows"));
+                Assert.Equal(0, OwnedCount(service, "_originalChildren"));
+                Assert.Null(typeof(MainWindow).GetField("_originalClosedCustodyRelease", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window));
+            }
+        }
+        finally
+        {
+            await service.CloseAndDrainAsync().WaitAsync(Bound, TestContext.Current.CancellationToken);
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Failed_post_close_bookkeeping_remains_a_failed_actual_window_delivery()
+    {
+        var window = new MainWindow();
+        var cause = new IOException("Actual parent custody bookkeeping failed.");
+        window.RegisterOriginalClosedCustodyRelease(_ => throw cause);
+        window.Show(); window.Close();
+        Assert.NotNull(window.OriginalWindowCloseDelivery);
+        var error = await Assert.ThrowsAsync<IOException>(() => window.OriginalWindowCloseDelivery.WaitAsync(Bound, TestContext.Current.CancellationToken));
+        Assert.Same(cause, error);
+        Assert.Same(cause, window.OriginalWindowCloseFailure);
+        await Assert.ThrowsAsync<IOException>(() => window.CloseAndDrainAsync().WaitAsync(Bound, TestContext.Current.CancellationToken));
+        Assert.Null(typeof(MainWindow).GetField("_originalClosedCustodyRelease", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window));
+    }
+
+    private static int OwnedCount(WorkspaceWindowService service, string name)
+    {
+        var value = typeof(WorkspaceWindowService).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(service)!;
+        return (int)value.GetType().GetProperty("Count")!.GetValue(value)!;
+    }
+    private sealed record Paths(string DataDirectory) : IAppPaths
+    {
+        public string DatabasePath => Path.Combine(DataDirectory, "test.db");
+        public string BrowserProfileDirectory => Path.Combine(DataDirectory, "browser");
+        public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+        public string LogsDirectory => Path.Combine(DataDirectory, "logs");
+        public string LegacyStatePath => Path.Combine(DataDirectory, "legacy");
     }
 
     private static async Task<(WorkspaceWindowService, WorkspaceSessionCoordinator, Window)> CreatePopupAsync(HeldPage page)

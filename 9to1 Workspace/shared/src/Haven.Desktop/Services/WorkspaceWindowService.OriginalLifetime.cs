@@ -14,6 +14,7 @@ public sealed partial class WorkspaceWindowService
     private readonly HashSet<Window> _originalWindows = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Window, PopupOriginal> _originalPopups = new(ReferenceEqualityComparer.Instance);
     private readonly List<Exception> _originalFailures = [];
+    private readonly Dictionary<object, Task> _originalChildCloses = new(ReferenceEqualityComparer.Instance);
     [ThreadStatic] private static List<WorkspaceWindowService>? _physicalSources;
 
     private DesktopOriginalWorkLifetime OriginalWindowWork
@@ -56,8 +57,22 @@ public sealed partial class WorkspaceWindowService
     }
     private MainView RetainShell(MainView actual) => RetainChild(actual);
     private WorkspaceTabViewModel RetainDetachedTab(WorkspaceTabViewModel actual) => RetainChild(actual);
-    private void ReleaseTransferredTab(WorkspaceTabViewModel actual)
-    { lock (_originalGate) _originalChildren.Remove(actual); }
+    private void ReleaseTransferredTab(WorkspaceTabViewModel actual, Window? closedPopup = null)
+    {
+        // Called only AFTER the actual receiving shell's AttachTransferredTab
+        // returns. A live transferred tab is not retired to release its old host.
+        lock (_originalGate)
+        {
+            if (_originalChildCloses.TryGetValue(actual, out var priorClose) && !priorClose.IsCompletedSuccessfully) return;
+            _originalChildren.Remove(actual);
+            _originalChildCloses.Remove(actual);
+            if (closedPopup is null || !_originalPopups.TryGetValue(closedPopup, out var popup)
+                || !popup.Closed || !ReferenceEquals(popup.Tab, actual)) return;
+            _originalPopups.Remove(closedPopup);
+            _originalWindows.Remove(closedPopup);
+            if (popup.Source is not null) PruneUnownedRetiredChild(popup.Source);
+        }
+    }
     private T RetainWindow<T>(T actual) where T : Window
     { lock (_originalGate) _originalWindows.Add(actual); return actual; }
     private void ConfigureWindow(Action source) => AcquireWindowSource(() => { source(); return true; });
@@ -130,7 +145,9 @@ public sealed partial class WorkspaceWindowService
         guard.DemandExternalOriginalRetirementJoin();
         AcquireWindowSource(() => { participant.RequestRetirement(); return true; });
         var task = AcquireWindowSource(participant.CloseAndDrainAsync);
+        RecordWindowChildClose(actual, task);
         await JoinWindowOriginalAsync(task);
+        PruneUnownedRetiredChild(actual);
     }
     private async Task JoinWindowOriginalAsync(Task actual)
     {
@@ -160,11 +177,17 @@ public sealed partial class WorkspaceWindowService
         {
             if (actual is not IDesktopOriginalRetirementParticipant participant || actual is not IDesktopOriginalRetirementJoinGuard)
             { AddWindowCause(failures, new DesktopOriginalRetirementUnavailableException(actual.GetType())); continue; }
-            try { tasks.Add(AcquireWindowSource(participant.CloseAndDrainAsync)); }
+            try
+            {
+                var task = AcquireWindowSource(participant.CloseAndDrainAsync);
+                RecordWindowChildClose(actual, task);
+                tasks.Add(task);
+            }
             catch (Exception cause) { AddWindowCause(failures, cause); }
         }
         foreach (var task in tasks.Distinct<Task>(ReferenceEqualityComparer.Instance))
             try { await task; } catch (Exception observed) { CaptureWindowCauses(failures, task, observed); }
+        foreach (var actual in children) PruneUnownedRetiredChild(actual);
         lock (_originalGate) foreach (var cause in _originalFailures) AddWindowCause(failures, cause);
         ThrowWindowCauses(failures); // Retain actual native content when any original/child failed.
         PopupOriginal[] popups;
@@ -187,6 +210,61 @@ public sealed partial class WorkspaceWindowService
         // MainWindow owns its genuine shell close and the App owns its final physical
         // close phase. This service must not destroy those native windows here.
     }
+    private MainWindow ConfigureMainWindowCustody(MainWindow window)
+    {
+        window.RegisterOriginalClosedCustodyRelease(PruneHealthyClosedMainWindow);
+        return window;
+    }
+    private void PruneHealthyClosedMainWindow(MainWindow window)
+    {
+        if (!window.OriginalNativeClosedCallback.IsCompletedSuccessfully
+            || window.OriginalWindowResourcesClose is not { IsCompletedSuccessfully: true }) return;
+        lock (_originalGate)
+        {
+            if (!_originalWindows.Contains(window)) return;
+            if (window.DataContext is not MainView shell) { _originalWindows.Remove(window); return; }
+            // Read the SAME actual shell close already joined by MainWindow.
+            // Never substitute its broader window-resource task for child identity.
+            if (shell.OriginalShellClose is not { IsCompletedSuccessfully: true } actualShellClose) return;
+            RecordWindowChildClose(shell, actualShellClose);
+            _originalWindows.Remove(window);
+            PruneUnownedRetiredChild(shell);
+        }
+    }
+
+    private void RecordWindowChildClose(object child, Task actual)
+    {
+        lock (_originalGate)
+        {
+            if (_originalChildCloses.TryGetValue(child, out var earlier) && !ReferenceEquals(earlier, actual))
+                throw new InvalidOperationException("An actual workspace child replaced its already-published close task.");
+            _originalChildCloses[child] = actual;
+        }
+    }
+    private void PruneUnownedRetiredChild(object child)
+    {
+        lock (_originalGate)
+        {
+            if (!_originalChildCloses.TryGetValue(child, out var actual) || !actual.IsCompletedSuccessfully) return;
+            if (_originalWindows.Any(window => ReferenceEquals(window.DataContext, child))
+                || _originalPopups.Values.Any(popup => ReferenceEquals(popup.Tab, child) || ReferenceEquals(popup.Source, child))) return;
+            _originalChildren.Remove(child);
+            _originalChildCloses.Remove(child);
+        }
+    }
+    private void PruneRetiredClosedPopup(Window window)
+    {
+        lock (_originalGate)
+        {
+            if (!_originalPopups.TryGetValue(window, out var popup) || !popup.Closed
+                || !_originalChildCloses.TryGetValue(popup.Tab, out var close) || !close.IsCompletedSuccessfully) return;
+            _originalPopups.Remove(window);
+            _originalWindows.Remove(window);
+            PruneUnownedRetiredChild(popup.Tab);
+            if (popup.Source is not null) PruneUnownedRetiredChild(popup.Source);
+        }
+    }
+
     private static void CaptureWindowCauses(List<Exception> failures, Task actual, Exception observed)
     {
         if (actual.Exception is { InnerExceptions.Count: > 0 } group)

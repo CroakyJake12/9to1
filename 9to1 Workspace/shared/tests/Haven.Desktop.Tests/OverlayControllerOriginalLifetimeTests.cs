@@ -187,21 +187,35 @@ public sealed class OverlayControllerOriginalLifetimeTests
     {
         var (controller, page, window, id) = await MountAsync();
         var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        page.RetainOriginalParentBorrower(held.Task, () => { });
-        window.Close();
-        await WaitUntilAsync(() => CustodyCount(controller, "_windowDrains") == 1);
-        Assert.Equal(1, CustodyCount(controller, "_originalPages"));
-        Assert.False(window.OriginalNativeClosed);
         var cause = new IOException("Real held Go original failed.");
-        held.SetException(cause);
-        var failure = await Assert.ThrowsAnyAsync<Exception>(() => controller.CloseAndDrainAsync().WaitAsync(Bound, Token));
-        Assert.Contains(cause, AllCauses(failure));
-        Assert.False(window.OriginalNativeClosed);
-        Assert.Equal(1, CustodyCount(controller, "_originalPages"));
-        Assert.Equal(1, CustodyCount(controller, "_windowDrains"));
-        Assert.Equal(1, CustodyCount(controller, "_closingSessions"));
-        Assert.NotNull(window.Content);
-        window.Hide(); // Preserve genuine failed custody; hide only the headless fixture.
+        Exception? assertionFailure = null;
+        page.RetainOriginalParentBorrower(held.Task, () => { });
+        try
+        {
+            window.Close();
+            await WaitUntilAsync(() => CustodyCount(controller, "_windowDrains") == 1);
+            Assert.Equal(1, CustodyCount(controller, "_originalPages"));
+            Assert.False(window.OriginalNativeClosed);
+            held.SetException(cause);
+            var failure = await Assert.ThrowsAnyAsync<Exception>(() => controller.CloseAndDrainAsync().WaitAsync(Bound, Token));
+            Assert.Contains(cause, AllCauses(failure));
+            Assert.False(window.OriginalNativeClosed);
+            Assert.Equal(1, CustodyCount(controller, "_originalPages"));
+            Assert.Equal(1, CustodyCount(controller, "_windowDrains"));
+            Assert.Equal(1, CustodyCount(controller, "_closingSessions"));
+            Assert.NotNull(window.Content);
+        }
+        catch (Exception error) { assertionFailure = error; throw; }
+        finally
+        {
+            held.TrySetException(cause); // Release the SAME original even on a failed assertion/timeout.
+            try { await controller.CloseAndDrainAsync().WaitAsync(Bound, CancellationToken.None); }
+            catch (Exception error) when (AllCauses(error).Any(item => ReferenceEquals(item, cause)) && AllCauses(error).Where(item => item is not AggregateException && item.InnerException is null)
+                .All(item => ReferenceEquals(item, cause))) { }
+            catch (Exception cleanup) when (assertionFailure is not null)
+            { throw new AggregateException("The assertion and its actual cleanup both failed.", assertionFailure, cleanup); }
+            finally { window.Hide(); } // Preserve failed custody; hide only the headless fixture.
+        }
     }
 
     private static int CustodyCount(OverlayWorkspaceController controller, string name)

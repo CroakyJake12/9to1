@@ -93,5 +93,6 @@ public sealed partial class MainWindow : Window, IDesktopOriginalRetirementParti
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(actualFailure).Throw();
         }
         _actualClosedSettlement.TrySetResult();
+        ReleaseOriginalClosedCustody();
     }
 }

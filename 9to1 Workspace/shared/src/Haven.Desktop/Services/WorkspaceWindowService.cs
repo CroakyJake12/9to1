@@ -87,11 +87,11 @@ public sealed partial class WorkspaceWindowService(
             sessions.UnregisterPopUp(windowId);
             host.Content = null;
             _windows.Remove(window);
-            if (OriginalWindowWork.IsRetiring) return;
+            if (OriginalWindowWork.IsRetiring) { PruneRetiredClosedPopup(window); return; }
             if (!source.IsDisposed)
             {
                 source.AttachTransferredTab(moved, replaceExisting: false);
-                ReleaseTransferredTab(moved);
+                ReleaseTransferredTab(moved, window);
             }
             else
             {
@@ -100,7 +100,7 @@ public sealed partial class WorkspaceWindowService(
                 shell.ApplyEdition(source.Edition);
                 if (OriginalWindowWork.IsRetiring) return;
                 shell.AttachTransferredTab(moved, replaceExisting: true);
-                ReleaseTransferredTab(moved);
+                ReleaseTransferredTab(moved, window);
                 sessions.Register(shell, WorkspaceWindowKind.Normal);
                 var fallback = CreateMainWindow();
                 fallback.DataContext = shell;
@@ -208,6 +208,7 @@ public sealed partial class WorkspaceWindowService(
             sessions.UnregisterPopUp(saved.Id);
             host.Content = null;
             _windows.Remove(window);
+            PruneRetiredClosedPopup(window);
         });
         _windows.Add(window);
         window.Show();
@@ -269,9 +270,9 @@ public sealed partial class WorkspaceWindowService(
     private MainWindow CreateMainWindow()
     {
 #if ANDROID
-        return RetainWindow(new MainWindow());
+        return ConfigureMainWindowCustody(RetainWindow(new MainWindow()));
 #else
-        return RetainWindow(new MainWindow(services.GetRequiredService<UserPreferencesService>()));
+        return ConfigureMainWindowCustody(RetainWindow(new MainWindow(services.GetRequiredService<UserPreferencesService>())));
 #endif
     }
 }

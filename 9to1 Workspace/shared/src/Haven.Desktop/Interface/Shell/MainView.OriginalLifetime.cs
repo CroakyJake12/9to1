@@ -13,6 +13,8 @@ public sealed partial class MainView
     private readonly List<Exception> _originalShellStopFailures = [];
     [ThreadStatic] private static List<MainView>? _synchronousShellSources;
 
+    internal Task? OriginalShellClose => _originalShellWork.OriginalClose;
+
     public void RequestRetirement()
     {
         // Snapshot/save is the native host's preceding step. This seals only this

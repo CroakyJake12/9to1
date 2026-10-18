@@ -18,6 +18,29 @@ public sealed partial class MainWindow
     private readonly AsyncLocal<LiveWindowDelivery?> _liveWindowDelivery = new();
     private readonly TaskCompletionSource _actualClosedSettlement = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal Task OriginalNativeClosedCallback => _actualClosedSettlement.Task;
+    internal Task? OriginalWindowResourcesClose => _originalWindowWork.OriginalClose;
+    private Action<MainWindow>? _originalClosedCustodyRelease;
+    internal void RegisterOriginalClosedCustodyRelease(Action<MainWindow> actualRelease)
+    {
+        ArgumentNullException.ThrowIfNull(actualRelease);
+        if (_originalClosedCustodyRelease is not null || OriginalNativeClosedCallback.IsCompleted)
+            throw new InvalidOperationException("The actual native window already has closed-custody bookkeeping.");
+        _originalClosedCustodyRelease = actualRelease;
+    }
+    private void ReleaseOriginalClosedCustody()
+    {
+        // Only the known parent service's private container release is registered.
+        // No IO, close, task, or second lifetime is dispatched by this hook.
+        if (!OriginalNativeClosedCallback.IsCompletedSuccessfully || OriginalWindowResourcesClose?.IsCompletedSuccessfully != true) return;
+        var release = _originalClosedCustodyRelease;
+        _originalClosedCustodyRelease = null; // Never retain the parent through a completed hook.
+        try { release?.Invoke(this); }
+        catch (Exception cause)
+        {
+            _actualWindowCloseFailure ??= cause;
+            throw; // The SAME owning native delivery/Close source retains this failure.
+        }
+    }
 
     // Return the SAME existing native window work token; this creates no new lifetime.
     internal CancellationToken AcquireOriginalWindowLifetime()
