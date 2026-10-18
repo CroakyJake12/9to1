@@ -19,7 +19,7 @@ namespace Haven.Desktop.Services;
 
 /// <summary>A distinct Spaces view owner per Haven tab, reusing the canonical
 /// Spaces Home page and its services.</summary>
-internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSession
+internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppContentSession
 {
     private readonly BrowseAppContentRequest _request;
     private readonly IServiceProvider _services;
@@ -130,8 +130,14 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
                 page.Controller.StateChanged += _stateChangedHandlerSpaces;
                 if (TryParseSelectedSpace(_request.Address, out var selectedSpaceId))
                     await page.Controller.SelectSpaceAsync(selectedSpaceId, token);
-                UpdateAddress(page.Controller.State.Selection?.Id);
-                _root.Content = page;
+                // Saved Chat routes carry a canonical ConversationId, including the
+                // existing legacy workspace migration. Restore it before publishing
+                // a generic Spaces location over the saved target.
+                if (!await TryRestoreRequestedConversationAsync(token))
+                {
+                    UpdateAddress(page.Controller.State.Selection?.Id);
+                    _root.Content = page;
+                }
                 _page = _root;
                 _published = true;
             }
@@ -208,6 +214,7 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
         {
             foreach (var chat in _ownedChats.ToArray())
             {
+                UnobserveConversationRoute(chat);
                 try { await chat.DisposeAsync(); _ownedChats.Remove(chat); }
                 catch (Exception error) { failures.Add(error); }
             }
@@ -310,13 +317,18 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
 
     private void OnSpacesStateChanged(SpacesHomeViewState state)
     {
-        if (_closing) return;
+        if (_closing || !_published) return;
         UpdateAddress(state.Selection?.Id);
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void UpdateAddress(Guid? selectedSpaceId)
     {
+        if (_chatPage is { } chat && ReferenceEquals(_root.Content, chat))
+        {
+            _address = ConversationAddress(chat.CurrentConversation);
+            return;
+        }
         if (selectedSpaceId is { } id && id != Guid.Empty)
             _address = AppContentAddress.Parse($"9to1://spaces/selected/{id:D}");
         else
@@ -384,7 +396,7 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
             throw new NotSupportedException("Only the Chat destination is available in this Haven tab.");
         var spaceId = action.Context.Scope.RegisteredSpaceId;
         var key = spaceId ?? Guid.Empty;
-        if (_chatsBySpace.TryGetValue(key, out var existing))
+        if (_chatsBySpace.TryGetValue(key, out var existing) && existing.CurrentConversation.SpaceId == spaceId)
         {
             lock (_gate)
             {
@@ -392,7 +404,9 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
                 DemandAlive();
                 _chatPage = existing;
                 _root.Content = existing;
+                _address = ConversationAddress(existing.CurrentConversation);
             }
+            StateChanged?.Invoke(this, EventArgs.Empty);
             return;
         }
         var factory = new OverlayChatSessionFactory(_services,
@@ -414,10 +428,13 @@ internal sealed class SpacesBrowseAppContentSession : IBrowseNativeAppContentSes
                 DemandAlive();
                 page.SetDraft(string.Empty);
                 _root.Content = page;
-                _chatsBySpace.Add(key, page);
+                _chatsBySpace[key] = page;
                 _chatPage = page;
+                ObserveConversationRoute(page);
+                _address = ConversationAddress(page.CurrentConversation);
                 published = true;
             }
+            StateChanged?.Invoke(this, EventArgs.Empty);
         }
         finally
         {
