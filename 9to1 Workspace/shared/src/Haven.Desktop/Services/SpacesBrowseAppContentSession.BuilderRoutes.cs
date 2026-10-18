@@ -17,7 +17,6 @@ internal sealed partial class SpacesBrowseAppContentSession
     private readonly List<SpaceBuilderPage> _ownedBuilders = [];
     private readonly Dictionary<Guid, SpaceBuilderPage> _buildersBySpace = [];
     private readonly Dictionary<SpaceBuilderPage, Task> _builderCloses = [];
-    private Task<SpaceBuilderPage.ClosePreparation?>? _activeBuilderPreparation = null;
 
     internal async Task<bool> TryRestoreRequestedBuilderAsync(CancellationToken token)
     {
@@ -64,7 +63,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 lock (_gate)
                 {
                     token.ThrowIfCancellationRequested(); DemandAlive();
-                    if (_activeBuilderPreparation is not null) throw new InvalidOperationException("Abort the session close preparation before navigating.");
+                    if (_activeDetailsPreparation is not null) throw new InvalidOperationException("Abort the session close preparation before navigating.");
                     SetRootContent(page);
                     _publishedBuilderRoute = new(page, AppContentAddress.Parse($"9to1://spaces/builder/{id:D}"));
                     _publishedChatRoute = null;
@@ -89,8 +88,8 @@ internal sealed partial class SpacesBrowseAppContentSession
                         lock (_gate) { _ownedBuilders.Remove(page); _builderCloses.Remove(page); }
                 }
                 catch (Exception cleanup) { failures.Add(cleanup); }
-                if (failures.Count > 0 && failure is null)
-                    throw new AggregateException("Space builder admission and cleanup failed.", failures);
+                if (failures.Count > 0)
+                    ThrowActualCauses(failures, "Space builder admission and cleanup failed.");
             }
             if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
         }, token);

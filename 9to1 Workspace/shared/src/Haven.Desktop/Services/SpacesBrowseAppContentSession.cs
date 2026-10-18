@@ -247,8 +247,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             if (_spacesPage is not null && _stateChangedHandlerSpaces is not null)
                 _spacesPage.Controller.StateChanged -= _stateChangedHandlerSpaces;
             foreach (var builder in _ownedBuilders.ToArray())
-                try { await builder.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
-            lock (_gate) { _ownedBuilders.Clear(); _buildersBySpace.Clear(); _builderCloses.Clear(); }
+                try { await builder.DisposeAsync(); if (failures.Count == 0) lock (_gate) { _ownedBuilders.Remove(builder); _builderCloses.Remove(builder); } }
+                catch (Exception error) { failures.Add(error); }
+            if (failures.Count == 0) lock (_gate) { _buildersBySpace.Clear(); }
             if (_spacesPage is IAsyncDisposable spacesDisposable)
                 try { await spacesDisposable.DisposeAsync(); }
                 catch (Exception error) { failures.Add(error); }

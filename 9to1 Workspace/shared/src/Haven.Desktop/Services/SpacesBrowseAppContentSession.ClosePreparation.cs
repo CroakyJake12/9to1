@@ -21,14 +21,16 @@ internal sealed partial class SpacesBrowseAppContentSession
     public bool SupportsReversibleClosePreparation => true;
 
     private sealed class SessionPreparation(SpacesBrowseAppContentSession owner,
-        SpaceDetailsPage[] pages, SpacesHomeViewState? homeState, long epoch) : IBrowseAppContentClosePreparation
+        SpaceDetailsPage[] pages, SpaceBuilderPage[] builders, SpacesHomeViewState? homeState, long epoch) : IBrowseAppContentClosePreparation
     {
         internal readonly SpacesBrowseAppContentSession Owner = owner;
         internal readonly SpaceDetailsPage[] Pages = pages;
+        internal readonly SpaceBuilderPage[] Builders = builders;
         internal SpacesHomeViewState? HomeState = homeState;
         internal SpacesHomePage.HomeClosePreparation? HomeLease;
         internal long Epoch = epoch;
         internal readonly List<(SpaceDetailsPage Page, SpaceDetailsPage.ClosePreparation Lease)> Leases = [];
+        internal readonly List<(SpaceBuilderPage Page, SpaceBuilderPage.ClosePreparation Lease)> BuilderLeases = [];
         internal bool Ready, Aborted, Accepted;
         internal Task? Abort, Close;
         public IBrowseAppContentSession Session => Owner;
@@ -52,6 +54,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                 return Task.FromResult<IBrowseAppContentClosePreparation?>(null);
             var candidate = new SessionPreparation(this,
                 _ownedDetails.Where(page => page.OriginalClose is null).ToArray(),
+                _ownedBuilders.Where(page => page.OriginalClose is null).ToArray(),
                 _spacesPage?.Controller.State, _routeEpoch);
             _activeDetailsPreparation = candidate;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -90,6 +93,11 @@ internal sealed partial class SpacesBrowseAppContentSession
             {
                 linked.Token.ThrowIfCancellationRequested();
                 if (!await PrepareEditorAsync(candidate, page, linked.Token).ConfigureAwait(false)) return false;
+            }
+            foreach (var page in candidate.Builders)
+            {
+                linked.Token.ThrowIfCancellationRequested();
+                if (!await PrepareBuilderAsync(candidate, page, linked.Token).ConfigureAwait(false)) return false;
             }
             if (candidate.HomeLease is { } currentHome && !currentHome.IsCurrent) return false;
             lock (_gate)
@@ -203,6 +211,86 @@ internal sealed partial class SpacesBrowseAppContentSession
         lock (_gate) return IsOwnCurrentPreparation(preparation);
     }
 
+    private async Task<bool> PrepareBuilderAsync(SessionPreparation candidate, SpaceBuilderPage page, CancellationToken token)
+    {
+        if (page.OriginalClose is not null) return false;
+        Control? priorView = null;
+        PublishedBuilderRoute? priorBuilder = null;
+        PublishedDetailsRoute? priorDetails = null;
+        PublishedChatRoute? priorChat = null;
+        Haven.Core.AppContentAddress? priorAddress = null;
+        var switched = false;
+        var failures = new List<Exception>();
+        var accepted = false;
+        Task? actual = null;
+        try
+        {
+            actual = OnUiAsync(() =>
+            {
+                lock (_gate)
+                {
+                    DemandAlive(); token.ThrowIfCancellationRequested();
+                    if (!ReferenceEquals(_activeDetailsPreparation, candidate)) throw new InvalidOperationException("The editor cohort changed.");
+                    if ((page.State.HasChanges || page.State.HasConflict) && !ReferenceEquals(_publishedBuilderRoute?.Page, page))
+                    {
+                        priorView = _root.Content as Control;
+                        priorBuilder = _publishedBuilderRoute; priorDetails = _publishedDetailsRoute; priorChat = _publishedChatRoute; priorAddress = _address;
+                        SetRootContent(page);
+                        _publishedBuilderRoute = new(page, Haven.Core.AppContentAddress.Parse($"9to1://spaces/builder/{page.State.SpaceId:D}"));
+                        _publishedDetailsRoute = null; _publishedChatRoute = null; _address = _publishedBuilderRoute.Address;
+                        candidate.Epoch = ++_routeEpoch;
+                        switched = true;
+                    }
+                }
+                if (switched) PublishStateChanged();
+                return Task.CompletedTask;
+            });
+            await actual.ConfigureAwait(false);
+            var original = page.PrepareCloseAsync(token);
+            actual = original; lock (_gate) RetainPreparation(original);
+            var lease = await original.ConfigureAwait(false);
+            if (lease is not null)
+            {
+                lock (_gate) candidate.BuilderLeases.Add((page, lease));
+                actual = lease.Settlement;
+                lock (_gate) RetainPreparation(actual);
+                await actual.ConfigureAwait(false);
+                accepted = lease.IsCurrent;
+            }
+        }
+        catch (Exception cause)
+        { if (actual is null) failures.Add(cause); else AddActualCauses(failures, actual, cause); }
+        finally
+        {
+            if (switched)
+                try
+                {
+                    actual = OnUiAsync(() =>
+                    {
+                        lock (_gate)
+                        {
+                            if (_closing) return Task.CompletedTask;
+                            if (!ReferenceEquals(_activeDetailsPreparation, candidate)) throw new InvalidOperationException("The builder decision lost its owner.");
+                            if (priorChat is not null && !ReferenceEquals(priorView, priorChat.Page))
+                                throw new InvalidOperationException("The retained Chat view and route owner disagree.");
+                            var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page.CurrentConversation));
+                            var restoredAddress = restoredChat?.Address ?? priorAddress!;
+                            SetRootContent(priorView);
+                            _publishedBuilderRoute = priorBuilder; _publishedDetailsRoute = priorDetails; _publishedChatRoute = restoredChat; _address = restoredAddress;
+                            candidate.Epoch = ++_routeEpoch;
+                        }
+                        PublishStateChanged();
+                        return Task.CompletedTask;
+                    });
+                    await actual.ConfigureAwait(false);
+                }
+                catch (Exception cause)
+                { if (actual is null) failures.Add(cause); else AddActualCauses(failures, actual, cause); }
+        }
+        ThrowActualCauses(failures, "The actual builder decision and prior-view restoration failed.");
+        return accepted;
+    }
+
     private bool IsOwnCurrentPreparation(SessionPreparation preparation) =>
         ReferenceEquals(preparation.Owner, this) && ReferenceEquals(_activeDetailsPreparation, preparation) &&
         preparation.Ready && !preparation.Aborted && !preparation.Accepted && !_closing &&
@@ -210,8 +298,11 @@ internal sealed partial class SpacesBrowseAppContentSession
         (_spacesPage is null || preparation.HomeLease is not null) &&
         !_commands.Any(task => !task.IsCompletedSuccessfully) &&
         _ownedDetails.Where(page => page.OriginalClose is null).SequenceEqual(preparation.Pages) &&
+        _ownedBuilders.Where(page => page.OriginalClose is null).SequenceEqual(preparation.Builders) &&
         preparation.Leases.Count == preparation.Pages.Length &&
-        preparation.Leases.All(item => item.Lease.IsCurrent && item.Lease.Settlement.IsCompletedSuccessfully);
+        preparation.BuilderLeases.Count == preparation.Builders.Length &&
+        preparation.Leases.All(item => item.Lease.IsCurrent && item.Lease.Settlement.IsCompletedSuccessfully) &&
+        preparation.BuilderLeases.All(item => item.Lease.IsCurrent && item.Lease.Settlement.IsCompletedSuccessfully);
 
     private Task AbortPreparation(SessionPreparation preparation)
     {
@@ -247,6 +338,18 @@ internal sealed partial class SpacesBrowseAppContentSession
                 if (actual is null) failures.Add(cause); else AddActualCauses(failures, actual, cause);
             }
         }
+        foreach (var (page, lease) in preparation.BuilderLeases.ToArray())
+        {
+            Task<bool>? actual = null;
+            try
+            {
+                actual = page.AbortCloseAsync(lease);
+                if (!await actual.ConfigureAwait(false) && !_closing)
+                    throw new InvalidOperationException("An acquired Space builder preparation could not be restored.");
+            }
+            catch (Exception cause)
+            { if (actual is null) failures.Add(cause); else AddActualCauses(failures, actual, cause); }
+        }
         if (preparation.HomeLease is { } homeLease)
         {
             Task? actual = null;
@@ -255,7 +358,9 @@ internal sealed partial class SpacesBrowseAppContentSession
             { if (actual is null) failures.Add(cause); else AddActualCauses(failures, actual, cause); }
         }
         lock (_gate)
+        {
             if (ReferenceEquals(_activeDetailsPreparation, preparation)) _activeDetailsPreparation = null;
+        }
         ThrowActualCauses(failures, "Spaces could not restore all acquired editor preparations.");
     }
 
@@ -293,6 +398,16 @@ internal sealed partial class SpacesBrowseAppContentSession
                     _preparedCloseFailures.Add(cause); // Partial acceptance must drain every sibling and retain its failure.
                 }
             }
+            foreach (var (page, lease) in preparation.BuilderLeases)
+            {
+                try { RecordBuilderClose(page, page.BeginClosePrepared(lease)); acquired = true; }
+                catch (Exception cause)
+                {
+                    if (page.OriginalClose is { } original) { RecordBuilderClose(page, original); acquired = true; }
+                    if (!acquired) throw;
+                    _preparedCloseFailures.Add(cause);
+                }
+            }
             preparation.Accepted = true;
             return preparation.Close = CloseAndDrainAsync();
         }
@@ -303,6 +418,13 @@ internal sealed partial class SpacesBrowseAppContentSession
         if (_detailsCloses.TryGetValue(page, out var prior) && !ReferenceEquals(prior, original))
             throw new InvalidOperationException("The details page replaced its published original close.");
         _detailsCloses[page] = original;
+    }
+
+    private void RecordBuilderClose(SpaceBuilderPage page, Task original)
+    {
+        if (_builderCloses.TryGetValue(page, out var prior) && !ReferenceEquals(prior, original))
+            throw new InvalidOperationException("The builder page replaced its published original close.");
+        _builderCloses[page] = original;
     }
 
     private void BeginDetailsRetirement(List<Exception> failures)
