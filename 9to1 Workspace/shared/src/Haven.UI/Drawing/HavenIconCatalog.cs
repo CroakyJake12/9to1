@@ -114,6 +114,11 @@ public static class HavenIconCatalog
         "folder-open" => Geometry(new HavenPathFigure(new HavenPoint(3, 9), [new HavenLineSegment(new HavenPoint(21, 9)), new HavenLineSegment(new HavenPoint(21, 19)), new HavenLineSegment(new HavenPoint(3, 19))], true), Line((3, 9), (9, 9), (12, 5), (21, 5))),
         "zoom-in" => Geometry(Circle(11, 11, 7), Line((11, 8), (11, 14)), Line((8, 11), (14, 11)), Line((16, 16), (21, 21))),
         "zoom-out" => Geometry(Circle(11, 11, 7), Line((8, 11), (14, 11)), Line((16, 16), (21, 21))),
+        "cart" => Geometry(new HavenPathFigure(new HavenPoint(3, 6),
+            [new HavenLineSegment(new HavenPoint(6, 6)), new HavenLineSegment(new HavenPoint(8, 18)), new HavenLineSegment(new HavenPoint(18, 18)), new HavenLineSegment(new HavenPoint(20, 6))], true),
+            Line((8, 6), (20, 6)), Circle(9, 21, 1.5), Circle(17, 21, 1.5)),
+        "experiences" => Geometry(Circle(12, 12, 9), Circle(12, 12, 4), Line((12, 3), (12, 8)), Line((12, 16), (12, 21)), Line((3, 12), (8, 12)), Line((16, 12), (21, 12))),
+        "sparkles" => Geometry(Line((12, 3), (12, 7)), Line((10, 5), (14, 5)), Line((19, 8), (19, 12)), Line((17, 10), (21, 10)), Line((5, 14), (5, 18)), Line((3, 16), (7, 16)), Line((15, 16), (15, 20)), Line((13, 18), (17, 18))),
         _ => Geometry(new HavenPathFigure(new HavenPoint(4, 4),
             [new HavenLineSegment(new HavenPoint(20, 4)), new HavenLineSegment(new HavenPoint(20, 20)), new HavenLineSegment(new HavenPoint(4, 20))], true), Line((7, 7), (17, 17)), Line((17, 7), (7, 17)))
     };

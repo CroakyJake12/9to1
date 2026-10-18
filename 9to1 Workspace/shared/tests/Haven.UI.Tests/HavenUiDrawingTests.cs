@@ -113,6 +113,9 @@ public sealed class HavenUiDrawingTests
     [InlineData("test")]
     [InlineData("experiment")]
     [InlineData("bookmark")]
+    [InlineData("cart")]
+    [InlineData("experiences")]
+    [InlineData("sparkles")]
     public void Go_and_add_menu_icon_keys_have_specific_geometry(string key)
     {
         var geometry = HavenIconCatalog.Resolve(key);
