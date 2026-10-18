@@ -33,12 +33,18 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         }
 
         chain.Reverse();
+        var rootCapabilities = ApplyCategoryPolicy(
+            chain[0].CapabilityBindings?.ToArray() ?? [],
+            chain[0].CapabilityCategoryPolicy);
+        var rootMemory = ApplyCategoryMemory(
+            chain[0].MemoryPolicy ?? new SpaceMemoryPolicy([SpaceMemoryScope.Conversation]),
+            chain[0].CapabilityCategoryPolicy);
         var effective = new EffectiveSpacePolicy(
             chain[0].Id,
             chain[0].ModelPolicy ?? new SpaceModelPolicy(chain[0].ModelName),
             chain[0].ContextPolicy ?? new SpaceContextPolicy(),
-            chain[0].MemoryPolicy ?? new SpaceMemoryPolicy([SpaceMemoryScope.Conversation]),
-            chain[0].CapabilityBindings?.ToArray() ?? [],
+            rootMemory,
+            rootCapabilities,
             ReadableSources(chain[0].ContextReferences),
             [chain[0].Id]);
         foreach (var child in chain.Skip(1))
@@ -94,11 +100,37 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
             foreach (var source in parent.Sources) sources[source.ContextId] = source;
         foreach (var source in ReadableSources(child.ContextReferences)) sources[source.ContextId] = source;
 
+        var mergedCapabilities = ApplyCategoryPolicy(
+            capabilities.Values.ToArray(),
+            child.CapabilityCategoryPolicy);
+        var mergedMemory = ApplyCategoryMemory(memory, child.CapabilityCategoryPolicy);
         return new EffectiveSpacePolicy(
-            child.Id, model, context, memory,
-            capabilities.Values.OrderBy(item => item.Kind).ThenBy(item => item.CapabilityId, StringComparer.Ordinal).ToArray(),
+            child.Id, model, context, mergedMemory,
+            mergedCapabilities.OrderBy(item => item.Kind).ThenBy(item => item.CapabilityId, StringComparer.Ordinal).ToArray(),
             sources.Values.OrderBy(item => item.AddedAt).ThenBy(item => item.ContextId).ToArray(),
             [.. parent.Ancestry, child.Id]);
+    }
+
+    private static IReadOnlyList<SpaceCapabilityBinding> ApplyCategoryPolicy(
+        IReadOnlyList<SpaceCapabilityBinding> capabilities,
+        SpaceCapabilityCategoryPolicy? policy)
+    {
+        if (policy is null) return capabilities;
+        var disabled = new HashSet<SpaceCapabilityKind>();
+        if (policy.Skills == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Skill);
+        if (policy.Plugins == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Plugin);
+        if (policy.Apps == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.ConnectedApp);
+        if (policy.Apps == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Mcp);
+        if (policy.Apps == SpaceCapabilityCategoryState.Disabled) disabled.Add(SpaceCapabilityKind.Agent);
+        if (disabled.Count == 0) return capabilities;
+        return capabilities.Where(b => !disabled.Contains(b.Kind)).ToArray();
+    }
+
+    private static SpaceMemoryPolicy ApplyCategoryMemory(SpaceMemoryPolicy memory, SpaceCapabilityCategoryPolicy? policy)
+    {
+        if (policy is null || policy.Memory != SpaceCapabilityCategoryState.Disabled) return memory;
+        // Disabled memory category restricts to no scopes.
+        return new SpaceMemoryPolicy([], memory.DefaultScope);
     }
 
     private static IReadOnlyList<SpaceContextReference> ReadableSources(IReadOnlyList<SpaceContextReference>? sources) =>
