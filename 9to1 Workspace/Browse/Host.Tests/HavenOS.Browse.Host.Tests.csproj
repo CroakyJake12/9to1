@@ -12,6 +12,7 @@
     <Compile Include="LinuxWebKitEngineAvailabilityTests.cs" />
     <Compile Include="OverlayChatInitializationTests.cs" />
     <Compile Include="SpacesConversationRouteTests.cs" />
+    <Compile Include="SpaceDetailsPageTests.cs" />
     <Compile Include="OverlayGoCreationTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/NativeAppContentRegistryTests.cs" Link="NativeAppContentRegistryTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs" Link="HavenAppRoutePolicyTests.cs" />
