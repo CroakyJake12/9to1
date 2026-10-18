@@ -84,10 +84,12 @@ public sealed partial class App
                 (provider.GetRequiredService<IWorkspaceToolService>() as WorkspaceToolService
                     ?? throw new InvalidOperationException("The SAME actual Windows workspace kernel is required."))
                 .CreateOriginalDeveloperCaptureSource(provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
-                    () => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                    // Pure join guards outlive DI admission during provider disposal.
+                    // Resolve the same retained cycle owners without reopening that provider.
+                    () => _windowsDeveloperSelections ?? throw new InvalidOperationException("The SAME configured Files selection owner is not captured."),
                     () => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
                     () => provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
-                    () => provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>()),
+                    () => _windowsDeveloperSteps ?? throw new InvalidOperationException("The SAME configured Files execution-binding owner is not captured.")),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
