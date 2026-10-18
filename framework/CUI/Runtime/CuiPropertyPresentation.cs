@@ -16,6 +16,17 @@ public static class CuiPropertyPresentation
     internal enum TemplatePart { ScrollBar, ScrollThumb, RailButton, SliderThumb, SpinnerButton, DisclosureButton, EmbeddedInput, FloatingMenuItem }
     private static readonly ConditionalWeakTable<Control, Projection> Projections = new();
     public static CuiEffectivePropertyStore For(Control control) => Get(control).Store;
+    /// <summary>Non-creating lookup for read-only diagnostics. Returns null when no projection has been attached.</summary>
+    public static bool TryGetExisting(Control control, out CuiEffectivePropertyStore? store)
+    {
+        store = null;
+        if (Projections.TryGetValue(control, out var projection))
+        {
+            store = projection.Store;
+            return true;
+        }
+        return false;
+    }
     public static void Attach(Control control,bool ownsTemplate=true) => _ = Get(control,ownsTemplate);
     internal static void ConfigurePart(Control control, TemplatePart part) => Get(control).ConfigurePart(part);
     public static void Detach(Control control)
