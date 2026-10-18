@@ -133,6 +133,15 @@
     },
     "physical_pc_power_loss_tested": false,
     "live_failed_compaction_recovery_tested": false,
-    "activation": "Pending runtime reload; see durable coordinator activation receipt"
+    "activation": {
+      "receipt": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/cycle-20261018T182704Z/compaction-activation.json",
+      "at": "2026-10-18T18:48:22.750539+00:00",
+      "code_commit": "37df5ce6cc93a0c91e3dc7346de3dd3efda41be4",
+      "monitor_pid": "2053781",
+      "worker_active_before_and_after": true,
+      "config_state_preserved": true,
+      "shared_service_unchanged": true,
+      "physical_power_loss_tested": false
+    }
   }
 }
