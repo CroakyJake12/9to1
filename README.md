@@ -1,94 +1,23 @@
 # 9to1
 
-9to1 is a Linux-first, cross-platform productivity ecosystem under active consolidation. The repository
-contains the operating system integration, shared application sources, Android host, donor material, and the in-progress CUI user-interface framework.
+The [attached 9to1 Development Specification v2](docs/specification/9to1-development-specification-v2.md) is the sole product authority. It is the exact local owner attachment from 18 October 2026, recorded in [provenance](docs/specification/provenance.json). Do not substitute web copies or older repository instructions. Read [AGENTS.md](AGENTS.md) before work, including after a handoff or context compaction.
 
-> **Migration status:** CUI consolidation is active and incomplete. Existing
-> AXAML and HUI sources remain migration inputs until their CUI replacements
-> pass runtime and parity verification. See
-> [the coordination ledger](docs/development/unified-host-tasks.md); source
-> presence or a successful build is not treated as product verification.
+Haven is the browser-derived super-app; Home Core is its shared service/control plane. Spaces owns core Spaces and Space Builder. Build combines Dev, Sites and Stacks into one application. The specification defines all other product identities, complete scope, dependencies, delivery surfaces and acceptance requirements.
 
-## Current State
+Applications are authored only in CUI, including their state, behaviour and orchestration. Infrastructure/donor internals retain permitted implementation languages behind typed boundaries. Avalonia supplies approved low-level capabilities; FluentTheme and donor theme presentation do not belong in CUI. Existing nonconforming code is migration work, never authority to weaken this contract.
 
-The repository is **not yet a production-ready ecosystem**. The [coordination ledger](docs/development/unified-host-tasks.md) records bounded implementation results and remaining verification work; it does not replace the full product specification. A source tree, test project, HUI scene, AXAML page, or package recipe does not establish CUI parity or platform verification.
+## Source and evidence
 
-## Repository map
+- `framework/CUI/` contains the shared CUI language, compiler/runtime, themes and backend infrastructure.
+- `9to1 Workspace/` contains application and shared service sources; legacy directory names do not define the product roster.
+- `apps/`, `cloud/`, `9to1 OS/` and `9-1 OS (Android)/` contain delivery/platform sources.
+- `docs/development/unified-host-tasks.md` and other retained engineering records are historical implementation evidence, not product authority or automatic proof of current acceptance.
+- `reference/` contains historical/donor evidence. Preserve applicable donor licences and notices.
 
-| Path | Purpose |
-| --- | --- |
-| `framework/CUI/` | Avalonia-derived CUI foundation, compiler/tooling, DevTools and platform adapters |
-| `9to1 Workspace/` | One source tree per application plus shared domain and service code |
-| `9to1 OS/` | Home/OS integration, image tooling and package-preload release contracts |
-| `9-1 OS (Android)/` | Android host and platform adapters |
-| `reference/` | Historical and donor evidence; not active product source |
-| `docs/parity/` | Per-product donor and runtime evidence |
+The repository remains under development. Readiness requires exact-source/runtime evidence for all applicable requirements and all seven acceptance criteria. A successful build, shell, test fixture or partial checkpoint does not establish completed product acceptance. [Open decisions](docs/specification/open-decisions.json) hold unresolved owner decisions without blocking independent authorised work.
 
-The detailed source classification is in
-[`docs/SOURCE-CLASSIFICATION.md`](docs/SOURCE-CLASSIFICATION.md).
+## Build entry point
 
-## CUI
+The existing root orchestration entry is `eng/9to1.ps1`; consult its current component help and the active coordinator's memory/build-concurrency safeguards before running it. Select focused authentic checks for the changed dependency graph. Commands and old status documents cannot waive the specification.
 
-CUI is the authoritative 9to1 UI identity and `.cui` is its application markup
-format. CUI retains the mature compositor, rendering, text, layout, input,
-accessibility and platform architecture of an explicitly pinned Avalonia source
-fork while replacing normal application AXAML authoring with CUI project,
-compiler, resource and runtime support.
-
-`framework/CUI/` includes the [.cui compiler](framework/CUI/Compiler/CuiCompiler.cs),
-[resource build tasks](framework/CUI/Compiler/CakeOS.Cui.Build.Tasks/CuiResourceBundle.cs),
-and a [runtime loader](framework/CUI/Runtime/CuiControlLoader.cs) that creates live
-Avalonia control trees. Its [DevTools](framework/CUI/DevTools/src/CuiLiveTreeInspector.cs)
-inspect those trees, and the [vendored Avalonia source](framework/CUI/vendor/Avalonia/)
-provides the underlying rendering and platform implementation. These source paths
-establish the implementation owners; they do not establish complete application
-migration, native behaviour, design parity, or production readiness. Current constraints
-and provenance are documented in `docs/cui/README.md` and `docs/architecture/cui.md`.
-
-## Products
-
-- **Home** is embedded in the OS and manages the app catalogue, installed
-  packages, updates, settings, models, voice and Dulche lifecycle.
-- **Spaces** supplies separate Chat, Study and Tasks environments plus custom
-  Spaces. It is not a prompt switch inside one chat screen.
-- **Dulche** is the shared, single-instance local model runtime. Applications
-  consume its broker API rather than starting one model server per app.
-- Standalone applications build from `9to1 Workspace/`; the OS consumes their
-  `.deb` artifacts through a hash-pinned preload manifest instead of carrying
-  duplicate app implementations.
-- Shared contextual AI uses semantic app context and typed actions. It should
-  not simulate raw UI input when an approved domain action is available.
-  The shared framework lives at `framework/CUI/AI/`.
-
-## Layout
-
-- `9to1 OS/`: OS platform, legacy hosts, packaging, release material, and the CUI foundation.
-- `9to1 Workspace/`: standalone app and shared application source.
-- `9to1 Workspace/Home/`: embedded OS Home domain and authored CUI surface.
-- `9to1 Workspace/Home/Source/Dulche/`: shared local llama.cpp-derived runtime.
-- `9-1 OS (Android)/`: Android-specific host and service code.
-- `reference/`: retained historical, superseded, and donor material.
-- `docs/parity/`: app-level donor/CUI/platform evidence.
-
-## Build and test
-
-The repository currently contains several independently buildable .NET, Python,
-native and packaging components. The root orchestrator exposes the buildable
-consolidation sets and fails honestly for package paths that do not exist:
-
-```powershell
-./eng/9to1.ps1 restore -Component core
-./eng/9to1.ps1 build -Component core
-./eng/9to1.ps1 test -Component core
-./eng/9to1.ps1 verify -Component core
-```
-
-Use the PowerShell entry (`eng/9to1.ps1`) for restore/build/test/package commands; some packaging and image steps require a Linux host. See `eng/README.md` for component and packaging commands.
-
-## Verification and licensing
-
-The acceptance chain and current blockers are maintained in the master status
-ledger and per-app parity records. Third-party provenance is indexed in
-[`THIRD_PARTY.md`](THIRD_PARTY.md). Preserve upstream notices and licences when
-moving or adapting donor code.
-
+Third-party provenance is indexed in [THIRD_PARTY.md](THIRD_PARTY.md). Preserve upstream licence and attribution obligations.
