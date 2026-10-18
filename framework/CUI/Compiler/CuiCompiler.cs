@@ -166,13 +166,26 @@ public sealed class CuiCompiler
         var definitions = CollectDefinitions(document);
         _declaredTypes.Clear();
         _declaredThemes.Clear();
-        foreach (var definition in AllComponents(document.Components).Where(component => component.IsDefinition && component.Type == "Theme" && component.Name is not null))
-            _declaredThemes.Add(definition.Name!);
-        foreach (var typeDefinition in AllComponents(document.Components).Where(component => component.IsDefinition && CuiLanguageVocabulary.VisualElements.Contains(component.Type)))
-            if (typeDefinition.TryGetLiteralAttribute("Type", out var typeName) && !string.IsNullOrWhiteSpace(typeName)) _declaredTypes.Add(typeDefinition.Type + "\0" + typeName);
+        CollectDeclarationMetadata(document.Components);
         var importedSymbols = ApplyImports(document, options, definitions, diagnostics);
         ValidateDefinitions(document, definitions, diagnostics);
         ValidateComponents(document.Components, definitions, diagnostics);
+        var outerTypes = _declaredTypes.ToArray();
+        var outerThemes = _declaredThemes.ToArray();
+        foreach (var template in document.Templates.Values)
+        {
+            var templateDefinitions = CollectDefinitions(template.Content, definitions);
+            CollectDeclarationMetadata(template.Content);
+            ValidateDefinitions(document, templateDefinitions, diagnostics);
+            ValidateComponents(template.Content, templateDefinitions, diagnostics);
+            // Template-local symbols do not become declarations in the next template
+            // or in the consuming document merely because this body was checked first.
+            _declaredTypes.Clear();
+            _declaredTypes.UnionWith(outerTypes);
+            _declaredThemes.Clear();
+            _declaredThemes.UnionWith(outerThemes);
+        }
+        CuiDefinitionDependencies.Validate(document, diagnostics);
 
         if (diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
@@ -198,10 +211,25 @@ public sealed class CuiCompiler
     private static bool IsCuiSource(string sourceName) =>
         CuiProjectItems.IsCuiSourceFamily(sourceName);
 
-    private static HashSet<string> CollectDefinitions(CuiDocument document)
+    private void CollectDeclarationMetadata(IEnumerable<CuiComponent> components)
     {
-        var definitions = new HashSet<string>(document.Templates.Keys, StringComparer.Ordinal);
-        foreach (var component in AllComponents(document.Components))
+        foreach (var component in AllComponents(components).Where(component => component.IsDefinition))
+        {
+            if (component.Type == "Theme" && component.Name is not null)
+                _declaredThemes.Add(component.Name);
+            if (CuiLanguageVocabulary.VisualElements.Contains(component.Type)
+                && component.TryGetLiteralAttribute("Type", out var typeName) && !string.IsNullOrWhiteSpace(typeName))
+                _declaredTypes.Add(component.Type + "\0" + typeName);
+        }
+    }
+
+    private static HashSet<string> CollectDefinitions(CuiDocument document) =>
+        CollectDefinitions(document.Components, document.Templates.Keys);
+
+    private static HashSet<string> CollectDefinitions(IEnumerable<CuiComponent> components, IEnumerable<string> outerDefinitions)
+    {
+        var definitions = new HashSet<string>(outerDefinitions, StringComparer.Ordinal);
+        foreach (var component in AllComponents(components))
         {
             if (!component.IsDefinition) continue;
             // A named definition is reusable by its authored identity, whether it wraps a
@@ -373,7 +401,9 @@ public sealed class CuiCompiler
                     : $"Unknown CUI element '{component.Type}'. Did you mean '{suggestion}'?", component.Span);
             }
 
-            if (!isLanguageConstruct && !isDefinition && (isKnownElement || definitions.Contains(component.Type)))
+            // Declarations supply the defaults that instances execute. They must receive
+            // the same property validation as instances, including unused declarations.
+            if (!isLanguageConstruct && (isDefinition || isKnownElement || definitions.Contains(component.Type)))
                 ValidateProperties(component, element, diagnostics);
 
             if (component.IsThemeScope && component.DefaultTheme is { } theme)
@@ -393,9 +423,9 @@ public sealed class CuiCompiler
     {
         var declaredType = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value as CuiLiteralValue;
         var typeValues = CuiControlRegistry.TypesFor(component.Type);
-        if (component.Type.Equals("Container", StringComparison.OrdinalIgnoreCase) && declaredType is null && !component.Properties.Keys.Any(key => key.Equals("Type", StringComparison.OrdinalIgnoreCase)))
+        if (!component.IsDefinition && component.Type.Equals("Container", StringComparison.OrdinalIgnoreCase) && declaredType is null && !component.Properties.Keys.Any(key => key.Equals("Type", StringComparison.OrdinalIgnoreCase)))
             diagnostics.Error("CUIC022", "Container requires a registered Type.", component.Span);
-        if (declaredType is not null && component.Type is not ("Object" or "Audio" or "Video") && !typeValues.Contains(declaredType.Value)
+        if (element is not null && declaredType is not null && component.Type is not ("Object" or "Audio" or "Video") && !typeValues.Contains(declaredType.Value)
             && !_declaredTypes.Contains(component.Type + "\0" + declaredType.Value) && !_registry.IsRegisteredRuntimeType(declaredType.Value))
             diagnostics.Error("CUIC017", $"Unknown {component.Type} Type '{declaredType.Value}'. Supported Types: {string.Join(", ", typeValues)}.", declaredType.Span);
         foreach (var (name, value) in component.Properties)
@@ -409,19 +439,16 @@ public sealed class CuiCompiler
                 continue;
             }
 
-            // A user-defined component instance has no built-in element descriptor. Its
-            // property names remain registry-checked; element-scoped allowance is decided by
-            // the definition's declared inputs, which the compiler models separately.
-            if (element is null) continue;
-
-            if (!element.AllowedProperties.Contains(property.Name)
+            // A custom Definition has no built-in descriptor, but registered literal
+            // types still apply. Do not let reuse turn an invalid number/bool into output.
+            if (element is not null && !element.AllowedProperties.Contains(property.Name)
                 && !property.IsAttached)
             {
                 diagnostics.Error("CUIC013", $"Property '{property.Name}' is not allowed on '{component.Type}'.", value.Span);
                 continue;
             }
 
-            if (!property.IsAttached && !property.SupportedElementTypes.Contains(element.Name))
+            if (element is not null && !property.IsAttached && !property.SupportedElementTypes.Contains(element.Name))
                 diagnostics.Error("CUIC014", $"Property '{property.Name}' is not supported on '{component.Type}'.", value.Span);
 
             if (declaredType is not null && property.Name is "RowSizes" or "ColumnSizes" or "Rows" or "Columns"
@@ -615,7 +642,7 @@ public sealed class CuiCompiler
         IReadOnlyDictionary<string, string> importedSymbols)
     {
         var entries = new List<KeyValuePair<string, IEnumerable<CuiCompilationDependency>>>();
-        void Add(IReadOnlyList<CuiComponent> components, string parentStableId)
+        void Add(IReadOnlyList<CuiComponent> components, string parentStableId, IReadOnlySet<string> visibleDefinitions)
         {
             var typeCounts = components.GroupBy(component => component.Type, StringComparer.Ordinal)
                 .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
@@ -627,7 +654,7 @@ public sealed class CuiCompiler
                 var dependencies = new List<CuiCompilationDependency>();
                 if (document.Templates.ContainsKey(component.Type))
                     dependencies.Add(new CuiCompilationDependency(CuiDependencyKind.Template, component.Type));
-                else if (definitions.Contains(component.Type) && !component.IsDefinition)
+                else if (visibleDefinitions.Contains(component.Type) && !component.IsDefinition)
                 {
                     dependencies.Add(new CuiCompilationDependency(CuiDependencyKind.Definition, component.Type));
                     if (importedSymbols.TryGetValue(component.Type, out var importSource))
@@ -643,13 +670,13 @@ public sealed class CuiCompiler
                 foreach (var action in component.Actions.Values)
                     dependencies.Add(new CuiCompilationDependency(CuiDependencyKind.Action, action.Name));
                 entries.Add(new KeyValuePair<string, IEnumerable<CuiCompilationDependency>>(stableId, dependencies));
-                Add(component.Children, stableId);
-                Add(component.ElseChildren, stableId + "/else");
+                Add(component.Children, stableId, visibleDefinitions);
+                Add(component.ElseChildren, stableId + "/else", visibleDefinitions);
             }
         }
-        Add(document.Components, "document");
+        Add(document.Components, "document", definitions);
         foreach (var template in document.Templates.Values)
-            Add(template.Content, $"template:{template.Name}");
+            Add(template.Content, $"template:{template.Name}", CollectDefinitions(template.Content, definitions));
         return new CuiDependencyGraph(entries);
     }
 
