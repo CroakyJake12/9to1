@@ -207,7 +207,9 @@ public sealed class SpacesHomeController
             if (selectedId is null || !registered.Any(space => space.Id == selectedId))
                 selectedId = builtIns.FirstOrDefault()?.Id ?? custom.FirstOrDefault()?.Id;
 
-            var pendingRenameSpaceId = intent.PendingRenameSpaceId ?? _pendingRenameSpaceId;
+            // An explicit rename intent (RenameDraft provided) clears or sets the pending rename;
+            // a refresh intent (RenameDraft omitted) preserves the existing pending rename.
+            var pendingRenameSpaceId = intent.RenameDraft is not null ? intent.PendingRenameSpaceId : _pendingRenameSpaceId;
             var renameDraft = intent.RenameDraft ?? _renameDraft;
 
             var selection = BuildSelection(registered, selectedId, pendingRenameSpaceId);
