@@ -507,5 +507,40 @@
       "no_dispatch_or_state_write": true
     },
     "activation_receipt": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/cycle-20261018T202334Z/cli-output-activation.json"
+  },
+  "owner_selected_model_patch": {
+    "at": "2026-10-19T08:12:23.794182+00:00",
+    "owner_request": "Unpause AC without breaking OC; let owner choose model",
+    "hashes": {
+      "continuation.py": "40de5254e649eae6f83dcd80f5be8333c188dd7c850b6f034b8b2573b299178f",
+      "test_continuation.py": "f84cff4e28a2a52cf122eae52c93b058bf9bfebd159147989f87435da44b8723"
+    },
+    "tests": {
+      "passed": 141,
+      "failed": 0,
+      "scope": "isolated fixtures; no live inference"
+    },
+    "activation": "RUN; waiting owner model choice and Continue",
+    "full_history_review": "PARTIAL; urgent control repair only",
+    "service_restarted": false,
+    "model_selection_changed": false,
+    "review_correction": "Use actual V2 user.text schema; 141 tests pass",
+    "independent_review": "continuation_audit; V2 user.text and STOP priority corrections applied",
+    "live_verification": {
+      "control": "RUN",
+      "hold_only": true,
+      "monitor": "ActiveState=active\nMainPID=23443\nNRestarts=0\n",
+      "loop_mode": "held_unreviewed_owner_input",
+      "observation_time": 1792397601.2055922,
+      "selected_model": {
+        "id": "beam-free",
+        "providerID": "opencode-go",
+        "variant": "max"
+      },
+      "outcome": "interrupted",
+      "active": true,
+      "last_user": "msg_1533795f5001tHBoOLzUVr3Yki"
+    },
+    "verified_at": "2026-10-19T08:13:22.708021+00:00"
   }
 }

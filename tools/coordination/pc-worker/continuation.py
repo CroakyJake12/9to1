@@ -256,6 +256,8 @@ class Continuation:
             raise ValueError('Durable programme identity changed; coordinator reconciliation required')
 
     def persist(self, mode, **fields):
+        if 'model' in fields:
+            fields['observed_model'] = fields.pop('model')
         self.state.update(mode=mode, observed_at=self.now(), **fields)
         save(self.state_path, self.state)
         record = {'at': self.now(), 'mode': mode, **fields}
@@ -352,6 +354,15 @@ class Continuation:
         active = self.api.request('session.active')['data']
         return self.persist('paused' if mode == 'PAUSE' else 'stopped', observed_active=self.sid in active)
 
+    def owner_resume_command(self, snapshot):
+        # Opt-in applies only to an explicit short owner resume, never arbitrary
+        # instructions or a Stop. The provider must still finish successfully.
+        user = snapshot['user']
+        raw = user.get('text', '')
+        text = raw.strip().lower() if isinstance(raw, str) else ''
+        return (self.config.get('follow_owner_selected_model') is True
+                and user.get('type') == 'user' and text in ('continue', 'resume'))
+
     def admission_block(self, snapshot):
         if snapshot['session'].get('model') != self.model:
             return 'held_model_changed'
@@ -359,13 +370,13 @@ class Continuation:
         pending = self.state.get('pending')
         if pending:
             approved.add(pending['message_id'])
-        if snapshot['user'].get('id') not in approved:
+        if snapshot['user'].get('id') not in approved and not self.owner_resume_command(snapshot):
             return 'held_unreviewed_owner_input'
         if snapshot['permissions'] or snapshot['forms']:
             return 'requires_owner_input'
         if self.sid in snapshot['active']:
             return 'running'
-        recovering_queue = (self.config.get('recovery', {}).get('enabled') is True
+        recovering_queue = (self.recovery_enabled()
                             and self.known_queue(snapshot)
                             and (self.owned_outage_matches(snapshot) or self.transient_terminal(snapshot)
                                  or self.outage_probe_candidate(snapshot)))
@@ -446,6 +457,13 @@ class Continuation:
                                   'control_hash': hashlib.sha256(Path(self.config['control_path']).read_bytes()).hexdigest()})
             if control['mode'] != 'RUN':
                 return self.halt(control, snapshot)
+            self.model = self.config['model']
+            if self.config.get('follow_owner_selected_model') is True:
+                selected = snapshot['session'].get('model')
+                if not isinstance(selected, dict) or not selected.get('id') or not selected.get('providerID'):
+                    return self.persist('held_invalid_selected_model')
+                # Observe the owner's UI selection. Never write a model to OC.
+                self.model = dict(selected)
             if self.config.get('enabled') is not True:
                 return self.persist('disabled')
             marker = self.config.get('coordinator_marker_path')
@@ -456,8 +474,7 @@ class Continuation:
                 return reconciled
             blocked = self.admission_block(snapshot)
             if blocked:
-                if (blocked == 'running' and self.config.get('recovery', {}).get('enabled') is True
-                        and self.config.get('recovery', {}).get('active_outage', {}).get('enabled') is True):
+                if blocked == 'running' and self.recovery_enabled(active=True):
                     return self.observe_active_outage(snapshot)
                 return self.persist(blocked, **self.evidence(snapshot))
             assistant = snapshot['assistant']
@@ -472,18 +489,21 @@ class Continuation:
             if awaiting and user.get('id') != awaiting:
                 # A new approved coordinator input supersedes our old boundary;
                 # an older projection is never sufficient to dispatch again.
-                if user.get('id') not in self.config.get('approved_user_message_ids', []):
+                if user.get('id') not in self.config.get('approved_user_message_ids', []) and not self.owner_resume_command(snapshot):
                     return self.persist('awaiting_dispatched_input', **self.evidence(snapshot))
             if compaction and phase.get('status') not in ('running', 'failed'):
                 return self.persist('held_compaction_outcome', **self.evidence(snapshot))
-            if not self.phase_model_matches(snapshot):
+            owner_selected_success = (self.config.get('follow_owner_selected_model') is True
+                                      and not compaction and successful(assistant)
+                                      and snapshot['session'].get('outcome') == 'succeeded')
+            if not self.phase_model_matches(snapshot) and not owner_selected_success:
                 return self.persist('held_unverified_compaction' if compaction else 'held_response_model_changed', **self.evidence(snapshot))
             outage_recovery = self.owned_outage_matches(snapshot)
             if snapshot['session'].get('outcome') == 'interrupted' and not outage_recovery:
                 return self.persist('held_interrupted', **self.evidence(snapshot))
             terminal_compaction = compaction and self.transient_terminal(snapshot)
             if compaction and not outage_recovery and not (
-                    terminal_compaction and self.config.get('recovery', {}).get('enabled') is True):
+                    terminal_compaction and self.recovery_enabled()):
                 return self.persist('held_compaction_outcome', **self.evidence(snapshot))
             completed = assistant.get('time', {}).get('completed')
             if not outage_recovery and not terminal_compaction and (
@@ -505,8 +525,10 @@ class Continuation:
                 if len(self.state['dispatched']) >= limit:
                     return self.persist('dispatch_limit_reached', **self.evidence(snapshot))
             recovery = not success
+            if recovery and self.config.get('follow_owner_selected_model') is True and not self.recovery_enabled():
+                return self.persist('held_terminal_failure', **self.evidence(snapshot))
             retry_count = 0 if success else self.state.get('retry_count', 0) + 1
-            provider_recovery = recovery and self.config.get('recovery', {}).get('enabled') is True
+            provider_recovery = recovery and self.recovery_enabled()
             if provider_recovery:
                 held = self.recover_provider(snapshot, retry_count, outage_recovery)
                 if held:
@@ -643,6 +665,9 @@ class Continuation:
 
     def recovery_enabled(self, active=False):
         return (self.config.get('enabled') is True
+                and self.model.get('providerID') == 'homepc'
+                and self.model.get('id') == 'strata-dynamic'
+                and not (active and self.config.get('follow_owner_selected_model') is True)
                 and self.config.get('recovery', {}).get('enabled') is True
                 and (not active or self.config.get('recovery', {}).get('active_outage', {}).get('enabled') is True))
 

@@ -1,6 +1,6 @@
 {
   "continuation_module": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway/continuation.py",
-  "continuation_sha256": "81edfd451a898399ae5c5b6bfd72f251046ad30e772d12e107d1c4888a4afdf7",
+  "continuation_sha256": "40de5254e649eae6f83dcd80f5be8333c188dd7c850b6f034b8b2573b299178f",
   "loop_root": "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/9to1-coordinator/pc-gateway/worker-loop",
   "identity": {
     "session_id": "ses_eb01533adffev5jMYgJVLFXfZP",

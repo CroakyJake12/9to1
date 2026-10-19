@@ -1174,4 +1174,72 @@ print(json.dumps({'mode':result,'prompts':len(api.prompts),'probes':api.gateway_
         self.assertNotIn('pending', self.worker.state)
 
 
+
+class OwnerSelectedModelTests(unittest.TestCase):
+    setUp = Tests.setUp
+    tearDown = Tests.tearDown
+    write_config = Tests.write_config
+    new_worker = Tests.new_worker
+
+    def selected(self):
+        self.config['follow_owner_selected_model'] = True
+        self.config['recovery'] = {'enabled': True, 'active_outage': {'enabled': True}}
+        self.write_config()
+        self.api.session['model'] = {'providerID': 'chosen', 'id': 'free', 'variant': 'max'}
+        self.api.model.update(self.api.session['model'])
+
+    def test_selected_free_model_dispatches_without_changing_model(self):
+        self.selected()
+        self.assertEqual('dispatched', self.worker.tick())
+        self.assertNotIn('model', self.api.prompts[0][2])
+        self.assertNotIn('model', self.api.prompts[0][2]['metadata'])
+        self.assertEqual(MODEL, module.read(self.worker.state_path)['model'])
+        self.api.inbox.clear()
+        self.assertEqual('awaiting_new_response', self.new_worker().tick())
+
+    def test_active_turn_never_probes_pc_or_interrupts(self):
+        self.selected(); self.api.active[SID] = {'type': 'running'}
+        self.assertEqual('running', self.worker.tick())
+        self.assertEqual(0, self.api.gateway_calls)
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+
+    def test_owner_continue_allows_completed_turn(self):
+        self.selected()
+        self.api.user.update(id='msg_new_owner', text='Continue')
+        self.worker.state['awaiting_user_id'] = 'msg_old_dispatch'
+        self.assertEqual('dispatched', self.worker.tick())
+
+    def test_stop_or_other_manual_input_never_auto_continues(self):
+        self.selected()
+        for text in ('stop', 'pause', 'change the task'):
+            self.api.user.update(id='msg_new_owner', text=text)
+            self.assertEqual('held_unreviewed_owner_input', self.worker.tick())
+        self.assertFalse(self.api.prompts)
+
+    def test_paid_selection_is_not_automatically_run(self):
+        self.selected(); self.api.model['cost'][0]['output'] = 1
+        self.assertEqual('held_free_model_verification', self.worker.tick())
+        self.assertFalse(self.api.prompts)
+
+    def test_selection_change_during_final_check_defers(self):
+        self.selected()
+        def hook(operation, params, data):
+            if operation == 'model.list':
+                self.api.session['model'] = {'providerID': 'different', 'id': 'different'}
+        self.api.hook = hook
+        self.assertEqual('deferred_state_changed', self.worker.tick())
+        self.assertFalse(self.api.prompts)
+
+    def test_owner_interruption_stays_held(self):
+        self.selected(); self.api.assistant['model'] = self.api.session['model']
+        self.api.session['outcome'] = 'interrupted'
+        self.assertEqual('held_interrupted', self.worker.tick())
+        self.assertFalse(self.api.prompts)
+
+    def test_hold_pause_does_not_interrupt_manual_turn(self):
+        self.selected(); self.api.active[SID] = {'type': 'running'}
+        self.control.write_text(json.dumps({'mode': 'PAUSE', 'hold_only': True}))
+        self.assertEqual('paused', self.worker.tick())
+        self.assertFalse(any(c[0] == 'session.interrupt' for c in self.api.calls))
+
 if __name__ == '__main__': unittest.main(verbosity=2)
