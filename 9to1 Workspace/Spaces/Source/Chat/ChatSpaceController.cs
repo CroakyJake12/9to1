@@ -109,16 +109,36 @@ public sealed partial class ChatSpaceController
             var models = _backend.GetModelInventoryAsync(token);
             var data = conversationId is { } id ? await _backend.GetConversationAsync(id, token).ConfigureAwait(false) : null;
             var safety = data is null ? null : await _backend.GetSafetySnapshotAsync(data.Conversation.Id, token).ConfigureAwait(false);
-            await Task.WhenAll(recent, models).ConfigureAwait(false);
+            await recent.ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            ChatSpaceModelInventory? inventory = null;
+            Exception? modelFailure = null;
+            try
+            {
+                inventory = await models.ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                modelFailure = exception;
+            }
             token.ThrowIfCancellationRequested();
             ChatSpaceViewState next;
             lock (_gate)
             {
                 if (_navigationVersion != version) return;
-                _modelDescriptors = models.Result.Models;
+                if (inventory is not null)
+                {
+                    _modelDescriptors = inventory.Models;
+                    var selected = ResolveSelectedModel(_state.Composer.SelectedModelName, inventory);
+                    next = Loaded(recent.Result, data, selected, "Chat Space ready", safety?.State == ConversationSafetyState.Locked);
+                }
+                else
+                {
+                    _modelDescriptors = [];
+                    var selected = _state.Composer.SelectedModelName;
+                    next = Loaded(recent.Result, data, selected, "Model inventory unavailable", safety?.State == ConversationSafetyState.Locked);
+                }
                 if (data is not null) _conversations[data.Conversation.Id] = data.Conversation;
-                var selected = ResolveSelectedModel(_state.Composer.SelectedModelName, models.Result);
-                next = Loaded(recent.Result, data, selected, "Chat Space ready", safety?.State == ConversationSafetyState.Locked);
                 if (preserveComposer)
                     next = next with { Composer = _state.Composer with
                         { SelectedModelName = next.Composer.SelectedModelName, SelectedModelIndex = next.Composer.SelectedModelIndex } };
