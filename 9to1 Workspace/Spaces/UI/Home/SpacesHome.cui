@@ -41,6 +41,7 @@
     <Action name="ManageSelected" command="spaces.edit-details" parameter="{Binding selection.id}" />
     <Action name="NewChat" command="spaces.new-chat" parameter="{Binding selection.id}" />
     <Action name="OpenConversation" command="spaces.open-conversation" parameter="{Binding conversation.id}" />
+    <Action name="OpenSidebarItem" command="spaces.open-sidebar-item" parameter="{Binding item.sidebarItemId}" />
     <Action name="ToggleSidebar" command="spaces.toggle-sidebar" />
     <Action name="ToggleSwitcher" command="spaces.toggle-space-switcher" />
     <Action name="ToggleOverflow" command="spaces.toggle-space-overflow" />
@@ -125,6 +126,18 @@
               </Container>
             </If>
             <Button id="space-new-chat" action="NewChat" content="New chat" accessible-name="Start a new chat in this Space" />
+            <!--
+              Plugin/extension-declared sidebar elements for this Space sit directly beneath New chat,
+              as an ordinary navigation row (icon left, readable label beside it). Each row is keyed by
+              the extension's stable SidebarItemId, and an element whose target this Space cannot yet
+              resolve stays visible but explicitly not actionable.
+            -->
+            <Repeat id="space-sidebar-items" Source="{Binding spaces.sidebarItems}" As="item" Key="{Binding item.sidebarItemId}">
+              <Container id="space-sidebar-item-row" role="listitem" accessible-name="{Binding item.label}" Type="Horizontal Stack" CellGap="8">
+                <Image id="space-sidebar-item-icon" Source="{Binding item.iconSource}" Width="20" Height="20" VerticalAlignment="Center" accessible-name="{Binding item.label}" />
+                <Button id="open-space-sidebar-item" action="OpenSidebarItem" content="{Binding item.label}" accessible-name="{Binding item.openLabel}" Interactive="{Binding item.isActionable}" />
+              </Container>
+            </Repeat>
             <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
               <Container id="space-conversation-row" role="listitem" accessible-name="{Binding conversation.title}" Type="Vertical Stack" CellGap="2">
                 <Button id="open-space-conversation" action="OpenConversation" content="{Binding conversation.title}" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" />

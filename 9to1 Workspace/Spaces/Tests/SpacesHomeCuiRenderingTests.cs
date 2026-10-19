@@ -204,6 +204,51 @@ public sealed class SpacesHomeCuiRenderingTests
         }, lifetime.Token);
     }
 
+    /// <summary>
+    /// The contextual sidebar carries the selected Space's declared custom elements. Until the owning
+    /// native surface supplies the real extension projection, the authored area must stay empty rather
+    /// than invent rows, and its stable-identity markup and command mapping must remain present.
+    /// </summary>
+    [Fact]
+    public async Task Authored_custom_sidebar_area_stays_empty_without_an_extension_projection()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            var state = StateWithSelection(new SpacesHomeSelection(
+                SpaceRegistry.ChatSpaceId, "Chat", "General chat", true, false, false, null,
+                "Default", "Ask", "Conversation", [], [], false, false, false));
+            var bindings = new SpacesHomeCuiBindings(() => state, (_, _, _) => ValueTask.CompletedTask);
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
+            loader.SetBindingContext(bindings);
+            loader.SetActionDispatcher(bindings);
+            Window? window = null;
+            try
+            {
+                var source = ReadAuthoredSource();
+                var (tree, diagnostics) = loader.LoadMarkup(source);
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show();
+                for (var pass = 0; pass < 3; pass++)
+                { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
+
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<Button>(),
+                    button => button.Name == "open-space-sidebar-item");
+                Assert.Contains("<Repeat id=\"space-sidebar-items\"", source);
+                Assert.Contains("Key=\"{Binding item.sidebarItemId}\"", source);
+                Assert.Contains("<Action name=\"OpenSidebarItem\" command=\"spaces.open-sidebar-item\"", source);
+                Assert.True(bindings.TryGetValue("spaces.sidebarItems", out var items));
+                Assert.Empty((IEnumerable<SpacesHomeSidebarRow>)items!);
+            }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            return true;
+        }, lifetime.Token);
+    }
+
     [Fact]
     public async Task Selection_details_render_context_references_and_capabilities()
     {

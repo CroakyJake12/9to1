@@ -22,7 +22,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         "spaces.confirm-rename", "spaces.cancel-rename", "spaces.set-query",
         "spaces.select-move-parent",
         "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details",
-        "spaces.new-chat", "spaces.open-conversation",
+        "spaces.new-chat", "spaces.open-conversation", "spaces.open-sidebar-item",
         "spaces.toggle-sidebar", "spaces.toggle-space-switcher", "spaces.toggle-space-overflow"
     };
 
@@ -74,6 +74,11 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             // truthfully reports none rather than inventing rows.
             "spaces.conversations" => Array.Empty<SpacesHomeConversationRow>(),
             "spaces.hasConversations" => false,
+            // Custom sidebar elements come from the extensions actually attached to the selected Space.
+            // The domain surface has no extension authority, so it truthfully reports none rather than
+            // inventing rows; the owning native surface serves the real projection.
+            "spaces.sidebarItems" => Array.Empty<SpacesHomeSidebarRow>(),
+            "spaces.hasSidebarItems" => false,
             // The contextual sidebar's collapse/switcher/overflow state is canonical view state on the
             // controller, so the authored surface reads it here rather than keeping hidden state.
             "spaces.sidebarCollapsed" => snapshot.SidebarCollapsed,
@@ -198,6 +203,18 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
                 : path.Equals("updatedLabel", StringComparison.OrdinalIgnoreCase) ? conversation.UpdatedLabel
                 : path.Equals("isCurrent", StringComparison.OrdinalIgnoreCase) ? conversation.IsCurrent
                 : path.Equals("openLabel", StringComparison.OrdinalIgnoreCase) ? $"Open conversation {conversation.Title}"
+                : null;
+            return value is not null;
+        }
+
+        if (item is SpacesHomeSidebarRow sidebarItem)
+        {
+            value = path.Equals("sidebarItemId", StringComparison.OrdinalIgnoreCase) ? sidebarItem.SidebarItemId
+                : path.Equals("label", StringComparison.OrdinalIgnoreCase) ? sidebarItem.Label
+                : path.Equals("iconSource", StringComparison.OrdinalIgnoreCase) ? IconSource(sidebarItem.IconKey)
+                : path.Equals("targetKind", StringComparison.OrdinalIgnoreCase) ? sidebarItem.TargetKind
+                : path.Equals("isActionable", StringComparison.OrdinalIgnoreCase) ? sidebarItem.IsActionable
+                : path.Equals("openLabel", StringComparison.OrdinalIgnoreCase) ? sidebarItem.OpenLabel
                 : null;
             return value is not null;
         }

@@ -74,6 +74,26 @@ public sealed record SpacesHomeContextReference(
     string PermissionLabel,
     string IndexStateLabel);
 
+/// <summary>
+/// One declared custom sidebar element for the selected Space, projected from the extension's stable
+/// <c>SidebarItemId</c>. The identity is what the sidebar keys and any visibility rule address; it is
+/// never a generated per-render value.
+/// </summary>
+public sealed record SpacesHomeSidebarRow(
+    string SidebarItemId,
+    string Label,
+    string IconKey,
+    string TargetKind,
+    string TargetId,
+    bool IsActionable,
+    string UnavailableReason = "")
+{
+    public string OpenLabel => IsActionable
+        ? $"{Label} ({TargetKind})"
+        : $"{Label} ({TargetKind}) - {UnavailableReason}";
+    public override string ToString() => Label;
+}
+
 public sealed record SpacesHomeCapability(
     string Id,
     string Label);
