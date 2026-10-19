@@ -14,16 +14,22 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
 {
     private readonly IServiceProvider _services;
     private readonly CancellationToken _hostLifetime;
+    // The same typed host navigation contract the Home launcher already uses. Spaces reuses it rather
+    // than inventing a second channel, so tab ownership, origin checks and retirement stay host-owned.
+    private readonly Func<BrowseNavigationIntent, Task, bool>? _queueNavigation;
 
-    private SpacesBrowseAppContentFactory(IServiceProvider services, CancellationToken hostLifetime)
+    private SpacesBrowseAppContentFactory(IServiceProvider services, CancellationToken hostLifetime,
+        Func<BrowseNavigationIntent, Task, bool>? queueNavigation)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
         _hostLifetime = hostLifetime;
+        _queueNavigation = queueNavigation;
     }
 
     internal static SpacesBrowseAppContentFactory BindOriginalSameProcess(IServiceProvider originalProvider,
         HomeNativeWindowsComposition sameHome, CancellationToken originalAppLifetime,
-        CancellationToken originalHostLifetime)
+        CancellationToken originalHostLifetime,
+        Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null)
     {
         WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(originalProvider, sameHome);
         ArgumentNullException.ThrowIfNull(originalProvider);
@@ -31,7 +37,7 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
         originalHostLifetime.ThrowIfCancellationRequested();
         if (!originalAppLifetime.CanBeCanceled || !originalHostLifetime.CanBeCanceled)
             throw new ArgumentException("Retain the actual native app and host lifetimes.");
-        return new(originalProvider, originalHostLifetime);
+        return new(originalProvider, originalHostLifetime, queueNavigation);
     }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
@@ -42,6 +48,6 @@ internal sealed class SpacesBrowseAppContentFactory : IBrowseAppContentFactory
             throw new UnauthorizedAccessException("Retain the original tab and authenticated Home profile.");
         if (request.Privacy != BrowserTabPrivacy.Standard)
             throw new NotSupportedException("Spaces is not available in a private browser session.");
-        return new SpacesBrowseAppContentSession(request, _services, _hostLifetime);
+        return new SpacesBrowseAppContentSession(request, _services, _hostLifetime, _queueNavigation);
     }
 }

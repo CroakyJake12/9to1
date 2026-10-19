@@ -49,6 +49,10 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     // The contextual sidebar's recent conversations for the selected Space. The owning surface
     // supplies them from the real conversation store; this page caches the latest projection.
     private readonly Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? _conversationsProvider;
+    // The selected Space's custom sidebar elements come from the extensions actually attached to it,
+    // which only the owning native surface can read.
+    private readonly Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? _sidebarItemsProvider;
+    private IReadOnlyList<SpacesHomeSidebarRow> _sidebarItems = [];
     private readonly Func<string, object?, CancellationToken, Task>? _workspaceCommandHost;
     private IReadOnlyList<SpacesHomeConversationRow> _conversations = [];
 
@@ -60,12 +64,14 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         Func<string, CancellationToken, Task<string>>? pickFileAsync = null,
         Func<SpacesAction, Task, bool>? queueNavigation = null,
         Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationsProvider = null,
-        Func<string, object?, CancellationToken, Task>? workspaceCommandHost = null)
+        Func<string, object?, CancellationToken, Task>? workspaceCommandHost = null,
+        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         if (navigationHost is null) throw new ArgumentNullException(nameof(navigationHost));
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
         _conversationsProvider = conversationsProvider;
+        _sidebarItemsProvider = sidebarItemsProvider;
         _workspaceCommandHost = workspaceCommandHost;
 
         Document = SpacesHomeCuiDocument.Load();
@@ -195,6 +201,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         if (path == "spaces.hasSpaceSummary") { lock (_gate) value = _spaceWorkspace?.Content is null; return true; }
         if (path == "spaces.conversations") { lock (_gate) value = _conversations; return true; }
         if (path == "spaces.hasConversations") { lock (_gate) value = _conversations.Count > 0; return true; }
+        if (path == "spaces.sidebarItems") { lock (_gate) value = _sidebarItems; return true; }
+        if (path == "spaces.hasSidebarItems") { lock (_gate) value = _sidebarItems.Count > 0; return true; }
         return _bindings.TryGetValue(path, out value);
     }
     public bool TrySetValue(string path, object? value)
@@ -279,6 +287,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 if (_workspaceCommandHost is not { } conversationHost)
                     throw new InvalidOperationException("No Spaces workspace host is available to open a conversation.");
                 await original.AwaitAsync(InvokeOriginalSource(() => conversationHost("spaces.open-conversation", parameter, token))).ConfigureAwait(false);
+                break;
+            case "spaces.open-sidebar-item":
+                if (_workspaceCommandHost is not { } sidebarHost)
+                    throw new InvalidOperationException("No Spaces workspace host is available to open a sidebar item.");
+                await original.AwaitAsync(InvokeOriginalSource(() => sidebarHost("spaces.open-sidebar-item", parameter, token))).ConfigureAwait(false);
                 break;
             case "spaces.toggle-sidebar":
                 InvokeOriginalSource(_controller.ToggleSidebar);
@@ -401,6 +414,38 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         {
             if (_work.IsRetiring || !_active || _generation != generation) return;
             _conversations = rows;
+        }
+        await Dispatcher.UIThread.InvokeAsync(() => _bindings.Refresh()).GetTask().ConfigureAwait(false);
+    }
+
+    /// <summary>Re-reads the custom sidebar elements the extensions attached to the selected Space
+    /// declare and republishes the contextual sidebar. A stale or retiring presentation discards the
+    /// result instead of overwriting a newer selection.</summary>
+    public async Task RefreshSidebarItemsAsync(CancellationToken cancellationToken = default)
+    {
+        long generation;
+        Guid? selected;
+        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? provider;
+        lock (_gate)
+        {
+            if (_work.IsRetiring || !_active) return;
+            provider = _sidebarItemsProvider;
+            if (provider is null) return;
+            generation = _generation;
+            selected = _controller.State.Selection?.Id;
+        }
+        if (selected is not { } spaceId)
+        {
+            lock (_gate) if (!_work.IsRetiring && _generation == generation) _sidebarItems = [];
+            return;
+        }
+        IReadOnlyList<SpacesHomeSidebarRow> rows;
+        try { rows = await provider(spaceId, cancellationToken).ConfigureAwait(false); }
+        catch (Exception) { return; }
+        lock (_gate)
+        {
+            if (_work.IsRetiring || !_active || _generation != generation) return;
+            _sidebarItems = rows;
         }
         await Dispatcher.UIThread.InvokeAsync(() => _bindings.Refresh()).GetTask().ConfigureAwait(false);
     }
