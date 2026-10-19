@@ -70,6 +70,9 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
     public Task? OriginalClose => _work.OriginalClose;
     internal CuiSceneHost Host => _host;
     internal Task<CuiSceneAvailability>? Show => _show;
+    /// <summary>The close-preparation decision scene this page actually presented, so a reviewer can
+    /// prove the visible three-choice decision rather than trusting a returned boolean.</summary>
+    internal CuiSceneHost? DecisionHost { get { lock (_gate) return _decision?.Host; } }
 
     private bool IsPresentationCurrent() => Volatile.Read(ref _live);
     private bool CanMutate()

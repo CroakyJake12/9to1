@@ -49,21 +49,25 @@ public sealed class SpacesDetailsRouteTests
             // Return to it through the retained session route, then exercise the actual CUI.
             await home.Controller.SelectSpaceAsync(custom.Id);
             await home.Controller.EditDetailsAsync(custom.Id);
-            var details = Assert.IsType<SpaceDetailsPage>(root.Content);
-            Assert.Equal($"9to1://spaces/details/{custom.Id:D}", session.Address.Value);
+            // Home's manage operation opens the one canonical Space surface: a UserCreated Space gets
+            // the full Builder graph, not a separate details product.
+            var editor = Assert.IsType<SpaceBuilderPage>(root.Content);
+            Assert.Equal($"9to1://spaces/builder/{custom.Id:D}", session.Address.Value);
             Assert.Same(root, session.OriginalNativeView);
-            Assert.Equal(custom.Id, details.State.SpaceId);
-            Input(details.EditorHost, "space-details-name").Text = "Saved same canonical Space";
-            Click(details.EditorHost, "space-details-save");
-            await details.EditorHost.CaptureOriginalActionSettlement(details.EditorShow!).WaitAsync(Bound);
+            Assert.Equal(custom.Id, editor.State.SpaceId);
+            Input(editor.Host, "space-builder-name").Text = "Saved same canonical Space";
+            Click(editor.Host, "space-builder-save");
+            await editor.Host.CaptureOriginalActionSettlement(editor.Show!).WaitAsync(Bound);
             var saved = (await rig.Spaces.ReadExistingAsync(custom.Id))!;
             Assert.Equal("Saved same canonical Space", saved.Name);
             Assert.Equal("retain-policy", saved.ModelName);
             Assert.Equal("Original instructions", saved.Instructions);
-            await Back(details, session);
+            await Back(editor, session);
             Assert.Same(home, root.Content);
             await home.Controller.SelectSpaceAsync(SpaceRegistry.ChatSpaceId);
-            await Open(home, session, "open-selected-space");
+            // The conversation is mounted inside the retained rail layout, so returning from the
+            // canonical Space editor restores that exact page and draft instead of a fresh one, and
+            // the contextual sidebar still presents its own history row.
             Assert.Same(chat, home.SpaceWorkspaceContent);
             Assert.Equal(conversation, chat.ConversationId);
             Assert.Equal("Retained unsent Details round trip", ((ChatHavenScene)typeof(NewChatPage).GetField("_scene", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(chat)!).Instruction.Text);
@@ -74,7 +78,7 @@ public sealed class SpacesDetailsRouteTests
             Assert.Same(close, prepared.AbortAsync()); // Accepted close is not reversible.
             await close.WaitAsync(Bound);
             Assert.True(session.CanRetireOriginalView);
-            Assert.True(details.OriginalClose!.IsCompletedSuccessfully);
+            Assert.True(editor.OriginalClose!.IsCompletedSuccessfully);
             Assert.True(home.OriginalClose!.IsCompletedSuccessfully);
             Assert.Null(root.Content);
         }
@@ -97,12 +101,12 @@ public sealed class SpacesDetailsRouteTests
             var home = Assert.IsType<SpacesHomePage>(root.Content);
             await home.Controller.SelectSpaceAsync(target.Id);
             await Open(home, session, "edit-space-details");
-            var page = Assert.IsType<SpaceDetailsPage>(root.Content);
+            var page = Assert.IsType<SpaceBuilderPage>(root.Content);
             Assert.True(session.OriginalQueuedNavigation!.IsCompletedSuccessfully);
             Assert.Same(root, session.OriginalNativeView);
             Assert.Equal(target.Id, page.State.SpaceId);
             Assert.Equal(0, rig.ConversationWrites); Assert.Equal(0, rig.ModelReads);
-            Assert.Equal($"9to1://spaces/details/{target.Id:D}", session.Address.Value);
+            Assert.Equal($"9to1://spaces/builder/{target.Id:D}", session.Address.Value);
             await Back(page, session);
             Assert.Same(home, root.Content);
         }
@@ -212,9 +216,9 @@ public sealed class SpacesDetailsRouteTests
             await Back(firstPage, session);
             var home = Assert.IsType<SpacesHomePage>(root.Content);
             await home.Controller.SelectSpaceAsync(second.Id); await Open(home, session, "edit-space-details");
-            var secondPage = Assert.IsType<SpaceDetailsPage>(root.Content);
+            var secondPage = Assert.IsType<SpaceBuilderPage>(root.Content);
             Assert.True(firstPage.TryEdit(SpaceDetailsField.Name, "Hidden unsaved"));
-            Assert.True(secondPage.TryEdit(SpaceDetailsField.Name, "Visible unsaved"));
+            Assert.True(secondPage.TryEdit(SpaceBuilderField.Name, "Visible unsaved"));
             var prepare = session.PrepareCloseAsync();
             await Decision(firstPage);
             Assert.Same(firstPage, root.Content); // An actual visible decision, not an invisible bool check.
@@ -224,9 +228,9 @@ public sealed class SpacesDetailsRouteTests
             Click(secondPage.DecisionHost!, "space-details-close-cancel");
             Assert.Null(await prepare.WaitAsync(Bound));
             Assert.Same(secondPage, root.Content);
-            Assert.Equal($"9to1://spaces/details/{second.Id:D}", session.Address.Value);
+            Assert.Equal($"9to1://spaces/builder/{second.Id:D}", session.Address.Value);
             Assert.True(firstPage.TryEdit(SpaceDetailsField.Description, "First restored"));
-            Assert.True(secondPage.TryEdit(SpaceDetailsField.Description, "Second restored"));
+            Assert.True(secondPage.TryEdit(SpaceBuilderField.Description, "Second restored"));
             Assert.Null(firstPage.OriginalClose); Assert.Null(secondPage.OriginalClose); Assert.Null(session.OriginalClose);
         }
         catch (Exception failure) { primary = failure; throw; }
@@ -384,7 +388,7 @@ public sealed class SpacesDetailsRouteTests
             var home = Assert.IsType<SpacesHomePage>(root.Content);
             session.StateChanged += (_, _) =>
             {
-                if (session.Address.Value != $"9to1://spaces/details/{target.Id:D}") return;
+                if (session.Address.Value != $"9to1://spaces/builder/{target.Id:D}") return;
                 captured = ExecutionContext.Capture();
                 refusal = Record.Exception(() => { _ = session.CloseAndDrainAsync(); });
             };
@@ -488,8 +492,8 @@ public sealed class SpacesDetailsRouteTests
             await Back(firstPage, session);
             var home = Assert.IsType<SpacesHomePage>(root.Content);
             await home.Controller.SelectSpaceAsync(second.Id); await Open(home, session, "edit-space-details");
-            var secondPage = Assert.IsType<SpaceDetailsPage>(root.Content);
-            Assert.True(secondPage.TryEdit(SpaceDetailsField.Name, "Unsaved source fault"));
+            var secondPage = Assert.IsType<SpaceBuilderPage>(root.Content);
+            Assert.True(secondPage.TryEdit(SpaceBuilderField.Name, "Unsaved source fault"));
             var preparation = session.PrepareCloseAsync(); await Decision(secondPage);
             Assert.False(firstPage.TryEdit(SpaceDetailsField.Description, "First is really leased"));
             store.FailNextRead = failure;
@@ -498,7 +502,7 @@ public sealed class SpacesDetailsRouteTests
             Assert.True(Contains(observed, failure)); Assert.True(preparation.IsFaulted);
             Assert.Same(secondPage, root.Content);
             Assert.True(firstPage.TryEdit(SpaceDetailsField.Description, "First restored after sibling fault"));
-            Assert.True(secondPage.TryEdit(SpaceDetailsField.Description, "Second restored after actual fault"));
+            Assert.True(secondPage.TryEdit(SpaceBuilderField.Description, "Second restored after actual fault"));
             Assert.Null(firstPage.OriginalClose); Assert.Null(secondPage.OriginalClose); Assert.Null(session.OriginalClose);
             Assert.Equal("Failing second editor", (await rig.Spaces.ReadExistingAsync(second.Id))!.Name);
         }
@@ -611,6 +615,10 @@ public sealed class SpacesDetailsRouteTests
     { var prior = session.OriginalQueuedNavigation; Click(page.OriginalHost, button); await (await Navigation(session, prior)).WaitAsync(Bound); }
     private static async Task Back(SpaceDetailsPage page, SpacesBrowseAppContentSession session)
     { var prior = session.OriginalQueuedNavigation; Click(page.EditorHost, "space-details-back"); await (await Navigation(session, prior)).WaitAsync(Bound); }
+    // The reviewed Home manage route publishes the one canonical Space surface (SPUI-201), so the
+    // Builder's own back action is the authored return path exercised by these route checks.
+    private static async Task Back(SpaceBuilderPage page, SpacesBrowseAppContentSession session)
+    { var prior = session.OriginalQueuedNavigation; Click(page.Host, "space-builder-back"); await (await Navigation(session, prior)).WaitAsync(Bound); }
     private static async Task<Task> Navigation(SpacesBrowseAppContentSession session, Task? prior)
     {
         using var deadline = new CancellationTokenSource(Bound);
@@ -619,6 +627,12 @@ public sealed class SpacesDetailsRouteTests
         return session.OriginalQueuedNavigation!;
     }
     private static async Task Decision(SpaceDetailsPage page)
+    {
+        using var deadline = new CancellationTokenSource(Bound);
+        while (page.DecisionHost?.Availability?.State != CuiSceneAvailabilityState.Ready || !ReferenceEquals(page.Content, page.DecisionHost))
+        { deadline.Token.ThrowIfCancellationRequested(); await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.SystemIdle).GetTask().WaitAsync(deadline.Token); }
+    }
+    private static async Task Decision(SpaceBuilderPage page)
     {
         using var deadline = new CancellationTokenSource(Bound);
         while (page.DecisionHost?.Availability?.State != CuiSceneAvailabilityState.Ready || !ReferenceEquals(page.Content, page.DecisionHost))

@@ -93,11 +93,16 @@ public sealed class UnifiedHomeContentTests
         await original;
         var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
         var window = Show(page);
-        var list = Assert.Single(page.GetVisualDescendants().OfType<ListBox>());
-        var modes = list.Items.Cast<ModeDefinition>().ToArray();
-        Assert.Contains(modes, mode => mode.Key == "files");
-        Assert.Contains(modes, mode => mode.Key == "spaces");
-        Assert.DoesNotContain(modes, mode => mode.Key == "assistants");
+        // The launcher is authored canonical CUI (Repeat Panel="Wrap"), never a donor ListBox, so the
+        // same catalogue rule is enforced against the tiles the page actually projects.
+        var tiles = page.GetVisualDescendants().OfType<Button>()
+            .Where(button => button.Name == "home-app-tile")
+            .Select(button => Assert.Single(button.GetVisualDescendants().OfType<TextBlock>()).Text)
+            .ToArray();
+        Assert.Contains("Files", tiles);
+        Assert.Contains("Spaces", tiles);
+        Assert.DoesNotContain("Assistants", tiles);
+        Assert.DoesNotContain("Dashboard", tiles);
         Assert.Equal(1, source.Reads);
         Assert.Equal(2, admissions);
         Assert.True(await session.TryPrepareToCloseAsync());
@@ -270,8 +275,9 @@ public sealed class UnifiedHomeContentTests
                 Assert.True(lastOrigin.Y >= sideOrigin.Y);
                 Assert.True(lastOrigin.Y + last.Bounds.Height <= sideOrigin.Y + sidebar.Bounds.Height + .5);
             }
-            var appList = Assert.Single(page.GetVisualDescendants().OfType<ListBox>());
-            Assert.True(appList.Bounds.Width >= 150 && appList.Bounds.Height >= 180);
+            var appRegion = Assert.Single(page.GetVisualDescendants().OfType<Control>(),
+                item => item.Name == "home-apps-results");
+            Assert.True(appRegion.Bounds.Width >= 150 && appRegion.Bounds.Height >= 180);
             var selectedId = chrome.State.SelectedTabId;
             scroll.Offset = default; Layout();
             var apps = buttons.Single(item => item.Name == "home-apps");

@@ -366,6 +366,11 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         {
             if (_publishedDetailsRoute is { } details)
                 _address = details.Address;
+            // A published editor owns the tab address. Without this the address fell back to the
+            // selected-Space form whenever a later state change re-projected it, so the address bar
+            // no longer identified the Space surface actually presented.
+            else if (_publishedBuilderRoute is { } builder)
+                _address = builder.Address;
             else if (_publishedChatRoute is { } chat)
                 _address = chat.Address;
             else if (selectedSpaceId is { } id && id != Guid.Empty)
