@@ -109,6 +109,101 @@ public sealed class SpacesHomeCuiRenderingTests
         }, lifetime.Token);
     }
 
+    /// <summary>
+    /// The canonical Spaces sidebar is contextual to the selected Space: its header displays that
+    /// Space and switches Spaces, an adjacent overflow holds that Space's quick actions, and the
+    /// whole sidebar collapses. These are the specification's MUST controls, so they are proven on the
+    /// authored surface rather than inferred from a view-model flag.
+    /// </summary>
+    [Fact]
+    public async Task Authored_contextual_sidebar_presents_switcher_quick_actions_and_collapse()
+    {
+        using var lifetime = new CancellationTokenSource();
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
+        await session.Dispatch<bool>(async () =>
+        {
+            var state = StateWithSelection(new SpacesHomeSelection(
+                SpaceRegistry.ChatSpaceId, "Chat", "General chat", true, false, false, null,
+                "Default", "Ask", "Conversation", [], [], false, false, false));
+            var actions = new List<(string Command, object? Parameter)>();
+            var bindings = new SpacesHomeCuiBindings(() => state, (command, parameter, _) =>
+            { actions.Add((command, parameter)); return ValueTask.CompletedTask; });
+
+            using var loader = new CuiControlLoader(SpacesHomeCuiDocument.CreateControlRegistry());
+            loader.SetBindingContext(bindings);
+            loader.SetActionDispatcher(bindings);
+            Window? window = null;
+            try
+            {
+                var (tree, diagnostics) = loader.LoadMarkup(ReadAuthoredSource());
+                Assert.Empty(diagnostics);
+                var root = Assert.IsAssignableFrom<Control>(tree);
+                loader.WireBindings(root);
+                window = new Window { Content = root, Width = 1280, Height = 900 };
+                window.Show();
+                for (var pass = 0; pass < 3; pass++)
+                { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
+
+                Control Named(string id) => Assert.Single(root!.GetVisualDescendants().OfType<Control>(),
+                    control => control.Name == id);
+                async Task<Button> Press(string id)
+                {
+                    var button = Assert.IsType<Button>(Named(id));
+                    Assert.True(button.IsEnabled, $"{id} must stay actionable for the current selection.");
+                    actions!.Clear();
+                    button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    await loader!.WhenActionsIdleAsync();
+                    return button;
+                }
+
+                Assert.True(bindings.TryGetValue("spaces.layoutColumns", out var expandedColumns));
+                Assert.Equal("72 260 1fr", expandedColumns);
+
+                var switcher = await Press("space-switcher");
+                Assert.Equal("Switch Space", AutomationProperties.GetName(switcher));
+                Assert.Equal("Chat", Assert.Single(switcher.GetVisualDescendants().OfType<TextBlock>()).Text);
+                Assert.Equal(("spaces.toggle-space-switcher", (object?)null), Assert.Single(actions));
+
+                state = state with { SpaceSwitcherOpen = true }; bindings.Refresh();
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var choices = root.GetVisualDescendants().OfType<Button>()
+                    .Where(button => button.Name is "space-switcher-builtin-row" or "space-switcher-custom-row")
+                    .ToArray();
+                Assert.Equal(3, choices.Length);
+                Assert.Equal(new[] { "Open Chat", "Open Study", "Open Recipes" },
+                    choices.Select(AutomationProperties.GetName));
+
+                await Press("space-overflow");
+                Assert.Equal(("spaces.toggle-space-overflow", (object?)null), Assert.Single(actions));
+                state = state with { SpaceSwitcherOpen = false, SpaceOverflowOpen = true }; bindings.Refresh();
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var quick = root.GetVisualDescendants().OfType<Button>()
+                    .Where(button => button.Name is "space-overflow-manage" or "space-overflow-rename"
+                        or "space-overflow-archive").ToArray();
+                Assert.Equal(3, quick.Length);
+                // A built-in Space keeps the quick actions visible but not actionable, so the surface
+                // stays deterministic instead of silently offering protected operations.
+                Assert.All(quick, button => Assert.False(button.IsEnabled));
+
+                await Press("space-sidebar-collapse");
+                Assert.Equal(("spaces.toggle-sidebar", (object?)null), Assert.Single(actions));
+                state = state with { SidebarCollapsed = true, SpaceOverflowOpen = false }; bindings.Refresh();
+                window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var sidebar = root.GetVisualDescendants().OfType<Control>()
+                    .SingleOrDefault(control => control.Name == "space-context-sidebar");
+                Assert.True(sidebar is null || !sidebar.IsEffectivelyVisible,
+                    "The collapsed contextual sidebar must not be presented.");
+                Assert.True(bindings.TryGetValue("spaces.layoutColumns", out var collapsedColumns));
+                Assert.Equal("72 0 1fr", collapsedColumns);
+                var expand = await Press("space-sidebar-expand");
+                Assert.Equal("Expand this Space's sidebar", AutomationProperties.GetName(expand));
+                Assert.Equal(("spaces.toggle-sidebar", (object?)null), Assert.Single(actions));
+            }
+            finally { window?.Close(); loader.Dispose(); await loader.WhenActionsIdleAsync(); }
+            return true;
+        }, lifetime.Token);
+    }
+
     [Fact]
     public async Task Selection_details_render_context_references_and_capabilities()
     {

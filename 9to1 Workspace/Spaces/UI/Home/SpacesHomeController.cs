@@ -114,7 +114,13 @@ public sealed record SpacesHomeViewState(
     int Revision,
     Guid? PendingRenameSpaceId = null,
     string RenameDraft = "",
-    int SelectedMoveParentIndex = 0)
+    int SelectedMoveParentIndex = 0,
+    // The main sidebar is contextual to the selected Space and collapsible, and its header owns the
+    // Space switcher and the adjacent quick-action overflow. These are presentation identities only;
+    // they never change which Space is selected or what a conversation contains.
+    bool SidebarCollapsed = false,
+    bool SpaceSwitcherOpen = false,
+    bool SpaceOverflowOpen = false)
 {
     public static SpacesHomeViewState Empty { get; } = new(
         string.Empty,
@@ -381,6 +387,51 @@ public sealed class SpacesHomeController
             _pendingRenameSpaceId = spaceId;
             _renameDraft = item.Name;
         }
+    }
+
+    /// <summary>Collapses or expands the contextual main sidebar. Collapsing also closes the Space
+    /// switcher and the quick-action overflow so no hidden control stays reachable.</summary>
+    public void ToggleSidebar()
+    {
+        var baseRevision = State.Revision;
+        var collapsed = !State.SidebarCollapsed;
+        TryPublish(State with
+        {
+            SidebarCollapsed = collapsed,
+            SpaceSwitcherOpen = false,
+            SpaceOverflowOpen = false,
+            StatusMessage = collapsed ? "Sidebar collapsed." : "Sidebar expanded."
+        }, baseRevision);
+    }
+
+    /// <summary>Activates the header control that switches between Spaces. Only one header popover is
+    /// open at a time, so the surface stays deterministic and inspectable.</summary>
+    public void ToggleSpaceSwitcher()
+    {
+        var baseRevision = State.Revision;
+        if (State.SidebarCollapsed) return;
+        var open = !State.SpaceSwitcherOpen;
+        TryPublish(State with
+        {
+            SpaceSwitcherOpen = open,
+            SpaceOverflowOpen = false,
+            StatusMessage = open ? "Choose a Space." : "Space switcher closed."
+        }, baseRevision);
+    }
+
+    /// <summary>Activates the overflow control beside the header, holding the quick actions for the
+    /// currently selected Space.</summary>
+    public void ToggleSpaceOverflow()
+    {
+        var baseRevision = State.Revision;
+        if (State.SidebarCollapsed) return;
+        var open = !State.SpaceOverflowOpen;
+        TryPublish(State with
+        {
+            SpaceOverflowOpen = open,
+            SpaceSwitcherOpen = false,
+            StatusMessage = open ? "Quick actions for this Space." : "Quick actions closed."
+        }, baseRevision);
     }
 
     public void SetRenameDraft(string? draft)

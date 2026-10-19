@@ -280,6 +280,15 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                     throw new InvalidOperationException("No Spaces workspace host is available to open a conversation.");
                 await original.AwaitAsync(InvokeOriginalSource(() => conversationHost("spaces.open-conversation", parameter, token))).ConfigureAwait(false);
                 break;
+            case "spaces.toggle-sidebar":
+                InvokeOriginalSource(_controller.ToggleSidebar);
+                break;
+            case "spaces.toggle-space-switcher":
+                InvokeOriginalSource(_controller.ToggleSpaceSwitcher);
+                break;
+            case "spaces.toggle-space-overflow":
+                InvokeOriginalSource(_controller.ToggleSpaceOverflow);
+                break;
             case "spaces.set-rename-draft":
                 InvokeOriginalSource(() => _controller.SetRenameDraft(parameter?.ToString()));
                 break;

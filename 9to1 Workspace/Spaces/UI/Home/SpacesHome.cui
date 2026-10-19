@@ -41,13 +41,16 @@
     <Action name="ManageSelected" command="spaces.edit-details" parameter="{Binding selection.id}" />
     <Action name="NewChat" command="spaces.new-chat" parameter="{Binding selection.id}" />
     <Action name="OpenConversation" command="spaces.open-conversation" parameter="{Binding conversation.id}" />
+    <Action name="ToggleSidebar" command="spaces.toggle-sidebar" />
+    <Action name="ToggleSwitcher" command="spaces.toggle-space-switcher" />
+    <Action name="ToggleOverflow" command="spaces.toggle-space-overflow" />
     <Action name="MoveSelected" command="spaces.move" parameter="{Binding selection.id}" />
     <Action name="AddContext" command="spaces.add-context" parameter="{Binding selection.id}" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
       <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}">
-        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="72 260 1fr" CellGap="16">
+        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="16">
           <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="72" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8">
             <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" Tooltip="Create a custom Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
               <Image id="create-space-icon" Source="icon:plus" Width="24" Height="24" />
@@ -77,14 +80,50 @@
                 <Image id="manage-selected-space-icon" Source="icon:settings" Width="24" Height="24" />
               </Button>
             </If>
+            <!-- Collapsing the contextual sidebar keeps one explicit control to bring it back. -->
+            <If Condition="{Binding spaces.sidebarCollapsed}">
+              <Button id="space-sidebar-expand" action="ToggleSidebar" accessible-name="Expand this Space's sidebar" Tooltip="Expand this Space's sidebar" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+                <Image id="space-sidebar-expand-icon" Source="icon:chevron-right" Width="24" Height="24" />
+              </Button>
+            </If>
           </Container>
           <!--
             The main sidebar is contextual to the selected Space: New chat plus that Space's own
             recent conversations. It stays visible while a Space conversation is mounted, and it
             never becomes a cross-Space history list because the rows are scoped to the selection.
           -->
-          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
-            <Text id="space-context-sidebar-title" text="{Binding selection.name}" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8" IsVisible="{Binding spaces.sidebarExpanded}">
+            <!--
+              The header control displays the currently selected Space and switches Spaces when
+              activated; the adjacent overflow control holds that Space's quick actions. Both popovers
+              are deterministic (only one open at a time) and the whole sidebar collapses.
+            -->
+            <Container id="space-context-header" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="6">
+              <Button Column="0" id="space-switcher" action="ToggleSwitcher" content="{Binding selection.name}" accessible-name="Switch Space" Tooltip="Switch to another Space" />
+              <Button Column="1" id="space-overflow" action="ToggleOverflow" accessible-name="Quick actions for this Space" Tooltip="Quick actions for this Space" Width="32" Height="32" Padding="6">
+                <Image id="space-overflow-icon" Source="icon:more" Width="18" Height="18" />
+              </Button>
+              <Button Column="2" id="space-sidebar-collapse" action="ToggleSidebar" accessible-name="Collapse this sidebar" Tooltip="Collapse this sidebar" Width="32" Height="32" Padding="6">
+                <Image id="space-sidebar-collapse-icon" Source="icon:chevron-left" Width="18" Height="18" />
+              </Button>
+            </Container>
+            <If Condition="{Binding spaces.spaceSwitcherOpen}">
+              <Container id="space-switcher-list" role="list" accessible-name="Spaces switcher" Type="Vertical Stack" CellGap="4">
+                <Repeat id="space-switcher-builtin" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
+                  <Button id="space-switcher-builtin-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" />
+                </Repeat>
+                <Repeat id="space-switcher-custom" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
+                  <Button id="space-switcher-custom-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" />
+                </Repeat>
+              </Container>
+            </If>
+            <If Condition="{Binding spaces.spaceOverflowOpen}">
+              <Container id="space-overflow-actions" role="menu" accessible-name="Space quick actions" Type="Vertical Stack" CellGap="4">
+                <Button id="space-overflow-manage" action="ManageSelected" content="Manage Space" accessible-name="Manage selected Space" Interactive="{Binding selection.canEditDetails}" />
+                <Button id="space-overflow-rename" action="RenameSelected" content="Rename Space" accessible-name="Rename selected Space" Interactive="{Binding selection.canEdit}" />
+                <Button id="space-overflow-archive" action="ArchiveSelected" content="Archive Space" accessible-name="Archive selected Space" Interactive="{Binding selection.canEdit}" />
+              </Container>
+            </If>
             <Button id="space-new-chat" action="NewChat" content="New chat" accessible-name="Start a new chat in this Space" />
             <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
               <Container id="space-conversation-row" role="listitem" accessible-name="{Binding conversation.title}" Type="Vertical Stack" CellGap="2">

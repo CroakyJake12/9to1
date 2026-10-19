@@ -22,7 +22,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         "spaces.confirm-rename", "spaces.cancel-rename", "spaces.set-query",
         "spaces.select-move-parent",
         "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details",
-        "spaces.new-chat", "spaces.open-conversation"
+        "spaces.new-chat", "spaces.open-conversation",
+        "spaces.toggle-sidebar", "spaces.toggle-space-switcher", "spaces.toggle-space-overflow"
     };
 
     private readonly CuiViewModel _values = new();
@@ -73,6 +74,13 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             // truthfully reports none rather than inventing rows.
             "spaces.conversations" => Array.Empty<SpacesHomeConversationRow>(),
             "spaces.hasConversations" => false,
+            // The contextual sidebar's collapse/switcher/overflow state is canonical view state on the
+            // controller, so the authored surface reads it here rather than keeping hidden state.
+            "spaces.sidebarCollapsed" => snapshot.SidebarCollapsed,
+            "spaces.sidebarExpanded" => !snapshot.SidebarCollapsed,
+            "spaces.spaceSwitcherOpen" => snapshot.SpaceSwitcherOpen,
+            "spaces.spaceOverflowOpen" => snapshot.SpaceOverflowOpen,
+            "spaces.layoutColumns" => snapshot.SidebarCollapsed ? "72 0 1fr" : "72 260 1fr",
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,
