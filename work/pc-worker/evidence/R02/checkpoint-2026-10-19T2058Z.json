@@ -1,0 +1,63 @@
+{
+  "milestone_id": "R02",
+  "spec_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "worker": "pc-implementation-opencode",
+  "timestamp_utc": "2026-10-19T20:58:00Z",
+  "branch": "opencode/v2-pc-sequential-20261018",
+  "head": "efc14df8",
+  "implementation_status": "in_progress",
+  "acceptance_status": "NOT_RUN",
+  "summary": "R02 stays in progress. The owner-visible journey remains implemented and natively proven, and a third real-app-only defect was found and fixed this pass. A refused Space UI action used to make the tab permanently unclosable: the refusal was admitted as original work, joined at close and re-raised as a close cause, so every later close threw AggregateException('The original Spaces work did not retire cleanly.'). It is now reproduced headlessly on the real session route and fixed: an action refused before it can change anything (missing or archived conversation, unavailable or archived Space) raises SpacesWorkspaceActionRefusal, which the owning session reports through the Spaces Home status line and completes normally. Genuine failures, work still running when close begins, and every save/close-preparation obligation keep their existing close semantics; the new test A_faulted_workspace_command_still_allows_an_ordinary_close asserts both the in-surface report and a clean retirement. The real app was re-measured after the change: one rail click opened a Chat Space conversation inside the retained rail layout with the icon-only rail and contextual sidebar both present, an unsent draft was typed, and an ordinary window close completed with the process absent within 4s. The last substantive R02 requirement, a sidebar customisable through stable section/item/rule identities with extension-contributed elements, is only partly done and is labelled as such: the authored space-sidebar-items area, the stable SpacesHomeSidebarRow projection keyed by ExtensionSidebarContribution.SidebarItemId and the OpenSidebarItem command mapping exist, and the domain surface truthfully reports no items so nothing renders. The remaining read path is now HELD FOR AN OWNER RESPONSE as DEC-014 in docs/specification/open-decisions.json: an IBrowseNativeAppContentSession has no host contract to navigate its own tab to an arbitrary address or open another app surface, and no reviewed service resolves ExtensionSidebarTargetKind to an authorised target. The identity and per-Space visibility sources are known (SpaceCapabilityBinding CapabilityId = Manifest.PackageId, Kind = Plugin, Override, read through the ExtensionManager singleton into InstalledExtensionPackage.Manifest.SidebarContributions), but wiring them without an activation contract would ship visible rows that cannot act, so the change is held rather than invented around. Also open: the in-tab back control was disabled after a refused web navigation and re-typing 9to1://spaces starts a fresh Spaces Home (open Haven browser-history question entangled with the unavailable Gecko engine), and R01's failing-save real-route probe is still NOT RUN.",
+  "next_action": "Await the DEC-014 answer before wiring spaces.sidebarItems and spaces.open-sidebar-item. Independent work in the meantime: add the R01 failing-save recovery-state probe on the real route, refresh the R01/R02 acceptance handoff for Astra (six R02 native evidence files now), then start the Automations scheduling/persistence/execution backend slice as bounded commits.",
+  "read_ranges": [
+    "docs/specification/9to1-development-specification-v2.md 4723-4866",
+    "docs/specification/9to1-development-specification-v2.md 5076-5161",
+    "docs/specification/9to1-development-specification-v2.md 5414-5450",
+    "docs/specification/owner-references/2026-10-18-haven-spaces/owner-correction.json"
+  ],
+  "checks": [
+    {
+      "name": "HavenOS.Spaces.Tests",
+      "command": "dotnet test HavenOS.Spaces.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "CakeOS.Cui.Runtime.Tests",
+      "command": "dotnet test framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "CuiCanonicalApplicationCompilationTests",
+      "command": "dotnet test framework/CUI/Compiler.Tests/CakeOS.Cui.Compiler.Tests.csproj -c Debug -m:1 --filter FullyQualifiedName~CuiCanonicalApplicationCompilationTests",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "HavenOS.Apps.Browse.Tests",
+      "command": "dotnet test HavenOS.Apps.Browse.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Haven.Desktop build",
+      "command": "dotnet build Haven.Desktop.csproj -c Debug -f net10.0 -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    }
+  ],
+  "lane_notes": {
+    "HavenOS.Browse.Host.Tests": "255 passed / 3 failed at efc14df8 (254 before the new close test); dotnet test exit code is non-zero because of the 3 failures. The 3 are the explicit platform guard 'This owning host fixture requires actual Windows Home; Linux is unvalidated' and are recorded as BLOCKED on this host, not as a pass. One earlier run at 20:36Z reported 253/4 with the extra failure name not captured; three later runs and this one returned the 3-failure baseline, so the lane carries one unreproduced intermittent failure to identify rather than being deterministically green.",
+    "shared/tests/Haven.Desktop.Tests": "BLOCKED: NETSDK1100 - targets net10.0-windows10.0.19041.0 and cannot build on this OS. EnableWindowsTargeting was deliberately not enabled.",
+    "Haven.Infrastructure.Tests": "BLOCKED: WebRtcVadSharp forces an x64 testhost on linux-arm64 - Could not find 'dotnet' host for the 'X64' architecture."
+  },
+  "evidence": [
+    "work/pc-worker/evidence/R02/NATIVE-SPACES-ENTRY-2026-10-19T1715Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SPACES-SIDEBAR-2026-10-19T1741Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-TAB-ROUNDTRIP-2026-10-19T1835Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SIDEBAR-ROWS-2026-10-19T1831Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SIDEBAR-CONTROLS-2026-10-19T1843Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-CLOSE-REGRESSION-2026-10-19T2057Z.md"
+  ]
+}
