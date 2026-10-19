@@ -1,0 +1,46 @@
+{
+  "milestone_id": "R02",
+  "spec_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "worker": "pc-implementation-opencode",
+  "timestamp_utc": "2026-10-19T17:15:00Z",
+  "branch": "opencode/v2-pc-sequential-20261018",
+  "head": "d8c6be77",
+  "implementation_status": "in_progress",
+  "acceptance_status": "NOT_RUN",
+  "summary": "R02 owner journey implemented and verified in the real apphost (d8c6be77). One click on an icon-only Spaces rail entry opens a new conversation scoped to that Space directly, with no details/sources interstitial, and the rail stays visible because the conversation is mounted in the authored space-app-content region of SpacesHome.cui. Space switching, custom-Space creation, the authored rail Manage entry, management return-chat identity and close/reopen conversation restoration were observed natively (profile /tmp/opencode/r02-spaces-entry-20261019T1705Z, PID 285661/292174, window 0x140001b); normal close exited in 1s and 4s. Catalogue projects 24 apps with Dashboard/Study/Tasks/Translate/Assistants/Dev absorbed. Remaining open: the selected Space chat/history sidebar is absent from the live chat surface; website-tab draft roundtrip NOT RUN; offline native inventory entry NOT RUN this pass. HavenOS.Browse.Host.Tests has 12 pre-existing failures at HEAD 3525b860 (verified by stashing and re-running) and the same 12 remain with no new failure; 5 are stale SpaceDetailsPage expectations that must be rewritten against the canonical SpaceBuilderPage.",
+  "next_action": "Implement the selected Space's chat/history sidebar in the live Spaces chat surface, then re-verify natively; afterwards rewrite the 5 stale SpacesDetailsRouteTests expectations against the Builder surface and diagnose the UnifiedHomeContentTests/UnifiedWorkspaceHostLifetimeTests pre-existing failures.",
+  "read_ranges": [
+    "docs/specification/9to1-development-specification-v2.md 4723-4866",
+    "docs/specification/9to1-development-specification-v2.md 5414-5450",
+    "docs/specification/owner-references/2026-10-18-haven-spaces/owner-correction.json"
+  ],
+  "checks": [
+    {
+      "name": "HavenOS.Spaces.Tests",
+      "command": "dotnet test HavenOS.Spaces.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "CakeOS.Cui.Runtime.Tests",
+      "command": "dotnet test CakeOS.Cui.Runtime.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "CuiCanonicalApplicationCompilationTests",
+      "command": "dotnet test CakeOS.Cui.Compiler.Tests.csproj -c Debug -m:1 --filter FullyQualifiedName~CuiCanonicalApplicationCompilationTests",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Haven.Desktop build",
+      "command": "dotnet build Haven.Desktop.csproj -c Debug -f net10.0 -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    }
+  ],
+  "evidence": [
+    "work/pc-worker/evidence/R02/NATIVE-SPACES-ENTRY-2026-10-19T1715Z.md"
+  ]
+}
