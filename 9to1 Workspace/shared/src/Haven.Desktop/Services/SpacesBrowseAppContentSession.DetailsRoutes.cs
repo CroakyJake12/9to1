@@ -100,6 +100,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                     try
                     {
                         SpacesHomePage? currentHome = null;
+                        bool detachStaleWorkspace = false;
                         // Report the queued failure even when a previous chat route is already
                         // published, so a failed new selection cannot silently leave the old
                         // actionable chat under the advanced rail selection. The home's own
@@ -108,8 +109,20 @@ internal sealed partial class SpacesBrowseAppContentSession
                         lock (_gate)
                             if (!_closing && _published && _routeEpoch == epoch && _publishedDetailsRoute is null &&
                                 _spacesPage is { } home)
+                            {
                                 currentHome = home;
-                        currentHome?.Controller.ReportQueuedActionFailure(selection, action, failure);
+                                // A failed Space open must not keep the previous Space's workspace
+                                // mounted under the advanced rail selection; the requested Space's
+                                // summary and status take its place instead.
+                                detachStaleWorkspace = action.Kind == SpacesActionKind.Open &&
+                                    _publishedChatRoute?.Page.CurrentConversation.SpaceId !=
+                                    action.Context.Scope.RegisteredSpaceId;
+                            }
+                        if (currentHome is not null)
+                        {
+                            if (detachStaleWorkspace) ClearMountedWorkspaceLocked();
+                            currentHome.Controller.ReportQueuedActionFailure(selection, action, failure);
+                        }
                         return Task.CompletedTask;
                     }
                     finally { ExecutingCommand.Value = prior; }
@@ -324,8 +337,22 @@ internal sealed partial class SpacesBrowseAppContentSession
                         {
                             DemandAlive(); linked.Token.ThrowIfCancellationRequested();
                             SetRootContent(home);
-                            _publishedDetailsRoute = null; _publishedChatRoute = null; _publishedBuilderRoute = null;
-                            _routeEpoch++; UpdateAddress(home.Controller.State.Selection?.Id);
+                            _publishedDetailsRoute = null; _publishedBuilderRoute = null;
+                            // A Space conversation stays mounted inside the Spaces workspace region
+                            // across a management roundtrip. Returning restores that same chat,
+                            // with its own identity and draft, instead of dropping to a summary.
+                            if (_chatPage is { } priorChat &&
+                                ReferenceEquals(home.SpaceWorkspaceContent, priorChat) &&
+                                (_returnChatConversationId is null ||
+                                 priorChat.CurrentConversation.Id == _returnChatConversationId))
+                                PublishChatPage(priorChat);
+                            else
+                            {
+                                _publishedChatRoute = null;
+                                home.ClearSpaceWorkspace();
+                                _routeEpoch++;
+                                UpdateAddress(home.Controller.State.Selection?.Id);
+                            }
                         }
                         PublishStateChanged();
                     }, linked.Token);

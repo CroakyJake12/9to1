@@ -375,12 +375,38 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     private void PublishChatPage(NewChatPage chat)
     {
         Dispatcher.UIThread.VerifyAccess();
-        SetRootContent(chat);
+        // The conversation is mounted inside the authored Spaces workspace region so the
+        // icon-only Spaces rail and the conversation's own chat/history sidebar remain visible
+        // together. Only when no Spaces Home region exists does Chat take the whole tab.
+        var home = _spacesPage;
+        if (home is not null && home.TryMountSpaceWorkspace(chat))
+            SetRootContent(home);
+        else
+        {
+            // The authored workspace may still hold this same page from an earlier in-place
+            // mount. Detach it before taking the whole tab, otherwise one control would have
+            // two native parents and the actual publication would fail.
+            home?.ClearSpaceWorkspace(chat);
+            SetRootContent(chat);
+        }
         _publishedDetailsRoute = null;
         _routeEpoch++;
         _chatPage = chat;
         _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
         _address = _publishedChatRoute.Address;
+    }
+
+    /// <summary>Detaches a Space workspace that failed or was retired without replacement and
+    /// restores the selected Space summary with its own address. Root still owns the detached
+    /// page's actual close; this only removes it from the live presentation.</summary>
+    private void ClearMountedWorkspaceLocked()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        var home = _spacesPage;
+        if (home is not null) home.ClearSpaceWorkspace();
+        _publishedChatRoute = null;
+        _routeEpoch++;
+        UpdateAddress(home?.Controller.State.Selection?.Id);
     }
 
     private static bool TryParseSelectedSpace(AppContentAddress address, out Guid selectedSpaceId)
@@ -462,10 +488,13 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         Dispatcher.UIThread.VerifyAccess();
         token.ThrowIfCancellationRequested();
         DemandAlive();
-        if (action.Context.Definition.Destination != SpacesDestinationKind.Chat)
-            throw new NotSupportedException("Only the Chat destination is available in this Haven tab.");
+        // Every canonical Space type is a conversation Space: Study, Tasks, Translate, Research,
+        // Shopping and Assistants are Space types, not separate apps. The Haven tab therefore
+        // opens a conversation scoped to the selected Space for any registered destination.
         var spaceId = action.Context.Scope.RegisteredSpaceId;
-        var key = spaceId ?? Guid.Empty;
+        if (spaceId is not { } registeredSpaceId || registeredSpaceId == Guid.Empty)
+            throw new InvalidOperationException("The Space action has no registered Space to scope its conversation.");
+        var key = registeredSpaceId;
         if (_chatsBySpace.TryGetValue(key, out var existing) && existing.CurrentConversation.SpaceId == spaceId)
         {
             lock (_gate)

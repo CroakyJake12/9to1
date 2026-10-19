@@ -43,6 +43,9 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     private Task? _hostClose;
     private Task<CuiSceneAvailability>? _exactOriginalShow;
     private int _editorOperationCount;
+    // The authored `space-app-content` region inside the Spaces rail layout. Root owns whatever
+    // workspace is mounted here; this page only hosts the control and reports its presence.
+    private ContentControl? _spaceWorkspace;
 
     public SpacesHomePage(
         SpaceRegistry registry,
@@ -57,7 +60,17 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
 
         Document = SpacesHomeCuiDocument.Load();
-        _host = new CuiSceneHost(SpacesHomeCuiDocument.CreateControlRegistry());
+        var controlRegistry = SpacesHomeCuiDocument.CreateControlRegistry();
+        // The authored workspace region is a stable host-owned mount, so a re-published scene
+        // keeps the same control and the mounted workspace is never silently rebuilt empty.
+        // A fresh publication builds a new tree, so the previous parent must release the mount
+        // first; Avalonia controls admit only one parent.
+        controlRegistry.BindAuthoredControl("space-app-content", _ =>
+        {
+            if (_spaceWorkspace is { } existing) DetachFromParent(existing);
+            return _spaceWorkspace ??= new ContentControl();
+        });
+        _host = new CuiSceneHost(controlRegistry);
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
 
         var queuedNavigationHost = new QueuedSpacesActionHost(this, navigationHost, _work, queueNavigation);
@@ -169,6 +182,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     public bool TryGetValue(string path, out object? value)
     {
         if (path == "spaces.canMutate") { lock (_gate) value = CanAdmitHomeMutation(); return true; }
+        if (path == "spaces.hasAppContent") { lock (_gate) value = _spaceWorkspace?.Content is not null; return true; }
+        if (path == "spaces.hasSpaceSummary") { lock (_gate) value = _spaceWorkspace?.Content is null; return true; }
         return _bindings.TryGetValue(path, out value);
     }
     public bool TrySetValue(string path, object? value)
@@ -239,6 +254,10 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 break;
             case "spaces.select":
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.SelectSpaceAsync(id, token))).ConfigureAwait(false);
+                // The owner's Spaces entry journey is direct: selecting a Space in the icon-only
+                // rail opens that Space's conversation in the same gesture. The Space summary is
+                // a management view, never a mandatory interstitial in front of a chat.
+                await original.AwaitAsync(InvokeOriginalSource(() => _controller.OpenSpaceAsync(id, token))).ConfigureAwait(false);
                 break;
             case "spaces.set-rename-draft":
                 InvokeOriginalSource(() => _controller.SetRenameDraft(parameter?.ToString()));
@@ -267,6 +286,81 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 break;
             default:
                 throw new InvalidOperationException($"Spaces Home command '{command}' is not owned by this host.");
+        }
+    }
+
+    /// <summary>The authored <c>space-app-content</c> region inside the retained Spaces rail
+    /// layout, or null before the scene has published it. Root owns whatever is mounted there.</summary>
+    internal Control? SpaceWorkspaceMount
+    {
+        get { lock (_gate) return _spaceWorkspace; }
+    }
+
+    /// <summary>The workspace Root currently mounts in that region, or null. Reading this never
+    /// transfers ownership of the mounted control.</summary>
+    internal Control? SpaceWorkspaceContent
+    {
+        get { lock (_gate) return _spaceWorkspace?.Content as Control; }
+    }
+
+    /// <summary>
+    /// Mounts Root's workspace (a Space chat, builder or details surface) into the authored
+    /// workspace region so the icon-only Spaces rail and the workspace, including its own
+    /// chat/history sidebar, stay visible together. This page never owns the mounted control:
+    /// Root retains its lifetime, close preparation and actual retirement.
+    /// </summary>
+    internal bool TryMountSpaceWorkspace(Control workspace)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentNullException.ThrowIfNull(workspace);
+        ContentControl? mount;
+        lock (_gate)
+        {
+            if (_work.IsRetiring || !_active) return false;
+            mount = _spaceWorkspace;
+        }
+        if (mount is null) return false;
+        return InvokeOriginalSource(() =>
+        {
+            mount.Content = workspace;
+            _bindings.Refresh();
+            return true;
+        });
+    }
+
+    /// <summary>Detaches the workspace Root has retired from the authored region and restores the
+    /// selected Space summary. A non-matching <paramref name="expected"/> leaves the live
+    /// workspace untouched rather than clearing a newer navigation.</summary>
+    internal bool ClearSpaceWorkspace(Control? expected = null)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_gate)
+        {
+            if (_work.IsRetiring || _spaceWorkspace is not { } mount) return false;
+            if (expected is not null && !ReferenceEquals(mount.Content, expected)) return false;
+            if (mount.Content is null) return false;
+            mount.Content = null;
+        }
+        InvokeOriginalSource(() => { _bindings.Refresh(); return true; });
+        return true;
+    }
+
+    /// <summary>Releases a control from its current native parent. A fresh CUI publication
+    /// builds a new tree, and Avalonia admits only one parent per control.</summary>
+    private static void DetachFromParent(Control control)
+    {
+        switch (control.Parent)
+        {
+            case Panel panel:
+                panel.Children.Remove(control);
+                break;
+            case ContentControl host when ReferenceEquals(host.Content, control):
+                host.Content = null;
+                break;
+            // A CUI Container cell wraps each child in its own decorator border.
+            case Decorator decorator when ReferenceEquals(decorator.Child, control):
+                decorator.Child = null;
+                break;
         }
     }
 

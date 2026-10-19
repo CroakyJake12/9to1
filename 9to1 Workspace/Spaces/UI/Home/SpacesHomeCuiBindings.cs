@@ -62,6 +62,11 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         value = path switch
         {
             "spaces.canMutate" => true, // The native owner overrides this with its actual reversible admission gate.
+            // The domain surface has no mounted Space workspace. The native Haven owner overrides
+            // this with the real authored `space-app-content` state so the rail and a Space chat,
+            // builder or details workspace stay presented together.
+            "spaces.hasAppContent" => false,
+            "spaces.hasSpaceSummary" => true,
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,

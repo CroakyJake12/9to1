@@ -40,7 +40,9 @@ public sealed class SpacesDetailsRouteTests
             var home = Assert.IsType<SpacesHomePage>(root.Content);
             await home.Controller.SelectSpaceAsync(SpaceRegistry.ChatSpaceId);
             await Open(home, session, "open-selected-space");
-            var chat = Assert.IsType<NewChatPage>(root.Content);
+            // The conversation is mounted inside the retained Spaces Home rail layout, so the
+            // icon-only rail and the chat's own history sidebar remain presented together.
+            var chat = Assert.IsType<NewChatPage>(home.SpaceWorkspaceContent);
             var conversation = chat.ConversationId;
             chat.SetDraft("Retained unsent Details round trip");
             // The original Home remains the session's canonical discoverability surface.
@@ -62,7 +64,7 @@ public sealed class SpacesDetailsRouteTests
             Assert.Same(home, root.Content);
             await home.Controller.SelectSpaceAsync(SpaceRegistry.ChatSpaceId);
             await Open(home, session, "open-selected-space");
-            Assert.Same(chat, root.Content);
+            Assert.Same(chat, home.SpaceWorkspaceContent);
             Assert.Equal(conversation, chat.ConversationId);
             Assert.Equal("Retained unsent Details round trip", ((ChatHavenScene)typeof(NewChatPage).GetField("_scene", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(chat)!).Instruction.Text);
             var prepared = (await session.PrepareCloseAsync().WaitAsync(Bound))!;
@@ -328,7 +330,7 @@ public sealed class SpacesDetailsRouteTests
             await Back(details, session);
             var home = Assert.IsType<SpacesHomePage>(root.Content);
             await home.Controller.SelectSpaceAsync(SpaceRegistry.ChatSpaceId); await Open(home, session, "open-selected-space");
-            var chat = Assert.IsType<NewChatPage>(root.Content);
+            var chat = Assert.IsType<NewChatPage>(home.SpaceWorkspaceContent);
             var changed = chat.CurrentConversation with { Id = Guid.NewGuid(), Title = "Held actual target" };
             rig.Row = changed;
             rig.ReadMessages = id => { Assert.Equal(changed.Id, id); entered.TrySetResult(); return messages.Task; };
@@ -341,7 +343,9 @@ public sealed class SpacesDetailsRouteTests
             Assert.Equal(changed.Id, chat.CurrentConversation.Id);
             Click(details.DecisionHost!, "space-details-close-cancel");
             Assert.Null(await preparation.WaitAsync(Bound));
-            Assert.Same(chat, root.Content);
+            // The retained conversation is restored inside the same Spaces Home rail layout it
+            // was mounted in, not as a separate root view.
+            Assert.Same(chat, home.SpaceWorkspaceContent);
             var expected = changed.SpaceId is { } actualSpace
                 ? $"9to1://spaces/selected/{actualSpace:D}/chat/{changed.Id:D}"
                 : $"9to1://spaces/chat/{changed.Id:D}";

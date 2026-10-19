@@ -145,7 +145,10 @@ public sealed class SpacesConversationRouteTests
             session.StateChanged += (_, _) => observedAddresses.Add(session.Address.Value);
             await session.InitializeAsync().WaitAsync(Bound);
             Assert.True(session.IsPublicationCurrent);
-            var page = Assert.IsType<NewChatPage>(Assert.IsType<ContentControl>(session.OriginalNativeView).Content);
+            // The owner's Spaces entry retains the icon-only rail: the tab's native view is the
+            // Spaces Home layout with the real conversation mounted inside its authored workspace.
+            var spacesHome = Assert.IsType<SpacesHomePage>(Assert.IsType<ContentControl>(session.OriginalNativeView).Content);
+            var page = Assert.IsType<NewChatPage>(spacesHome.SpaceWorkspaceContent);
             Assert.Equal(original.Id, page.ConversationId);
             Assert.Contains($"9to1://spaces/chat/{original.Id:D}", observedAddresses);
 
@@ -226,7 +229,9 @@ public sealed class SpacesConversationRouteTests
             var spaces = Assert.IsType<SpacesHomePage>(root.Content);
             await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
             await session.OriginalQueuedNavigation!.WaitAsync(Bound);
-            var chat = Assert.IsType<NewChatPage>(root.Content);
+            // The conversation is mounted inside the retained Spaces Home rail layout rather than
+            // replacing the tab's root view, which is what keeps the rail and chat sidebar together.
+            var chat = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
             chat.SetDraft("Unsent close-boundary fixture");
             Assert.True(await session.TryPrepareToCloseAsync().WaitAsync(Bound));
 

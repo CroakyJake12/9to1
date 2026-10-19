@@ -38,6 +38,7 @@
     <Action name="EditExtensions" command="spaces.edit-extensions" parameter="{Binding selection.id}" />
     <Action name="EditGraph" command="spaces.edit-graph" parameter="{Binding selection.id}" />
     <Action name="EditDetails" command="spaces.edit-details" parameter="{Binding selection.id}" />
+    <Action name="ManageSelected" command="spaces.edit-details" parameter="{Binding selection.id}" />
     <Action name="MoveSelected" command="spaces.move" parameter="{Binding selection.id}" />
     <Action name="AddContext" command="spaces.add-context" parameter="{Binding selection.id}" />
   </Actions>
@@ -64,9 +65,27 @@
                 </Button>
               </Container>
             </Repeat>
+            <!--
+              Space management stays a deliberate operation. While a Space workspace is mounted the
+              summary and its manage buttons are hidden, so the rail keeps one explicit settings
+              entry for the selected user-created Space instead of a second navigation surface.
+            -->
+            <If Condition="{Binding selection.canEditDetails}">
+              <Button id="manage-selected-space" action="ManageSelected" accessible-name="Manage selected Space" Tooltip="Manage this Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+                <Image id="manage-selected-space-icon" Source="icon:settings" Width="24" Height="24" />
+              </Button>
+            </If>
           </Container>
 
-          <Container id="space-details" accessible-name="Selected Space" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10">
+          <!--
+            The selected Space's own workspace (a chat, a builder or a details page) is mounted
+            into the authored `space-app-content` control by the native Spaces owner. While a
+            workspace is mounted the Space summary is deliberately hidden so the icon-only rail
+            and the workspace, including its chat/history sidebar, stay on screen together. The
+            summary returns when the workspace retires; nothing here invents a second navigation.
+          -->
+          <Container id="space-app-content" accessible-name="Space workspace" Type="Overlay" Column="1" IsVisible="{Binding spaces.hasAppContent}" />
+          <Container id="space-details" accessible-name="Selected Space" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10" IsVisible="{Binding spaces.hasSpaceSummary}">
             <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
             <Container id="spaces-search-controls" Type="Grid" RowSizes="Auto" ColumnSizes="24 1fr" CellGap="8">
               <Image id="spaces-search-icon" Source="icon:search" Width="20" Height="20" VerticalAlignment="Center" />

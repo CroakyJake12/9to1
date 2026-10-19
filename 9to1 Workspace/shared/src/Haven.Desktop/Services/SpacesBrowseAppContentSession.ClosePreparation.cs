@@ -125,6 +125,7 @@ internal sealed partial class SpacesBrowseAppContentSession
     private async Task<bool> PrepareEditorAsync(SessionPreparation candidate, SpaceDetailsPage page, CancellationToken token)
     {
         Control? priorView = null;
+        Control? priorWorkspace = null;
         PublishedBuilderRoute? priorBuilder = null;
         PublishedDetailsRoute? priorDetails = null;
         PublishedChatRoute? priorChat = null;
@@ -144,6 +145,10 @@ internal sealed partial class SpacesBrowseAppContentSession
                     if ((page.State.HasChanges || page.State.HasConflict) && !ReferenceEquals(_publishedDetailsRoute?.Page, page))
                     {
                         priorView = _root.Content as Control;
+                        // A Space conversation is normally mounted inside the retained Spaces Home
+                        // rail layout, so the live chat identity is that region's content rather
+                        // than the tab's root view.
+                        priorWorkspace = _spacesPage?.SpaceWorkspaceContent;
                         priorBuilder = _publishedBuilderRoute; priorDetails = _publishedDetailsRoute; priorChat = _publishedChatRoute; priorAddress = _address;
                         SetRootContent(page);
                         _publishedDetailsRoute = new(page, Haven.Core.AppContentAddress.Parse($"9to1://spaces/details/{page.State.SpaceId:D}"));
@@ -184,7 +189,8 @@ internal sealed partial class SpacesBrowseAppContentSession
                             // A real already-admitted Chat transition may have completed while
                             // its view was hidden for this decision. Derive from that SAME page
                             // on its UI owner; the saved projection is not a fresh identity proof.
-                            if (priorChat is not null && !ReferenceEquals(priorView, priorChat.Page))
+                            if (priorChat is not null && !ReferenceEquals(priorView, priorChat.Page) &&
+                                !ReferenceEquals(priorWorkspace, priorChat.Page))
                                 throw new InvalidOperationException("The retained Chat view and route owner disagree.");
                             var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page.CurrentConversation));
                             var restoredAddress = restoredChat?.Address ?? priorAddress!;
@@ -216,6 +222,7 @@ internal sealed partial class SpacesBrowseAppContentSession
     {
         if (page.OriginalClose is not null) return false;
         Control? priorView = null;
+        Control? priorWorkspace = null;
         PublishedBuilderRoute? priorBuilder = null;
         PublishedDetailsRoute? priorDetails = null;
         PublishedChatRoute? priorChat = null;
@@ -235,6 +242,9 @@ internal sealed partial class SpacesBrowseAppContentSession
                     if ((page.State.HasChanges || page.State.HasConflict) && !ReferenceEquals(_publishedBuilderRoute?.Page, page))
                     {
                         priorView = _root.Content as Control;
+                        // The live Space conversation normally sits in the retained Spaces Home
+                        // workspace region, not in the tab's root view.
+                        priorWorkspace = _spacesPage?.SpaceWorkspaceContent;
                         priorBuilder = _publishedBuilderRoute; priorDetails = _publishedDetailsRoute; priorChat = _publishedChatRoute; priorAddress = _address;
                         SetRootContent(page);
                         _publishedBuilderRoute = new(page, Haven.Core.AppContentAddress.Parse($"9to1://spaces/builder/{page.State.SpaceId:D}"));
@@ -272,7 +282,8 @@ internal sealed partial class SpacesBrowseAppContentSession
                         {
                             if (_closing) return Task.CompletedTask;
                             if (!ReferenceEquals(_activeDetailsPreparation, candidate)) throw new InvalidOperationException("The builder decision lost its owner.");
-                            if (priorChat is not null && !ReferenceEquals(priorView, priorChat.Page))
+                            if (priorChat is not null && !ReferenceEquals(priorView, priorChat.Page) &&
+                                !ReferenceEquals(priorWorkspace, priorChat.Page))
                                 throw new InvalidOperationException("The retained Chat view and route owner disagree.");
                             var restoredChat = priorChat is null ? null : new PublishedChatRoute(priorChat.Page, ConversationAddress(priorChat.Page.CurrentConversation));
                             var restoredAddress = restoredChat?.Address ?? priorAddress!;
