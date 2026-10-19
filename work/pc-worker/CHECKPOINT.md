@@ -1,8 +1,10 @@
-# PC implementation worker checkpoint — 2026-10-19 22:28 BST (21:28 UTC)
+# PC implementation worker checkpoint — 2026-10-19 22:08 UTC (23:08 Europe/London; corrected deadline 23:00 Europe/London)
 
-Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `35c881d8`. Base main
+Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `9fc92762`. Base main
 `06a39628`. Nothing is pushed or merged; the owner preview is not running and no owner profile was
-touched.
+touched. Parallel-worker admission was requested and verified as not admissible from this worker;
+see `work/pc-worker/PARALLEL-WORKER-ADMISSION-2026-10-19.md` for the exact limitations and the lanes
+the coordinator can admit.
 
 Session commits, oldest first: `c17761e2` R01 settled-failure contract → `8a989523` R02 catalogue →
 `c8bf19de` R02 obsolete tests → `d450f4bf` R02 offline degraded inventory → `146622bc` R04 selector →
