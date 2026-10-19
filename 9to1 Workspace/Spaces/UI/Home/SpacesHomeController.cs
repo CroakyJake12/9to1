@@ -843,6 +843,15 @@ public sealed class SpacesHomeController
             .ToArray();
     }
 
+    /// <summary>Reports a Space workspace action that the owning native surface refused before it
+    /// could change anything, so the refusal is visible in the sidebar that raised it. This changes
+    /// only the status line: it never alters the selected Space or any conversation.</summary>
+    public void ReportWorkspaceActionRefusal(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        PublishStatus(message);
+    }
+
     private void PublishStatus(string message)
     {
         Publish(State with { StatusMessage = message });

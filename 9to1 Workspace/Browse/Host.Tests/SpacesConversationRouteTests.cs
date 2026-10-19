@@ -254,6 +254,43 @@ public sealed class SpacesConversationRouteTests
         finally { await session!.CloseAndDrainAsync().WaitAsync(Bound); }
     }
 
+    /// <summary>
+    /// A UI action that faults must leave the session closable. On HEAD 71661cf3 a failed Space
+    /// sidebar action left the real app unable to complete an ordinary close for the rest of its
+    /// lifetime, so this is proven against the actual session route rather than assumed.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task A_faulted_workspace_command_still_allows_an_ordinary_close()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+
+            // Ask the sidebar to open a conversation identity that does not exist. The real route
+            // refuses it in the surface that raised it; the refusal must not become retained work
+            // that makes an ordinary close impossible for the rest of the tab's life.
+            await spaces.DispatchAsync("spaces.open-conversation", Guid.NewGuid()).AsTask().WaitAsync(Bound);
+            Assert.Contains("no longer available", spaces.Controller.State.StatusMessage);
+
+            await session.CloseAndDrainAsync().WaitAsync(Bound);
+            Assert.True(session.CanRetireOriginalView);
+            Assert.Null(root.Content);
+        }
+        finally
+        {
+            if (session is not null)
+                try { await session.CloseAndDrainAsync().WaitAsync(Bound); } catch { }
+        }
+    }
+
     private static NewChatPage Chat(SpacesBrowseAppContentSession session) =>
         (NewChatPage)typeof(SpacesBrowseAppContentSession).GetField("_chatPage", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(session)!;
 

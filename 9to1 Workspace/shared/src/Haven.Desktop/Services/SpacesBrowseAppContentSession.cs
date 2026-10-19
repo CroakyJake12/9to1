@@ -17,6 +17,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Services;
 
+/// <summary>A Space UI action that was refused before it could change anything. The refusal is
+/// reported in the surface that owns the action instead of being retained as a close obligation,
+/// so one failed click can never make the tab permanently unclosable.</summary>
+internal sealed class SpacesWorkspaceActionRefusal : InvalidOperationException
+{
+    public SpacesWorkspaceActionRefusal(string message) : base(message) { }
+}
+
 /// <summary>A distinct Spaces view owner per Haven tab, reusing the canonical
 /// Spaces Home page and its services.</summary>
 internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppContentSession, IBrowseAppContentClosePreparationParticipant
@@ -618,8 +626,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         token.ThrowIfCancellationRequested();
         DemandAlive();
         var space = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(spaceId, token)
-            ?? throw new InvalidOperationException("The selected Space is unavailable.");
-        if (space.IsArchived) throw new InvalidOperationException("The selected Space is archived.");
+            ?? throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
+        if (space.IsArchived) throw new SpacesWorkspaceActionRefusal("The selected Space is archived.");
         var page = await NewChatSessionFactory().CreateNewAsync(token);
         _ownedChats.Add(page);
         var published = false;
@@ -656,11 +664,11 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         DemandAlive();
         var conversations = _services.GetRequiredService<IConversationRepository>();
         var row = await conversations.GetAsync(conversationId, token)
-            ?? throw new InvalidOperationException("The selected conversation is no longer available.");
+            ?? throw new SpacesWorkspaceActionRefusal("The selected conversation is no longer available.");
         if (row.IsArchived || row.IsTemporary)
-            throw new InvalidOperationException("That conversation is not available in this Space.");
+            throw new SpacesWorkspaceActionRefusal("That conversation is not available in this Space.");
         var chat = await NewChatSessionFactory().RestoreAsync(conversationId, token)
-            ?? throw new InvalidOperationException("The selected conversation is no longer available.");
+            ?? throw new SpacesWorkspaceActionRefusal("The selected conversation is no longer available.");
         _ownedChats.Add(chat);
         var published = false;
         try
@@ -728,14 +736,30 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 {
                     linked.Token.ThrowIfCancellationRequested();
                     DemandAlive();
-                    if (command == "spaces.new-chat") await NewConversationOnUiAsync(target, linked.Token);
-                    else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync(target, linked.Token);
-                    else throw new InvalidOperationException($"The Spaces workspace command '{command}' is not owned by this host.");
+                    try
+                    {
+                        if (command == "spaces.new-chat") await NewConversationOnUiAsync(target, linked.Token);
+                        else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync(target, linked.Token);
+                        else throw new InvalidOperationException($"The Spaces workspace command '{command}' is not owned by this host.");
+                    }
+                    catch (SpacesWorkspaceActionRefusal refusal)
+                    {
+                        // A refusal before any effect is reported in the surface that raised it. It is
+                        // not retained as a close obligation, so a failed click cannot make the tab
+                        // permanently unclosable.
+                        ReportWorkspaceActionRefusal(refusal.Message);
+                    }
                 }
                 finally { ExecutingCommand.Value = previous; }
             }).ConfigureAwait(false);
         }
         finally { Volatile.Write(ref execution.Active, false); _commandSerial.Release(); }
+    }
+
+    private void ReportWorkspaceActionRefusal(string message)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        _spacesPage?.Controller.ReportWorkspaceActionRefusal(message);
     }
 
     private static async Task OnUiAsync(Func<Task> action)
