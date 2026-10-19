@@ -81,6 +81,17 @@ public sealed partial class BrowseChrome
     public IReadOnlyList<BrowseAdmissionRefusalRecord> AdmissionRefusals
     { get { lock (_nativeSourceGate) return _admissionRefusals.ToArray(); } }
 
+    /// <summary>Re-validates that the supplied failure is the exact refusal instance this
+    /// chrome witnessed for one of its own admissions. A replayed, wrapped, aggregated or
+    /// hand-made exception returns false, so only the genuine admission's own proof can
+    /// settle the CUI action retirement obligation.</summary>
+    public bool IsVerifiedSettledActionFailure(Exception failure)
+    {
+        if (failure is not BrowseNativeAdmissionRefusal refusal) return false;
+        lock (_nativeSourceGate)
+            return _admissionRefusals.Any(record => ReferenceEquals(record.Refusal, refusal));
+    }
+
     /// <summary>
     /// Withdraws the retirement obligation of one retained source, and only when that
     /// source belongs to the propagation chain of a specific admission this chrome

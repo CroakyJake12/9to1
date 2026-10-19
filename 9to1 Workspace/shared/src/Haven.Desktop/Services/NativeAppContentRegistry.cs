@@ -62,7 +62,14 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
     /// It is constructed only at that lookup, before any session, owner or view exists,
     /// and names the exact request it answers. Nothing else may create this proof.</summary>
     internal sealed class NativeAppContentAdmissionRefusal(BrowseAppContentRequest request,
-        IBrowseAppContentFactory issuingFactory) : BrowseNativeAdmissionRefusal(request, issuingFactory);
+        IBrowseAppContentFactory issuingFactory) : BrowseNativeAdmissionRefusal(request, issuingFactory),
+        CakeOS.Cui.Runtime.ICuiSettledActionFailure
+    {
+        /// <summary>The admission acquired no owner, session or view, so this refusal
+        /// carries verified proof of having no effect. Verification by the host's
+        /// validator (concrete type + witnessed instance) is still required.</summary>
+        public bool IsVerified => true;
+    }
 
     private void DemandHost()
     {

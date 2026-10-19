@@ -35,10 +35,12 @@ public sealed record CuiNativeScene(string AppId, string Title, string Surface, 
 public sealed class CuiSceneHost : ContentControl, IDisposable
 {
     private readonly CuiControlRegistry _registry;
+    private readonly Func<Exception, bool>? _isSettledActionFailure;
 
-    public CuiSceneHost(CuiControlRegistry? registry = null)
+    public CuiSceneHost(CuiControlRegistry? registry = null, Func<Exception, bool>? isSettledActionFailure = null)
     {
         _registry = registry ?? new();
+        _isSettledActionFailure = isSettledActionFailure;
         // Inherited chrome defaults also apply when an existing shell embeds this host.
         // A content control with its own authored font retains that local value.
         FontFamily = new Avalonia.Media.FontFamily(CuiNativeHost.BundledInterfaceFontFamily);
@@ -746,16 +748,28 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         ThrowOriginal(errors);
     }
 
-    private static async Task JoinOriginalTaskAsync(Task original, List<Exception> errors)
+    private async Task JoinOriginalTaskAsync(Task original, List<Exception> errors)
     {
         try { await original.ConfigureAwait(false); }
         catch (Exception error)
         {
             // Await selects one cause from WhenAll. Preserve every actual fault payload,
             // including a payload that is itself an empty/unknown AggregateException.
+            IEnumerable<Exception> causes;
             if (original.Exception is { } fault && fault.InnerExceptions.Count != 0)
-                foreach (var cause in fault.InnerExceptions) AddOriginal(errors, cause);
-            else AddOriginal(errors, error);
+                causes = fault.InnerExceptions;
+            else causes = [error];
+
+            // A conclusively effect-free settled action failure (verified by the host's
+            // typed proof validator) is retained in the diagnostics ledger by its owner
+            // but must not be counted as an outstanding retirement duty. It is honoured
+            // only when EVERY cause of this task is verified; any mixed or unverified
+            // fault graph stays a conservative retirement failure.
+            var causeList = causes.ToList();
+            var allSettled = causeList.Count > 0 && _isSettledActionFailure is { } validator
+                && causeList.All(validator);
+            if (allSettled) return;
+            foreach (var cause in causeList) AddOriginal(errors, cause);
         }
     }
 

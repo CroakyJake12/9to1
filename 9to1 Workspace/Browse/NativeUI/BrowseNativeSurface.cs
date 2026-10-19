@@ -53,7 +53,9 @@ public sealed class BrowseNativeWindow : Window
     public IReadOnlyList<Task<bool>> OriginalClosePreparations => _closePreparations.ToArray();
     internal BrowseNativeWindow(BrowseNativeWorkspace workspace, CuiNativeScene originalScene)
     {
-        _workspace = workspace; _originalScene = originalScene; _scene = new(originalScene.ControlRegistry);
+        _workspace = workspace; _originalScene = originalScene;
+        _scene = new(originalScene.ControlRegistry, failure =>
+            _workspace.OriginalChrome.IsVerifiedSettledActionFailure(failure));
         Content = _scene; Title = "9to1 Haven"; Width = 1180; Height = 800; MinWidth = 360; MinHeight = 520;
         Closing += OnClosing; KeyDown += OnKeyDown;
     }
