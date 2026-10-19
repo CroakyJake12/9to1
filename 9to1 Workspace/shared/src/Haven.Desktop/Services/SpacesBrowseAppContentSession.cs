@@ -535,7 +535,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 published = true;
             }
             PublishStateChanged();
-            await RefreshSpacesConversationsAsync(token).ConfigureAwait(false);
+            await RefreshSpacesConversationsAsync(token);
         }
         finally
         {
@@ -612,7 +612,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         Dispatcher.UIThread.VerifyAccess();
         token.ThrowIfCancellationRequested();
         DemandAlive();
-        var space = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(spaceId, token).ConfigureAwait(false)
+        var space = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(spaceId, token)
             ?? throw new InvalidOperationException("The selected Space is unavailable.");
         if (space.IsArchived) throw new InvalidOperationException("The selected Space is archived.");
         var page = await NewChatSessionFactory().CreateNewAsync(token);
@@ -634,7 +634,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 published = true;
             }
             PublishStateChanged();
-            await RefreshSpacesConversationsAsync(token).ConfigureAwait(false);
+            await RefreshSpacesConversationsAsync(token);
         }
         finally
         {
@@ -650,11 +650,11 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         token.ThrowIfCancellationRequested();
         DemandAlive();
         var conversations = _services.GetRequiredService<IConversationRepository>();
-        var row = await conversations.GetAsync(conversationId, token).ConfigureAwait(false)
+        var row = await conversations.GetAsync(conversationId, token)
             ?? throw new InvalidOperationException("The selected conversation is no longer available.");
         if (row.IsArchived || row.IsTemporary)
             throw new InvalidOperationException("That conversation is not available in this Space.");
-        var chat = await NewChatSessionFactory().RestoreAsync(conversationId, token).ConfigureAwait(false)
+        var chat = await NewChatSessionFactory().RestoreAsync(conversationId, token)
             ?? throw new InvalidOperationException("The selected conversation is no longer available.");
         _ownedChats.Add(chat);
         var published = false;
@@ -674,7 +674,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 published = true;
             }
             PublishStateChanged();
-            await RefreshSpacesConversationsAsync(token).ConfigureAwait(false);
+            await RefreshSpacesConversationsAsync(token);
         }
         finally
         {
@@ -723,8 +723,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 {
                     linked.Token.ThrowIfCancellationRequested();
                     DemandAlive();
-                    if (command == "spaces.new-chat") await NewConversationOnUiAsync(target, linked.Token).ConfigureAwait(false);
-                    else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync(target, linked.Token).ConfigureAwait(false);
+                    if (command == "spaces.new-chat") await NewConversationOnUiAsync(target, linked.Token);
+                    else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync(target, linked.Token);
                     else throw new InvalidOperationException($"The Spaces workspace command '{command}' is not owned by this host.");
                 }
                 finally { ExecutingCommand.Value = previous; }

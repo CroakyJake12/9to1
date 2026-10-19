@@ -209,6 +209,51 @@ public sealed class SpacesConversationRouteTests
         finally { await session.CloseAndDrainAsync().WaitAsync(Bound); }
     }
 
+    /// <summary>
+    /// The contextual Space sidebar must create and open real conversations inside the selected
+    /// Space, mounted beside the retained icon-only rail. This is the owner's chat/history
+    /// requirement, so it is proven against the actual session route rather than a mock surface.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Contextual_sidebar_new_chat_opens_a_real_conversation_in_the_selected_Space()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var first = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var firstId = first.ConversationId;
+
+            await spaces.DispatchAsync("spaces.new-chat", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var second = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotEqual(firstId, second.ConversationId);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, second.CurrentConversation.SpaceId);
+            // The rail layout is still the tab's live view: the new conversation is mounted
+            // inside it, so the rail and the contextual sidebar remain presented together.
+            Assert.Same(spaces, root.Content);
+
+            // A sidebar row restores that exact stored conversation identity rather than
+            // creating another one or reusing the currently mounted page.
+            await spaces.DispatchAsync("spaces.open-conversation", firstId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var reopened = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotEqual(second.ConversationId, reopened.ConversationId);
+            Assert.Equal(firstId, reopened.ConversationId);
+            Assert.Same(spaces, root.Content);
+        }
+        finally { await session!.CloseAndDrainAsync().WaitAsync(Bound); }
+    }
+
     private static NewChatPage Chat(SpacesBrowseAppContentSession session) =>
         (NewChatPage)typeof(SpacesBrowseAppContentSession).GetField("_chatPage", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(session)!;
 
@@ -270,6 +315,8 @@ public sealed class SpacesConversationRouteTests
     {
         internal Conversation? Row = new(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Saved fixture", null, null,
             false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);
+        // Conversations the session actually persisted during the test, keyed by real identity.
+        internal readonly Dictionary<Guid, Conversation> Written = new();
         internal readonly SpaceRegistry Spaces;
         internal Func<Guid, Task<IReadOnlyList<ChatMessage>>>? ReadMessages;
         internal readonly ChatMessage SavedMessage;
@@ -284,11 +331,14 @@ public sealed class SpacesConversationRouteTests
             SavedMessage = new(Guid.NewGuid(), Row!.Id, MessageRole.User, "Persisted history fixture", null, null, null, DateTimeOffset.UnixEpoch);
             var conversations = Proxy<IConversationRepository>((name, args) => name switch
             {
-                "GetAsync" => Task.FromResult(Row is { } row && row.Id == (Guid)args![0]! ? row : null),
+                "GetAsync" => Task.FromResult(Written.TryGetValue((Guid)args![0]!, out var stored) ? stored
+                    : Row is { } row && row.Id == (Guid)args![0]! ? row : null),
                 // The contextual Space sidebar reads the selected Space's own conversations. The
                 // fixture still controls all I/O: a row only appears under the Space it names.
                 "GetBySpaceAsync" => Task.FromResult<IReadOnlyList<Conversation>>(
-                    Row is { } scoped && scoped.SpaceId == (Guid)args![0]! ? [scoped] : []),
+                    Written.Values.Where(row => row.SpaceId == (Guid)args![0]!).Concat(
+                        Row is { } scoped && scoped.SpaceId == (Guid)args![0]! && !Written.ContainsKey(scoped.Id)
+                            ? [scoped] : Array.Empty<Conversation>()).ToArray()),
                 "GetMessagesAsync" => ReadMessages?.Invoke((Guid)args![0]!) ?? Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = Row!.Id }]),
                 "GetContextEntriesAsync" => Task.FromResult<IReadOnlyList<ConversationContextEntry>>([]),
                 "UpsertConversationAsync" => allowConversationWrites ? RecordConversationWrite((Conversation)args![0]!) : RecordUnexpectedWrite(),
@@ -337,7 +387,13 @@ public sealed class SpacesConversationRouteTests
             _services = services.BuildServiceProvider();
         }
         private Task RecordUnexpectedWrite() { ConversationWrites++; throw Unexpected("Creating or modifying a saved conversation during restore"); }
-        private Task RecordConversationWrite(Conversation conversation) { ConversationWrites++; Row = conversation; return Task.CompletedTask; }
+        private Task RecordConversationWrite(Conversation conversation)
+        {
+            ConversationWrites++;
+            Written[conversation.Id] = conversation;
+            Row = conversation;
+            return Task.CompletedTask;
+        }
         private Task<IReadOnlyList<ModelDescriptor>> Models() { ModelReads++; return Task.FromResult<IReadOnlyList<ModelDescriptor>>([]); }
         internal SpacesBrowseAppContentSession Session(string address, Guid? tabId = null, string profileId = "profile", BrowserTabPrivacy privacy = BrowserTabPrivacy.Standard) => new(
             new BrowseAppContentRequest(tabId ?? Guid.NewGuid(), AppContentAddress.Parse(address), profileId, privacy), _services, CancellationToken.None);
