@@ -19,7 +19,7 @@
           <Text id="home-heading" Text="Apps" FontSize="24" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
           <Container id="home-search-row" Row="1" Type="Wrap" CellGap="8" IsVisible="False">
             <Input id="home-search" Type="Text" PlaceholderText="Search or enter an address" AccessibleName="New Tab search or prompt" MinWidth="180" />
-            <Input id="home-search-mode" Type="Select" AccessibleName="Search or AI" Width="100" />
+            <Input id="home-search-mode" Type="Select" AccessibleName="Search or AI" Width="132" />
             <Button id="home-submit" action="home.submit" Content="Go" AccessibleName="Submit New Tab search or prompt" />
           </Container>
           <Container id="home-content" Row="2" Type="Overlay" />
