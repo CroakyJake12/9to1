@@ -51,7 +51,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     private readonly Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? _conversationsProvider;
     // The selected Space's custom sidebar elements come from the extensions actually attached to it,
     // which only the owning native surface can read.
-    private readonly Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? _sidebarItemsProvider;
+    private readonly Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? _sidebarItemsProvider;
     private IReadOnlyList<SpacesHomeSidebarRow> _sidebarItems = [];
     private readonly Func<string, object?, CancellationToken, Task>? _workspaceCommandHost;
     private IReadOnlyList<SpacesHomeConversationRow> _conversations = [];
@@ -65,7 +65,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         Func<SpacesAction, Task, bool>? queueNavigation = null,
         Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationsProvider = null,
         Func<string, object?, CancellationToken, Task>? workspaceCommandHost = null,
-        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null)
+        Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         if (navigationHost is null) throw new ArgumentNullException(nameof(navigationHost));
@@ -424,23 +424,23 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     public async Task RefreshSidebarItemsAsync(CancellationToken cancellationToken = default)
     {
         long generation;
-        Guid? selected;
-        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? provider;
+        SpacesHomeSelection? selected;
+        Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? provider;
         lock (_gate)
         {
             if (_work.IsRetiring || !_active) return;
             provider = _sidebarItemsProvider;
             if (provider is null) return;
             generation = _generation;
-            selected = _controller.State.Selection?.Id;
+            selected = _controller.State.Selection;
         }
-        if (selected is not { } spaceId)
+        if (selected is null)
         {
             lock (_gate) if (!_work.IsRetiring && _generation == generation) _sidebarItems = [];
             return;
         }
         IReadOnlyList<SpacesHomeSidebarRow> rows;
-        try { rows = await provider(spaceId, cancellationToken).ConfigureAwait(false); }
+        try { rows = await provider(selected, cancellationToken).ConfigureAwait(false); }
         catch (Exception) { return; }
         lock (_gate)
         {

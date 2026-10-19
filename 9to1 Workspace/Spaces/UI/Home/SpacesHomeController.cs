@@ -96,7 +96,13 @@ public sealed record SpacesHomeSidebarRow(
 
 public sealed record SpacesHomeCapability(
     string Id,
-    string Label);
+    string Label,
+    // The binding kind is carried explicitly so a projection never has to re-read the Space or parse a
+    // display label to learn whether a capability is a plugin, skill, agent, MCP server or app.
+    string Kind = "",
+    // The Space's own enable/disable override, so a Space that disabled an attached extension hides its
+    // elements without losing the attachment.
+    bool IsDisabled = false);
 
 public sealed record SpacesHomeSelection(
     Guid Id,
@@ -806,7 +812,8 @@ public sealed class SpacesHomeController
             .ToArray();
 
         var capabilities = (space.CapabilityBindings ?? [])
-            .Select(binding => new SpacesHomeCapability(binding.CapabilityId, $"{binding.Kind}:{binding.CapabilityId}"))
+            .Select(binding => new SpacesHomeCapability(binding.CapabilityId, $"{binding.Kind}:{binding.CapabilityId}", binding.Kind.ToString(),
+                binding.Override == SpaceCapabilityOverride.Disabled))
             .ToArray();
 
         var hasEditor = _extensionEditorHost is not null;

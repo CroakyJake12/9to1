@@ -596,19 +596,20 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     }
 
     /// <summary>Reads the custom sidebar elements declared by the extensions actually attached to the
-    /// selected Space. Attachment plus the Space's own enable/disable override is the per-Space
-    /// visibility decision, so nothing is shown for a Space that has not attached the extension and a
-    /// Space that disabled it does not lose the attachment. An element is only offered as actionable
-    /// when the host can actually open its target.</summary>
-    private async Task<IReadOnlyList<SpacesHomeSidebarRow>> ReadSpaceSidebarItemsAsync(Guid spaceId, CancellationToken token)
+    /// selected Space. It projects the selection the controller already resolved, so refreshing this
+    /// surface never issues an extra Space-registry read and cannot disturb when a selection or route
+    /// read settles. Attachment plus the Space's own enable/disable override is the per-Space
+    /// visibility decision, so nothing is shown for a Space that has not attached the extension and
+    /// disabling it does not drop the attachment. An element is only offered as actionable when the
+    /// host can actually open its target.</summary>
+    private async Task<IReadOnlyList<SpacesHomeSidebarRow>> ReadSpaceSidebarItemsAsync(SpacesHomeSelection selection,
+        CancellationToken token)
     {
-        var space = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(spaceId, token).ConfigureAwait(false);
-        if (space?.CapabilityBindings is not { Count: > 0 } bindings) return [];
-        var attached = bindings
-            .Where(binding => binding.Kind == SpaceCapabilityKind.Plugin
-                              && binding.Override != SpaceCapabilityOverride.Disabled)
-            .Select(binding => binding.CapabilityId)
-            .Where(id => !string.IsNullOrWhiteSpace(id))
+        var attached = selection.Capabilities
+            .Where(capability => string.Equals(capability.Kind, nameof(SpaceCapabilityKind.Plugin), StringComparison.Ordinal)
+                                 && !capability.IsDisabled
+                                 && !string.IsNullOrWhiteSpace(capability.Id))
+            .Select(capability => capability.Id)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
         if (attached.Length == 0) return [];
@@ -651,11 +652,12 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             try { await RefreshSpacesConversationsAsync(_token).ConfigureAwait(false); }
             catch (Exception failure) when (failure is not OperationCanceledException)
             { System.Diagnostics.Trace.TraceError("Spaces sidebar conversation refresh failed: {0}", failure); }
-            // The extension-contributed projection is NOT yet refreshed here. Sequencing it into this
-            // admitted selection path regressed SpacesDetailsRouteTests.
-            // Actual_queued_read_failure_stays_faulted_and_only_observes_status_for_the_same_current_selection
-            // (both variants): the extra republish changed when the queued read failure settled. It needs
-            // its own admission point that cannot alter selection settlement.
+            // The extension-contributed projection reads only the selection the controller already
+            // resolved, so it issues no extra Space-registry read and cannot change when a selection or
+            // held route read settles. That is what makes it safe to refresh here.
+            try { await (_spacesPage?.RefreshSidebarItemsAsync(_token) ?? Task.CompletedTask).ConfigureAwait(false); }
+            catch (Exception failure) when (failure is not OperationCanceledException)
+            { System.Diagnostics.Trace.TraceError("Spaces sidebar item refresh failed: {0}", failure); }
         });
     }
 
@@ -815,7 +817,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         DemandAlive();
         if (_spacesPage?.Controller.State.Selection is not { } selection)
             throw new SpacesWorkspaceActionRefusal("Select a Space before opening one of its sidebar items.");
-        var rows = await ReadSpaceSidebarItemsAsync(selection.Id, token).ConfigureAwait(false);
+        var rows = await ReadSpaceSidebarItemsAsync(selection, token).ConfigureAwait(false);
         var row = rows.FirstOrDefault(item => string.Equals(item.SidebarItemId, sidebarItemId, StringComparison.Ordinal));
         if (row is null)
             throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
