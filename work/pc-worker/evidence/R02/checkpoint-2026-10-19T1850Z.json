@@ -1,0 +1,62 @@
+{
+  "milestone_id": "R02",
+  "spec_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "worker": "pc-implementation-opencode",
+  "timestamp_utc": "2026-10-19T18:50:00Z",
+  "branch": "opencode/v2-pc-sequential-20261018",
+  "head": "60c6a042",
+  "implementation_status": "in_progress",
+  "acceptance_status": "NOT_RUN",
+  "summary": "R02 continues to close owner-visible gaps with native proof. This slice implements the three contextual-sidebar controls the canonical range 4763-4866 requires and that did not exist: the header control that displays the selected Space and opens a Space switcher, the adjacent overflow control with that Space's quick actions (Manage / Rename / Archive), and collapse with an explicit rail expand control. Verified in the real apphost: header shows 'Switch Space' with the selected Space name; the switcher lists Chat/Study/Tasks/Assistants/Shopping/Research/Translate/Experiences; clicking the switcher's Open Translate row moved the same tab to 9to1://spaces/selected/b100...007/chat/9d4b0b45-6f73-4a6c-ab19-94fc02b760d7 and re-labelled the header; collapse removed the sidebar, kept the conversation and address, and left 'Expand this Space's sidebar' in the rail; expand restored it; overflow presented the three quick actions; WM_DELETE_WINDOW exited in 2s. Earlier in the session the same tab journey was proven for direct Space entry, the icon-only rail, the chat/history sidebar with real New chat and per-row conversation identities (including restoring an unsent draft), and the tab roundtrip that keeps the conversation and draft while another tab holds web content. Lane state: HavenOS.Spaces.Tests 219/219, CakeOS.Cui.Runtime.Tests 405/405, canonical CUI compilation 13/13, HavenOS.Apps.Browse.Tests 150/150, HavenOS.Browse.Host.Tests 254 passed / 3 failed (the 3 are the explicit 'requires actual Windows Home; Linux is unvalidated' platform guard). Remaining R02 gaps, recorded not hidden: the sidebar is not yet customisable through stable section/item/rule identities and Plugin-contributed custom sidebar elements with per-Space visibility are not implemented; the in-tab back control was disabled after a refused web navigation (open Haven browser-history question, entangled with the unavailable Gecko engine); the offline model-inventory native entry was not driven this pass.",
+  "next_action": "Implement the stable section/item/rule sidebar customisation identity and Plugin-contributed sidebar elements with per-Space visibility (spec 4763-4866 and the Plugin sidebar acceptance section), then request independent acceptance for R01/R02 with the native evidence set.",
+  "read_ranges": [
+    "docs/specification/9to1-development-specification-v2.md 4723-4866",
+    "docs/specification/9to1-development-specification-v2.md 5076-5161",
+    "docs/specification/9to1-development-specification-v2.md 5414-5450",
+    "docs/specification/owner-references/2026-10-18-haven-spaces/owner-correction.json"
+  ],
+  "checks": [
+    {
+      "name": "HavenOS.Spaces.Tests",
+      "command": "dotnet test HavenOS.Spaces.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "CakeOS.Cui.Runtime.Tests",
+      "command": "dotnet test framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "CuiCanonicalApplicationCompilationTests",
+      "command": "dotnet test framework/CUI/Compiler.Tests/CakeOS.Cui.Compiler.Tests.csproj -c Debug -m:1 --filter FullyQualifiedName~CuiCanonicalApplicationCompilationTests",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "HavenOS.Apps.Browse.Tests",
+      "command": "dotnet test HavenOS.Apps.Browse.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Haven.Desktop build",
+      "command": "dotnet build Haven.Desktop.csproj -c Debug -f net10.0 -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    }
+  ],
+  "lane_notes": {
+    "HavenOS.Browse.Host.Tests": "254 passed / 3 failed; dotnet test exit code is non-zero because of the 3 failures. The 3 are the explicit platform guard 'This owning host fixture requires actual Windows Home; Linux is unvalidated' and are recorded as BLOCKED on this host, not as a pass. 9 previously failing tests in this lane now pass.",
+    "shared/tests/Haven.Desktop.Tests": "BLOCKED: NETSDK1100 - targets net10.0-windows10.0.19041.0 and cannot build on this OS.",
+    "Haven.Infrastructure.Tests": "BLOCKED: WebRtcVadSharp forces an x64 testhost on linux-arm64 - Could not find 'dotnet' host for the 'X64' architecture."
+  },
+  "evidence": [
+    "work/pc-worker/evidence/R02/NATIVE-SPACES-ENTRY-2026-10-19T1715Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SPACES-SIDEBAR-2026-10-19T1741Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-TAB-ROUNDTRIP-2026-10-19T1835Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SIDEBAR-ROWS-2026-10-19T1831Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SIDEBAR-CONTROLS-2026-10-19T1843Z.md"
+  ]
+}
