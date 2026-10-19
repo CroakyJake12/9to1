@@ -1,8 +1,8 @@
-# PC implementation worker checkpoint — 2026-10-19 20:50 BST (19:50 UTC)
+# PC implementation worker checkpoint — 2026-10-19 21:28 BST (20:28 UTC)
 
-Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `1b7ce9a0`-equivalent evidence
-commit chain below; latest source commit `60c6a042`. Base main `06a39628`. Nothing is pushed or
-merged; the owner preview is not running and no owner profile was touched.
+Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `aec18695`. Base main
+`06a39628`. Nothing is pushed or merged; the owner preview is not running and no owner profile was
+touched.
 
 Session commits, oldest first: `c17761e2` R01 settled-failure contract → `8a989523` R02 catalogue →
 `c8bf19de` R02 obsolete tests → `d450f4bf` R02 offline degraded inventory → `146622bc` R04 selector →
@@ -11,8 +11,9 @@ Session commits, oldest first: `c17761e2` R01 settled-failure contract → `8a98
 direct Space entry inside the retained rail → `6515199b` R02 native entry evidence → `71661cf3` R02
 contextual sidebar → `37ff0b4d` R02 sidebar thread-affinity fix + identity tests → `7c2f27e0` R02
 sidebar native evidence → `da581cf9` R01 draft-close evidence → `e7b39567` worker checkpoint →
-`d6716ba5` canonical-surface route lane + Builder address projection → `7c2f27e0`/`d6716ba5`
-evidence → `60c6a042` R02 sidebar switcher/overflow/collapse.
+`d6716ba5` canonical-surface route lane + Builder address projection → evidence commits →
+`60c6a042` R02 sidebar switcher/overflow/collapse → `c51205fe` worker checkpoint → `aec18695` R02
+authored custom-sidebar element area (read path pending).
 
 ## Ledger state
 
@@ -75,7 +76,7 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 - `HavenOS.Browse.Host.Tests` **254 passed / 3 failed** (was 12 failures at `3525b860`). The 3 are the
   explicit platform guard "This owning host fixture requires actual Windows Home; Linux is
   unvalidated" — recorded as BLOCKED on this host, never as a pass.
-- `HavenOS.Spaces.Tests` 219/219 · `CakeOS.Cui.Runtime.Tests` 405/405 · canonical CUI compilation
+- `HavenOS.Spaces.Tests` 220/220 · `CakeOS.Cui.Runtime.Tests` 405/405 · canonical CUI compilation
   13/13 · `HavenOS.Apps.Browse.Tests` 150/150 · `Haven.Desktop` build 0 errors.
 - `shared/tests/Haven.Desktop.Tests` BLOCKED: `NETSDK1100` (`net10.0-windows10.0.19041.0` cannot build
   on this OS). `EnableWindowsTargeting` was not enabled: cross-building a Windows test host on Linux
@@ -85,9 +86,12 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 
 ## Open gates (do not treat as done)
 
-- R02: the main sidebar is not yet "customisable through stable section/item/rule identities", and
-  Plugin-contributed custom sidebar elements with per-Space visibility are not implemented
-  (spec 4763–4866 and the Plugin sidebar acceptance section). The in-tab `Go back` control was
+- R02: the main sidebar is not yet "customisable through stable section/item/rule identities". The
+  authored area, stable identity projection and command mapping now exist (`aec18695`) but three parts
+  are explicitly pending: the Haven.Desktop provider that reads the selected Space's attached
+  extensions and their `ExtensionManifest.SidebarContributions`, the `spaces.open-sidebar-item`
+  handler in the Spaces session per declared target kind, and the per-Space visibility selection. The
+  markup renders nothing today, so no native journey is claimed for it. The in-tab `Go back` control was
   disabled after a refused web navigation, and re-typing `9to1://spaces` starts a fresh Spaces Home
   rather than restoring the previous conversation — recorded as an open Haven browser-history question
   entangled with the unavailable Gecko engine. Offline model-inventory native entry was not driven
@@ -101,8 +105,10 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 
 ## Next executable actions
 
-1. Implement the stable section/item/rule sidebar customisation identity plus Plugin-contributed
-   sidebar elements with per-Space visibility (the last substantive R02 requirement).
+1. Finish the custom sidebar element read path: wire the Haven.Desktop provider from the selected
+   Space's attached extensions to `spaces.sidebarItems`, implement `spaces.open-sidebar-item` in the
+   Spaces session for each declared `ExtensionSidebarTargetKind`, then add the per-Space visibility
+   selection and run the native journey with a real attached extension.
 2. Add the R01 negative probes: a failing save retains recovery state; a faulted UI action still
    allows an ordinary close.
 3. Then move to the Automations backend slice (owner priority 3) as bounded commits.
