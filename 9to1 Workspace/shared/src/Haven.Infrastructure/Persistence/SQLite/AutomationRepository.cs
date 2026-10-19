@@ -15,7 +15,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents automation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAutomationRepository
+public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAutomationRepository, IAutomationRunContinuationStore
 {
     /// <summary>Exact maintained factory observation only; no READ, WRITE or scheduler authority.</summary>
     public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameActual) => ReferenceEquals(factory, sameActual);
@@ -118,8 +118,10 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
         {
             insert.Transaction = transaction;
             insert.CommandText = """
-                INSERT INTO automation_runs(id,automation_id,status,scheduled_for,started_at,completed_at,result,error,lease_token)
-                VALUES($id,$automationId,$status,$scheduledFor,$startedAt,$completedAt,$result,$error,$leaseToken);
+                INSERT INTO automation_runs(id,automation_id,status,scheduled_for,started_at,completed_at,result,error,lease_token,
+                    revision,definition_revision,pinned_graph_json,admission_snapshot_json,continuation_descriptor_json,details_json)
+                VALUES($id,$automationId,$status,$scheduledFor,$startedAt,$completedAt,$result,$error,$leaseToken,
+                    $revision,$definitionRevision,$pinnedGraph,$admissionSnapshot,$continuation,$details);
                 """;
             insert.Parameters.AddWithValue("$id", run.Id.ToString());
             insert.Parameters.AddWithValue("$automationId", run.AutomationId.ToString());
@@ -130,6 +132,7 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
             insert.Parameters.AddWithValue("$result", (object?)run.Result ?? DBNull.Value);
             insert.Parameters.AddWithValue("$error", (object?)run.Error ?? DBNull.Value);
             insert.Parameters.AddWithValue("$leaseToken", (object?)run.LeaseToken ?? DBNull.Value);
+            AddCanonicalRunParameters(insert, run);
             await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
         await using (var update = connection.CreateCommand())
@@ -159,11 +162,107 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            result.Add(new AutomationRun(reader.Guid("id"), reader.Guid("automation_id"), (AutomationRunStatus)reader.Int32("status"),
-                reader.DateTimeOffset("scheduled_for"), reader.NullableDateTimeOffset("started_at"), reader.NullableDateTimeOffset("completed_at"),
-                reader.NullableString("result"), reader.NullableString("error"), reader.NullableString("lease_token")));
+            result.Add(ReadRun(reader));
         }
         return result;
+    }
+
+    /// <summary>Reads Runs that are durably waiting to be resumed: a Wait/Delay or approval
+    /// continuation whose due time has arrived. The caller resumes from the persisted continuation
+    /// instead of restarting the graph, so already-committed node side effects are not repeated.</summary>
+    public async Task<IReadOnlyList<AutomationRun>> GetResumableRunsAsync(DateTimeOffset now, int limit,
+        CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT * FROM automation_runs
+            WHERE status IN ({(int)AutomationRunStatus.Waiting},{(int)AutomationRunStatus.ApprovalRequired},{(int)AutomationRunStatus.RetryPending})
+              AND scheduled_for <= $now
+            ORDER BY scheduled_for LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$now", now.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$limit", limit);
+        var result = new List<AutomationRun>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) result.Add(ReadRun(reader));
+        return result;
+    }
+
+    /// <summary>Persists a Run that has released its execution resource while it waits. This touches
+    /// only the Run row: it never advances the definition's schedule or clears its lease, because the
+    /// definition is still occupied by the suspended Run.</summary>
+    public async Task SuspendRunAsync(AutomationRun run, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(run);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO automation_runs(id,automation_id,status,scheduled_for,started_at,completed_at,result,error,lease_token,
+                revision,definition_revision,pinned_graph_json,admission_snapshot_json,continuation_descriptor_json,details_json)
+            VALUES($id,$automationId,$status,$scheduledFor,$startedAt,$completedAt,$result,$error,$leaseToken,
+                $revision,$definitionRevision,$pinnedGraph,$admissionSnapshot,$continuation,$details)
+            ON CONFLICT(id) DO UPDATE SET
+                status=excluded.status, scheduled_for=excluded.scheduled_for, started_at=excluded.started_at,
+                completed_at=excluded.completed_at, result=excluded.result, error=excluded.error,
+                lease_token=excluded.lease_token, revision=excluded.revision,
+                definition_revision=excluded.definition_revision, pinned_graph_json=excluded.pinned_graph_json,
+                admission_snapshot_json=excluded.admission_snapshot_json,
+                continuation_descriptor_json=excluded.continuation_descriptor_json,
+                details_json=excluded.details_json;
+            """;
+        command.Parameters.AddWithValue("$id", run.Id.ToString());
+        command.Parameters.AddWithValue("$automationId", run.AutomationId.ToString());
+        command.Parameters.AddWithValue("$status", (int)run.Status);
+        command.Parameters.AddWithValue("$scheduledFor", run.ScheduledFor.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$startedAt", (object?)run.StartedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$completedAt", (object?)run.CompletedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$result", (object?)run.Result ?? DBNull.Value);
+        command.Parameters.AddWithValue("$error", (object?)run.Error ?? DBNull.Value);
+        command.Parameters.AddWithValue("$leaseToken", (object?)run.LeaseToken ?? DBNull.Value);
+        AddCanonicalRunParameters(command, run);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Writes the canonical run state that a restarted process needs in order to resume
+    /// without replaying committed work or re-pointing a historical Run at a newer definition.</summary>
+    private static void AddCanonicalRunParameters(Microsoft.Data.Sqlite.SqliteCommand command, AutomationRun run)
+    {
+        command.Parameters.AddWithValue("$revision", run.Revision);
+        command.Parameters.AddWithValue("$definitionRevision", (object?)run.DefinitionRevision ?? DBNull.Value);
+        command.Parameters.AddWithValue("$pinnedGraph", run.PinnedGraph is { } binding
+            ? System.Text.Json.JsonSerializer.Serialize(binding) : (object)DBNull.Value);
+        command.Parameters.AddWithValue("$admissionSnapshot", (object?)run.AdmissionSnapshotJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$continuation", (object?)run.ContinuationDescriptorJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$details", run.Details is { } details
+            ? System.Text.Json.JsonSerializer.Serialize(details) : (object)DBNull.Value);
+    }
+
+    private static AutomationRun ReadRun(Microsoft.Data.Sqlite.SqliteDataReader reader)
+    {
+        var ordinal = reader.GetOrdinal("pinned_graph_json");
+        var pinned = reader.IsDBNull(ordinal) ? null : System.Text.Json.JsonSerializer.Deserialize<AutomationGraphBinding>(reader.GetString(ordinal));
+        ordinal = reader.GetOrdinal("definition_revision");
+        var definitionRevision = reader.IsDBNull(ordinal) ? (long?)null : reader.GetInt64(ordinal);
+        ordinal = reader.GetOrdinal("details_json");
+        var detailsJson = reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+        ordinal = reader.GetOrdinal("continuation_descriptor_json");
+        var continuation = reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+        ordinal = reader.GetOrdinal("admission_snapshot_json");
+        var admission = reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+        return new AutomationRun(reader.Guid("id"), reader.Guid("automation_id"),
+            (AutomationRunStatus)reader.Int32("status"), reader.DateTimeOffset("scheduled_for"),
+            reader.NullableDateTimeOffset("started_at"), reader.NullableDateTimeOffset("completed_at"),
+            reader.NullableString("result"), reader.NullableString("error"), reader.NullableString("lease_token"))
+        {
+            Revision = reader.GetInt64(reader.GetOrdinal("revision")),
+            DefinitionRevision = definitionRevision,
+            PinnedGraph = pinned,
+            AdmissionSnapshotJson = admission,
+            ContinuationDescriptorJson = continuation,
+            Details = detailsJson is null ? null : System.Text.Json.JsonSerializer.Deserialize<AutomationRunDetails>(detailsJson)
+        };
     }
 
     /// <summary>

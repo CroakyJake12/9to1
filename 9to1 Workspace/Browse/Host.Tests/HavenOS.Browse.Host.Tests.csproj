@@ -15,6 +15,7 @@
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceHostLifetimeTests.cs" Link="UnifiedWorkspaceHostLifetimeTests.cs" />
     <Compile Include="LinuxWebKitEngineAvailabilityTests.cs" />
     <Compile Include="OverlayChatInitializationTests.cs" />
+    <Compile Include="AutomationRunContinuationPersistenceTests.cs" />
     <Compile Include="SpacesConversationRouteTests.cs" />
     <Compile Include="SpacesDetailsRouteTests.cs" />
     <Compile Include="SpaceDetailsPageTests.cs" />

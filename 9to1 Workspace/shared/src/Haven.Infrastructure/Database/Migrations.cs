@@ -826,6 +826,7 @@ internal static class Migrations
             ALTER TABLE external_connections ADD COLUMN capability_snapshot_version TEXT NULL;
         """),
         new(27, PlannerRichEntitiesMigration.Sql),
-        new(TaskExecutionRevisionMigration.Version, TaskExecutionRevisionMigration.Sql)
+        new(TaskExecutionRevisionMigration.Version, TaskExecutionRevisionMigration.Sql),
+        new(AutomationRunCanonicalStateMigration.Version, AutomationRunCanonicalStateMigration.Sql)
     ];
 }

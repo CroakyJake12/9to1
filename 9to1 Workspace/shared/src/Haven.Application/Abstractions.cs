@@ -191,6 +191,26 @@ public interface IAutomationRepository
 }
 
 /// <summary>
+/// The durable wait/approval continuation half of the Automation run store. It is a separate capability
+/// rather than a member of <see cref="IAutomationRepository"/> because a Run that waits must persist its
+/// continuation and release the execution resource, and a store that cannot do that must not appear to
+/// support durable waits. Spec: Wait/Delay MUST be durable and a restart must resume a valid waiting Run
+/// from persisted state without repeating already-committed side effects.
+/// </summary>
+public interface IAutomationRunContinuationStore
+{
+    /// <summary>Persists a Run that has released its execution resource while it waits, awaits approval
+    /// or awaits a bounded retry, keeping its pinned revision, node execution states and continuation
+    /// recoverable. This never advances the definition's schedule or clears its lease.</summary>
+    Task SuspendRunAsync(AutomationRun run, CancellationToken cancellationToken);
+
+    /// <summary>Reads Runs whose persisted wait has become due so the owning runtime can resume them from
+    /// the continuation instead of restarting the graph from the beginning.</summary>
+    Task<IReadOnlyList<AutomationRun>> GetResumableRunsAsync(DateTimeOffset now, int limit,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// Defines the training repository contract so callers depend on a capability rather than one implementation.
 /// </summary>
 public interface ITrainingRepository
