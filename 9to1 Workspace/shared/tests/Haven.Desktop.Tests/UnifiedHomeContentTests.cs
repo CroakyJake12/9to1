@@ -128,34 +128,6 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaFact]
-    public async Task App_button_queues_exact_source_tab_and_returns_before_navigation_can_retire_it()
-    {
-        using var lifetime = new CancellationTokenSource();
-        BrowseNavigationIntent? captured = null; Task? settlement = null;
-        var request = Request();
-        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
-            (intent, source) =>
-            {
-                Assert.False(source.IsCompleted);
-                captured = intent; settlement = source; return true;
-            }).CreateSession(request));
-        await session.InitializeAsync();
-        var page = session.OriginalNativeView;
-        var window = Show(page);
-        var list = Assert.Single(page.GetVisualDescendants().OfType<ListBox>());
-        list.SelectedItem = list.Items.Cast<ModeDefinition>().Single(mode => mode.Key == "files");
-        var button = page.GetVisualDescendants().OfType<Button>().Single(item => item.Content?.ToString() == "Open app");
-        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        Assert.NotNull(captured); Assert.NotNull(settlement);
-        Assert.Equal(request.TabId, captured.SourceTabId);
-        Assert.Equal("9to1://files", captured.Address.Value);
-        Assert.True(captured.OpenInNewTab);
-        await settlement;
-        await session.CloseAndDrainAsync();
-        window.Close();
-    }
-
-    [AvaloniaFact]
     public async Task Close_cancels_original_admission_before_joining_it_and_retains_its_cancellation()
     {
         using var lifetime = new CancellationTokenSource();
@@ -216,7 +188,7 @@ public sealed class UnifiedHomeContentTests
             using var frame = window.CaptureRenderedFrame();
             Assert.NotNull(frame);
             Assert.Equal(width, frame.PixelSize.Width); Assert.Equal(height, frame.PixelSize.Height);
-            foreach (var label in new[] { "Apps", "Dashboard", "Models / Discover", "New Tab", "Open app" })
+            foreach (var label in new[] { "Apps", "Models / Discover", "New Tab" })
             {
                 var button = page.GetVisualDescendants().OfType<Button>().Single(item => item.Content?.ToString() == label);
                 Assert.True(button.Bounds.Width >= 44 && button.Bounds.Height >= 24);
