@@ -1,6 +1,6 @@
-# PC implementation worker checkpoint — 2026-10-19 21:28 BST (20:28 UTC)
+# PC implementation worker checkpoint — 2026-10-19 21:58 BST (20:58 UTC)
 
-Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `aec18695`. Base main
+Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `d659a062`. Base main
 `06a39628`. Nothing is pushed or merged; the owner preview is not running and no owner profile was
 touched.
 
@@ -13,7 +13,9 @@ contextual sidebar → `37ff0b4d` R02 sidebar thread-affinity fix + identity tes
 sidebar native evidence → `da581cf9` R01 draft-close evidence → `e7b39567` worker checkpoint →
 `d6716ba5` canonical-surface route lane + Builder address projection → evidence commits →
 `60c6a042` R02 sidebar switcher/overflow/collapse → `c51205fe` worker checkpoint → `aec18695` R02
-authored custom-sidebar element area (read path pending).
+authored custom-sidebar element area (read path pending) → `a1260fac` checkpoint for the unreproduced
+intermittent lane failure → `e8d3cf30` DEC-014 open decision → `d659a062` refused Space UI action is
+reported in-surface instead of retained as a close obligation.
 
 ## Ledger state
 
@@ -63,6 +65,15 @@ Real defects found and fixed by native passes (headless lanes were green before 
 2. `UpdateAddress` ignored the published Builder route, so a later state change rewrote the tab
    address to the selected-Space form while the canonical Space editor was presented. Fixed in
    `d6716ba5`.
+ 3. A refused Space UI action made the tab permanently unclosable. The refusal was admitted as
+    original work, joined at close and re-raised as a close cause, so every later close threw
+    `AggregateException("The original Spaces work did not retire cleanly.")` — in the real app the
+    instance simply never completed a close. Reproduced headlessly on the real session route and
+    fixed in `d659a062`: an action refused before it can change anything (missing/archived
+    conversation, unavailable/archived Space) now raises `SpacesWorkspaceActionRefusal`, which the
+    owning session reports through the Spaces Home status line and completes normally. Genuine
+    failures, work still running when close begins, and every save/close-preparation obligation keep
+    their existing close semantics.
 
 Test-lane alignment (expectations updated to enforce the specification, coverage preserved):
 - 4 `UnifiedHomeContentTests` expected a donor `ListBox`; they now assert the authored canonical CUI
@@ -73,9 +84,9 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 
 ## Test lanes (guarded `/home/jacob/.local/bin/dotnet`, `-m:1`, serialized)
 
-- `HavenOS.Browse.Host.Tests` **254 passed / 3 failed** (was 12 failures at `3525b860`). The 3 are the
-  explicit platform guard "This owning host fixture requires actual Windows Home; Linux is
-  unvalidated" — recorded as BLOCKED on this host, never as a pass.
+- `HavenOS.Browse.Host.Tests` **255 passed / 3 failed** (258 total, at `d659a062`; 254 before the new
+  close test). The 3 are the explicit platform guard "This owning host fixture requires actual Windows
+  Home; Linux is unvalidated" — recorded as BLOCKED on this host, never as a pass.
 - Flakiness observed and not hidden: one run at 20:36 UTC reported **253 passed / 4 failed**, i.e. one
   extra failure beyond the three platform guards. The failure name was not captured because the
   summary was grepped alone. Three subsequent runs (two `--no-build`, one with build) each returned
@@ -92,17 +103,26 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 ## Open gates (do not treat as done)
 
 - R02: the main sidebar is not yet "customisable through stable section/item/rule identities". The
-  authored area, stable identity projection and command mapping now exist (`aec18695`) but three parts
-  are explicitly pending: the Haven.Desktop provider that reads the selected Space's attached
-  extensions and their `ExtensionManifest.SidebarContributions`, the `spaces.open-sidebar-item`
-  handler in the Spaces session per declared target kind, and the per-Space visibility selection. The
-  markup renders nothing today, so no native journey is claimed for it. The in-tab `Go back` control was
+  authored area, stable identity projection and command mapping exist (`aec18695`) but the markup
+  renders nothing today, so no native journey is claimed for it. The remaining read path is **held for
+  an owner response to DEC-014** (`docs/specification/open-decisions.json`): an
+  `IBrowseNativeAppContentSession` has no host contract to navigate its own tab to an arbitrary
+  address or open another app surface, and no reviewed service resolves
+  `ExtensionSidebarTargetKind` to an authorised target. The identity and per-Space visibility sources
+  are known (`SpaceCapabilityBinding(CapabilityId = Manifest.PackageId, Kind = Plugin, Override)` →
+  `InstalledExtensionPackage.Manifest.SidebarContributions`, `ExtensionManager` singleton), but wiring
+  them without an activation contract would ship visible rows that cannot do anything, so that change
+  is held rather than invented around. The in-tab `Go back` control was
   disabled after a refused web navigation, and re-typing `9to1://spaces` starts a fresh Spaces Home
   rather than restoring the previous conversation — recorded as an open Haven browser-history question
   entangled with the unavailable Gecko engine. Offline model-inventory native entry was not driven
   this pass (the degraded "Local models are unavailable" state was observed on the real surface).
-- R01: failing-save / failing-close recovery-state probes on the real route; a dedicated probe that a
-  faulted UI action can never permanently block an ordinary close.
+- R01: failing-save / failing-close recovery-state probes on the real route are still NOT RUN. The
+  probe that a faulted UI action cannot permanently block an ordinary close is now covered headlessly
+  on the real session route (`A_faulted_workspace_command_still_allows_an_ordinary_close`) and the
+  real app's ordinary close with a Spaces conversation mounted was re-measured
+  (`evidence/R02/NATIVE-CLOSE-REGRESSION-2026-10-19T2057Z.md`, exit ≤4 s); a native run of the actual
+  refusal has not been driven because the disposable profile had no stale row to click.
 - F01 authority/capability-manifest/permission foundation (spec 1–1076; only 1–560 read) is still
   unimplemented.
 - Automations scheduling/persistence/execution backends, Build/Dev, Write/Present/Boards/Canvas and
@@ -110,14 +130,18 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 
 ## Next executable actions
 
-1. Finish the custom sidebar element read path: wire the Haven.Desktop provider from the selected
-   Space's attached extensions to `spaces.sidebarItems`, implement `spaces.open-sidebar-item` in the
-   Spaces session for each declared `ExtensionSidebarTargetKind`, then add the per-Space visibility
-   selection and run the native journey with a real attached extension.
-2. Add the R01 negative probes: a failing save retains recovery state; a faulted UI action still
-   allows an ordinary close.
-3. Then move to the Automations backend slice (owner priority 3) as bounded commits.
-4. Keep refreshing this file plus the R01/R02 evidence so Astra can review independently.
+1. Custom sidebar elements stay held until DEC-014 is answered. Once the owner names the activation
+   contract, wire `spaces.sidebarItems` from the attached-extension projection in Haven.Desktop,
+   implement `spaces.open-sidebar-item` for each declared `ExtensionSidebarTargetKind`, add the
+   per-Space visibility selection and run the native journey with a real attached extension.
+2. Add the remaining R01 negative probes on the real route: a failing save retains recovery state, and
+   a failing close leaves the canonical failure surface without wedging the tab.
+3. Then move to the Automations backend slice (owner priority 3): genuine scheduling, persistence and
+   execution, as bounded commits.
+4. Keep refreshing this file plus the R01/R02 evidence so Astra can review independently. The R02
+   native evidence set for review is now `NATIVE-SPACES-ENTRY-…1715Z`, `NATIVE-SPACES-SIDEBAR-…1741Z`,
+   `NATIVE-SIDEBAR-ROWS-…1831Z`, `NATIVE-TAB-ROUNDTRIP-…1835Z`,
+   `NATIVE-SIDEBAR-CONTROLS-…1843Z` and `NATIVE-CLOSE-REGRESSION-…2057Z`.
 
 ## Environment notes for the next session
 
