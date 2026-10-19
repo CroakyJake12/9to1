@@ -263,7 +263,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     }
     private void OnDashboardApp(object? sender, ModeDefinition mode)
     {
-        var path = HavenAppRoutePolicy.IsDeprecatedStandalone(mode) ? "spaces/assistants" : mode.Key;
+        var path = mode.Key.Trim().Equals("assistants", StringComparison.OrdinalIgnoreCase) ? "spaces/assistants" : mode.Key;
         StartNavigation(AppContentAddress.Parse("9to1://" + path));
     }
     private void OnConversation(object? sender, Conversation conversation) =>

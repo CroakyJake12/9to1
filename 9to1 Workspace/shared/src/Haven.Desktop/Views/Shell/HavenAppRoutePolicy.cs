@@ -40,11 +40,24 @@ public readonly record struct HavenAppRoute(HavenAppRouteKind Kind, HavenSurface
 public static class HavenAppRoutePolicy
 {
     // Keep the old catalogue identity resolvable for pins, usage and saved links.
-    // The owner folded this product into Spaces on 16 October 2026.
+    // The owner folded these capabilities into their canonical owners on 16-18
+    // October 2026: assistants/dashboard/study/tasks/translate into Spaces or
+    // Haven, dev (and its sites/stacks scope) into Build. They are not standalone
+    // applications in the Apps catalogue, but their stored IDs and aliases remain
+    // resolvable for compatibility.
     public static bool IsDeprecatedStandalone(ModeDefinition app)
     {
         ArgumentNullException.ThrowIfNull(app);
-        return app.Key.Trim().Equals("assistants", StringComparison.OrdinalIgnoreCase);
+        return app.Key.Trim().ToLowerInvariant() switch
+        {
+            "assistants" => true,
+            "dashboard" => true,
+            "study" => true,
+            "tasks" => true,
+            "translate" => true,
+            "dev" => true,
+            _ => false
+        };
     }
 
     public static HavenAppRoute Resolve(ModeDefinition app)

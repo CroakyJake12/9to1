@@ -81,7 +81,14 @@ public sealed class HavenAppRoutePolicyTests
         Assert.Equal(31, (int)HavenSurface.Assistants);
         Assert.Equal(new HavenAppRoute(HavenAppRouteKind.Spaces, HavenSurface.Spaces, "assistants"), HavenAppRoutePolicy.Resolve(app));
         Assert.True(HavenAppRoutePolicy.IsDeprecatedStandalone(app));
-        Assert.False(HavenAppRoutePolicy.IsDeprecatedStandalone(BuiltInModeSeed.Modes.Single(item => item.Key == "spaces")));
+        // Canonical ownership (owner correction 2026-10-18): absorbed standalone entries.
+        foreach (var absorbed in new[] { "dashboard", "study", "tasks", "translate", "dev" })
+            Assert.True(HavenAppRoutePolicy.IsDeprecatedStandalone(BuiltInModeSeed.Modes.Single(item => item.Key == absorbed)),
+                absorbed + " should be deprecated standalone");
+        // Canonical owners remain standalone.
+        foreach (var owner in new[] { "spaces", "chat", "browse", "files" })
+            Assert.False(HavenAppRoutePolicy.IsDeprecatedStandalone(BuiltInModeSeed.Modes.Single(item => item.Key == owner)),
+                owner + " should remain standalone");
         Assert.Equal(BuiltInModeSeed.Modes.Count, BuiltInModeSeed.Modes.Select(item => item.Id).Distinct().Count());
     }
 
