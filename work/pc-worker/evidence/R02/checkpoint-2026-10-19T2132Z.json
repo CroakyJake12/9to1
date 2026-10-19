@@ -1,0 +1,70 @@
+{
+  "milestone_id": "R02",
+  "spec_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "worker": "pc-implementation-opencode",
+  "timestamp_utc": "2026-10-19T21:32:00Z",
+  "branch": "opencode/v2-pc-sequential-20261018",
+  "head": "a17e933f",
+  "implementation_status": "in_progress",
+  "acceptance_status": "NOT_RUN",
+  "summary": "R02 remains in progress and its owner-visible journey remains natively proven; the last substantive R02 requirement (a sidebar customisable through stable section/item/rule identities with extension-contributed elements) is held pending the owner answer to DEC-014, because an app-content session has no host contract to navigate its own tab to an arbitrary address or open another app surface and no reviewed service resolves ExtensionSidebarTargetKind. Nothing was invented around that: the authored area and stable identity projection exist and render nothing until a projection is supplied. Independent authorised work continued on owner priority 3. A third real-app-only defect was found and fixed: a refused Space UI action was admitted as original work, joined at close and re-raised as a close cause, so after one failed sidebar click the tab could never complete an ordinary close. It is reproduced headlessly on the real session route and fixed - an action refused before it can change anything now reports through the Spaces Home status line and completes normally, while genuine failures, work still running when close begins and every save/close-preparation obligation keep their existing close semantics. The real app was re-measured after the change: one rail click opened a Chat Space conversation inside the retained rail layout with the icon-only rail and contextual sidebar present, an unsent draft was typed, and an ordinary window close completed with the process absent within 4s. Automations backend work then started from an evidence-based inventory: automation_runs previously persisted only nine summary columns, so AutomationRun.Revision, DefinitionRevision, PinnedGraph, AdmissionSnapshotJson, ContinuationDescriptorJson and Details were dropped on write and never hydrated, and ContinuationDescriptorJson was read or written nowhere in shared/src. Migration 29 adds the canonical columns and a resumable-run index; AutomationRepository now writes and hydrates them and a new IAutomationRunContinuationStore capability exposes SuspendRunAsync and GetResumableRunsAsync. That is the persistence foundation only: the graph runtime still executes a delay node with an in-process Task.Delay and nothing suspends or resumes a Run yet, so durable Wait is NOT implemented and NOT claimed. An acceptance handoff for R01/R02 was written for independent review.",
+  "next_action": "Automations runtime half of durable Wait: have the graph runtime write the continuation and call SuspendRunAsync at a Wait/Delay or approval node, replace the in-process Task.Delay, and have the existing 1-minute sweep call GetResumableRunsAsync and resume from the continuation without re-executing committed nodes. R02 sidebar activation stays held until DEC-014 is answered.",
+  "read_ranges": [
+    "docs/specification/9to1-development-specification-v2.md 4723-4866",
+    "docs/specification/9to1-development-specification-v2.md 8088-8374",
+    "docs/specification/owner-references/2026-10-18-haven-spaces/owner-correction.json"
+  ],
+  "checks": [
+    {
+      "name": "HavenOS.Spaces.Tests",
+      "command": "dotnet test HavenOS.Spaces.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "HavenOS.Apps.Browse.Tests",
+      "command": "dotnet test HavenOS.Apps.Browse.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "AutomationRunContinuationPersistenceTests",
+      "command": "dotnet test HavenOS.Browse.Host.Tests.csproj -c Debug -m:1 --filter FullyQualifiedName~AutomationRunContinuationPersistenceTests",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "HavenOS.Browse.Host.Tests new close test",
+      "command": "dotnet test HavenOS.Browse.Host.Tests.csproj -c Debug -m:1 --filter FullyQualifiedName~A_faulted_workspace_command_still_allows",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Haven.Desktop build",
+      "command": "dotnet build Haven.Desktop.csproj -c Debug -f net10.0 -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Haven.Infrastructure build",
+      "command": "dotnet build Haven.Infrastructure.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    }
+  ],
+  "lane_notes": {
+    "HavenOS.Browse.Host.Tests": "257 passed / 3 failed at 35c881d8 (260 total); dotnet test exit code is non-zero because of the 3 failures. The 3 are the explicit platform guard 'This owning host fixture requires actual Windows Home; Linux is unvalidated' and are recorded as BLOCKED on this host, not as a pass. One earlier run at 20:36Z reported 253/4 with the extra failure name not captured; four later runs returned the 3-failure baseline, so the lane carries one unreproduced intermittent failure to identify rather than being deterministically green.",
+    "CakeOS.Cui.Runtime.Tests": "405/405 PASS at d659a062; not re-run at a17e933f because the only later change is the Automations persistence layer.",
+    "shared/tests/Haven.Desktop.Tests": "BLOCKED: NETSDK1100 - targets net10.0-windows10.0.19041.0 and cannot build on this OS. EnableWindowsTargeting was deliberately not enabled. The five IAutomationRepository fakes there were left untouched, so their behaviour under IAutomationRunContinuationStore is NOT RUN on this host.",
+    "Haven.Infrastructure.Tests": "BLOCKED: WebRtcVadSharp forces an x64 testhost on linux-arm64 - Could not find 'dotnet' host for the 'X64' architecture. The new Automations persistence tests were therefore placed in HavenOS.Browse.Host.Tests, which runs on this host."
+  },
+  "evidence": [
+    "work/pc-worker/evidence/R02/NATIVE-SPACES-ENTRY-2026-10-19T1715Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SPACES-SIDEBAR-2026-10-19T1741Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-TAB-ROUNDTRIP-2026-10-19T1835Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SIDEBAR-ROWS-2026-10-19T1831Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-SIDEBAR-CONTROLS-2026-10-19T1843Z.md",
+    "work/pc-worker/evidence/R02/NATIVE-CLOSE-REGRESSION-2026-10-19T2057Z.md",
+    "work/pc-worker/ACCEPTANCE-HANDOFF-R01-R02-2026-10-19.md"
+  ]
+}
