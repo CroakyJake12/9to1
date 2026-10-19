@@ -500,6 +500,7 @@ public sealed partial class App
         {
             _actualShutdownFailure = error;
             ReportOriginalShutdownFailure(error);
+            ShowOriginalShutdownRecovery(error);
             if (error is OperationCanceledException)
                 throw new AggregateException("The actual native shutdown retains its uncertain cancellation cause.", error);
             throw; // SAME failed original remains inspectable, never retried or described as no effect.
@@ -513,6 +514,41 @@ public sealed partial class App
         System.Diagnostics.Debug.WriteLine("[9to1 original shutdown] " + failure);
         try { Console.Error.WriteLine("[9to1 original shutdown] " + failure); }
         catch (Exception diagnosticFailure) { System.Diagnostics.Debug.WriteLine("[9to1 original shutdown diagnostic] " + diagnosticFailure); }
+    }
+
+    /// <summary>
+    /// Presents a CUI-authored recovery state for an unresolved close obligation instead of
+    /// leaving blank disabled chrome. This does not retry, relabel or manufacture a clean
+    /// receipt; it only exposes the retained failure and a truthful recovery affordance.
+    /// </summary>
+    private void ShowOriginalShutdownRecovery(Exception failure)
+    {
+        try
+        {
+            if (_actualDesktop is not { } desktop) return;
+            var window = desktop.MainWindow ?? desktop.Windows.OfType<MainWindow>().FirstOrDefault();
+            if (window is null) return;
+            var loader = new CakeOS.Cui.Runtime.CuiControlLoader();
+            var status = new CakeOS.Cui.Runtime.CuiViewModel();
+            status.Set("RecoveryMessage", "9to1 could not finish closing: " + failure.Message);
+            loader.SetBindingContext(status);
+            var document = new CakeOS.Cui.Language.CuiRichParser().Parse(
+                "<Cui><Container Type=\"Vertical Stack\" Padding=\"24\" CellGap=\"12\">" +
+                "<Text Text=\"Shutdown did not complete\" FontWeight=\"Bold\" FontSize=\"18\" />" +
+                "<Text Text=\"{Binding RecoveryMessage}\" TextWrapping=\"Wrap\" />" +
+                "<Text Text=\"The window remains open so your work and data are preserved. Review the reported failure, then close again or restart 9to1.\" TextWrapping=\"Wrap\" />" +
+                "</Container></Cui>");
+            var loaded = loader.TryLoad(document);
+            if (loaded.Root is null) { loader.Dispose(); return; }
+            loader.WireBindings(loaded.Root);
+            Dispatcher.UIThread.Invoke(() => { window.Content = loaded.Root; });
+        }
+        catch (Exception diagnosticFailure)
+        {
+            System.Diagnostics.Debug.WriteLine("[9to1 original shutdown recovery] " + diagnosticFailure);
+            try { Console.Error.WriteLine("[9to1 original shutdown recovery] " + diagnosticFailure); }
+            catch { }
+        }
     }
     private void DemandOriginalDesktopBorrowerJoins(IReadOnlyList<object> actualOwners)
     {
