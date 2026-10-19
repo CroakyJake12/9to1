@@ -1,0 +1,10 @@
+/home/jacob/Documents/Codex/2026-10-17/new-chat/work/blank-window/atspi_tool.py:56: DeprecationWarning: Atspi.Action.get_action_name is deprecated
+  value['actions'] = [action.get_action_name(i) for i in range(action.get_n_actions())] if action else []
+Traceback (most recent call last):
+  File "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/blank-window/atspi_tool.py", line 204, in <module>
+    main()
+    ~~~~^^
+  File "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/blank-window/atspi_tool.py", line 188, in main
+    result['accepted'] = action.do_action(indices[0])
+                         ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+gi.repository.GLib.GError: atspi_error: Element not enabled. (1)
