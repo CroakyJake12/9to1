@@ -76,6 +76,11 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 - `HavenOS.Browse.Host.Tests` **254 passed / 3 failed** (was 12 failures at `3525b860`). The 3 are the
   explicit platform guard "This owning host fixture requires actual Windows Home; Linux is
   unvalidated" — recorded as BLOCKED on this host, never as a pass.
+- Flakiness observed and not hidden: one run at 20:36 UTC reported **253 passed / 4 failed**, i.e. one
+  extra failure beyond the three platform guards. The failure name was not captured because the
+  summary was grepped alone. Three subsequent runs (two `--no-build`, one with build) each returned
+  254/3, so it did not reproduce. A reviewer should treat this lane as having one unreproduced
+  intermittent failure to identify, not as deterministically green.
 - `HavenOS.Spaces.Tests` 220/220 · `CakeOS.Cui.Runtime.Tests` 405/405 · canonical CUI compilation
   13/13 · `HavenOS.Apps.Browse.Tests` 150/150 · `Haven.Desktop` build 0 errors.
 - `shared/tests/Haven.Desktop.Tests` BLOCKED: `NETSDK1100` (`net10.0-windows10.0.19041.0` cannot build
