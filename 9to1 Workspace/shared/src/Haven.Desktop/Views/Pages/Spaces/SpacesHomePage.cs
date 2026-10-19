@@ -46,6 +46,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     // The authored `space-app-content` region inside the Spaces rail layout. Root owns whatever
     // workspace is mounted here; this page only hosts the control and reports its presence.
     private ContentControl? _spaceWorkspace;
+    // The contextual sidebar's recent conversations for the selected Space. The owning surface
+    // supplies them from the real conversation store; this page caches the latest projection.
+    private readonly Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? _conversationsProvider;
+    private readonly Func<string, object?, CancellationToken, Task>? _workspaceCommandHost;
+    private IReadOnlyList<SpacesHomeConversationRow> _conversations = [];
 
     public SpacesHomePage(
         SpaceRegistry registry,
@@ -53,11 +58,15 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         ICuiSceneReadiness readiness,
         ISpacesExtensionEditorHost? extensionEditorHost = null,
         Func<string, CancellationToken, Task<string>>? pickFileAsync = null,
-        Func<SpacesAction, Task, bool>? queueNavigation = null)
+        Func<SpacesAction, Task, bool>? queueNavigation = null,
+        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationsProvider = null,
+        Func<string, object?, CancellationToken, Task>? workspaceCommandHost = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         if (navigationHost is null) throw new ArgumentNullException(nameof(navigationHost));
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
+        _conversationsProvider = conversationsProvider;
+        _workspaceCommandHost = workspaceCommandHost;
 
         Document = SpacesHomeCuiDocument.Load();
         var controlRegistry = SpacesHomeCuiDocument.CreateControlRegistry();
@@ -184,6 +193,8 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         if (path == "spaces.canMutate") { lock (_gate) value = CanAdmitHomeMutation(); return true; }
         if (path == "spaces.hasAppContent") { lock (_gate) value = _spaceWorkspace?.Content is not null; return true; }
         if (path == "spaces.hasSpaceSummary") { lock (_gate) value = _spaceWorkspace?.Content is null; return true; }
+        if (path == "spaces.conversations") { lock (_gate) value = _conversations; return true; }
+        if (path == "spaces.hasConversations") { lock (_gate) value = _conversations.Count > 0; return true; }
         return _bindings.TryGetValue(path, out value);
     }
     public bool TrySetValue(string path, object? value)
@@ -258,6 +269,16 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 // rail opens that Space's conversation in the same gesture. The Space summary is
                 // a management view, never a mandatory interstitial in front of a chat.
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.OpenSpaceAsync(id, token))).ConfigureAwait(false);
+                break;
+            case "spaces.new-chat":
+                if (_workspaceCommandHost is not { } newChatHost)
+                    throw new InvalidOperationException("No Spaces workspace host is available to start a conversation.");
+                await original.AwaitAsync(InvokeOriginalSource(() => newChatHost("spaces.new-chat", id, token))).ConfigureAwait(false);
+                break;
+            case "spaces.open-conversation":
+                if (_workspaceCommandHost is not { } conversationHost)
+                    throw new InvalidOperationException("No Spaces workspace host is available to open a conversation.");
+                await original.AwaitAsync(InvokeOriginalSource(() => conversationHost("spaces.open-conversation", parameter, token))).ConfigureAwait(false);
                 break;
             case "spaces.set-rename-draft":
                 InvokeOriginalSource(() => _controller.SetRenameDraft(parameter?.ToString()));
@@ -343,6 +364,36 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         }
         InvokeOriginalSource(() => { _bindings.Refresh(); return true; });
         return true;
+    }
+
+    /// <summary>Re-reads the selected Space's recent conversations from the owning store and
+    /// republishes the contextual sidebar. A stale or retiring presentation discards the result
+    /// instead of overwriting a newer selection.</summary>
+    public async Task RefreshConversationsAsync(CancellationToken cancellationToken = default)
+    {
+        long generation;
+        Guid? selected;
+        Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? provider;
+        lock (_gate)
+        {
+            if (_work.IsRetiring || !_active) return;
+            provider = _conversationsProvider;
+            if (provider is null) return;
+            generation = _generation;
+            selected = _controller.State.Selection?.Id;
+        }
+        if (selected is not { } spaceId)
+        {
+            lock (_gate) if (!_work.IsRetiring && _generation == generation) _conversations = [];
+            return;
+        }
+        var rows = await provider(spaceId, cancellationToken).ConfigureAwait(false);
+        lock (_gate)
+        {
+            if (_work.IsRetiring || !_active || _generation != generation) return;
+            _conversations = rows;
+        }
+        await Dispatcher.UIThread.InvokeAsync(() => _bindings.Refresh()).GetTask().ConfigureAwait(false);
     }
 
     /// <summary>Releases a control from its current native parent. A fresh CUI publication

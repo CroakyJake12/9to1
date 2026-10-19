@@ -54,6 +54,20 @@ public sealed record SpacesHomeItem(
     public string IconKey { get; init; } = "sparkles";
 }
 
+/// <summary>
+/// One recent conversation in the currently selected Space, projected for the contextual
+/// sidebar. The owning native surface supplies these rows from the real conversation store;
+/// they are scoped to one Space and never form a cross-Space history list.
+/// </summary>
+public sealed record SpacesHomeConversationRow(
+    Guid Id,
+    string Title,
+    string UpdatedLabel,
+    bool IsCurrent)
+{
+    public override string ToString() => Title;
+}
+
 public sealed record SpacesHomeContextReference(
     Guid ContextId,
     string Label,

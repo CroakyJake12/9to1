@@ -285,6 +285,10 @@ public sealed class SpacesConversationRouteTests
             var conversations = Proxy<IConversationRepository>((name, args) => name switch
             {
                 "GetAsync" => Task.FromResult(Row is { } row && row.Id == (Guid)args![0]! ? row : null),
+                // The contextual Space sidebar reads the selected Space's own conversations. The
+                // fixture still controls all I/O: a row only appears under the Space it names.
+                "GetBySpaceAsync" => Task.FromResult<IReadOnlyList<Conversation>>(
+                    Row is { } scoped && scoped.SpaceId == (Guid)args![0]! ? [scoped] : []),
                 "GetMessagesAsync" => ReadMessages?.Invoke((Guid)args![0]!) ?? Task.FromResult<IReadOnlyList<ChatMessage>>([SavedMessage with { ConversationId = Row!.Id }]),
                 "GetContextEntriesAsync" => Task.FromResult<IReadOnlyList<ConversationContextEntry>>([]),
                 "UpsertConversationAsync" => allowConversationWrites ? RecordConversationWrite((Conversation)args![0]!) : RecordUnexpectedWrite(),

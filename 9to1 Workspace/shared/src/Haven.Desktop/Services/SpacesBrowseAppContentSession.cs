@@ -131,7 +131,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             var registry = _services.GetRequiredService<SpaceRegistry>();
             var navigationHost = new HavenSpacesActionHost(this);
             var page = new SpacesHomePage(registry, navigationHost, SpacesHomePage.ImmediateReadinessInstance,
-                queueNavigation: QueueSpaceAction);
+                queueNavigation: QueueSpaceAction,
+                conversationsProvider: ReadSpaceConversationsAsync,
+                workspaceCommandHost: ExecuteWorkspaceCommandAsync);
             _spacesPage = page;
             try
             {
@@ -353,6 +355,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             UpdateAddress(state.Selection?.Id);
         }
         PublishStateChanged();
+        // The contextual sidebar follows the selected Space, so its recent conversations are
+        // re-read from the real store whenever the selection publishes.
+        ObserveSpacesSelectionChange();
     }
 
     private void UpdateAddress(Guid? selectedSpaceId)
@@ -530,6 +535,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 published = true;
             }
             PublishStateChanged();
+            await RefreshSpacesConversationsAsync(token).ConfigureAwait(false);
         }
         finally
         {
@@ -546,6 +552,185 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         public bool SupportsAction(SpacesActionKind action) => action is SpacesActionKind.Open or SpacesActionKind.EditDetails;
         public Task ExecuteAsync(SpacesAction action, CancellationToken cancellationToken = default) =>
             owner.ExecuteCommandAsync(action, cancellationToken);
+    }
+
+    /// <summary>Reads the selected Space's real recent conversations for the contextual sidebar.
+    /// A store without Space membership queries truthfully contributes no rows; any other failure
+    /// is reported to the caller rather than being presented as an empty history.</summary>
+    private async Task<IReadOnlyList<SpacesHomeConversationRow>> ReadSpaceConversationsAsync(Guid spaceId, CancellationToken token)
+    {
+        IReadOnlyList<Conversation> rows;
+        try
+        {
+            rows = await _services.GetRequiredService<IConversationRepository>()
+                .GetBySpaceAsync(spaceId, 20, token).ConfigureAwait(false);
+        }
+        catch (NotSupportedException) { return []; }
+        Guid? current;
+        lock (_gate) current = _publishedChatRoute?.Page.CurrentConversation.Id;
+        return rows
+            .Where(row => !row.IsArchived && !row.IsTemporary)
+            .Select(row => new SpacesHomeConversationRow(row.Id,
+                string.IsNullOrWhiteSpace(row.Title) ? "Untitled conversation" : row.Title,
+                row.UpdatedAt.LocalDateTime.ToString("d MMM yyyy HH:mm"),
+                row.Id == current))
+            .ToArray();
+    }
+
+    /// <summary>Republishes the contextual sidebar for the current selection. The sidebar is a
+    /// projection, so a failed read never takes a live navigation down with it.</summary>
+    private Task RefreshSpacesConversationsAsync(CancellationToken token)
+    {
+        try { return _spacesPage?.RefreshConversationsAsync(token) ?? Task.CompletedTask; }
+        catch (Exception failure)
+        {
+            System.Diagnostics.Trace.TraceError("Spaces sidebar refresh failed: {0}", failure);
+            return Task.CompletedTask;
+        }
+    }
+
+    private void ObserveSpacesSelectionChange()
+    {
+        _ = Task.Run(async () =>
+        {
+            try { await RefreshSpacesConversationsAsync(_token).ConfigureAwait(false); }
+            catch (Exception failure) when (failure is not OperationCanceledException)
+            { System.Diagnostics.Trace.TraceError("Spaces sidebar conversation refresh failed: {0}", failure); }
+        });
+    }
+
+    private OverlayChatSessionFactory NewChatSessionFactory() => new(_services,
+        _services.GetRequiredService<IConversationRepository>(),
+        _services.GetRequiredService<CapabilityRegistryService>(),
+        _services.GetRequiredService<ICatalogRepository>(),
+        _services.GetRequiredService<IModeRegistry>());
+
+    /// <summary>Starts a new conversation inside the selected Space from the contextual sidebar.
+    /// It never creates another Space and never reuses an existing conversation.</summary>
+    private async Task NewConversationOnUiAsync(Guid spaceId, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        var space = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(spaceId, token).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("The selected Space is unavailable.");
+        if (space.IsArchived) throw new InvalidOperationException("The selected Space is archived.");
+        var page = await NewChatSessionFactory().CreateNewAsync(token);
+        _ownedChats.Add(page);
+        var published = false;
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            DemandAlive();
+            await page.AssignSpaceAsync(spaceId);
+            lock (_gate)
+            {
+                token.ThrowIfCancellationRequested();
+                DemandAlive();
+                page.SetDraft(string.Empty);
+                PublishChatPage(page);
+                _chatsBySpace[spaceId] = page;
+                ObserveConversationRoute(page);
+                published = true;
+            }
+            PublishStateChanged();
+            await RefreshSpacesConversationsAsync(token).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (!published) { await page.DisposeAsync(); _ownedChats.Remove(page); }
+        }
+    }
+
+    /// <summary>Opens an existing conversation of the selected Space from the contextual sidebar.
+    /// The real stored identity is restored; nothing is replaced or recreated on failure.</summary>
+    private async Task OpenConversationOnUiAsync(Guid conversationId, CancellationToken token)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        var conversations = _services.GetRequiredService<IConversationRepository>();
+        var row = await conversations.GetAsync(conversationId, token).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("The selected conversation is no longer available.");
+        if (row.IsArchived || row.IsTemporary)
+            throw new InvalidOperationException("That conversation is not available in this Space.");
+        var chat = await NewChatSessionFactory().RestoreAsync(conversationId, token).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("The selected conversation is no longer available.");
+        _ownedChats.Add(chat);
+        var published = false;
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            DemandAlive();
+            if (chat.CurrentConversation.Id != conversationId || chat.CurrentConversation.SpaceId != row.SpaceId)
+                throw new InvalidOperationException("The restored conversation is not the selected Space conversation.");
+            lock (_gate)
+            {
+                token.ThrowIfCancellationRequested();
+                DemandAlive();
+                PublishChatPage(chat);
+                if (chat.CurrentConversation.SpaceId is { } spaceId) _chatsBySpace[spaceId] = chat;
+                ObserveConversationRoute(chat);
+                published = true;
+            }
+            PublishStateChanged();
+            await RefreshSpacesConversationsAsync(token).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (!published) { await chat.DisposeAsync(); _ownedChats.Remove(chat); }
+        }
+    }
+
+    /// <summary>Runs one contextual-sidebar workspace command under the same serial and UI owner as
+    /// the queued Space navigation, so a sidebar click cannot race an in-flight route change.</summary>
+    private Task ExecuteWorkspaceCommandAsync(string command, object? parameter, CancellationToken caller)
+    {
+        lock (_gate)
+        {
+            DemandAlive();
+            caller.ThrowIfCancellationRequested();
+            if (_activeDetailsPreparation is not null)
+                throw new InvalidOperationException("Abort the exact Spaces close preparation before navigating.");
+            if (parameter is not Guid target || target == Guid.Empty)
+                throw new InvalidOperationException("The Spaces workspace command has no valid target identity.");
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var execution = new CommandExecution(this);
+            var actual = ExecuteWorkspaceCommandDriverAsync(start.Task, command, target, caller, execution);
+            execution.Original = actual;
+            _commands.RemoveAll(task => task.IsCompletedSuccessfully);
+            _commands.Add(actual);
+            _lastQueuedNavigation = actual;
+            start.SetResult();
+            ObserveQueuedSpaceAction(actual);
+            return actual;
+        }
+    }
+
+    private async Task ExecuteWorkspaceCommandDriverAsync(Task start, string command, Guid target,
+        CancellationToken caller, CommandExecution execution)
+    {
+        await start.ConfigureAwait(false);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
+        await _commandSerial.WaitAsync(linked.Token).ConfigureAwait(false);
+        try
+        {
+            await OnUiAsync(async () =>
+            {
+                var previous = ExecutingCommand.Value;
+                ExecutingCommand.Value = execution; Volatile.Write(ref execution.Active, true);
+                try
+                {
+                    linked.Token.ThrowIfCancellationRequested();
+                    DemandAlive();
+                    if (command == "spaces.new-chat") await NewConversationOnUiAsync(target, linked.Token).ConfigureAwait(false);
+                    else if (command == "spaces.open-conversation") await OpenConversationOnUiAsync(target, linked.Token).ConfigureAwait(false);
+                    else throw new InvalidOperationException($"The Spaces workspace command '{command}' is not owned by this host.");
+                }
+                finally { ExecutingCommand.Value = previous; }
+            }).ConfigureAwait(false);
+        }
+        finally { Volatile.Write(ref execution.Active, false); _commandSerial.Release(); }
     }
 
     private static async Task OnUiAsync(Func<Task> action)

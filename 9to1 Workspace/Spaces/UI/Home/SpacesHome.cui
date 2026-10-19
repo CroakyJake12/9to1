@@ -39,13 +39,15 @@
     <Action name="EditGraph" command="spaces.edit-graph" parameter="{Binding selection.id}" />
     <Action name="EditDetails" command="spaces.edit-details" parameter="{Binding selection.id}" />
     <Action name="ManageSelected" command="spaces.edit-details" parameter="{Binding selection.id}" />
+    <Action name="NewChat" command="spaces.new-chat" parameter="{Binding selection.id}" />
+    <Action name="OpenConversation" command="spaces.open-conversation" parameter="{Binding conversation.id}" />
     <Action name="MoveSelected" command="spaces.move" parameter="{Binding selection.id}" />
     <Action name="AddContext" command="spaces.add-context" parameter="{Binding selection.id}" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
       <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}">
-        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="72 1fr" CellGap="16">
+        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="72 260 1fr" CellGap="16">
           <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="72" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8">
             <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" Tooltip="Create a custom Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
               <Image id="create-space-icon" Source="icon:plus" Width="24" Height="24" />
@@ -76,6 +78,24 @@
               </Button>
             </If>
           </Container>
+          <!--
+            The main sidebar is contextual to the selected Space: New chat plus that Space's own
+            recent conversations. It stays visible while a Space conversation is mounted, and it
+            never becomes a cross-Space history list because the rows are scoped to the selection.
+          -->
+          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
+            <Text id="space-context-sidebar-title" text="{Binding selection.name}" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+            <Button id="space-new-chat" action="NewChat" content="New chat" accessible-name="Start a new chat in this Space" />
+            <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
+              <Container id="space-conversation-row" role="listitem" accessible-name="{Binding conversation.title}" Type="Vertical Stack" CellGap="2">
+                <Button id="open-space-conversation" action="OpenConversation" content="{Binding conversation.title}" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" />
+                <Text id="space-conversation-updated" text="{Binding conversation.updatedLabel}" foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Repeat>
+            <If Condition="!{Binding spaces.hasConversations}">
+              <Text id="space-conversations-empty" text="No conversations in this Space yet" foreground="{Resource CuiTextSoftBrush}" />
+            </If>
+          </Container>
 
           <!--
             The selected Space's own workspace (a chat, a builder or a details page) is mounted
@@ -84,8 +104,8 @@
             and the workspace, including its chat/history sidebar, stay on screen together. The
             summary returns when the workspace retires; nothing here invents a second navigation.
           -->
-          <Container id="space-app-content" accessible-name="Space workspace" Type="Overlay" Column="1" IsVisible="{Binding spaces.hasAppContent}" />
-          <Container id="space-details" accessible-name="Selected Space" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10" IsVisible="{Binding spaces.hasSpaceSummary}">
+          <Container id="space-app-content" accessible-name="Space workspace" Type="Overlay" Column="2" IsVisible="{Binding spaces.hasAppContent}" />
+          <Container id="space-details" accessible-name="Selected Space" Column="2" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10" IsVisible="{Binding spaces.hasSpaceSummary}">
             <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
             <Container id="spaces-search-controls" Type="Grid" RowSizes="Auto" ColumnSizes="24 1fr" CellGap="8">
               <Image id="spaces-search-icon" Source="icon:search" Width="20" Height="20" VerticalAlignment="Center" />

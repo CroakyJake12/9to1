@@ -21,7 +21,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         "spaces.archive", "spaces.add-context", "spaces.clear-search", "spaces.select", "spaces.set-rename-draft",
         "spaces.confirm-rename", "spaces.cancel-rename", "spaces.set-query",
         "spaces.select-move-parent",
-        "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details"
+        "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details",
+        "spaces.new-chat", "spaces.open-conversation"
     };
 
     private readonly CuiViewModel _values = new();
@@ -67,6 +68,11 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             // builder or details workspace stay presented together.
             "spaces.hasAppContent" => false,
             "spaces.hasSpaceSummary" => true,
+            // The contextual Space sidebar is served by the owning native surface from the real
+            // conversation store. The domain projection has no conversation authority, so it
+            // truthfully reports none rather than inventing rows.
+            "spaces.conversations" => Array.Empty<SpacesHomeConversationRow>(),
+            "spaces.hasConversations" => false,
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,
@@ -173,6 +179,17 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
                 : path.Equals("position", StringComparison.OrdinalIgnoreCase) ? homeItem.Position
                 : path.Equals("revision", StringComparison.OrdinalIgnoreCase) ? homeItem.Revision
                 : path.Equals("canEdit", StringComparison.OrdinalIgnoreCase) ? homeItem.CanEdit
+                : null;
+            return value is not null;
+        }
+
+        if (item is SpacesHomeConversationRow conversation)
+        {
+            value = path.Equals("id", StringComparison.OrdinalIgnoreCase) ? conversation.Id
+                : path.Equals("title", StringComparison.OrdinalIgnoreCase) ? conversation.Title
+                : path.Equals("updatedLabel", StringComparison.OrdinalIgnoreCase) ? conversation.UpdatedLabel
+                : path.Equals("isCurrent", StringComparison.OrdinalIgnoreCase) ? conversation.IsCurrent
+                : path.Equals("openLabel", StringComparison.OrdinalIgnoreCase) ? $"Open conversation {conversation.Title}"
                 : null;
             return value is not null;
         }
