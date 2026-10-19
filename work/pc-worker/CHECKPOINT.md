@@ -117,16 +117,47 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
   rather than restoring the previous conversation — recorded as an open Haven browser-history question
   entangled with the unavailable Gecko engine. Offline model-inventory native entry was not driven
   this pass (the degraded "Local models are unavailable" state was observed on the real surface).
-- R01: failing-save / failing-close recovery-state probes on the real route are still NOT RUN. The
-  probe that a faulted UI action cannot permanently block an ordinary close is now covered headlessly
-  on the real session route (`A_faulted_workspace_command_still_allows_an_ordinary_close`) and the
-  real app's ordinary close with a Spaces conversation mounted was re-measured
+- R01: the failing-save recovery-state guarantee is covered headlessly on the real route by
+  `SpacesDetailsRouteTests.Actual_second_editor_preparation_fault_restores_first_lease_and_retains_the_source_in_failed_session_close`
+  (the preparation faults with the exact injected cause, the same editor stays presented, both editors
+  remain editable, no close is admitted and the stored name is unchanged). What is NOT RUN is a native
+  real-app run of a failing save. The probe that a faulted UI action cannot permanently block an
+  ordinary close is now covered headlessly on the real session route
+  (`A_faulted_workspace_command_still_allows_an_ordinary_close`) and the real app's ordinary close with
+  a Spaces conversation mounted was re-measured
   (`evidence/R02/NATIVE-CLOSE-REGRESSION-2026-10-19T2057Z.md`, exit ≤4 s); a native run of the actual
   refusal has not been driven because the disposable profile had no stale row to click.
 - F01 authority/capability-manifest/permission foundation (spec 1–1076; only 1–560 read) is still
   unimplemented.
 - Automations scheduling/persistence/execution backends, Build/Dev, Write/Present/Boards/Canvas and
   Files/accounts/cloud storage have not been started this session.
+
+## Automations backend map (read spec 8088–8374 in full before implementing)
+
+Inventory taken at `d659a062`, so the next slice starts from evidence rather than assumption:
+
+- Scheduling exists but is UI-hosted: `Haven.Desktop/Interface/Shell/MainView.Automations.cs` starts a
+  real 1-minute `DispatcherTimer` sweep with a re-entrancy guard, a CTS registered in
+  `_originalAutomationSources`, and bus events for success/failure. `ScheduledTaskRunner` deliberately
+  owns no timer, OS registration, worker process or background loop, so due work only advances while
+  the desktop shell is alive. Spec 8221 says a cloud-capable workflow must not unnecessarily depend on
+  an open desktop UI.
+- Persistence foundations exist: `IAutomationRepository` (`GetAllAsync`, `GetDueAsync`, `UpsertAsync`,
+  `DeleteAsync`, `TryAcquireLeaseAsync`, `CompleteRunAsync`, `GetRunsAsync`) with a SQLite
+  implementation in `Haven.Infrastructure/Persistence/SQLite/AutomationRepository.cs`.
+- The canonical run entity shape already exists: `AutomationRun` carries `Revision`,
+  `DefinitionRevision`, `PinnedGraph`, `AdmissionSnapshotJson`, `ContinuationDescriptorJson` and
+  `AutomationRunDetails` (TriggerId/TriggerEventId, typed inputs/outputs, node execution states, error
+  descriptor, causal ancestry, audit references, ActionGraphId).
+- **Durable Wait/resume is not implemented.** `ContinuationDescriptorJson` is declared in
+  `Haven.Core/Entities/AutomationEntities.cs:49` and is written or read nowhere in `shared/src`. The
+  delay node sleeps in-process (`BuiltInAutomationActionNodes.cs:143`, `await Task.Delay(...)`) and the
+  retry backoff sleeps (`ScheduledTaskRuntime.cs:274`). Spec 8199–8203 forbids a Wait that depends on a
+  thread/process literally sleeping and requires resume from persisted state without replaying
+  committed side effects.
+- Authoring conformance: `Haven.Desktop/Views/Pages/Automations/AutomationsPage.axaml` is a
+  non-CUI authoring surface. CUI is the only application-authoring language, so this needs reconciling
+  to canonical versioned CUI rather than being treated as an accepted implementation.
 
 ## Next executable actions
 
@@ -136,10 +167,14 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
    per-Space visibility selection and run the native journey with a real attached extension.
 2. Add the remaining R01 negative probes on the real route: a failing save retains recovery state, and
    a failing close leaves the canonical failure surface without wedging the tab.
-3. Then move to the Automations backend slice (owner priority 3): genuine scheduling, persistence and
-   execution, as bounded commits.
-4. Keep refreshing this file plus the R01/R02 evidence so Astra can review independently. The R02
-   native evidence set for review is now `NATIVE-SPACES-ENTRY-…1715Z`, `NATIVE-SPACES-SIDEBAR-…1741Z`,
+3. Then the Automations backend (owner priority 3), starting with durable Wait/resume: write and read
+   `AutomationRun.ContinuationDescriptorJson` as a typed continuation (run identity, pinned revision,
+   node position, committed outputs, ResumeAt), persist Status Waiting, release the execution resource,
+   and resume from the scheduler sweep without replaying committed node side effects. Replace the
+   in-process `Task.Delay` in the delay node. Keep the retry backoff bounded and inspectable.
+4. Keep refreshing this file plus the R01/R02 evidence so Astra can review independently. The
+   review entry point is now `work/pc-worker/ACCEPTANCE-HANDOFF-R01-R02-2026-10-19.md`; the R02
+   native evidence set is `NATIVE-SPACES-ENTRY-…1715Z`, `NATIVE-SPACES-SIDEBAR-…1741Z`,
    `NATIVE-SIDEBAR-ROWS-…1831Z`, `NATIVE-TAB-ROUNDTRIP-…1835Z`,
    `NATIVE-SIDEBAR-CONTROLS-…1843Z` and `NATIVE-CLOSE-REGRESSION-…2057Z`.
 
