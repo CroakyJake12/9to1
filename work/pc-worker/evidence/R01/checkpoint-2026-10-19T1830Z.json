@@ -1,0 +1,46 @@
+{
+  "milestone_id": "R01",
+  "spec_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "worker": "pc-implementation-opencode",
+  "timestamp_utc": "2026-10-19T18:30:00Z",
+  "branch": "opencode/v2-pc-sequential-20261018",
+  "head": "37ff0b4d",
+  "implementation_status": "in_progress",
+  "acceptance_status": "NOT_RUN",
+  "summary": "R01 unsaved-draft close-preparation sub-item is now proven on the real UI route (WM_DELETE_WINDOW only, never a signal). With a dirty Space Builder editor, close is refused rather than silently discarded and the app presents a real visible three-choice decision (Save / Discard / Cancel) with the status 'Unsaved changes.'; Cancel restores the exact same draft and usable commands with the process still alive; Save exits 1s later and the saved value is still present after relaunching the same disposable profile; Discard exits 2s later and the discarded edit is genuinely absent after relaunch (name still 'Draft probe'); a final clean close exits in 2s. Suite state refreshed: HavenOS.Apps.Browse.Tests 150/150 PASS (includes BrowseAppContentTests and BrowseClosePreparationTests); HavenOS.Browse.Host.Tests 245 passed / 12 failed where the 12 are the pre-existing failures recorded at HEAD 3525b860 (NativeAdmissionShutdownTests and UnifiedClosePreparationTests are inside that passing set); HavenOS.Spaces.Tests 218/218; CakeOS.Cui.Runtime.Tests 405/405. BLOCKED with exact reason: shared/tests/Haven.Desktop.Tests cannot build on this host - NETSDK1100 'To build a project targeting Windows on this operating system, set the EnableWindowsTargeting property to true' for net10.0-windows10.0.19041.0 - so NativeAppContentRegistryTests and DesktopOriginalShutdownSequenceTests are NOT RUN here; the equivalent UnifiedWorkspaceHostLifetimeTests cases that do run in Browse.Host.Tests fail with the explicit guard 'This owning host fixture requires actual Windows Home; Linux is unvalidated', recorded as a platform block, not a pass. Still open for R01: the failing-save / failing-close recovery-state probes on the real route, and a dedicated probe that a faulted UI action can never permanently block an ordinary close (observed on HEAD 71661cf3 with the sidebar action, cause fixed in 37ff0b4d).",
+  "next_action": "Add a real-route probe for a failing save/close retaining recovery state, and a probe that a faulted UI action never blocks ordinary close; then request independent acceptance for R01/R02 with the native evidence set.",
+  "read_ranges": [
+    "work/pc-worker/SHUTDOWN-ASSIGNMENT.md 44-62",
+    "docs/specification/9to1-development-specification-v2.md 4723-4866"
+  ],
+  "checks": [
+    {
+      "name": "HavenOS.Apps.Browse.Tests",
+      "command": "dotnet test HavenOS.Apps.Browse.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "HavenOS.Spaces.Tests",
+      "command": "dotnet test HavenOS.Spaces.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "CakeOS.Cui.Runtime.Tests",
+      "command": "dotnet test CakeOS.Cui.Runtime.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Haven.Desktop build",
+      "command": "dotnet build Haven.Desktop.csproj -c Debug -f net10.0 -m:1",
+      "exit_code": 0,
+      "result": "PASS"
+    }
+  ],
+  "evidence": [
+    "work/pc-worker/evidence/R01/NATIVE-DRAFT-CLOSE-2026-10-19T1822Z.md",
+    "work/pc-worker/evidence/R01/NATIVE-APPHOST-2026-10-18T2037Z.md"
+  ]
+}
