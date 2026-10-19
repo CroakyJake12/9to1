@@ -97,9 +97,14 @@ internal sealed partial class SpacesBrowseAppContentSession
                     try
                     {
                         SpacesHomePage? currentHome = null;
+                        // Report the queued failure even when a previous chat route is already
+                        // published, so a failed new selection cannot silently leave the old
+                        // actionable chat under the advanced rail selection. The home's own
+                        // ReportQueuedActionFailure is responsible for coherent rollback or
+                        // explicit unavailable presentation tied to the requested Space.
                         lock (_gate)
                             if (!_closing && _published && _routeEpoch == epoch && _publishedDetailsRoute is null &&
-                                _publishedChatRoute is null && _spacesPage is { } home)
+                                _spacesPage is { } home)
                                 currentHome = home;
                         currentHome?.Controller.ReportQueuedActionFailure(selection, action, failure);
                         return Task.CompletedTask;
