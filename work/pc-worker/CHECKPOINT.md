@@ -1,6 +1,6 @@
-# PC implementation worker checkpoint — 2026-10-19 21:58 BST (20:58 UTC)
+# PC implementation worker checkpoint — 2026-10-19 22:28 BST (21:28 UTC)
 
-Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `d659a062`. Base main
+Source identity: branch `opencode/v2-pc-sequential-20261018`, HEAD `35c881d8`. Base main
 `06a39628`. Nothing is pushed or merged; the owner preview is not running and no owner profile was
 touched.
 
@@ -15,7 +15,9 @@ sidebar native evidence → `da581cf9` R01 draft-close evidence → `e7b39567` w
 `60c6a042` R02 sidebar switcher/overflow/collapse → `c51205fe` worker checkpoint → `aec18695` R02
 authored custom-sidebar element area (read path pending) → `a1260fac` checkpoint for the unreproduced
 intermittent lane failure → `e8d3cf30` DEC-014 open decision → `d659a062` refused Space UI action is
-reported in-surface instead of retained as a close obligation.
+reported in-surface instead of retained as a close obligation → `efc14df8` native close-regression
+evidence → `00b6761f` R02 ledger checkpoint record → `708b3f92` R01/R02 acceptance handoff and the
+Automations backend map → `35c881d8` Automations durable Run-state/continuation persistence foundation.
 
 ## Ledger state
 
@@ -84,9 +86,10 @@ Test-lane alignment (expectations updated to enforce the specification, coverage
 
 ## Test lanes (guarded `/home/jacob/.local/bin/dotnet`, `-m:1`, serialized)
 
-- `HavenOS.Browse.Host.Tests` **255 passed / 3 failed** (258 total, at `d659a062`; 254 before the new
-  close test). The 3 are the explicit platform guard "This owning host fixture requires actual Windows
-  Home; Linux is unvalidated" — recorded as BLOCKED on this host, never as a pass.
+- `HavenOS.Browse.Host.Tests` **257 passed / 3 failed** (260 total, at `35c881d8`; 255 before the two
+  new Automations persistence tests). The 3 are the explicit platform guard "This owning host fixture
+  requires actual Windows Home; Linux is unvalidated" — recorded as BLOCKED on this host, never as a
+  pass.
 - Flakiness observed and not hidden: one run at 20:36 UTC reported **253 passed / 4 failed**, i.e. one
   extra failure beyond the three platform guards. The failure name was not captured because the
   summary was grepped alone. Three subsequent runs (two `--no-build`, one with build) each returned
@@ -159,6 +162,30 @@ Inventory taken at `d659a062`, so the next slice starts from evidence rather tha
   non-CUI authoring surface. CUI is the only application-authoring language, so this needs reconciling
   to canonical versioned CUI rather than being treated as an accepted implementation.
 
+### Automations slice landed at `35c881d8` (persistence foundation only)
+
+`automation_runs` previously kept nine summary columns, so `AutomationRun.Revision`,
+`DefinitionRevision`, `PinnedGraph`, `AdmissionSnapshotJson`, `ContinuationDescriptorJson` and `Details`
+were dropped on write and never hydrated. Migration 29
+(`AutomationRunCanonicalStateMigration`) adds those columns plus a resumable-run index;
+`AutomationRepository` now writes and reads them, and a new `IAutomationRunContinuationStore`
+capability exposes `SuspendRunAsync` (persists a waiting Run without advancing the definition's
+schedule or clearing its lease) and `GetResumableRunsAsync`. It is deliberately a separate capability,
+not a member of `IAutomationRepository`, so a store that cannot keep a continuation cannot appear to
+support durable waits. Two new tests in `HavenOS.Browse.Host.Tests` prove the round trip against the
+real SQLite schema and migrations, including a store reopen standing in for a restarted process.
+
+Not implemented and not claimed: the graph runtime still executes a delay node with an in-process
+`Task.Delay` (`BuiltInAutomationActionNodes.cs:143`) and nothing suspends or resumes a Run yet, so
+durable Wait remains open. The five `IAutomationRepository` fakes in
+`shared/tests/Haven.Desktop.Tests` were left untouched; that lane is BLOCKED on this host
+(`NETSDK1100`), so their behaviour under the new capability is NOT RUN here.
+
+Note for the next session: default interface members do not compile in this repo (`CS1519` on
+`default` in an interface body, even at `LangVersion 14`), so optional store capabilities must be
+separate interfaces. The xUnit analyzer in `Browse/Host.Tests` also requires the test
+`CancellationToken` on `WaitAsync`, i.e. `.WaitAsync(Bound, token)`.
+
 ## Next executable actions
 
 1. Custom sidebar elements stay held until DEC-014 is answered. Once the owner names the activation
@@ -167,11 +194,12 @@ Inventory taken at `d659a062`, so the next slice starts from evidence rather tha
    per-Space visibility selection and run the native journey with a real attached extension.
 2. Add the remaining R01 negative probes on the real route: a failing save retains recovery state, and
    a failing close leaves the canonical failure surface without wedging the tab.
-3. Then the Automations backend (owner priority 3), starting with durable Wait/resume: write and read
-   `AutomationRun.ContinuationDescriptorJson` as a typed continuation (run identity, pinned revision,
-   node position, committed outputs, ResumeAt), persist Status Waiting, release the execution resource,
-   and resume from the scheduler sweep without replaying committed node side effects. Replace the
-   in-process `Task.Delay` in the delay node. Keep the retry backoff bounded and inspectable.
+3. Automations backend (owner priority 3): the persistence foundation is landed at `35c881d8`. The next
+   slice is the runtime half — have the graph runtime write
+   `AutomationRun.ContinuationDescriptorJson` and call `SuspendRunAsync` when a Wait/Delay or approval
+   node is reached, replace the in-process `Task.Delay` in the delay node, and have the existing
+   1-minute sweep call `GetResumableRunsAsync` and resume from the continuation without re-executing
+   committed nodes. Keep the retry backoff bounded and inspectable.
 4. Keep refreshing this file plus the R01/R02 evidence so Astra can review independently. The
    review entry point is now `work/pc-worker/ACCEPTANCE-HANDOFF-R01-R02-2026-10-19.md`; the R02
    native evidence set is `NATIVE-SPACES-ENTRY-…1715Z`, `NATIVE-SPACES-SIDEBAR-…1741Z`,
