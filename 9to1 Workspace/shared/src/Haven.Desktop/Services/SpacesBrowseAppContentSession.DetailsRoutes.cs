@@ -14,6 +14,9 @@ internal sealed partial class SpacesBrowseAppContentSession
 {
     private sealed record PublishedDetailsRoute(SpaceDetailsPage Page, AppContentAddress Address);
     private PublishedDetailsRoute? _publishedDetailsRoute; // Same _gate as the Chat projection.
+    // Canonical return-chat identity preserved across management/builder entry so
+    // the prior chat can be restored on return rather than being lost.
+    private Guid? _returnChatConversationId;
     private readonly List<SpaceDetailsPage> _ownedDetails = [];
     private readonly Dictionary<Guid, SpaceDetailsPage> _detailsBySpace = [];
     private readonly Dictionary<SpaceDetailsPage, Task> _detailsCloses = [];
@@ -212,6 +215,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                     token.ThrowIfCancellationRequested(); DemandAlive();
                     if (_activeDetailsPreparation is not null) throw new InvalidOperationException("Abort the session close preparation before navigating.");
                     SetRootContent(page); // Only successful native publication changes the immutable projection.
+                    if (_publishedChatRoute is { } priorChat) _returnChatConversationId = priorChat.Page.CurrentConversation.Id;
                     _publishedDetailsRoute = new(page, AppContentAddress.Parse($"9to1://spaces/details/{id:D}"));
                     _publishedChatRoute = null;
                     _publishedBuilderRoute = null;

@@ -68,6 +68,7 @@ internal sealed partial class SpacesBrowseAppContentSession
                     token.ThrowIfCancellationRequested(); DemandAlive();
                     if (_activeDetailsPreparation is not null) throw new InvalidOperationException("Abort the session close preparation before navigating.");
                     SetRootContent(page);
+                    if (_publishedChatRoute is { } priorChat) _returnChatConversationId = priorChat.Page.CurrentConversation.Id;
                     _publishedBuilderRoute = new(page, AppContentAddress.Parse($"9to1://spaces/builder/{id:D}"));
                     _publishedChatRoute = null;
                     _publishedDetailsRoute = null;
