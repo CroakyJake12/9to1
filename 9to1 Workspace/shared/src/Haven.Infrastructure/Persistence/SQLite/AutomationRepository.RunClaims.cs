@@ -59,6 +59,12 @@ public sealed partial class AutomationRepository
             return new(false, string.Empty, AutomationResumeErrorKind.WaitResumeFailed, "claim.status.ineligible",
                 "The Run is not in a resumable waiting/approval/retry state; refusing to claim.");
 
+        // Due-time fence: a Run must be genuinely due to be claimed. A direct/forged request must not
+        // bypass the candidate query and claim a far-future Wait/Approval before its due time.
+        if (existing.ScheduledFor > DateTimeOffset.UtcNow)
+            return new(false, string.Empty, AutomationResumeErrorKind.WaitResumeFailed, "claim.not.due",
+                "The Run is not due yet; refusing to claim before its scheduled due time.");
+
         if (existing.AutomationId != request.AutomationId)
             return new(false, string.Empty, AutomationResumeErrorKind.WaitResumeFailed, "claim.identity.mismatch", "The claim automation identity does not match the persisted Run.");
         if (existing.LeaseToken != request.LeaseToken)

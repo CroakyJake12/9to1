@@ -69,13 +69,13 @@ public sealed class AutomationRunContinuationCoordinator(
                 // a side effect occurred; retain the claim and record an uncertain settlement so a later
                 // sweep never re-executes B while unresolved.
                 await RecordUncertainAsync(run, claim, AutomationRunClaimSettlementKind.ResumeCancelled, null, null,
-                    "The resumer cancelled before persistence.", cancellationToken).ConfigureAwait(false);
+                    "The resumer cancelled before persistence.", CancellationToken.None).ConfigureAwait(false);
                 throw;
             }
             catch (Exception ex)
             {
                 await RecordUncertainAsync(run, claim, AutomationRunClaimSettlementKind.ResumeFault, null, null,
-                    ex.Message, cancellationToken).ConfigureAwait(false);
+                    ex.Message, CancellationToken.None).ConfigureAwait(false);
                 throw;
             }
 
@@ -167,7 +167,10 @@ public sealed class AutomationRunContinuationCoordinator(
             // Keep the claim and record the EXACT persistence operation that could not be acknowledged.
             // This is the durable outcome/receipt; we never release on failure, ACK loss, or cancellation.
             var runJson = updatedRun is null ? null : System.Text.Json.JsonSerializer.Serialize(updatedRun);
-            await RecordUncertainAsync(run, claim, kind, runJson, nextRunAt, ex.Message, cancellationToken).ConfigureAwait(false);
+            // Persist the retained uncertain outcome through an INDEPENDENT bounded lifetime, never the
+            // caller's cancelled token: an in-flight/lost ACK must be recorded before any rethrow so a
+            // later sweep cannot re-execute B. The recording is a best-effort durable receipt.
+            await RecordUncertainAsync(run, claim, kind, runJson, nextRunAt, ex.Message, CancellationToken.None).ConfigureAwait(false);
             if (ex is OperationCanceledException oce && cancellationToken.IsCancellationRequested) throw oce;
             throw;
         }

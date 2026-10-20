@@ -240,12 +240,27 @@ public sealed class AutomationPass8UncertainSettlementAndPinTests : IDisposable
             new BuiltInAutomationActionNodeExecutor(), continuationStore: store);
         var suspended = await runner.RunOneAsync(task, now, token).WaitAsync(Bound, token);
 
-        // Publish a NEWER Active payload with the SAME node IDs but a B that is invalid (would fail).
-        // If resume wrongly used the current payload, it would fail; using the pinned snapshot succeeds.
-        var invalidB = Node("Action", ("action", "emit"), ("value", "b"), ("force_invalid", "true"));
+        // Publish a NEWER Active payload with the SAME node IDs but a B that is materially changed so the
+        // real executor detects it (an unsupported action kind fails execution). If resume wrongly used the
+        // current payload, the run would FAIL; using the pinned snapshot (old B, emit "b") succeeds.
+        var triggerNode = fx.Graph.Nodes.Single(n => n.Id == fx.TriggerId);
+        var actionANode = fx.Graph.Nodes.Single(n => n.Id == fx.ActionAId);
+        var waitNode = fx.Graph.Nodes.Single(n => n.Id == fx.WaitId);
+        var oldBNode = fx.Graph.Nodes.Single(n => n.Id == fx.ActionBId);
+        // Preserve the SAME B NodeID but make it materially changed so the real executor detects and
+        // FAILS it (unsupported action kind). If resume wrongly substituted the current Active payload,
+        // the run would fail; the pinned old snapshot (emit "b") is what actually succeeds.
+        var changedB = oldBNode with
+        {
+            Parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["action"] = "transmit-to-mars",
+                ["value"] = "changed"
+            }
+        };
         var newGraph = new AutomationGraphDefinition(AutomationGraphDefinition.CurrentVersion,
-            [fx.Trigger, fx.ActionA, fx.Wait, invalidB],
-            [new(fx.Trigger.Id, fx.ActionA.Id), new(fx.ActionA.Id, fx.Wait.Id), new(fx.Wait.Id, invalidB.Id)]);
+            [triggerNode, actionANode, waitNode, changedB],
+            [new(triggerNode.Id, actionANode.Id), new(actionANode.Id, waitNode.Id), new(waitNode.Id, changedB.Id)]);
         var newPayload = ScheduledGraphAutomationPayloadCodec.Serialize(fx.GraphId, fx.TriggerId, "Durable wait rev2",
             AutomationGraphCodec.Serialize(newGraph), null, graphId: fx.GraphId, sourceRevision: 5,
             schemaVersion: 1, sourceDigest: "d1g3st-new", capabilityProfileId: "automations");
@@ -261,9 +276,12 @@ public sealed class AutomationPass8UncertainSettlementAndPinTests : IDisposable
         var outcome = await coordinator.SweepResumeAsync(sweepAt, 10, token).WaitAsync(Bound, token);
         Assert.True(outcome.Accepted, outcome.Message);
         var final = Assert.Single(await reopened.GetRunsAsync(automationId, 10, token).WaitAsync(Bound, token));
-        // The run completed with the OLD pinned revision (4), never the current revision (5).
+        // The run completed with the OLD pinned revision (4), never the current revision (5), and the
+        // executed OUTPUT is the old B (emit "b", graphSucceeded=true) — not the changed unsupported B
+        // that would have failed the graph had the Active payload been substituted.
         Assert.Equal(AutomationRunStatus.Succeeded, final.Status);
         Assert.Equal(4, final.DefinitionRevision);
+        Assert.Contains("graphSucceeded\":true", final.Result ?? string.Empty, StringComparison.Ordinal);
     }
 
     // ---- Test 6: approval by-ID not hidden by >100 other waiting Runs; conflicting decision refuses ----
@@ -362,10 +380,10 @@ public sealed class AutomationPass8UncertainSettlementAndPinTests : IDisposable
                 new BuiltInAutomationActionNodeExecutor(), continuationStore: store));
 
         var request = new GraphActivationRequest(AutomationNodeGraphDurableAdapter.GraphTypeValue, fx.GraphId, 4,
-            fx.Trigger.Id, "schedule", "session", "entity", "participant", System.Text.Json.JsonSerializer.SerializeToElement(new { }), 1000);
+            fx.TriggerId, "schedule", "session", "entity", "participant", System.Text.Json.JsonSerializer.SerializeToElement(new { }), 1000);
 
         // Legitimate pin: the adapter acquires a real claim and returns an authoritative binding.
-        var legitEnvelope = EnvelopeFor(suspended, fx.GraphId, 4, fx.Wait.Id, request, now, GraphContinuationKind.Wait);
+        var legitEnvelope = EnvelopeFor(suspended, fx.GraphId, 4, fx.WaitId, request, now, GraphContinuationKind.Wait);
         var legit = await adapter.AdmitResumeAsync(legitEnvelope, request, token);
         Assert.NotNull(legit);
         Assert.Equal(suspended.Id.ToString(), legit!.OwnerRunId);

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Haven.Application.NodeGraph;
+using Haven.Core;
 
 namespace Haven.Application.Automations;
 
@@ -179,7 +180,7 @@ public sealed class AutomationNodeGraphDurableAdapter : INodeGraphOwnerBackedCon
         }
         catch (Exception ex)
         {
-            await RecordUncertainAsync(run, claimToken, AutomationRunClaimSettlementKind.ResumeFault, null, null, ex.Message, cancellationToken).ConfigureAwait(false);
+            await RecordUncertainAsync(run, claimToken, AutomationRunClaimSettlementKind.ResumeFault, null, null, ex.Message, CancellationToken.None).ConfigureAwait(false);
             return new GraphActivationResult(false, "graph.automation.resume.fault", Array.Empty<GraphRuntimeTransition>(), budget.StepsConsumed, true)
             { Outcome = GraphRunOutcome.Uncertain };
         }
@@ -208,7 +209,7 @@ public sealed class AutomationNodeGraphDurableAdapter : INodeGraphOwnerBackedCon
         {
             var kind = result.ReSuspended ? AutomationRunClaimSettlementKind.Suspend : AutomationRunClaimSettlementKind.Complete;
             var runJson = result.UpdatedRun is null ? null : JsonSerializer.Serialize(result.UpdatedRun);
-            await RecordUncertainAsync(run, claimToken, kind, runJson, result.NextRunAt, ex.Message, cancellationToken).ConfigureAwait(false);
+            await RecordUncertainAsync(run, claimToken, kind, runJson, result.NextRunAt, ex.Message, CancellationToken.None).ConfigureAwait(false);
             return new GraphActivationResult(false, "graph.automation.persist.uncertain", Array.Empty<GraphRuntimeTransition>(), budget.StepsConsumed, true)
             { Outcome = GraphRunOutcome.Uncertain };
         }
