@@ -252,7 +252,8 @@ public sealed partial class App
             _session = new UnifiedWorkspaceSession(coordinator, restored);
             var persistence = _session.OpenWindow(_session.MainWindowId, _actor.ProfileId);
             var files = FilesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
-            var spaces = SpacesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
+            var spaces = SpacesBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
+                (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement));
             var modes = _services.GetRequiredService<IModeRegistry>();
             var apps = new NativeAppContentRegistry(modes,
                 [new NativeAppContentRegistration(Guid.Parse("a0000000-0000-0000-0000-000000000030"),
