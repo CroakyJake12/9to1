@@ -12,6 +12,7 @@ using Haven.Core;
 using Haven.Desktop.Events;
 using Haven.Desktop.Dashboard;
 using Haven.Desktop.Services;
+using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Home;
 using Haven.Desktop.Views.Shell;
 using HavenOS.Apps.Browse;
@@ -292,10 +293,13 @@ public sealed partial class App
                 _services.GetRequiredService<IBrowserAutomationService>(), currentToken, apps, home, _actor.ProfileId, persistence));
             _chrome = await _chromeCreation;
             DemandCurrent();
-            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent);
+            _sharedGateway = new HavenGateway(this);
+            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent, sharedContext: new SharedHostContext(this));
             var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, _homeTheme.Context);
+            scene.ControlRegistry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
             _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
-            _scene = new CuiSceneHost(scene.ControlRegistry); Content = _scene;
+            _scene = new CuiSceneHost(scene.ControlRegistry);
+            ComposeSharedFrame();
             _sceneInitialization = Track(_scene.ShowAsync(scene, currentToken));
             var ready = await _sceneInitialization;
             _workspace.ObserveReadiness(ready);
@@ -501,6 +505,7 @@ public sealed partial class App
                 // A null returned owner is therefore not proof that producers stopped.
                 var producersStopped = _workspaceClose is { IsCompletedSuccessfully: true } ||
                     (_chromeCreation is null && _chrome is null);
+                await JoinSharedPanelSettlementAsync(failures);
                 if (producersStopped)
                 {
                     try { _sceneClose ??= _scene?.CloseOriginalAsync(); } catch (Exception error) { AddAppCause(failures, error); }

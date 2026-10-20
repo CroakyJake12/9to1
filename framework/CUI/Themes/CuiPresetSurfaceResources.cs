@@ -48,6 +48,8 @@ internal static class CuiPresetSurfaceResources
         resources["CuiFloatingSurfaceMaterial"] = resources["CuiPanel2Brush"];
         resources["CuiPopupSurfaceBrush"] = Gradient(90,
             (0, Opaque(Mix(palette.Panel2, white, dark ? .04 : .12))), (1, Opaque(palette.Panel2)));
+        // Opaque solid fallback for transparency negotiation, independent of the gradient surface.
+        resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(Opaque(palette.Panel2));
         ApplyForeground(resources, palette);
 
         IBrush Glass(Color colour) => Gradient(90, (0, Mix(colour, white, dark ? .09 : .20)), (.35, colour), (1, colour));

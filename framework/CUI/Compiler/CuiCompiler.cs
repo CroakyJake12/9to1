@@ -172,17 +172,31 @@ public sealed class CuiCompiler
         if (diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
 
+        var stateful = document.Variables.Count > 0
+            || document.Actions.Values.Any(action => action.LocalTarget is not null);
+        var requiresQueryViewport = DocumentUsesQueryViewport(document);
         var effectiveMetadata = options.Metadata;
-        if (document.Variables.Count > 0
-            || document.Actions.Values.Any(action => action.LocalTarget is not null))
+        if (stateful || requiresQueryViewport)
         {
+            // Stateful documents (document-root local variables or pure-local actions) require the
+            // distinct stateful ABI and V2 compiled transport. The ABI is derived from typed
+            // semantics, so stripping/relabelling capability text cannot downgrade a stateful doc.
+            // A query-only document (QueryViewport scope, no local-state Variables/Toggle) keeps its
+            // stateless ABI but must still declare the derived query capability so a host that does
+            // not support bounded paged query scopes fails at admission rather than at control
+            // creation.
             var capabilities = new List<string>(options.Metadata.RequiredCapabilities);
-            capabilities.Add(CuiRuntimeCompatibility.LocalStateToggleCapability);
-            if (document.Variables.Values.Any(declaration => !string.IsNullOrEmpty(declaration.Selection)))
-                capabilities.Add(CuiRuntimeCompatibility.LocalStateRandomSelectCapability);
+            if (stateful)
+            {
+                capabilities.Add(CuiRuntimeCompatibility.LocalStateToggleCapability);
+                if (document.Variables.Values.Any(declaration => !string.IsNullOrEmpty(declaration.Selection)))
+                    capabilities.Add(CuiRuntimeCompatibility.LocalStateRandomSelectCapability);
+            }
+            if (requiresQueryViewport)
+                capabilities.Add(CuiRuntimeCompatibility.QueryViewportCapability);
             effectiveMetadata = new CuiCompilationMetadata(
                 options.Metadata.LanguageVersion,
-                options.Metadata.RuntimeAbiVersion,
+                stateful ? CuiCompiledArtifactCodec.V2RuntimeAbiVersion : options.Metadata.RuntimeAbiVersion,
                 options.Metadata.ComponentRegistryVersion,
                 capabilities.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
         }
@@ -192,6 +206,45 @@ public sealed class CuiCompiler
         {
             Output = output
         };
+    }
+
+    /// <summary>True if any component/template route in the document (component tree, definition
+    /// bodies, template content, else-children/closure) contains a QueryViewport container. This
+    /// drives declaration of the <c>query-viewport</c> capability for both stateful and stateless
+    /// query documents.</summary>
+    private static bool DocumentUsesQueryViewport(CuiDocument document)
+    {
+        foreach (var component in document.Components)
+            if (ComponentUsesQueryViewport(component))
+                return true;
+        foreach (var template in document.Templates.Values)
+            if (template?.Content is not null)
+                foreach (var component in template.Content)
+                    if (ComponentUsesQueryViewport(component))
+                        return true;
+        return false;
+    }
+
+    /// <summary>Recursively tests a component (and its children/else-children closure) for a
+    /// QueryViewport container: either a component whose native type is QueryViewport, or a
+    /// Container whose authored Type literal is QueryViewport. List/Repeat template bodies live in
+    /// the document template table and are covered separately.</summary>
+    private static bool ComponentUsesQueryViewport(CuiComponent component)
+    {
+        foreach (var node in component.DescendantsAndSelf())
+        {
+            if (string.Equals(node.Type, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (string.Equals(node.Type, "Container", StringComparison.OrdinalIgnoreCase))
+            {
+                var typeValue = node.Properties
+                    .FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value;
+                if (typeValue is CuiLiteralValue literal
+                    && string.Equals(literal.Value, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -244,6 +297,12 @@ public sealed class CuiCompiler
                     $"Local variable '{declaration.Name}' has unsupported Type '{declaration.Type}'; only bool (or a string RandomOnce source select) is supported in this bounded slice.",
                     declaration.Span);
                 continue;
+            }
+            if (!string.IsNullOrEmpty(declaration.Source))
+            {
+                diagnostics.Error("CUIC039",
+                    $"Local bool variable '{declaration.Name}' declares a Source without Selection; a bool literal cannot carry a candidate pool.",
+                    declaration.Span);
             }
             if (!bool.TryParse(declaration.Value, out _))
             {
@@ -516,7 +575,12 @@ public sealed class CuiCompiler
 
             // A custom Definition has no built-in descriptor, but registered literal
             // types still apply. Do not let reuse turn an invalid number/bool into output.
-            if (element is not null && !_registry.SupportsProperty(element, declaredType?.Value, property))
+            // The authored QueryViewport typed source is a scoped runtime port, not a native element
+            // property, so it is allowed only on a QueryViewport container.
+            var isQueryViewportSource = declaredType is not null
+                && declaredType.Value.Equals("QueryViewport", StringComparison.OrdinalIgnoreCase)
+                && property.Name.Equals("Source", StringComparison.OrdinalIgnoreCase);
+            if (!isQueryViewportSource && element is not null && !_registry.SupportsProperty(element, declaredType?.Value, property))
             {
                 diagnostics.Error("CUIC013", $"Property '{property.Name}' is not allowed on '{component.Type}'.", value.Span);
                 continue;

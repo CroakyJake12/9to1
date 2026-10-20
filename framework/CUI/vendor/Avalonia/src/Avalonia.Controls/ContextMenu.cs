@@ -84,6 +84,13 @@ namespace Avalonia.Controls
         private Action<IPopupHost?>? _popupHostChangedHandler;
 
         /// <summary>
+        /// Optional authored configuration applied once to the retained popup when it is first created
+        /// (before any show). Carries only the public <see cref="Popup"/> type. Used by CUI to route
+        /// context-menu popups through the same per-open transparency request/receipt seam.
+        /// </summary>
+        public Action<Popup>? ConfigurePopup { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ContextMenu"/> class.
         /// </summary>
         public ContextMenu()
@@ -320,6 +327,8 @@ namespace Avalonia.Controls
                 _popup.Closed += PopupClosed;
                 _popup.Closing += PopupClosing;
                 _popup.KeyUp += PopupKeyUp;
+
+                ConfigurePopup?.Invoke(_popup);
             }
 
             _popup.SetPopupParent(control);

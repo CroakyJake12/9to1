@@ -200,6 +200,23 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public IChatComposerInputPort ComposerInput => _composerInput;
 
     public event EventHandler? ModelChanged;
+    /// <summary>Raised when the user asks to manage local models from this chat (for example
+    /// from the truthful unavailable-model state). The host routes it to the shared Home local
+    /// model manager/catalogue, preserving this conversation, draft, selection and focus.</summary>
+    public event EventHandler? ManageLocalModelsRequested;
+    /// <summary>Typed recovery action from the affected chat status. It never fabricates a
+    /// model or changes the send gate; it only requests the shared local-model management
+    /// route so the user can install/repair/import the missing safe local artifacts.</summary>
+    public void RequestManageLocalModels()
+    {
+        DemandOriginalChatCurrent();
+        ManageLocalModelsRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>The actual recovery loader action-settlement pipeline for the currently shown
+    /// recovery surface. The host joins this snapshot when routing a local-model recovery request so
+    /// the navigation settles only after the real recovery action pipeline drains.</summary>
+    public Task RecoveryActionSettlement => _scene.RecoveryActionSettlement;
     public event EventHandler? ConversationStateChanged;
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
@@ -207,6 +224,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;
+    /// <summary>The actual model-client source this page discovers/sends through. Normal and
+    /// Overlay chat must both receive the same routed <see cref="IProviderModelClient"/> from
+    /// their factory composition; this exposes the bound instance for composition regression
+    /// tests without granting callers an escape hatch to bypass routing.</summary>
+    internal IOllamaClient ModelClientSource => _ollama;
     public IReadOnlyList<ModelDescriptor> AdmittedModels => _admittedCatalogue;
     /// <summary>Truthful availability of configured model discovery. Unavailable is a
     /// terminal degraded observation that survives Fresh/Restore; model-backed actions
@@ -388,7 +410,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     }
 
     private const string ModelUnavailableStatus =
-        "Local models are unavailable. Connect a configured model provider, then try again.";
+        "Local models are unavailable. Open the model manager to install or repair the safe local artifacts.";
 
     private const string NoLocalModelStatus = "No local model is available.";
 
@@ -1094,6 +1116,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             if (_originalWork.IsRetiring) return;
             _bus.Fire("Chat.Problems.Resolve.Click");
             ShowResolveProblems();
+        };
+        _scene.ManageLocalModelsRequested += (_, _) =>
+        {
+            if (_originalWork.IsRetiring) return;
+            // The recovery action only requests the shared Home local-model management route; it
+            // never fabricates a model or changes the send gate.
+            RequestManageLocalModels();
         };
         _scene.AddActionSelected += (_, action) =>
         {
@@ -2654,6 +2683,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         DemandOriginalChatCurrent();
         _scene.SetSending(_isSending, CanUseSelectedModel);
+        // The genuine local-model management recovery action is offered exactly while model
+        // discovery is a truthful terminal unavailable observation; it never fabricates a model.
+        _scene.SetManageLocalModelsVisible(_modelAvailability == ChatModelAvailability.Unavailable);
         DemandOriginalChatCurrent();
     }
 

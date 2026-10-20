@@ -82,7 +82,9 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         IEnumerable<IHomeActionPolicySource>? originalActionPolicies = null,
         Func<HomeNativeWindowsOwnerComponents, IReadOnlyDictionary<Type, object>>? configureOriginalOwners = null,
         Func<HomeNativeWindowsIdentityComponents, HomeNativeWindowsStoreRegistrations>? configureOriginalStores = null,
-        Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null)
+        Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null,
+        string? linuxDulcheExecutableSha256 = null,
+        HomeDulcheCapabilityObservation? dulcheCapabilityObservation = null)
     {
         StateStore = originalStateStore ?? throw new ArgumentNullException(nameof(originalStateStore));
         ArgumentNullException.ThrowIfNull(originalPrincipalSource);
@@ -122,7 +124,38 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
             () => api ?? throw new InvalidOperationException("The original Home API has not been constructed."));
         Productivity = new();
         var permissionsService = new HomePermissionsCoreService(Permissions, Profiles);
-        Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity], Sessions);
+        // The shared local Dulche runtime is owned by Home Core as one lifecycle service. The
+        // observation source composes real package discovery, a bounded broker adapter and verified
+        // model evidence; it never fabricates a model or a Ready state, so a missing/altered/blocked
+        // axis is reported truthfully as a recoverable degraded observation. Linux uses the packaged
+        // runtime + systemd-loopback broker + content-addressed model store; other platforms use
+        // explicit unsupported adapters and can never report Ready.
+        IHomeDulcheRuntimeObservationSource dulcheSource;
+        if (OperatingSystem.IsLinux())
+        {
+            // The bundled Dulche package and model store are the ONLY canonical local sources. A
+            // root-supplied executable pin and an already-admitted capability observation are optional
+            // narrow seams: when absent, the runtime stays truthfully Degraded with the exact missing
+            // prerequisites recorded — nothing is fabricated, hard-coded or downloaded here. The
+            // source reuses the canonical packaged model catalogue
+            // (HomeDulchePackagedModelEvidenceSource) rather than a new global registry.
+            dulcheSource = new HomeDulcheRuntimeObservationSource(
+                new HomeDulcheLinuxRuntimePackageSource(linuxDulcheExecutableSha256),
+                new HomeDulcheLinuxBrokerAdapter(),
+                new HomeDulchePackagedModelEvidenceSource(),
+                dulcheCapabilityObservation);
+        }
+        else
+        {
+            var platform = OperatingSystem.IsWindows() ? "windows"
+                : OperatingSystem.IsAndroid() ? "android" : "unknown";
+            dulcheSource = new HomeDulcheRuntimeObservationSource(
+                new HomeDulcheUnsupportedRuntimePackageSource(platform),
+                new HomeDulcheUnsupportedBrokerAdapter(platform),
+                new HomeDulchePackagedModelEvidenceSource());
+        }
+        var dulcheRuntime = new HomeDulcheRuntimeService(dulcheSource);
+        Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity, dulcheRuntime], Sessions);
         Api = api = new(Runtime, Sessions, Profiles);
         var components = new Dictionary<Type, object>
         {
@@ -147,6 +180,8 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
             [typeof(HomeCoreRuntime)] = Runtime,
             [typeof(HomeCoreApi)] = Api,
             [typeof(IHomeCoreApi)] = Api,
+            [typeof(HomeDulcheRuntimeService)] = dulcheRuntime,
+            [typeof(IHomeDulcheRuntimeObservationSource)] = dulcheSource,
             [typeof(IAppPaths)] = _paths
         };
         AddRegistrations(components, stageServices);

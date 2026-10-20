@@ -81,8 +81,12 @@
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HavenNotifications.cui" LogicalName="Haven.Desktop.Home.HavenNotifications.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HavenSharedPanelShell.cui" LogicalName="Haven.Desktop.Home.HavenSharedPanelShell.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HavenAppHeader.cui" LogicalName="Haven.Desktop.Home.HavenAppHeader.cui" />
     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
+    <EmbeddedResource Include="Views/Pages/Chat/ChatRecovery.cui" LogicalName="Haven.Desktop.Chat.Recovery.cui" />
     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
     <Compile Update="Prefabs\**\*.hui.cs"><DependentUpon>%(Filename)</DependentUpon></Compile>
   </ItemGroup>

@@ -126,5 +126,9 @@
     <Compile Include="ChatModelDiscoveryPolicyTests.cs" />
     <Compile Include="NewChatOriginalWorkLifetimeTests.cs" />
     <Compile Include="SpacesBrowseAppContentSessionRetirementTests.cs" />
+    <Compile Include="SpacesRailSvgIconsTests.cs" />
+    <!-- Lane4 shared header/Assistants rail read projections (source-only, NOT RUN). -->
+    <Compile Include="AssistantRailIconProjectionTests.cs" />
+    <Compile Include="HavenAppHeaderBindingsTests.cs" />
   </ItemGroup>
 </Project>

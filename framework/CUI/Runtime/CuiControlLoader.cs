@@ -260,7 +260,10 @@ public sealed class CuiControlLoader : IDisposable
         if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
             !TryGetActionInvocation(control, out var invocation)) return;
         var isLocal = invocation.Command == LocalToggleCommand;
-        var dispatcher = _actionDispatcher;
+        // A control inside a QueryViewport's authored subtree dispatches through that viewport (the
+        // generic runtime query/state owner); the viewport forwards unrelated commands to the scene
+        // host dispatcher. Outside such a scope, the scene/app dispatcher is used directly.
+        var dispatcher = !isLocal ? ScopedDispatcherFor(control) ?? _actionDispatcher : _actionDispatcher;
         if (!isLocal && dispatcher is null) return;
 
         if (control is MenuItem && !control.IsEffectivelyEnabled) return;
@@ -854,10 +857,10 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
-    private Control LoadComponent(CuiComponent component, string? identityOverride = null, bool definitionInstance = false)
+    private Control LoadComponent(CuiComponent component, string? identityOverride = null, bool definitionInstance = false, Control? parent = null)
     {
         if (component.Type.Equals("Repeat", StringComparison.OrdinalIgnoreCase))
-            return LoadRepeat(component);
+            return LoadRepeat(component, parent);
         if (component.Type.Equals("If", StringComparison.OrdinalIgnoreCase))
             return LoadConditional(component);
 
@@ -945,10 +948,48 @@ public sealed class CuiControlLoader : IDisposable
             _currentLayer = layer;
             try
             {
-                foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
+                // A QueryViewport is the generic runtime state/query scope for a bounded paged
+                // picker. While loading its authored subtree, the viewport becomes the active binding
+                // context and action dispatcher: child bindings (Items/Query/range/availability) and
+                // pager actions resolve against the viewport, which owns the query string + opaque
+                // cursor and delegates all data filtering/pagination to its authored typed
+                // ICuiPagedSource. The viewport defers nonlocal lookups and non-pager commands to the
+                // scene/app host, so the parent context/dispatcher are captured and restored around
+                // the subtree. The guardian callback is fenced to this load attempt's generation so a
+                // retired viewport can never refresh a newer frame.
+                ICuiBindingContext? viewportPreviousContext = null;
+                ICuiActionDispatcher? viewportPreviousDispatcher = null;
+                CuiQueryViewport? activeViewport = null;
+                if (control is CuiQueryViewport viewport)
                 {
-                    var childControl = LoadComponent(child);
-                    AddChild(control, childControl);
+                    activeViewport = viewport;
+                    viewport.InnerContext = _bindingContext;
+                    viewport.InnerDispatcher = _actionDispatcher;
+                    var mountGeneration = _loadGeneration;
+                    viewport.RefreshHost = () =>
+                    {
+                        if (IsLoadAttemptCurrent(mountGeneration)) OnBindingPropertyChanged(null);
+                    };
+                    viewportPreviousContext = _bindingContext;
+                    viewportPreviousDispatcher = _actionDispatcher;
+                    _bindingContext = viewport;
+                    _actionDispatcher = viewport;
+                }
+                try
+                {
+                    foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
+                    {
+                        var childControl = LoadComponent(child, parent: control);
+                        if (childControl is not null) AddChild(control, childControl);
+                    }
+                }
+                finally
+                {
+                    if (activeViewport is not null)
+                    {
+                        _bindingContext = viewportPreviousContext;
+                        _actionDispatcher = viewportPreviousDispatcher;
+                    }
                 }
             }
             finally
@@ -1082,7 +1123,7 @@ public sealed class CuiControlLoader : IDisposable
             $"Layer value '{resolved}' must be a signed integer.", layerValue.Span));
     }
 
-    private Control LoadRepeat(CuiComponent component)
+    private Control LoadRepeat(CuiComponent component, Control? parent)
     {
         if (component.Repeat is null)
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
@@ -1091,8 +1132,28 @@ public sealed class CuiControlLoader : IDisposable
 
         var layer = ResolveLayer(component, _currentLayer);
         var panelValue = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Panel", StringComparison.OrdinalIgnoreCase)).Value;
-        var panelName = panelValue is null ? "Vertical Stack" : panelValue is CuiLiteralValue literal ? literal.Value :
-            throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel must be a structural literal.", component.Span));
+        var explicitPanel = panelValue is not null;
+
+        // Canonical container-range mode: Repeat is a keyed generated CHILD RANGE of the actual
+        // owning Container, so each item's visual root participates directly in that Container's
+        // declared Wrap/Horizontal Stack/Vertical Stack/Grid layout. No hidden vertical sub-panel
+        // is invented, and the repeat itself carries no layout/visual/input policy. The explicit
+        // legacy `Panel=` extension remains as a versioned compatibility escape for existing
+        // consumers; it is not the canonical repair and is never implied automatically.
+        if (!explicitPanel && parent is CuiContainerControl container)
+        {
+            var cellHost = new ContainerCellRepeatHost(container, container.AuthoredChildCount);
+            var cellState = new CuiRepeatState(cellHost, component, layer,
+                _bindingContext, _currentRepeatIdentity, _themeNames.Peek(), container);
+            _repeats.Add(cellState);
+            ReconcileRepeat(cellState);
+            return new CuiRepeatFragment { State = cellState };
+        }
+
+        var panelName = explicitPanel
+            ? panelValue is CuiLiteralValue literal ? literal.Value :
+                throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel must be a structural literal.", component.Span))
+            : "Vertical Stack";
         Panel host = panelName.ToLowerInvariant() switch
         {
             "vertical stack" => new StackPanel(),
@@ -1106,7 +1167,8 @@ public sealed class CuiControlLoader : IDisposable
         _authoredControls[host] = component;
         CuiPropertyPresentation.Attach(host); CuiLifecycleProperties.Attach(host); ApplyThemeToControlIfContainer(host);
         ApplyProperties(host, component);
-        var state = new CuiRepeatState(host, component, layer, _bindingContext, _currentRepeatIdentity, _themeNames.Peek());
+        var state = new CuiRepeatState(new LegacyPanelRepeatHost(host), component, layer,
+            _bindingContext, _currentRepeatIdentity, _themeNames.Peek(), host);
         _repeats.Add(state);
         ReconcileRepeat(state);
         return host;
@@ -1251,7 +1313,7 @@ public sealed class CuiControlLoader : IDisposable
                 {
                     var placement = RepeatItemPlacement(propertyName);
                     if (placement is null) continue;
-                    if (state.Host is not Grid) throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat item placement requires Panel Grid.", state.Component.Span));
+                    if (!state.Host.IsGrid) throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat item placement requires Panel Grid.", state.Component.Span));
                     if (value is CuiBindingValue binding) ApplyLiveBinding(itemRoot, placement, binding, state.Component.Span);
                     else if (ResolveValue(value) is { } resolved) ApplyLiteralProperty(itemRoot, placement, resolved, state.Component.Span);
                 }
@@ -1292,7 +1354,7 @@ public sealed class CuiControlLoader : IDisposable
                 continue;
             UnsubscribeScope(removed.Scope);
             DetachControlTree(removed.Root);
-            state.Host.Children.Remove(removed.Root);
+            state.Host.Remove(removed.Root);
         }
 
         foreach (var retired in replaced)
@@ -1302,7 +1364,7 @@ public sealed class CuiControlLoader : IDisposable
             // The key survives into nextInstances, so the removal pass above deliberately skips
             // it. Without this the superseded row stays parented and renders alongside its
             // replacement.
-            state.Host.Children.Remove(retired.Root);
+            state.Host.Remove(retired.Root);
         }
 
         state.Items.Clear();
@@ -1313,16 +1375,16 @@ public sealed class CuiControlLoader : IDisposable
         // focus on every writeback and interrupts caret/selection/composition.
         for (var index = 0; index < nextRoots.Count; index++)
         {
-            var current = state.Host.Children.IndexOf(nextRoots[index]);
-            if (current < 0) state.Host.Children.Insert(index, nextRoots[index]);
-            else if (current != index) state.Host.Children.Move(current, index);
+            var current = state.Host.IndexOf(nextRoots[index]);
+            if (current < 0) state.Host.Insert(index, nextRoots[index]);
+            else if (current != index) state.Host.Move(current, index);
         }
     }
 
     private void DetachControlTree(Control root)
     {
         var removed = EnumerateControls(root).ToHashSet<Control>(ReferenceEqualityComparer.Instance);
-        foreach (var repeat in _repeats.Where(repeat => removed.Contains(repeat.Host)).ToArray())
+        foreach (var repeat in _repeats.Where(repeat => repeat.HostControl is not null && removed.Contains(repeat.HostControl)).ToArray())
         {
             foreach (var item in repeat.Items.Values) UnsubscribeScope(item.Scope);
             repeat.Dispose();
@@ -1345,6 +1407,11 @@ public sealed class CuiControlLoader : IDisposable
 
     private static void DetachPresentation(Control control)
     {
+        // Retire an owned QueryViewport scope on the canonical teardown path (frame reload, close,
+        // conditional/repeat retirement). Withdraw clears the typed source, inner context/dispatcher
+        // and refresh callback without raising notifications, evaluating, or dispatching, so a
+        // retained old viewport cannot evaluate its old source or refresh a newer frame.
+        if (control is CuiQueryViewport retiredViewport) retiredViewport.Withdraw();
         CuiLayoutProperties.Detach(control);
         CuiLifecycleProperties.Detach(control);
         CuiPropertyPresentation.Detach(control);
@@ -1826,6 +1893,13 @@ public sealed class CuiControlLoader : IDisposable
             if (component.Repeat is not null && (propName.Equals("Panel", StringComparison.OrdinalIgnoreCase) || RepeatItemPlacement(propName) is not null)) continue;
             if (!_controlRegistry.TryGetProperty(propName, out var descriptor))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"Unknown or forbidden CUI property '{propName}'.", value.Span));
+            // The authored QueryViewport typed source is a scoped runtime port, not a native element
+            // property, so it is handled here and bypasses generic element-support validation.
+            if (control is CuiQueryViewport sourceViewport && propName.Equals("Source", StringComparison.OrdinalIgnoreCase))
+            {
+                ApplyQueryViewportSource(sourceViewport, value, component.Span);
+                continue;
+            }
             if (_controlRegistry.TryResolveElement(component.Type, out var element) && !_controlRegistry.SupportsProperty(element, resolvedObjectType, descriptor))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"CUI property '{propName}' is not supported on {component.Type}.", value.Span));
             // Type selects the native lowering of core polymorphic elements.
@@ -1859,6 +1933,30 @@ public sealed class CuiControlLoader : IDisposable
 
             ApplyAuthoredValue(control, descriptor.Name, value);
         }
+    }
+
+    /// <summary>Apply the authored typed source of a QueryViewport. A binding path is wired as a
+    /// live binding (initial mount + live replacement); a literal resolves once. An invalid
+    /// non-null source type is rejected diagnostically. There is no composer-specific lookup here.</summary>
+    private void ApplyQueryViewportSource(CuiQueryViewport viewport, CuiValue value, CuiSourceSpan span)
+    {
+        if (value is CuiBindingValue binding && (_bindingContext is not null || _declaredVariables.ContainsKey(binding.Path)))
+        {
+            ApplyLiveBinding(viewport, "Source", binding, span);
+            return;
+        }
+        SetQueryViewportSource(viewport, ResolveObject(value), span);
+    }
+
+    /// <summary>Validate and assign a resolved QueryViewport source. Non-null values must be an
+    /// <see cref="ICuiPagedSource"/>; anything else is a diagnostic error, never silently ignored.</summary>
+    private void SetQueryViewportSource(CuiQueryViewport viewport, object? source, CuiSourceSpan span)
+    {
+        if (source is not null && source is not ICuiPagedSource)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR079", CuiDiagnosticSeverity.Error,
+                $"CUI QueryViewport Source must resolve to an ICuiPagedSource; got '{source.GetType().Name}'.", span));
+        viewport.Source = (ICuiPagedSource?)source;
     }
 
     private void ApplyDirective(Control control, string normalizedName, CuiValue value, CuiSourceSpan span)
@@ -2424,6 +2522,21 @@ public sealed class CuiControlLoader : IDisposable
                 ApplyTypedProperty(control, propName, image, sourceSpan, level);
                 return;
             }
+            // Authored floating-relationship (Target + Placement) on a Container: this is the typed
+            // placement contract consumed by the overlay-float panel. It is authored CUI, validated by
+            // the compiler, and cannot be set by an element-id/app-id heuristic in framework code. It is
+            // routed through the typed effective-property path (validated, normalized, change-notified)
+            // so live anchors re-resolve; invalid values become CUIR053 source diagnostics below.
+            if (control is CuiContainerControl relationshipContainer
+                && (propName.Equals("Target", StringComparison.OrdinalIgnoreCase)
+                    || propName.Equals("Placement", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (propName.Equals("Target", StringComparison.OrdinalIgnoreCase))
+                    relationshipContainer.SetAuthoredTarget(resolved);
+                else
+                    relationshipContainer.SetAuthoredPlacement(resolved);
+                return;
+            }
             if (CuiLifecycleProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
             if (CuiLayoutProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
             if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, "CUI authored " + level, sourceSpan: sourceSpan)) return;
@@ -2784,6 +2897,11 @@ public sealed class CuiControlLoader : IDisposable
                 // Automation / Accessibility
                 case "tooltip":
                     ToolTip.SetTip(control, resolved);
+                    // Narrow per-control popup routing for CUI-authored tooltips: establish the transparency
+                    // request seam on the adorned control so its retained ToolTip popup is configured
+                    // BEFORE its first Show via the per-instance attached ConfigurePopup path — never via
+                    // a process-wide default that would reconfigure unrelated non-CUI tooltips.
+                    ToolTip.SetConfigurePopup(control, CuiPopupPresentation.RequestTransparency);
                     break;
                 case "shortcut":
                     var gesture = Avalonia.Input.KeyGesture.Parse(resolved);
@@ -2854,6 +2972,23 @@ public sealed class CuiControlLoader : IDisposable
         _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null);
     }
 
+    /// <summary>Resolve the nearest authored QueryViewport scope ancestor of a control, if any. The
+    /// viewport owns the paged-query runtime state and routes its authored controls' actions; the
+    /// viewport forwards non-pager commands to the scene host dispatcher.</summary>
+    private static ICuiActionDispatcher? ScopedDispatcherFor(Control control)
+    {
+        // Traverse the actual Visual ancestor chain (Floating/Overlay/Repeat and scroll ancestry)
+        // to the nearest owning QueryViewport scope. GetVisualParent returns a Visual; non-Control
+        // visual containers are transparent to the walk.
+        Visual? current = control;
+        while (current is not null)
+        {
+            if (current is CuiQueryViewport viewport) return viewport;
+            current = current.GetVisualParent();
+        }
+        return null;
+    }
+
     private bool TryGetActionInvocation(Control control, out CuiActionInvocation invocation)
     {
         if (_actionInvocations.TryGetValue(control, out invocation!))
@@ -2915,6 +3050,10 @@ public sealed class CuiControlLoader : IDisposable
 
     private void AddChild(Control parent, Control child)
     {
+        // A canonical container-mode Repeat already attached its item range to the owning Container
+        // during LoadRepeat; the returned fragment is a pure bookkeeping marker with no layout,
+        // visual or input effect and must never be added as a cell.
+        if (child is CuiRepeatFragment) return;
         if (child is ContextMenu menu)
         {
             if (parent.ContextMenu is not null || _ownedContextMenus.ContainsKey(parent))
@@ -3052,6 +3191,16 @@ public sealed class CuiControlLoader : IDisposable
         var alreadyApplying = !_applyingHostValues.Add(control);
         try
         {
+            // The authored QueryViewport source is a scoped runtime port: resolve the typed object
+            // from the context and assign it (validating type), including live source replacement.
+            if (control is CuiQueryViewport vp && NormalizeProperty(property) == "source")
+            {
+                if (binding.Mode == CuiBindingMode.TwoWay)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR080", CuiDiagnosticSeverity.Error,
+                        "QueryViewport Source is a one-way typed runtime port.", span));
+                SetQueryViewportSource(vp, context.TryGetValue(binding.Path, out var source) ? source : binding.Fallback, span);
+                return;
+            }
             if (NormalizeProperty(property) == "itemssource")
             {
                 if (control is not ItemsControl items || binding.Mode == CuiBindingMode.TwoWay ||
@@ -3431,15 +3580,88 @@ public sealed class CuiControlLoader : IDisposable
 
     private sealed record RepeatItemInstance(RepeatItemScope Scope, Panel Root, string? Template);
 
+    /// <summary>Attachment abstraction for a Repeat's generated item roots. The canonical container
+    /// host emits each root into the owning Container's layout as its own cell; the legacy panel
+    /// host retains the historical "one hidden panel per Repeat" behaviour for explicit Panel= and
+    /// non-container parents. Both preserve stable keyed identity without clearing/re-adding.</summary>
+    private interface ICuiRepeatHost
+    {
+        int Count { get; }
+        int IndexOf(Control child);
+        void Insert(int index, Control child);
+        bool Remove(Control child);
+        void Move(int fromIndex, int toIndex);
+        /// <summary>Whether the layout the repeat items are placed into is a Grid (the only layout
+        /// that supports per-item Row/Column placement).</summary>
+        bool IsGrid { get; }
+    }
+
+    private sealed class LegacyPanelRepeatHost : ICuiRepeatHost
+    {
+        private readonly Panel _panel;
+        public LegacyPanelRepeatHost(Panel panel) => _panel = panel;
+        public int Count => _panel.Children.Count;
+        public int IndexOf(Control child) => _panel.Children.IndexOf(child);
+        public void Insert(int index, Control child) => _panel.Children.Insert(index, child);
+        public bool Remove(Control child) => _panel.Children.Remove(child);
+        public void Move(int from, int to) => _panel.Children.Move(from, to);
+        public bool IsGrid => _panel is Grid;
+    }
+
+    private sealed class ContainerCellRepeatHost : ICuiRepeatHost
+    {
+        private readonly CuiContainerControl _container;
+        private readonly int _baseIndex;
+        private readonly List<Control> _roots = [];
+        public ContainerCellRepeatHost(CuiContainerControl container, int baseIndex)
+        {
+            _container = container;
+            _baseIndex = baseIndex;
+        }
+        public int Count => _roots.Count;
+        public int IndexOf(Control child) => _roots.IndexOf(child);
+        public void Insert(int index, Control child)
+        {
+            _container.InsertAuthoredChild(_baseIndex + index, child);
+            _roots.Insert(Math.Clamp(index, 0, _roots.Count), child);
+        }
+        public bool Remove(Control child)
+        {
+            var index = _roots.IndexOf(child);
+            if (index < 0) return false;
+            _container.RemoveChild(child);
+            _roots.RemoveAt(index);
+            return true;
+        }
+        public void Move(int from, int to)
+        {
+            if (from == to) return;
+            _container.MoveAuthoredChild(_baseIndex + from, _baseIndex + to);
+            var root = _roots[from];
+            _roots.RemoveAt(from);
+            _roots.Insert(to, root);
+        }
+        public bool IsGrid => _container.Layout is Grid;
+    }
+
+    /// <summary>Sentinel returned by a canonical container-mode LoadRepeat. It is never attached to
+    /// the visual tree and carries no layout/visual/input effect; it only signals AddChild to skip
+    /// adding a (already-attached) repeat range as a single cell.</summary>
+    private sealed class CuiRepeatFragment : Avalonia.Controls.Decorator
+    {
+        public CuiRepeatState State = null!;
+    }
+
     private sealed class CuiRepeatState : IDisposable
     {
         private object? _source;
         private System.Collections.Specialized.INotifyCollectionChanged? _observableSource;
         private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _handler;
 
-        public CuiRepeatState(Panel host, CuiComponent component, int layer, ICuiBindingContext? context, string? identityPrefix, string themeName)
+        public CuiRepeatState(ICuiRepeatHost host, CuiComponent component, int layer, ICuiBindingContext? context, string? identityPrefix, string themeName, Control? hostControl)
         {
             Host = host;
+            HostControl = hostControl;
             Component = component;
             Layer = layer; Context = context; IdentityPrefix = identityPrefix; ThemeName = themeName;
         }
@@ -3447,7 +3669,10 @@ public sealed class CuiControlLoader : IDisposable
         public ICuiBindingContext? Context { get; }
         public string? IdentityPrefix { get; }
         public string ThemeName { get; }
-        public Panel Host { get; }
+        public ICuiRepeatHost Host { get; }
+        /// <summary>The physical visual anchor (the owning Container for canonical mode, the legacy
+        /// panel otherwise) used for subtree teardown membership checks.</summary>
+        public Control? HostControl { get; }
         public CuiComponent Component { get; }
         public int Layer { get; }
         public Dictionary<string, RepeatItemInstance> Items { get; } = new(StringComparer.Ordinal);

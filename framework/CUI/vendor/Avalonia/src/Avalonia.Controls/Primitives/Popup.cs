@@ -174,6 +174,27 @@ namespace Avalonia.Controls.Primitives
         /// </summary>
         public event EventHandler? Opened;
 
+        /// <summary>
+        /// Occurs just before a newly created native popup-root destination is shown, for every open
+        /// of this popup. The argument carries the real destination (<see cref="PopupRoot"/>, never the
+        /// internal <see cref="IPopupHost"/>) so authored presentation policy can request per-pixel
+        /// alpha BEFORE the destination's first show. Reopening this popup creates a fresh destination,
+        /// so this event is re-raised for each one; subscribers remain lifetime-scoped to this popup.
+        /// </summary>
+        public event EventHandler<PopupBeforeShowEventArgs>? BeforeShow;
+
+        /// <summary>
+        /// Arguments for <see cref="BeforeShow"/>: the fresh native popup-root destination about to be
+        /// shown. Carries only the public <see cref="PopupRoot"/> type.
+        /// </summary>
+        public sealed class PopupBeforeShowEventArgs : EventArgs
+        {
+            public PopupBeforeShowEventArgs(PopupRoot destination) => Destination = destination;
+
+            /// <summary>The fresh native popup destination about to be shown.</summary>
+            public PopupRoot Destination { get; }
+        }
+
         internal event EventHandler<CancelEventArgs>? Closing;
 
         internal IPopupHost? Host => _openState?.PopupHost;
@@ -578,6 +599,51 @@ namespace Avalonia.Controls.Primitives
             _openState = new PopupOpenState(placementTarget, topLevel, popupHost, cleanupPopup);
 
             WindowManagerAddShadowHintChanged(popupHost, WindowManagerAddShadowHint);
+
+            // Narrow authored pre-show seam: notify subscribers (the CUI popup producers) just before
+            // the fresh destination is shown so they can request per-pixel alpha BEFORE its first Show,
+            // for every open of this popup. Only native popup-root destinations are notified; overlay
+            // hosts have no separate destination window.
+            //
+            // The callback is synchronous after _openState is published, so a handler may Close()/
+            // retire/reopen this popup before returning. We therefore (1) capture the exact open state
+            // created here, (2) guard after the callback so we never Show a destination that was
+            // retired/disposed by the handler, and (3) on a subscriber fault retire the captured state
+            // exactly once via its own cleanup custody (never double-disposing a destination a handler
+            // already closed), preserving the original error and leaving the popup retryable.
+            if (popupHost is PopupRoot popupRootDestination)
+            {
+                var openedState = _openState;
+                Exception? callbackFault = null;
+                try
+                {
+                    BeforeShow?.Invoke(this, new PopupBeforeShowEventArgs(popupRootDestination));
+                }
+                catch (Exception ex)
+                {
+                    callbackFault = ex;
+                }
+
+                if (callbackFault is not null)
+                {
+                    // Retire the captured state exactly once through its own cleanup custody, only if it
+                    // is still the live open state (a handler may already have closed/retired it — never
+                    // double-dispose the destination). Preserve the original callback fault.
+                    if (ReferenceEquals(_openState, openedState) && openedState is not null)
+                    {
+                        try { openedState.Dispose(); }
+                        catch { /* retain the original callback fault */ }
+                        _openState = null;
+                    }
+                    throw callbackFault;
+                }
+
+                // Post-callback guard: only proceed when the live open state is STILL the one this Open()
+                // created (and so its destination was not retired by a Close()/reopen in the handler).
+                // Showing the captured destination after it was retired would operate on a disposed host.
+                if (!ReferenceEquals(_openState, openedState) || openedState is null)
+                    return;
+            }
 
             popupHost.Show();
             IsUsingOverlayLayer = popupHost is OverlayPopupHost;

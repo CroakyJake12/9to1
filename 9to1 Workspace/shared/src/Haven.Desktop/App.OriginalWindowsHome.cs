@@ -45,7 +45,7 @@ public sealed partial class App
                 principal, paths, new("9to1.home.desktop.v1"),
                 protectedInstalledPeerVerifier: rootClient,
                 originalResourceResolvers: OriginalWindowsDeveloperResolvers().Concat(OriginalInstalledHomeAppsResolvers()).Concat([_actualAssistantTaskContextWriteResolver!, _actualAssistantMemoryWriteResolver!, _actualAssistantCapabilityInitializationResolver!, _actualAssistantMiniComputerOperationResolver!, _actualAssistantMiniComputerIdentityResolver!, _actualAutomationLibraryWriteResolver!, _actualAssistantAttachmentReadResolver!, _actualAssistantAttachmentImportResolver!, _actualAssistantAttachmentEgressResolver!, _actualGeneratedUiResolver!]),
-                originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!]),
+                originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!, new HomeModelRouteActionPolicies()]),
                 configureOriginalOwners: owners => CaptureOriginalHomeRootOwnerComponents(original, owners, rootClient,
                     new SiteNativeAuthoringSession(sites!, owners.Profiles, owners.Resources, owners.Broker)),
                 configureOriginalStores: identity =>
@@ -67,7 +67,9 @@ public sealed partial class App
                     resolver = new(authority);
                     sites = new(authority);
                     sitesResolver = new(sites);
-                    return new([resolver, sitesResolver], new Dictionary<Type, object>
+                    return new([resolver, sitesResolver,
+                        new HomeModelRouteProfileOwner(ownership.Identity.Profiles),
+                        new HomeModelRouteOwner(ownership.Identity.Profiles, new HomeVersionedModelRouteRepository(ownership.Identity.StateStore))], new Dictionary<Type, object>
                     {
                         [typeof(CanonicalProjectContextStoreReadOwner)] = projectContexts,
                         [typeof(ICanonicalProjectContextStoreReadSource)] = projectContexts,

@@ -27,7 +27,7 @@ internal sealed class TaskRunProcessStageCustody(TaskExecutionCoordinator owner,
     internal Task? ActualBody;
     internal Func<bool>? OriginalResultClosed;
     internal Func<Task>? OriginalResultJoin;
-    internal Haven.Core.TaskExecutionSnapshot? AcknowledgedBegin;
+    internal global::Haven.Core.TaskExecutionSnapshot? AcknowledgedBegin;
     internal volatile bool BeginOwnershipTransferred;
     internal readonly string Name = name;
     internal TaskExecutionCoordinator Owner => owner;

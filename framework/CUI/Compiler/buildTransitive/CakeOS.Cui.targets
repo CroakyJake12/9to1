@@ -3,6 +3,9 @@
     <_CuiSourceTaskProject>$(MSBuildThisFileDirectory)../../Build.Tasks/CakeOS.Cui.Build.Compiler.csproj</_CuiSourceTaskProject>
     <CuiCompilerTaskAssembly Condition="'$(CuiCompilerTaskAssembly)' == ''">$(MSBuildThisFileDirectory)../../Build.Tasks/bin/$(Configuration)/net10.0/CakeOS.Cui.Build.Compiler.dll</CuiCompilerTaskAssembly>
     <_CuiBuildCompilerDependsOn Condition="'$(CuiUsePrebuiltCompiler)' != 'true'">ResolveProjectReferences</_CuiBuildCompilerDependsOn>
+    <!-- Mirror the SDK's effective DefaultCopyToPublishDirectoryMetadata default (true). The CompileCuiSourcesTask
+         consumes this to decide whether a missing CopyToPublishDirectory inherits publish from a real output-copy mode. -->
+    <DefaultCopyToPublishDirectoryMetadata Condition="'$(DefaultCopyToPublishDirectoryMetadata)' == ''">true</DefaultCopyToPublishDirectoryMetadata>
   </PropertyGroup>
   <!-- Build infrastructure is a build-only dependency, never application code-behind.
        The task project itself does not import these targets, avoiding recursion. -->
@@ -58,14 +61,20 @@
       <_CuiPackagedSource Remove="@(_CuiPackagedSource)" Condition="'%(Extension)' != '.cui' and '%(Extension)' != '.cui-theme' and '%(Extension)' != '.cui-prefab'" />
     </ItemGroup>
     <CakeOS.Cui.Build.CompileCuiSourcesTask Sources="@(Cui);@(CuiMarkup);@(_CuiPackagedSource)" ProjectDirectory="$(MSBuildProjectDirectory)"
-                                         OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)" ResourcesToSnapshot="@(_CuiPackagedSource)">
+                                         OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)" ResourcesToSnapshot="@(_CuiPackagedSource)"
+                                         IntermediateOutputPath="$(IntermediateOutputPath)" OutputDirectory="$(OutputPath)" PublishDirectory="$(PublishDir)"
+                                         DefaultCopyToPublishDirectoryMetadata="$(DefaultCopyToPublishDirectoryMetadata)">
       <Output TaskParameter="CompiledArtifacts" ItemName="_CuiCompiledArtifact" />
       <Output TaskParameter="SnapshotResources" ItemName="_CuiSnapshotResource" />
       <Output TaskParameter="SourceSnapshots" ItemName="_CuiSourceSnapshot" />
+      <Output TaskParameter="StatefulPackagedSources" ItemName="_CuiStatefulPackagedSource" />
+      <Output TaskParameter="StaleOwnedOutputs" ItemName="_CuiStaleOwnedOutput" />
+      <Output TaskParameter="PreservedForeignOutputs" ItemName="_CuiPreservedForeignOutput" />
     </CakeOS.Cui.Build.CompileCuiSourcesTask>
     <ItemGroup>
-      <FileWrites Include="@(_CuiCompiledArtifact);@(_CuiSourceSnapshot)" />
-      <!-- Package the exact compiled bytes, preserving authored resource/copy identities. -->
+      <FileWrites Include="@(_CuiCompiledArtifact);@(_CuiSourceSnapshot);@(_CuiStaleOwnedOutput)" />
+      <!-- Package only ADMITTED stateless raw snapshots (SnapshotResources). Stateful sources were
+           compiled and provenance-snapshotted but are excluded from every shipped raw identity. -->
       <EmbeddedResource Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'EmbeddedResource'" />
       <Content Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'Content'" />
       <None Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'None'" />
@@ -76,7 +85,48 @@
       <None Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'None'" />
       <AvaloniaResource Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'AvaloniaResource'" />
       <CuiMarkup Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'CuiMarkup'" />
-      <EmbeddedResource Include="@(_CuiCompiledArtifact)" LogicalName="CUI.Compilation.v1" />
+      <!-- Embed the compiled artifact under the resource identity returned by the task (V2 for
+           stateful, genuine V1 otherwise), never a hardcoded identity. -->
+      <EmbeddedResource Include="@(_CuiCompiledArtifact)" LogicalName="%(_CuiCompiledArtifact.CuiResourceLogicalName)" />
     </ItemGroup>
+  </Target>
+
+  <!-- Foreign user data at a formerly-owned raw destination must never enter the SDK's persisted
+       clean/deletion bookkeeping. The SDK records every file the build writes in $(CleanFile); once
+       a source transitions stateful its raw output is no longer produced, and IncrementalClean /
+       CoreClean (explicit dotnet clean) would otherwise delete it. Scrub those exact foreign
+       identities from the recorded prior file-writes BEFORE the SDK's incremental/explicit clean
+       evaluates them, so foreign files survive both incremental builds and explicit clean/rebuild
+       without ever being claimed as produced (they are never added to FileWrites). The preserved
+       set itself is derived by the CompileCuiSourcesTask from a strict ownership hash-guard and is
+       persisted separately from the owned list. -->
+  <Target Name="CuiScrubPreservedForeignFromCleanList"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+          Condition="'@(_CuiPreservedForeignOutput)' != '' and Exists('$(IntermediateOutputPath)$(CleanFile)')">
+    <ReadLinesFromFile File="$(IntermediateOutputPath)$(CleanFile)">
+      <Output TaskParameter="Lines" ItemName="_CuiPriorCleanLines"/>
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_CuiPriorCleanLinesKeep Include="@(_CuiPriorCleanLines)" Exclude="@(_CuiPreservedForeignOutput)"/>
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(CleanFile)"
+                      Lines="@(_CuiPriorCleanLinesKeep)" Overwrite="true"/>
+  </Target>
+
+  <!-- Publish-equivalent hygiene: scrub preserved foreign identities from the recorded prior
+       publish file-writes so a later publish's incremental clean never deletes them. (The publish
+       clean file is only rewritten by a publish, so this runs after the publish clean list is
+       materialized.) -->
+  <Target Name="CuiScrubPreservedForeignFromPublishCleanList"
+          AfterTargets="_IncrementalCleanPublishDirectory"
+          Condition="'@(_CuiPreservedForeignOutput)' != '' and '$(PublishDir)' != '' and Exists('$(IntermediateOutputPath)$(_PublishCleanFile)')">
+    <ReadLinesFromFile File="$(IntermediateOutputPath)$(_PublishCleanFile)">
+      <Output TaskParameter="Lines" ItemName="_CuiPriorPublishCleanLines"/>
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_CuiPriorPublishCleanLinesKeep Include="@(_CuiPriorPublishCleanLines)" Exclude="@(_CuiPreservedForeignOutput)"/>
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(_PublishCleanFile)"
+                      Lines="@(_CuiPriorPublishCleanLinesKeep)" Overwrite="true"/>
   </Target>
 </Project>

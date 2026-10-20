@@ -48,6 +48,13 @@ internal sealed partial class OverlayWorkspaceController : IAsyncDisposable, IDe
         _go = go;
         _hotkey = hotkey;
         _notifications = notifications;
+        // Wire the typed recovery seam so every Overlay chat can route the genuine local-model
+        // management request. The floating Overlay cannot open the shell's Home/Discover tab, so
+        // it surfaces honest guidance instead of fabricating navigation or a model.
+        chats.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
+            _notifications.Show("Local models",
+                "Open Home to manage local models, or configure a model provider.",
+                ToastKind.Warning, TimeSpan.FromSeconds(6));
     }
 
     public Task InitializeAsync(CancellationToken cancellationToken) => RunControllerAsync(() => InitializeCoreAsync(cancellationToken));

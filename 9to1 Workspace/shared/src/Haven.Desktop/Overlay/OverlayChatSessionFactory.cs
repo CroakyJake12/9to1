@@ -15,6 +15,12 @@ internal sealed class OverlayChatSessionFactory(
     ICatalogRepository catalog,
     IModeRegistry modes)
 {
+    /// <summary>Optional typed host seam applied to every page the factory creates. Hosts use
+    /// it to wire page events (for example the local-model recovery request) to host-owned
+    /// navigation, so the real Spaces/Overlay composition routes recovery instead of relying on
+    /// the old MainView path alone.</summary>
+    public Action<NewChatPage>? WireHost { get; set; }
+
     public Task<NewChatPage> CreateNewAsync(CancellationToken cancellationToken) =>
         CreatePageAsync(page => page.StartFreshConversationAsync(), cancellationToken);
 
@@ -47,9 +53,15 @@ internal sealed class OverlayChatSessionFactory(
     {
         Dispatcher.UIThread.VerifyAccess();
         cancellationToken.ThrowIfCancellationRequested();
-        var page = ActivatorUtilities.CreateInstance<NewChatPage>(services);
+        // Overlay chat must use the SAME routed catalogue as the normal Haven chat page. The
+        // shared IProviderModelClient is the resilient routed client, not the raw Ollama
+        // transport. Inject it explicitly so NewChatPage's IOllamaClient slot binds to the
+        // routed source instead of resolving the raw Ollama registration in the container.
+        var routed = services.GetRequiredService<IProviderModelClient>();
+        var page = ActivatorUtilities.CreateInstance<NewChatPage>(services, routed);
         try
         {
+            if (WireHost is not null) WireHost(page);
             // Construction starts original model discovery bound to the initial conversation.
             // Join it before Fresh/Load replaces that target; keep all UI work on this dispatcher.
             await page.OriginalInitialization.WaitAsync(cancellationToken);

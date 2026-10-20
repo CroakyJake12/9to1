@@ -6,6 +6,7 @@ using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Core;
 using Haven.Application;
+using Haven.Application.Haven;
 using Haven.Browser;
 
 namespace HavenOS.Apps.Browse;
@@ -37,6 +38,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     private readonly BrowseChrome _chrome;
     private readonly Func<string, bool> _originalActionAvailability;
+    private readonly IHavenHostContext? _hostContext;
     private readonly object _sourceGate = new();
     private readonly List<Task> _originalCommands = [], _originalOperations = [], _originalNotifications = [], _originalUiOperations = [];
     private BrowseChromeSnapshot _snapshot;
@@ -62,9 +64,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public IReadOnlyList<Task> OriginalOperations { get { lock (_sourceGate) return _originalOperations.ToArray(); } }
     public IReadOnlyList<Task> OriginalNotifications { get { lock (_sourceGate) return _originalNotifications.Concat(_originalUiOperations).ToArray(); } }
 
-    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability, IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null)
+    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability, IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null, IHavenHostContext? sharedContext = null)
     {
         _originalDownloadFilesService = originalDownloadFilesService;
+        _hostContext = sharedContext;
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
         _originalActionAvailability = originalActionAvailability ?? throw new ArgumentNullException(nameof(originalActionAvailability));
         _snapshot = _chrome.State; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
@@ -123,6 +126,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "Bookmarks" => _bookmarkRows,
             "History" => _historyRows,
             "Downloads" => _downloadRows,
+            "Haven.Embedded" => _hostContext?.IsEmbedded == true,
+            "Haven.ModelAvailable" => _hostContext?.ModelSupported == true,
+            "Haven.NotificationsAvailable" => _hostContext?.NotificationsSupported == true,
+            "Haven.ProfileAvailable" => _hostContext?.ProfileSupported == true,
             "DownloadOpenStatus" => _downloadFilesStatus,
             "DownloadStatus" => _snapshot.Downloads.Status,
             "CanBack" => IsActionAvailable("9to1.Browse.Back") == true,
@@ -144,6 +151,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public bool? IsActionAvailable(string command)
     {
         if (!_ready || _busy || _retiring || _disposed || !_originalActionAvailability(command) || _retiring || _disposed) return false;
+        var shared = HavenSharedActionAvailable(command);
+        if (shared.HasValue) return shared;
         var tab = _snapshot.SelectedTab; var interactive = tab.EngineState == BrowseEngineState.Ready && _chrome.ObserveOriginalEngine(tab.Id) is not null;
         return command switch
         {
@@ -178,6 +187,24 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
+        if (IsHavenSharedCommand(command))
+        {
+            // Shared rail opens are genuine retained operations: reserve admission before
+            // invoking the gateway and return the real settlement so the workspace's close
+            // joins actual show/init/account faults and refusals. The open runs inside the
+            // same CommandInvocation/logical-driver guard as ordinary commands, so a
+            // reentrant provider callback that asks to close cannot join its own in-flight
+            // action.
+            lock (_sourceGate) CheckAdmission(_originalOperations);
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var prior = LogicalDriver.Value;
+            var invocation = new CommandInvocation(this, prior);
+            var original = RunSharedOpenAsync(start.Task, command, token, invocation);
+            invocation.Self = original;
+            lock (_sourceGate) Retain(_originalOperations, original);
+            start.SetResult();
+            return new(original);
+        }
         if ((command is "9to1.Browse.SelectTab" or "9to1.Browse.CloseTabRow") && !IsCurrentTabTarget(parameter))
         { _status = "The tab row changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         if (command == "9to1.Browse.CloseTabRow" &&

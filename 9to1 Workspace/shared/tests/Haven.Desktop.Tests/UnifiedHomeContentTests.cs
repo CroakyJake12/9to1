@@ -14,6 +14,7 @@ using Haven.Desktop.Services;
 using Haven.Desktop.Events;
 using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Apps.Browse;
+using HavenOS.Home.Discover;
 
 namespace Haven.Desktop.Tests;
 
@@ -25,9 +26,9 @@ public sealed class UnifiedHomeContentTests
     private static UnifiedHomeContentFactory Factory(Registry source, CancellationToken lifetime,
         Func<BrowseNavigationIntent, Task, bool>? navigation = null,
         Func<BrowseAppContentRequest, CancellationToken, Task>? admission = null, bool aiAvailable = true,
-        Func<NewDashboardPage>? dashboard = null) => new(source,
+        Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null) => new(source,
             dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
-            () => throw new InvalidOperationException("Apps must not construct an unused model catalogue."),
+            discover ?? (() => throw new InvalidOperationException("Apps must not construct an unused model catalogue.")),
             navigation ?? ((_, _) => true),
             (_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI."),
             admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable);
@@ -72,10 +73,109 @@ public sealed class UnifiedHomeContentTests
     [InlineData("cui://home")]
     [InlineData("browse://history")]
     [InlineData("browse://home/settings")]
+    [InlineData("browse://newtab/models")]
     public void Home_factory_does_not_admit_other_namespaces_or_nested_privileged_routes(string route)
     {
         using var lifetime = new CancellationTokenSource();
         Assert.Throws<NotSupportedException>(() => Factory(new(), lifetime.Token).CreateSession(Request(route)));
+    }
+
+    [AvaloniaFact]
+    public void Home_models_route_is_admitted_only_under_the_home_authority()
+    {
+        using var lifetime = new CancellationTokenSource();
+        // The canonical local-model recovery route (browse://home/models) is admitted, and it
+        // resolves to the Home surface.
+        var admitted = Factory(new(), lifetime.Token).CreateSession(Request("browse://home/models"));
+        Assert.Equal(AppContentNamespace.Browse, admitted.Address.Namespace);
+        Assert.Equal("home", admitted.Address.Authority);
+        Assert.Equal(new[] { "models" }, admitted.Address.ResourceSegments);
+        // The same models segment is NOT admissible under the New Tab authority.
+        Assert.Throws<NotSupportedException>(() => Factory(new(), lifetime.Token).CreateSession(Request("browse://newtab/models")));
+    }
+
+    [AvaloniaFact]
+    public async Task Central_Browse_dispatch_admits_only_browse_home_models_and_refuses_newtab_models_and_arbitrary_segments()
+    {
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var paths = new LayoutPaths();
+        var catalogue = new OwnedRecoveryCatalogueFixture();
+        BrowseChrome? chrome = null;
+        HomeDiscoverPage? discover = null;
+        Window? window = null;
+        IBrowseNativeAppContentSession? session = null;
+        try
+        {
+            // The ACTUAL owning Discover page/catalogue is acquired by the normal Home factory.
+            // This fixture reports an explicitly empty local catalogue, not a fabricated model.
+            chrome = await BrowseChrome.CreateAsync(paths,
+                internalContentFactory: Factory(new(), lifetime.Token,
+                    discover: () => discover = new HomeDiscoverPage(new HomeDiscoverCatalog([catalogue]))),
+                homeProfileId: "central-route-profile", cancellationToken: lifetime.Token)
+                .WaitAsync(TimeSpan.FromSeconds(20), lifetime.Token);
+
+            var admitted = await chrome.NavigateAsync("browse://home/models", lifetime.Token)
+                .WaitAsync(TimeSpan.FromSeconds(20), lifetime.Token);
+            var tab = admitted.SelectedTab;
+            Assert.Equal(AppContentNamespace.Browse, tab.Address.Namespace);
+            Assert.Equal("home", tab.Address.Authority);
+            Assert.Equal(new[] { "models" }, tab.Address.ResourceSegments);
+            Assert.Equal(BrowseEngineState.NativeApp, tab.EngineState);
+            session = chrome.ObserveOriginalAppContent(admitted.SelectedTabId);
+            Assert.NotNull(session);
+            Assert.Equal("browse://home/models", session!.Address.Value);
+            var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
+            window = Show(page);
+            Assert.NotNull(discover);
+            Assert.Contains(page.GetVisualDescendants().OfType<HomeDiscoverPage>(), item => ReferenceEquals(item, discover));
+            Assert.True(catalogue.Reads > 0, "The genuine Models page must activate its owned catalogue source.");
+            Assert.Equal(0, catalogue.Actions);
+
+            var tabCount = admitted.Tabs.Count;
+            var refusedNewTab = await chrome.NavigateAsync("browse://newtab/models", lifetime.Token)
+                .WaitAsync(TimeSpan.FromSeconds(20), lifetime.Token);
+            Assert.Equal("browse://home/models", refusedNewTab.SelectedTab.Address.Value);
+            Assert.Equal(tabCount, refusedNewTab.Tabs.Count);
+            Assert.Contains("not registered", refusedNewTab.Status, StringComparison.Ordinal);
+            var refusedNested = await chrome.NavigateAsync("browse://home/settings", lifetime.Token)
+                .WaitAsync(TimeSpan.FromSeconds(20), lifetime.Token);
+            Assert.Equal("browse://home/models", refusedNested.SelectedTab.Address.Value);
+            Assert.Equal(tabCount, refusedNested.Tabs.Count);
+            Assert.Contains("not registered", refusedNested.Status, StringComparison.Ordinal);
+        }
+        finally
+        {
+            try
+            {
+                if (chrome is not null)
+                {
+                    var preparation = await chrome.PrepareCloseAsync(TestContext.Current.CancellationToken)
+                        .WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+                    Assert.NotNull(preparation);
+                    await preparation!.BeginClose().WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+                    if (session is not null) Assert.True(session.CanRetireOriginalView);
+                }
+            }
+            finally { window?.Close(); Directory.Delete(paths.DataDirectory, true); }
+        }
+    }
+
+    private sealed class OwnedRecoveryCatalogueFixture : IHomeDiscoverCatalogueSource
+    {
+        public string ProviderId => "fixture-owned-local-catalogue";
+        internal int Reads, Actions;
+        public Task<HomeDiscoverProviderSnapshot> GetSnapshotAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Reads++;
+            return Task.FromResult(new HomeDiscoverProviderSnapshot(ProviderId, "Fixture-owned empty local catalogue",
+                HomeDiscoverConnectionState.Connected, HomeDiscoverSourceState.Available, "fixture-revision-1", []));
+        }
+        public Task<HomeDiscoverActionResult> ExecuteAsync(HomeDiscoverActionRequest request, CancellationToken cancellationToken)
+        {
+            Actions++;
+            throw new NotSupportedException("This catalogue fixture does not authorize model actions.");
+        }
     }
 
     [AvaloniaFact]

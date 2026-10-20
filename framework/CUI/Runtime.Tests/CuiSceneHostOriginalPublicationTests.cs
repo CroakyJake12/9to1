@@ -46,6 +46,73 @@ public sealed class CuiSceneHostOriginalPublicationTests
         });
     }
 
+    [Fact]
+    public async Task DispatcherWrapped_recovery_settlement_is_flattened_so_navigation_ack_waits_for_the_real_loader_action()
+    {
+        await RunAsync(async rig =>
+        {
+            var action = new HeldAction();
+            _ = rig.Track(action.Original);
+            rig.Release(action.Complete);
+            Task<CuiSceneAvailability>? show = null;
+            Task? settlement = null;
+            Task? unflattenedUpcast = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene(actions: action) with
+            { IsPublicationCurrent = () => true })));
+            await show!;
+            await rig.Ui(() =>
+            {
+                ((Button)Assert.IsType<Button>(rig.Host.Content)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                // EXACT production shape (now flattened): an external navigation owner joins this
+                // snapshot and must settle only after the real recovery loader action pipeline drains.
+                settlement = rig.Track(Dispatcher.UIThread.InvokeAsync<Task>(
+                    () => rig.Host.CaptureOriginalActionSettlement(show!)).GetTask().Unwrap());
+                // Regression guard: the unflattened upcast (Task<Task> -> Task) completes when the
+                // dispatcher callback RUNS, i.e. BEFORE the genuine loader action settles — the exact
+                // navigation-ACK-before-settlement gap this fix closes.
+                unflattenedUpcast = rig.Track(Dispatcher.UIThread.InvokeAsync<Task>(
+                    () => rig.Host.CaptureOriginalActionSettlement(show!)).GetTask());
+            });
+            Assert.Equal(1, action.Calls);
+            Assert.False(action.Original.IsCompleted);
+            await unflattenedUpcast!.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.True(unflattenedUpcast.IsCompleted); // buggy upcast ACK'd as soon as the callback ran
+            Assert.False(settlement!.IsCompleted);       // flattened still waits for the held loader action
+            action.Complete();
+            await settlement;
+            Assert.True(action.Original.IsCompletedSuccessfully);
+            Assert.True(settlement.IsCompletedSuccessfully);
+        });
+    }
+
+    [Fact]
+    public async Task DispatcherWrapped_recovery_settlement_retains_the_genuine_loader_fault_by_identity()
+    {
+        await RunAsync(async rig =>
+        {
+            var action = new HeldAction();
+            _ = rig.Track(action.Original);
+            rig.Release(action.Complete);
+            Task<CuiSceneAvailability>? show = null;
+            Task? settlement = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene(actions: action) with
+            { IsPublicationCurrent = () => true })));
+            await show!;
+            await rig.Ui(() =>
+            {
+                ((Button)Assert.IsType<Button>(rig.Host.Content)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                settlement = rig.Track(Dispatcher.UIThread.InvokeAsync<Task>(
+                    () => rig.Host.CaptureOriginalActionSettlement(show!)).GetTask().Unwrap());
+            });
+            var primary = new InvalidOperationException("genuine recovery loader fault");
+            action.Fail(primary);
+            Assert.Same(primary, await Record.ExceptionAsync(() => action.Original));
+            rig.Expect(primary);
+            Assert.Same(primary, await Record.ExceptionAsync(() => settlement!));
+            Assert.True(settlement!.IsFaulted);
+        });
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
