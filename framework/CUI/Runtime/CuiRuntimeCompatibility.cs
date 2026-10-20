@@ -42,6 +42,11 @@ public static class CuiRuntimeCompatibility
     /// string variable selected once per mounted frame from a binding source pool).</summary>
     public const string LocalStateRandomSelectCapability = "local-state-random-select";
 
+    /// <summary>Capability name for the generic bounded paged QueryViewport scope (typed paged
+    /// source port, query/cursor window state, generic paging commands). A host advertising this
+    /// capability can execute bounded paged query documents.</summary>
+    public const string QueryViewportCapability = "query-viewport";
+
     public static IReadOnlySet<string> Capabilities { get; } = new HashSet<string>(StringComparer.Ordinal)
     {
         "native-controls",
@@ -53,6 +58,7 @@ public static class CuiRuntimeCompatibility
         "atomic-tree-replacement",
         LocalStateToggleCapability,
         LocalStateRandomSelectCapability,
+        QueryViewportCapability,
     };
 
     public static bool IsLanguageVersionCompatible(string? version)
@@ -75,7 +81,8 @@ public static class CuiRuntimeCompatibility
     /// document/closure) BEFORE any scene/control effect. Throws
     /// <see cref="CuiRuntimeLoadException"/> with a stable canonical diagnostic code.
     /// </summary>
-    public static void ValidateArtifactHostSupport(CuiCompiledArtifact artifact, CuiSourceSpan diagnosticSpan)
+    public static void ValidateArtifactHostSupport(CuiCompiledArtifact artifact, CuiSourceSpan diagnosticSpan,
+        IReadOnlySet<string>? capabilities = null)
     {
         if (artifact is null)
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
@@ -84,6 +91,11 @@ public static class CuiRuntimeCompatibility
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIB003", CuiDiagnosticSeverity.Error,
                 "The compiled CUI artifact is missing envelope compatibility metadata.", diagnosticSpan));
+        // The supported capability set is the live host profile. Defaults to this runtime's full
+        // set; an older host (e.g. one that predates the bounded paged QueryViewport scope) supplies
+        // a narrower profile so admission fails on the genuinely-required capability before any
+        // scene/control effect.
+        var supported = capabilities ?? Capabilities;
 
         // Envelope requirements (the conservative whole-bundle boundary): this is the admitted
         // contract for the entire required closure, so a stateful sibling whose ABI/capability the
@@ -91,7 +103,7 @@ public static class CuiRuntimeCompatibility
         RequireLanguage(artifact.Metadata.LanguageVersion, diagnosticSpan);
         RequireRegistry(artifact.Metadata.ComponentRegistryVersion, diagnosticSpan);
         RequireAbi(artifact.Metadata.RuntimeAbiVersion, diagnosticSpan);
-        RequireCapabilities(artifact.Metadata.RequiredCapabilities, diagnosticSpan);
+        RequireCapabilities(artifact.Metadata.RequiredCapabilities, diagnosticSpan, supported);
 
         if (artifact.Documents is not null)
         {
@@ -101,7 +113,7 @@ public static class CuiRuntimeCompatibility
                 RequireLanguage(document.Metadata.LanguageVersion, diagnosticSpan);
                 RequireRegistry(document.Metadata.ComponentRegistryVersion, diagnosticSpan);
                 RequireAbi(document.Metadata.RuntimeAbiVersion, diagnosticSpan);
-                RequireCapabilities(document.Metadata.RequiredCapabilities, diagnosticSpan);
+                RequireCapabilities(document.Metadata.RequiredCapabilities, diagnosticSpan, supported);
             }
         }
     }
@@ -130,12 +142,13 @@ public static class CuiRuntimeCompatibility
                 $"Compiled CUI runtime ABI '{abi}' is not supported by this runtime (supported range {MinStatelessAbi}..{CurrentAbi}).", span));
     }
 
-    private static void RequireCapabilities(IEnumerable<string> capabilities, CuiSourceSpan span)
+    private static void RequireCapabilities(IEnumerable<string> capabilities, CuiSourceSpan span,
+        IReadOnlySet<string> supported)
     {
         if (capabilities is null) return;
         foreach (var capability in capabilities)
         {
-            if (capability is null || !Capabilities.Contains(capability))
+            if (capability is null || !supported.Contains(capability))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR067", CuiDiagnosticSeverity.Error,
                     $"Compiled CUI document requires unsupported capability '{capability}'.", span));

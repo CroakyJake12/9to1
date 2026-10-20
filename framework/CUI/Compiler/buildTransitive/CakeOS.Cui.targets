@@ -69,6 +69,7 @@
       <Output TaskParameter="SourceSnapshots" ItemName="_CuiSourceSnapshot" />
       <Output TaskParameter="StatefulPackagedSources" ItemName="_CuiStatefulPackagedSource" />
       <Output TaskParameter="StaleOwnedOutputs" ItemName="_CuiStaleOwnedOutput" />
+      <Output TaskParameter="PreservedForeignOutputs" ItemName="_CuiPreservedForeignOutput" />
     </CakeOS.Cui.Build.CompileCuiSourcesTask>
     <ItemGroup>
       <FileWrites Include="@(_CuiCompiledArtifact);@(_CuiSourceSnapshot);@(_CuiStaleOwnedOutput)" />
@@ -88,5 +89,44 @@
            stateful, genuine V1 otherwise), never a hardcoded identity. -->
       <EmbeddedResource Include="@(_CuiCompiledArtifact)" LogicalName="%(_CuiCompiledArtifact.CuiResourceLogicalName)" />
     </ItemGroup>
+  </Target>
+
+  <!-- Foreign user data at a formerly-owned raw destination must never enter the SDK's persisted
+       clean/deletion bookkeeping. The SDK records every file the build writes in $(CleanFile); once
+       a source transitions stateful its raw output is no longer produced, and IncrementalClean /
+       CoreClean (explicit dotnet clean) would otherwise delete it. Scrub those exact foreign
+       identities from the recorded prior file-writes BEFORE the SDK's incremental/explicit clean
+       evaluates them, so foreign files survive both incremental builds and explicit clean/rebuild
+       without ever being claimed as produced (they are never added to FileWrites). The preserved
+       set itself is derived by the CompileCuiSourcesTask from a strict ownership hash-guard and is
+       persisted separately from the owned list. -->
+  <Target Name="CuiScrubPreservedForeignFromCleanList"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+          Condition="'@(_CuiPreservedForeignOutput)' != '' and Exists('$(IntermediateOutputPath)$(CleanFile)')">
+    <ReadLinesFromFile File="$(IntermediateOutputPath)$(CleanFile)">
+      <Output TaskParameter="Lines" ItemName="_CuiPriorCleanLines"/>
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_CuiPriorCleanLinesKeep Include="@(_CuiPriorCleanLines)" Exclude="@(_CuiPreservedForeignOutput)"/>
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(CleanFile)"
+                      Lines="@(_CuiPriorCleanLinesKeep)" Overwrite="true"/>
+  </Target>
+
+  <!-- Publish-equivalent hygiene: scrub preserved foreign identities from the recorded prior
+       publish file-writes so a later publish's incremental clean never deletes them. (The publish
+       clean file is only rewritten by a publish, so this runs after the publish clean list is
+       materialized.) -->
+  <Target Name="CuiScrubPreservedForeignFromPublishCleanList"
+          AfterTargets="_IncrementalCleanPublishDirectory"
+          Condition="'@(_CuiPreservedForeignOutput)' != '' and '$(PublishDir)' != '' and Exists('$(IntermediateOutputPath)$(_PublishCleanFile)')">
+    <ReadLinesFromFile File="$(IntermediateOutputPath)$(_PublishCleanFile)">
+      <Output TaskParameter="Lines" ItemName="_CuiPriorPublishCleanLines"/>
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_CuiPriorPublishCleanLinesKeep Include="@(_CuiPriorPublishCleanLines)" Exclude="@(_CuiPreservedForeignOutput)"/>
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(_PublishCleanFile)"
+                      Lines="@(_CuiPriorPublishCleanLinesKeep)" Overwrite="true"/>
   </Target>
 </Project>

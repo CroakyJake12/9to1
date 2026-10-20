@@ -950,23 +950,26 @@ public sealed class CuiControlLoader : IDisposable
             {
                 // A QueryViewport is the generic runtime state/query scope for a bounded paged
                 // picker. While loading its authored subtree, the viewport becomes the active binding
-                // context and action dispatcher: child bindings (Items/Query/PageLabel/HasNext) and
+                // context and action dispatcher: child bindings (Items/Query/range/availability) and
                 // pager actions resolve against the viewport, which owns the query string + opaque
-                // cursor and delegates all data filtering/pagination to its typed ICuiPagedSource.
-                // The viewport defers nonlocal lookups and non-pager commands to the scene/app host,
-                // so the parent context/dispatcher are captured and restored around the subtree.
+                // cursor and delegates all data filtering/pagination to its authored typed
+                // ICuiPagedSource. The viewport defers nonlocal lookups and non-pager commands to the
+                // scene/app host, so the parent context/dispatcher are captured and restored around
+                // the subtree. The guardian callback is fenced to this load attempt's generation so a
+                // retired viewport can never refresh a newer frame.
                 ICuiBindingContext? viewportPreviousContext = null;
                 ICuiActionDispatcher? viewportPreviousDispatcher = null;
-                var isQueryViewport = control is CuiQueryViewport viewport;
-                if (isQueryViewport)
+                CuiQueryViewport? activeViewport = null;
+                if (control is CuiQueryViewport viewport)
                 {
+                    activeViewport = viewport;
                     viewport.InnerContext = _bindingContext;
                     viewport.InnerDispatcher = _actionDispatcher;
-                    viewport.RefreshHost = () => OnBindingPropertyChanged(null);
-                    if (viewport.Source is null
-                        && _bindingContext?.TryGetValue("Composer.EmojiCatalogueSource", out var source) == true
-                        && source is ICuiPagedSource pagedSource)
-                        viewport.Source = pagedSource;
+                    var mountGeneration = _loadGeneration;
+                    viewport.RefreshHost = () =>
+                    {
+                        if (IsLoadAttemptCurrent(mountGeneration)) OnBindingPropertyChanged(null);
+                    };
                     viewportPreviousContext = _bindingContext;
                     viewportPreviousDispatcher = _actionDispatcher;
                     _bindingContext = viewport;
@@ -982,7 +985,7 @@ public sealed class CuiControlLoader : IDisposable
                 }
                 finally
                 {
-                    if (isQueryViewport)
+                    if (activeViewport is not null)
                     {
                         _bindingContext = viewportPreviousContext;
                         _actionDispatcher = viewportPreviousDispatcher;
@@ -1404,6 +1407,11 @@ public sealed class CuiControlLoader : IDisposable
 
     private static void DetachPresentation(Control control)
     {
+        // Retire an owned QueryViewport scope on the canonical teardown path (frame reload, close,
+        // conditional/repeat retirement). Withdraw clears the typed source, inner context/dispatcher
+        // and refresh callback without raising notifications, evaluating, or dispatching, so a
+        // retained old viewport cannot evaluate its old source or refresh a newer frame.
+        if (control is CuiQueryViewport retiredViewport) retiredViewport.Withdraw();
         CuiLayoutProperties.Detach(control);
         CuiLifecycleProperties.Detach(control);
         CuiPropertyPresentation.Detach(control);
@@ -1885,6 +1893,13 @@ public sealed class CuiControlLoader : IDisposable
             if (component.Repeat is not null && (propName.Equals("Panel", StringComparison.OrdinalIgnoreCase) || RepeatItemPlacement(propName) is not null)) continue;
             if (!_controlRegistry.TryGetProperty(propName, out var descriptor))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"Unknown or forbidden CUI property '{propName}'.", value.Span));
+            // The authored QueryViewport typed source is a scoped runtime port, not a native element
+            // property, so it is handled here and bypasses generic element-support validation.
+            if (control is CuiQueryViewport sourceViewport && propName.Equals("Source", StringComparison.OrdinalIgnoreCase))
+            {
+                ApplyQueryViewportSource(sourceViewport, value, component.Span);
+                continue;
+            }
             if (_controlRegistry.TryResolveElement(component.Type, out var element) && !_controlRegistry.SupportsProperty(element, resolvedObjectType, descriptor))
                 throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR052", CuiDiagnosticSeverity.Error, $"CUI property '{propName}' is not supported on {component.Type}.", value.Span));
             // Type selects the native lowering of core polymorphic elements.
@@ -1918,6 +1933,30 @@ public sealed class CuiControlLoader : IDisposable
 
             ApplyAuthoredValue(control, descriptor.Name, value);
         }
+    }
+
+    /// <summary>Apply the authored typed source of a QueryViewport. A binding path is wired as a
+    /// live binding (initial mount + live replacement); a literal resolves once. An invalid
+    /// non-null source type is rejected diagnostically. There is no composer-specific lookup here.</summary>
+    private void ApplyQueryViewportSource(CuiQueryViewport viewport, CuiValue value, CuiSourceSpan span)
+    {
+        if (value is CuiBindingValue binding && (_bindingContext is not null || _declaredVariables.ContainsKey(binding.Path)))
+        {
+            ApplyLiveBinding(viewport, "Source", binding, span);
+            return;
+        }
+        SetQueryViewportSource(viewport, ResolveObject(value), span);
+    }
+
+    /// <summary>Validate and assign a resolved QueryViewport source. Non-null values must be an
+    /// <see cref="ICuiPagedSource"/>; anything else is a diagnostic error, never silently ignored.</summary>
+    private void SetQueryViewportSource(CuiQueryViewport viewport, object? source, CuiSourceSpan span)
+    {
+        if (source is not null && source is not ICuiPagedSource)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR079", CuiDiagnosticSeverity.Error,
+                $"CUI QueryViewport Source must resolve to an ICuiPagedSource; got '{source.GetType().Name}'.", span));
+        viewport.Source = (ICuiPagedSource?)source;
     }
 
     private void ApplyDirective(Control control, string normalizedName, CuiValue value, CuiSourceSpan span)
@@ -2938,7 +2977,10 @@ public sealed class CuiControlLoader : IDisposable
     /// viewport forwards non-pager commands to the scene host dispatcher.</summary>
     private static ICuiActionDispatcher? ScopedDispatcherFor(Control control)
     {
-        Control? current = control;
+        // Traverse the actual Visual ancestor chain (Floating/Overlay/Repeat and scroll ancestry)
+        // to the nearest owning QueryViewport scope. GetVisualParent returns a Visual; non-Control
+        // visual containers are transparent to the walk.
+        Visual? current = control;
         while (current is not null)
         {
             if (current is CuiQueryViewport viewport) return viewport;
@@ -3149,6 +3191,16 @@ public sealed class CuiControlLoader : IDisposable
         var alreadyApplying = !_applyingHostValues.Add(control);
         try
         {
+            // The authored QueryViewport source is a scoped runtime port: resolve the typed object
+            // from the context and assign it (validating type), including live source replacement.
+            if (control is CuiQueryViewport vp && NormalizeProperty(property) == "source")
+            {
+                if (binding.Mode == CuiBindingMode.TwoWay)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR080", CuiDiagnosticSeverity.Error,
+                        "QueryViewport Source is a one-way typed runtime port.", span));
+                SetQueryViewportSource(vp, context.TryGetValue(binding.Path, out var source) ? source : binding.Fallback, span);
+                return;
+            }
             if (NormalizeProperty(property) == "itemssource")
             {
                 if (control is not ItemsControl items || binding.Mode == CuiBindingMode.TwoWay ||

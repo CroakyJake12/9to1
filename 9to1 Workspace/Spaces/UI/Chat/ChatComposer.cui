@@ -18,8 +18,8 @@
     <Action name="composer.set-response-mode.PreferText" command="composer.set-response-mode" parameter="PreferText" />
     <Action name="composer.set-response-mode.AlwaysText" command="composer.set-response-mode" parameter="AlwaysText" />
     <Action name="composer.toggle-formatting"><Toggle Target="FormattingOpen" /></Action>
-    <Action name="composer.emoji-prev" command="composer.emoji-prev" />
-    <Action name="composer.emoji-next" command="composer.emoji-next" />
+    <Action name="composer.emoji-prev" command="query.previous" />
+    <Action name="composer.emoji-next" command="query.next" />
   </Actions>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
@@ -68,7 +68,7 @@
            string and opaque cursor; the authored Repeat/input/pager bind to its bounded window and
            metadata. All catalogue filtering/pagination stays behind the typed data port; no app C#
            query/page/cursor state exists. -->
-      <Container id="emoji-query" Type="QueryViewport" CellGap="8">
+      <Container id="emoji-query" Type="QueryViewport" CellGap="8" Source="{Binding Composer.EmojiCatalogueSource}">
         <Input id="emoji-search" Type="Text" Value="{Binding Query}" placeholdertext="Search emoji…" MinHeight="36" accessible-name="Search emoji" />
         <!-- Bounded vertical scroll viewport over the wrapping grid: finite width (inherited from
              the vertical panel) so the Wrap lays out multiple columns/rows, vertical scrolling only,
@@ -86,7 +86,11 @@
         <Container id="emoji-pager" Type="Horizontal Stack" CellGap="8" padding="4">
           <Button id="emoji-prev" action="composer.emoji-prev" content="‹" MinWidth="32" MinHeight="32"
                   IsVisible="{Binding HasPrevious}" accessible-name="Previous emoji page" />
-          <Text id="emoji-page-label" text="{Binding PageLabel}" font-size="12" VerticalAlignment="Center" />
+          <Text id="emoji-page-start" text="{Binding PageStart}" font-size="12" VerticalAlignment="Center" />
+          <Text id="emoji-page-sep" text="–" font-size="12" VerticalAlignment="Center" />
+          <Text id="emoji-page-end" text="{Binding PageEnd}" font-size="12" VerticalAlignment="Center" />
+          <Text id="emoji-page-of" text="/" font-size="12" VerticalAlignment="Center" />
+          <Text id="emoji-total" text="{Binding TotalCount}" font-size="12" VerticalAlignment="Center" />
           <Button id="emoji-next" action="composer.emoji-next" content="›" MinWidth="32" MinHeight="32"
                   IsVisible="{Binding HasNext}" accessible-name="Next emoji page" />
         </Container>

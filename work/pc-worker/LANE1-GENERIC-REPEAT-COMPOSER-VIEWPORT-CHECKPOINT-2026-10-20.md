@@ -190,3 +190,95 @@ Toolbar/plus/icons, Compiler/Core/Task/RuntimeCompatibility, transport, and root
    present in `HavenOS.Browse.Host.Tests.csproj`).
 3. Confirm no regression in `CuiTranscriptRepeatCapabilityTests`, `CuiRepeatedInputFocusTests`,
    `HostComposerLifetimeTests`, and the 30-test compiler/codec suite.
+
+---
+
+## Resume Pass 4 — generic contract repair + capability admission + retirement (final source receipt)
+
+**Date:** 2026-10-20 (this session, later turn)
+**Baseline commit for delta:** `b2410afdd80e` (lane-1 freeze). Working tree HEAD `ddb2a8b8`.
+**Scope:** source/tests/static checks only. NO .NET/build/app/native/display/model/subagent/provider
+changes; no commit/push. Root owns SDK and rebuilt-artifact execution.
+
+### A. Four compile repairs (warnings-as-errors preserved)
+- **CS0108** (`CuiQueryViewport.cs`): replaced the public `event PropertyChangedEventHandler? PropertyChanged`
+  (which hid the base member) with an explicit `INotifyPropertyChanged.PropertyChanged` interface
+  implementation backed by a private `_propertyChanged` field.
+- **CS0165** (`CuiControlLoader.cs`): replaced the outer `CuiQueryViewport? viewport = null;` +
+  `if (viewport ...)` pattern with a directly scoped `if (control is CuiQueryViewport viewport)` and
+  an `activeViewport` local so no unassigned-local path remains.
+- **CS0103** (`CuiQueryViewport.cs`): binding keys are now published string constants
+  (`QueryKey/ItemsKey/TotalCountKey/HasPreviousKey/HasNextKey/PageStartKey/PageEndKey/IsEmptyKey`)
+  instead of `nameof` member references on the explicit interface.
+- **CS0266** (`CuiControlLoader.cs` `ScopedDispatcherFor`): the ancestor walk now starts from `Visual? current = control;`
+  and narrows each step with `current is CuiQueryViewport viewport`, eliminating the implicit
+  `Visual`→`Control` conversion by walking the raw Visual chain.
+
+### B. Generic runtime contract (app authoring removed from framework)
+- `CuiQueryViewport.cs` rewrite: no hardcoded composer path, no `composer.emoji-prev/next`, no
+  "No emoji found"/"Chat composer" wording. Uses generic commands `query.previous`/`query.next`
+  (`PreviousCommand`/`NextCommand` consts); unrelated commands forward to the inner host dispatcher.
+  `Source` is a plain CLR `ICuiPagedSource?` typed port (one-way; invalid type rejected). Adds
+  `IsEmpty` binding. `Withdraw()` is internal and clears source/context/dispatcher/refresh callback
+  without raising notifications, evaluating, or dispatching.
+- `ChatComposer.cui` authored mapping: `composer.emoji-prev` → `command="query.previous"`,
+  `composer.emoji-next` → `command="query.next"`; QueryViewport container gets
+  `Source="{Binding Composer.EmojiCatalogueSource}"`; the pager label row is now numeric
+  (`emoji-page-start` `emoji-page-end` `emoji-total` + authored separators), binding `PageStart`/
+  `PageEnd`/`TotalCount`. No `PageLabel` remains.
+
+### C. Capability derivation/admission (compiler → artifact/codec → whole-bundle host admission)
+- `CuiCompiledArtifact.cs`: new `QueryViewportCapability = "query-viewport"`; `DeriveRequiredCapabilities`
+  now walks component/template/closure trees (`ContainsQueryViewport`/`ComponentUsesQueryViewport`,
+  case-insensitive `Type` lookup on Container `Type="QueryViewport"` literal) and runs for EVERY
+  document regardless of statefulness (CUIR076 on stripped capability before any effect). ABI1/ABI2
+  and V1/V2 transport contracts kept.
+- `CuiCompiler.cs`: `DocumentUsesQueryViewport`/`ComponentUsesQueryViewport` detect the scope; the
+  compiler stamps `query-viewport` for stateless query docs while keeping ABI1, and stamps both
+  capabilities + ABI2 for stateful docs.
+- `CuiRuntimeCompatibility.cs`: `QueryViewportCapability` const + included in `Capabilities`; the
+  optional `capabilities` param on `ValidateArtifactHostSupport` models an older host profile at the
+  real admission boundary (`RequireCapabilities` consults the supplied supported set; CUIR067).
+
+### D. Retirement/withdraw semantics
+- `CuiControlLoader.cs`: `DetachPresentation` (canonical teardown path covering reload/close/repeat/
+  conditional) now calls `retiredViewport.Withdraw()`; the duplicate `Withdraw()` in
+  `DetachControlTree` was removed. `RefreshHost` is generation-fenced via `IsLoadAttemptCurrent(mountGeneration)`.
+
+### E. Tests (new/updated; all NOT RUN — require root SDK/artifact rebuild)
+- `framework/CUI/Compiler.Tests/CuiQueryViewportCapabilityTests.cs` (new): query-only doc emits
+  `query-viewport` + stays ABI1; stateful+query emits both caps + ABI2; template/definition/closure
+  route derives the cap; stripped cap rejected at artifact admission (CUIR076); older host profile
+  rejected at `ValidateArtifactHostSupport` (CUIR067) while current host admits identical artifact.
+- `framework/CUI/Runtime.Tests/CuiQueryViewportRuntimeTests.cs` (new): generic viewport publishes a
+  bounded window, numeric labels, empty state, query reset; paging routes generic commands through
+  the owning viewport and stops at boundaries without host fallthrough; two independent viewports
+  isolate sources/cursors; live source replacement refreshes the window; unrelated non-pager actions
+  forward to host with original fault propagation.
+- `framework/CUI/Runtime.Tests/CuiQueryViewportRetirementTests.cs` (new): reload and loader-close
+  retire the old viewport so a retained old reference cannot evaluate an old/new source, refresh the
+  newer frame, or mutate new Items; the current frame stays functional.
+- `9to1 Workspace/Browse/Host.Tests/ChatComposerEmojiPickerViewportTests.cs` (updated): final-page
+  label assertion now targets the numeric `emoji-total` (`EndsWith` of `TotalCount` string) instead
+  of the removed `emoji-page-label`.
+
+### F. File hashes (SHA-256, current working tree)
+| File | Hash |
+| --- | --- |
+| `framework/CUI/Runtime/CuiQueryViewport.cs` | `fec4ff22f5282a4e88db70cad812df1bef41aef8ce9f1468a01c9f4c322c9326` |
+| `framework/CUI/Runtime/CuiControlLoader.cs` | `8055014ad1dce18c56014b8d6e137e2fe884af07248a90ffe98e57ea3620e797` |
+| `framework/CUI/Core/CuiCompiledArtifact.cs` | `8161613b73b4b4e7dea875a423016f74293a89f46aace3ecd687d064f0e8497a` |
+| `framework/CUI/Compiler/CuiCompiler.cs` | `9e636f50b5d600fdf1da0c3823dea35c9900be6eda016fdc67ddcf180f8bb84d` |
+| `framework/CUI/Runtime/CuiRuntimeCompatibility.cs` | `dd0a64fe31e0a5134720d8881f4d4f3b039bc7a9dcc96ab57e473616f805ab56` |
+| `framework/CUI/Compiler.Tests/CuiQueryViewportCapabilityTests.cs` | `d42be6094e882deea1adbd02159eca927805cfc2c5c23683f837089086109217` |
+| `framework/CUI/Runtime.Tests/CuiQueryViewportRuntimeTests.cs` | `42fcfa632d7be6dbd0e8c2de0cf5c6d4ec39437dfc26820c85bb33c32538d109` |
+| `framework/CUI/Runtime.Tests/CuiQueryViewportRetirementTests.cs` | `8563e54c8577d910c401b8525f9e94a89bfddedeb4ff012157f2ad497896280e` |
+| `9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui` | `8592f68b3d9846eb522788ae3148fce3524f58c25ca2ef0748a46f0a6ecfaf52` |
+| `9to1 Workspace/Browse/Host.Tests/ChatComposerEmojiPickerViewportTests.cs` | `0ee8fffb3ddf5e35ecdfb2f65663deb98b7488a61a3e0d2fc7531ac8e9c1321b` |
+
+### G. Unresolved dependencies (root-owned)
+- **All execution gates NOT RUN** until root rebuilds the compiled ChatComposer artifact from the
+  updated `ChatComposer.cui` (it must now declare `query-viewport`), and grants a .NET test slot.
+  `CuiCompiledArtifact.Validate` derived-capability checks run for all documents (CUIR076), so a
+  committed pre-rebuild composer artifact lacking `query-viewport` will be rejected until rebuild.
+- New SDK test files are auto-included by the SDK projects (no csproj edit needed).

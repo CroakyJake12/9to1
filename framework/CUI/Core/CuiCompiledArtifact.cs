@@ -59,6 +59,12 @@ public static class CuiCompiledArtifactCodec
     public const string LocalStateToggleCapability = "local-state-toggle";
     public const string LocalStateRandomSelectCapability = "local-state-random-select";
 
+    /// <summary>Semantic feature capability for a bounded paged QueryViewport scope, derived from the
+    /// actual component/template semantics wherever a QueryViewport container occurs. It is a genuine
+    /// runtime requirement independent of local-state Variables/Toggle, so a query-only document can
+    /// never evade the admission gate by omitting the capability string.</summary>
+    public const string QueryViewportCapability = "query-viewport";
+
     public static JsonSerializerOptions Options { get; } = CreateOptions();
 
     public static byte[] WriteArtifact(CuiCompiledArtifact artifact) =>
@@ -169,11 +175,14 @@ public static class CuiCompiledArtifactCodec
                 if (!string.Equals(document.Metadata.RuntimeAbiVersion, V2RuntimeAbiVersion, StringComparison.Ordinal))
                     throw new CuiV2AdmissionException("CUIR074",
                         $"Compiled document '{document.Source}' carries stateful typed semantics but declares ABI '{document.Metadata.RuntimeAbiVersion}'; stateful documents require ABI {V2RuntimeAbiVersion}.");
-                foreach (var capability in DeriveRequiredCapabilities(document.Semantics))
-                    if (!CapsOrEmpty(document.Metadata).Contains(capability))
-                        throw new CuiV2AdmissionException("CUIR076",
-                            $"Compiled document '{document.Source}' performs required feature '{capability}' but does not declare it; a stripped capability string cannot downgrade it.");
             }
+            // Required capabilities are checked independently of statefulness: a query-only document
+            // (QueryViewport scope, no local-state Variables/Toggle) must still declare the derived
+            // query capability or be rejected before any effect.
+            foreach (var capability in DeriveRequiredCapabilities(document.Semantics))
+                if (!CapsOrEmpty(document.Metadata).Contains(capability))
+                    throw new CuiV2AdmissionException("CUIR076",
+                        $"Compiled document '{document.Source}' performs required feature '{capability}' but does not declare it; a stripped capability string cannot downgrade it.");
 
             maxAbi = MaxAbi(maxAbi, document.Metadata.RuntimeAbiVersion);
             envelopeCaps.UnionWith(CapsOrEmpty(document.Metadata));
@@ -207,8 +216,9 @@ public static class CuiCompiledArtifactCodec
 
     /// <summary>Derives the mandatory feature capabilities required by the actual typed semantics
     /// (a pure-local Toggle targets declared local state; a choose-once RandomOnce variable selects
-    /// from a source pool once). These genuine requirements can never be waived by stripping
-    /// capability strings from the payload.</summary>
+    /// from a source pool once; a QueryViewport scope performs bounded paged query/pagination).
+    /// These genuine requirements can never be waived by stripping capability strings from the
+    /// payload.</summary>
     private static HashSet<string> DeriveRequiredCapabilities(CuiV2Semantics semantics)
     {
         var required = new HashSet<string>(StringComparer.Ordinal);
@@ -220,7 +230,56 @@ public static class CuiCompiledArtifactCodec
             foreach (var variable in semantics.Variables.Values)
                 if (variable is not null && !string.IsNullOrEmpty(variable.Selection))
                     required.Add(LocalStateRandomSelectCapability);
+        if (ContainsQueryViewport(semantics))
+            required.Add(QueryViewportCapability);
         return required;
+    }
+
+    /// <summary>True if any component/template route in the typed semantics (component tree,
+    /// definition bodies, template content, else-children/closure) contains a QueryViewport scope.</summary>
+    private static bool ContainsQueryViewport(CuiV2Semantics semantics)
+    {
+        if (semantics.Components is not null)
+            foreach (var component in semantics.Components)
+                if (ComponentUsesQueryViewport(component))
+                    return true;
+        if (semantics.Templates is not null)
+            foreach (var template in semantics.Templates.Values)
+                if (template?.Content is not null)
+                    foreach (var component in template.Content)
+                        if (ComponentUsesQueryViewport(component))
+                            return true;
+        return false;
+    }
+
+    /// <summary>Recursively tests a typed V2 component (and its children/else-children closure) for
+    /// a QueryViewport container: either a component whose native type is QueryViewport, or a
+    /// Container whose authored Type literal is QueryViewport. List/Repeat template bodies live in
+    /// the semantics template table and are covered separately.</summary>
+    private static bool ComponentUsesQueryViewport(CuiV2Component component)
+    {
+        if (component is null) return false;
+        if (string.Equals(component.Type, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (string.Equals(component.Type, "Container", StringComparison.OrdinalIgnoreCase)
+            && component.Properties is not null)
+        {
+            var typeValue = component.Properties
+                .FirstOrDefault(pair => pair.Key.Equals("Type", StringComparison.OrdinalIgnoreCase)).Value;
+            if (typeValue is not null
+                && string.Equals(typeValue.Kind, CuiV2ValueKind.Literal, StringComparison.Ordinal)
+                && string.Equals(typeValue.LiteralValue, "QueryViewport", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (component.Children is not null)
+            foreach (var child in component.Children)
+                if (ComponentUsesQueryViewport(child))
+                    return true;
+        if (component.ElseChildren is not null)
+            foreach (var child in component.ElseChildren)
+                if (ComponentUsesQueryViewport(child))
+                    return true;
+        return false;
     }
 
     private static IReadOnlyList<string> CapsOrEmpty(CuiCompilationMetadata metadata) =>

@@ -197,13 +197,32 @@ check('transitioned-v2-now-stateful', v2_docs_after == {'Stateful.cui', 'Statele
 check('transitioned-v1-drops-stateless', 'Stateless.cui' not in v1_docs_after)
 # The owned destination was overwritten with unrelated bytes -> hash-guard must refuse deletion.
 check('unrelated-same-path-preserved', (out / 'Raw' / 'Stateless.cui').read_text(encoding='utf-8') == UNRELATED_MARKER)
+# A follow-up build must keep shielding the foreign file (durable preservation across the
+# platform's incremental clean), and the preserved path must never be claimed as owned.
+invoke(mix / 'Lane2Mixed.csproj', 'build', True, label='lane2-transition-foreign-preserved-followup')
+check('unrelated-same-path-preserved-after-followup',
+      (out / 'Raw' / 'Stateless.cui').read_text(encoding='utf-8') == UNRELATED_MARKER)
+manifest = json.loads((mix / 'obj/Debug/net10.0/Cui/packaged-raw-manifest.json').read_text(encoding='utf-8'))
+owned_dests = {os.path.abspath(entry['Destination']) for entry in (manifest.get('Owned') or [])}
+foreign_path = os.path.abspath(str(out / 'Raw' / 'Stateless.cui'))
+check('foreign-marker-path-not-claimed-as-owned', foreign_path not in owned_dests)
+# The foreign marker must survive explicit SDK clean AND rebuild: its identity is scrubbed from
+# the SDK's persisted clean list, so neither CoreClean (dotnet clean) nor a rebuild's Clean deletes
+# it, and it is never claimed as an owned/produced file.
+invoke(mix / 'Lane2Mixed.csproj', 'clean', True, label='lane2-explicit-clean-preserves-foreign')
+check('explicit-clean-preserves-foreign-marker',
+      (out / 'Raw' / 'Stateless.cui').read_text(encoding='utf-8') == UNRELATED_MARKER)
+invoke(mix / 'Lane2Mixed.csproj', 'build', True, extra=('-t:Rebuild',),
+       label='lane2-rebuild-preserves-foreign')
+check('rebuild-preserves-foreign-marker',
+      (out / 'Raw' / 'Stateless.cui').read_text(encoding='utf-8') == UNRELATED_MARKER)
 check('never-copy-still-present', (out / 'NeverCopy.cui').exists())
 check('sources-not-deleted', (mix / 'Stateless.cui').exists() and (mix / 'Stateful.cui').exists())
 check('v2-still-embedded', 'CUI.Compilation.v2' in resource_names(dll, 'transition'))
 
 # --- custom publish directory: publish-only / publish-never / content defaults ---
 invoke(mix / 'Lane2Mixed.csproj', 'publish', True,
-       extra=('-p:PublishDir=' + str(publish_override)),
+       extra=('-p:PublishDir=' + str(publish_override),),
        label='lane2-publish-custom-root')
 check('publish-custom-root-created', publish_override.is_dir())
 check('publish-only-published', (publish_override / 'PublishOnly.cui').exists())
@@ -219,7 +238,7 @@ check('stateful-raw-not-published', not (publish_override / 'Stateful.cui').exis
 # identical bytes is user data and must survive a later publish untouched.
 write(publish_override / 'NeverCopy.cui', (mix / 'NeverCopy.cui').read_text(encoding='utf-8'))
 invoke(mix / 'Lane2Mixed.csproj', 'publish', True,
-       extra=('-p:PublishDir=' + str(publish_override)),
+       extra=('-p:PublishDir=' + str(publish_override),),
        label='lane2-publish-nonproduced-same-bytes')
 check('nonproduced-same-bytes-publish-survives',
       (publish_override / 'NeverCopy.cui').read_text(encoding='utf-8') == (mix / 'NeverCopy.cui').read_text(encoding='utf-8'))
@@ -364,7 +383,7 @@ pubdef_pub = evidence / 'publish-defaulting-root'
 
 invoke(pubdef / 'Lane2PublishDefaulting.csproj', 'build', True, label='lane2-publish-defaulting-baseline')
 invoke(pubdef / 'Lane2PublishDefaulting.csproj', 'publish', True,
-       extra=('-p:PublishDir=' + str(pubdef_pub)),
+       extra=('-p:PublishDir=' + str(pubdef_pub),),
        label='lane2-publish-defaulting-false')
 check('defaulting-false-content-not-default-published', not (pubdef_pub / 'DefaultInherit.cui').exists())
 check('defaulting-false-embedded-not-default-published', not (pubdef_pub / 'DefaultInheritEmbedded.cui').exists())
@@ -381,7 +400,7 @@ write(pubdef_pub / 'DefaultInheritEmbedded.cui', (pubdef / 'DefaultInheritEmbedd
 # becomes genuinely stale and must be removed, while the nonproduced same-byte files survive.
 write(pubdef / 'ExplicitPublish.cui', STATEFUL)
 invoke(pubdef / 'Lane2PublishDefaulting.csproj', 'publish', True,
-       extra=('-p:PublishDir=' + str(pubdef_pub)),
+       extra=('-p:PublishDir=' + str(pubdef_pub),),
        label='lane2-publish-defaulting-transition')
 check('genuine-stale-owned-publish-output-removed', not (pubdef_pub / 'ExplicitPublish.cui').exists())
 check('nonproduced-same-bytes-content-survives',
@@ -396,7 +415,7 @@ check('nonproduced-same-bytes-embedded-survives',
 # ---------------------------------------------------------------------------
 tr = evidence / 'Lane2TrailingSeparator'
 write(tr / 'Safe.cui', STATELESS)
-trail_group = '<PropertyGroup><OutputPath>bin/Debug/net10.0/</OutputPath></PropertyGroup>'
+trail_group = '<PropertyGroup><OutputPath>bin/Debug/</OutputPath></PropertyGroup>'
 trail_items = '<Content Include="Safe.cui" Link="Sub/Safe.cui" TargetPath="Sub/Safe.cui" CopyToOutputDirectory="PreserveNewest" />'
 write(tr / 'Lane2TrailingSeparator.csproj', csproj(task, trail_items, trail_group))
 invoke(tr / 'Lane2TrailingSeparator.csproj', 'build', True, label='lane2-trailing-slash-output-root')
@@ -414,7 +433,7 @@ tr_pub = evidence / 'publish-trailing-root'
 write(tr / 'Lane2TrailingPublish.csproj',
       csproj(task, '<Content Include="Safe.cui" CopyToPublishDirectory="Always" />', trail_group))
 invoke(tr / 'Lane2TrailingPublish.csproj', 'publish', True,
-       extra=('-p:PublishDir=' + str(tr_pub) + '/'),
+       extra=('-p:PublishDir=' + str(tr_pub) + '/',),
        label='lane2-trailing-slash-publish-root')
 check('trailing-slash-publish-output-present', (tr_pub / 'Safe.cui').exists())
 

@@ -219,11 +219,11 @@ public sealed class ChatComposerEmojiPickerViewportTests
                 "final page must still realize a bounded window");
             Assert.True(realized.Length >= 1, "final page must realize cells");
 
-            // The page label reports the truthful full-catalogue total on the final page.
-            var pageLabel = FindLabel(view, "emoji-page-label");
-            Assert.NotNull(pageLabel);
-            Assert.EndsWith($"of {ComposerEmojiCatalogue.Entries.Count}", pageLabel!.Text,
-                StringComparison.Ordinal);
+            // The numeric total label reports the truthful full-catalogue total on the final page.
+            var totalLabel = FindLabel(view, "emoji-total");
+            Assert.NotNull(totalLabel);
+            Assert.EndsWith(ComposerEmojiCatalogue.Entries.Count.ToString(CultureInfo.InvariantCulture),
+                totalLabel!.Text, StringComparison.Ordinal);
 
             // The final page's realized glyphs are genuine catalogue entries (complete reach).
             var catalogueGlyphs = ComposerEmojiCatalogue.Entries.Select(e => e.Text).ToHashSet(StringComparer.Ordinal);

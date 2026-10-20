@@ -36,6 +36,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     [Output] public ITaskItem[] SourceSnapshots { get; private set; } = [];
     [Output] public ITaskItem[] StatefulPackagedSources { get; private set; } = [];
     [Output] public ITaskItem[] StaleOwnedOutputs { get; private set; } = [];
+    [Output] public ITaskItem[] PreservedForeignOutputs { get; private set; } = [];
 
     public override bool Execute()
     {
@@ -44,6 +45,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         SourceSnapshots = [];
         StatefulPackagedSources = [];
         StaleOwnedOutputs = [];
+        PreservedForeignOutputs = [];
         try
         {
             var root = Path.GetFullPath(BuildPath(ProjectDirectory));
@@ -223,7 +225,9 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
 
             // Read the previous custody manifest strictly: a corrupt/ambiguous record must fail the
             // build (preserving evidence) instead of being erased by a successful package.
-            var previousOwned = ReadManifestStrict(manifestPath);
+            var previous = ReadManifestStrict(manifestPath);
+            var previousOwned = previous.Owned;
+            var previousPreserved = previous.PreservedForeign;
 
             // Write provenance snapshots (benign intermediates) so ownership hashes are real bytes.
             foreach (var input in inputs) Publish(snapshots[input.Path], input.Bytes);
@@ -233,6 +237,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
                 SnapshotOwned(currentOwned, outputRoot, publishRoot, root, item, sourcePaths);
 
             var stale = ComputeStaleOwnedOutputs(previousOwned, currentOwned, root, outputRoot, publishRoot, protectedPaths);
+            var stillPreserved = ComputeStillPreservedForeign(previousPreserved, currentOwned, root, outputRoot, publishRoot, protectedPaths);
 
             // All path/ownership validation succeeded. Now stage and commit the compiled artifact
             // outputs (a validation failure above would have returned without touching them).
@@ -242,17 +247,41 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             // and never a source or a preserved replacement. Only actually-deleted destinations are
             // reported as cleaned build outputs (FileWrites).
             var deletedOwned = new List<ITaskItem>();
+            var preservedForeignDestinations = new HashSet<string>(StringComparer.Ordinal);
+            // Previously-preserved foreign outputs are kept out of the SDK's clean bookkeeping for as
+            // long as they still exist within an allocated root and have not been legitimately
+            // reclaimed as owned outputs.
+            foreach (var path in stillPreserved) preservedForeignDestinations.Add(path);
             foreach (var owned in stale)
             {
-                if (!File.Exists(owned.Destination) || !FileHashMatches(owned)) continue;
+                if (!File.Exists(owned.Destination)) continue;
                 var full = Path.GetFullPath(owned.Destination);
                 if (protectedPaths.Contains(full) || string.Equals(full, root, StringComparison.Ordinal)) continue;
-                File.Delete(owned.Destination);
-                Log.LogMessage(MessageImportance.Low, "Removed stale build-owned raw CUI output: {0}", owned.Destination);
-                deletedOwned.Add(new TaskItem(owned.Destination));
+                if (FileHashMatches(owned))
+                {
+                    File.Delete(owned.Destination);
+                    Log.LogMessage(MessageImportance.Low, "Removed stale build-owned raw CUI output: {0}", owned.Destination);
+                    deletedOwned.Add(new TaskItem(owned.Destination));
+                }
+                else
+                {
+                    // A previously-owned destination now holds bytes that are no longer the owned
+                    // artifact (user/foreign data). Never delete it. Report it so the build's
+                    // targets can scrub this exact identity from the SDK's persisted clean
+                    // bookkeeping, keeping the foreign file alive across incremental builds and
+                    // explicit clean/rebuild. This is not an ownership claim; the path is kept out
+                    // of the owned list and out of FileWrites, so it is never claimed as produced.
+                    Log.LogMessage(MessageImportance.Low, "Preserved stale build-owned raw CUI output with foreign bytes: {0}", owned.Destination);
+                    preservedForeignDestinations.Add(full);
+                }
             }
+            var preservedForeign = preservedForeignDestinations
+                .Order(StringComparer.Ordinal)
+                .Select(path => (ITaskItem)new TaskItem(path))
+                .ToList();
             StaleOwnedOutputs = deletedOwned.ToArray();
-            WriteManifest(manifestPath, currentOwned);
+            PreservedForeignOutputs = preservedForeign.ToArray();
+            WriteManifest(manifestPath, currentOwned, preservedForeignDestinations);
 
             CompiledArtifacts = artifactItems.ToArray();
             SnapshotResources = mappedResources.ToArray();
@@ -361,6 +390,36 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         return stale;
     }
 
+    /// <summary>Returns previously-preserved foreign destinations that must remain excluded from the
+    /// SDK's persisted clean bookkeeping on this build: they still exist physically, remain inside an
+    /// allocated root, are not a source/protected path, and have not been legitimately reclaimed as
+    /// owned outputs. These identities are scrubbed from the SDK's clean lists — they are not
+    /// ownership claims and never enter the owned list or FileWrites.</summary>
+    private static List<string> ComputeStillPreservedForeign(
+        IReadOnlyList<string> previousPreserved, List<OwnedRaw> currentOwned, string projectRoot,
+        string outputRoot, string? publishRoot, ISet<string> protectedPaths)
+    {
+        if (previousPreserved.Count == 0) return new List<string>();
+        var validRoots = new List<string>();
+        if (!string.IsNullOrEmpty(outputRoot)) validRoots.Add(outputRoot);
+        if (!string.IsNullOrEmpty(publishRoot)) validRoots.Add(publishRoot!);
+        var currentDestinations = currentOwned.Select(owned => owned.Destination).ToHashSet(StringComparer.Ordinal);
+        var result = new List<string>();
+        foreach (var path in previousPreserved)
+        {
+            if (!File.Exists(path)) continue;
+            string full;
+            try { full = Path.GetFullPath(path); }
+            catch { continue; }
+            if (string.Equals(full, projectRoot, PathComparison)) continue;
+            if (protectedPaths.Contains(full)) continue;
+            if (currentDestinations.Contains(full)) continue;
+            var underAnyRoot = validRoots.Any(root => IsPhysicallyInside(full, root));
+            if (underAnyRoot) result.Add(full);
+        }
+        return result;
+    }
+
     private static readonly HashSet<string> ValidCopyModes = new(StringComparer.OrdinalIgnoreCase)
         { "Always", "PreserveNewest", "IfDifferent" };
 
@@ -429,10 +488,11 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
 
     /// <summary>Reads the previous custody manifest strictly. A corrupt/ambiguous record must fail
     /// the build (preserving its evidence) rather than being silently treated as empty and erased by
-    /// a successful package.</summary>
-    private static List<OwnedRaw> ReadManifestStrict(string path)
+    /// a successful package. Returns both the previously-owned outputs and any previously-preserved
+    /// foreign destinations (shielded from the platform's incremental clean).</summary>
+    private static ManifestSnapshot ReadManifestStrict(string path)
     {
-        if (!File.Exists(path)) return new List<OwnedRaw>();
+        if (!File.Exists(path)) return new ManifestSnapshot(new List<OwnedRaw>(), new List<string>());
         ManifestModel? model;
         try
         {
@@ -444,15 +504,22 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         }
         if (model?.Owned is null)
             throw new InvalidDataException("The packaged raw CUI custody manifest is ambiguous (missing owned list); refusing an unsafe package.");
-        return model.Owned
+        var owned = model.Owned
             .Select(entry => new OwnedRaw(entry.Original ?? "", entry.Destination ?? "", entry.Sha256 ?? ""))
             .ToList();
+        var preserved = model.PreservedForeign?.Where(path => !string.IsNullOrEmpty(path)).Select(path => path!).ToList()
+            ?? new List<string>();
+        return new ManifestSnapshot(owned, preserved);
     }
 
-    private static void WriteManifest(string path, List<OwnedRaw> owned)
+    private static void WriteManifest(string path, List<OwnedRaw> owned, IEnumerable<string> preservedForeign)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var model = new ManifestModel { Owned = owned.Select(entry => new OwnedRawModel(entry.Original, entry.Destination, entry.Sha256)).ToArray() };
+        var model = new ManifestModel
+        {
+            Owned = owned.Select(entry => new OwnedRawModel(entry.Original, entry.Destination, entry.Sha256)).ToArray(),
+            PreservedForeign = preservedForeign.ToArray(),
+        };
         File.WriteAllText(path, JsonSerializer.Serialize(model, new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -638,6 +705,8 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     private sealed class ManifestModel
     {
         public OwnedRawModel[] Owned { get; set; } = [];
+        public string[] PreservedForeign { get; set; } = [];
     }
     private sealed record OwnedRawModel(string Original, string Destination, string Sha256);
+    private sealed record ManifestSnapshot(List<OwnedRaw> Owned, List<string> PreservedForeign);
 }

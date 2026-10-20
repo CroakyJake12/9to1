@@ -35,17 +35,33 @@ public interface ICuiPagedSource
 
 /// <summary>
 /// A generic CUI runtime scope that owns a bounded paged query (query text + opaque cursor) and
-/// exposes the resulting window to authored child bindings. It is the canonical runtime state/query
+/// exposes the resulting window to authored child bindings. It is the generic runtime state/query
 /// contract for pickers: the authored document composes a search input (two-way to
-/// <c>Query</c>), a keyed Repeat over <c>Items</c>, and Prev/Next controls bound to the opaque
-/// cursor. All pagination/query data filtering stays behind a typed <see cref="ICuiPagedSource"/>;
-/// this viewport holds NO per-view page cache beyond the single current window and NEVER owns
-/// control trees (children are authored in CUI).
+/// <c>Query</c>), a keyed Repeat over <c>Items</c>, pager controls bound to <c>HasPrevious</c>/
+/// <c>HasNext</c>, and numeric range/empty metadata. All pagination/query data filtering stays behind
+/// a typed <see cref="ICuiPagedSource"/>; this viewport holds NO per-view page cache beyond the
+/// single current window, produces no app-specific wording, and NEVER owns control trees (children
+/// are authored in CUI). The generic paging commands are <c>query.previous</c>/<c>query.next</c>;
+/// the authored document maps its own action names to them, and unrelated commands are forwarded to
+/// the scene host dispatcher.
 /// </summary>
 public sealed class CuiQueryViewport : CuiContainerControl,
     ICuiWritableBindingContext, ICuiRepeatItemBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
 {
-    private static readonly object[] EmptyItems = [];
+    /// <summary>Binding keys published to authored child bindings by this viewport.</summary>
+    public const string QueryKey = "Query";
+    public const string ItemsKey = "Items";
+    public const string TotalCountKey = "TotalCount";
+    public const string HasPreviousKey = "HasPrevious";
+    public const string HasNextKey = "HasNext";
+    public const string PageStartKey = "PageStart";
+    public const string PageEndKey = "PageEnd";
+    public const string IsEmptyKey = "IsEmpty";
+
+    /// <summary>Generic runtime paging commands routed through the nearest owning query scope.</summary>
+    public const string PreviousCommand = "query.previous";
+    public const string NextCommand = "query.next";
+
     private readonly List<object> _items = [];
     private ICuiPagedSource? _source;
     private string _query = "";
@@ -56,25 +72,31 @@ public sealed class CuiQueryViewport : CuiContainerControl,
     private CuiPageCursor? _next;
     private ICuiBindingContext? _innerContext;
     private ICuiActionDispatcher? _innerDispatcher;
+    private event PropertyChangedEventHandler? _propertyChanged;
+    private bool _withdrawn;
 
     public CuiQueryViewport() : base("Vertical Stack")
     {
     }
 
     /// <summary>The typed data port. Assigning it re-evaluates the current window and republishes
-    /// all result metadata to authored bindings.</summary>
+    /// all result metadata to authored bindings. A non-null value that is not an
+    /// <see cref="ICuiPagedSource"/> is rejected; null clears the window.</summary>
     public ICuiPagedSource? Source
     {
         get => _source;
         set
         {
+            if (value is not null && value is not ICuiPagedSource)
+                throw new InvalidOperationException("CUI QueryViewport Source must be an ICuiPagedSource.");
             _source = value;
             Reevaluate();
         }
     }
 
     /// <summary>Delegate invoked after re-evaluation so the owning loader refreshes authored bindings
-    /// (Repeat items, pager visibility, page label). Set by the loader at mount.</summary>
+    /// (Repeat items, pager visibility, range/empty metadata). Set by the loader at mount; cleared
+    /// by <see cref="Withdraw"/> on frame retirement.</summary>
     public Action? RefreshHost { get; set; }
 
     /// <summary>The binding context this viewport defers non-local lookups to (the scene/app host).
@@ -92,8 +114,32 @@ public sealed class CuiQueryViewport : CuiContainerControl,
         set => _innerDispatcher = value;
     }
 
+    /// <summary>True once this viewport has been withdrawn (its owning loader frame retired).</summary>
+    internal bool IsWithdrawn => _withdrawn;
+
+    /// <summary>Withdraw all registrations/references on frame retirement (reload/close/failure).
+    /// Clears the source, inner context, inner dispatcher and refresh callback without raising any
+    /// notification, invoking evaluation, or dispatching. A withdrawn viewport is inert: it can no
+    /// longer evaluate an old source, refresh a newer frame, or dispatch old host actions.</summary>
+    internal void Withdraw()
+    {
+        _withdrawn = true;
+        _source = null;
+        _innerContext = null;
+        _innerDispatcher = null;
+        RefreshHost = null;
+        _items.Clear();
+        _totalCount = 0;
+        _startOffset = 0;
+        _prev = null;
+        _next = null;
+        _cursor = null;
+        _query = "";
+    }
+
     private void Reevaluate()
     {
+        if (_withdrawn) return;
         var source = _source;
         if (source is null)
         {
@@ -113,28 +159,33 @@ public sealed class CuiQueryViewport : CuiContainerControl,
             _prev = result.Prev;
             _next = result.Next;
         }
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Items)));
+        // Publish every typed binding key through the observable contract. Emitting each key lets the
+        // loader refresh exactly the authored bindings that observe that path leaf.
+        Publish(QueryKey);
+        Publish(ItemsKey);
+        Publish(TotalCountKey);
+        Publish(HasPreviousKey);
+        Publish(HasNextKey);
+        Publish(PageStartKey);
+        Publish(PageEndKey);
+        Publish(IsEmptyKey);
         RefreshHost?.Invoke();
     }
+
+    private void Publish(string key) => _propertyChanged?.Invoke(this, new PropertyChangedEventArgs(key));
 
     public bool TryGetValue(string path, out object? value)
     {
         switch (path)
         {
-            case "Items": value = _items; return true;
-            case "TotalCount": value = _totalCount; return true;
-            case "HasPrevious": value = _prev is not null; return true;
-            case "HasNext": value = _next is not null; return true;
-            case "PageStart": value = _startOffset + 1; return true;
-            case "PageEnd":
-                value = _startOffset + _items.Count;
-                return true;
-            case "PageLabel":
-                value = _totalCount == 0
-                    ? "No emoji found"
-                    : $"{_startOffset + 1}–{_startOffset + _items.Count} of {_totalCount}";
-                return true;
-            case "Query": value = _query; return true;
+            case QueryKey: value = _query; return true;
+            case ItemsKey: value = _items; return true;
+            case TotalCountKey: value = _totalCount; return true;
+            case HasPreviousKey: value = _prev is not null; return true;
+            case HasNextKey: value = _next is not null; return true;
+            case PageStartKey: value = _totalCount == 0 ? 1 : _startOffset + 1; return true;
+            case PageEndKey: value = _startOffset + _items.Count; return true;
+            case IsEmptyKey: value = _items.Count == 0; return true;
         }
         value = null;
         return _innerContext is not null && _innerContext.TryGetValue(path, out value);
@@ -142,7 +193,7 @@ public sealed class CuiQueryViewport : CuiContainerControl,
 
     public bool TrySetValue(string path, object? value)
     {
-        if (path == "Query")
+        if (path == QueryKey)
         {
             var query = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
             if (string.Equals(query, _query, StringComparison.Ordinal)) return true;
@@ -167,20 +218,31 @@ public sealed class CuiQueryViewport : CuiContainerControl,
     {
         switch (command)
         {
-            case "composer.emoji-prev" when _prev is not null:
-                _cursor = _prev;
-                Reevaluate();
+            case PreviousCommand:
+                if (!_withdrawn && _prev is not null)
+                {
+                    _cursor = _prev;
+                    Reevaluate();
+                }
                 return ValueTask.CompletedTask;
-            case "composer.emoji-next" when _next is not null:
-                _cursor = _next;
-                Reevaluate();
+            case NextCommand:
+                if (!_withdrawn && _next is not null)
+                {
+                    _cursor = _next;
+                    Reevaluate();
+                }
                 return ValueTask.CompletedTask;
+            default:
+                return _innerDispatcher is not null
+                    ? _innerDispatcher.DispatchAsync(command, parameter, cancellationToken)
+                    : ValueTask.FromException(new InvalidOperationException(
+                        $"The generic query viewport has no host dispatcher for command '{command}'."));
         }
-        if (_innerDispatcher is not null)
-            return _innerDispatcher.DispatchAsync(command, parameter, cancellationToken);
-        return ValueTask.FromException(new InvalidOperationException(
-            $"Chat composer CUI command '{command}' has no handler."));
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+    {
+        add => _propertyChanged += value;
+        remove => _propertyChanged -= value;
+    }
 }
