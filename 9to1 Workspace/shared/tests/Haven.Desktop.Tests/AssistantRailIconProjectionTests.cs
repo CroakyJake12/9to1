@@ -107,5 +107,107 @@ public sealed class AssistantRailIconProjectionTests
         Assert.Equal("Generic", result.Selection.Kind);
         Assert.Null(result.Selection.Identity);
     }
+
+    [Fact]
+    public async Task Running_read_fault_is_unavailable_and_never_downgraded_to_mostused()
+    {
+        var a = Assistant("a"); var b = Assistant("b");
+        // Running read faults; a naive projection would swallow it as "no running" and then
+        // select most-used despite being unable to establish running-first precedence.
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+            running: (configured, _) => throw new UnauthorizedAccessException("no running access"),
+            mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
+        var result = await projection.ResolveAsync();
+        Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+        Assert.Equal("RunningReadFailed", result.Code);
+        Assert.Equal("Generic", result.Selection.Kind);
+        Assert.Null(result.Selection.Identity);
+    }
+
+    [Fact]
+    public async Task Usage_read_fault_is_unavailable_distinct_from_usage_not_recorded()
+    {
+        var a = Assistant("a");
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
+            mostUsed: (configured, _) => throw new UnauthorizedAccessException("no usage access")));
+        var result = await projection.ResolveAsync();
+        Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+        Assert.Equal("UsageReadFailed", result.Code);
+        Assert.Null(result.Selection.Identity);
+    }
+
+    [Fact]
+    public async Task Catalogue_cancellation_is_cancelled_distinct_from_none_or_cached_success()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => throw new OperationCanceledException(cts.Token)));
+        var result = await projection.ResolveAsync(cts.Token);
+        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
+        Assert.Equal("Cancelled", result.Code);
+        Assert.Equal("Generic", result.Selection.Kind);
+    }
+
+    [Fact]
+    public async Task Running_cancellation_is_cancelled_and_never_selects_mostused()
+    {
+        var a = Assistant("a"); var b = Assistant("b");
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+            running: (configured, _) => throw new OperationCanceledException(cts.Token),
+            mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
+        var result = await projection.ResolveAsync(cts.Token);
+        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
+        Assert.Null(result.Selection.Identity);
+    }
+
+    [Fact]
+    public async Task Stale_running_snapshot_identity_is_not_published()
+    {
+        var a = Assistant("a"); var b = Assistant("b");
+        // Source returns a running snapshot that is NOT the current configured catalogue.
+        var stale = Assistant("stale");
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+            running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(stale)));
+        var result = await projection.ResolveAsync();
+        Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+        Assert.Equal("StaleRunningSnapshot", result.Code);
+        Assert.Null(result.Selection.Identity);
+    }
+
+    [Fact]
+    public async Task Stale_usage_snapshot_revision_is_not_published()
+    {
+        var a = Assistant("a");
+        // Source returns a usage snapshot whose revision is not in the current catalogue.
+        var staleRevision = new AssistantDefinitionSnapshot(a.Identity, a.Revision + 1, a.Kind, a.Configuration, a.Capabilities);
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
+            mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(staleRevision)));
+        var result = await projection.ResolveAsync();
+        Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+        Assert.Equal("StaleUsageSnapshot", result.Code);
+        Assert.Null(result.Selection.Identity);
+    }
+
+    [Fact]
+    public async Task Running_snapshot_is_published_only_within_current_configured_catalogue()
+    {
+        var a = Assistant("a"); var b = Assistant("b");
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+            running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[1])));
+        var result = await projection.ResolveAsync();
+        Assert.Equal(AssistantRailIconState.Available, result.State);
+        Assert.Equal("Running", result.Selection.Kind);
+        Assert.Equal(b.Identity, result.Selection.Identity);
+        Assert.Equal(b.Revision, result.Selection.Revision);
+    }
 }
 #endif

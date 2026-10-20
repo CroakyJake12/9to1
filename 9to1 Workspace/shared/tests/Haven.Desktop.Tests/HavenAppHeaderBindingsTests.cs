@@ -1,4 +1,5 @@
 #if !ANDROID
+using CakeOS.Cui.Runtime;
 using Haven.Application.Haven;
 using Xunit;
 
@@ -79,6 +80,42 @@ public sealed class HavenAppHeaderBindingsTests
         bindings.SearchText = "geometry dash";
         await bindings.DispatchAsync("9to1.Haven.Search", null);
         Assert.Equal(["geometry dash"], probe.Searched);
+    }
+
+    [Fact]
+    public void TwoWay_writeback_updates_searchtext_and_raises_propertychanged()
+    {
+        var probe = new Probe();
+        var bindings = new HavenAppHeaderBindings(new FakeHostContext(embedded: true), probe.OpenAsync, probe.SearchAsync);
+        var raised = false;
+        bindings.PropertyChanged += (_, args) => { if (args.PropertyName == nameof(bindings.SearchText)) raised = true; };
+        Assert.True(bindings is ICuiWritableBindingContext);
+        Assert.True(((ICuiWritableBindingContext)bindings).TrySetValue("SearchText", "compiler gate"));
+        Assert.Equal("compiler gate", bindings.SearchText);
+        Assert.True(raised);
+    }
+
+    [Fact]
+    public void TwoWay_writeback_refuses_non_string_and_oversized_values()
+    {
+        var probe = new Probe();
+        var bindings = new HavenAppHeaderBindings(new FakeHostContext(embedded: true), probe.OpenAsync, probe.SearchAsync);
+        var writable = (ICuiWritableBindingContext)bindings;
+        Assert.False(writable.TrySetValue("SearchText", 42));
+        Assert.Equal("", bindings.SearchText);
+        Assert.False(writable.TrySetValue("SearchText", new string('x', HavenAppHeaderBindings.MaxSearchLength + 1)));
+        Assert.Equal("", bindings.SearchText);
+    }
+
+    [Fact]
+    public void TwoWay_writeback_refuses_unknown_paths()
+    {
+        var probe = new Probe();
+        var bindings = new HavenAppHeaderBindings(new FakeHostContext(embedded: true), probe.OpenAsync, probe.SearchAsync);
+        var writable = (ICuiWritableBindingContext)bindings;
+        Assert.False(writable.TrySetValue("ShowModel", true));
+        Assert.False(writable.TrySetValue("NotAPath", "x"));
+        Assert.Equal("", bindings.SearchText);
     }
 }
 #endif

@@ -53,6 +53,12 @@ public sealed partial class App
                 _host.OpenProfilePanelAsync(cancellationToken);
         }
 
+        /// <summary>Admission outcome for re-observing the current authenticated Home actor after
+        /// an await. Current is the only state that may proceed to an owning operation; Changed
+        /// means a different full actor/auth revision is now current; Cancelled/Faulted keep
+        /// caller cancellation and source faults distinct from a changed actor.</summary>
+        internal enum ActorAdmissionStatus { Current, Changed, Cancelled, Faulted }
+
         /// <summary>Monotonic generation for the currently mounted shared panel. A panel that
         /// opened earlier is retired the moment another panel or close replaces it; stale async
         /// completions from a retired panel must never mutate the replacement surface.</summary>
@@ -224,13 +230,20 @@ public sealed partial class App
             _sharedPanelLoader = null;
             _sharedPanelRoot = null;
             if (present is null) { if (_shellBindings is not null) _shellBindings.HasOpenPanel = false; return; }
+            // Retire A's exact authored root BEFORE any disposal callback runs. If A.Dispose
+            // synchronously mounts B, B's own Show takes over _sharedPanelLoader/_sharedPanelRoot
+            // and adds B's root, so retiring A's exact root here never clears B and never bumps
+            // B's generation. If no replacement mounts, A's root is removed once and the panel
+            // state is cleared below. Only the exact captured A root is removed through real CUI
+            // container bookkeeping; unrelated/new children are never touched.
+            if (_sharedPanelHost is not null && root is not null)
+                _sharedPanelHost.RemoveChild(root);
             RetireLoader(present);
             // Only mutate shared-panel state if no replacement was mounted during A's settle.
             if (_sharedPanelLoader is null)
             {
                 // No replacement: ensure stale completions from the retired A refuse.
                 Interlocked.Increment(ref _sharedPanelGeneration);
-                if (_sharedPanelHost is not null && root is not null) _sharedPanelHost.RemoveChild(root);
                 if (_shellBindings is not null) _shellBindings.HasOpenPanel = false;
             }
             // If B mounted, B's own Show already set HasOpenPanel and reserved B's generation and
@@ -246,17 +259,31 @@ public sealed partial class App
             StringComparer.Ordinal.Equals(profile, _actor?.ProfileId);
 
         /// <summary>Re-observe the ACTUAL current Home actor/auth revision and require it to
-        /// still match the profile a shared panel was opened for. Used by dispatcher admission
-        /// before any owning mutation; a stale panel refuses before touching the service.</summary>
-        internal async Task<bool> ReobserveActorAsync(string? expectedProfile, CancellationToken token)
+        /// still equal the full authenticated actor/session/auth revision a shared panel was
+        /// opened for (not merely the same profile string). Distinguished outcomes keep caller
+        /// cancellation and source faults apart from a genuinely changed actor, so a caller can
+        /// publish a precise structured refusal instead of conflating them.</summary>
+        internal async Task<ActorAdmissionStatus> ReobserveActorAsync(AuthenticatedResourceActor expected, CancellationToken token)
         {
+            if (expected is null) return ActorAdmissionStatus.Changed;
             try
             {
                 var actor = await ObserveActorAsync(token);
-                return actor is not null && StringComparer.Ordinal.Equals(actor.ProfileId, expectedProfile);
+                return actor is not null && actor == expected ? ActorAdmissionStatus.Current : ActorAdmissionStatus.Changed;
             }
-            catch { return false; }
+            catch (OperationCanceledException) { return ActorAdmissionStatus.Cancelled; }
+            catch { return ActorAdmissionStatus.Faulted; }
         }
+
+        /// <summary>Structured status code for a failed actor admission, kept distinct from a
+        /// changed actor so callers never masquerade a cancellation/source fault as a profile
+        /// change (or vice versa).</summary>
+        internal static string ActorAdmissionCode(ActorAdmissionStatus status) => status switch
+        {
+            ActorAdmissionStatus.Cancelled => "Cancelled",
+            ActorAdmissionStatus.Faulted => "ActorReadFailed",
+            _ => "ActorChanged"
+        };
 
         /// <summary>Surfaces a structured shared-panel command refusal through the real rail
         /// status channel. Genuine stale/malformed command refusals are published, never
@@ -328,8 +355,8 @@ public sealed partial class App
             if (service is null || theme is null)
                 return Task.FromResult(HavenSharedOpenResult.Refused("NotificationsUnavailable", "The durable Home notification service is unavailable."));
             var generation = checked(++_sharedPanelGeneration);
-            var profile = _actor?.ProfileId;
-            var bindings = new HavenNotificationsCuiBindings(this, service, generation, profile);
+            var actor = _actor;
+            var bindings = new HavenNotificationsCuiBindings(this, service, generation, actor);
             var loader = new CuiControlLoader();
             // Configure binding/theme/action context before loading so the authored Repeat
             // captures this panel's real notification source and the genuine Home theme.
@@ -407,7 +434,7 @@ public sealed partial class App
                 var loader = new CuiControlLoader();
                 loader.SetThemePreferenceContext(theme);
                 loader.SetBindingContext(controller.Surface);
-                loader.SetActionDispatcher(new HomeModelPickerDispatcher(controller, this, generation, actor.ProfileId));
+                loader.SetActionDispatcher(new HomeModelPickerDispatcher(controller, this, generation, actor));
                 var loaded = loader.TryLoad(controller.Surface.Document);
                 if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
                 {
@@ -550,13 +577,14 @@ public sealed partial class App
         /// retired panel refuses and never reaches the service. Missing/malformed parameters refuse
         /// structurally rather than silently succeeding.</summary>
         private sealed class HomeModelPickerDispatcher(HomeModelPickerCuiController controller, UnifiedWorkspaceHost host,
-            long generation, string? profile)
+            long generation, AuthenticatedResourceActor actor)
             : ICuiActionDispatcher
         {
             private readonly HomeModelPickerCuiController _controller = controller;
             private readonly UnifiedWorkspaceHost _host = host;
             private readonly long _generation = generation;
-            private readonly string? _profile = profile;
+            private readonly AuthenticatedResourceActor _actor = actor;
+            private readonly string? _profile = actor.ProfileId;
 
             public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
             {
@@ -565,9 +593,17 @@ public sealed partial class App
                 if (!_host.IsPanelCurrent(_generation, _profile))
                 { _host.PublishSharedRefusal("StalePanel", "This model-picker panel is no longer current."); return; }
                 // Full current actor/admission re-validation BEFORE calling the owner, so a
-                // retired/actor-switched panel refuses before touching the owning service.
-                if (!await _host.ReobserveActorAsync(_profile, cancellationToken))
-                { _host.PublishSharedRefusal("ActorChanged", "The authenticated Home profile changed; reopen the model picker."); return; }
+                // retired/actor-switched panel refuses before touching the owning service. The
+                // exact mounted panel/generation is re-checked AFTER the await, because the panel
+                // may retire during the awaited re-observation.
+                var admission = await _host.ReobserveActorAsync(_actor, cancellationToken);
+                if (admission != ActorAdmissionStatus.Current || !_host.IsPanelCurrent(_generation, _profile))
+                {
+                    _host.PublishSharedRefusal(ActorAdmissionCode(admission), admission == ActorAdmissionStatus.Cancelled
+                        ? "The model-picker admission was cancelled."
+                        : "This model-picker panel is no longer current for the authenticated profile.");
+                    return;
+                }
                 switch (command)
                 {
                     case "Refresh":
@@ -653,31 +689,26 @@ public sealed partial class App
         /// currentness BEFORE invoking the owning service, so a retired panel refuses without
         /// service mutation.</summary>
         private sealed class HavenNotificationsCuiBindings(UnifiedWorkspaceHost host, HavenNotificationService service,
-            long generation, string? profile)
+            long generation, AuthenticatedResourceActor actor)
             : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
         {
             private readonly UnifiedWorkspaceHost _host = host;
             private readonly HavenNotificationService _service = service;
             private readonly long _generation = generation;
-            private readonly string? _profile = profile;
+            private readonly AuthenticatedResourceActor _actor = actor;
+            private readonly string? _profile = actor.ProfileId;
             private HavenNotificationRow[] _rows = [];
 
             public event PropertyChangedEventHandler? PropertyChanged;
 
             private bool IsCurrent() => _host.IsPanelCurrent(_generation, _profile);
 
-            /// <summary>Re-observe the ACTUAL current Home actor/auth revision (never the
-            /// startup-cached profile alone) and require it to still match this panel's opened
-            /// profile before an owning read/mutation proceeds.</summary>
-            private async Task<bool> ReobserveActorAsync(CancellationToken token)
-            {
-                try
-                {
-                    var actor = await _host.ObserveActorAsync(token);
-                    return actor is not null && StringComparer.Ordinal.Equals(actor.ProfileId, _profile);
-                }
-                catch { return false; }
-            }
+            /// <summary>Re-observe the ACTUAL full current Home actor/session/auth revision (never
+            /// the startup-cached profile alone) and require it to still equal the panel's opened
+            /// actor before an owning read/mutation proceeds. Distinguished outcomes keep
+            /// cancellation/source faults apart from a changed actor.</summary>
+            private async Task<ActorAdmissionStatus> ReobserveActorAsync(CancellationToken token)
+                => await _host.ReobserveActorAsync(_actor, token);
 
             public bool TryGetValue(string path, out object? value)
             {
@@ -696,9 +727,20 @@ public sealed partial class App
 
             private async Task LoadCoreCoreAsync(CancellationToken token)
             {
+                // Current actor admission FIRST, before any owning service read.
+                if (!IsCurrent()) { Refuse("StalePanel", "This notifications panel is no longer current."); return; }
+                var admission = await ReobserveActorAsync(token);
+                if (admission != ActorAdmissionStatus.Current)
+                {
+                    Refuse(_host.ActorAdmissionCode(admission), admission == ActorAdmissionStatus.Cancelled
+                        ? "The notifications read was cancelled."
+                        : "The authenticated profile changed; reopen notifications.");
+                    return;
+                }
                 var items = await _service.GetRecentAsync(50, includeDismissed: false, token).ConfigureAwait(false);
                 // Marshal the visible row mutation and PropertyChanged publication to the UI
-                // thread (real async service reads resume off-UI).
+                // thread (real async service reads resume off-UI). Revalidate immediately before
+                // publication so a retired panel never publishes onto a replacement surface.
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     if (!IsCurrent()) return;
@@ -719,13 +761,13 @@ public sealed partial class App
                         _host.HideSharedPanel();
                         return;
                     case "9to1.Haven.MarkRead" when TryNotificationId(parameter, out var readId):
-                        await Retain(MarkReadCoreAsync(readId, true, token));
+                        await RetainBeforeOwner(ct => MarkReadCoreAsync(readId, true, ct), token);
                         return;
                     case "9to1.Haven.MarkRead":
                         Refuse("MalformedCommand", "The notifications mark-read command received a malformed identifier.");
                         return;
                     case "9to1.Haven.Dismiss" when TryNotificationId(parameter, out var dismissId):
-                        await Retain(DismissCoreAsync(dismissId, token));
+                        await RetainBeforeOwner(ct => DismissCoreAsync(dismissId, ct), token);
                         return;
                     case "9to1.Haven.Dismiss":
                         Refuse("MalformedCommand", "The notifications dismiss command received a malformed identifier.");
@@ -738,27 +780,66 @@ public sealed partial class App
 
             private void Refuse(string code, string message) => _host.PublishSharedRefusal(code, message);
 
-            private ValueTask Retain(Task task)
+            /// <summary>Reserves the retained original-task slot in the host ledger BEFORE the
+            /// owning action begins, so a synchronous completion or reentrant close cannot acquire
+            /// service work outside the reserved ledger. Mirrors the model-picker dispatcher's
+            /// admission gate; faults/refusals are retained, never swallowed as success.</summary>
+            private ValueTask RetainBeforeOwner(Func<CancellationToken, Task> produce, CancellationToken token)
             {
-                _host.Track(task);
-                return new(task);
+                var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var retained = Run(gate.Task, produce, token);
+                _host.Track(retained);
+                gate.SetResult();
+                return new(retained);
+
+                static async Task Run(Task start, Func<CancellationToken, Task> body, CancellationToken ct)
+                {
+                    await start;
+                    await body(ct);
+                }
             }
 
             private async Task MarkReadCoreAsync(Guid id, bool read, CancellationToken token)
             {
-                if (!IsCurrent() || !await ReobserveActorAsync(token)) return; // refuse before service mutation
+                // Admission + exact currentness BEFORE any service/actor callback.
+                if (!IsCurrent()) { Refuse("StalePanel", "This notifications panel is no longer current."); return; }
+                var before = await ReobserveActorAsync(token);
+                if (before != ActorAdmissionStatus.Current)
+                {
+                    Refuse(_host.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
+                        ? "The notifications mark-read was cancelled."
+                        : "The authenticated profile changed; reopen notifications.");
+                    return;
+                }
+                // Validate the requested identifier against the current authorized row membership.
+                if (!IsMemberRow(id)) { Refuse("MalformedCommand", "The notification is not in the current authorized list."); return; }
                 await _service.MarkReadAsync(id, read, token).ConfigureAwait(false);
-                if (!IsCurrent() || !await ReobserveActorAsync(token)) return; // revalidate after async acquisition, before publication
+                // Revalidate AFTER async acquisition and immediately before publication. If the
+                // panel/actor retired AFTER the committed mutation, preserve the genuine committed
+                // result and do not publish onto a replacement surface; never pretend the late
+                // retirement rolled the commit back.
+                if (!IsCurrent() || await ReobserveActorAsync(token) != ActorAdmissionStatus.Current) return;
                 await LoadCoreAsync(token).ConfigureAwait(false);
             }
 
             private async Task DismissCoreAsync(Guid id, CancellationToken token)
             {
-                if (!IsCurrent() || !await ReobserveActorAsync(token)) return;
+                if (!IsCurrent()) { Refuse("StalePanel", "This notifications panel is no longer current."); return; }
+                var before = await ReobserveActorAsync(token);
+                if (before != ActorAdmissionStatus.Current)
+                {
+                    Refuse(_host.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
+                        ? "The notifications dismiss was cancelled."
+                        : "The authenticated profile changed; reopen notifications.");
+                    return;
+                }
+                if (!IsMemberRow(id)) { Refuse("MalformedCommand", "The notification is not in the current authorized list."); return; }
                 await _service.DismissAsync(id, token).ConfigureAwait(false);
-                if (!IsCurrent() || !await ReobserveActorAsync(token)) return;
+                if (!IsCurrent() || await ReobserveActorAsync(token) != ActorAdmissionStatus.Current) return;
                 await LoadCoreAsync(token).ConfigureAwait(false);
             }
+
+            private bool IsMemberRow(Guid id) => Array.Exists(_rows, row => row.Id == id);
 
             private static bool TryNotificationId(object? parameter, out Guid id)
             {

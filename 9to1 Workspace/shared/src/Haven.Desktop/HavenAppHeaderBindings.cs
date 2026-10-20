@@ -1,6 +1,7 @@
 #if !ANDROID
 using System.ComponentModel;
 using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
 using Haven.Application.Haven;
 
 namespace Haven.Desktop;
@@ -17,12 +18,17 @@ public sealed class HavenAppHeaderBindings(
     IHavenHostContext hostContext,
     Func<string, CancellationToken, Task<HavenSharedOpenResult>> openSharedAsync,
     Func<string, CancellationToken, Task> searchAsync)
-    : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
+    : ICuiWritableBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
 {
     private readonly IHavenHostContext _host = hostContext;
     private readonly Func<string, CancellationToken, Task<HavenSharedOpenResult>> _open = openSharedAsync;
     private readonly Func<string, CancellationToken, Task> _search = searchAsync;
     private string _searchText = "";
+
+    /// <summary>Maximum authored search-query length accepted from the TwoWay input write-back.
+    /// Bounded so a malformed/oversized authored value is refused (CUIR006-safe) rather than
+    /// silently stored.</summary>
+    public const int MaxSearchLength = 512;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -68,6 +74,18 @@ public sealed class HavenAppHeaderBindings(
             _ => null
         };
         return value is not null;
+    }
+
+    /// <summary>The narrowly allowed TwoWay write-back path is the search query. It validates
+    /// the value before storing and raises property-change, so the authored input write-back and
+    /// the search gateway stay consistent. Any other path is refused (never silently accepted).</summary>
+    public bool TrySetValue(string path, object? value)
+    {
+        if (!string.Equals(path, "SearchText", StringComparison.Ordinal)) return false;
+        if (value is not string text) return false;
+        if (text.Length > MaxSearchLength) return false;
+        SearchText = text;
+        return true;
     }
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
