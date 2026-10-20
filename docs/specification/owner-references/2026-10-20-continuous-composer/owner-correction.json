@@ -9,7 +9,8 @@
   },
   "owner_words": [
     "The chatbox in your current design doesn't match the spec. It should be continuous, not a visible box inside a box, and have format/emoji button/permission selector. See attached chatgpt compose for example.",
-    "The send button is also missing the wave voice thing when the compose area is empty. But that could be intentional at this point, awaiting further development on voice"
+    "The send button is also missing the wave voice thing when the compose area is empty. But that could be intentional at this point, awaiting further development on voice",
+    "The formatting should just be a single button thst opens a toolbar"
   ],
   "requirements": [
     "Author one continuous composer surface; the text entry must not present a separate visible box inside the outer composer. Avoid an independent inner background, rounded outline or clipped inset glow.",
@@ -22,7 +23,9 @@
     "The latest Spaces reference is Professional and its mistaken glow is excluded. Preserve other user-selected themes rather than removing their specified effects globally.",
     "The idle empty composer must show the waveform Voice-mode control; switch to Send for a genuine pending message. Preserve canonical attachment/content applicability and active Stop/Resume/queue/edit semantics rather than selecting Voice merely because text is temporarily empty.",
     "The waveform invokes the full canonical Voice & Vision session through the same ConversationID, SpaceID and Voice SessionID, with a floating voice pill over the still-usable chat. It is not a settings/model picker, dictation-only replacement or automatic navigation to the standalone app.",
-    "Respect actual audio/camera/screen permissions, persistent capture indicators and explicit sharing. Never silently enable camera or screen sharing. The owner noted this is still pending; that is not a waiver or evidence that Voice is implemented."
+    "Respect actual audio/camera/screen permissions, persistent capture indicators and explicit sharing. Never silently enable camera or screen sharing. The owner noted this is still pending; that is not a waiver or evidence that Voice is implemented.",
+    "Show one Format (Aa) button that opens the floating formatting toolbar. Individual formatting commands belong inside that toolbar, not persistently exposed in the composer controls row. Preserve the expanded AND focused visibility rule for the Format and emoji buttons."
   ],
-  "voice_clarified_at": "2026-10-20T12:17:07.536234+00:00"
+  "voice_clarified_at": "2026-10-20T12:17:07.536234+00:00",
+  "format_toolbar_clarified_at": "2026-10-20T14:59:18.728276+00:00"
 }
