@@ -15,6 +15,7 @@ using Haven.Desktop.Events;
 using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Apps.Browse;
 using HavenOS.Home.Discover;
+using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 
 namespace Haven.Desktop.Tests;
 
@@ -121,7 +122,8 @@ public sealed class UnifiedHomeContentTests
             Assert.Equal("home", tab.Address.Authority);
             Assert.Equal(new[] { "models" }, tab.Address.ResourceSegments);
             Assert.Equal(BrowseEngineState.NativeApp, tab.EngineState);
-            session = chrome.ObserveOriginalAppContent(admitted.SelectedTabId);
+            session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(
+                chrome.ObserveOriginalAppContent(admitted.SelectedTabId));
             Assert.NotNull(session);
             Assert.Equal("browse://home/models", session!.Address.Value);
             var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);

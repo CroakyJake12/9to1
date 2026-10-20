@@ -1244,7 +1244,10 @@ public sealed class HostComposerLifetimeTests
         {
             await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
-            Assert.Equal(1, registrar.RegisterCount);
+            // The real parent now owns separate composer and recovery native children.
+            Assert.Equal(2, registrar.RegisterCount);
+            Assert.True(registrar.TryCreate(scene.RecoveryHost, out var recoveryMapped));
+            Assert.Same(scene.RecoveryView, recoveryMapped);
             Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
             Assert.True(FindInput(scene.ComposerView)!.Bounds.Width > 0);
             Assert.True(registrar.TryCreate(scene.ComposerHost, out var mapped));
@@ -1301,7 +1304,10 @@ public sealed class HostComposerLifetimeTests
         {
             await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
-            Assert.Equal(1, registrar.RegisterCount);
+            // The real parent now owns separate composer and recovery native children.
+            Assert.Equal(2, registrar.RegisterCount);
+            Assert.True(registrar.TryCreate(scene.RecoveryHost, out var recoveryMapped));
+            Assert.Same(scene.RecoveryView, recoveryMapped);
             Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
             Assert.True(FindInput(scene.ComposerView)!.Bounds.Width > 0);
             Assert.True(registrar.TryCreate(scene.ComposerHost, out var mapped));

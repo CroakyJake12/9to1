@@ -61,7 +61,7 @@ public sealed class FloatingFormatToolbarTests
     {
         var source = new Source { CanSend = true };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 900, Height = 700, Content = view };
+        var window = CreateFooterWindow(view, 900, 700);
         window.Show();
         Exception? testFailure = null;
         try
@@ -98,6 +98,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             Assert.True(toolbar!.IsVisible, "Aa must open the floating toolbar");
             Assert.True(toolbar.Bounds.Width > 0 && toolbar.Bounds.Height > 0);
 
@@ -161,7 +162,7 @@ public sealed class FloatingFormatToolbarTests
     {
         var source = new Source { CanSend = true };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 900, Height = 700, Content = view };
+        var window = CreateFooterWindow(view, 900, 700);
         window.Show();
         Exception? testFailure = null;
         try
@@ -171,6 +172,7 @@ public sealed class FloatingFormatToolbarTests
             var box = FindInput(view);
             Assert.NotNull(box);
             view.Input.Text = "draft";
+            box!.Focus();
             PumpLayout(window);
 
             // Open the floating toolbar over the input's top edge.
@@ -178,6 +180,7 @@ public sealed class FloatingFormatToolbarTests
             await view.CaptureOriginalActionSettlement(); PumpLayout(window);
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             var inputRect = WindowBounds(box, window);
 
             // Real click near the LEFT edge of the first editable line.
@@ -205,7 +208,7 @@ public sealed class FloatingFormatToolbarTests
     {
         var source = new Source { CanSend = true };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 420, Height = 620, Content = view };
+        var window = CreateFooterWindow(view, 420, 620);
         window.Show();
         Exception? testFailure = null;
         try
@@ -220,6 +223,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             var inputBefore = WindowBounds(box, window);
 
             // Real narrow resize: shrink the window and re-layout.
@@ -230,7 +234,7 @@ public sealed class FloatingFormatToolbarTests
             var windowClient = new Rect(0, 0, window.Width, window.Height);
             Assert.True(windowClient.Contains(WindowBounds(toolbar, window)), "toolbar must stay inside the narrowed viewport");
             Assert.False(WindowBounds(toolbar, window).Intersects(WindowBounds(box, window)));
-            Assert.False(toolbar.GetVisualAncestors().Contains(FindContainer(view, "composer-body")));
+            Assert.DoesNotContain(FindContainer(view, "composer-body"), toolbar.GetVisualAncestors());
 
             // Out-of-flow measure holds at the narrowed width: closing then reopening the toolbar
             // must not change the surface's desired size.
@@ -268,7 +272,7 @@ public sealed class FloatingFormatToolbarTests
             Chips = [new ChatComposerChip("c1", "Documents", false), new ChatComposerChip("c2", "Design", false)]
         };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 900, Height = 700, Content = view };
+        var window = CreateFooterWindow(view, 900, 700);
         window.Show();
         Exception? testFailure = null;
         try
@@ -283,6 +287,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             var toolbarWin = WindowBounds(toolbar!, window);
             var windowClient = new Rect(0, 0, window.Width, window.Height);
             Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the window viewport");
@@ -303,7 +308,7 @@ public sealed class FloatingFormatToolbarTests
     {
         var source = new Source { CanSend = true };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 300, Height = 620, Content = view };
+        var window = CreateFooterWindow(view, 300, 620);
         window.Show();
         Exception? testFailure = null;
         try
@@ -318,6 +323,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             var windowClient = new Rect(0, 0, window.Width, window.Height);
             Assert.True(windowClient.Contains(WindowBounds(toolbar!, window)), "toolbar must stay inside the narrowed viewport");
             // Every formatting command must itself be visible and hit-testable, not merely the toolbar
@@ -350,7 +356,7 @@ public sealed class FloatingFormatToolbarTests
                 .Select(i => new ChatComposerChip($"c{i}", $"Chip {i} label", false)).ToArray()
         };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 300, Height = 620, Content = view };
+        var window = CreateFooterWindow(view, 300, 620);
         window.Show();
         Exception? testFailure = null;
         try
@@ -365,6 +371,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             var windowClient = new Rect(0, 0, window.Width, window.Height);
             var toolbarWin = WindowBounds(toolbar!, window);
             Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the narrowed viewport");
@@ -407,9 +414,13 @@ public sealed class FloatingFormatToolbarTests
     [AvaloniaFact]
     public async Task Live_target_retarget_reanchors_swaps_observers_and_matches_ids_case_sensitively()
     {
-        var source = new Source { CanSend = true };
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = [new ChatComposerChip("retarget-anchor", "Retained anchor context", false)]
+        };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 900, Height = 700, Content = view };
+        var window = CreateFooterWindow(view, 900, 700);
         window.Show();
         Exception? testFailure = null;
         try
@@ -423,6 +434,7 @@ public sealed class FloatingFormatToolbarTests
             await view.CaptureOriginalActionSettlement(); PumpLayout(window);
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
 
             var layer = FindContainer(view, "composer-floating-layer")!;
             var container = Assert.IsType<CuiContainerControl>(layer);
@@ -431,6 +443,7 @@ public sealed class FloatingFormatToolbarTests
             var inputColumn = FindContainer(view, "input-column")!;
             Assert.NotNull(body);
             Assert.NotNull(inputColumn);
+            Assert.NotEqual(WindowBounds(body, window).Top, WindowBounds(inputColumn, window).Top);
 
             var before = WindowBounds(toolbar!, window);
             var windowClient = new Rect(0, 0, window.Width, window.Height);
@@ -442,6 +455,7 @@ public sealed class FloatingFormatToolbarTests
             PumpLayout(window);
             Assert.Equal("input-column", container.AuthoredTargetId);
             var after = WindowBounds(toolbar!, window);
+            AssertPlaced(toolbar!);
             Assert.NotEqual(before, after);
             Assert.True(windowClient.Contains(after));
             Assert.False(after.Intersects(WindowBounds(inputColumn, window)));
@@ -458,8 +472,12 @@ public sealed class FloatingFormatToolbarTests
             container.SetAuthoredTarget("Composer-Body");
             PumpLayout(window);
             Assert.Equal("Composer-Body", container.AuthoredTargetId);
-            var failed = WindowBounds(toolbar!, window);
-            Assert.True(failed.Width <= 0 || failed.Height <= 0, "wrong-case target must fail closed (hidden)");
+            // The renderer suppresses the wrapper, retaining prior layout bounds for recovery.
+            // Assert actual paint/input/focus withdrawal rather than treating stale bounds as visibility.
+            Assert.False(Assert.IsType<Border>(layer.GetVisualParent()).IsVisible,
+                "wrong-case target must fail closed by hiding the floating wrapper");
+            Assert.False(toolbar!.IsEffectivelyVisible,
+                "wrong-case target must remove toolbar paint, hit testing and focus participation");
         }
         catch (Exception error) { testFailure = error; throw; }
         finally
@@ -473,7 +491,7 @@ public sealed class FloatingFormatToolbarTests
     {
         var source = new Source { CanSend = true };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 900, Height = 700, Content = view };
+        var window = CreateFooterWindow(view, 900, 700);
         window.Show();
         Exception? testFailure = null;
         try
@@ -489,6 +507,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             var tb = toolbar!;
             var layer = FindContainer(view, "composer-floating-layer")!;
             var cell = Assert.IsType<Border>(layer.GetVisualParent());
@@ -544,10 +563,11 @@ public sealed class FloatingFormatToolbarTests
             Background = Brushes.Gray,
             Child = new TextBlock { Text = "status bar", VerticalAlignment = VerticalAlignment.Center }
         };
-        var grid = new Grid { RowDefinitions = new("*,Auto") };
+        var grid = new Grid { RowDefinitions = new("*,Auto,Auto") };
         grid.Children.Add(view);
+        Grid.SetRow(view, 1);
         grid.Children.Add(footer);
-        Grid.SetRow(footer, 1);
+        Grid.SetRow(footer, 2);
         var window = new Window { Width = 900, Height = 700, Content = grid };
         window.Show();
         Exception? testFailure = null;
@@ -564,6 +584,7 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
             Assert.True(toolbar!.IsVisible);
             var toolbarWin = WindowBounds(toolbar, window);
             var windowClient = new Rect(0, 0, window.Width, window.Height);
@@ -577,6 +598,24 @@ public sealed class FloatingFormatToolbarTests
         {
             await FinishComposerTestAsync(window, view, testFailure);
         }
+    }
+
+    // Match the production ChatHavenScene's intrinsic Auto footer allocation. A direct
+    // full-window stretched composer consumes its own toolbar's safe placement space.
+    private static Window CreateFooterWindow(ChatComposerCuiView view, double width, double height)
+    {
+        var grid = new Grid { RowDefinitions = new("*,Auto") };
+        grid.Children.Add(view);
+        Grid.SetRow(view, 1);
+        return new Window { Width = width, Height = height, Content = grid };
+    }
+
+    private static void AssertPlaced(Control toolbar)
+    {
+        Assert.True(toolbar.IsVisible, "authored toolbar must be open");
+        Assert.True(toolbar.IsEffectivelyVisible, "placed toolbar must participate in actual rendering/input");
+        Assert.True(toolbar.Bounds.Width > 0 && toolbar.Bounds.Height > 0,
+            "placed toolbar must have a positive physical rectangle");
     }
 
     private static void Click(TopLevel top, Control target)
@@ -632,6 +671,7 @@ public sealed class FloatingFormatToolbarTests
     {
         try { await view.CloseAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
         finally { window.Close(); }
-        if (testFailure is not null) throw testFailure;
+        if (testFailure is not null)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(testFailure).Throw();
     }
 }
