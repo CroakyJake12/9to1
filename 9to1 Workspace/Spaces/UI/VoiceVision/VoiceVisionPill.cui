@@ -20,6 +20,7 @@
     <Action name="ToggleCamera" command="voice.camera" />
     <Action name="ToggleCaptions" command="voice.captions" />
     <Action name="OpenFullSurface" command="voice.open-full" />
+    <Action name="Hide" command="voice.hide" />
     <Action name="SetMode" command="voice.set-mode" parameter="{Binding pill.selectedModeIndex}" />
   </Actions>
   <Theme Name="user_preference">
@@ -38,6 +39,10 @@
                   Tooltip="End the Voice session" IsEnabled="{Binding pill.canEnd}"
                   Width="32" Height="32" Padding="6" IconOnly="True">
             <Image id="voice-pill-end-icon" Source="icon:close" Width="16" Height="16" />
+          </Button>
+          <Button id="voice-pill-hide" action="Hide" accessible-name="Hide Voice session"
+                  Tooltip="Hide the Voice session pill" Width="32" Height="32" Padding="6" IconOnly="True">
+            <Image id="voice-pill-hide-icon" Source="icon:chevron-down" Width="16" Height="16" />
           </Button>
         </Container>
 

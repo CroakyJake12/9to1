@@ -29,8 +29,17 @@
     <EmbeddedResource Include="UI\Home\SpacesHome.cui" LogicalName="HavenOS.Apps.Spaces.UI.Home.SpacesHome.cui" />
     <EmbeddedResource Include="UI\Builder\SpaceDetails.cui" LogicalName="HavenOS.Apps.Spaces.UI.Builder.SpaceDetails.cui" />
     <EmbeddedResource Include="UI\Builder\SpaceBuilder.cui" LogicalName="HavenOS.Apps.Spaces.UI.Builder.SpaceBuilder.cui" />
+    <!-- The Voice &amp; Vision pill and full session documents are stateless, so the canonical CUI
+         build emits them into the genuine V1 compiled bundle (CUI.Compilation.v1) under their
+         project-relative source names. The raw .cui is also snapshotted for stateless identity. -->
+    <EmbeddedResource Include="UI\VoiceVision\VoiceVisionPill.cui" LogicalName="HavenOS.Apps.Spaces.UI.VoiceVision.VoiceVisionPill.cui" />
+    <EmbeddedResource Include="UI\VoiceVision\VoiceVisionSession.cui" LogicalName="HavenOS.Apps.Spaces.UI.VoiceVision.VoiceVisionSession.cui" />
+    <EmbeddedResource Include="UI\VoiceVision\VoiceVisionHostShell.cui" LogicalName="HavenOS.Apps.Spaces.UI.VoiceVision.VoiceVisionHostShell.cui" />
     <None Update="UI\Chat\ChatSpace.cui" CopyToOutputDirectory="PreserveNewest" />
     <None Update="UI\Home\SpacesHome.cui" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="UI\VoiceVision\VoiceVisionPill.cui" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="UI\VoiceVision\VoiceVisionSession.cui" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="UI\VoiceVision\VoiceVisionHostShell.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Import Project="../../framework/CUI/Compiler/buildTransitive/CakeOS.Cui.targets" />
 </Project>

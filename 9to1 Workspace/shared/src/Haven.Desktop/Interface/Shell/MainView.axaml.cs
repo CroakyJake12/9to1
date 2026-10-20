@@ -11,6 +11,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Application.Automations;
+using Haven.Application.Call;
 
 using Haven.Browser;
 using Haven.Core;
@@ -1021,6 +1022,11 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         // surface, preserving this conversation, draft, selection and focus.
         page.ManageLocalModelsRequested += (_, _) => StartOriginalShellEvent(original =>
             original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenHomeDiscoverAsync())));
+        // Wire the composer's waveform Voice toggle to the shared same-session Voice &amp; Vision
+        // pill only when the real Voice runtime is registered. No runtime keeps the toggle
+        // truthfully hidden, so no fabricated voice is ever presented.
+        if (Haven.Desktop.App.Services?.GetService<IVoiceVisionRuntime>() is not null)
+            page.ConfigureVoiceOpener(() => { ShowVoicePill(); return ValueTask.CompletedTask; });
         return page;
     }
 

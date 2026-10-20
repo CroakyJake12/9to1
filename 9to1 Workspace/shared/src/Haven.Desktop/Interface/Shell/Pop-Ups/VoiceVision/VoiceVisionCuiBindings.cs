@@ -25,8 +25,8 @@ public sealed class VoiceVisionCuiBindings : ICuiWritableBindingContext, ICuiAct
     private static readonly IReadOnlySet<string> KnownCommands = new HashSet<string>(StringComparer.Ordinal)
     {
         "voice.start", "voice.end", "voice.mute", "voice.pause-resume", "voice.screen-share",
-        "voice.camera", "voice.captions", "voice.open-full", "voice.set-mode", "voice.submit-text",
-        "voice.toggle-transcript"
+        "voice.camera", "voice.captions", "voice.open-full", "voice.return", "voice.toggle",
+        "voice.hide", "voice.set-mode", "voice.submit-text", "voice.toggle-transcript"
     };
 
     private readonly Func<VoiceVisionRuntimeState> _state;
@@ -159,6 +159,9 @@ public sealed class VoiceVisionCuiBindings : ICuiWritableBindingContext, ICuiAct
             "voice.camera" => snapshot.HasCameraSource || snapshot.CanUseCamera,
             "voice.captions" => true,
             "voice.open-full" => true,
+            "voice.return" => true,
+            "voice.toggle" => true,
+            "voice.hide" => true,
             "voice.set-mode" => snapshot.CanEnd,
             "voice.submit-text" => snapshot.IsActive,
             "voice.toggle-transcript" => snapshot.CanEnd,

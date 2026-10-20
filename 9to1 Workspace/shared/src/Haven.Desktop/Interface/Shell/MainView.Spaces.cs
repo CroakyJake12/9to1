@@ -1,4 +1,5 @@
 using Haven.Application;
+using Haven.Application.Call;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
@@ -192,9 +193,16 @@ public sealed partial class MainView
             _conversationSafety);
 
         DemandCanonicalPageAcquisition();
+        // Wire the composer's waveform Voice toggle to the shared same-session Voice &amp; Vision
+        // pill only when the real Voice runtime is registered. No runtime keeps the toggle
+        // truthfully hidden, so no fabricated voice is ever presented.
+        Func<ValueTask>? openVoice = null;
+        if (services?.GetService<IVoiceVisionRuntime>() is not null)
+            openVoice = () => { ShowVoicePill(); return ValueTask.CompletedTask; };
         var page = new ChatSpacePage(backend, ChatSpacePage.ImmediateReadinessInstance, conversationId,
             clipboard: services?.GetService<IPlatformShellService>(),
-            avatarResolver: role => ResolveChatSpaceAvatar(role));
+            avatarResolver: role => ResolveChatSpaceAvatar(role),
+            openVoice: openVoice);
         // A fresh page per open is not reachable from a shell field, so it must join the retained
         // cohort or its retirement would never be joined and the native CUI host would leak.
         RetainOriginalCanonicalPage(page);

@@ -15,15 +15,18 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
     private readonly Func<ChatSpaceViewState> _state;
     private readonly Func<string, object?, CancellationToken, ValueTask> _dispatch;
     private readonly Func<IChatComposerInputPort?>? _inputPort;
+    private readonly Func<ValueTask>? _openVoice;
 
     public ChatSpaceComposerSource(
         Func<ChatSpaceViewState> state,
         Func<string, object?, CancellationToken, ValueTask> dispatch,
-        Func<IChatComposerInputPort?>? inputPort = null)
+        Func<IChatComposerInputPort?>? inputPort = null,
+        Func<ValueTask>? openVoice = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _inputPort = inputPort;
+        _openVoice = openVoice;
     }
 
     private ChatSpaceViewState Snapshot => _state();
@@ -44,6 +47,12 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
     public bool HasAdd => !Snapshot.IsSafetyLocked;
     public bool CanSend => !Snapshot.IsLoading && !Snapshot.IsSafetyLocked && Snapshot.Composer.CanSend;
     public bool IsEditing => Snapshot.Composer.IsEditing;
+
+    /// <summary>Voice is surfaced only when the host has actually wired an opener to the shared
+    /// Voice &amp; Vision runtime; no opener means no fabricated voice toggle.</summary>
+    public bool HasVoice => _openVoice is not null;
+
+    public ValueTask OpenVoice() => _openVoice?.Invoke() ?? ValueTask.CompletedTask;
 
     public IReadOnlyList<ChatComposerChip> Chips =>
         Snapshot.Composer.Attachments

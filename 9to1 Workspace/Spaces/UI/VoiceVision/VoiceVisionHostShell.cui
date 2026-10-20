@@ -1,0 +1,31 @@
+<Cui id="voicevision.host.shell" version="1">
+  <!--
+    Canonical CUI floating Voice host shell. The whole composition — the live chat/scene
+    slot plus the floating pill and full-surface overlays — is authored here. The native
+    host ONLY mounts the genuine live chat control into the named scene host element and
+    the concise pill/full controls into their named host elements, and flips the authored
+    ShowPill/ShowFull states. No structure/backdrop/visibility/position is authored in C#.
+
+    The scene slot always holds the SAME live chat control (the ACTUAL session root), so
+    the chat stays attached and usable while the pill floats over it. The full surface is
+    deliberate and overlays the scene; return removes the full overlay and reveals the same
+    chat/pill/session. Hiding removes both overlays and restores the chat-only root.
+     -->
+  <Theme Name="user_preference">
+    <Page id="voice-host-shell-page">
+      <Container id="voice-host-root" Type="Overlay">
+        <!-- Live chat/scene slot: always mounted, never replaced. -->
+        <Container id="voice-scene-host" Type="Grid" ColumnSizes="1fr" RowSizes="1fr" />
+
+        <!-- Deliberate full Voice &amp; Vision surface overlay. -->
+        <Container id="voice-full-layer" Type="Overlay" IsVisible="{Binding Host.ShowFull}">
+          <Container id="voice-full-host" Type="Grid" ColumnSizes="1fr" RowSizes="1fr" />
+        </Container>
+
+        <!-- Floating pill overlay, anchored bottom-right over the still-usable chat. -->
+        <Container id="voice-pill-host" Type="Overlay Float" IsVisible="{Binding Host.ShowPill}"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20" />
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

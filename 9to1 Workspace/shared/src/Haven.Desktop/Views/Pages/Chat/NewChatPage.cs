@@ -217,10 +217,21 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     /// recovery surface. The host joins this snapshot when routing a local-model recovery request so
     /// the navigation settles only after the real recovery action pipeline drains.</summary>
     public Task RecoveryActionSettlement => _scene.RecoveryActionSettlement;
+
+    /// <summary>Captures the shared composer loader's currently-originating action settlement. The
+    /// Voice host carries this genuine settlement into its external owner queue when the composer
+    /// waveform opener fires, so the presentation mount is deferred until that composer action
+    /// settles instead of running synchronously inside it.</summary>
+    public Task CaptureComposerActionSettlement() => _scene.ComposerView.CaptureOriginalActionSettlement();
     public event EventHandler? ConversationStateChanged;
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? AddCatalogItemSelected;
+    /// <summary>Wires the shared composer's waveform Voice toggle to the real Voice &amp; Vision
+    /// pill opener supplied by the shell. No opener keeps the toggle truthfully hidden. The opener
+    /// only requests presentation of the shared same-session pill; it never starts the runtime or
+    /// invents a model.</summary>
+    public void ConfigureVoiceOpener(Func<ValueTask>? openVoice) => _scene.SetVoiceOpener(openVoice);
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;

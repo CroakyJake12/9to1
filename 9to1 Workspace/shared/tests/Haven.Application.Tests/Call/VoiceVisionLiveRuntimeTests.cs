@@ -57,6 +57,50 @@ public sealed class VoiceVisionLiveRuntimeTests
     }
 
     [Fact]
+    public async Task Start_while_another_conversation_active_is_refused_without_a_second_capture()
+    {
+        var coordinator = NewCoordinator();
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var first = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        Assert.True(first.Succeeded);
+        Assert.Equal(1, coordinator.StartCount);
+
+        // Requesting Start for a DIFFERENT conversation while the shared runtime is live must be
+        // refused truthfully: it must never issue a second Coordinator Start nor swap the live
+        // session, because one runtime owns one live conversation.
+        var second = await runtime.StartAsync(Request(ConvoB), TestContext.Current.CancellationToken);
+        Assert.False(second.Succeeded);
+        Assert.Equal(VisionVoiceErrorCode.Conflict, second.Error!.Code);
+        Assert.Equal(1, coordinator.StartCount);
+        Assert.Equal(first.SessionId, runtime.State.SessionId);
+        Assert.Equal(ConvoId, runtime.State.ConversationId);
+        Assert.True(runtime.State.IsActive);
+    }
+
+    [Fact]
+    public async Task Full_pill_reopen_keeps_same_identity_without_End()
+    {
+        var coordinator = NewCoordinator();
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var start = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        Assert.True(start.Succeeded);
+
+        // Full → close presentation → reopen pill: the shared session is reused, identity is
+        // preserved, and closing a presentation is never End.
+        runtime.SetPresentation(VoiceVisionPresentationKind.Full);
+        runtime.SetPresentation(VoiceVisionPresentationKind.None);
+        runtime.SetPresentation(VoiceVisionPresentationKind.Pill);
+
+        Assert.Equal(0, coordinator.EndCount);
+        Assert.Equal(start.SessionId, runtime.State.SessionId);
+        Assert.Equal(ConvoId, runtime.State.ConversationId);
+        Assert.Equal(VoiceVisionPresentationKind.Pill, runtime.State.Presentation);
+        Assert.True(runtime.State.IsActive);
+    }
+
+    [Fact]
     public async Task Closing_a_presentation_is_not_End_and_End_drains_the_runtime()
     {
         var coordinator = NewCoordinator();
@@ -511,6 +555,7 @@ public sealed class VoiceVisionLiveRuntimeTests
 
     // -- fixed conversation identity --
     private static readonly Guid ConvoId = new("11111111-1111-1111-1111-111111111111");
+    private static readonly Guid ConvoB = new("22222222-2222-2222-2222-222222222222");
 
     private static FakeCallCoordinator NewCoordinator() => new()
     {

@@ -459,6 +459,16 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
 
     private async Task<VoiceVisionStartResult> StartNewAsync(VoiceVisionStartRequest request, CancellationToken cancellationToken)
     {
+        // One live runtime owns one live conversation. If the shared coordinator is already live on
+        // a DIFFERENT conversation (or on no identifiable conversation), a new start cannot drive a
+        // second simultaneous session. Refuse truthfully instead of issuing a second Start on the
+        // shared coordinator, which would leave two logical sessions sharing one runtime. The
+        // same-conversation case is handled earlier by attach-existing and never reaches here.
+        if (_runtime.IsActive && _runtime.CurrentConversation?.Id != request.ConversationId)
+            return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.Conflict,
+                "A Voice &amp; Vision session is already active in another conversation; end it before starting here.",
+                "ConversationID", "StartSession", true));
+
         if (!IsModeSupported(request.Mode))
             return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.ModelCapabilityMismatch,
                 $"The selected backend does not run {request.Mode} mode; the session was not started.", "VoiceMode", "StartSession", false));
