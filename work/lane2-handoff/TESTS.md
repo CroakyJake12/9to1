@@ -1,8 +1,10 @@
-# Lane 2 — Tests (pass 3; all NOT RUN pending .NET slot)
+# Lane 2 — Tests (pass 4; all NOT RUN pending .NET slot)
 
 All builds/tests are **NOT RUN**. Lane 2 is not lane 1; the serialized .NET slot has not been
 allocated by the coordinator. These files are authored (by inspection) and run only when the slot is
 granted. No test is manufactured to pass; each asserts a required contract.
+Runtime-patch-dependent tests (consumer + `ValidateArtifactHostSupport`) are NOT RUN until root applies
+`PATCH-Runtime-artifact-admission.md` and allocates the slot.
 
 ## Compiler tests — `framework/CUI/Compiler.Tests/CakeOS.Cui.Compiler.Tests.csproj`
 
@@ -35,6 +37,7 @@ Filter:
   - `Action_identity_key_mismatch_is_rejected` (CUIR073)
   - `Unsupported_dependency_kind_is_rejected` (CUIR071)
   - `Missing_value_span_is_rejected_before_consumer_use` (CUIR072)
+  - `Missing_resource_span_is_rejected` (CUIR072; pass-4 addition)
 - `CuiLocalStateAbiOutputTests`
   - `Stateful_toggle_document_emits_abi2_and_local_state_toggle_capability`
   - `Stateful_random_once_document_emits_abi2_and_random_select_capability`
@@ -58,6 +61,19 @@ Filter:
 - Admission rejections before effects: unknown format (CUIR060), version (CUIR061), language (CUIR064),
   stateful-without-ABI2 with capabilities stripped (CUIR074), unsupported capability (CUIR067), envelope/doc
   ABI contradiction (CUIR075).
+- **Whole-bundle host admission (pass 4, via `ValidateArtifactHostSupport`)**, all NOT RUN until root
+  applies `PATCH-Runtime-artifact-admission.md`:
+  - `Admission_rejects_unsupported_language_version_before_effects` (consistent unsupported language
+    envelope+doc → `CUIR064`).
+  - `Admission_rejects_envelope_document_language_contradiction_before_effects` (doc "99" vs envelope
+    "1" → `CUIR075`).
+  - `Admission_rejects_unsupported_component_registry_before_effects` (consistent unsupported registry →
+    `CUIR066`).
+  - `Sibling_abi999_required_import_is_rejected_before_effects` (stateless sibling ABI999, envelope-
+    consistent → `CUIR065`).
+  - `Sibling_only_unknown_capability_with_consistent_union_is_rejected` (sibling-only unknown capability,
+    envelope-consistent union → `CUIR067`).
+  - `Genuine_abi1_stateless_sibling_plus_abi2_composer_succeeds` (ABI1 sibling + ABI2 composer OK).
 - `Missing_compiled_composer_resource_has_no_raw_fallback_and_composer_is_not_in_v1`: no raw composer
   resource; V2 present; composer absent from any genuine V1 bundle (stateless sibling V1 allowed).
 - Test-only Compiler project reference (for `CuiV1ArtifactCodec.ReadArtifact`) added to the test
@@ -85,12 +101,20 @@ Covers, under one script:
 - Output-copy (Always/PreserveNewest/IfDifferent) vs publish (`CopyToPublishDirectory` defaults)
   ownership modelled independently: publish-only content copied only to a **custom PublishDir**;
   `CopyToPublishDirectory=Never` absent there; `CopyToOutputDirectory=Never` not copied to output.
+- **Publish eligibility vs real `Microsoft.NET.Publish.targets` (1013–1060) defaults (pass 4)**: a
+  copied-EmbeddedResource case (`CopiedEmbedded.cui`) exercises `IsPublishEligible` default-inherit
+  = `IsOutputCopyEligible`; a NeverCopy-with-NoPublish line (line 206) is corrected to a real
+  `CopyToPublishDirectory=Never` case; a nonproduced same-byte path survives publish untouched.
 - Unrelated same-path bytes preserved: overwriting an owned destination with unrelated bytes prevents
   stale deletion (hash-guard); a never-owned same-bytes path is never claimed/deleted.
 - Incremental stateless → stateful on the same output: stale owned raw removed only when hash still
   matches; unrelated file untouched; sources never deleted; V1 drops the transitioned document.
 - Statefulness propagation through the **import closure**: a stateless importer of a stateful child is
   promoted to ABI2 and both appear in V2.
+- **All-ancestor physical containment (pass 4, Project 4)**: ancestor-link escape is rejected, physical
+  source-alias is rejected, and a legitimate output inside the project root is accepted; skipped if
+  symlinks are unavailable. Covers `IsPhysicallyInside` resolving ALL existing ancestors and
+  `ShippedDestination`'s physical source-alias rejection.
 - Unsafe/escaping `TargetPath` fails the build (`Unsafe`, CUIB003) before any artifact is published.
 - Failed compile (`Widht` typo → `CUIC012`) publishes nothing and preserves the prior artifact bytes.
 

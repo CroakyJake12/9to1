@@ -368,16 +368,21 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         return ValidCopyModes.Contains(item.GetMetadata("CopyToOutputDirectory"));
     }
 
-    /// <summary>Publish eligibility honors CopyToPublishDirectory independently of output copy: an
-    /// explicit Always/PreserveNewest/IfDifferent publishes; Never does not; Content/None publish by
-    /// default while embedded-only item types do not. Publish-only items are therefore tracked.</summary>
+    /// <summary>Publish eligibility honors the ACTUAL MSBuild default-inherit rule
+    /// (Microsoft.NET.Publish.targets / DefaultCopyToPublishDirectoryMetadata): a missing
+    /// CopyToPublishDirectory inherits ONLY from a real CopyToOutputDirectory copy mode
+    /// (Always/PreserveNewest/IfDifferent), for Content, None and EmbeddedResource alike.
+    /// CopyToOutputDirectory=Never/empty disables default publish — such items produce NO publish
+    /// destination. An explicit valid CopyToPublishDirectory (publish-only) still publishes; Never
+    /// never publishes. Publish-only items are therefore tracked separately.</summary>
     private static bool IsPublishEligible(ITaskItem item)
     {
         var copyToPublish = item.GetMetadata("CopyToPublishDirectory");
         if (string.Equals(copyToPublish, "Never", StringComparison.OrdinalIgnoreCase)) return false;
         if (!string.IsNullOrWhiteSpace(copyToPublish)) return true;
-        var type = item.GetMetadata("CuiItemType");
-        return type is "Content" or "None";
+        // Missing CopyToPublishDirectory: default-inherit only from a real output-copy mode across
+        // Content/None/EmbeddedResource. Never/empty output-copy mode produces no publish destination.
+        return IsOutputCopyEligible(item);
     }
 
     private static void SnapshotOwned(
@@ -470,29 +475,84 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             throw new ArgumentException($"Unsafe TargetPath '{target}' escapes output root '{outputRoot}'.");
         if (!IsPhysicallyInside(full, outputRoot))
             throw new ArgumentException($"Unsafe TargetPath '{target}' resolves outside output root '{outputRoot}' (link/junction escape).");
+        // Lexical source overlap, plus physical source aliases (a destination that resolves to the
+        // same canonical file as a source through a link/junction must also be rejected).
         if (sourcePaths.Contains(full))
             throw new ArgumentException($"Unsafe TargetPath '{target}' overlaps a compiled CUI source '{full}'.");
+        var physicalFull = ResolvePhysicalPath(full);
+        foreach (var source in sourcePaths)
+        {
+            if (string.Equals(ResolvePhysicalPath(source), physicalFull, StringComparison.Ordinal))
+                throw new ArgumentException($"Unsafe TargetPath '{target}' aliases a compiled CUI source '{source}' (physical identity).");
+        }
         return full;
     }
 
-    /// <summary>Physical containment check that follows a final symlink/junction component so a link
-    /// pointing outside an allocated root is treated as unsafe.</summary>
+    /// <summary>Physical containment check: resolves EVERY existing ancestor of the path (not just a
+    /// final link component) to canonical physical identity, then compares it against the canonical
+    /// physical identity of the root. This catches escapes through an ancestor symlink even when the
+    /// final path is absent or a plain file (for example bin/link/new.cui where bin/link resolves
+    /// outside the root).</summary>
     private static bool IsPhysicallyInside(string fullPath, string root)
     {
         try
         {
-            if (File.Exists(fullPath) && File.ResolveLinkTarget(fullPath, true) is { } fileTarget)
-                fullPath = fileTarget.FullName;
-            else if (Directory.Exists(fullPath) && Directory.ResolveLinkTarget(fullPath, true) is { } dirTarget)
-                fullPath = dirTarget.FullName;
+            var physical = ResolvePhysicalPath(fullPath);
+            var physicalRoot = ResolvePhysicalPath(root);
+            return physical.StartsWith(physicalRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                || string.Equals(physical, physicalRoot, StringComparison.Ordinal);
         }
         catch
         {
             // Resolution failure means we cannot prove containment -> treat as unsafe.
             return false;
         }
-        return fullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-            || string.Equals(fullPath, root, StringComparison.Ordinal);
+    }
+
+    /// <summary>Returns the canonical physical identity of a path by following every EXISTING ancestor
+    /// component's link target (file or directory) and appending any trailing nonexistent components
+    /// safely. Missing components are not resolved; their lexical value is preserved under the
+    /// already-resolved parent, which matches actual platform path semantics.</summary>
+    private static string ResolvePhysicalPath(string path)
+    {
+        var full = Path.GetFullPath(path);
+        var root = Path.GetPathRoot(full);
+        if (string.IsNullOrEmpty(root)) root = Path.DirectorySeparatorChar.ToString();
+        var segments = new List<string>();
+        var remaining = full;
+        while (remaining.Length > root.Length)
+        {
+            var name = Path.GetFileName(remaining);
+            if (string.IsNullOrEmpty(name)) break;
+            segments.Insert(0, name);
+            var parent = Path.GetDirectoryName(remaining);
+            if (parent is null) break;
+            remaining = parent;
+        }
+        var resolved = root;
+        foreach (var segment in segments)
+        {
+            resolved = Path.Combine(resolved, segment);
+            resolved = ResolveExistingLink(resolved);
+        }
+        return resolved;
+    }
+
+    private static string ResolveExistingLink(string path)
+    {
+        try
+        {
+            if (File.Exists(path) && File.ResolveLinkTarget(path, true) is { } fileTarget)
+                return fileTarget.FullName;
+            if (Directory.Exists(path) && Directory.ResolveLinkTarget(path, true) is { } dirTarget)
+                return dirTarget.FullName;
+        }
+        catch
+        {
+            // Resolution failure -> fall back to the lexical path; a later containment comparison still
+            // fails safely when containment cannot be proven.
+        }
+        return path;
     }
 
     private void Report(CuiDiagnostic diagnostic, string root)

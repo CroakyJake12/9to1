@@ -352,6 +352,25 @@ public sealed class CuiV2TransportCodecTests
     }
 
     [Fact]
+    public void Missing_resource_span_is_rejected()
+    {
+        // A structurally otherwise-valid resource/value with a null resource span must be rejected on
+        // decode (CUIR072) before reconstruction: CuiV2Resource.ToCuiResource() dereferences the span.
+        var span = SpanAt();
+        var value = new CuiV2Value(CuiV2ValueKind.Literal, LiteralValue: "x", Span: span);
+        var resources = new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal)
+        {
+            ["R"] = new CuiV2Resource("R", value, null!),
+        };
+        var semantics = EmptySemantics(span) with { Resources = resources };
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            semantics, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document));
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
     public void Null_dependency_entries_are_rejected()
     {
         var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),

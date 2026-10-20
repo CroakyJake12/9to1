@@ -125,6 +125,7 @@ class Program
 # ---------------------------------------------------------------------------
 mix = evidence / 'Lane2Mixed'
 items = f'''<EmbeddedResource Include="Stateful.cui" LogicalName="Lane2.Stateful.cui" />
+<EmbeddedResource Include="CopiedEmbedded.cui" LogicalName="Lane2.CopiedEmbedded.cui" CopyToOutputDirectory="PreserveNewest" />
 <Content Include="Stateless.cui" Link="Raw/Stateless.cui" CopyToOutputDirectory="PreserveNewest" />
 <Content Include="PublishOnly.cui" CopyToPublishDirectory="Always" />
 <Content Include="NoPublish.cui" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
@@ -133,7 +134,8 @@ items = f'''<EmbeddedResource Include="Stateful.cui" LogicalName="Lane2.Stateful
 <AvaloniaResource Include="AvaloniaResource.cui" />
 <CuiMarkup Include="Prefab.cui-prefab" />'''
 write(mix / 'Lane2Mixed.csproj', csproj(task, items))
-for name, source in [('Stateful.cui', STATEFUL), ('Stateless.cui', STATELESS),
+for name, source in [('Stateful.cui', STATEFUL), ('CopiedEmbedded.cui', STATELESS),
+                     ('Stateless.cui', STATELESS),
                      ('PublishOnly.cui', STATELESS), ('NoPublish.cui', STATELESS),
                      ('NeverCopy.cui', STATELESS), ('Theme.cui-theme', STATELESS),
                      ('AvaloniaResource.cui', STATELESS), ('Prefab.cui-prefab', STATELESS)]:
@@ -161,7 +163,7 @@ v2_docs = {d['Source'] for d in v2p.get('Documents') or []}
 v1_docs = {d['source'] for d in v1p.get('documents') or []}
 check('v2-exactly-stateful-subset', v2_docs == {'Stateful.cui'})
 expected_v1 = {'Stateless.cui', 'PublishOnly.cui', 'NoPublish.cui', 'NeverCopy.cui',
-               'Theme.cui-theme', 'AvaloniaResource.cui', 'Prefab.cui-prefab'}
+               'CopiedEmbedded.cui', 'Theme.cui-theme', 'AvaloniaResource.cui', 'Prefab.cui-prefab'}
 check('v1-all-five-item-types-stateless-subset', v1_docs == expected_v1)
 
 # Authoritative resource enumeration: both artifact identities embedded; stateful raw excluded.
@@ -173,6 +175,9 @@ check('stateless-raw-copied', (out / 'Raw' / 'Stateless.cui').exists())
 check('publish-only-not-copied-to-output', not (out / 'PublishOnly.cui').exists())
 check('no-publish-copied-to-output', (out / 'NoPublish.cui').exists())
 check('never-copy-not-copied-to-output', not (out / 'NeverCopy.cui').exists())
+# A copied EmbeddedResource (CopyToOutputDirectory=PreserveNewest) is a real output-copy mode, so it
+# both copies to output and default-publishes (see publish section below).
+check('copied-embedded-copied-to-output', (out / 'CopiedEmbedded.cui').exists())
 
 # --- never-owned same-bytes path must not be claimed or deleted ----------------
 write(out / 'NeverCopy.cui', (mix / 'NeverCopy.cui').read_text(encoding='utf-8'))
@@ -203,8 +208,21 @@ invoke(mix / 'Lane2Mixed.csproj', 'publish', True,
 check('publish-custom-root-created', publish_override.is_dir())
 check('publish-only-published', (publish_override / 'PublishOnly.cui').exists())
 check('publish-never-absent', not (publish_override / 'NoPublish.cui').exists())
-check('content-default-published', (publish_override / 'NeverCopy.cui').exists())
+# CopyToOutputDirectory=Never disables default publish: NeverCopy must NOT appear in the publish dir.
+check('never-copy-absent-from-publish', not (publish_override / 'NeverCopy.cui').exists())
+# A copied EmbeddedResource (real CopyToOutputDirectory mode) default-inherits publish.
+check('copied-embedded-default-published', (publish_override / 'CopiedEmbedded.cui').exists())
 check('stateful-raw-not-published', not (publish_override / 'Stateful.cui').exists())
+
+# --- same-byte nonproduced publish destination must not be claimed or deleted ----
+# NeverCopy is never publish-eligible, so a file already at its (nonproduced) publish destination with
+# identical bytes is user data and must survive a later publish untouched.
+write(publish_override / 'NeverCopy.cui', (mix / 'NeverCopy.cui').read_text(encoding='utf-8'))
+invoke(mix / 'Lane2Mixed.csproj', 'publish', True,
+       extra=('-p:PublishDir=' + str(publish_override)),
+       label='lane2-publish-nonproduced-same-bytes')
+check('nonproduced-same-bytes-publish-survives',
+      (publish_override / 'NeverCopy.cui').read_text(encoding='utf-8') == (mix / 'NeverCopy.cui').read_text(encoding='utf-8'))
 
 # --- failed compile must preserve the previous artifact bytes -------------------
 v2_before = v2.read_bytes()
@@ -241,6 +259,62 @@ write(unsafe / 'Lane2Unsafe.csproj', csproj(task, unsafe_item))
 invoke(unsafe / 'Lane2Unsafe.csproj', 'build', False, 'Unsafe', label='lane2-unsafe-targetpath')
 check('unsafe-build-did-not-publish-artifact',
       not (unsafe / 'obj/Debug/net10.0/Cui/compilation.v2.cuic.json').exists())
+
+# ---------------------------------------------------------------------------
+# Project 4: all-ancestor physical containment (symlink/junction escapes).
+# A destination whose path goes through an ancestor symlink that resolves outside the
+# output root, or that physically aliases a compiled source, must fail safely before
+# publication. Ordinary legitimate output paths still succeed. Skipped only when the
+# platform genuinely cannot create symlinks (reason recorded).
+# ---------------------------------------------------------------------------
+phys = evidence / 'Lane2Physical'
+write(phys / 'Safe.cui', STATELESS)
+phys_norm = '<Content Include="Safe.cui" Link="Normal/Safe.cui" TargetPath="Normal/Safe.cui" CopyToOutputDirectory="PreserveNewest" />'
+write(phys / 'Lane2Physical.csproj', csproj(task, phys_norm))
+invoke(phys / 'Lane2Physical.csproj', 'build', True, label='lane2-physical-legit-output')
+check('physical-legit-output-present', (phys / 'bin/Debug/net10.0/Normal/Safe.cui').exists())
+
+symlinks_available = True
+reason = ''
+try:
+    outside_dir = evidence / 'outside'
+    outside_dir.mkdir(parents=True, exist_ok=True)
+    anc_link = phys / 'bin/Debug/net10.0/anclink'
+    anc_link.parent.mkdir(parents=True, exist_ok=True)
+    anc_link.symlink_to(outside_dir, target_is_directory=True)
+except OSError as e:
+    symlinks_available = False
+    reason = f'platform symlink creation unavailable ({e}); skipping physical-link/alias fixture cases'
+    print(reason, flush=True)
+
+if symlinks_available:
+    # Ancestor link escape: bin/Debug/net10.0/anclink -> outside. The final path is absent/plain,
+    # but the ANCESTOR resolves outside the root, so it must be rejected.
+    write(phys / 'Lane2PhysicalEscape.csproj',
+          csproj(task, '<Content Include="Safe.cui" Link="anclink/new.cui" TargetPath="anclink/new.cui" CopyToOutputDirectory="PreserveNewest" />'))
+    invoke(phys / 'Lane2PhysicalEscape.csproj', 'build', False, 'Unsafe',
+           label='lane2-physical-ancestor-link-escape')
+    check('ancestor-link-escape-did-not-publish-artifact',
+          not (phys / 'obj/Debug/net10.0/Cui/compilation.v2.cuic.json').exists()
+          and not (phys / 'obj/Debug/net10.0/Cui/compilation.v1.cuic.json').exists())
+
+    # Physical source alias: a destination that resolves (through a link) to a compiled source file
+    # must be rejected as a source alias, not claimed as an owned output.
+    alias_path = phys / 'bin/Debug/net10.0/alias.cui'
+    try:
+        alias_path.symlink_to(phys / 'Safe.cui')
+        alias_available = True
+    except OSError as e:
+        alias_available = False
+        reason = f'platform symlink creation unavailable for file alias ({e}); skipping source-alias fixture case'
+        print(reason, flush=True)
+    if alias_available:
+        write(phys / 'Lane2PhysicalAlias.csproj',
+              csproj(task, '<Content Include="Safe.cui" Link="alias.cui" TargetPath="alias.cui" CopyToOutputDirectory="PreserveNewest" />'))
+        invoke(phys / 'Lane2PhysicalAlias.csproj', 'build', False, 'Unsafe',
+               label='lane2-physical-source-alias')
+        check('physical-source-alias-did-not-publish-artifact',
+              not (phys / 'obj/Debug/net10.0/Cui/compilation.v2.cuic.json').exists())
 
 
 print('ALL LANE2 V2 PACKAGING CHECKS PASSED')

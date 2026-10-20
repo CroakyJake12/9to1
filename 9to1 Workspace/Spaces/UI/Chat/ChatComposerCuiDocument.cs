@@ -49,6 +49,13 @@ public static class ChatComposerCuiDocument
                 admission.Code, CuiDiagnosticSeverity.Error, admission.Message, Span));
         }
 
+        // Real host-support admission for the WHOLE required bundle (envelope + every document/closure)
+        // against this runtime's supported language, component registry, minimum/current ABI range and
+        // capability set, before any reconstruction or scene/control effect. This closes the sibling
+        // escape (e.g. a stateless sibling ABI999 with a matching envelope max, or a sibling-only unknown
+        // capability with a matching envelope union) that selected-document checks alone would allow.
+        CuiRuntimeCompatibility.ValidateArtifactHostSupport(artifact, Span);
+
         var document = artifact.Documents.FirstOrDefault(entry =>
             string.Equals(entry.Source, CompiledSourceName, StringComparison.Ordinal))
             ?? throw new CuiRuntimeLoadException(new CuiDiagnostic(

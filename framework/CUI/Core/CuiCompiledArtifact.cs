@@ -339,6 +339,9 @@ public static class CuiCompiledArtifactCodec
             if (!string.Equals(resource.Key, key, StringComparison.Ordinal))
                 throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' resource key '{key}' disagrees with its identity '{resource.Key}'.");
             ValidateValue(resource.Value, source);
+            if (resource.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"Resource '{key}' in '{source}' is missing its source span.");
         }
 
         var templateNames = new HashSet<string>(StringComparer.Ordinal);

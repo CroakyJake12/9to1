@@ -1,12 +1,41 @@
-# Lane 2 handoff — typed CUI V2 transport & packaging (pass 3)
+# Lane 2 handoff — typed CUI V2 transport & packaging (pass 4)
 
 - Date: 2026-10-20. Branch `codex/mercury-transport-20261020`. Worktree HEAD `fb70840d`.
 - Authorized six Mercury workers; lane 2. No model subagents, no `.NET`/build/restore/app runs until the
   coordinator allocates the serialized slot (lane 1 only). All compile/tests here are **NOT RUN**.
 - Authority: read `AGENTS.md`, canonical `docs/specification/9to1-development-specification-v2.md`,
   `work/pc-worker/ONE-APP-IMPLEMENTATION-AUDIT-2026-10-20.md`, the original transport plan
-  `…/cui-v2-transport-packaging-plan-de33c168.md`, and the frozen pass-2 review
-  `…/lane2-transport-pass2-review-88575ef0.md`.
+  `…/cui-v2-transport-packaging-plan-de33c168.md`, the frozen pass-2 review
+  `…/lane2-transport-pass2-review-88575ef0.md`, and the pass-3 review
+  `…/lane2-transport-pass3-review-a67a.md`.
+
+## Pass-4 scope
+
+Final bounded source/test corrections on top of pass 3 (dirty HEAD `fb70840d`), per the pass-3 review:
+
+1. **Missing resource-span typed admission** — `CuiCompiledArtifact.cs` resource loop now rejects a
+   null `resource.Span` (CUIR072) before use; new `CuiV2TransportCodecTests.Missing_resource_span_is_rejected`.
+2. **Real Runtime ABI/capability whole-bundle admission API** — new
+   `CuiRuntimeCompatibility.ValidateArtifactHostSupport(CuiCompiledArtifact, CuiSourceSpan)` performs
+   actual host support (language CUIR064, registry CUIR066, ABI range CUIR065, capabilities CUIR067;
+   CUIB003 for missing artifact) for the entire bundle before effects, superseding the earlier constant
+   `a67a` hunk. Root-owned `Runtime/CuiRuntimeCompatibility.cs` is supplied as the exact handoff patch
+   in `work/lane2-handoff/Runtime/CuiRuntimeCompatibility.cs` + `PATCH-Runtime-artifact-admission.md`.
+   Consumer `ChatComposerCuiDocument.Load(byte[])` calls it right after codec decode; consumer tests split
+   into unsupported-language (CUIR064), language-contradiction (CUIR075), registry (CUIR066), sibling
+   ABI999 (CUIR065), sibling-only unknown capability (CUIR067), and genuine ABI1-sibling+ABI2-composer.
+3. **All-ancestor physical containment + SDK-correct publish eligibility** — `CompileCuiSourcesTask.cs`:
+   `IsPhysicallyInside` resolves ALL existing ancestors (`ResolvePhysicalPath`/`ResolveExistingLink`);
+   `ShippedDestination` adds physical source-alias rejection; `IsPublishEligible` matches real
+   `Microsoft.NET.Publish.targets` (1013–1060): Never/empty disables default publish, explicit non-empty
+   mode→true, else default-inherit = `IsOutputCopyEligible` across Content/None/EmbeddedResource.
+   Verifier updated: line 206 NeverCopy fix, copied-EmbeddedResource case, nonproduced same-byte publish
+   survival, and all-ancestor containment Project 4.
+4. **ByRef Deconstruct assertion fix** — `CuiLocalStateAbiOutputTests.cs` Deconstruct reflection now
+   uses `typeof(...).MakeByRefType()`.
+
+Root already applied the 4-arg ctor/4-out Deconstruct (SHA `581a2638…`) and the old-Core binary probe
+passed; those are NOT reapplied. No .NET execution performed; all compile/tests remain NOT RUN.
 
 ## Pass-3 scope
 
@@ -48,39 +77,42 @@ Resolve every remaining primary defect in the frozen pass-2 review:
    ignores capabilities (tolerates omitted/unknown capabilities) — added alongside the span/shape
    tests.
 
-## Findings → resolution (pass 3)
+## Findings → resolution (pass 4, on top of pass 3)
 
-1. **Strict V2 admission** — hardened `CuiCompiledArtifact.cs` with duplicate-JSON-key rejection,
-   span/identity validation, and derived-capability enforcement. New codec tests cover null
-   dependency entries, null root/action/import spans, identity-key mismatch, envelope/document
-   language mismatch, stripped-required-capability rejection, and duplicate exact JSON keys.
-2. **Output/publish ownership** — `CompileCuiSourcesTask.cs` rewritten around real MSBuild eligibility
-   (modelled copy modes; publish defaults; publish-only tracking; stage/validate-then-publish; only
-   actually-deleted destinations to `FileWrites`; hash-guarded stale deletion).
-3. **Path custody** — `ShippedDestination`/`ValidateOwnedRoots`/`ReadManifestStrict` fail closed;
-   unsafe TargetPath expected-fail is covered by the verifier.
-4. **ABI decoupling** — `V1RuntimeAbiVersion` added; emitter seeds stateless with it; Runtime
-   ABI2/feature seam supplied as `work/lane2-handoff/PATCH-Runtime-Abi2-admission.md`.
-5. **Repaired packaging fixture** — Python verifier rewritten (see TESTS.md).
-6. **Forwarding evidence** — real type resolution tests replace attribute enumeration.
-7. **V1 baseline reader** — bounded unchanged-consumer test added.
+1. **Resource-span typed admission** — `CuiCompiledArtifact.cs` rejects null `resource.Span` (CUIR072)
+   in the resource loop; `CuiV2TransportCodecTests.Missing_resource_span_is_rejected` added.
+2. **Real whole-bundle Runtime admission** — `CuiRuntimeCompatibility.ValidateArtifactHostSupport`
+   (language CUIR064 / registry CUIR066 / ABI range CUIR065 / capabilities CUIR067 / CUIB003) checks
+   the entire artifact (envelope + every required document/closure), closing the stateless-sibling and
+   sibling-only-capability escapes. Supersedes the `a67a` constant hunk. Consumer `Load(byte[])` calls
+   it immediately after codec decode; consumer language/registry/sibling tests added.
+3. **Containment + publish eligibility** — `CompileCuiSourcesTask.cs`: `IsPhysicallyInside` resolves all
+   existing ancestors; `ShippedDestination` rejects physical source-alias; `IsPublishEligible` mirrors
+   `Microsoft.NET.Publish.targets` (1013–1060) defaults (Never/empty disables default publish; explicit
+   non-empty→true; else default-inherit = `IsOutputCopyEligible` across Content/None/EmbeddedResource).
+   Verifier line 206 fixed; copied-EmbeddedResource case; nonproduced same-byte publish survival; Project 4.
+4. **ByRef Deconstruct** — `CuiLocalStateAbiOutputTests.cs` uses `typeof(...).MakeByRefType()`.
 
-## Concretely changed files (pass-3 SHA-256)
+## Concretely changed files (pass-4 SHA-256)
 
 | Path | SHA-256 |
 |---|---|
-| framework/CUI/Core/CuiCompiledArtifact.cs | `5cff671411e573d896eca7b4c2e42728d37bedff14be8a5c7d0bfcce87ac7792` |
-| framework/CUI/Build.Tasks/CompileCuiSourcesTask.cs | `e0493448a95960ff1d5c9e6fb88826e87ccd6cca18f6baa3d474ef9cc25cda66` |
-| framework/CUI/Compiler.Tests/CuiLocalStateAbiOutputTests.cs | `0783a8f1d2bc307d54ceecea56fa02058d71ac0ddf8e111e63debcefd79c0352` |
-| framework/CUI/Compiler.Tests/CuiV2TransportCodecTests.cs | `633012927134c1acce1693443f9d25ecc102b0395a15b6f5cb636f821b9121cb` |
-| framework/CUI/Build.Tasks.Tests/verify_lane2_v2_packaging.py | `8eec6d2345d896d9d2ce50405fc126b58aadcc10e2c858a18dac1e3d67a53a0f` |
-| 9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj | `03854bab71b44275b46973d818c94c4e67b59f3e32880221a366575771cbb84f` |
-| work/lane2-handoff/PATCH-Runtime-Abi2-admission.md | `a367f3b3de9bb9031dfc69f3681dbd03301d5e7caaff5a491335f4bac1c6c686` |
+| framework/CUI/Core/CuiCompiledArtifact.cs | `57c0310f80d108b1404cedce10661ba3314e741418a410a0620a3def2480378c` |
+| framework/CUI/Build.Tasks/CompileCuiSourcesTask.cs | `9d482ffefbb89cd6981d942aa1e615d832af3d1a30dfae0ee3fd794207c43f43` |
+| framework/CUI/Compiler.Tests/CuiLocalStateAbiOutputTests.cs | `22131f397eaffbbd2466d0a167fe97f963d40b7fad9e71805a005b0005e792a1` |
+| framework/CUI/Compiler.Tests/CuiV2TransportCodecTests.cs | `60cf3ba446b619b4c0f2b1536a3e27c858323c52d22411553a04823387cffe34` |
+| framework/CUI/Build.Tasks.Tests/verify_lane2_v2_packaging.py | `04684374d31f83369ebaa2a69410138fcb697ed8e8f06383763499f71a87aa8d` |
+| 9to1 Workspace/Spaces/UI/Chat/ChatComposerCuiDocument.cs | `0c1c9efacd48a363f132a64399795c6ff2593b06e7b5bae61204ae3f535e4c52` |
+| 9to1 Workspace/Spaces/Tests/ChatComposerCompiledTransportTests.cs | `3214f44c1441dcb7ebf647ada1b94fd14da2d7c6828ed1732a76b43bcaebe52d` |
+| 9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj | `03854bab71b44275b46973d818c94c4e67b59f3e32880221a366575771cbb84f` (unchanged) |
+| work/lane2-handoff/Runtime/CuiRuntimeCompatibility.cs | `14515fcf0c118c705a7fe65a9c4015e689db4766540ae026c4aca6f62f6bfcff` |
+| work/lane2-handoff/PATCH-Runtime-artifact-admission.md | `b125e881fc85f393a6ffe0a8718e5aaefd23bd0c2aeb4ae71fb3754c497a80a0` |
 | work/lane2-handoff/PATCH-CuiActionDefinition-four-arg.md | `6325b3ef79435649fb24b5de96a84226489598c9b0fdbbfdb4438bc02ca3af2c` (unchanged) |
 
-Unchanged from pass 2: `CuiV2Transport.cs`, `CuiV1ArtifactCodec.cs`, `CuiV2Projection.cs`,
-`CuiCompiler.cs`, `CuiCompilationMetadata.TypeForwarder.cs`, `buildTransitive/CakeOS.Cui.targets`,
-`Spaces/HavenOS.Spaces.csproj`, `Spaces/UI/Chat/ChatComposerCuiDocument.cs`.
+Pass-3 SHA-256 entries (above) are superseded by the pass-4 rows. Unchanged from pass 2/3:
+`CuiV2Transport.cs`, `CuiV1ArtifactCodec.cs`, `CuiV2Projection.cs`, `CuiCompiler.cs`,
+`CuiCompilationMetadata.TypeForwarder.cs`, `buildTransitive/CakeOS.Cui.targets`,
+`Spaces/HavenOS.Spaces.csproj`, `PATCH-Runtime-Abi2-admission.md`.
 
 ## Commands (all NOT RUN until the serialized .NET slot)
 
@@ -93,18 +125,18 @@ Unchanged from pass 2: `CuiV2Transport.cs`, `CuiV1ArtifactCodec.cs`, `CuiV2Proje
 
 ## Intentionally dependent on lane1/root
 
-- `PATCH-CuiActionDefinition-four-arg.md` — apply to `Core/CuiDocument.cs` so the two binary-compat
-  tests pass.
-- `PATCH-Runtime-Abi2-admission.md` — apply to `Runtime/CuiRuntimeCompatibility.cs` so the runtime
-  advertises the stateful ABI2 while min-stateless ABI1 stays decoupled.
+- `PATCH-CuiActionDefinition-four-arg.md` — **already applied by root** (SHA `581a2638…`); old-Core
+  binary probe passed. Do not reapply.
+- `PATCH-Runtime-artifact-admission.md` (replaces the superseded `PATCH-Runtime-Abi2-admission.md`) —
+  apply to `Runtime/CuiRuntimeCompatibility.cs` (preimage SHA `23d0e130…`) so the runtime performs real
+  whole-bundle host admission. Until applied, the consumer (`ChatComposerCuiDocument`) and the new
+  consumer tests referencing `ValidateArtifactHostSupport` do not compile → those tests are **NOT RUN**.
+- `PATCH-Runtime-Abi2-admission.md` — superseded by the artifact-admission patch (kept for provenance).
 
 ## Residual / not claimed
 
-- Authoritative assembly-resource enumeration and all compiler/runtime test executions require the
-  allocated .NET slot; the verifier authors a real C# probe and the tests are authored by inspection
-  only.
-- A true "unchanged binary consumer" fixture (a separately compiled old-reference assembly) still
-  requires a build slot; the forwarding evidence uses real `GetForwardedTypes`/`Type.GetType`
-  resolution of the historical assembly-qualified name, which is the strongest static proof available
-  here.
-- All compile/test results remain NOT RUN; no completion/compatibility claim is made from inspection alone.
+- All compile/test results remain **NOT RUN**; no completion/compatibility claim is made from inspection
+  alone. Runtime-patch-dependent tests (consumer + `ValidateArtifactHostSupport` consumers) are NOT RUN
+  until root applies the patch and allocates the slot.
+- Open (not part of the four corrections): metadata converter lines 508–516 malformed kind/empty version;
+  `ReadManifestStrict` null-entry dereference. Both are recorded for later, not in the pass-4 scope.

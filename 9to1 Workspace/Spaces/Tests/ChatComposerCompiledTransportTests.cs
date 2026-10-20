@@ -86,13 +86,48 @@ public sealed class ChatComposerCompiledTransportTests
     [Fact]
     public void Admission_rejects_unsupported_language_version_before_effects()
     {
+        // A CONSISTENTLY unsupported language (envelope AND document both "99") passes the codec's
+        // internal consistency checks but must fail runtime host-support admission as CUIR064.
         var artifact = ReadEmbeddedArtifact();
         var doc = ComposerDocument(artifact);
         var badMeta = new CuiCompilationMetadata(
+            "99", doc.Metadata.RuntimeAbiVersion, doc.Metadata.ComponentRegistryVersion, doc.Metadata.RequiredCapabilities);
+        var badEnv = new CuiCompilationMetadata(
             "99", artifact.Metadata.RuntimeAbiVersion, artifact.Metadata.ComponentRegistryVersion, artifact.Metadata.RequiredCapabilities);
-        var replaced = artifact with { Documents = ReplaceDocument(artifact, doc, doc with { Metadata = badMeta }) };
+        var replaced = artifact with { Metadata = badEnv, Documents = ReplaceDocument(artifact, doc, doc with { Metadata = badMeta }) };
         var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
         Assert.Equal("CUIR064", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_envelope_document_language_contradiction_before_effects()
+    {
+        // A language CONTRADICTION (document "99" vs envelope "1") is an internal envelope/document
+        // inconsistency and must be rejected by the codec as CUIR075 (not CUIR064), preserving both
+        // causal checks rather than weakening strict consistency.
+        var artifact = ReadEmbeddedArtifact();
+        var doc = ComposerDocument(artifact);
+        var badMeta = new CuiCompilationMetadata(
+            "99", doc.Metadata.RuntimeAbiVersion, doc.Metadata.ComponentRegistryVersion, doc.Metadata.RequiredCapabilities);
+        var replaced = artifact with { Documents = ReplaceDocument(artifact, doc, doc with { Metadata = badMeta }) };
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
+        Assert.Equal("CUIR075", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_unsupported_component_registry_before_effects()
+    {
+        // A consistently unsupported component registry (envelope AND document) passes internal
+        // consistency but fails runtime host-support admission as CUIR066.
+        var artifact = ReadEmbeddedArtifact();
+        var doc = ComposerDocument(artifact);
+        var badMeta = new CuiCompilationMetadata(
+            doc.Metadata.LanguageVersion, doc.Metadata.RuntimeAbiVersion, "999.0", doc.Metadata.RequiredCapabilities);
+        var badEnv = new CuiCompilationMetadata(
+            artifact.Metadata.LanguageVersion, artifact.Metadata.RuntimeAbiVersion, "999.0", artifact.Metadata.RequiredCapabilities);
+        var replaced = artifact with { Metadata = badEnv, Documents = ReplaceDocument(artifact, doc, doc with { Metadata = badMeta }) };
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
+        Assert.Equal("CUIR066", error.Diagnostic.Code);
     }
 
     [Fact]
@@ -133,6 +168,55 @@ public sealed class ChatComposerCompiledTransportTests
     }
 
     [Fact]
+    public void Sibling_abi999_required_import_is_rejected_before_effects()
+    {
+        // A stateless sibling declared with ABI999 (with an envelope-consistent max) passes the codec's
+        // internal consistency, and the selected composer's own metadata stays valid. Host-support
+        // admission must reject the required sibling's unsupported ABI before any reconstruction/effects.
+        var artifact = ReadEmbeddedArtifact();
+        var sibling = StatelessDocument("sibling.cui", "999");
+        var combined = artifact with
+        {
+            Documents = artifact.Documents.Append(sibling).ToArray(),
+            Metadata = EnvelopeFor(artifact.Documents.Append(sibling)),
+        };
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(combined)));
+        Assert.Equal("CUIR065", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Sibling_only_unknown_capability_with_consistent_union_is_rejected()
+    {
+        // A sibling-only unknown capability reflected in the envelope's consistent union passes the
+        // codec, but host-support admission must reject it as unsupported before any effects.
+        var artifact = ReadEmbeddedArtifact();
+        var sibling = StatelessDocument("sibling.cui", "2", ["future-capability"]);
+        var combined = artifact with
+        {
+            Documents = artifact.Documents.Append(sibling).ToArray(),
+            Metadata = EnvelopeFor(artifact.Documents.Append(sibling)),
+        };
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(combined)));
+        Assert.Equal("CUIR067", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Genuine_abi1_stateless_sibling_plus_abi2_composer_succeeds()
+    {
+        // A genuine stateless ABI1 sibling alongside the stateful ABI2 composer must load: ABI1 is
+        // within the supported stateless range and no unknown requirement is present.
+        var artifact = ReadEmbeddedArtifact();
+        var sibling = StatelessDocument("sibling.cui", "1");
+        var combined = artifact with
+        {
+            Documents = artifact.Documents.Append(sibling).ToArray(),
+            Metadata = EnvelopeFor(artifact.Documents.Append(sibling)),
+        };
+        var semantics = ChatComposerCuiDocument.Load(Serialize(combined));
+        Assert.NotNull(semantics);
+    }
+
+    [Fact]
     public void Missing_compiled_composer_resource_has_no_raw_fallback_and_composer_is_not_in_v1()
     {
         // The stateful composer must never fall back to a raw embedded .cui resource and must never
@@ -164,4 +248,53 @@ public sealed class ChatComposerCompiledTransportTests
 
     private static byte[] Serialize(CuiCompiledArtifact artifact) =>
         Encoding.UTF8.GetBytes(JsonSerializer.Serialize(artifact, CuiCompiledArtifactCodec.Options));
+
+    private static CuiCompiledArtifactDocument StatelessDocument(string source, string abi, IEnumerable<string>? capabilities = null)
+    {
+        var span = new CuiV2Span("UI/Chat/ChatComposer.cui", 1, 1, 1, 1);
+        var component = new CuiV2Component(
+            "Page", "root", Array.Empty<string>(),
+            new Dictionary<string, CuiV2Value>(StringComparer.Ordinal),
+            new Dictionary<string, CuiV2ActionReference>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Component>(), null, null, span);
+        var semantics = new CuiV2Semantics(
+            source,
+            new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Style>(),
+            new Dictionary<string, CuiV2Action>(StringComparer.Ordinal),
+            new Dictionary<string, CuiV2Template>(StringComparer.Ordinal),
+            new[] { component },
+            span,
+            new Dictionary<string, CuiV2Value>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Import>(),
+            new Dictionary<string, CuiV2Variable>(StringComparer.Ordinal));
+        var meta = new CuiCompilationMetadata("1", abi, "2.0", capabilities?.ToArray() ?? Array.Empty<string>());
+        return new CuiCompiledArtifactDocument(
+            source, "0000000000000000000000000000000000000000000000000000000000000000",
+            meta, semantics, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+    }
+
+    private static CuiCompilationMetadata EnvelopeFor(IEnumerable<CuiCompiledArtifactDocument> docs)
+    {
+        var list = docs.ToArray();
+        var caps = new HashSet<string>(StringComparer.Ordinal);
+        string? maxAbi = null;
+        foreach (var document in list)
+        {
+            caps.UnionWith(document.Metadata.RequiredCapabilities);
+            maxAbi = MaxAbi(maxAbi, document.Metadata.RuntimeAbiVersion);
+        }
+        var first = list[0];
+        return new CuiCompilationMetadata(
+            first.Metadata.LanguageVersion, maxAbi ?? first.Metadata.RuntimeAbiVersion,
+            first.Metadata.ComponentRegistryVersion, caps);
+    }
+
+    private static string? MaxAbi(string? current, string candidate)
+    {
+        if (current is null) return candidate;
+        if (int.TryParse(current, out var a) && int.TryParse(candidate, out var b))
+            return b > a ? candidate : current;
+        return string.Compare(candidate, current, StringComparison.Ordinal) > 0 ? candidate : current;
+    }
 }
