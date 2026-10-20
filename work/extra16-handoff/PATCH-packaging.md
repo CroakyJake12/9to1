@@ -1,11 +1,11 @@
-# Bounded packaging correction — causal evidence
+# Bounded packaging correction — causal evidence (pass 2)
 
 ## Problem
 
 The `CakeOS.Cui` compiler package (`framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj`) packs the CUI
 toolchain (`IncludeCuiCompilerToolchain` copies build outputs to `tools/compiler` and `tools/legacy`)
 and ships `buildTransitive/CakeOS.Cui.{props,targets}`. Its `ProjectReference`s to `Core`, `Language`
-and `Runtime` have two harmful packaging side effects:
+and `Runtime` had two harmful packaging side effects:
 
 1. Default `dotnet pack` publishes the project's own build output under `lib/net10.0/`, i.e.
    `CakeOS.Cui.Compiler.dll` becomes a consumer compile/runtime reference. Because the compiler
@@ -17,9 +17,8 @@ and `Runtime` have two harmful packaging side effects:
    making the build tools appear to be application runtime controls.
 
 This violates the canonical home-runtime / native-vs-web distinction and the CUI build-vs-runtime
-separation: the compiler/toolchain belongs to the build environment; it must not invent private
-Home/runtime services, force desktop/native assets into a web app, or claim Web/WASM compatibility
-without an actual dependency graph.
+separation: the compiler/toolchain belongs to the build environment; it must not force desktop/native
+assets into a web app or claim Web/WASM compatibility without an actual dependency graph.
 
 ## Fix (smallest owned packaging correction, Compiler package)
 
@@ -28,27 +27,37 @@ In `framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj` (packaging metadata only)
 - `<IncludeBuildOutput>false</IncludeBuildOutput>` — never publish the compiler assembly under
   `lib/`; it is a build tool and ships only under `tools/compiler`.
 - `<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>` — suppress the
-  ProjectReference package dependencies; the toolchain is self-contained under `tools/compiler`
-  (`CopyLocalLockFileAssemblies` on the Build.Tasks project already copies the compiler + Core +
-  Language + Runtime assemblies beside the task), so no package dependency is needed and the closure
-  is clean.
+  ProjectReference package dependencies; the toolchain is self-contained under `tools/compiler`.
 - `<DevelopmentDependency>true</DevelopmentDependency>` — classify as a build-time development
   dependency; it is not propagated to downstream projects.
 
-## Fix (Build.Tasks package)
+Same metadata applied to the standalone `CakeOS.Cui.Build.Compiler` build-task package. The Build.Tasks
+`buildTransitive/CakeOS.Cui.Build.Compiler.props` is preserved as-is (its `tools/net10.0` layout,
+distinct from the Compiler package's `tools/compiler` layout) — a clarifying comment was added only.
 
-In `framework/CUI/Build.Tasks/CakeOS.Cui.Build.Compiler.csproj` (packaging metadata only): the same
-`SuppressDependenciesWhenPacking` and `DevelopmentDependency` metadata, because this standalone build-
-task package is also self-contained under `tools/net10.0` (`BuildOutputTargetFolder=tools` +
-`CopyLocalLockFileAssemblies`) and must not leak a dependency on `CakeOS.Cui`.
+## Public package-contract note (honesty)
 
-## Layouts preserved
+These changes intentionally reclassify `CakeOS.Cui` as a build-tool/development-only package. They
+**remove** the previously shipped `lib/net10.0` compiler assembly and its package dependencies from the
+packed artifact; the public compiler/runtime ABI of that old `lib` payload is not preserved by any
+forwarder. **No old Compiler binary forwarder is proven or recovered** — none exists in this sparse
+base. Runtime/Core/Language package metadata remains a root-owned integration patch only and was not
+edited here.
 
-- `CakeOS.Cui` package: `tools/compiler/*` (net10.0 task + compiler + deps), `tools/legacy/`
-  (`netstandard2.0` resource task), `buildTransitive/CakeOS.Cui.{props,targets}`.
-- `CakeOS.Cui.Build.Compiler` package: `tools/net10.0/*` (`BuildOutputTargetFolder=tools`),
-  `buildTransitive/CakeOS.Cui.Build.Compiler.props` — selects `tools/net10.0`; distinct from the
-  `CakeOS.Cui` package's `tools/compiler` selection. Both layouts are preserved, not flattened.
+## Bundling proof (not just dependency suppression)
+
+The gate must prove every tool dependency is physically bundled under `tools`, not merely that package
+dependencies are suppressed. The `IncludeCuiCompilerToolchain` target globs the Build.Tasks output
+(`../Build.Tasks/bin/$(Configuration)/net10.0/**/*`) into `tools/compiler`; that output is populated
+with the full copy-local closure (`CopyLocalLockFileAssemblies=true`) of the compiler task, i.e. the
+compiler assembly plus Core/Language/Runtime and the Avalonia/Skia dependencies. The
+`verify_nuget_consumer_dependencies.py` gate therefore asserts under `tools/compiler`:
+- `CakeOS.Cui.Compiler.dll`, `CakeOS.Cui.Build.Compiler.dll`;
+- `CakeOS.Cui.Core.dll`, `CakeOS.Cui.Language.dll`, `CakeOS.Cui.Runtime.dll`;
+- at least one `Avalonia.*` assembly (the desktop runtime closure) bundled with the toolchain.
+
+If the pack mechanism did not actually copy the closure, these asset-presence checks fail — so they
+are an independent bundling proof rather than a proxy for `SuppressDependenciesWhenPacking`.
 
 ## Effect on consumers
 
@@ -61,10 +70,3 @@ task package is also self-contained under `tools/net10.0` (`BuildOutputTargetFol
 - No web/WASM/browser dependency or asset is claimed, so the package is honest at the supported
   boundary; a Web/WASM-targeted consumer that actually needs the Desktop-only runtime fails with a
   precise unsupported/missing-dependency diagnostic rather than a fabricated compatibility claim.
-
-## Dependency / out-of-scope
-
-- `Runtime` / `Core` / `Language` package metadata were not edited (outside this lane's scope). With
-  the compiler package's dependencies suppressed, an app that needs the CUI runtime must reference the
-  runtime explicitly — the correct separation. If the coordinator determines the runtime package's
-  own metadata needs correction, that is a separate root-owned patch backed by causal evidence.

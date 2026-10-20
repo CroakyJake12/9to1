@@ -8,12 +8,13 @@ source projects in the other. This exercises installed package assets directly;
 the separate ``verify_nuget_consumer_dependencies.py`` gate proves a real
 PackageReference restore/build against a local feed (no source path escape).
 
-The verifier consumes the typed transport's returned contract: distinct genuine V1
-(lowercase keys) and V2 (PascalCase keys) artifacts, plus the legacy single-file
-V1 layout, whichever the actual build emitted. Manifest resources are enumerated
-authoritatively through a tiny compiled C# probe rather than raw byte scans. A
-stateless -> stateful input transition proves stateful source is never
-raw-shipped under a V1 identity (it must move to a distinct V2 artifact).
+The verifier consumes the typed transport's returned contract: genuine V1
+(stateless) and distinct V2 (stateful) artifacts, plus the legacy single-file V1
+layout. A stateless baseline MUST emit V1; V2 is required only after the stateful
+transition. Manifest resources are enumerated authoritatively through a tiny
+compiled C# probe (no raw byte scans); the actually shipped payload is inspected by
+loading the embedded resource text, so stale leftover ``obj`` files under the
+compile output are never mistaken for what the shipped assembly embeds.
 
 Every SDK invocation uses the provided guarded dotnet (--dotnet) with -m:1.
 """
@@ -29,6 +30,8 @@ STATELESS = '<Page ID="stateless"><Text Text="Packaged real source"/></Page>'
 STATEFUL = ('<Cui><Variable Type="bool" ID="Open">False</Variable>\n'
             '<Actions><Action name="toggle"><Toggle Target="Open"/></Action></Actions>\n'
             '<Page><Button Action="toggle" Content="Aa"/></Page></Cui>')
+# Distinctive marker of stateful source that must never appear in a raw/V1 payload.
+STATEFUL_SENTINEL = '<Variable Type="bool" ID="Open">'
 
 p = argparse.ArgumentParser()
 p.add_argument('--package', type=Path, required=True)
@@ -92,30 +95,6 @@ def compiler_hash(artifact):
     return get(artifact, 'CompilerSha256', 'compilerSha256')
 
 
-def doc_sources(version, artifact):
-    docs = get(artifact, 'Documents', 'documents') or []
-    sources = set()
-    for doc in docs:
-        source = get(doc, 'Source', 'source')
-        if source is not None:
-            sources.add(source)
-    return sources
-
-
-def doc_runtime_abis(version, artifact):
-    docs = get(artifact, 'Documents', 'documents') or []
-    abis = {}
-    for doc in docs:
-        source = get(doc, 'Source', 'source')
-        if version == 'v2':
-            meta = get(doc, 'Metadata', 'metadata') or {}
-        else:
-            comp = get(doc, 'Compilation', 'compilation') or {}
-            meta = get(comp, 'Metadata', 'metadata') or {}
-        abis[source] = get(meta, 'RuntimeAbiVersion', 'runtimeAbiVersion')
-    return abis
-
-
 def build(name, project, expected, diagnostic=None, extra=()):
     cmd = [str(a.dotnet), 'build', str(project), '-m:1', '--verbosity', 'minimal', *extra]
     result = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -126,18 +105,30 @@ def build(name, project, expected, diagnostic=None, extra=()):
     return result.stdout
 
 
+def probe_program():
+    return ('using System;\nusing System.IO;\nusing System.Reflection;\nclass Program\n{\n'
+            '    static int Main(string[] args)\n    {\n'
+            '        var a = Assembly.LoadFrom(args[0]);\n'
+            '        if (args.Length > 2 && args[1] == "--resource")\n'
+            '        {\n'
+            '            var stream = a.GetManifestResourceStream(args[2]);\n'
+            '            if (stream == null) { Console.Error.WriteLine("MISSING"); return 2; }\n'
+            '            using var reader = new StreamReader(stream);\n'
+            '            Console.Write(reader.ReadToEnd());\n'
+            '            return 0;\n'
+            '        }\n'
+            '        foreach (var n in a.GetManifestResourceNames()) Console.WriteLine(n);\n'
+            '        return 0;\n    }\n}\n')
+
+
 def run_probe(dll, label):
     """Authoritative assembly-manifest enumeration via a tiny compiled C# probe."""
     probe = e / 'probe'
+    probe.mkdir(parents=True, exist_ok=True)   # owned probe dir must exist before writes
     (probe / 'Probe.csproj').write_text(
         '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType>'
         '<TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>')
-    (probe / 'Program.cs').write_text(
-        'using System;\nusing System.Reflection;\nclass Program\n{\n'
-        '    static int Main(string[] args)\n    {\n'
-        '        var a = Assembly.LoadFrom(args[0]);\n'
-        '        foreach (var n in a.GetManifestResourceNames()) Console.WriteLine(n);\n'
-        '        return 0;\n    }\n}\n')
+    (probe / 'Program.cs').write_text(probe_program())
     run = subprocess.run([str(probe_dotnet), 'run', '--project', str(probe / 'Probe.csproj'),
                           '--', str(dll)],
                          cwd=probe, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -145,6 +136,25 @@ def run_probe(dll, label):
     if run.returncode != 0:
         raise RuntimeError('resource probe failed; inspect ' + label + '-probe.log')
     return {line.strip() for line in run.stdout.splitlines() if line.strip()}
+
+
+def run_probe_resource(dll, resource, label):
+    """Read the actually embedded text payload of one named manifest resource."""
+    probe = e / 'probe'
+    probe.mkdir(parents=True, exist_ok=True)
+    (probe / 'Probe.csproj').write_text(
+        '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType>'
+        '<TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>')
+    (probe / 'Program.cs').write_text(probe_program())
+    run = subprocess.run([str(probe_dotnet), 'run', '--project', str(probe / 'Probe.csproj'),
+                          '--', str(dll), '--resource', resource],
+                         cwd=probe, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    (e / (label + '-probe-resource-' + resource + '.log')).write_text(run.stdout)
+    if run.returncode == 2:
+        return None  # resource not embedded (MISSING)
+    if run.returncode != 0:
+        raise RuntimeError('resource probe failed for ' + resource + '; inspect ' + label + '-probe.log')
+    return run.stdout
 
 
 def compiler_dll_candidates(mode):
@@ -213,18 +223,21 @@ for mode, directory in [('package', installed), ('source', root / 'Compiler')]:
                reason='baseline build did not produce the consumer assembly')
         continue
     names = run_probe(assembly, mode + '-baseline')
+    # A stateless baseline is genuine V1 output; V2 is required only after the
+    # stateful transition, so its absence here is expected, not a defect.
     check(mode + '-genuine-v1-resource-embedded', V1_RESOURCE in names)
-    if any('v2' in n for n in artifacts):
-        check(mode + '-distinct-v2-resource-embedded', V2_RESOURCE in names)
+    if V2_RESOURCE in names:
+        check(mode + '-distinct-v2-resource-embedded-at-stateless', True)
     else:
-        record(mode + '-distinct-v2-resource-embedded', 'blocked',
-               reason='no V2 artifact emitted by actual transport contract')
+        check(mode + '-stateless-baseline-is-v1-only',
+              'compilation.v2.cuic.json' not in artifacts)
 
     check(mode + '-build-tools-not-app-runtime',
           not (f / 'bin/Debug/net10.0/CakeOS.Cui.Build.Compiler.dll').exists())
 
-    # Stateless -> stateful transition: stateful raw source must not be raw-shipped
-    # under a V1 identity; it must move to a distinct V2 artifact.
+    # Stateless -> stateful transition: stateful raw source must not be shipped
+    # under a V1 identity; it must move to a distinct embedded V2 artifact. The
+    # shipped state is read from the assembly manifest/payload, not stale obj files.
     write_source(STATEFUL)
     tproc = subprocess.run([str(a.dotnet), 'build', str(project), '-m:1',
                             '--verbosity', 'minimal'],
@@ -233,39 +246,32 @@ for mode, directory in [('package', installed), ('source', root / 'Compiler')]:
     if tproc.returncode != 0:
         record(mode + '-stateful-transition', 'blocked',
                reason='compiler did not accept the stateful input at the detected transport contract')
-    else:
-        artifacts_after = discover_artifacts(cui_dir)
-        v2_after = get(artifacts_after, 'compilation.v2.cuic.json')
-        v1_after = get(artifacts_after, 'compilation.v1.cuic.json')
-        if v2_after is None:
-            record(mode + '-stateful-not-raw-shipped-under-v1', 'blocked',
-                   reason='typed V2 transport not detected; cannot prove the transition')
-        else:
-            _, v2 = read_artifact(v2_after)
-            v2_docs = doc_sources('v2', v2)
-            stateful_in_v2 = 'Main.cui' in v2_docs
-            if v1_after is not None:
-                _, v1 = read_artifact(v1_after)
-                v1_docs = doc_sources('v1', v1)
-                stateful_in_v1 = 'Main.cui' in v1_docs
-            else:
-                v1_docs = set()
-                stateful_in_v1 = False
-            names_after = run_probe(assembly, mode + '-transition')
-            check(mode + '-stateful-promoted-to-v2', stateful_in_v2)
-            check(mode + '-stateful-absent-from-v1', not stateful_in_v1)
-            check(mode + '-v2-resource-embedded-after-transition', V2_RESOURCE in names_after)
-            if stateful_in_v2 and not stateful_in_v1 and V2_RESOURCE in names_after:
-                # Validate the stateful V2 document is ABI2 (not raw source under V1).
-                abis = doc_runtime_abis('v2', v2)
-                check(mode + '-stateful-v2-abi2', abis.get('Main.cui') == '2')
-            elif not stateful_in_v2 and not stateful_in_v1:
-                record(mode + '-stateful-v2-abi2', 'blocked',
-                       reason='build did not compile stateful source as V2 (compiler/task mismatch)')
+        continue
 
-# Legacy single-file V1 compatibility: still consumed when present (sparse base).
-# (No explicit check here; discover_artifacts already folds compilation.cuic.json into
-#  the per-mode artifact loop above if the actual build emits it.)
+    names_after = run_probe(assembly, mode + '-transition')
+    if V2_RESOURCE not in names_after:
+        record(mode + '-stateful-not-raw-shipped-under-v1', 'blocked',
+               reason='distinct V2 artifact not embedded in the shipped assembly; '
+                      'typed V2 transport not present/integrated')
+        continue
+
+    v2_text = run_probe_resource(assembly, V2_RESOURCE, mode + '-transition')
+    v2 = json.loads(v2_text) if v2_text else {}
+    docs = get(v2, 'Documents', 'documents') or []
+    main_doc = next((d for d in docs if get(d, 'Source', 'source') == 'Main.cui'), None)
+    meta = get(main_doc, 'Metadata', 'metadata') or {}
+    abi = get(meta, 'RuntimeAbiVersion', 'runtimeAbiVersion')
+    check(mode + '-stateful-promoted-to-v2', main_doc is not None)
+    check(mode + '-stateful-v2-abi2', abi == '2', abi=abi)
+
+    # Stateful composer must be absent from the actually shipped raw/V1 payload.
+    if V1_RESOURCE in names_after:
+        v1_text = run_probe_resource(assembly, V1_RESOURCE, mode + '-transition') or ''
+        check(mode + '-stateful-absent-from-shipped-v1',
+              STATEFUL_SENTINEL not in v1_text and 'Main.cui' not in v1_text)
+    else:
+        # No V1 resource is shipped at all, so stateful raw is certainly absent.
+        check(mode + '-stateful-absent-from-shipped-v1', True)
 
 print(json.dumps({
     'checks': len(rows),

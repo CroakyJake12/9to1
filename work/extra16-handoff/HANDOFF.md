@@ -104,8 +104,9 @@ Full causal evidence: [`PATCH-packaging.md`](PATCH-packaging.md).
   be integrated so the stateful-transition checks can PASS; otherwise those checks report BLOCKED
   (never fabricated PASS). The toolchain/NuGet gate and the packaging closure checks do not require
   it.
-- `dotnet pack` / `restore` / `build` / probe runs must go through the guarded
-  `/home/jacob/.local/bin/dotnet` with `-m:1` under the allocated slot (NOT run here).
+- `dotnet pack` / `restore` / `build` / probe runs must go through the coordinator-supplied guarded SDK
+  (the old `/home/jacob/.local/bin/dotnet` path is absent here) with `-m:1` under the allocated slot
+  (NOT run here). Pass it explicitly with `--dotnet "$DOTNET"`.
 - Offline restore is expected; only the local feed is used (no registries, no package publishing).
 
 ## NOT run / NOT done
@@ -125,3 +126,34 @@ Full causal evidence: [`PATCH-packaging.md`](PATCH-packaging.md).
   root-owned patch backed by causal evidence.
 - The exact package version that `dotnet pack` produces (default `1.0.0` if unset) is parsed from the
   nupkg's nuspec by the gate, so the consumer uses the real version.
+
+## Pass 2 — fix round (concrete harness defects)
+
+All five reported defects were addressed in the owned fixtures; no broad redesign.
+
+1. **run_probe directory bug** — both `verify_toolchain_package.py` and
+   `verify_nuget_consumer_dependencies.py` now create the owned `e/probe` directory
+   (`mkdir(parents=True, exist_ok=True)`) before writing `Probe.csproj`/`Program.cs`. Authoritative
+   manifest enumeration is kept; no byte-scan substitute.
+2. **Nested assets reading** — the gate now descends `project → frameworks → net10.0 → dependencies`
+   with literal keys (never a dotted split, because the TFM key `net10.0` contains a dot) and resolves
+   the version from the `libraries` key (`id/version`), not from `dependency.target` (which is
+   `Package`). A `--selfcheck` Python-only fixture (authentic nested shape) proves the correct shape
+   passes and a wrong version is detected; all 5 selfcheck cases pass.
+3. **Inverted command outcome logic** — `run_dotnet` now returns the raw process; success is the raw
+   exit code (`succeeded()`). The native stateful transition and the WASM branch use raw success.
+   WASM success/failure paths are correct, and a missing-workload/unsupported outcome is classified
+   BLOCKED vs product/harness FAIL. The actual RID output path is read from the recorded `$(TargetPath)`
+   (after build) or found under `bin/**`, never a guessed non-RID path.
+4. **Stage expectations** — a stateless baseline is genuine V1 output; V2 absence at baseline is
+   expected (not BLOCKED). V2 is required only after the stateful transition, and the shipped state is
+   read from the assembly's embedded manifest/payload via the probe (`--resource`), proving the stateful
+   composer is ABI2 in distinct V2 and absent from the actually shipped raw/V1 payload. Stale `obj`
+   files are not treated as shipped; nothing is deleted.
+5. **Packaging reviewability** — `PATCH-packaging.md` now states the build-tool classification, that
+   removing `lib/` does NOT preserve an old compiler binary forwarder (none recovered), and that the
+   gate proves bundling under `tools` (Core/Language/Runtime + Avalonia closure) independently of
+   `SuppressDependenciesWhenPacking`. Runtime/Core/Language metadata remains root-only.
+
+The guarded SDK path is now a variable in `TESTS.md` (the old `/home/jacob/.local/bin/dotnet` path is
+absent here); every command passes `--dotnet "$DOTNET"`.
