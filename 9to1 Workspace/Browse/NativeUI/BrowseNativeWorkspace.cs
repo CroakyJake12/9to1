@@ -134,7 +134,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             // state; the UI renders unavailable without ever inventing a percentage.
             "Haven.ModelName" => _hostContext?.ModelInfo?.Name ?? string.Empty,
             "Haven.EffortLabel" => _hostContext?.ModelInfo?.EffortLabel ?? string.Empty,
+            "Haven.EffortPercent" => _hostContext?.ModelInfo?.EffortPercent ?? string.Empty,
             "Haven.EffortConfigurable" => _hostContext?.ModelInfo?.EffortConfigurable == true,
+            "Haven.ModelTooltip" => ModelTooltip(),
             "Haven.UsageVisible" => _hostContext?.ModelInfo?.UsageVisible == true,
             "Haven.UsageSummary" => _hostContext?.ModelInfo?.UsageSummary ?? string.Empty,
             "Haven.ContextVisible" => _hostContext?.ModelInfo?.ContextVisible == true,
@@ -396,11 +398,33 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         // Web locations keep their exact canonical address text.
         if (tab.Address.IsWeb) return tab.Address.ToString();
         // First-party surface: show the genuinely admitted content-session title when one is
-        // published; otherwise the canonical address (never an invented name or a GUID route leak).
+        // published (including a real Spaces session titled "Spaces"). Only when no genuine title
+        // exists surface the top-level surface address (scheme://authority) — never the raw route,
+        // which can carry opaque GUID segments.
         var title = tab.Title;
-        return !string.IsNullOrWhiteSpace(title) && !string.Equals(title, "Spaces", StringComparison.Ordinal)
-            ? title
-            : tab.Address.ToString();
+        if (!string.IsNullOrWhiteSpace(title)) return title;
+        return SurfaceAddress(tab.Address);
+    }
+
+    private static string SurfaceAddress(AppContentAddress address) =>
+        (address.Namespace switch
+        {
+            AppContentNamespace.Browse => "browse",
+            AppContentNamespace.Cui => "cui",
+            AppContentNamespace.NativeApp => "9to1",
+            _ => string.Empty
+        }) + "://" + address.Authority;
+
+    /// <summary>Accessible hover/focus detail for the model control: the genuine selected model name
+    /// and reasoning-effort tier (never a fabricated percentage), plus the universal-picker action.</summary>
+    private string ModelTooltip()
+    {
+        var info = _hostContext?.ModelInfo;
+        if (info is null) return "Choose the active AI model";
+        var effort = info.EffortConfigurable && info.EffortTierCount > 0
+            ? " · " + (info.EffortLabel.Length > 0 ? info.EffortLabel : info.EffortPercent)
+            : string.Empty;
+        return "Active AI model: " + info.Name + effort + " — open the universal model picker";
     }
 
     private void Changed() => PropertyChanged?.Invoke(this, new(string.Empty));

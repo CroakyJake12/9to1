@@ -380,7 +380,7 @@ public sealed class CuiControlRegistry
         var input = common.Concat(new[]
         {
             "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "Foreground",
-            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput"
+            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput", "DisplayValue"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var content = common.Concat(new[]
         {
@@ -439,6 +439,7 @@ public sealed class CuiControlRegistry
             ("Hidden", "boolean", typeof(bool), true), ("IsVisible", "boolean", typeof(bool), true),
             ("IsEnabled", "boolean", typeof(bool), true), ("Focusable", "boolean", typeof(bool), true),
             ("FocusRequested", "boolean", typeof(bool), true), ("SelectOnFocusRequest", "boolean", typeof(bool), true),
+            ("DisplayValue", "text", typeof(string), false),
             ("DefaultAction", "boolean", typeof(bool), true), ("CancelAction", "boolean", typeof(bool), true),
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),

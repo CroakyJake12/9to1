@@ -1,3 +1,5 @@
+using Haven.Core;
+
 namespace Haven.Application.Haven;
 
 /// <summary>
@@ -53,12 +55,22 @@ public sealed record HavenTopBarModelInfo(
     string? UsageSummary,
     string? UsageScope,
     bool ContextMeasured,
-    string? ContextSummary)
+    string? ContextSummary,
+    int EffortLevelOrdinal = -1)
 {
     /// <summary>Remote model with no trustworthy provider usage telemetry: hide the usage arc and
     /// surface an accessible "M" note ("Provider usage unavailable; this model may still be
     /// metered"). Never a bogus zero percentage.</summary>
     public bool MeterMarker => !IsLocal && !RemoteUsageAvailable;
+
+    /// <summary>The only percentage shown beside the model name: the bijective tier for the
+    /// selected reasoning-effort level on this exact model/provider/route. It is never CPU usage,
+    /// quota, context fill, confidence or health. When the scale/ordinal is unknown this is empty
+    /// (truthful), never a fabricated percentage.</summary>
+    public string EffortPercent =>
+        ReasoningScale.TryTierPercentage(EffortTierCount, EffortLevelOrdinal, out var percentage)
+            ? percentage + "%"
+            : string.Empty;
 
     /// <summary>Whether the compact usage arc may be shown (only a genuinely measured numerator and
     /// denominator for the applicable scope/window, and never for a local model).</summary>

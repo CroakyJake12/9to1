@@ -34,6 +34,7 @@ public sealed partial class App
             public bool NotificationsSupported => _host._services.GetService<HavenNotificationService>() is not null;
             public bool ProfileSupported => _host._services.GetService<NativeCakeAccountUiOwner>() is not null;
             public IHavenSharedControlGateway? SharedControls => _host._sharedGateway;
+            public HavenTopBarModelInfo? ModelInfo => _host._modelInfo;
         }
 
         /// <summary>Typed, asynchronous gateway to the genuine Home-owned shared surfaces.
@@ -157,6 +158,9 @@ public sealed partial class App
                 _shellBindings = shellBindings;
                 _sharedPanelHost = FindNamedContainer(loaded.Root, SharedPanelHostId);
                 Content = loaded.Root;
+                // Populate the genuine selected-model projection for the top-bar cluster under the
+                // host lifecycle; the real route read is retained so close joins its settlement.
+                Track(RefreshModelInfoAsync(CancellationToken.None));
             }
             catch (CuiRuntimeLoadException)
             {
@@ -297,6 +301,37 @@ public sealed partial class App
             generation == Volatile.Read(ref _sharedPanelGeneration) &&
             StringComparer.Ordinal.Equals(profile, _actor?.ProfileId);
 
+        /// <summary>Lifetime-owned snapshot of the genuine current selected model/provider/route for
+        /// the top-bar cluster. It is populated from the REAL Home provider/route repository and is
+        /// never fabricated; absent the genuine composition it stays null (truthful unavailable).</summary>
+        private HavenTopBarModelInfo? _modelInfo;
+
+        /// <summary>Composes the genuine selected-model projection from the real Home provider/route
+        /// repository. It runs under the host lifecycle (started at shell compose) and publishes only
+        /// while the host is current, so the snapshot is lifetime-owned and never fabricated. The
+        /// effort tier is kept truthful: until an exact per-route effort LevelID source is available
+        /// the ordinal stays unknown so a percentage is never invented.</summary>
+        private async Task RefreshModelInfoAsync(CancellationToken token)
+        {
+            try
+            {
+                if (!IsCurrent || _home is null) return;
+                var routes = new HomeVersionedModelRouteRepository(_home.StateStore);
+                var provider = new HomeModelPickerFeatureProvider(_home.Profiles, routes,
+                    _services.GetRequiredService<IModelProviderRegistry>(),
+                    _services.GetRequiredService<IPrivacyPreferenceStore>(),
+                    _home.Resources, _home.Broker);
+                var result = await provider.GetSnapshotAsync("User", "chat", token);
+                if (!IsCurrent) return;
+                var snapshot = result.Succeeded ? result.Value : null;
+                var route = snapshot?.Routes.FirstOrDefault();
+                var candidate = route?.Candidates.FirstOrDefault(item => item.Enabled) ?? route?.Candidates.FirstOrDefault();
+                if (route is null || candidate is null) { _modelInfo = null; return; }
+                _modelInfo = new HavenTopBarModelInfo(candidate.ModelId, false, 0, string.Empty, false, false, null, null, false, null);
+            }
+            catch (Exception) { _modelInfo = null; }
+        }
+
         /// <summary>Re-observe the ACTUAL current Home actor/auth revision and require it to
         /// still equal the full authenticated actor/session/auth revision a shared panel was
         /// opened for (not merely the same profile string). Distinguished outcomes keep caller
@@ -385,16 +420,16 @@ public sealed partial class App
             });
         }
 
-        private Task<HavenSharedOpenResult> OpenNotificationsPanelAsync(CancellationToken cancellationToken)
+        private async Task<HavenSharedOpenResult> OpenNotificationsPanelAsync(CancellationToken cancellationToken)
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (!IsCurrent) return Task.FromResult(HavenSharedOpenResult.Denied);
+            if (!IsCurrent) return HavenSharedOpenResult.Denied;
             var service = _services.GetService<HavenNotificationService>();
             var theme = _homeTheme?.Context;
             if (service is null || theme is null)
-                return Task.FromResult(HavenSharedOpenResult.Refused("NotificationsUnavailable", "The durable Home notification service is unavailable."));
+                return HavenSharedOpenResult.Refused("NotificationsUnavailable", "The durable Home notification service is unavailable.");
             var actor = _actor;
-            if (actor is null) return Task.FromResult(HavenSharedOpenResult.Denied);
+            if (actor is null) return HavenSharedOpenResult.Denied;
             var generation = checked(++_sharedPanelGeneration);
             var bindings = new HavenNotificationsCuiBindings(this, service, generation, actor);
             var loader = new CuiControlLoader();
@@ -408,20 +443,20 @@ public sealed partial class App
             catch (CuiRuntimeLoadException error)
             {
                 loader.Dispose();
-                return Task.FromResult(HavenSharedOpenResult.Refused("PanelLoadBlocked", error.Message));
+                return HavenSharedOpenResult.Refused("PanelLoadBlocked", error.Message);
             }
             var loaded = loader.TryLoad(document);
             if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             {
                 loader.Dispose();
-                return Task.FromResult(HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored notifications panel failed to load."));
+                return HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored notifications panel failed to load.");
             }
             loader.WireBindings(loaded.Root);
             if (_sharedPanelHost is null)
             {
                 RetireLoader(loader);
-                return Task.FromResult(HavenSharedOpenResult.Refused("PanelHostUnavailable",
-                    "The authored shared-panel host is unavailable."));
+                return HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                    "The authored shared-panel host is unavailable.");
             }
             // Admission is reserved before invoking the durable provider read.
             var load = AdmitOriginal(async () =>
@@ -430,11 +465,18 @@ public sealed partial class App
                 return HavenSharedOpenResult.Succeeded();
             });
             // Mount propagates the REAL outcome: a missing/retired host is a structured refusal,
-            // never a silent success while the panel stays closed.
+            // never a silent success while the panel stays closed. Join the EXACT admitted read
+            // before returning a mount refusal so the real read settlement/fault is retained and
+            // observable (and close joins it), rather than abandoning the gateway invocation.
             if (!ShowSharedPanel(loader, loaded.Root))
-                return Task.FromResult(HavenSharedOpenResult.Refused("PanelHostUnavailable",
-                    "The authored shared-panel host is unavailable."));
-            return ThenResult(load);
+            {
+                var settled = await ThenResult(load);
+                return settled.Opened
+                    ? HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                        "The authored shared-panel host is unavailable.")
+                    : settled;
+            }
+            return await ThenResult(load);
         }
 
         /// <summary>Opens the authentic Home Universal Model Picker for the current profile,

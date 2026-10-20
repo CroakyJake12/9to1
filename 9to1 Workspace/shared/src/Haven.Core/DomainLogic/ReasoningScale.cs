@@ -50,4 +50,30 @@ public static class ReasoningScale
     /// </summary>
     public static bool UsesHighReasoningRuntime(EffortLevel effort) =>
         effort == EffortLevel.Max;
+
+    /// <summary>
+    /// The bijective tier percentages for a model's advertised reasoning-effort level count.
+    /// The exact model/route advertises how many levels it supports; the selected level's ordinal
+    /// maps one-to-one onto a tier so the top-bar percentage is never fabricated or derived from
+    /// CPU usage, quota, context fill or health. Only 3/4/5-level scales are defined; any other
+    /// count reports no percentages (truthful unknown).
+    /// </summary>
+    public static IReadOnlyList<int> TierPercentages(int levelCount) => levelCount switch
+    {
+        3 => [35, 70, 100],
+        4 => [25, 50, 75, 100],
+        5 => [20, 40, 60, 80, 100],
+        _ => []
+    };
+
+    /// <summary>Resolves the bijective tier percentage for an ordinal (0-based level index) on a
+    /// model's advertised level count. Returns false when the count is not a known scale or the
+    /// ordinal is out of range, so callers render a truthful unknown rather than a guess.</summary>
+    public static bool TryTierPercentage(int levelCount, int ordinal, out int percentage)
+    {
+        var tiers = TierPercentages(levelCount);
+        if (ordinal < 0 || ordinal >= tiers.Count) { percentage = 0; return false; }
+        percentage = tiers[ordinal];
+        return true;
+    }
 }

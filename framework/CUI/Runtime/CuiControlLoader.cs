@@ -43,6 +43,12 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<RepeatItemScope, PropertyChangedEventHandler> _scopeChangedHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiComponent> _authoredControls = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
+    /// <summary>Per-control typed input presentation state: an authored read-only friendly
+    /// DisplayValue shown while the input is unfocused, the raw writable Value revealed on focus
+    /// (so native edit/copy operate on the canonical value), and genuine user edits tracked so a
+    /// later focus reveal never resurrects a stale value. Programmatic presentation switches are
+    /// fenced so they never write back to the writable binding.</summary>
+    private readonly Dictionary<Control, InputPresentationState> _inputPresentation = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiActionInvocation> _actionInvocations = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
@@ -331,6 +337,7 @@ public sealed class CuiControlLoader : IDisposable
             _actionHandlers.Clear();
             _wiredActions.Clear();
             _actionInvocations.Clear();
+            _inputPresentation.Clear();
             _currentRepeatIdentity = null;
         }
         catch (Exception error) { AddDistinctFailure(failures, error); }
@@ -535,6 +542,7 @@ public sealed class CuiControlLoader : IDisposable
         _controlThemeNames.Clear(); _controlThemeResources.Clear(); _appliedThemeKeys.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
         _authoredControls.Clear();
         _observedBindings.Clear();
+        _inputPresentation.Clear();
         ClearActionHandlers();
         _rootOwnsBackdrop = false;
         _actionInvocations.Clear();
@@ -1419,8 +1427,11 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
-    private static void DetachPresentation(Control control)
+    private void DetachPresentation(Control control)
     {
+        // Retire owned input presentation state first (unsubscribe focus/lostfocus/textchanged
+        // handlers that close over this loader/control) so a retired control never fires.
+        RetireInputPresentation(control);
         // Retire an owned QueryViewport scope on the canonical teardown path (frame reload, close,
         // conditional/repeat retirement). Withdraw clears the typed source, inner context/dispatcher
         // and refresh callback without raising notifications, evaluating, or dispatching, so a
@@ -1430,6 +1441,20 @@ public sealed class CuiControlLoader : IDisposable
         CuiLifecycleProperties.Detach(control);
         CuiPropertyPresentation.Detach(control);
         if (control is CuiContainerControl container) container.Dispose();
+    }
+
+    /// <summary>Unsubscribes a retired input's handlers and drops its presentation state. This
+    /// runs on reload/dispose/teardown so anonymous closures from a retired control cannot fire on
+    /// a newer frame; it is idempotent.</summary>
+    private void RetireInputPresentation(Control control)
+    {
+        if (!_inputPresentation.Remove(control, out var state)) return;
+        if (state.Wired && control is TextBox box)
+        {
+            if (state.GotFocus is not null) box.GotFocus -= state.GotFocus;
+            if (state.LostFocus is not null) box.LostFocus -= state.LostFocus;
+            if (state.TextChanged is not null) box.TextChanged -= state.TextChanged;
+        }
     }
 
     private string CreateRepeatIdentityPrefix(CuiComponent component, string key)
@@ -2787,6 +2812,9 @@ public sealed class CuiControlLoader : IDisposable
                     if (control is TextBox ptb)
                         ptb.PlaceholderText = resolved;
                     break;
+                case "displayvalue":
+                    ApplyInputPresentationBinding(control, resolved);
+                    break;
                 // Actions / events: store in Tag for wiring
                 case "action":
                 case "on:click":
@@ -3284,7 +3312,20 @@ public sealed class CuiControlLoader : IDisposable
                 return;
             }
             if (CuiInputValidationProperties.GetHasError(control) && resolved == previous && NormalizeProperty(property) is "value" or "text" or "checked" or "selectedindex") return;
+            // Bounded typed input presentation: DisplayValue is presentation metadata, not a native
+            // control property. It is kept in the per-control presentation state so the friendly
+            // display never corrupts the writable raw value.
+            if (NormalizeProperty(property) is "displayvalue")
+            {
+                ApplyInputPresentationBinding(control, resolved);
+                return;
+            }
+            if (NormalizeProperty(property) is "value" or "text") CaptureInputRaw(control, resolved);
             if (resolved is not null) ApplyLiteralProperty(control, property, resolved, span);
+            // A host-side writable update must not leave the friendly unfocused location looking like
+            // the raw text (which can carry a route GUID). Restore the display whenever the input is
+            // unfocused; the raw binding value stays intact and a focused edit is never overridden.
+            if (NormalizeProperty(property) is "value" or "text") RestoreFriendlyIfUnfocused(control);
         }
         catch
         {
@@ -3598,6 +3639,85 @@ public sealed class CuiControlLoader : IDisposable
                 foreach (var descendant in EnumerateControls(item)) yield return descendant;
                 break;
         }
+    }
+
+    /// <summary>Bounded typed presentation state for a text Input. The friendly DisplayValue is
+    /// shown while the input is unfocused; the raw writable Value is revealed on focus so native
+    /// edit/copy always operate on the canonical value; Raw tracks the last genuine user text so a
+    /// later focus reveal never resurrects a stale host-published value. Handlers are retained for
+    /// unsubscription on retirement.</summary>
+    private sealed class InputPresentationState
+    {
+        public string? Display;
+        public string? Raw;
+        public bool Focused;
+        public bool Wired;
+        public EventHandler<RoutedEventArgs>? GotFocus;
+        public EventHandler<RoutedEventArgs>? LostFocus;
+        public EventHandler<TextChangedEventArgs>? TextChanged;
+    }
+
+    private void ApplyInputPresentationBinding(Control control, string? value)
+    {
+        if (!_inputPresentation.TryGetValue(control, out var state))
+            _inputPresentation[control] = state = new InputPresentationState();
+        state.Display = value;
+        EnsureInputPresentationWiring(control, state);
+        // Reflect the authored display immediately when the input is not focused; the raw editable
+        // value stays untouched so the writable port is never corrupted by friendly presentation.
+        if (!state.Focused && control is TextBox box) SetInputShownText(box, state.Display);
+    }
+
+    private void CaptureInputRaw(Control control, string? raw)
+    {
+        if (_inputPresentation.TryGetValue(control, out var state)) state.Raw = raw;
+    }
+
+    private void EnsureInputPresentationWiring(Control control, InputPresentationState state)
+    {
+        if (state.Wired || control is not TextBox box) return;
+        state.Wired = true;
+        state.GotFocus = (_, _) =>
+        {
+            state.Focused = true;
+            // Reveal the full canonical editable value on focus (never the friendly label) so
+            // native selection/caret/undo and copy operate on the genuine value.
+            SetInputShownText(box, state.Raw ?? box.Text);
+        };
+        state.TextChanged = (_, _) =>
+        {
+            // Track genuine user edits (outside the host-value fence) so a later focus reveal keeps
+            // the user's latest text rather than a stale host-published value.
+            if (state.Focused && !_applyingHostValues.Contains(box)) state.Raw = box.Text;
+        };
+        state.LostFocus = (_, _) =>
+        {
+            state.Focused = false;
+            // Resume the readable friendly location while leaving the raw binding value intact.
+            if (state.Display is not null) SetInputShownText(box, state.Display);
+        };
+        box.GotFocus += state.GotFocus;
+        box.TextChanged += state.TextChanged;
+        box.LostFocus += state.LostFocus;
+    }
+
+    /// <summary>Swaps a Text input's shown text inside the host-value fence so the generic writable
+    /// write-back never treats a programmatic presentation change as a user edit.</summary>
+    private void SetInputShownText(TextBox box, string? text)
+    {
+        try { _applyingHostValues.Add(box); box.Text = text; }
+        finally { _applyingHostValues.Remove(box); }
+    }
+
+    /// <summary>Restores the friendly Display while the input is unfocused after a host-side
+    /// writable value update. Never touches the raw binding value and never overrides a focused
+    /// edit.</summary>
+    private void RestoreFriendlyIfUnfocused(Control control)
+    {
+        if (control is not TextBox box) return;
+        if (!_inputPresentation.TryGetValue(control, out var state)) return;
+        if (!state.Focused && state.Display is not null)
+            SetInputShownText(box, state.Display);
     }
 
     private sealed record CuiLiveBinding(

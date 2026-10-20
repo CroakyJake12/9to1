@@ -51,9 +51,14 @@ public sealed class BrowseAddressDisplayTests
             "New conversation", "9to1://spaces");
         Assert.Equal("New conversation", CallResolveAddressDisplay(workspace, spaceChat));
 
-        // A first-party location with no admitted distinct title falls back to the canonical address
-        // rather than an invented friendly name.
-        var noTitle = Tab("9to1://spaces", "Spaces", "9to1://spaces");
+        // A genuine Spaces session titled "Spaces" is shown (not rejected as a placeholder), and
+        // never the GUID-carrying raw address.
+        var genuineSpaces = Tab("9to1://spaces/selected/9a6b41a2-0000-0000-0000-000000000001/chat/00000000-0000-0000-0000-000000000002",
+            "Spaces", "9to1://spaces");
+        Assert.Equal("Spaces", CallResolveAddressDisplay(workspace, genuineSpaces));
+
+        // No genuine admitted distinct title: fall back to the surface address, never a GUID leak.
+        var noTitle = Tab("9to1://spaces/selected/9a6b41a2-0000-0000-0000-000000000001", "", "9to1://spaces");
         Assert.Equal("9to1://spaces", CallResolveAddressDisplay(workspace, noTitle));
     }
 

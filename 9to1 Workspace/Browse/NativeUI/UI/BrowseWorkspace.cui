@@ -12,9 +12,9 @@
       <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs">
         <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
-            <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8">
+            <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" Padding="0 0 2 0" CornerRadius="8">
               <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Selected="{Binding tab.Selected}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
-              <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="15" Background="Transparent" Color="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="8">×</Button>
+              <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Selected="{Binding tab.Selected}" Height="32" MinHeight="32" Width="30" MinWidth="30" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="8">×</Button>
             </Container>
           </Repeat>
         </Container>
@@ -28,8 +28,8 @@
           <Button id="BrowseStopButton" action="9to1.Browse.Stop" IsVisible="{Binding IsLoading}" AccessibleName="Stop loading" Tooltip="Stop loading" Interactive="{Binding Can.Stop}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">×</Button>
         </Container>
         <Container Type="Grid" Column="3" ColumnSizes="1fr Auto" Background="{Resource CuiInputSurfaceBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="16">
-          <Input Type="Text" id="BrowseAddressBox" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" DisplayValue="{Binding AddressDisplay}" Height="32" MinHeight="32" MinWidth="64" Padding="12 4" FontSize="13" Background="Transparent" BorderWidth="0" CornerRadius="16" />
-          <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="1" AccessibleName="Go to address" Tooltip="Go to address" Interactive="{Binding Can.Navigate}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="16" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="16">→</Button>
+          <Input Type="Text" id="BrowseAddressBox" VerticalAlignment="Center" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" DisplayValue="{Binding AddressDisplay}" Height="32" MinHeight="32" MinWidth="64" Padding="12 4" FontSize="13" Background="Transparent" BorderWidth="0" CornerRadius="16" />
+          <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="1" VerticalAlignment="Center" AccessibleName="Go to address" Tooltip="Go to address" Interactive="{Binding Can.Navigate}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="16" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="16">→</Button>
         </Container>
         <Container id="HavenSharedCluster" Type="Horizontal Stack" Column="4" CellGap="4" VerticalAlignment="Center" IsVisible="{Binding Haven.Embedded}" AccessibleName="Haven model, notifications and profile">
           <Container id="HavenMetricCluster" Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
@@ -39,9 +39,10 @@
             <Text IsVisible="{Binding Haven.ContextVisible}" Text="{Binding Haven.ContextSummary}" FontSize="11" AccessibleName="Context use" />
             <Button id="HavenMeterMarkerButton" IsVisible="{Binding Haven.MeterMarker}" Height="24" MinHeight="24" Width="24" MinWidth="24" Padding="2" FontSize="12" Background="Transparent" BorderWidth="0" CornerRadius="8" Tooltip="Provider usage unavailable; this model may still be metered" AccessibleName="Provider usage unavailable; this model may still be metered">M</Button>
           </Container>
-          <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="Choose AI model" Tooltip="Choose the active AI model" Interactive="{Binding Haven.ModelAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-            <Image Source="avares://Haven/Assets/haven-model.svg" Width="18" Height="18" />
+          <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="Choose AI model" Tooltip="{Binding Haven.ModelTooltip}" Interactive="{Binding Haven.ModelAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Image Source="avares://Haven/Assets/haven-model.svg" Width="16" Height="16" />
           </Button>
+          <Text IsVisible="{Binding Haven.EffortConfigurable}" Text="{Binding Haven.EffortPercent}" FontSize="11" VerticalAlignment="Center" AccessibleName="Selected reasoning effort level" />
           <Button id="HavenNotificationsButton" action="9to1.Haven.OpenNotifications" accessible-name="Notifications" Tooltip="Open notifications" Interactive="{Binding Haven.NotificationsAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
             <Image Source="avares://Haven/Assets/haven-notifications.svg" Width="18" Height="18" />
           </Button>
