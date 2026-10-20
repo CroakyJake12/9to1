@@ -187,7 +187,7 @@
     "mercury_activation_condition": "Only after confirmed OpenCode Beam usage exhaustion",
     "existing_mercury_spending_cap_usd": 5,
     "spending_controls_changed": false,
-    "mercury_requests_sent": "Three authorised OpenCode turns ended (third via coordinator interrupt); fourth now active. Exact provider request count/billed total UNKNOWN. Key outside Git; existing cap unchanged."
+    "mercury_requests_sent": "Four authorised OpenCode turns ended (third/fourth via coordinator safe-boundary interruption); no model request active at this boundary. Exact provider request count/billed total UNKNOWN. Key outside Git; existing cap unchanged."
   },
   "allowance": {
     "beam_remaining": "EXHAUSTED: recorded provider.quota FreeUsageLimitError at2026-10-20T10:50:38Z",
@@ -196,9 +196,9 @@
   },
   "unaccepted_candidate": {
     "worktree": "/workspace/9to1-chat-cui",
-    "base": "9985a1392cd8fd1b299a8582856a877da5c1a6a7",
+    "base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
     "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
-    "state": "UNACCEPTED; pass4 active in one OpenCode Mercury request with exclusive serialized .NET slot",
+    "state": "CHECKPOINT, UNACCEPTED; no model request or .NET active at this source boundary; preparing concrete lifecycle/context tasks",
     "first_compilation": "5actual C#adapter errors",
     "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
     "independent_source_blockers": [
@@ -211,7 +211,7 @@
       "CUI local presentation state requires framework implementation and authored CUI migration"
     ],
     "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof",
-    "latest_observation_at": "2026-10-20T12:09:14.536984+00:00",
+    "latest_observation_at": "2026-10-20T12:39:23.972332+00:00",
     "third_turn_tests": {
       "initial_host_core": "82total/50passed/32failed; includes production NativeHost registration failure subsequently corrected in active source",
       "component_lifetime": "2passed/0failed, not whole-page or app acceptance",
@@ -233,6 +233,29 @@
       "prompt": "/workspace/shared/9to1-test-evidence/opencode-composer-pass4-dispatch.txt",
       "sha256": "7a19219e76213d053d1493775a01b363e8cbe685208c091d58a1c294142e69a7",
       "scope": "Synchronous actual input/edit snapshots, queue/retirement durability, original-owned UI settlement, actual Button click/IsEnabled tests, live Home preference ownership"
+    },
+    "pass4_intervention": {
+      "at": "2026-10-20T12:22:02Z",
+      "reason": "Worker reverted failed rendered-control helpers to internal bindings/source checks; rejected coverage substitution",
+      "scope": "Only private fourth OpenCode child, after tool settlement; source/logs/TRX protected",
+      "frozen": "/workspace/shared/9to1-test-evidence/composer-pass4-frozen-20261020T122202Z/identity.json",
+      "patch_sha256": "27a6da2e0a6b1cd99cf5ec3363a58e9586d50980f2c5f9929c8d88963c758f51",
+      "original_config_restored": true
+    },
+    "last_independent_qa": {
+      "source_base": "9985a1392cd8fd1b299a8582856a877da5c1a6a7",
+      "source_patch_sha256": "e7f1e891a8cf32ff8fd416865b61e7b0d6b2638fbde71c13363a5da126975dc7",
+      "source_commit": "2c01d9b6",
+      "latest_owner_waveform_docs": "9727ca0c (main04a6091e)",
+      "evidence": "/workspace/shared/9to1-test-evidence/composer-pass4-independent-qa/identity-after-mounted-overlay-and-stop.json",
+      "suite": "OverlayChatInitializationTests20passed/0failed/0skipped",
+      "rendered_scope": "6actual-control cases mount the productionpage in1100x800Window; remainingcases realpage/factory domain/lifetime tests, not all20rendered",
+      "immediate_queued_edit": "ActualTextBox.Text then alreadycapturedButton.ClickEvent samecallback/no pump; realcanonicalqueued draftclose/reopen passes",
+      "stop_regression": "Genuinebefore-fix actualButton.IsEnabled=false while responseactive and catalogueheld; afterminimalbooleanfix actualbuttonclick cancels same CTS;20suitepasses",
+      "harness_reds": "Two initialStoptestsetup failures retained/classified; not productproof",
+      "new_component_lifetime_tests": "NOT_ACCEPTED; held-source-only tests do not prove loader settlement/close custody",
+      "native_composer": "NOT_RUN",
+      "whole_app": "NOT_RUN"
     }
   },
   "latest_owner_ui_refinements": {
