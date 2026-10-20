@@ -33,6 +33,15 @@ public interface ICuiPagedSource
     CuiPagedResult Evaluate(string? query, CuiPageCursor? cursor);
 }
 
+/// <summary>A typed paged source that can revise its own contents in place. The runtime treats
+/// <see cref="Revision"/> as an opaque revision stamp: assigning the same source reference is an
+/// idempotent no-op unless the revision changed, so an external invalidation/revision ownership path
+/// can force a re-evaluation of the CURRENT source without a source replacement.</summary>
+public interface ICuiMutablePagedSource : ICuiPagedSource
+{
+    int Revision { get; }
+}
+
 /// <summary>
 /// A generic CUI runtime scope that owns a bounded paged query (query text + opaque cursor) and
 /// exposes the resulting window to authored child bindings. It is the generic runtime state/query
@@ -74,6 +83,8 @@ public sealed class CuiQueryViewport : CuiContainerControl,
     private ICuiActionDispatcher? _innerDispatcher;
     private event PropertyChangedEventHandler? _propertyChanged;
     private bool _withdrawn;
+    private int _generation;
+    private int? _appliedRevision;
 
     public CuiQueryViewport() : base("Vertical Stack")
     {
@@ -85,7 +96,9 @@ public sealed class CuiQueryViewport : CuiContainerControl,
     /// Assigning the SAME source reference is idempotent: it is a safe no-op that does not
     /// re-evaluate, republish, or reenter the viewport, so the loader's ordinary refresh path
     /// (which reapplies the parent Source binding) cannot feed back into this viewport's own
-    /// producer indefinitely.</summary>
+    /// producer indefinitely. A source implementing <see cref="ICuiMutablePagedSource"/> may revise
+    /// its contents in place: when the same reference is assigned and its revision stamp changed,
+    /// this viewport re-evaluates the current source exactly once (no producer feedback).</summary>
     public ICuiPagedSource? Source
     {
         get => _source;
@@ -93,8 +106,22 @@ public sealed class CuiQueryViewport : CuiContainerControl,
         {
             if (value is not null && value is not ICuiPagedSource)
                 throw new InvalidOperationException("CUI QueryViewport Source must be an ICuiPagedSource.");
-            if (ReferenceEquals(value, _source)) return;
+            if (ReferenceEquals(value, _source))
+            {
+                // Same reference: idempotent unless a mutable source reports a new revision stamp,
+                // which is the external invalidation/revision ownership path for in-place content
+                // changes. Re-evaluate the CURRENT source once, without re-entering the producer.
+                if (value is ICuiMutablePagedSource mutable && mutable.Revision != _appliedRevision)
+                {
+                    _appliedRevision = mutable.Revision;
+                    _generation++;
+                    Reevaluate();
+                }
+                return;
+            }
             _source = value;
+            _appliedRevision = value is ICuiMutablePagedSource revised ? revised.Revision : null;
+            _generation++;
             Reevaluate();
         }
     }
@@ -129,6 +156,7 @@ public sealed class CuiQueryViewport : CuiContainerControl,
     internal void Withdraw()
     {
         _withdrawn = true;
+        _generation++;
         _source = null;
         _innerContext = null;
         _innerDispatcher = null;
@@ -156,12 +184,14 @@ public sealed class CuiQueryViewport : CuiContainerControl,
         }
         else
         {
+            var generationAtStart = _generation;
             var result = source.Evaluate(_query, _cursor);
-            // Fence the evaluation against a nested update (source replacement or withdrawal) that
-            // arrived while producing this window. Such a nested update has already published its
-            // own coherent result; publishing this now-stale outer window would overwrite the newer
-            // owner's state with an older producer's snapshot, so abort without mutating.
-            if (_withdrawn || !ReferenceEquals(_source, source)) return;
+            // Fence the evaluation against a nested update that arrived while producing this window:
+            // a source replacement, a withdrawal, or a same-source query/cursor change (any of which
+            // bumps the generation). Such a nested update has already published its own coherent
+            // result; publishing this now-stale outer window would overwrite the newer owner's state
+            // with an older producer's snapshot, so abort without mutating.
+            if (_withdrawn || !ReferenceEquals(_source, source) || _generation != generationAtStart) return;
             _items.Clear();
             if (result.Items is not null) _items.AddRange(result.Items);
             _totalCount = result.TotalCount;
@@ -209,6 +239,7 @@ public sealed class CuiQueryViewport : CuiContainerControl,
             if (string.Equals(query, _query, StringComparison.Ordinal)) return true;
             _query = query;
             _cursor = null; // a new query restarts at the first window
+            _generation++;
             Reevaluate();
             return true;
         }
@@ -232,6 +263,7 @@ public sealed class CuiQueryViewport : CuiContainerControl,
                 if (!_withdrawn && _prev is not null)
                 {
                     _cursor = _prev;
+                    _generation++;
                     Reevaluate();
                 }
                 return ValueTask.CompletedTask;
@@ -239,6 +271,7 @@ public sealed class CuiQueryViewport : CuiContainerControl,
                 if (!_withdrawn && _next is not null)
                 {
                     _cursor = _next;
+                    _generation++;
                     Reevaluate();
                 }
                 return ValueTask.CompletedTask;

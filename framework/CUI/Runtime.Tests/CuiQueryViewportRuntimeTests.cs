@@ -131,10 +131,86 @@ public sealed class CuiQueryViewportRuntimeTests
         }
     }
 
+    /// <summary>A typed paged source whose contents can be revised in place. <see cref="Revision"/>
+    /// is an opaque stamp incremented on every in-place update, giving the runtime an external
+    /// invalidation path to re-evaluate the CURRENT source without replacing it.</summary>
+    private sealed class MutableListSource : ICuiMutablePagedSource
+    {
+        private List<string> _data;
+        public int PageSize { get; set; } = 3;
+        public int Revision { get; private set; }
+        public int EvaluateCount { get; private set; }
+        public MutableListSource(params string[] data) => _data = data.ToList();
+        public void Update(params string[] data) { _data = data.ToList(); Revision++; }
+        public CuiPagedResult Evaluate(string? query, CuiPageCursor? cursor)
+        {
+            EvaluateCount++;
+            var offset = cursor?.Offset ?? 0;
+            var window = _data.Skip(offset).Take(PageSize).Select(item => (object)item).ToList();
+            var next = offset + window.Count < _data.Count ? new CuiPageCursor(offset + window.Count) : null;
+            var prev = offset > 0 ? new CuiPageCursor(Math.Max(0, offset - PageSize)) : null;
+            return new CuiPagedResult(window, _data.Count, offset, prev, next);
+        }
+    }
+
+    /// <summary>A typed source that, on the first evaluation for a specific query, synchronously
+    /// changes the QUERY on the same viewport (a same-source query reentry). A newer inner result is
+    /// published while the outer evaluation is still in flight; the outer stale window must never
+    /// overwrite it.</summary>
+    private sealed class ReentrantQuerySource : ICuiPagedSource
+    {
+        private readonly string[] _data;
+        private bool _flipped;
+        public CuiQueryViewport? Viewport { get; set; }
+        public int EvaluateCount { get; private set; }
+        public ReentrantQuerySource(params string[] data) => _data = data;
+        public CuiPagedResult Evaluate(string? query, CuiPageCursor? cursor)
+        {
+            EvaluateCount++;
+            if (!_flipped && string.Equals(query, "zzz", StringComparison.Ordinal))
+            {
+                _flipped = true;
+                Viewport?.TrySetValue("Query", "new");
+            }
+            var filtered = string.IsNullOrEmpty(query)
+                ? _data
+                : _data.Where(item => item.Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray();
+            return new CuiPagedResult(filtered.Select(item => (object)item).ToList(), filtered.Length, 0, null, null);
+        }
+    }
+
     private static void Pump() => Dispatcher.UIThread.RunJobs();
 
-    private static T? Find<T>(Control root, string id) where T : class =>
-        root.GetVisualDescendants().OfType<T>().FirstOrDefault(control => control is Control c && c.Name == id);
+    /// <summary>All authored children of a CUI container, recursively. Hidden authored controls are
+    /// legitimately retained in the authored ownership contract (they are only pruned from the live
+    /// layout/visual tree, not from the container's authored child range), so this walk finds them
+    /// where a visual-only lookup cannot.</summary>
+    private static IEnumerable<Control> AuthoredDescendants(Control root)
+    {
+        // Renderer-owned panels/decorators can wrap authored containers. Follow those
+        // wrappers as well so retained invisible pager buttons remain discoverable.
+        IEnumerable<Control> children = root switch
+        {
+            CuiContainerControl container => container.AuthoredChildren,
+            Panel panel => panel.Children,
+            Decorator { Child: Control child } => new[] { child },
+            ContentControl { Content: Control child } => new[] { child },
+            _ => Array.Empty<Control>(),
+        };
+        foreach (var child in children)
+        {
+            yield return child;
+            foreach (var descendant in AuthoredDescendants(child)) yield return descendant;
+        }
+    }
+
+    private static T? Find<T>(Control root, string id) where T : class
+    {
+        foreach (var candidate in root.GetVisualDescendants().OfType<T>()
+            .Concat(AuthoredDescendants(root).OfType<T>()))
+            if (candidate is Control c && c.Name == id) return candidate;
+        return null;
+    }
 
     private static string[] Cells(Control root) =>
         Find<Control>(root, "grid")!.GetVisualDescendants().OfType<Button>()
@@ -245,11 +321,11 @@ public sealed class CuiQueryViewportRuntimeTests
                   <Actions><Action name="next" command="query.next" /></Actions>
                   <Page><Container id="root" Type="Vertical Stack">
                     <Container id="q1" Type="QueryViewport" Source="{Binding SourceA}">
-                      <Container id="g1" Type="Wrap"><Repeat Source="{Binding Items}" As="it" Key="{Binding it}"><Button id="cell" content="{Binding it}"/></Repeat></Container>
+                      <Container id="g1" Type="Wrap"><Repeat id="r1" Source="{Binding Items}" As="it" Key="{Binding it}"><Button id="cellA" content="{Binding it}"/></Repeat></Container>
                       <Button id="n1" action="next" content="›" IsVisible="{Binding HasNext}"/>
                     </Container>
                     <Container id="q2" Type="QueryViewport" Source="{Binding SourceB}">
-                      <Container id="g2" Type="Wrap"><Repeat Source="{Binding Items}" As="it" Key="{Binding it}"><Button id="cell" content="{Binding it}"/></Repeat></Container>
+                      <Container id="g2" Type="Wrap"><Repeat id="r2" Source="{Binding Items}" As="it" Key="{Binding it}"><Button id="cellB" content="{Binding it}"/></Repeat></Container>
                       <Button id="n2" action="next" content="›" IsVisible="{Binding HasNext}"/>
                     </Container>
                   </Container></Page>
@@ -269,7 +345,7 @@ public sealed class CuiQueryViewportRuntimeTests
             try
             {
                 var cellsOf = (string id) => Find<Control>(root!, id)!.GetVisualDescendants().OfType<Button>()
-                    .Where(b => b.Name == "cell").Select(b => (string?)b.Content).ToArray();
+                    .Where(b => b.Name is "cellA" or "cellB").Select(b => (string?)b.Content).ToArray();
 
                 Assert.Equal(new[] { "a0", "a1", "a2" }, cellsOf("g1"));
                 Assert.Equal(new[] { "b0", "b1", "b2" }, cellsOf("g2"));
@@ -522,6 +598,87 @@ public sealed class CuiQueryViewportRuntimeTests
                 prev2.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await loader.WhenActionsIdleAsync(); Pump();
                 Assert.Equal(new[] { "0", "1", "2" }, Cells(root2!));
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Same_port_mutable_content_revision_re_evaluates_current_source_without_replacement()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var host = new HostContext();
+            var source = new MutableListSource("0", "1", "2");
+            host.Set("Source", source);
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(host);
+            var (root, diagnostics) = loader.LoadMarkup(PagerMarkup);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            var window = new Window { Content = root, Width = 400, Height = 340 };
+            window.Show(); Pump();
+            try
+            {
+                Assert.Equal(new[] { "0", "1", "2" }, Cells(root!));
+                var before = source.EvaluateCount;
+
+                // In-place content revision on the SAME source reference, then the loader's ordinary
+                // refresh path (no source replacement, no host notification needed). This must
+                // re-evaluate the current source exactly once and publish the revised window without
+                // producer feedback or duplicate evaluation.
+                source.Update("a", "b", "c", "d", "e");
+                loader.RefreshBindings(); Pump();
+
+                Assert.Equal(new[] { "a", "b", "c" }, Cells(root!));
+                Assert.Equal("5", Find<TextBlock>(root!, "total")!.Text);
+                Assert.Equal(before + 1, source.EvaluateCount);
+
+                // A repeated refresh with an unchanged revision stays idempotent.
+                loader.RefreshBindings(); Pump();
+                Assert.Equal(before + 1, source.EvaluateCount);
+                Assert.Equal(new[] { "a", "b", "c" }, Cells(root!));
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Same_source_query_reentry_during_evaluate_publishes_newer_window_not_stale_outer()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var host = new HostContext();
+            var source = new ReentrantQuerySource("alpha", "beta", "new1", "new2");
+            host.Set("Source", source);
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(host);
+            var (root, diagnostics) = loader.LoadMarkup(PagerMarkup);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            var window = new Window { Content = root, Width = 400, Height = 340 };
+            window.Show(); Pump();
+            try
+            {
+                Assert.Equal(new[] { "alpha", "beta", "new1", "new2" }, Cells(root!));
+
+                // Arm the source with the real owning viewport so its evaluation can reenter the
+                // same viewport's query while an evaluation is still in flight.
+                source.Viewport = Find<CuiQueryViewport>(root!, "q1");
+
+                // A genuine authored query change drives a fresh evaluation. The source reacts by
+                // changing the query again DURING that evaluation, so a newer inner window is
+                // published first. The stale outer window (the empty "zzz" result) must not
+                // overwrite the newer inner publication.
+                var search = Find<TextBox>(root!, "search")!;
+                search.Text = "zzz"; Pump();
+
+                Assert.Equal(new[] { "new1", "new2" }, Cells(root!));
+                Assert.Equal(3, source.EvaluateCount); // "" (mount), then "zzz", then nested "new"
             }
             finally { window.Close(); }
             return true;

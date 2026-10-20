@@ -63,8 +63,36 @@ public sealed class CuiQueryViewportRetirementTests
 
     private static void Pump() => Dispatcher.UIThread.RunJobs();
 
-    private static T? Find<T>(Control root, string id) where T : class =>
-        root.GetVisualDescendants().OfType<T>().FirstOrDefault(control => control is Control c && c.Name == id);
+    /// <summary>All authored children of a CUI container, recursively. Hidden authored controls are
+    /// legitimately retained in the authored ownership contract (they are only pruned from the live
+    /// layout/visual tree, not from the container's authored child range), so this walk finds them
+    /// where a visual-only lookup cannot.</summary>
+    private static IEnumerable<Control> AuthoredDescendants(Control root)
+    {
+        // Renderer-owned panels/decorators can wrap authored containers. Follow those
+        // wrappers as well so retained invisible pager buttons remain discoverable.
+        IEnumerable<Control> children = root switch
+        {
+            CuiContainerControl container => container.AuthoredChildren,
+            Panel panel => panel.Children,
+            Decorator { Child: Control child } => new[] { child },
+            ContentControl { Content: Control child } => new[] { child },
+            _ => Array.Empty<Control>(),
+        };
+        foreach (var child in children)
+        {
+            yield return child;
+            foreach (var descendant in AuthoredDescendants(child)) yield return descendant;
+        }
+    }
+
+    private static T? Find<T>(Control root, string id) where T : class
+    {
+        foreach (var candidate in root.GetVisualDescendants().OfType<T>()
+            .Concat(AuthoredDescendants(root).OfType<T>()))
+            if (candidate is Control c && c.Name == id) return candidate;
+        return null;
+    }
 
     private static string[] Cells(Control root) =>
         Find<Control>(root, "grid")!.GetVisualDescendants().OfType<Button>()

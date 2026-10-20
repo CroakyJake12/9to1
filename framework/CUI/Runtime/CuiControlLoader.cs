@@ -2100,7 +2100,12 @@ public sealed class CuiControlLoader : IDisposable
     /// </summary>
     public void RefreshBindings()
     {
-        foreach (var record in _liveBindings)
+        // Enumerate a snapshot: applying a binding (for example re-entering the QueryViewport
+        // source, which publishes and refreshes authored bindings) can add new live binding records
+        // while this pass is in flight. A snapshot keeps the enumeration stable while every record
+        // present at the start is still refreshed; newly-added records were applied with their
+        // initial values at registration, so no update is dropped.
+        foreach (var record in _liveBindings.ToArray())
         {
             ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
         }
@@ -2323,7 +2328,11 @@ public sealed class CuiControlLoader : IDisposable
     {
         void RefreshAffectedBindings()
         {
-            foreach (var record in _liveBindings)
+            // Snapshot the live-binding list: re-entrant publication (e.g. a QueryViewport source
+            // assignment that refreshes authored bindings and reconciles Repeats) can append records
+            // while this pass is in flight. A snapshot keeps enumeration stable without dropping any
+            // nested update (new records were applied with their initial values at registration).
+            foreach (var record in _liveBindings.ToArray())
             {
                 var leaf = record.Binding.Path[(record.Binding.Path.LastIndexOf('.') + 1)..];
                 if (!string.IsNullOrEmpty(propertyName)
