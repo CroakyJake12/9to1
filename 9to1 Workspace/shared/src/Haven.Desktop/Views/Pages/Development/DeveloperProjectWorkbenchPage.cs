@@ -128,6 +128,9 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     internal (Guid TaskId, Guid ExecutionId, Guid ContextId) OriginalReadinessContext => (_taskId, _runId, _contextId);
     internal bool IsOriginalReadinessPresentationCurrent(CuiSceneHost exactHost, long originalGeneration) =>
         ReferenceEquals(exactHost, _host) && IsCurrent(originalGeneration);
+    /// <summary>True while the workbench holds unsaved authored work or an in-flight Dev command,
+    /// so a tab owner can veto retirement instead of silently discarding it.</summary>
+    internal bool HasUnsavedWork { get { lock (_gate) return _editor is { IsDirty: true } || _pending; } }
     public new event PropertyChangedEventHandler? PropertyChanged;
     public DeveloperActionObservation? OriginalDeveloperObservation { get; private set; }
     public DeveloperSourceChangePass? OriginalSourcePass { get; private set; }

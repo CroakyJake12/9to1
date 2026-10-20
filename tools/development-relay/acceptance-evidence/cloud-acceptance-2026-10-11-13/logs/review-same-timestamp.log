@@ -1,1 +1,0 @@
-{"scenario":"Two ordered decisions at the same persisted timestamp","expected":"NEEDS_WORK","actual":"ACCEPTED","status":"FAIL","scope":"Controlled real SQLite implementation regression, not a human app review","source_sha":"fb7c9015e48cee5c541c6a7476f22cd6db9ae388"}

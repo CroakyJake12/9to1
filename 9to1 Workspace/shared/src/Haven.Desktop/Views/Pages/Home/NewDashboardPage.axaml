@@ -1,7 +1,0 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="using:Haven.Desktop.Controls"
-             xmlns:hui="using:Haven.Desktop.HavenUI.Components"
-             x:Class="Haven.Desktop.Views.Pages.Home.NewDashboardPage">
-  <!-- Avalonia activation wrapper. Dashboard.cui owns the rendered shell. -->
-</UserControl>

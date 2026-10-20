@@ -1,4 +1,6 @@
+using System.Linq;
 using System.Text.Json;
+using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Language;
 
 namespace CakeOS.Cui;
@@ -51,9 +53,11 @@ public sealed class CuiV1AdmissionException : Exception
 /// required compiled projection collections (components/templates/source-map/dependencies/semantics).
 /// Wrong kinds, missing required values and incomplete metadata are translated into the canonical
 /// typed admission diagnostic rather than leaking <see cref="InvalidOperationException"/>,
-/// <see cref="KeyNotFoundException"/> or <see cref="ArgumentException"/>. Unknown optional fields,
-/// omitted/unknown capability values and host-support questions are deliberately NOT decided here:
-/// they are tolerated (baseline contract) and are decided by the Runtime <c>ValidateArtifactHostSupport</c>
+/// <see cref="KeyNotFoundException"/> or <see cref="ArgumentException"/>. The envelope aggregate is
+/// reconciled with every document's own metadata (producer contract): a document whose language,
+/// registry or capability set contradicts the envelope is malformed. Unknown optional fields, omitted/
+/// unknown capability values and host-support questions are deliberately NOT decided here: they are
+/// tolerated (baseline contract) and are decided by the Runtime <c>ValidateArtifactHostSupport</c>
 /// admission boundary at the consumer.
 /// </remarks>
 public static class CuiV1ArtifactReader
@@ -68,18 +72,18 @@ public static class CuiV1ArtifactReader
         ArgumentNullException.ThrowIfNull(utf8);
         using var document = ParseOrThrow(utf8);
         var root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object)
+            throw Admission("CUIR070", "The V1 compiled CUI artifact root must be a JSON object.");
 
         var format = String(root, "format");
         if (!string.Equals(format, FormatName, StringComparison.Ordinal))
             throw Admission("CUIR060", $"Unsupported compiled CUI artifact format '{format}'.");
-        var version = root.TryGetProperty("formatVersion", out var versionEl) && versionEl.TryGetInt32(out var v) ? v : -1;
-        if (version != FormatVersion)
-            throw Admission("CUIR061", $"Unsupported compiled CUI artifact format version {version}; V1 ({FormatVersion}) expected.");
+        var version = ReadFormatVersion(root);
 
         var compilerSha256 = String(root, "compilerSha256");
         var envelope = ReadMetadata(RequireObject(root, "metadata", "envelope compatibility metadata"), "envelope");
 
-        if (!root.TryGetProperty("documents", out var docsEl) || docsEl.ValueKind != JsonValueKind.Array)
+        if (!TryGetPropertySafe(root, "documents", out var docsEl) || docsEl.ValueKind != JsonValueKind.Array)
             throw Admission("CUIR072", "The V1 compiled CUI artifact is missing its documents collection.");
         if (docsEl.GetArrayLength() == 0)
             throw Admission("CUIR072", "The V1 compiled CUI artifact declares no documents.");
@@ -103,6 +107,7 @@ public static class CuiV1ArtifactReader
             var documentMetadata = ReadMetadata(
                 RequireObject(compilation, "Metadata", $"compatibility metadata for document '{source}'"),
                 $"document '{source}'");
+            ReconcileEnvelope(envelope, documentMetadata, source);
 
             // The entire required compiled projection must be present and correctly shaped. A
             // producer that strips Components/Templates/SourceMap/Dependencies/Semantics is
@@ -119,6 +124,28 @@ public static class CuiV1ArtifactReader
         return new CuiV1LoadedArtifact(FormatName, FormatVersion, compilerSha256, envelope, loadedDocuments);
     }
 
+    private static int ReadFormatVersion(JsonElement root)
+    {
+        if (!TryGetPropertySafe(root, "formatVersion", out var versionEl))
+            throw Admission("CUIR061", $"Unsupported compiled CUI artifact format version; V1 ({FormatVersion}) expected.");
+        if (versionEl.ValueKind != JsonValueKind.Number || !versionEl.TryGetInt32(out var version))
+            throw Admission("CUIR070", "The V1 compiled CUI artifact format version must be an integer.");
+        if (version != FormatVersion)
+            throw Admission("CUIR061", $"Unsupported compiled CUI artifact format version {version}; V1 ({FormatVersion}) expected.");
+        return version;
+    }
+
+    private static void ReconcileEnvelope(CuiCompilationMetadata envelope, CuiCompilationMetadata document, string source)
+    {
+        if (!string.Equals(envelope.LanguageVersion, document.LanguageVersion, StringComparison.Ordinal))
+            throw Admission("CUIR072", $"Document '{source}' language version '{document.LanguageVersion}' contradicts the envelope aggregate '{envelope.LanguageVersion}'.");
+        if (!string.Equals(envelope.ComponentRegistryVersion, document.ComponentRegistryVersion, StringComparison.Ordinal))
+            throw Admission("CUIR072", $"Document '{source}' component registry version '{document.ComponentRegistryVersion}' contradicts the envelope aggregate '{envelope.ComponentRegistryVersion}'.");
+        foreach (var capability in document.RequiredCapabilities)
+            if (!envelope.RequiredCapabilities.Contains(capability))
+                throw Admission("CUIR072", $"Document '{source}' requires capability '{capability}' absent from the envelope aggregate.");
+    }
+
     private static JsonDocument ParseOrThrow(byte[] utf8)
     {
         try
@@ -131,11 +158,23 @@ public static class CuiV1ArtifactReader
         }
     }
 
+    /// <summary>Safe property probe that never throws on non-object elements; missing/wrong-kind
+    /// reports false so callers translate the case into the typed admission diagnostic.</summary>
+    private static bool TryGetPropertySafe(JsonElement element, string property, out JsonElement value)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            value = default;
+            return false;
+        }
+        return element.TryGetProperty(property, out value);
+    }
+
     /// <summary>Requires a present object-valued property, translating a missing/wrong kind into
     /// the canonical structural admission diagnostic.</summary>
     private static JsonElement RequireObject(JsonElement element, string property, string what)
     {
-        if (!element.TryGetProperty(property, out var child) || child.ValueKind != JsonValueKind.Object)
+        if (!TryGetPropertySafe(element, property, out var child) || child.ValueKind != JsonValueKind.Object)
             throw Admission("CUIR072", $"The V1 artifact is missing or malformed {what}.");
         return child;
     }
@@ -144,14 +183,14 @@ public static class CuiV1ArtifactReader
     /// the canonical structural admission diagnostic.</summary>
     private static JsonElement RequireArray(JsonElement element, string property, string what)
     {
-        if (!element.TryGetProperty(property, out var child) || child.ValueKind != JsonValueKind.Array)
+        if (!TryGetPropertySafe(element, property, out var child) || child.ValueKind != JsonValueKind.Array)
             throw Admission("CUIR072", $"The V1 artifact is missing or malformed {what}.");
         return child;
     }
 
     private static string RequireNonEmptyString(JsonElement element, string property, string what)
     {
-        if (!element.TryGetProperty(property, out var child) || child.ValueKind != JsonValueKind.String)
+        if (!TryGetPropertySafe(element, property, out var child) || child.ValueKind != JsonValueKind.String)
             throw Admission("CUIR072", $"The V1 artifact is missing {what}.");
         var value = child.GetString();
         if (string.IsNullOrWhiteSpace(value))
@@ -166,7 +205,7 @@ public static class CuiV1ArtifactReader
         var registry = RequireNonEmptyString(element, "ComponentRegistryVersion", $"{what} component registry version");
 
         var capabilities = new List<string>();
-        if (element.TryGetProperty("RequiredCapabilities", out var capsEl))
+        if (TryGetPropertySafe(element, "RequiredCapabilities", out var capsEl))
         {
             if (capsEl.ValueKind != JsonValueKind.Array)
                 throw Admission("CUIR072", $"The V1 artifact {what} declares a non-array required-capability set.");
@@ -185,7 +224,7 @@ public static class CuiV1ArtifactReader
     private static CuiDocument ReadDocument(JsonElement element, string source)
     {
         var resources = new Dictionary<string, CuiResourceDefinition>(StringComparer.Ordinal);
-        if (element.TryGetProperty("Resources", out var resourcesEl))
+        if (TryGetPropertySafe(element, "Resources", out var resourcesEl))
         {
             if (resourcesEl.ValueKind != JsonValueKind.Object)
                 throw Admission("CUIR072", $"The resources of document '{source}' are not a JSON object.");
@@ -197,14 +236,14 @@ public static class CuiV1ArtifactReader
         }
 
         var styles = new List<CuiStyleDefinition>();
-        if (element.TryGetProperty("Styles", out var stylesEl))
+        if (TryGetPropertySafe(element, "Styles", out var stylesEl))
         {
             if (stylesEl.ValueKind != JsonValueKind.Array)
                 throw Admission("CUIR072", $"The styles of document '{source}' are not a JSON array.");
             foreach (var styleEl in stylesEl.EnumerateArray())
             {
                 var setters = new List<CuiStyleSetter>();
-                if (styleEl.TryGetProperty("Setters", out var settersEl))
+                if (TryGetPropertySafe(styleEl, "Setters", out var settersEl))
                 {
                     if (settersEl.ValueKind != JsonValueKind.Array)
                         throw Admission("CUIR072", $"The setters of a style in document '{source}' are not a JSON array.");
@@ -217,7 +256,7 @@ public static class CuiV1ArtifactReader
         }
 
         var actions = new Dictionary<string, CuiActionDefinition>(StringComparer.Ordinal);
-        if (element.TryGetProperty("Actions", out var actionsEl))
+        if (TryGetPropertySafe(element, "Actions", out var actionsEl))
         {
             if (actionsEl.ValueKind != JsonValueKind.Object)
                 throw Admission("CUIR072", $"The actions of document '{source}' are not a JSON object.");
@@ -226,7 +265,7 @@ public static class CuiV1ArtifactReader
                 var actionEl = pair.Value;
                 if (actionEl.ValueKind != JsonValueKind.Object)
                     throw Admission("CUIR072", $"Action '{pair.Name}' of document '{source}' is not a JSON object.");
-                var parameter = actionEl.TryGetProperty("Parameter", out var parameterEl) && parameterEl.ValueKind == JsonValueKind.Object
+                var parameter = TryGetPropertySafe(actionEl, "Parameter", out var parameterEl) && parameterEl.ValueKind == JsonValueKind.Object
                     ? ReadValue(parameterEl, source) : null;
                 actions[pair.Name] = new CuiActionDefinition(String(actionEl, "Name"), String(actionEl, "Command"),
                     parameter, ReadSpan(actionEl), NullableString(actionEl, "LocalTarget"));
@@ -234,7 +273,7 @@ public static class CuiV1ArtifactReader
         }
 
         var templates = new Dictionary<string, CuiTemplateDefinition>(StringComparer.Ordinal);
-        if (element.TryGetProperty("Templates", out var templatesEl))
+        if (TryGetPropertySafe(element, "Templates", out var templatesEl))
         {
             if (templatesEl.ValueKind != JsonValueKind.Object)
                 throw Admission("CUIR072", $"The templates of document '{source}' are not a JSON object.");
@@ -248,10 +287,12 @@ public static class CuiV1ArtifactReader
             }
         }
 
-        var components = ReadComponents(element, "Components", source);
+        // The compiled semantic model's root component collection is a required projection; a
+        // producer that omits or misshapes it is malformed, never a silently-empty document.
+        var components = ReadComponentsArray(RequireArray(element, "Components", $"semantic components for document '{source}'"), source);
 
         var rootProperties = new Dictionary<string, CuiValue>(StringComparer.Ordinal);
-        if (element.TryGetProperty("RootProperties", out var rootEl))
+        if (TryGetPropertySafe(element, "RootProperties", out var rootEl))
         {
             if (rootEl.ValueKind != JsonValueKind.Object)
                 throw Admission("CUIR072", $"The root properties of document '{source}' are not a JSON object.");
@@ -260,7 +301,7 @@ public static class CuiV1ArtifactReader
         }
 
         var imports = new List<CuiImportDefinition>();
-        if (element.TryGetProperty("Imports", out var importsEl))
+        if (TryGetPropertySafe(element, "Imports", out var importsEl))
         {
             if (importsEl.ValueKind != JsonValueKind.Array)
                 throw Admission("CUIR072", $"The imports of document '{source}' are not a JSON array.");
@@ -269,7 +310,7 @@ public static class CuiV1ArtifactReader
         }
 
         var variables = new Dictionary<string, CuiVariableDeclaration>(StringComparer.Ordinal);
-        if (element.TryGetProperty("Variables", out var variablesEl))
+        if (TryGetPropertySafe(element, "Variables", out var variablesEl))
         {
             if (variablesEl.ValueKind != JsonValueKind.Object)
                 throw Admission("CUIR072", $"The variables of document '{source}' are not a JSON object.");
@@ -294,7 +335,7 @@ public static class CuiV1ArtifactReader
     private static CuiComponent ReadComponent(JsonElement element, string source)
     {
         var properties = new Dictionary<string, CuiValue>(StringComparer.OrdinalIgnoreCase);
-        if (element.TryGetProperty("Properties", out var propertiesEl))
+        if (TryGetPropertySafe(element, "Properties", out var propertiesEl))
         {
             if (propertiesEl.ValueKind != JsonValueKind.Object)
                 throw Admission("CUIR072", $"The properties of a component in document '{source}' are not a JSON object.");
@@ -303,7 +344,7 @@ public static class CuiV1ArtifactReader
         }
 
         var actions = new Dictionary<string, CuiActionReference>(StringComparer.OrdinalIgnoreCase);
-        if (element.TryGetProperty("Actions", out var actionsEl))
+        if (TryGetPropertySafe(element, "Actions", out var actionsEl))
         {
             if (actionsEl.ValueKind != JsonValueKind.Object)
                 throw Admission("CUIR072", $"The actions of a component in document '{source}' are not a JSON object.");
@@ -312,7 +353,7 @@ public static class CuiV1ArtifactReader
         }
 
         CuiCondition? condition = null;
-        if (element.TryGetProperty("Condition", out var conditionEl))
+        if (TryGetPropertySafe(element, "Condition", out var conditionEl))
         {
             condition = new CuiCondition(
                 ReadValue(RequireObject(conditionEl, "Test", "condition test value"), source),
@@ -320,19 +361,19 @@ public static class CuiV1ArtifactReader
         }
 
         CuiRepeatDefinition? repeat = null;
-        if (element.TryGetProperty("Repeat", out var repeatEl))
+        if (TryGetPropertySafe(element, "Repeat", out var repeatEl))
         {
             repeat = new CuiRepeatDefinition(
                 ReadValue(RequireObject(repeatEl, "Source", "repeat source value"), source),
                 String(repeatEl, "ItemName"),
                 ReadValue(RequireObject(repeatEl, "Key", "repeat key value"), source),
                 ReadSpan(repeatEl),
-                repeatEl.TryGetProperty("Template", out var templateEl) && templateEl.ValueKind == JsonValueKind.Object
+                TryGetPropertySafe(repeatEl, "Template", out var templateEl) && templateEl.ValueKind == JsonValueKind.Object
                     ? ReadValue(templateEl, source) : null);
         }
 
         CuiListDefinition? list = null;
-        if (element.TryGetProperty("List", out var listEl))
+        if (TryGetPropertySafe(element, "List", out var listEl))
         {
             list = new CuiListDefinition(
                 ReadValue(RequireObject(listEl, "Items", "list items value"), source),
@@ -340,7 +381,7 @@ public static class CuiV1ArtifactReader
         }
 
         CuiPropertyRegionDefinition? propertyRegion = null;
-        if (element.TryGetProperty("PropertyRegion", out var regionEl))
+        if (TryGetPropertySafe(element, "PropertyRegion", out var regionEl))
         {
             propertyRegion = new CuiPropertyRegionDefinition(
                 String(regionEl, "PropertyName"),
@@ -348,13 +389,14 @@ public static class CuiV1ArtifactReader
         }
 
         var textParts = new List<CuiTextPart>();
-        if (element.TryGetProperty("TextParts", out var partsEl))
+        if (TryGetPropertySafe(element, "TextParts", out var partsEl))
         {
             if (partsEl.ValueKind != JsonValueKind.Array)
                 throw Admission("CUIR072", $"The text parts of a component in document '{source}' are not a JSON array.");
             foreach (var part in partsEl.EnumerateArray())
             {
-                var typeName = part.TryGetProperty("$type", out var typeEl) ? typeEl.GetString() : null;
+                var typeName = TryGetPropertySafe(part, "$type", out var typeEl) && typeEl.ValueKind == JsonValueKind.String
+                    ? typeEl.GetString() : null;
                 textParts.Add(typeName == nameof(CuiExpressionTextPart)
                     ? new CuiExpressionTextPart(ReadValue(RequireObject(part, "Value", "expression text value"), source), ReadSpan(part))
                     : new CuiLiteralTextPart(String(part, "Value"), ReadSpan(part)));
@@ -373,8 +415,13 @@ public static class CuiV1ArtifactReader
 
     private static IReadOnlyList<CuiComponent> ReadComponents(JsonElement element, string name, string source)
     {
-        if (!element.TryGetProperty(name, out var list) || list.ValueKind != JsonValueKind.Array)
+        if (!TryGetPropertySafe(element, name, out var list) || list.ValueKind != JsonValueKind.Array)
             return System.Array.Empty<CuiComponent>();
+        return ReadComponentsArray(list, source);
+    }
+
+    private static IReadOnlyList<CuiComponent> ReadComponentsArray(JsonElement list, string source)
+    {
         var result = new List<CuiComponent>();
         foreach (var child in list.EnumerateArray()) result.Add(ReadComponent(child, source));
         return result;
@@ -382,7 +429,10 @@ public static class CuiV1ArtifactReader
 
     private static CuiValue ReadValue(JsonElement element, string source)
     {
-        var typeName = element.TryGetProperty("$type", out var typeEl) ? typeEl.GetString() : null;
+        if (element.ValueKind != JsonValueKind.Object)
+            throw Admission("CUIR070", $"A V1 semantic value in document '{source}' must be a JSON object.");
+        var typeName = TryGetPropertySafe(element, "$type", out var typeEl) && typeEl.ValueKind == JsonValueKind.String
+            ? typeEl.GetString() : null;
         return typeName switch
         {
             nameof(CuiLiteralValue) => new CuiLiteralValue(String(element, "Value"), ReadSpan(element)),
@@ -409,11 +459,11 @@ public static class CuiV1ArtifactReader
         // The writer nests each span under a "Span" object; some older V1 shapes carried the
         // coordinates directly on the owning element. Read from the nested shape when present so a
         // genuine V1 round-trip preserves the authored source coordinates instead of defaulting.
-        if (!element.TryGetProperty("Span", out var spanEl) || spanEl.ValueKind != JsonValueKind.Object)
+        if (!TryGetPropertySafe(element, "Span", out var spanEl) || spanEl.ValueKind != JsonValueKind.Object)
             spanEl = element;
         var source = String(spanEl, "SourceName");
         (int line, int column) Pos(string property) =>
-            spanEl.TryGetProperty(property, out var pos) && pos.ValueKind == JsonValueKind.Object
+            TryGetPropertySafe(spanEl, property, out var pos) && pos.ValueKind == JsonValueKind.Object
                 ? (Int(pos, "Line"), Int(pos, "Column")) : (1, 1);
         var (sl, sc) = Pos("Start");
         var (el, ec) = Pos("End");
@@ -421,22 +471,25 @@ public static class CuiV1ArtifactReader
     }
 
     private static string String(JsonElement element, string property) =>
-        element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
+        TryGetPropertySafe(element, property, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString() ?? "" : "";
 
     private static string? NullableString(JsonElement element, string property) =>
-        element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
+        TryGetPropertySafe(element, property, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString() : null;
 
-    private static bool Bool(JsonElement element, string property, bool fallback = false) =>
-        element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.True;
+    private static bool Bool(JsonElement element, string property, bool fallback = false)
+    {
+        if (!TryGetPropertySafe(element, property, out var value)) return fallback;
+        return value.ValueKind == JsonValueKind.True;
+    }
 
     private static int Int(JsonElement element, string property) =>
-        element.TryGetProperty(property, out var value) && value.TryGetInt32(out var result) ? result : 0;
+        TryGetPropertySafe(element, property, out var value) && value.TryGetInt32(out var result) ? result : 0;
 
     private static IReadOnlyList<string> Array(JsonElement element, string property)
     {
-        if (!element.TryGetProperty(property, out var list) || list.ValueKind != JsonValueKind.Array)
+        if (!TryGetPropertySafe(element, property, out var list) || list.ValueKind != JsonValueKind.Array)
             return System.Array.Empty<string>();
         var result = new List<string>();
         foreach (var item in list.EnumerateArray())

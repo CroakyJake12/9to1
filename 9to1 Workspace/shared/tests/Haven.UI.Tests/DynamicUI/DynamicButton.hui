@@ -1,3 +1,0 @@
-<DynamicUI Name="AssemblyButton">
-  <Button Name="Action" Type="{{BUTTONTYPE}}" Enabled="{{ISENABLED}}">{{BTNTXT}}</Button>
-</DynamicUI>

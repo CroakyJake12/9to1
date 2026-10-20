@@ -1,9 +1,0 @@
-<Project>
-  <Import Project="..\Directory.Build.props" />
-  <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\obj\**\*;**\bin\**\*</DefaultItemExcludes>
-    <BaseIntermediateOutputPath Condition="'$(UseArtifactsOutput)' != 'true'">$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-    <MSBuildProjectExtensionsPath Condition="'$(UseArtifactsOutput)' != 'true'">$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
-    <BaseOutputPath Condition="'$(UseArtifactsOutput)' != 'true'">$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
-  </PropertyGroup>
-</Project>

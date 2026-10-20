@@ -137,4 +137,111 @@ public sealed class CuiV1ReaderShimRegressionTests
         var loaded = CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(mutated);
         Assert.Contains("future-capability", loaded.Metadata.RequiredCapabilities);
     }
+
+    // --- Causal regressions for the repaired typed admission boundary (root kind, scalar
+    //     kinds, required semantics projection, envelope reconciliation, bool default) ---
+
+    private const string MinimalSpan = """{ "SourceName": "sample.cui", "Start": {"Line":1,"Column":1}, "End": {"Line":1,"Column":1} }""";
+
+    private static byte[] MinimalArtifact()
+    {
+        var json = """
+        {
+          "format": "cui-build-compilation",
+          "formatVersion": 1,
+          "compilerSha256": "compiler",
+          "metadata": { "LanguageVersion": "1", "RuntimeAbiVersion": "1", "ComponentRegistryVersion": "1" },
+          "documents": [
+            {
+              "source": "sample.cui",
+              "sha256": "x",
+              "compilation": {
+                "Metadata": { "LanguageVersion": "1", "RuntimeAbiVersion": "1", "ComponentRegistryVersion": "1" },
+                "Components": [],
+                "Templates": {},
+                "SourceMap": [],
+                "Dependencies": {},
+                "Semantics": {
+                  "SourceName": "sample.cui",
+                  "Span": __SPAN__,
+                  "Components": [
+                    { "Type": "Page", "Classes": [], "Children": [], "ElseChildren": [], "Groups": [],
+                      "Span": __SPAN__ }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+        """.Replace("__SPAN__", MinimalSpan);
+        return Encoding.UTF8.GetBytes(json);
+    }
+
+    [Fact]
+    public void Core_reader_rejects_array_root_with_admission_not_invalid_operation()
+    {
+        var error = Assert.Throws<CakeOS.Cui.CuiV1AdmissionException>(
+            () => CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(Encoding.UTF8.GetBytes("[1,2]")));
+        Assert.Equal("CUIR070", error.Code);
+    }
+
+    [Fact]
+    public void Core_reader_rejects_string_format_version_with_admission()
+    {
+        var root = JsonNode.Parse(MinimalArtifact())!.AsObject();
+        root["formatVersion"] = "1";
+        var error = Assert.Throws<CakeOS.Cui.CuiV1AdmissionException>(
+            () => CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(Encoding.UTF8.GetBytes(root.ToJsonString(Indented))));
+        Assert.Equal("CUIR070", error.Code);
+    }
+
+    [Fact]
+    public void Core_reader_rejects_malformed_scalar_semantic_value()
+    {
+        var mutated = Mutate(MinimalArtifact(), root =>
+            Compilation0(root)["Semantics"]!["Components"]![0]!["Properties"] =
+                new JsonObject { ["Bad"] = "oops" });
+        var error = Assert.Throws<CakeOS.Cui.CuiV1AdmissionException>(
+            () => CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(mutated));
+        Assert.Equal("CUIR070", error.Code);
+    }
+
+    [Fact]
+    public void Core_reader_rejects_missing_required_semantics_components()
+    {
+        var mutated = Mutate(MinimalArtifact(), root =>
+            ((JsonObject)Compilation0(root)["Semantics"]!).Remove("Components"));
+        var error = Assert.Throws<CakeOS.Cui.CuiV1AdmissionException>(
+            () => CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(mutated));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Core_reader_rejects_envelope_language_contradiction()
+    {
+        var mutated = Mutate(MinimalArtifact(), root =>
+            ((JsonObject)Compilation0(root)["Metadata"]!)["LanguageVersion"] = "2");
+        var error = Assert.Throws<CakeOS.Cui.CuiV1AdmissionException>(
+            () => CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(mutated));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Core_reader_preserves_absent_IsLive_true_default()
+    {
+        var root = JsonNode.Parse(MinimalArtifact())!.AsObject();
+        var component = (JsonObject)Compilation0(root)["Semantics"]!["Components"]![0]!;
+        component["Condition"] = new JsonObject
+        {
+            ["Test"] = new JsonObject { ["$type"] = "CuiLiteralValue", ["Value"] = "x", ["Span"] = JsonNode.Parse(MinimalSpan) },
+            ["Negate"] = false,
+            ["Span"] = JsonNode.Parse(MinimalSpan),
+        };
+        var bytes = Encoding.UTF8.GetBytes(root.ToJsonString(Indented));
+        var loaded = CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(bytes);
+        var document = Assert.Single(loaded.Documents);
+        var page = Assert.Single(document.Semantics.Components);
+        Assert.NotNull(page.Condition);
+        Assert.True(page.Condition!.IsLive);
+    }
 }

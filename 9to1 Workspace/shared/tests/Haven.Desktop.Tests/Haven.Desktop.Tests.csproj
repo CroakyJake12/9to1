@@ -59,6 +59,8 @@
     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
     <!-- Lane12 Build (Dev) native content binding: canonical address codec + central dev registration route. -->
     <Compile Include="BuildBrowseAppContentIntegrationTests.cs" />
+    <!-- Lane12 authentic Build session control over the SAME genuine Linux Home/Files rig. -->
+    <Compile Include="BuildBrowseAppContentAuthenticTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
     <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->

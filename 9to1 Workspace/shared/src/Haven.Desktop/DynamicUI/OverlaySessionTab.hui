@@ -1,3 +1,0 @@
-<DynamicUI Name="OverlaySessionTab">
-  <Button Name="Activate" Variant="Secondary" Content="{{LABEL}}" MinHeight="34px" />
-</DynamicUI>
