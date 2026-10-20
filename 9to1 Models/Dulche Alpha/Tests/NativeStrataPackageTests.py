@@ -49,5 +49,38 @@ class NativeTargetControls(unittest.TestCase):
         self.assertIn("lockSha256", src); self.assertIn("toolchain", src)
         self.assertIn("workerSha256", src)
 
+    def test_cmake_installs_donor_runtime_closure(self):
+        # pass-3 installed ONLY the helper; the donor tokenizer + gguf reader + runtime dep lock must
+        # be installed beside it or the text path fails (a real packaging defect).
+        cm = pathlib.Path(__file__).resolve().parents[1]/"InferenceEngines"/"NativeStrata"/"CMakeLists.txt"
+        src = cm.read_text()
+        self.assertIn("strata_tokenizer_helper.py", src)
+        self.assertIn("strata_tokenizer.py", src)
+        self.assertIn("gguf_reader.py", src)
+        self.assertIn("strata-runtime-dependencies.json", src)
+        self.assertIn("hash-verified runtime closure", src)
+
+    def test_runtime_dependency_lock_pins_regex_jinja2(self):
+        native = pathlib.Path(__file__).resolve().parents[1]/"InferenceEngines"/"NativeStrata"
+        lock = json.loads((native/"strata-runtime-dependencies.json").read_text())
+        self.assertEqual(lock["schema"], "strata-runtime-dependencies/v1")
+        self.assertIn("regex", lock["runtimeModules"])
+        self.assertIn("jinja2", lock["runtimeModules"])
+        self.assertEqual(lock["runtimeModules"]["regex"]["pin"], "2026.9.29")
+        self.assertEqual(lock["runtimeModules"]["jinja2"]["pin"], "3.1.6")
+        self.assertTrue(lock["runtimeModules"]["regex"]["sdist"]["sha256"].startswith("8b5fcc"))
+        self.assertTrue(lock["runtimeModules"]["jinja2"]["sdist"]["sha256"].startswith("0137fb"))
+
+    def test_build_package_verifies_helper_closure(self):
+        p=pathlib.Path(__file__).resolve().parents[1]/"InferenceEngines"/"NativeStrata"/"build-package.py"
+        src=p.read_text()
+        self.assertIn("helperClosure", src)
+        self.assertIn("required_closure", src)
+        self.assertIn("gguf_reader.py", src)
+        self.assertIn("runtimeDepsLockSha256", src)
+        self.assertIn("runtimeModulesPinned", src)
+        # The closure must be REQUIRED (raise on missing), not optional receipt fields.
+        self.assertIn("raise ValueError(\"Installed text-path runtime closure is incomplete", src)
+
 if __name__ == "__main__":
     unittest.main()

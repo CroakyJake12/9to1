@@ -44,10 +44,16 @@ class WireContractSourceTests(unittest.TestCase):
 
     def test_candidate_operation_dispatch(self):
         src = CANDIDATE.read_text()
-        # op 1 = load; op 2 = text generate; op 4 = structured-tools generate; op 3 = stop.
-        self.assertIn("if (operation == 1)", src)
-        self.assertIn("operation == 2 || operation == 4", src)
-        self.assertIn("if (operation == 3)", src)
+        # The worker names its ops: op 1 = load, op 2 = text generate, op 4 = structured-tools
+        # generate, op 3 = stop, op 5 = cancel. Dispatch uses the named constants (not bare literals).
+        self.assertIn("kOpLoad = 1", src)
+        self.assertIn("kOpGenerate = 2", src)
+        self.assertIn("kOpStop = 3", src)
+        self.assertIn("kOpStructuredGenerate = 4", src)
+        self.assertIn("kOpCancel = 5", src)
+        self.assertIn("operation == kOpLoad", src)
+        self.assertIn("operation == kOpGenerate || operation == kOpStructuredGenerate", src)
+        self.assertIn("operation == kOpStop", src)
 
     def test_candidate_gen_line_shape(self):
         src = CANDIDATE.read_text()

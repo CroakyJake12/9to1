@@ -146,7 +146,8 @@ def main():
         files = ["CMakeLists.txt", "dulche_strata.h", "dulche_strata.cpp", "dulche_strata_worker.cpp"]
     else:
         files = ["CMakeLists.txt", "dulche_strata.h", "dulche_strata_candidate_worker.cpp",
-                 "strata_tokenizer_helper.py"]
+                 "strata_tokenizer_helper.py", "strata-runtime-dependencies.json",
+                 "dulche_child_process.h"]
     for filename in files:
         shutil.copyfile(overlay / filename, fork / filename)
     record = {"profile": args.profile, "target": args.target,
@@ -233,10 +234,43 @@ def main():
             raise ValueError("Installed engine binary is missing from the receipt closure: " + str(engine))
         record["engineSha256"] = hashlib.sha256(engine.read_bytes()).hexdigest()
         record["engineBytes"] = engine.stat().st_size
-        helper = args.install / "runtimes" / args.target / "native" / "strata_tokenizer_helper.py"
-        if helper.exists():
-            record["helperSha256"] = hashlib.sha256(helper.read_bytes()).hexdigest()
-            record["helperBytes"] = helper.stat().st_size
+        native = args.install / "runtimes" / args.target / "native"
+        helper = native / "strata_tokenizer_helper.py"
+        # The text-path runtime closure is REQUIRED (not optional): the helper plus the donor modules
+        # it imports (strata_tokenizer.py, gguf_reader.py) and the runtime dependency lock must all be
+        # installed next to the worker. A missing donor module is a real packaging defect (pass-3),
+        # not a cosmetic receipt field.
+        required_closure = ["strata_tokenizer_helper.py", "strata_tokenizer.py", "gguf_reader.py",
+                            "strata-runtime-dependencies.json"]
+        closure = {}
+        for name in required_closure:
+            path = native / name
+            if not path.exists():
+                raise ValueError("Installed text-path runtime closure is incomplete; missing " + str(path))
+            blob = path.read_bytes()
+            closure[name] = {"bytes": len(blob), "sha256": hashlib.sha256(blob).hexdigest()}
+        record["helperClosure"] = closure
+        # Confirm the pinned runtime dependency lock is the exact one we shipped.
+        lock_file = native / "strata-runtime-dependencies.json"
+        record["runtimeDepsLockSha256"] = closure["strata-runtime-dependencies.json"]["sha256"]
+        # The installed helper/donor digests must match the local overlay/upstream source (so the
+        # receipt is not just self-referential text).
+        local_helper = overlay / "strata_tokenizer_helper.py"
+        local_donor = upstream / "tools" / "strata_tokenizer.py"
+        local_gguf = upstream / "tools" / "gguf_reader.py"
+        for name, local_path in (("strata_tokenizer_helper.py", local_helper),
+                                 ("strata_tokenizer.py", local_donor),
+                                 ("gguf_reader.py", local_gguf)):
+            if not local_path.exists():
+                raise ValueError("Local runtime-closure source is missing: " + str(local_path))
+            if hashlib.sha256(local_path.read_bytes()).hexdigest() != closure[name]["sha256"]:
+                raise ValueError("Installed " + name + " does not match the local verified source closure")
+        # Verify the pinned runtime module versions/resolutions against the lock schema.
+        dep = json.loads(lock_file.read_text())
+        if dep.get("schema") != "strata-runtime-dependencies/v1":
+            raise ValueError("Runtime dependency lock has an unexpected schema")
+        record["runtimeModulesPinned"] = sorted(dep.get("runtimeModules", {}).keys())
+        record["runtimePinSchema"] = dep.get("schema")
     record["qualification"] = "Actual build artifact; runtime CUDA-device/model/capability acceptance is separately required."
     shutil.copyfile(lock_path, args.install / "strata-source-lock.json")
     (args.install / "strata-build-receipt.json").write_text(json.dumps(record, indent=2) + "\n")

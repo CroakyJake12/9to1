@@ -5,11 +5,13 @@
 //
 // STATUS: SOURCE-ONLY. NOT BUILT / NOT RUN in this checkpoint (no compiler/CUDA/model build was
 // executed). This file implements the REAL portable resident-child IPC + lifecycle, the real
-// GEN/T/DONE relay and the real bounded response validation. It is NOT a drop-in substitute for
-// the production legacy in-process ABI worker (`dulche_strata_worker.cpp`), which remains the
-// known-good rollback.
+// GEN/T/DONE relay, the real bounded response validation, and the lazy verified bundled-helper
+// text path. It is NOT a drop-in substitute for the production legacy in-process ABI worker
+// (`dulche_strata_worker.cpp`), which remains the known-good rollback. The portable child-process
+// RAII component (`dulche_child_process.h`) is compiled and unit-tested standalone on POSIX
+// (see work/pc-worker/thunder-benchmark/native-child-test/); the full worker is not built here.
 //
-// Architecture. The v0.2.1 engine has no library session API; it is a standalone CLI:
+// Architecture. The v0.2.1 engine is a standalone CLI:
 //
 //     strata generate --serve --pack <pack-dir> --max-context N ...
 //
@@ -35,6 +37,24 @@
 // absent or its verified identity does not match the registered model, ONLY text generation requests
 // fail closed with the exact dependency cause; load/probe/shutdown still operate normally.
 //
+// Host wire (V2 candidate ABI):
+//   out hello (type 0): version u32=2, origin text, cuda u32, nccl u32=0, family text
+//   in  load  (op 1):  directory text, registration text, context u32,
+//                       expected_tokenizer_identity text, count u32, devices[count] u32
+//   out loaded (type 4): NativeErrors(0,0)
+//   in  text generate (op 2) / structured generate (op 4):
+//                        [op4: wire_version u32=1] message_count u32,
+//                        messages{role u32, content text, name text, images u32},
+//                        max_new u32, temperature f64, top_p f64, top_k u32, seed u64,
+//                        stop_count u32, stops[stop_count] text, effort text
+//   out token (type 1): byte_len u32 + utf-8 bytes
+//   out text terminal (type 2): NativeErrors(0,0), terminalText text, prompt u64, prefill u64,
+//                        decode u64, prefillSeconds f64, decodeSeconds f64, reused flag u32(+u64),
+//                        kv flag u32(+u32), stopped u32
+//   out failure (type 5): NativeErrors(code,count,text...)
+//   in  cancel (op 5): stop the in-flight generate (forwarded as ENGINE STOP)
+//   in  stop  (op 3): clean shutdown (QUIT), ack (type 3), exit 0
+//
 // The relay never equates a successful process spawn with a model load: it publishes `loaded` only
 // after the engine actually prints READY and has not exited.
 
@@ -53,24 +73,14 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <deque>
 #include <optional>
 #include <cmath>
 #include <filesystem>
 
-#if defined(_WIN32)
-#define NOMINMAX
-#include <windows.h>
-#include <process.h>
-#include <io.h>
-#else
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/types.h>
+#include "dulche_child_process.h"
+
+#if !defined(_WIN32)
+#include <poll.h>
 #endif
 
 #if defined(STRATA_HAS_CUDA) && STRATA_HAS_CUDA
@@ -81,6 +91,33 @@ namespace {
 
 constexpr size_t kLimit = 16U * 1024U * 1024U;
 constexpr uint32_t kAbiVersion = 2;  // explicit incompatible transport vs legacy v1 in-process ABI
+constexpr uint32_t kOpLoad = 1;
+constexpr uint32_t kOpGenerate = 2;
+constexpr uint32_t kOpStop = 3;
+constexpr uint32_t kOpStructuredGenerate = 4;
+constexpr uint32_t kOpCancel = 5;
+
+struct Msg {
+    uint32_t role = 0;
+    std::string content;
+    std::string name;
+};
+
+struct GenerateRequest {
+    std::vector<Msg> messages;
+    uint32_t max_new = 0;
+    double temperature = 0.7;
+    double top_p = 1.0;
+    uint32_t top_k = 0;
+    uint64_t seed = 0;
+    double min_p = 0.0;
+    double penalty_repeat = 0.0;
+    double penalty_freq = 0.0;
+    double penalty_present = 0.0;
+    int32_t penalty_last_n = 0;
+    bool structured = false;
+    std::string expected_tokenizer_identity;
+};
 
 // ------------------------------------------------------- cross-platform binary stdio helpers
 void set_binary_stdio() {
@@ -91,20 +128,15 @@ void set_binary_stdio() {
 #endif
 }
 
-// Raw fd read abstraction (returns n>0, 0 on EOF, -1 on error).
-int read_raw(int fd, char* buf, size_t count) {
-#if defined(_WIN32)
-    return static_cast<int>(_read(fd, buf, static_cast<unsigned>(count)));
-#else
-    for (;;) {
-        const ssize_t n = ::read(fd, buf, count);
-        if (n < 0 && errno == EINTR) continue;
-        return static_cast<int>(n);
-    }
-#endif
+// ---------------------------------------------------------------- frame buffer (same envelope)
+template<class To, class From>
+To bit_pun(const From& src) {
+    static_assert(sizeof(To) == sizeof(From), "bit_pun size mismatch");
+    To dst;
+    std::memcpy(&dst, &src, sizeof(To));
+    return dst;
 }
 
-// ---------------------------------------------------------------- frame buffer (same envelope)
 struct Buffer {
     std::vector<unsigned char> bytes;
     size_t cursor{};
@@ -132,8 +164,8 @@ struct Buffer {
         cursor += size;
         return value;
     }
-    void real(double value) { number(std::bit_cast<uint64_t>(value)); }
-    double read_real() { return std::bit_cast<double>(read_number<uint64_t>()); }
+    void real(double value) { number(bit_pun<uint64_t>(value)); }
+    double read_real() { return bit_pun<double>(read_number<uint64_t>()); }
     void end() const { if (cursor != bytes.size()) throw std::invalid_argument("Unexpected native command suffix."); }
 };
 
@@ -147,6 +179,7 @@ void write_frame(FILE* wire, uint32_t type, const Buffer& payload) {
         || std::fflush(wire) != 0) throw std::runtime_error("Native output pipe failed.");
 }
 
+// Read a full host command frame from stdin. Returns false on clean EOF. Blocking (outer loop).
 bool read_command(Buffer& result) {
     unsigned char length[4];
     const auto count = std::fread(length, 1, 4, stdin);
@@ -211,207 +244,8 @@ Buffer hardware_probe() {
     return output;
 }
 
-// ---------------------------------------------------------------- engine sub-process (--serve)
-#if defined(_WIN32)
-struct EngineProcess {
-    PROCESS_INFORMATION pi{};
-    HANDLE in_write = nullptr, out_read = nullptr, err_read = nullptr;
-    int out_fd = -1, err_fd = -1;
-    bool alive() const { return pi.hProcess && WaitForSingleObject(pi.hProcess, 0) == WAIT_TIMEOUT; }
-    void kill() {
-        if (pi.hProcess) TerminateProcess(pi.hProcess, 1);
-    }
-    void close() {
-        if (pi.hProcess) { CloseHandle(pi.hProcess); pi.hProcess = nullptr; }
-        if (pi.hThread) { CloseHandle(pi.hThread); pi.hThread = nullptr; }
-        if (in_write) { CloseHandle(in_write); in_write = nullptr; }
-        if (out_read) { CloseHandle(out_read); out_read = nullptr; }
-        if (err_read) { CloseHandle(err_read); err_read = nullptr; }
-        out_fd = -1; err_fd = -1;
-    }
-};
-#else
-struct EngineProcess {
-    pid_t pid = -1;
-    int in_fd = -1;
-    int out_fd = -1;
-    int err_fd = -1;
-    bool alive() const { return pid > 0 && ::kill(pid, 0) == 0; }
-    void kill() { if (pid > 0) ::kill(pid, SIGKILL); }
-    void close() {
-        if (in_fd >= 0) { ::close(in_fd); in_fd = -1; }
-        if (out_fd >= 0) { ::close(out_fd); out_fd = -1; }
-        if (err_fd >= 0) { ::close(err_fd); err_fd = -1; }
-        if (pid > 0) { ::waitpid(pid, nullptr, WNOHANG); pid = -1; }
-    }
-};
-#endif
-
-struct EngineSpawn {
-    std::string exe;
-    std::vector<std::string> args;
-};
-
-#if defined(_WIN32)
-void spawn_engine(const EngineSpawn& spawn, EngineProcess& engine) {
-    std::string cmdline = "\"" + spawn.exe + "\"";
-    for (const auto& arg : spawn.args) {
-        cmdline += " \"";
-        for (char c : arg) {
-            if (c == '"') cmdline += "\\\"";
-            else cmdline += c;
-        }
-        cmdline += "\"";
-    }
-    SECURITY_ATTRIBUTES sa{};
-    sa.nLength = sizeof(sa);
-    sa.bInheritHandle = TRUE;
-    HANDLE in_read = nullptr, in_write = nullptr, out_read = nullptr, out_write = nullptr;
-    HANDLE err_read = nullptr, err_write = nullptr;
-    if (!CreatePipe(&in_read, &in_write, &sa, 0)
-        || !CreatePipe(&out_read, &out_write, &sa, 0)
-        || !CreatePipe(&err_read, &err_write, &sa, 0)) {
-        if (in_read) CloseHandle(in_read); if (in_write) CloseHandle(in_write);
-        if (out_read) CloseHandle(out_read); if (out_write) CloseHandle(out_write);
-        if (err_read) CloseHandle(err_read); if (err_write) CloseHandle(err_write);
-        throw std::runtime_error("CreatePipe failed");
-    }
-    SetHandleInformation(in_write, HANDLE_FLAG_INHERIT, 0);
-    SetHandleInformation(out_read, HANDLE_FLAG_INHERIT, 0);
-    SetHandleInformation(err_read, HANDLE_FLAG_INHERIT, 0);
-    STARTUPINFOW si{};
-    si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdInput = in_read;
-    si.hStdOutput = out_write;
-    si.hStdError = err_write;
-    std::wstring wcmdline(cmdline.begin(), cmdline.end());
-    BOOL ok = CreateProcessW(nullptr, wcmdline.data(), nullptr, nullptr, TRUE,
-                             CREATE_NO_WINDOW, nullptr, nullptr, &si, &engine.pi);
-    CloseHandle(in_read);
-    CloseHandle(out_write);
-    CloseHandle(err_write);
-    engine.in_write = in_write;
-    engine.out_read = out_read;
-    engine.err_read = err_read;
-    engine.out_fd = _open_osfhandle(reinterpret_cast<intptr_t>(out_read), _O_RDONLY | _O_BINARY);
-    engine.err_fd = _open_osfhandle(reinterpret_cast<intptr_t>(err_read), _O_RDONLY | _O_BINARY);
-    if (!ok) {
-        engine.close();
-        throw std::runtime_error("CreateProcess failed for the bundled engine");
-    }
-}
-#else
-void spawn_engine(const EngineSpawn& spawn, EngineProcess& engine) {
-    int in_pipe[2], out_pipe[2], err_pipe[2];
-    if (::pipe(in_pipe) != 0 || ::pipe(out_pipe) != 0 || ::pipe(err_pipe) != 0)
-        throw std::runtime_error("pipe() failed");
-    const pid_t pid = ::fork();
-    if (pid < 0) {
-        ::close(in_pipe[0]); ::close(in_pipe[1]);
-        ::close(out_pipe[0]); ::close(out_pipe[1]);
-        ::close(err_pipe[0]); ::close(err_pipe[1]);
-        throw std::runtime_error("fork() failed");
-    }
-    if (pid == 0) {
-        ::dup2(in_pipe[0], STDIN_FILENO);
-        ::dup2(out_pipe[1], STDOUT_FILENO);
-        ::dup2(err_pipe[1], STDERR_FILENO);
-        ::close(in_pipe[0]); ::close(in_pipe[1]);
-        ::close(out_pipe[0]); ::close(out_pipe[1]);
-        ::close(err_pipe[0]); ::close(err_pipe[1]);
-        std::vector<char*> argv;
-        argv.reserve(spawn.args.size() + 2);
-        argv.push_back(const_cast<char*>(spawn.exe.c_str()));
-        for (const auto& arg : spawn.args) argv.push_back(const_cast<char*>(arg.c_str()));
-        argv.push_back(nullptr);
-        ::execv(spawn.exe.c_str(), argv.data());
-        _exit(127);
-    }
-    ::close(in_pipe[0]);
-    ::close(out_pipe[1]);
-    ::close(err_pipe[1]);
-    engine.pid = pid;
-    engine.in_fd = in_pipe[1];
-    engine.out_fd = out_pipe[0];
-    engine.err_fd = err_pipe[0];
-}
-#endif
-
-// Bounded stderr drain.
-struct StderrDrain {
-    std::thread thread;
-    std::atomic<bool> stop{false};
-    std::mutex mu;
-    std::string captured;
-    void start(int fd) {
-        if (fd < 0) return;
-        thread = std::thread([this, fd] {
-            char buf[4096];
-            for (;;) {
-                const int n = read_raw(fd, buf, sizeof buf);
-                if (n <= 0) break;
-                std::lock_guard<std::mutex> lk(mu);
-                if (stop.load()) break;
-                if (captured.size() + static_cast<size_t>(n) <= 64U * 1024U) captured.append(buf, static_cast<size_t>(n));
-            }
-        });
-    }
-    void join() {
-        stop.store(true);
-        if (thread.joinable()) thread.join();
-    }
-};
-
-// Bounded line reader over a raw fd (no stdio buffering on the engine pipe).
-struct LineReader {
-    std::string buf;
-    int fd;
-    explicit LineReader(int fd_) : fd(fd_) {}
-    bool next(std::string& out) {
-        out.clear();
-        for (;;) {
-            const auto nl = buf.find('\n');
-            if (nl != std::string::npos) {
-                out.assign(buf, 0, nl);
-                buf.erase(0, nl + 1);
-                if (!out.empty() && out.back() == '\r') out.pop_back();
-                if (out.size() > kLimit) throw std::invalid_argument("Engine output line exceeds limit.");
-                return true;
-            }
-            if (buf.size() > kLimit) throw std::invalid_argument("Engine output line exceeds limit.");
-            char chunk[4096];
-            const int n = read_raw(fd, chunk, sizeof chunk);
-            if (n <= 0) {
-                if (buf.empty()) return false;
-                out.swap(buf);
-                if (!out.empty() && out.back() == '\r') out.pop_back();
-                buf.clear();
-                return true;
-            }
-            buf.append(chunk, static_cast<size_t>(n));
-        }
-    }
-};
-
-// ---------------------------------------------------------------- tokenizer helper (bundled)
-//
-// Text <-> token-id conversion is NOT implemented in this C++ worker. It is delegated to a bundled
-// helper process that reuses the donor tokenizer (tools/strata_tokenizer.py) and the model's own
-// GGUF chat template. The helper is a required, explicitly-pinned runtime dependency; when it is
-// absent or does not match the registered model identity, text generation fails closed with the
-// exact dependency cause. Load/probe/shutdown do NOT depend on it.
-struct TokenizerHelper {
-    EngineProcess proc;
-    StderrDrain drain;
-    bool ok() const { return proc.alive(); }
-};
-
-// Locate the bundled engine via an actual package-relative path. The relay worker is installed at
-// `runtimes/<target>/native/dulche-strata-candidate-worker[.exe]`; the engine is its sibling at
-// `runtimes/<target>/engine/strata[.exe]`. We resolve from the worker's own executable path, never a
-// build-machine path. The compile-time STRATA_CANDIDATE_ENGINE is only a last-resort fallback.
-std::string locate_engine(int argc, char** argv) {
+// ---------------------------------------------------------------- locate bundled engine/helper
+std::string self_dir(int argc, char** argv) {
     std::filesystem::path self;
 #if defined(_WIN32)
     {
@@ -427,17 +261,17 @@ std::string locate_engine(int argc, char** argv) {
     }
     if (self.empty() && argc > 0) self = std::filesystem::path(argv[0]);
 #endif
-    if (self.empty()) {
-#ifdef STRATA_CANDIDATE_ENGINE
-        return std::string(STRATA_CANDIDATE_ENGINE);
-#else
-        return std::string();
-#endif
+    if (self.empty()) return std::string();
+    return self.parent_path().string();
+}
+
+std::string locate_engine(int argc, char** argv) {
+    const auto dir = self_dir(argc, argv);
+    if (!dir.empty()) {
+        std::filesystem::path base(dir);
+        const auto candidate = base / ".." / "engine" / ("strata" + std::string(STRATA_NATIVE_EXT));
+        if (std::filesystem::exists(candidate)) return candidate.string();
     }
-    const auto dir = self.parent_path();
-    const auto candidate = dir / ".." / "engine" / ("strata" + std::string(STRATA_NATIVE_EXT));
-    if (std::filesystem::exists(candidate)) return candidate.string();
-    // fallback: compile-time default
 #ifdef STRATA_CANDIDATE_ENGINE
     return std::string(STRATA_CANDIDATE_ENGINE);
 #else
@@ -445,8 +279,19 @@ std::string locate_engine(int argc, char** argv) {
 #endif
 }
 
-// Build the engine argv from a load request (pack directory + context).
-std::vector<std::string> build_engine_args(const std::string& pack_dir, uint32_t context) {    std::vector<std::string> args;
+// The bundled helper is installed next to the worker (runtimes/<target>/native/strata_tokenizer_helper.py).
+std::string locate_helper(int argc, char** argv) {
+    const auto dir = self_dir(argc, argv);
+    if (!dir.empty()) {
+        std::filesystem::path base(dir);
+        const auto candidate = base / "strata_tokenizer_helper.py";
+        if (std::filesystem::exists(candidate)) return candidate.string();
+    }
+    return std::string();
+}
+
+std::vector<std::string> build_engine_args(const std::string& pack_dir, uint32_t context) {
+    std::vector<std::string> args;
     args.push_back("generate");
     args.push_back("--serve");
     args.push_back("--pack");
@@ -458,31 +303,121 @@ std::vector<std::string> build_engine_args(const std::string& pack_dir, uint32_t
     return args;
 }
 
-std::string build_gen_line(int64_t max_new, const std::vector<int64_t>& ids,
-                           double temperature, double top_p, uint32_t top_k, uint64_t seed,
-                           double min_p, double penalty_repeat, double penalty_freq,
-                           double penalty_present, int32_t penalty_last_n) {
-    std::string line = "GEN " + std::to_string(max_new);
-    if (temperature > 0.0) {
-        line += " temperature=" + std::to_string(temperature);
-        line += " top_p=" + std::to_string(top_p > 0.0 ? top_p : 1.0);
-        if (top_k != 0) line += " top_k=" + std::to_string(top_k);
-        if (min_p > 0.0) line += " min_p=" + std::to_string(min_p);
-        if (penalty_last_n > 0) line += " penalty_last_n=" + std::to_string(penalty_last_n);
-        if (penalty_repeat > 0.0) line += " penalty_repeat=" + std::to_string(penalty_repeat);
-        if (penalty_freq > 0.0) line += " penalty_freq=" + std::to_string(penalty_freq);
-        if (penalty_present > 0.0) line += " penalty_present=" + std::to_string(penalty_present);
-        if (seed != 0) line += " seed=" + std::to_string(seed);
+// ---------------------------------------------------------------- raw fd write/read (children)
+bool write_all(int fd, const void* data, size_t n) {
+    const char* p = static_cast<const char*>(data);
+    size_t left = n;
+    while (left > 0) {
+        const ssize_t w = ::write(fd, p, left);
+        if (w < 0) {
+            if (errno == EINTR) continue;
+            return false;
+        }
+        p += w;
+        left -= static_cast<size_t>(w);
     }
-    line += " ";
-    for (size_t i = 0; i < ids.size(); ++i) {
-        if (i) line += ",";
-        line += std::to_string(ids[i]);
-    }
-    line += "\n";
-    return line;
+    return true;
 }
 
+bool read_exact(int fd, void* out, size_t n) {
+    char* p = static_cast<char*>(out);
+    size_t got = 0;
+    while (got < n) {
+        const ssize_t r = ::read(fd, p + got, n - got);
+        if (r < 0) {
+            if (errno == EINTR) continue;
+            return false;
+        }
+        if (r == 0) return false;  // EOF
+        got += static_cast<size_t>(r);
+    }
+    return true;
+}
+
+void engine_send(dulche::ChildProcess& engine, const std::string& line) {
+    if (!write_all(engine.in_fd(), line.data(), line.size()))
+        throw std::runtime_error("Engine input pipe failed.");
+}
+
+// ---------------------------------------------------------------- bundled tokenizer helper
+//
+// The helper is a sibling subprocess that reuses the donor tokenizer (tools/strata_tokenizer.py,
+// plus sibling gguf_reader.py and the `regex`/`jinja2` runtime modules). Its protocol is
+// length-prefixed frames (4-byte LE length + body):
+//
+//   IDENTITY          -> "IDENT <sha256>"
+//   ENC <json>        -> "TON <id,id,...>" | "ERR <msg>"
+//   DEC <ids>         -> "BYT <raw bytes>"  | "ERR <msg>"
+//   QUIT
+bool helper_send(dulche::ChildProcess& h, const std::string& body) {
+    const uint32_t len = static_cast<uint32_t>(body.size());
+    unsigned char hdr[4];
+    hdr[0] = len & 0xffU; hdr[1] = (len >> 8) & 0xffU;
+    hdr[2] = (len >> 16) & 0xffU; hdr[3] = (len >> 24) & 0xffU;
+    return write_all(h.in_fd(), hdr, 4) && write_all(h.in_fd(), body.data(), body.size());
+}
+
+bool helper_recv(dulche::ChildProcess& h, std::string& body) {
+    unsigned char hdr[4];
+    if (!read_exact(h.out_fd(), hdr, 4)) return false;
+    const uint32_t len = (uint32_t)hdr[0] | ((uint32_t)hdr[1] << 8)
+                       | ((uint32_t)hdr[2] << 16) | ((uint32_t)hdr[3] << 24);
+    if (len > kLimit) return false;
+    body.assign(len, '\0');
+    return read_exact(h.out_fd(), body.data(), len);
+}
+
+// ---------------------------------------------------------------- message JSON (ENC)
+std::string json_escape(const std::string& s) {
+    std::string out;
+    out.reserve(s.size() + 8);
+    for (char c : s) {
+        switch (c) {
+            case '"': out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            case '\b': out += "\\b"; break;
+            case '\f': out += "\\f"; break;
+            default:
+                if (static_cast<unsigned char>(c) < 0x20) {
+                    char tmp[8];
+                    std::snprintf(tmp, sizeof tmp, "\\u%04x", static_cast<unsigned>(c));
+                    out += tmp;
+                } else {
+                    out += c;
+                }
+        }
+    }
+    return out;
+}
+
+std::string role_name(uint32_t role) {
+    switch (role) {
+        case 0: return "system";
+        case 1: return "user";
+        case 2: return "assistant";
+        case 3: return "tool";
+        default: throw std::invalid_argument("Unknown native chat role.");
+    }
+}
+
+std::string build_messages_json(const std::vector<Msg>& messages) {
+    std::string out = "[";
+    bool first = true;
+    for (const auto& m : messages) {
+        if (!first) out += ",";
+        first = false;
+        out += "{\"role\":\"" + role_name(m.role) + "\"";
+        if (!m.name.empty()) out += ",\"name\":\"" + json_escape(m.name) + "\"";
+        out += ",\"content\":\"" + json_escape(m.content) + "\"}";
+    }
+    out += "]";
+    return out;
+}
+
+// ---------------------------------------------------------------- DONE terminal parsing
 struct DoneMetrics {
     int64_t generated = 0;
     int64_t prompt_tokens = 0;
@@ -568,56 +503,251 @@ DoneMetrics parse_done(const std::string& line) {
     return m;
 }
 
+std::string build_gen_line(int64_t max_new, const std::vector<int64_t>& ids,
+                           double temperature, double top_p, uint32_t top_k, uint64_t seed,
+                           double min_p, double penalty_repeat, double penalty_freq,
+                           double penalty_present, int32_t penalty_last_n) {
+    std::string line = "GEN " + std::to_string(max_new);
+    if (temperature > 0.0) {
+        line += " temperature=" + std::to_string(temperature);
+        line += " top_p=" + std::to_string(top_p > 0.0 ? top_p : 1.0);
+        if (top_k != 0) line += " top_k=" + std::to_string(top_k);
+        if (min_p > 0.0) line += " min_p=" + std::to_string(min_p);
+        if (penalty_last_n > 0) line += " penalty_last_n=" + std::to_string(penalty_last_n);
+        if (penalty_repeat > 0.0) line += " penalty_repeat=" + std::to_string(penalty_repeat);
+        if (penalty_freq > 0.0) line += " penalty_freq=" + std::to_string(penalty_freq);
+        if (penalty_present > 0.0) line += " penalty_present=" + std::to_string(penalty_present);
+        if (seed != 0) line += " seed=" + std::to_string(seed);
+    }
+    line += " ";
+    for (size_t i = 0; i < ids.size(); ++i) {
+        if (i) line += ",";
+        line += std::to_string(ids[i]);
+    }
+    line += "\n";
+    return line;
+}
+
 // ---------------------------------------------------------------- relay session
-struct CandidateSession {
-    EngineProcess engine;
+struct Session {
+    dulche::ChildProcess engine;
+    std::optional<dulche::LineReader> engine_reader;
+    std::unique_ptr<dulche::ChildProcess> helper;   // bundled tokenizer helper (lazy)
+    std::string helper_identity;
     bool loaded = false;
     std::string registration;
     std::string pack_dir;
     uint32_t context = 0;
     std::vector<uint32_t> devices;
-    std::optional<TokenizerHelper> helper;
+    std::string expected_tokenizer_identity;
 };
 
-// Wait for READY after spawn. Only a live process that prints READY is considered loaded.
-void wait_ready(EngineProcess& engine, LineReader& reader) {
+// Wait for READY after spawn. Only a live process that prints READY is considered loaded. The
+// READY max-context is validated against the requested context.
+void wait_ready(dulche::ChildProcess& engine, dulche::LineReader& reader, uint32_t requested_context) {
     std::string line;
     for (int i = 0; i < 200000; ++i) {
         if (!engine.alive()) throw std::runtime_error("Engine exited before READY (model load failed).");
         if (!reader.next(line)) throw std::runtime_error("Engine stdout ended before READY.");
-        if (line.rfind("READY ", 0) == 0) return;
+        if (line.rfind("READY ", 0) == 0) {
+            const auto tok = split_space(line);
+            if (tok.size() >= 2) {
+                const int64_t max_ctx = parse_i64(tok[1], "READY max_context");
+                if (max_ctx < 0) throw std::runtime_error("Engine READY reports a negative context.");
+                if (requested_context > 0 && static_cast<uint64_t>(max_ctx) < requested_context)
+                    throw std::runtime_error("Engine READY context is smaller than the requested context.");
+            }
+            return;
+        }
         if (line.rfind("ERR ", 0) == 0) throw std::runtime_error("Engine reported load error: " + line.substr(4));
         // INFO / PP / RESUME telemetry lines are drained harmlessly.
     }
     throw std::runtime_error("Engine did not reach READY within the bound.");
 }
 
-// Send a line to the engine's stdin (raw fd write).
-void engine_send(EngineProcess& engine, const std::string& line) {
+// Spawn + verify the bundled helper onto session.helper. Throws with the exact dependency cause
+// when the helper (or a required runtime module) is unavailable or its identity mismatches.
+void bind_helper(Session& session, int argc, char** argv) {
+    if (session.helper) return;
+    const std::string helper_path = locate_helper(argc, argv);
+    if (helper_path.empty())
+        throw std::invalid_argument(
+            "candidate text generation dependency: bundled tokenizer helper "
+            "(strata_tokenizer_helper.py) could not be located next to the worker; refusing to "
+            "fabricate token ids.");
+    dulche::SpawnSpec spec;
 #if defined(_WIN32)
-    const DWORD n = static_cast<DWORD>(line.size());
-    DWORD written = 0;
-    if (!WriteFile(engine.in_write, line.data(), n, &written, nullptr) || written != n)
-        throw std::runtime_error("Engine input pipe failed.");
+    spec.exe = "py";
 #else
-    const char* p = line.data();
-    size_t left = line.size();
-    while (left > 0) {
-        const ssize_t n = ::write(engine.in_fd, p, left);
-        if (n < 0) { if (errno == EINTR) continue; throw std::runtime_error("Engine input pipe failed."); }
-        p += n; left -= static_cast<size_t>(n);
-    }
+    spec.exe = "python3";
 #endif
+    const std::string tokenizer_dir = (std::filesystem::path(session.pack_dir) / "tokenizer").string();
+    spec.args.push_back(helper_path);
+    spec.args.push_back("--tokenizer-dir");
+    spec.args.push_back(tokenizer_dir);
+    if (!session.expected_tokenizer_identity.empty()) {
+        spec.args.push_back("--expected-identity");
+        spec.args.push_back(session.expected_tokenizer_identity);
+    }
+    auto proc = std::make_unique<dulche::ChildProcess>();
+    if (!proc->spawn(spec))
+        throw std::invalid_argument(
+            "candidate text generation dependency: could not spawn the bundled tokenizer helper "
+            "(requires a python3 interpreter with the pinned regex/jinja2 modules); refusing generation "
+            "rather than fabricating token ids.");
+    std::string resp;
+    if (!helper_send(*proc, "IDENTITY") || !helper_recv(*proc, resp) || resp.rfind("IDENT ", 0) != 0)
+        throw std::invalid_argument(
+            "candidate text generation dependency: bundled tokenizer helper did not answer IDENTITY; "
+            "the pinned regex/jinja2 runtime modules are unavailable in this environment.");
+    const std::string ident = resp.substr(5);
+    if (!session.expected_tokenizer_identity.empty() && ident != session.expected_tokenizer_identity)
+        throw std::invalid_argument(
+            "candidate text generation dependency: bundled tokenizer identity mismatch (registered "
+            + session.expected_tokenizer_identity + " != observed " + ident + ")");
+    session.helper = std::move(proc);
+    session.helper_identity = ident;
+}
+
+// ---------------------------------------------------------------- text generation relay
+// Runs one generate request to completion. Emits token frames (type 1) and a terminal frame
+// (type 2) on success. On a request-scoped error it emits a failure frame (type 5) for the caller;
+// it does not tear down the session for ordinary generation errors.
+void run_generation(Session& session, const GenerateRequest& req, int argc, char** argv) {
+    bind_helper(session, argc, argv);
+    dulche::ChildProcess& helper = *session.helper;
+
+    // ENC messages -> token ids.
+    const std::string json = build_messages_json(req.messages);
+    if (!helper_send(helper, "ENC " + json)) throw std::runtime_error("Helper input pipe failed.");
+    std::string resp;
+    if (!helper_recv(helper, resp)) throw std::runtime_error(
+        "candidate text generation dependency: bundled tokenizer helper exited; the pinned regex/"
+        "jinja2 runtime modules are unavailable in this environment.");
+    std::vector<int64_t> ids;
+    if (resp.rfind("TON ", 0) == 0) {
+        size_t pos = 4;
+        while (pos < resp.size()) {
+            size_t comma = resp.find(',', pos);
+            const std::string part = resp.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+            ids.push_back(parse_i64(part, "token id"));
+            if (comma == std::string::npos) break;
+            pos = comma + 1;
+        }
+    } else if (resp.rfind("ERR ", 0) == 0) {
+        throw std::invalid_argument("candidate text generation dependency: " + resp.substr(4));
+    } else {
+        throw std::invalid_argument("candidate text generation dependency: malformed TON response.");
+    }
+    if (ids.empty()) throw std::invalid_argument("candidate text generation dependency: tokenizer produced no ids for the prompt.");
+
+    const std::string line = build_gen_line(req.max_new, ids, req.temperature, req.top_p, req.top_k,
+                                             req.seed, req.min_p, req.penalty_repeat, req.penalty_freq,
+                                             req.penalty_present, req.penalty_last_n);
+    engine_send(session.engine, line);
+
+    bool cancelled = false;
+    auto stall_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(120);
+
+    for (;;) {
+        std::string line_out;
+        bool engine_readable = false;
+        bool stdin_readable = false;
+        {
+            struct pollfd pfd[2];
+            pfd[0].fd = 0; pfd[0].events = POLLIN; pfd[0].revents = 0;
+            pfd[1].fd = session.engine.out_fd(); pfd[1].events = POLLIN; pfd[1].revents = 0;
+            const int pr = ::poll(pfd, 2, 200);
+            if (pr < 0) { if (errno == EINTR) continue; throw std::runtime_error("poll failed during generation."); }
+            if (pfd[0].revents & (POLLIN | POLLHUP)) stdin_readable = true;
+            if (pfd[1].revents & (POLLIN | POLLHUP | POLLERR)) engine_readable = true;
+        }
+
+        if (stdin_readable) {
+            Buffer cmd;
+            if (read_command(cmd)) {
+                const uint32_t op = cmd.read_number<uint32_t>();
+                if (op == kOpCancel) {
+                    if (!cancelled) { engine_send(session.engine, "STOP\n"); cancelled = true; }
+                } else if (op == kOpStop) {
+                    engine_send(session.engine, "QUIT\n");
+                    cancelled = true;
+                } else {
+                    throw std::invalid_argument("Unexpected native command during generation.");
+                }
+            }
+        }
+
+        if (engine_readable) {
+            if (!session.engine_reader->next(line_out)) {
+                throw std::runtime_error("Engine stdout ended during generation.");
+            }
+            stall_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(120);
+            if (line_out.rfind("T ", 0) == 0) {
+                const int64_t id = parse_i64(line_out.substr(2), "T id");
+                if (id < 0) throw std::invalid_argument("Negative token id from engine.");
+                std::string dec;
+                if (!helper_send(helper, "DEC " + std::to_string(id)) || !helper_recv(helper, dec))
+                    throw std::runtime_error("candidate text generation dependency: helper DEC round trip failed.");
+                if (dec.rfind("BYT ", 0) == 0) {
+                    const std::string raw = dec.substr(4);
+                    Buffer tk;
+                    tk.number(static_cast<uint32_t>(raw.size()));
+                    tk.bytes.insert(tk.bytes.end(), raw.begin(), raw.end());
+                    write_frame(stdout, 1, tk);
+                } else if (dec.rfind("ERR ", 0) == 0) {
+                    throw std::invalid_argument("candidate text generation dependency: " + dec.substr(4));
+                }
+                continue;
+            }
+            if (line_out.rfind("DONE ", 0) == 0) {
+                const DoneMetrics m = parse_done(line_out);
+                Buffer term;
+                term.number<uint32_t>(0); term.number<uint32_t>(0);           // NativeErrors: none
+                term.text(std::string());
+                term.number(static_cast<uint64_t>(m.prompt_tokens));
+                term.number(static_cast<uint64_t>(m.read_n));
+                term.number(static_cast<uint64_t>(m.generated));
+                term.real(m.prompt_ms / 1000.0);
+                term.real(m.decode_ms / 1000.0);
+                const uint64_t reused = m.reused;
+                term.number(static_cast<uint32_t>(reused > 0 ? 1 : 0));
+                if (reused > 0) term.number(reused);
+                term.number(static_cast<uint32_t>(0));                        // kv: do not claim incremental KV
+                term.number(static_cast<uint32_t>(m.finish == "cancel" ? 1 : 0));
+                write_frame(stdout, 2, term);
+                return;
+            }
+            if (line_out.rfind("ERR ", 0) == 0) {
+                throw std::invalid_argument("Engine reported generation error: " + line_out.substr(4));
+            }
+            // INFO / PP / RESUME / REUSED / YIELDED telemetry lines are drained harmlessly.
+            continue;
+        }
+
+        if (std::chrono::steady_clock::now() > stall_deadline)
+            throw std::runtime_error("Engine generation stalled without output (bounded).");
+    }
+}
+
+// Emit a failure frame (type 5) with the standard NativeErrors layout.
+void emit_failure(const std::string& message) {
+    Buffer failure;
+    failure.number<uint32_t>(3); failure.number<uint32_t>(1); failure.text(message);
+    write_frame(stdout, 5, failure);
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
     set_binary_stdio();
+#if !defined(_WIN32)
+    signal(SIGPIPE, SIG_IGN);
+#endif
     const bool probe = argc == 2 && std::strcmp(argv[1], "--hardware-probe") == 0;
     if (argc != 1 && !probe) return 64;
 
-    CandidateSession session;
+    Session session;
     try {
         // Hello: explicit incompatible ABI version 2, candidate origin, candidate-verified family.
         Buffer hello;
@@ -643,55 +773,71 @@ int main(int argc, char** argv) {
             }
         }
 
-        std::optional<LineReader> engine_reader;
-        std::optional<StderrDrain> engine_drain;
-
         Buffer command;
         while (read_command(command)) {
-            const auto operation = command.read_number<uint32_t>();
-            if (operation == 1) {
-                // load: directory (pack), registration, context, devices
+            const uint32_t operation = command.read_number<uint32_t>();
+            if (operation == kOpLoad) {
                 const auto directory = command.read_text();
                 const auto registration = command.read_text();
                 const auto context = command.read_number<uint32_t>();
+                const auto expected_identity = command.read_text();
                 const auto count = command.read_number<uint32_t>();
                 if (count > 64) throw std::invalid_argument("Too many native devices.");
+                session.devices.clear();
                 for (uint32_t i = 0; i < count; ++i) session.devices.push_back(command.read_number<uint32_t>());
                 command.end();
                 if (session.loaded) throw std::invalid_argument("Native session is already loaded.");
-                if (registration.empty() || directory.empty()) throw std::invalid_argument("Native load requires a registration and pack directory.");
+                if (registration.empty() || directory.empty()) throw std::invalid_argument(
+                    "Native load requires a registration and pack directory.");
+
+                // Validate the requested registration/family/format/topology against the protected
+                // model identity. The candidate registers a GGUF `qwen35moe` family; a nonempty
+                // registration must match that family, not just be nonempty.
+                if (registration.rfind("qwen35moe", 0) != 0 && registration.find("qwen35") == std::string::npos)
+                    throw std::invalid_argument(
+                        "candidate load: registration does not match the supported GGUF qwen35moe family; "
+                        "refusing to fabricate a load.");
+                if (context == 0) throw std::invalid_argument("candidate load: context must be positive.");
+
                 session.registration = registration;
                 session.pack_dir = directory;
                 session.context = context;
-                // Spawn the bundled engine (package-relative path, exact argv, no shell).
-                EngineSpawn spawn;
-                spawn.exe = locate_engine(argc, argv);
-                if (spawn.exe.empty()) throw std::invalid_argument(
+                session.expected_tokenizer_identity = expected_identity;
+
+                // Plumb the requested devices through a documented environment channel; actual
+                // device binding is validated at native-acceptance time, never silently dropped.
+                std::string dev_env;
+                for (size_t i = 0; i < session.devices.size(); ++i) {
+                    if (i) dev_env += ",";
+                    dev_env += std::to_string(session.devices[i]);
+                }
+#if !defined(_WIN32)
+                if (!dev_env.empty()) setenv("STRATA_CANDIDATE_DEVICES", dev_env.c_str(), 1);
+#endif
+
+                dulche::SpawnSpec spec;
+                spec.exe = locate_engine(argc, argv);
+                if (spec.exe.empty()) throw std::invalid_argument(
                     "candidate load dependency: bundled engine binary could not be located next to the worker "
                     "(expected runtimes/<target>/engine/strata[.exe]); refusing to fabricate a load.");
-                spawn.args = build_engine_args(directory, context);
-                spawn_engine(spawn, session.engine);
-                engine_drain.emplace();
-                engine_drain->start(session.engine.err_fd);
-                engine_reader.emplace(session.engine.out_fd);
-                wait_ready(session.engine, *engine_reader);
+                spec.args = build_engine_args(directory, context);
+                if (!session.engine.spawn(spec)) throw std::runtime_error(
+                    "candidate load dependency: engine spawn failed (exact argv, no shell).");
+                session.engine_reader.emplace(session.engine.out_fd());
+                wait_ready(session.engine, *session.engine_reader, context);
                 session.loaded = true;
                 Buffer loaded;
                 loaded.number<uint32_t>(0); loaded.number<uint32_t>(0);  // NativeErrors: none
                 write_frame(stdout, 4, loaded);
-            } else if (operation == 2 || operation == 4) {
-                // generate (text) or structured-tools generate (op 4).
-                if (!session.loaded) throw std::invalid_argument("Native generation requires a loaded engine.");
-                bool structured = false;
-                if (operation == 4) {
+            } else if (operation == kOpGenerate || operation == kOpStructuredGenerate) {
+                GenerateRequest req;
+                if (operation == kOpStructuredGenerate) {
                     if (command.read_number<uint32_t>() != 1)
                         throw std::invalid_argument("Unsupported structured tool wire version.");
-                    structured = true;
+                    req.structured = true;
                 }
                 const auto message_count = command.read_number<uint32_t>();
                 if (message_count > 4096) throw std::invalid_argument("Too many native messages.");
-                struct Msg { uint32_t role; std::string content; std::string name; };
-                std::vector<Msg> messages;
                 for (uint32_t i = 0; i < message_count; ++i) {
                     Msg m;
                     m.role = command.read_number<uint32_t>();
@@ -699,51 +845,48 @@ int main(int argc, char** argv) {
                     m.name = command.read_text();
                     const auto images = command.read_number<uint32_t>();
                     if (images != 0) throw std::invalid_argument("Image generation is not supported by the candidate text relay.");
-                    messages.push_back(std::move(m));
+                    req.messages.push_back(std::move(m));
                 }
-                const auto max_new = command.read_number<uint32_t>();
-                const auto temperature = command.read_real();
-                const auto top_p = command.read_real();
-                const auto top_k = command.read_number<uint32_t>();
-                const auto seed = command.read_number<uint64_t>();
-                (void)command.read_number<uint32_t>();  // reserved field
-                const auto bias = command.read_text();
+                req.max_new = command.read_number<uint32_t>();
+                req.temperature = command.read_real();
+                req.top_p = command.read_real();
+                req.top_k = command.read_number<uint32_t>();
+                req.seed = command.read_number<uint64_t>();
+                const auto stop_count = command.read_number<uint32_t>();
+                if (stop_count > 4096) throw std::invalid_argument("Too many native stops.");
+                for (uint32_t i = 0; i < stop_count; ++i) (void)command.read_text();
+                const auto effort = command.read_text();
                 command.end();
-                if (bias.size() > 4096) throw std::invalid_argument("Native bias text is oversized.");
-                if (max_new == 0 || max_new > 1U << 20) throw std::invalid_argument("Bounded native max_new is invalid.");
 
-                // Structured tool generation additionally requires a proven same-model probe; until a
-                // real model+r is loaded and probed, Tools stay unavailable (text requests still work).
-                if (structured) throw std::invalid_argument(
-                    "structured tool request requires a proven same-model tool probe, which is not available "
-                    "for this candidate registration yet; text generation remains available.");
+                if (!session.loaded) throw std::invalid_argument("Native generation requires a loaded engine.");
+                if (req.max_new == 0 || req.max_new > 1U << 20) throw std::invalid_argument("Bounded native max_new is invalid.");
+                if (stop_count > 0) throw std::invalid_argument(
+                    "candidate: explicit stop lists are not yet supported by the relay; refusing this option "
+                    "rather than silently dropping it.");
+                if (!effort.empty() && effort != "medium" && effort != "none")
+                    throw std::invalid_argument("candidate: unsupported reasoning effort " + effort + "; only medium/none are mapped.");
 
-                // Tokenize messages via the bundled helper (model-bound). The helper is a required,
-                // pinned runtime dependency (donor tools/strata_tokenizer.py + model GGUF chat
-                // template, needing the `regex`/`jinja2` Python modules). If it is unavailable or its
-                // verified identity does not match the registered model, ONLY this text request fails
-                // closed with the exact dependency cause rather than fabricating token ids.
-                if (!session.helper.has_value()) {
-                    throw std::invalid_argument(
-                        "candidate text generation dependency: bundled tokenizer helper "
-                        "(strata_tokenizer_helper.py on the donor tools/strata_tokenizer.py + model GGUF "
-                        "chat template, requiring the regex/jinja2 Python modules) is not bound/verified "
-                        "in this source checkpoint; refusing generation rather than fabricating token ids.");
+                if (req.structured) {
+                    // Structured tools remain unavailable until real loaded-model reasoning metadata and a
+                    // proven same-model probe exist. Text generation continues to work.
+                    emit_failure(
+                        "structured tool request requires a proven same-model tool probe, which is not "
+                        "available for this candidate registration yet; text generation remains available.");
+                    continue;
                 }
-                (void)messages;
-                (void)structured;
-                (void)max_new; (void)temperature; (void)top_p; (void)top_k; (void)seed; (void)bias;
-                throw std::invalid_argument("candidate text generation dependency: bundled tokenizer helper is not yet wired to the relay in this source checkpoint.");
-            } else if (operation == 3) {
+                req.expected_tokenizer_identity = session.expected_tokenizer_identity;
+                try {
+                    run_generation(session, req, argc, argv);
+                } catch (const std::exception& error) {
+                    emit_failure(error.what());
+                }
+            } else if (operation == kOpStop) {
                 command.end();
-                if (session.engine.alive()) {
-                    engine_send(session.engine, "QUIT\n");
-                    // Give the engine a moment to exit; then reap/kill only the owned process.
-                    std::this_thread::sleep_for(std::chrono::milliseconds(250));
-                    if (session.engine.alive()) session.engine.kill();
+                if (session.engine.spawned()) {
+                    if (session.engine.alive()) engine_send(session.engine, "QUIT\n");
+                    if (!session.engine.wait_exit(3000) && session.engine.alive()) session.engine.kill();
                 }
-                if (engine_drain.has_value()) engine_drain->join();
-                session.engine.close();
+                session.engine.shutdown();
                 Buffer stopped;
                 write_frame(stdout, 3, stopped);
                 std::fflush(stdout);
@@ -752,9 +895,7 @@ int main(int argc, char** argv) {
                 throw std::invalid_argument("Unsupported native operation.");
             }
         }
-        if (session.engine.alive()) session.engine.kill();
-        if (engine_drain.has_value()) engine_drain->join();
-        session.engine.close();
+        session.engine.shutdown();
         std::fflush(stdout);
         return 0;
     } catch (const std::exception& error) {
@@ -764,12 +905,10 @@ int main(int argc, char** argv) {
             write_frame(stdout, 5, failure);
             std::fflush(stdout);
         } catch (...) {}
-        if (session.engine.alive()) session.engine.kill();
-        session.engine.close();
+        session.engine.shutdown();   // exception-safe RAII teardown (no std::terminate)
         return 72;
     } catch (...) {
-        if (session.engine.alive()) session.engine.kill();
-        session.engine.close();
+        session.engine.shutdown();
         return 73;
     }
 }

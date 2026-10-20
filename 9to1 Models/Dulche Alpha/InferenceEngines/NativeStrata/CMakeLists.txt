@@ -92,8 +92,18 @@ else()
     target_compile_options(dulche-strata-candidate-worker PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
   endif()
   install(TARGETS dulche-strata-candidate-worker RUNTIME DESTINATION runtimes/${_strata_target_dir}/native)
-  # Bundled tokenizer/chat-template helper (required, pinned runtime dependency of the text path).
-  install(FILES strata_tokenizer_helper.py DESTINATION runtimes/${_strata_target_dir}/native)
+  # Bundled tokenizer/chat-template helper plus the donor runtime closure it imports, all installed
+  # next to the worker. The helper (strata_tokenizer_helper.py) imports the donor
+  # `strata_tokenizer.py` (which itself imports the sibling `gguf_reader.py` and the pinned `regex`
+  # runtime module) and the `jinja2` runtime module for chat-template rendering. These files are a
+  # REQUIRED, hash-verified runtime closure of the candidate text path; installing only the helper
+  # (as in pass-3) is a real defect. `strata-runtime-dependencies.json` pins the exact
+  # regex/jinja2 versions and is installed alongside so the installed closure is auditable.
+  install(FILES strata_tokenizer_helper.py
+                "${DULCHE_STRATA_UPSTREAM}/tools/strata_tokenizer.py"
+                "${DULCHE_STRATA_UPSTREAM}/tools/gguf_reader.py"
+                strata-runtime-dependencies.json
+        DESTINATION runtimes/${_strata_target_dir}/native)
   # Candidate upstream license is MIT (© 2026 Niko1221 and Strata contributors). The original legacy
   # Apache-2.0 notice is preserved separately in the maintained fork/rollback and is not deleted.
   install(FILES "${DULCHE_STRATA_UPSTREAM}/LICENSE" DESTINATION licenses/strata)

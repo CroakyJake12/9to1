@@ -15,14 +15,22 @@ Every input is length-prefixed and bounded; every output is length-prefixed and 
 missing dependency or identity mismatch the helper exits non-zero with a precise cause on stderr, so
 the relay fails ONLY the affected text request (never load/probe/shutdown).
 
-Identity validation: the GGUF tokenizer metadata (vocabulary size, pre-type, special tokens) is
-hashed and compared with the registered model identity supplied at spawn time. A mismatch is
-rejected BEFORE any token is produced.
+Identity validation: the canonical identity binds the pre-tokenizer, the FULL ordered vocabulary, the
+ordered merge rules, token types, special ids and the chat-template bytes - not just the vocabulary
+length. A same-sized changed vocab/merge/template therefore changes the identity and is rejected
+BEFORE any token is produced.
+
+Chat rendering replicates the donor frontend exactly (`serve/frontend.py` ChatTemplate):
+`ImmutableSandboxedEnvironment(trim_blocks=True, lstrip_blocks=True, extensions=['jinja2.ext.loopcontrols'])`
+with the `tojson` filter and `raise_exception` global, rendering with `messages`, `add_generation_prompt`
+and `tools`. If a required variable is missing or the template is not a Jinja template, the request
+fails closed with a precise capability refusal - never a guessed render.
 
 STATUS: SOURCE-ONLY. The byte-level BPE round trip is unit-tested with a synthetic vocabulary in
 NativeStrataTokenizerHelperTests.py; no real model weights are used in this checkpoint. In this
-cloud build the donor `regex`/`jinja2` dependencies are not installed, so the helper is verified to
-fail closed with the exact dependency cause rather than fabricate token ids.
+cloud build the bundled donor module `strata_tokenizer.py` (and its `regex` dependency) are not
+installed beside the helper, so it is verified to fail closed with the EXACT dependency cause rather
+than fabricate token ids.
 """
 from __future__ import annotations
 
@@ -32,12 +40,27 @@ import json
 import pathlib
 import sys
 
-_DEPENDENCY_CAUSE = None
+# ------------------------------------------------------------------ precise dependency diagnostics
+# The donor module and the `regex` runtime module are separate facts. A missing donor module is NOT
+# proof that `regex` itself is absent; report each precisely.
+_REGEX_REPORT = "not-imported"
 try:
-    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import regex  # noqa: F401 - probe availability only
+    _REGEX_REPORT = "imported"
+except Exception as exc:  # pragma: no cover
+    _REGEX_REPORT = "missing: %s" % (exc,)
+
+_BUNDLED_DONOR_AVAILABLE = False
+_DONOR_CAUSE = None
+try:
+    _helper_dir = pathlib.Path(__file__).resolve().parent
+    if str(_helper_dir) not in sys.path:
+        sys.path.insert(0, str(_helper_dir))
     from strata_tokenizer import Tokenizer, PromptEncoder  # type: ignore
+    _BUNDLED_DONOR_AVAILABLE = True
 except Exception as exc:  # pragma: no cover - dependency gate
-    _DEPENDENCY_CAUSE = "missing donor tokenizer dependency (tools/strata_tokenizer.py requires 'regex'): %s" % (exc,)
+    _DONOR_CAUSE = ("bundled donor tokenizer module (strata_tokenizer.py) is not installed beside "
+                     "the helper: %s" % (exc,))
     Tokenizer = None  # type: ignore
     PromptEncoder = None  # type: ignore
 
@@ -69,15 +92,60 @@ def write_frame(stream, body: bytes):
     stream.flush()
 
 
+def _u64_le(value: int) -> bytes:
+    return int(value).to_bytes(8, "little", signed=False)
+
+
+def _feed_str(h: "hashlib._Hash", text: str):
+    b = text.encode("utf-8")
+    h.update(_u64_le(len(b)) + b)
+
+
 def tokenizer_identity(tok) -> str:
-    """Deterministic identity hash of the tokenizer's verified metadata (not weight shards)."""
+    """Deterministic canonical identity of the tokenizer's verified metadata.
+
+    Binds the pre-tokenizer, the FULL ordered vocabulary, the ordered merge rules, token types,
+    special ids and the chat-template bytes. Equal-sized content changes are detected. No weight
+    shards are read.
+    """
     h = hashlib.sha256()
-    h.update(b"strata-tokenizer-v1")
-    h.update(tok.pre.encode("utf-8"))
-    h.update(len(tok.tokens).to_bytes(8, "little"))
-    for t in sorted(tok.special_tokens, key=lambda s: tok.special_tokens[s]):
-        h.update(t.encode("utf-8"))
-        h.update(tok.special_tokens[t].to_bytes(8, "little"))
+    h.update(b"strata-tokenizer-v2")
+    _feed_str(h, getattr(tok, "pre", "qwen35") or "qwen35")
+
+    tokens = list(getattr(tok, "tokens", None) or [])
+    h.update(_u64_le(len(tokens)))
+    for t in tokens:
+        _feed_str(h, t)
+
+    ranks = getattr(tok, "ranks", None) or {}
+    ordered_merges = sorted(ranks.items(), key=lambda kv: int(kv[1]))
+    h.update(_u64_le(len(ordered_merges)))
+    for pair, rank in ordered_merges:
+        _feed_str(h, "%s %s" % (pair[0], pair[1]))
+        h.update(_u64_le(int(rank)))
+
+    token_types = getattr(tok, "token_types", None)
+    if token_types is None:
+        h.update(b"\x00")
+    else:
+        h.update(b"\x01")
+        h.update(_u64_le(len(token_types)))
+        for x in token_types:
+            ix = int(x)
+            h.update(ix.to_bytes(8, "little", signed=ix < 0))
+
+    special = getattr(tok, "special_ids", None) or getattr(tok, "special_tokens", {}) or {}
+    for key in sorted(special, key=lambda k: int(special[k])):
+        _feed_str(h, key)
+        h.update(_u64_le(int(special[key])))
+
+    template = getattr(tok, "chat_template", None)
+    if template is None:
+        h.update(b"\x00")
+    else:
+        h.update(b"\x01")
+        _feed_str(h, template)
+
     return h.hexdigest()
 
 
@@ -111,7 +179,7 @@ def serve(tok, encoder, expected_identity, in_stream=None, out_stream=None):
                 if "text" in data:
                     ids = tok.encode(data["text"], parse_special=True)
                 elif "messages" in data:
-                    ids = render_messages(tok, encoder, data["messages"])
+                    ids = render_messages(tok, data["messages"])
                 else:
                     raise ValueError("ENC payload must carry 'text' or 'messages'")
                 if len(ids) > MAX_ID_COUNT:
@@ -134,25 +202,47 @@ def serve(tok, encoder, expected_identity, in_stream=None, out_stream=None):
     return 0
 
 
-def render_messages(tok, encoder, messages) -> list[int]:
-    """Render chat messages through the model's own chat template when available.
+def render_messages(tok, messages) -> list[int]:
+    """Render chat messages through the model's own chat template, replicating the donor frontend.
 
-    The donor server renders the chat template in Python (Jinja). Reimplementing a general Jinja
-    renderer here would be a guessed template, which is forbidden. Therefore the helper renders the
-    model's stored `tokenizer.chat_template` only with a supported Jinja renderer; otherwise it fails
-    closed for THIS request with the exact dependency cause.
+    The donor frontend (`serve/frontend.py` ChatTemplate) renders with
+    `ImmutableSandboxedEnvironment(trim_blocks=True, lstrip_blocks=True,
+    extensions=['jinja2.ext.loopcontrols'])`, a `tojson` filter and a `raise_exception` global.
+    We replicate that exactly, passing `messages`, `add_generation_prompt` and `tools` (as the donor
+    does). A non-Jinja template or a template that needs a variable we do not control fails closed
+    with a precise capability refusal - never a guessed render.
     """
     try:
-        import jinja2  # type: ignore
+        import jinja2
+        from jinja2.sandbox import ImmutableSandboxedEnvironment
     except Exception as exc:
         raise ValueError("chat template renderer dependency (jinja2) is unavailable: %s" % (exc,))
     template_text = getattr(tok, "chat_template", None)
-    if template_text is None:
+    if not template_text:
         raise ValueError("model tokenizer carries no chat_template; cannot render a chat prompt")
-    if "{%" not in template_text:
-        raise ValueError("chat template is not a Jinja template; refusing to guess role semantics")
-    template = jinja2.Environment().from_string(template_text)
-    rendered = template.render(messages=messages, add_generation_prompt=True, **{"tools": None})
+
+    class _TemplateError(jinja2.exceptions.TemplateError, ValueError):
+        pass
+
+    def _raise_exception(message):
+        raise _TemplateError(message)
+
+    def _tojson(value, ensure_ascii=False, indent=None, separators=None, sort_keys=False):
+        return json.dumps(value, ensure_ascii=ensure_ascii, indent=indent,
+                          separators=separators, sort_keys=sort_keys)
+
+    env = ImmutableSandboxedEnvironment(trim_blocks=True, lstrip_blocks=True,
+                                        extensions=["jinja2.ext.loopcontrols"])
+    env.filters["tojson"] = _tojson
+    env.globals["raise_exception"] = _raise_exception
+    try:
+        template = env.from_string(template_text)
+    except Exception as exc:
+        raise ValueError("chat template is invalid Jinja: %s" % (exc,))
+    try:
+        rendered = template.render(messages=messages, add_generation_prompt=True, tools=None)
+    except Exception as exc:
+        raise ValueError("chat template render refused the request: %s" % (exc,))
     return tok.encode(rendered, parse_special=True)
 
 
@@ -163,8 +253,9 @@ def main() -> int:
     parser.add_argument("--expected-identity", help="registered model tokenizer identity to compare")
     args = parser.parse_args()
 
-    if Tokenizer is None or PromptEncoder is None:
-        sys.stderr.write("dependency: %s\n" % _DEPENDENCY_CAUSE)
+    if not _BUNDLED_DONOR_AVAILABLE:
+        sys.stderr.write("dependency: %s\n" % (_DONOR_CAUSE,))
+        sys.stderr.write("dependency: regex module report: %s\n" % _REGEX_REPORT)
         return 3
 
     try:
@@ -185,10 +276,18 @@ def main() -> int:
                     raise ValueError("vocabulary id out of range")
                 ordered[idx] = token
             tok = Tokenizer(ordered, merges, token_types, cfg.get("pre", "qwen35"), special)
-            tok.chat_template = (d / "chat_template.jinja").read_text(encoding="utf-8") \
-                if (d / "chat_template.jinja").exists() else None
+            template_file = d / "chat_template.jinja"
+            tok.chat_template = template_file.read_text(encoding="utf-8") if template_file.exists() else None
         elif args.gguf:
             tok = Tokenizer.from_gguf(args.gguf)
+            # from_gguf never attaches the chat template; read it from the same GGUF metadata so
+            # message rendering works instead of failing unconditionally.
+            try:
+                from gguf_reader import GGUFFile
+                _md = GGUFFile(pathlib.Path(args.gguf)).metadata
+                tok.chat_template = _md.get("tokenizer.chat_template")
+            except Exception:
+                tok.chat_template = None
         else:
             sys.stderr.write("dependency: one of --gguf or --tokenizer-dir is required\n")
             return 3

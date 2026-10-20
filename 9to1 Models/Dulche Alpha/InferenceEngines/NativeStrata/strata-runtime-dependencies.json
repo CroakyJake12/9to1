@@ -1,0 +1,43 @@
+{
+  "schema": "strata-runtime-dependencies/v1",
+  "purpose": "Runtime module closure required by the candidate (v0.2.1) rich path. The bundled tokenizer helper (strata_tokenizer_helper.py) imports the donor strata_tokenizer.py, which imports the sibling gguf_reader.py (stdlib only) and the `regex` module; chat-template rendering requires `jinja2`. These are the ONLY third-party runtime modules of the text path. Versions are pinned here with real PyPI sdist digests; the installed closure is verified against this lock in build-package.py and must not silently fall back to unverified versions.",
+  "verifiedAt": "2026-10-20T00:00:00Z",
+  "verificationMethod": "PyPI JSON index (pypi.org/pypi/<project>/<version>/json) sdist sha256; recorded 2026-10-20. Actual module availability is probed at runtime (missing module => precise dependency cause, fail-closed).",
+  "runtimeModules": {
+    "regex": {
+      "role": "donor tokenizer pre-tokenizer/BPE (`regex.compile(QWEN35_PATTERN)`), imported by strata_tokenizer.py",
+      "pin": "2026.9.29",
+      "requiresPython": ">=3.10",
+      "license": "Apache-2.0 AND CNRI-Python",
+      "sdist": {
+        "filename": "regex-2026.9.29.tar.gz",
+        "sha256": "8b5fcc4771732191b2b7d1dd68d8f0353f47f8d90b6150f6dce58bf1112442cb"
+      },
+      "note": "Wheels are platform-specific; the sdist sha256 is the canonical pin. The pre-tokenizer pattern uses `\\p{L}`/`\\p{M}` and requires a real `regex` module, not the stdlib `re`."
+    },
+    "jinja2": {
+      "role": "chat-template renderer (donor frontend ChatTemplate) - ImmutableSandboxedEnvironment(trim_blocks, lstrip_blocks, loopcontrols) + tojson + raise_exception",
+      "pin": "3.1.6",
+      "requiresPython": ">=3.7",
+      "license": "BSD-3-Clause",
+      "sdist": {
+        "filename": "jinja2-3.1.6.tar.gz",
+        "sha256": "0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d"
+      }
+    }
+  },
+  "donorModules": {
+    "strata_tokenizer.py": {
+      "role": "donor tokenizer of record (reads GGUF tokenizer metadata / extracted pack tokenizer/ dir)",
+      "source": "upstream tools/strata_tokenizer.py (v0.2.1 donor)",
+      "stdlibOnly": false,
+      "imports": ["regex", "gguf_reader"]
+    },
+    "gguf_reader.py": {
+      "role": "minimal GGUF v3 header reader (stdlib only; no ggml/gguf-py dependency)",
+      "source": "upstream tools/gguf_reader.py (v0.2.1 donor)",
+      "stdlibOnly": true
+    }
+  },
+  "class": "The actual `regex` module and the donor module are separate facts: a missing donor `strata_tokenizer.py` is NOT proof that `regex` itself is absent, and vice versa. The helper reports each precisely and fails ONLY the affected text request."
+}

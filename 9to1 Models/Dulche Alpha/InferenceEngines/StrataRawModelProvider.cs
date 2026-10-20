@@ -5,12 +5,15 @@ using System.Collections.Frozen;
 namespace Dulche.Runtime;
 
 /// <summary>Raw local transport only. Must be wrapped by the SAME existing ManagedProviderDulcheAdapter,
-/// coordinator/frame/context authority before canonical dispatch. It never runs tools or selects fallback.</summary>
+/// coordinator/frame/context authority before canonical dispatch. It never runs tools or selects fallback.
+/// It owns the shared actual-worker surface (`IStrataNativeWorker`) so the same composition can drive the
+/// V1 legacy worker or the guarded V2 candidate worker; the candidate path is not composition-selected
+/// in this source-only checkpoint (no version>=1 acceptance).</summary>
 public sealed class StrataRawModelProvider : IModelProvider, IAsyncDisposable, IOriginalInferenceEngineModelSource
 {
-    private readonly StrataNativeWorker _worker;
+    private readonly IStrataNativeWorker _worker;
     private readonly ProviderModelDescriptor _model;
-    public StrataRawModelProvider(string sameConfiguredProviderId,StrataNativeWorker actualLoadedWorker,
+    public StrataRawModelProvider(string sameConfiguredProviderId,IStrataNativeWorker actualLoadedWorker,
         ProviderModelDescriptor originalDescriptor)
     {
         _worker=actualLoadedWorker??throw new ArgumentNullException(nameof(actualLoadedWorker));

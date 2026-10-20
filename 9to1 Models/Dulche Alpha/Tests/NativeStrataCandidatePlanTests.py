@@ -52,7 +52,7 @@ class CandidateProfilePlanTests(unittest.TestCase):
     def test_build_package_receipt_covers_engine_helper_closure(self):
         src = (NATIVE / "build-package.py").read_text()
         self.assertIn("engineSha256", src)
-        self.assertIn("helperSha256", src)
+        self.assertIn("helperClosure", src)
         self.assertIn("dependencyPinnedCommit", src)
         self.assertIn("resolve_built", src)          # multi-config aware artifact resolution
         self.assertIn("windows-x64", src)
@@ -62,8 +62,9 @@ class CandidateProfilePlanTests(unittest.TestCase):
         # The candidate worker must implement the real spawn/ready/relay/parse lifecycle rather than
         # leaving all load/generate paths unconditionally throwing.
         src = (NATIVE / "dulche_strata_candidate_worker.cpp").read_text()
-        for token in ("spawn_engine", "wait_ready", "build_gen_line", "parse_done",
-                      "locate_engine", "engine_send", "read_command", "write_frame"):
+        for token in ("wait_ready", "build_gen_line", "parse_done", "locate_engine",
+                      "engine_send", "read_command", "write_frame", "bind_helper",
+                      "run_generation", "ChildProcess"):
             self.assertIn(token, src)
         # The blanket "candidate load blocker" / "candidate generate blocker" strings are gone; the
         # remaining text-generation block is the bundled tokenizer-helper dependency with an exact cause.
