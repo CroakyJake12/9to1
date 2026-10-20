@@ -732,15 +732,21 @@ public sealed partial class App
                 var admission = await ReobserveActorAsync(token);
                 if (admission != ActorAdmissionStatus.Current)
                 {
-                    Refuse(_host.ActorAdmissionCode(admission), admission == ActorAdmissionStatus.Cancelled
+                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(admission), admission == ActorAdmissionStatus.Cancelled
                         ? "The notifications read was cancelled."
                         : "The authenticated profile changed; reopen notifications.");
                     return;
                 }
+                // Re-check exact panel/generation/full actor AFTER the admission await and
+                // immediately BEFORE acquisition; a replacement panel mounted during the await
+                // must never be read or published onto.
+                if (!IsCurrent()) { Refuse("StalePanel", "This notifications panel is no longer current."); return; }
                 var items = await _service.GetRecentAsync(50, includeDismissed: false, token).ConfigureAwait(false);
                 // Marshal the visible row mutation and PropertyChanged publication to the UI
-                // thread (real async service reads resume off-UI). Revalidate immediately before
-                // publication so a retired panel never publishes onto a replacement surface.
+                // thread (real async service reads resume off-UI). Revalidate the ACTUAL actor
+                // (not merely the cached profile) immediately before publication so a retired
+                // or actor-switched panel never publishes onto a replacement surface.
+                if (!IsCurrent() || await ReobserveActorAsync(token) != ActorAdmissionStatus.Current) return;
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     if (!IsCurrent()) return;
@@ -806,13 +812,24 @@ public sealed partial class App
                 var before = await ReobserveActorAsync(token);
                 if (before != ActorAdmissionStatus.Current)
                 {
-                    Refuse(_host.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
+                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
                         ? "The notifications mark-read was cancelled."
                         : "The authenticated profile changed; reopen notifications.");
                     return;
                 }
                 // Validate the requested identifier against the current authorized row membership.
                 if (!IsMemberRow(id)) { Refuse("MalformedCommand", "The notification is not in the current authorized list."); return; }
+                // Re-check exact panel/generation/full actor AFTER the admission await and
+                // immediately BEFORE acquisition; a panel retired (A→B) or actor switched during
+                // the await must never allow A's stale mutation to proceed.
+                var again = await ReobserveActorAsync(token);
+                if (!IsCurrent() || again != ActorAdmissionStatus.Current)
+                {
+                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(again), again == ActorAdmissionStatus.Cancelled
+                        ? "The notifications mark-read was cancelled."
+                        : "This notifications panel is no longer current.");
+                    return;
+                }
                 await _service.MarkReadAsync(id, read, token).ConfigureAwait(false);
                 // Revalidate AFTER async acquisition and immediately before publication. If the
                 // panel/actor retired AFTER the committed mutation, preserve the genuine committed
@@ -828,12 +845,22 @@ public sealed partial class App
                 var before = await ReobserveActorAsync(token);
                 if (before != ActorAdmissionStatus.Current)
                 {
-                    Refuse(_host.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
+                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
                         ? "The notifications dismiss was cancelled."
                         : "The authenticated profile changed; reopen notifications.");
                     return;
                 }
                 if (!IsMemberRow(id)) { Refuse("MalformedCommand", "The notification is not in the current authorized list."); return; }
+                // Re-check exact panel/generation/full actor AFTER the admission await and
+                // immediately BEFORE acquisition (same fence as mark-read).
+                var again = await ReobserveActorAsync(token);
+                if (!IsCurrent() || again != ActorAdmissionStatus.Current)
+                {
+                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(again), again == ActorAdmissionStatus.Cancelled
+                        ? "The notifications dismiss was cancelled."
+                        : "This notifications panel is no longer current.");
+                    return;
+                }
                 await _service.DismissAsync(id, token).ConfigureAwait(false);
                 if (!IsCurrent() || await ReobserveActorAsync(token) != ActorAdmissionStatus.Current) return;
                 await LoadCoreAsync(token).ConfigureAwait(false);

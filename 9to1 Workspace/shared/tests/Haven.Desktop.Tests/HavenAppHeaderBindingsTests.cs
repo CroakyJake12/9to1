@@ -66,9 +66,9 @@ public sealed class HavenAppHeaderBindingsTests
     {
         var probe = new Probe();
         var bindings = new HavenAppHeaderBindings(new FakeHostContext(embedded: false), probe.OpenAsync, probe.SearchAsync);
-        await bindings.DispatchAsync("9to1.Haven.OpenModel", null);
-        await bindings.DispatchAsync("9to1.Haven.OpenNotifications", null);
-        await bindings.DispatchAsync("9to1.Haven.OpenProfile", null);
+        await bindings.DispatchAsync("9to1.Haven.OpenModel", null, TestContext.Current.CancellationToken);
+        await bindings.DispatchAsync("9to1.Haven.OpenNotifications", null, TestContext.Current.CancellationToken);
+        await bindings.DispatchAsync("9to1.Haven.OpenProfile", null, TestContext.Current.CancellationToken);
         Assert.Equal(["9to1.Haven.OpenModel", "9to1.Haven.OpenNotifications", "9to1.Haven.OpenProfile"], probe.Opened);
     }
 
@@ -78,7 +78,7 @@ public sealed class HavenAppHeaderBindingsTests
         var probe = new Probe();
         var bindings = new HavenAppHeaderBindings(new FakeHostContext(embedded: true), probe.OpenAsync, probe.SearchAsync);
         bindings.SearchText = "geometry dash";
-        await bindings.DispatchAsync("9to1.Haven.Search", null);
+        await bindings.DispatchAsync("9to1.Haven.Search", null, TestContext.Current.CancellationToken);
         Assert.Equal(["geometry dash"], probe.Searched);
     }
 

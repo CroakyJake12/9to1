@@ -1,0 +1,340 @@
+--- a/9to1 Workspace/shared/src/Haven.Desktop/AssistantRailIconProjection.cs
++++ b/9to1 Workspace/shared/src/Haven.Desktop/AssistantRailIconProjection.cs
+@@ -132,7 +132,7 @@
+                 && definition.Configuration.Enabled && !definition.Configuration.Archived)
+             .ToArray();
+         if (configured.Length == 0)
+-            return AssistantRailIconReadResult.NoneConfigured;
++            return WithCancellationCheck(token) ?? AssistantRailIconReadResult.NoneConfigured;
+ 
+         // Running-first: an authorised running read is the only way to establish precedence. A
+         // fault here must NOT be downgraded to "no running" (which would let a most-used selection
+@@ -153,9 +153,10 @@
+         if (running is not null)
+         {
+             // Only publish a running snapshot that matches a fresh authorised configured entry
+-            // (identity + revision). A stale/unrelated snapshot is never trusted.
++            // (identity + revision). A stale/unrelated snapshot is never trusted. A source that
++            // ignores caller cancellation must not publish a successful selection.
+             if (TryMatchConfigured(configured, running) is { } runningMatch)
+-                return AssistantRailIconReadResult.Running(runningMatch);
++                return WithCancellationCheck(token) ?? AssistantRailIconReadResult.Running(runningMatch);
+             return AssistantRailIconReadResult.Unavailable("StaleRunningSnapshot",
+                 "The running-assistant read returned a snapshot that is not in the current authorised configuration.");
+         }
+@@ -177,16 +178,26 @@
+         if (mostUsed is not null)
+         {
+             if (TryMatchConfigured(configured, mostUsed) is { } usedMatch)
+-                return AssistantRailIconReadResult.MostUsed(usedMatch);
++                return WithCancellationCheck(token) ?? AssistantRailIconReadResult.MostUsed(usedMatch);
+             return AssistantRailIconReadResult.Unavailable("StaleUsageSnapshot",
+                 "The most-used-assistant read returned a snapshot that is not in the current authorised configuration.");
+         }
+ 
+         // Configured assistants exist, an authorised running read proved none is running, and no
+         // genuine usage aggregate is recorded.
+-        return AssistantRailIconReadResult.UsageNotRecorded;
++        return WithCancellationCheck(token) ?? AssistantRailIconReadResult.UsageNotRecorded;
+     }
+ 
++    /// <summary>Returns a structured Cancelled result when the caller's token is cancelled, or
++    /// null so the caller may publish its genuine successful result. Guards the publication of
++    /// any successful selection/state against a token that a source may have ignored (an
++    /// ignored-cancel completion must never publish Available/None/UsageNotRecorded). Genuine
++    /// returned source faults and authority distinctions (unavailable/denied/stale) are kept.</summary>
++    private static AssistantRailIconReadResult? WithCancellationCheck(CancellationToken token)
++        => token.IsCancellationRequested
++            ? AssistantRailIconReadResult.Cancelled("The assistant read was cancelled.")
++            : null;
++
+     private static AssistantDefinitionSnapshot? TryMatchConfigured(
+         IReadOnlyList<AssistantDefinitionSnapshot> configured, AssistantDefinitionSnapshot candidate)
+     {
+--- a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/AssistantRailIconProjectionTests.cs
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/AssistantRailIconProjectionTests.cs
+@@ -34,7 +34,7 @@
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+             running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[1])));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Available, result.State);
+         Assert.Equal("Running", result.Selection.Kind);
+         Assert.Equal(b.Identity, result.Selection.Identity);
+@@ -49,7 +49,7 @@
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+             mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Available, result.State);
+         Assert.Equal("MostUsed", result.Selection.Kind);
+         Assert.Equal(a.Identity, result.Selection.Identity);
+@@ -60,7 +60,7 @@
+     {
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue())));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.NoneConfigured, result.State);
+         Assert.Equal("Generic", result.Selection.Kind);
+         Assert.Null(result.Selection.Identity);
+@@ -73,7 +73,7 @@
+         var archived = Assistant("archived", archived: true);
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(disabled, archived))));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.NoneConfigured, result.State);
+     }
+ 
+@@ -82,7 +82,7 @@
+     {
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(null)));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+         Assert.Equal("Generic", result.Selection.Kind);
+     }
+@@ -92,7 +92,7 @@
+     {
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => throw new UnauthorizedAccessException("no access")));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+     }
+ 
+@@ -102,7 +102,7 @@
+         var a = Assistant("a");
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a))));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.UsageNotRecorded, result.State);
+         Assert.Equal("Generic", result.Selection.Kind);
+         Assert.Null(result.Selection.Identity);
+@@ -118,7 +118,7 @@
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+             running: (configured, _) => throw new UnauthorizedAccessException("no running access"),
+             mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+         Assert.Equal("RunningReadFailed", result.Code);
+         Assert.Equal("Generic", result.Selection.Kind);
+@@ -132,7 +132,7 @@
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
+             mostUsed: (configured, _) => throw new UnauthorizedAccessException("no usage access")));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+         Assert.Equal("UsageReadFailed", result.Code);
+         Assert.Null(result.Selection.Identity);
+@@ -141,7 +141,7 @@
+     [Fact]
+     public async Task Catalogue_cancellation_is_cancelled_distinct_from_none_or_cached_success()
+     {
+-        using var cts = new CancellationTokenSource();
++        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+         cts.Cancel();
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => throw new OperationCanceledException(cts.Token)));
+@@ -155,7 +155,7 @@
+     public async Task Running_cancellation_is_cancelled_and_never_selects_mostused()
+     {
+         var a = Assistant("a"); var b = Assistant("b");
+-        using var cts = new CancellationTokenSource();
++        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+         cts.Cancel();
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+@@ -175,7 +175,7 @@
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+             running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(stale)));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+         Assert.Equal("StaleRunningSnapshot", result.Code);
+         Assert.Null(result.Selection.Identity);
+@@ -190,7 +190,7 @@
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
+             mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(staleRevision)));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
+         Assert.Equal("StaleUsageSnapshot", result.Code);
+         Assert.Null(result.Selection.Identity);
+@@ -203,11 +203,55 @@
+         var projection = new AssistantRailIconProjection(new FakeSource(
+             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
+             running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[1])));
+-        var result = await projection.ResolveAsync();
++        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
+         Assert.Equal(AssistantRailIconState.Available, result.State);
+         Assert.Equal("Running", result.Selection.Kind);
+         Assert.Equal(b.Identity, result.Selection.Identity);
+         Assert.Equal(b.Revision, result.Selection.Revision);
+     }
++
++    [Fact]
++    public async Task Ignored_cancellation_with_none_configured_is_cancelled_not_none()
++    {
++        // Source IGNORES cancellation and returns a truthful empty catalogue; the projection
++        // must still honour the caller's cancellation rather than publish NoneConfigured.
++        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
++        var projection = new AssistantRailIconProjection(new FakeSource(
++            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue())));
++        cts.Cancel();
++        var result = await projection.ResolveAsync(cts.Token);
++        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
++        Assert.Equal("Cancelled", result.Code);
++        Assert.Equal("Generic", result.Selection.Kind);
++    }
++
++    [Fact]
++    public async Task Ignored_cancellation_with_running_selection_is_cancelled_not_available()
++    {
++        var a = Assistant("a");
++        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
++        var projection = new AssistantRailIconProjection(new FakeSource(
++            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
++            running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
++        cts.Cancel();
++        var result = await projection.ResolveAsync(cts.Token);
++        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
++        Assert.Equal("Cancelled", result.Code);
++        Assert.Null(result.Selection.Identity);
++    }
++
++    [Fact]
++    public async Task Ignored_cancellation_with_no_usage_is_cancelled_not_usage_not_recorded()
++    {
++        var a = Assistant("a");
++        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
++        var projection = new AssistantRailIconProjection(new FakeSource(
++            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a))));
++        cts.Cancel();
++        var result = await projection.ResolveAsync(cts.Token);
++        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
++        Assert.Equal("Cancelled", result.Code);
++        Assert.Equal("Generic", result.Selection.Kind);
++    }
+ }
+ #endif
+--- a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppHeaderBindingsTests.cs
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppHeaderBindingsTests.cs
+@@ -66,9 +66,9 @@
+     {
+         var probe = new Probe();
+         var bindings = new HavenAppHeaderBindings(new FakeHostContext(embedded: false), probe.OpenAsync, probe.SearchAsync);
+-        await bindings.DispatchAsync("9to1.Haven.OpenModel", null);
+-        await bindings.DispatchAsync("9to1.Haven.OpenNotifications", null);
+-        await bindings.DispatchAsync("9to1.Haven.OpenProfile", null);
++        await bindings.DispatchAsync("9to1.Haven.OpenModel", null, TestContext.Current.CancellationToken);
++        await bindings.DispatchAsync("9to1.Haven.OpenNotifications", null, TestContext.Current.CancellationToken);
++        await bindings.DispatchAsync("9to1.Haven.OpenProfile", null, TestContext.Current.CancellationToken);
+         Assert.Equal(["9to1.Haven.OpenModel", "9to1.Haven.OpenNotifications", "9to1.Haven.OpenProfile"], probe.Opened);
+     }
+ 
+@@ -78,7 +78,7 @@
+         var probe = new Probe();
+         var bindings = new HavenAppHeaderBindings(new FakeHostContext(embedded: true), probe.OpenAsync, probe.SearchAsync);
+         bindings.SearchText = "geometry dash";
+-        await bindings.DispatchAsync("9to1.Haven.Search", null);
++        await bindings.DispatchAsync("9to1.Haven.Search", null, TestContext.Current.CancellationToken);
+         Assert.Equal(["geometry dash"], probe.Searched);
+     }
+ 
+--- a/9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs
++++ b/9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs
+@@ -732,15 +732,21 @@
+                 var admission = await ReobserveActorAsync(token);
+                 if (admission != ActorAdmissionStatus.Current)
+                 {
+-                    Refuse(_host.ActorAdmissionCode(admission), admission == ActorAdmissionStatus.Cancelled
++                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(admission), admission == ActorAdmissionStatus.Cancelled
+                         ? "The notifications read was cancelled."
+                         : "The authenticated profile changed; reopen notifications.");
+                     return;
+                 }
++                // Re-check exact panel/generation/full actor AFTER the admission await and
++                // immediately BEFORE acquisition; a replacement panel mounted during the await
++                // must never be read or published onto.
++                if (!IsCurrent()) { Refuse("StalePanel", "This notifications panel is no longer current."); return; }
+                 var items = await _service.GetRecentAsync(50, includeDismissed: false, token).ConfigureAwait(false);
+                 // Marshal the visible row mutation and PropertyChanged publication to the UI
+-                // thread (real async service reads resume off-UI). Revalidate immediately before
+-                // publication so a retired panel never publishes onto a replacement surface.
++                // thread (real async service reads resume off-UI). Revalidate the ACTUAL actor
++                // (not merely the cached profile) immediately before publication so a retired
++                // or actor-switched panel never publishes onto a replacement surface.
++                if (!IsCurrent() || await ReobserveActorAsync(token) != ActorAdmissionStatus.Current) return;
+                 await Dispatcher.UIThread.InvokeAsync(() =>
+                 {
+                     if (!IsCurrent()) return;
+@@ -806,13 +812,24 @@
+                 var before = await ReobserveActorAsync(token);
+                 if (before != ActorAdmissionStatus.Current)
+                 {
+-                    Refuse(_host.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
++                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
+                         ? "The notifications mark-read was cancelled."
+                         : "The authenticated profile changed; reopen notifications.");
+                     return;
+                 }
+                 // Validate the requested identifier against the current authorized row membership.
+                 if (!IsMemberRow(id)) { Refuse("MalformedCommand", "The notification is not in the current authorized list."); return; }
++                // Re-check exact panel/generation/full actor AFTER the admission await and
++                // immediately BEFORE acquisition; a panel retired (A→B) or actor switched during
++                // the await must never allow A's stale mutation to proceed.
++                var again = await ReobserveActorAsync(token);
++                if (!IsCurrent() || again != ActorAdmissionStatus.Current)
++                {
++                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(again), again == ActorAdmissionStatus.Cancelled
++                        ? "The notifications mark-read was cancelled."
++                        : "This notifications panel is no longer current.");
++                    return;
++                }
+                 await _service.MarkReadAsync(id, read, token).ConfigureAwait(false);
+                 // Revalidate AFTER async acquisition and immediately before publication. If the
+                 // panel/actor retired AFTER the committed mutation, preserve the genuine committed
+@@ -828,12 +845,22 @@
+                 var before = await ReobserveActorAsync(token);
+                 if (before != ActorAdmissionStatus.Current)
+                 {
+-                    Refuse(_host.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
++                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(before), before == ActorAdmissionStatus.Cancelled
+                         ? "The notifications dismiss was cancelled."
+                         : "The authenticated profile changed; reopen notifications.");
+                     return;
+                 }
+                 if (!IsMemberRow(id)) { Refuse("MalformedCommand", "The notification is not in the current authorized list."); return; }
++                // Re-check exact panel/generation/full actor AFTER the admission await and
++                // immediately BEFORE acquisition (same fence as mark-read).
++                var again = await ReobserveActorAsync(token);
++                if (!IsCurrent() || again != ActorAdmissionStatus.Current)
++                {
++                    Refuse(UnifiedWorkspaceHost.ActorAdmissionCode(again), again == ActorAdmissionStatus.Cancelled
++                        ? "The notifications dismiss was cancelled."
++                        : "This notifications panel is no longer current.");
++                    return;
++                }
+                 await _service.DismissAsync(id, token).ConfigureAwait(false);
+                 if (!IsCurrent() || await ReobserveActorAsync(token) != ActorAdmissionStatus.Current) return;
+                 await LoadCoreAsync(token).ConfigureAwait(false);
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj
+@@ -83,6 +83,7 @@
+     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
+     <EmbeddedResource Include="Views/Pages/Home/HavenNotifications.cui" LogicalName="Haven.Desktop.Home.HavenNotifications.cui" />
+     <EmbeddedResource Include="Views/Pages/Home/HavenSharedPanelShell.cui" LogicalName="Haven.Desktop.Home.HavenSharedPanelShell.cui" />
++    <EmbeddedResource Include="Views/Pages/Home/HavenAppHeader.cui" LogicalName="Haven.Desktop.Home.HavenAppHeader.cui" />
+     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
+     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
+     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />

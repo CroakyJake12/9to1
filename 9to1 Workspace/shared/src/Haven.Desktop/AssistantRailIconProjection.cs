@@ -132,7 +132,7 @@ public sealed class AssistantRailIconProjection(IAssistantRailIconSource source)
                 && definition.Configuration.Enabled && !definition.Configuration.Archived)
             .ToArray();
         if (configured.Length == 0)
-            return AssistantRailIconReadResult.NoneConfigured;
+            return WithCancellationCheck(token) ?? AssistantRailIconReadResult.NoneConfigured;
 
         // Running-first: an authorised running read is the only way to establish precedence. A
         // fault here must NOT be downgraded to "no running" (which would let a most-used selection
@@ -153,9 +153,10 @@ public sealed class AssistantRailIconProjection(IAssistantRailIconSource source)
         if (running is not null)
         {
             // Only publish a running snapshot that matches a fresh authorised configured entry
-            // (identity + revision). A stale/unrelated snapshot is never trusted.
+            // (identity + revision). A stale/unrelated snapshot is never trusted. A source that
+            // ignores caller cancellation must not publish a successful selection.
             if (TryMatchConfigured(configured, running) is { } runningMatch)
-                return AssistantRailIconReadResult.Running(runningMatch);
+                return WithCancellationCheck(token) ?? AssistantRailIconReadResult.Running(runningMatch);
             return AssistantRailIconReadResult.Unavailable("StaleRunningSnapshot",
                 "The running-assistant read returned a snapshot that is not in the current authorised configuration.");
         }
@@ -177,15 +178,25 @@ public sealed class AssistantRailIconProjection(IAssistantRailIconSource source)
         if (mostUsed is not null)
         {
             if (TryMatchConfigured(configured, mostUsed) is { } usedMatch)
-                return AssistantRailIconReadResult.MostUsed(usedMatch);
+                return WithCancellationCheck(token) ?? AssistantRailIconReadResult.MostUsed(usedMatch);
             return AssistantRailIconReadResult.Unavailable("StaleUsageSnapshot",
                 "The most-used-assistant read returned a snapshot that is not in the current authorised configuration.");
         }
 
         // Configured assistants exist, an authorised running read proved none is running, and no
         // genuine usage aggregate is recorded.
-        return AssistantRailIconReadResult.UsageNotRecorded;
+        return WithCancellationCheck(token) ?? AssistantRailIconReadResult.UsageNotRecorded;
     }
+
+    /// <summary>Returns a structured Cancelled result when the caller's token is cancelled, or
+    /// null so the caller may publish its genuine successful result. Guards the publication of
+    /// any successful selection/state against a token that a source may have ignored (an
+    /// ignored-cancel completion must never publish Available/None/UsageNotRecorded). Genuine
+    /// returned source faults and authority distinctions (unavailable/denied/stale) are kept.</summary>
+    private static AssistantRailIconReadResult? WithCancellationCheck(CancellationToken token)
+        => token.IsCancellationRequested
+            ? AssistantRailIconReadResult.Cancelled("The assistant read was cancelled.")
+            : null;
 
     private static AssistantDefinitionSnapshot? TryMatchConfigured(
         IReadOnlyList<AssistantDefinitionSnapshot> configured, AssistantDefinitionSnapshot candidate)

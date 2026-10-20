@@ -34,7 +34,7 @@ public sealed class AssistantRailIconProjectionTests
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
             running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[1])));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Available, result.State);
         Assert.Equal("Running", result.Selection.Kind);
         Assert.Equal(b.Identity, result.Selection.Identity);
@@ -49,7 +49,7 @@ public sealed class AssistantRailIconProjectionTests
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
             mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Available, result.State);
         Assert.Equal("MostUsed", result.Selection.Kind);
         Assert.Equal(a.Identity, result.Selection.Identity);
@@ -60,7 +60,7 @@ public sealed class AssistantRailIconProjectionTests
     {
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue())));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.NoneConfigured, result.State);
         Assert.Equal("Generic", result.Selection.Kind);
         Assert.Null(result.Selection.Identity);
@@ -73,7 +73,7 @@ public sealed class AssistantRailIconProjectionTests
         var archived = Assistant("archived", archived: true);
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(disabled, archived))));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.NoneConfigured, result.State);
     }
 
@@ -82,7 +82,7 @@ public sealed class AssistantRailIconProjectionTests
     {
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(null)));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
         Assert.Equal("Generic", result.Selection.Kind);
     }
@@ -92,7 +92,7 @@ public sealed class AssistantRailIconProjectionTests
     {
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => throw new UnauthorizedAccessException("no access")));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
     }
 
@@ -102,7 +102,7 @@ public sealed class AssistantRailIconProjectionTests
         var a = Assistant("a");
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a))));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.UsageNotRecorded, result.State);
         Assert.Equal("Generic", result.Selection.Kind);
         Assert.Null(result.Selection.Identity);
@@ -118,7 +118,7 @@ public sealed class AssistantRailIconProjectionTests
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
             running: (configured, _) => throw new UnauthorizedAccessException("no running access"),
             mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
         Assert.Equal("RunningReadFailed", result.Code);
         Assert.Equal("Generic", result.Selection.Kind);
@@ -132,7 +132,7 @@ public sealed class AssistantRailIconProjectionTests
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
             mostUsed: (configured, _) => throw new UnauthorizedAccessException("no usage access")));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
         Assert.Equal("UsageReadFailed", result.Code);
         Assert.Null(result.Selection.Identity);
@@ -141,7 +141,7 @@ public sealed class AssistantRailIconProjectionTests
     [Fact]
     public async Task Catalogue_cancellation_is_cancelled_distinct_from_none_or_cached_success()
     {
-        using var cts = new CancellationTokenSource();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         cts.Cancel();
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => throw new OperationCanceledException(cts.Token)));
@@ -155,7 +155,7 @@ public sealed class AssistantRailIconProjectionTests
     public async Task Running_cancellation_is_cancelled_and_never_selects_mostused()
     {
         var a = Assistant("a"); var b = Assistant("b");
-        using var cts = new CancellationTokenSource();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         cts.Cancel();
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
@@ -175,7 +175,7 @@ public sealed class AssistantRailIconProjectionTests
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
             running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(stale)));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
         Assert.Equal("StaleRunningSnapshot", result.Code);
         Assert.Null(result.Selection.Identity);
@@ -190,7 +190,7 @@ public sealed class AssistantRailIconProjectionTests
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
             mostUsed: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(staleRevision)));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Unavailable, result.State);
         Assert.Equal("StaleUsageSnapshot", result.Code);
         Assert.Null(result.Selection.Identity);
@@ -203,11 +203,55 @@ public sealed class AssistantRailIconProjectionTests
         var projection = new AssistantRailIconProjection(new FakeSource(
             _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a, b)),
             running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[1])));
-        var result = await projection.ResolveAsync();
+        var result = await projection.ResolveAsync(TestContext.Current.CancellationToken);
         Assert.Equal(AssistantRailIconState.Available, result.State);
         Assert.Equal("Running", result.Selection.Kind);
         Assert.Equal(b.Identity, result.Selection.Identity);
         Assert.Equal(b.Revision, result.Selection.Revision);
+    }
+
+    [Fact]
+    public async Task Ignored_cancellation_with_none_configured_is_cancelled_not_none()
+    {
+        // Source IGNORES cancellation and returns a truthful empty catalogue; the projection
+        // must still honour the caller's cancellation rather than publish NoneConfigured.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue())));
+        cts.Cancel();
+        var result = await projection.ResolveAsync(cts.Token);
+        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
+        Assert.Equal("Cancelled", result.Code);
+        Assert.Equal("Generic", result.Selection.Kind);
+    }
+
+    [Fact]
+    public async Task Ignored_cancellation_with_running_selection_is_cancelled_not_available()
+    {
+        var a = Assistant("a");
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a)),
+            running: (configured, _) => Task.FromResult<AssistantDefinitionSnapshot?>(configured[0])));
+        cts.Cancel();
+        var result = await projection.ResolveAsync(cts.Token);
+        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
+        Assert.Equal("Cancelled", result.Code);
+        Assert.Null(result.Selection.Identity);
+    }
+
+    [Fact]
+    public async Task Ignored_cancellation_with_no_usage_is_cancelled_not_usage_not_recorded()
+    {
+        var a = Assistant("a");
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var projection = new AssistantRailIconProjection(new FakeSource(
+            _ => Task.FromResult<AssistantCatalogueObservation?>(Catalogue(a))));
+        cts.Cancel();
+        var result = await projection.ResolveAsync(cts.Token);
+        Assert.Equal(AssistantRailIconState.Cancelled, result.State);
+        Assert.Equal("Cancelled", result.Code);
+        Assert.Equal("Generic", result.Selection.Kind);
     }
 }
 #endif
