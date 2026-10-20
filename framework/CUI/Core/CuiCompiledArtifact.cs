@@ -47,6 +47,18 @@ public static class CuiCompiledArtifactCodec
     /// <summary>Stateful runtime ABI required for V2 stateful documents.</summary>
     public const string V2RuntimeAbiVersion = "2";
 
+    /// <summary>Minimum ABI required by genuine stateless (V1-eligible) compiled documents. This is
+    /// deliberately decoupled from <see cref="V2RuntimeAbiVersion"/> and from whatever ABI the
+    /// runtime advertises, so a stateful-aware runtime can advertise the higher current ABI without
+    /// stamping stateless documents as stateful.</summary>
+    public const string V1RuntimeAbiVersion = "1";
+
+    /// <summary>Stateful feature capability names derived from the actual typed semantics (never from
+    /// a capability string alone): a pure-local Toggle action and a choose-once RandomOnce variable.
+    /// A stripped capability string cannot downgrade these genuine requirements.</summary>
+    public const string LocalStateToggleCapability = "local-state-toggle";
+    public const string LocalStateRandomSelectCapability = "local-state-random-select";
+
     public static JsonSerializerOptions Options { get; } = CreateOptions();
 
     public static byte[] WriteArtifact(CuiCompiledArtifact artifact) =>
@@ -57,6 +69,10 @@ public static class CuiCompiledArtifactCodec
     public static CuiCompiledArtifact ReadArtifact(byte[] utf8)
     {
         ArgumentNullException.ThrowIfNull(utf8);
+        // Reject duplicate exact JSON symbol keys before deserialization collapses them (the HashSet
+        // admission checks below cannot detect ambiguity that was already lost). Case-distinct Ordinal
+        // keys (Flag/flag) remain distinct.
+        RejectDuplicateJsonKeys(utf8);
         CuiCompiledArtifact artifact;
         try
         {
@@ -87,6 +103,8 @@ public static class CuiCompiledArtifactCodec
         var sourceIds = new HashSet<string>(StringComparer.Ordinal);
         string? maxAbi = null;
         var envelopeCaps = new HashSet<string>(StringComparer.Ordinal);
+        string? firstLanguage = null;
+        string? firstRegistry = null;
 
         foreach (var document in artifact.Documents)
         {
@@ -112,25 +130,53 @@ public static class CuiCompiledArtifactCodec
                 if (entry is null || string.IsNullOrWhiteSpace(entry.StableId))
                     throw new CuiV2AdmissionException("CUIR072",
                         $"Compiled document '{document.Source}' has an invalid source-map entry.");
+                if (entry.Source is null)
+                    throw new CuiV2AdmissionException("CUIR072",
+                        $"Compiled document '{document.Source}' has a source-map entry without a source span.");
             }
 
             if (document.Dependencies is null)
                 throw new CuiV2AdmissionException("CUIR072", $"Compiled document '{document.Source}' has no dependency graph.");
+            if (document.Dependencies.Entries is null)
+                throw new CuiV2AdmissionException("CUIR072", $"Compiled document '{document.Source}' has a null dependency entry list.");
             foreach (var dependency in document.Dependencies.Entries)
             {
                 if (dependency is null || string.IsNullOrWhiteSpace(dependency.StableId)
+                    || string.IsNullOrWhiteSpace(dependency.Name)
                     || !ValidDependencyKinds.Contains(dependency.Kind))
                     throw new CuiV2AdmissionException("CUIR071",
-                        $"Compiled document '{document.Source}' carries an unsupported dependency kind '{dependency?.Kind}'.");
+                        $"Compiled document '{document.Source}' carries an unsupported or malformed dependency kind '{dependency?.Kind}'.");
+            }
+
+            if (firstLanguage is null)
+            {
+                firstLanguage = document.Metadata.LanguageVersion;
+                firstRegistry = document.Metadata.ComponentRegistryVersion;
+            }
+            else
+            {
+                if (!string.Equals(firstLanguage, document.Metadata.LanguageVersion, StringComparison.Ordinal))
+                    throw new CuiV2AdmissionException("CUIR075",
+                        $"Compiled document '{document.Source}' language version '{document.Metadata.LanguageVersion}' disagrees with sibling '{firstLanguage}'.");
+                if (!string.Equals(firstRegistry, document.Metadata.ComponentRegistryVersion, StringComparison.Ordinal))
+                    throw new CuiV2AdmissionException("CUIR075",
+                        $"Compiled document '{document.Source}' component registry '{document.Metadata.ComponentRegistryVersion}' disagrees with sibling '{firstRegistry}'.");
             }
 
             var stateful = RequiresAbi2(document.Semantics);
-            if (stateful && !string.Equals(document.Metadata.RuntimeAbiVersion, V2RuntimeAbiVersion, StringComparison.Ordinal))
-                throw new CuiV2AdmissionException("CUIR074",
-                    $"Compiled document '{document.Source}' carries stateful typed semantics but declares ABI '{document.Metadata.RuntimeAbiVersion}'; stateful documents require ABI {V2RuntimeAbiVersion}.");
+            if (stateful)
+            {
+                if (!string.Equals(document.Metadata.RuntimeAbiVersion, V2RuntimeAbiVersion, StringComparison.Ordinal))
+                    throw new CuiV2AdmissionException("CUIR074",
+                        $"Compiled document '{document.Source}' carries stateful typed semantics but declares ABI '{document.Metadata.RuntimeAbiVersion}'; stateful documents require ABI {V2RuntimeAbiVersion}.");
+                foreach (var capability in DeriveRequiredCapabilities(document.Semantics))
+                    if (!CapsOrEmpty(document.Metadata).Contains(capability))
+                        throw new CuiV2AdmissionException("CUIR076",
+                            $"Compiled document '{document.Source}' performs required feature '{capability}' but does not declare it; a stripped capability string cannot downgrade it.");
+            }
 
             maxAbi = MaxAbi(maxAbi, document.Metadata.RuntimeAbiVersion);
-            envelopeCaps.UnionWith(document.Metadata.RequiredCapabilities);
+            envelopeCaps.UnionWith(CapsOrEmpty(document.Metadata));
         }
 
         if (artifact.Metadata is null)
@@ -139,9 +185,15 @@ public static class CuiCompiledArtifactCodec
         if (!string.Equals(artifact.Metadata.RuntimeAbiVersion, expectedMaxAbi, StringComparison.Ordinal))
             throw new CuiV2AdmissionException("CUIR075",
                 $"The artifact envelope ABI '{artifact.Metadata.RuntimeAbiVersion}' does not equal the maximum document ABI '{expectedMaxAbi}'.");
-        if (!artifact.Metadata.RequiredCapabilities.ToHashSet(StringComparer.Ordinal).SetEquals(envelopeCaps))
+        if (!CapsOrEmpty(artifact.Metadata).ToHashSet(StringComparer.Ordinal).SetEquals(envelopeCaps))
             throw new CuiV2AdmissionException("CUIR075",
                 "The artifact envelope capability set does not equal the union of document requirements.");
+        if (firstLanguage is not null && !string.Equals(firstLanguage, artifact.Metadata.LanguageVersion, StringComparison.Ordinal))
+            throw new CuiV2AdmissionException("CUIR075",
+                $"The artifact envelope language version '{artifact.Metadata.LanguageVersion}' does not match its documents ('{firstLanguage}').");
+        if (firstRegistry is not null && !string.Equals(firstRegistry, artifact.Metadata.ComponentRegistryVersion, StringComparison.Ordinal))
+            throw new CuiV2AdmissionException("CUIR075",
+                $"The artifact envelope component registry version '{artifact.Metadata.ComponentRegistryVersion}' does not match its documents ('{firstRegistry}').");
     }
 
     /// <summary>Statefulness is determined by inspecting typed semantics (document-root local
@@ -151,6 +203,62 @@ public static class CuiCompiledArtifactCodec
         ArgumentNullException.ThrowIfNull(semantics);
         return (semantics.Variables is { Count: > 0 })
             || (semantics.Actions is not null && semantics.Actions.Values.Any(action => action.LocalTarget is not null));
+    }
+
+    /// <summary>Derives the mandatory feature capabilities required by the actual typed semantics
+    /// (a pure-local Toggle targets declared local state; a choose-once RandomOnce variable selects
+    /// from a source pool once). These genuine requirements can never be waived by stripping
+    /// capability strings from the payload.</summary>
+    private static HashSet<string> DeriveRequiredCapabilities(CuiV2Semantics semantics)
+    {
+        var required = new HashSet<string>(StringComparer.Ordinal);
+        if (semantics.Actions is not null)
+            foreach (var action in semantics.Actions.Values)
+                if (action?.LocalTarget is not null)
+                    required.Add(LocalStateToggleCapability);
+        if (semantics.Variables is not null)
+            foreach (var variable in semantics.Variables.Values)
+                if (variable is not null && !string.IsNullOrEmpty(variable.Selection))
+                    required.Add(LocalStateRandomSelectCapability);
+        return required;
+    }
+
+    private static IReadOnlyList<string> CapsOrEmpty(CuiCompilationMetadata metadata) =>
+        metadata.RequiredCapabilities ?? Array.Empty<string>();
+
+    /// <summary>Rejects duplicate exact JSON object keys before System.Text.Json deserialization
+    /// collapses them (for example two sibling symbol definitions with the same key, or duplicate
+    /// identity fields). Case-distinct Ordinal keys remain distinct and are preserved.</summary>
+    private static void RejectDuplicateJsonKeys(byte[] utf8)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(utf8,
+                new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Disallow, AllowTrailingCommas = false });
+            Walk(document.RootElement);
+        }
+        catch (JsonException)
+        {
+            // Malformed JSON is reported as CUIR070 during deserialization in ReadArtifact.
+        }
+
+        static void Walk(JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var property in element.EnumerateObject())
+                {
+                    if (!seen.Add(property.Name))
+                        throw new CuiV2AdmissionException("CUIR073", $"Duplicate JSON object key '{property.Name}'.");
+                    Walk(property.Value);
+                }
+            }
+            else if (element.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in element.EnumerateArray()) Walk(item);
+            }
+        }
     }
 
     private static readonly HashSet<string> ValidDependencyKinds = new(StringComparer.Ordinal)
@@ -173,12 +281,24 @@ public static class CuiCompiledArtifactCodec
 
     private static void ValidateSemantics(CuiV2Semantics semantics, string source)
     {
+        if (string.IsNullOrWhiteSpace(semantics.SourceName))
+            throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has no source name.");
+        if (semantics.Span is null)
+            throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' is missing its root source span.");
         if (semantics.Components is null)
             throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has no component tree.");
         if (semantics.Resources is null || semantics.Actions is null || semantics.Templates is null
             || semantics.RootProperties is null || semantics.Imports is null || semantics.Variables is null
             || semantics.Styles is null)
             throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' is missing a required semantic collection.");
+
+        foreach (var import in semantics.Imports)
+        {
+            if (import is null || string.IsNullOrWhiteSpace(import.Source))
+                throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has a null/unsourced import.");
+            if (import.Span is null)
+                throw new CuiV2AdmissionException("CUIR072", $"Import '{import.Source}' in '{source}' is missing its source span.");
+        }
 
         foreach (var style in semantics.Styles) ValidateStyle(style, source);
 
@@ -189,6 +309,10 @@ public static class CuiCompiledArtifactCodec
                 throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has a null/unnamed action.");
             if (!actionNames.Add(name))
                 throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' declares duplicate action '{name}'.");
+            if (!string.Equals(action.Name, name, StringComparison.Ordinal))
+                throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' action key '{name}' disagrees with its identity '{action.Name}'.");
+            if (action.Span is null)
+                throw new CuiV2AdmissionException("CUIR072", $"Action '{name}' in '{source}' is missing its source span.");
             if (action.Parameter is { } parameter) ValidateValue(parameter, source);
         }
 
@@ -199,6 +323,10 @@ public static class CuiCompiledArtifactCodec
                 throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has a null/unnamed variable.");
             if (!variableNames.Add(name))
                 throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' declares duplicate variable '{name}'.");
+            if (!string.Equals(variable.Name, name, StringComparison.Ordinal))
+                throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' variable key '{name}' disagrees with its identity '{variable.Name}'.");
+            if (variable.Span is null)
+                throw new CuiV2AdmissionException("CUIR072", $"Variable '{name}' in '{source}' is missing its source span.");
         }
 
         var resourceKeys = new HashSet<string>(StringComparer.Ordinal);
@@ -208,6 +336,8 @@ public static class CuiCompiledArtifactCodec
                 throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has a null/unnamed resource.");
             if (!resourceKeys.Add(key))
                 throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' declares duplicate resource '{key}'.");
+            if (!string.Equals(resource.Key, key, StringComparison.Ordinal))
+                throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' resource key '{key}' disagrees with its identity '{resource.Key}'.");
             ValidateValue(resource.Value, source);
         }
 
@@ -218,8 +348,12 @@ public static class CuiCompiledArtifactCodec
                 throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has a null/unnamed template.");
             if (!templateNames.Add(name))
                 throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' declares duplicate template '{name}'.");
+            if (!string.Equals(template.Name, name, StringComparison.Ordinal))
+                throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' template key '{name}' disagrees with its identity '{template.Name}'.");
             if (template.Parameters is null || template.Content is null)
                 throw new CuiV2AdmissionException("CUIR072", $"Template '{name}' in '{source}' is missing parameters/content.");
+            if (template.Span is null)
+                throw new CuiV2AdmissionException("CUIR072", $"Template '{name}' in '{source}' is missing its source span.");
             foreach (var component in template.Content) ValidateComponent(component, source);
         }
 
@@ -247,21 +381,48 @@ public static class CuiCompiledArtifactCodec
             if (string.IsNullOrWhiteSpace(actionRef?.Name))
                 throw new CuiV2AdmissionException("CUIR072",
                     $"Component '{component.Type}' in '{source}' has a null/unnamed action reference.");
+            if (actionRef!.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"Action reference '{actionRef.Name}' on '{component.Type}' in '{source}' is missing its source span.");
         }
-        if (component.Condition is { } condition) ValidateValue(condition.Test, source);
+        if (component.Condition is { } condition)
+        {
+            ValidateValue(condition.Test, source);
+            if (condition.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"Condition on '{component.Type}' in '{source}' is missing its source span.");
+        }
         if (component.Repeat is { } repeat)
         {
             ValidateValue(repeat.Source, source);
             ValidateValue(repeat.Key, source);
+            if (repeat.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"Repeat on '{component.Type}' in '{source}' is missing its source span.");
             if (repeat.Template is { } template) ValidateValue(template, source);
         }
-        if (component.List is { } list) ValidateValue(list.Items, source);
-        if (component.PropertyRegion is { } region) ValidateValue(region.Value, source);
+        if (component.List is { } list)
+        {
+            ValidateValue(list.Items, source);
+            if (list.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"List on '{component.Type}' in '{source}' is missing its source span.");
+        }
+        if (component.PropertyRegion is { } region)
+        {
+            ValidateValue(region.Value, source);
+            if (region.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"Property region on '{component.Type}' in '{source}' is missing its source span.");
+        }
         foreach (var part in component.TextParts)
         {
             if (part is null || string.IsNullOrWhiteSpace(part.Kind))
                 throw new CuiV2AdmissionException("CUIR071",
                     $"Component '{component.Type}' in '{source}' has a null/unknown text part.");
+            if (part.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"Text part on '{component.Type}' in '{source}' is missing its source span.");
             if (part.Kind == CuiV2TextPartKind.Expression && part.ExpressionValue is { } expressionValue)
                 ValidateValue(expressionValue, source);
             else if (part.Kind != CuiV2TextPartKind.Literal)

@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using CakeOS.Cui;
 using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Language;
@@ -73,12 +72,24 @@ public sealed class CuiLocalStateAbiOutputTests
         var assembly = typeof(CakeOS.Cui.Compiler.CuiCompilationMetadata).Assembly;
         Assert.Equal("CakeOS.Cui.Core", assembly.GetName().Name);
 
-        // The Compiler assembly must forward the historical CLR identity so an old assembly-qualified
-        // reference ("CakeOS.Cui.Compiler.CuiCompilationMetadata, CakeOS.Cui.Compiler") resolves to
-        // the Core type rather than failing.
         var compilerAssembly = typeof(CakeOS.Cui.Compiler.CuiCompiler).Assembly;
-        var forwarders = compilerAssembly.GetCustomAttributes<TypeForwardedToAttribute>().ToArray();
-        Assert.Contains(forwarders, forwarder => forwarder.Destination == typeof(CuiCompilationMetadata));
+
+        // Real forwarding evidence #1: the Compiler assembly's forwarded-type table must expose the
+        // Core type (this is the metadata that actually redirects an old reference). GetForwardedTypes
+        // can throw if any unrelated forwarded type fails to load; tolerate that, but the target type
+        // must always be present.
+        Type[] forwarded;
+        try { forwarded = compilerAssembly.GetForwardedTypes(); }
+        catch (ReflectionTypeLoadException ex) { forwarded = ex.Types.OfType<Type>().ToArray(); }
+        Assert.Contains(forwarded, t => t == typeof(CuiCompilationMetadata));
+
+        // Real forwarding evidence #2: the historical assembly-qualified name used by precompiled
+        // V1 consumers must resolve to the live type in the Core assembly — not fail, and never land
+        // in the Compiler assembly.
+        var resolved = Type.GetType("CakeOS.Cui.Compiler.CuiCompilationMetadata, CakeOS.Cui.Compiler", throwOnError: false);
+        Assert.NotNull(resolved);
+        Assert.Equal(typeof(CuiCompilationMetadata), resolved);
+        Assert.Equal("CakeOS.Cui.Core", resolved!.Assembly.GetName().Name);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using CakeOS.Cui;
 using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Runtime;
@@ -192,7 +193,8 @@ public sealed class CuiV2TransportCodecTests
     {
         var (output, _) = Compile("<Cui><Page><Text Text=\"hi\" /></Page></Cui>");
         Assert.Equal("1", output.Metadata.RuntimeAbiVersion);
-        Assert.Equal(CuiCompiledArtifactCodec.V1ResourceLogicalName, CuiCompiledArtifactCodec.V1ResourceLogicalName);
+        Assert.Equal("CUI.Compilation.v1", CuiCompiledArtifactCodec.V1ResourceLogicalName);
+        Assert.NotEqual(CuiCompiledArtifactCodec.ResourceLogicalName, CuiCompiledArtifactCodec.V1ResourceLogicalName);
 
         var v1 = CuiV1ArtifactCodec.WriteBundle(
             [new CuiV1ArtifactCodec.CuiV1Compiled(output, "sample.cui", Hash("stateless"))], "compiler");
@@ -347,5 +349,230 @@ public sealed class CuiV2TransportCodecTests
         var bytes = CuiCompiledArtifactCodec.WriteArtifact(artifact);
         var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
         Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Null_dependency_entries_are_rejected()
+    {
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            EmptySemantics(SpanAt()), Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(null!));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document));
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Null_document_root_span_is_rejected()
+    {
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            EmptySemantics(null!), Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document));
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Null_action_span_is_rejected()
+    {
+        var span = SpanAt();
+        var actions = new Dictionary<string, CuiV2Action>(StringComparer.Ordinal)
+        {
+            ["t"] = new CuiV2Action("t", "cmd", null, null!),
+        };
+        var semantics = EmptySemantics(span) with { Actions = actions };
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            semantics, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document));
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Null_import_span_is_rejected()
+    {
+        var span = SpanAt();
+        var imports = new[] { new CuiV2Import("other.cui", null, null!) };
+        var semantics = EmptySemantics(span) with { Imports = imports };
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            semantics, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document));
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Action_identity_key_mismatch_is_rejected()
+    {
+        var span = SpanAt();
+        var actions = new Dictionary<string, CuiV2Action>(StringComparer.Ordinal)
+        {
+            ["t"] = new CuiV2Action("u", "cmd", null, span),
+        };
+        var semantics = EmptySemantics(span) with { Actions = actions };
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            semantics, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document));
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR073", error.Code);
+    }
+
+    [Fact]
+    public void Stateful_semantics_with_stripped_required_capability_is_rejected()
+    {
+        // A choose-once RandomOnce variable is genuinely stateful and requires the
+        // local-state-random-select capability. Stripping the capability string cannot downgrade it.
+        var span = SpanAt();
+        var variables = new Dictionary<string, CuiV2Variable>(StringComparer.Ordinal)
+        {
+            ["Pick"] = new CuiV2Variable("Pick", "string", "", span, Source: "Candidates", Selection: "RandomOnce"),
+        };
+        var semantics = EmptySemantics(span) with { Variables = variables };
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "2"),
+            semantics, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(MakeArtifact(document));
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR076", error.Code);
+    }
+
+    [Fact]
+    public void Envelope_document_language_mismatch_is_rejected()
+    {
+        var doc = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            EmptySemantics(SpanAt()), Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var envelope = Meta("2", "1");
+        var artifact = new CuiCompiledArtifact(CuiCompiledArtifactCodec.FormatName, CuiCompiledArtifactCodec.FormatVersion,
+            "compiler", envelope, [doc]);
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(artifact);
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR075", error.Code);
+    }
+
+    [Fact]
+    public void Duplicate_exact_json_symbol_keys_are_rejected()
+    {
+        // Duplicate exact JSON object keys are collapsed during deserialization before the HashSet
+        // identity checks could ever observe them; the codec must reject the original ambiguity at
+        // the raw-JSON layer. (Case-distinct Ordinal keys remain distinct — covered separately.)
+        const string json = """
+            { "Format": "cui-build-compilation", "FormatVersion": 2,
+              "CompilerSha256": "x", "Metadata": {},
+              "Documents": [ { "Source": "a.cui", "Source": "b.cui" } ] }
+            """;
+        var error = Assert.Throws<CuiV2AdmissionException>(
+            () => CuiCompiledArtifactCodec.ReadArtifact(Encoding.UTF8.GetBytes(json)));
+        Assert.Equal("CUIR073", error.Code);
+    }
+
+    [Fact]
+    public void Genuine_v1_baseline_reader_tolerates_capabilities_and_unknown_fields()
+    {
+        // The genuine V1 reader is the unchanged baseline consumer: it reconstructs the typed model
+        // but does not apply V2's strict capability/envelope admission. It must therefore tolerate a
+        // producer that omits RequiredCapabilities entirely, and one that carries an unknown
+        // capability — both of which the V2 codec would reject.
+        var (output, _) = Compile("<Cui><Page><Text Text=\"hi\" /></Page></Cui>");
+        var v1 = CuiV1ArtifactCodec.WriteBundle(
+            [new CuiV1ArtifactCodec.CuiV1Compiled(output, "sample.cui", Hash("stateless"))], "compiler");
+
+        var stripped = CuiV1ArtifactCodec.ReadArtifact(Transform(v1, omitKey: "RequiredCapabilities", injectIntoRootMetadataCap: null));
+        Assert.Equal(1, stripped.FormatVersion);
+        var doc = Assert.Single(stripped.Documents);
+        Assert.Equal("sample.cui", doc.Source);
+        Assert.Empty(doc.Metadata.RequiredCapabilities);
+
+        var injected = CuiV1ArtifactCodec.ReadArtifact(Transform(v1, omitKey: null, injectIntoRootMetadataCap: "future-capability"));
+        Assert.Contains("future-capability", injected.Metadata.RequiredCapabilities);
+    }
+
+    private static CuiV2Semantics EmptySemantics(CuiV2Span span) => new(
+        "sample.cui",
+        new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal),
+        Array.Empty<CuiV2Style>(),
+        new Dictionary<string, CuiV2Action>(StringComparer.Ordinal),
+        new Dictionary<string, CuiV2Template>(StringComparer.Ordinal),
+        Array.Empty<CuiV2Component>(),
+        span,
+        new Dictionary<string, CuiV2Value>(StringComparer.Ordinal),
+        Array.Empty<CuiV2Import>(),
+        new Dictionary<string, CuiV2Variable>(StringComparer.Ordinal));
+
+    /// <summary>Rewrites a JSON document, optionally omitting every property named
+    /// <paramref name="omitKey"/> and/or injecting an extra capability into the root-level metadata
+    /// object. Used to shape genuine-V1 payloads for the baseline-consumer test.</summary>
+    private static byte[] Transform(byte[] input, string? omitKey, string? injectIntoRootMetadataCap)
+    {
+        using var document = JsonDocument.Parse(input);
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            Write(writer, document.RootElement, isRoot: true);
+        }
+        return stream.ToArray();
+
+        void Write(Utf8JsonWriter w, JsonElement element, bool isRoot)
+        {
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.Object:
+                    w.WriteStartObject();
+                    foreach (var property in element.EnumerateObject())
+                    {
+                        if (omitKey is not null && property.Name == omitKey) continue;
+                        if (isRoot && injectIntoRootMetadataCap is not null && property.Name == "metadata")
+                        {
+                            w.WritePropertyName("metadata");
+                            WriteMetadataWithInjectedCap(w, property.Value);
+                            continue;
+                        }
+                        w.WritePropertyName(property.Name);
+                        Write(w, property.Value, isRoot: false);
+                    }
+                    w.WriteEndObject();
+                    break;
+                case JsonValueKind.Array:
+                    w.WriteStartArray();
+                    foreach (var item in element.EnumerateArray()) Write(w, item, isRoot: false);
+                    w.WriteEndArray();
+                    break;
+                case JsonValueKind.String:
+                    w.WriteStringValue(element.GetString());
+                    break;
+                case JsonValueKind.Number:
+                    w.WriteRawValue(element.GetRawText());
+                    break;
+                case JsonValueKind.True:
+                    w.WriteBooleanValue(true);
+                    break;
+                case JsonValueKind.False:
+                    w.WriteBooleanValue(false);
+                    break;
+                case JsonValueKind.Null:
+                    w.WriteNullValue();
+                    break;
+            }
+        }
+
+        void WriteMetadataWithInjectedCap(Utf8JsonWriter w, JsonElement metadata)
+        {
+            w.WriteStartObject();
+            foreach (var property in metadata.EnumerateObject())
+            {
+                if (property.Name == "RequiredCapabilities")
+                {
+                    w.WritePropertyName("RequiredCapabilities");
+                    w.WriteStartArray();
+                    if (property.Value.ValueKind == JsonValueKind.Array)
+                        foreach (var capability in property.Value.EnumerateArray()) w.WriteStringValue(capability.GetString());
+                    w.WriteStringValue(injectIntoRootMetadataCap);
+                    w.WriteEndArray();
+                }
+                else
+                {
+                    w.WritePropertyName(property.Name);
+                    Write(w, property.Value, isRoot: false);
+                }
+            }
+            w.WriteEndObject();
+        }
     }
 }
