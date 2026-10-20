@@ -1,5 +1,9 @@
 # Agent instructions — 9to1 specification v2
 
+## Pinned owner requirement — one implementation per app
+
+Haven embeds the SAME standalone app implementations, canonical objects, data and services. Never maintain separate older Haven and newer standalone versions of an app. Host chrome/top bars may adapt to the surface as explicitly requested; app behavior and full applicable specification requirements remain shared. Existing Haven code may be reused only if these conditions hold. Verify actual production composition/routes and real runtime surfaces, not just names or duplicate source files. This is a direct owner requirement to keep pinned; read `docs/specification/owner-references/2026-10-20-single-app-implementation/owner-correction.json` at every handoff.
+
 ## Sole product authority
 
 Read [the attached canonical specification](docs/specification/9to1-development-specification-v2.md) before working on any surface. Its SHA-256 is `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`; [provenance](docs/specification/provenance.json) identifies the exact local owner attachment. Do not fetch or substitute a web version. Read the applicable full sections and dependencies, not only an implementation summary.
