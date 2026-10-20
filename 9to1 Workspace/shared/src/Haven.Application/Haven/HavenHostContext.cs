@@ -27,6 +27,46 @@ public interface IHavenHostContext
     /// <summary>The typed gateway that opens the genuine borrowed shared surfaces.
     /// Returns null when a host does not own the shared control cluster.</summary>
     IHavenSharedControlGateway? SharedControls { get; }
+
+    /// <summary>Optional typed snapshot of the current effective model's presentation and
+    /// resource-measurement state for the top-bar cluster. Null means the host does not yet
+    /// supply measurement telemetry; callers MUST render a truthful unavailable state and never
+    /// invent a percentage. The percentage beside the model name (HavenTopBarModelInfo.EffortLabel)
+    /// is exclusively the selected reasoning-effort tier for that exact model/route.</summary>
+    HavenTopBarModelInfo? ModelInfo => null;
+}
+
+/// <summary>
+/// Truthful, typed top-bar model presentation. The percentage beside the model name is ONLY the
+/// currently selected reasoning-effort tier for that model/provider/route (never usage, quota,
+/// context fill, confidence, CPU/GPU/resource utilisation or health). Usage/context are SEPARATE
+/// labelled metrics with actual provenance; absent measurement remains unknown/unavailable, never an
+/// invented 0% or 100%.
+/// </summary>
+public sealed record HavenTopBarModelInfo(
+    string Name,
+    bool EffortConfigurable,
+    int EffortTierCount,
+    string EffortLabel,
+    bool IsLocal,
+    bool RemoteUsageAvailable,
+    string? UsageSummary,
+    string? UsageScope,
+    bool ContextMeasured,
+    string? ContextSummary)
+{
+    /// <summary>Remote model with no trustworthy provider usage telemetry: hide the usage arc and
+    /// surface an accessible "M" note ("Provider usage unavailable; this model may still be
+    /// metered"). Never a bogus zero percentage.</summary>
+    public bool MeterMarker => !IsLocal && !RemoteUsageAvailable;
+
+    /// <summary>Whether the compact usage arc may be shown (only a genuinely measured numerator and
+    /// denominator for the applicable scope/window, and never for a local model).</summary>
+    public bool UsageVisible => !IsLocal && RemoteUsageAvailable && UsageSummary is not null;
+
+    /// <summary>Whether the independent context occupancy metric may be shown (only when actually
+    /// measured).</summary>
+    public bool ContextVisible => ContextMeasured && ContextSummary is not null;
 }
 
 /// <summary>

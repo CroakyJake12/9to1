@@ -34,6 +34,7 @@
     <Compile Include="FloatingFormatToolbarTests.cs" />
     <Compile Include="ChatComposerEmojiPickerViewportTests.cs" />
     <Compile Include="HavenPackagedSvgResolverStrictTests.cs" />
+    <Compile Include="NativeSharedPanelIntegrationTests.cs" />
     <Using Include="Xunit" />
     <PackageReference Include="Avalonia.Headless.XUnit" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

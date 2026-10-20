@@ -178,8 +178,39 @@ public sealed partial class App
             Content = _scene;
         }
 
+        /// <summary>Finds a named authored container by walking the RETAINED authored CUI graph,
+        /// including closed/hidden nested containers. The shared-panel shell authors its backdrop
+        /// and the nested panel host as children that are hidden while no panel is open: a hidden
+        /// cell is removed from the active native layout (Layout.Children), but the authored child
+        /// remains in the owning container's AuthoredChildren. Searching only live visual/logical
+        /// descendants therefore misses the closed nested panel host and the shell silently reports
+        /// an "available but never shown" panel. Traversing the retained authored children finds
+        /// and validates the exact named hosts even before any panel opens.</summary>
         private static CuiContainerControl? FindNamedContainer(Control root, string name) =>
-            root.GetLogicalDescendants().OfType<CuiContainerControl>().FirstOrDefault(control => control.Name == name);
+            FindNamedContainerRecursive(root, name);
+
+        private static CuiContainerControl? FindNamedContainerRecursive(Control control, string name)
+        {
+            if (control is CuiContainerControl named && named.Name == name) return named;
+            switch (control)
+            {
+                case CuiContainerControl container:
+                    // Every authored child (including hidden cells no longer in the active layout)
+                    // is part of the retained authored graph.
+                    foreach (var child in container.AuthoredChildren)
+                        if (FindNamedContainerRecursive(child, name) is { } found) return found;
+                    break;
+                case Panel panel:
+                    foreach (var child in panel.Children)
+                        if (FindNamedContainerRecursive(child, name) is { } found) return found;
+                    break;
+                case Decorator { Child: Control child }:
+                    return FindNamedContainerRecursive(child, name);
+                case ContentControl { Content: Control child }:
+                    return FindNamedContainerRecursive(child, name);
+            }
+            return null;
+        }
 
         /// <summary>Retires a panel loader and retains BOTH disposal phases: the synchronous
         /// Dispose runs unsubscribe/cancel callbacks (which may reenter and mount a replacement),
@@ -192,10 +223,15 @@ public sealed partial class App
             Track(loader.WhenActionsIdleAsync());
         }
 
-        private void ShowSharedPanel(CuiControlLoader loader, Control root)
+        /// <summary>Mounts a loaded panel's authored root into the validated panel host and flips
+        /// the authored HasOpenPanel state. Returns true only when the panel was genuinely mounted.
+        /// When the authored panel host is absent (or mounting/retirement failed), the incoming
+        /// loader is retired, the panel is NOT shown, and the caller must publish a truthful refusal
+        /// instead of reporting success.</summary>
+        private bool ShowSharedPanel(CuiControlLoader loader, Control root)
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (_sharedPanelHost is null) { RetireLoader(loader); return; }
+            if (_sharedPanelHost is null) { RetireLoader(loader); return false; }
             if (_sharedPanelLoader is { } present && !ReferenceEquals(present, loader))
             {
                 // Capture exactly A's ownership (loader + authored root) before any callback runs.
@@ -214,12 +250,13 @@ public sealed partial class App
                 RetireLoader(present);
                 // Recheck the same incoming owner after callbacks before installing B.
                 if (_sharedPanelLoader is { } replacement && !ReferenceEquals(replacement, loader))
-                { RetireLoader(loader); return; }
+                { RetireLoader(loader); return false; }
             }
             _sharedPanelLoader = loader;
             _sharedPanelRoot = root;
             _sharedPanelHost.AddChild(root);
             if (_shellBindings is not null) _shellBindings.HasOpenPanel = true;
+            return true;
         }
 
         private void HideSharedPanel()
@@ -380,13 +417,23 @@ public sealed partial class App
                 return Task.FromResult(HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored notifications panel failed to load."));
             }
             loader.WireBindings(loaded.Root);
+            if (_sharedPanelHost is null)
+            {
+                RetireLoader(loader);
+                return Task.FromResult(HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                    "The authored shared-panel host is unavailable."));
+            }
             // Admission is reserved before invoking the durable provider read.
             var load = AdmitOriginal(async () =>
             {
                 await bindings.LoadCoreAsync(cancellationToken);
                 return HavenSharedOpenResult.Succeeded();
             });
-            ShowSharedPanel(loader, loaded.Root);
+            // Mount propagates the REAL outcome: a missing/retired host is a structured refusal,
+            // never a silent success while the panel stays closed.
+            if (!ShowSharedPanel(loader, loaded.Root))
+                return Task.FromResult(HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                    "The authored shared-panel host is unavailable."));
             return ThenResult(load);
         }
 
@@ -455,7 +502,9 @@ public sealed partial class App
                         : HavenSharedOpenResult.Refused(opened.Code ?? "ModelOpenFailed", opened.Message);
                 }
                 _modelSessions.Add(session);
-                ShowSharedPanel(loader, loaded.Root);
+                if (!ShowSharedPanel(loader, loaded.Root))
+                    return HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                        "The authored shared-panel host is unavailable.");
                 return HavenSharedOpenResult.Succeeded();
             });
         }

@@ -28,10 +28,17 @@
           <Button id="BrowseStopButton" action="9to1.Browse.Stop" IsVisible="{Binding IsLoading}" AccessibleName="Stop loading" Tooltip="Stop loading" Interactive="{Binding Can.Stop}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">×</Button>
         </Container>
         <Container Type="Grid" Column="3" ColumnSizes="1fr Auto" Background="{Resource CuiInputSurfaceBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="16">
-          <Input Type="Text" id="BrowseAddressBox" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" Height="32" MinHeight="32" MinWidth="64" Padding="12 4" FontSize="13" Background="Transparent" BorderWidth="0" CornerRadius="16" />
+          <Input Type="Text" id="BrowseAddressBox" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" DisplayValue="{Binding AddressDisplay}" Height="32" MinHeight="32" MinWidth="64" Padding="12 4" FontSize="13" Background="Transparent" BorderWidth="0" CornerRadius="16" />
           <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="1" AccessibleName="Go to address" Tooltip="Go to address" Interactive="{Binding Can.Navigate}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="16" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="16">→</Button>
         </Container>
         <Container id="HavenSharedCluster" Type="Horizontal Stack" Column="4" CellGap="4" VerticalAlignment="Center" IsVisible="{Binding Haven.Embedded}" AccessibleName="Haven model, notifications and profile">
+          <Container id="HavenMetricCluster" Type="Vertical Stack" CellGap="2" VerticalAlignment="Center">
+            <Text IsVisible="{Binding Haven.EffortConfigurable}" Text="{Binding Haven.ModelName}" FontSize="11" AccessibleName="Active model" />
+            <Text IsVisible="{Binding Haven.EffortConfigurable}" Text="{Binding Haven.EffortLabel}" FontSize="11" AccessibleName="Selected reasoning effort level" />
+            <Text IsVisible="{Binding Haven.UsageVisible}" Text="{Binding Haven.UsageSummary}" FontSize="11" AccessibleName="Provider usage" />
+            <Text IsVisible="{Binding Haven.ContextVisible}" Text="{Binding Haven.ContextSummary}" FontSize="11" AccessibleName="Context use" />
+            <Button id="HavenMeterMarkerButton" IsVisible="{Binding Haven.MeterMarker}" Height="24" MinHeight="24" Width="24" MinWidth="24" Padding="2" FontSize="12" Background="Transparent" BorderWidth="0" CornerRadius="8" Tooltip="Provider usage unavailable; this model may still be metered" AccessibleName="Provider usage unavailable; this model may still be metered">M</Button>
+          </Container>
           <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="Choose AI model" Tooltip="Choose the active AI model" Interactive="{Binding Haven.ModelAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
             <Image Source="avares://Haven/Assets/haven-model.svg" Width="18" Height="18" />
           </Button>
