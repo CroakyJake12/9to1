@@ -68,8 +68,8 @@ public sealed class CuiContainerRelationshipTests
             using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
             var loaded = loader.LoadMarkup("""
                 <Cui><Container Type="Overlay Float" id="surface">
-                  <Container id="body"/>
-                  <Container id="footer"/>
+                  <Container id="body" Type="Vertical Stack"/>
+                  <Container id="footer" Type="Vertical Stack"/>
                   <Container id="float-layer" Type="Floating" Target="body" Placement="above"/>
                 </Container></Cui>
                 """);

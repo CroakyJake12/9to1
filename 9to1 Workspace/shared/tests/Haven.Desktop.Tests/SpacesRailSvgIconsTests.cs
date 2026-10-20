@@ -104,7 +104,7 @@ public sealed class SpacesRailSvgIconsTests
     public void Unsupported_svg_semantics_fail_loudly_rather_than_render_partially()
     {
         // The outline asset uses stroke/fill="none", which the strict decoder must reject loudly.
-        var outlineUri = "avares://Haven.Desktop/Assets/home.svg";
+        var outlineUri = "avares://" + typeof(SpacesRailPackagedIcons).Assembly.GetName().Name + "/Assets/home.svg";
         using var mounted = NewTarget();
         var target = mounted.Target;
         var ex = Assert.Throws<InvalidOperationException>(() =>

@@ -106,6 +106,48 @@ public sealed class CuiActionEventRuntimeTests
         }, CancellationToken.None);
     }
 
+    [Theory]
+    [InlineData("attribute")]
+    [InlineData("Clicked")]
+    [InlineData("OnceClick")]
+    public async Task Non_query_action_uses_current_dispatcher_after_load_and_wire(string eventType)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(async () =>
+        {
+            var calls = new List<(string Owner, string Command, object? Parameter)>();
+            var selected = new object();
+            var model = new CuiViewModel(); model.Set("Selected", selected);
+            var first = new Dispatcher((command, parameter, _) =>
+            { calls.Add(("A", command, parameter)); return ValueTask.CompletedTask; });
+            var second = new Dispatcher((command, parameter, _) =>
+            { calls.Add(("B", command, parameter)); return ValueTask.CompletedTask; });
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(model);
+            loader.SetActionDispatcher(first);
+            var buttonMarkup = eventType == "attribute"
+                ? """<Button ID="Run" Text="Run" Action="Save"/>"""
+                : $"""<Button ID="Run" Text="Run"><ActionEvent Type="{eventType}" Action="Save"/></Button>""";
+            var loaded = loader.LoadMarkup(
+                """<Cui><Actions><Action Name="Save" Command="canonical-save" Parameter="{Binding Selected}"/></Actions><Page>"""
+                + buttonMarkup + "</Page></Cui>");
+            Assert.Empty(loaded.Diagnostics);
+            var root = Assert.IsAssignableFrom<Control>(loaded.Root);
+            loader.WireBindings(root);
+            var button = Assert.Single(root.GetVisualDescendants().OfType<Button>());
+
+            // A owned load/wiring; the existing mutable setter changes the ordinary dispatcher
+            // before the real button click. Query-scope retention must not freeze A globally.
+            loader.SetActionDispatcher(second);
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await loader.WhenActionsIdleAsync().WaitAsync(Bound);
+            var call = Assert.Single(calls);
+            Assert.Equal("B", call.Owner);
+            Assert.Equal("canonical-save", call.Command);
+            Assert.Same(selected, call.Parameter);
+        }, CancellationToken.None);
+    }
+
     private sealed class Dispatcher(Func<string, object?, CancellationToken, ValueTask> callback) : ICuiActionDispatcher
     {
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) => callback(command, parameter, cancellationToken);

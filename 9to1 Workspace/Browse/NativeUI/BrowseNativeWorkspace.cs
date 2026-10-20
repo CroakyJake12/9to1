@@ -196,14 +196,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             // reentrant provider callback that asks to close cannot join its own in-flight
             // action.
             lock (_sourceGate) CheckAdmission(_originalOperations);
-            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var prior = LogicalDriver.Value;
-            var invocation = new CommandInvocation(this, prior);
-            var original = RunSharedOpenAsync(start.Task, command, token, invocation);
-            invocation.Self = original;
-            lock (_sourceGate) Retain(_originalOperations, original);
-            start.SetResult();
-            return new(original);
+            var sharedStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var sharedPrior = LogicalDriver.Value;
+            var sharedInvocation = new CommandInvocation(this, sharedPrior);
+            var sharedOriginal = RunSharedOpenAsync(sharedStart.Task, command, token, sharedInvocation);
+            sharedInvocation.Self = sharedOriginal;
+            lock (_sourceGate) Retain(_originalOperations, sharedOriginal);
+            sharedStart.SetResult();
+            return new(sharedOriginal);
         }
         if ((command is "9to1.Browse.SelectTab" or "9to1.Browse.CloseTabRow") && !IsCurrentTabTarget(parameter))
         { _status = "The tab row changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }

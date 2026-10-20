@@ -61,10 +61,48 @@ public sealed class CuiQueryViewportRetirementTests
         public bool TrySetValue(string path, object? value) { _values[path] = value; return true; }
     }
 
+    private sealed class RecordingDispatcher : ICuiActionDispatcher
+    {
+        public List<string> Commands { get; } = [];
+        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            return ValueTask.CompletedTask;
+        }
+    }
+
     private static void Pump() => Dispatcher.UIThread.RunJobs();
 
-    private static T? Find<T>(Control root, string id) where T : class =>
-        root.GetVisualDescendants().OfType<T>().FirstOrDefault(control => control is Control c && c.Name == id);
+    /// <summary>All authored children of a CUI container, recursively. Hidden authored controls are
+    /// legitimately retained in the authored ownership contract (they are only pruned from the live
+    /// layout/visual tree, not from the container's authored child range), so this walk finds them
+    /// where a visual-only lookup cannot.</summary>
+    private static IEnumerable<Control> AuthoredDescendants(Control root)
+    {
+        // Renderer-owned panels/decorators can wrap authored containers. Follow those
+        // wrappers as well so retained invisible pager buttons remain discoverable.
+        IEnumerable<Control> children = root switch
+        {
+            CuiContainerControl container => container.AuthoredChildren,
+            Panel panel => panel.Children,
+            Decorator { Child: Control child } => new[] { child },
+            ContentControl { Content: Control child } => new[] { child },
+            _ => Array.Empty<Control>(),
+        };
+        foreach (var child in children)
+        {
+            yield return child;
+            foreach (var descendant in AuthoredDescendants(child)) yield return descendant;
+        }
+    }
+
+    private static T? Find<T>(Control root, string id) where T : class
+    {
+        foreach (var candidate in root.GetVisualDescendants().OfType<T>()
+            .Concat(AuthoredDescendants(root).OfType<T>()))
+            if (candidate is Control c && c.Name == id) return candidate;
+        return null;
+    }
 
     private static string[] Cells(Control root) =>
         Find<Control>(root, "grid")!.GetVisualDescendants().OfType<Button>()
@@ -120,6 +158,50 @@ public sealed class CuiQueryViewportRetirementTests
             await loader.WhenActionsIdleAsync(); Pump();
             Assert.Equal(new[] { "3" }, Cells(root2!));
             Assert.False(Find<Button>(root2!, "next")!.IsVisible);
+
+            window.Close();
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Reload_does_not_let_old_frame_pager_control_dispatch_into_the_new_frame()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var host = new HostContext();
+            host.Set("Source", new PagedListSource("0", "1", "2", "3"));
+            var dispatcher = new RecordingDispatcher();
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(host); loader.SetActionDispatcher(dispatcher);
+            var (root1, diagnostics1) = loader.LoadMarkup(Markup);
+            Assert.Empty(diagnostics1);
+            loader.WireBindings(root1!);
+
+            var window = new Window { Content = root1, Width = 400, Height = 340 };
+            window.Show(); Pump();
+            Assert.Equal(new[] { "0", "1", "2" }, Cells(root1!));
+
+            // Retain a strong reference to the OLD Next button across the reload.
+            var oldNext = Find<Button>(root1!, "next")!;
+            Assert.True(oldNext.IsVisible);
+
+            // Reload into a new frame generation; the old frame's controls are retired.
+            var (root2, diagnostics2) = loader.LoadMarkup(Markup);
+            Assert.Empty(diagnostics2);
+            loader.WireBindings(root2!);
+            window.Content = root2; Pump();
+            Assert.Equal(new[] { "0", "1", "2" }, Cells(root2!));
+
+            // Clicking the retained OLD-frame Next must not dispatch into the new frame: its handler
+            // and recorded owner were retired with the old frame, so neither the new viewport nor
+            // the global dispatcher may observe it (old controls never inherit a new/global owner).
+            oldNext.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await loader.WhenActionsIdleAsync(); Pump();
+            Assert.Equal(new[] { "0", "1", "2" }, Cells(root2!));
+            Assert.DoesNotContain("query.next", dispatcher.Commands);
+            Assert.DoesNotContain("query.previous", dispatcher.Commands);
 
             window.Close();
             return true;

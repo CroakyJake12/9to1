@@ -1,4 +1,7 @@
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using Haven.Application.Haven;
 using Haven.Browser;
@@ -263,5 +266,70 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(2, gateway.Calls);
         }
         finally { await workspace.DisposeAsync().AsTask(); }
+    }
+
+    /// <summary>The authored topbar controls must route each genuine open through the SAME typed
+    /// gateway when mounted with an embedded host context. This proves the production layout (not
+    /// the command dispatch surface alone) settles the actual open, and the mounted controls are
+    /// enabled, visible and wired in the navigation bar.</summary>
+    [AvaloniaFact]
+    public async Task Authored_topbar_controls_route_each_open_to_the_typed_gateway()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var gateway = new SharedControlsFakeGateway();
+        var context = new SharedControlsFakeContext(gateway);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            var model = Find(window, "HavenModelButton");
+            var notifications = Find(window, "HavenNotificationsButton");
+            var profile = Find(window, "HavenProfileButton");
+            Assert.True(model.IsEffectivelyVisible); Assert.True(model.IsEnabled);
+            Assert.True(notifications.IsEffectivelyVisible); Assert.True(notifications.IsEnabled);
+            Assert.True(profile.IsEffectivelyVisible); Assert.True(profile.IsEnabled);
+            await ClickSharedOpen(window, workspace, model);
+            Assert.Equal(1, gateway.ModelOpens);
+            await ClickSharedOpen(window, workspace, notifications);
+            Assert.Equal(1, gateway.NotificationOpens);
+            await ClickSharedOpen(window, workspace, profile);
+            Assert.Equal(1, gateway.ProfileOpens);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    /// <summary>Observe the actual authored shared-open pipeline and the SAME original operation
+    /// retained by Browse. Shared surfaces intentionally use the operation ledger, while ordinary
+    /// browser commands use OriginalCommand; requiring the latter would reject a genuine open.</summary>
+    private static async Task ClickSharedOpen(BrowseNativeWindow window, BrowseNativeWorkspace workspace, Button button)
+    {
+        window.UpdateLayout();
+        button.BringIntoView();
+        window.UpdateLayout();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Same(window, TopLevel.GetTopLevel(button));
+        Assert.True(button.IsEffectivelyVisible);
+        Assert.True(button.IsEnabled);
+        var loader = Loader(window);
+        var diagnostics = Assert.IsType<CuiControlDiagnostics>(loader.Inspect(button));
+        Assert.True(diagnostics.DispatcherConnected);
+        Assert.True(diagnostics.ActionsWired);
+        var ordinaryBefore = workspace.OriginalCommand;
+        var operationsBefore = workspace.OriginalOperations.ToArray();
+        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var pipeline = loader.WhenActionsIdleAsync();
+        await Observe(pipeline, window);
+        var admitted = workspace.OriginalOperations
+            .Where(actual => !operationsBefore.Any(previous => ReferenceEquals(previous, actual))).ToArray();
+        var original = Assert.Single(admitted);
+        await Observe(original, window);
+        Assert.Contains(original, workspace.OriginalOperations);
+        Assert.Same(ordinaryBefore, workspace.OriginalCommand);
+        await Task.WhenAll(workspace.OriginalNotifications.ToArray());
     }
 }

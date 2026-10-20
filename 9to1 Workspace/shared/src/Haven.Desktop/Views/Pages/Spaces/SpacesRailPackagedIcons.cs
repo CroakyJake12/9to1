@@ -23,7 +23,10 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 public static class SpacesRailPackagedIcons
 {
     /// <summary>Packaged asset URI scheme/path prefix for the rail icon family.</summary>
-    public const string AssetUriPrefix = "avares://Haven.Desktop/Assets/SpacesRail/";
+    public static readonly string AssetUriPrefix = "avares://" +
+        (typeof(SpacesRailPackagedIcons).Assembly.GetName().Name
+            ?? throw new InvalidOperationException("The Spaces rail asset owner has no assembly name.")) +
+        "/Assets/SpacesRail/";
 
     private const string IconPrefix = "icon:";
     private const string SvgExtension = ".svg";
