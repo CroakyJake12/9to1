@@ -1,0 +1,15 @@
+<Cui id="shared-ai-access-selector" version="1">
+  <Page>
+    <Container id="ai-access-selector-surface" accessible-name="AI access mode" Type="Horizontal Stack" CellGap="8">
+      <Text id="ai-access-current-mode" text="{Binding Access.CurrentModeLabel}" accessible-name="Current AI access mode" font-weight="SemiBold" />
+      <Button id="ai-access-readonly" content="Read-only" action="access.select-readonly"
+              accessible-name="Set AI access to read-only" Selected="{Binding Access.IsReadOnly}"
+              Interactive="{Binding Access.CanChangeMode}" />
+      <Button id="ai-access-write" content="Write" action="access.select-write"
+              accessible-name="Set AI access to write mode" Selected="{Binding Access.IsWriteMode}"
+              Interactive="{Binding Access.CanChangeMode}" />
+      <Text id="ai-access-status" text="{Binding Access.StatusMessage}" accessible-name="AI access status"
+            IsVisible="{Binding Access.HasStatus}" font-size="12" />
+    </Container>
+  </Page>
+</Cui>
