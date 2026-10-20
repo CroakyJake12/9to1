@@ -34,6 +34,8 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
     public IReadOnlyList<HomeModelPickerRouteRow> Routes { get; }
     public IReadOnlyList<HomeModelPickerTraceRow> Trace { get; }
 
+    public bool HasSnapshot => _state.Snapshot is not null;
+
     public bool TryGetValue(string path, out object? value)
     {
         switch (path)
@@ -43,7 +45,9 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
             case "Category": value = _category; return true;
             case "StatusMessage": value = _state.StatusMessage; return true;
             case "Snapshot.Routes": value = Routes; return true;
-            case "HasRoutes": value = Routes.Count != 0; return true;
+            case "HasSnapshot": value = HasSnapshot; return true;
+            case "State.HasSnapshot": value = HasSnapshot; return true;
+            case "HasRoutes": value = HasSnapshot && Routes.Count != 0; return true;
             case "HasPreview": value = _state.Preview is not null; return true;
             case "HasTrace": value = Trace.Count != 0; return true;
             case "Preview.ResolutionState": value = _state.Preview?.ResolutionState ?? string.Empty; return true;

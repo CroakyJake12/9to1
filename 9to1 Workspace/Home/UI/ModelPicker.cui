@@ -23,7 +23,8 @@
         </Container>
         <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" />
         <Container id="model-route-list" Type="Vertical Stack">
-          <If condition="{Binding HasRoutes}">
+          <If condition="{Binding HasSnapshot}">
+            <If condition="{Binding HasRoutes}">
             <Repeat Source="{Binding Snapshot.Routes}" As="route" Key="{Binding route.RouteId}">
               <Container id="model-route-template" margin="0 0 0 14" Type="Vertical Stack">
                 <Container id="model-route-card" background="{Resource CuiPanelBrush}" corner-radius="12" padding="18" margin="0 0 0 12" Type="Overlay" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
@@ -65,12 +66,13 @@
                 </Container>
               </Container>
             </Repeat>
+            </If>
+            <Else>
+              <Container id="model-route-empty" padding="20" Type="Vertical Stack">
+                <Text text="No routes are configured for this category." foreground="{Resource CuiTextSoftBrush}" />
+              </Container>
+            </Else>
           </If>
-          <Else>
-            <Container id="model-route-empty" padding="20" Type="Vertical Stack">
-              <Text text="No routes are configured for this category." foreground="{Resource CuiTextSoftBrush}" />
-            </Container>
-          </Else>
         </Container>
         <Container id="model-route-actions" margin="0 12 0 8" Type="Horizontal Stack">
           <Button id="save-model-route" action="SaveRoute" content="Save route" accessible-name="Save model route changes" />

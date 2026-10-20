@@ -2,6 +2,7 @@ using System.Collections;
 using System.Text.Json;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
+using HavenOS.Home;
 using HavenOS.Home.Core;
 using Xunit;
 
@@ -150,6 +151,58 @@ public sealed class HomeModelPickerCuiProjectionTests
     {
         Assert.True(context.TryGetValue(path, out var value), $"Missing projection value: {path}");
         return Assert.IsType<T>(value);
+    }
+
+    [Fact]
+    public void Snapshot_availability_distinguishes_unknown_failed_loaded_empty_and_loaded_routes()
+    {
+        var surface = HomeModelPickerCuiSurface.LoadDefault();
+
+        surface.ApplyState(HomeModelPickerEditorState.Initial);
+        Assert.False(Value<bool>(surface, "HasSnapshot"));
+        Assert.False(Value<bool>(surface, "HasRoutes"));
+        Assert.Equal("NotLoaded", surface.State.StatusCode);
+        Assert.Equal("Model routes have not been loaded.", Value<string>(surface, "StatusMessage"));
+
+        var failed = HomeModelPickerEditorState.Initial with
+        {
+            StatusCode = "HomeServiceUnavailable",
+            StatusMessage = "Could not load model routes (HttpRequestException).",
+        };
+        surface.ApplyState(failed);
+        Assert.False(Value<bool>(surface, "HasSnapshot"));
+        Assert.False(Value<bool>(surface, "HasRoutes"));
+        Assert.Equal("HomeServiceUnavailable", surface.State.StatusCode);
+        Assert.Equal("Could not load model routes (HttpRequestException).", Value<string>(surface, "StatusMessage"));
+
+        surface.ApplyState(State([]));
+        Assert.True(Value<bool>(surface, "HasSnapshot"));
+        Assert.False(Value<bool>(surface, "HasRoutes"));
+        Assert.Equal("Ready", surface.State.StatusCode);
+
+        surface.ApplyState(State([Route("chat.active")]));
+        Assert.True(Value<bool>(surface, "HasSnapshot"));
+        Assert.True(Value<bool>(surface, "HasRoutes"));
+        Assert.Single(surface.Projection.Routes);
+    }
+
+    [Fact]
+    public void Authored_resource_bindings_resolve_for_no_snapshot_and_loaded_empty_states()
+    {
+        var surface = HomeModelPickerCuiSurface.LoadDefault();
+
+        surface.ApplyState(HomeModelPickerEditorState.Initial);
+        Walk(surface.Document.Components, surface);
+
+        surface.ApplyState(HomeModelPickerEditorState.Initial with
+        {
+            StatusCode = "HomeServiceUnavailable",
+            StatusMessage = "Could not load model routes (HttpRequestException).",
+        });
+        Walk(surface.Document.Components, surface);
+
+        surface.ApplyState(State([]));
+        Walk(surface.Document.Components, surface);
     }
 
     private static HomeModelPickerCuiSurface Surface() =>
