@@ -88,6 +88,8 @@ public sealed record SpacesHomeSidebarRow(
     bool IsActionable,
     string UnavailableReason = "")
 {
+    public string? OwnerPackageId { get; init; }
+    public string? OwnerPackageVersion { get; init; }
     public string OpenLabel => IsActionable
         ? $"{Label} ({TargetKind})"
         : $"{Label} ({TargetKind}) - {UnavailableReason}";

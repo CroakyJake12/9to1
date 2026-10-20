@@ -625,9 +625,16 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             {
                 if (string.IsNullOrWhiteSpace(contribution.SidebarItemId) || string.IsNullOrWhiteSpace(contribution.TargetId))
                     continue;
+                var unavailableReason = "";
+                var actionable = canOpen && TryResolveSidebarTarget(contribution.TargetKind.ToString(),
+                    contribution.TargetId, out _, out unavailableReason);
                 rows.Add(new SpacesHomeSidebarRow(contribution.SidebarItemId, contribution.Label, contribution.IconKey,
-                    contribution.TargetKind.ToString(), contribution.TargetId, canOpen,
-                    canOpen ? "" : "This tab cannot open that target yet."));
+                    contribution.TargetKind.ToString(), contribution.TargetId, actionable,
+                    actionable ? "" : (canOpen ? unavailableReason : "This tab cannot open that target yet."))
+                {
+                    OwnerPackageId = package.Manifest.PackageId,
+                    OwnerPackageVersion = package.Manifest.Version
+                });
             }
         }
         return rows;
@@ -746,7 +753,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
 
     /// <summary>Runs one contextual-sidebar workspace command under the same serial and UI owner as
     /// the queued Space navigation, so a sidebar click cannot race an in-flight route change.</summary>
-    private Task ExecuteWorkspaceCommandAsync(string command, object? parameter, CancellationToken caller)
+    private Task ExecuteWorkspaceCommandAsync(string command, object? parameter, CancellationToken caller,
+        Task? originatingSettlement = null)
     {
         lock (_gate)
         {
@@ -758,21 +766,21 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             {
                 if (parameter is not string { Length: > 0 } sidebarItemId)
                     throw new InvalidOperationException("The Spaces sidebar command has no item identity.");
-                return AdmitWorkspaceDriver(start => ExecuteSidebarItemDriverAsync(start, sidebarItemId, caller));
+                return AdmitWorkspaceDriver((start, execution) => ExecuteSidebarItemDriverAsync(start, execution, sidebarItemId, caller, originatingSettlement));
             }
             if (parameter is not Guid target || target == Guid.Empty)
                 throw new InvalidOperationException("The Spaces workspace command has no valid target identity.");
-            return AdmitWorkspaceDriver(start => ExecuteWorkspaceCommandDriverAsync(start, command, target, caller));
+            return AdmitWorkspaceDriver((start, execution) => ExecuteWorkspaceCommandDriverAsync(start, execution, command, target, caller));
         }
     }
 
     /// <summary>Admits one workspace action as original work with the same lease, retirement and
     /// failure bookkeeping regardless of which workspace command it is.</summary>
-    private Task AdmitWorkspaceDriver(Func<Task, Task> build)
+    private Task AdmitWorkspaceDriver(Func<Task, CommandExecution, Task> build)
     {
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var execution = new CommandExecution(this);
-        var actual = build(start.Task);
+        var actual = build(start.Task, execution);
         execution.Original = actual;
         _commands.RemoveAll(task => task.IsCompletedSuccessfully);
         _commands.Add(actual);
@@ -782,7 +790,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         return actual;
     }
 
-    private async Task ExecuteSidebarItemDriverAsync(Task start, string sidebarItemId, CancellationToken caller)
+    private async Task ExecuteSidebarItemDriverAsync(Task start, CommandExecution execution, string sidebarItemId, CancellationToken caller,
+        Task? originatingSettlement = null)
     {
         await start.ConfigureAwait(false);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
@@ -792,54 +801,174 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             await OnUiAsync(async () =>
             {
                 var previous = ExecutingCommand.Value;
-                ExecutingCommand.Value = new CommandExecution(this) { Original = Task.CompletedTask };
+                ExecutingCommand.Value = execution;
+                Volatile.Write(ref execution.Active, true);
                 try
                 {
                     linked.Token.ThrowIfCancellationRequested();
                     DemandAlive();
-                    try { await OpenSidebarItemOnUiAsync(sidebarItemId, linked.Token); }
+                    try { await OpenSidebarItemOnUiAsync(sidebarItemId, linked.Token, originatingSettlement); }
                     catch (SpacesWorkspaceActionRefusal refusal) { ReportWorkspaceActionRefusal(refusal.Message); }
                 }
-                finally { ExecutingCommand.Value = previous; }
+                finally
+                {
+                    ExecutingCommand.Value = previous;
+                    Volatile.Write(ref execution.Active, false);
+                }
             }).ConfigureAwait(false);
         }
         finally { _commandSerial.Release(); }
+    }
+
+    private async Task<AuthenticatedResourceActor> ReadSidebarHomeActorAsync(CancellationToken token)
+    {
+        try
+        {
+            await DemandDetailsHomeAdmissionAsync(token);
+            return await _services.GetRequiredService<HomeNativeWindowsComposition>().Profiles.GetCurrentAsync(token)
+                ?? throw new UnauthorizedAccessException("The authenticated Home profile is unavailable.");
+        }
+        catch (UnauthorizedAccessException denial)
+        {
+            // Admission has made no effect. Keep expected denials out of retained close faults;
+            // I/O, corrupt-state and other genuine failures retain their original custody.
+            throw new SpacesWorkspaceActionRefusal(denial.Message);
+        }
     }
 
     /// <summary>Opens the target an extension-contributed sidebar element declares. It reuses the
     /// host's existing typed navigation intent, so tab ownership, origin checks and retirement stay
     /// host-owned and the current conversation and its draft are not disturbed by an unresolvable
     /// target: an element whose target cannot be resolved refuses before anything changes.</summary>
-    private async Task OpenSidebarItemOnUiAsync(string sidebarItemId, CancellationToken token)
+    private async Task OpenSidebarItemOnUiAsync(string sidebarItemId, CancellationToken token,
+        Task? originatingSettlement = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         token.ThrowIfCancellationRequested();
         DemandAlive();
+        var initialActor = await ReadSidebarHomeActorAsync(token);
         if (_spacesPage?.Controller.State.Selection is not { } selection)
             throw new SpacesWorkspaceActionRefusal("Select a Space before opening one of its sidebar items.");
-        var rows = await ReadSpaceSidebarItemsAsync(selection, token).ConfigureAwait(false);
-        var row = rows.FirstOrDefault(item => string.Equals(item.SidebarItemId, sidebarItemId, StringComparison.Ordinal));
-        if (row is null)
+        var initialSelection = selection;
+        var initialSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(selection.Id, token);
+        if (initialSpace is null || initialSpace.IsArchived)
+            throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
+        long initialRouteEpoch;
+        lock (_gate) initialRouteEpoch = _routeEpoch;
+        var rows = await ReadSpaceSidebarItemsAsync(selection, token).ConfigureAwait(true);
+        var matchingRows = rows.Where(item => string.Equals(item.SidebarItemId, sidebarItemId, StringComparison.Ordinal)).ToArray();
+        if (matchingRows.Length == 0)
             throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+        if (matchingRows.Length > 1)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is ambiguous.");
+        var row = matchingRows[0];
         if (_hostQueueNavigation is null)
             throw new SpacesWorkspaceActionRefusal("This tab cannot open that sidebar target.");
-        AppContentAddress address;
-        try { address = AppContentAddress.Parse(row.TargetId); }
-        catch (Exception failure) when (failure is FormatException or UriFormatException or ArgumentException)
+
+        // Revalidate against the live controller projection and the authoritative Space/package
+        // state. A delayed extension read must not admit a stale selection or attachment.
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        if (_spacesPage?.Controller.State.Selection is not { } currentSelection ||
+            !ReferenceEquals(currentSelection, initialSelection) ||
+            currentSelection.Id != selection.Id)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+        var actualSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(selection.Id, token);
+        if (actualSpace is null || actualSpace.IsArchived)
+            throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
+        if (actualSpace.Revision != initialSpace.Revision)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+        if (!SpaceCapabilityBindingsEqual(actualSpace.CapabilityBindings, initialSpace.CapabilityBindings))
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+        var attachedPackageIds = (actualSpace.CapabilityBindings ?? Array.Empty<SpaceCapabilityBinding>())
+            .Where(capability => capability.Kind == SpaceCapabilityKind.Plugin
+                                 && capability.Override != SpaceCapabilityOverride.Disabled
+                                 && !string.IsNullOrWhiteSpace(capability.CapabilityId))
+            .Select(capability => capability.CapabilityId)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var extensions = _services.GetRequiredService<ExtensionManager>();
+        var stillAttached = false;
+        var attachedCount = 0;
+        foreach (var packageId in attachedPackageIds)
         {
-            throw new SpacesWorkspaceActionRefusal($"That sidebar item's target is not an addressable destination: {row.TargetKind}");
+            var package = await extensions.GetPackageAsync(packageId, token);
+            if (package is null || !package.IsEnabled) continue;
+            if (package.Manifest.SidebarContributions is { Count: > 0 } contributions)
+            {
+                foreach (var contribution in contributions)
+                {
+                    if (!string.Equals(contribution.SidebarItemId, sidebarItemId, StringComparison.Ordinal)) continue;
+                    if (contribution.TargetKind.ToString() != row.TargetKind) continue;
+                    if (!string.Equals(contribution.TargetId, row.TargetId, StringComparison.Ordinal)) continue;
+                    if (row.OwnerPackageId is not null &&
+                        !string.Equals(package.Manifest.PackageId, row.OwnerPackageId, StringComparison.Ordinal))
+                        continue;
+                    if (row.OwnerPackageVersion is not null &&
+                        !string.Equals(package.Manifest.Version, row.OwnerPackageVersion, StringComparison.Ordinal))
+                        continue;
+                    stillAttached = true;
+                    attachedCount++;
+                }
+            }
         }
-        if (!_hostQueueNavigation(new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: false), Task.CompletedTask))
+        if (attachedCount > 1)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is ambiguous.");
+        if (!stillAttached)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+
+        // Final checks after ALL delayed reads.
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        if (_spacesPage?.Controller.State.Selection is not { } postSelection ||
+            !ReferenceEquals(postSelection, initialSelection) ||
+            postSelection.Id != initialSelection.Id)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+        var postSpace = await _services.GetRequiredService<SpaceRegistry>().ReadExistingAsync(selection.Id, token);
+        if (postSpace is null || postSpace.IsArchived)
+            throw new SpacesWorkspaceActionRefusal("The selected Space is unavailable.");
+        if (postSpace.Revision != initialSpace.Revision)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+        if (!SpaceCapabilityBindingsEqual(postSpace.CapabilityBindings, initialSpace.CapabilityBindings))
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer attached to this Space.");
+        var currentActor = await ReadSidebarHomeActorAsync(token);
+        if (initialActor != currentActor)
+            throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer available for this tab.");
+        token.ThrowIfCancellationRequested();
+        DemandAlive();
+        lock (_gate)
+        {
+            if (_closing || !_published || _routeEpoch != initialRouteEpoch ||
+                _activeDetailsPreparation is not null ||
+                !ReferenceEquals(_spacesPage?.Controller.State.Selection, initialSelection))
+                throw new SpacesWorkspaceActionRefusal("That sidebar item is no longer available for this tab.");
+        }
+        string unavailableReason = "";
+        if (!TryResolveSidebarTarget(row.TargetKind, row.TargetId, out var address, out unavailableReason))
+            throw new SpacesWorkspaceActionRefusal(string.IsNullOrWhiteSpace(unavailableReason)
+                ? row.UnavailableReason : unavailableReason);
+
+        // The host owns downstream navigation. The genuine originating settlement is
+        // captured by the Spaces page action and handed through the typed callback.
+        // Never synthesize a completed settlement here.
+        if (originatingSettlement is null)
+            throw new SpacesWorkspaceActionRefusal("This tab cannot open that sidebar target.");
+        var execution = ExecutingCommand.Value;
+        if (execution is null || !ReferenceEquals(execution.Owner, this) ||
+            !Volatile.Read(ref execution.Active) || execution.Original is null)
+            throw new SpacesWorkspaceActionRefusal("This tab cannot open that sidebar target.");
+        Task settlement = Task.WhenAll(originatingSettlement, execution.Original);
+
+        if (!_hostQueueNavigation(new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: false), settlement))
             throw new SpacesWorkspaceActionRefusal("The tab could not accept that sidebar destination.");
     }
 
-    private async Task ExecuteWorkspaceCommandDriverAsync(Task start, string command, Guid target,
+    private async Task ExecuteWorkspaceCommandDriverAsync(Task start, CommandExecution execution, string command, Guid target,
         CancellationToken caller)
     {
         await start.ConfigureAwait(false);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
         await _commandSerial.WaitAsync(linked.Token).ConfigureAwait(false);
-        var execution = new CommandExecution(this);
         try
         {
             await OnUiAsync(async () =>
@@ -864,10 +993,14 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                         ReportWorkspaceActionRefusal(refusal.Message);
                     }
                 }
-                finally { ExecutingCommand.Value = previous; }
+                finally
+                {
+                    ExecutingCommand.Value = previous;
+                    Volatile.Write(ref execution.Active, false);
+                }
             }).ConfigureAwait(false);
         }
-        finally { Volatile.Write(ref execution.Active, false); _commandSerial.Release(); }
+        finally { _commandSerial.Release(); }
     }
 
     private void ReportWorkspaceActionRefusal(string message)
@@ -875,6 +1008,56 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         Dispatcher.UIThread.VerifyAccess();
         _spacesPage?.Controller.ReportWorkspaceActionRefusal(message);
     }
+
+    private static bool SpaceCapabilityBindingsEqual(IReadOnlyList<SpaceCapabilityBinding>? left,
+        IReadOnlyList<SpaceCapabilityBinding>? right)
+    {
+        var a = left ?? Array.Empty<SpaceCapabilityBinding>();
+        var b = right ?? Array.Empty<SpaceCapabilityBinding>();
+        if (a.Count != b.Count) return false;
+        for (var i = 0; i < a.Count; i++)
+        {
+            if (!string.Equals(a[i].CapabilityId, b[i].CapabilityId, StringComparison.Ordinal)) return false;
+            if (a[i].Kind != b[i].Kind) return false;
+            if (a[i].Override != b[i].Override) return false;
+            if (!string.Equals(a[i].VersionPin, b[i].VersionPin, StringComparison.Ordinal)) return false;
+        }
+        return true;
+    }
+
+    private static bool TryResolveSidebarTarget(string targetKind, string targetId, out AppContentAddress address,
+        out string unavailableReason)
+    {
+        address = default!;
+        unavailableReason = "";
+        if (!Enum.TryParse<ExtensionSidebarTargetKind>(targetKind, out var kind) ||
+            kind is not (ExtensionSidebarTargetKind.Page or ExtensionSidebarTargetKind.AppSurface))
+        {
+            unavailableReason = "That sidebar target kind is not supported yet.";
+            return false;
+        }
+        AppContentAddress parsed;
+        try { parsed = AppContentAddress.Parse(targetId); }
+        catch (Exception failure) when (failure is FormatException or UriFormatException or ArgumentException)
+        {
+            unavailableReason = $"That sidebar item's target is not an addressable destination: {targetKind}";
+            return false;
+        }
+        if (kind == ExtensionSidebarTargetKind.Page && !IsWebAddress(parsed))
+        {
+            unavailableReason = "That Page sidebar target must use a permitted web address.";
+            return false;
+        }
+        if (kind == ExtensionSidebarTargetKind.AppSurface && parsed.Namespace != AppContentNamespace.NativeApp)
+        {
+            unavailableReason = "That AppSurface sidebar target must use a registered app address.";
+            return false;
+        }
+        address = parsed;
+        return true;
+    }
+
+    private static bool IsWebAddress(AppContentAddress address) => address.IsWeb;
 
     private static async Task OnUiAsync(Func<Task> action)
     {

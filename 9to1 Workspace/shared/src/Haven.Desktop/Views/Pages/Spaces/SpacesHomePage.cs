@@ -40,6 +40,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     [ThreadStatic] private static List<SpacesHomePage>? _sourceCallbacks;
     private bool _active;
     private long _generation;
+    private long _sidebarItemsReadSequence;
     private Task? _hostClose;
     private Task<CuiSceneAvailability>? _exactOriginalShow;
     private int _editorOperationCount;
@@ -53,7 +54,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     // which only the owning native surface can read.
     private readonly Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? _sidebarItemsProvider;
     private IReadOnlyList<SpacesHomeSidebarRow> _sidebarItems = [];
-    private readonly Func<string, object?, CancellationToken, Task>? _workspaceCommandHost;
+    private readonly Func<string, object?, CancellationToken, Task?, Task>? _workspaceCommandHost;
     private IReadOnlyList<SpacesHomeConversationRow> _conversations = [];
 
     public SpacesHomePage(
@@ -64,7 +65,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         Func<string, CancellationToken, Task<string>>? pickFileAsync = null,
         Func<SpacesAction, Task, bool>? queueNavigation = null,
         Func<Guid, CancellationToken, Task<IReadOnlyList<SpacesHomeConversationRow>>>? conversationsProvider = null,
-        Func<string, object?, CancellationToken, Task>? workspaceCommandHost = null,
+        Func<string, object?, CancellationToken, Task?, Task>? workspaceCommandHost = null,
         Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? sidebarItemsProvider = null)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
@@ -281,17 +282,25 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             case "spaces.new-chat":
                 if (_workspaceCommandHost is not { } newChatHost)
                     throw new InvalidOperationException("No Spaces workspace host is available to start a conversation.");
-                await original.AwaitAsync(InvokeOriginalSource(() => newChatHost("spaces.new-chat", id, token))).ConfigureAwait(false);
+                await original.AwaitAsync(InvokeOriginalSource(() => newChatHost("spaces.new-chat", id, token, null))).ConfigureAwait(false);
                 break;
             case "spaces.open-conversation":
                 if (_workspaceCommandHost is not { } conversationHost)
                     throw new InvalidOperationException("No Spaces workspace host is available to open a conversation.");
-                await original.AwaitAsync(InvokeOriginalSource(() => conversationHost("spaces.open-conversation", parameter, token))).ConfigureAwait(false);
+                await original.AwaitAsync(InvokeOriginalSource(() => conversationHost("spaces.open-conversation", parameter, token, null))).ConfigureAwait(false);
                 break;
             case "spaces.open-sidebar-item":
                 if (_workspaceCommandHost is not { } sidebarHost)
                     throw new InvalidOperationException("No Spaces workspace host is available to open a sidebar item.");
-                await original.AwaitAsync(InvokeOriginalSource(() => sidebarHost("spaces.open-sidebar-item", parameter, token))).ConfigureAwait(false);
+                Task? sidebarSettlement = null;
+                var sidebarExactShow = _exactOriginalShow;
+                var sidebarOriginating = _work.Executing;
+                if (sidebarExactShow is null || sidebarOriginating is null)
+                    throw new InvalidOperationException("No genuine originating settlement is available for the Spaces sidebar item.");
+                var sidebarPipeline = await Dispatcher.UIThread.InvokeAsync<Task>(
+                    () => InvokeOriginalSource(() => _host.CaptureOriginalActionSettlement(sidebarExactShow))).GetTask();
+                sidebarSettlement = Task.WhenAll(sidebarPipeline, sidebarOriginating.Task);
+                await original.AwaitAsync(InvokeOriginalSource(() => sidebarHost("spaces.open-sidebar-item", parameter, token, sidebarSettlement))).ConfigureAwait(false);
                 break;
             case "spaces.toggle-sidebar":
                 InvokeOriginalSource(_controller.ToggleSidebar);
@@ -424,6 +433,7 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
     public async Task RefreshSidebarItemsAsync(CancellationToken cancellationToken = default)
     {
         long generation;
+        long readSequence;
         SpacesHomeSelection? selected;
         Func<SpacesHomeSelection, CancellationToken, Task<IReadOnlyList<SpacesHomeSidebarRow>>>? provider;
         lock (_gate)
@@ -433,10 +443,16 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             if (provider is null) return;
             generation = _generation;
             selected = _controller.State.Selection;
+            readSequence = ++_sidebarItemsReadSequence;
         }
         if (selected is null)
         {
-            lock (_gate) if (!_work.IsRetiring && _generation == generation) _sidebarItems = [];
+            lock (_gate)
+            {
+                if (!_work.IsRetiring && _active && _generation == generation &&
+                    readSequence == _sidebarItemsReadSequence)
+                    _sidebarItems = [];
+            }
             return;
         }
         IReadOnlyList<SpacesHomeSidebarRow> rows;
@@ -444,10 +460,21 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         catch (Exception) { return; }
         lock (_gate)
         {
-            if (_work.IsRetiring || !_active || _generation != generation) return;
+            if (_work.IsRetiring || !_active || _generation != generation ||
+                readSequence != _sidebarItemsReadSequence ||
+                !ReferenceEquals(_controller.State.Selection, selected)) return;
             _sidebarItems = rows;
         }
-        await Dispatcher.UIThread.InvokeAsync(() => _bindings.Refresh()).GetTask().ConfigureAwait(false);
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            lock (_gate)
+            {
+                if (_work.IsRetiring || !_active || _generation != generation ||
+                    readSequence != _sidebarItemsReadSequence ||
+                    !ReferenceEquals(_controller.State.Selection, selected)) return;
+            }
+            _bindings.Refresh();
+        }).GetTask().ConfigureAwait(false);
     }
 
     /// <summary>Releases a control from its current native parent. A fresh CUI publication

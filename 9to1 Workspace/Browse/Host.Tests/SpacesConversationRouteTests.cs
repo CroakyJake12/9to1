@@ -362,7 +362,8 @@ public sealed class SpacesConversationRouteTests
         internal HomeNativeWindowsComposition? Home { get; }
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-space-route-" + Guid.NewGuid().ToString("N"));
         internal Rig(bool withHome = false, bool allowConversationWrites = false, IVersionedSettingsStore? settings = null,
-            InstalledExtensionPackage[]? extensionPackages = null)
+            InstalledExtensionPackage[]? extensionPackages = null,
+            Func<CancellationToken, Task<IReadOnlyList<InstalledExtensionPackage>>>? getInstalledAsync = null)
         {
             Directory.CreateDirectory(_directory);
             Spaces = new(settings ?? new Settings());
@@ -422,13 +423,15 @@ public sealed class SpacesConversationRouteTests
                     new OperatingSystemPrincipalSource(), paths, new("spaces.route.test." + Guid.NewGuid().ToString("N")));
                 services.AddSingleton(Home);
             }
-            if (extensionPackages is not null)
+            if (extensionPackages is not null || getInstalledAsync is not null)
             {
                 // A real ExtensionManager over a controlled extension repository, so the sidebar
                 // projection reads the same manifest data the shipping surface uses.
-                var extensionRepository = Proxy<IExtensionRepository>((name, _) => name switch
+                var extensionRepository = Proxy<IExtensionRepository>((name, args) => name switch
                 {
-                    "GetInstalledAsync" => Task.FromResult<IReadOnlyList<InstalledExtensionPackage>>(extensionPackages),
+                    "GetInstalledAsync" => getInstalledAsync is not null
+                        ? getInstalledAsync((CancellationToken)args![0]!)
+                        : Task.FromResult<IReadOnlyList<InstalledExtensionPackage>>(extensionPackages!),
                     _ => throw Unexpected(name)
                 });
                 services.AddSingleton(new ExtensionManager(extensionRepository,
