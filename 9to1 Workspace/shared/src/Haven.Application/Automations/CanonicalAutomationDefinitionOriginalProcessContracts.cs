@@ -42,7 +42,7 @@ public interface ICanonicalAutomationDefinitionOriginalProcessSource : ICanonica
         Action<Task> retain, CancellationToken token);
     Task<ICanonicalAutomationDefinitionOriginalProcessPreparation> PrepareOriginalChangeProcessWithinSourceAsync(
         ICanonicalAutomationLibraryOriginalObservation sameObservation,
-        AutomationOwnerRead<Haven.Core.AutomationDefinition> sameRow, CanonicalAutomationOriginalChangeKind kind,
+        AutomationOwnerRead<global::Haven.Core.AutomationDefinition> sameRow, CanonicalAutomationOriginalChangeKind kind,
         Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token);
     bool IsIssuedOriginalProcessPreparation(ICanonicalAutomationDefinitionOriginalProcessPreparation sameActual);
     bool IsIssuedOriginalChangeObservation(ICanonicalAutomationDefinitionOriginalChangeObservation sameActual);
