@@ -109,21 +109,35 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
 
     /// <summary>
     /// Completes a Run. Completion is a state transition on the persisted Run row performed in the
-    /// same SQLite write transaction as any definition lease release/scheduling. A Run's canonical
-    /// identity (AutomationId, pinned definition revision and pinned graph binding) is immutable, the
-    /// desired persisted revision must be exactly one greater than the stored revision, terminal states
-    /// are final, and an identical persisted payload is a no-write acknowledgment. A Run that carries a
-    /// real acquired definition lease token is a scheduled write and must still match the definition's
-    /// current lease; the definition CAS must affect exactly one row or the whole Run mutation rolls back.
+    /// same SQLite write transaction as any definition lease release/scheduling. Completion applies only
+    /// to a known terminal status (Succeeded, Failed or Cancelled) that carries a completion timestamp.
+    /// A Run's canonical identity (AutomationId, pinned definition revision and pinned graph binding) is
+    /// immutable, the desired persisted revision must be exactly one greater than the stored revision,
+    /// terminal states are final, and an identical persisted payload is a no-write acknowledgment. The
+    /// ORIGINAL Run lease token is immutable across a transition: a stored leased Run cannot be completed
+    /// with a different (or null) token, so a desired null token cannot bypass the definition CAS. A Run
+    /// that carries a real acquired definition lease token is a scheduled write and must still match the
+    /// definition's current lease; the definition CAS must affect exactly one row or the whole Run
+    /// mutation rolls back. History-only appends (null lease, including the legacy revision-0 new
+    /// terminal case) never touch the definition schedule/lease/updated_at.
     /// </summary>
     public async Task CompleteRunAsync(AutomationRun run, DateTimeOffset? nextRunAt, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
+        var desired = ToRow(run);
+
+        // Invariant validation applies to both brand-new and existing rows.
+        if (desired.Revision < 0)
+            throw new InvalidOperationException("A Run revision cannot be negative.");
+        if (!IsTerminal((AutomationRunStatus)desired.Status))
+            throw new InvalidOperationException("Completion applies only to a known terminal status (Succeeded, Failed, or Cancelled).");
+        if (desired.CompletedAt is null)
+            throw new InvalidOperationException("A completed Run must carry a completion timestamp.");
+
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (Microsoft.Data.Sqlite.SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
         var existing = await ReadRunRowAsync(connection, transaction, run.Id, cancellationToken).ConfigureAwait(false);
-        var desired = ToRow(run);
 
         if (existing is not null)
         {
@@ -143,6 +157,12 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
             if (IsTerminal((AutomationRunStatus)existing.Status))
                 throw new InvalidOperationException("A completed Run cannot be mutated.");
 
+            // The ORIGINAL Run lease token must be carried across the transition. A stored leased Run
+            // cannot be completed with a different token (even when the definition now holds that token)
+            // or with a null token that would otherwise bypass the definition CAS.
+            if (desired.LeaseToken != existing.LeaseToken)
+                throw new InvalidOperationException("A Run's original lease token is immutable across completion.");
+
             // The desired revision is the revision to persist; it must advance by exactly one from the
             // stored revision. Anything else (stale, jump, or changed-same-version) is rejected.
             if (desired.Revision != existing.Revision + 1)
@@ -156,11 +176,11 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
             await InsertRunRowAsync(connection, transaction, desired, cancellationToken).ConfigureAwait(false);
         }
 
-        // Scheduled writes (a transition into a known completion state that carries a real acquired
-        // definition lease token) must match the definition's current lease and mutate the definition.
-        // History-only appends (null lease) never touch the definition schedule/lease/updated_at. The
-        // definition mutation is a conditional CAS: if it affects zero rows the Run mutation is rolled back.
-        if (desired.LeaseToken is not null && IsTerminal((AutomationRunStatus)desired.Status))
+        // Scheduled writes (a terminal write that carries a real acquired definition lease token) must
+        // match the definition's current lease and mutate the definition. History-only appends (null
+        // lease) never touch the definition schedule/lease/updated_at. The definition mutation is a
+        // conditional CAS: if it affects zero rows the Run mutation is rolled back.
+        if (desired.LeaseToken is not null)
         {
             var released = await ReleaseDefinitionLeaseAsync(connection, transaction,
                 desired.AutomationId, desired.LeaseToken, nextRunAt, cancellationToken).ConfigureAwait(false);
@@ -214,15 +234,23 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
     }
 
     /// <summary>Persists a Run that has released its execution resource while it waits, awaits approval
-    /// or awaits a bounded retry. The suspending Run must still hold the definition lease (a lost or
-    /// stolen token is rejected), but suspension touches ONLY the Run row: it never advances the
-    /// definition's schedule, clears its lease, or changes its timestamp, because the definition is still
-    /// occupied by the suspended Run.</summary>
+    /// or awaits a bounded retry. Suspension applies only to the Waiting/ApprovalRequired states, never a
+    /// terminal or unknown status, and a suspended Run cannot carry a completion timestamp. The
+    /// suspending Run must still hold the definition lease (a lost or stolen token is rejected), and the
+    /// ORIGINAL Run lease token is immutable across a transition. Suspension touches ONLY the Run row: it
+    /// never advances the definition's schedule, clears its lease, or changes its timestamp, because the
+    /// definition is still occupied by the suspended Run.</summary>
     public async Task SuspendRunAsync(AutomationRun run, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
         if (run.LeaseToken is null)
             throw new InvalidOperationException("A Run cannot be suspended without a definition lease token.");
+        if (!IsSupportedSuspendedStatus(run.Status))
+            throw new InvalidOperationException("Suspension applies only to Waiting or ApprovalRequired states.");
+        if (run.Revision < 0)
+            throw new InvalidOperationException("A Run revision cannot be negative.");
+        if (run.CompletedAt is not null)
+            throw new InvalidOperationException("A suspended Run cannot carry a completion timestamp.");
 
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (Microsoft.Data.Sqlite.SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
@@ -249,6 +277,8 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
                 return; // no-write acknowledgment
             if (IsTerminal((AutomationRunStatus)existing.Status))
                 throw new InvalidOperationException("A completed Run cannot be resumed or re-suspended.");
+            if (desired.LeaseToken != existing.LeaseToken)
+                throw new InvalidOperationException("A Run's original lease token is immutable across suspension.");
             if (desired.Revision != existing.Revision + 1)
                 throw new InvalidOperationException("Run revision must advance by exactly one from the persisted revision.");
             await UpdateRunRowAsync(connection, transaction, desired, existing.Revision, cancellationToken).ConfigureAwait(false);
@@ -261,6 +291,11 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
     /// terminal, and the enum is not renumbered.</summary>
     private static bool IsTerminal(AutomationRunStatus status) =>
         status is AutomationRunStatus.Succeeded or AutomationRunStatus.Failed or AutomationRunStatus.Cancelled;
+
+    /// <summary>True only for the statuses a Run can be durably suspended in. Unknown/other values are
+    /// rejected rather than silently accepted as a suspension.</summary>
+    private static bool IsSupportedSuspendedStatus(AutomationRunStatus status) =>
+        status is AutomationRunStatus.Waiting or AutomationRunStatus.ApprovalRequired;
 
     /// <summary>The exact persisted Run row, normalized for comparison.</summary>
     private sealed record AutomationRunRow(

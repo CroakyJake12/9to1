@@ -139,51 +139,74 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var completed = suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Result = "ok", Revision = 8 };
         await fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token).WaitAsync(Bound, token);
 
+        // Reopen (reconstruct the same serialized payload from disk) as a restarted process would.
+        var reopened = new AutomationRepository(NewDatabase());
         var afterFirst = await ReadAutomationRowAsync(fx.AutomationId);
 
-        // An identical retry with a DIFFERENT nextRunAt must be ignored: no reschedule, no second write.
-        await fx.Store.CompleteRunAsync(completed, fx.Now.AddYears(5), token).WaitAsync(Bound, token);
-        Assert.Equal(afterFirst, await ReadAutomationRowAsync(fx.AutomationId));
-        var runs = await fx.Store.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token);
+        // A newer lease is acquired and the schedule is advanced behind the ack's back.
+        Assert.True(await reopened.TryAcquireLeaseAsync(fx.AutomationId, "lease-2", fx.Now.AddMinutes(60), token));
+        await using (var connection = await NewDatabase().OpenAsync(token))
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "UPDATE automations SET next_run_at=$nr WHERE id=$id;";
+            command.Parameters.AddWithValue("$nr", fx.Now.AddYears(9).ToUniversalTime().ToString("O"));
+            command.Parameters.AddWithValue("$id", fx.AutomationId.ToString());
+            await command.ExecuteNonQueryAsync(token);
+        }
+        var beforeNewer = await ReadAutomationRowAsync(fx.AutomationId);
+
+        // Write-blocking triggers prove the retry issues NO write to either table: any INSERT/UPDATE/
+        // DELETE on automation_runs or automations would raise and fail the test.
+        await using (var connection = await NewDatabase().OpenAsync(token))
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = """
+                CREATE TRIGGER block_run_insert BEFORE INSERT ON automation_runs
+                BEGIN SELECT RAISE(ABORT, 'blocked run insert'); END;
+                CREATE TRIGGER block_run_update BEFORE UPDATE ON automation_runs
+                BEGIN SELECT RAISE(ABORT, 'blocked run update'); END;
+                CREATE TRIGGER block_run_delete BEFORE DELETE ON automation_runs
+                BEGIN SELECT RAISE(ABORT, 'blocked run delete'); END;
+                CREATE TRIGGER block_def_update BEFORE UPDATE ON automations
+                BEGIN SELECT RAISE(ABORT, 'blocked definition update'); END;
+                """;
+            await command.ExecuteNonQueryAsync(token);
+        }
+
+        // The identical retry with a DIFFERENT nextRunAt must be a pure no-write acknowledgement.
+        await reopened.CompleteRunAsync(completed, fx.Now.AddYears(5), token).WaitAsync(Bound, token);
+        Assert.Equal(beforeNewer, await ReadAutomationRowAsync(fx.AutomationId));
+        Assert.Equal("lease-2", (await ReadAutomationRowAsync(fx.AutomationId)).LeaseToken);
+        var runs = await reopened.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token);
         Assert.Single(runs);
         Assert.Equal(8, Assert.Single(runs).Revision);
-
-        // A newer lease is acquired on the definition; an old lost-ack retry (still carrying the original
-        // token) must leave the newer lease and schedule byte/value intact.
-        Assert.True(await fx.Store.TryAcquireLeaseAsync(fx.AutomationId, "lease-2", fx.Now.AddMinutes(60), token));
-        var beforeNewer = await ReadAutomationRowAsync(fx.AutomationId);
-        await fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(3), token).WaitAsync(Bound, token);
-        var afterNewer = await ReadAutomationRowAsync(fx.AutomationId);
-        Assert.Equal(beforeNewer, afterNewer);
-        Assert.Equal("lease-2", afterNewer.LeaseToken);
-        Assert.Equal(beforeNewer.NextRunAt, afterNewer.NextRunAt);
     }
 
     [Fact]
     public async Task Stale_jump_or_changed_same_version_transitions_reject_without_mutation()
     {
         // stale
-        await AssertRejectedTransition((fx, _) => fx with { Revision = 6 });
+        await AssertRejectedTransition((suspended, fx) => suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 6 });
         // jump
-        await AssertRejectedTransition((fx, _) => fx with { Revision = 9 });
-        // changed-same-version: same revision but a different persisted payload
-        await AssertRejectedTransition((fx, _) => fx with { Result = "changed-without-revision-bump" });
+        await AssertRejectedTransition((suspended, fx) => suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 9 });
+        // changed-same-version: same revision as stored but a different persisted payload
+        await AssertRejectedTransition((suspended, fx) => suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 7, Result = "changed-without-revision-bump" });
     }
 
     [Fact]
     public async Task Wrong_identity_lease_or_stolen_lease_rejects_run_and_definition_unchanged()
     {
         // wrong AutomationId
-        await AssertRejectedRunAndDefinitionUnchanged((fx, _) => fx with { AutomationId = Guid.NewGuid(), Status = AutomationRunStatus.Succeeded, Revision = 8 });
+        await AssertRejectedRunAndDefinitionUnchanged((suspended, fx) => suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 8, AutomationId = Guid.NewGuid() });
 
-        // wrong lease token: the run's token does not match the held definition lease
-        await AssertRejectedRunAndDefinitionUnchanged((fx, _) => fx with { LeaseToken = "wrong-token", Status = AutomationRunStatus.Succeeded, Revision = 8 });
+        // wrong lease token: the desired run's token differs from the run's OWN original stored token
+        await AssertRejectedRunAndDefinitionUnchanged((suspended, fx) => suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 8, LeaseToken = "wrong-token" });
 
         // changed pinned graph identity
-        await AssertRejectedRunAndDefinitionUnchanged((fx, _) => fx with { PinnedGraph = new AutomationGraphBinding(Guid.NewGuid(), 4), Status = AutomationRunStatus.Succeeded, Revision = 8 });
+        await AssertRejectedRunAndDefinitionUnchanged((suspended, fx) => suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 8, PinnedGraph = new AutomationGraphBinding(Guid.NewGuid(), 4) });
 
         // changed pinned definition revision
-        await AssertRejectedRunAndDefinitionUnchanged((fx, _) => fx with { DefinitionRevision = 9, Status = AutomationRunStatus.Succeeded, Revision = 8 });
+        await AssertRejectedRunAndDefinitionUnchanged((suspended, fx) => suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 8, DefinitionRevision = 9 });
 
         // stolen definition lease: definition lease replaced behind the run's back
         await AssertStolenLeaseRejects();
@@ -217,6 +240,9 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var suspended = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(45), fx.Now, revision: 7);
         await fx.Store.SuspendRunAsync(suspended, token).WaitAsync(Bound, token);
 
+        var runBefore = await SerializeRunRowAsync(fx.RunId);
+        var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
+
         await using (var connection = await NewDatabase().OpenAsync(token))
         await using (var command = connection.CreateCommand())
         {
@@ -229,17 +255,14 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         }
 
         var completed = suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 8 };
-        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token)).WaitAsync(Bound, token);
+        var ex = await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(
+            () => fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token));
+        Assert.Contains("forced definition update failure", ex.Message);
 
-        // The Run transition rolled back with the failed definition CAS.
-        var runs = await fx.Store.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token);
-        var row = Assert.Single(runs);
-        Assert.Equal(7, row.Revision);
-        Assert.Equal(AutomationRunStatus.Waiting, row.Status);
-
-        var def = await ReadAutomationRowAsync(fx.AutomationId);
-        Assert.Equal(fx.Token, def.LeaseToken);
-        Assert.Equal(fx.Now.AddDays(1).ToUniversalTime().ToString("O"), def.NextRunAt);
+        // The Run transition rolled back with the failed definition CAS: every persisted Run and
+        // definition column is byte-for-byte unchanged.
+        Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
+        Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
     }
 
     [Fact]
@@ -252,20 +275,46 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var first = suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Result = "first", Revision = 8 };
         var second = suspended with { Status = AutomationRunStatus.Failed, CompletedAt = fx.Now.AddMinutes(1), Error = "second", Revision = 8 };
 
-        var storeA = new AutomationRepository(NewDatabase());
-        var storeB = new AutomationRepository(NewDatabase());
+        // Coordinate both stores to start their write transactions together. The losing outcome must be
+        // the specific optimistic-conflict guard, so a generic catch must never hide an unrelated
+        // SQLITE_BUSY or a setup fault.
+        var gate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task<RaceOutcome> RunFromStoreAsync(AutomationRun candidate, DateTimeOffset schedule)
+        {
+            await gate.Task;
+            var store = new AutomationRepository(NewDatabase());
+            try { await store.CompleteRunAsync(candidate, schedule, token); return new RaceOutcome(true, null); }
+            catch (Exception error) { return new RaceOutcome(false, error); }
+        }
 
-        var outcomes = await Task.WhenAll(
-            CaptureOutcomeAsync(storeA.CompleteRunAsync(first, fx.Now.AddDays(2), token)),
-            CaptureOutcomeAsync(storeB.CompleteRunAsync(second, fx.Now.AddDays(2), token)));
+        var taskA = RunFromStoreAsync(first, fx.Now.AddDays(2));
+        var taskB = RunFromStoreAsync(second, fx.Now.AddDays(3));
+        gate.TrySetResult(true);
+        var outcomes = await Task.WhenAll(taskA, taskB);
 
-        Assert.Equal(1, outcomes.Count(result => result));
-        Assert.Equal(1, outcomes.Count(result => !result));
+        Assert.Equal(1, outcomes.Count(outcome => outcome.Ok));
+        var loser = Assert.Single(outcomes.Where(outcome => !outcome.Ok));
+        var conflict = Assert.IsType<InvalidOperationException>(loser!.Error);
+        Assert.Equal("Concurrent run transition conflict.", conflict.Message);
 
+        var aWon = outcomes[0].Ok;
         var runs = await fx.Store.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token);
         var row = Assert.Single(runs);
         Assert.Equal(8, row.Revision);
-        Assert.True(row.Status is AutomationRunStatus.Succeeded or AutomationRunStatus.Failed);
+        if (aWon)
+        {
+            Assert.Equal(AutomationRunStatus.Succeeded, row.Status);
+            Assert.Equal("first", row.Result);
+        }
+        else
+        {
+            Assert.Equal(AutomationRunStatus.Failed, row.Status);
+            Assert.Equal("second", row.Error);
+        }
+
+        // The persisted schedule is exactly the winner's, never the loser's.
+        var expectedNext = (aWon ? fx.Now.AddDays(2) : fx.Now.AddDays(3)).ToUniversalTime().ToString("O");
+        Assert.Equal(expectedNext, (await ReadAutomationRowAsync(fx.AutomationId)).NextRunAt);
     }
 
     [Fact]
@@ -329,6 +378,86 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var database = NewDatabase();
         await database.InitializeAsync(token).WaitAsync(Bound, token);
         Assert.IsAssignableFrom<IAutomationRunContinuationStore>(new AutomationRepository(database));
+    }
+
+    [Fact]
+    public async Task Stored_A_desired_B_complete_rejects_when_definition_now_holds_B_both_rows_unchanged()
+    {
+        var fx = await NewLeasedFixtureAsync();
+        var suspended = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(45), fx.Now, revision: 7);
+        await fx.Store.SuspendRunAsync(suspended, token).WaitAsync(Bound, token);
+
+        // The definition now holds a NEWER lease B behind the run's back.
+        Assert.True(await fx.Store.TryAcquireLeaseAsync(fx.AutomationId, "lease-B", fx.Now.AddMinutes(61), token));
+        var runBefore = await SerializeRunRowAsync(fx.RunId);
+        var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
+
+        // Desired carries B and the definition currently holds B: it must still reject because the
+        // run's ORIGINAL stored token is A (A->B must not mask the status/lease guard).
+        var completed = suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), LeaseToken = "lease-B", Revision = 8 };
+        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token));
+
+        Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
+        Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
+    }
+
+    [Fact]
+    public async Task Stored_A_desired_B_suspend_rejects_when_definition_now_holds_B_both_rows_unchanged()
+    {
+        var fx = await NewLeasedFixtureAsync();
+        var suspended = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(45), fx.Now, revision: 7);
+        await fx.Store.SuspendRunAsync(suspended, token).WaitAsync(Bound, token);
+
+        Assert.True(await fx.Store.TryAcquireLeaseAsync(fx.AutomationId, "lease-B", fx.Now.AddMinutes(61), token));
+        var runBefore = await SerializeRunRowAsync(fx.RunId);
+        var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
+
+        var resume = suspended with { LeaseToken = "lease-B", ScheduledFor = fx.Now.AddMinutes(90), Revision = 8 };
+        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.SuspendRunAsync(resume, token));
+
+        Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
+        Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
+    }
+
+    [Fact]
+    public async Task Stored_A_desired_null_complete_rejects_both_rows_unchanged()
+    {
+        var fx = await NewLeasedFixtureAsync();
+        var suspended = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(45), fx.Now, revision: 7);
+        await fx.Store.SuspendRunAsync(suspended, token).WaitAsync(Bound, token);
+
+        var runBefore = await SerializeRunRowAsync(fx.RunId);
+        var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
+
+        // A null desired token would otherwise bypass the definition CAS for an existing leased waiting
+        // run; it must be rejected with both rows unchanged.
+        var completed = suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), LeaseToken = null, Revision = 8 };
+        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token));
+
+        Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
+        Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
+    }
+
+    [Fact]
+    public async Task Complete_rejects_waiting_and_unknown_statuses_without_mutation()
+    {
+        var fx = await NewLeasedFixtureAsync();
+        var suspended = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(45), fx.Now, revision: 7);
+        await fx.Store.SuspendRunAsync(suspended, token).WaitAsync(Bound, token);
+
+        await AssertCompleteRejectedWithoutMutationAsync(fx, suspended with { Status = AutomationRunStatus.Waiting, Revision = 8 });
+        await AssertCompleteRejectedWithoutMutationAsync(fx, suspended with { Status = (AutomationRunStatus)999, Revision = 8 });
+    }
+
+    [Fact]
+    public async Task Suspend_rejects_terminal_and_unknown_statuses_without_mutation()
+    {
+        var fx = await NewLeasedFixtureAsync();
+        var suspended = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(45), fx.Now, revision: 7);
+        await fx.Store.SuspendRunAsync(suspended, token).WaitAsync(Bound, token);
+
+        await AssertSuspendRejectedWithoutMutationAsync(fx, suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 8 });
+        await AssertSuspendRejectedWithoutMutationAsync(fx, suspended with { Status = (AutomationRunStatus)999, Revision = 8 });
     }
 
     // ---- helpers ----
@@ -436,10 +565,60 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         Assert.Equal(fx.Now.AddDays(1).ToUniversalTime().ToString("O"), def.NextRunAt);
     }
 
-    private static async Task<bool> CaptureOutcomeAsync(Task task)
+    private sealed record RaceOutcome(bool Ok, Exception? Error);
+
+    private async Task<string> SerializeRunRowAsync(Guid runId)
     {
-        try { await task; return true; }
-        catch { return false; }
+        await using var connection = await NewDatabase().OpenAsync(token);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM automation_runs WHERE id=$id;";
+        command.Parameters.AddWithValue("$id", runId.ToString());
+        await using var reader = await command.ExecuteReaderAsync(token);
+        await reader.ReadAsync(token);
+        var sb = new System.Text.StringBuilder();
+        for (var i = 0; i < reader.FieldCount; i++)
+        {
+            sb.Append(reader.GetName(i)).Append('=');
+            sb.Append(reader.IsDBNull(i) ? "<NULL>" : Convert.ToString(reader.GetValue(i), System.Globalization.CultureInfo.InvariantCulture));
+            sb.Append('|');
+        }
+        return sb.ToString();
+    }
+
+    private async Task<string> SerializeDefinitionRowAsync(Guid automationId)
+    {
+        await using var connection = await NewDatabase().OpenAsync(token);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM automations WHERE id=$id;";
+        command.Parameters.AddWithValue("$id", automationId.ToString());
+        await using var reader = await command.ExecuteReaderAsync(token);
+        await reader.ReadAsync(token);
+        var sb = new System.Text.StringBuilder();
+        for (var i = 0; i < reader.FieldCount; i++)
+        {
+            sb.Append(reader.GetName(i)).Append('=');
+            sb.Append(reader.IsDBNull(i) ? "<NULL>" : Convert.ToString(reader.GetValue(i), System.Globalization.CultureInfo.InvariantCulture));
+            sb.Append('|');
+        }
+        return sb.ToString();
+    }
+
+    private async Task AssertCompleteRejectedWithoutMutationAsync(LeasedFixture fx, AutomationRun completed)
+    {
+        var runBefore = await SerializeRunRowAsync(fx.RunId);
+        var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
+        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token)).WaitAsync(Bound, token);
+        Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
+        Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
+    }
+
+    private async Task AssertSuspendRejectedWithoutMutationAsync(LeasedFixture fx, AutomationRun resume)
+    {
+        var runBefore = await SerializeRunRowAsync(fx.RunId);
+        var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
+        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.SuspendRunAsync(resume, token)).WaitAsync(Bound, token);
+        Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
+        Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
     }
 
     private async Task<(string? LeaseToken, string? LeaseUntil, string? NextRunAt, string? UpdatedAt)> ReadAutomationRowAsync(Guid automationId)
