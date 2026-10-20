@@ -26,8 +26,11 @@ public sealed partial class AutomationRepository
     /// <summary>Atomically binds one running claim to exactly one resumable Run. The transaction re-reads
     /// the authoritative persisted row and verifies the exact expected revision/status/automation
     /// identity/original lease token and continuation digest BEFORE inserting the claim, so neither a
-    /// stale view nor caller-supplied JSON ever becomes the fence. A conflict on the run_id primary key
-    /// makes exactly one concurrent caller win; every loser acquires nothing and performs zero effects.</summary>
+    /// stale view nor caller-supplied JSON ever becomes the fence. Only a genuinely resumable
+    /// (Waiting/ApprovalRequired/RetryPending) non-terminal Run may be claimed, and the definition must
+    /// still exist, be enabled, AND still hold exactly the Run's original lease token; a lost/stolen/
+    /// cleared definition lease revokes the claim before any effect. A conflict on the run_id primary
+    /// key makes exactly one concurrent caller win; every loser acquires nothing and performs zero effects.</summary>
     public async Task<AutomationRunClaimAcquisition> TryAcquireRunClaimAsync(AutomationRunClaimRequest request,
         CancellationToken cancellationToken)
     {
@@ -50,6 +53,12 @@ public sealed partial class AutomationRepository
         if (existing is null)
             return new(false, string.Empty, AutomationResumeErrorKind.WaitResumeFailed, "run.not.found", "The Run no longer exists and cannot be claimed.");
 
+        // Eligibility fence: only a genuinely resumable non-terminal status may be claimed. Terminal/
+        // running/unknown/other states are refused before any effect, even if the caller requested one.
+        if (!IsEligibleClaimStatus((AutomationRunStatus)existing.Status))
+            return new(false, string.Empty, AutomationResumeErrorKind.WaitResumeFailed, "claim.status.ineligible",
+                "The Run is not in a resumable waiting/approval/retry state; refusing to claim.");
+
         if (existing.AutomationId != request.AutomationId)
             return new(false, string.Empty, AutomationResumeErrorKind.WaitResumeFailed, "claim.identity.mismatch", "The claim automation identity does not match the persisted Run.");
         if (existing.LeaseToken != request.LeaseToken)
@@ -61,13 +70,18 @@ public sealed partial class AutomationRepository
         if (!string.Equals(ComputeContinuationDigest(existing.ContinuationDescriptorJson), request.ContinuationDigest, StringComparison.Ordinal))
             return new(false, string.Empty, AutomationResumeErrorKind.WaitResumeFailed, "claim.continuation.mismatch", "The claim continuation digest does not match the persisted continuation.");
 
-        // The definition must still exist and be operational; a disabled/deleted/revoked definition is
-        // never resumable and the run stops before any side effect.
-        var enabled = await ReadDefinitionEnabledAsync(connection, transaction, request.AutomationId, cancellationToken).ConfigureAwait(false);
-        if (enabled is null)
+        // The definition must still exist and be operational AND still hold exactly the Run's original
+        // lease token. A lost/stolen/cleared definition lease means the run's authority was revoked or
+        // superseded; the run stops before any side effect. This is the definition-token equality fence.
+        var definition = await ReadDefinitionStateAsync(connection, transaction, request.AutomationId, cancellationToken).ConfigureAwait(false);
+        if (definition.Enabled is null)
             return new(false, string.Empty, AutomationResumeErrorKind.NeedsAttention, "definition.deleted", "The definition is gone; the Run cannot be resumed.");
-        if (enabled.Value != true)
+        if (definition.Enabled.Value != true)
             return new(false, string.Empty, AutomationResumeErrorKind.NeedsAttention, "definition.disabled", "The definition is disabled; the Run cannot be resumed.");
+        if (existing.LeaseToken is null || string.IsNullOrWhiteSpace(definition.LeaseToken) ||
+            !string.Equals(existing.LeaseToken, definition.LeaseToken, StringComparison.Ordinal))
+            return new(false, string.Empty, AutomationResumeErrorKind.NeedsAttention, "definition.token.lost",
+                "The definition no longer holds this Run's original lease token; the Run cannot be resumed.");
 
         var claimToken = Guid.NewGuid().ToString("N");
         await using var insert = connection.CreateCommand();
@@ -95,7 +109,9 @@ public sealed partial class AutomationRepository
     }
 
     /// <summary>Releases a held claim. Only the owning claim token may release it; an unrelated token is
-    /// refused so a losing/stale worker cannot steal another winner's claim.</summary>
+    /// refused so a losing/stale worker cannot steal another winner's claim. This is also how a settled
+    /// (acknowledged) claim — including one that carried an uncertain settlement — is cleared once its
+    /// exact persistence operation is durably acknowledged.</summary>
     public async Task ReleaseRunClaimAsync(Guid runId, string claimToken, CancellationToken cancellationToken)
     {
         if (runId == Guid.Empty || string.IsNullOrWhiteSpace(claimToken)) return;
@@ -107,16 +123,105 @@ public sealed partial class AutomationRepository
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<bool?> ReadDefinitionEnabledAsync(
+    /// <summary>Bounded by-ID read of exactly one due resumable Run. The Run is returned only when it is
+    /// a genuine due candidate (resumable status and due time); otherwise null. This is the authoritative
+    /// read used by the approval path so a large number of other waiting Runs never hides an exact
+    /// approved target. It remains a candidate read — never an approval or an execution grant.</summary>
+    public async Task<AutomationRun?> GetResumableRunByIdAsync(Guid runId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        if (runId == Guid.Empty) return null;
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT * FROM automation_runs
+            WHERE id=$id
+              AND status IN ({(int)AutomationRunStatus.Waiting},{(int)AutomationRunStatus.ApprovalRequired},{(int)AutomationRunStatus.RetryPending})
+              AND scheduled_for <= $now
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$id", runId.ToString());
+        command.Parameters.AddWithValue("$now", now.ToUniversalTime().ToString("O"));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) return null;
+        return ReadRun(reader);
+    }
+
+    /// <summary>Records an uncertain settlement on the held claim row, retaining the exact prepared
+    /// persistence operation (run JSON and next schedule) and the original error. The claim is retained
+    /// so a later sweep cannot re-execute the resumed action B while the exact outcome is unknown. This
+    /// is a durable outcome/receipt for the exact persistence operation, never a blanket catch.</summary>
+    public async Task RecordUncertainSettlementAsync(AutomationRunClaimSettlement settlement, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settlement);
+        if (settlement.RunId == Guid.Empty || string.IsNullOrWhiteSpace(settlement.ClaimToken)) return;
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE automation_run_claims SET
+                settlement_kind=$kind,
+                settlement_run_json=$runJson,
+                settlement_next_run_at=$nextRunAt,
+                settlement_error=$error,
+                settled_at=$settledAt
+            WHERE run_id=$runId AND claim_token=$token;
+            """;
+        command.Parameters.AddWithValue("$kind", (int)settlement.Kind);
+        command.Parameters.AddWithValue("$runJson", (object?)settlement.RunJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$nextRunAt", (object?)settlement.NextRunAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$error", (object?)settlement.Error ?? DBNull.Value);
+        command.Parameters.AddWithValue("$settledAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$runId", settlement.RunId.ToString());
+        command.Parameters.AddWithValue("$token", settlement.ClaimToken);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Reads retained claims whose settlement is still uncertain. Reconciliation replays only the
+    /// exact persisted operation and releases the claim once it is durably acknowledged; it never
+    /// re-executes the chart and never fabricates a fresh outcome.</summary>
+    public async Task<IReadOnlyList<AutomationRunClaimSettlement>> GetUncertainSettlementsAsync(CancellationToken cancellationToken)
+    {
+        var result = new List<AutomationRunClaimSettlement>();
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT run_id, automation_id, claim_token, settlement_kind, settlement_run_json,
+                   settlement_next_run_at, settlement_error
+            FROM automation_run_claims
+            WHERE settlement_kind IS NOT NULL
+            ORDER BY settled_at;
+            """;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var kindOrdinal = reader.GetOrdinal("settlement_kind");
+            var nextOrdinal = reader.GetOrdinal("settlement_next_run_at");
+            result.Add(new AutomationRunClaimSettlement(
+                reader.Guid("run_id"),
+                reader.Guid("automation_id"),
+                reader.String("claim_token"),
+                (AutomationRunClaimSettlementKind)reader.GetInt32(kindOrdinal),
+                reader.NullableString("settlement_run_json"),
+                reader.IsDBNull(nextOrdinal) ? null : reader.GetDateTimeOffset(nextOrdinal),
+                reader.NullableString("settlement_error")));
+        }
+        return result;
+    }
+
+    private static bool IsEligibleClaimStatus(AutomationRunStatus status) =>
+        status is AutomationRunStatus.Waiting or AutomationRunStatus.ApprovalRequired or AutomationRunStatus.RetryPending;
+
+    private static async Task<(bool? Enabled, string? LeaseToken)> ReadDefinitionStateAsync(
         SqliteConnection connection, SqliteTransaction transaction, Guid automationId, CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = "SELECT is_enabled FROM automations WHERE id=$id;";
+        command.CommandText = "SELECT is_enabled, lease_token FROM automations WHERE id=$id;";
         command.Parameters.AddWithValue("$id", automationId.ToString());
-        var value = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-        if (value is null or DBNull) return null;
-        return Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture) == 1;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) return (null, null);
+        var enabled = reader.GetInt32(0) == 1;
+        var lease = reader.IsDBNull(1) ? null : reader.GetString(1);
+        return (enabled, lease);
     }
 
     private static string ComputeContinuationDigest(string? continuationJson)

@@ -40,6 +40,38 @@ public sealed record AutomationRunClaimAcquisition(
     string Code,
     string Message);
 
+/// <summary>Typed classification of a held claim's settlement state. A settlement is recorded when the
+/// exact persistence operation that should make the resume durable (re-suspension or terminal completion)
+/// cannot be acknowledged — for example a SQL rollback, a post-commit ACK loss, caller cancellation during
+/// held persistence, or a malformed resumer result. Recording a settlement RETAINS the claim so a later
+/// sweep cannot re-execute the resumed action B; the claim is released only after the exact persistence
+/// operation is acknowledged or a proven safe pre-effect refusal occurs.</summary>
+public enum AutomationRunClaimSettlementKind
+{
+    /// <summary>Re-suspension (SuspendRunAsync) outcome is unknown/unacknowledged.</summary>
+    Suspend = 0,
+    /// <summary>Terminal completion (CompleteRunAsync) outcome is unknown/unacknowledged.</summary>
+    Complete = 1,
+    /// <summary>The resumer cancelled before a persistence operation was prepared.</summary>
+    ResumeCancelled = 2,
+    /// <summary>The resumer faulted (invalid/malformed result, unexpected error).</summary>
+    ResumeFault = 3,
+    /// <summary>The resumer returned an accepted outcome but omitted the required updated Run.</summary>
+    MalformedResume = 4
+}
+
+/// <summary>Durable record of an uncertain claim settlement. It retains the exact prepared persistence
+/// operation (the run JSON and next schedule) plus the original error, so reconciliation replays ONLY
+/// that exact operation without fresh graph execution. The claim is retained while unsettled.</summary>
+public sealed record AutomationRunClaimSettlement(
+    Guid RunId,
+    Guid AutomationId,
+    string ClaimToken,
+    AutomationRunClaimSettlementKind Kind,
+    string? RunJson,
+    DateTimeOffset? NextRunAt,
+    string? Error);
+
 /// <summary>A typed approval decision for an Approval continuation. Decisions require the current
 /// authorised original actor and the exact same Run/node/continuation revision; duplicate conflicting,
 /// stale or forged decisions are rejected before effects.</summary>
@@ -65,10 +97,25 @@ public interface IAutomationRunClaimStore
     Task<IReadOnlyList<AutomationRun>> GetResumableClaimCandidatesAsync(DateTimeOffset now, int limit,
         CancellationToken cancellationToken);
 
+    /// <summary>Bounded, authoritative by-ID read of exactly one due resumable Run (no pagination).
+    /// Returns the Run only when it is a genuine due candidate; otherwise null. Used by the approval
+    /// path so a large number of other waiting Runs never hides an exact approved target.</summary>
+    Task<AutomationRun?> GetResumableRunByIdAsync(Guid runId, DateTimeOffset now,
+        CancellationToken cancellationToken);
+
     /// <summary>Atomically binds one running claim to exactly one resumable Run. Returns the winning
     /// acquisition for at most one concurrent caller; every loser is refused with zero effects.</summary>
     Task<AutomationRunClaimAcquisition> TryAcquireRunClaimAsync(AutomationRunClaimRequest request,
         CancellationToken cancellationToken);
+
+    /// <summary>Records an uncertain settlement on the held claim row, retaining the exact prepared
+    /// persistence operation and the original error. The claim is NOT released; a later sweep must not
+    /// re-execute the resumed action while this settlement is outstanding.</summary>
+    Task RecordUncertainSettlementAsync(AutomationRunClaimSettlement settlement, CancellationToken cancellationToken);
+
+    /// <summary>Reads retained claims whose settlement is still uncertain. Reconciliation replays only
+    /// the exact persisted operation and releases the claim once it is durably acknowledged.</summary>
+    Task<IReadOnlyList<AutomationRunClaimSettlement>> GetUncertainSettlementsAsync(CancellationToken cancellationToken);
 
     /// <summary>Releases a held claim (e.g. after a terminal write or re-suspension). Only the owning
     /// claim token may release it.</summary>

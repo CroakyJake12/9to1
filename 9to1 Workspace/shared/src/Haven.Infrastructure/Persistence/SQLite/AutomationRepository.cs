@@ -98,14 +98,26 @@ public sealed partial class AutomationRepository(ISqliteConnectionFactory factor
 
     /// <summary>
     /// Attempts to acquire lease async and reports the result without using failure for normal control flow.
+    /// Acquisition is fenced by the SAME active same-Run guard as due selection: a definition whose current
+    /// lease token is held by an active non-terminal Run (Running/Waiting/ApprovalRequired/RetryPending/
+    /// Paused/Blocked) cannot be re-acquired even when the lease timestamp has expired, so a long-wait
+    /// Run is never stolen/duplicated by a fresh scheduler. Ordinary new-run/terminal/history callers
+    /// (whose definition holds no active-run token) are unaffected.
     /// </summary>
     public async Task<bool> TryAcquireLeaseAsync(Guid automationId, string leaseToken, DateTimeOffset leaseUntil, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = """
+        command.CommandText = $"""
             UPDATE automations SET lease_token=$leaseToken, lease_until=$leaseUntil
-            WHERE id=$id AND (lease_until IS NULL OR lease_until < $now);
+            WHERE id=$id AND (lease_until IS NULL OR lease_until < $now)
+              AND NOT EXISTS (
+                  SELECT 1 FROM automation_runs r
+                  WHERE r.automation_id = automations.id
+                    AND r.lease_token IS NOT NULL
+                    AND r.lease_token = automations.lease_token
+                    AND r.status IN ({ActiveLeasedRunStatusList})
+              );
             """;
         command.Parameters.AddWithValue("$leaseToken", leaseToken);
         command.Parameters.AddWithValue("$leaseUntil", leaseUntil.ToUniversalTime().ToString("O"));

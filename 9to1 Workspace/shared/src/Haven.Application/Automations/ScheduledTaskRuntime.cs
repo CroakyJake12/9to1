@@ -607,11 +607,20 @@ public sealed class ScheduledTaskRunner(
             ? pending.ResumeAt ?? scheduledFor
             : scheduledFor;
 
+        // Authenticated pinned execution snapshot: the EXACT graph actually executed for this Run (the
+        // trigger-scoped projection), the canonical identity, the trigger and a self-integrity digest.
+        // A resume reloads exactly this snapshot and never substitutes the current Active task payload.
+        var snapshot = new AutomationPinnedExecutionSnapshot(
+            identity.Guid, identity.Revision, identity.Schema, identity.Digest,
+            payload.TriggerNodeId, payload.CapabilityProfileId, scopedJson,
+            AutomationPinnedExecutionSnapshot.ComputeDigest(scopedJson));
+
         var suspended = new AutomationRun(runId, task.Id, status, due, startedAt, null, null, null, leaseToken)
         {
             Revision = 0,
             DefinitionRevision = identity.Revision,
             PinnedGraph = new AutomationGraphBinding(identity.Guid, identity.Revision),
+            AdmissionSnapshotJson = AutomationPinnedExecutionSnapshotCodec.Serialize(snapshot),
             ContinuationDescriptorJson = AutomationGraphContinuationCodec.Serialize(continuation),
             Details = BuildRunDetails(payload, startedAt)
         };
@@ -632,12 +641,6 @@ public sealed class ScheduledTaskRunner(
         if (task is null)
             return new(null, null, false, new(false, AutomationResumeErrorKind.NeedsAttention, "definition.deleted", "The definition is gone; the Run cannot be resumed."));
 
-        if (!ScheduledGraphAutomationPayloadCodec.TryDeserialize(task.Instruction, out var payload))
-            return new(null, null, false, new(false, AutomationResumeErrorKind.WaitResumeFailed, "payload.invalid", "The scheduled graph payload is unreadable; refusing."));
-        if (!AutomationGraphCodec.TryDeserialize(payload.GraphJson, out var graph))
-            return new(null, null, false, new(false, AutomationResumeErrorKind.WaitResumeFailed, "graph.invalid", "The captured scheduled graph is unreadable; refusing."));
-        if (!AutomationGraphTriggerScope.TrySelect(graph, payload.TriggerNodeId, out var scoped, out var scopeError))
-            return new(null, null, false, new(false, AutomationResumeErrorKind.WaitResumeFailed, "graph.trigger.invalid", scopeError ?? "The scheduled graph trigger is invalid."));
         if (!AutomationGraphContinuationCodec.TryDeserialize(run.ContinuationDescriptorJson, out var continuation))
             return new(null, null, false, new(false, AutomationResumeErrorKind.WaitResumeFailed, "continuation.invalid", "The persisted continuation is unreadable; refusing."));
 
@@ -650,10 +653,30 @@ public sealed class ScheduledTaskRunner(
         if (pinnedGraphId == Guid.Empty || pinnedRevision < 1)
             return new(null, null, false, new(false, AutomationResumeErrorKind.WaitResumeFailed, "continuation.pin.missing", "The Run has no authoritative pinned graph identity; refusing to resume."));
 
+        // Load the authenticated pinned execution snapshot captured at suspension. This is the EXACT graph
+        // the Run executed — never the current Active task payload. Missing/corrupt/incompatible snapshots
+        // fail safely; the current payload is never substituted under an old label.
+        if (!AutomationPinnedExecutionSnapshotCodec.TryDeserialize(run.AdmissionSnapshotJson, out var snapshot))
+            return new(null, null, false, new(false, AutomationResumeErrorKind.MigrationRequired, "continuation.snapshot.invalid",
+                "The Run has no valid pinned execution snapshot; refusing to substitute the current graph."));
+        if (snapshot.GraphId != pinnedGraphId || snapshot.Revision != pinnedRevision)
+            return new(null, null, false, new(false, AutomationResumeErrorKind.MigrationRequired, "continuation.snapshot.pin.mismatch",
+                "The pinned execution snapshot does not match the Run's pin; refusing to resume."));
+        if (snapshot.GraphId != continuation.GraphId || snapshot.Revision != continuation.PinnedDefinitionRevision ||
+            snapshot.SchemaVersion != continuation.SchemaVersion ||
+            !string.Equals(snapshot.SourceDigest, continuation.SourceDigest, StringComparison.Ordinal))
+            return new(null, null, false, new(false, AutomationResumeErrorKind.MigrationRequired, "continuation.snapshot.inconsistent",
+                "The pinned execution snapshot and the persisted continuation are inconsistent; refusing to resume."));
+
+        if (!AutomationGraphCodec.TryDeserialize(snapshot.GraphJson, out var graph))
+            return new(null, null, false, new(false, AutomationResumeErrorKind.WaitResumeFailed, "graph.invalid", "The pinned execution snapshot graph is unreadable; refusing."));
+        if (!AutomationGraphTriggerScope.TrySelect(graph, snapshot.TriggerNodeId, out var scoped, out var scopeError))
+            return new(null, null, false, new(false, AutomationResumeErrorKind.WaitResumeFailed, "graph.trigger.invalid", scopeError ?? "The pinned execution snapshot trigger is invalid."));
+
         var workflow = new ReusableTaskDefinition(
-            payload.WorkflowId,
-            string.IsNullOrWhiteSpace(payload.WorkflowName) ? task.Name : payload.WorkflowName,
-            "Scheduled graph snapshot",
+            task.Id,
+            task.Name,
+            "Scheduled graph snapshot (authenticated pin)",
             string.Empty,
             task.ContainerId,
             true,
@@ -662,8 +685,8 @@ public sealed class ScheduledTaskRunner(
             AutomationGraphCodec.Serialize(scoped));
 
         var graphRunner = new ReusableDeviceWorkflowRunner(deviceExecutor, builtInExecutor);
-        var outcome = await graphRunner.RunDurableAsync(workflow, continuation, pinnedGraphId, pinnedRevision,
-            continuation.SchemaVersion, continuation.SourceDigest, permissionGranted: false, cancellationToken).ConfigureAwait(false);
+        var outcome = await graphRunner.RunDurableAsync(workflow, continuation, snapshot.GraphId, snapshot.Revision,
+            snapshot.SchemaVersion, snapshot.SourceDigest, permissionGranted: false, cancellationToken).ConfigureAwait(false);
 
         if (outcome.Outcome is AutomationGraphRunTerminal terminal)
         {
