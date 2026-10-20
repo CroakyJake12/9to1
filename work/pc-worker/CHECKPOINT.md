@@ -230,3 +230,12 @@ The owner supplied the actual PC implementation branch at `346891bef36e5f83f5f21
 The recovered source passes Home232 (9 Windows skips), CUI Runtime413, CUI Compiler101 and Spaces220 tests on Linux x64. These are engineering checks, not whole-app/native Windows/web acceptance. Home manager action/host integration, the remaining Spaces activation contracts, Automations durable execution, Build and the productivity suite remain open. The source is backed up on the existing GitHub repository. Raw test evidence remains in the task workspace.
 
 Owner clarification: all 9to1 web hosting/deployment targets `9to1.uk` through Cloudflare. The existing Sites-backed coordinator is used for programme evidence/status only; no 9to1 product site has been deployed there. Mercury remains unused until Beam quota exhaustion; its verified $5 cap is unchanged and its credential remains outside Git.
+
+
+### Cloud update — 20 October, 10:00 UTC
+
+`55525891` preserves the reviewed Space-sidebar activation guard: actual selection/revision, package identity/version, profile and lifecycle are checked after delayed reads; the host receives the original page, loader and session settlement. Expected Home access loss refuses without poisoning close. The focused real-service regression set passes 21/21. Full CUI/Automation/Generative resolution and native app acceptance remain open.
+
+A real Linux native run (frozen earlier candidate v2) exposed failed direct entry, empty restored history and empty visible composer. The SQLite conversation, draft text and matching current branch are intact. The owner identifies formatting mismatch with supplied mockups. These remain FAIL pending repair and a fresh shipping artifact; screenshots are evidence, not acceptance. Actual mounted chat uses the legacy HavenScene path, while the rail/context sidebar is canonical CUI, so editing the unused ChatSpace document alone would not repair the screenshot.
+
+Whole Host candidate v2: 274 passed/4 failed; baseline: 257 passed/5 failed. Three failures explicitly require Windows; the remaining held-save lifecycle failure also reproduces on baseline. No guards were removed. Raw logs, exact source patch and native screenshots are retained privately in the task workspace. Progress emails are being sent every 30 minutes during active work.

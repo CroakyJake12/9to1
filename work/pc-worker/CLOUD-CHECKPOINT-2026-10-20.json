@@ -1,7 +1,7 @@
 {
   "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
-  "recorded_at": "2026-10-20T09:57:54.129057+01:00",
-  "source_commit": "612be73f4cc0af6e9a10f038aeac5ff9994bb2c6",
+  "recorded_at": "2026-10-20T10:00:00Z",
+  "source_commit": "5552589183261de93f54bfb2c31daff239343839",
   "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
   "branch": "codex/cloud-continuation-20261020",
   "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
@@ -10,7 +10,9 @@
   "requirements": [
     "CUI dynamic-update/error-boundary and hot-reload contracts",
     "Universal Model Picker stable identity and unknown/empty state",
-    "APP-AC-001 through APP-AC-007"
+    "APP-AC-001 through APP-AC-007",
+    "Spaces sidebar safe activation; package/profile/selection/lifetime custody",
+    "LE-04 drafts and restored tabs; direct owner mockup/entry refinements"
   ],
   "source_sha256": {
     "framework/CUI/Runtime/CuiRuntimeSurface.cs": "5c3a77fe7aeba64747f7252ece7efa0bc6f6d6525734b49580a3da2f4596587f",
@@ -53,7 +55,32 @@
       "exit_code": 0
     },
     "evidence_location": "Task workspace: /workspace/shared/9to1-test-evidence/current-source; raw logs/TRX are not included in this source checkpoint",
-    "baseline_note": "Earlier main-based source had six compiler failures and an intermittent Home evidence-fixture collection race. These were recorded separately; the recovered PC-based source was validated anew. No tests or platform guards were removed."
+    "baseline_note": "Earlier main-based source had six compiler failures and an intermittent Home evidence-fixture collection race. These were recorded separately; the recovered PC-based source was validated anew. No tests or platform guards were removed.",
+    "spaces_activation_guards": {
+      "passed": 21,
+      "failed": 0,
+      "evidence": "/workspace/shared/9to1-test-evidence/spaces-final-fences-and-denial.log",
+      "independent_source_review": "PASS for narrow guard checkpoint"
+    },
+    "host_candidate_prior_v2": {
+      "passed": 274,
+      "failed": 4,
+      "baseline_whole_suite": {
+        "passed": 257,
+        "failed": 5
+      },
+      "note": "Three explicit Windows-only guards fail on Linux; same held-save lifecycle failure reproduced on baseline. No test weakened. Final denial fix received focused21-case check."
+    },
+    "native_linux_observations": {
+      "artifact": "/workspace/shared/9to1-native-evidence/spaces-candidate-v2/identity.json",
+      "artifact_precedes_final_guard_changes": true,
+      "native_start_create_type_close": "observed",
+      "direct_entry": "FAIL: summary interstitial",
+      "history_after_restart": "FAIL: empty projection despite persisted conversation",
+      "draft_after_restart": "FAIL: composer empty, SQLite text and current branch intact",
+      "formatting": "FAIL: user identifies mismatch with Professional mockups",
+      "effective_theme": "UNVERIFIED"
+    }
   },
   "acceptance": {
     "whole_cui_framework": "NOT_RUN",
@@ -63,9 +90,11 @@
     "web": "NOT_RUN"
   },
   "remaining_gaps": [
-    "Home model-manager actions and shipping host integration are incomplete",
-    "Spaces extension target-kind, delayed-selection, UI-dispatcher and original-action settlement repairs are in progress",
-    "Automation continuation completion/revision guards and durable runtime Wait/resume remain incomplete",
+    "Actual mounted chat still uses legacy HavenScene authoring; canonical CUI migration/layout correction required without dropping behavior",
+    "Direct Space entry, initial history and visible draft restoration fail native review",
+    "Home model-manager actions and shipping host integration remain incomplete",
+    "Spaces CUI/Automation/Generative target resolvers and full native workflows remain unaccepted",
+    "Automation durable runtime Wait/resume and transition guards remain incomplete",
     "Full Build and productivity-suite requirements remain pending"
   ],
   "programme_reconciliation": {
