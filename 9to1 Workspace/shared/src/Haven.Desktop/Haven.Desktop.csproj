@@ -83,6 +83,7 @@
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
+    <EmbeddedResource Include="Views/Pages/Chat/ChatRecovery.cui" LogicalName="Haven.Desktop.Chat.Recovery.cui" />
     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
     <Compile Update="Prefabs\**\*.hui.cs"><DependentUpon>%(Filename)</DependentUpon></Compile>
   </ItemGroup>

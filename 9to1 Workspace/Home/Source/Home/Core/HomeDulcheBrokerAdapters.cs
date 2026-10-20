@@ -1,53 +1,85 @@
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+
 namespace HavenOS.Home.Core;
 
-/// <summary>Linux transport adapter for the shared broker. The packaged Dulche broker is a systemd
-/// user service exposing an HTTP control endpoint on loopback (default Dulche port 9477). This
-/// adapter ATTACHES to an already-running broker (borrowed ownership) and only publishes a positive
-/// observation after it actually observes a live broker process identity and a healthy endpoint. It
-/// never launches a competing server and never infers running state from the platform name.</summary>
+/// <summary>
+/// Linux transport adapter for the shared broker. The packaged Dulche broker is a systemd user
+/// service (<c>haven-inference-broker.service</c>) whose sandbox restricts address families to
+/// AF_UNIX and whose worker listens on the runtime socket <c>$XDG_RUNTIME_DIR/haven/inference.sock</c>.
+/// This adapter ATTACHES to that already-running packaged broker (borrowed ownership) and only
+/// publishes a positive observation after it actually observes the live broker process identity from
+/// systemd and a healthy AF_UNIX HTTP endpoint. It never launches a competing server and never
+/// infers running state from the platform name. It releases nothing it did not acquire; it never
+/// kills or shuts down the borrowed systemd broker.
+/// </summary>
 public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
 {
     public const string PlatformId = "linux";
-    public const int DefaultDulchePort = 9477;
     private const string BrokerUnitName = "haven-inference-broker.service";
+    private const string SocketRelativePath = "haven/inference.sock";
 
-    private readonly int _port;
-    private readonly Func<Uri, CancellationToken, Task<bool>> _healthProbe;
+    private readonly string? _socketPath;
     private readonly Func<CancellationToken, Task<long?>> _brokerPidSource;
+    private readonly Func<string, CancellationToken, Task<bool>> _healthProbe;
+    private readonly TimeSpan _commandTimeout;
 
     public HomeDulcheLinuxBrokerAdapter(
-        int? port = null,
-        Func<Uri, CancellationToken, Task<bool>>? healthProbe = null,
-        Func<CancellationToken, Task<long?>>? brokerPidSource = null)
+        string? socketPath = null,
+        Func<CancellationToken, Task<long?>>? brokerPidSource = null,
+        Func<string, CancellationToken, Task<bool>>? healthProbe = null,
+        TimeSpan? commandTimeout = null)
     {
-        _port = port ?? DefaultDulchePort;
-        if (_port is < 1024 or > 65535)
-            throw new ArgumentOutOfRangeException(nameof(port), "The broker port must be between 1024 and 65535.");
-        _healthProbe = healthProbe ?? DefaultHealthProbeAsync;
+        _socketPath = socketPath;
         _brokerPidSource = brokerPidSource ?? DefaultBrokerPidSourceAsync;
+        _healthProbe = healthProbe ?? DefaultHealthProbeAsync;
+        _commandTimeout = commandTimeout ?? TimeSpan.FromSeconds(3);
     }
 
     public string Platform => PlatformId;
-    public bool Supported => true;
+    public bool Supported => OperatingSystem.IsLinux() && SocketPath is not null;
+
+    private string? SocketPath
+    {
+        get
+        {
+            if (_socketPath is not null) return _socketPath;
+            var runtimeDir = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
+            if (string.IsNullOrWhiteSpace(runtimeDir)) return null;
+            var candidate = Path.Combine(runtimeDir, SocketRelativePath);
+            return Path.IsPathFullyQualified(candidate) ? candidate : null;
+        }
+    }
 
     public async ValueTask<HomeDulcheBrokerObservation?> ObserveAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        var socketPath = SocketPath;
+        if (!Supported || socketPath is null) return null;
         var pid = await _brokerPidSource(cancellationToken).ConfigureAwait(false);
         if (pid is not { } livePid || livePid <= 0) return null;
-        var endpoint = new Uri($"http://127.0.0.1:{_port}/v1/", UriKind.Absolute);
-        var healthy = await _healthProbe(endpoint, cancellationToken).ConfigureAwait(false);
+        var healthy = await _healthProbe(socketPath, cancellationToken).ConfigureAwait(false);
         if (!healthy) return null;
-        return new HomeDulcheBrokerObservation(livePid, "http-loopback", endpoint, DateTimeOffset.UtcNow);
+        return new HomeDulcheBrokerObservation(livePid, "unix-socket", null, DateTimeOffset.UtcNow, socketPath);
     }
 
-    private static async Task<bool> DefaultHealthProbeAsync(Uri endpoint, CancellationToken cancellationToken)
+    /// <summary>Bounded health probe over the real AF_UNIX socket. Connect/read/exit are all
+    /// cancellable and time-bounded; a stuck socket never stalls optional service startup.</summary>
+    private static async Task<bool> DefaultHealthProbeAsync(string socketPath, CancellationToken cancellationToken)
     {
+        if (!OperatingSystem.IsLinux()) return false;
+        var handler = new SocketsHttpHandler
+        {
+            UseProxy = false,
+            AllowAutoRedirect = false,
+            ConnectCallback = (context, token) => ConnectUnixAsync(socketPath, token)
+        };
+        using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(3) };
         try
         {
-            var baseUri = new Uri(endpoint, "../health");
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
-            using var response = await client.GetAsync(baseUri, cancellationToken).ConfigureAwait(false);
+            using var response = await client.GetAsync(new Uri("http://localhost/health"), cancellationToken).ConfigureAwait(false);
             return response.IsSuccessStatusCode;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -60,32 +92,65 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
         }
     }
 
-    private static Task<long?> DefaultBrokerPidSourceAsync(CancellationToken cancellationToken)
+    private static async ValueTask<Stream> ConnectUnixAsync(string socketPath, CancellationToken token)
     {
-        if (!OperatingSystem.IsLinux()) return Task.FromResult<long?>(null);
+        var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
         try
         {
-            var psi = new System.Diagnostics.ProcessStartInfo("systemctl")
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true
-            };
-            psi.ArgumentList.Add("--user");
-            psi.ArgumentList.Add("show");
-            psi.ArgumentList.Add(BrokerUnitName);
-            psi.ArgumentList.Add("-p");
-            psi.ArgumentList.Add("MainPID");
-            psi.ArgumentList.Add("--value");
-            using var process = System.Diagnostics.Process.Start(psi);
-            if (process is null) return Task.FromResult<long?>(null);
-            var output = process.StandardOutput.ReadToEnd().Trim();
-            process.WaitForExit(2000);
-            return Task.FromResult(long.TryParse(output, out var pid) && pid > 0 ? pid : (long?)null);
+            await socket.ConnectAsync(new UnixDomainSocketEndPoint(socketPath), token).ConfigureAwait(false);
+            return new NetworkStream(socket, ownsSocket: true);
         }
         catch
         {
-            return Task.FromResult<long?>(null);
+            socket.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>Reads the live broker MainPID from systemd with cancellable, time-bounded async
+    /// stdout and exit observation. Unlike a synchronous ReadToEnd before WaitForExit, this honours
+    /// cancellation/timeout, checks the real exit status and never silently ignores a failed/partial
+    /// lookup child.</summary>
+    private async Task<long?> DefaultBrokerPidSourceAsync(CancellationToken cancellationToken)
+    {
+        if (!OperatingSystem.IsLinux()) return null;
+        var psi = new ProcessStartInfo("systemctl")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        psi.ArgumentList.Add("--user");
+        psi.ArgumentList.Add("show");
+        psi.ArgumentList.Add(BrokerUnitName);
+        psi.ArgumentList.Add("-p");
+        psi.ArgumentList.Add("MainPID");
+        psi.ArgumentList.Add("--value");
+        using var process = new Process { StartInfo = psi };
+        try
+        {
+            if (!process.Start()) return null;
+            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(_commandTimeout);
+            bool exited;
+            try { exited = await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false); }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (OperationCanceledException) { return null; } // bounded timeout: no stall
+            var output = await outputTask.ConfigureAwait(false);
+            _ = await errorTask.ConfigureAwait(false);
+            if (!exited || process.ExitCode != 0) return null;
+            return long.TryParse(output.Trim(), out var pid) && pid > 0 ? pid : null;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return null;
         }
     }
 }

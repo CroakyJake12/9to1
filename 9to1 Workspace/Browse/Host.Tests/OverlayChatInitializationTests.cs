@@ -116,6 +116,66 @@ public sealed class OverlayChatInitializationTests
         }
     }
 
+    // The recovery action is a REAL rendered CUI button (ChatRecovery.cui) mounted under the chat
+    // scene's RecoveryHost native host. This tests drives that actual button and verifies the host
+    // seam routes to the genuine Home Models destination while the draft and truthful refusal survive.
+    [AvaloniaFact]
+    public async Task Rendered_recovery_button_routes_to_home_models_while_draft_survives()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetException(new HttpRequestException("Connection refused (127.0.0.1:11434)",
+            new SocketException((int)SocketError.ConnectionRefused)));
+        AppContentAddress? routedDestination = null;
+        rig.Factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
+        {
+            // Mirror the production Spaces host seam: request the genuine Home Models destination.
+            routedDestination = AppContentAddress.Parse("9to1://home/models");
+        };
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        rig.Mount(page);
+        try
+        {
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            page.SetDraft("offline model recovery draft");
+            var recoveryButton = RecoveryButton(page);
+            Assert.True(recoveryButton.IsEffectivelyVisible);
+            recoveryButton.RaiseEvent(new RoutedEventArgs(NativeButton.ClickEvent));
+            await Scene(page).RecoveryView.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.NotNull(routedDestination);
+            Assert.Equal("home", routedDestination.Authority);
+            Assert.Equal(new[] { "models" }, routedDestination.ResourceSegments);
+            // Draft and truthful refusal survive the recovery route.
+            Assert.Equal("offline model recovery draft", ComposerText(page));
+            Assert.False(SendEnabled(page));
+        }
+        finally
+        {
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    // The rendered recovery affordance is offered exactly while model discovery is a truthful
+    // terminal unavailable observation; it stays hidden when a model is available.
+    [AvaloniaFact]
+    public async Task Recovery_button_is_hidden_when_models_are_available()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        rig.Mount(page);
+        try
+        {
+            Assert.Equal(ChatModelAvailability.Available, page.ModelAvailability);
+            Assert.False(RecoveryButton(page).IsEffectivelyVisible);
+        }
+        finally
+        {
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
     [AvaloniaFact]
     public async Task Cancelled_creation_joins_held_original_model_read_before_returning_failure()
     {
@@ -997,6 +1057,12 @@ public sealed class OverlayChatInitializationTests
     private static ChatHavenScene Scene(NewChatPage page) =>
         (ChatHavenScene)typeof(NewChatPage)
             .GetField("_scene", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+
+    private static ChatRecoveryCuiView RecoveryView(NewChatPage page) => Scene(page).RecoveryView;
+
+    private static NativeButton RecoveryButton(NewChatPage page) => RecoveryView(page)
+        .GetVisualDescendants().OfType<NativeButton>()
+        .Single(button => AutomationProperties.GetAutomationId(button) == "recovery-manage-button");
 
     private static bool SendEnabled(NewChatPage page) =>
         SendButton(page).IsEnabled;

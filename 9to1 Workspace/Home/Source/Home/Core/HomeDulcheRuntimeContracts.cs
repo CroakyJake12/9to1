@@ -85,12 +85,19 @@ public interface IHomeDulcheBrokerAdapter
 
 /// <summary>Positive current process/endpoint observation. This is only published after the adapter
 /// actually observes a live broker process and a healthy endpoint; it is never inferred from the
-/// platform name.</summary>
+/// platform name. An AF_UNIX transport records the real socket path in <see cref="SocketPath"/>
+/// and leaves <see cref="Endpoint"/> null; an HTTP loopback transport records <c>Endpoint</c>.
+/// A single observation may only claim one transport kind.</summary>
 public sealed record HomeDulcheBrokerObservation(
     long BrokerPid,
     string EndpointKind,
-    Uri Endpoint,
-    DateTimeOffset ObservedAtUtc);
+    Uri? Endpoint,
+    DateTimeOffset ObservedAtUtc,
+    string? SocketPath = null)
+{
+    public bool IsUnixSocket => string.Equals(EndpointKind, "unix-socket", StringComparison.Ordinal)
+        && SocketPath is { Length: > 0 };
+}
 
 /// <summary>Obtains only registered, verified, eligible local model artifacts. Implementations must
 /// preserve the canonical model/provider/artifact identity and an explicit selection, and must not
@@ -102,3 +109,13 @@ public interface IHomeDulcheModelEvidenceSource
     /// installed and verified. Never returns unverified or non-hex evidence.</summary>
     ValueTask<HomeDulcheModelEvidence?> FindEligibleAsync(CancellationToken cancellationToken);
 }
+
+/// <summary>Typed generation-capability probe bound to the SAME observed broker endpoint/process and
+/// SAME verified model that the observation source actually observed. It must not be invoked without
+/// an explicit model-use admission and never at Home startup. Passing the observed objects keeps any
+/// positive result causally attached to that exact endpoint/model/generation rather than a free
+/// standing boolean.</summary>
+public delegate Task<bool> HomeDulcheCapabilityProbe(
+    HomeDulcheBrokerObservation broker,
+    HomeDulcheModelEvidence model,
+    CancellationToken cancellationToken);

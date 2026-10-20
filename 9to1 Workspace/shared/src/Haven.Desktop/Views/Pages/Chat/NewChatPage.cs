@@ -405,7 +405,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     }
 
     private const string ModelUnavailableStatus =
-        "Local models are unavailable. Connect a configured model provider, then try again.";
+        "Local models are unavailable. Open the model manager to install or repair the safe local artifacts.";
 
     private const string NoLocalModelStatus = "No local model is available.";
 

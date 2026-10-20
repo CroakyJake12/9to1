@@ -1,0 +1,9 @@
+<Cui id="chat.recovery" version="1">
+  <Actions>
+    <Action name="chat.recovery.manage" command="chat.recovery.manage" />
+  </Actions>
+  <Button id="recovery-manage-button" content="Manage local models" font-size="12"
+          MinHeight="32" IsVisible="{Binding Recovery.Visible}" accessible-name="Manage local models">
+    <ActionEvent Type="Clicked" Action="chat.recovery.manage" />
+  </Button>
+</Cui>

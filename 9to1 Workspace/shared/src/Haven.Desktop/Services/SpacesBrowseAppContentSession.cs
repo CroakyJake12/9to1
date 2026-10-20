@@ -681,19 +681,22 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     }
 
     /// <summary>Routes the genuine local-model recovery request through the host's typed
-    /// navigation seam. It opens the canonical Home surface in a separate tab so the current
-    /// conversation, draft, selection and focus are preserved; when this host cannot navigate,
-    /// the request stays unrouted (no fabricated navigation or state change).</summary>
+    /// navigation seam. It opens the canonical Home Models surface in a separate tab so the current
+    /// conversation, draft, selection and focus are preserved; when this host cannot navigate, or
+    /// when this session is closing or no longer publishes its view, the request stays unrouted (no
+    /// fabricated navigation or state change). The navigation settlement is the page's genuinely
+    /// admitted original work, never a completed-task stand-in.</summary>
     private void WireChatRecovery(OverlayChatSessionFactory factory)
     {
         factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
         {
-            if (_hostQueueNavigation is null || _closing) return;
+            if (_hostQueueNavigation is null || _closing || !_published) return;
             try
             {
-                var address = AppContentAddress.Parse("9to1://home");
+                var address = AppContentAddress.Parse("9to1://home/models");
+                var settlement = page.JoinAdmittedOriginalWorkAsync();
                 _hostQueueNavigation(new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true),
-                    Task.CompletedTask);
+                    settlement);
             }
             catch (Exception failure) when (failure is not OperationCanceledException)
             {

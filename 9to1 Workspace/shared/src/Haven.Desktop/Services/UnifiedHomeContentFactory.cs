@@ -43,9 +43,15 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
     {
         ArgumentNullException.ThrowIfNull(request); _hostLifetime.ThrowIfCancellationRequested();
         if (!_hostIsCurrent()) throw new InvalidOperationException("The original Home host is no longer current.");
-        if (request.Address.Namespace != AppContentNamespace.Browse || request.Address.ResourceSegments.Count != 0 ||
-            request.Address.Authority is not ("home" or "newtab"))
-            throw new NotSupportedException("This owner admits only Home and New Tab.");
+        if (request.Address.Namespace != AppContentNamespace.Browse)
+            throw new NotSupportedException("This owner admits only Home, New Tab and Home Models.");
+        if (request.Address.Authority is not ("home" or "newtab"))
+            throw new NotSupportedException("This owner admits only Home, New Tab and Home Models.");
+        var segments = request.Address.ResourceSegments;
+        var admissibleSegments = segments.Count == 0 ||
+            (segments.Count == 1 && segments[0].Equals("models", StringComparison.Ordinal));
+        if (!admissibleSegments)
+            throw new NotSupportedException("This owner admits only Home, New Tab and Home Models.");
         if (request.TabId == Guid.Empty || string.IsNullOrWhiteSpace(request.ProfileId))
             throw new UnauthorizedAccessException("Retain the original Home profile and tab identity.");
         if (request.Privacy != BrowserTabPrivacy.Standard)

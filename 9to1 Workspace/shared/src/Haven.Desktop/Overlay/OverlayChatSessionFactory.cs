@@ -59,9 +59,9 @@ internal sealed class OverlayChatSessionFactory(
         // routed source instead of resolving the raw Ollama registration in the container.
         var routed = services.GetRequiredService<IProviderModelClient>();
         var page = ActivatorUtilities.CreateInstance<NewChatPage>(services, routed);
-        if (WireHost is not null) WireHost(page);
         try
         {
+            if (WireHost is not null) WireHost(page);
             // Construction starts original model discovery bound to the initial conversation.
             // Join it before Fresh/Load replaces that target; keep all UI work on this dispatcher.
             await page.OriginalInitialization.WaitAsync(cancellationToken);

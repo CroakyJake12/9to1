@@ -13,7 +13,7 @@ public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObser
     private readonly IHomeDulcheRuntimePackageSource _package;
     private readonly IHomeDulcheBrokerAdapter _broker;
     private readonly IHomeDulcheModelEvidenceSource _models;
-    private readonly Func<CancellationToken, Task<bool>>? _capabilityProbe;
+    private readonly HomeDulcheCapabilityProbe? _capabilityProbe;
     private readonly string _platform;
     private readonly string _architecture;
 
@@ -21,7 +21,7 @@ public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObser
         IHomeDulcheRuntimePackageSource package,
         IHomeDulcheBrokerAdapter broker,
         IHomeDulcheModelEvidenceSource models,
-        Func<CancellationToken, Task<bool>>? capabilityProbe = null,
+        HomeDulcheCapabilityProbe? capabilityProbe = null,
         string? platform = null,
         string? architecture = null)
     {
@@ -42,6 +42,11 @@ public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObser
 
         var package = await _package.ProbeAsync(cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
+        // Preserve EVERY actual axis's diagnostics. The package probe is an independent truth axis:
+        // dropping its deficiencies would let a Degraded observation (e.g. package.Verified=false)
+        // publish with an empty list and fail open in the lifecycle owner.
+        foreach (var packageDeficiency in package.Deficiencies)
+            deficiencies.Add(packageDeficiency);
 
         var transportSupported = _broker.Supported;
         if (!transportSupported)
@@ -79,9 +84,9 @@ public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObser
         var capabilitySupported = false;
         if (_capabilityProbe is not null)
         {
-            if (processRunning && endpointAvailable && modelVerified)
+            if (processRunning && endpointAvailable && modelVerified && broker is not null && model is not null)
             {
-                try { capabilitySupported = await _capabilityProbe(cancellationToken).ConfigureAwait(false); }
+                try { capabilitySupported = await _capabilityProbe(broker, model, cancellationToken).ConfigureAwait(false); }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
                 catch { capabilitySupported = false; }
             }

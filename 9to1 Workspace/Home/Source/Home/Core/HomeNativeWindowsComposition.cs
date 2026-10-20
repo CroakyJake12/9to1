@@ -82,7 +82,9 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         IEnumerable<IHomeActionPolicySource>? originalActionPolicies = null,
         Func<HomeNativeWindowsOwnerComponents, IReadOnlyDictionary<Type, object>>? configureOriginalOwners = null,
         Func<HomeNativeWindowsIdentityComponents, HomeNativeWindowsStoreRegistrations>? configureOriginalStores = null,
-        Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null)
+        Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null,
+        string? linuxDulcheExecutableSha256 = null,
+        HomeDulcheCapabilityProbe? dulcheCapabilityProbe = null)
     {
         StateStore = originalStateStore ?? throw new ArgumentNullException(nameof(originalStateStore));
         ArgumentNullException.ThrowIfNull(originalPrincipalSource);
@@ -131,10 +133,17 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         IHomeDulcheRuntimeObservationSource dulcheSource;
         if (OperatingSystem.IsLinux())
         {
+            // The bundled Dulche package and model store are the ONLY canonical local sources. A
+            // root-supplied executable pin and a typed capability probe are optional narrow seams:
+            // when absent, the runtime stays truthfully Degraded with the exact missing prerequisites
+            // recorded — nothing is fabricated, hard-coded or downloaded here. The source reuses the
+            // canonical packaged model catalogue (HomeDulchePackagedModelEvidenceSource) rather than
+            // a new global registry.
             dulcheSource = new HomeDulcheRuntimeObservationSource(
-                new HomeDulcheLinuxRuntimePackageSource(),
+                new HomeDulcheLinuxRuntimePackageSource(linuxDulcheExecutableSha256),
                 new HomeDulcheLinuxBrokerAdapter(),
-                new HomeDulchePackagedModelEvidenceSource());
+                new HomeDulchePackagedModelEvidenceSource(),
+                dulcheCapabilityProbe);
         }
         else
         {

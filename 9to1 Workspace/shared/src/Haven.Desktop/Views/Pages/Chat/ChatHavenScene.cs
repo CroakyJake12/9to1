@@ -67,6 +67,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     private Task? _composerReleaseTask;
     private bool _composerReleased;
     private readonly object _composerCloseGate = new();
+    private readonly ChatRecoveryBindings _recoveryBindings;
 
     /// <summary>Constructs a scene with its own transport resolver (used by tests/hosts that do
     /// not share a scene-level native resolver).</summary>
@@ -96,7 +97,11 @@ internal sealed partial class ChatHavenScene : IDisposable
         Status = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "Status");
         AttachmentStatus = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "AttachmentStatus");
         ManageAttachments = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "ManageAttachments");
-        ManageLocalModels = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "ManageLocalModels");
+        RecoveryHost = Root.DescendantsAndSelf().OfType<NativeHost>().Single(element => element.Name == "RecoveryHost");
+        _recoveryBindings = new ChatRecoveryBindings();
+        _recoveryBindings.ManageLocalModelsRequested += (_, _) => ManageLocalModelsRequested?.Invoke(this, EventArgs.Empty);
+        RecoveryView = new ChatRecoveryCuiView(_recoveryBindings);
+        _nativeResolver.Register(RecoveryHost, RecoveryView);
         TaskActions = (Container)Root.DescendantsAndSelf().Single(element => element.Name == "TaskActions");
         NewTask = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "NewTask");
         TaskHistory = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "TaskHistory");
@@ -124,7 +129,6 @@ internal sealed partial class ChatHavenScene : IDisposable
         ContextToggle.Invoked += OnContextToggleInvoked;
         ContextClose.Invoked += OnContextCloseInvoked;
         ManageAttachments.Invoked += (_, _) => ManageAttachmentsRequested?.Invoke(this, EventArgs.Empty);
-        ManageLocalModels.Invoked += (_, _) => ManageLocalModelsRequested?.Invoke(this, EventArgs.Empty);
         NewTask.Invoked += (_, _) => NewTaskRequested?.Invoke(this, EventArgs.Empty);
         TaskHistory.Invoked += (_, _) => TaskHistoryRequested?.Invoke(this, EventArgs.Empty);
         _addMenu.AddActionSelected += OnSharedAddActionSelected;
@@ -150,7 +154,8 @@ internal sealed partial class ChatHavenScene : IDisposable
     public HavenText Status { get; }
     public HavenText AttachmentStatus { get; }
     public HavenButton ManageAttachments { get; }
-    public HavenButton ManageLocalModels { get; }
+    public NativeHost RecoveryHost { get; }
+    public ChatRecoveryCuiView RecoveryView { get; }
     public Container TaskActions { get; }
     public HavenButton NewTask { get; }
     public HavenButton TaskHistory { get; }
@@ -221,11 +226,14 @@ internal sealed partial class ChatHavenScene : IDisposable
     public void SetTaskMode(bool enabled) =>
         TaskActions.SetValue(HavenProperties.Visibility, enabled ? HavenVisibility.Visible : HavenVisibility.Collapsed);
 
-    /// <summary>Shows or hides the genuine "Manage local models" recovery action next to the
+    /// <summary>Shows or hides the genuine CUI "Manage local models" recovery action next to the
     /// chat status. It is a routing affordance only: it requests the shared Home local-model
     /// management route and never fabricates a model or changes the send gate.</summary>
-    public void SetManageLocalModelsVisible(bool visible) =>
-        ManageLocalModels.SetValue(HavenProperties.Visibility, visible ? HavenVisibility.Visible : HavenVisibility.Collapsed);
+    public void SetManageLocalModelsVisible(bool visible)
+    {
+        _recoveryBindings.Visible = visible;
+        RecoveryView.Refresh();
+    }
 
     /// <summary>
     /// Updates the one-line context summary shown on the Context card header; callers label token estimates clearly.
@@ -744,7 +752,7 @@ internal sealed partial class ChatHavenScene : IDisposable
                   </Container>
                   <Button Name="ResolveProblems" Variant="Ghost" Content="Resolve problems" MinHeight="34px" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Text Name="Status" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
-                  <Button Name="ManageLocalModels" Variant="Ghost" Content="Manage local models" MinHeight="32px" HorizontalAlignment="Center" Visibility="Collapsed" />
+                  <NativeHost Name="RecoveryHost" Width="100%" MinHeight="32px" HorizontalAlignment="Center" />
                   <Text Name="AttachmentStatus" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Button Name="ManageAttachments" Variant="Ghost" Content="Manage attachments" MinHeight="32px" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <NativeHost Name="ComposerHost" Width="100%" MinHeight="44px" />
@@ -845,6 +853,11 @@ internal sealed partial class ChatHavenScene : IDisposable
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
         _composerQueue?.Dispose();
         _addMenu.Dispose();
+        // Retire and release the authored recovery surface: stop admitting its command, unregister
+        // the native mapping and dispose the CUI loader/view. Unregister failures are not swallowed.
+        _recoveryBindings.Retire();
+        _nativeResolver.Unregister(RecoveryHost, RecoveryView);
+        RecoveryView.Dispose();
         // Synchronous Dispose requests the SAME child close but cannot claim the async join
         // completed or release the physical mapping early; that release follows the joined ACK
         // path (JoinComposerCloseAndReleaseAsync) owned by the page lifecycle.
