@@ -84,12 +84,26 @@ public sealed class ScheduledTaskRuntimeTests
         Assert.Equal(ex.Draft.Run.Id, repository.Runs[0].Id);
         Assert.Equal(AutomationRunStatus.Succeeded, repository.Runs[0].Status);
 
-        // Reconciliation of the exact already-committed payload is a confirmed no-write ACK and never
-        // re-executes the model.
+        // Reconciliation of the exact already-committed payload is acknowledged (operation-only) and
+        // never re-executes the model or duplicates the row.
         var reconciliation = await runner.ReconcileCompletionAsync(ex.Draft, CancellationToken.None);
-        Assert.Equal(ScheduledTaskCompletionReconciliationKind.ConfirmedNoWrite, reconciliation.Kind);
+        Assert.Equal(ScheduledTaskCompletionReconciliationKind.Acknowledged, reconciliation.Kind);
+        Assert.Null(reconciliation.Cause);
         Assert.Equal(1, model.CompleteCount);
         Assert.Single(repository.Runs);
+    }
+
+    [Fact]
+    public void BatchResultKeepsLegacyFiveParameterConstructorAndFiveOutDeconstruct()
+    {
+        // The original five-parameter constructor and five-out Deconstruct must remain intact (not only
+        // optional-argument source compatibility).
+        var result = new ScheduledTaskBatchResult(4, 3, 2, 1, 0);
+        Assert.Equal((4, 3, 2, 1, 0), (result.Due, result.Started, result.Succeeded, result.Failed, result.Skipped));
+        var (due, started, succeeded, failed, skipped) = result;
+        Assert.Equal((4, 3, 2, 1, 0), (due, started, succeeded, failed, skipped));
+        Assert.Equal(0, result.Uncertain);
+        Assert.Empty(result.Uncertainties);
     }
 
     private static AutomationDefinition Definition(AutomationScheduleKind kind, bool enabled)
@@ -173,6 +187,10 @@ public sealed class ScheduledTaskRuntimeTests
 
         public Task CompleteRunAsync(AutomationRun run, DateTimeOffset? nextRunAt, CancellationToken cancellationToken)
         {
+            // Idempotent acknowledgment: an identical already-committed Run is a no-write ack, so
+            // operation-only reconciliation never duplicates the row.
+            if (Runs.Any(existing => existing.Id == run.Id))
+                return Task.CompletedTask;
             Runs.Add(run);
             _leases.Remove(run.AutomationId);
             if (Definitions.TryGetValue(run.AutomationId, out var definition))
@@ -186,15 +204,18 @@ public sealed class ScheduledTaskRuntimeTests
 
     /// <summary>Completes the durable write through the real memory repository, then throws a distinct
     /// ACK-loss exception — the exact lost-acknowledgement-after-commit simulation. It never fabricates
-    /// a failed/duplicate terminal row.</summary>
+    /// a failed/duplicate terminal row, and it fails only once so an identical replay can be acknowledged
+    /// idempotently (honest lost-ACK semantics).</summary>
     private sealed class AckLossAutomationRepository(MemoryAutomationRepository inner) : IAutomationRepository
     {
         public bool FailOnComplete { get; init; }
+        private int _failuresRemaining = 1;
 
         public async Task CompleteRunAsync(AutomationRun run, DateTimeOffset? nextRunAt, CancellationToken cancellationToken)
         {
             await inner.CompleteRunAsync(run, nextRunAt, cancellationToken);
-            if (FailOnComplete) throw new IOException("Simulated ACK loss after durable commit.");
+            if (FailOnComplete && Interlocked.Decrement(ref _failuresRemaining) >= 0)
+                throw new IOException("Simulated ACK loss after durable commit.");
         }
 
         public Task<IReadOnlyList<AutomationDefinition>> GetAllAsync(CancellationToken cancellationToken) => inner.GetAllAsync(cancellationToken);
