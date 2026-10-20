@@ -108,43 +108,66 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
     }
 
     /// <summary>
-    /// Performs complete run asynchronously so I/O does not block the caller's thread.
+    /// Completes a Run. Completion is a state transition on the persisted Run row performed in the
+    /// same SQLite write transaction as any definition lease release/scheduling. A Run's canonical
+    /// identity (AutomationId, pinned definition revision and pinned graph binding) is immutable, the
+    /// desired persisted revision must be exactly one greater than the stored revision, terminal states
+    /// are final, and an identical persisted payload is a no-write acknowledgment. A Run that carries a
+    /// real acquired definition lease token is a scheduled write and must still match the definition's
+    /// current lease; the definition CAS must affect exactly one row or the whole Run mutation rolls back.
     /// </summary>
     public async Task CompleteRunAsync(AutomationRun run, DateTimeOffset? nextRunAt, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(run);
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (Microsoft.Data.Sqlite.SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        await using (var insert = connection.CreateCommand())
+
+        var existing = await ReadRunRowAsync(connection, transaction, run.Id, cancellationToken).ConfigureAwait(false);
+        var desired = ToRow(run);
+
+        if (existing is not null)
         {
-            insert.Transaction = transaction;
-            insert.CommandText = """
-                INSERT INTO automation_runs(id,automation_id,status,scheduled_for,started_at,completed_at,result,error,lease_token,
-                    revision,definition_revision,pinned_graph_json,admission_snapshot_json,continuation_descriptor_json,details_json)
-                VALUES($id,$automationId,$status,$scheduledFor,$startedAt,$completedAt,$result,$error,$leaseToken,
-                    $revision,$definitionRevision,$pinnedGraph,$admissionSnapshot,$continuation,$details);
-                """;
-            insert.Parameters.AddWithValue("$id", run.Id.ToString());
-            insert.Parameters.AddWithValue("$automationId", run.AutomationId.ToString());
-            insert.Parameters.AddWithValue("$status", (int)run.Status);
-            insert.Parameters.AddWithValue("$scheduledFor", run.ScheduledFor.ToUniversalTime().ToString("O"));
-            insert.Parameters.AddWithValue("$startedAt", (object?)run.StartedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
-            insert.Parameters.AddWithValue("$completedAt", (object?)run.CompletedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
-            insert.Parameters.AddWithValue("$result", (object?)run.Result ?? DBNull.Value);
-            insert.Parameters.AddWithValue("$error", (object?)run.Error ?? DBNull.Value);
-            insert.Parameters.AddWithValue("$leaseToken", (object?)run.LeaseToken ?? DBNull.Value);
-            AddCanonicalRunParameters(insert, run);
-            await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            // The Run's canonical identity is immutable: the automation binding and the pinned definition
+            // revision/graph binding cannot be re-pointed at a newer or different definition.
+            if (existing.AutomationId != desired.AutomationId)
+                throw new InvalidOperationException("The AutomationId on a Run is immutable and cannot be changed on completion.");
+            if (!PinnedStateMatches(existing, desired))
+                throw new InvalidOperationException("A Run's pinned definition revision and graph binding are immutable.");
+
+            // An identical persisted payload is a no-write acknowledgment. It is recognized before any
+            // definition lease/scheduling requirement, so a lost-ack retry after a newer lease/schedule
+            // returns with no writes and never reapplies the supplied nextRunAt.
+            if (RowEquals(existing, desired))
+                return;
+
+            if (IsTerminal((AutomationRunStatus)existing.Status))
+                throw new InvalidOperationException("A completed Run cannot be mutated.");
+
+            // The desired revision is the revision to persist; it must advance by exactly one from the
+            // stored revision. Anything else (stale, jump, or changed-same-version) is rejected.
+            if (desired.Revision != existing.Revision + 1)
+                throw new InvalidOperationException("Run revision must advance by exactly one from the persisted revision.");
+
+            await UpdateRunRowAsync(connection, transaction, desired, existing.Revision, cancellationToken).ConfigureAwait(false);
         }
-        await using (var update = connection.CreateCommand())
+        else
         {
-            update.Transaction = transaction;
-            update.CommandText = "UPDATE automations SET next_run_at=$nextRunAt, lease_token=NULL, lease_until=NULL, updated_at=$updatedAt WHERE id=$id AND lease_token=$leaseToken;";
-            update.Parameters.AddWithValue("$nextRunAt", (object?)nextRunAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
-            update.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
-            update.Parameters.AddWithValue("$id", run.AutomationId.ToString());
-            update.Parameters.AddWithValue("$leaseToken", (object?)run.LeaseToken ?? DBNull.Value);
-            await update.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            // A brand-new Run (for example a scheduler's first terminal write or a history-only append).
+            await InsertRunRowAsync(connection, transaction, desired, cancellationToken).ConfigureAwait(false);
         }
+
+        // Scheduled writes (a transition into a known completion state that carries a real acquired
+        // definition lease token) must match the definition's current lease and mutate the definition.
+        // History-only appends (null lease) never touch the definition schedule/lease/updated_at. The
+        // definition mutation is a conditional CAS: if it affects zero rows the Run mutation is rolled back.
+        if (desired.LeaseToken is not null && IsTerminal((AutomationRunStatus)desired.Status))
+        {
+            var released = await ReleaseDefinitionLeaseAsync(connection, transaction,
+                desired.AutomationId, desired.LeaseToken, nextRunAt, cancellationToken).ConfigureAwait(false);
+            if (!released)
+                throw new InvalidOperationException("Definition lease no longer matches; refusing to complete the Run.");
+        }
+
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -190,53 +213,221 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
         return result;
     }
 
-    /// <summary>Persists a Run that has released its execution resource while it waits. This touches
-    /// only the Run row: it never advances the definition's schedule or clears its lease, because the
-    /// definition is still occupied by the suspended Run.</summary>
+    /// <summary>Persists a Run that has released its execution resource while it waits, awaits approval
+    /// or awaits a bounded retry. The suspending Run must still hold the definition lease (a lost or
+    /// stolen token is rejected), but suspension touches ONLY the Run row: it never advances the
+    /// definition's schedule, clears its lease, or changes its timestamp, because the definition is still
+    /// occupied by the suspended Run.</summary>
     public async Task SuspendRunAsync(AutomationRun run, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
+        if (run.LeaseToken is null)
+            throw new InvalidOperationException("A Run cannot be suspended without a definition lease token.");
+
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (Microsoft.Data.Sqlite.SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+        // Validate the acquired definition lease: lost/stolen tokens are rejected. Suspend never mutates
+        // the definition (schedule, lease or timestamp).
+        if (!await DefinitionLeaseMatchesAsync(connection, transaction, run.AutomationId, run.LeaseToken, cancellationToken).ConfigureAwait(false))
+            throw new InvalidOperationException("Definition lease is not held by this Run; cannot suspend.");
+
+        var existing = await ReadRunRowAsync(connection, transaction, run.Id, cancellationToken).ConfigureAwait(false);
+        var desired = ToRow(run);
+
+        if (existing is null)
+        {
+            await InsertRunRowAsync(connection, transaction, desired, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            if (existing.AutomationId != desired.AutomationId)
+                throw new InvalidOperationException("The AutomationId on a Run is immutable.");
+            if (!PinnedStateMatches(existing, desired))
+                throw new InvalidOperationException("A Run's pinned definition revision and graph binding are immutable.");
+            if (RowEquals(existing, desired))
+                return; // no-write acknowledgment
+            if (IsTerminal((AutomationRunStatus)existing.Status))
+                throw new InvalidOperationException("A completed Run cannot be resumed or re-suspended.");
+            if (desired.Revision != existing.Revision + 1)
+                throw new InvalidOperationException("Run revision must advance by exactly one from the persisted revision.");
+            await UpdateRunRowAsync(connection, transaction, desired, existing.Revision, cancellationToken).ConfigureAwait(false);
+        }
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>True only for the known live completion statuses. Other enum values are not treated as
+    /// terminal, and the enum is not renumbered.</summary>
+    private static bool IsTerminal(AutomationRunStatus status) =>
+        status is AutomationRunStatus.Succeeded or AutomationRunStatus.Failed or AutomationRunStatus.Cancelled;
+
+    /// <summary>The exact persisted Run row, normalized for comparison.</summary>
+    private sealed record AutomationRunRow(
+        Guid Id, Guid AutomationId, int Status, DateTimeOffset ScheduledFor,
+        DateTimeOffset? StartedAt, DateTimeOffset? CompletedAt,
+        string? Result, string? Error, string? LeaseToken,
+        long Revision, long? DefinitionRevision, string? PinnedGraphJson,
+        string? AdmissionSnapshotJson, string? ContinuationDescriptorJson, string? DetailsJson);
+
+    private static AutomationRunRow ToRow(AutomationRun run) => new(
+        run.Id, run.AutomationId, (int)run.Status, run.ScheduledFor.ToUniversalTime(),
+        run.StartedAt?.ToUniversalTime(), run.CompletedAt?.ToUniversalTime(),
+        run.Result, run.Error, run.LeaseToken,
+        run.Revision, run.DefinitionRevision,
+        run.PinnedGraph is { } binding ? System.Text.Json.JsonSerializer.Serialize(binding) : null,
+        run.AdmissionSnapshotJson, run.ContinuationDescriptorJson,
+        run.Details is { } details ? System.Text.Json.JsonSerializer.Serialize(details) : null);
+
+    /// <summary>Compares the exact serialized persisted fields (including nullable values and canonical
+    /// details), not .NET reference equality of deserialized lists.</summary>
+    private static bool RowEquals(AutomationRunRow a, AutomationRunRow b) =>
+        a.Id == b.Id &&
+        a.AutomationId == b.AutomationId &&
+        a.Status == b.Status &&
+        a.ScheduledFor == b.ScheduledFor &&
+        a.StartedAt == b.StartedAt &&
+        a.CompletedAt == b.CompletedAt &&
+        a.Result == b.Result &&
+        a.Error == b.Error &&
+        a.LeaseToken == b.LeaseToken &&
+        a.Revision == b.Revision &&
+        a.DefinitionRevision == b.DefinitionRevision &&
+        a.PinnedGraphJson == b.PinnedGraphJson &&
+        a.AdmissionSnapshotJson == b.AdmissionSnapshotJson &&
+        a.ContinuationDescriptorJson == b.ContinuationDescriptorJson &&
+        a.DetailsJson == b.DetailsJson;
+
+    /// <summary>Guards the immutable historical pin: the run's own definition revision and graph binding
+    /// must not change across a transition. It does not compare the historical pin to a newer current
+    /// active definition.</summary>
+    private static bool PinnedStateMatches(AutomationRunRow existing, AutomationRunRow desired) =>
+        existing.DefinitionRevision == desired.DefinitionRevision &&
+        existing.PinnedGraphJson == desired.PinnedGraphJson;
+
+    private static async Task<AutomationRunRow?> ReadRunRowAsync(
+        Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, Guid id, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            SELECT id, automation_id, status, scheduled_for, started_at, completed_at, result, error, lease_token,
+                   revision, definition_revision, pinned_graph_json, admission_snapshot_json,
+                   continuation_descriptor_json, details_json
+            FROM automation_runs WHERE id=$id;
+            """;
+        command.Parameters.AddWithValue("$id", id.ToString());
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) return null;
+        var ordinal = reader.GetOrdinal("definition_revision");
+        var definitionRevision = reader.IsDBNull(ordinal) ? (long?)null : reader.GetInt64(ordinal);
+        return new AutomationRunRow(
+            reader.Guid("id"), reader.Guid("automation_id"), reader.Int32("status"), reader.DateTimeOffset("scheduled_for"),
+            reader.NullableDateTimeOffset("started_at"), reader.NullableDateTimeOffset("completed_at"),
+            reader.NullableString("result"), reader.NullableString("error"), reader.NullableString("lease_token"),
+            reader.GetInt64(reader.GetOrdinal("revision")), definitionRevision,
+            reader.NullableString("pinned_graph_json"), reader.NullableString("admission_snapshot_json"),
+            reader.NullableString("continuation_descriptor_json"), reader.NullableString("details_json"));
+    }
+
+    private static async Task InsertRunRowAsync(
+        Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, AutomationRunRow row, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO automation_runs(id,automation_id,status,scheduled_for,started_at,completed_at,result,error,lease_token,
                 revision,definition_revision,pinned_graph_json,admission_snapshot_json,continuation_descriptor_json,details_json)
             VALUES($id,$automationId,$status,$scheduledFor,$startedAt,$completedAt,$result,$error,$leaseToken,
-                $revision,$definitionRevision,$pinnedGraph,$admissionSnapshot,$continuation,$details)
-            ON CONFLICT(id) DO UPDATE SET
-                status=excluded.status, scheduled_for=excluded.scheduled_for, started_at=excluded.started_at,
-                completed_at=excluded.completed_at, result=excluded.result, error=excluded.error,
-                lease_token=excluded.lease_token, revision=excluded.revision,
-                definition_revision=excluded.definition_revision, pinned_graph_json=excluded.pinned_graph_json,
-                admission_snapshot_json=excluded.admission_snapshot_json,
-                continuation_descriptor_json=excluded.continuation_descriptor_json,
-                details_json=excluded.details_json;
+                $revision,$definitionRevision,$pinnedGraph,$admissionSnapshot,$continuation,$details);
             """;
-        command.Parameters.AddWithValue("$id", run.Id.ToString());
-        command.Parameters.AddWithValue("$automationId", run.AutomationId.ToString());
-        command.Parameters.AddWithValue("$status", (int)run.Status);
-        command.Parameters.AddWithValue("$scheduledFor", run.ScheduledFor.ToUniversalTime().ToString("O"));
-        command.Parameters.AddWithValue("$startedAt", (object?)run.StartedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
-        command.Parameters.AddWithValue("$completedAt", (object?)run.CompletedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
-        command.Parameters.AddWithValue("$result", (object?)run.Result ?? DBNull.Value);
-        command.Parameters.AddWithValue("$error", (object?)run.Error ?? DBNull.Value);
-        command.Parameters.AddWithValue("$leaseToken", (object?)run.LeaseToken ?? DBNull.Value);
-        AddCanonicalRunParameters(command, run);
+        command.Parameters.AddWithValue("$id", row.Id.ToString());
+        AddRunRowBaseParameters(command, row);
+        AddCanonicalRunRowParameters(command, row);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Optimistic transition: only the revision we observed may be replaced. A zero-row result
+    /// means another writer already advanced the Run, so the transition loses the race.</summary>
+    private static async Task UpdateRunRowAsync(
+        Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction,
+        AutomationRunRow row, long expectedRevision, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            UPDATE automation_runs SET
+                automation_id=$automationId, status=$status, scheduled_for=$scheduledFor, started_at=$startedAt,
+                completed_at=$completedAt, result=$result, error=$error, lease_token=$leaseToken,
+                revision=$revision, definition_revision=$definitionRevision, pinned_graph_json=$pinnedGraph,
+                admission_snapshot_json=$admissionSnapshot, continuation_descriptor_json=$continuation, details_json=$details
+            WHERE id=$id AND revision=$expectedRevision;
+            """;
+        command.Parameters.AddWithValue("$id", row.Id.ToString());
+        command.Parameters.AddWithValue("$expectedRevision", expectedRevision);
+        AddRunRowBaseParameters(command, row);
+        AddCanonicalRunRowParameters(command, row);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+            throw new InvalidOperationException("Concurrent run transition conflict.");
+    }
+
+    private static void AddRunRowBaseParameters(Microsoft.Data.Sqlite.SqliteCommand command, AutomationRunRow row)
+    {
+        command.Parameters.AddWithValue("$automationId", row.AutomationId.ToString());
+        command.Parameters.AddWithValue("$status", row.Status);
+        command.Parameters.AddWithValue("$scheduledFor", row.ScheduledFor.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$startedAt", (object?)row.StartedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$completedAt", (object?)row.CompletedAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$result", (object?)row.Result ?? DBNull.Value);
+        command.Parameters.AddWithValue("$error", (object?)row.Error ?? DBNull.Value);
+        command.Parameters.AddWithValue("$leaseToken", (object?)row.LeaseToken ?? DBNull.Value);
     }
 
     /// <summary>Writes the canonical run state that a restarted process needs in order to resume
     /// without replaying committed work or re-pointing a historical Run at a newer definition.</summary>
-    private static void AddCanonicalRunParameters(Microsoft.Data.Sqlite.SqliteCommand command, AutomationRun run)
+    private static void AddCanonicalRunRowParameters(Microsoft.Data.Sqlite.SqliteCommand command, AutomationRunRow row)
     {
-        command.Parameters.AddWithValue("$revision", run.Revision);
-        command.Parameters.AddWithValue("$definitionRevision", (object?)run.DefinitionRevision ?? DBNull.Value);
-        command.Parameters.AddWithValue("$pinnedGraph", run.PinnedGraph is { } binding
-            ? System.Text.Json.JsonSerializer.Serialize(binding) : (object)DBNull.Value);
-        command.Parameters.AddWithValue("$admissionSnapshot", (object?)run.AdmissionSnapshotJson ?? DBNull.Value);
-        command.Parameters.AddWithValue("$continuation", (object?)run.ContinuationDescriptorJson ?? DBNull.Value);
-        command.Parameters.AddWithValue("$details", run.Details is { } details
-            ? System.Text.Json.JsonSerializer.Serialize(details) : (object)DBNull.Value);
+        command.Parameters.AddWithValue("$revision", row.Revision);
+        command.Parameters.AddWithValue("$definitionRevision", (object?)row.DefinitionRevision ?? DBNull.Value);
+        command.Parameters.AddWithValue("$pinnedGraph", (object?)row.PinnedGraphJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$admissionSnapshot", (object?)row.AdmissionSnapshotJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$continuation", (object?)row.ContinuationDescriptorJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$details", (object?)row.DetailsJson ?? DBNull.Value);
+    }
+
+    /// <summary>Reads whether the definition currently holds exactly the given lease token. Token equality
+    /// is the fence; no lease-expiry cutoff is invented without a renewal contract.</summary>
+    private static async Task<bool> DefinitionLeaseMatchesAsync(
+        Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction,
+        Guid automationId, string leaseToken, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT lease_token FROM automations WHERE id=$id;";
+        command.Parameters.AddWithValue("$id", automationId.ToString());
+        var value = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        if (value is null or DBNull) return false;
+        return string.Equals((string)value, leaseToken, StringComparison.Ordinal);
+    }
+
+    /// <summary>Conditional definition lease release/scheduling CAS. Returns false (no exception) when
+    /// the current lease no longer matches; the caller then rolls back the paired Run mutation.</summary>
+    private static async Task<bool> ReleaseDefinitionLeaseAsync(
+        Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction,
+        Guid automationId, string leaseToken, DateTimeOffset? nextRunAt, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            UPDATE automations
+            SET next_run_at=$nextRunAt, lease_token=NULL, lease_until=NULL, updated_at=$updatedAt
+            WHERE id=$id AND lease_token=$leaseToken;
+            """;
+        command.Parameters.AddWithValue("$nextRunAt", (object?)nextRunAt?.ToUniversalTime().ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", automationId.ToString());
+        command.Parameters.AddWithValue("$leaseToken", leaseToken);
+        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 1;
     }
 
     private static AutomationRun ReadRun(Microsoft.Data.Sqlite.SqliteDataReader reader)
