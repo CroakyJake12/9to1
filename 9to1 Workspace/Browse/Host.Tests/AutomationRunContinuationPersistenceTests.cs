@@ -146,7 +146,7 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
             run => run.Id == fx.RunId);
         Assert.Equal(8, reconstructed.Revision);
         Assert.Equal(AutomationRunStatus.Succeeded, reconstructed.Status);
-        Assert.Null(reconstructed.LeaseToken); // the definition lease was released by the completion
+        Assert.Equal(fx.Token, reconstructed.LeaseToken); // immutable Run history retains its original token
 
         // ---- Phase 1: ack immediately after the definition lease release (currently null) ----
         await InstallWriteBlockingTriggersAsync();
@@ -295,7 +295,7 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var outcomes = await Task.WhenAll(taskA, taskB);
 
         Assert.Equal(1, outcomes.Count(outcome => outcome.Ok));
-        var loser = Assert.Single(outcomes.Where(outcome => !outcome.Ok));
+        var loser = Assert.Single(outcomes, outcome => !outcome.Ok);
         var conflict = Assert.IsType<InvalidOperationException>(loser!.Error);
         // The serialized loser re-reads the winning terminal row and rejects with finality, while the
         // optimistic-CAS loser reports the revision conflict. Either is a legitimate, specific conflict
