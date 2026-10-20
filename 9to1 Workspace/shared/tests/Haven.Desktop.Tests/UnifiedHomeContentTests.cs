@@ -94,6 +94,52 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaFact]
+    public async Task Central_Browse_dispatch_admits_only_browse_home_models_and_refuses_newtab_models_and_arbitrary_segments()
+    {
+        // Regression coverage through the REAL central Browse dispatch (NavigateAsync →
+        // BrowseChrome.IsOwnedCanvas → internal content factory), never a Parse-string fixture or a
+        // direct factory call. It depends on the root-owned IsOwnedCanvas allowance for
+        // browse://home/models ONLY (returned as the 07 root-preserving hunk).
+        using var lifetime = new CancellationTokenSource();
+        var paths = new LayoutPaths();
+        try
+        {
+            var chrome = await BrowseChrome.CreateAsync(paths,
+                internalContentFactory: Factory(new(), lifetime.Token), homeProfileId: "central-route-profile")
+                .WaitAsync(TimeSpan.FromSeconds(20));
+
+            // The canonical local-model recovery route is admitted only under the home authority.
+            var admitted = await chrome.NavigateAsync("browse://home/models").WaitAsync(TimeSpan.FromSeconds(20));
+            var tab = admitted.SelectedTab;
+            Assert.Equal(AppContentNamespace.Browse, tab.Address.Namespace);
+            Assert.Equal("home", tab.Address.Authority);
+            Assert.Equal(new[] { "models" }, tab.Address.ResourceSegments);
+            Assert.Equal(BrowseEngineState.NativeApp, tab.EngineState);
+            var session = chrome.ObserveOriginalAppContent(admitted.SelectedTabId);
+            Assert.NotNull(session);
+            Assert.Equal("browse://home/models", session!.Address.Value);
+
+            // The SAME models segment is NOT admissible under the New Tab authority: the central
+            // dispatch refuses it (route left unchanged, no new tab/content owner created).
+            var tabCount = admitted.Tabs.Count;
+            var refusedNewTab = await chrome.NavigateAsync("browse://newtab/models").WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.Equal("browse://home/models", refusedNewTab.SelectedTab.Address.Value);
+            Assert.Equal(tabCount, refusedNewTab.Tabs.Count); // no tab was created for the refused route
+            Assert.Contains("not registered", refusedNewTab.Status, StringComparison.Ordinal);
+
+            // Arbitrary segments under home stay refused as well.
+            var refusedNested = await chrome.NavigateAsync("browse://home/settings").WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.Equal("browse://home/models", refusedNested.SelectedTab.Address.Value);
+            Assert.Equal(tabCount, refusedNested.Tabs.Count);
+            Assert.Contains("not registered", refusedNested.Status, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(paths.DataDirectory, true);
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Home_uses_current_catalogue_and_retains_exact_initialization_and_retirement()
     {
         using var lifetime = new CancellationTokenSource();

@@ -591,45 +591,52 @@ public sealed class HomeDulcheRuntimeServiceTests
 
     // ---------------------------------------------------------------- capability receipt issuer
 
+    private static HomeDulcheCapabilityObservation BoundCapability(DateTimeOffset? observedAt = null) =>
+        new(true, "llamacpp", "local-model-q4", observedAt ?? DateTimeOffset.UtcNow,
+            "verified same-generation model-use admission", BrokerObservation, Sha64);
+
     [Fact]
-    public void Issue_binds_a_receipt_to_the_observed_broker_generation_and_verified_model_SHA()
+    public void Issue_affirms_only_the_same_owned_broker_generation_and_artifact()
     {
         var issuer = new HomeDulcheCapabilityReceiptIssuer();
-        var verified = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
-            DateTimeOffset.UtcNow, "verified same-generation model-use admission");
+        var observedAt = DateTimeOffset.Parse("2026-10-20T12:00:00Z");
+        var owned = BoundCapability(observedAt);
         var model = VerifiedEvidence();
 
-        var receipt = issuer.Issue(verified, model, BrokerObservation);
+        var receipt = issuer.Issue(owned, model, BrokerObservation);
 
-        Assert.NotNull(receipt);
-        Assert.True(receipt!.IsSameGeneration(model, BrokerObservation));
+        // The SAME original observation is affirmed (custody preserved); no fresh admission is minted.
+        Assert.Same(owned, receipt);
+        Assert.Equal(observedAt, receipt!.ObservedAtUtc);
         Assert.True(receipt.GenerationCapable);
         Assert.Equal(model.ArtifactSha256, receipt.ModelArtifactSha256);
         Assert.Same(BrokerObservation, receipt.Broker);
+        Assert.True(receipt.IsSameGeneration(model, BrokerObservation));
     }
 
     [Fact]
-    public void Issue_returns_null_when_no_verified_current_capability_observation_is_supplied()
+    public void Issue_returns_null_when_input_capability_is_unbound_or_invalid()
     {
         var issuer = new HomeDulcheCapabilityReceiptIssuer();
-        // Preserve default Degraded: absent a current verified generation-capability observation the
-        // axis stays closed and no receipt is fabricated.
+        // Preserve default Degraded: absent a genuine owning broker/artifact binding the axis stays
+        // closed and no receipt is fabricated — an unbound bool+string is NOT owning evidence.
         Assert.Null(issuer.Issue(null, VerifiedEvidence(), BrokerObservation));
-        Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(false, "llamacpp", "local-model-q4",
-            DateTimeOffset.UtcNow, "not capable"), VerifiedEvidence(), BrokerObservation));
         Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
-            DateTimeOffset.UtcNow, ""), VerifiedEvidence(), BrokerObservation));
+            DateTimeOffset.UtcNow, "verified"), VerifiedEvidence(), BrokerObservation));
+        Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(false, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "not capable", BrokerObservation, Sha64), VerifiedEvidence(), BrokerObservation));
+        Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "", BrokerObservation, Sha64), VerifiedEvidence(), BrokerObservation));
     }
 
     [Fact]
     public void Issue_returns_null_when_verified_model_or_live_broker_evidence_is_absent()
     {
         var issuer = new HomeDulcheCapabilityReceiptIssuer();
-        var verified = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
-            DateTimeOffset.UtcNow, "verified");
-        Assert.Null(issuer.Issue(verified, null, BrokerObservation));      // no verified model artifact
-        Assert.Null(issuer.Issue(verified, VerifiedEvidence(), null));      // no live broker observation
-        Assert.Null(issuer.Issue(verified, null, null));
+        var owned = BoundCapability();
+        Assert.Null(issuer.Issue(owned, null, BrokerObservation));      // no verified model artifact
+        Assert.Null(issuer.Issue(owned, VerifiedEvidence(), null));      // no live broker observation
+        Assert.Null(issuer.Issue(owned, null, null));
     }
 
     [Fact]
@@ -638,34 +645,66 @@ public sealed class HomeDulcheRuntimeServiceTests
         var issuer = new HomeDulcheCapabilityReceiptIssuer();
         var model = VerifiedEvidence();
         Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(true, "llamacpp", "other-model",
-            DateTimeOffset.UtcNow, "verified"), model, BrokerObservation));
+            DateTimeOffset.UtcNow, "verified", BrokerObservation, Sha64), model, BrokerObservation));
         Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(true, "other-provider", "local-model-q4",
-            DateTimeOffset.UtcNow, "verified"), model, BrokerObservation));
+            DateTimeOffset.UtcNow, "verified", BrokerObservation, Sha64), model, BrokerObservation));
     }
 
     [Fact]
-    public void Issued_receipt_fails_closed_after_the_same_identified_broker_restarts()
+    public void Issue_refuses_stale_rebind_after_broker_restart()
     {
         var issuer = new HomeDulcheCapabilityReceiptIssuer();
-        var verified = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
-            DateTimeOffset.UtcNow, "verified");
         var model = VerifiedEvidence();
         var running = new HomeDulcheBrokerObservation(42, "http-loopback", Endpoint, DateTimeOffset.UtcNow);
-
-        var receipt = issuer.Issue(verified, model, running);
-        Assert.NotNull(receipt);
-        Assert.True(receipt!.IsSameGeneration(model, running));
-
-        // Same provider/model/endpoint identity but a NEW broker generation (PID changed): the same
-        // receipt must fail CLOSED against the restarted broker, exactly like the lifecycle owner.
         var restarted = new HomeDulcheBrokerObservation(99, "http-loopback", Endpoint, DateTimeOffset.UtcNow);
-        Assert.False(receipt.IsSameGeneration(model, restarted));
 
-        // Re-issuing against the restarted broker binds a fresh receipt for the new generation.
-        var rebound = issuer.Issue(verified, model, restarted);
-        Assert.NotNull(rebound);
-        Assert.True(rebound!.IsSameGeneration(model, restarted));
-        Assert.False(rebound.IsSameGeneration(model, running));
+        // Genuine owning evidence bound to the ORIGINAL broker generation.
+        var owned = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "verified", running, Sha64);
+        Assert.Same(owned, issuer.Issue(owned, model, running));
+
+        // Stale evidence must NOT be rebind to the restarted broker: same names are not the same
+        // generation. This closes the demonstrated stale-evidence-rebinding gap.
+        Assert.Null(issuer.Issue(owned, model, restarted));
+        Assert.True(owned.IsSameGeneration(model, running));
+        Assert.False(owned.IsSameGeneration(model, restarted));
+
+        // A genuinely NEW observation for the restarted broker binds to that generation.
+        var fresh = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "verified", restarted, Sha64);
+        Assert.Same(fresh, issuer.Issue(fresh, model, restarted));
+        Assert.True(fresh.IsSameGeneration(model, restarted));
+        Assert.False(fresh.IsSameGeneration(model, running));
+    }
+
+    [Fact]
+    public void Issue_refuses_rebind_for_a_replaced_artifact_with_same_model_id()
+    {
+        var issuer = new HomeDulcheCapabilityReceiptIssuer();
+        var oldArtifact = new string('a', 64);
+        var newArtifact = new string('b', 64);
+        var oldModel = new HomeDulcheModelEvidence("local-model-q4", "llamacpp", oldArtifact, 1234, DateTimeOffset.UtcNow);
+        var newModel = new HomeDulcheModelEvidence("local-model-q4", "llamacpp", newArtifact, 5678, DateTimeOffset.UtcNow);
+
+        var owned = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "verified", BrokerObservation, oldArtifact);
+        Assert.Same(owned, issuer.Issue(owned, oldModel, BrokerObservation));
+        // Same model id, but the installed artifact changed: the old evidence must not bind to it.
+        Assert.Null(issuer.Issue(owned, newModel, BrokerObservation));
+        Assert.False(owned.IsSameGeneration(newModel, BrokerObservation));
+    }
+
+    [Fact]
+    public void Issue_preserves_original_observed_timestamp_and_custody()
+    {
+        var issuer = new HomeDulcheCapabilityReceiptIssuer();
+        var observedAt = DateTimeOffset.Parse("2026-10-20T08:15:00Z");
+        var owned = BoundCapability(observedAt);
+
+        var affirmed = issuer.Issue(owned, VerifiedEvidence(), BrokerObservation);
+
+        Assert.Same(owned, affirmed);
+        Assert.Equal(observedAt, affirmed!.ObservedAtUtc);
     }
 
     private static void AssertOriginalPreserved(Exception root, Exception expected)

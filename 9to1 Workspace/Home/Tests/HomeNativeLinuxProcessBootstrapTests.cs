@@ -49,6 +49,43 @@ public sealed class HomeNativeLinuxProcessBootstrapTests
     });
 
     [LinuxFact]
+    public Task Composed_runtime_contains_one_dulche_service_and_degraded_missing_assets_still_start_required_services_and_close() => WithRigAsync(async rig =>
+    {
+        rig.Compose();
+        var home = rig.Composition!;
+        await rig.Start().WaitAsync(rig.Token);
+
+        // The composed Home runtime contains EXACTLY ONE Dulche lifecycle service, registered via the
+        // single shared observation source (one original process/profile/store/session lifetime owner).
+        Assert.Single(home.Runtime.Current.Services, row => row.ServiceId == "dulche.runtime");
+        var dulcheService = Assert.IsType<HomeDulcheRuntimeService>(
+            home.Services.GetService(typeof(HomeDulcheRuntimeService)));
+        Assert.Same(dulcheService, home.Services.GetService(typeof(HomeDulcheRuntimeService)));
+        Assert.IsAssignableFrom<IHomeDulcheRuntimeObservationSource>(
+            home.Services.GetService(typeof(IHomeDulcheRuntimeObservationSource)));
+
+        // Unrelated required Home services still start Ready: the Dulche deficit is OPTIONAL.
+        foreach (var id in new[] { "home.core", "home.state", "permissions.trust", "productivity.engine" })
+        {
+            var service = Assert.Single(home.Runtime.Current.Services, row => row.ServiceId == id);
+            Assert.True(service.IsAvailable);
+            Assert.Equal(HomeServiceLifecycleState.Ready, service.State);
+        }
+        // Missing package/model/generation evidence is a truthful OPTIONAL degraded diagnostic only;
+        // it never blocks the required services and never fabricates Ready (generation axis stays
+        // BLOCKED until a genuine owned capability observation exists).
+        var dulche = Assert.Single(home.Runtime.Current.Services, row => row.ServiceId == "dulche.runtime");
+        Assert.False(dulche.IsAvailable);
+        Assert.Equal(HomeServiceLifecycleState.Degraded, dulche.State);
+        Assert.Contains("HomeServiceStartFailed", dulche.Diagnostic);
+
+        // Normal close succeeds when nothing was acquired.
+        var close = rig.Close();
+        await close.WaitAsync(rig.Token);
+        Assert.True(close.IsCompletedSuccessfully);
+    });
+
+    [LinuxFact]
     public Task Existing_process_lease_is_not_replaced_or_released_by_failed_start() => WithRigAsync(async rig =>
     {
         rig.Compose();
