@@ -684,8 +684,9 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     /// navigation seam. It opens the canonical Home Models surface in a separate tab so the current
     /// conversation, draft, selection and focus are preserved; when this host cannot navigate, or
     /// when this session is closing or no longer publishes its view, the request stays unrouted (no
-    /// fabricated navigation or state change). The navigation settlement is the page's genuinely
-    /// admitted original work, never a completed-task stand-in.</summary>
+    /// fabricated navigation or state change). The navigation settlement is the recovery surface's
+    /// genuinely admitted original action settlement, never a completed-task stand-in; queue
+    /// refusals and capture failures are surfaced rather than swallowed.</summary>
     private void WireChatRecovery(OverlayChatSessionFactory factory)
     {
         factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
@@ -693,10 +694,12 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             if (_hostQueueNavigation is null || _closing || !_published) return;
             try
             {
-                var address = AppContentAddress.Parse("9to1://home/models");
-                var settlement = page.JoinAdmittedOriginalWorkAsync();
-                _hostQueueNavigation(new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true),
+                var address = AppContentAddress.Parse("browse://home/models");
+                var settlement = page.RecoveryActionSettlement;
+                var admitted = _hostQueueNavigation(new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true),
                     settlement);
+                if (!admitted)
+                    System.Diagnostics.Trace.TraceError("Spaces local-model recovery navigation was refused by the host queue.");
             }
             catch (Exception failure) when (failure is not OperationCanceledException)
             {

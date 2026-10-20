@@ -27,7 +27,6 @@ namespace HavenOS.Home.Core;
 public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposable
 {
     private readonly IHomeDulcheRuntimeObservationSource _source;
-    private readonly SemaphoreSlim _startGate = new(1, 1);
     private readonly object _sync = new();
     private readonly List<RetainedOriginal> _retained = [];
     private Task? _startTask;
@@ -61,29 +60,40 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
     {
         cancellationToken.ThrowIfCancellationRequested();
         Task start;
-        await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             if (_stopped) throw new InvalidOperationException("A stopped Dulche runtime cannot be restarted; create a new runtime instance.");
-            if (_startTask is { } pending && !pending.IsCompleted)
+            if (_admissionClosed) throw new ObjectDisposedException(nameof(HomeDulcheRuntimeService),
+                "A Dulche runtime seal has begun; create a new runtime instance.");
+            if (_startTask is { } existing)
             {
-                start = pending;
+                // Coalesce repeated starts: the service owns ONE shared start. A completed start
+                // (Ready or a truthful refusal) is returned as-is so repeated Starts never spawn
+                // new observations/owners.
+                start = existing;
             }
             else
             {
+                // Publish ONE shared start BEFORE any source callback can run so a synchronous source
+                // callback or a reentrant Stop joins the SAME published start instead of forgetting a
+                // held observation or early-acknowledging a close.
                 var generation = ++_generation;
-                start = StartCoreAsync(generation, cancellationToken);
+                var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                start = StartCoreAsync(begin.Task, generation);
                 _startTask = start;
+                begin.SetResult();
             }
         }
-        finally { _startGate.Release(); }
-        await start.ConfigureAwait(false);
+        // Await the shared start with the caller's own token so one borrower's cancelled wait never
+        // cancels the shared start or another borrower's wait.
+        await start.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task StartCoreAsync(int generation, CancellationToken cancellationToken)
+    private async Task StartCoreAsync(Task begin, int generation)
     {
-        var observation = await _source.ObserveAsync(cancellationToken).ConfigureAwait(false);
+        await begin.ConfigureAwait(false);
+        var observation = await _source.ObserveAsync(CancellationToken.None).ConfigureAwait(false);
         lock (_sync)
         {
             // Stale completion guard: completion from an older generation never publishes after a
@@ -154,9 +164,13 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
         await begin.ConfigureAwait(false);
         var failures = new List<Exception>();
         // Drain the actual held original (the shared observe), preserving its fault by identity.
+        // A truthful expected readiness refusal (non-Ready/optional-missing-prerequisite observation)
+        // is a startup diagnostic, NOT an acquired-resource cleanup failure: nothing was acquired,
+        // so a normal close must succeed. Genuine owned-start/connection/child faults still fail
+        // close and are retained.
         if (startTask is not null)
             try { await startTask.ConfigureAwait(false); }
-            catch (Exception error) { Record(failures, error); }
+            catch (Exception error) { if (!IsExpectedReadinessRefusal(error)) Record(failures, error); }
         foreach (var original in retained)
             try { await original.ConfigureAwait(false); }
             catch (Exception error) { Record(failures, error); }
@@ -173,6 +187,14 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
             if (!sink.Any(existing => ReferenceEquals(existing, error))) sink.Add(error);
         }
     }
+
+    /// <summary>True when a start fault is the classified expected readiness refusal raised for any
+    /// non-Ready observation. Such a refusal is preserved as Home startup diagnostics (HomeCoreRuntime
+    /// records it under <c>home.core</c> start failures) but must not poison a normal close that
+    /// acquired no resource.</summary>
+    private static bool IsExpectedReadinessRefusal(Exception error) =>
+        error is InvalidOperationException ioe &&
+        ioe.Message.StartsWith("HomeDulcheRuntimeUnavailable:", StringComparison.Ordinal);
 
     /// <summary>The last genuinely observed lifecycle/catalogue state, or null before start or after stop.</summary>
     public HomeDulcheRuntimeObservation? CurrentObservation
@@ -202,6 +224,5 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
         }
         await close.ConfigureAwait(false);
         lock (_sync) _disposed = true;
-        _startGate.Dispose();
     }
 }

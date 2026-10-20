@@ -129,7 +129,7 @@ public sealed class OverlayChatInitializationTests
         rig.Factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
         {
             // Mirror the production Spaces host seam: request the genuine Home Models destination.
-            routedDestination = AppContentAddress.Parse("9to1://home/models");
+            routedDestination = AppContentAddress.Parse("browse://home/models");
         };
         var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
         rig.Mount(page);
@@ -140,7 +140,7 @@ public sealed class OverlayChatInitializationTests
             var recoveryButton = RecoveryButton(page);
             Assert.True(recoveryButton.IsEffectivelyVisible);
             recoveryButton.RaiseEvent(new RoutedEventArgs(NativeButton.ClickEvent));
-            await Scene(page).RecoveryView.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            await Scene(page).RecoveryView.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.NotNull(routedDestination);
             Assert.Equal("home", routedDestination.Authority);
             Assert.Equal(new[] { "models" }, routedDestination.ResourceSegments);
@@ -173,6 +173,39 @@ public sealed class OverlayChatInitializationTests
         {
             await DrainBackgroundPageOriginalsAsync(page);
             await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    // The recovery surface mirrors the shared composer's child-close + release join. Closing the
+    // page must retire the recovery command admission, ACK the child close and then release the
+    // physical native mapping + view (the real JoinRecoveryCloseAndReleaseAsync path).
+    [AvaloniaFact]
+    public async Task Closing_the_page_releases_the_recovery_surface()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetException(new HttpRequestException("Connection refused (127.0.0.1:11434)",
+            new SocketException((int)SocketError.ConnectionRefused)));
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        rig.Mount(page);
+        bool fullyReleased = false;
+        try
+        {
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            Assert.True(RecoveryButton(page).IsEffectivelyVisible);
+            Assert.False(RecoveryDisposed(page));
+
+            // Join the exact scene-level recovery close + release; it must ACK and release.
+            await Scene(page).JoinRecoveryCloseAndReleaseAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.True(RecoveryDisposed(page));
+            fullyReleased = true;
+        }
+        finally
+        {
+            if (!fullyReleased)
+            {
+                await DrainBackgroundPageOriginalsAsync(page);
+                await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            }
         }
     }
 
@@ -1063,6 +1096,10 @@ public sealed class OverlayChatInitializationTests
     private static NativeButton RecoveryButton(NewChatPage page) => RecoveryView(page)
         .GetVisualDescendants().OfType<NativeButton>()
         .Single(button => AutomationProperties.GetAutomationId(button) == "recovery-manage-button");
+
+    private static bool RecoveryDisposed(NewChatPage page) =>
+        (bool)typeof(ChatRecoveryCuiView).GetField("_disposed", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(Scene(page).RecoveryView)!;
 
     private static bool SendEnabled(NewChatPage page) =>
         SendButton(page).IsEnabled;

@@ -23,13 +23,13 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
 
     private readonly string? _socketPath;
     private readonly Func<CancellationToken, Task<long?>> _brokerPidSource;
-    private readonly Func<string, CancellationToken, Task<bool>> _healthProbe;
+    private readonly Func<string, long, CancellationToken, Task<bool>> _healthProbe;
     private readonly TimeSpan _commandTimeout;
 
     public HomeDulcheLinuxBrokerAdapter(
         string? socketPath = null,
         Func<CancellationToken, Task<long?>>? brokerPidSource = null,
-        Func<string, CancellationToken, Task<bool>>? healthProbe = null,
+        Func<string, long, CancellationToken, Task<bool>>? healthProbe = null,
         TimeSpan? commandTimeout = null)
     {
         _socketPath = socketPath;
@@ -60,27 +60,30 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
         if (!Supported || socketPath is null) return null;
         var pid = await _brokerPidSource(cancellationToken).ConfigureAwait(false);
         if (pid is not { } livePid || livePid <= 0) return null;
-        var healthy = await _healthProbe(socketPath, cancellationToken).ConfigureAwait(false);
+        var healthy = await _healthProbe(socketPath, livePid, cancellationToken).ConfigureAwait(false);
         if (!healthy) return null;
         return new HomeDulcheBrokerObservation(livePid, "unix-socket", null, DateTimeOffset.UtcNow, socketPath);
     }
 
-    /// <summary>Bounded health probe over the real AF_UNIX socket. Connect/read/exit are all
-    /// cancellable and time-bounded; a stuck socket never stalls optional service startup.</summary>
-    private static async Task<bool> DefaultHealthProbeAsync(string socketPath, CancellationToken cancellationToken)
+    /// <summary>Bounded health probe over the real AF_UNIX socket. It verifies the live broker
+    /// process identity a second way: the accepted Unix socket peer credentials must match the
+    /// systemd MainPID observed by <see cref="DefaultBrokerPidSourceAsync"/>. Connect/read/exit are
+    /// all cancellable and time-bounded; a stuck socket never stalls optional service startup.</summary>
+    private static async Task<bool> DefaultHealthProbeAsync(string socketPath, long expectedPid, CancellationToken cancellationToken)
     {
-        if (!OperatingSystem.IsLinux()) return false;
+        if (!OperatingSystem.IsLinux() || expectedPid <= 0) return false;
+        long? observedPeerPid = null;
         var handler = new SocketsHttpHandler
         {
             UseProxy = false,
             AllowAutoRedirect = false,
-            ConnectCallback = (context, token) => ConnectUnixAsync(socketPath, token)
+            ConnectCallback = (context, token) => ConnectUnixAsync(socketPath, expectedPid, value => observedPeerPid = value, token)
         };
         using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(3) };
         try
         {
             using var response = await client.GetAsync(new Uri("http://localhost/health"), cancellationToken).ConfigureAwait(false);
-            return response.IsSuccessStatusCode;
+            return response.IsSuccessStatusCode && observedPeerPid == expectedPid;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -92,12 +95,19 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
         }
     }
 
-    private static async ValueTask<Stream> ConnectUnixAsync(string socketPath, CancellationToken token)
+    private static async ValueTask<Stream> ConnectUnixAsync(string socketPath, long expectedPid, Action<long?> report, CancellationToken token)
     {
         var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
         try
         {
             await socket.ConnectAsync(new UnixDomainSocketEndPoint(socketPath), token).ConfigureAwait(false);
+            var peer = HomeNativePeerObservation.FromAcceptedUnixSocket(socket);
+            report(peer?.ProcessId);
+            if (peer is null || peer.ProcessId != expectedPid)
+            {
+                socket.Dispose();
+                throw new IOException("The AF_UNIX peer process does not match the systemd MainPID.");
+            }
             return new NetworkStream(socket, ownsSocket: true);
         }
         catch
@@ -133,12 +143,12 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
             if (!process.Start()) return null;
             var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
             var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(_commandTimeout);
+
             bool exited;
-            try { exited = await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false); }
+            try { exited = await RunToExitAsync(process, cancellationToken).ConfigureAwait(false); }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-            catch (OperationCanceledException) { return null; } // bounded timeout: no stall
+            catch { return null; }
+
             var output = await outputTask.ConfigureAwait(false);
             _ = await errorTask.ConfigureAwait(false);
             if (!exited || process.ExitCode != 0) return null;
@@ -152,6 +162,36 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
         {
             return null;
         }
+    }
+
+    /// <summary>Waits for a child process to exit within the configured bound. If the bound elapses
+    /// the child is killed and reaped and <c>false</c> is returned, so no zombie or orphaned
+    /// redirected reader is left behind. Caller cancellation propagates.</summary>
+    private async Task<bool> RunToExitAsync(Process process, CancellationToken cancellationToken)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(_commandTimeout);
+        bool exited;
+        try
+        {
+            exited = await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            TryKillAndReap(process);
+            return false;
+        }
+        return exited;
+    }
+
+    private static void TryKillAndReap(Process process)
+    {
+        try { if (!process.HasExited) process.Kill(entireProcessTree: true); } catch { }
+        try { process.WaitForExit(1000); } catch { }
     }
 }
 

@@ -48,10 +48,12 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         if (request.Address.Authority is not ("home" or "newtab"))
             throw new NotSupportedException("This owner admits only Home, New Tab and Home Models.");
         var segments = request.Address.ResourceSegments;
+        // The models route is scoped to the Home authority only; it is not admissible under New Tab.
+        var isHome = request.Address.Authority == "home";
         var admissibleSegments = segments.Count == 0 ||
-            (segments.Count == 1 && segments[0].Equals("models", StringComparison.Ordinal));
+            (isHome && segments.Count == 1 && segments[0].Equals("models", StringComparison.Ordinal));
         if (!admissibleSegments)
-            throw new NotSupportedException("This owner admits only Home, New Tab and Home Models.");
+            throw new NotSupportedException("This owner admits only Home and New Tab; the models route is available only under Home.");
         if (request.TabId == Guid.Empty || string.IsNullOrWhiteSpace(request.ProfileId))
             throw new UnauthorizedAccessException("Retain the original Home profile and tab identity.");
         if (request.Privacy != BrowserTabPrivacy.Standard)

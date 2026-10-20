@@ -110,12 +110,20 @@ public interface IHomeDulcheModelEvidenceSource
     ValueTask<HomeDulcheModelEvidence?> FindEligibleAsync(CancellationToken cancellationToken);
 }
 
-/// <summary>Typed generation-capability probe bound to the SAME observed broker endpoint/process and
-/// SAME verified model that the observation source actually observed. It must not be invoked without
-/// an explicit model-use admission and never at Home startup. Passing the observed objects keeps any
-/// positive result causally attached to that exact endpoint/model/generation rather than a free
-/// standing boolean.</summary>
-public delegate Task<bool> HomeDulcheCapabilityProbe(
-    HomeDulcheBrokerObservation broker,
-    HomeDulcheModelEvidence model,
-    CancellationToken cancellationToken);
+/// <summary>Typed record of an already-admitted, same-generation generation-capability observation.
+/// This is NEVER produced by initiating inference during Home startup; it records an explicit
+/// model-use admission that already verified generation capability for the SAME observed broker
+/// endpoint/process and SAME verified model. It is bound to the observed <see cref="HomeDulcheBrokerObservation"/>
+/// and <see cref="HomeDulcheModelEvidence"/> via the matching model id and provider id. When no such
+/// admission observation is supplied, the capability axis stays explicitly blocked (never inferred).</summary>
+public sealed record HomeDulcheCapabilityObservation(
+    bool GenerationCapable,
+    string ProviderId,
+    string ModelId,
+    DateTimeOffset ObservedAtUtc,
+    string Evidence)
+{
+    public bool IsSameGeneration(HomeDulcheModelEvidence model) =>
+        model is not null && string.Equals(ProviderId, model.ProviderId, StringComparison.Ordinal)
+        && string.Equals(ModelId, model.ModelId, StringComparison.Ordinal);
+}

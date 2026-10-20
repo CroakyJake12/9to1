@@ -5,15 +5,16 @@ namespace HavenOS.Home.Core;
 /// <summary>Composes the independent, genuinely observed axes of the shared local Dulche runtime.
 /// Each axis is obtained from a real source (package probe, broker adapter, model evidence). No axis
 /// is inferred from the platform name, and Ready is reached only when every required positive
-/// observation is present — including a live process, a healthy endpoint and a verified generation
-/// capability probe. Verification alone is not model Ready; service health alone is not generation
-/// capability.</summary>
+/// observation is present — including a live process, a healthy endpoint and an already-admitted
+/// generation capability observation. Verification alone is not model Ready; service health alone is
+/// not generation capability; and generation capability is never inferred by initiating a probe
+/// during startup — it is recorded only from an explicit same-generation model-use admission.</summary>
 public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObservationSource
 {
     private readonly IHomeDulcheRuntimePackageSource _package;
     private readonly IHomeDulcheBrokerAdapter _broker;
     private readonly IHomeDulcheModelEvidenceSource _models;
-    private readonly HomeDulcheCapabilityProbe? _capabilityProbe;
+    private readonly HomeDulcheCapabilityObservation? _alreadyAdmittedCapability;
     private readonly string _platform;
     private readonly string _architecture;
 
@@ -21,14 +22,14 @@ public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObser
         IHomeDulcheRuntimePackageSource package,
         IHomeDulcheBrokerAdapter broker,
         IHomeDulcheModelEvidenceSource models,
-        HomeDulcheCapabilityProbe? capabilityProbe = null,
+        HomeDulcheCapabilityObservation? alreadyAdmittedCapability = null,
         string? platform = null,
         string? architecture = null)
     {
         _package = package ?? throw new ArgumentNullException(nameof(package));
         _broker = broker ?? throw new ArgumentNullException(nameof(broker));
         _models = models ?? throw new ArgumentNullException(nameof(models));
-        _capabilityProbe = capabilityProbe;
+        _alreadyAdmittedCapability = alreadyAdmittedCapability;
         _platform = platform ?? (OperatingSystem.IsWindows() ? "windows"
             : OperatingSystem.IsLinux() ? "linux"
             : OperatingSystem.IsAndroid() ? "android" : "unknown");
@@ -81,22 +82,19 @@ public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObser
         var processRunning = broker is not null;
         var endpointAvailable = broker is not null;
 
+        // Generation capability is NEVER probed during startup. It is recorded only from an
+        // already-admitted, same-generation model-use observation that verified capability for the
+        // SAME observed broker endpoint/process and SAME verified model. Absent such an admission,
+        // the capability axis stays explicitly blocked (never inferred).
         var capabilitySupported = false;
-        if (_capabilityProbe is not null)
+        if (processRunning && endpointAvailable && modelVerified && model is not null &&
+            _alreadyAdmittedCapability is { GenerationCapable: true } admitted &&
+            admitted.IsSameGeneration(model))
         {
-            if (processRunning && endpointAvailable && modelVerified && broker is not null && model is not null)
-            {
-                try { capabilitySupported = await _capabilityProbe(broker, model, cancellationToken).ConfigureAwait(false); }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-                catch { capabilitySupported = false; }
-            }
-            if (!capabilitySupported)
-                deficiencies.Add("The installed runtime/model has no verified generation-capability probe.");
+            capabilitySupported = true;
         }
-        else
-        {
-            deficiencies.Add("No verified generation-capability probe is configured; generation capability is blocked.");
-        }
+        if (!capabilitySupported)
+            deficiencies.Add("No verified generation-capability admission is recorded for the observed runtime/model; generation capability is blocked.");
 
         var ready = package.Installed && package.Verified && modelVerified && transportSupported
             && processRunning && endpointAvailable && capabilitySupported;

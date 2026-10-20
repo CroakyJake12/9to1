@@ -212,6 +212,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         DemandOriginalChatCurrent();
         ManageLocalModelsRequested?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>The actual recovery loader action-settlement pipeline for the currently shown
+    /// recovery surface. The host joins this snapshot when routing a local-model recovery request so
+    /// the navigation settles only after the real recovery action pipeline drains.</summary>
+    public Task RecoveryActionSettlement => _scene.RecoveryActionSettlement;
     public event EventHandler? ConversationStateChanged;
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;

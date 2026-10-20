@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -94,41 +95,139 @@ internal static class ChatRecoveryCuiDocument
     }
 }
 
+/// <summary>Immediate readiness for the shared recovery scene (the host page owns deeper readiness).</summary>
+internal sealed class ChatRecoveryReadiness : ICuiSceneReadiness
+{
+    public static readonly ChatRecoveryReadiness Instance = new();
+    private ChatRecoveryReadiness() { }
+    public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken) =>
+        new(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "ready", "Chat recovery is ready."));
+}
+
 /// <summary>
 /// The live CUI recovery surface mounted into the chat scene under the <c>RecoveryHost</c> native
-/// host. It owns the loader/scene host and the typed presentation adapter, rendering
-/// <c>ChatRecovery.cui</c>. The owning <see cref="ChatHavenScene"/> controls visibility through the
-/// bindings and disposes/unregisters this view during its own disposal.
+/// host. It mirrors the shared composer <see cref="CuiSceneHost"/> pattern: it owns the scene host,
+/// the typed presentation adapter and a guarded initialization, and it exposes the actual loader
+/// action-settlement capture (<see cref="CaptureOriginalActionSettlement"/>). The owning
+/// <see cref="ChatHavenScene"/> controls visibility through the bindings and joins the child close
+/// before releasing the physical native mapping.
 /// </summary>
-public sealed class ChatRecoveryCuiView : ContentControl, IDisposable
+public sealed class ChatRecoveryCuiView : ContentControl, IDisposable, IAsyncDisposable
 {
-    private readonly CuiControlLoader _loader = new();
+    private readonly CuiSceneHost _host;
     private readonly ChatRecoveryBindings _bindings;
+    private readonly object _initGate = new();
+    private Task<CuiSceneAvailability>? _initializeTask;
+    /// <summary>The EXACT raw host Show task retained for loader settlement capture. This is a
+    /// distinct identity from the public guarded initialization wrapper; only this raw task can
+    /// be handed to <see cref="CuiSceneHost.CaptureOriginalActionSettlement"/>.</summary>
+    private Task<CuiSceneAvailability>? _rawShowTask;
+    private readonly object _closeGate = new();
+    private Task? _closeTask;
+    private bool _closing;
     private bool _disposed;
 
-    public ChatRecoveryCuiView(ChatRecoveryBindings bindings)
+    internal ChatRecoveryCuiView(ChatRecoveryBindings bindings)
+        : this(bindings, ChatRecoveryReadiness.Instance)
+    {
+    }
+
+    /// <summary>Readiness injection seam used by tests to hold/observe the real host show
+    /// pipeline; defaults to production readiness. The SAME production host/loader/document are
+    /// exercised, never an alternate renderer.</summary>
+    internal ChatRecoveryCuiView(ChatRecoveryBindings bindings, ICuiSceneReadiness readiness)
     {
         _bindings = bindings ?? throw new ArgumentNullException(nameof(bindings));
+        _readiness = readiness ?? ChatRecoveryReadiness.Instance;
+        _host = new CuiSceneHost();
         AutomationProperties.SetAutomationId(this, "ChatRecoveryCuiView");
         AutomationProperties.SetName(this, "Local model recovery");
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Stretch;
-        var document = ChatRecoveryCuiDocument.Load();
-        _loader.SetBindingContext(_bindings);
-        _loader.SetActionDispatcher(_bindings);
-        var loaded = _loader.TryLoad(document);
-        if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
-        {
-            _loader.Dispose();
-            throw new InvalidDataException("The canonical recovery CUI did not produce a usable control.");
-        }
-        _loader.WireBindings(loaded.Root);
-        Content = loaded.Root;
+        Content = _host;
+        _ = InitializeAsync();
     }
 
-    /// <summary>Joins the real retained recovery action pipeline (including the current admitted
-    /// dispatch) so an owner that requested a recovery can observe it settle.</summary>
-    public Task WhenActionsIdleAsync() => _loader.WhenActionsIdleAsync();
+    private readonly ICuiSceneReadiness _readiness;
+
+    /// <summary>Idempotent guarded initialization; parents join it before publication/restoration.</summary>
+    public Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        lock (_initGate)
+        {
+            if (_initializeTask is null)
+            {
+                var scene = new CuiNativeScene(
+                    "spaces.chat.recovery", "Chat Recovery", "Chat",
+                    ChatRecoveryCuiDocument.Load(), _bindings, _bindings, _readiness)
+                {
+                    IsPublicationCurrent = () => !_closing
+                };
+                var rawShow = _host.ShowAsync(scene, cancellationToken);
+                _rawShowTask = rawShow;
+                _initializeTask = rawShow;
+            }
+            return _initializeTask;
+        }
+    }
+
+    /// <summary>
+    /// Captures the ACTUAL loader action-settlement pipeline for actions admitted on this recovery
+    /// surface, using the exact original raw Show task. External callers join this snapshot outside
+    /// any included action (an action must never await a snapshot containing itself). Requires
+    /// UI-thread access and a successful guarded initialization.
+    /// </summary>
+    public Task CaptureOriginalActionSettlement()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        Task<CuiSceneAvailability>? rawShow;
+        Task<CuiSceneAvailability>? initTask;
+        lock (_initGate)
+        {
+            rawShow = _rawShowTask;
+            initTask = _initializeTask;
+        }
+        if (rawShow is null || _closing || initTask is null || !initTask.IsCompletedSuccessfully)
+            throw new InvalidOperationException("The recovery surface has no completed live initialization to capture from.");
+        return _host.CaptureOriginalActionSettlement(rawShow);
+    }
+
+    /// <summary>Publishes one child close task BEFORE any close callback can reenter, mirroring the
+    /// host start-gate pattern. The parent joins this exact task during cleanup; repeated close
+    /// requests share the SAME task, and no duplicate work is admitted after it.</summary>
+    public Task CloseAsync()
+    {
+        lock (_closeGate)
+        {
+            if (_closeTask is not null) return _closeTask;
+            _closing = true;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _closeTask = CloseOriginalCoreAsync(start.Task);
+            start.SetResult(); // original is published before the close body/callbacks run
+            return _closeTask;
+        }
+    }
+
+    private async Task CloseOriginalCoreAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        // Retire command admission first: start the host close independently of initialization, so a
+        // cancellation or fault in init can never skip retirement.
+        _bindings.Retire();
+        var hostClose = _host.CloseOriginalAsync();
+        var faults = new List<Exception>();
+        Task<CuiSceneAvailability>? initTask;
+        lock (_initGate) initTask = _initializeTask;
+        try { await hostClose.ConfigureAwait(false); }
+        catch (Exception error) { faults.Add(error); }
+        if (initTask is not null)
+        {
+            try { await initTask.ConfigureAwait(false); }
+            catch (Exception error) { faults.Add(error); }
+        }
+        if (faults.Count == 1) throw faults[0];
+        if (faults.Count > 1) throw new AggregateException(faults);
+    }
 
     /// <summary>Republishes the authored recovery visibility from the owner scene.</summary>
     public void Refresh() => _bindings.Refresh();
@@ -137,8 +236,13 @@ public sealed class ChatRecoveryCuiView : ContentControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        _bindings.Retire();
-        Content = null;
-        _loader.Dispose();
+        try { CloseAsync(); } catch { /* Best-effort synchronous teardown; joins observe faults. */ }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        if (_disposed) return new ValueTask(CloseAsync());
+        _disposed = true;
+        return new ValueTask(CloseAsync());
     }
 }

@@ -72,10 +72,25 @@ public sealed class UnifiedHomeContentTests
     [InlineData("cui://home")]
     [InlineData("browse://history")]
     [InlineData("browse://home/settings")]
+    [InlineData("browse://newtab/models")]
     public void Home_factory_does_not_admit_other_namespaces_or_nested_privileged_routes(string route)
     {
         using var lifetime = new CancellationTokenSource();
         Assert.Throws<NotSupportedException>(() => Factory(new(), lifetime.Token).CreateSession(Request(route)));
+    }
+
+    [AvaloniaFact]
+    public void Home_models_route_is_admitted_only_under_the_home_authority()
+    {
+        using var lifetime = new CancellationTokenSource();
+        // The canonical local-model recovery route (browse://home/models) is admitted, and it
+        // resolves to the Home surface.
+        var admitted = Factory(new(), lifetime.Token).CreateSession(Request("browse://home/models"));
+        Assert.Equal(AppContentNamespace.Browse, admitted.Address.Namespace);
+        Assert.Equal("home", admitted.Address.Authority);
+        Assert.Equal(new[] { "models" }, admitted.Address.ResourceSegments);
+        // The same models segment is NOT admissible under the New Tab authority.
+        Assert.Throws<NotSupportedException>(() => Factory(new(), lifetime.Token).CreateSession(Request("browse://newtab/models")));
     }
 
     [AvaloniaFact]

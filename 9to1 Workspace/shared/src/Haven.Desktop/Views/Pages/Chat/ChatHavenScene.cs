@@ -67,6 +67,10 @@ internal sealed partial class ChatHavenScene : IDisposable
     private Task? _composerReleaseTask;
     private bool _composerReleased;
     private readonly object _composerCloseGate = new();
+    private Task? _recoveryClose;
+    private Task? _recoveryReleaseTask;
+    private bool _recoveryReleased;
+    private readonly object _recoveryCloseGate = new();
     private readonly ChatRecoveryBindings _recoveryBindings;
 
     /// <summary>Constructs a scene with its own transport resolver (used by tests/hosts that do
@@ -838,6 +842,62 @@ internal sealed partial class ChatHavenScene : IDisposable
         _composerReleased = true;
     }
 
+    /// <summary>The actual recovery loader action-settlement pipeline for the currently shown
+    /// recovery surface, captured on the UI thread. External navigation owners join this snapshot
+    /// outside any included action so the navigation settles only after the real recovery action
+    /// pipeline drains.</summary>
+    public Task RecoveryActionSettlement =>
+        Dispatcher.UIThread.InvokeAsync(Task)(() => RecoveryView.CaptureOriginalActionSettlement()).GetTask().Unwrap();
+
+    /// <summary>Starts the shared recovery surface's child close (retires its command admission
+    /// and closes the scene host) and publishes the one close task the parent joins during cleanup.
+    /// The SAME close original is returned on every call; no CompletedTask stand-in is ever
+    /// fabricated.</summary>
+    public Task StartRecoveryClose()
+    {
+        lock (_recoveryCloseGate)
+        {
+            _recoveryClose ??= RecoveryView.CloseAsync();
+            return _recoveryClose;
+        }
+    }
+
+    /// <summary>Joins the exact recovery-surface close and then releases the native resolver mapping
+    /// and physical view. ONE SAME release-attempt task is published before any Unregister/Dispose
+    /// callback can reenter; the child must ACK before any physical release, release-success is only
+    /// recorded after the native unregister and view dispose actually succeed, and a failed Unregister
+    /// stays the SAME retained fault (never silently retried on a later call).</summary>
+    public Task JoinRecoveryCloseAndReleaseAsync()
+    {
+        lock (_recoveryCloseGate)
+        {
+            if (_recoveryReleaseTask is not null) return _recoveryReleaseTask;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _recoveryReleaseTask = JoinRecoveryCloseAndReleaseCoreAsync(start.Task);
+            start.SetResult(); // the release attempt is published before any Unregister/dispose callback
+            return _recoveryReleaseTask;
+        }
+    }
+
+    private async Task JoinRecoveryCloseAndReleaseCoreAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        var close = StartRecoveryClose();
+        await close.ConfigureAwait(false); // child ACK required before any physical release
+        await Dispatcher.UIThread.InvokeAsync(ReleaseRecoveryUi).GetTask().ConfigureAwait(false);
+    }
+
+    private void ReleaseRecoveryUi()
+    {
+        if (_recoveryReleased) return;
+        // Unregister/dispose only after the child close acknowledged. Resolver unregister failures
+        // are not swallowed and do not set success state; they remain observable as the SAME
+        // retained release-attempt task.
+        _nativeResolver.Unregister(RecoveryHost, RecoveryView);
+        RecoveryView.Dispose();
+        _recoveryReleased = true;
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -853,11 +913,11 @@ internal sealed partial class ChatHavenScene : IDisposable
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
         _composerQueue?.Dispose();
         _addMenu.Dispose();
-        // Retire and release the authored recovery surface: stop admitting its command, unregister
-        // the native mapping and dispose the CUI loader/view. Unregister failures are not swallowed.
+        // Retire the authored recovery surface's command admission and start its child close. The
+        // physical native mapping/view release follows the joined ACK path
+        // (JoinRecoveryCloseAndReleaseAsync) owned by the page lifecycle, mirroring the composer.
         _recoveryBindings.Retire();
-        _nativeResolver.Unregister(RecoveryHost, RecoveryView);
-        RecoveryView.Dispose();
+        StartRecoveryClose();
         // Synchronous Dispose requests the SAME child close but cannot claim the async join
         // completed or release the physical mapping early; that release follows the joined ACK
         // path (JoinComposerCloseAndReleaseAsync) owned by the page lifecycle.

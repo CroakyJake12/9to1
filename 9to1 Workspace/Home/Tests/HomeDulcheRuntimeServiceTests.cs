@@ -35,18 +35,21 @@ public sealed class HomeDulcheRuntimeServiceTests
 
     // ---------------------------------------------------------------- observation composition
 
+    private static HomeDulcheCapabilityObservation AdmittedCapability(bool capable = true) =>
+        new(capable, "llamacpp", "local-model-q4", DateTimeOffset.UtcNow, "test-admission");
+
     private static HomeDulcheRuntimeObservationSource Source(
         IHomeDulcheRuntimePackageSource package,
         IHomeDulcheBrokerAdapter broker,
         IHomeDulcheModelEvidenceSource models,
-        HomeDulcheCapabilityProbe? capability = null) =>
-        new(package, broker, models, capability);
+        HomeDulcheCapabilityObservation? alreadyAdmittedCapability = null) =>
+        new(package, broker, models, alreadyAdmittedCapability);
 
     private static HomeDulcheRuntimeObservationSource ReadySource() => Source(
         new FakePackageSource(installed: true, verified: true),
         new FakeBrokerAdapter(supported: true, BrokerObservation),
         new FakeModelEvidenceSource(VerifiedEvidence()),
-        (_, _, _) => Task.FromResult(true));
+        AdmittedCapability());
 
     private static HomeDulcheModelEvidence VerifiedEvidence() =>
         new("local-model-q4", "llamacpp", Sha64, 1234, DateTimeOffset.UtcNow);
@@ -90,7 +93,7 @@ public sealed class HomeDulcheRuntimeServiceTests
             new FakePackageSource(installed: true, verified: true),
             new FakeBrokerAdapter(supported: true, BrokerObservation),
             new FakeModelEvidenceSource(VerifiedEvidence()),
-            (_, _, _) => Task.FromResult(false));
+            AdmittedCapability(capable: false));
         var observation = await source.ObserveAsync(CancellationToken.None);
 
         Assert.Equal(HomeServiceLifecycleState.Degraded, observation.Lifecycle);
@@ -107,7 +110,7 @@ public sealed class HomeDulcheRuntimeServiceTests
             new FakePackageSource(installed: true, verified: true),
             new FakeBrokerAdapter(supported: true, null),
             new FakeModelEvidenceSource(VerifiedEvidence()),
-            (_, _, _) => Task.FromResult(true));
+            AdmittedCapability());
         var observation = await source.ObserveAsync(CancellationToken.None);
 
         Assert.Equal(HomeServiceLifecycleState.Degraded, observation.Lifecycle);
@@ -124,7 +127,7 @@ public sealed class HomeDulcheRuntimeServiceTests
             new FakePackageSource(installed: true, verified: true),
             new FakeBrokerAdapter(supported: true, BrokerObservation),
             new FakeModelEvidenceSource(null),
-            (_, _, _) => Task.FromResult(true));
+            AdmittedCapability());
         var observation = await source.ObserveAsync(CancellationToken.None);
 
         Assert.Equal(HomeServiceLifecycleState.Degraded, observation.Lifecycle);
@@ -140,7 +143,7 @@ public sealed class HomeDulcheRuntimeServiceTests
             new FakePackageSource(installed: true, verified: false),
             new FakeBrokerAdapter(supported: true, BrokerObservation),
             new FakeModelEvidenceSource(VerifiedEvidence()),
-            (_, _, _) => Task.FromResult(true));
+            AdmittedCapability());
         var observation = await source.ObserveAsync(CancellationToken.None);
 
         Assert.Equal(HomeServiceLifecycleState.Degraded, observation.Lifecycle);
@@ -240,7 +243,7 @@ public sealed class HomeDulcheRuntimeServiceTests
             new FakePackageSource(installed: true, verified: true),
             new FakeBrokerAdapter(supported: true, BrokerObservation),
             new FakeModelEvidenceSource(null),
-            (_, _, _) => Task.FromResult(true));
+            AdmittedCapability());
         await using var service = new HomeDulcheRuntimeService(degradedSource);
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
@@ -275,11 +278,13 @@ public sealed class HomeDulcheRuntimeServiceTests
         await using var service = new HomeDulcheRuntimeService(held);
 
         var start = service.StartAsync(CancellationToken.None);
-        await service.StopAsync(CancellationToken.None); // bumps generation before the held read settles
-        Assert.Null(service.CurrentObservation);
+        var stopping = service.StopAsync(CancellationToken.None); // bumps generation before the held read settles
+        Assert.False(start.IsCompleted);
 
+        // Release the held observe only AFTER Stop began; Stop joins the in-flight start, and the
+        // stale completion must be discarded (the generation already moved on).
         gate.SetResult(await ReadySource().ObserveAsync(CancellationToken.None));
-        await start.WaitAsync(TimeSpan.FromSeconds(10)); // completes normally, stale publish discarded
+        await Task.WhenAll(start, stopping).WaitAsync(TimeSpan.FromSeconds(10));
 
         Assert.Null(service.CurrentObservation);
     }
@@ -313,7 +318,7 @@ public sealed class HomeDulcheRuntimeServiceTests
                 "The packaged runtime executable has no verified SHA-256 pin; runtime verification is blocked."),
             new FakeBrokerAdapter(supported: true, BrokerObservation),
             new FakeModelEvidenceSource(VerifiedEvidence()),
-            (_, _, _) => Task.FromResult(true));
+            AdmittedCapability());
         var observation = await source.ObserveAsync(CancellationToken.None);
 
         Assert.Equal(HomeServiceLifecycleState.Degraded, observation.Lifecycle);
@@ -382,6 +387,74 @@ public sealed class HomeDulcheRuntimeServiceTests
     }
 
     [Fact]
+    public async Task Repeated_start_after_degraded_refusal_coalesces_same_task()
+    {
+        // Item 5/6: the service reuses the SAME shared start even after it completed with a
+        // truthful refusal, so repeated Starts never spawn new observations/owners.
+        var degradedSource = Source(
+            new FakePackageSource(installed: true, verified: true),
+            new FakeBrokerAdapter(supported: true, BrokerObservation),
+            new FakeModelEvidenceSource(null));
+        await using var service = new HomeDulcheRuntimeService(degradedSource);
+
+        var first = service.StartAsync(CancellationToken.None);
+        var firstError = await Assert.ThrowsAsync<InvalidOperationException>(() => first);
+        var second = service.StartAsync(CancellationToken.None);
+        Assert.True(ReferenceEquals(first, second));
+        var secondError = await Assert.ThrowsAsync<InvalidOperationException>(() => second);
+        Assert.Same(firstError, secondError);
+    }
+
+    [Fact]
+    public async Task Stop_succeeds_after_expected_readiness_refusal_start()
+    {
+        // Item 5/6: a truthful non-Ready start refusal is a startup diagnostic, not an
+        // acquired-resource cleanup failure, so a normal close must succeed after it.
+        var degradedSource = Source(
+            new FakePackageSource(installed: true, verified: true),
+            new FakeBrokerAdapter(supported: true, BrokerObservation),
+            new FakeModelEvidenceSource(null));
+        await using var service = new HomeDulcheRuntimeService(degradedSource);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
+        await service.StopAsync(CancellationToken.None); // must NOT rethrow the availability refusal
+        Assert.Null(service.CurrentObservation);
+    }
+
+    [Fact]
+    public async Task Genuine_start_fault_fails_close()
+    {
+        // Item 5/6: a genuine owner/start fault still fails close and is preserved by identity.
+        var boom = new InvalidOperationException("boom");
+        var source = new DelegatingObservationSource(_ => Task.FromException<HomeDulcheRuntimeObservation>(boom));
+        await using var service = new HomeDulcheRuntimeService(source);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.StopAsync(CancellationToken.None));
+        Assert.True(ReferenceEquals(error, boom) ||
+                    (error is AggregateException aggregate &&
+                     aggregate.InnerExceptions.Contains(boom, ReferenceEqualityComparer.Instance)));
+    }
+
+    [Fact]
+    public async Task Unix_socket_broker_forwards_expected_pid_to_health_probe()
+    {
+        // The adapter binds the systemd MainPID to the real AF_UNIX health probe so the peer
+        // credential check can match the accepted socket against the observed broker process.
+        long? observedPid = null;
+        var adapter = new HomeDulcheLinuxBrokerAdapter(
+            socketPath: "/run/user/1000/haven/inference.sock",
+            brokerPidSource: _ => Task.FromResult<long?>(42),
+            healthProbe: (_, pid, _) => { observedPid = pid; return Task.FromResult(true); });
+
+        var observation = await adapter.ObserveAsync(CancellationToken.None);
+
+        Assert.NotNull(observation);
+        Assert.Equal(42, observation!.BrokerPid);
+        Assert.Equal(42, observedPid);
+    }
+
+    [Fact]
     public async Task Unix_socket_broker_observation_is_positive_when_pid_and_health_observed()
     {
         // The real adapter reports a positive observation only for the actual AF_UNIX socket when
@@ -389,7 +462,7 @@ public sealed class HomeDulcheRuntimeServiceTests
         var adapter = new HomeDulcheLinuxBrokerAdapter(
             socketPath: "/run/user/1000/haven/inference.sock",
             brokerPidSource: _ => Task.FromResult<long?>(42),
-            healthProbe: (_, _) => Task.FromResult(true));
+            healthProbe: (_, _, _) => Task.FromResult(true));
         Assert.True(adapter.Supported);
 
         var observation = await adapter.ObserveAsync(CancellationToken.None);
@@ -407,7 +480,7 @@ public sealed class HomeDulcheRuntimeServiceTests
         var adapter = new HomeDulcheLinuxBrokerAdapter(
             socketPath: "/run/user/1000/haven/inference.sock",
             brokerPidSource: _ => Task.FromResult<long?>(42),
-            healthProbe: (_, _) => Task.FromResult(false));
+            healthProbe: (_, _, _) => Task.FromResult(false));
 
         var observation = await adapter.ObserveAsync(CancellationToken.None);
 
