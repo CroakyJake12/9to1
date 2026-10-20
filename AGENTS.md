@@ -14,6 +14,8 @@ On every fresh session, handoff or context compaction, reread this file, the spe
 
 If a conflict or uncertainty affects public behaviour, compatibility, security, data or architecture, queue the exact requirement, conflicting evidence and affected change in `docs/specification/open-decisions.json` for an owner response. Hold only that affected change/acceptance decision; continue independent authorised work. Do not invent a waiver or silently narrow scope.
 
+Direct owner accent clarification on 20 October: Professional uses per-app accent overrides, falling back to blue when an app has no override. Read `docs/specification/owner-references/2026-10-20-professional-app-accents/owner-correction.json`; preserve Home-owned preferences and neutral surfaces.
+
 ## CUI and product boundaries
 
 CUI is the only application-authoring language: structure, styling, state, interactions, behaviours, composition and orchestration use canonical versioned CUI and typed runtime/action contracts. C#, XAML/AXAML, HUI, HTML/CSS/JavaScript, React and native-control markup must not become application source or hidden code-behind. Mature donor engines, compiler/runtime/backend internals, OS adapters and external services may retain implementation languages behind reviewed typed infrastructure boundaries. Missing CUI expressiveness is a framework conformance gap to implement, not permission for a parallel authoring path.
