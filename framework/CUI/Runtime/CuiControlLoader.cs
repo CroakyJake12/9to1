@@ -260,10 +260,13 @@ public sealed class CuiControlLoader : IDisposable
         if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
             !TryGetActionInvocation(control, out var invocation)) return;
         var isLocal = invocation.Command == LocalToggleCommand;
-        // A control inside a QueryViewport's authored subtree dispatches through that viewport (the
-        // generic runtime query/state owner); the viewport forwards unrelated commands to the scene
-        // host dispatcher. Outside such a scope, the scene/app dispatcher is used directly.
-        var dispatcher = !isLocal ? ScopedDispatcherFor(control) ?? _actionDispatcher : _actionDispatcher;
+        // Dispatch through the OWNED dispatcher captured at load/action-invocation time (the nearest
+        // owning query scope, usually a QueryViewport). This owner is retained regardless of current
+        // native visibility/attachment, so a same-frame hidden or detached authored pager control
+        // keeps its correct local query owner and never falls back to a global host; the viewport
+        // forwards unrelated commands to the scene host dispatcher. Only when no owner was recorded
+        // (a non-scoped/global action) does routing fall back to the scene/app dispatcher.
+        var dispatcher = !isLocal ? invocation.Owner ?? ScopedDispatcherFor(control) ?? _actionDispatcher : _actionDispatcher;
         if (!isLocal && dispatcher is null) return;
 
         if (control is MenuItem && !control.IsEffectivelyEnabled) return;
@@ -759,10 +762,21 @@ public sealed class CuiControlLoader : IDisposable
     private void WireBindingsRecursive(Control control, Control? contextMenuOwner = null)
     {
         // Native menu items use the same retained pipeline as native buttons. Pure-local toggles
-        // are wired even without an external dispatcher; external commands require one.
+        // are wired even without an external dispatcher; external commands require a dispatcher,
+        // either the scene/app one, the recorded owning query scope (the generic runtime query/state
+        // owner captured at load/action-invocation time), or the nearest owning query scope resolved
+        // from the current visual tree (a fallback for dynamically rebuilt subtrees such as
+        // refreshed conditional branches). ObserveActionDispatch uses the same recorded owner first,
+        // so admission and dispatch stay aligned: a button authored inside a mounted QueryViewport is
+        // wired even when no global dispatcher is configured and even when it is hidden/detached at
+        // wire time (its owner is recorded, not lost), while a command with no resolvable dispatcher
+        // stays unwired (truthful, never broadly accepted).
         if (control is Button or MenuItem && !_wiredActions.Contains(control)
             && TryGetActionInvocation(control, out var actionInvocation)
-            && (_actionDispatcher is not null || actionInvocation.Command == LocalToggleCommand))
+            && (_actionDispatcher is not null
+                || actionInvocation.Command == LocalToggleCommand
+                || actionInvocation.Owner is not null
+                || ScopedDispatcherFor(control) is not null))
         {
             EventHandler<RoutedEventArgs> handler = (_, args) =>
             {
@@ -2093,7 +2107,12 @@ public sealed class CuiControlLoader : IDisposable
     /// </summary>
     public void RefreshBindings()
     {
-        foreach (var record in _liveBindings)
+        // Enumerate a snapshot: applying a binding (for example re-entering the QueryViewport
+        // source, which publishes and refreshes authored bindings) can add new live binding records
+        // while this pass is in flight. A snapshot keeps the enumeration stable while every record
+        // present at the start is still refreshed; newly-added records were applied with their
+        // initial values at registration, so no update is dropped.
+        foreach (var record in _liveBindings.ToArray())
         {
             ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
         }
@@ -2316,7 +2335,11 @@ public sealed class CuiControlLoader : IDisposable
     {
         void RefreshAffectedBindings()
         {
-            foreach (var record in _liveBindings)
+            // Snapshot the live-binding list: re-entrant publication (e.g. a QueryViewport source
+            // assignment that refreshes authored bindings and reconciles Repeats) can append records
+            // while this pass is in flight. A snapshot keeps enumeration stable without dropping any
+            // nested update (new records were applied with their initial values at registration).
+            foreach (var record in _liveBindings.ToArray())
             {
                 var leaf = record.Binding.Path[(record.Binding.Path.LastIndexOf('.') + 1)..];
                 if (!string.IsNullOrEmpty(propertyName)
@@ -2358,7 +2381,13 @@ public sealed class CuiControlLoader : IDisposable
             if (context is not null && !ReferenceEquals(context, conditional.Context))
                 continue;
             var previousContext = _bindingContext;
+            var previousDispatcher = _actionDispatcher;
             _bindingContext = conditional.Context;
+            // A rebuilt branch is authored inside the same owning query scope as its host. Capture
+            // that scope (the nearest visual QueryViewport, if any) so the new branch's controls
+            // record the correct owner instead of losing it during a dynamic subtree rebuild; when
+            // there is no owning scope the current scene/app dispatcher is preserved unchanged.
+            _actionDispatcher = ScopedDispatcherFor(conditional.Host) ?? previousDispatcher;
             _themeStack.Push(ResolveTheme(conditional.ThemeName).Theme.BaseTheme); _themeNames.Push(conditional.ThemeName);
             try
             {
@@ -2377,6 +2406,7 @@ public sealed class CuiControlLoader : IDisposable
                 _themeStack.Pop();
                 _themeNames.Pop();
                 _bindingContext = previousContext;
+                _actionDispatcher = previousDispatcher;
             }
         }
     }
@@ -2969,7 +2999,11 @@ public sealed class CuiControlLoader : IDisposable
         }
         var liveParameter = _documentActions.TryGetValue(reference, out var boundDefinition)
             ? boundDefinition.Parameter as CuiBindingValue : null;
-        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null);
+        // Capture only an authored query scope at load time. Ordinary scene/app actions continue
+        // to use the current SetActionDispatcher value. Wiring and dispatch reuse a recorded query owner
+        // so a hidden/detached same-frame control keeps its correct local query owner; a retired
+        // frame's controls are cleaned up with their invocations and cannot adopt a new/global owner.
+        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null, _actionDispatcher as CuiQueryViewport);
     }
 
     /// <summary>Resolve the nearest authored QueryViewport scope ancestor of a control, if any. The
@@ -3003,7 +3037,13 @@ public sealed class CuiControlLoader : IDisposable
     }
 
     private sealed record CuiActionInvocation(string Command, object? Parameter,
-        ICuiBindingContext? ParameterContext = null, CuiBindingValue? LiveParameter = null, bool OriginOnly = false)
+        ICuiBindingContext? ParameterContext = null, CuiBindingValue? LiveParameter = null, bool OriginOnly = false,
+        // The query scope that owned this authored action while it was loaded. An ordinary scene/app
+        // dispatcher is deliberately not captured: SetActionDispatcher remains current at click time. It
+        // is captured when the control is authored so dispatch does not re-infer authority from
+        // current native visual ancestry (which disappears for hidden/detached controls). Local
+        // toggles carry no owner and are handled locally.
+        ICuiActionDispatcher? Owner = null)
     {
         internal object? ResolveCurrentParameter() => LiveParameter is not null
             ? ParameterContext is not null && ParameterContext.TryGetValue(LiveParameter.Path, out var current)

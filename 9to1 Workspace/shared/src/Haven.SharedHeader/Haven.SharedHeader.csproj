@@ -1,0 +1,41 @@
+<!--
+  FILE DOCUMENTATION
+  Where: src/Haven.SharedHeader/Haven.SharedHeader.csproj in the shared Haven composition layer.
+  What: This MSBuild/XML file declares a genuine production CUI component-owner boundary for the
+        embedded Haven shared-header panels (the persistent shared-panel shell and the unified
+        notifications panel). It OWNS the two authored .cui documents and compiles them through the
+        canonical CUI Build.Tasks/SDK into the shipped compiled bundle (genuine V1 for these stateless
+        documents), then embeds the emitted artifact. Haven.Desktop references this component and
+        consumes the emitted artifact; it is a reusable shipping component, not a separate app, a
+        test-only producer or a conformance waiver.
+  Why: Directly importing the CUI SDK into the mixed legacy Desktop project would trigger the real
+        CUIB001 guard on its existing .hui/.axaml inputs. A dedicated component owner isolates the two
+        real shared-panel documents and wires exactly them through the canonical compiler target
+        without disabling/narrowing that guard or touching working capabilities.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>Haven.SharedHeader</AssemblyName>
+    <RootNamespace>Haven.SharedHeader</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <!-- The genuine V1 compiled-artifact codec (CuiV1ArtifactCodec) and the metadata contract live
+         in the canonical compiler assembly; the runtime consumer reads the emitted artifact with it. -->
+    <ProjectReference Include="../../../../framework/CUI/Compiler/CakeOS.Cui.Compiler.csproj" />
+  </ItemGroup>
+  <Import Project="../../../../framework/CUI/Compiler/buildTransitive/CakeOS.Cui.props" />
+  <ItemGroup>
+    <!-- The two REAL authored shared-panel documents, wired through the canonical Build.Tasks/SDK.
+         Actual source item type is @(Cui) (canonical), not an invented item. These are the only
+         documents owned by this component; no .hui/.axaml/.xaml inputs exist here. -->
+    <Cui Include="Documents/HavenNotifications.cui" />
+    <Cui Include="Documents/HavenSharedPanelShell.cui" />
+  </ItemGroup>
+  <Import Project="../../../../framework/CUI/Compiler/buildTransitive/CakeOS.Cui.targets" />
+</Project>

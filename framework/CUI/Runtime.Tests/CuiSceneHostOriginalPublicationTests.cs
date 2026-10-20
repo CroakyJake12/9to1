@@ -95,15 +95,25 @@ public sealed class CuiSceneHostOriginalPublicationTests
             rig.Release(action.Complete);
             Task<CuiSceneAvailability>? show = null;
             Task? settlement = null;
+            Task<Task>? captureAdmission = null;
             await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene(actions: action) with
             { IsPublicationCurrent = () => true })));
             await show!;
             await rig.Ui(() =>
             {
                 ((Button)Assert.IsType<Button>(rig.Host.Content)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                settlement = rig.Track(Dispatcher.UIThread.InvokeAsync<Task>(
-                    () => rig.Host.CaptureOriginalActionSettlement(show!)).GetTask().Unwrap());
+                captureAdmission = rig.Track(Dispatcher.UIThread.InvokeAsync<Task>(
+                    () => rig.Host.CaptureOriginalActionSettlement(show!)).GetTask());
+                settlement = rig.Track(captureAdmission.Unwrap());
             });
+            // Wait only for the dispatcher callback to capture the SAME live publication, not for
+            // the held loader pipeline. Faulting first can publish the failure wrapper before capture.
+            var captured = await Assert.IsAssignableFrom<Task<Task>>(captureAdmission)
+                .WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(1, action.Calls);
+            Assert.False(action.Original.IsCompleted);
+            Assert.False(captured.IsCompleted);
+            Assert.False(Assert.IsAssignableFrom<Task>(settlement).IsCompleted);
             var primary = new InvalidOperationException("genuine recovery loader fault");
             action.Fail(primary);
             Assert.Same(primary, await Record.ExceptionAsync(() => action.Original));
