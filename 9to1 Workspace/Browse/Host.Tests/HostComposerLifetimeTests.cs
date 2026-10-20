@@ -8,14 +8,16 @@ using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.UI;
 using System.Threading;
 using Xunit;
 
 namespace HavenOS.Browse.Host.Tests;
 
 /// <summary>
-/// Executable actual-page portable regression coverage for the single shared CUI composer. It
+/// Executable shared-component portable regression coverage for the single shared CUI composer. It
 /// exercises the guarded initialization, real input wiring (SelectionStart/End, AcceptsReturn,
 /// caret), async action settlement, close/self-join and watcher detach against the real
 /// <see cref="ChatComposerCuiView"/>, plus mounting that same view inside a CUI host (the ChatSpace
@@ -100,6 +102,7 @@ public sealed class HostComposerLifetimeTests
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
+        Exception? testFailure = null;
         try
         {
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
@@ -147,7 +150,11 @@ public sealed class HostComposerLifetimeTests
             Assert.Equal(string.Empty, view.Input.Text);
             Assert.Null(FindInput(view));
         }
-        finally { window.Close(); }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
     }
 
     [AvaloniaFact]
@@ -161,6 +168,7 @@ public sealed class HostComposerLifetimeTests
             "<Cui><Container id=\"surface\" Type=\"Vertical Stack\"><Container id=\"composer-mount\" Type=\"Vertical Stack\" /></Container></Cui>");
         var window = new Window { Width = 800, Height = 600, Content = host };
         window.Show();
+        Exception? testFailure = null;
         try
         {
             await host.ShowAsync(new CuiNativeScene("spaces.chat", "Chat Space", "Chat",
@@ -179,7 +187,11 @@ public sealed class HostComposerLifetimeTests
 
             await host.CloseOriginalAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
-        finally { window.Close(); }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, composer, testFailure, additionalOriginals: [host.CloseOriginalAsync()]);
+        }
     }
 
     /// <summary>Runs a few dispatcher/layout passes so headless composition builds the visual tree
@@ -196,20 +208,22 @@ public sealed class HostComposerLifetimeTests
     }
 
     private static TextBox? FindInput(ContentControl root) =>
-        root.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(box =>
+        root.GetVisualDescendants().OfType<TextBox>().SingleOrDefault(box =>
             AutomationProperties.GetAutomationId(box) == "composer-input");
 
     private static Button? FindButton(ContentControl root, string automationId) =>
-        root.GetVisualDescendants().OfType<Button>().FirstOrDefault(b =>
+        root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>
             AutomationProperties.GetAutomationId(b) == automationId);
 
     [AvaloniaFact]
-    public async Task Real_send_button_click_awaits_the_same_held_source_operation()
+    public async Task Real_send_button_click_settles_actual_loader_snapshot()
     {
         var source = new HeldOperationSource();
         var view = new ChatComposerCuiView(source);
         var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
+        Exception? testFailure = null;
+        Task? pipeline = null;
         try
         {
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
@@ -225,26 +239,39 @@ public sealed class HostComposerLifetimeTests
             sendButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.Equal(1, source.SendStarted);
             Assert.True(source.IsPending);
-
-            // The settlement stays pending while the held source operation is in flight.
             Assert.False(source.LastAdmitted.IsCompleted);
 
-            // Release the SAME held operation; it settles exactly once.
-            source.Release();
-            await source.LastAdmitted.WaitAsync(TimeSpan.FromSeconds(10));
+            // Captured from the UI thread AFTER admission: the ACTUAL loader action-settlement
+            // pipeline, using the exact retained raw host Show (never a source-only witness).
+            // The snapshot must be genuinely pending while the same raw source task is held.
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.NotNull(pipeline);
+            Assert.False(pipeline.IsCompleted);
+
+            // Release the SAME raw source task on a worker thread; the actual loader snapshot
+            // (not merely LastAdmitted) settles exactly once.
+            await Task.Run(() => source.Release());
+            await pipeline.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.False(source.IsPending);
             Assert.Equal(1, source.SendStarted); // no duplicate admission
         }
-        finally { window.Close(); }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release, additionalOriginals: [pipeline, source.LastAdmitted]);
+        }
     }
 
     [AvaloniaFact]
-    public async Task Faulted_source_operation_retains_its_real_fault()
+    public async Task Faulted_source_operation_retains_its_real_fault_through_loader()
     {
         var source = new HeldOperationSource();
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Content = view };
+        var window = new Window { Width = 900, Height = 700, Content = view };
         window.Show();
+        Exception? testFailure = null;
+        Task? pipeline = null;
+        var failure = new IOException("source offline");
         try
         {
             await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
@@ -253,44 +280,549 @@ public sealed class HostComposerLifetimeTests
             var sendButton = FindButton(view, "send-button");
             Assert.NotNull(sendButton);
 
-            var failure = new IOException("source offline");
-            var admitted = source.LastAdmitted;
             sendButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            source.Fault(failure);
+            Assert.True(source.IsPending);
 
-            var error = await Record.ExceptionAsync(() => admitted.WaitAsync(TimeSpan.FromSeconds(10)));
-            Assert.NotNull(error);
-            Assert.Contains(failure, AllCauses(error!));
+            // Capture the ACTUAL loader pipeline after admission, then fault the held source.
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+            await Task.Run(() => source.Fault(failure));
+
+            // The EXACT IOException must surface through the actual loader snapshot, independently
+            // of awaiting the source task itself.
+            var pipelineError = await Record.ExceptionAsync(() => pipeline.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(pipelineError);
+            Assert.Contains(failure, AllCauses(pipelineError!));
+
+            var sourceError = await Record.ExceptionAsync(() => source.LastAdmitted.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(sourceError);
+            Assert.Contains(failure, AllCauses(sourceError!));
         }
-        finally { window.Close(); }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release, additionalOriginals: [pipeline, source.LastAdmitted], expectedCause: failure);
+        }
+    }
+
+    /// <summary>A deterministic held readiness barrier proving the real host Show is genuinely
+    /// incomplete until released. It DELIBERATELY ignores cancellation (matching the contract that
+    /// readiness/actions ignoring cancellation keep close genuinely pending), while still observing
+    /// when the host requested cancellation of the show.</summary>
+    private sealed class HeldReadiness : ICuiSceneReadiness
+    {
+        private readonly TaskCompletionSource<CuiSceneAvailability> _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<CuiSceneAvailability> _released = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _cancellationObserved = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task Entered => _entered.Task;
+        public Task CancellationObserved => _cancellationObserved.Task;
+        public int CheckCount;
+        public void Release() => _released.TrySetResult(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "ready", "ready"));
+        public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken)
+        {
+            CheckCount++;
+            _entered.TrySetResult(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "observed", "observed"));
+            cancellationToken.Register(() => _cancellationObserved.TrySetResult());
+            return new ValueTask<CuiSceneAvailability>(_released.Task); // deliberately ignores cancellation
+        }
     }
 
     [AvaloniaFact]
-    public async Task Close_before_init_withdraws_and_joins_initialization_without_deadlock()
+    public async Task Close_before_init_holds_then_joins_same_show_and_close()
+    {
+        var source = new RecordingSource();
+        var readiness = new HeldReadiness();
+        var view = new ChatComposerCuiView(source, readiness);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        Task? init = null;
+        Task? close = null;
+        try
+        {
+            init = view.InitializeAsync();
+            // Prove readiness actually entered and raw Show/guarded init are genuinely incomplete.
+            await readiness.Entered.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(1, readiness.CheckCount);
+            Assert.False(init.IsCompleted);
+
+            // Close while the real show is still held: it withdraws, joins the SAME init/host,
+            // and stays genuinely pending until readiness (which ignores cancellation) is released.
+            close = view.CloseAsync();
+            Assert.False(close.IsCompleted);
+            await readiness.CancellationObserved.WaitAsync(TimeSpan.FromSeconds(10));
+            // The cancellation was requested but readiness ignores it => close stays genuinely pending.
+            Assert.False(close.IsCompleted);
+            Assert.Same(close, view.CloseAsync()); // repeated close shares the same real task
+
+            readiness.Release();
+            // The host withdrawal cancels the in-flight show, so init settles faulted/canceled
+            // with the owner-withdrawal cause; close joins it and must NOT report false success.
+            var initError = await ObserveTask(init).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.NotNull(initError);
+            var closeError = await ObserveTask(close).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.NotNull(closeError);
+            // close genuinely joined the withdrawal: a cancellation/owner-withdrawal cause is
+            // retained (never laundered into a clean receipt).
+            Assert.Contains(AllCauses(closeError!), e => e is OperationCanceledException);
+            Assert.Equal(1, readiness.CheckCount); // close created no second init/Show
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: readiness.Release, allowOwnerWithdrawal: true);
+        }
+    }
+
+    private static async Task<Exception?> ObserveTask(Task task)
+    {
+        try { await task.ConfigureAwait(false); return null; }
+        catch (Exception error) { return error; }
+    }
+
+    [AvaloniaFact]
+    public async Task Reentrant_close_withdraws_remaining_edit_callbacks_while_the_original_action_is_held()
+    {
+        var source = new HeldOperationSource { Draft = "draft" };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        Task? pipeline = null;
+        Task? close = null;
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            var button = FindButton(view, "send-button");
+            Assert.NotNull(box);
+            Assert.NotNull(button);
+            Assert.True(button!.IsEnabled);
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+
+            var laterTextCallbacks = 0;
+            var invalidations = 0;
+            view.Input.TextChanged += (_, _) => close = view.CloseAsync();
+            view.Input.TextChanged += (_, _) => laterTextCallbacks++;
+            view.Input.Invalidated += (_, _) => invalidations++;
+
+            // This real synchronous edit closes from the FIRST typed edit callback. Neither a
+            // later subscriber nor the subsequent invalidation may publish after withdrawal.
+            box!.Text = "closing edit";
+            Assert.NotNull(close);
+            Assert.Same(close, view.CloseAsync());
+            Assert.False(close!.IsCompleted);
+            Assert.Equal(0, laterTextCallbacks);
+            Assert.Equal(0, invalidations);
+            view.Input.Text = "late edit";
+            Assert.Equal("closing edit", box.Text);
+
+            await Task.Run(source.Release);
+            await pipeline.WaitAsync(TimeSpan.FromSeconds(10));
+            await close.WaitAsync(TimeSpan.FromSeconds(10));
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release, additionalOriginals: [pipeline, source.LastAdmitted]);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_send_close_withdraws_late_input_and_releases_only_after_ack()
+    {
+        var source = new HeldOperationSource();
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        Task? pipeline = null;
+        Task? close = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            source.Draft = "draft";
+            var sendButton = FindButton(view, "send-button");
+            Assert.NotNull(sendButton);
+            sendButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(1, source.SendStarted);
+            Assert.True(source.IsPending);
+
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Text = "original";
+
+            close = view.CloseAsync();
+            Assert.False(close.IsCompleted);
+
+            // Producer retirement: late writes/selection/caret/focus cannot reach the real TextBox.
+            view.Input.Text = "late write";
+            Assert.Equal("original", box.Text);
+            var selStartBefore = box.SelectionStart;
+            var selLenBefore = box.SelectionEnd - box.SelectionStart;
+            view.Input.SetSelection(0, 3);
+            view.Input.PlaceCaretAtEnd();
+            view.Input.Focus();
+            Assert.Equal(selStartBefore, box.SelectionStart);
+            Assert.Equal(selLenBefore, box.SelectionEnd - box.SelectionStart);
+
+            // Release the held source on a worker thread; only then does the child ACK and the
+            // physical input get terminally released.
+            await Task.Run(() => source.Release());
+            await pipeline.WaitAsync(TimeSpan.FromSeconds(10));
+            await close.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(source.IsPending);
+            Assert.Equal(string.Empty, view.Input.Text); // terminal release after ACK
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release, additionalOriginals: [pipeline, source.LastAdmitted]);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Faulted_held_send_close_retains_input_and_same_failed_close()
+    {
+        var source = new HeldOperationSource();
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        var failure = new IOException("send backend failed");
+        Task? pipeline = null;
+        Task? close = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            source.Draft = "draft";
+            view.Input.Text = "retained";
+            var sendButton = FindButton(view, "send-button");
+            Assert.NotNull(sendButton);
+            sendButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+
+            close = view.CloseAsync();
+            Assert.False(close.IsCompleted);
+
+            await Task.Run(() => source.Fault(failure));
+
+            var closeError = await Record.ExceptionAsync(() => close.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(closeError);
+            Assert.Contains(failure, AllCauses(closeError!));
+            var pipelineError = await Record.ExceptionAsync(() => pipeline.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(pipelineError);
+            Assert.Contains(failure, AllCauses(pipelineError!));
+
+            // Faulted close retains input custody: the port is not terminally released and the
+            // retained reference stays readable (host may clear its Content, but we hold the box).
+            Assert.Equal("retained", view.Input.Text);
+            // Repeated close returns the SAME failed task; no second release attempt.
+            Assert.Same(close, view.CloseAsync());
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release, additionalOriginals: [pipeline, source.LastAdmitted], expectedCause: failure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Capture_refuses_pre_init_after_withdrawal_and_off_thread()
+    {
+        var source = new RecordingSource();
+        var readiness = new HeldReadiness();
+        var view = new ChatComposerCuiView(source, readiness);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            // The SAME guarded init task is returned on repeated calls.
+            var init = view.InitializeAsync();
+            Assert.Same(init, view.InitializeAsync());
+
+            // Pre-init (guarded attach not yet successful): capture is refused.
+            await readiness.Entered.WaitAsync(TimeSpan.FromSeconds(10));
+            var preInitError = await Record.ExceptionAsync(() => view.CaptureOriginalActionSettlement());
+            Assert.NotNull(preInitError);
+
+            readiness.Release();
+            try { await init.WaitAsync(TimeSpan.FromSeconds(10)); } catch { /* owner withdrawal */ }
+
+            // After guarded init succeeds, capture works and returns the actual loader snapshot.
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            source.Draft = "draft";
+            var sendButton = FindButton(view, "send-button");
+            Assert.NotNull(sendButton);
+            sendButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var pipeline = view.CaptureOriginalActionSettlement();
+            Assert.NotNull(pipeline);
+
+            // After withdrawal/close, capture is refused.
+            await view.CloseAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            var afterCloseError = await Record.ExceptionAsync(() => view.CaptureOriginalActionSettlement());
+            Assert.NotNull(afterCloseError);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: readiness.Release, allowOwnerWithdrawal: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Capture_refuses_off_ui_thread()
     {
         var source = new RecordingSource();
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Content = view };
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var error = await Record.ExceptionAsync(() => Task.Run(() => view.CaptureOriginalActionSettlement()));
+            Assert.NotNull(error);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    /// <summary>Recording native registrar that delegates real identity-safe mapping, records
+    /// UI-thread access and exact instance/count, and can fault on Unregister or reenter the real
+    /// release method (proving publication-before-callback).</summary>
+    private sealed class RecordingRegistrar : IHavenNativeControlRegistrar
+    {
+        private readonly ChatGenUiNativeControlResolver _mapping = new();
+        public int RegisterCount;
+        public int UnregisterCount;
+        public bool LastRegisterOnUI;
+        public bool LastUnregisterOnUI;
+        public Exception? UnregisterFault;
+        public Action? OnUnregister;
+
+        public bool TryCreate(HavenElement element, out Control? control)
+        {
+            return _mapping.TryCreate(element, out control);
+        }
+
+        public void Register(HavenElement element, Control control)
+        {
+            RegisterCount++;
+            LastRegisterOnUI = Dispatcher.UIThread.CheckAccess();
+            _mapping.Register(element, control);
+        }
+
+        public void Unregister(HavenElement element, Control control)
+        {
+            UnregisterCount++;
+            LastUnregisterOnUI = Dispatcher.UIThread.CheckAccess();
+            OnUnregister?.Invoke();
+            if (UnregisterFault is not null) throw UnregisterFault;
+            _mapping.Unregister(element, control);
+        }
+
+        public bool IsRegistered(HavenElement element) => _mapping.TryCreate(element, out _);
+    }
+
+    [AvaloniaFact]
+    public async Task Parent_native_registrar_holds_mapping_until_child_ack_then_unregisters_once_on_ui()
+    {
+        var registrar = new RecordingRegistrar();
+        var scene = new ChatHavenScene(registrar);
+        var window = new Window { Width = 900, Height = 700, Content = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = scene.Root } };
+        window.Show();
+        Exception? testFailure = null;
+        Task? release = null;
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            Assert.Equal(1, registrar.RegisterCount);
+            Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
+            Assert.True(FindInput(scene.ComposerView)!.Bounds.Width > 0);
+            Assert.True(registrar.TryCreate(scene.ComposerHost, out var mapped));
+            Assert.Same(scene.ComposerView, mapped);
+            Assert.True(registrar.LastRegisterOnUI);
+            Assert.True(registrar.IsRegistered(scene.ComposerHost));
+
+            // A held child action keeps the physical mapping until a positive child ACK.
+            scene.ComposerDirectSend = _ => new ValueTask(held.Task);
+            scene.Input.Text = "draft";
+            var sendButton = FindButton(scene.ComposerView, "send-button");
+            Assert.NotNull(sendButton);
+            Assert.True(sendButton!.IsEnabled);
+            sendButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var pipeline = scene.ComposerView.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+
+            release = scene.JoinComposerCloseAndReleaseAsync();
+            Assert.False(release.IsCompleted);
+            Assert.True(registrar.IsRegistered(scene.ComposerHost)); // not released pre-ACK
+
+            // Reenter the real release method DURING Unregister: it must return the SAME published
+            // release task (published before the callback), never a fresh attempt.
+            registrar.OnUnregister = () =>
+            {
+                var reentered = scene.JoinComposerCloseAndReleaseAsync();
+                Assert.Same(release, reentered);
+            };
+
+            // Release the held source on a worker thread; child ACKs; only then unregister once on UI.
+            await Task.Run(() => held.TrySetResult());
+            await release.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(1, registrar.UnregisterCount);
+            Assert.True(registrar.LastUnregisterOnUI);
+            Assert.False(registrar.IsRegistered(scene.ComposerHost));
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, scene.ComposerView, testFailure, additionalOriginals: [scene.JoinComposerCloseAndReleaseAsync()], release: () => held.TrySetResult());
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Parent_failed_unregister_retains_same_release_task_no_second_unregister()
+    {
+        var registrar = new RecordingRegistrar { UnregisterFault = new IOException("unregister failed") };
+        var scene = new ChatHavenScene(registrar);
+        var window = new Window { Width = 900, Height = 700, Content = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = scene.Root } };
+        window.Show();
+        Exception? testFailure = null;
+        Task? release = null;
+        try
+        {
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            Assert.Equal(1, registrar.RegisterCount);
+            Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
+            Assert.True(FindInput(scene.ComposerView)!.Bounds.Width > 0);
+            Assert.True(registrar.TryCreate(scene.ComposerHost, out var mapped));
+            Assert.Same(scene.ComposerView, mapped);
+
+            // Child close ACKs (no held action) then Unregister faults.
+            release = scene.JoinComposerCloseAndReleaseAsync();
+            var error = await Record.ExceptionAsync(() => release.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(error);
+            Assert.Contains(registrar.UnregisterFault!, AllCauses(error!));
+            Assert.Equal(1, registrar.UnregisterCount); // exactly one attempt
+
+            // Repeated/reentrant join returns the SAME failed release task; no retry/unregister.
+            var releaseAgain = scene.JoinComposerCloseAndReleaseAsync();
+            Assert.Same(release, releaseAgain);
+            Assert.Equal(1, registrar.UnregisterCount);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, scene.ComposerView, testFailure, additionalOriginals: [scene.JoinComposerCloseAndReleaseAsync()], expectedCause: registrar.UnregisterFault);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Parent_child_fault_keeps_original_mapping_without_unregistering()
+    {
+        var registrar = new RecordingRegistrar();
+        var scene = new ChatHavenScene(registrar);
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failure = new IOException("held child failed");
+        var window = new Window
+        {
+            Width = 900, Height = 700,
+            Content = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = scene.Root }
+        };
+        Task? pipeline = null;
+        Task? release = null;
+        Exception? testFailure = null;
         window.Show();
         try
         {
-            // Close while initialization is still in flight: the close joins it and withdraws
-            // producers, instead of skipping withdrawal when init is late/faulted.
-            var init = view.InitializeAsync();
-            var close = view.CloseAsync();
-            await close.WaitAsync(TimeSpan.FromSeconds(10));
-            await init.WaitAsync(TimeSpan.FromSeconds(10));
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
+            Assert.True(FindInput(scene.ComposerView)!.Bounds.Width > 0);
+            scene.ComposerDirectSend = _ => new ValueTask(held.Task);
+            scene.Input.Text = "draft";
+            var button = FindButton(scene.ComposerView, "send-button");
+            Assert.NotNull(button);
+            Assert.True(button!.IsEnabled);
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            pipeline = scene.ComposerView.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+            release = scene.JoinComposerCloseAndReleaseAsync();
+            Assert.False(release.IsCompleted);
 
-            // Repeated close requests share the SAME completed task; no duplicate work.
-            var closeAgain = view.CloseAsync();
-            Assert.Same(close, closeAgain);
-
-            // Physical input is released: a late write cannot publish after close.
-            view.Input.Text = "should not publish";
-            Assert.Equal(string.Empty, view.Input.Text);
-            Assert.Null(FindInput(view));
+            await Task.Run(() => held.TrySetException(failure));
+            var parentError = await Record.ExceptionAsync(() => release.WaitAsync(TimeSpan.FromSeconds(10)));
+            var actionError = await Record.ExceptionAsync(() => pipeline.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(parentError);
+            Assert.NotNull(actionError);
+            Assert.Contains(failure, AllCauses(parentError!));
+            Assert.Contains(failure, AllCauses(actionError!));
+            Assert.Equal(0, registrar.UnregisterCount);
+            Assert.True(registrar.TryCreate(scene.ComposerHost, out var mapped));
+            Assert.Same(scene.ComposerView, mapped);
+            Assert.Same(release, scene.JoinComposerCloseAndReleaseAsync());
+            Assert.Equal(0, registrar.UnregisterCount);
         }
-        finally { window.Close(); }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, scene.ComposerView, testFailure,
+                release: () => held.TrySetResult(),
+                additionalOriginals: [pipeline, scene.JoinComposerCloseAndReleaseAsync(), held.Task],
+                expectedCause: failure);
+        }
+    }
+
+    private static async Task FinishComposerTestAsync(Window window, ChatComposerCuiView view,
+        Exception? testFailure, Action? release = null, Task?[]? additionalOriginals = null,
+        Exception? expectedCause = null, bool allowOwnerWithdrawal = false)
+    {
+        var failures = new List<Exception>();
+        var originals = new List<Task>();
+        try { release?.Invoke(); }
+        catch (Exception error) { failures.Add(error); }
+        // Acquire both duties independently: a failed acquisition/join cannot skip its sibling.
+        try { originals.Add(view.InitializeAsync()); }
+        catch (Exception error) { failures.Add(error); }
+        try { originals.Add(view.CloseAsync()); }
+        catch (Exception error) { failures.Add(error); }
+        if (additionalOriginals is not null)
+            originals.AddRange(additionalOriginals.OfType<Task>());
+        foreach (var original in originals.Distinct())
+        {
+            try { await original.WaitAsync(TimeSpan.FromSeconds(10)); }
+            catch (Exception error)
+            {
+                var causes = AllCauses(error).ToArray();
+                if (causes.Length > 0 && causes.All(cause => ReferenceEquals(cause, expectedCause) ||
+                    (allowOwnerWithdrawal && cause is OperationCanceledException))) continue;
+                failures.Add(error);
+            }
+        }
+        try { window.Close(); }
+        catch (Exception error) { failures.Add(error); }
+        if (failures.Count == 0) return;
+        if (testFailure is not null) failures.Insert(0, testFailure);
+        throw new AggregateException("Composer test and independent original cleanup failed.", failures);
     }
 
     private static IEnumerable<Exception> AllCauses(Exception error)

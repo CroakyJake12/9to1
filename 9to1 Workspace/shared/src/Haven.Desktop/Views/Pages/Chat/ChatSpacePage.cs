@@ -381,10 +381,11 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         await actual.ConfigureAwait(false);
         // Join the exact shared-composer child close published during Stop. Only after the child
         // acknowledged is the physical view released; a failed close preserves physical ownership
-        // and remains observable as an independent cleanup failure.
+        // and remains observable as an independent cleanup failure. The release is marshaled to
+        // the UI thread (the view disposes real visual-tree/native resources).
         var composerClose = _composerClose ?? _composerView.CloseAsync();
         await composerClose.ConfigureAwait(false);
-        _composerView.Dispose();
+        await Dispatcher.UIThread.InvokeAsync(() => _composerView.Dispose()).GetTask().ConfigureAwait(false);
     }
 
     public void Dispose() => RequestRetirement();

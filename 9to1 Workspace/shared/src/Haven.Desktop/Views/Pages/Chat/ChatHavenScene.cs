@@ -1,4 +1,5 @@
-﻿using Haven.Core;
+﻿using Avalonia.Threading;
+using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.HavenUI.Tokens;
 using Haven.Desktop.Prefabs;
@@ -63,8 +64,9 @@ internal sealed partial class ChatHavenScene : IDisposable
     private bool _disposed;
     private readonly Task _composerInit;
     private Task? _composerClose;
-    private bool _composerClosing;
+    private Task? _composerReleaseTask;
     private bool _composerReleased;
+    private readonly object _composerCloseGate = new();
 
     /// <summary>Constructs a scene with its own transport resolver (used by tests/hosts that do
     /// not share a scene-level native resolver).</summary>
@@ -770,33 +772,51 @@ internal sealed partial class ChatHavenScene : IDisposable
     public Task ComposerInitialization => _composerInit;
 
     /// <summary>Starts the shared composer's child close (withdraws its producers and detaches its
-    /// watchers) and publishes the one close task the parent joins during cleanup.</summary>
+    /// watchers) and publishes the one close task the parent joins during cleanup. The SAME close
+    /// original is returned on every call; no CompletedTask stand-in is ever fabricated.</summary>
     public Task StartComposerClose()
     {
-        if (_composerClosing) return _composerClose ?? Task.CompletedTask;
-        _composerClosing = true;
-        _composerClose = ComposerView.CloseAsync();
-        return _composerClose;
+        lock (_composerCloseGate)
+        {
+            _composerClose ??= ComposerView.CloseAsync();
+            return _composerClose;
+        }
     }
 
     /// <summary>Joins the exact shared-composer close and then releases the native resolver mapping
-    /// and physical view. Close faults stay observable by the caller.</summary>
-    public async Task JoinComposerCloseAndReleaseAsync()
+    /// and physical view. ONE SAME release-attempt task is published before any Unregister/Dispose
+    /// callback can reenter; the child must ACK before any physical release, release-success is only
+    /// recorded after the native unregister and view dispose actually succeed, and a failed Unregister
+    /// stays the SAME retained fault (never silently retried on a later call).</summary>
+    public Task JoinComposerCloseAndReleaseAsync()
     {
-        if (_composerReleased) return;
-        var close = StartComposerClose();
-        await close.ConfigureAwait(false);
-        ReleaseComposer();
+        lock (_composerCloseGate)
+        {
+            if (_composerReleaseTask is not null) return _composerReleaseTask;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _composerReleaseTask = JoinComposerCloseAndReleaseCoreAsync(start.Task);
+            start.SetResult(); // the release attempt is published before any Unregister/dispose callback
+            return _composerReleaseTask;
+        }
     }
 
-    private void ReleaseComposer()
+    private async Task JoinComposerCloseAndReleaseCoreAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        var close = StartComposerClose();
+        await close.ConfigureAwait(false); // child ACK required before any physical release
+        await Dispatcher.UIThread.InvokeAsync(ReleaseComposerUi).GetTask().ConfigureAwait(false);
+    }
+
+    private void ReleaseComposerUi()
     {
         if (_composerReleased) return;
-        _composerReleased = true;
         // Detach/unregister only after the child close acknowledged. Resolver unregister failures
-        // are not swallowed; they remain observable to the joining caller.
+        // are not swallowed and do not set success state; they remain observable as the SAME
+        // retained release-attempt task.
         _nativeResolver.Unregister(ComposerHost, ComposerView);
         ComposerView.Dispose();
+        _composerReleased = true;
     }
 
     public void Dispose()
@@ -814,6 +834,9 @@ internal sealed partial class ChatHavenScene : IDisposable
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
         _composerQueue?.Dispose();
         _addMenu.Dispose();
-        ReleaseComposer();
+        // Synchronous Dispose requests the SAME child close but cannot claim the async join
+        // completed or release the physical mapping early; that release follows the joined ACK
+        // path (JoinComposerCloseAndReleaseAsync) owned by the page lifecycle.
+        StartComposerClose();
     }
 }

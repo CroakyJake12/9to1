@@ -289,6 +289,10 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
     private readonly CuiComposerInputPort _input;
     private readonly object _initGate = new();
     private Task<CuiSceneAvailability>? _initializeTask;
+    /// <summary>The EXACT raw host Show task retained for loader settlement capture. This is a
+    /// distinct identity from the public guarded initialization wrapper; only this raw task can
+    /// be handed to <see cref="CuiSceneHost.CaptureOriginalActionSettlement"/>.</summary>
+    private Task<CuiSceneAvailability>? _rawShowTask;
     private readonly object _closeGate = new();
     private Task? _closeTask;
     private bool _closing;
@@ -296,8 +300,18 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
 
     public ChatComposerCuiView(IChatComposerSource source, string? owningAppId = null,
         CuiThemePreferenceContext? themePreference = null)
+        : this(source, ChatComposerReadiness.Instance, owningAppId, themePreference)
+    {
+    }
+
+    /// <summary>Readiness injection seam used by tests to hold/observe the real host show
+    /// pipeline; defaults to production readiness. The SAME production host/loader/document/input
+    /// are exercised, never an alternate renderer.</summary>
+    internal ChatComposerCuiView(IChatComposerSource source, ICuiSceneReadiness readiness,
+        string? owningAppId = null, CuiThemePreferenceContext? themePreference = null)
     {
         _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)));
+        _readiness = readiness ?? ChatComposerReadiness.Instance;
         var registry = new CuiControlRegistry();
         _host = new CuiSceneHost(registry);
         AutomationProperties.SetAutomationId(this, "ChatComposerCuiView");
@@ -313,6 +327,7 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
 
     private readonly string? _owningAppId;
     private readonly CuiThemePreferenceContext? _themePreference;
+    private readonly ICuiSceneReadiness _readiness;
 
     public IChatComposerInputPort Input => _input;
     public ChatComposerBindings Bindings => _bindings;
@@ -329,20 +344,24 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
             {
                 var scene = new CuiNativeScene(
                     _owningAppId ?? "spaces.chat.composer", "Chat Composer", "Chat",
-                    ChatComposerCuiDocument.Load(), _bindings, _bindings, ChatComposerReadiness.Instance)
+                    ChatComposerCuiDocument.Load(), _bindings, _bindings, _readiness)
                 {
                     ThemePreference = _themePreference,
                     IsPublicationCurrent = () => !_closing
                 };
-                _initializeTask = ShowGuardedAsync(scene, cancellationToken);
+                // Retain the EXACT raw host Show task for loader settlement capture; the public
+                // guarded initialization wrapper is a distinct task identity.
+                var rawShow = _host.ShowAsync(scene, cancellationToken);
+                _rawShowTask = rawShow;
+                _initializeTask = ShowGuardedAsync(rawShow, cancellationToken);
             }
             return _initializeTask;
         }
     }
 
-    private async Task<CuiSceneAvailability> ShowGuardedAsync(CuiNativeScene scene, CancellationToken cancellationToken)
+    private async Task<CuiSceneAvailability> ShowGuardedAsync(Task<CuiSceneAvailability> rawShow, CancellationToken cancellationToken)
     {
-        var availability = await _host.ShowAsync(scene, cancellationToken).ConfigureAwait(false);
+        var availability = await rawShow.ConfigureAwait(false);
         if (_closing) return availability;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -351,43 +370,76 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         return availability;
     }
 
-    /// <summary>Publishes one child close task. The parent joins this exact task during cleanup;
-    /// repeated close requests share the SAME task, and no duplicate work is admitted after it.</summary>
+    /// <summary>
+    /// Captures the ACTUAL loader action-settlement pipeline for actions admitted on this
+    /// composer, using the exact original raw Show task. External callers join this snapshot
+    /// outside any included action (an action must never await a snapshot containing itself).
+    /// Requires UI-thread access, a successful guarded initialization/input attachment AND an
+    /// exact retained raw host Show; raw Show ready alone does not mean the real input is wired,
+    /// so capture is refused before that guarded attachment succeeds, after withdrawal/close, or
+    /// when no retained raw Show exists.
+    /// </summary>
+    public Task CaptureOriginalActionSettlement()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        Task<CuiSceneAvailability>? rawShow;
+        Task<CuiSceneAvailability>? initTask;
+        lock (_initGate)
+        {
+            rawShow = _rawShowTask;
+            initTask = _initializeTask;
+        }
+        if (rawShow is null || _closing || initTask is null || !initTask.IsCompletedSuccessfully)
+            throw new InvalidOperationException("The composer has no completed live initialization to capture from.");
+        return _host.CaptureOriginalActionSettlement(rawShow);
+    }
+
+    /// <summary>Publishes one child close task BEFORE any close callback can reenter, mirroring the
+    /// host start-gate pattern. The parent joins this exact task during cleanup; repeated close
+    /// requests share the SAME task, and no duplicate work is admitted after it.</summary>
     public Task CloseAsync()
     {
         lock (_closeGate)
         {
             if (_closeTask is not null) return _closeTask;
             _closing = true;
-            _closeTask = CloseOriginalCoreAsync();
+            _input.Withdraw(); // producer retirement begins before any close callback reentry
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _closeTask = CloseOriginalCoreAsync(start.Task);
+            start.SetResult(); // original is published before the close body/callbacks run
             return _closeTask;
         }
     }
 
-    private async Task CloseOriginalCoreAsync()
+    private async Task CloseOriginalCoreAsync(Task start)
     {
+        await start.ConfigureAwait(false);
         // Withdraw producers/action admission first: start the host close independently of the
         // initialization, so a cancellation or fault in init can never skip withdrawal.
         var hostClose = _host.CloseOriginalAsync();
         var faults = new List<Exception>();
+
+        // Join the complete actual initialization independently, retaining its fault.
+        Task<CuiSceneAvailability>? initTask;
+        lock (_initGate) initTask = _initializeTask;
+
         try { await hostClose.ConfigureAwait(false); }
         catch (Exception error) { faults.Add(error); }
 
-        // Join the complete actual initialization independently, retaining its fault.
-        Task? initTask;
-        lock (_initGate) initTask = _initializeTask;
         if (initTask is not null)
         {
             try { await initTask.ConfigureAwait(false); }
             catch (Exception error) { faults.Add(error); }
         }
 
-        // Only after the child acknowledged settled work is the physical input released.
-        // A late attach is already refused by `_closing`, so no publish can follow close.
-        _input.Detach();
-
-        try { _host.Dispose(); }
-        catch (Exception error) { faults.Add(error); }
+        // Physical input watcher detach happens ONLY after both the host close and initialization
+        // acknowledged (positive ACK). A faulted close is not approval: references stay owned for
+        // the caller and no terminal Detach hides the failure. The release itself is marshaled to
+        // the UI thread because these are real TextBox subscriptions/visual-tree operations.
+        if (faults.Count == 0)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => _input.Detach()).GetTask().ConfigureAwait(false);
+        }
 
         if (faults.Count == 1) throw faults[0];
         if (faults.Count > 1) throw new AggregateException(faults);
@@ -444,6 +496,7 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
     private TextBox? _attached;
     private string? _pendingText;
     private bool _released;
+    private volatile bool _withdrawn;
     private EventHandler<TextChangingEventArgs>? _textChangingHandler;
     private EventHandler<RoutedEventArgs>? _gotFocusHandler;
     private EventHandler<RoutedEventArgs>? _lostFocusHandler;
@@ -456,12 +509,29 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
 
     /// <summary>Attaches the real input. The first attach keeps the input live; a later resolved
     /// input replaces watchers without releasing the port. After terminal <see cref="Detach"/>
-    /// retirement any late attach is refused.</summary>
+    /// retirement or retirement onset (<see cref="Withdraw"/>) any late attach is refused.</summary>
     internal void Attach(TextBox box)
     {
-        if (_released) return;
+        Dispatcher.UIThread.VerifyAccess();
+        if (_released || _withdrawn) return;
         if (ReferenceEquals(box, _attached)) return;
         ReplaceWatchers(box);
+    }
+
+    /// <summary>
+    /// Generic producer-retirement gate, separate from terminal physical <see cref="Detach"/>.
+    /// Called when close begins: it stops any late attach, text/selection/caret/focus mutation and
+    /// watcher/focus producer callbacks from reaching the real TextBox, while RETAINING the retained
+    /// input/watcher/mapping custody so failed/pending close can be recovered by the owning caller.
+    /// Terminal unsubscribe and reference clearing only ever happen later on a successful ACK via
+    /// <see cref="Detach"/>.
+    /// </summary>
+    internal void Withdraw()
+    {
+        // This gate may be set by an external close owner on another thread. Keep all physical
+        // watcher/input custody until the acknowledged UI-thread Detach below. Removing a handler
+        // here would neither stop its already-running invocation nor preserve UI-thread ownership.
+        _withdrawn = true;
     }
 
     private void ReplaceWatchers(TextBox box)
@@ -484,20 +554,33 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
         // the real value is captured before the clear: this is the actual edit signal.
         _textChangingHandler = (_, _) =>
         {
-            TextChanged?.Invoke(this, EventArgs.Empty);
-            Invalidated?.Invoke(this, EventArgs.Empty);
+            NotifyLiveInputSubscribers(TextChanged);
+            NotifyLiveInputSubscribers(Invalidated);
         };
-        _gotFocusHandler = (_, _) => _onFocusChanged?.Invoke(true);
-        _lostFocusHandler = (_, _) => _onFocusChanged?.Invoke(false);
+        _gotFocusHandler = (_, _) => { if (!_released && !_withdrawn) _onFocusChanged?.Invoke(true); };
+        _lostFocusHandler = (_, _) => { if (!_released && !_withdrawn) _onFocusChanged?.Invoke(false); };
         box.TextChanging += _textChangingHandler;
         box.GotFocus += _gotFocusHandler;
         box.LostFocus += _lostFocusHandler;
+    }
+
+    private void NotifyLiveInputSubscribers(EventHandler? subscribers)
+    {
+        if (subscribers is null) return;
+        foreach (EventHandler subscriber in subscribers.GetInvocationList())
+        {
+            // A subscriber may synchronously close the owner. Recheck before EACH subsequent
+            // callback, including the transition from TextChanged to Invalidated.
+            if (_released || _withdrawn) return;
+            subscriber(this, EventArgs.Empty);
+        }
     }
 
     /// <summary>Terminal release: detaches every named watcher, clears retained textbox
     /// references and refuses any later attach. Used only on retirement/close.</summary>
     internal void Detach()
     {
+        Dispatcher.UIThread.VerifyAccess();
         if (_attached is { } box)
         {
             if (_textChangingHandler is not null) box.TextChanging -= _textChangingHandler;
@@ -517,7 +600,8 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
         get
         {
             if (_released) return null;
-            if (_attached is not null) return _attached;
+            if (_attached is not null) return _attached; // retained for reads/recovery after withdrawal
+            if (_withdrawn) return null;                  // no late attach after retirement onset
             var box = _resolve();
             if (box is not null) Attach(box);
             return box;
@@ -533,8 +617,8 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
         }
         set
         {
-            // After retirement the port is released; no delayed write may publish after close.
-            if (_released) return;
+            // After retirement onset or terminal release no delayed write may reach the real box.
+            if (_released || _withdrawn) return;
             if (Current is { } box) box.Text = value ?? string.Empty;
             else _pendingText = value ?? string.Empty;
         }
@@ -558,6 +642,7 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
 
     public void PlaceCaretAtEnd(bool extendSelection = false)
     {
+        if (_released || _withdrawn) return;
         if (Current is not { } box) return;
         var length = box.Text?.Length ?? 0;
         if (extendSelection)
@@ -574,6 +659,7 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
 
     public void SetSelection(int anchor, int caret)
     {
+        if (_released || _withdrawn) return;
         if (Current is not { } box) return;
         var length = box.Text?.Length ?? 0;
         var start = Math.Clamp(anchor, 0, length);
@@ -586,11 +672,16 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
 
     public void ClearSelection()
     {
+        if (_released || _withdrawn) return;
         if (Current is not { } box) return;
         var caret = Math.Clamp(box.CaretIndex, 0, box.Text?.Length ?? 0);
         box.SelectionStart = caret;
         box.SelectionEnd = caret;
     }
 
-    public void Focus() => Current?.Focus();
+    public void Focus()
+    {
+        if (_released || _withdrawn) return;
+        Current?.Focus();
+    }
 }
