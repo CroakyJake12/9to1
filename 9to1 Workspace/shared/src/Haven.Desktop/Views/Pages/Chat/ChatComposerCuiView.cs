@@ -173,10 +173,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         if (path == "Composer.EmojiQuery")
         {
             _emojiQuery = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
-            // A new query must never leave the window on a stale page nor let late callbacks
-            // mutate a retired result set: reset to the first page and clamp.
-            _emojiPage = 0;
-            ClampEmojiPage();
+            // A new query restarts the window at the first page: clear the opaque cursor token.
+            // The engine owns all page arithmetic; there is no local page state to clamp.
+            _emojiCursor = null;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
             return true;
         }

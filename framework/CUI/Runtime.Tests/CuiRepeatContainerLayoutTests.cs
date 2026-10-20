@@ -52,7 +52,7 @@ public sealed class CuiRepeatContainerLayoutTests
     public async Task Repeat_items_flow_into_the_owning_wrap_as_individual_cells_with_static_siblings()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
             var model = new CuiViewModel();
@@ -114,7 +114,7 @@ public sealed class CuiRepeatContainerLayoutTests
     public async Task Keyed_add_remove_reorder_preserves_item_identity_and_wrap_positions()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
             var model = new CuiViewModel();
@@ -163,7 +163,7 @@ public sealed class CuiRepeatContainerLayoutTests
     public async Task Two_repeat_ranges_with_static_siblings_all_emit_into_the_owning_container()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
             const string markup = """
@@ -206,7 +206,7 @@ public sealed class CuiRepeatContainerLayoutTests
     public async Task Explicit_legacy_panel_attribute_keeps_the_nested_host_panel_compatibility_escape()
     {
         using var lifetime = new CancellationTokenSource();
-        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
             const string markup = """
