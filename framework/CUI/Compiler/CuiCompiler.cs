@@ -172,17 +172,21 @@ public sealed class CuiCompiler
         if (diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
 
+        var stateful = document.Variables.Count > 0
+            || document.Actions.Values.Any(action => action.LocalTarget is not null);
         var effectiveMetadata = options.Metadata;
-        if (document.Variables.Count > 0
-            || document.Actions.Values.Any(action => action.LocalTarget is not null))
+        if (stateful)
         {
+            // Stateful documents (document-root local variables or pure-local actions) require the
+            // distinct stateful ABI and V2 compiled transport. The ABI is derived from typed
+            // semantics, so stripping/relabelling capability text cannot downgrade a stateful doc.
             var capabilities = new List<string>(options.Metadata.RequiredCapabilities);
             capabilities.Add(CuiRuntimeCompatibility.LocalStateToggleCapability);
             if (document.Variables.Values.Any(declaration => !string.IsNullOrEmpty(declaration.Selection)))
                 capabilities.Add(CuiRuntimeCompatibility.LocalStateRandomSelectCapability);
             effectiveMetadata = new CuiCompilationMetadata(
                 options.Metadata.LanguageVersion,
-                options.Metadata.RuntimeAbiVersion,
+                CuiCompiledArtifactCodec.V2RuntimeAbiVersion,
                 options.Metadata.ComponentRegistryVersion,
                 capabilities.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
         }
@@ -244,6 +248,12 @@ public sealed class CuiCompiler
                     $"Local variable '{declaration.Name}' has unsupported Type '{declaration.Type}'; only bool (or a string RandomOnce source select) is supported in this bounded slice.",
                     declaration.Span);
                 continue;
+            }
+            if (!string.IsNullOrEmpty(declaration.Source))
+            {
+                diagnostics.Error("CUIC039",
+                    $"Local bool variable '{declaration.Name}' declares a Source without Selection; a bool literal cannot carry a candidate pool.",
+                    declaration.Span);
             }
             if (!bool.TryParse(declaration.Value, out _))
             {

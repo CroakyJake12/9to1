@@ -1101,12 +1101,12 @@ public sealed class CuiControlLoader : IDisposable
         // consumers; it is not the canonical repair and is never implied automatically.
         if (!explicitPanel && parent is CuiContainerControl container)
         {
-            var host = new ContainerCellRepeatHost(container, container.AuthoredChildCount);
-            var state = new CuiRepeatState(host, component, layer,
+            var cellHost = new ContainerCellRepeatHost(container, container.AuthoredChildCount);
+            var cellState = new CuiRepeatState(cellHost, component, layer,
                 _bindingContext, _currentRepeatIdentity, _themeNames.Peek(), container);
-            _repeats.Add(state);
-            ReconcileRepeat(state);
-            return new CuiRepeatFragment { State = state };
+            _repeats.Add(cellState);
+            ReconcileRepeat(cellState);
+            return new CuiRepeatFragment { State = cellState };
         }
 
         var panelName = explicitPanel

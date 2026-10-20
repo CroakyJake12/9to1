@@ -65,13 +65,11 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     private string? _emojiQuery;
     private bool _focused;
     private bool _expanded;
-    /// <summary>Bounded emoji picker window size. The full catalogue (3,944 entries at the pinned
-    /// Unicode resource) is never materialised in one Repeat: the typed query exposes one window of
-    /// results plus truthful total/page metadata, and the authored CUI pages through the whole
-    /// catalogue. A window large enough to overflow the grid viewport also gives the scroll owner
-    /// genuine content to scroll within the page.</summary>
-    private const int EmojiPageSize = 48;
-    private int _emojiPage;
+    /// <summary>Opaque cursor token for the picker's current window. It is never decoded or used
+    /// for arithmetic here: the non-visual catalogue query engine owns all pagination math and
+    /// returns the next/previous opaque cursors. The authored CUI binds to the projected result
+    /// metadata and advances the window only through those engine-provided tokens.</summary>
+    private ComposerEmojiCatalogueQuery.Cursor? _emojiCursor;
 
     public ChatComposerBindings(IChatComposerSource source)
     {
@@ -134,25 +132,25 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 value = _emojiQuery ?? string.Empty;
                 return true;
             case "Composer.EmojiEntries":
-                value = EmojiPageEntries();
+                value = CurrentEmojiPage.Items;
                 return true;
             case "Composer.EmojiTotalCount":
-                value = EmojiTotalCount();
+                value = CurrentEmojiPage.TotalCount;
                 return true;
             case "Composer.EmojiPageStart":
-                value = EmojiPageStart;
+                value = CurrentEmojiPage.StartOffset + 1;
                 return true;
             case "Composer.EmojiPageEnd":
-                value = EmojiPageEnd;
+                value = CurrentEmojiPage.StartOffset + CurrentEmojiPage.Items.Count;
                 return true;
             case "Composer.EmojiHasPrevious":
-                value = EmojiHasPrevious;
+                value = CurrentEmojiPage.Prev is not null;
                 return true;
             case "Composer.EmojiHasNext":
-                value = EmojiHasNext;
+                value = CurrentEmojiPage.Next is not null;
                 return true;
             case "Composer.EmojiPageLabel":
-                value = EmojiPageLabel;
+                value = EmojiPageLabel(CurrentEmojiPage);
                 return true;
             case "Composer.EmojiIconCandidates":
                 // Read-only catalogue eligibility: the random-trigger pool. CUI owns the

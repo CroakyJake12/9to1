@@ -14,6 +14,12 @@
       authored ChatSpace.cui against real domain state rather than only parsing it.
     -->
     <ProjectReference Include="..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
+    <!--
+      Test-only reference to the Compiler assembly for the genuine-V1 baseline inspection
+      (CuiV1ArtifactCodec.ReadArtifact) in ChatComposerCompiledTransportTests. This is scoped to
+      the test project only; production Spaces code must not depend on the Compiler assembly.
+    -->
+    <ProjectReference Include="..\..\..\framework\CUI\Compiler\CakeOS.Cui.Compiler.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
