@@ -35,6 +35,16 @@ public interface IChatComposerSource
     bool CanSend { get; }
     bool IsEditing { get; }
     IReadOnlyList<ChatComposerChip> Chips { get; }
+
+    /// <summary>Whether a Voice &amp; Vision surface is available to open from the idle composer.
+    /// The host decides truthfully: false when no live voice runtime/opener is wired.</summary>
+    bool HasVoice { get; }
+
+    /// <summary>Opens the Voice &amp; Vision surface (the full same-session floating pill) for the
+    /// current conversation. The host routes this to the shared IVoiceVisionRuntime; it never
+    /// fabricates a default model or a permissive local-only claim.</summary>
+    ValueTask OpenVoice();
+
     ValueTask Send();
     ValueTask Stop();
     ValueTask Add();
@@ -113,6 +123,9 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.IsEditing":
                 value = _source.IsEditing;
                 return true;
+            case "Composer.HasVoice":
+                value = _source.HasVoice;
+                return true;
             case "Composer.SendLabel":
                 value = _source.IsEditing ? "Update" : "Send";
                 return true;
@@ -182,6 +195,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         {
             "composer.send" => _source.CanSend,
             "composer.add" => _source.HasAdd,
+            "composer.voice" => _source.HasVoice,
             "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => true,
             "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => true,
             _ => true
@@ -198,6 +212,8 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return _source.Stop();
             case "composer.add":
                 return _source.Add();
+            case "composer.voice":
+                return _source.OpenVoice();
             case "composer.settings":
                 _settingsOpen = !_settingsOpen;
                 _emojiOpen = false;

@@ -130,5 +130,9 @@
     <!-- Lane4 shared header/Assistants rail read projections (source-only, NOT RUN). -->
     <Compile Include="AssistantRailIconProjectionTests.cs" />
     <Compile Include="HavenAppHeaderBindingsTests.cs" />
+    <!-- Voice &amp; Vision pill/full CUI compiled-bundle + presentation bindings (source/tests only). -->
+    <Compile Include="VoiceVision/VoiceVisionCuiCompiledTests.cs;VoiceVision/VoiceVisionCuiPresentationTests.cs" />
+    <!-- Shared composer Voice &amp; Vision seam: projection/availability/dispatch (source/tests only). -->
+    <Compile Include="ChatComposerVoiceSeamTests.cs" />
   </ItemGroup>
 </Project>

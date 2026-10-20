@@ -26,6 +26,16 @@ internal sealed partial class ChatHavenScene
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
 
+        /// <summary>Whether this scene has wired a real Voice &amp; Vision opener. Defaults to false
+        /// so no fabricated voice toggle appears until the host provides an opener.</summary>
+        public bool HasVoice { get; set; }
+
+        /// <summary>Optional opener supplied by the host to start/present the shared Voice &amp;
+        /// Vision session. Null keeps HasVoice false (truthful).</summary>
+        public Func<ValueTask>? OpenVoiceDelegate { get; set; }
+
+        public ValueTask OpenVoice() => OpenVoiceDelegate?.Invoke() ?? ValueTask.CompletedTask;
+
         public ValueTask Send() => _scene.HandleComposerSendAsync();
         public ValueTask Stop() { _scene.StopRequested?.Invoke(_scene, EventArgs.Empty); return ValueTask.CompletedTask; }
         public ValueTask Add() { _scene.ShowAddMenu(); return ValueTask.CompletedTask; }
