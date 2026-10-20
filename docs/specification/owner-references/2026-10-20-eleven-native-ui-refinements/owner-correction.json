@@ -1,0 +1,67 @@
+{
+  "authority": "Latest direct owner instructions in current chat; canonical v2 otherwise authoritative",
+  "recorded_at": "2026-10-20T22:46:42.586051+00:00",
+  "requirements": [
+    {
+      "id": 1,
+      "scope": "composer",
+      "requirement": "Send is a centred upward-arrow icon in a circular button. Preserve Send message accessible name and tooltip and circular disabled shape; genuine edit/stop/resume state must remain accurate."
+    },
+    {
+      "id": 2,
+      "scope": "composer",
+      "requirement": "Reduce attachment plus optical size and thickness while keeping comfortable hit target; it is quieter than primary Send."
+    },
+    {
+      "id": 3,
+      "scope": "composer",
+      "requirement": "Emoji/hand-like control needs consistent button treatment and matching visual family. Earlier owner explicitly required random actual emoji and chromeless unselected trigger; a focused asynchronous clarification is pending for random actual emoji versus rounded SVG smiley. Hold only that conflicting glyph decision; advance independent work."
+    },
+    {
+      "id": 4,
+      "scope": "composer",
+      "requirement": "Replace the intricate small symbol by Send with a simpler symbol of comparable weight, accurate for its actual action. Current action is Thread settings, not an invented permission policy."
+    },
+    {
+      "id": 5,
+      "scope": "spaces-recovery",
+      "requirement": "Combine model availability message and Manage local models into one compact status row with proportionate secondary action; remove oversized full-width setup strip and separate tiny sentence layer. Preserve truthful bundled Dulche availability and genuine recovery action."
+    },
+    {
+      "id": 6,
+      "scope": "browser",
+      "requirement": "Vertically centre address text with its trailing arrow in the actual field, addressing real padding/lineheight/layout. Preserve raw editing/copy and readable unfocused view."
+    },
+    {
+      "id": 7,
+      "scope": "spaces-sidebar",
+      "requirement": "Use one consistent left gutter for Chat heading, Recent chats and empty-state content. New chat leading icon and text retain their own coherent indentation."
+    },
+    {
+      "id": 8,
+      "scope": "spaces-sidebar",
+      "requirement": "Use short, smaller and quieter empty-history wording such as No chats yet, with deliberate spacing below Recent chats."
+    },
+    {
+      "id": 9,
+      "scope": "browser-tabs",
+      "requirement": "Active tab highlight includes title and close button as one surface with consistent trailing padding. Increase visible close glyph slightly while preserving comfortable hit target and action ownership."
+    },
+    {
+      "id": 10,
+      "scope": "spaces-rail",
+      "requirement": "Top rail control opens canonical Spaces viewing/management interface and uses requested grid/toolbox symbol. It must not imply or directly perform immediate creation; creation occurs inside that same interface."
+    },
+    {
+      "id": 11,
+      "scope": "browser-model",
+      "requirement": "Replace ambiguous clock-like model symbol with an actual CPU glyph plus genuine percentage as one compact aligned control opening the same universal model selector."
+    }
+  ],
+  "specification_semantics": {
+    "model_percentage": "SPUI-133–136 still apply: beside-model percentage exclusively real selected reasoning-effort tier where supported. It is not hardware utilization/usage; separate usage/context metrics retain their own true labels/provenance. Never invent100% when unconfigured or unsupported.",
+    "same_app": "Canonical shared CUI app/objects/services across Haven and standalone; host-aware shared controls unchanged.",
+    "focus": "Keep visible composer focus outline, genuine draft/selection/undo and keyboard accessibility."
+  },
+  "pending_decision": "Emoji glyph/treatment only; awaiting optional owner clarification while all other work continues."
+}
