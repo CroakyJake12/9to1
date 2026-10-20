@@ -1,7 +1,6 @@
 #if !ANDROID
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
@@ -11,6 +10,7 @@ using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Application.Haven;
 using Haven.Desktop.Accounts;
+using Haven.SharedHeader;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -468,91 +468,21 @@ public sealed partial class App
             return HavenSharedOpenResult.Succeeded();
         }
 
-        /// <summary>Reads the authored Haven shared-panel shell CUI document from the packaged
-        /// compiled transport (hard format/ABI/registry/capability admission) with no raw parser
-        /// fallback.</summary>
+        /// <summary>Reads the authored Haven shared-panel shell CUI document from the GENUINE V1
+        /// compiled transport owned by the Haven.SharedHeader component (hard format/ABI/registry/
+        /// capability admission on the whole bundle) with no raw parser fallback.</summary>
         private static class HavenSharedPanelShellDocument
         {
-            public const string CompiledSourceName = "Views/Pages/Home/HavenSharedPanelShell.cui";
-            public static CuiDocument Load() => CompiledCuiDocument.Load(CompiledSourceName);
+            public static CuiDocument Load() => HavenSharedHeaderDocuments.LoadShell();
         }
 
         /// <summary>Reads the authored Haven notifications CUI document from the packaged compiled
-        /// transport. The compiled bundle is emitted by the CUI build target; if the bundle or the
-        /// requested source is absent this fails fast with a structured load exception rather than
-        /// silently reparsing raw source (BLOCKED on the aligned build emission; see the lane4
-        /// integration patch for the registration).</summary>
+        /// V1 transport. The compiled bundle is emitted by the CUI build target in the
+        /// Haven.SharedHeader component; if the bundle or the requested source is absent this fails
+        /// fast with a structured load exception rather than silently reparsing raw source.</summary>
         private static class HavenNotificationsCuiDocument
         {
-            public const string CompiledSourceName = "Views/Pages/Home/HavenNotifications.cui";
-            public static CuiDocument Load() => CompiledCuiDocument.Load(CompiledSourceName);
-        }
-
-        /// <summary>Shared consumer for the packaged compiled CUI bundle. It validates format,
-        /// version, language, runtime ABI, component registry and required capabilities before the
-        /// validated source snapshot is reconstructed via the canonical parser — exactly the root/
-        /// lane2 agreed V2 corrective transport. No loose raw-source fallback exists.</summary>
-        private static class CompiledCuiDocument
-        {
-            public const string CompiledArtifactResource = "CUI.Compilation.v1";
-
-            public static CuiDocument Load(string sourceName)
-            {
-                var assembly = typeof(UnifiedWorkspaceHost).Assembly;
-                using var stream = assembly.GetManifestResourceStream(CompiledArtifactResource)
-                    ?? throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR069", CuiDiagnosticSeverity.Error,
-                        $"The packaged compiled CUI bundle '{CompiledArtifactResource}' was not found. The project must emit the canonical compiled bundle.", Span));
-                using var buffer = new MemoryStream();
-                stream.CopyTo(buffer);
-                return Load(buffer.ToArray(), sourceName);
-            }
-
-            public static CuiDocument Load(byte[] artifactBytes, string sourceName)
-            {
-                var artifact = CuiCompiledArtifactCodec.ReadArtifact(artifactBytes);
-                if (!string.Equals(artifact.Format, CuiCompiledArtifactCodec.FormatName, StringComparison.Ordinal))
-                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR060", CuiDiagnosticSeverity.Error,
-                        $"Unsupported compiled CUI artifact format '{artifact.Format}'.", Span));
-                if (artifact.FormatVersion != CuiCompiledArtifactCodec.FormatVersion)
-                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR061", CuiDiagnosticSeverity.Error,
-                        $"Unsupported compiled CUI artifact format version {artifact.FormatVersion}.", Span));
-                var document = artifact.Documents.FirstOrDefault(entry => string.Equals(entry.Source, sourceName, StringComparison.Ordinal))
-                    ?? throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR062", CuiDiagnosticSeverity.Error,
-                        $"Compiled CUI bundle does not contain '{sourceName}'.", Span));
-                var metadata = document.Metadata;
-                if (!CuiRuntimeCompatibility.IsLanguageVersionCompatible(metadata.LanguageVersion))
-                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR064", CuiDiagnosticSeverity.Error,
-                        $"Compiled CUI language version '{metadata.LanguageVersion}' is not supported by this runtime.", Span));
-                if (!string.Equals(metadata.RuntimeAbiVersion, CuiRuntimeCompatibility.RuntimeAbiVersion, StringComparison.Ordinal))
-                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR065", CuiDiagnosticSeverity.Error,
-                        $"Compiled CUI runtime ABI '{metadata.RuntimeAbiVersion}' does not match the current runtime ABI '{CuiRuntimeCompatibility.RuntimeAbiVersion}'.", Span));
-                if (!string.Equals(metadata.ComponentRegistryVersion, CuiControlRegistry.ComponentRegistryVersion, StringComparison.Ordinal))
-                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR066", CuiDiagnosticSeverity.Error,
-                        $"Compiled CUI component registry '{metadata.ComponentRegistryVersion}' does not match the current registry '{CuiControlRegistry.ComponentRegistryVersion}'.", Span));
-                foreach (var capability in metadata.RequiredCapabilities)
-                {
-                    if (!CuiRuntimeCompatibility.Capabilities.Contains(capability))
-                        throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                            "CUIR067", CuiDiagnosticSeverity.Error,
-                            $"Compiled CUI document requires unsupported capability '{capability}'.", Span));
-                }
-                // Lane2 owns typed compiled-semantic reconstruction. Until that corrective
-                // transport is merged, the runtime refuses here rather than reconstructing the
-                // loadable model from the raw source snapshot (no SourceText/parser/compiler
-                // fallback). See lane4 integration PATCH B (BLOCKED).
-                throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                    "CUIR070", CuiDiagnosticSeverity.Error,
-                    $"Compiled semantic reconstruction for '{sourceName}' requires the lane2 aligned typed transport, which is not yet merged.", Span));
-            }
-
-            private static readonly CuiSourceSpan Span = CuiSourceSpan.At("compiled.cui", 1, 1);
+            public static CuiDocument Load() => HavenSharedHeaderDocuments.LoadNotifications();
         }
 
         /// <summary>Nonvisual binding context for the authored shared-panel shell. The authored

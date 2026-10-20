@@ -36,6 +36,7 @@
     <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
     <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
+    <ProjectReference Include="..\Haven.SharedHeader\Haven.SharedHeader.csproj" />
     <ProjectReference Include="../../../Accounts/Remote/NineToOne.Accounts.Remote.csproj" />
     <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../../Assistants/HavenOS.Assistants.Core.csproj" />
@@ -81,8 +82,9 @@
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
-    <EmbeddedResource Include="Views/Pages/Home/HavenNotifications.cui" LogicalName="Haven.Desktop.Home.HavenNotifications.cui" />
-    <EmbeddedResource Include="Views/Pages/Home/HavenSharedPanelShell.cui" LogicalName="Haven.Desktop.Home.HavenSharedPanelShell.cui" />
+    <!-- The shared-header shell and notifications documents are owned and compiled by the
+         Haven.SharedHeader component (genuine V1 artifact resource "CUI.Compilation.v1"). They are
+         NOT raw-embedded here; this host consumes the emitted compiled bundle through the component. -->
     <EmbeddedResource Include="Views/Pages/Home/HavenAppHeader.cui" LogicalName="Haven.Desktop.Home.HavenAppHeader.cui" />
     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
