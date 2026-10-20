@@ -112,7 +112,7 @@ public sealed class CuiPopupBackingTests
                 </Button></Container></Theme>
                 """);
             Assert.Empty(loaded.Diagnostics);
-            var window = new Window { Content = loaded.Root, Width = 600, Height = 300 };
+            var window = CuiNativePopupFixture.New(loaded.Root, 600, 300);
             try
             {
                 window.Show(); window.UpdateLayout();
@@ -179,7 +179,7 @@ public sealed class CuiPopupBackingTests
                 </Button></Container></Theme>
                 """);
             Assert.Empty(loaded.Diagnostics);
-            var window = new Window { Content = loaded.Root, Width = 600, Height = 300 };
+            var window = CuiNativePopupFixture.New(loaded.Root, 600, 300);
             try
             {
                 window.Show(); window.UpdateLayout();
@@ -230,7 +230,7 @@ public sealed class CuiPopupBackingTests
                 </Container></Theme>
                 """);
             Assert.Empty(loaded.Diagnostics);
-            var window = new Window { Content = loaded.Root, Width = 500, Height = 300 };
+            var window = CuiNativePopupFixture.New(loaded.Root, 500, 300);
             try
             {
                 window.Show(); window.UpdateLayout();
@@ -266,7 +266,7 @@ public sealed class CuiPopupBackingTests
                 </Button></Container></Theme>
                 """);
             Assert.Empty(loaded.Diagnostics);
-            var window = new Window { Content = loaded.Root, Width = 600, Height = 300 };
+            var window = CuiNativePopupFixture.New(loaded.Root, 600, 300);
             try
             {
                 window.Show(); window.UpdateLayout();
@@ -319,12 +319,12 @@ public sealed class CuiPopupBackingTests
         {
             using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
             var loaded = loader.LoadMarkup("""
-                <Cui><Container Type="Page"><Button Content="Owner"><Container Type="Context Menu">
+                <Cui><Page><Button Content="Owner"><Container Type="Context Menu">
                   <Button Type="Menu Item" Content="Open"/>
-                </Container></Button></Container></Cui>
+                </Container></Button></Page></Cui>
                 """);
             Assert.Empty(loaded.Diagnostics);
-            var window = new Window { Content = loaded.Root, Width = 600, Height = 300 };
+            var window = CuiNativePopupFixture.New(loaded.Root, 600, 300);
             try
             {
                 window.Show(); window.UpdateLayout();
@@ -356,8 +356,8 @@ public sealed class CuiPopupBackingTests
         {
             using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
             var loaded = loader.LoadMarkup("""
-                <Cui><Container Type="Page"><Button Content="Save" tooltip="Save (Ctrl+S)"/>
-                <Button Content="Plain"/></Container></Cui>
+                <Cui><Page><Button Content="Save" tooltip="Save (Ctrl+S)"/>
+                <Button Content="Plain"/></Page></Cui>
                 """);
             Assert.Empty(loaded.Diagnostics);
             // A control WITHOUT an authored tooltip must NOT be configured (no process-wide leakage).
@@ -369,7 +369,7 @@ public sealed class CuiPopupBackingTests
             Assert.True(ToolTip.GetConfigurePopup(authoredButton) == CuiPopupPresentation.RequestTransparency,
                 "the loader must attach the narrow per-control tooltip request path");
 
-            var window = new Window { Content = loaded.Root, Width = 500, Height = 250 };
+            var window = CuiNativePopupFixture.New(loaded.Root, 500, 250);
             try
             {
                 window.Show(); window.UpdateLayout();
