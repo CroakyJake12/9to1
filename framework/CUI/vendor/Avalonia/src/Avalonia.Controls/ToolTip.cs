@@ -113,6 +113,20 @@ namespace Avalonia.Controls
         private CompositeDisposable? _subscriptions;
 
         /// <summary>
+        /// Optional authored configuration applied to the retained popup before each show (idempotent).
+        /// Carries only the public <see cref="Popup"/> type. Used by CUI to route tooltip popups
+        /// through the same per-open transparency request/receipt seam.
+        /// </summary>
+        public Action<Popup>? ConfigurePopup { get; set; }
+
+        /// <summary>
+        /// Host-wide default configuration applied to every newly opened tooltip popup. A host that
+        /// owns all tooltip surfaces (for example the CUI runtime) may set this once; hosts that leave
+        /// it null keep the default tooltip behavior unchanged.
+        /// </summary>
+        public static Action<Popup>? DefaultConfigurePopup { get; set; }
+
+        /// <summary>
         /// Initializes static members of the <see cref="ToolTip"/> class.
         /// </summary>
         static ToolTip()
@@ -414,6 +428,11 @@ namespace Avalonia.Controls
                 _popup.Opened += OnPopupOpened;
                 _popup.Closed += OnPopupClosed;
             }
+
+            // Apply the transparency request before every show (RequestTransparency is idempotent), so
+            // a ConfigurePopup assigned after first creation (for example during template application)
+            // still takes effect, and a host-wide DefaultConfigurePopup covers the very first open.
+            (ConfigurePopup ?? DefaultConfigurePopup)?.Invoke(_popup);
 
             _subscriptions = new CompositeDisposable(new[]
             {

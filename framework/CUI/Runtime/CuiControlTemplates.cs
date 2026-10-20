@@ -23,6 +23,14 @@ namespace CakeOS.Cui.Runtime;
 public static class CuiControlTemplates
 {
     private static readonly Lazy<ResourceDictionary> Catalogue = new(CreateCatalogue);
+
+    static CuiControlTemplates()
+    {
+        // Route every CUI-hosted tooltip through the shared per-open transparency request seam. The
+        // CUI runtime owns all tooltip surfaces in this host; hosts that never set this keep the
+        // default tooltip behavior unchanged.
+        ToolTip.DefaultConfigurePopup = CuiPopupPresentation.RequestTransparency;
+    }
     public static void Populate(IResourceDictionary resources)
     { foreach(var entry in Catalogue.Value) resources[entry.Key]=entry.Value; }
     public static bool TryGet(Type backendType,out IControlTemplate? template)
@@ -161,6 +169,8 @@ public static class CuiControlTemplates
         if(owner.ContextMenu is null)
         {
             var menu=new ContextMenu();
+            // Route the text-input context menu popup through the shared per-open transparency request seam.
+            menu.ConfigurePopup = CuiPopupPresentation.RequestTransparency;
             foreach(var (label,path,action) in new (string,string?,Action)[] { ("Cut","CanCut",owner.Cut),("Copy","CanCopy",owner.Copy),("Paste","CanPaste",owner.Paste),("Select all",null,owner.SelectAll) })
             {
                 var item=new CuiMenuItem { Header=label }; if(path is not null) Bind(item,Control.IsEnabledProperty,owner,path);

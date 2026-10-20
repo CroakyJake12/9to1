@@ -174,6 +174,27 @@ namespace Avalonia.Controls.Primitives
         /// </summary>
         public event EventHandler? Opened;
 
+        /// <summary>
+        /// Occurs just before a newly created native popup-root destination is shown, for every open
+        /// of this popup. The argument carries the real destination (<see cref="PopupRoot"/>, never the
+        /// internal <see cref="IPopupHost"/>) so authored presentation policy can request per-pixel
+        /// alpha BEFORE the destination's first show. Reopening this popup creates a fresh destination,
+        /// so this event is re-raised for each one; subscribers remain lifetime-scoped to this popup.
+        /// </summary>
+        public event EventHandler<PopupBeforeShowEventArgs>? BeforeShow;
+
+        /// <summary>
+        /// Arguments for <see cref="BeforeShow"/>: the fresh native popup-root destination about to be
+        /// shown. Carries only the public <see cref="PopupRoot"/> type.
+        /// </summary>
+        public sealed class PopupBeforeShowEventArgs : EventArgs
+        {
+            public PopupBeforeShowEventArgs(PopupRoot destination) => Destination = destination;
+
+            /// <summary>The fresh native popup destination about to be shown.</summary>
+            public PopupRoot Destination { get; }
+        }
+
         internal event EventHandler<CancelEventArgs>? Closing;
 
         internal IPopupHost? Host => _openState?.PopupHost;
@@ -578,6 +599,29 @@ namespace Avalonia.Controls.Primitives
             _openState = new PopupOpenState(placementTarget, topLevel, popupHost, cleanupPopup);
 
             WindowManagerAddShadowHintChanged(popupHost, WindowManagerAddShadowHint);
+
+            // Narrow authored pre-show seam: notify subscribers (the CUI popup producers) just before
+            // the fresh destination is shown so they can request per-pixel alpha BEFORE its first Show,
+            // for every open of this popup. Only native popup-root destinations are notified; overlay
+            // hosts have no separate destination window. A subscriber exception must never leave the
+            // popup half-open: dispose the fresh host and clear the open state so Open() can retry.
+            if (popupHost is PopupRoot popupRootDestination)
+            {
+                try
+                {
+                    BeforeShow?.Invoke(this, new PopupBeforeShowEventArgs(popupRootDestination));
+                }
+                catch
+                {
+                    popupHost.SetChild(null);
+                    popupHost.Hide();
+                    ((ISetLogicalParent)popupHost).SetParent(null);
+                    popupHost.Dispose();
+                    handlerCleanup.Dispose();
+                    _openState = null;
+                    throw;
+                }
+            }
 
             popupHost.Show();
             IsUsingOverlayLayer = popupHost is OverlayPopupHost;

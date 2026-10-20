@@ -37,7 +37,11 @@ internal sealed class CuiTransparencyFallback : IDisposable
         _fallback = fallback;
         _brushSubscription = owner.GetResourceObservable("CuiPopupOpaqueFallbackBrush")
             .Subscribe(new BrushObserver(value => { _opaqueBrush = value as IBrush; Apply(); }));
-        owner.PropertyChanged += OnPropertyChanged;
+        // Subscribe to the TopLevel transparency REPORT hook (not the ActualTransparencyLevel property
+        // change), so every processed report is delivered — including unchanged None→None reports,
+        // the OnApplyTemplate re-report, and retemplate. This settles receipt-before-template/retemplate
+        // and rebinds per new destination because each PopupRoot owns its own projection.
+        owner.TransparencyLevelReported += OnReported;
         owner.DetachedFromVisualTree += OnDetached;
         Apply();
     }
@@ -63,13 +67,10 @@ internal sealed class CuiTransparencyFallback : IDisposable
         Apply();
     }
 
-    private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+    private void OnReported(WindowTransparencyLevel level)
     {
-        if (change.Property == TopLevel.ActualTransparencyLevelProperty && change.NewValue is WindowTransparencyLevel level)
-        {
-            _observedLevel = level;
-            Apply();
-        }
+        _observedLevel = level;
+        Apply();
     }
 
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs e) => Dispose();
@@ -87,7 +88,7 @@ internal sealed class CuiTransparencyFallback : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        _owner.PropertyChanged -= OnPropertyChanged;
+        _owner.TransparencyLevelReported -= OnReported;
         _owner.DetachedFromVisualTree -= OnDetached;
         _brushSubscription?.Dispose();
         _brushSubscription = null;

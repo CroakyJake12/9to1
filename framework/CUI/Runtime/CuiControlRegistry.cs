@@ -270,7 +270,7 @@ public sealed class CuiControlRegistry
         {
             "grid" or "vertical stack" or "horizontal stack" or "absolute" or "overlay" or "overlay float" or "wrap" or "floating" => new CuiContainerControl(type),
             "menu" => new CuiMenu(),
-            "context menu" => new ContextMenu(),
+            "context menu" => CreateContextMenu(),
             _ => UnknownContainerType(type, out error),
         };
     }
@@ -306,6 +306,14 @@ public sealed class CuiControlRegistry
             "menu item" => new CuiMenuItem(),
             _ => UnknownInputType(type, out error)
         };
+    }
+
+    private static ContextMenu CreateContextMenu()
+    {
+        var menu = new ContextMenu();
+        // Route authored context-menu popups through the shared per-open transparency request seam.
+        menu.ConfigurePopup = CuiPopupPresentation.RequestTransparency;
+        return menu;
     }
 
     private static Control? UnknownContainerType(string type, out string? error)

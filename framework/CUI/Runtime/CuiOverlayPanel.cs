@@ -29,6 +29,8 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
 
     private readonly List<(Control Observed, EventHandler<AvaloniaPropertyChangedEventArgs> Handler)> _observed = [];
     private readonly Dictionary<Control, Control?> _targets = [];
+    private readonly Dictionary<CuiContainerControl, EventHandler> _relationshipHandlers = [];
+    private readonly Dictionary<CuiContainerControl, Control> _hostCells = [];
 
     public CuiOverlayPanel() => UseLayoutRounding = false;
 
@@ -54,6 +56,7 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        EnsureRelationshipObservers();
         Observe();
         var viewport = OwnerViewport(finalSize);
         foreach (var cell in Children)
@@ -90,28 +93,51 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         var anchor = TranslateToPanel(target);
         if (anchor is null) return Unplaced();
 
-        var desired = cell.DesiredSize;
-        var width = Math.Max(0, Math.Min(desired.Width, viewport.Width));
-        var size = new Size(width, Math.Max(0, desired.Height));
+        // Fail closed on an unsupported placement in this floating relationship: never silently treat an
+        // unrelated placement symbol as Above.
+        var side = SideOf(host);
+        if (side is null) return Unplaced();
+
+        // Clamp the usable width BEFORE measuring the floating content, then remeasure at that width so
+        // wrap-based heights reflect the ACTUAL available width rather than a wider earlier measure.
+        var usableWidth = Math.Max(0, viewport.Width);
+        cell.Measure(new Size(usableWidth, double.PositiveInfinity));
+        var size = new Size(
+            Math.Max(0, Math.Min(cell.DesiredSize.Width, usableWidth)),
+            Math.Max(0, cell.DesiredSize.Height));
         if (size.Width <= 0 || size.Height <= 0) return Unplaced();
 
-        var side = SideOf(host);
-        var rect = Preferred(side, anchor.Value, size);
-
-        // Flip to the opposite side when the preferred side cannot fit the real viewport.
-        if (!viewport.Contains(rect))
+        // Try the authored side first, then its opposite, then the two perpendicular sides. A candidate
+        // is acceptable only when it fits ENTIRELY inside the usable owner viewport AND does not intersect
+        // the protected composer body (the authored target). If no side offers genuinely safe space, fall
+        // back to an explicit bounded unplaced/degraded state rather than covering editing/actions.
+        foreach (var candidateSide in OrderedSides(side))
         {
-            var flipped = Preferred(Opposite(side), anchor.Value, size);
-            rect = viewport.Contains(flipped) ? flipped : Fit(rect, viewport);
+            var rect = Preferred(candidateSide, anchor.Value, size);
+            if (Fits(rect, viewport, anchor.Value)) return rect;
+        }
+        return Unplaced();
+    }
+
+    /// <summary>A candidate is usable only when it is fully inside the owner viewport AND avoids the
+    /// protected composer body. A positive rectangle alone does not mean usable space exists.</summary>
+    private static bool Fits(Rect rect, Rect viewport, Rect anchor) =>
+        viewport.Contains(rect) && !rect.Intersects(anchor);
+
+    private static IEnumerable<string> OrderedSides(string side)
+    {
+        yield return side;
+        yield return Opposite(side);
+        if (side is "Above" or "Under")
+        {
+            yield return "LeftOf";
+            yield return "RightOf";
         }
         else
         {
-            rect = Fit(rect, viewport);
+            yield return "Above";
+            yield return "Under";
         }
-
-        // The arrangement rect is still empty only when there was genuinely no usable space.
-        if (rect.Width <= 0 || rect.Height <= 0) return Unplaced();
-        return rect;
     }
 
     /// <summary>A failed relationship must not park the bar at (0,0): return an empty (invisible)
@@ -142,7 +168,7 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     {
         if (string.IsNullOrWhiteSpace(id)) return null;
         var target = this.GetVisualDescendants().OfType<Control>()
-            .FirstOrDefault(c => string.Equals(AutomationProperties.GetAutomationId(c), id, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(c => string.Equals(AutomationProperties.GetAutomationId(c), id, StringComparison.Ordinal));
         return target is not null && ValidTarget(target) ? target : null;
     }
 
@@ -153,12 +179,13 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         (ReferenceEquals(target, this) || this.IsVisualAncestorOf(target))
         && target.IsAttachedToVisualTree() && target.IsEffectivelyVisible;
 
-    private static string SideOf(CuiContainerControl host) => host.AuthoredPlacement switch
+    private static string? SideOf(CuiContainerControl host) => host.AuthoredPlacement?.Trim() switch
     {
+        "Above" => "Above",
         "Under" => "Under",
         "LeftOf" => "LeftOf",
         "RightOf" => "RightOf",
-        _ => "Above",
+        _ => null,
     };
 
     private static string Opposite(string side) => side switch
@@ -176,17 +203,6 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         "RightOf" => new Rect(anchor.Right + Gap, anchor.Center.Y - size.Height / 2, size.Width, size.Height),
         _ => new Rect(anchor.Center.X - size.Width / 2, anchor.Top - Gap - size.Height, size.Width, size.Height),
     };
-
-    private static Rect Fit(Rect rect, Rect viewport)
-    {
-        var x = rect.X;
-        var y = rect.Y;
-        if (x + rect.Width > viewport.Right) x = viewport.Right - rect.Width;
-        if (x < viewport.Left) x = viewport.Left;
-        if (y + rect.Height > viewport.Bottom) y = viewport.Bottom - rect.Height;
-        if (y < viewport.Top) y = viewport.Top;
-        return new Rect(x, y, rect.Width, rect.Height);
-    }
 
     /// <summary>Observe the panel, its coordinate ancestors up to the owning top-level, each authored
     /// target and the target's intermediate coordinate ancestors. Movement of any intermediate regular-flow
@@ -226,9 +242,41 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         }
     }
 
+    /// <summary>Observe each floating host's authored Target/Placement relationship so a live authored
+    /// Target change invalidates the cached target and the next arrange re-resolves against the NEW id
+    /// and swaps observers to the new target. Subscriptions are bounded and lifetime-owned.</summary>
+    private void EnsureRelationshipObservers()
+    {
+        foreach (var cell in Children)
+        {
+            if (!IsFloatingCell(cell)) continue;
+            var host = FloatingHost(cell);
+            if (host is null) continue;
+            _hostCells[host] = cell;
+            if (_relationshipHandlers.ContainsKey(host)) continue;
+            EventHandler handler = (_, _) =>
+            {
+                // The authored relationship changed: drop the stale cached target so the next arrange
+                // re-resolves against the NEW id (and rebinds observers to the new target).
+                if (_hostCells.TryGetValue(host, out var relatedCell)) _targets.Remove(relatedCell);
+                InvalidateMeasure();
+            };
+            host.RelationshipChanged += handler;
+            _relationshipHandlers[host] = handler;
+        }
+    }
+
+    private void DisposeRelationshipObservers()
+    {
+        foreach (var (host, handler) in _relationshipHandlers) host.RelationshipChanged -= handler;
+        _relationshipHandlers.Clear();
+        _hostCells.Clear();
+    }
+
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         DisposeObservers();
+        DisposeRelationshipObservers();
         _targets.Clear();
         base.OnDetachedFromVisualTree(e);
     }
@@ -239,5 +287,9 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         _observed.Clear();
     }
 
-    public void Dispose() => DisposeObservers();
+    public void Dispose()
+    {
+        DisposeObservers();
+        DisposeRelationshipObservers();
+    }
 }

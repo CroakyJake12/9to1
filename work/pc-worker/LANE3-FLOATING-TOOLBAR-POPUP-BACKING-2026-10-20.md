@@ -203,3 +203,86 @@ plus a recompiled CUI composer bundle. Only source + static checks this pass.
 - `dotnet build "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj" -m:1`
 - `dotnet test "9to1 Workspace/Browse/Host.Tests/HavenOS.Browse.Host.Tests.csproj" -m:1 --filter "FullyQualifiedName~FloatingFormatToolbarTests"`
 - Also re-run the full `HavenOS.Browse.Host.Tests` + `CakeOS.Cui.Runtime.Tests` suites for regression.
+
+---
+
+# Pass 4 — repair pass the three pass-3 reviewed failures (source/test authoring only)
+
+Source identity (dirty, uncommitted; working HEAD remains `fb70840d` + carried source). All execution
+still **NOT RUN** — no .NET build/test/app until the coordinator grants a serialized slot plus a
+recompiled CUI composer bundle. Only source + static review this pass. No subagents, no commits, no
+network, no images, no .NET/app/native actions.
+
+## Repaired findings (L3P4-001..003)
+
+- **001 — genuine per-open alpha request + real destination receipt.** `Popup.BeforeShow` (new
+  vendor-fork event on `Popup`, fired inside `Open()` just before the fresh destination's first `Show`)
+  is the pre-show seam. `CuiPopupPresentation.RequestTransparency(popup)` subscribes once
+  (idempotent via `ConditionalWeakTable`), and the handler applies `TransparencyLevelHint = [Transparent]`
+  to each fresh destination per open + reopen. Receipt is real: `CuiTransparencyFallback` subscribes
+  to the new `TopLevel.TransparencyLevelReported` hook (raised inside
+  `HandleTransparencyLevelChanged` for every processed report, including same-valued None→None and
+  OnApplyTemplate re-reports), plus explicit `ObserveDestinationAlpha`. `Popup`'s pre-show hook has
+  cleanup-on-throw (host disposed, open state cleared, retryable) so a subscriber exception never
+  leaves a half-open popup. Producers wired: Select/ComboBox + MenuItem popups
+  (`CuiControlTemplates`), authored context menus (`CuiControlRegistry.CreateContextMenu`), TextInput
+  context menu, and ToolTip (`ConfigurePopup` instance + `DefaultConfigurePopup` static, applied
+  per-open).
+- **002 — collision-safe floating placement + bounded remeasurement.** `CuiOverlayPanel` placement:
+  authored `Target` id resolves to the whole protected `composer-body` (Ordinal, descendant-scoped,
+  attached+effectively-visible); `Placement` is case-insensitive parsed and fail-closed (unsupported →
+  null → Unplaced). Content is remeasured at the clamped usable viewport width BEFORE sizing (wrap
+  height reflects actual width). Candidates try authored side → opposite → perpendiculars
+  (`OrderedSides`), acceptable only when `Fits` = full viewport containment AND no intersection with
+  the protected composer body. No safe side → **degraded to hidden** (empty `Unplaced()` rect), never
+  (0,0) and never covering editing/actions. Observers lifetime-scoped (panel + coordinate ancestors to
+  top-level + each target + target's intermediate coordinate ancestors), disposed on detach/close.
+- **003 — complete small Target/Placement contract.** `CuiContainerControl.AuthoredTargetId` /
+  `AuthoredPlacement` are read-only properties; `SetAuthoredTarget` / `SetAuthoredPlacement` are
+  validated typed setters raising `RelationshipChanged` on change. Loader routes authored
+  Target/Placement through these typed methods (`CuiControlLoader`). New `CuiContainerRelationshipTests`
+  covers placement casing normalization, invalid/empty value fail-closed, and target non-empty/white-
+  space rejection.
+
+## Remaining pre-show capability/airspace dependency (BLOCKED, not implemented)
+- Overlay-host adoption stays BLOCKED on a reviewed pre-show capability/airspace signal: platform
+  transparency negotiation + conservative native child-window airspace query. The typed seam exists
+  (`PreferOverlayHost` / `PreferOverlayHostUnknown` / `ApplyHostDecision` /
+  `RegisterAirspaceInspector` / `QueryAirspace`), and **zero real callers** use it; native hosting is
+  the shipping default and already fixes the white backing via the opaque fallback + alpha-aware
+  projection. Exact insertion point: before `CreatePopupHost` in `Popup.Open` — not added. Not a
+  claim that the host matrix changed the shipping host.
+
+## Producer call map (real production wiring)
+- `CuiControlTemplates` static ctor: `ToolTip.DefaultConfigurePopup = CuiPopupPresentation.RequestTransparency`.
+- `CuiControlTemplates`: Select popup + MenuItem submenu popup call `RequestTransparency(popup)`.
+- `CuiControlTemplates` TextInput context menu: `menu.ConfigurePopup = RequestTransparency`.
+- `CuiControlRegistry.CreateContextMenu()`: `menu.ConfigurePopup = RequestTransparency`.
+- `ToolTip` per-open apply: `(ConfigurePopup ?? DefaultConfigurePopup)?.Invoke(_popup)`.
+
+## Static review status
+- Vendor-fork event signatures match their invocations and subscribers (`EventHandler<PopupBeforeShowEventArgs>`,
+  `Action<WindowTransparencyLevel>`, `Action<Popup>`). `ResolveOpaquePaint`, `ObserveDestinationAlpha`,
+  `RequestTransparency`, `SetAuthoredTarget/Placement` present with matching call sites. Runtime.Tests
+  csproj is SDK-style default-glob (new test files compile automatically). Host.Tests csproj explicitly
+  compiles `FloatingFormatToolbarTests.cs`. TreatWarningsAsErrors is on; **no build has run** so
+  compiler-level verification remains pending the slot.
+
+## Current file identity (SHA-256, pass 4)
+- `9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui` `9679d2123eb5c81a054378d5dff9fece0e54daaab4864907ed12439c41c43f2b` (unchanged from pass 3)
+- `9to1 Workspace/Browse/Host.Tests/FloatingFormatToolbarTests.cs` `c96be34429bd34e207ddb6d4ecf85f05b4ee5237562248c2973ecddae934afd4`
+- `framework/CUI/Runtime/CuiFloatingLayer.cs` `b3fe77dc6a55c25d08992bab76d82766b57513d7967d87cbea13ce6b87ca6e96`
+- `framework/CUI/Runtime/CuiOverlayPanel.cs` `938a3a50a034e5546a6abb66f6306ca343b1e141d37c61fd6a710343656779f1`
+- `framework/CUI/Runtime/CuiTransparencyFallback.cs` `9b49a3b29f628a08d8c776e8ff20ef2e927c7f40e77ebf583b73a2950847c237`
+- `framework/CUI/Runtime/CuiPopupPresentation.cs` `ef89f7bfad18418125f43f20dc6cf4ad8ed8d514e587659ec6148e103b960f52`
+- `framework/CUI/Runtime/CuiControlTemplates.cs` `073fdc03b7ee2ef9543c0ee57cbddab6846c75f9ec46d6eb9b8bb371e828adfb`
+- `framework/CUI/Runtime/CuiControlRegistry.cs` `92f5cc328f94395686903cd09f56b5abac36d133d9cc5d9b0128ec27706046be`
+- `framework/CUI/Runtime/CuiContainerControl.cs` `58906f09af19ffa3edd072660ba5357910fbcd51258fc3e6b47f8a7ed3c2d9e1`
+- `framework/CUI/Runtime/CuiControlLoader.cs` `29045b2e2bc28a1339ee1c83fde6ab17539d8406d4ee806bf4fdf5a43524d941`
+- `framework/CUI/Runtime.Tests/CuiPopupBackingTests.cs` `71ef6cf3f84704b7498c77ae6e084c2d399be365a99e7f4eb9eba21be556a60c`
+- `framework/CUI/Runtime.Tests/CuiContainerRelationshipTests.cs` `fe080c81bfcf5ffe64aa33752187a8df99b720c00506531968fccb6780a27a5b` (new)
+- Vendor fork (new this pass):
+  - `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Primitives/Popup.cs` `eaa579811e066c3446f48b6f64d58eac81e04d8b12dbb5fca3647e12d14b2ebe`
+  - `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TopLevel.cs` `5045b3ec830365b2adb37efa210a4fdb28cd3aa90f9b51c1e79567e33afb27b5`
+  - `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ContextMenu.cs` `8b9abee31ff9c09fa1c49ca56a8dc08275c8cef69c48250f5aa4eb579ecabef7`
+  - `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ToolTip.cs` `c1d5d7bd14dc09537cfaf62f79b774a05ddadd1d115d6ca43ea87cbb4ede19b6`

@@ -1,7 +1,7 @@
+using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
-using Avalonia.VisualTree;
 
 namespace CakeOS.Cui.Runtime;
 
@@ -85,31 +85,31 @@ public static class CuiPopupPresentation
     public static IBrush? ResolveOpaquePaint(WindowTransparencyLevel level, IBrush? opaqueBrush) =>
         level == WindowTransparencyLevel.None ? opaqueBrush : null;
 
+    private static readonly ConditionalWeakTable<Popup, object> Requested = new();
+
     /// <summary>
-    /// Narrow producer alpha request. The real CUI popup producers call this immediately after
-    /// constructing their <see cref="Popup"/> so that, at the popup open boundary (the earliest
-    /// public point the CUI host is reachable), the destination requests per-pixel alpha. The
-    /// negotiated receipt is observed by the <see cref="CuiTransparencyFallback"/> projection via
-    /// <see cref="TopLevel.ActualTransparencyLevelProperty"/> (or an explicit
-    /// <see cref="ObserveDestinationAlpha"/> receipt). If a low-level pre-first-present hook is
-    /// required, the caller should submit it as a typed integration dependency; this open-boundary
-    /// request is the honest public seam today and never invents capability.
+    /// Narrow producer alpha request. The real CUI popup producers call this when they create their
+    /// <see cref="Popup"/>. It subscribes to the popup's pre-show <see cref="Popup.BeforeShow"/>
+    /// seam, so the request is applied to EACH fresh destination BEFORE its first Show — never after
+    /// Show via Opened, and never only on the first open (reopening the same popup creates a fresh
+    /// destination and receives a fresh request). The negotiated receipt is observed by the
+    /// <see cref="CuiTransparencyFallback"/> projection via the TopLevel transparency report hook
+    /// (or an explicit <see cref="ObserveDestinationAlpha"/> receipt). The request is idempotent:
+    /// repeated calls never double-subscribe.
     /// </summary>
     public static void RequestTransparency(Popup popup)
     {
         ArgumentNullException.ThrowIfNull(popup);
-        EventHandler? handler = null;
-        handler = (_, _) =>
-        {
-            popup.Opened -= handler;
-            // Reach the CUI popup host through real visual topology (never reflection into an
-            // internal Host field): the authored popup content is attached inside the PopupRoot.
-            if (popup.Child is not Control content) return;
-            var root = content.GetVisualAncestors().OfType<PopupRoot>().FirstOrDefault();
-            if (root is null) return;
-            root.TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
-        };
-        popup.Opened += handler;
+        if (Requested.TryGetValue(popup, out _)) return;
+        popup.BeforeShow += OnBeforeShow;
+        Requested.Add(popup, new object());
+    }
+
+    private static void OnBeforeShow(object? sender, Popup.PopupBeforeShowEventArgs args)
+    {
+        // Apply the alpha request to the fresh destination before its first show. The handler stays
+        // subscribed for the lifetime of the popup, so every open (including reopens) negotiates.
+        args.Destination.TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
     }
 
     /// <summary>

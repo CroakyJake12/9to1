@@ -156,4 +156,142 @@ public sealed class CuiPopupBackingTests
             finally { window.Close(); }
         }, CancellationToken.None);
     }
+
+    [Fact]
+    public async Task Actual_negotiation_callback_drives_the_projection_including_unchanged_none_to_none()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Theme Name="Professional"><Container Type="Menu"><Button Type="Menu Item" Content="File">
+                  <Button Type="Menu Item" Content="Open"/>
+                </Button></Container></Theme>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            var window = new Window { Content = loaded.Root, Width = 600, Height = 300 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var owner = Assert.Single(loaded.Root!.GetVisualDescendants().OfType<CuiMenuItem>());
+                owner.IsSubMenuOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var item = owner.Items.OfType<CuiMenuItem>().First();
+
+                var popupRoot = Assert.Single(item.GetVisualAncestors().OfType<PopupRoot>());
+                var fallback = Assert.Single(popupRoot.GetVisualDescendants().OfType<Border>(),
+                    border => border.Name == "PART_TransparencyFallback");
+
+                // Drive the ACTUAL TopLevel negotiation callback (the private method wired to
+                // ITopLevelImpl.TransparencyLevelChanged and OnApplyTemplate), not a manual injection.
+                var handle = typeof(TopLevel).GetMethod("HandleTransparencyLevelChanged",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    ?? throw new InvalidOperationException("HandleTransparencyLevelChanged not found");
+
+                // A genuine first None report paints the latest guaranteed-opaque semantic color.
+                handle.Invoke(popupRoot, new object[] { WindowTransparencyLevel.None });
+                Assert.NotNull(fallback.Background);
+                var painted = Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!);
+                Assert.Equal(255, painted.Color.A);
+
+                // An UNCHANGED None→None report must still be observed (the old projection only saw
+                // property changes and missed it); the fallback stays painted.
+                handle.Invoke(popupRoot, new object[] { WindowTransparencyLevel.None });
+                Assert.NotNull(fallback.Background);
+
+                // A negotiated-through surface keeps the fallback null.
+                handle.Invoke(popupRoot, new object[] { WindowTransparencyLevel.Transparent });
+                Assert.Null(fallback.Background);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Request_transparency_applies_to_each_fresh_destination_before_show()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Theme Name="Professional"><Container Type="Vertical Stack">
+                  <Input Type="Select"><Text>Alpha</Text><Text>Beta</Text></Input>
+                </Container></Theme>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            var window = new Window { Content = loaded.Root, Width = 500, Height = 300 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var combo = Assert.Single(loaded.Root!.GetVisualDescendants().OfType<ComboBox>());
+
+                // First open: the real Select producer requests transparency on the fresh destination.
+                combo.IsDropDownOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var firstRoot = PopupRootOf(combo);
+                Assert.Contains(WindowTransparencyLevel.Transparent, firstRoot.TransparencyLevelHint);
+
+                // Reopen: a FRESH destination is created and receives its own request (the request is
+                // applied before Show, never only on the first open).
+                combo.IsDropDownOpen = false; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                combo.IsDropDownOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var secondRoot = PopupRootOf(combo);
+                Assert.NotSame(firstRoot, secondRoot);
+                Assert.Contains(WindowTransparencyLevel.Transparent, secondRoot.TransparencyLevelHint);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Later_resource_emission_never_clears_a_negotiated_opaque_fallback_nor_paints_alpha_capable()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Theme Name="Professional"><Container Type="Menu"><Button Type="Menu Item" Content="File">
+                  <Button Type="Menu Item" Content="Open"/>
+                </Button></Container></Theme>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            var window = new Window { Content = loaded.Root, Width = 600, Height = 300 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var owner = Assert.Single(loaded.Root!.GetVisualDescendants().OfType<CuiMenuItem>());
+                owner.IsSubMenuOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var item = owner.Items.OfType<CuiMenuItem>().First();
+                var popupRoot = Assert.Single(item.GetVisualAncestors().OfType<PopupRoot>());
+                var fallback = Assert.Single(popupRoot.GetVisualDescendants().OfType<Border>(),
+                    border => border.Name == "PART_TransparencyFallback");
+
+                // Opaque negotiated → painted. A later opaque-brush re-emission must NOT clear it
+                // (the causal regression: an unobserved projection cleared the fallback on resource
+                // emission). Re-emitting a NEW opaque brush keeps the latest guaranteed-opaque color.
+                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.None);
+                Assert.NotNull(fallback.Background);
+                popupRoot.Resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(Colors.DarkSlateGray);
+                Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.NotNull(fallback.Background);
+                Assert.Equal(255, Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!).Color.A);
+
+                // Transparent negotiated → null; a later opaque-brush emission must still keep it null.
+                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.Transparent);
+                Assert.Null(fallback.Background);
+                popupRoot.Resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(Colors.DarkSlateGray);
+                Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.Null(fallback.Background);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    private static PopupRoot PopupRootOf(ComboBox combo)
+    {
+        var popup = Assert.Single(combo.GetVisualDescendants().OfType<Popup>());
+        var content = Assert.IsAssignableFrom<Control>(popup.Child);
+        return Assert.Single(content.GetVisualAncestors().OfType<PopupRoot>());
+    }
 }

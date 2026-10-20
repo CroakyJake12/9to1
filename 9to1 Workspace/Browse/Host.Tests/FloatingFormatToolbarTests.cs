@@ -336,6 +336,136 @@ public sealed class FloatingFormatToolbarTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Wrapped_chips_narrow_toolbar_all_six_commands_hit_test_and_dispatch()
+    {
+        // A real wrapped-chip case: enough chips to force the row to wrap at the narrow width, plus a
+        // narrow window so the floating toolbar itself wraps to multiple lines.
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = Enumerable.Range(0, 10)
+                .Select(i => new ChatComposerChip($"c{i}", $"Chip {i} label", false)).ToArray()
+        };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 300, Height = 620, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            var toolbarWin = WindowBounds(toolbar!, window);
+            Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the narrowed viewport");
+            // No protected body/input/action overlap.
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover input");
+            Assert.False(toolbarWin.Intersects(WindowBounds(FindButton(view, "send-button")!, window)), "toolbar must not cover send");
+            var chipsRow = FindContainer(view, "chips-row")!;
+            Assert.True(chipsRow.Bounds.Height > 0, "chips row must be present and wrapping");
+            Assert.False(toolbarWin.Intersects(WindowBounds(chipsRow, window)), "toolbar must not cover wrapped chips");
+
+            // Real pointer-click ALL SIX commands after narrow wrapping: each original format action
+            // dispatches/settles, is preserved across successive use, and selection is retained.
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                var b = WindowBounds(commandButtons[i], window);
+                Assert.True(b.Width > 0 && b.Height > 0, $"format command {i} must remain visible");
+                Assert.True(windowClient.Contains(b), $"format command {i} must stay inside the narrowed viewport");
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+                Assert.Equal(i + 1, source.FormatCount);
+                Assert.True(toolbar.IsVisible);
+            }
+
+            // Retained selection/identity and focus through the six dispatch clicks.
+            Assert.Same(box, FindInput(view));
+            Assert.True(box.IsKeyboardFocusWithin);
+            Assert.Equal(0, view.Input.SelectionLength);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Live_target_retarget_reanchors_swaps_observers_and_matches_ids_case_sensitively()
+    {
+        var source = new Source { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+
+            var layer = FindContainer(view, "composer-floating-layer")!;
+            var container = Assert.IsType<CuiContainerControl>(layer);
+            Assert.Equal("composer-body", container.AuthoredTargetId);
+            var body = FindContainer(view, "composer-body")!;
+            var inputColumn = FindContainer(view, "input-column")!;
+            Assert.NotNull(body);
+            Assert.NotNull(inputColumn);
+
+            var before = WindowBounds(toolbar!, window);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            Assert.True(windowClient.Contains(before));
+
+            // Live retarget A→B while A remains attached/valid: placement must change immediately and
+            // the old anchor subscription retired (no stale anchor retained).
+            container.SetAuthoredTarget("input-column");
+            PumpLayout(window);
+            Assert.Equal("input-column", container.AuthoredTargetId);
+            var after = WindowBounds(toolbar!, window);
+            Assert.NotEqual(before, after);
+            Assert.True(windowClient.Contains(after));
+            Assert.False(after.Intersects(WindowBounds(inputColumn, window)));
+            Assert.False(after.Intersects(WindowBounds(FindButton(view, "send-button")!, window)));
+
+            // Retarget back to the whole body re-anchors to the original placement.
+            container.SetAuthoredTarget("composer-body");
+            PumpLayout(window);
+            Assert.Equal(before, WindowBounds(toolbar!, window));
+
+            // Canonical CUI Target IDs are ordinal/case-sensitive: a differently-cased id must NOT
+            // resolve to the body, so the bar fails closed (hidden) rather than anchoring to the
+            // stale body.
+            container.SetAuthoredTarget("Composer-Body");
+            PumpLayout(window);
+            Assert.Equal("Composer-Body", container.AuthoredTargetId);
+            var failed = WindowBounds(toolbar!, window);
+            Assert.True(failed.Width <= 0 || failed.Height <= 0, "wrong-case target must fail closed (hidden)");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
     private static void Click(TopLevel top, Control target)
     {
         var center = Center(target, top);

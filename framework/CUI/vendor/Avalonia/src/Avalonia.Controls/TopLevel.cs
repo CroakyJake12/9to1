@@ -378,6 +378,14 @@ namespace Avalonia.Controls
         }
 
         /// <summary>
+        /// Raised after every processed actual-transparency report — including unchanged re-reports
+        /// and the OnApplyTemplate re-report — so subscribed projections receive same-valued destination
+        /// observations, not only property transitions. The platform callback ownership remains with
+        /// <see cref="ITopLevelImpl.TransparencyLevelChanged"/>; this is an additive notification.
+        /// </summary>
+        public event Action<WindowTransparencyLevel>? TransparencyLevelReported;
+
+        /// <summary>
         /// Gets or sets the <see cref="IBrush"/> that transparency will blend with when transparency is not supported.
         /// By default this is a solid white brush.
         /// </summary>
@@ -731,6 +739,12 @@ namespace Avalonia.Controls
             }
 
             ActualTransparencyLevel = transparencyLevel;
+
+            // Narrow receipt hook: deliver EVERY processed actual-transparency report (including
+            // unchanged re-reports and the OnApplyTemplate re-report) to subscribed projections, so a
+            // real None→None platform report is still observed. This is additive and does not replace
+            // or steal ITopLevelImpl.TransparencyLevelChanged ownership.
+            TransparencyLevelReported?.Invoke(transparencyLevel);
         }
 
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
