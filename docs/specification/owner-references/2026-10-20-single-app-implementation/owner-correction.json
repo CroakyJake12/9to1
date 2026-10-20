@@ -6,13 +6,18 @@
     "Existing Haven code may be reused provided Haven renders the same standalone app implementations.",
     "Standalone and Haven-embedded apps must not diverge into separate implementations.",
     "All applicable requirements in the canonical specification remain mandatory.",
-    "Treat this as a pinned programme-wide constraint."
+    "Treat this as a pinned programme-wide constraint.",
+    "Where newer implementations exist, merge the older and newer work where useful and feasible.",
+    "Use the newer implementation directly when it is better; preserving the older implementation is not the goal."
   ],
   "implementation_invariants": [
     "One owning app surface/engine and canonical object identity/data/services across standalone and embedded hosts.",
     "Host-aware top bars may adapt as explicitly requested; app-specific behavior and capabilities remain shared.",
     "Audit real composition/factory routes and actual rendered surfaces; a renamed/wrapped legacy app or duplicate modern surface elsewhere does not establish compliance.",
-    "Reusing older code does not waive missing requirements or independent acceptance."
+    "Reusing older code does not waive missing requirements or independent acceptance.",
+    "Compare actual requirements coverage, functionality, durability, integration and refinement before choosing or merging; timestamps/names alone do not establish quality.",
+    "Consolidate the chosen/merged implementation into one shared owning app surface for standalone and Haven; do not ship parallel divergent implementations."
   ],
-  "authority": "Direct owner clarification; canonical v2 remains sole general product authority."
+  "authority": "Direct owner clarification; canonical v2 remains sole general product authority.",
+  "updated_at": "2026-10-20T10:32:42.733698+00:00"
 }
