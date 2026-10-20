@@ -1,0 +1,125 @@
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/ChatComposerCuiView.cs b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/ChatComposerCuiView.cs
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/ChatComposerCuiView.cs
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/ChatComposerCuiView.cs
+@@ -10,6 +10,7 @@
+ using CakeOS.Cui.Runtime;
+ using CakeOS.Cui.Themes;
+ using Haven.Core;
++using NineToOne.Cui.AI;
+ using Haven.Desktop.HavenUI.Backend;
+ using Haven.Desktop.Prefabs;
+ using HavenOS.Apps.Spaces.Chat;
+@@ -57,18 +58,21 @@
+ /// completed task.
+ /// </summary>
+ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActionDispatcher,
+-    ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
++    ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged, IDisposable
+ {
+     private readonly IChatComposerSource _source;
++    private readonly AppAiAccessSelectorBindings? _aiAccess;
+     private bool _settingsOpen;
+     private bool _emojiOpen;
+     private string? _emojiQuery;
+     private bool _focused;
+     private bool _expanded;
+ 
+-    public ChatComposerBindings(IChatComposerSource source)
++    public ChatComposerBindings(IChatComposerSource source, AppAiAccessSelectorBindings? aiAccess = null)
+     {
+         _source = source ?? throw new ArgumentNullException(nameof(source));
++        _aiAccess = aiAccess;
++        if (_aiAccess is not null) _aiAccess.PropertyChanged += OnAiAccessPropertyChanged;
+     }
+ 
+     /// <summary>Observed focus on the real composer input; drives compact/expanded formatting.</summary>
+@@ -134,7 +138,11 @@
+                 // choose-once selection; this is only a bounded non-I/O typed query.
+                 value = ComposerEmojiIconPool.Candidates;
+                 return true;
++            case "Composer.HasAiAccessSelector":
++                value = _aiAccess is not null;
++                return true;
+             default:
++                if (_aiAccess is not null && _aiAccess.TryGetValue(path, out value)) return true;
+                 return false;
+         }
+     }
+@@ -173,6 +181,7 @@
+             "composer.add" => _source.HasAdd,
+             "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => true,
+             "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => true,
++            "access.select-readonly" or "access.select-write" => _aiAccess?.IsActionAvailable(command),
+             _ => true
+         };
+     }
+@@ -223,6 +232,8 @@
+                 return _source.InsertEmoji(emoji);
+             case "composer.cancel-edit":
+                 return _source.CancelEdit();
++            case "access.select-readonly" or "access.select-write" when _aiAccess is not null:
++                return _aiAccess.DispatchAsync(command, parameter, cancellationToken);
+             default:
+                 return ValueTask.FromException(new InvalidOperationException($"Chat composer CUI command '{command}' is not owned by the shared composer."));
+         }
+@@ -270,6 +281,18 @@
+     public bool TrySetItemValue(object item, string path, object? value) => false;
+ 
+     public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
++
++    private void OnAiAccessPropertyChanged(object? sender, PropertyChangedEventArgs e) =>
++        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
++
++    /// <summary>Disposes only the AI-access bridge this bindings instance created. The shared
++    /// AppAiAccessSelector and its FloatingAiBarState remain owned by Home; they are never
++    /// disposed here.</summary>
++    public void Dispose()
++    {
++        if (_aiAccess is not null) _aiAccess.PropertyChanged -= OnAiAccessPropertyChanged;
++        _aiAccess?.Dispose();
++    }
+ }
+ 
+ /// <summary>
+@@ -399,13 +422,22 @@
+     {
+     }
+ 
++    /// <summary>Integration overload: threads the shared AI access selector into the composer.</summary>
++    public ChatComposerCuiView(IChatComposerSource source, AppAiAccessSelector aiAccessSelector,
++        string? owningAppId = null, CuiThemePreferenceContext? themePreference = null)
++        : this(source, ChatComposerReadiness.Instance, owningAppId, themePreference, aiAccessSelector)
++    {
++    }
++
+     /// <summary>Readiness injection seam used by tests to hold/observe the real host show
+     /// pipeline; defaults to production readiness. The SAME production host/loader/document/input
+     /// are exercised, never an alternate renderer.</summary>
+     internal ChatComposerCuiView(IChatComposerSource source, ICuiSceneReadiness readiness,
+-        string? owningAppId = null, CuiThemePreferenceContext? themePreference = null)
+-    {
+-        _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)));
++        string? owningAppId = null, CuiThemePreferenceContext? themePreference = null,
++        AppAiAccessSelector? aiAccessSelector = null)
++    {
++        _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)),
++            aiAccessSelector is null ? null : new AppAiAccessSelectorBindings(aiAccessSelector));
+         _readiness = readiness ?? ChatComposerReadiness.Instance;
+         var registry = new CuiControlRegistry();
+         // Shared typed packaged-SVG image infrastructure for authored icon assets (e.g. the enlarged
+@@ -569,6 +601,7 @@
+     {
+         if (_disposed) return;
+         _disposed = true;
++        _bindings.Dispose();
+         try { CloseAsync(); } catch { /* Best-effort synchronous teardown; joins observe faults. */ }
+     }
+ 
+@@ -576,6 +609,7 @@
+     {
+         if (_disposed) return new ValueTask(CloseAsync());
+         _disposed = true;
++        _bindings.Dispose();
+         return new ValueTask(CloseAsync());
+     }
+ }

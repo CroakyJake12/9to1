@@ -1,0 +1,161 @@
+diff --git a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/AppAiAccessSelectorBindingsTests.cs b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/AppAiAccessSelectorBindingsTests.cs
+new file mode 100644
+--- /dev/null
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/AppAiAccessSelectorBindingsTests.cs
+@@ -0,0 +1,156 @@
++// PROPOSED inclusion (host-layer integration test), NOT part of framework/CUI/AI.Tests.
++//
++// This is the causal bridge test for `AppAiAccessSelectorBindings` (work/extra09-handoff/
++// AppAiAccessSelectorBindings.cs). It targets the actual CUI Runtime API
++// (ICuiWritableBindingContext / ICuiActionDispatcher / ICuiActionAvailability) and the real
++// `AppAiAccessSelector` / `FloatingAiBarState` / `AppAiCoordinator`, so the invalidation
++// contract and mode delegation are verified against genuine runtime/domain types.
++//
++// Suggested inclusion: a host test project that already references CakeOS.Cui.Runtime,
++// CakeOS.Cui, NineToOne.Cui.AI and xunit (e.g. `9to1 Workspace/shared/tests/
++// Haven.Desktop.Tests/` or `9to1 Workspace/Browse/Host.Tests/`). Root may run this under a
++// frozen-binary gate while the source tree moves. This file is provided as a source patch and
++// is NOT executed by this lane (all execution is NOT RUN until root allocation).
++
++using CakeOS.Cui;
++using CakeOS.Cui.Runtime;
++using NineToOne.Cui.AI;
++using Xunit;
++
++namespace Haven.Desktop.Views.Pages.Chat.Tests;
++
++public sealed class AppAiAccessSelectorBindingsTests
++{
++    [Fact]
++    public void BindingsExposeLiveModeAndForwardOwnerNotifications()
++    {
++        using var state = CreateState();
++        using var selector = new AppAiAccessSelector(state);
++        using var bindings = new AppAiAccessSelectorBindings(selector);
++
++        Assert.True(bindings.TryGetValue("Access.IsReadOnly", out var isRO));
++        Assert.Equal(true, isRO);
++        Assert.False(selector.IsWriteMode);
++        Assert.True(bindings.IsActionAvailable("access.select-readonly"));
++        Assert.True(bindings.IsActionAvailable("access.select-write"));
++
++        var changed = 0;
++        bindings.PropertyChanged += (_, e) => { changed++; Assert.Null(e.PropertyName); };
++
++        // A current-owner update must be forwarded through INotifyPropertyChanged.
++        selector.SelectWrite();
++        Assert.Equal(1, changed);
++        Assert.True(bindings.TryGetValue("Access.IsWriteMode", out var isWrite));
++        Assert.Equal(true, isWrite);
++        Assert.True(bindings.TryGetValue("Access.CurrentModeLabel", out var label));
++        Assert.Equal("Write mode", label);
++
++        selector.SelectReadOnly();
++        Assert.Equal(2, changed);
++        Assert.True(bindings.TryGetValue("Access.IsReadOnly", out var isROAfter));
++        Assert.Equal(true, isROAfter);
++    }
++
++    [Fact]
++    public async Task DispatchDelegatesToRealModeChange()
++    {
++        using var state = CreateState();
++        using var selector = new AppAiAccessSelector(state);
++        using var bindings = new AppAiAccessSelectorBindings(selector);
++
++        await bindings.DispatchAsync("access.select-write", null).ConfigureAwait(false);
++        Assert.Equal(AppAiAccessMode.Write, state.AccessMode);
++        Assert.True(selector.IsWriteMode);
++
++        await bindings.DispatchAsync("access.select-readonly", null).ConfigureAwait(false);
++        Assert.Equal(AppAiAccessMode.ReadOnly, state.AccessMode);
++        Assert.True(selector.IsReadOnly);
++    }
++
++    [Fact]
++    public async Task UnknownCommandIsRejected()
++    {
++        using var state = CreateState();
++        using var selector = new AppAiAccessSelector(state);
++        using var bindings = new AppAiAccessSelectorBindings(selector);
++
++        await Assert.ThrowsAsync<InvalidOperationException>(
++            () => bindings.DispatchAsync("access.not-owned", null).AsTask()).ConfigureAwait(false);
++    }
++
++    [Fact]
++    public void ReadOnlyPathsAreNotWritable()
++    {
++        using var state = CreateState();
++        using var selector = new AppAiAccessSelector(state);
++        using var bindings = new AppAiAccessSelectorBindings(selector);
++
++        Assert.False(bindings.TrySetValue("Access.CurrentModeLabel", "Write"));
++        Assert.Equal(AppAiAccessMode.ReadOnly, state.AccessMode);
++    }
++
++    [Fact]
++    public void DisposeUnsubscribesWithoutDisposingSharedSelector()
++    {
++        using var state = CreateState();
++        using var selector = new AppAiAccessSelector(state);
++        var bindings = new AppAiAccessSelectorBindings(selector);
++        var changed = 0;
++        bindings.PropertyChanged += (_, _) => changed++;
++
++        bindings.Dispose();
++
++        // A late owner update after dispose must be fenced out.
++        selector.SelectWrite();
++        Assert.Equal(0, changed);
++
++        // The shared selector is still live (the bridge must not dispose shared ownership).
++        selector.SelectReadOnly();
++        Assert.Equal(AppAiAccessMode.ReadOnly, selector.AccessMode);
++        Assert.True(selector.CanChangeMode);
++    }
++
++    private static FloatingAiBarState CreateState() =>
++        new(new AppAiCoordinator(new FakeContext(), new FakeActions(), new FakeApprovals(), new FakeDulche()));
++
++    private sealed class FakeContext : IAppAiContext
++    {
++        public ValueTask<AppAiContextSnapshot> CaptureAsync(CancellationToken cancellationToken) =>
++            ValueTask.FromResult(new AppAiContextSnapshot(
++                "write", "document", "doc-1", "Current document", null,
++                new Dictionary<string, System.Text.Json.JsonElement>(), AppAiDataSensitivity.UserContent,
++                DateTimeOffset.UtcNow, "rev-1"));
++    }
++
++    private sealed class FakeActions : IAppAiActions
++    {
++        public IReadOnlyList<AppAiActionDescriptor> Actions =>
++        [
++            new("insert-paragraph", "Insert paragraph", "Adds reviewed text.",
++                AppAiActionRisk.ReversibleChange, true, "{\"type\":\"object\"}",
++                AffectedObjectIds: ["section-1"], ImpactUnknown: false, ImpactSummary: "Updates one section"),
++        ];
++
++        public ValueTask<AppAiActionResult> ExecuteAsync(
++            AppAiActionRequest request, CancellationToken cancellationToken) =>
++            ValueTask.FromResult(AppAiActionResult.Success("Inserted"));
++    }
++
++    private sealed class FakeApprovals : IAppAiApprovalVerifier
++    {
++        public ValueTask<bool> VerifyAsync(
++            string appId, string actionId, string approvalToken, CancellationToken cancellationToken) =>
++            ValueTask.FromResult(approvalToken == "approved");
++    }
++
++    private sealed class FakeDulche : IDulcheAppClient
++    {
++        public async IAsyncEnumerable<AppAiResponseChunk> StreamAsync(
++            AppAiPrompt prompt,
++            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
++        {
++            await Task.Yield();
++            yield return new AppAiResponseChunk("Done", IsFinal: true);
++        }
++    }
++}

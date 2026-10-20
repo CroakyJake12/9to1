@@ -1,0 +1,22 @@
+diff --git a/9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui b/9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui
+--- a/9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui
++++ b/9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui
+@@ -50,6 +50,18 @@
+       <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
+     </Container>
+ 
++    <Container id="composer-ai-access" Type="Horizontal Stack" CellGap="6" padding="4"
++          IsVisible="{Binding Composer.HasAiAccessSelector}" accessible-name="AI access mode">
++      <Text text="{Binding Access.CurrentModeLabel}" font-weight="SemiBold" font-size="12" />
++      <Button action="access.select-readonly" content="Read-only" font-size="12"
++              Selected="{Binding Access.IsReadOnly}" Interactive="{Binding Access.CanChangeMode}"
++              accessible-name="Set AI access to read-only" />
++      <Button action="access.select-write" content="Write" font-size="12"
++              Selected="{Binding Access.IsWriteMode}" Interactive="{Binding Access.CanChangeMode}"
++              accessible-name="Set AI access to write mode" />
++      <Text text="{Binding Access.StatusMessage}" IsVisible="{Binding Access.HasStatus}" font-size="12" />
++    </Container>
++
+     <Container id="controls-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
+       <Container id="left-controls" Column="0" Type="Horizontal Stack" CellGap="6">
+         <Button id="add-button" action="composer.add" Width="44" Height="44" Padding="6" CornerRadius="22" accessible-name="Add files or actions">

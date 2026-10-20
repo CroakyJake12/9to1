@@ -1,4 +1,8 @@
 <Cui id="shared-ai-access-selector" version="1">
+  <Actions>
+    <Action name="access.select-readonly" command="access.select-readonly" />
+    <Action name="access.select-write" command="access.select-write" />
+  </Actions>
   <Page>
     <Container id="ai-access-selector-surface" accessible-name="AI access mode" Type="Horizontal Stack" CellGap="8">
       <Text id="ai-access-current-mode" text="{Binding Access.CurrentModeLabel}" accessible-name="Current AI access mode" font-weight="SemiBold" />

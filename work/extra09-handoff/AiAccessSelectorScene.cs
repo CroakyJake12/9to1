@@ -1,3 +1,5 @@
+using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
 using NineToOne.Cui.AI;
 
 namespace Haven.Desktop.Views.Pages.Chat;
@@ -22,4 +24,7 @@ public static class AiAccessSelectorScene
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }
+
+    /// <summary>Parses the packaged selector once. Throws InvalidDataException when invalid.</summary>
+    public static CuiDocument Load() => new CuiDocumentSource(ReadSource(), ResourceName).Document;
 }

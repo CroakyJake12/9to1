@@ -1,0 +1,121 @@
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/AppAiAccessSelectorBindings.cs b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/AppAiAccessSelectorBindings.cs
+new file mode 100644
+--- /dev/null
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/AppAiAccessSelectorBindings.cs
+@@ -0,0 +1,116 @@
++using System.ComponentModel;
++using CakeOS.Cui;
++using CakeOS.Cui.Runtime;
++using NineToOne.Cui.AI;
++
++namespace Haven.Desktop.Views.Pages.Chat;
++
++/// <summary>
++/// PROPOSED production wiring (host layer) — not part of framework/CUI/AI.
++///
++/// Bridges the reusable <see cref="AppAiAccessSelector"/> (typed adapter over the existing
++/// <see cref="FloatingAiBarState"/>) into an authored CUI scene, so <c>AiAccessSelector.cui</c>
++/// can be mounted by a host (the shared floating bar and/or the shared composer) with the SAME
++/// live AI access-mode state.
++///
++/// Invalidation contract: this bridge subscribes ONCE to the shared
++/// <see cref="AppAiAccessSelector.Changed"/> and forwards every current-owner update through the
++/// CUI binding notification contract (<see cref="INotifyPropertyChanged"/>, the same mechanism
++/// <c>ChatComposerBindings</c> uses) with a null property name to refresh all bound surfaces.
++/// It keeps NO duplicate mode cache — every read reflects live state.
++///
++/// Lifetime: disposing this bridge only unsubscribes ITS OWN handler. It never disposes the shared
++/// <see cref="AppAiAccessSelector"/> (nor the underlying <see cref="FloatingAiBarState"/>), which
++/// may be owned by another component. Late notifications captured after dispose are fenced out.
++/// </summary>
++public sealed class AppAiAccessSelectorBindings :
++    ICuiWritableBindingContext,
++    ICuiActionDispatcher,
++    ICuiActionAvailability,
++    INotifyPropertyChanged,
++    IDisposable
++{
++    private readonly AppAiAccessSelector _selector;
++    private bool _disposed;
++
++    public AppAiAccessSelectorBindings(AppAiAccessSelector selector)
++    {
++        _selector = selector ?? throw new ArgumentNullException(nameof(selector));
++        _selector.Changed += OnSelectorChanged;
++    }
++
++    public AppAiAccessSelector Selector => _selector;
++
++    public event PropertyChangedEventHandler? PropertyChanged;
++
++    public bool TryGetValue(string path, out object? value)
++    {
++        value = null;
++        switch (path)
++        {
++            case "Access.CurrentModeLabel":
++                value = _selector.CurrentModeLabel;
++                return true;
++            case "Access.IsReadOnly":
++                value = _selector.IsReadOnly;
++                return true;
++            case "Access.IsWriteMode":
++                value = _selector.IsWriteMode;
++                return true;
++            case "Access.CanChangeMode":
++                value = _selector.CanChangeMode;
++                return true;
++            case "Access.HasStatus":
++                value = _selector.HasStatus;
++                return true;
++            case "Access.StatusMessage":
++                value = _selector.Status?.Message ?? string.Empty;
++                return true;
++            default:
++                return false;
++        }
++    }
++
++    public bool TrySetValue(string path, object? value) => false;
++
++    public bool? IsActionAvailable(string command) => command switch
++    {
++        "access.select-readonly" or "access.select-write" => _selector.CanChangeMode,
++        _ => null
++    };
++
++    public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
++    {
++        cancellationToken.ThrowIfCancellationRequested();
++        switch (command)
++        {
++            case "access.select-readonly":
++                _selector.SelectReadOnly();
++                return ValueTask.CompletedTask;
++            case "access.select-write":
++                _selector.SelectWrite();
++                return ValueTask.CompletedTask;
++            default:
++                return ValueTask.FromException(new InvalidOperationException(
++                    $"AI access selector CUI command '{command}' is not owned by the shared selector."));
++        }
++    }
++
++    private void OnSelectorChanged(object? sender, EventArgs e)
++    {
++        // Fence late owner notifications captured after this bridge was disposed.
++        if (_disposed) return;
++        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
++    }
++
++    /// <summary>
++    /// Unsubscribes only this bridge's handler. The shared selector (and its owned bar state) is
++    /// intentionally NOT disposed here; it may be owned by another component.
++    /// </summary>
++    public void Dispose()
++    {
++        if (_disposed) return;
++        _disposed = true;
++        _selector.Changed -= OnSelectorChanged;
++    }
++}

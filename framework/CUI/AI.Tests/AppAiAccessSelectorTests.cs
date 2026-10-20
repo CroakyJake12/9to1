@@ -177,9 +177,13 @@ public sealed class AppAiAccessSelectorTests
         Assert.Contains("Access.IsReadOnly", AllBindingPaths(readOnly), StringComparison.Ordinal);
         Assert.Contains("Access.IsWriteMode", AllBindingPaths(write), StringComparison.Ordinal);
 
-        // The actions represent the real read-only/write mode change commands.
+        // Each button references the declared action by its authored name.
         Assert.Equal("access.select-readonly", readOnly.Actions["action"].Name);
         Assert.Equal("access.select-write", write.Actions["action"].Name);
+
+        // The document-level action definitions resolve those names to the actual commands.
+        Assert.Equal("access.select-readonly", document.Actions["access.select-readonly"].Command);
+        Assert.Equal("access.select-write", document.Actions["access.select-write"].Command);
 
         // Status line is present and bound to the observed-status projection.
         Assert.Contains("Access.HasStatus", AllBindingPaths(status), StringComparison.Ordinal);

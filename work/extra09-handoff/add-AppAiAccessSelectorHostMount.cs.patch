@@ -1,0 +1,66 @@
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/AppAiAccessSelectorHostMount.cs b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/AppAiAccessSelectorHostMount.cs
+new file mode 100644
+--- /dev/null
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/AppAiAccessSelectorHostMount.cs
+@@ -0,0 +1,61 @@
++using CakeOS.Cui.Runtime;
++using NineToOne.Cui.AI;
++
++namespace Haven.Desktop.Views.Pages.Chat;
++
++/// <summary>
++/// PROPOSED production wiring (host layer) — not part of framework/CUI/AI.
++///
++/// Compilable typed mount adapter for a GENUINELY SUPPLIED owner state. It builds a
++/// <see cref="CuiNativeScene"/> for the packaged <c>AiAccessSelector.cui</c> document bound
++/// through <see cref="AppAiAccessSelectorBindings"/> to the shared
++/// <see cref="AppAiAccessSelector"/> (and therefore to the one owner
++/// <see cref="FloatingAiBarState"/>).
++///
++/// PRODUCTION DEPENDENCY STATUS (honest): as of this handoff there is NO production floating-bar
++/// render host/call site in this worktree that consumes <c>FloatingAiBarScene</c> or supplies an
++/// owner <see cref="FloatingAiBarState"/> to the shared composer. This adapter is therefore a
++/// typed mount/scene integration point for the genuine supplied owner, NOT proven production
++/// integration. It is not wired into a production host here.
++///
++/// Ownership: this mount creates and owns the <see cref="AppAiAccessSelectorBindings"/> it uses.
++/// Disposing the mount releases the bridge (which unsubscribes from
++/// <see cref="AppAiAccessSelector.Changed"/>). The shared selector and its
++/// <see cref="FloatingAiBarState"/> remain owned by Home and are never disposed here.
++/// </summary>
++public sealed class AppAiAccessSelectorHostMount : IDisposable
++{
++    private readonly AppAiAccessSelectorBindings _bindings;
++    private readonly CuiSceneHost _host;
++    private bool _disposed;
++
++    public AppAiAccessSelectorHostMount(
++        AppAiAccessSelector selector,
++        ICuiSceneReadiness readiness,
++        CuiControlRegistry? registry = null)
++    {
++        ArgumentNullException.ThrowIfNull(selector);
++        ArgumentNullException.ThrowIfNull(readiness);
++        _bindings = new AppAiAccessSelectorBindings(selector);
++        var document = AiAccessSelectorScene.Load();
++        var scene = new CuiNativeScene(
++            "spaces.chat.ai-access", "AI access", "Chat",
++            document, _bindings, _bindings, readiness);
++        _host = new CuiSceneHost(registry);
++        Scene = scene;
++    }
++
++    /// <summary>The authored selector scene bound to the live shared owner state.</summary>
++    public CuiNativeScene Scene { get; }
++
++    public Task<CuiSceneAvailability> ShowAsync(CancellationToken cancellationToken = default) =>
++        _host.ShowAsync(Scene, cancellationToken);
++
++    /// <summary>Releases only this mount's bridge; the shared selector/state remain owned by Home.</summary>
++    public void Dispose()
++    {
++        if (_disposed) return;
++        _disposed = true;
++        _bindings.Dispose();
++    }
++}
