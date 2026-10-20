@@ -200,6 +200,18 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public IChatComposerInputPort ComposerInput => _composerInput;
 
     public event EventHandler? ModelChanged;
+    /// <summary>Raised when the user asks to manage local models from this chat (for example
+    /// from the truthful unavailable-model state). The host routes it to the shared Home local
+    /// model manager/catalogue, preserving this conversation, draft, selection and focus.</summary>
+    public event EventHandler? ManageLocalModelsRequested;
+    /// <summary>Typed recovery action from the affected chat status. It never fabricates a
+    /// model or changes the send gate; it only requests the shared local-model management
+    /// route so the user can install/repair/import the missing safe local artifacts.</summary>
+    public void RequestManageLocalModels()
+    {
+        DemandOriginalChatCurrent();
+        ManageLocalModelsRequested?.Invoke(this, EventArgs.Empty);
+    }
     public event EventHandler? ConversationStateChanged;
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
@@ -207,6 +219,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;
+    /// <summary>The actual model-client source this page discovers/sends through. Normal and
+    /// Overlay chat must both receive the same routed <see cref="IProviderModelClient"/> from
+    /// their factory composition; this exposes the bound instance for composition regression
+    /// tests without granting callers an escape hatch to bypass routing.</summary>
+    internal IOllamaClient ModelClientSource => _ollama;
     public IReadOnlyList<ModelDescriptor> AdmittedModels => _admittedCatalogue;
     /// <summary>Truthful availability of configured model discovery. Unavailable is a
     /// terminal degraded observation that survives Fresh/Restore; model-backed actions

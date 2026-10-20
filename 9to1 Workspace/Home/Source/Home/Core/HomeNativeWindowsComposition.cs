@@ -122,7 +122,13 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
             () => api ?? throw new InvalidOperationException("The original Home API has not been constructed."));
         Productivity = new();
         var permissionsService = new HomePermissionsCoreService(Permissions, Profiles);
-        Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity], Sessions);
+        // The shared local Dulche runtime is owned by Home Core as one lifecycle service. The
+        // default observation source performs only real package/platform existence probes; it
+        // never fabricates a model or a Ready state, so a missing/altered runtime is reported
+        // truthfully as a recoverable degraded observation.
+        var dulcheSource = new HomeDulcheRuntimeObservationSource();
+        var dulcheRuntime = new HomeDulcheRuntimeService(dulcheSource);
+        Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity, dulcheRuntime], Sessions);
         Api = api = new(Runtime, Sessions, Profiles);
         var components = new Dictionary<Type, object>
         {
@@ -147,6 +153,8 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
             [typeof(HomeCoreRuntime)] = Runtime,
             [typeof(HomeCoreApi)] = Api,
             [typeof(IHomeCoreApi)] = Api,
+            [typeof(HomeDulcheRuntimeService)] = dulcheRuntime,
+            [typeof(IHomeDulcheRuntimeObservationSource)] = dulcheSource,
             [typeof(IAppPaths)] = _paths
         };
         AddRegistrations(components, stageServices);

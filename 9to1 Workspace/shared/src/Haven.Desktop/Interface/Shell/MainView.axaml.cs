@@ -1017,6 +1017,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         page.ConversationStateChanged += OnNewChatConversationStateChanged;
         page.AddActionSelected += OnNewChatAddActionSelected;
         page.AddCatalogItemSelected += OnNewChatCatalogItemSelected;
+        // The typed local-model recovery action routes to the shared Home model catalogue/Discover
+        // surface, preserving this conversation, draft, selection and focus.
+        page.ManageLocalModelsRequested += (_, _) => StartOriginalShellEvent(original =>
+            original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => OpenHomeDiscoverAsync())));
         return page;
     }
 

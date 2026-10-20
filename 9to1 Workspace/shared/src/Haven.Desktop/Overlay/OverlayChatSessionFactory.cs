@@ -47,7 +47,12 @@ internal sealed class OverlayChatSessionFactory(
     {
         Dispatcher.UIThread.VerifyAccess();
         cancellationToken.ThrowIfCancellationRequested();
-        var page = ActivatorUtilities.CreateInstance<NewChatPage>(services);
+        // Overlay chat must use the SAME routed catalogue as the normal Haven chat page. The
+        // shared IProviderModelClient is the resilient routed client, not the raw Ollama
+        // transport. Inject it explicitly so NewChatPage's IOllamaClient slot binds to the
+        // routed source instead of resolving the raw Ollama registration in the container.
+        var routed = services.GetRequiredService<IProviderModelClient>();
+        var page = ActivatorUtilities.CreateInstance<NewChatPage>(services, routed);
         try
         {
             // Construction starts original model discovery bound to the initial conversation.

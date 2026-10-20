@@ -61,6 +61,59 @@ public sealed class OverlayChatInitializationTests
         }
     }
 
+    // Overlay chat must publish the SAME routed model catalogue as the normal Haven chat page
+    // (IProviderModelClient), never a separate raw Ollama transport. The rig registers only
+    // the routed source, so if the Overlay factory accidentally resolved the raw Ollama slot
+    // the page's bound model client would not be the rig's routed instance.
+    [AvaloniaFact]
+    public async Task Overlay_chat_binds_the_same_routed_model_client_as_normal_chat()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        try
+        {
+            Assert.Same(rig.Routed, page.ModelClientSource);
+            Assert.True(page.ModelClientSource is IProviderModelClient);
+            // The routed source is the only provider that was ever available; the raw Ollama
+            // transport was never registered, so Overlay discovery cannot have touched it.
+            Assert.Equal(1, rig.ModelReadAttempts);
+        }
+        finally
+        {
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    // The typed local-model recovery action must open a real management route while the
+    // conversation, draft and refusal state survive; it never clears the draft or fabricates
+    // a model or a send admission.
+    [AvaloniaFact]
+    public async Task Manage_local_models_action_routes_while_draft_and_refusal_survive()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetException(new HttpRequestException("Connection refused (127.0.0.1:11434)",
+            new SocketException((int)SocketError.ConnectionRefused)));
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var requested = false;
+        page.ManageLocalModelsRequested += (_, _) => requested = true;
+        try
+        {
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            page.SetDraft("offline model recovery draft");
+            page.RequestManageLocalModels();
+            Assert.True(requested);
+            Assert.Equal("offline model recovery draft", ComposerText(page));
+            Assert.False(SendEnabled(page));
+        }
+        finally
+        {
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
     [AvaloniaFact]
     public async Task Cancelled_creation_joins_held_original_model_read_before_returning_failure()
     {
@@ -1015,6 +1068,9 @@ public sealed class OverlayChatInitializationTests
         public readonly DraftStore Drafts = new();
         public int ConversationSelections;
         public OverlayChatSessionFactory Factory { get; }
+        /// <summary>The SAME routed source the Overlay factory must bind NewChatPage's model
+        /// client to; raw Ollama is not present in the Overlay graph at all.</summary>
+        public IProviderModelClient Routed { get; } = null!;
         /// <summary>The ARMED next conversation write, if any, so a test can hold the exact real
         /// storage boundary that an accepted send's committed input must pass.</summary>
         public HeldConversationWrite? NextConversationWrite;
@@ -1049,6 +1105,10 @@ public sealed class OverlayChatInitializationTests
             }
         }
         private int _modelReadCount;
+        /// <summary>Total provider model reads the page actually attempted through the routed
+        /// client; used to prove discovery went through the shared routed source and never the
+        /// raw Ollama transport.</summary>
+        public int ModelReadAttempts => _modelReadCount;
         private readonly ServiceProvider _services;
         private readonly List<NativeWindow> _windows = [];
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-chat-initialization-" + Guid.NewGuid().ToString("N"));
@@ -1066,7 +1126,7 @@ public sealed class OverlayChatInitializationTests
                 "GetContextEntriesAsync" => Task.FromResult<IReadOnlyList<ConversationContextEntry>>([]),
                 _ => throw RecordUnexpected(name)
             });
-            var ollama = Proxy<IOllamaClient>((name, args) =>
+            var ollama = Proxy<IProviderModelClient>((name, args) =>
             {
                 if (name != "GetModelsAsync")
                 {
@@ -1104,7 +1164,14 @@ public sealed class OverlayChatInitializationTests
             var instances = new GenUiInstanceStore();
             var services = new ServiceCollection()
                 .AddSingleton(new HavenEventBus())
-                .AddSingleton(conversations).AddSingleton(ollama).AddSingleton(safety)
+                .AddSingleton(conversations).AddSingleton(safety)
+                // The SAME routed source backs both the IOllamaClient slot NewChatPage binds
+                // (through the Overlay factory's explicit routed-client injection) and the
+                // IProviderModelClient identity the production composition uses. There is no
+                // separate raw Ollama client in this Overlay rig, so Overlay discovery can
+                // never accidentally fall through to a raw transport.
+                .AddSingleton<IProviderModelClient>(ollama)
+                .AddSingleton<IOllamaClient>(ollama)
                 .AddSingleton(Proxy<IConversationProductionRepository>(Drafts.Invoke))
                 .AddSingleton(Proxy<IConversationVersioningService>())
                 .AddSingleton(new UserPreferencesService(paths))
@@ -1119,6 +1186,7 @@ public sealed class OverlayChatInitializationTests
                 typeof(AssessmentTemplateRuntime), typeof(WorkflowTemplateRuntime), typeof(CustomTemplateRuntime) })
                 services.AddSingleton(type);
             _services = services.BuildServiceProvider();
+            Routed = _services.GetRequiredService<IProviderModelClient>();
             var capabilities = new CapabilityRegistryService(Proxy<ICapabilityRepository>((name, _) =>
                 name == "GetCapabilitiesAsync" ? Task.FromResult<IReadOnlyList<CapabilityDefinition>>([]) : throw Unexpected(name)));
             var catalog = Proxy<ICatalogRepository>((name, _) => name switch {

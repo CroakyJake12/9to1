@@ -37,6 +37,26 @@ class PackagingTests(unittest.TestCase):
         dependencies = set(self.manifest["runtimeDependencies"])
         self.assertTrue({"python3", "libc6", "libstdc++6", "libgcc-s1", "libgomp1"}.issubset(dependencies))
 
+    def test_runtime_package_rejects_model_weight_arguments(self) -> None:
+        builder = (REPOSITORY / "9to1 OS/packaging/llamacpp/build-deb.sh").read_text(encoding="utf-8")
+        self.assertIn("gguf", builder)
+        # The runtime package accepts a real native llama-server binary input only; it must
+        # never accept/embed a model weight path or GGUF as a substitute for weights.
+        self.assertIn('exit 68', builder)
+
+    def test_home_model_manifest_example_is_a_zero_placeholder_not_an_asset(self) -> None:
+        manifest = json.loads((RUNTIME / "model-manifest.example.json").read_text(encoding="utf-8"))
+        self.assertEqual("0000000000000000000000000000000000000000000000000000000000000000", manifest["sha256"])
+        self.assertEqual(0, manifest["size"])
+
+    def test_ci_model_lock_is_proof_only_and_bans_packaging_that_model(self) -> None:
+        lock_data = json.loads((RUNTIME / "test-model.lock.json").read_text(encoding="utf-8"))
+        self.assertEqual("ci-real-inference-proof-only", lock_data["purpose"])
+        policy = lock_data["distributionPolicy"]
+        self.assertFalse(policy["commitModel"])
+        self.assertFalse(policy["packageModel"])
+        self.assertFalse(policy["uploadModelArtifact"])
+
     def test_builder_has_no_package_install_or_service_enable_step(self) -> None:
         builder = (REPOSITORY / "9to1 OS/packaging/llamacpp/build-deb.sh").read_text(encoding="utf-8")
         self.assertNotIn("dpkg -i", builder)
