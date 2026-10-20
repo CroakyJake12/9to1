@@ -20,7 +20,7 @@
         </Container>
           <Button id="BrowseNewTabButton" Column="1" action="9to1.Browse.NewTab" Interactive="{Binding Can.NewTab}" AccessibleName="New tab" Tooltip="New tab (Ctrl+T)" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">+</Button>
       </Container>
-      <Container id="BrowseNavigationBar" Type="Grid" Row="1" Column="0" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto" CellGap="4" Padding="8 4 8 6" Background="{Resource CuiPanelBrush}">
+      <Container id="BrowseNavigationBar" Type="Grid" Row="1" Column="0" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto" CellGap="2" Padding="4 4 4 6" Background="{Resource CuiPanelBrush}">
         <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Tooltip="Go back (Alt+Left)" Interactive="{Binding CanBack}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">←</Button>
         <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" AccessibleName="Go forward" Tooltip="Go forward (Alt+Right)" Interactive="{Binding CanForward}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">→</Button>
         <Container Type="Overlay" Column="2">

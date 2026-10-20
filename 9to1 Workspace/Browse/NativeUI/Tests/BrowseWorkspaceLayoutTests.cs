@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -7,6 +8,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Browser;
+using Haven.Desktop.HavenUI.Backend;
 using Xunit;
 
 namespace HavenOS.Apps.Browse.Tests;
@@ -25,7 +27,10 @@ public sealed partial class BrowseNativeUiTests
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
         window.Width = width; window.Height = height;
-        using (var validation = new CuiControlLoader(BrowseNativeSurface.CreateScene(workspace, new FixtureReadiness()).ControlRegistry!))
+        RegisterProductionImageResolver(window);
+        var validationRegistry = BrowseNativeSurface.CreateScene(workspace, new FixtureReadiness()).ControlRegistry!;
+        RegisterProductionImageResolver(validationRegistry);
+        using (var validation = new CuiControlLoader(validationRegistry))
         {
             validation.SetBindingContext(workspace); validation.SetActionDispatcher(workspace);
             var loaded = validation.TryLoad(BrowseNativeWorkspace.LoadDocument());
@@ -150,9 +155,12 @@ public sealed partial class BrowseNativeUiTests
         var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
         window.Width = width;
+        RegisterProductionImageResolver(window);
+        var validationRegistry = BrowseNativeSurface.CreateScene(workspace, new FixtureReadiness()).ControlRegistry!;
+        RegisterProductionImageResolver(validationRegistry);
         try
         {
-            using (var validation = new CuiControlLoader(BrowseNativeSurface.CreateScene(workspace, new FixtureReadiness()).ControlRegistry!))
+            using (var validation = new CuiControlLoader(validationRegistry))
             {
                 validation.SetBindingContext(workspace); validation.SetActionDispatcher(workspace);
                 var loaded = validation.TryLoad(BrowseNativeWorkspace.LoadDocument());
@@ -228,4 +236,21 @@ public sealed partial class BrowseNativeUiTests
         }
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
     }
+
+    /// <summary>Mount the SAME production packaged-SVG resolver on a mounted Browse window's
+    /// retained native scene before Show/InitializeAsync, so authored avares://Haven SVG icons
+    /// resolve exactly as in the real host.</summary>
+    private static void RegisterProductionImageResolver(BrowseNativeWindow window)
+    {
+        var scene = typeof(BrowseNativeWindow)
+            .GetField("_originalScene", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(window) as CuiNativeScene;
+        Assert.NotNull(scene);
+        scene!.ControlRegistry!.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
+    }
+
+    /// <summary>Mount the SAME production packaged-SVG resolver on a validation scene registry
+    /// before TryLoad.</summary>
+    private static void RegisterProductionImageResolver(CuiControlRegistry registry)
+        => registry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
 }

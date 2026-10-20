@@ -279,6 +279,7 @@ public sealed partial class BrowseNativeUiTests
         var context = new SharedControlsFakeContext(gateway);
         var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
