@@ -210,6 +210,24 @@
       "Meaningful control/route/lifetime test coverage was weakened; restore actual production checks",
       "CUI local presentation state requires framework implementation and authored CUI migration"
     ],
-    "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof"
+    "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof",
+    "latest_observation_at": "2026-10-20T11:49:17.889596+00:00",
+    "third_turn_tests": {
+      "initial_host_core": "82total/50passed/32failed; includes production NativeHost registration failure subsequently corrected in active source",
+      "component_lifetime": "2passed/0failed, not whole-page or app acceptance",
+      "later_host": "84total/72passed/12failed at11:48UTC; actual queued-draft/model-gate regressions and obsolete Instruction reflection helpers still under repair",
+      "state": "ACTIVE source, not frozen; exclusive serialized .NET slot held by one OpenCode Mercury worker",
+      "rendered_control_coverage": "Still deficient: Overlay helper invokes bindings directly and reads source CanSend; must restore real authored Button event and IsEnabled coverage"
+    }
+  },
+  "latest_owner_ui_refinements": {
+    "source_commit": "a7cc05cb95bbe135301e141a2e5bcdffa5a1c53f",
+    "references": [
+      "docs/specification/owner-references/2026-10-20-professional-spaces-heading/owner-correction.json",
+      "docs/specification/owner-references/2026-10-20-continuous-composer/owner-correction.json"
+    ],
+    "priority": "Canonical specification takes priority over both illustrative images. Professional excludes mistaken decorative glow.",
+    "composer": "One continuous surface, no visible nested input box; genuine format/emoji under expanded-and-focused rule and canonical permission selector, separate from AI Read-only/Write.",
+    "icons": "Filled rounded SVGs and real running/most-used/configured Assistant state remain required and unimplemented."
   }
 }
