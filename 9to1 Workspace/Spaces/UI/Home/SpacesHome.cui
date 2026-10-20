@@ -52,7 +52,7 @@
     <Page id="spaces-page" role="main" accessible-name="Spaces">
       <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}" Background="{Resource CuiBackgroundBrush}">
         <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="0" Background="{Resource CuiBackgroundBrush}">
-          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="70" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8" Background="{Resource CuiPanelBrush}">
+          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="70" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
             <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" Tooltip="Create a custom Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="create-space-icon" Source="icon:plus" Width="24" Height="24" />
             </Button>
@@ -93,7 +93,7 @@
             recent conversations. It stays visible while a Space conversation is mounted, and it
             never becomes a cross-Space history list because the rows are scoped to the selection.
           -->
-          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="12" CellGap="8" Background="{Resource CuiPanelBrush}" IsVisible="{Binding spaces.sidebarExpanded}">
+          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="12" CellGap="8" Background="{Resource CuiPanel3Brush}" IsVisible="{Binding spaces.sidebarExpanded}">
             <!--
               The header control displays the currently selected Space and switches Spaces when
               activated; the adjacent overflow control holds that Space's quick actions. Both popovers

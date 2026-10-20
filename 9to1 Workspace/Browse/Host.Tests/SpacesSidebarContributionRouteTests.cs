@@ -681,13 +681,9 @@ public sealed class SpacesSidebarContributionRouteTests
     private static string ReadDraft(NewChatPage page)
     {
         var scene = typeof(NewChatPage).GetField("_scene", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page)!;
-        var instructionMember = scene.GetType().GetField("Instruction")
-            ?? (MemberInfo?)scene.GetType().GetProperty("Instruction");
-        var instruction = instructionMember is FieldInfo field
-            ? field.GetValue(scene)
-            : ((PropertyInfo)instructionMember!).GetValue(scene);
-        var textProperty = instruction!.GetType().GetProperty("Text")!;
-        return (string?)textProperty.GetValue(instruction) ?? string.Empty;
+        // The scene's live canonical input is the single authority for the composer draft; the
+        // retired `Instruction` reflection member no longer exists on ChatHavenScene.
+        return ((ChatHavenScene)scene).Input.Text ?? string.Empty;
     }
 
     /// <summary>An AppSurface target declared with an HTTPS address is a kind/namespace mismatch:

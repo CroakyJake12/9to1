@@ -70,7 +70,7 @@ public sealed class SpacesDetailsRouteTests
             // the contextual sidebar still presents its own history row.
             Assert.Same(chat, home.SpaceWorkspaceContent);
             Assert.Equal(conversation, chat.ConversationId);
-            Assert.Equal("Retained unsent Details round trip", ((ChatHavenScene)typeof(NewChatPage).GetField("_scene", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(chat)!).Instruction.Text);
+            Assert.Equal("Retained unsent Details round trip", ((ChatHavenScene)typeof(NewChatPage).GetField("_scene", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(chat)!).Input.Text);
             var prepared = (await session.PrepareCloseAsync().WaitAsync(Bound))!;
             Assert.True(prepared.IsCurrent);
             var close = prepared.BeginClose();

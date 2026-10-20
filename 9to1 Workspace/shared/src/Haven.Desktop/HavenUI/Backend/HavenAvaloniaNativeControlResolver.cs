@@ -13,6 +13,18 @@ public interface IHavenAvaloniaNativeControlResolver
 }
 
 /// <summary>
+/// Narrow typed registration extension used by owners that mount a real native control for a
+/// Haven element (such as the shared CUI composer inside a Chat NativeHost). Solving custody
+/// through a typed registrar avoids reflection, unsafe downcasts and unrelated interfaces.
+/// The control remains owned by the element's owner; the registrar only records the mapping.
+/// </summary>
+public interface IHavenNativeControlRegistrar : IHavenAvaloniaNativeControlResolver
+{
+    void Register(HavenElement element, Control control);
+    void Unregister(HavenElement element, Control control);
+}
+
+/// <summary>
 /// Safe default that creates no native controls. Platform composition roots
 /// must explicitly provide capabilities such as a WebView or video player.
 /// </summary>

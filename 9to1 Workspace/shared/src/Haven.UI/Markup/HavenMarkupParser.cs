@@ -124,7 +124,7 @@ public sealed class HavenMarkupParser(HavenPrefabCatalog? prefabs = null)
 
     private static HavenElement Create(string name, string sourceName, int line, int column) => name switch
     {
-        "Page" => new Page(), "Container" => new Container(), "Text" => new Text(), "Markdown" => new Markdown(), "Button" => new Button(), "Input" => new Input(), "Toggle" => new Toggle(), "Slider" => new Slider(), "Select" => new Select(), "Image" => new HavenImageComponent(), "Icon" => new Icon(), "Video" => new Video(), "Canvas" => new Canvas(), "Web" => new Web(), "Progress" => new Progress(), "Separator" => new Separator(),
+        "Page" => new Page(), "Container" => new Container(), "Text" => new Text(), "Markdown" => new Markdown(), "Button" => new Button(), "Input" => new Input(), "Toggle" => new Toggle(), "Slider" => new Slider(), "Select" => new Select(), "Image" => new HavenImageComponent(), "Icon" => new Icon(), "Video" => new Video(), "Canvas" => new Canvas(), "Web" => new Web(), "Progress" => new Progress(), "Separator" => new Separator(), "NativeHost" => new NativeHost(),
         _ => throw new HavenMarkupException(sourceName, line, column, $"Unknown 9to1 component '{name}'.")
     };
 

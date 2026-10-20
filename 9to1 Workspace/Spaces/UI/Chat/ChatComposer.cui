@@ -12,8 +12,21 @@
       </Container>
       <Input id="composer-input" Type="Text" AcceptsReturn="True" Value="{Binding Composer.Draft}" placeholdertext="{Binding Composer.Placeholder}" background="Transparent" padding="4" MinHeight="44" accessible-name="Message" />
       <Container id="format-row" Type="Horizontal Stack" CellGap="6" IsVisible="{Binding Composer.ShowFormatting}">
-        <Button action="composer.format" action-argument="Bold" content="Aa" accessible-name="Format selected text" />
+        <Button action="composer.format" action-argument="Bold" content="B" font-weight="Bold" accessible-name="Bold" />
+        <Button action="composer.format" action-argument="Italic" content="I" font-style="Italic" accessible-name="Italic" />
+        <Button action="composer.format" action-argument="Code" content="&lt;&gt;" accessible-name="Inline code" />
+        <Button action="composer.format" action-argument="Link" content="🔗" accessible-name="Link" />
+        <Button action="composer.format" action-argument="Quote" content="❝" accessible-name="Quote" />
+        <Button action="composer.format" action-argument="Bullet" content="•" accessible-name="Bullet list" />
         <Button action="composer.emoji" content="😀" accessible-name="Insert emoji" />
+      </Container>
+    </Container>
+    <Container id="emoji-panel" Column="0" ColumnSpan="4" Row="1" Type="Vertical Stack" CellGap="8" padding="8" background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
+      <Input id="emoji-search" Type="Text" Value="{Binding Composer.EmojiQuery}" placeholdertext="Search emoji…" MinHeight="36" accessible-name="Search emoji" />
+      <Container Type="Wrap" CellGap="6" MaxHeight="180">
+        <Repeat Source="{Binding Composer.EmojiEntries}" As="emoji" Key="{Binding emoji.Text}">
+          <Button action="composer.emoji-insert" action-argument="{Binding emoji.Text}" content="{Binding emoji.Text}" font-size="18" accessible-name="Insert {Binding emoji.Name}" />
+        </Repeat>
       </Container>
     </Container>
     <Button id="settings-button" action="composer.settings" content="⚙" Column="2" Width="44" Height="44" CornerRadius="22" IsVisible="{Binding Composer.ShowFormatting}" accessible-name="Thread settings" />
@@ -28,8 +41,10 @@
       <Button action="composer.set-action-mode" action-argument="JustChat" content="Just chat" font-size="12" />
       <Text text="Responses:" font-size="12" font-weight="SemiBold" />
       <Button action="composer.set-response-mode" action-argument="Auto" content="Auto" font-size="12" />
-      <Button action="composer.set-response-mode" action-argument="AlwaysVisual" content="Visual" font-size="12" />
-      <Button action="composer.set-response-mode" action-argument="AlwaysText" content="Text" font-size="12" />
+      <Button action="composer.set-response-mode" action-argument="AlwaysVisual" content="Always visual" font-size="12" />
+      <Button action="composer.set-response-mode" action-argument="PreferVisual" content="Prefer visual" font-size="12" />
+      <Button action="composer.set-response-mode" action-argument="PreferText" content="Prefer text" font-size="12" />
+      <Button action="composer.set-response-mode" action-argument="AlwaysText" content="Always text" font-size="12" />
     </Container>
   </Container>
 </Cui>

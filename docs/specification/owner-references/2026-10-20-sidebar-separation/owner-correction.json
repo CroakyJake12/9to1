@@ -1,0 +1,13 @@
+{
+  "source": "Direct owner clarification in current chat,20October2026",
+  "recorded_at": "2026-10-20T11:29:05.613508+00:00",
+  "owner_request": "There should be more definition between the 2 sidebars. Maybe the secondary one is lighter or the icon one darker?",
+  "interpretation": "Give the icon rail and selected Space contextual sidebar distinct semantic surfaces; use a lighter contextual surface and subtle rail boundary in Professional dark appearances. Preserve theme adaptation and accessibility.",
+  "authority": "Direct owner refinement; canonical v2 remains general product authority",
+  "invariants": [
+    "Same canonical Spaces CUI resource in standalone and Haven",
+    "Preserve 70px approximate rail and contextual sidebar layout, collapse/reopen and selection/draft state",
+    "Use existing CUI semantic surface/line resources; no app-specific hardcoded colours or new native presentation",
+    "Verify actual native artifact and preserve earlier FAIL/NOT_RUN states"
+  ]
+}

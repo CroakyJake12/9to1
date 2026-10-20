@@ -7,7 +7,8 @@ internal sealed partial class ChatHavenScene
     /// <summary>
     /// Live data source bridging the shared CUI composer view to the real Haven Chat scene
     /// (queue-aware send, catalogue popup, chips, typed input). No state is cloned; the scene
-    /// remains the single authority.
+    /// remains the single authority. Action methods execute the real operation and report the
+    /// admitted lifetime through the returned ValueTask.
     /// </summary>
     internal sealed class HavenComposerSource : IChatComposerSource
     {
@@ -19,25 +20,26 @@ internal sealed partial class ChatHavenScene
         public bool IsSending => _scene._isSending;
         public bool IsSafetyLocked => _scene._safetyLocked;
         public bool HasAdd { get; set; } = true;
-        public bool CanSend => !_scene._safetyLocked && (_scene._isSending || !string.IsNullOrWhiteSpace(_scene.Input.Text));
+        public bool CanSend => !_scene._safetyLocked && _scene._modelAvailable;
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
 
-        public void Send() => _scene.HandleComposerSend();
-        public void Stop() => _scene.StopRequested?.Invoke(_scene, EventArgs.Empty);
-        public void Add() => _scene.ShowAddMenu();
-        public void OpenSettings() => _scene.OpenComposerSettings();
-        public void CloseSettings() { }
-        public void SetActionMode(string mode) => _scene.SelectComposerActionMode(mode);
-        public void SetResponseMode(string mode) => _scene.SelectComposerResponseMode(mode);
-        public void InvokeChip(string id) => _scene.AttachmentInvoked?.Invoke(_scene, id);
-        public void RemoveChip(string id) => _scene._attachmentRemoveRequested?.Invoke(_scene, id);
-        public void FormatSelection(string command) => _scene.FormatComposerSelection(command);
-        public void Emoji() => _scene.OpenComposerEmoji();
-        public void CancelEdit() { }
+        public ValueTask Send() => _scene.HandleComposerSendAsync();
+        public ValueTask Stop() { _scene.StopRequested?.Invoke(_scene, EventArgs.Empty); return ValueTask.CompletedTask; }
+        public ValueTask Add() { _scene.ShowAddMenu(); return ValueTask.CompletedTask; }
+        public ValueTask OpenSettings() { _scene.OpenComposerSettings(); return ValueTask.CompletedTask; }
+        public ValueTask CloseSettings() => ValueTask.CompletedTask;
+        public ValueTask SetActionMode(string mode) { _scene.SelectComposerActionMode(mode); return ValueTask.CompletedTask; }
+        public ValueTask SetResponseMode(string mode) { _scene.SelectComposerResponseMode(mode); return ValueTask.CompletedTask; }
+        public ValueTask InvokeChip(string id) { _scene.AttachmentInvoked?.Invoke(_scene, id); return ValueTask.CompletedTask; }
+        public ValueTask RemoveChip(string id) { _scene._attachmentRemoveRequested?.Invoke(_scene, id); return ValueTask.CompletedTask; }
+        public ValueTask FormatSelection(string command) { _scene.FormatComposerSelection(command); return ValueTask.CompletedTask; }
+        public ValueTask InsertEmoji(string emoji) { _scene.InsertComposerEmoji(emoji); return ValueTask.CompletedTask; }
+        public ValueTask CancelEdit() => ValueTask.CompletedTask;
     }
 
-    /// <summary>Formatting edits the current selection in the real CUI input.</summary>
+    /// <summary>Formatting edits the current selection in the real CUI input using the actual
+    /// selection endpoints, preserving forward/backward selection and the caret.</summary>
     public void FormatComposerSelection(string command)
     {
         if (Input.SelectionLength <= 0) return;
@@ -48,6 +50,10 @@ internal sealed partial class ChatHavenScene
         {
             "Bold" => $"**{selected}**",
             "Italic" => $"_{selected}_",
+            "Code" => $"`{selected}`",
+            "Link" => $"[{selected}](url)",
+            "Quote" => $"> {selected}",
+            "Bullet" => $"- {selected}",
             "Strikethrough" => $"~~{selected}~~",
             _ => selected
         };
@@ -56,6 +62,21 @@ internal sealed partial class ChatHavenScene
         Input.SetSelection(start, start + wrapped.Length);
     }
 
-    /// <summary>Emoji opens its real menu while keeping composer focus; insertion stays external/unmigrated.</summary>
+    /// <summary>Inserts a chosen emoji at the real caret, replacing any active selection and
+    /// keeping focus in the composer input.</summary>
+    public void InsertComposerEmoji(string emoji)
+    {
+        if (string.IsNullOrEmpty(emoji)) return;
+        var text = Input.Text ?? string.Empty;
+        var start = Math.Clamp(Input.SelectionStart, 0, text.Length);
+        var length = Math.Clamp(Input.SelectionLength, 0, text.Length - start);
+        var next = text.Remove(start, length).Insert(start, emoji);
+        Input.Text = next;
+        Input.SetSelection(start + emoji.Length, start + emoji.Length);
+        Input.Focus();
+    }
+
+    /// <summary>Emoji is inserted through the typed port (see <see cref="InsertComposerEmoji"/>);
+    /// this legacy entry point remains only to keep the retired HUI surface out of presentation.</summary>
     public void OpenComposerEmoji() => Input.Focus();
 }

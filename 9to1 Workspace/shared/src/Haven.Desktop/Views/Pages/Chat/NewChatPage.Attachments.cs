@@ -432,8 +432,12 @@ public sealed partial class NewChatPage
             try { await inFlightSend.ConfigureAwait(false); }
             catch (Exception error) { original.Capture(inFlightSend, error); }
         }
+        // Read the page's authoritative observed-composer mirror (`_originalComposerText`) rather
+        // than the live control: this retirement body runs on the background context where the
+        // live TextBox may already be detached/closed, and the mirror survives teardown and is
+        // kept current by every real edit and every programmatic publication.
         await WriteOriginalDraftAsync(CaptureOriginalDraftMutation(
-            OriginalDraftInputOwner, CaptureUnsentDraftText(_composerInput.Text, _scene.QueuedComposerMessages),
+            OriginalDraftInputOwner, CaptureUnsentDraftText(_originalComposerText, _scene.QueuedComposerMessages),
             _pendingAttachmentIds)).ConfigureAwait(false);
     }
 

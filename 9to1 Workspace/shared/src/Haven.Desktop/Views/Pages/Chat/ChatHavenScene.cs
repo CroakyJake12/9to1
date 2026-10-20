@@ -52,14 +52,19 @@ internal sealed partial class ChatHavenScene : IDisposable
     private readonly Dictionary<Guid, Guid> _toolOwners = [];
     private readonly Dictionary<Guid, IReadOnlyList<HavenElement>> _generatedContent = [];
     private readonly ChatAddMenuSurface _addMenu;
-    private readonly IHavenAvaloniaNativeControlResolver _nativeResolver;
+    private readonly IHavenNativeControlRegistrar _nativeResolver;
     private readonly HavenComposerSource _composerSource;
     private PopupMenu? _activeMessagePopup;
     private bool _isSending;
     private bool _safetyLocked;
+    private bool _modelAvailable = true;
     private bool _isContextExpanded;
     private bool _contextDismissed;
     private bool _disposed;
+    private readonly Task _composerInit;
+    private Task? _composerClose;
+    private bool _composerClosing;
+    private bool _composerReleased;
 
     /// <summary>Constructs a scene with its own transport resolver (used by tests/hosts that do
     /// not share a scene-level native resolver).</summary>
@@ -67,7 +72,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     {
     }
 
-    public ChatHavenScene(IHavenAvaloniaNativeControlResolver nativeResolver)
+    public ChatHavenScene(IHavenNativeControlRegistrar nativeResolver)
     {
         ArgumentNullException.ThrowIfNull(nativeResolver);
         _nativeResolver = nativeResolver;
@@ -82,6 +87,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         ComposerHost = Root.DescendantsAndSelf().OfType<NativeHost>().Single(element => element.Name == "ComposerHost");
         _composerSource = new HavenComposerSource(this);
         ComposerView = new ChatComposerCuiView(_composerSource);
+        _composerInit = ComposerView.InitializeAsync();
         _nativeResolver.Register(ComposerHost, ComposerView);
         Messages = (DynamicUIRuntime)Root.DescendantsAndSelf().Single(element => element.Name == "Messages");
         EmptyState = Root.DescendantsAndSelf().Single(element => element.Name == "EmptyState");
@@ -181,6 +187,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     public void SetSending(bool sending, bool modelAvailable)
     {
         _isSending = sending;
+        _modelAvailable = modelAvailable;
         ComposerView.RefreshSurface();
     }
 
@@ -727,7 +734,7 @@ internal sealed partial class ChatHavenScene : IDisposable
                   <Text Name="Status" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Text Name="AttachmentStatus" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Button Name="ManageAttachments" Variant="Ghost" Content="Manage attachments" MinHeight="32px" HorizontalAlignment="Center" Visibility="Collapsed" />
-                  <NativeHost Name="ComposerHost" Width="100%" MinHeight="44" />
+                  <NativeHost Name="ComposerHost" Width="100%" MinHeight="44px" />
                 </Container>
               </Container>
             </Page>
@@ -741,9 +748,55 @@ internal sealed partial class ChatHavenScene : IDisposable
     {
         EnsureQueuedSendingEnabled();
         if (_composerQueue is not null)
-            _composerQueue.HandleSendInvoked();
+            _composerQueue.HandleSendInvokedAsync();
         else if (!_isSending)
             SendRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Queue-aware composer send returning the SAME admitted send task through the typed
+    /// async owner path (see <see cref="ChatHavenScene.SendQueue.ComposerDirectSend"/>). Empty
+    /// -composer Stop and FIFO queued drafts keep their exact existing behavior.</summary>
+    public ValueTask HandleComposerSendAsync()
+    {
+        EnsureQueuedSendingEnabled();
+        if (_composerQueue is not null)
+            return _composerQueue.HandleSendInvokedAsync();
+        if (_isSending) return ValueTask.CompletedTask;
+        return RaiseSendRequestedAsync();
+    }
+
+    /// <summary>The shared composer's guarded initialization task. The owning page/factory joins
+    /// it before publishing or restoring the conversation target.</summary>
+    public Task ComposerInitialization => _composerInit;
+
+    /// <summary>Starts the shared composer's child close (withdraws its producers and detaches its
+    /// watchers) and publishes the one close task the parent joins during cleanup.</summary>
+    public Task StartComposerClose()
+    {
+        if (_composerClosing) return _composerClose ?? Task.CompletedTask;
+        _composerClosing = true;
+        _composerClose = ComposerView.CloseAsync();
+        return _composerClose;
+    }
+
+    /// <summary>Joins the exact shared-composer close and then releases the native resolver mapping
+    /// and physical view. Close faults stay observable by the caller.</summary>
+    public async Task JoinComposerCloseAndReleaseAsync()
+    {
+        if (_composerReleased) return;
+        var close = StartComposerClose();
+        await close.ConfigureAwait(false);
+        ReleaseComposer();
+    }
+
+    private void ReleaseComposer()
+    {
+        if (_composerReleased) return;
+        _composerReleased = true;
+        // Detach/unregister only after the child close acknowledged. Resolver unregister failures
+        // are not swallowed; they remain observable to the joining caller.
+        _nativeResolver.Unregister(ComposerHost, ComposerView);
+        ComposerView.Dispose();
     }
 
     public void Dispose()
@@ -761,7 +814,6 @@ internal sealed partial class ChatHavenScene : IDisposable
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
         _composerQueue?.Dispose();
         _addMenu.Dispose();
-        _nativeResolver.Unregister(ComposerHost, ComposerView);
-        ComposerView.Dispose();
+        ReleaseComposer();
     }
 }

@@ -1084,6 +1084,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _dual = null;
 
         _scene.SendRequested += (_, _) => _ = SubmitCurrentInstructionAsync();
+        // The shared composer's direct send path returns the SAME admitted send task the page runs,
+        // instead of discarding SubmitCurrentInstructionAsync through the legacy event.
+        _scene.ComposerDirectSend = _ => new ValueTask(SubmitCurrentInstructionAsync());
         _scene.StopRequested += OnStopRequested;
         _composerInput.Invalidated += OnComposerEditCompleted;
         _scene.ResolveProblemsRequested += (_, _) =>
@@ -1118,6 +1121,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     private async Task InitialiseOriginalBodyAsync()
     {
+        // Join the shared composer's guarded initialization before the page's first
+        // conversation target is published/restored, so the composer is never presented as a
+        // ready empty mount before its real input is wired.
+        await AwaitChatOriginalAsync(_scene.ComposerInitialization);
         await AwaitChatOriginalAsync(SetStatusAsync("Connecting to local modelsâ€¦"));
         await AwaitChatOriginalAsync(RefreshModelsAsync());
     }
@@ -1159,17 +1166,29 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             // so the next REAL change is compared against it, but it is never itself an edit.
             _originalComposerText = text;
         }
-        else if (!string.Equals(text, _originalComposerText, StringComparison.Ordinal))
+        else if (!_originalWork.IsRetiring)
         {
-            _originalComposerText = text;
-            if (!_originalWork.IsRetiring)
+            // A queue-while-sending clear is not a user deletion either: the queued text has NOT
+            // been sent, so the canonical draft must keep it instead of deleting it. This is
+            // handled even when the composer's observed text already matched (a typing edit that
+            // coalesced with the programmatic clear never updated `_originalComposerText`), so
+            // the queued snapshot is written here rather than relying on that earlier edit.
+            var clearingForQueuedSend = string.IsNullOrWhiteSpace(text) && _scene.HasQueuedComposerMessages;
+            if (clearingForQueuedSend)
             {
+                var queuedSave = CaptureUnsentDraftText(text, _scene.QueuedComposerMessages);
+                _originalComposerText = text;
+                if (!string.IsNullOrWhiteSpace(queuedSave))
+                {
+                    Interlocked.Increment(ref _originalComposerRevision);
+                    _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, queuedSave, _pendingAttachmentIds));
+                }
+            }
+            else if (!string.Equals(text, _originalComposerText, StringComparison.Ordinal))
+            {
+                _originalComposerText = text;
                 Interlocked.Increment(ref _originalComposerRevision);
-                // A queue-while-sending clear is not a user deletion either: the queued text
-                // has NOT been sent, so the canonical draft must keep it instead of deleting it.
-                var clearingForQueuedSend = string.IsNullOrWhiteSpace(text) && _scene.HasQueuedComposerMessages;
-                if (!clearingForQueuedSend)
-                    _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, text, _pendingAttachmentIds));
+                _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, text, _pendingAttachmentIds));
             }
         }
         RunOriginalChatNotification(() => OnComposerEditCompletedOriginalBody(sender, e));
@@ -1319,6 +1338,10 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             if (OriginalDraftInputOwner.Id != acceptedSend.Target.Id) return;
             RestoreUnsentOriginalInstruction(instruction);
         }
+        // The restore reads and writes the live composer control, so it must run on the UI
+        // thread even though the send body executes on the original background context.
+        async Task RestoreUnsentOriginalInstructionIfUnchangedUiAsync() =>
+            await AwaitChatOriginalAsync(InvokeOriginalChatUiAsync(RestoreUnsentOriginalInstructionIfUnchanged));
         try
         {
         _pendingInstruction = null;
@@ -1459,23 +1482,24 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
                 await AwaitChatOriginalAsync(AssociatePendingAttachmentsWithUserMessageAsync(userMessageId, acceptedSend, RequireChatOriginal().Token));
             // A refused preflight or a FAILED write after the presentation-only event never
             // owned a committed user message: keep the unsent text in the composer and in the
-            // canonical draft instead of losing it to the send's clear.
+            // canonical draft instead of losing it to the send's clear. The restore reads and
+            // writes the live composer control, so it must run on the UI thread.
             if (sendReportedFailure && committedUserMessageId is null)
-                RestoreUnsentOriginalInstructionIfUnchanged();
+                await RestoreUnsentOriginalInstructionIfUnchangedUiAsync();
             if (!_originalWork.IsRetiring && CanonicalPermissionWaiting is null)
                 await AwaitChatOriginalAsync(SetStatusAsync(string.Empty));
         }
         catch (OperationCanceledException originalCaughtCause)
         {
             RetainHandledOriginalChatCause(originalCaughtCause);
-            if (committedUserMessageId is null) RestoreUnsentOriginalInstructionIfUnchanged();
+            if (committedUserMessageId is null) await RestoreUnsentOriginalInstructionIfUnchangedUiAsync();
             if (!_originalWork.IsRetiring)
                 await AwaitChatOriginalAsync(SetStatusAsync("Response stopped."));
         }
         catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
         {
             RetainHandledOriginalChatCause(exception);
-            if (committedUserMessageId is null) RestoreUnsentOriginalInstructionIfUnchanged();
+            if (committedUserMessageId is null) await RestoreUnsentOriginalInstructionIfUnchangedUiAsync();
             if (!_originalWork.IsRetiring)
                 await AwaitChatOriginalAsync(SetStatusAsync("9to1 could not complete that response: " + exception.Message));
         }

@@ -30,6 +30,7 @@
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceSessionProjectionTests.cs" Link="UnifiedWorkspaceSessionProjectionTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/ProfessionalThemePreferenceRegressionTests.cs" Link="ProfessionalThemePreferenceRegressionTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/WorkspaceSessionTerminalSaveTests.cs" Link="WorkspaceSessionTerminalSaveTests.cs" />
+    <Compile Include="HostComposerLifetimeTests.cs" />
     <Using Include="Xunit" />
     <PackageReference Include="Avalonia.Headless.XUnit" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

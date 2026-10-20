@@ -234,7 +234,7 @@ internal sealed class ChatGenUiSurfaceMount : IDisposable, IAsyncDisposable
     { if (!errors.Any(item => ReferenceEquals(item, cause))) errors.Add(cause); }
 }
 
-internal sealed class ChatGenUiNativeControlResolver : IHavenAvaloniaNativeControlResolver
+internal sealed class ChatGenUiNativeControlResolver : IHavenNativeControlRegistrar
 {
     private readonly Dictionary<HavenElement, Control> _controls = [];
 

@@ -15,7 +15,7 @@ internal sealed class ChatComposerQueue : IDisposable
     private readonly Func<bool> _isSending;
     private readonly Func<bool> _isSafetyLocked;
     private readonly Action<string> _setStatus;
-    private readonly Action _sendRequested;
+    private readonly Func<ValueTask> _sendRequested;
     private readonly Action _stopRequested;
     private readonly Queue<string> _queuedComposerMessages = new();
     private DispatcherTimer? _queuedSendPump;
@@ -27,7 +27,7 @@ internal sealed class ChatComposerQueue : IDisposable
         Func<bool> isSending,
         Func<bool> isSafetyLocked,
         Action<string> setStatus,
-        Action sendRequested,
+        Func<ValueTask> sendRequested,
         Action stopRequested)
     {
         _getText = getText ?? throw new ArgumentNullException(nameof(getText));
@@ -43,26 +43,26 @@ internal sealed class ChatComposerQueue : IDisposable
 
     public IReadOnlyList<string> QueuedComposerMessages => _queuedComposerMessages.ToArray();
 
-    public void HandleSendInvoked()
+    /// <summary>Admits one composer send. A direct (not-yet-sending) send returns the SAME
+    /// admitted send task the owner runs; an empty-composer Stop or a queued admission resolves
+    /// synchronously with the queue/dispatch state fully applied. No send task is swallowed.</summary>
+    public ValueTask HandleSendInvokedAsync()
     {
-        if (_disposed) return;
+        if (_disposed) return ValueTask.CompletedTask;
         if (!_isSending())
-        {
-            _sendRequested();
-            return;
-        }
+            return _sendRequested();
 
         var draft = _getText().Trim();
         if (string.IsNullOrWhiteSpace(draft))
         {
             _stopRequested();
-            return;
+            return ValueTask.CompletedTask;
         }
 
         if (_queuedComposerMessages.Count >= QueuedComposerMessageLimit)
         {
             _setStatus($"Message queue is full ({QueuedComposerMessageLimit}). Wait for a queued message to send or stop the current response.");
-            return;
+            return ValueTask.CompletedTask;
         }
 
         _queuedComposerMessages.Enqueue(draft);
@@ -71,6 +71,7 @@ internal sealed class ChatComposerQueue : IDisposable
             ? "Message queued. Clear the composer and press Stop to cancel the active response."
             : $"{_queuedComposerMessages.Count} messages queued.");
         StartQueuedSendPump();
+        return ValueTask.CompletedTask;
     }
 
     private void StartQueuedSendPump()
@@ -110,7 +111,8 @@ internal sealed class ChatComposerQueue : IDisposable
             ? "Sending queued message…"
             : $"Sending queued message… {_queuedComposerMessages.Count} still queued.");
         if (_disposed) { _queuedSendPump?.Stop(); return; }
-        _sendRequested();
+        // Timer-generated sends remain parent-owned; the pump does not wait for their settlement.
+        _ = _sendRequested();
 
         if (_disposed) { _queuedSendPump?.Stop(); return; }
         if (_queuedComposerMessages.Count == 0) _queuedSendPump?.Stop();

@@ -847,12 +847,14 @@ public sealed class OverlayChatInitializationTests
     private static ModelDescriptor Model(string name) =>
         new(name, 1024, "llama", "1B", "Q4_0", new HashSet<ToolCapability>(), DateTimeOffset.UnixEpoch);
 
-    /// <summary>Invokes the REAL send control exactly as a click does: the same Invoked event the
-    /// scene's queue-aware handler owns. No second owner, no fake page and no direct call into a
-    /// test-only method.</summary>
-    private static void InvokeSendControl(NewChatPage page) =>
-        typeof(Haven.UI.HavenElement).GetMethod("Invoke", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .Invoke(Scene(page).SendButton, null);
+    /// <summary>Dispatches the REAL send through the shared composer's typed action adapter, the
+    /// same queue-aware path a click on the authored send control owns. No second owner, no fake
+    /// page and no direct call into a test-only method.</summary>
+    private static void InvokeSendControl(NewChatPage page)
+    {
+        var bindings = Scene(page).ComposerView.Bindings;
+        _ = bindings.DispatchAsync("composer.send", null, CancellationToken.None);
+    }
 
     /// <summary>One later GetModelsAsync read the test explicitly arms and releases.</summary>
     private sealed class HeldModelRead
@@ -867,9 +869,9 @@ public sealed class OverlayChatInitializationTests
             .GetField("_scene", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
 
     private static bool SendEnabled(NewChatPage page) =>
-        Scene(page).SendButton.GetValue(HavenProperties.Enabled);
+        Scene(page).ComposerView.Source.CanSend;
 
-    private static string ComposerText(NewChatPage page) => Scene(page).Instruction.Text ?? string.Empty;
+    private static string ComposerText(NewChatPage page) => Scene(page).Input.Text ?? string.Empty;
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {

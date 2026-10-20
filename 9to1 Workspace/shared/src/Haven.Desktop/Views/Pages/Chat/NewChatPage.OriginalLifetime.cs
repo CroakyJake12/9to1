@@ -320,6 +320,9 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             { try { action(); } catch (Exception error) { failures.Add(error); } }
             Attempt(() => _sendCancellation?.Cancel());
             Attempt(_sendProgressTimer.Stop);
+            // Start the shared composer's child close now (withdraw its producers and detach its
+            // watchers); the parent joins this exact task before the page originals are joined.
+            Attempt(() => _scene.StartComposerClose());
             Attempt(() => _scene.StopRequested -= OnStopRequested);
             Attempt(() => _composerInput.Invalidated -= OnComposerEditCompleted);
             Attempt(() => _scene.AttachmentRemoveRequested -= OnAttachmentRemoveRequested);
@@ -357,6 +360,10 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             }
             catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, actual, cause); }
         }
+        // Join the exact shared-composer close that Stop started, before releasing its physical
+        // native mapping. Close faults stay an independent cleanup failure.
+        try { await _scene.JoinComposerCloseAndReleaseAsync(); }
+        catch (Exception cause) { CaptureOriginalGeneratedCauses(failures, null, cause); }
         var actualDispatcher = Dispatcher.UIThread.InvokeAsync(() => _originalWork.RunCloseCallback(() =>
         {
             try { _sendCancellation?.Dispose(); } catch (Exception cause) { AddOriginalGeneratedCause(failures, cause); }
