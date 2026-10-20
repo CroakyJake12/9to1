@@ -1,0 +1,188 @@
+<Cui id="voicevision.session" version="1">
+  <!--
+    Canonical CUI full Voice & Vision session surface. Session-first and uncluttered:
+    the centre reflects the live interaction (status, capture state, controls) while
+    secondary surfaces (transcript toggle, visual sources, mode/voice metadata) remain
+    collapsible or compact. Every field is projected from the shared runtime state; no
+    control claims a mode, device or capture is operational unless it can be, and the
+    same canonical SessionID is presented as the floating pill.
+  -->
+  <Actions>
+    <Action name="Start" command="voice.start" />
+    <Action name="End" command="voice.end" />
+    <Action name="ToggleMute" command="voice.mute" />
+    <Action name="TogglePause" command="voice.pause-resume" />
+    <Action name="ToggleScreenShare" command="voice.screen-share" />
+    <Action name="ToggleCamera" command="voice.camera" />
+    <Action name="ToggleCaptions" command="voice.captions" />
+    <Action name="ToggleTranscript" command="voice.toggle-transcript" />
+    <Action name="SubmitText" command="voice.submit-text" parameter="{Binding session.textInput}" />
+    <Action name="SetMode" command="voice.set-mode" parameter="{Binding session.selectedModeIndex}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="voice-session-page" role="main" accessible-name="Voice and Vision">
+      <Container id="voice-session-body" Type="Grid" RowSizes="Auto 1fr Auto" CellGap="12" Padding="16">
+
+        <!-- Header: identity, live status and persistent capture indicators -->
+        <Container id="voice-session-header" Type="Vertical Stack" Row="0" CellGap="8">
+          <Container id="voice-session-title-row" Type="Horizontal Stack" CellGap="10">
+            <Text id="voice-session-title" Text="Voice &amp; Vision" FontRole="Heading"
+                  AccessibleName="Voice and Vision" />
+            <Text id="voice-session-mode" Text="{Binding session.modeLabel}"
+                  AccessibleName="Voice mode" FontRole="Body" FontWeight="SemiBold" />
+            <Image id="voice-session-wave" Source="icon:wave" Width="20" Height="20"
+                   IsVisible="{Binding session.isListening}" accessible-name="Waveform" />
+            <Text id="voice-session-status" Text="{Binding session.statusText}"
+                  AccessibleName="Session status" FontRole="Body" />
+            <Button id="voice-session-end" action="End" accessible-name="End session"
+                    Tooltip="End the Voice session" IsEnabled="{Binding session.canEnd}"
+                    Width="32" Height="32" Padding="6" IconOnly="True">
+              <Image id="voice-session-end-icon" Source="icon:close" Width="16" Height="16" />
+            </Button>
+          </Container>
+
+          <!-- Persistent capture indicators: never rely on colour alone -->
+          <Container id="voice-session-capture-indicators" Type="Horizontal Stack" CellGap="10">
+            <If Condition="{Binding session.isScreenSharing}">
+              <Text id="voice-session-share-indicator" Text="Screen sharing active"
+                    AccessibleName="Screen sharing active" FontRole="Body" FontSize="13" />
+            </If>
+            <If Condition="{Binding session.hasCameraSource}">
+              <Text id="voice-session-camera-indicator" Text="Camera active"
+                    AccessibleName="Camera active" FontRole="Body" FontSize="13" />
+            </If>
+            <If Condition="{Binding session.areCaptionsEnabled}">
+              <Text id="voice-session-captions-indicator" Text="Captions on"
+                    AccessibleName="Captions on" FontRole="Body" FontSize="13" />
+            </If>
+            <If Condition="{Binding session.isLocalOnly}">
+              <Text id="voice-session-local-indicator" Text="Local-only policy"
+                    AccessibleName="Local-only policy" FontRole="Body" FontSize="13" />
+            </If>
+          </Container>
+
+          <If Condition="{Binding session.hasPermissionNotice}">
+            <Text id="voice-session-permission" Text="{Binding session.permissionNotice}"
+                  AccessibleName="Permission notice" FontRole="Body" FontSize="12" />
+          </If>
+        </Container>
+
+        <!-- Main live interaction body -->
+        <Container id="voice-session-main" Type="Vertical Stack" Row="1" CellGap="14"
+                   VerticalScrolling="True">
+
+          <!-- Primary capture/control row -->
+          <Container id="voice-session-controls" Type="Horizontal Stack" CellGap="8">
+            <Button id="voice-session-start" action="Start" accessible-name="Start session"
+                    Tooltip="Start the Voice session" IsEnabled="{Binding session.canStart}"
+                    Width="40" Height="40" Padding="6">
+              <Image id="voice-session-start-icon" Source="icon:play" Width="18" Height="18" />
+            </Button>
+            <Button id="voice-session-mute" action="ToggleMute" accessible-name="Mute or unmute"
+                    Tooltip="Mute or unmute the microphone" IsEnabled="{Binding session.canToggleMute}"
+                    Width="40" Height="40" Padding="6">
+              <Image id="voice-session-mute-icon" Source="icon:wave" Width="18" Height="18"
+                     Opacity="{Binding session.muteOpacity}" />
+            </Button>
+            <Button id="voice-session-pause" action="TogglePause" accessible-name="Pause or resume"
+                    Tooltip="Pause or resume the session" IsEnabled="{Binding session.canPause}"
+                    Width="40" Height="40" Padding="6">
+              <Image id="voice-session-pause-icon" Source="icon:play" Width="18" Height="18" />
+            </Button>
+            <Button id="voice-session-screen" action="ToggleScreenShare" accessible-name="Share screen"
+                    Tooltip="Start or stop screen sharing" IsEnabled="{Binding session.canShareScreen}"
+                    Width="40" Height="40" Padding="6">
+              <Image id="voice-session-screen-icon" Source="icon:window" Width="18" Height="18" />
+            </Button>
+            <Button id="voice-session-camera" action="ToggleCamera" accessible-name="Use camera"
+                    Tooltip="Start or stop camera capture" IsEnabled="{Binding session.canUseCamera}"
+                    Width="40" Height="40" Padding="6">
+              <Image id="voice-session-camera-icon" Source="icon:vision" Width="18" Height="18" />
+            </Button>
+            <Button id="voice-session-captions" action="ToggleCaptions" accessible-name="Toggle captions"
+                    Tooltip="Show or hide live captions" IsEnabled="{Binding session.canEnableCaptions}"
+                    Width="40" Height="40" Padding="6">
+              <Image id="voice-session-captions-icon" Source="icon:text" Width="18" Height="18" />
+            </Button>
+          </Container>
+
+          <!-- Mode selector + truthful voice/model metadata -->
+          <Container id="voice-session-config" Type="Horizontal Stack" CellGap="24">
+            <Container id="voice-session-mode-group" Type="Vertical Stack" CellGap="4">
+              <Text id="voice-session-mode-label" Text="Mode" FontRole="Body" FontSize="13" />
+              <Input id="voice-session-mode-select" Type="Select" ItemsSource="{Binding session.modeNames}"
+                     SelectedIndex="{Binding session.selectedModeIndex, mode=TwoWay}"
+                     IsEnabled="{Binding session.canEnd}" MinWidth="170" />
+            </Container>
+            <Container id="voice-session-voice-group" Type="Vertical Stack" CellGap="4">
+              <Text id="voice-session-voice-label" Text="Voice" FontRole="Body" FontSize="13" />
+              <Text id="voice-session-voice-value" Text="{Binding session.selectedVoiceName}"
+                    FontRole="Body" AccessibleName="Selected voice" />
+              <Text id="voice-session-model-value" Text="{Binding session.effectiveModelPolicy}"
+                    FontRole="Body" FontSize="12" AccessibleName="Effective model policy" />
+            </Container>
+          </Container>
+
+          <!-- Read-only input-level feedback -->
+          <Container id="voice-session-audio" Type="Horizontal Stack" CellGap="8">
+            <Text id="voice-session-audio-label" Text="Input level" FontRole="Body" FontSize="13" />
+            <Text id="voice-session-audio-value" Text="{Binding session.audioPercent}"
+                  FontRole="Body" FontSize="13" AccessibleName="Input level" />
+          </Container>
+
+          <!-- Collapsible transcript surface -->
+          <Container id="voice-session-transcript" Type="Vertical Stack" CellGap="6">
+            <Container id="voice-session-transcript-header" Type="Horizontal Stack" CellGap="8">
+              <Text id="voice-session-transcript-title" Text="Transcript" FontRole="Heading" />
+              <Button id="voice-session-transcript-toggle" action="ToggleTranscript"
+                      accessible-name="Show or hide transcript" IsEnabled="{Binding session.canEnd}"
+                      Width="72" Height="28" Padding="4">
+                <Text id="voice-session-transcript-toggle-label"
+                      Text="{Binding session.transcriptToggleLabel}" FontRole="Body" FontSize="12" />
+              </Button>
+            </Container>
+            <If Condition="{Binding session.isTranscriptVisible}">
+              <Text id="voice-session-transcript-note"
+                    Text="Stable exchange is shown here; unfinished speech remains a hypothesis and is not durable history."
+                    FontRole="Body" FontSize="12" />
+            </If>
+          </Container>
+
+          <!-- Visual sources (Repeat of the projection's active sources) -->
+          <Container id="voice-session-sources" Type="Vertical Stack" CellGap="6">
+            <Text id="voice-session-sources-title" Text="Visual sources" FontRole="Heading" />
+            <Repeat id="voice-session-source-items" Panel="Wrap" Source="{Binding session.visualSources}"
+                    As="source">
+              <Container id="voice-session-source-card" Type="Vertical Stack" CellGap="2"
+                         BorderColor="#33000000" BorderWidth="1" CornerRadius="8" Padding="8"
+                         Margin="0 0 8 8">
+                <Text id="voice-session-source-name" Text="{Binding source.displayName}"
+                      FontRole="Body" FontWeight="SemiBold" AccessibleName="{Binding source.displayName}" />
+                <Text id="voice-session-source-type" Text="{Binding source.typeLabel}"
+                      FontRole="Body" FontSize="12" />
+                <Text id="voice-session-source-state" Text="{Binding source.stateLabel}"
+                      FontRole="Body" FontSize="12" AccessibleName="{Binding source.stateLabel}" />
+              </Container>
+            </Repeat>
+            <If Condition="{Binding session.hasNoVisualSources}">
+              <Text id="voice-session-no-sources" Text="No visual sources are attached."
+                    FontRole="Body" FontSize="12" />
+            </If>
+          </Container>
+        </Container>
+
+        <!-- Footer: typed text input shares the same session/conversation -->
+        <Container id="voice-session-footer" Type="Horizontal Stack" Row="2" CellGap="8">
+          <Input id="voice-session-text" Type="Text" Value="{Binding session.textInput, mode=TwoWay}"
+                 PlaceholderText="Type to send in the same conversation" IsEnabled="{Binding session.isActive}"
+                 Width="560" MinWidth="200" AcceptsReturn="False" />
+          <Button id="voice-session-send" action="SubmitText" accessible-name="Send typed message"
+                  Tooltip="Send typed text in the same session" IsEnabled="{Binding session.canSendText}"
+                  Width="64" Height="32" Padding="6">
+            <Text id="voice-session-send-label" Text="Send" FontRole="Body" />
+          </Button>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>
