@@ -53,6 +53,14 @@ public sealed partial class BrowseNativeUiTests
         public Task<HavenSharedOpenResult> OpenProfileAsync(CancellationToken token = default) { Calls++; return Task.FromException<HavenSharedOpenResult>(new InvalidOperationException("original open failed")); }
     }
 
+    private sealed class CancellingGateway : IHavenSharedControlGateway
+    {
+        public int Calls;
+        public Task<HavenSharedOpenResult> OpenModelPickerAsync(CancellationToken token = default) { Calls++; return Task.FromCanceled<HavenSharedOpenResult>(new CancellationToken(true)); }
+        public Task<HavenSharedOpenResult> OpenNotificationsAsync(CancellationToken token = default) { Calls++; return Task.FromCanceled<HavenSharedOpenResult>(new CancellationToken(true)); }
+        public Task<HavenSharedOpenResult> OpenProfileAsync(CancellationToken token = default) { Calls++; return Task.FromCanceled<HavenSharedOpenResult>(new CancellationToken(true)); }
+    }
+
     /// <summary>The persistent Haven shared rail must degrade truthfully: with no host context
     /// the model/notifications/profile controls are unavailable and their actions are refused.</summary>
     [AvaloniaFact]
@@ -202,7 +210,8 @@ public sealed partial class BrowseNativeUiTests
     }
 
     /// <summary>A real gateway fault must be retained as a failed original open and never
-    /// fabricated as success; the next rail action still works.</summary>
+    /// fabricated as success: the original action task faults (so close joins it), a
+    /// structured status is published, and the next rail action still routes.</summary>
     [AvaloniaFact]
     public async Task Shared_gateway_fault_is_retained_and_never_fabricated_as_success()
     {
@@ -215,7 +224,39 @@ public sealed partial class BrowseNativeUiTests
         try
         {
             var dispatch = workspace.DispatchAsync("9to1.Haven.OpenNotifications", null).AsTask();
-            await dispatch; // structured retention; does not throw to the caller
+            var fault = await Assert.ThrowsAsync<InvalidOperationException>(() => dispatch);
+            Assert.Equal("original open failed", fault.Message);
+            Assert.Equal(1, gateway.Calls);
+            var second = workspace.DispatchAsync("9to1.Haven.OpenProfile", null).AsTask();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => second);
+            Assert.Equal(2, gateway.Calls);
+        }
+        finally
+        {
+            // Close truthfully surfaces the retained original open faults (never hides them).
+            try { await workspace.DisposeAsync().AsTask(); }
+            catch (AggregateException closeFailures)
+            {
+                Assert.Contains(closeFailures.InnerExceptions, failure => failure.Message == "original open failed");
+            }
+        }
+    }
+
+    /// <summary>An ignored cancellation must stay safe: it is never reclassified as success
+    /// nor as a fault, and the next rail action still routes.</summary>
+    [AvaloniaFact]
+    public async Task Shared_gateway_cancellation_is_safe_and_never_fabricates_success()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var gateway = new CancellingGateway();
+        var context = new SharedControlsFakeContext(gateway);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
+        workspace.ObserveReadiness(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "shared-rail-fixture", "Ready"));
+        try
+        {
+            var dispatch = workspace.DispatchAsync("9to1.Haven.OpenNotifications", null).AsTask();
+            await dispatch; // safe non-fault non-success settlement
             Assert.Equal(1, gateway.Calls);
             var second = workspace.DispatchAsync("9to1.Haven.OpenProfile", null).AsTask();
             await second;

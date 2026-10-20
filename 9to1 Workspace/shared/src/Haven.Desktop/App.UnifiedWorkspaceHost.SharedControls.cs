@@ -65,10 +65,12 @@ public sealed partial class App
         /// <summary>Retained original-session leases for composed model providers; disposed at close.</summary>
         private readonly List<HomeModelPickerOriginalSessionProvider> _modelSessions = [];
 
-        /// <summary>The authored shared-panel shell loader/bindings and its named host element.</summary>
+        /// <summary>The authored shared-panel shell loader/bindings and its named host elements.
+        /// Host elements are the real CUI containers (AddChild/RemoveChild contract), never a
+        /// donor Panel/Children escape.</summary>
         private CuiControlLoader? _shellLoader;
         private SharedPanelShellBindings? _shellBindings;
-        private Control? _sharedPanelHost;
+        private CuiContainerControl? _sharedPanelHost;
 
         /// <summary>The currently mounted shared panel loader (if any). Its retained action/disposal
         /// settlement is joined at close before borrowed owners are released.</summary>
@@ -94,23 +96,24 @@ public sealed partial class App
             async Task<T> Run(Task gate)
             {
                 await gate;
+                // Enter the same original execution guard/ledger protocol as ordinary host
+                // observations so a reentrant provider callback requesting close cannot join its
+                // own in-flight open.
+                using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
                 return await produce();
             }
         }
 
-        /// <summary>Composes the authored main scene and the authored shared-panel shell. All
-        /// shell structure, backdrop/dimming, spacing and visibility are authored in packaged
-        /// .cui documents; this host only mounts the scene and the active panel into named host
-        /// elements. It never builds modal UI or visible chrome in C#.</summary>
+        /// <summary>Composes the authored main scene and the authored shared-panel shell. The
+        /// whole frame structure, backdrop/dimming, spacing and visibility are authored in the
+        /// packaged shell .cui; this host only mounts the scene control into the named scene
+        /// host element and records the authored panel host element. It never builds grid/modal
+        /// UI or visible chrome in C#. If the compiled shell bundle is unavailable (BLOCKED
+        /// dependency), the host degrades truthfully: the scene mounts directly and shared
+        /// panels remain unavailable until root emits the bundle.</summary>
         private void ComposeSharedFrame()
         {
             Dispatcher.UIThread.VerifyAccess();
-            var frame = new Grid();
-            frame.Children.Add(_scene!);
-            // The authored shared-panel shell is mounted from the packaged compiled transport.
-            // If the compiled bundle registration is not yet aligned (BLOCKED dependency), the host
-            // degrades truthfully: the scene still mounts and panels remain unavailable until root
-            // emits the bundle. Never silently reparses raw source.
             var shellBindings = new SharedPanelShellBindings();
             var shellLoader = new CuiControlLoader();
             try
@@ -122,56 +125,74 @@ public sealed partial class App
                 if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
                 {
                     shellLoader.Dispose();
-                    _shellBindings = null; _sharedPanelHost = null;
+                    SetSceneOnlyFallback();
+                    return;
                 }
-                else
+                shellLoader.WireBindings(loaded.Root);
+                var sceneHost = FindNamedContainer(loaded.Root, SharedSceneHostId);
+                if (sceneHost is null)
                 {
-                    shellLoader.WireBindings(loaded.Root);
-                    var host = FindNamedChild(loaded.Root, SharedPanelHostId);
-                    if (host is null)
-                    {
-                        shellLoader.Dispose();
-                        _shellBindings = null; _sharedPanelHost = null;
-                    }
-                    else
-                    {
-                        _shellLoader = shellLoader; _shellBindings = shellBindings; _sharedPanelHost = host;
-                        frame.Children.Add(loaded.Root);
-                    }
+                    shellLoader.Dispose();
+                    SetSceneOnlyFallback();
+                    return;
                 }
+                sceneHost.AddChild(_scene!);
+                _shellLoader = shellLoader;
+                _shellBindings = shellBindings;
+                _sharedPanelHost = FindNamedContainer(loaded.Root, SharedPanelHostId);
+                Content = loaded.Root;
             }
             catch (CuiRuntimeLoadException)
             {
                 shellLoader.Dispose();
-                _shellBindings = null; _sharedPanelHost = null;
+                SetSceneOnlyFallback();
             }
-            Content = frame;
         }
 
+        private const string SharedSceneHostId = "shared-scene-host";
         private const string SharedPanelHostId = "shared-panel-host";
 
-        private static Control? FindNamedChild(Control root, string name) =>
-            root.GetLogicalDescendants().OfType<Control>().FirstOrDefault(control => control.Name == name);
-
-        /// <summary>Retires the previous panel BEFORE any synchronous Dispose/cancellation reentry:
-        /// dispose is first reserved, its settlement (including failures and post-Dispose cleanup)
-        /// is retained, and a late callback from the retired panel can never retire the replacement.</summary>
-        private void ReserveRetirementCustody(CuiControlLoader previous)
+        /// <summary>Truthful degradation when the authored shell cannot be mounted: the scene
+        /// is shown directly and shared panels remain unavailable. No raw reparse fallback.</summary>
+        private void SetSceneOnlyFallback()
         {
-            try { previous.Dispose(); }
+            _shellLoader = null;
+            _shellBindings = null;
+            _sharedPanelHost = null;
+            Content = _scene;
+        }
+
+        private static CuiContainerControl? FindNamedContainer(Control root, string name) =>
+            root.GetLogicalDescendants().OfType<CuiContainerControl>().FirstOrDefault(control => control.Name == name);
+
+        /// <summary>Retires a panel loader and retains BOTH disposal phases: the synchronous
+        /// Dispose runs unsubscribe/cancel callbacks (which may reenter and mount a replacement),
+        /// and the post-Dispose cleanup task is retained through the host original-task ledger so
+        /// close joins real cleanup and failures. Dispose failure is preserved by identity.</summary>
+        private void RetireLoader(CuiControlLoader loader)
+        {
+            try { loader.Dispose(); }
             catch (Exception error) { Track(Task.FromException(error)); }
-            Track(previous.WhenActionsIdleAsync());
+            Track(loader.WhenActionsIdleAsync());
         }
 
         private void ShowSharedPanel(CuiControlLoader loader, Control root)
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (_sharedPanelHost is null) { loader.Dispose(); return; }
+            if (_sharedPanelHost is null) { RetireLoader(loader); return; }
             if (_sharedPanelLoader is { } present && !ReferenceEquals(present, loader))
-                ReserveRetirementCustody(present);
+            {
+                // Detach A as current BEFORE any synchronous dispose/cancel callback runs, so a
+                // callback that mounts a replacement B is preserved rather than overwritten by
+                // this outer retirement. Bump generation so stale A completions refuse.
+                _sharedPanelLoader = null;
+                Interlocked.Increment(ref _sharedPanelGeneration);
+                RetireLoader(present);
+                if (_sharedPanelLoader is { } replacement && !ReferenceEquals(replacement, loader))
+                { RetireLoader(loader); return; }
+            }
             _sharedPanelLoader = loader;
-            _sharedPanelHost.Children.Clear();
-            _sharedPanelHost.Children.Add(root);
+            _sharedPanelHost.AddChild(root);
             if (_shellBindings is not null) _shellBindings.HasOpenPanel = true;
         }
 
@@ -182,10 +203,11 @@ public sealed partial class App
             Interlocked.Increment(ref _sharedPanelGeneration);
             if (_sharedPanelLoader is { } present)
             {
-                ReserveRetirementCustody(present);
                 _sharedPanelLoader = null;
+                RetireLoader(present);
             }
-            if (_sharedPanelHost is not null) _sharedPanelHost.Children.Clear();
+            if (_sharedPanelHost is not null)
+                foreach (var child in _sharedPanelHost.AuthoredChildren.ToArray()) _sharedPanelHost.RemoveChild(child);
             if (_shellBindings is not null) _shellBindings.HasOpenPanel = false;
         }
 
@@ -203,12 +225,15 @@ public sealed partial class App
         /// exact-base integration patch (App.UnifiedWorkspaceHost.cs is lane5-owned).</summary>
         internal async Task JoinSharedPanelSettlementAsync(List<Exception> failures)
         {
+            // Dispose FIRST so the post-Dispose cleanup task is reserved, then join the FULL
+            // settlement (which includes that disposal task via WhenActionsIdleAsync). Awaits
+            // before Dispose never captured the new disposal task.
             if (_sharedPanelLoader is { } panelLoader)
             {
+                _sharedPanelLoader = null;
+                try { panelLoader.Dispose(); } catch (Exception error) { AddAppCause(failures, error); }
                 try { await JoinOriginalAppTaskAsync(panelLoader.WhenActionsIdleAsync(), failures); }
                 catch (Exception error) { AddAppCause(failures, error); }
-                try { panelLoader.Dispose(); } catch (Exception error) { AddAppCause(failures, error); }
-                _sharedPanelLoader = null;
             }
             foreach (var session in _modelSessions.ToArray())
             {
@@ -218,6 +243,8 @@ public sealed partial class App
             if (_shellLoader is not null)
             {
                 try { _shellLoader.Dispose(); } catch (Exception error) { AddAppCause(failures, error); }
+                try { await JoinOriginalAppTaskAsync(_shellLoader.WhenActionsIdleAsync(), failures); }
+                catch (Exception error) { AddAppCause(failures, error); }
                 _shellLoader = null;
             }
         }
@@ -229,22 +256,18 @@ public sealed partial class App
             var owner = _services.GetService<NativeCakeAccountUiOwner>();
             if (owner is null) return Task.FromResult(HavenSharedOpenResult.Refused("ProfileUnavailable", "The native profile owner is unavailable."));
             var window = TopLevel.GetTopLevel(this) as Window ?? throw new InvalidOperationException("The Haven host window is unavailable.");
-            try
+            // Admission is reserved BEFORE the native owner is invoked (AdmitOriginal reserves a
+            // slot in the host ledger before producing), so close joins the genuine open task.
+            return AdmitOriginal(async () =>
             {
-                // The native owner reserves its own open ledger before invoking any callback and
-                // requires the UI thread; retain its genuine task so close can join it.
-                var original = owner.OpenAsync(window);
+                Task original;
+                try { original = owner.OpenAsync(window); }
+                catch (Exception error) { return HavenSharedOpenResult.Refused("ProfileOpenFailed", error.Message); }
                 Track(original);
-                return AdmitOriginal(async () =>
-                {
-                    await original.ConfigureAwait(false);
-                    return HavenSharedOpenResult.Succeeded();
-                });
-            }
-            catch (Exception error)
-            {
-                return Task.FromResult(HavenSharedOpenResult.Refused("ProfileOpenFailed", error.Message));
-            }
+                try { await original; }
+                catch (Exception error) { return HavenSharedOpenResult.Refused("ProfileOpenFailed", error.Message); }
+                return HavenSharedOpenResult.Succeeded();
+            });
         }
 
         private Task<HavenSharedOpenResult> OpenNotificationsPanelAsync(CancellationToken cancellationToken)
@@ -302,8 +325,12 @@ public sealed partial class App
             var generation = checked(++_sharedPanelGeneration);
             return AdmitOriginal(async () =>
             {
-                // Resolve the real, same-owner composition once, bound to the current actor.
-                var actor = await ObserveActorAsync(cancellationToken).ConfigureAwait(false);
+                // Re-observe the ACTUAL current Home actor (not the startup-cached _actor) and
+                // refuse before any work if this panel's profile no longer matches. The whole
+                // open runs on the UI thread (no ConfigureAwait(false) after real profile/provider
+                // I/O) so control load/mount and Surface.ApplyState/PropertyChanged publication
+                // are fenced before visible mutation on the UI thread.
+                var actor = await ObserveActorAsync(cancellationToken);
                 if (actor is null || !IsPanelCurrent(generation, actor.ProfileId))
                     return HavenSharedOpenResult.Denied;
                 HomeModelPickerOriginalSessionProvider session;
@@ -315,7 +342,7 @@ public sealed partial class App
                         _services.GetRequiredService<IPrivacyPreferenceStore>(),
                         _home.Resources, _home.Broker);
                     session = new HomeModelPickerOriginalSessionProvider(provider, _home.Profiles);
-                    var begun = await session.BeginAsync(cancellationToken).ConfigureAwait(false);
+                    var begun = await session.BeginAsync(cancellationToken);
                     if (!begun) return HavenSharedOpenResult.Refused("OriginalModelSessionUnavailable",
                         "The originating model manager session could not be bound to the current Home actor.");
                 }
@@ -335,31 +362,23 @@ public sealed partial class App
                 var loaded = loader.TryLoad(controller.Surface.Document);
                 if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
                 {
-                    loader.Dispose();
+                    RetireLoader(loader);
                     return HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored model-picker panel failed to load.");
                 }
                 loader.WireBindings(loaded.Root);
+                // Await the real session/controller/catalogue initialization BEFORE reporting
+                // success; surface its typed refusal/failure rather than discarding it.
+                var opened = await controller.OpenAsync("User", "chat", cancellationToken);
+                if (!opened.Succeeded || !IsPanelCurrent(generation, actor.ProfileId))
+                {
+                    RetireLoader(loader);
+                    return opened.Succeeded ? HavenSharedOpenResult.Denied
+                        : HavenSharedOpenResult.Refused(opened.Code ?? "ModelOpenFailed", opened.Message);
+                }
                 _modelSessions.Add(session);
-                // Admission was reserved by this outer AdmitOriginal before the provider call; the
-                // refresh is joined through the same ledger.
-                _ = AdmitOriginal(() => RefreshModelPickerAsync(controller, generation, actor.ProfileId, CancellationToken.None));
                 ShowSharedPanel(loader, loaded.Root);
                 return HavenSharedOpenResult.Succeeded();
             });
-        }
-
-        private async Task<HavenSharedOpenResult> RefreshModelPickerAsync(
-            HomeModelPickerCuiController controller, long generation, string? expectedProfile, CancellationToken cancellationToken)
-        {
-            // Re-observe the ACTUAL current Home actor (not the startup-cached _actor) and refuse
-            // before any work if it no longer matches this panel's profile.
-            var actor = await ObserveActorAsync(cancellationToken).ConfigureAwait(false);
-            if (actor is null || !StringComparer.Ordinal.Equals(actor.ProfileId, expectedProfile)) return HavenSharedOpenResult.Denied;
-            if (!IsPanelCurrent(generation, expectedProfile)) return HavenSharedOpenResult.Denied;
-            // controller.PublicationGate revalidates immediately before applying surface state, so
-            // a retirement between here and publication still cannot publish.
-            await controller.OpenAsync("User", "chat", cancellationToken).ConfigureAwait(false);
-            return IsPanelCurrent(generation, expectedProfile) ? HavenSharedOpenResult.Succeeded() : HavenSharedOpenResult.Denied;
         }
 
         private static async Task<HavenSharedOpenResult> ThenResult(Task load)
@@ -445,17 +464,13 @@ public sealed partial class App
                             "CUIR067", CuiDiagnosticSeverity.Error,
                             $"Compiled CUI document requires unsupported capability '{capability}'.", Span));
                 }
-                var parser = new CuiRichParser();
-                var semantics = parser.Parse(document.Compilation.SourceText, sourceName);
-                if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR068", CuiDiagnosticSeverity.Error,
-                        $"Compiled CUI bundle for '{sourceName}' failed snapshot revalidation.", Span));
-                if (semantics.Components.Count == 0)
-                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                        "CUIR063", CuiDiagnosticSeverity.Error,
-                        $"Compiled semantic model for '{sourceName}' is empty.", Span));
-                return semantics;
+                // Lane2 owns typed compiled-semantic reconstruction. Until that corrective
+                // transport is merged, the runtime refuses here rather than reconstructing the
+                // loadable model from the raw source snapshot (no SourceText/parser/compiler
+                // fallback). See lane4 integration PATCH B (BLOCKED).
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR070", CuiDiagnosticSeverity.Error,
+                    $"Compiled semantic reconstruction for '{sourceName}' requires the lane2 aligned typed transport, which is not yet merged.", Span));
             }
 
             private static readonly CuiSourceSpan Span = CuiSourceSpan.At("compiled.cui", 1, 1);
@@ -560,6 +575,19 @@ public sealed partial class App
 
             private bool IsCurrent() => _host.IsPanelCurrent(_generation, _profile);
 
+            /// <summary>Re-observe the ACTUAL current Home actor/auth revision (never the
+            /// startup-cached profile alone) and require it to still match this panel's opened
+            /// profile before an owning read/mutation proceeds.</summary>
+            private async Task<bool> ReobserveActorAsync(CancellationToken token)
+            {
+                try
+                {
+                    var actor = await _host.ObserveActorAsync(token);
+                    return actor is not null && StringComparer.Ordinal.Equals(actor.ProfileId, _profile);
+                }
+                catch { return false; }
+            }
+
             public bool TryGetValue(string path, out object? value)
             {
                 value = path switch
@@ -578,12 +606,17 @@ public sealed partial class App
             private async Task LoadCoreCoreAsync(CancellationToken token)
             {
                 var items = await _service.GetRecentAsync(50, includeDismissed: false, token).ConfigureAwait(false);
-                if (!IsCurrent()) return;
-                _rows = items.Where(item => !item.IsDismissed)
-                    .Select(item => new HavenNotificationRow(item.Id, item.Title, item.Message,
-                        item.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture), !item.IsRead))
-                    .ToArray();
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+                // Marshal the visible row mutation and PropertyChanged publication to the UI
+                // thread (real async service reads resume off-UI).
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (!IsCurrent()) return;
+                    _rows = items.Where(item => !item.IsDismissed)
+                        .Select(item => new HavenNotificationRow(item.Id, item.Title, item.Message,
+                            item.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture), !item.IsRead))
+                        .ToArray();
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+                }).GetTask().ConfigureAwait(false);
             }
 
             public ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default)
@@ -611,17 +644,17 @@ public sealed partial class App
 
             private async Task MarkReadCoreAsync(Guid id, bool read, CancellationToken token)
             {
-                if (!IsCurrent()) return; // refuse before service mutation
+                if (!IsCurrent() || !await ReobserveActorAsync(token)) return; // refuse before service mutation
                 await _service.MarkReadAsync(id, read, token).ConfigureAwait(false);
-                if (!IsCurrent()) return; // revalidate after async acquisition, before publication
+                if (!IsCurrent() || !await ReobserveActorAsync(token)) return; // revalidate after async acquisition, before publication
                 await LoadCoreAsync(token).ConfigureAwait(false);
             }
 
             private async Task DismissCoreAsync(Guid id, CancellationToken token)
             {
-                if (!IsCurrent()) return;
+                if (!IsCurrent() || !await ReobserveActorAsync(token)) return;
                 await _service.DismissAsync(id, token).ConfigureAwait(false);
-                if (!IsCurrent()) return;
+                if (!IsCurrent() || !await ReobserveActorAsync(token)) return;
                 await LoadCoreAsync(token).ConfigureAwait(false);
             }
 

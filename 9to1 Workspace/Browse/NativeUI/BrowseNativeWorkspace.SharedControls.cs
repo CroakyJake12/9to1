@@ -10,42 +10,67 @@ namespace HavenOS.Apps.Browse;
 /// actual host. Shared opens are genuine retained operations: their real show/init/
 /// account settlement is awaited and retained under the workspace's original-operation
 /// ledger, so close joins actual faults/refusals rather than treating the open as an
-/// instantaneous bool. It never fabricates model/account/badge/usage state and never
-/// invokes inference.
+/// instantaneous bool. A real fault is never turned into success: it is published as a
+/// structured status and the original open task retains the fault so close joins it.
+/// It never fabricates model/account/badge/usage state and never invokes inference.
 /// </summary>
 public sealed partial class BrowseNativeWorkspace
 {
     private bool IsHavenSharedCommand(string command) => command is
         "9to1.Haven.OpenModel" or "9to1.Haven.OpenNotifications" or "9to1.Haven.OpenProfile";
 
-    /// <summary>Runs one shared rail open as a retained original operation. The operation does
-    /// not report success until the borrowed surface's real open has settled; a refused or
-    /// failed open surfaces its structured message and never fabricates success.</summary>
-    private async Task RunSharedOpenAsync(Task start, string command, CancellationToken token)
+    /// <summary>Runs one shared rail open as a retained original operation inside the same
+    /// logical-driver invocation guard as ordinary commands, so a reentrant provider calling
+    /// close cannot join its own in-flight action. The operation does not report success until
+    /// the borrowed surface's real open has settled; a refused or failed open publishes its
+    /// structured message and retains the original fault (never fabricates success).</summary>
+    private async Task RunSharedOpenAsync(Task start, string command, CancellationToken token,
+        CommandInvocation invocation)
     {
-        await start; token.ThrowIfCancellationRequested();
-        var context = _hostContext;
-        if (context?.SharedControls is not { } shared) return;
+        var prior = LogicalDriver.Value; LogicalDriver.Value = invocation;
         try
         {
-            var result = command switch
+            await start; token.ThrowIfCancellationRequested();
+            var context = _hostContext;
+            if (context?.SharedControls is not { } shared) return;
+            HavenSharedOpenResult result;
+            try
             {
-                "9to1.Haven.OpenModel" => await shared.OpenModelPickerAsync(token).ConfigureAwait(false),
-                "9to1.Haven.OpenNotifications" => await shared.OpenNotificationsAsync(token).ConfigureAwait(false),
-                "9to1.Haven.OpenProfile" => await shared.OpenProfileAsync(token).ConfigureAwait(false),
-                _ => HavenSharedOpenResult.Refused("UnknownCommand", "Unknown shared control command.")
-            };
+                result = command switch
+                {
+                    "9to1.Haven.OpenModel" => await shared.OpenModelPickerAsync(token),
+                    "9to1.Haven.OpenNotifications" => await shared.OpenNotificationsAsync(token),
+                    "9to1.Haven.OpenProfile" => await shared.OpenProfileAsync(token),
+                    _ => HavenSharedOpenResult.Refused("UnknownCommand", "Unknown shared control command.")
+                };
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancellation stays safe and is surfaced as a structured non-success status; it
+                // is never reclassified as success and the open task completes without fault so
+                // an accepted close can join an ignored-cancellation original.
+                PublishSharedStatus("Cancelled", "The shared control open was cancelled.");
+                return;
+            }
+            catch (Exception failure)
+            {
+                PublishSharedStatus("OpenFailed", failure.Message);
+                throw; // retain the original fault so close joins it; never fabricate success
+            }
             if (!result.Opened && !string.IsNullOrWhiteSpace(result.Message))
-                _status = result.Message;
+                PublishSharedStatus(result.Code ?? "Refused", result.Message);
         }
-        catch (OperationCanceledException)
+        finally
         {
-            // Ignored cancellation stays safe; the open simply did not settle.
+            invocation.Active = false;
+            LogicalDriver.Value = prior;
         }
-        catch (Exception failure)
-        {
-            _status = "Browse retained the shared open failure: " + failure.Message;
-        }
+    }
+
+    private void PublishSharedStatus(string code, string message)
+    {
+        _status = code + ": " + message;
+        Changed();
     }
 
     private bool? HavenSharedActionAvailable(string command) => command switch

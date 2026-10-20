@@ -191,10 +191,16 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         {
             // Shared rail opens are genuine retained operations: reserve admission before
             // invoking the gateway and return the real settlement so the workspace's close
-            // joins actual show/init/account faults and refusals.
+            // joins actual show/init/account faults and refusals. The open runs inside the
+            // same CommandInvocation/logical-driver guard as ordinary commands, so a
+            // reentrant provider callback that asks to close cannot join its own in-flight
+            // action.
             lock (_sourceGate) CheckAdmission(_originalOperations);
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var original = RunSharedOpenAsync(start.Task, command, token);
+            var prior = LogicalDriver.Value;
+            var invocation = new CommandInvocation(this, prior);
+            var original = RunSharedOpenAsync(start.Task, command, token, invocation);
+            invocation.Self = original;
             lock (_sourceGate) Retain(_originalOperations, original);
             start.SetResult();
             return new(original);
