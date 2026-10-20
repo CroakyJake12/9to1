@@ -51,7 +51,7 @@ public sealed class CuiV2TransportCodecTests
               <Variable Type="string" ID="Pick" Source="{Binding Candidates}" Selection="RandomOnce" />
               <Page id="root">
                 <Container id="box" Type="Vertical Stack" CellGap="8" CompoundFocus="true" OwnsBackdrop="true">
-                  <If Test="{Binding Show}"><Text Text="Hi" /></If>
+                  <If Condition="{Binding Show}"><Text Text="Hi" /></If>
                   <Repeat Source="{Binding Items}" As="item" Key="{Binding item.Id}">
                     <Button action="do" content="{Binding item.Label}" />
                   </Repeat>

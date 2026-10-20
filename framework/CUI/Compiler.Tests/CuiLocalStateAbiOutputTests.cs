@@ -78,7 +78,7 @@ public sealed class CuiLocalStateAbiOutputTests
         var result = new CuiCompiler().Compile(source, "bool-source.cui", Options());
         Assert.False(result.Succeeded);
         Assert.Null(result.Output);
-        var error = Assert.Single(result.Diagnostics.Where(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error));
+        var error = Assert.Single(result.Diagnostics, diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error);
         Assert.Equal("CUIC039", error.Code);
         Assert.Contains("Flag", error.Message);
         Assert.Contains("Source", error.Message);
