@@ -253,6 +253,8 @@ public static class CuiThemeResourceApplier
         var spacing = expression.SpacingScale * settings.DisplayScale;
         resources["CuiControlPadding"] = new Avalonia.Thickness((professional ? 12 : 14) * spacing, (professional ? 7 : 10) * spacing);
         resources["CuiControlMinHeight"] = (professional ? 34d : 40d * expression.ControlHeightScale) * settings.DisplayScale;
+        resources["CuiButtonVerticalContentAlignment"] = Avalonia.Layout.VerticalAlignment.Center;
+        resources["CuiButtonHorizontalContentAlignment"] = Avalonia.Layout.HorizontalAlignment.Center;
         resources["CuiControlBorderWidth"] = new Thickness((settings.HighContrast ? 2 : 1) * settings.DisplayScale);
         resources["CuiControlBorderBrush"] = professional && !settings.HighContrast ? Brushes.Transparent : resources["CuiLineBrush"];
         resources["CuiChoiceBorderBrush"] = new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.LineStrong, palette.Panel, 3));

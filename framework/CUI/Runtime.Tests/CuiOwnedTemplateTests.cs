@@ -14,6 +14,63 @@ namespace CakeOS.Cui.Runtime.Tests;
 
 public sealed class CuiOwnedTemplateTests
 {
+    [Theory]
+    [InlineData(13d)]
+    [InlineData(22d)]
+    public async Task Button_content_is_vertically_centered_by_theme_while_authored_alignment_and_multiline_inputs_survive(double fontSize)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            foreach (var theme in Enum.GetValues<CuiTheme>())
+            {
+                using var loader = new CuiControlLoader();
+                var (root, diagnostics) = loader.LoadMarkup($"""
+                    <Theme Name="{CuiThemeCatalog.Name(theme)}"><Container Type="Vertical Stack">
+                      <Button ID="ordinary" Height="64" Width="180" Padding="8" FontSize="{fontSize}">Spaces</Button>
+                      <Button ID="symbol" Height="44" Width="44" Padding="8" FontSize="{fontSize}">+</Button>
+                      <Button ID="exception" Height="64" Width="180" Padding="8" VerticalContentAlignment="Top" HorizontalContentAlignment="Left">Intentional top</Button>
+                      <Container Type="Menu"><Button Type="Menu Item" ID="menu" Height="56" Content="Aa" /></Container>
+                      <Input Type="Text" ID="draft" Height="90" AcceptsReturn="True" Value="alpha&#10;beta" />
+                    </Container></Theme>
+                    """);
+                Assert.Empty(diagnostics);
+                var window = new Window { Content = root, Width = 380, Height = 480 };
+                try
+                {
+                    window.Show(); window.UpdateLayout();
+                    var ordinary = root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "ordinary");
+                    var text = ordinary.GetVisualDescendants().OfType<TextBlock>().Single(block => block.Text == "Spaces");
+                    var position = text.TranslatePoint(default, ordinary)!.Value;
+                    Assert.InRange(Math.Abs(position.Y + text.Bounds.Height / 2 - ordinary.Bounds.Height / 2), 0, 1);
+                    Assert.InRange(Math.Abs(position.X + text.Bounds.Width / 2 - ordinary.Bounds.Width / 2), 0, 1);
+                    var symbol = root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "symbol");
+                    var glyph = symbol.GetVisualDescendants().OfType<TextBlock>().Single(block => block.Text == "+");
+                    var glyphPosition = glyph.TranslatePoint(default, symbol)!.Value;
+                    Assert.InRange(Math.Abs(glyphPosition.X + glyph.Bounds.Width / 2 - symbol.Bounds.Width / 2), 0, 1);
+                    Assert.InRange(Math.Abs(glyphPosition.Y + glyph.Bounds.Height / 2 - symbol.Bounds.Height / 2), 0, 1);
+                    var effective = CuiPropertyPresentation.For(ordinary).Resolve("VerticalContentAlignment");
+                    Assert.Equal(Avalonia.Layout.VerticalAlignment.Center, effective.Value);
+                    var exception = root!.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "exception");
+                    Assert.Equal(Avalonia.Layout.VerticalAlignment.Top, exception.VerticalContentAlignment);
+                    Assert.Equal(Avalonia.Layout.HorizontalAlignment.Left, exception.HorizontalContentAlignment);
+                    var menu = root!.GetVisualDescendants().OfType<CuiMenuItem>().Single();
+                    Assert.Equal(Avalonia.Layout.VerticalAlignment.Center, menu.VerticalContentAlignment);
+                    var input = root!.GetVisualDescendants().OfType<TextBox>().Single();
+                    Assert.NotEqual(Avalonia.Layout.VerticalAlignment.Center, input.VerticalContentAlignment);
+                    Assert.Equal("alpha\nbeta", input.Text);
+                    // A theme token change is live, and remains below an authored exception.
+                    ordinary.Resources["CuiButtonVerticalContentAlignment"] = Avalonia.Layout.VerticalAlignment.Bottom;
+                    exception.Resources["CuiButtonVerticalContentAlignment"] = Avalonia.Layout.VerticalAlignment.Bottom;
+                    window.UpdateLayout();
+                    Assert.Equal(Avalonia.Layout.VerticalAlignment.Bottom, ordinary.VerticalContentAlignment);
+                    Assert.Equal(Avalonia.Layout.VerticalAlignment.Top, exception.VerticalContentAlignment);
+                }
+                finally { window.Close(); }
+            }
+        }, CancellationToken.None);
+    }
+
     [Fact]
     public void Professional_preserves_four_distinct_brightness_surfaces()
     {

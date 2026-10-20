@@ -13,7 +13,7 @@
         <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
             <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8">
-              <Button id="BrowseTabButton" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Selected="{Binding tab.Selected}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
+              <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Selected="{Binding tab.Selected}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
               <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="15" Background="Transparent" Color="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="8">×</Button>
             </Container>
           </Repeat>
@@ -42,7 +42,7 @@
             <Container id="BrowseBookmarksPage" Type="Vertical Stack" CellGap="6" IsVisible="{Binding IsBookmarks}">
               <Repeat Source="{Binding Bookmarks}" As="bookmark" Key="{Binding bookmark.Key}">
                 <Container Type="Vertical Stack">
-                  <Button id="BrowseBookmarkRowButton" action="OpenBookmark" Text="{Binding bookmark.Label}" AccessibleName="{Binding bookmark.Label}" Interactive="{Binding Can.OpenBookmark}" />
+                  <Button id="BrowseBookmarkRowButton" HorizontalContentAlignment="Left" action="OpenBookmark" Text="{Binding bookmark.Label}" AccessibleName="{Binding bookmark.Label}" Interactive="{Binding Can.OpenBookmark}" />
                   <Text Text="{Binding bookmark.Detail}" TextWrapping="Wrap" />
                 </Container>
               </Repeat>
@@ -51,7 +51,7 @@
             <Container id="BrowseHistoryPage" Type="Vertical Stack" CellGap="6" IsVisible="{Binding IsHistory}">
               <Repeat Source="{Binding History}" As="visit" Key="{Binding visit.Key}">
                 <Container Type="Vertical Stack">
-                  <Button id="BrowseHistoryRowButton" action="OpenHistory" Text="{Binding visit.Label}" AccessibleName="{Binding visit.Label}" Interactive="{Binding Can.OpenHistory}" />
+                  <Button id="BrowseHistoryRowButton" HorizontalContentAlignment="Left" action="OpenHistory" Text="{Binding visit.Label}" AccessibleName="{Binding visit.Label}" Interactive="{Binding Can.OpenHistory}" />
                   <Text Text="{Binding visit.Detail}" TextWrapping="Wrap" />
                 </Container>
               </Repeat>
@@ -71,7 +71,7 @@
               </Repeat>
               <Text Text="{Binding DownloadDestinationPrompt}" TextWrapping="Wrap" />
               <Repeat Source="{Binding DownloadDestinations}" As="folder" Key="{Binding folder.Key}">
-                <Button id="BrowseDownloadDestinationButton" action="RegisterDownloadDestination" Text="{Binding folder.Label}" Interactive="{Binding Can.RegisterDownloadDestination}" />
+                <Button id="BrowseDownloadDestinationButton" HorizontalContentAlignment="Left" action="RegisterDownloadDestination" Text="{Binding folder.Label}" Interactive="{Binding Can.RegisterDownloadDestination}" />
               </Repeat>
               <Button id="BrowseRetryDownloadRegistrationButton" action="9to1.Browse.RetryDownloadRegistration" Interactive="{Binding Can.RetryDownloadRegistration}">Continue Files approval</Button>
               <Text IsVisible="{Binding EmptyDownloads}">No completed approved downloads.</Text>

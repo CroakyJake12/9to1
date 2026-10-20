@@ -14,6 +14,14 @@ namespace CakeOS.Cui.Runtime;
 /// <summary>Native menu behavior with CUI-owned automation for opening and invoking it.</summary>
 public sealed class CuiMenuItem : MenuItem
 {
+    public static readonly StyledProperty<Avalonia.Layout.VerticalAlignment> VerticalContentAlignmentProperty =
+        ContentControl.VerticalContentAlignmentProperty.AddOwner<CuiMenuItem>();
+    public static readonly StyledProperty<Avalonia.Layout.HorizontalAlignment> HorizontalContentAlignmentProperty =
+        ContentControl.HorizontalContentAlignmentProperty.AddOwner<CuiMenuItem>();
+    public Avalonia.Layout.VerticalAlignment VerticalContentAlignment
+    { get => GetValue(VerticalContentAlignmentProperty); set => SetValue(VerticalContentAlignmentProperty, value); }
+    public Avalonia.Layout.HorizontalAlignment HorizontalContentAlignment
+    { get => GetValue(HorizontalContentAlignmentProperty); set => SetValue(HorizontalContentAlignmentProperty, value); }
     public static readonly StyledProperty<int> MenuColumnsProperty = AvaloniaProperty.Register<CuiMenuItem, int>(nameof(MenuColumns), 1,
         validate: value => value is >= 1 and <= 8);
     public static readonly StyledProperty<bool> IconOnlyProperty = AvaloniaProperty.Register<CuiMenuItem, bool>(nameof(IconOnly));

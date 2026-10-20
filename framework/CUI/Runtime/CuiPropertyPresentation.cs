@@ -144,6 +144,10 @@ public static class CuiPropertyPresentation
                 }
             }
             Watch("CuiTextBrush", "Foreground");
+            if (control is Button or MenuItem)
+                Watch("CuiButtonVerticalContentAlignment", "VerticalContentAlignment");
+            if (control is Button and not (CheckBox or RadioButton or ToggleSwitch))
+                Watch("CuiButtonHorizontalContentAlignment", "HorizontalContentAlignment");
             Watch("CuiFlowDirection", "FlowDirection");
             if (control is ContextMenu)
             {

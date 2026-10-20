@@ -100,7 +100,7 @@
               are deterministic (only one open at a time) and the whole sidebar collapses.
             -->
             <Container id="space-context-header" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="4">
-              <Button Column="0" id="space-switcher" action="ToggleSwitcher" content="{Binding selection.name}" accessible-name="Switch Space" Tooltip="Switch to another Space" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
+              <Button Column="0" id="space-switcher" HorizontalContentAlignment="Left" action="ToggleSwitcher" content="{Binding selection.name}" accessible-name="Switch Space" Tooltip="Switch to another Space" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
               <Button Column="1" id="space-overflow" action="ToggleOverflow" accessible-name="Quick actions for this Space" Tooltip="Quick actions for this Space" Width="32" Height="32" Padding="6" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6">
                 <Image id="space-overflow-icon" Source="icon:more" Width="18" Height="18" />
               </Button>
@@ -111,10 +111,10 @@
             <If Condition="{Binding spaces.spaceSwitcherOpen}">
               <Container id="space-switcher-list" role="list" accessible-name="Spaces switcher" Type="Vertical Stack" CellGap="4">
                 <Repeat id="space-switcher-builtin" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
-                  <Button id="space-switcher-builtin-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
+                  <Button id="space-switcher-builtin-row" HorizontalContentAlignment="Left" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
                 </Repeat>
                 <Repeat id="space-switcher-custom" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
-                  <Button id="space-switcher-custom-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
+                  <Button id="space-switcher-custom-row" HorizontalContentAlignment="Left" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
                 </Repeat>
               </Container>
             </If>
@@ -125,7 +125,7 @@
                 <Button id="space-overflow-archive" action="ArchiveSelected" content="Archive Space" accessible-name="Archive selected Space" Interactive="{Binding selection.canEdit}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
               </Container>
             </If>
-            <Button id="space-new-chat" action="NewChat" accessible-name="Start a new chat in this Space" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Button id="space-new-chat" HorizontalContentAlignment="Stretch" action="NewChat" accessible-name="Start a new chat in this Space" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Container Type="Horizontal Stack" CellGap="8">
                 <Image id="space-new-chat-icon" Source="icon:plus" Width="18" Height="18" VerticalAlignment="Center" />
                 <Text id="space-new-chat-label" text="New chat" font-size="14" />
@@ -138,7 +138,7 @@
               resolve stays visible but explicitly not actionable.
             -->
             <Repeat id="space-sidebar-items" Source="{Binding spaces.sidebarItems}" As="item" Key="{Binding item.sidebarItemId}">
-              <Button id="open-space-sidebar-item" action="OpenSidebarItem" accessible-name="{Binding item.openLabel}" Interactive="{Binding item.isActionable}" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+              <Button id="open-space-sidebar-item" HorizontalContentAlignment="Stretch" action="OpenSidebarItem" accessible-name="{Binding item.openLabel}" Interactive="{Binding item.isActionable}" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                 <Container id="space-sidebar-item-row" role="listitem" accessible-name="{Binding item.label}" Type="Horizontal Stack" CellGap="8">
                   <Image id="space-sidebar-item-icon" Source="{Binding item.iconSource}" Width="20" Height="20" VerticalAlignment="Center" accessible-name="{Binding item.label}" />
                   <Text id="space-sidebar-item-label" text="{Binding item.label}" font-size="14" />
@@ -149,7 +149,7 @@
             <Container id="space-recent-chats-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
             <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
               <Container id="space-conversation-row" role="listitem" accessible-name="{Binding conversation.title}" Type="Vertical Stack" CellGap="2">
-                <Button id="open-space-conversation" action="OpenConversation" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" Padding="12" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+                <Button id="open-space-conversation" HorizontalContentAlignment="Stretch" action="OpenConversation" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" Padding="12" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                 <Container Type="Vertical Stack" CellGap="2">
                   <Text id="space-conversation-title" text="{Binding conversation.title}" font-size="14" />
                   <Text id="space-conversation-updated" text="{Binding conversation.updatedLabel}" foreground="{Resource CuiTextSoftBrush}" font-size="12" />
