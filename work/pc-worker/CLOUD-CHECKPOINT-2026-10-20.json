@@ -1,12 +1,12 @@
 {
   "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
-  "recorded_at": "2026-10-20T10:13:44.913905+00:00",
-  "source_commit": "8927b0577d6b74e4c4fbb05ccb419bda70c67e34",
+  "recorded_at": "2026-10-20T10:54:47.550366+00:00",
+  "source_commit": "5e99dc97602a575a635381178b9544daf379d451",
   "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
   "branch": "codex/cloud-continuation-20261020",
   "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
   "engineering_state": "CHECKPOINT",
-  "implementation_mode": "OpenCode Beam implements; separate Codex review and execution checks",
+  "implementation_mode": "One OpenCode implementation request at a time; separate Codex reviews/checks. Beam free-quota exhausted; owner-authorised Mercury fallback starting with unchanged $5 cap.",
   "requirements": [
     "CUI dynamic-update/error-boundary and hot-reload contracts",
     "Universal Model Picker stable identity and unknown/empty state",
@@ -20,7 +20,12 @@
     "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiScene.cs": "f50555e2f7aed7e2f3d67242e825d824f128097d620ab850bcf35e264629334b",
     "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiProjection.cs": "9ecb62a682c1ba4e0bf4c6d23a03200b864a67548946fa70c3adec4b19af794b",
     "9to1 Workspace/Home/UI/ModelPicker.cui": "db145cb6140b39ae937844e9e4034c53ef87213132f599d25c0895a537e21169",
-    "9to1 Workspace/Home/Tests/HomeModelPickerCuiProjectionTests.cs": "cb1bc4f0137c8605f5f17f401272fd900854a16f9314e5fa4a98f9163b090c3b"
+    "9to1 Workspace/Home/Tests/HomeModelPickerCuiProjectionTests.cs": "cb1bc4f0137c8605f5f17f401272fd900854a16f9314e5fa4a98f9163b090c3b",
+    "framework/CUI/Themes/CuiSurfacePaletteCatalog.cs": "b8f2efb3a1e070e605470bc54f883fb500a13d792d1d82fcf931b27add375040",
+    "framework/CUI/Runtime.Tests/CuiAppAccentTests.cs": "656e506460a35556d777f6381977e821d623e0bc877e43a44cabf1dcd18231c4",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/NewChatPage.cs": "eda0e63db46592d6c82bb11b0779ad23083d4f941f376967295554cc1c55f552",
+    "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui": "7b1d26a91b490609f6555a427ef9f67d4b05bface25df9c5d2c3ffaeb08bff16",
+    "9to1 Workspace/Browse/Host.Tests/OverlayChatInitializationTests.cs": "c9b26ae29a7f389beff01974144257fed14459b7d5638dacff0cbc430e0db684"
   },
   "validation": {
     "platform": "Debian13 linux-x64; SDK10.0.401; serialized -m:1",
@@ -118,6 +123,25 @@
       "source": "baseline27303895 plus private independently authored probe patch",
       "evidence": "/workspace/shared/9to1-test-evidence/real-sqlite-draft-probe.log",
       "scope": "real SQLite adapter, actual OverlayChatSessionFactory page/mount/render commands/close. Does not replace full process or Spaces-route acceptance."
+    },
+    "professional_blue_and_default_dual": {
+      "source": "1272dead4eae48392cf06cb6938d172e7811fea5, cherry-picked as5e99dc97",
+      "relevant_theme_runtime": {
+        "passed": 38,
+        "failed": 0,
+        "skipped": 0
+      },
+      "focused_host": {
+        "passed": 41,
+        "failed": 0,
+        "skipped": 0
+      },
+      "baseline_red": "One genuine failure when old implementation creates default Dual control; real Dual service precondition armed",
+      "independent_source_review": "PASS narrow slice",
+      "native_artifact_sha256": "6bd4d18258aec731522aaac2ba1206866796ccd8bd80e839a736859d1099d83f",
+      "native_evidence": "/workspace/shared/9to1-native-evidence/blue-dual-v1/native-journey.json",
+      "native_observation": "1440x920: blue focus, no Dual status; draft visible and same SQLite text after graceful exit0; legacy composer and initial history still deficient",
+      "plugin_integration": "NOT_RUN; removal of automatic first-party bar is not full Plugin implementation"
     }
   },
   "acceptance": {
@@ -134,7 +158,10 @@
     "Spaces CUI/Automation/Generative target resolvers and full native workflows remain unaccepted",
     "Automation durable runtime Wait/resume and transition guards remain incomplete",
     "Full Build and productivity-suite requirements remain pending",
-    "All-app embedded/standalone top bars and persistent Browse shared model/notifications/profile controls are required by direct owner refinement; implementation remains open"
+    "All-app embedded/standalone top bars and persistent Browse shared model/notifications/profile controls are required by direct owner refinement; implementation remains open",
+    "Pinned owner requirement: compare and consolidate actual standalone/Haven implementations; merge useful work or prefer a better newer implementation; no divergent copies",
+    "Filled rounded SVG assets and authorised running/most-used Assistant presentation remain incomplete",
+    "Bundled Home-owned Dulche startup/default model discovery/acquisition/routing and verified production assets remain incomplete"
   ],
   "programme_reconciliation": {
     "native_observation_at": "2026-10-20T08:47:44Z",
@@ -148,11 +175,11 @@
     "mercury_activation_condition": "Only after confirmed OpenCode Beam usage exhaustion",
     "existing_mercury_spending_cap_usd": 5,
     "spending_controls_changed": false,
-    "mercury_requests_sent": 0
+    "mercury_requests_sent": "See private process/session receipts; fallback activation starting after recorded Beam provider.quota/FreeUsageLimitError. No credential stored in repository."
   },
   "allowance": {
-    "beam_remaining": "UNKNOWN",
+    "beam_remaining": "EXHAUSTED: recorded provider.quota FreeUsageLimitError at2026-10-20T10:50:38Z",
     "codex_remaining": "UNKNOWN",
-    "paid_fallback_activated": false
+    "paid_fallback_activated": "Starting authorised Mercury fallback, private process-scoped key, verified $5 cap untouched"
   }
 }
