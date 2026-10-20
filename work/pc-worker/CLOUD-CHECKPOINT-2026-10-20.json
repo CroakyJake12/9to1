@@ -1,7 +1,7 @@
 {
   "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
-  "recorded_at": "2026-10-20T10:00:00Z",
-  "source_commit": "5552589183261de93f54bfb2c31daff239343839",
+  "recorded_at": "2026-10-20T10:13:44.913905+00:00",
+  "source_commit": "8927b0577d6b74e4c4fbb05ccb419bda70c67e34",
   "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
   "branch": "codex/cloud-continuation-20261020",
   "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
@@ -80,6 +80,44 @@
       "draft_after_restart": "FAIL: composer empty, SQLite text and current branch intact",
       "formatting": "FAIL: user identifies mismatch with Professional mockups",
       "effective_theme": "UNVERIFIED"
+    },
+    "theme_sidebar_candidate": {
+      "source": "38ad30a1 (cherry-picked as8927b057)",
+      "host_focused": {
+        "passed": 22,
+        "failed": 0
+      },
+      "spaces": {
+        "passed": 220,
+        "failed": 0
+      },
+      "canonical_real_source_compilation": {
+        "passed": 7,
+        "failed": 0
+      },
+      "baseline_regression": "Professional preference expected Professional, actual Glow; repaired regression passes",
+      "independent_source_review": "PASS for narrow theme bridge/sidebar layout",
+      "independent_native_visual_review": "PASS for bounded rail/sidebar/stage slice; wholeapp remains unaccepted"
+    },
+    "native_linux_layout_candidate": {
+      "artifact_sha256": "42a198f7af40c00776cfcad9528fe17a921bb8af4fc76e76edbebee46a405440",
+      "evidence": "/workspace/shared/9to1-native-evidence/spaces-layout-v1/native-journey.json",
+      "viewport": [
+        "1440x920",
+        "960x760"
+      ],
+      "preference": "Professional / SuperDark in actual private preference file",
+      "computed_native_theme_inspector": "NOT_CAPTURED",
+      "draft": "Visible after restart and preserved through collapse/reexpand and graceful close; actual SQLite text matches",
+      "history": "FAIL initially empty; populates after sidebar toggle",
+      "note": "No backend draft fix made; earlier v2 empty-composer observation is not an established current-source defect"
+    },
+    "real_sqlite_factory_draft_probe": {
+      "passed": 1,
+      "failed": 0,
+      "source": "baseline27303895 plus private independently authored probe patch",
+      "evidence": "/workspace/shared/9to1-test-evidence/real-sqlite-draft-probe.log",
+      "scope": "real SQLite adapter, actual OverlayChatSessionFactory page/mount/render commands/close. Does not replace full process or Spaces-route acceptance."
     }
   },
   "acceptance": {
@@ -91,11 +129,12 @@
   },
   "remaining_gaps": [
     "Actual mounted chat still uses legacy HavenScene authoring; canonical CUI migration/layout correction required without dropping behavior",
-    "Direct Space entry, initial history and visible draft restoration fail native review",
+    "Direct Space entry and initial history refresh remain deficient; current native draft restore observed working without backend change",
     "Home model-manager actions and shipping host integration remain incomplete",
     "Spaces CUI/Automation/Generative target resolvers and full native workflows remain unaccepted",
     "Automation durable runtime Wait/resume and transition guards remain incomplete",
-    "Full Build and productivity-suite requirements remain pending"
+    "Full Build and productivity-suite requirements remain pending",
+    "All-app embedded/standalone top bars and persistent Browse shared model/notifications/profile controls are required by direct owner refinement; implementation remains open"
   ],
   "programme_reconciliation": {
     "native_observation_at": "2026-10-20T08:47:44Z",
