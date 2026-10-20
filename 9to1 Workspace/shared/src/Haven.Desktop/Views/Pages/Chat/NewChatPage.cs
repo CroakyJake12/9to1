@@ -1062,15 +1062,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _bus.RegisterElement("Chat.Composer.Send", Scene);
         _bus.RegisterElement("Chat.Problems.Resolve", Scene);
 
-        // Dual-model comparison is optional: it only appears when App services exposed DualModelService.
-        if (App.Services?.GetService<DualModelService>() is { } dualModels)
-        {
-            _dual = new DualModelChatController(dualModels);
-            _scene.EnsureDualModelBar();
-            _scene.DualToggleRequested += OnDualToggleRequested;
-            _scene.DualModelPickerRequested += OnDualModelPickerRequested;
-            _scene.DualSecondModelChosen += OnDualSecondModelChosen;
-        }
+        // Dual is now a Plugin-owned capability, not a first-party composer bar. Do not
+        // auto-inject the Dual control from NewChatPage; explicit Plugin activation owns it.
+        _dual = null;
 
         _scene.SendRequested += (_, _) => _ = SubmitCurrentInstructionAsync();
         _scene.StopRequested += OnStopRequested;

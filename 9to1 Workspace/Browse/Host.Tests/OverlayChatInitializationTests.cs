@@ -810,6 +810,40 @@ public sealed class OverlayChatInitializationTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Fresh_chat_has_no_automatic_dual_control_and_draft_still_works()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetResult([Model("llama3")]);
+        var servicesProperty = typeof(Haven.Desktop.App).GetProperty("Services", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var previousServices = servicesProperty.GetValue(null);
+        // Arm the REAL old injection precondition: the global app provider supplies Dual.
+        // Without this the test also passed the old implementation.
+        using var appServices = new ServiceCollection()
+            .AddSingleton(new DualModelService(Proxy<IOllamaClient>()))
+            .BuildServiceProvider();
+        NewChatPage? page = null;
+        try
+        {
+            servicesProperty.SetValue(null, appServices);
+            page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+            var scene = Scene(page);
+            Assert.Null(typeof(ChatHavenScene).GetField("_dualToggle", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scene));
+            Assert.Null(typeof(NewChatPage).GetField("_dual", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            page.SetDraft("fresh chat draft");
+            await WaitUntilAsync(() => rig.Drafts.Draft(page.CurrentConversation.Id)?.Content == "fresh chat draft");
+            Assert.Equal("fresh chat draft", ComposerText(page));
+        }
+        finally
+        {
+            try
+            {
+                if (page is not null) await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            }
+            finally { servicesProperty.SetValue(null, previousServices); }
+        }
+    }
+
     private static ModelDescriptor Model(string name) =>
         new(name, 1024, "llama", "1B", "Q4_0", new HashSet<ToolCapability>(), DateTimeOffset.UnixEpoch);
 
