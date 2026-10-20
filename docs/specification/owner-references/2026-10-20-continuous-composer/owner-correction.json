@@ -1,0 +1,23 @@
+{
+  "source": "Direct owner messages and image attachment in the current chat, 20 October 2026",
+  "recorded_at": "2026-10-20T11:44:42.331792+00:00",
+  "authority": "Canonical specification v2 has priority over these illustrative references, as explicitly clarified by the owner. Direct textual refinements apply within that contract.",
+  "reference": {
+    "file": "1000014314.jpg",
+    "sha256": "8e16c0d1166b7f37bc31dc58b22eb1f87725b03c5e12e332e040c1a612e0361a",
+    "kind": "illustrative rough reference, not proof of implemented behavior"
+  },
+  "owner_words": [
+    "The chatbox in your current design doesn't match the spec. It should be continuous, not a visible box inside a box, and have format/emoji button/permission selector. See attached chatgpt compose for example."
+  ],
+  "requirements": [
+    "Author one continuous composer surface; the text entry must not present a separate visible box inside the outer composer. Avoid an independent inner background, rounded outline or clipped inset glow.",
+    "The shared CUI composite treatment must prevent inner input background, border or focus adorner from recreating a nested box, while preserving a visible accessible outer-composer focus indication and genuine text-input behavior.",
+    "Provide genuine formatting and emoji controls with the specification visibility rule: next to + only when the composer is expanded AND focused, never in compact/mini mode.",
+    "Formatting is the genuine accessible floating CUI toolbar under SPUI-192, acting on the real semantic selection/caret and preserving canonical content, undo/redo, focus and selection. Emoji uses the real keyboard-operable CUI picker.",
+    "Provide a genuine permission selector bound to canonical effective policy/permission owners, with truthful available options and enforced scopes. Preserve the separately required persistent AI Read-only/Write access mode; do not conflate permission approval policy, AI access mode, or All/Basic/JustChat model capability modes. DEC-001 still leaves the exact Ask for Approval semantics open; this owner request establishes presence, not invented new grant semantics.",
+    "The ChatGPT screenshot illustrates continuous composition and control arrangement; it is not an instruction to copy branding, model text, warning icon, message text or personal/provider state.",
+    "Canonical v2 takes priority over example images; retain applicable complete composer requirements, compact/expanded behavior, accessibility, real attachment/Voice & Vision actions and canonical draft/conversation lifetimes.",
+    "The latest Spaces reference is Professional and its mistaken glow is excluded. Preserve other user-selected themes rather than removing their specified effects globally."
+  ]
+}
