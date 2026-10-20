@@ -13,6 +13,16 @@
          than an application runtime reference. -->
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <!-- SDK10.0.401 NuGet.Build.Tasks.Pack.targets (447-454) packs only
+         BuiltProjectOutputGroup/satellites/docs/PRI; CopyLocalLockFileAssemblies
+         populates build output but is NOT membership in the default pack, and
+         SuppressDependenciesWhenPacking suppresses the fallback without bundling
+         the closure. Collect the resolved copy-local task dependency closure
+         explicitly so the standalone package is self-contained under tools/net10.0
+         (Compiler/Core/Language/Runtime + Avalonia transitive managed/runtime
+         assets), while staying development-only with no lib/ and no consumer
+         runtime dependency. -->
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeStandaloneCuiTaskClosure</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Compiler/CakeOS.Cui.Compiler.csproj" />
@@ -23,4 +33,24 @@
   <ItemGroup>
     <None Include="buildTransitive/CakeOS.Cui.Build.Compiler.props" Pack="true" PackagePath="buildTransitive/CakeOS.Cui.Build.Compiler.props" />
   </ItemGroup>
+  <!-- Collect the resolved copy-local task dependency closure from this project's
+       dedicated build output into tools/net10.0. The output is populated by
+       CopyLocalLockFileAssemblies with the compiler reference (CakeOS.Cui.Compiler
+       via ProjectReference) plus its transitive Core/Language/Runtime and Avalonia
+       managed/runtime assets. Hosting MSBuild.Framework/Utilities are Private=false,
+       so they are never copied to this output, and the project is not
+       self-contained, so no .NET host assemblies appear. Only DLL members of the
+       closure are packed; the project's own task assembly ships via
+       BuildOutputTargetFolder=tools and is excluded here to avoid a duplicate
+       package entry. Foreign/stale non-DLL output is intentionally not collected. -->
+  <Target Name="IncludeStandaloneCuiTaskClosure">
+    <ItemGroup>
+      <StandaloneCuiTaskClosure Include="bin/$(Configuration)/net10.0/**/*.dll"
+                                Exclude="bin/$(Configuration)/net10.0/CakeOS.Cui.Build.Compiler.dll" />
+    </ItemGroup>
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="@(StandaloneCuiTaskClosure)"
+                              PackagePath="tools/net10.0/%(RecursiveDir)" />
+    </ItemGroup>
+  </Target>
 </Project>

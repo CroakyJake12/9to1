@@ -56,7 +56,9 @@ parser.add_argument('--package', type=Path, default=None)
 parser.add_argument('--evidence', type=Path, default=None)
 parser.add_argument('--dotnet', type=Path, default=Path('/home/jacob/.local/bin/dotnet'))
 parser.add_argument('--probe-dotnet', type=Path, default=None)
-parser.add_argument('--expected-package-id', default='CakeOS.Cui')
+parser.add_argument('--expected-package-id', default='CakeOS.Cui',
+                    help='exact package id; selects the layout: CakeOS.Cui (tools/compiler) '
+                         'or CakeOS.Cui.Build.Compiler (standalone tools/net10.0)')
 parser.add_argument('--selfcheck', action='store_true')
 args = parser.parse_args()
 
@@ -71,6 +73,63 @@ def get(obj, *keys):
         if isinstance(obj, dict) and key in obj:
             return obj[key]
     return None
+
+
+def resolve_layout(expected_id):
+    """Both actual package layouts:
+    - main CakeOS.Cui compiler package -> tools/compiler (+ tools/legacy)
+    - standalone CakeOS.Cui.Build.Compiler task package -> tools/net10.0
+    """
+    low = (expected_id or '').lower()
+    if low == 'cakeos.cui.build.compiler':
+        return {
+            'standalone': True,
+            'tool_prefix': 'tools/net10.0',
+            'task_dll': 'CakeOS.Cui.Build.Compiler.dll',
+            'compiler_dll': 'CakeOS.Cui.Compiler.dll',
+            'props': 'buildTransitive/CakeOS.Cui.Build.Compiler.props',
+        }
+    return {
+        'standalone': False,
+        'tool_prefix': 'tools/compiler',
+        'task_dll': 'CakeOS.Cui.Build.Compiler.dll',
+        'compiler_dll': 'CakeOS.Cui.Compiler.dll',
+        'legacy_dll': 'tools/legacy/CakeOS.Cui.Build.Tasks.dll',
+        'props': 'buildTransitive/CakeOS.Cui.props',
+    }
+
+
+def classify_closure(archive_names, L):
+    """Missing closure members, or [] when the layout is fully bundled."""
+    prefix = L['tool_prefix']
+    required = {
+        f'{prefix}/{L["compiler_dll"]}',
+        f'{prefix}/CakeOS.Cui.Core.dll',
+        f'{prefix}/CakeOS.Cui.Language.dll',
+        f'{prefix}/CakeOS.Cui.Runtime.dll',
+    }
+    if not L['standalone']:
+        required.add(f'{prefix}/{L["task_dll"]}')
+        required.add('tools/legacy/CakeOS.Cui.Build.Tasks.dll')
+    else:
+        required.add(f'{prefix}/{L["task_dll"]}')
+    return sorted(required - set(archive_names))
+
+
+def standalone_probe_project(props_abs):
+    """Real installed-task harness (same task-argument contract as root attempt2
+    consumer/Probe.csproj): absolute import of the installed package props only, no
+    source fallback. CompileCuiSourcesTask is invoked with the exact required
+    arguments Sources/ProjectDirectory/OutputFile."""
+    return ('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework>'
+            '<NuGetAudit>false</NuGetAudit></PropertyGroup>'
+            '<Import Project="' + escape(str(props_abs), {'"': '&quot;'}) + '"/>'
+            '<UsingTask TaskName="CakeOS.Cui.Build.CompileCuiSourcesTask" AssemblyFile="$(CuiCompilerTaskAssembly)"/>'
+            '<Target Name="Probe">'
+            '<Error Condition="\'$(CuiCompilerTaskAssembly)\' == \'\'" Text="Installed standalone task was not admitted"/>'
+            '<CompileCuiSourcesTask Sources="$(MSBuildProjectDirectory)/Input.cui" '
+            'ProjectDirectory="$(MSBuildProjectDirectory)" '
+            'OutputFile="$(MSBuildProjectDirectory)/artifacts/compilation.v1.cuic.json"/></Target></Project>')
 
 
 def asset_dependencies(assets):
@@ -147,6 +206,37 @@ def selfcheck():
     case('selfcheck-missing-library-returns-none',
          resolved_library_version(get(missing_lib, 'libraries'), 'CakeOS.Cui') is None)
 
+    # Both actual package layouts, no SDK.
+    main_l = resolve_layout('CakeOS.Cui')
+    std_l = resolve_layout('CakeOS.Cui.Build.Compiler')
+    case('selfcheck-main-layout-is-tools-compiler',
+         not main_l['standalone'] and main_l['tool_prefix'] == 'tools/compiler')
+    case('selfcheck-standalone-layout-is-tools-net10',
+         std_l['standalone'] and std_l['tool_prefix'] == 'tools/net10.0')
+    case('selfcheck-standalone-distinct-from-main',
+         std_l['tool_prefix'] != main_l['tool_prefix'])
+
+    # Standalone closure expectation: compiler + Core/Language/Runtime + Avalonia.
+    std_closure = sorted(set(classify_closure(set(), std_l)))
+    full_std = set(std_closure) | {std_l['props']}
+    case('selfcheck-standalone-closure-expected',
+         'tools/net10.0/CakeOS.Cui.Compiler.dll' in std_closure
+         and 'tools/net10.0/CakeOS.Cui.Core.dll' in std_closure
+         and 'tools/net10.0/CakeOS.Cui.Language.dll' in std_closure
+         and 'tools/net10.0/CakeOS.Cui.Runtime.dll' in std_closure
+         and 'tools/net10.0/CakeOS.Cui.Build.Compiler.dll' in std_closure)
+    case('selfcheck-standalone-closure-complete', classify_closure(full_std, std_l) == [])
+    # Missing-dependency detection.
+    missing_compiler = full_std - {'tools/net10.0/CakeOS.Cui.Compiler.dll'}
+    case('selfcheck-standalone-missing-dependency-detected',
+         classify_closure(missing_compiler, std_l) == ['tools/net10.0/CakeOS.Cui.Compiler.dll'])
+
+    # Real installed-task harness fixture (task-argument contract preserved).
+    probe_txt = standalone_probe_project(Path('/pkg/buildTransitive/CakeOS.Cui.Build.Compiler.props'))
+    harness_needed = ('CompileCuiSourcesTask', 'Sources=', 'ProjectDirectory=',
+                      'OutputFile=', 'CuiCompilerTaskAssembly')
+    case('selfcheck-real-installed-task-harness', all(n in probe_txt for n in harness_needed))
+
     summary = {
         'mode': 'selfcheck',
         'synthetic_authentic_shape': True,
@@ -166,6 +256,7 @@ package = args.package.resolve()
 dotnet = args.dotnet.resolve()
 probe_dotnet = (args.probe_dotnet or dotnet).resolve()
 expected_id = args.expected_package_id
+LAYOUT = resolve_layout(expected_id)
 
 feed = e / 'local-feed'
 feed.mkdir()
@@ -228,25 +319,24 @@ check('nuspec-development-dependency', bool(dev_dep))
 archive_names = set()
 with zipfile.ZipFile(package) as z:
     archive_names = set(z.namelist())
+L = LAYOUT
+prefix = L['tool_prefix']
 required_assets = {
-    'tools/compiler/CakeOS.Cui.Build.Compiler.dll',
-    'tools/compiler/CakeOS.Cui.Compiler.dll',
-    'tools/legacy/CakeOS.Cui.Build.Tasks.dll',
-    'buildTransitive/CakeOS.Cui.props',
-    'buildTransitive/CakeOS.Cui.targets',
+    f'{prefix}/{L["task_dll"]}',
+    f'{prefix}/{L["compiler_dll"]}',
+    L['props'],
 }
+if not L['standalone']:
+    required_assets.add('tools/legacy/CakeOS.Cui.Build.Tasks.dll')
+    required_assets.add('buildTransitive/CakeOS.Cui.targets')
 check('packed-toolchain-assets-present', required_assets <= archive_names,
       missing=sorted(required_assets - archive_names))
 # Bundling proof: the toolchain must be self-contained under tools (not merely that
-# package dependencies are suppressed).
-bundled_closure = {
-    'tools/compiler/CakeOS.Cui.Core.dll',
-    'tools/compiler/CakeOS.Cui.Language.dll',
-    'tools/compiler/CakeOS.Cui.Runtime.dll',
-}
-check('toolchain-bundles-compiler-runtime-closure', bundled_closure <= archive_names,
-      missing=sorted(bundled_closure - archive_names))
-avalonia = [n for n in archive_names if n.startswith('tools/compiler/Avalonia.')]
+# package dependencies are suppressed). Applies to BOTH actual layouts.
+closure_missing = classify_closure(archive_names, L)
+check('toolchain-bundles-compiler-runtime-closure', closure_missing == [],
+      missing=closure_missing)
+avalonia = [n for n in archive_names if n.startswith(prefix + '/Avalonia.')]
 check('toolchain-bundles-avalonia-closure', len(avalonia) > 0, found=sorted(avalonia)[:8])
 lib_entries = [n for n in archive_names if n.startswith('lib/')]
 check('package-has-no-lib-runtime-assets', len(lib_entries) == 0, lib=lib_entries)
@@ -258,7 +348,7 @@ check('no-wasm-browser-assets-shipped', not wasm_assets, suspicious=wasm_assets)
 
 
 def compiler_dll_path():
-    return installed / 'tools/compiler/CakeOS.Cui.Compiler.dll'
+    return installed / LAYOUT['tool_prefix'] / LAYOUT['compiler_dll']
 
 
 def read_artifact(path):
@@ -389,148 +479,186 @@ def classify_wasm_failure(log):
 
 
 # --- 3. native/minimal net10 consumer -------------------------------------------
-consumer = e / 'consumer'
-consumer.mkdir()
-write_nuget_config(consumer)
-(consumer / 'Main.cui').write_text(STATELESS)
-consumer_csproj(consumer / 'Consumer.csproj', consumer)
-proj = consumer / 'Consumer.csproj'
-
-restore_proc = run_dotnet([str(dotnet), 'restore', str(proj), '-m:1'], consumer, 'restore-native')
-check('native-restore-succeeds', succeeded(restore_proc))
-
-assets_path = consumer / 'obj/project.assets.json'
-if assets_path.exists():
-    assets = json.loads(assets_path.read_text(encoding='utf-8'))
-    libraries = get(assets, 'libraries') or {}
-    dep_ok = dependency_present(assets, pkg_id)
-    resolved_ver = resolved_library_version(libraries, pkg_id)
-    record('native-resolved-required-package',
-           'pass' if (dep_ok and resolved_ver == pkg_ver) else 'fail',
-           dependency_present=dep_ok, resolved_version=resolved_ver,
-           expected_version=pkg_ver)
-    lib_keys = [k for k in libraries if not k.startswith('.NETCoreApp')]
-    extra_libs = [k for k in lib_keys if k.lower() != f'{pkg_id.lower()}/{pkg_ver.lower()}']
-    check('native-clean-closure-only-cui-package', len(extra_libs) == 0, libraries=lib_keys)
-    pkg_lib = get(libraries, f'{pkg_id}/{pkg_ver}')
-    check('native-package-path-resolves-from-cache',
-          bool(pkg_lib) and 'framework' not in str(get(pkg_lib, 'path') or '').lower(),
-          path=get(pkg_lib, 'path'))
-    cache_pkg_tool = cache / f'{pkg_id.lower()}/{pkg_ver.lower()}/tools/compiler/CakeOS.Cui.Compiler.dll'
-    check('native-restore-populated-isolated-cache-from-feed', cache_pkg_tool.exists(),
-          path=str(cache_pkg_tool))
-else:
-    record('native-assets-not-produced', 'fail',
-           reason='restore did not produce project.assets.json')
-
-build_proc = run_dotnet([str(dotnet), 'build', str(proj), '-m:1', '--verbosity', 'minimal'],
-                        consumer, 'build-native')
-check('native-build-succeeds', succeeded(build_proc))
-
-choice_path = consumer / 'toolchain.txt'
-if choice_path.exists():
-    choice = choice_path.read_text().splitlines()
-    choice0 = choice[0].strip() if choice else ''
-    choice1 = choice[1].strip() if len(choice) > 1 else ''
-    check('native-prebuilt-toolchain-selected', choice0 == 'true')
-    check('native-compiler-from-installed-package',
-          'tools/compiler/CakeOS.Cui.Build.Compiler.dll' in choice1
-          and '/framework/' not in choice1.replace('\\', '/'), compiler_assembly=choice1)
-else:
-    record('native-toolchain-choice-not-recorded', 'fail',
-           reason='toolchain.txt was not produced')
-
-native_dll = read_target_path(consumer) or find_consumer_dll(consumer)
-if native_dll is None or not native_dll.exists():
-    record('native-missing-consumer-assembly', 'fail',
-           reason='native build did not produce the consumer assembly at recorded/actual path')
-else:
-    names = run_probe(native_dll, 'native')
-    check('native-genuine-v1-resource-embedded', V1_RESOURCE in names)
-
-# Tools must not become app runtime controls.
-check('native-task-assembly-not-in-app-output',
-      not (consumer / 'bin/Debug/net10.0/CakeOS.Cui.Build.Compiler.dll').exists())
-check('native-compiler-assembly-not-in-app-output',
-      not (consumer / 'bin/Debug/net10.0/CakeOS.Cui.Compiler.dll').exists())
-
-# Stateless -> stateful transition on the same consumer: read the shipped payload.
-(consumer / 'Main.cui').write_text(STATEFUL)
-trans_proc = run_dotnet([str(dotnet), 'build', str(proj), '-m:1', '--verbosity', 'minimal'],
-                        consumer, 'build-native-transition')
-if not succeeded(trans_proc):
-    record('native-stateful-transition', 'blocked',
-           reason='compiler did not accept the stateful input at the detected transport contract')
-else:
-    trans_dll = read_target_path(consumer) or find_consumer_dll(consumer)
-    if trans_dll is None or not trans_dll.exists():
-        record('native-stateful-not-raw-shipped-under-v1', 'fail',
-               reason='transition build succeeded but consumer assembly not found at recorded/actual path')
-    else:
-        names_after = run_probe(trans_dll, 'native-transition')
-        if V2_RESOURCE not in names_after:
-            record('native-stateful-not-raw-shipped-under-v1', 'blocked',
-                   reason='distinct V2 artifact not embedded in the shipped assembly; '
-                          'typed V2 transport not present/integrated')
+if L['standalone']:
+    # Real installed-task harness: import the installed package props (absolute)
+    # and invoke the actual CompileCuiSourcesTask, exactly the root attempt2
+    # consumer/Probe.csproj contract (Sources/ProjectDirectory/OutputFile). This
+    # proves the packaged compiler/runtime closure resolves at task execution time
+    # from the installed tools/net10.0 directory, with no source fallback.
+    probe = e / 'consumer'
+    probe.mkdir()
+    write_nuget_config(probe)
+    (probe / 'Input.cui').write_text(
+        '<Page ID="standalone-probe"><Text Text="TESTONLY standalone task probe"/></Page>\n')
+    (probe / 'Probe.csproj').write_text(
+        standalone_probe_project((installed / L['props']).resolve()))
+    build_proc = run_dotnet([str(dotnet), 'build', str(probe / 'Probe.csproj'),
+                             '-m:1', '--verbosity', 'minimal'],
+                            probe, 'build-standalone-installed-task')
+    check('standalone-installed-task-runs', succeeded(build_proc))
+    if succeeded(build_proc):
+        art = probe / 'artifacts/compilation.v1.cuic.json'
+        if art.exists():
+            data = json.loads(art.read_text(encoding='utf-8'))
+            version = get(data, 'FormatVersion', 'formatVersion')
+            meta = get(data, 'Metadata', 'metadata') or {}
+            check('standalone-genuine-v1-artifact-produced', version == 1, version=version)
+            check('standalone-artifact-metadata-present', bool(meta))
         else:
-            v2_text = run_probe_resource(trans_dll, V2_RESOURCE, 'native-transition')
-            v2 = json.loads(v2_text) if v2_text else {}
-            docs = get(v2, 'Documents', 'documents') or []
-            main_doc = next((d for d in docs if get(d, 'Source', 'source') == 'Main.cui'), None)
-            meta = get(main_doc, 'Metadata', 'metadata') or {}
-            abi = get(meta, 'RuntimeAbiVersion', 'runtimeAbiVersion')
-            check('native-stateful-promoted-to-v2', main_doc is not None)
-            check('native-stateful-v2-abi2', abi == '2', abi=abi)
-            if V1_RESOURCE in names_after:
-                v1_text = run_probe_resource(trans_dll, V1_RESOURCE, 'native-transition') or ''
-                check('native-stateful-absent-from-shipped-v1',
-                      STATEFUL_SENTINEL not in v1_text and 'Main.cui' not in v1_text)
+            record('standalone-artifact-not-produced', 'fail',
+                   reason='task ran but the v1 artifact was not produced')
+    # Tools must not become app runtime controls.
+    check('standalone-task-assembly-not-in-app-output',
+          not (probe / 'bin/Debug/net10.0/CakeOS.Cui.Build.Compiler.dll').exists())
+    check('standalone-compiler-assembly-not-in-app-output',
+          not (probe / 'bin/Debug/net10.0/CakeOS.Cui.Compiler.dll').exists())
+else:
+    consumer = e / 'consumer'
+    consumer.mkdir()
+    write_nuget_config(consumer)
+    (consumer / 'Main.cui').write_text(STATELESS)
+    consumer_csproj(consumer / 'Consumer.csproj', consumer)
+    proj = consumer / 'Consumer.csproj'
+
+    restore_proc = run_dotnet([str(dotnet), 'restore', str(proj), '-m:1'], consumer, 'restore-native')
+    check('native-restore-succeeds', succeeded(restore_proc))
+
+    assets_path = consumer / 'obj/project.assets.json'
+    if assets_path.exists():
+        assets = json.loads(assets_path.read_text(encoding='utf-8'))
+        libraries = get(assets, 'libraries') or {}
+        dep_ok = dependency_present(assets, pkg_id)
+        resolved_ver = resolved_library_version(libraries, pkg_id)
+        record('native-resolved-required-package',
+               'pass' if (dep_ok and resolved_ver == pkg_ver) else 'fail',
+               dependency_present=dep_ok, resolved_version=resolved_ver,
+               expected_version=pkg_ver)
+        lib_keys = [k for k in libraries if not k.startswith('.NETCoreApp')]
+        extra_libs = [k for k in lib_keys if k.lower() != f'{pkg_id.lower()}/{pkg_ver.lower()}']
+        check('native-clean-closure-only-cui-package', len(extra_libs) == 0, libraries=lib_keys)
+        pkg_lib = get(libraries, f'{pkg_id}/{pkg_ver}')
+        check('native-package-path-resolves-from-cache',
+              bool(pkg_lib) and 'framework' not in str(get(pkg_lib, 'path') or '').lower(),
+              path=get(pkg_lib, 'path'))
+        cache_pkg_tool = cache / f'{pkg_id.lower()}/{pkg_ver.lower()}' / LAYOUT['tool_prefix'] / LAYOUT['compiler_dll']
+        check('native-restore-populated-isolated-cache-from-feed', cache_pkg_tool.exists(),
+              path=str(cache_pkg_tool))
+    else:
+        record('native-assets-not-produced', 'fail',
+               reason='restore did not produce project.assets.json')
+
+    build_proc = run_dotnet([str(dotnet), 'build', str(proj), '-m:1', '--verbosity', 'minimal'],
+                            consumer, 'build-native')
+    check('native-build-succeeds', succeeded(build_proc))
+
+    choice_path = consumer / 'toolchain.txt'
+    if choice_path.exists():
+        choice = choice_path.read_text().splitlines()
+        choice0 = choice[0].strip() if choice else ''
+        choice1 = choice[1].strip() if len(choice) > 1 else ''
+        check('native-prebuilt-toolchain-selected', choice0 == 'true')
+        check('native-compiler-from-installed-package',
+              f'{L["tool_prefix"]}/CakeOS.Cui.Build.Compiler.dll' in choice1
+              and '/framework/' not in choice1.replace('\\', '/'), compiler_assembly=choice1)
+    else:
+        record('native-toolchain-choice-not-recorded', 'fail',
+               reason='toolchain.txt was not produced')
+
+    native_dll = read_target_path(consumer) or find_consumer_dll(consumer)
+    if native_dll is None or not native_dll.exists():
+        record('native-missing-consumer-assembly', 'fail',
+               reason='native build did not produce the consumer assembly at recorded/actual path')
+    else:
+        names = run_probe(native_dll, 'native')
+        check('native-genuine-v1-resource-embedded', V1_RESOURCE in names)
+
+    # Tools must not become app runtime controls.
+    check('native-task-assembly-not-in-app-output',
+          not (consumer / 'bin/Debug/net10.0/CakeOS.Cui.Build.Compiler.dll').exists())
+    check('native-compiler-assembly-not-in-app-output',
+          not (consumer / 'bin/Debug/net10.0/CakeOS.Cui.Compiler.dll').exists())
+
+    # Stateless -> stateful transition on the same consumer: read the shipped payload.
+    (consumer / 'Main.cui').write_text(STATEFUL)
+    trans_proc = run_dotnet([str(dotnet), 'build', str(proj), '-m:1', '--verbosity', 'minimal'],
+                            consumer, 'build-native-transition')
+    if not succeeded(trans_proc):
+        record('native-stateful-transition', 'blocked',
+               reason='compiler did not accept the stateful input at the detected transport contract')
+    else:
+        trans_dll = read_target_path(consumer) or find_consumer_dll(consumer)
+        if trans_dll is None or not trans_dll.exists():
+            record('native-stateful-not-raw-shipped-under-v1', 'fail',
+                   reason='transition build succeeded but consumer assembly not found at recorded/actual path')
+        else:
+            names_after = run_probe(trans_dll, 'native-transition')
+            if V2_RESOURCE not in names_after:
+                record('native-stateful-not-raw-shipped-under-v1', 'blocked',
+                       reason='distinct V2 artifact not embedded in the shipped assembly; '
+                              'typed V2 transport not present/integrated')
             else:
-                check('native-stateful-absent-from-shipped-v1', True)
+                v2_text = run_probe_resource(trans_dll, V2_RESOURCE, 'native-transition')
+                v2 = json.loads(v2_text) if v2_text else {}
+                docs = get(v2, 'Documents', 'documents') or []
+                main_doc = next((d for d in docs if get(d, 'Source', 'source') == 'Main.cui'), None)
+                meta = get(main_doc, 'Metadata', 'metadata') or {}
+                abi = get(meta, 'RuntimeAbiVersion', 'runtimeAbiVersion')
+                check('native-stateful-promoted-to-v2', main_doc is not None)
+                check('native-stateful-v2-abi2', abi == '2', abi=abi)
+                if V1_RESOURCE in names_after:
+                    v1_text = run_probe_resource(trans_dll, V1_RESOURCE, 'native-transition') or ''
+                    check('native-stateful-absent-from-shipped-v1',
+                          STATEFUL_SENTINEL not in v1_text and 'Main.cui' not in v1_text)
+                else:
+                    check('native-stateful-absent-from-shipped-v1', True)
 
 # --- 4. browser/WASM-targeted dependency-inspection/consumer, supported boundary --
-wasm = e / 'wasm-consumer'
-wasm.mkdir()
-write_nuget_config(wasm)
-(wasm / 'Main.cui').write_text(STATELESS)
-consumer_csproj(wasm / 'Consumer.csproj', wasm,
-                extra_props='<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>')
-wasm_proj = wasm / 'Consumer.csproj'
+# (main CakeOS.Cui compiler package only; the standalone build-task package has
+#  no consumer-side CUI compilation wiring, so WASM consumer exercise does not
+#  apply to it.)
+if not L['standalone']:
+    wasm = e / 'wasm-consumer'
+    wasm.mkdir()
+    write_nuget_config(wasm)
+    (wasm / 'Main.cui').write_text(STATELESS)
+    consumer_csproj(wasm / 'Consumer.csproj', wasm,
+                    extra_props='<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>')
+    wasm_proj = wasm / 'Consumer.csproj'
 
-wasm_restore = run_dotnet([str(dotnet), 'restore', str(wasm_proj), '-m:1'],
-                          wasm, 'wasm-restore')
-wasm_build = None
-if succeeded(wasm_restore):
-    wasm_build = run_dotnet([str(dotnet), 'build', str(wasm_proj), '-m:1', '--verbosity', 'minimal'],
-                            wasm, 'wasm-build')
+    wasm_restore = run_dotnet([str(dotnet), 'restore', str(wasm_proj), '-m:1'],
+                              wasm, 'wasm-restore')
+    wasm_build = None
+    if succeeded(wasm_restore):
+        wasm_build = run_dotnet([str(dotnet), 'build', str(wasm_proj), '-m:1', '--verbosity', 'minimal'],
+                                wasm, 'wasm-build')
 
-if wasm_build is not None and succeeded(wasm_build):
-    wasm_dll = read_target_path(wasm) or find_consumer_dll(wasm)
-    if wasm_dll is None or not wasm_dll.exists():
-        record('wasm-targeted-consumer-boundary', 'fail',
-               reason='WASM build reported success but assembly output was not found at the '
-                      'recorded/actual RID path', recorded=str(wasm_dll))
+    if wasm_build is not None and succeeded(wasm_build):
+        wasm_dll = read_target_path(wasm) or find_consumer_dll(wasm)
+        if wasm_dll is None or not wasm_dll.exists():
+            record('wasm-targeted-consumer-boundary', 'fail',
+                   reason='WASM build reported success but assembly output was not found at the '
+                          'recorded/actual RID path', recorded=str(wasm_dll))
+        else:
+            wasm_choice = (wasm / 'toolchain.txt').read_text().splitlines() \
+                if (wasm / 'toolchain.txt').exists() else []
+            wasm_names = run_probe(wasm_dll, 'wasm')
+            check('wasm-compiler-from-installed-package',
+                  bool(wasm_choice) and wasm_choice[0].strip() == 'true'
+                  and f'{L["tool_prefix"]}/CakeOS.Cui.Build.Compiler.dll' in wasm_choice[1]
+                  and '/framework/' not in wasm_choice[1].replace('\\', '/'))
+            check('wasm-genuine-v1-resource-embedded', V1_RESOURCE in wasm_names)
+            check('wasm-no-browser-runtime-injected',
+                  not (wasm_dll.parent / 'CakeOS.Cui.Build.Compiler.dll').exists())
+            record('wasm-targeted-consumer-boundary', 'pass',
+                   output_path=str(wasm_dll),
+                   detail='compiler toolchain is RID-agnostic and compiled at the supported boundary; '
+                          'no web/WASM runtime was claimed or injected')
     else:
-        wasm_choice = (wasm / 'toolchain.txt').read_text().splitlines() \
-            if (wasm / 'toolchain.txt').exists() else []
-        wasm_names = run_probe(wasm_dll, 'wasm')
-        check('wasm-compiler-from-installed-package',
-              bool(wasm_choice) and wasm_choice[0].strip() == 'true'
-              and 'tools/compiler/CakeOS.Cui.Build.Compiler.dll' in wasm_choice[1]
-              and '/framework/' not in wasm_choice[1].replace('\\', '/'))
-        check('wasm-genuine-v1-resource-embedded', V1_RESOURCE in wasm_names)
-        check('wasm-no-browser-runtime-injected',
-              not (wasm_dll.parent / 'CakeOS.Cui.Build.Compiler.dll').exists())
-        record('wasm-targeted-consumer-boundary', 'pass',
-               output_path=str(wasm_dll),
-               detail='compiler toolchain is RID-agnostic and compiled at the supported boundary; '
-                      'no web/WASM runtime was claimed or injected')
-else:
-    log = (wasm_build.stdout if wasm_build is not None else wasm_restore.stdout)
-    status, diag = classify_wasm_failure(log)
-    record('wasm-targeted-consumer-boundary', status,
-           reason='WASM-targeted build did not succeed',
-           diagnostic=diag)
+        log = (wasm_build.stdout if wasm_build is not None else wasm_restore.stdout)
+        status, diag = classify_wasm_failure(log)
+        record('wasm-targeted-consumer-boundary', status,
+               reason='WASM-targeted build did not succeed',
+               diagnostic=diag)
 
 summary = {
     'required_package': f'{pkg_id}@{pkg_ver}',

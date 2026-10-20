@@ -157,3 +157,28 @@ All five reported defects were addressed in the owned fixtures; no broad redesig
 
 The guarded SDK path is now a variable in `TESTS.md` (the old `/home/jacob/.local/bin/dotnet` path is
 absent here); every command passes `--dotnet "$DOTNET"`.
+
+## Extra16 addendum — standalone package closure fix (post-pass2)
+
+- `framework/CUI/Build.Tasks/CakeOS.Cui.Build.Compiler.csproj` — added
+  `TargetsForTfmSpecificContentInPackage` (+ `IncludeStandaloneCuiTaskClosure` target) that collects the
+  resolved copy-local task dependency closure (`bin/$(Configuration)/net10.0/**/*.dll`, excluding the
+  project's own task assembly which still ships via `BuildOutputTargetFolder=tools`) into
+  `tools/net10.0`. This fixes the real packaged-task failure (attempt2 MSB4018 / FileNotFoundException
+  `CakeOS.Cui.Compiler`): the standalone nupkg now bundles Compiler/Core/Language/Runtime and the
+  Avalonia transitive managed/runtime assets while staying development-only with no `lib/` and no
+  consumer runtime dependency. Hosting MSBuild.Framework/Utilities remain `Private=false` (absent from
+  output); the project is not self-contained, so no .NET host assemblies appear. Main `CakeOS.Cui`
+  `tools/compiler` explicit collection and both props layouts are preserved.
+- `framework/CUI/Build.Tasks.Tests/verify_nuget_consumer_dependencies.py` — extended to prove BOTH
+  actual layouts: layout is selected from `--expected-package-id` (`CakeOS.Cui` → `tools/compiler`;
+  `CakeOS.Cui.Build.Compiler` → standalone `tools/net10.0`). The standalone path runs a real
+  installed-task harness (root attempt2 consumer/Probe.csproj contract: `Sources`/`ProjectDirectory`/
+  `OutputFile`) against the installed package props with no source fallback. New no-SDK selfchecks:
+  both-layout resolution, standalone closure expectation, missing-dependency detection, and real
+  installed-task harness generation. `--selfcheck` now runs 12/12 PASS (was 5/5).
+- New file hashes (extra16): `CakeOS.Cui.Build.Compiler.csproj`
+  `ebeaf386c51050ef6685f158fd3764fc803588c0b06434932bc4496464540a22`;
+  `verify_nuget_consumer_dependencies.py`
+  `2858e1381f9bfde9973dda2104aa92997bbb5f7496b888177698dfb76dad8b2c`.
+  `buildTransitive/CakeOS.Cui.Build.Compiler.props` and `verify_toolchain_package.py` are unchanged.
