@@ -25,6 +25,10 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     [Required] public string IntermediateOutputPath { get; set; } = "";
     [Required] public string OutputDirectory { get; set; } = "";
     public string PublishDirectory { get; set; } = "";
+    /// <summary>Effective SDK DefaultCopyToPublishDirectoryMetadata switch. When true (the SDK
+    /// default), an item missing CopyToPublishDirectory inherits publish from a real output-copy mode;
+    /// when false, no default publish is inferred and only explicit valid modes publish.</summary>
+    public bool DefaultCopyToPublishDirectoryMetadata { get; set; } = true;
     public string[] RequiredCapabilities { get; set; } = [];
     public ITaskItem[] ResourcesToSnapshot { get; set; } = [];
     [Output] public ITaskItem[] CompiledArtifacts { get; private set; } = [];
@@ -196,11 +200,13 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             // Incremental raw-output ownership: only claim destinations ACTUALLY produced by MSBuild
             // copy/publish semantics. Output copy is valid only for Content/None/EmbeddedResource with
             // a real copy mode (Always/PreserveNewest/IfDifferent); CopyToOutputDirectory=Never and
-            // never-copied item types create no ownership entry. Publish is modelled separately,
-            // honoring CopyToPublishDirectory defaults (Content/None publish unless Never) and
-            // publish-only items. Each entry records the exact artifact bytes expected at the
-            // destination, so stale cleanup refuses to delete a path whose current contents are no
-            // longer that owned artifact (preserving unrelated same-path files).
+            // never-copied item types create no ownership entry. Publish is modelled separately:
+            // explicit CopyToPublishDirectory values are eligible only for the SDK's real gather modes
+            // (Always/PreserveNewest/IfDifferent), and a missing value default-inherits from a real
+            // output-copy mode only when the SDK's effective DefaultCopyToPublishDirectoryMetadata switch
+            // is on. Each entry records the exact artifact bytes expected at the destination, so stale
+            // cleanup refuses to delete a path whose current contents are no longer that owned artifact
+            // (preserving unrelated same-path files).
             var manifestPath = Path.Combine(Path.GetFullPath(BuildPath(IntermediateOutputPath), root), "Cui", "packaged-raw-manifest.json");
             var outputRoot = Path.GetFullPath(BuildPath(OutputDirectory), root);
             var publishRoot = string.IsNullOrWhiteSpace(PublishDirectory)
@@ -345,7 +351,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             string full;
             try { full = Path.GetFullPath(owned.Destination); }
             catch { continue; }
-            if (string.Equals(full, projectRoot, StringComparison.Ordinal)) continue;
+            if (string.Equals(full, projectRoot, PathComparison)) continue;
             // Never treat a source path, a preserved replacement, or an arbitrary/outside-root path
             // as a stale owned output.
             if (protectedPaths.Contains(full)) continue;
@@ -368,24 +374,31 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         return ValidCopyModes.Contains(item.GetMetadata("CopyToOutputDirectory"));
     }
 
-    /// <summary>Publish eligibility honors the ACTUAL MSBuild default-inherit rule
-    /// (Microsoft.NET.Publish.targets / DefaultCopyToPublishDirectoryMetadata): a missing
-    /// CopyToPublishDirectory inherits ONLY from a real CopyToOutputDirectory copy mode
-    /// (Always/PreserveNewest/IfDifferent), for Content, None and EmbeddedResource alike.
-    /// CopyToOutputDirectory=Never/empty disables default publish — such items produce NO publish
-    /// destination. An explicit valid CopyToPublishDirectory (publish-only) still publishes; Never
-    /// never publishes. Publish-only items are therefore tracked separately.</summary>
-    private static bool IsPublishEligible(ITaskItem item)
+    private static readonly HashSet<string> ValidPublishModes = new(StringComparer.OrdinalIgnoreCase)
+        { "Always", "PreserveNewest", "IfDifferent" };
+
+    /// <summary>Publish eligibility mirrors the ACTUAL SDK gather rules (Microsoft.NET.Publish.targets
+    /// 927–947). An explicit CopyToPublishDirectory is eligible only when it is a real gather mode
+    /// (Always/PreserveNewest/IfDifferent); Never or any other value (e.g. a typo) produces no publish
+    /// custody entry. When CopyToPublishDirectory is absent, the SDK's DefaultCopyToPublishDirectoryMetadata
+    /// target defaults it from a real CopyToOutputDirectory copy mode, but only when the effective
+    /// defaulting switch is true — we gate on that same switch so disabled defaulting never invents a
+    /// publish destination.</summary>
+    private bool IsPublishEligible(ITaskItem item)
     {
+        // Only the item types the SDK actually gathers at publish (Content/None/EmbeddedResource) can
+        // ever acquire publish custody; AvaloniaResource/CuiMarkup (and any other type) never do.
+        var type = item.GetMetadata("CuiItemType");
+        if (type is not ("Content" or "None" or "EmbeddedResource")) return false;
         var copyToPublish = item.GetMetadata("CopyToPublishDirectory");
-        if (string.Equals(copyToPublish, "Never", StringComparison.OrdinalIgnoreCase)) return false;
-        if (!string.IsNullOrWhiteSpace(copyToPublish)) return true;
-        // Missing CopyToPublishDirectory: default-inherit only from a real output-copy mode across
-        // Content/None/EmbeddedResource. Never/empty output-copy mode produces no publish destination.
-        return IsOutputCopyEligible(item);
+        if (!string.IsNullOrWhiteSpace(copyToPublish))
+            return ValidPublishModes.Contains(copyToPublish);
+        // Missing CopyToPublishDirectory: default-inherit only when the SDK's effective defaulting flag
+        // is on AND the item has a real output-copy mode (Content/None/EmbeddedResource).
+        return DefaultCopyToPublishDirectoryMetadata && IsOutputCopyEligible(item);
     }
 
-    private static void SnapshotOwned(
+    private void SnapshotOwned(
         List<OwnedRaw> owned, string outputRoot, string? publishRoot, string projectRoot,
         ITaskItem item, ISet<string> sourcePaths)
     {
@@ -447,9 +460,9 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     /// generated products cannot land beside/lap sources and risk accidental deletion.</summary>
     private static void ValidateOwnedRoots(string outputRoot, string? publishRoot, string projectRoot)
     {
-        if (string.Equals(outputRoot, projectRoot, StringComparison.Ordinal))
+        if (string.Equals(outputRoot, projectRoot, PathComparison))
             throw new ArgumentException("The CUI output directory overlaps the project root; refusing unsafe packaging.");
-        if (publishRoot is not null && string.Equals(publishRoot, projectRoot, StringComparison.Ordinal))
+        if (publishRoot is not null && string.Equals(publishRoot, projectRoot, PathComparison))
             throw new ArgumentException("The CUI publish directory overlaps the project root; refusing unsafe packaging.");
     }
 
@@ -482,7 +495,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         var physicalFull = ResolvePhysicalPath(full);
         foreach (var source in sourcePaths)
         {
-            if (string.Equals(ResolvePhysicalPath(source), physicalFull, StringComparison.Ordinal))
+            if (string.Equals(ResolvePhysicalPath(source), physicalFull, PathComparison))
                 throw new ArgumentException($"Unsafe TargetPath '{target}' aliases a compiled CUI source '{source}' (physical identity).");
         }
         return full;
@@ -499,8 +512,8 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         {
             var physical = ResolvePhysicalPath(fullPath);
             var physicalRoot = ResolvePhysicalPath(root);
-            return physical.StartsWith(physicalRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-                || string.Equals(physical, physicalRoot, StringComparison.Ordinal);
+            return physical.StartsWith(physicalRoot + Path.DirectorySeparatorChar, PathComparison)
+                || string.Equals(physical, physicalRoot, PathComparison);
         }
         catch
         {
@@ -508,6 +521,12 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             return false;
         }
     }
+
+    /// <summary>Canonical physical path comparison follows platform casing semantics so that a source
+    /// alias, an ancestor link and a root identity are recognized regardless of case for the host
+    /// filesystem (case-insensitive on Windows, case-sensitive elsewhere).</summary>
+    private static StringComparison PathComparison =>
+        OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
     /// <summary>Returns the canonical physical identity of a path by following every EXISTING ancestor
     /// component's link target (file or directory) and appending any trailing nonexistent components
@@ -538,20 +557,16 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         return resolved;
     }
 
+    /// <summary>Follows one existing path component's link/junction target. A component that does not
+    /// exist is a legitimate trailing suffix and keeps its lexical value. A component that EXISTS but
+    /// whose physical identity cannot be resolved must fail closed (propagating a bounded IO/Argument
+    /// error) rather than being treated as proven safe by lexical containment.</summary>
     private static string ResolveExistingLink(string path)
     {
-        try
-        {
-            if (File.Exists(path) && File.ResolveLinkTarget(path, true) is { } fileTarget)
-                return fileTarget.FullName;
-            if (Directory.Exists(path) && Directory.ResolveLinkTarget(path, true) is { } dirTarget)
-                return dirTarget.FullName;
-        }
-        catch
-        {
-            // Resolution failure -> fall back to the lexical path; a later containment comparison still
-            // fails safely when containment cannot be proven.
-        }
+        if (File.Exists(path))
+            return File.ResolveLinkTarget(path, true)?.FullName ?? path;
+        if (Directory.Exists(path))
+            return Directory.ResolveLinkTarget(path, true)?.FullName ?? path;
         return path;
     }
 

@@ -1,4 +1,4 @@
-# Lane 2 — Tests (pass 4; all NOT RUN pending .NET slot)
+# Lane 2 — Tests (pass 5 final bounded; all NOT RUN pending .NET slot)
 
 All builds/tests are **NOT RUN**. Lane 2 is not lane 1; the serialized .NET slot has not been
 allocated by the coordinator. These files are authored (by inspection) and run only when the slot is
@@ -69,8 +69,10 @@ Filter:
     "1" → `CUIR075`).
   - `Admission_rejects_unsupported_component_registry_before_effects` (consistent unsupported registry →
     `CUIR066`).
-  - `Sibling_abi999_required_import_is_rejected_before_effects` (stateless sibling ABI999, envelope-
-    consistent → `CUIR065`).
+  - `Whole_bundle_abi999_stateless_sibling_is_rejected_before_effects` (stateless sibling ABI999,
+    envelope-consistent → `CUIR065`; whole-bundle admission fixture, pass-5 rename; `StatelessDocument`
+    initializes `ElseChildren`/`TextParts` to explicit empty typed arrays so the strict codec reaches
+    the intended check).
   - `Sibling_only_unknown_capability_with_consistent_union_is_rejected` (sibling-only unknown capability,
     envelope-consistent union → `CUIR067`).
   - `Genuine_abi1_stateless_sibling_plus_abi2_composer_succeeds` (ABI1 sibling + ABI2 composer OK).
@@ -114,7 +116,14 @@ Covers, under one script:
 - **All-ancestor physical containment (pass 4, Project 4)**: ancestor-link escape is rejected, physical
   source-alias is rejected, and a legitimate output inside the project root is accepted; skipped if
   symlinks are unavailable. Covers `IsPhysicallyInside` resolving ALL existing ancestors and
-  `ShippedDestination`'s physical source-alias rejection.
+  `ShippedDestination`'s physical source-alias rejection. Pass-5: the escape/alias failures now prove
+  the successful V1/V2 bytes, ownership manifest and source are preserved (no outside writes) instead of
+  demanding the artifacts be absent.
+- **Exact SDK publish eligibility under disabled defaulting (pass 5, Project 5)**: `Lane2PublishDefaulting`
+  sets `DefaultCopyToPublishDirectoryMetadata=false`; output-copy Content/EmbeddedResource without explicit
+  `CopyToPublishDirectory` do not default-publish, explicit valid publish-only stays published, explicit
+  Never stays absent, and an invalid explicit mode acquires no ownership. A stateless→stateful transition
+  without Clean removes a genuine owned stale publish output while same-byte nonproduced files survive.
 - Unsafe/escaping `TargetPath` fails the build (`Unsafe`, CUIB003) before any artifact is published.
 - Failed compile (`Widht` typo → `CUIC012`) publishes nothing and preserves the prior artifact bytes.
 

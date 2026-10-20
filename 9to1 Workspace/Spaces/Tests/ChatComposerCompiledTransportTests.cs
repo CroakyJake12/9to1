@@ -168,11 +168,13 @@ public sealed class ChatComposerCompiledTransportTests
     }
 
     [Fact]
-    public void Sibling_abi999_required_import_is_rejected_before_effects()
+    public void Whole_bundle_abi999_stateless_sibling_is_rejected_before_effects()
     {
         // A stateless sibling declared with ABI999 (with an envelope-consistent max) passes the codec's
         // internal consistency, and the selected composer's own metadata stays valid. Host-support
         // admission must reject the required sibling's unsupported ABI before any reconstruction/effects.
+        // This is whole-bundle admission (the sibling is appended to the bundle), not an import-closure
+        // edge; the name reflects exactly what the fixture constructs.
         var artifact = ReadEmbeddedArtifact();
         var sibling = StatelessDocument("sibling.cui", "999");
         var combined = artifact with
@@ -252,11 +254,14 @@ public sealed class ChatComposerCompiledTransportTests
     private static CuiCompiledArtifactDocument StatelessDocument(string source, string abi, IEnumerable<string>? capabilities = null)
     {
         var span = new CuiV2Span("UI/Chat/ChatComposer.cui", 1, 1, 1, 1);
+        // The strict codec rejects null optional collections (CUIR072), so ElseChildren and TextParts
+        // must be explicit empty arrays of their actual typed element types (never null).
         var component = new CuiV2Component(
             "Page", "root", Array.Empty<string>(),
             new Dictionary<string, CuiV2Value>(StringComparer.Ordinal),
             new Dictionary<string, CuiV2ActionReference>(StringComparer.Ordinal),
-            Array.Empty<CuiV2Component>(), null, null, span);
+            Array.Empty<CuiV2Component>(), null, null, span,
+            null, null, Array.Empty<CuiV2Component>(), null, false, null, "", Array.Empty<CuiV2TextPart>());
         var semantics = new CuiV2Semantics(
             source,
             new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal),

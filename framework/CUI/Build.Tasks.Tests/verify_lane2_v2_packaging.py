@@ -274,6 +274,27 @@ write(phys / 'Lane2Physical.csproj', csproj(task, phys_norm))
 invoke(phys / 'Lane2Physical.csproj', 'build', True, label='lane2-physical-legit-output')
 check('physical-legit-output-present', (phys / 'bin/Debug/net10.0/Normal/Safe.cui').exists())
 
+# The stateless legit build produced a genuine V1 artifact (no V2). Capture its exact bytes plus the
+# ownership manifest and source before the unsafe/alias attempts, so the expected failures can prove
+# the prior successful state is preserved rather than demanding the artifacts be absent.
+phys_v1 = phys / 'obj/Debug/net10.0/Cui/compilation.v1.cuic.json'
+phys_v2 = phys / 'obj/Debug/net10.0/Cui/compilation.v2.cuic.json'
+phys_manifest = phys / 'obj/Debug/net10.0/Cui/packaged-raw-manifest.json'
+phys_v1_before = phys_v1.read_bytes() if phys_v1.exists() else None
+phys_v2_before = phys_v2.read_bytes() if phys_v2.exists() else None
+phys_manifest_before = phys_manifest.read_bytes() if phys_manifest.exists() else None
+phys_source_before = (phys / 'Safe.cui').read_bytes()
+
+def assert_physical_state_preserved(label):
+    check(label + '-preserves-v1-bytes', phys_v1.exists() and phys_v1.read_bytes() == phys_v1_before)
+    check(label + '-preserves-v2-state',
+          (phys_v2_before is None and not phys_v2.exists())
+          or (phys_v2.exists() and phys_v2.read_bytes() == phys_v2_before))
+    check(label + '-preserves-ownership-manifest',
+          (phys_manifest_before is None and not phys_manifest.exists())
+          or (phys_manifest.exists() and phys_manifest.read_bytes() == phys_manifest_before))
+    check(label + '-preserves-source', (phys / 'Safe.cui').read_bytes() == phys_source_before)
+
 symlinks_available = True
 reason = ''
 try:
@@ -294,9 +315,9 @@ if symlinks_available:
           csproj(task, '<Content Include="Safe.cui" Link="anclink/new.cui" TargetPath="anclink/new.cui" CopyToOutputDirectory="PreserveNewest" />'))
     invoke(phys / 'Lane2PhysicalEscape.csproj', 'build', False, 'Unsafe',
            label='lane2-physical-ancestor-link-escape')
-    check('ancestor-link-escape-did-not-publish-artifact',
-          not (phys / 'obj/Debug/net10.0/Cui/compilation.v2.cuic.json').exists()
-          and not (phys / 'obj/Debug/net10.0/Cui/compilation.v1.cuic.json').exists())
+    # Rejection must preserve the successful stateless artifact state and produce no outside writes.
+    assert_physical_state_preserved('ancestor-link-escape')
+    check('ancestor-link-escape-no-outside-writes', list(outside_dir.iterdir()) == [])
 
     # Physical source alias: a destination that resolves (through a link) to a compiled source file
     # must be rejected as a source alias, not claimed as an owned output.
@@ -313,8 +334,60 @@ if symlinks_available:
               csproj(task, '<Content Include="Safe.cui" Link="alias.cui" TargetPath="alias.cui" CopyToOutputDirectory="PreserveNewest" />'))
         invoke(phys / 'Lane2PhysicalAlias.csproj', 'build', False, 'Unsafe',
                label='lane2-physical-source-alias')
-        check('physical-source-alias-did-not-publish-artifact',
-              not (phys / 'obj/Debug/net10.0/Cui/compilation.v2.cuic.json').exists())
+        assert_physical_state_preserved('physical-source-alias')
+
+
+# ---------------------------------------------------------------------------
+# Project 5: exact SDK publish eligibility under disabled defaulting
+# (DefaultCopyToPublishDirectoryMetadata=false). Proves:
+#   - output-copy Content/EmbeddedResource without explicit CopyToPublishDirectory do NOT
+#     default-publish when defaulting is disabled (no custody entry, no claimed destination);
+#   - explicit valid publish-only (Always) remains published, explicit Never stays absent, and an
+#     invalid explicit mode (a typo) acquires no ownership;
+#   - a stateless -> stateful transition without Clean removes a GENUINE owned stale publish output
+#     (bytes still equal the owned artifact) while the same-byte nonproduced files pre-placed at
+#     publish destinations survive (they were never owned).
+# ---------------------------------------------------------------------------
+pubdef = evidence / 'Lane2PublishDefaulting'
+pubdef_items = f'''<Content Include="DefaultInherit.cui" CopyToOutputDirectory="PreserveNewest" />
+<EmbeddedResource Include="DefaultInheritEmbedded.cui" LogicalName="Lane2.DIEmbedded.cui" CopyToOutputDirectory="PreserveNewest" />
+<Content Include="ExplicitPublish.cui" CopyToPublishDirectory="Always" />
+<Content Include="ExplicitNever.cui" CopyToPublishDirectory="Never" />
+<Content Include="BogusMode.cui" CopyToPublishDirectory="Bogus" />'''
+write(pubdef / 'Lane2PublishDefaulting.csproj', csproj(task, pubdef_items,
+    extra_groups='<PropertyGroup><DefaultCopyToPublishDirectoryMetadata>false</DefaultCopyToPublishDirectoryMetadata></PropertyGroup>'))
+for name in ['DefaultInherit.cui', 'DefaultInheritEmbedded.cui', 'ExplicitPublish.cui',
+             'ExplicitNever.cui', 'BogusMode.cui']:
+    write(pubdef / name, STATELESS)
+
+pubdef_pub = evidence / 'publish-defaulting-root'
+
+invoke(pubdef / 'Lane2PublishDefaulting.csproj', 'build', True, label='lane2-publish-defaulting-baseline')
+invoke(pubdef / 'Lane2PublishDefaulting.csproj', 'publish', True,
+       extra=('-p:PublishDir=' + str(pubdef_pub)),
+       label='lane2-publish-defaulting-false')
+check('defaulting-false-content-not-default-published', not (pubdef_pub / 'DefaultInherit.cui').exists())
+check('defaulting-false-embedded-not-default-published', not (pubdef_pub / 'DefaultInheritEmbedded.cui').exists())
+check('defaulting-false-explicit-publish-only-published', (pubdef_pub / 'ExplicitPublish.cui').exists())
+check('defaulting-false-explicit-never-absent', not (pubdef_pub / 'ExplicitNever.cui').exists())
+check('defaulting-false-invalid-mode-not-owned', not (pubdef_pub / 'BogusMode.cui').exists())
+
+# Pre-place same-byte files at nonproduced publish destinations (never owned). They must survive the
+# upcoming transition even though a genuine owned stale output is removed.
+write(pubdef_pub / 'DefaultInherit.cui', (pubdef / 'DefaultInherit.cui').read_text(encoding='utf-8'))
+write(pubdef_pub / 'DefaultInheritEmbedded.cui', (pubdef / 'DefaultInheritEmbedded.cui').read_text(encoding='utf-8'))
+
+# Transition the explicit publish-only item to stateful (no Clean): its owned publish destination
+# becomes genuinely stale and must be removed, while the nonproduced same-byte files survive.
+write(pubdef / 'ExplicitPublish.cui', STATEFUL)
+invoke(pubdef / 'Lane2PublishDefaulting.csproj', 'publish', True,
+       extra=('-p:PublishDir=' + str(pubdef_pub)),
+       label='lane2-publish-defaulting-transition')
+check('genuine-stale-owned-publish-output-removed', not (pubdef_pub / 'ExplicitPublish.cui').exists())
+check('nonproduced-same-bytes-content-survives',
+      (pubdef_pub / 'DefaultInherit.cui').read_text(encoding='utf-8') == (pubdef / 'DefaultInherit.cui').read_text(encoding='utf-8'))
+check('nonproduced-same-bytes-embedded-survives',
+      (pubdef_pub / 'DefaultInheritEmbedded.cui').read_text(encoding='utf-8') == (pubdef / 'DefaultInheritEmbedded.cui').read_text(encoding='utf-8'))
 
 
 print('ALL LANE2 V2 PACKAGING CHECKS PASSED')

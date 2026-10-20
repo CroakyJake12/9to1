@@ -3,6 +3,9 @@
     <_CuiSourceTaskProject>$(MSBuildThisFileDirectory)../../Build.Tasks/CakeOS.Cui.Build.Compiler.csproj</_CuiSourceTaskProject>
     <CuiCompilerTaskAssembly Condition="'$(CuiCompilerTaskAssembly)' == ''">$(MSBuildThisFileDirectory)../../Build.Tasks/bin/$(Configuration)/net10.0/CakeOS.Cui.Build.Compiler.dll</CuiCompilerTaskAssembly>
     <_CuiBuildCompilerDependsOn Condition="'$(CuiUsePrebuiltCompiler)' != 'true'">ResolveProjectReferences</_CuiBuildCompilerDependsOn>
+    <!-- Mirror the SDK's effective DefaultCopyToPublishDirectoryMetadata default (true). The CompileCuiSourcesTask
+         consumes this to decide whether a missing CopyToPublishDirectory inherits publish from a real output-copy mode. -->
+    <DefaultCopyToPublishDirectoryMetadata Condition="'$(DefaultCopyToPublishDirectoryMetadata)' == ''">true</DefaultCopyToPublishDirectoryMetadata>
   </PropertyGroup>
   <!-- Build infrastructure is a build-only dependency, never application code-behind.
        The task project itself does not import these targets, avoiding recursion. -->
@@ -59,7 +62,8 @@
     </ItemGroup>
     <CakeOS.Cui.Build.CompileCuiSourcesTask Sources="@(Cui);@(CuiMarkup);@(_CuiPackagedSource)" ProjectDirectory="$(MSBuildProjectDirectory)"
                                          OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)" ResourcesToSnapshot="@(_CuiPackagedSource)"
-                                         IntermediateOutputPath="$(IntermediateOutputPath)" OutputDirectory="$(OutputPath)" PublishDirectory="$(PublishDir)">
+                                         IntermediateOutputPath="$(IntermediateOutputPath)" OutputDirectory="$(OutputPath)" PublishDirectory="$(PublishDir)"
+                                         DefaultCopyToPublishDirectoryMetadata="$(DefaultCopyToPublishDirectoryMetadata)">
       <Output TaskParameter="CompiledArtifacts" ItemName="_CuiCompiledArtifact" />
       <Output TaskParameter="SnapshotResources" ItemName="_CuiSnapshotResource" />
       <Output TaskParameter="SourceSnapshots" ItemName="_CuiSourceSnapshot" />

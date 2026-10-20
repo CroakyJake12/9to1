@@ -1,4 +1,4 @@
-# Lane 2 — Source identity and custody record (pass 4)
+# Lane 2 — Source identity and custody record (pass 5 final bounded)
 
 - Worktree HEAD: `fb70840d561286ecd46bd62b3c0736bf7d24108b`
 - Branch: `codex/mercury-transport-20261020`
@@ -48,26 +48,34 @@
   `work/lane2-handoff/PATCH-Runtime-artifact-admission.md` (preimage SHA `23d0e130…`) adding
   `ValidateArtifactHostSupport` + constants (supersedes `PATCH-Runtime-Abi2-admission.md`).
 
-## Post-edit source identities (pass 4)
+## Post-edit source identities (pass 5)
 
 | Path | SHA-256 |
 |---|---|
 | framework/CUI/Core/CuiCompiledArtifact.cs | `57c0310f80d108b1404cedce10661ba3314e741418a410a0620a3def2480378c` |
-| framework/CUI/Build.Tasks/CompileCuiSourcesTask.cs | `9d482ffefbb89cd6981d942aa1e615d832af3d1a30dfae0ee3fd794207c43f43` |
+| framework/CUI/Core/CuiV2Transport.cs | `3d515075499f0a247e1548052852a01d8d934b487f09473c063285b05a48ab75` |
+| framework/CUI/Compiler/CuiCompiler.cs | `f2b7dabb024a7ca08c75a00564310700003d6f7d4751c255df84842bd9c7c1b9` |
+| framework/CUI/Compiler/CuiV2Projection.cs | `c6e2c16dc67bc72da568e9b566c3947ba60daf91b58aee3f7d9a09957987c352` |
+| framework/CUI/Compiler/CuiV1ArtifactCodec.cs | `5af0b4c8ffebe82ca107d2ebdd9af5962bbc2d8de9fb1fc67a2a64e2fba4a991` |
+| framework/CUI/Compiler/CuiCompilationMetadata.TypeForwarder.cs | `c90de0d9e74a2000e2ce1852724a59a8984bd36eb69e04649df8141a5b99367f` |
+| framework/CUI/Compiler/buildTransitive/CakeOS.Cui.targets | `db5504578584102204cdc3bdc366c7a35025590bb31b7cbf1b937a5f8ff0f1f9` (pass-5) |
+| framework/CUI/Build.Tasks/CompileCuiSourcesTask.cs | `33ede57ca7860c72bf7c2149336855a7f53cba2167473d456c8b6c244fc7d73d` (pass-5) |
+| framework/CUI/Build.Tasks.Tests/verify_lane2_v2_packaging.py | `4055c4143105d059387623d75fafdb4a8e536668670f8e9e4142bdf9d8328720` (pass-5) |
 | framework/CUI/Compiler.Tests/CuiLocalStateAbiOutputTests.cs | `22131f397eaffbbd2466d0a167fe97f963d40b7fad9e71805a005b0005e792a1` |
 | framework/CUI/Compiler.Tests/CuiV2TransportCodecTests.cs | `60cf3ba446b619b4c0f2b1536a3e27c858323c52d22411553a04823387cffe34` |
-| framework/CUI/Build.Tasks.Tests/verify_lane2_v2_packaging.py | `04684374d31f83369ebaa2a69410138fcb697ed8e8f06383763499f71a87aa8d` |
+| 9to1 Workspace/Spaces/HavenOS.Spaces.csproj | `81da49921b0b161f75aeda2828e6994c60e21f4ef30a934406a773e84d173c91` |
 | 9to1 Workspace/Spaces/UI/Chat/ChatComposerCuiDocument.cs | `0c1c9efacd48a363f132a64399795c6ff2593b06e7b5bae61204ae3f535e4c52` |
-| 9to1 Workspace/Spaces/Tests/ChatComposerCompiledTransportTests.cs | `3214f44c1441dcb7ebf647ada1b94fd14da2d7c6828ed1732a76b43bcaebe52d` |
-| 9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj | `03854bab71b44275b46973d818c94c4e67b59f3e32880221a366575771cbb84f` (unchanged) |
+| 9to1 Workspace/Spaces/Tests/ChatComposerCompiledTransportTests.cs | `807d69654c51b459baefb766c3522ecb6868f6cf3be710f330ac8ae7befb50fb` (pass-5) |
+| 9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj | `03854bab71b44275b46973d818c94c4e67b59f3e32880221a366575771cbb84f` |
 | work/lane2-handoff/Runtime/CuiRuntimeCompatibility.cs | `14515fcf0c118c705a7fe65a9c4015e689db4766540ae026c4aca6f62f6bfcff` |
 | work/lane2-handoff/PATCH-Runtime-artifact-admission.md | `b125e881fc85f393a6ffe0a8718e5aaefd23bd0c2aeb4ae71fb3754c497a80a0` |
 | work/lane2-handoff/PATCH-CuiActionDefinition-four-arg.md | `6325b3ef79435649fb24b5de96a84226489598c9b0fdbbfdb4438bc02ca3af2c` (unchanged) |
 | work/lane2-handoff/PATCH-Runtime-Abi2-admission.md | `a367f3b3de9bb9031dfc69f3681dbd03301d5e7caaff5a491335f4bac1c6c686` (superseded) |
 
-Frozen pass-2 checkpoint `88575ef0ddfa86b412dd5e2bdbf1cbb189eeb081` is preserved; frozen pass-3 review
-`lane2-transport-pass3-review-a67a.md` is authoritative for the 15-file inventory. The worktree is dirty
-on top of HEAD `fb70840d`. These hashes supersede the pass-2/pass-3 entries in the frozen manifests.
+Pass-5 fixes four files (`CompileCuiSourcesTask.cs`, `CakeOS.Cui.targets`, `verify_lane2_v2_packaging.py`,
+`ChatComposerCompiledTransportTests.cs`); all other rows are unchanged from the frozen pass-4 state.
+Frozen pass-4 review `lane2-transport-pass4-review-f2b5.md` is authoritative for the 15-file inventory.
+The worktree is dirty on top of HEAD `fb70840d`.
 
 ## Status
 
