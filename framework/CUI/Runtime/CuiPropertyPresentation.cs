@@ -91,6 +91,7 @@ public static class CuiPropertyPresentation
         private bool _selected;
         private bool _dragging;
         private bool _compoundFocus;
+        private bool _chromeless;
         private CuiFontRole _fontRole;
         private CuiAccentRole _accentRole;
         private CuiCustomFonts? _customFonts;
@@ -151,6 +152,9 @@ public static class CuiPropertyPresentation
             {
                 Register("AccentRole", typeof(CuiAccentRole), CuiAccentRole.None, value =>
                 { _accentRole = (CuiAccentRole)value!; RefreshAccentRole(); RefreshFontRole(); });
+                // Generic chromeless/icon appearance: suppresses interaction (hover/pressed) paint
+                // while retaining the real selected background and visible keyboard focus.
+                Register("Chromeless", typeof(bool), false, value => _chromeless = value is true);
                 WatchCustom("CuiButtonRoundnessPercent", value =>
                 { _roundnessPercent = value is double percent ? percent : null; RefreshRoundness(); });
                 foreach (var tier in new[] { "Primary", "Secondary", "Tertiary" })
