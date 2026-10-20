@@ -10,10 +10,15 @@ namespace CakeOS.Cui.Compiler;
 /// Genuine V1 compiled artifact writer plus a public compatibility shim over the Core reader.
 /// V1 carries the FULL typed compiled projection (Components/Templates/SourceMap/Dependencies/
 /// Semantics), never a source snapshot. Writing is owned here (the compiler producer); reading is
-/// supplied by <see cref="CuiV1ArtifactReader"/> in Core (below the compiler) so stateless app
-/// consumers depend only on Core/Runtime. This type retains its public writer/read surface so
-/// existing producer callers and tests keep working; the read shim is thin and has no divergent
-/// decoder.
+/// supplied by <see cref="CakeOS.Cui.CuiV1ArtifactReader"/> in Core (below the compiler) so
+/// stateless app consumers depend only on Core/Runtime.
+///
+/// This type retains its full public API surface, including the nested <see cref="CuiV1LoadedDocument"/>
+/// and <see cref="CuiV1LoadedArtifact"/> records and the <see cref="ReadArtifact(byte[])"/> return
+/// type, so existing producer callers and compatibility tests keep working. The read shim is a thin
+/// mapping adapter over the single Core decoder (no divergent second decoder). It preserves the
+/// historical public exception contract (<see cref="InvalidDataException"/>) for producer/test
+/// callers while the Core reader reports structured <see cref="CuiV1AdmissionException"/> codes.
 /// </summary>
 public static class CuiV1ArtifactCodec
 {
@@ -32,6 +37,19 @@ public static class CuiV1ArtifactCodec
         [property: JsonPropertyName("sha256")] string Sha256,
         [property: JsonPropertyName("compilation")] CuiCompiledDocument Compilation);
 
+    public sealed record CuiV1LoadedDocument(
+        string Source,
+        string Sha256,
+        CuiCompilationMetadata Metadata,
+        CuiDocument Semantics);
+
+    public sealed record CuiV1LoadedArtifact(
+        string Format,
+        int FormatVersion,
+        string CompilerSha256,
+        CuiCompilationMetadata Metadata,
+        IReadOnlyList<CuiV1LoadedDocument> Documents);
+
     public sealed record CuiV1Compiled(CuiCompiledDocument Compilation, string Source, string Sha256);
 
     /// <summary>Writes a genuine V1 artifact (one or more full compiled projections), retaining the
@@ -48,18 +66,21 @@ public static class CuiV1ArtifactCodec
         return JsonSerializer.SerializeToUtf8Bytes(artifact, WriteOptions());
     }
 
-    /// <summary>Public compatibility shim over the genuine Core reader. The Core reader throws
-    /// <see cref="CuiV1AdmissionException"/>; this shim preserves the historical public contract
-    /// (<see cref="InvalidDataException"/>) for existing producer/test callers. Returns the typed
-    /// <see cref="CuiV1LoadedArtifact"/> from Core.</summary>
+    /// <summary>Public compatibility shim over the genuine Core reader. The Core reader returns the
+    /// Core <see cref="CakeOS.Cui.CuiV1LoadedArtifact"/>; this shim maps it onto this type's public
+    /// nested <see cref="CuiV1LoadedArtifact"/> and translates <see cref="CuiV1AdmissionException"/>
+    /// into the historical public <see cref="InvalidDataException"/> contract.</summary>
     public static CuiV1LoadedArtifact ReadArtifact(byte[] utf8)
     {
         ArgumentNullException.ThrowIfNull(utf8);
         try
         {
-            return CuiV1ArtifactReader.ReadArtifact(utf8);
+            var core = CakeOS.Cui.CuiV1ArtifactReader.ReadArtifact(utf8);
+            return new CuiV1LoadedArtifact(
+                core.Format, core.FormatVersion, core.CompilerSha256, core.Metadata,
+                core.Documents.Select(d => new CuiV1LoadedDocument(d.Source, d.Sha256, d.Metadata, d.Semantics)).ToArray());
         }
-        catch (CuiV1AdmissionException admission)
+        catch (CakeOS.Cui.CuiV1AdmissionException admission)
         {
             throw new InvalidDataException(admission.Message);
         }

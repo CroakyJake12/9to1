@@ -1,5 +1,6 @@
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -12,18 +13,49 @@ namespace HavenOS.Apps.Dev.Tests;
 /// The Build development workbench MUST consume the genuine V1 compiled CUI artifact through the
 /// typed Core/Runtime transport — never a silent raw-source reparse fallback and never a loose
 /// source/snapshot model. These tests exercise the ACTUAL embedded artifact and the typed
-/// semantics/action round-trip, then verify host-support admission fails closed on malformed,
-/// missing, unknown-version, language, ABI (contradictory and consistently unsupported) and
-/// capability rejections before any scene effect.
+/// semantics/action round-trip, then verify structural and host-support admission fails closed on
+/// malformed, missing, unknown-version, language, registry, ABI (contradictory and consistently
+/// unsupported), duplicate-identity, missing-required-collection and capability rejections before
+/// any scene effect.
 /// </summary>
+/// <remarks>
+/// Every mutation is a structural edit of the ACTUAL embedded bytes decoded through
+/// <see cref="System.Text.Json.Nodes.JsonNode"/> (round-tripped through a real JSON writer), so the
+/// mutated payload is always valid JSON and exactly the intended field changed. Unsupported-value
+/// cases (language/registry/ABI/capability) therefore reach the admission boundary as well-formed
+/// artifacts rather than being masked by malformed JSON.
+/// </remarks>
 public sealed class DeveloperWorkbenchCompiledTransportTests
 {
     private const string WorkbenchSource = "UI/DeveloperWorkbench.cui";
+
+    private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
 
     private static byte[] Embedded() => DeveloperWorkbenchCuiDocument.ReadEmbeddedArtifact();
 
     private static CuiV1LoadedArtifact Decode(byte[] bytes) =>
         CuiV1ArtifactReader.ReadArtifact(bytes);
+
+    private static JsonObject Root() => JsonNode.Parse(Embedded())!.AsObject();
+
+    private static byte[] Rebuild(JsonObject root) =>
+        Encoding.UTF8.GetBytes(root.ToJsonString(Indented));
+
+    private static JsonObject DocumentAt(JsonObject root, int index) => (JsonObject)root["documents"]![index]!;
+
+    private static JsonObject CompilationAt(JsonObject root, int index) => (JsonObject)DocumentAt(root, index)["compilation"]!;
+
+    private static JsonObject MetadataAt(JsonObject root, int index) => (JsonObject)CompilationAt(root, index)["Metadata"]!;
+
+    private static JsonObject EnvelopeMetadata(JsonObject root) => (JsonObject)root["metadata"]!;
+
+    private static int WorkbenchIndex(JsonObject root)
+    {
+        var docs = (JsonArray)root["documents"]!;
+        for (int i = 0; i < docs.Count; i++)
+            if (DocumentAt(root, i)["source"]?.GetValue<string>() == WorkbenchSource) return i;
+        throw new InvalidOperationException("Workbench document not present in embedded artifact.");
+    }
 
     private static void AssertWorkbench(byte[] bytes)
     {
@@ -40,6 +72,8 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
         Assert.False(string.IsNullOrWhiteSpace(document.Sha256));
         Assert.Equal("1", document.Metadata.RuntimeAbiVersion);
         Assert.NotNull(document.Semantics);
+        Assert.NotNull(document.Semantics.Components);
+        Assert.NotEmpty(document.Semantics.Components);
     }
 
     [Fact]
@@ -101,6 +135,7 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
     [Fact]
     public void Admission_rejects_malformed_artifact_before_effects()
     {
+        // Truncated bytes => malformed JSON syntax, caught by the reader as CUIR070.
         var truncated = Embedded()[..(Embedded().Length / 2)];
         var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(truncated));
         Assert.Equal("CUIR070", error.Diagnostic.Code);
@@ -109,43 +144,124 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
     [Fact]
     public void Admission_rejects_unknown_artifact_format_before_effects()
     {
-        var bytes = Mutate(Embedded(), "\"format\"", "cui-build-compilation", "\"bogus\"");
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(bytes));
+        var root = Root();
+        Assert.Equal("cui-build-compilation", root["format"]!.GetValue<string>());
+        root["format"] = "bogus";
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
         Assert.Equal("CUIR060", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Admission_rejects_unsupported_format_version_before_effects()
     {
-        var bytes = Mutate(Embedded(), "\"formatVersion\"", "1", "999");
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(bytes));
+        var root = Root();
+        Assert.Equal(1, root["formatVersion"]!.GetValue<int>());
+        root["formatVersion"] = 999;
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
         Assert.Equal("CUIR061", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Admission_rejects_missing_workbench_document_before_effects()
     {
-        var bytes = Mutate(Embedded(), "\"source\"", WorkbenchSource, "\"UI/Missing.cui\"");
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(bytes));
+        var root = Root();
+        var document = DocumentAt(root, WorkbenchIndex(root));
+        Assert.Equal(WorkbenchSource, document["source"]!.GetValue<string>());
+        // Rename the workbench document so the bundle loads structurally but no longer contains the
+        // selected source; the consumer must fail with CUIR062 (missing selected document).
+        document["source"] = "UI/NotTheWorkbench.cui";
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
         Assert.Equal("CUIR062", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_missing_per_document_metadata_before_effects()
+    {
+        var root = Root();
+        var compilation = CompilationAt(root, WorkbenchIndex(root));
+        Assert.NotNull(compilation["Metadata"]);
+        compilation.Remove("Metadata");
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
+        Assert.Equal("CUIR072", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_missing_source_identity_before_effects()
+    {
+        var root = Root();
+        var document = DocumentAt(root, WorkbenchIndex(root));
+        Assert.Equal(WorkbenchSource, document["source"]!.GetValue<string>());
+        document.Remove("source");
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
+        Assert.Equal("CUIR072", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_missing_required_compilation_collection_before_effects()
+    {
+        var root = Root();
+        var compilation = CompilationAt(root, WorkbenchIndex(root));
+        Assert.NotNull(compilation["Components"]);
+        compilation.Remove("Components");
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
+        Assert.Equal("CUIR072", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_wrong_required_shape_before_effects()
+    {
+        var root = Root();
+        var compilation = CompilationAt(root, WorkbenchIndex(root));
+        Assert.NotNull(compilation["Semantics"]);
+        compilation["Semantics"] = "not-an-object";
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
+        Assert.Equal("CUIR072", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_duplicate_source_identity_before_effects()
+    {
+        var root = Root();
+        var docs = (JsonArray)root["documents"]!;
+        int index = WorkbenchIndex(root);
+        var clone = ((JsonObject)docs[index]!).DeepClone();
+        docs.Add(clone);
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
+        Assert.Equal("CUIR072", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Admission_rejects_unsupported_language_version_before_effects()
     {
-        // Envelope metadata precedes the document metadata, so the first LanguageVersion is envelope.
-        var bytes = Mutate(Embedded(), "\"LanguageVersion\"", "\"1\"", "\"99\"", occurrence: 1);
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(bytes));
+        var root = Root();
+        var envelope = EnvelopeMetadata(root);
+        Assert.Equal("1", envelope["LanguageVersion"]!.GetValue<string>());
+        envelope["LanguageVersion"] = "99";
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
         Assert.Equal("CUIR064", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_unsupported_registry_version_before_effects()
+    {
+        var root = Root();
+        var envelope = EnvelopeMetadata(root);
+        Assert.Equal(CuiControlRegistry.ComponentRegistryVersion, envelope["ComponentRegistryVersion"]!.GetValue<string>());
+        envelope["ComponentRegistryVersion"] = "9.9";
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
+        Assert.Equal("CUIR066", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Admission_rejects_contradictory_document_abi_before_effects()
     {
-        // Envelope stays ABI1 (valid) while the document declares ABI999: a contradiction that must
-        // still fail whole-bundle admission with CUIR065 before any effect.
-        var bytes = Mutate(Embedded(), "\"RuntimeAbiVersion\"", "\"1\"", "\"999\"", occurrence: 2);
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(bytes));
+        // Envelope stays ABI1 (valid) while the workbench document declares ABI999: a contradiction
+        // that must still fail whole-bundle host support with CUIR065 before any effect.
+        var root = Root();
+        var documentMetadata = MetadataAt(root, WorkbenchIndex(root));
+        Assert.Equal("1", documentMetadata["RuntimeAbiVersion"]!.GetValue<string>());
+        documentMetadata["RuntimeAbiVersion"] = "999";
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
         Assert.Equal("CUIR065", error.Diagnostic.Code);
     }
 
@@ -154,18 +270,39 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
     {
         // Envelope AND document both ABI999: consistently unsupported, rejected at the envelope with
         // CUIR065 (deterministic diagnostic precedence).
-        var bytes = ReplaceAll(Embedded(), "\"RuntimeAbiVersion\"", "\"1\"", "\"999\"");
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(bytes));
+        var root = Root();
+        EnvelopeMetadata(root)["RuntimeAbiVersion"] = "999";
+        MetadataAt(root, WorkbenchIndex(root))["RuntimeAbiVersion"] = "999";
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
         Assert.Equal("CUIR065", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Admission_rejects_unknown_required_capability_before_effects()
     {
-        // Inject an unsupported capability into the envelope's required-capability set (first
-        // occurrence is the envelope), which must fail whole-bundle admission with CUIR067.
-        var bytes = Mutate(Embedded(), "\"RequiredCapabilities\"", "[]", "[\"future-capability\"]", occurrence: 1);
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(bytes));
+        // Inject an unsupported capability into the envelope's required-capability set.
+        var root = Root();
+        var envelope = EnvelopeMetadata(root);
+        Assert.Equal(0, ((JsonArray)envelope["RequiredCapabilities"]!).Count);
+        envelope["RequiredCapabilities"] = new JsonArray("future-capability");
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
+        Assert.Equal("CUIR067", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Admission_rejects_unsupported_capability_on_required_sibling_before_effects()
+    {
+        // A required sibling (not the selected workbench document) demands a capability this host
+        // does not support; whole-bundle admission must reject the bundle with CUIR067 even though
+        // the selected document alone is clean. Envelope stays consistent (union of capabilities).
+        var root = Root();
+        var docs = (JsonArray)root["documents"]!;
+        int index = WorkbenchIndex(root);
+        var sibling = ((JsonObject)docs[index]!).DeepClone();
+        sibling["source"] = "UI/Sibling.cui";
+        ((JsonObject)sibling["compilation"]!)["Metadata"]!.AsObject()["RequiredCapabilities"] = new JsonArray("future-capability");
+        docs.Add(sibling);
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => DeveloperWorkbenchCuiDocument.Load(Rebuild(root)));
         Assert.Equal("CUIR067", error.Diagnostic.Code);
     }
 
@@ -173,32 +310,5 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
     {
         foreach (var node in nodes)
         { yield return node; foreach (var child in Descendants(node.Children)) yield return child; }
-    }
-
-    // Matches `"key" : value` (any insignificant whitespace around the colon).
-    private static readonly Regex KeyValuePattern = new(
-        "(?<key>\"[^\"]+\")\\s*:\\s*(?<value>\\[[^\\]]*\\]|\"[^\"]*\"|-?\\d+)",
-        RegexOptions.Compiled);
-
-    private static byte[] Mutate(byte[] source, string key, string oldValue, string newValue, int occurrence = 1)
-    {
-        var text = Encoding.UTF8.GetString(source);
-        var pattern = new Regex(Regex.Escape(key) + @"\s*:\s*(?<value>" + Regex.Escape(oldValue) + ")");
-        if (occurrence < 0) throw new ArgumentOutOfRangeException(nameof(occurrence));
-
-        var matches = pattern.Matches(text);
-        Assert.True(matches.Count >= occurrence, $"Expected '{key}: {oldValue}' (occurrence {occurrence}) in the embedded artifact.");
-        var target = matches[occurrence - 1];
-        var mutated = text[..target.Groups["value"].Index] + newValue + text[(target.Groups["value"].Index + target.Groups["value"].Length)..];
-        return Encoding.UTF8.GetBytes(mutated);
-    }
-
-    private static byte[] ReplaceAll(byte[] source, string key, string oldValue, string newValue)
-    {
-        var text = Encoding.UTF8.GetString(source);
-        var pattern = new Regex(Regex.Escape(key) + @"\s*:\s*(?<value>" + Regex.Escape(oldValue) + ")");
-        var mutated = pattern.Replace(text, m => m.Groups["key"].Value + ": " + newValue);
-        Assert.NotEqual(text, mutated);
-        return Encoding.UTF8.GetBytes(mutated);
     }
 }
