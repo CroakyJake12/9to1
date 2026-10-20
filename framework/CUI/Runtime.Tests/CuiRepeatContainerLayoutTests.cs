@@ -39,7 +39,7 @@ public sealed class CuiRepeatContainerLayoutTests
         control.TranslatePoint(new Point(0, 0), ancestor) ?? default;
 
     private static Control? FindContainer(Control root, string id) =>
-        root.GetVisualDescendants().OfType<Control>().SingleOrDefault(c =>
+        root.GetSelfAndVisualDescendants().OfType<Control>().SingleOrDefault(c =>
             AutomationProperties.GetAutomationId(c) == id);
 
     private static Button[] ItemButtons(Control root)
