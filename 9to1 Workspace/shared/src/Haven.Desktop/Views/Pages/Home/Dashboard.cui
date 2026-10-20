@@ -74,6 +74,10 @@
                 <Text id="dashboard-recent-empty" Text="{Binding briefing.recentEmpty}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
               </If>
             </Container>
+            <If Condition="{Binding briefing.hasRefusal}">
+              <Text id="dashboard-briefing-refusal" Text="{Binding briefing.refusal}" TextWrapping="Wrap"
+                    Foreground="{Resource CuiInformationBrush}" AccessibleName="Briefing action result" />
+            </If>
           </Container>
           <Container id="dashboard-pinned-section" Type="Vertical Stack" IsVisible="False" CellGap="12">
             <Container Type="Wrap" CellGap="12">

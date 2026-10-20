@@ -1,16 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Core;
+using Haven.Desktop.Services;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
 /// <summary>
 /// Typed destination for a surfaced briefing row. The Dashboard never accepts an arbitrary URI:
-/// a row can only be opened when it derives from a real bounded snapshot row whose Id/Kind/ActionKey
-/// pass validation and whose source is current and permitted.
+/// a row can only be opened when it is re-validated against the current source snapshot (present,
+/// current, well-formed canonical identity and permitted kind/action). Id/Kind/ActionKey alone are
+/// NOT authorization; they are only the typed identity used to revalidate against live source state.
 /// </summary>
 public sealed record DashboardBriefingTarget(string Kind, string Id, string ActionKey);
 
@@ -45,20 +50,23 @@ public sealed record DashboardWorkRow(
     public string OpenLabel => "Open " + Title;
 }
 
-/// <summary>Truthful briefing lifecycle/availability states. Loading and Error/Stale are distinct;
-/// nothing presents fake zeros or old data as current.</summary>
-public enum DashboardBriefingPhase { Loading, Ready, Stale, Error }
+/// <summary>Truthful briefing lifecycle/availability states. Loading, Ready, Stale, Error and
+/// Revoked are distinct; nothing presents fake zeros, old data as current, or a hidden failure.</summary>
+public enum DashboardBriefingPhase { Loading, Ready, Stale, Error, Revoked }
 
 /// <summary>
 /// The current briefing projection the authored Dashboard.cui reads: the real bounded agenda and
-/// recent rows, plus honest loading/empty/stale/error state. State never invents a current result.
+/// recent rows, plus honest loading/empty/stale/error/revoked state and the latest visible refusal.
+/// State never invents a current result. Phase/count ordering is explicit so stale/revoked/error
+/// explanations always win over populated counts.
 /// </summary>
 public sealed record DashboardBriefingViewState(
     DashboardBriefingPhase Phase,
     string Message,
     DateTimeOffset? CapturedAt,
     IReadOnlyList<DashboardAgendaRow> Agenda,
-    IReadOnlyList<DashboardWorkRow> RecentWork)
+    IReadOnlyList<DashboardWorkRow> RecentWork,
+    string Refusal = "")
 {
     /// <summary>The state before the first bounded source read completes.</summary>
     public static DashboardBriefingViewState Loading { get; } =
@@ -68,16 +76,18 @@ public sealed record DashboardBriefingViewState(
     public bool NoAgenda => Agenda.Count == 0 && Phase is DashboardBriefingPhase.Ready or DashboardBriefingPhase.Stale;
     public bool HasRecent => RecentWork.Count > 0;
     public bool NoRecent => RecentWork.Count == 0 && Phase is DashboardBriefingPhase.Ready or DashboardBriefingPhase.Stale;
-    public bool ShowRetry => Phase is DashboardBriefingPhase.Error or DashboardBriefingPhase.Stale;
+    public bool ShowRetry => Phase is DashboardBriefingPhase.Error or DashboardBriefingPhase.Stale or DashboardBriefingPhase.Revoked;
     public bool HasOpenable => Agenda.Any(row => row.CanOpen) || RecentWork.Any(row => row.CanOpen);
+    public bool HasRefusal => Refusal.Length > 0;
 
     public string AgendaStatus => (Phase, Agenda.Count) switch
     {
         (DashboardBriefingPhase.Loading, _) => "Loading today's brief…",
         (DashboardBriefingPhase.Error, _) => Message,
+        (DashboardBriefingPhase.Revoked, _) => Message,
+        (DashboardBriefingPhase.Stale, _) => Message,
         (_, 1) => "1 item in today's agenda.",
         (_, > 1) => $"{Agenda.Count} items in today's agenda.",
-        (DashboardBriefingPhase.Stale, 0) => $"{Message} Nothing is scheduled for today.",
         (_, 0) => "Nothing is scheduled for today."
     };
 
@@ -85,24 +95,32 @@ public sealed record DashboardBriefingViewState(
     {
         (DashboardBriefingPhase.Loading, _) => "Loading recent work…",
         (DashboardBriefingPhase.Error, _) => Message,
+        (DashboardBriefingPhase.Revoked, _) => Message,
+        (DashboardBriefingPhase.Stale, _) => Message,
         (_, 1) => "1 recently changed item.",
         (_, > 1) => $"{RecentWork.Count} recently changed items.",
-        (DashboardBriefingPhase.Stale, 0) => $"{Message} No recent work yet.",
         (_, 0) => "No recent work to show yet."
     };
 
-    public string AgendaEmpty => Phase == DashboardBriefingPhase.Stale
-        ? "Nothing is due or scheduled for today. Items are stale until refreshed."
-        : "Nothing is due or scheduled for today.";
+    public string AgendaEmpty => Phase switch
+    {
+        DashboardBriefingPhase.Stale => "Nothing is due or scheduled for today. Items are stale until refreshed.",
+        DashboardBriefingPhase.Revoked => "Today's agenda is unavailable because its source is no longer authorized.",
+        _ => "Nothing is due or scheduled for today."
+    };
 
-    public string RecentEmpty => Phase == DashboardBriefingPhase.Stale
-        ? "No recent work yet. Items are stale until refreshed."
-        : "Recent chats, projects and calls will appear here.";
+    public string RecentEmpty => Phase switch
+    {
+        DashboardBriefingPhase.Stale => "No recent work yet. Items are stale until refreshed.",
+        DashboardBriefingPhase.Revoked => "Recent work is unavailable because its source is no longer authorized.",
+        _ => "Recent chats, projects and calls will appear here."
+    };
 
     /// <summary>
-    /// Projects a bounded snapshot (or a truthful error/stale state when the source is unavailable).
-    /// A null snapshot with an error yields the Error state with no rows; a retained snapshot is
-    /// always surfaced as stale and non-openable, never as current.
+    /// Projects a bounded snapshot (or a truthful error/revoked state when the source is unavailable).
+    /// A null snapshot yields Error/Revoked with NO rows (unauthorized/sensitive content is purged,
+    /// never retained). A successfully read but time-stale snapshot is surfaced only as stale and
+    /// non-openable, never as current.
     /// </summary>
     public static DashboardBriefingViewState FromSnapshot(DashboardSnapshot? snapshot, bool stale, string? error)
     {
@@ -117,6 +135,10 @@ public sealed record DashboardBriefingViewState(
         if (error is not null) message += " " + error;
         return new(phase, message, snapshot.CapturedAt, agenda, recent);
     }
+
+    /// <summary>Revoked state: no rows are retained because the source is denied/revoked/deleted.</summary>
+    public static DashboardBriefingViewState Revoked(string? detail) =>
+        new(DashboardBriefingPhase.Revoked, detail ?? "This area is no longer authorized. Content has been cleared.", null, [], []);
 
     private static DashboardAgendaRow MapAgenda(DashboardAgendaItem item, bool stale) => new(
         item.Id, item.Kind, item.Title, Provenance(item.Kind),
@@ -162,8 +184,8 @@ public sealed record DashboardBriefingViewState(
 
     /// <summary>
     /// A row is openable only when its snapshot is current (not stale/error) and its source identity
-    /// is a well-formed canonical entity of an allowed kind/action. This is the typed guard that
-    /// prevents arbitrary URI acceptance and keeps revoked/stale rows from being actionable.
+    /// is a well-formed canonical entity of an allowed kind/action. This is the typed guard used by
+    /// the projection; the page re-validates against the live source before any navigation.
     /// </summary>
     private static bool CanOpen(string? kind, string? actionKey, string? id, bool stale)
     {
@@ -237,6 +259,8 @@ public sealed class NewDashboardPageBriefingBindings
             "briefing.agenda" => snapshot.Agenda,
             "briefing.recentWork" => snapshot.RecentWork,
             "briefing.status" => snapshot.Message,
+            "briefing.refusal" => snapshot.Refusal,
+            "briefing.hasRefusal" => snapshot.HasRefusal,
             _ => Unresolved
         };
         return !ReferenceEquals(value, Unresolved);
@@ -322,11 +346,10 @@ public sealed partial class NewDashboardPage
 {
     private NewDashboardPageBriefingBindings? _briefingBindings;
     private DashboardBriefingViewState _briefingState = DashboardBriefingViewState.Loading;
-    private DashboardSnapshot? _briefingLastSnapshot;
     private Func<DashboardBriefingTarget, bool>? _briefingNavigator;
     private string _lastBriefingRefusal = string.Empty;
 
-    /// <summary>Host hook that routes a validated briefing target to the owning app/entity. It must
+    /// <summary>Host hook that routes a page-validated target to the owning app/entity. It must
     /// return true only when it actually navigated; otherwise the page reports a truthful refusal.</summary>
     public Func<DashboardBriefingTarget, bool>? BriefingNavigator
     {
@@ -338,49 +361,124 @@ public sealed partial class NewDashboardPage
     public string LastBriefingRefusal => _lastBriefingRefusal;
 
     /// <summary>
-    /// Typed, authority-checked briefing navigation. Only a target that is present in the current
-    /// snapshot as an openable row is forwarded to the host navigator. Unknown, stale, revoked or
-    /// unauthorized targets are refused without any forbidden read/open.
+    /// Reserved, authority-checked briefing navigation. The operation reserves the Home original work
+    /// before any external read or callback, re-reads the current authorized source snapshot, and only
+    /// then forwards a target that is present, current and permitted. Missing/revoked/stale/unknown
+    /// targets are refused without any navigation, and the refusal is surfaced in the authored CUI.
     /// </summary>
-    public bool TryNavigateBriefing(DashboardBriefingTarget target)
+    public Task<bool> TryNavigateBriefingAsync(DashboardBriefingTarget target)
     {
-        if (target is null || !IsPresentOpenableTarget(target))
-            return RefuseBriefing("Cannot open: this item is missing, stale or no longer authorized.");
-        if (_briefingNavigator is not null && _briefingNavigator(target))
-        {
-            _lastBriefingRefusal = string.Empty;
-            return true;
-        }
-        return RefuseBriefing("This item's owning app is not reachable from this dashboard right now.");
+        if (_disposed || _homeWork.IsRetiring || !_dashboardActive)
+            return Task.FromResult(RefuseBriefing("The dashboard is closing or inactive; this item cannot be opened now."));
+        return _homeWork.Executing is { } current
+            ? current.AwaitAsync(NavigateBriefingReservedAsync(current, target))
+            : _homeWork.RunAsync(original => NavigateBriefingReservedAsync(original, target));
     }
 
-    private bool IsPresentOpenableTarget(DashboardBriefingTarget target) =>
-        _briefingState.Agenda.Any(row => row.CanOpen && row.Target == target)
-        || _briefingState.RecentWork.Any(row => row.CanOpen && row.Target == target);
+    private async Task<bool> NavigateBriefingReservedAsync(DesktopOriginalWorkLifetime.Original original, DashboardBriefingTarget target)
+    {
+        Task<bool>? source = null;
+        try
+        {
+            await original.AwaitAsync(Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                source = NavigateBriefingCoreAsync(target, original.Token);
+            }).GetTask()).ConfigureAwait(false);
+            return await original.AwaitAsync(source ?? throw new InvalidOperationException("The Home navigation was not acquired.")).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            return RefuseBriefing("This item could not be opened: " + ex.Message);
+        }
+    }
+
+    private async Task<bool> NavigateBriefingCoreAsync(DashboardBriefingTarget target, CancellationToken token)
+    {
+        if (_disposed || _homeWork.IsRetiring || !_dashboardActive)
+            return RefuseBriefing("The dashboard is closing or inactive; this item cannot be opened now.");
+        if (_widgetDashboard is null)
+            return RefuseBriefing("No dashboard source is available to verify this item.");
+
+        // Revalidate against the LIVE authorized source; the cached projection is never the authority.
+        DashboardSnapshot snapshot;
+        try
+        {
+            snapshot = await AwaitHomeSourceAsync(_widgetDashboard.GetSnapshotAsync(DateTimeOffset.UtcNow, token));
+        }
+        catch
+        {
+            return RefuseBriefing("This item could not be verified against its current source.");
+        }
+        token.ThrowIfCancellationRequested();
+
+        var stale = DateTimeOffset.UtcNow - snapshot.CapturedAt > WidgetStaleAfter;
+        var fresh = DashboardBriefingViewState.FromSnapshot(snapshot, stale: false, error: null);
+        if (stale || !IsPresentOpenableTarget(fresh, target))
+            return RefuseBriefing("Cannot open: this item is missing, stale or no longer authorized.");
+
+        if (_briefingNavigator is null)
+            return RefuseBriefing("This item's owning app is not reachable from this dashboard right now.");
+
+        bool navigated;
+        try
+        {
+            navigated = await AwaitHomeSourceAsync(Task.FromResult(_briefingNavigator(target)));
+        }
+        catch
+        {
+            navigated = false;
+        }
+        if (!navigated)
+            return RefuseBriefing("This item's owning app is not reachable from this dashboard right now.");
+
+        ClearBriefingRefusal();
+        return true;
+    }
+
+    private static bool IsPresentOpenableTarget(DashboardBriefingViewState fresh, DashboardBriefingTarget? target) =>
+        target is not null
+        && (fresh.Agenda.Any(row => row.CanOpen && row.Target == target)
+            || fresh.RecentWork.Any(row => row.CanOpen && row.Target == target));
 
     private bool RefuseBriefing(string reason)
     {
         _lastBriefingRefusal = reason;
+        _briefingState = _briefingState with { Refusal = reason };
+        _briefingBindings?.NotifyChanged();
         return false;
+    }
+
+    private void ClearBriefingRefusal()
+    {
+        if (_briefingState.Refusal.Length == 0) return;
+        _briefingState = _briefingState with { Refusal = "" };
+        _briefingBindings?.NotifyChanged();
     }
 
     private void UpdateBriefing(DashboardSnapshot? snapshot, bool stale, string? error)
     {
-        if (snapshot is not null) _briefingLastSnapshot = snapshot;
+        // A retired/deactivated page must not publish a late-resolved source as current content.
+        // The act source update is only admitted while the dashboard is active and mounted.
+        if (_disposed || !_dashboardActive) return;
         _briefingState = DashboardBriefingViewState.FromSnapshot(snapshot, stale, error);
         _briefingBindings?.NotifyChanged();
     }
 
-    private ValueTask DispatchBriefingCommandAsync(string command, object? parameter, CancellationToken token)
+    private void RevokeBriefing(string? detail)
+    {
+        _briefingState = DashboardBriefingViewState.Revoked(detail);
+        _briefingBindings?.NotifyChanged();
+    }
+
+    private async ValueTask DispatchBriefingCommandAsync(string command, object? parameter, CancellationToken token)
     {
         if (command == NewDashboardPageBriefingBindings.RefreshCommand)
         {
             if (_dashboardActive && !_disposed && _widgetDashboard is not null)
-                return new ValueTask(RunHomeEventAsync(RefreshWidgetSurfaceAsync));
-            return ValueTask.CompletedTask;
+                await RunHomeEventAsync(RefreshWidgetSurfaceAsync);
+            return;
         }
         if (command == NewDashboardPageBriefingBindings.OpenCommand && parameter is DashboardBriefingTarget target)
-            TryNavigateBriefing(target);
-        return ValueTask.CompletedTask;
+            await TryNavigateBriefingAsync(target);
     }
 }

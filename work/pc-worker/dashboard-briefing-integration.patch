@@ -1,101 +1,59 @@
-From: Mercury worker lane 14 (Home Dashboard briefing)
-Subject: Integrate source-backed dashboard briefing navigation into UnifiedHomePage
+From: Mercury worker lane 14 (pass2) — Home Dashboard briefing
+Subject: [PATCH] Integrate source-backed briefing navigation into UnifiedHomePage
 
-Context
-=======
-Lane 14 added source-backed TODAY agenda and RECENT WORK briefing sections to the Home
-dashboard (Dashboard.cui + NewDashboardPage.Briefing.cs). The briefing rows route through a
-typed, authority-checked target: `NewDashboardPage.TryNavigateBriefing(DashboardBriefingTarget)`.
-The page exposes a `BriefingNavigator` delegate that a host sets to actually navigate. The
-desktop host seam is `UnifiedHomePage` (READ ONLY for this lane). This patch is the exact seam
-integration for the root coordinator to reconcile; it is intentionally NOT applied by this worker.
+Base: ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb (root read-only file unchanged by this lane)
+Target: 9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHomePage.cs
 
-Important constraints honoured here:
-- No arbitrary URI acceptance: an entity deep link is emitted only for the verified conversation
-  route (`9to1://spaces/chat/{id}`). Every other kind either routes to its owning app surface or
-  fails with a truthful refusal (the page then reports "this item's owning app is not reachable").
-- No UI automation, no duplicated entity creation, no mutation of task status or external actions.
-- The target Id/Kind/ActionKey are already validated by the page before the navigator is invoked,
-  so this seam only maps a validated target to a navigation address.
+This patch binds the dashboard's BriefingNavigator when the dashboard is mounted and unbinds it on
+cleanup, and implements the host route for a page-validated briefing target. Only the conversation
+entity has a verified exact deep link in this host (the same route OnConversation already uses).
+Every other kind (Planner task/event, call, container group/subject/project) lacks a verified exact
+entity route here; we refuse honestly (return false) so the dashboard surfaces a truthful
+owning-app/opening limitation instead of forging a URI or restoring retired identities.
 
-Suggested change (UnifiedHomePage.cs, dashboard branch in SelectAsync, ~line 199-211)
-========================================================================================
-Inside `original.RunAcceptedPublicationCallback(() => { ... })` where the dashboard is created:
-
-    _dashboard = _createDashboard();
-    _dashboard.ModeRequested += OnDashboardApp;
-    _dashboard.ManageAppsRequested += OnManageApps;
-    _dashboard.DiscoverRequested += OnDiscover;
-    _dashboard.ConversationRequested += OnConversation;
-    _dashboard.BriefingNavigator = TryRouteBriefingTarget;   // NEW
-
-Add the following private method (next to OnConversation/OnDashboardApp) and the refusal hook:
-
-    /// <summary>
-    /// Maps a page-validated briefing target to a real navigation address. Returns true only when a
-    /// genuine destination was issued. Unverified/owning-app-only kinds are NOT forged into entity
-    /// deep links; when only an owning app is safely known we open that app and state the limitation,
-    /// otherwise we return false so the page reports an honest refusal.
-    /// </summary>
-    private bool TryRouteBriefingTarget(DashboardBriefingTarget target)
-    {
-        // Conversation entities have a verified exact deep link.
-        if (target.Kind.Equals("chat", StringComparison.OrdinalIgnoreCase)
-            && Guid.TryParse(target.Id, out var conversationId))
-        {
-            StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversationId:D}"));
-            return true;
-        }
-        // Planner tasks/events: open the owning Planner app (no verified exact entity deep link).
-        // We do NOT forge a task/event entity link here.
-        if (target.Kind.Equals("task", StringComparison.OrdinalIgnoreCase)
-            || target.Kind.Equals("event", StringComparison.OrdinalIgnoreCase))
-        {
-            StartNavigation(AppContentAddress.Parse("9to1://planner"));
-            return true;
-        }
-        // Calls: open the owning call/Spaces surface only; an exact call-session link is unverified.
-        if (target.Kind.Equals("call", StringComparison.OrdinalIgnoreCase))
-        {
-            StartNavigation(AppContentAddress.Parse("9to1://call"));
-            return true;
-        }
-        // Container rows (group / subject / project) have no verified exact entity deep link; the
-        // owning app surface is a safe, honest destination.
-        if (target.Kind.Equals("group", StringComparison.OrdinalIgnoreCase))
-        {
-            StartNavigation(AppContentAddress.Parse("9to1://spaces"));
-            return true;
-        }
-        if (target.Kind.Equals("subject", StringComparison.OrdinalIgnoreCase))
-        {
-            StartNavigation(AppContentAddress.Parse("9to1://study"));
-            return true;
-        }
-        if (target.Kind.Equals("project", StringComparison.OrdinalIgnoreCase))
-        {
-            StartNavigation(AppContentAddress.Parse("9to1://studio"));
-            return true;
-        }
-        // Anything else (unknown kind, malformed id) is refused honestly by the page.
-        return false;
-    }
-
-Cleanup (UnifiedHomePage.CleanupAsync, ~line 379-383)
-=====================================================
-Also unsubscribe the navigator in the existing dashboard detach block:
-
-    _dashboard.ModeRequested -= OnDashboardApp;
-    _dashboard.ManageAppsRequested -= OnManageApps;
-    _dashboard.DiscoverRequested -= OnDiscover;
-    _dashboard.ConversationRequested -= OnConversation;
-    _dashboard.BriefingNavigator = null;   // NEW
-
-Reconciliation notes
-====================
-- Verify the owning-app destinations `9to1://call`, `9to1://study`, `9to1://studio`,
-  `9to1://spaces` are the canonical current routes in this checkout. If a destination is not an
-  accepted route, the corresponding branch should return false instead of forging a link, so the
-  page reports its honest "owning app is not reachable" refusal.
-- No changes are required in App.UnifiedWorkspaceHost.CreateDashboard; the navigator hook is
-  attached at mount time by UnifiedHomePage like the other dashboard event subscriptions.
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHomePage.cs b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHomePage.cs
+index 7b6f161ab3a382d65df07bcf88522e691b5780dc..77b77503eb6d4becd3fadff8e953b52a4ff2dea7 100644
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHomePage.cs
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHomePage.cs
+@@ -203,6 +203,7 @@
+                     _dashboard.ManageAppsRequested += OnManageApps;
+                     _dashboard.DiscoverRequested += OnDiscover;
+                     _dashboard.ConversationRequested += OnConversation;
++                    _dashboard.BriefingNavigator = TryRouteBriefingTarget;
+                 });
+             }
+             if (!original.IsAcceptedPublicationCurrent) return;
+@@ -268,6 +269,25 @@
+     }
+     private void OnConversation(object? sender, Conversation conversation) =>
+         StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversation.Id:D}"));
++
++    /// <summary>
++    /// Routes a page-validated briefing target. Only the conversation entity has a verified exact
++    /// deep link in this host (the same route OnConversation already uses). Every other kind lacks a
++    /// verified exact entity route here, so we refuse honestly rather than forge a URI; the dashboard
++    /// then surfaces that truthful owning-app/opening limitation.
++    /// </summary>
++    private bool TryRouteBriefingTarget(DashboardBriefingTarget target)
++    {
++        if (target.Kind.Equals("chat", StringComparison.OrdinalIgnoreCase)
++            && Guid.TryParse(target.Id, out var conversationId))
++        {
++            StartNavigation(AppContentAddress.Parse($"9to1://spaces/chat/{conversationId:D}"));
++            return true;
++        }
++        // Planner tasks/events, calls and container rows (group/subject/project) have no verified
++        // exact entity deep link here. We do NOT invent owning-app aliases; honest refusal is shown.
++        return false;
++    }
+     private void OnManageProviders(object? sender, EventArgs args) => StartNavigation(AppContentAddress.Parse("9to1://home/settings"));
+     private void OnManageApps(object? sender, EventArgs args) => StartSelection("apps");
+     private void OnDiscover(object? sender, EventArgs args) => StartSelection("models");
+@@ -380,6 +400,7 @@
+         {
+             _dashboard.ModeRequested -= OnDashboardApp; _dashboard.ManageAppsRequested -= OnManageApps;
+             _dashboard.DiscoverRequested -= OnDiscover; _dashboard.ConversationRequested -= OnConversation;
++            _dashboard.BriefingNavigator = null;
+         }
+         if (_discover is not null) _discover.ManageProvidersRequested -= OnManageProviders;
+         _viewport.Child = null; Content = null;

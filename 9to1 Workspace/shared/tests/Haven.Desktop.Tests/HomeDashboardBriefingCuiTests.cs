@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
@@ -13,9 +15,10 @@ namespace Haven.Desktop.Tests;
 
 /// <summary>
 /// Focused tests for the source-backed Home dashboard briefing sections (TODAY agenda and RECENT
-/// WORK). These exercise the typed binding projection, the authority-checked target routing and
-/// the truthful loading/empty/stale/error states. Tests are authored here; they are NOT run by the
-/// implementation worker (root allocates the build/test slot).
+/// WORK). These exercise the typed binding projection, the authority-checked live-source navigation,
+/// the truthful loading/empty/stale/error/revoked states and the held-original close settlement.
+/// Tests are authored here; they are NOT run by the implementation worker (root owns the build/test
+/// slot).
 /// </summary>
 public sealed class HomeDashboardBriefingCuiTests
 {
@@ -39,10 +42,11 @@ public sealed class HomeDashboardBriefingCuiTests
         Assert.Equal("Chat conversation", state.RecentWork[0].Provenance);
         Assert.Equal(new DashboardBriefingTarget("task", taskId, "plan"), state.Agenda[0].Target);
         Assert.Equal(new DashboardBriefingTarget("chat", chatId, "chat"), state.RecentWork[0].Target);
+        Assert.False(state.HasRefusal);
     }
 
     [Fact]
-    public void Stale_snapshot_marks_rows_stale_and_non_actionable()
+    public void Stale_snapshot_marks_rows_stale_and_non_actionable_and_stale_explanation_wins()
     {
         var agenda = new DashboardAgendaItem(Guid.NewGuid().ToString("D"), "task", "Ship report", "", TodayAt(9), false, "plan");
         var state = DashboardBriefingViewState.FromSnapshot(Snapshot(agenda, null), stale: true, error: null);
@@ -51,10 +55,13 @@ public sealed class HomeDashboardBriefingCuiTests
         Assert.Single(state.Agenda);
         Assert.False(state.Agenda[0].CanOpen);
         Assert.True(state.ShowRetry);
+        // Stale explanation must win over the populated count; stale rows are never shown as current.
+        Assert.Contains("stale", state.AgendaStatus, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("items in today's agenda", state.AgendaStatus);
     }
 
     [Fact]
-    public void Error_without_prior_snapshot_is_truthful_and_never_fabricates_rows()
+    public void Error_without_source_is_truthful_and_purges_all_rows()
     {
         var state = DashboardBriefingViewState.FromSnapshot(null, stale: true, error: "source revoked");
 
@@ -62,7 +69,21 @@ public sealed class HomeDashboardBriefingCuiTests
         Assert.Empty(state.Agenda);
         Assert.Empty(state.RecentWork);
         Assert.False(state.HasOpenable);
+        Assert.False(state.HasAgenda);
+        Assert.False(state.HasRecent);
         Assert.True(state.ShowRetry);
+    }
+
+    [Fact]
+    public void Rvoked_state_purges_content_and_surfaces_distinct_explanation()
+    {
+        var state = DashboardBriefingViewState.Revoked("This area is no longer authorized.");
+
+        Assert.Equal(DashboardBriefingPhase.Revoked, state.Phase);
+        Assert.Empty(state.Agenda);
+        Assert.Empty(state.RecentWork);
+        Assert.False(state.HasOpenable);
+        Assert.Contains("no longer authorized", state.AgendaStatus, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -116,15 +137,16 @@ public sealed class HomeDashboardBriefingCuiTests
         Assert.Null(bindings.IsActionAvailable("unrelated.command"));
     }
 
-    // ---------- Authority-checked page routing ----------
+    // ---------- Authority-checked live-source navigation ----------
 
     [AvaloniaFact]
-    public async Task Valid_target_routes_to_navigator_refusal_never_reaches_it()
+    public async Task Valid_target_routes_after_live_revalidation_unknown_target_is_refused_and_visible()
     {
         using var bus = new HavenEventBus();
         var chatId = Guid.NewGuid().ToString("D");
-        var source = new BriefingRepository(chatId, Guid.NewGuid().ToString("D"));
-        using var page = CreatePage(bus, source);
+        var taskId = Guid.NewGuid().ToString("D");
+        var repo = new ControlledRepository(() => Snapshot(TaskAt(taskId), Chat(chatId)));
+        using var page = CreatePage(bus, repo);
         var navigated = new List<DashboardBriefingTarget>();
         page.BriefingNavigator = target => { navigated.Add(target); return true; };
 
@@ -132,21 +154,136 @@ public sealed class HomeDashboardBriefingCuiTests
         try
         {
             window.Show();
-            await page.ActivateAsync(CancellationToken.None);
+            await page.ActivateAsync(TestContext.Current.CancellationToken);
             window.UpdateLayout();
 
             var valid = new DashboardBriefingTarget("chat", chatId, "chat");
-            Assert.True(page.TryNavigateBriefing(valid));
+            Assert.True(await page.TryNavigateBriefingAsync(valid));
             Assert.Equal(valid, Assert.Single(navigated));
+            Assert.Equal(string.Empty, page.LastBriefingRefusal);
 
             var unknown = new DashboardBriefingTarget("chat", Guid.NewGuid().ToString("D"), "chat");
-            Assert.False(page.TryNavigateBriefing(unknown));
+            Assert.False(await page.TryNavigateBriefingAsync(unknown));
             Assert.Single(navigated); // the unknown target never reached the host
             Assert.False(string.IsNullOrEmpty(page.LastBriefingRefusal));
 
-            var staleKind = new DashboardBriefingTarget("call", Guid.NewGuid().ToString("D"), "call");
-            Assert.False(page.TryNavigateBriefing(staleKind));
-            Assert.Single(navigated);
+            // The refusal is surfaced in the authored CUI, not hidden.
+            Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), item =>
+                item.Name == "dashboard-briefing-refusal" && item.Text?.Length > 0);
+        }
+        finally { window.Close(); page.Dispose(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_source_navigation_joins_original_and_revoking_between_reads_forbids_navigation()
+    {
+        using var bus = new HavenEventBus();
+        var chatId = Guid.NewGuid().ToString("D");
+        var repo = new ControlledRepository(() => Snapshot(null, Chat(chatId)));
+        using var page = CreatePage(bus, repo);
+        var navigated = 0;
+        page.BriefingNavigator = _ => { navigated++; return true; };
+
+        var window = new Window { Content = page, Width = 1000, Height = 800 };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(TestContext.Current.CancellationToken);
+            window.UpdateLayout();
+
+            var valid = new DashboardBriefingTarget("chat", chatId, "chat");
+
+            // Hold the next current-source read (the navigation's revalidation read).
+            using var hold = new TaskCompletionSource<DashboardSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+            repo.HoldRead = hold;
+            var navigation = page.TryNavigateBriefingAsync(valid);
+            Assert.False(navigation.IsCompleted);
+
+            // Revoke/delete the row before the held read resolves.
+            hold.SetResult(Snapshot(null, null));
+            Assert.False(await navigation);
+            Assert.Equal(0, navigated);
+            Assert.False(string.IsNullOrEmpty(page.LastBriefingRefusal));
+        }
+        finally { window.Close(); page.Dispose(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_source_navigation_waits_for_current_source_then_navigates_exactly_once()
+    {
+        using var bus = new HavenEventBus();
+        var chatId = Guid.NewGuid().ToString("D");
+        var repo = new ControlledRepository(() => Snapshot(null, Chat(chatId)));
+        using var page = CreatePage(bus, repo);
+        var navigated = 0;
+        page.BriefingNavigator = _ => { navigated++; return true; };
+
+        var window = new Window { Content = page, Width = 1000, Height = 800 };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(TestContext.Current.CancellationToken);
+            window.UpdateLayout();
+
+            var valid = new DashboardBriefingTarget("chat", chatId, "chat");
+            using var hold = new TaskCompletionSource<DashboardSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+            repo.HoldRead = hold;
+            var navigation = page.TryNavigateBriefingAsync(valid);
+            Assert.False(navigation.IsCompleted);
+
+            hold.SetResult(Snapshot(null, Chat(chatId)));
+            Assert.True(await navigation);
+            Assert.Equal(1, navigated);
+            Assert.Equal(string.Empty, page.LastBriefingRefusal);
+        }
+        finally { window.Close(); page.Dispose(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Inactive_page_refuses_without_any_source_read()
+    {
+        using var bus = new HavenEventBus();
+        var chatId = Guid.NewGuid().ToString("D");
+        var repo = new ControlledRepository(() => Snapshot(null, Chat(chatId)));
+        using var page = CreatePage(bus, repo);
+        var navigated = 0;
+        page.BriefingNavigator = _ => { navigated++; return true; };
+
+        // Never activated: the page is inactive, so no source read and no navigation.
+        var valid = new DashboardBriefingTarget("chat", chatId, "chat");
+        Assert.False(await page.TryNavigateBriefingAsync(valid));
+        Assert.Equal(0, navigated);
+        Assert.Equal(0, repo.Reads);
+        Assert.False(string.IsNullOrEmpty(page.LastBriefingRefusal));
+    }
+
+    [AvaloniaFact]
+    public async Task Close_joins_a_held_briefing_navigation_before_detaching()
+    {
+        using var bus = new HavenEventBus();
+        var chatId = Guid.NewGuid().ToString("D");
+        var repo = new ControlledRepository(() => Snapshot(null, Chat(chatId)));
+        using var page = CreatePage(bus, repo);
+        var navigated = 0;
+        page.BriefingNavigator = _ => { navigated++; return true; };
+
+        var window = new Window { Content = page, Width = 1000, Height = 800 };
+        window.Show();
+        try
+        {
+            await page.ActivateAsync(TestContext.Current.CancellationToken);
+            var valid = new DashboardBriefingTarget("chat", chatId, "chat");
+            using var hold = new TaskCompletionSource<DashboardSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+            repo.HoldRead = hold;
+            var navigation = page.TryNavigateBriefingAsync(valid);
+
+            var close = page.CloseAndDrainAsync();
+            Assert.False(close.IsCompleted); // close must await the held navigation original
+            hold.SetResult(Snapshot(null, null)); // revoke: navigation refuses, then close drains
+            _ = await Record.ExceptionAsync(() => navigation);
+            _ = await Record.ExceptionAsync(() => close);
+            Assert.True(close.IsCompleted);
+            Assert.Equal(0, navigated);
         }
         finally { window.Close(); page.Dispose(); }
     }
@@ -156,16 +293,19 @@ public sealed class HomeDashboardBriefingCuiTests
     {
         using var bus = new HavenEventBus();
         var chatId = Guid.NewGuid().ToString("D");
-        var source = new BlockingBriefingRepository(chatId, Guid.NewGuid().ToString("D"));
-        using var page = CreatePage(bus, source);
+        var taskId = Guid.NewGuid().ToString("D");
+        var repo = new ControlledRepository(() => Snapshot(TaskAt(taskId), Chat(chatId)));
+        using var page = CreatePage(bus, repo);
         var window = new Window { Content = page, Width = 1000, Height = 800 };
         window.Show();
         try
         {
-            var activation = page.ActivateAsync(CancellationToken.None);
-            Assert.Equal(1, source.Reads);
+            using var hold = new TaskCompletionSource<DashboardSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+            repo.HoldRead = hold;
+            var activation = page.ActivateAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(1, repo.Reads);
             page.Deactivate();
-            source.FirstRead.SetResult(source.LateSnapshot());
+            hold.SetResult(Snapshot(TaskAt(taskId), Chat(chatId)));
             _ = await Record.ExceptionAsync(() => activation);
             window.UpdateLayout();
 
@@ -184,34 +324,42 @@ public sealed class HomeDashboardBriefingCuiTests
     public async Task Dashboard_renders_real_briefing_rows_and_truthful_empty_state(int width, int height)
     {
         using var bus = new HavenEventBus();
-        using var populated = CreatePage(bus, new BriefingRepository(Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D")));
-        using var populatedWindow = new Window { Content = populated, Width = width, Height = height };
-        populatedWindow.Show();
-        await populated.ActivateAsync(CancellationToken.None);
-        populatedWindow.Measure(new Size(width, height));
-        populatedWindow.Arrange(new Rect(0, 0, width, height));
-        populatedWindow.UpdateLayout();
+        using var populated = CreatePage(bus, new ControlledRepository(() =>
+            Snapshot(TaskAt(Guid.NewGuid().ToString("D")), Chat(Guid.NewGuid().ToString("D")))));
+        var populatedWindow = new Window { Content = populated, Width = width, Height = height };
+        try
+        {
+            populatedWindow.Show();
+            await populated.ActivateAsync(TestContext.Current.CancellationToken);
+            populatedWindow.Measure(new Size(width, height));
+            populatedWindow.Arrange(new Rect(0, 0, width, height));
+            populatedWindow.UpdateLayout();
 
-        Assert.Contains(populated.GetVisualDescendants().OfType<TextBlock>(), item =>
-            item.Text == "Ship report" || item.Text == "Design review");
-        Assert.Contains(populated.GetVisualDescendants().OfType<TextBlock>(), item =>
-            item.Text?.Contains("Planner task", StringComparison.Ordinal) == true);
-        Assert.DoesNotContain(populated.GetVisualDescendants().OfType<TextBlock>(), item =>
-            item.Name == "dashboard-agenda-empty");
+            Assert.Contains(populated.GetVisualDescendants().OfType<TextBlock>(), item =>
+                item.Text == "Ship report" || item.Text == "Design review");
+            Assert.Contains(populated.GetVisualDescendants().OfType<TextBlock>(), item =>
+                item.Text?.Contains("Planner task", StringComparison.Ordinal) == true);
+            Assert.DoesNotContain(populated.GetVisualDescendants().OfType<TextBlock>(), item =>
+                item.Name == "dashboard-agenda-empty");
+            Assert.DoesNotContain(populated.GetVisualDescendants().OfType<TextBlock>(), item =>
+                item.Name == "dashboard-briefing-refusal" && item.Text?.Length > 0);
+        }
+        finally { populatedWindow.Close(); }
 
-        populatedWindow.Close();
+        using var empty = CreatePage(bus, new ControlledRepository(() => Snapshot(null, null)));
+        var emptyWindow = new Window { Content = empty, Width = width, Height = height };
+        try
+        {
+            emptyWindow.Show();
+            await empty.ActivateAsync(TestContext.Current.CancellationToken);
+            emptyWindow.UpdateLayout();
 
-        using var empty = CreatePage(bus, new BriefingRepository(null, null));
-        using var emptyWindow = new Window { Content = empty, Width = width, Height = height };
-        emptyWindow.Show();
-        await empty.ActivateAsync(CancellationToken.None);
-        emptyWindow.UpdateLayout();
-
-        Assert.Contains(empty.GetVisualDescendants().OfType<TextBlock>(), item =>
-            item.Name == "dashboard-agenda-empty" && item.Text?.Contains("Nothing is scheduled", StringComparison.Ordinal) == true);
-        Assert.Contains(empty.GetVisualDescendants().OfType<TextBlock>(), item =>
-            item.Name == "dashboard-recent-empty");
-        emptyWindow.Close();
+            Assert.Contains(empty.GetVisualDescendants().OfType<TextBlock>(), item =>
+                item.Name == "dashboard-agenda-empty" && item.Text?.Contains("Nothing is scheduled", StringComparison.Ordinal) == true);
+            Assert.Contains(empty.GetVisualDescendants().OfType<TextBlock>(), item =>
+                item.Name == "dashboard-recent-empty");
+        }
+        finally { emptyWindow.Close(); }
     }
 
     // ---------- Helpers ----------
@@ -227,36 +375,24 @@ public sealed class HomeDashboardBriefingCuiTests
     private static DateTimeOffset Now => DateTimeOffset.UtcNow;
     private static DateTimeOffset TodayAt(int hour) => new(DateTimeOffset.UtcNow.Date.AddHours(hour), TimeSpan.Zero);
 
-    private sealed class BriefingRepository(string? chatId, string? taskId) : IDashboardRepository
-    {
-        public Task<DashboardSnapshot> GetSnapshotAsync(DateTimeOffset now, CancellationToken cancellationToken)
-        {
-            var agenda = taskId is null ? [] : new[]
-            {
-                new DashboardAgendaItem(taskId, "task", "Ship report", "Notes", TodayAt(9), false, "plan")
-            };
-            var recent = chatId is null ? [] : new[]
-            {
-                new DashboardWorkItem(chatId, "chat", "Design review", "Chat conversation", Now, "chat", "chat")
-            };
-            return Task.FromResult(new DashboardSnapshot(now, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, TimeSpan.Zero, agenda, recent));
-        }
-    }
+    private static DashboardAgendaItem TaskAt(string id) =>
+        new(id, "task", "Ship report", "Notes", TodayAt(9), false, "plan");
 
-    private sealed class BlockingBriefingRepository(string chatId, string taskId) : IDashboardRepository
+    private static DashboardWorkItem Chat(string id) =>
+        new(id, "chat", "Design review", "Chat conversation", Now, "chat", "chat");
+
+    /// <summary>Controllable real repository adapter: serves a current snapshot and can optionally
+    /// hold the next read so tests can exercise held-source revalidation and close joining.</summary>
+    private sealed class ControlledRepository(Func<DashboardSnapshot> next) : IDashboardRepository
     {
         public int Reads { get; private set; }
-        public TaskCompletionSource<DashboardSnapshot> FirstRead { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<DashboardSnapshot>? HoldRead { get; set; }
 
         public Task<DashboardSnapshot> GetSnapshotAsync(DateTimeOffset now, CancellationToken cancellationToken)
         {
             Reads++;
-            return Reads == 1 ? FirstRead.Task : Task.FromResult(LateSnapshot());
+            return HoldRead is { } hold ? hold.Task : Task.FromResult(next());
         }
-
-        public DashboardSnapshot LateSnapshot() => new(DateTimeOffset.UtcNow, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, TimeSpan.Zero,
-            new[] { new DashboardAgendaItem(taskId, "task", "Ship report", "Notes", TodayAt(9), false, "plan") },
-            new[] { new DashboardWorkItem(chatId, "chat", "Design review", "Chat conversation", Now, "chat", "chat") });
     }
 
     private sealed class TestLayout : IDashboardLayoutRepository

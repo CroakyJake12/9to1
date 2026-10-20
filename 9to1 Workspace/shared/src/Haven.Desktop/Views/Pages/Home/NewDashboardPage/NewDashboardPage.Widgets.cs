@@ -163,12 +163,11 @@ public sealed partial class NewDashboardPage
             var snapshot = await AwaitHomeSourceAsync(_widgetDashboard!.GetSnapshotAsync(DateTimeOffset.UtcNow, token));
             token.ThrowIfCancellationRequested();
             var staleSnapshot = DateTimeOffset.UtcNow - snapshot.CapturedAt > WidgetStaleAfter;
+            // The briefing sections publish the authorized current source immediately, independently of
+            // every unrelated widget provider: one held provider must not hide available Today/Recent.
+            UpdateBriefing(snapshot, staleSnapshot, null);
             var loaded = await Task.WhenAll(_widgetProviders.Select(provider => LoadWidgetAsync(provider, snapshot, staleSnapshot, token)));
             token.ThrowIfCancellationRequested();
-
-            // The briefing sections are projected from the same bounded snapshot already read above.
-            _briefingLastSnapshot = snapshot;
-            UpdateBriefing(snapshot, staleSnapshot, null);
 
             _widgetViews = AppendCustomWidgetViews(loaded.Select(item => item.View));
             foreach (var item in loaded)
@@ -187,9 +186,10 @@ public sealed partial class NewDashboardPage
         catch (Exception ex)
         {
             if (token.IsCancellationRequested || _disposed || !_dashboardActive) return;
-            // A retained snapshot is surfaced only as stale and non-openable; with no prior data we
-            // show a truthful error state with no rows. Old data is never presented as current.
-            UpdateBriefing(_briefingLastSnapshot, stale: true, ex.Message);
+            // A source failure is treated as an authority/availability boundary: sensitive row content
+            // is purged immediately and no old data is retained or shown as current. The authored CUI
+            // surfaces a distinct revoked/error explanation with retry.
+            RevokeBriefing("Dashboard data is unavailable. This area was cleared and cannot be shown until refreshed.");
             _widgetViews = AppendCustomWidgetViews(_widgetProviders.Select(provider =>
             {
                 if (_widgetCache.TryGetValue(provider.Definition.Key, out var cached))

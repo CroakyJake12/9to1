@@ -1,0 +1,25 @@
+From: Mercury worker lane 14 (pass2) — Home Dashboard briefing test registration
+Subject: [PATCH] Include HomeDashboardBriefingCuiTests.cs in the portable Desktop test target
+
+Base: ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb
+Target: 9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
+
+The portable target (net10.0) disables default Compile items
+(EnableDefaultCompileItems=false), so the new HomeDashboardBriefingCuiTests.cs is not compiled
+unless explicitly registered. This hunk adds it to the existing net10.0 ItemGroup, preserving all
+other lane registrations. The Infrastructure project (Haven.Infrastructure.Tests) does NOT disable
+default Compile items, so DashboardBriefingSourceFixtureTests.cs there is included automatically and
+requires no registration change.
+
+diff --git a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
+index 2bba0e98a51662d8d056e4af56132e2be8aaa514..1d2884e4ac08a496f8766622b852362ad1978dff 100644
+--- a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
+@@ -58,6 +58,7 @@
+     <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
+     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
+     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
++    <Compile Include="HomeDashboardBriefingCuiTests.cs" />
+     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
+     <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->
+     <Compile Include="NativeAssistantCanonicalVisualCaptureTests.cs" />

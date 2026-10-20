@@ -34,7 +34,7 @@ public sealed class DashboardBriefingSourceFixtureTests : IDisposable
 
         await planner.EnsureDefaultsAsync(CancellationToken.None);
         var taskId = Guid.NewGuid();
-        await planner.UpsertTaskAsync(TaskAt("Due today", day.AddHours(17), now), CancellationToken.None);
+        await planner.UpsertTaskAsync(TaskAt(taskId, "Due today", day.AddHours(17), now), CancellationToken.None);
         var eventId = Guid.NewGuid();
         await planner.UpsertEventAsync(new PlannerEvent(
             eventId, PlannerDefaults.LocalCalendarId, "Seminar", "", "Room 2", day.AddHours(13), day.AddHours(14),
@@ -69,8 +69,8 @@ public sealed class DashboardBriefingSourceFixtureTests : IDisposable
         Assert.Empty(snapshot.Agenda.Where(item => item.Id == "not-a-canonical-id"));
     }
 
-    private static PlannerTask TaskAt(string title, DateTimeOffset dueAt, DateTimeOffset now) => new(
-        Guid.NewGuid(), PlannerDefaults.PersonalCollectionId, null, title, "", PlannerPriority.Medium,
+    private static PlannerTask TaskAt(Guid id, string title, DateTimeOffset dueAt, DateTimeOffset now) => new(
+        id, PlannerDefaults.PersonalCollectionId, null, title, "", PlannerPriority.Medium,
         PlannerTaskStatus.Planned, "[]", 30, null, dueAt, null, null, null, 0, now, now, "Europe/London");
 
     public void Dispose() => _paths.Dispose();
