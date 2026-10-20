@@ -10,14 +10,22 @@ public sealed record GraphActivationRequest(string GraphType, Guid GraphId, long
 public sealed record GraphRuntimeAdmission(GraphDocument Graph, GraphCapabilityProfile Capabilities);
 public sealed record GraphRuntimeTransition(Guid NodeId, string State, JsonElement Values);
 
-/// <summary>Explicit typed workflow outcomes. Legacy adapters leave Outcome unspecified; EffectiveOutcome infers.
-/// These four states are distinct: completed, yielded (resumable), blocked (waiting on an external condition without
-/// a claim to resume), and uncertain (needs recovery). No value is an authorization grant.</summary>
+/// <summary>Explicit typed workflow outcomes. These four states are distinct: completed, yielded (resumable),
+/// blocked (waiting on an external condition without a claim to resume), and uncertain (needs recovery). No value
+/// is an authorization grant. Legacy adapters leave Outcome unspecified; EffectiveOutcome then reflects only the
+/// explicit NeedsRecovery flag — a definite legacy refusal/failure stays definite, not uncertain.</summary>
 public enum GraphRunOutcome { Completed, Yielded, Blocked, Uncertain }
 
 /// <summary>Continuation kind carried by an owning engine. Approval is distinct from Home permission and is never
-/// auto-advanced by time alone; the owning integration supplies explicit typed approval/rejection/timeout/cancel.</summary>
+/// auto-advanced by time alone; the owning integration supplies explicit typed decision/rejection/timeout/cancel.
+/// Serializable kinds (WorkflowDecision) are reserved for lane6/Home integration and are fail-closed here.</summary>
 public enum GraphContinuationKind { Wait, Approval, Custom }
+
+/// <summary>Workflow approval/Human-review decision semantics, distinct from Home permission and from generic run
+/// outcomes. These four owner-supplied decisions are explicit and typed; the generic layer never infers an approval
+/// from time, a public bool/string/JSON decision, or a run outcome. Actual human UI and decision persistence belong to
+/// lane6/Home integration; while that integration is absent the framework remains fail-closed pending.</summary>
+public enum GraphApprovalDecision { Approved, Rejected, TimedOut, Cancelled }
 
 /// <summary>Owner-captured continuation payload attached to a yielded/blocked result. This is descriptive state only —
 /// never permission, a Home lease, an approved workflow decision, or a current actor receipt. The registry merges it
@@ -28,15 +36,15 @@ public sealed record GraphContinuationCapture(string OwnerRunId, GraphContinuati
 public sealed record GraphActivationResult(bool Succeeded, string Code, IReadOnlyList<GraphRuntimeTransition> Transitions,
     int StepsConsumed, bool NeedsRecovery = false)
 {
-    /// <summary>Explicit workflow outcome. Null is unspecified (legacy adapters); EffectiveOutcome infers</summary>
+    /// <summary>Explicit workflow outcome. Null is unspecified (legacy adapters); EffectiveOutcome reflects only
+    /// NeedsRecovery, so an ordinary definite refusal/failure remains definite rather than becoming uncertain.</summary>
     public GraphRunOutcome? Outcome { get; init; }
     /// <summary>Owner-captured continuation data for yielded/blocked results (additive, opt-in).</summary>
     public GraphContinuationCapture? Continuation { get; init; }
     /// <summary>Detached, strictly versioned continuation envelope produced by the registry for yielded/blocked results.
     /// Ready only for durable storage; it is descriptive state, never execution authority.</summary>
     public GraphRuntimeContinuation? Envelope { get; init; }
-    public GraphRunOutcome EffectiveOutcome => Outcome ?? (NeedsRecovery || !Succeeded
-        ? GraphRunOutcome.Uncertain : GraphRunOutcome.Completed);
+    public GraphRunOutcome EffectiveOutcome => Outcome ?? (NeedsRecovery ? GraphRunOutcome.Uncertain : GraphRunOutcome.Completed);
 }
 
 /// <summary>Owners authenticate session/participant/entity, read the canonical graph and narrow the profile in AdmitAsync.
@@ -51,13 +59,25 @@ public interface INodeGraphRuntimeAdapter
         GraphExecutionBudget budget, CancellationToken cancellationToken);
 }
 
-/// <summary>Opt-in continuation capability. Old adapters that implement only INodeGraphRuntimeAdapter keep the original
-/// activation path; resume against them fails clearly before any effect. The registry re-admits and re-validates the
-/// pinned graph/revision/schema/profile binding on every resume before invoking this callback.</summary>
+/// <summary>Continuation-capable adapter (opt-in). Old adapters that implement only INodeGraphRuntimeAdapter keep the
+/// original activation path; resume against them fails clearly before any effect. The registry re-admits and
+/// re-validates the pinned graph/revision/schema/profile binding on every resume before invoking this callback.</summary>
 public interface INodeGraphContinuationAdapter : INodeGraphRuntimeAdapter
 {
     ValueTask<GraphActivationResult> ResumeAsync(GraphRuntimeContinuation continuation, GraphActivationRequest request,
         GraphRuntimeAdmission admission, GraphExecutionBudget budget, CancellationToken cancellationToken);
+}
+
+/// <summary>Owner-backed continuation admission (opt-in, required for resume). The registered owning adapter must
+/// reload/claim/validate the exact persisted Run/descriptor and the current caller before any resumed effects, and
+/// return/refuse a detached authoritative continuation binding. Returning null denies/revokes (fail closed). The
+/// registry consumes ONLY this validated binding and compares every relevant envelope/request/state/budget field,
+/// refusing discrepancies before the resume callback. A deserialized envelope, checksum/MAC string or public
+/// DTO/bool is never authority; SQL and approval issuance are lane6/Home integration.</summary>
+public interface INodeGraphOwnerBackedContinuationAdapter : INodeGraphContinuationAdapter
+{
+    ValueTask<GraphContinuationAdmission?> AdmitResumeAsync(GraphRuntimeContinuation continuation,
+        GraphActivationRequest request, CancellationToken cancellationToken);
 }
 
 public sealed class GraphExecutionBudget
@@ -104,12 +124,9 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
         if (reject is not null) return Reject(reject);
         var budget = new GraphExecutionBudget(request.StepLimit);
         var result = await adapter.ExecuteAsync(request, normalized!, budget, cancellationToken).ConfigureAwait(false);
-        return FinalizeResult(result, request, normalized!, budget);
+        return FinalizeResult(result, request, normalized!, budget, baselineConsumed: 0);
     }
 
-    /// <summary>Resume a persisted continuation at the SAME registry boundary. The caller supplies a fresh authenticated
-    /// context; the registry re-admits and re-validates the exact pinned graph/revision/schema/profile before dispatching.
-    /// A serialized envelope is descriptive state, never permission, a lease, an approved decision or an actor receipt.</summary>
     public async ValueTask<GraphActivationResult> ResumeAsync(GraphRuntimeContinuation continuation,
         GraphActivationRequest request, CancellationToken cancellationToken = default)
     {
@@ -127,6 +144,7 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             continuation.OwnerState.ValueKind is not (JsonValueKind.Object or JsonValueKind.Null or JsonValueKind.Undefined))
             return Reject("graph.resume.state.malformed");
         if (!IsBasicRequestValid(request)) return Reject("graph.resume.request.invalid");
+        if (IsEnvelopeOversized(continuation)) return Reject("graph.resume.envelope.oversized");
         if (!string.Equals(request.GraphType, continuation.GraphType, StringComparison.Ordinal) ||
             request.GraphId != continuation.GraphId || request.ExpectedRevision != continuation.Revision ||
             request.StartNodeId != continuation.StartNodeId ||
@@ -138,7 +156,7 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
         request = request with { Variables = request.Variables.Clone() };
         var adapter = FindAdapter(request.GraphType);
         if (adapter is null) return Reject("graph.runtime.unavailable-or-ambiguous");
-        if (adapter is not INodeGraphContinuationAdapter continuationAdapter) return Reject("graph.resume.unsupported");
+        if (adapter is not INodeGraphOwnerBackedContinuationAdapter ownerAdapter) return Reject("graph.resume.unsupported");
         if (!adapter.SupportedEvents.Contains(request.EventType)) return Reject("graph.event.unsupported");
         var admitted = await adapter.AdmitAsync(request, cancellationToken).ConfigureAwait(false);
         var reject = ValidateAdmission(schemas, admitted, request, out var normalized);
@@ -148,19 +166,35 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             normalized.Graph.GraphId != continuation.GraphId || normalized.Graph.Revision != continuation.Revision)
             return Reject("graph.resume.descriptor-mismatch");
         if (!normalized.Graph.Nodes.Any(node => node.NodeId == continuation.NodeId)) return Reject("graph.resume.node.missing");
-        var digest = GraphContinuationDigest.Compute(normalized.Graph, request.Variables);
+
+        // Owner-backed admission: THE authority. Reload/claim/validate persisted Run + current caller.
+        var binding = await ownerAdapter.AdmitResumeAsync(continuation, request, cancellationToken).ConfigureAwait(false);
+        if (binding is null) return Reject("graph.resume.denied");
+        var bindingError = ValidateBinding(binding, continuation, normalized.Graph);
+        if (bindingError is not null) return Reject(bindingError);
+
+        var digest = GraphContinuationDigest.Compute(normalized.Graph, request.Variables, binding);
         if (!FixedTimeEquals(digest, continuation.Digest)) return Reject("graph.resume.digest-mismatch");
-        var budget = new GraphExecutionBudget(continuation.StepLimit, continuation.StepsConsumed);
-        var result = await continuationAdapter.ResumeAsync(continuation, request, normalized, budget, cancellationToken).ConfigureAwait(false);
-        return FinalizeResult(result, request, normalized, budget);
+
+        // Exhaustion handling BEFORE any effect: a saved budget with no remaining steps cannot execute another action,
+        // even if an adapter would ignore TryConsume.
+        var remaining = binding.AuthorizedStepLimit - binding.StepsConsumedBeforeResume;
+        if (remaining <= 0)
+            return new GraphActivationResult(false, "graph.budget.exhausted", [], binding.StepsConsumedBeforeResume)
+            { Outcome = GraphRunOutcome.Blocked, Envelope = continuation };
+
+        var budget = new GraphExecutionBudget(binding.AuthorizedStepLimit, binding.StepsConsumedBeforeResume);
+        var result = await ownerAdapter.ResumeAsync(continuation, request, normalized, budget, cancellationToken).ConfigureAwait(false);
+        return FinalizeResult(result, request, normalized, budget, baselineConsumed: binding.StepsConsumedBeforeResume);
     }
 
     private GraphActivationResult FinalizeResult(GraphActivationResult? result, GraphActivationRequest request,
-        GraphRuntimeAdmission admission, GraphExecutionBudget budget)
+        GraphRuntimeAdmission admission, GraphExecutionBudget budget, int baselineConsumed)
     {
         // Invalid acknowledgement may follow owner side effects. Preserve uncertainty instead of claiming no execution.
+        // Transitions must be funded by steps actually consumed during THIS segment (delta), never by historical steps.
         if (result is null || result.Transitions is null || result.Transitions.Count > budget.Limit ||
-            result.StepsConsumed != budget.StepsConsumed || result.Transitions.Count > budget.StepsConsumed ||
+            result.StepsConsumed != budget.StepsConsumed || result.Transitions.Count > budget.StepsConsumed - baselineConsumed ||
             result.Transitions.Any(transition => transition is null || transition.Values.ValueKind == JsonValueKind.Undefined ||
                 !admission.Graph.Nodes.Any(node => node.NodeId == transition.NodeId)))
             return new(false, "graph.result.needs-recovery", [], budget.StepsConsumed, true);
@@ -171,7 +205,7 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             Transitions = Array.AsReadOnly(result.Transitions.Select(transition => transition with
                 { Values = transition.Values.Clone() }).ToArray()),
             Outcome = result.Outcome,
-            NeedsRecovery = result.EffectiveOutcome == GraphRunOutcome.Uncertain || result.NeedsRecovery,
+            NeedsRecovery = result.NeedsRecovery,
             Envelope = envelope
         };
     }
@@ -190,7 +224,9 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             capture.OwnerState.ValueKind is not (JsonValueKind.Object or JsonValueKind.Null or JsonValueKind.Undefined) ||
             !admission.Graph.Nodes.Any(node => node.NodeId == capture.NodeId))
             return new(false, "graph.result.continuation.invalid", [], budget.StepsConsumed, true);
-        var digest = GraphContinuationDigest.Compute(admission.Graph, request.Variables);
+        var binding = new GraphContinuationAdmission(
+            capture.OwnerRunId, capture.Kind, capture.NodeId, capture.ResumeAt,
+            capture.Condition, capture.OwnerState, budget.Limit, budget.StepsConsumed);
         envelope = new GraphRuntimeContinuation(
             GraphRuntimeContinuation.CurrentProtocolVersion,
             request.GraphType,
@@ -211,8 +247,46 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             capture.OwnerState.Clone(),
             budget.StepsConsumed,
             budget.Limit,
-            digest);
+            GraphContinuationDigest.Compute(admission.Graph, request.Variables, binding));
         return null;
+    }
+
+    private static string? ValidateBinding(GraphContinuationAdmission binding, GraphRuntimeContinuation continuation, GraphDocument graph)
+    {
+        // Budget authority is validated for its own validity before equality: an oversized authoritative limit is
+        // tampered regardless of what the envelope claims.
+        if (binding.AuthorizedStepLimit is < 1 or > 10000 ||
+            binding.StepsConsumedBeforeResume is < 0 || binding.StepsConsumedBeforeResume > binding.AuthorizedStepLimit)
+            return "graph.resume.budget.tampered";
+        if (!string.Equals(binding.OwnerRunId, continuation.OwnerRunId, StringComparison.Ordinal)) return "graph.resume.admission-mismatch";
+        if (binding.Kind != continuation.Kind || binding.NodeId != continuation.NodeId) return "graph.resume.admission-mismatch";
+        if (binding.ResumeAt != continuation.ResumeAt) return "graph.resume.admission-mismatch";
+        if (!ElementEquals(binding.Condition, continuation.Condition)) return "graph.resume.admission-mismatch";
+        if (!ElementEquals(binding.OwnerState, continuation.OwnerState)) return "graph.resume.admission-mismatch";
+        if (binding.AuthorizedStepLimit != continuation.StepLimit || binding.StepsConsumedBeforeResume != continuation.StepsConsumed)
+            return "graph.resume.admission-mismatch";
+        if (binding.NodeId == Guid.Empty || !graph.Nodes.Any(node => node.NodeId == binding.NodeId)) return "graph.resume.node.missing";
+        return null;
+    }
+
+    private static bool ElementEquals(JsonElement left, JsonElement right)
+    {
+        if (left.ValueKind == JsonValueKind.Undefined && right.ValueKind == JsonValueKind.Undefined) return true;
+        if (left.ValueKind == JsonValueKind.Undefined || right.ValueKind == JsonValueKind.Undefined) return false;
+        return JsonElement.DeepEquals(left, right);
+    }
+
+    private static bool IsEnvelopeOversized(GraphRuntimeContinuation continuation)
+    {
+        try
+        {
+            var encoded = new GraphRuntimeContinuationCodec().Serialize(continuation);
+            return Encoding.UTF8.GetByteCount(encoded) > GraphRuntimeContinuationCodec.MaximumSerializedBytes;
+        }
+        catch (Exception)
+        {
+            return true; // malformed/unsafe direct input fails closed
+        }
     }
 
     private INodeGraphRuntimeAdapter? FindAdapter(string graphType)

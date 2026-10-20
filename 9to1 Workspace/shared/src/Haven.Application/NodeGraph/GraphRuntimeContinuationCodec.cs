@@ -6,11 +6,12 @@ namespace Haven.Application.NodeGraph;
 
 /// <summary>Strictly versioned, bounded codec for the detached continuation envelope. It preserves the distinction
 /// between false, present null, absent, and redacted/unavailable/error representations rather than coercing them.
-/// Corruption, unknown versions and oversized payloads fail closed with structured errors. The envelope remains
-/// descriptive state — deserializing it never grants permission or authorizes execution.</summary>
+/// Corruption, duplicate/unknown fields, unknown enums, invalid dates, malformed typed state and oversized payloads
+/// fail closed with structured errors. The envelope remains descriptive state — deserializing it never grants
+/// permission or authorizes execution.</summary>
 public sealed class GraphRuntimeContinuationCodec
 {
-    /// <summary>Bounded envelope size (1 MiB). Oversized continuations are rejected before any adapter effect.</summary>
+    /// <summary>Bounded envelope size (1 MiB). Payloads strictly larger than this are rejected before any adapter effect.</summary>
     public const int MaximumSerializedBytes = 1 << 20;
 
     public string Serialize(GraphRuntimeContinuation continuation)
@@ -53,30 +54,33 @@ public sealed class GraphRuntimeContinuationCodec
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
         if (root.ValueKind != JsonValueKind.Object) throw new JsonException("Continuation envelope must be a JSON object.");
-        var protocolVersion = ReadInt(root, "protocolVersion");
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        if (root.EnumerateObject().Any(property => !seen.Add(property.Name)))
+            throw new JsonException("Continuation envelope contains duplicate fields.");
+        var protocolVersion = ReadInt(root, "protocolVersion", seen);
         if (protocolVersion != GraphRuntimeContinuation.CurrentProtocolVersion)
             throw new JsonException($"Unsupported continuation protocol version {protocolVersion}.");
         return new GraphRuntimeContinuation(
             protocolVersion,
-            ReadString(root, "graphType"),
-            ReadString(root, "ownerRunId"),
-            ReadGuid(root, "graphId"),
-            ReadLong(root, "revision"),
-            ReadString(root, "capabilityProfileId"),
-            ReadInt(root, "schemaVersion"),
-            ReadGuid(root, "startNodeId"),
-            ReadString(root, "eventType"),
-            ReadString(root, "sessionId"),
-            ReadString(root, "entityId"),
-            ReadString(root, "participantId"),
-            ReadEnum<GraphContinuationKind>(root, "kind"),
-            ReadGuid(root, "nodeId"),
-            ReadDateTime(root, "resumeAt"),
-            ReadElement(root, "condition"),
-            ReadElement(root, "ownerState"),
-            ReadInt(root, "stepsConsumed"),
-            ReadInt(root, "stepLimit"),
-            ReadString(root, "digest"));
+            ReadString(root, "graphType", seen),
+            ReadString(root, "ownerRunId", seen),
+            ReadGuid(root, "graphId", seen),
+            ReadLong(root, "revision", seen),
+            ReadString(root, "capabilityProfileId", seen),
+            ReadInt(root, "schemaVersion", seen),
+            ReadGuid(root, "startNodeId", seen),
+            ReadString(root, "eventType", seen),
+            ReadString(root, "sessionId", seen),
+            ReadString(root, "entityId", seen),
+            ReadString(root, "participantId", seen),
+            ReadEnum<GraphContinuationKind>(root, "kind", seen),
+            ReadGuid(root, "nodeId", seen),
+            ReadDateTime(root, "resumeAt", seen),
+            ReadStateElement(root, "condition", seen),
+            ReadStateElement(root, "ownerState", seen),
+            ReadInt(root, "stepsConsumed", seen),
+            ReadInt(root, "stepLimit", seen),
+            ReadString(root, "digest", seen));
     }
 
     public bool TryDeserialize(string json, out GraphRuntimeContinuation? continuation, out string? error)
@@ -102,31 +106,36 @@ public sealed class GraphRuntimeContinuationCodec
         element.WriteTo(writer);
     }
 
-    private static string ReadString(JsonElement root, string name) =>
+    private static string ReadString(JsonElement root, string name, HashSet<string> seen) =>
         root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.String ? element.GetString()!
             : throw new JsonException($"Continuation envelope is missing or invalid '{name}'.");
 
-    private static int ReadInt(JsonElement root, string name) =>
+    private static int ReadInt(JsonElement root, string name, HashSet<string> seen) =>
         root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var value)
             ? value : throw new JsonException($"Continuation envelope is missing or invalid '{name}'.");
 
-    private static long ReadLong(JsonElement root, string name) =>
+    private static long ReadLong(JsonElement root, string name, HashSet<string> seen) =>
         root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.Number && element.TryGetInt64(out var value)
             ? value : throw new JsonException($"Continuation envelope is missing or invalid '{name}'.");
 
-    private static Guid ReadGuid(JsonElement root, string name) =>
-        Guid.TryParse(ReadString(root, name), out var guid) ? guid
+    private static Guid ReadGuid(JsonElement root, string name, HashSet<string> seen) =>
+        Guid.TryParse(ReadString(root, name, seen), out var guid) ? guid
             : throw new JsonException($"Continuation envelope has an invalid '{name}'.");
 
-    private static DateTimeOffset? ReadDateTime(JsonElement root, string name) =>
+    private static DateTimeOffset? ReadDateTime(JsonElement root, string name, HashSet<string> seen) =>
         root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.String
             ? DateTimeOffset.Parse(element.GetString()!, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
             : null;
 
-    private static TEnum ReadEnum<TEnum>(JsonElement root, string name) where TEnum : struct, Enum =>
-        Enum.TryParse<TEnum>(ReadString(root, name), ignoreCase: false, out var value) ? value
-            : throw new JsonException($"Continuation envelope has an unsupported '{name}'.");
+    private static JsonElement ReadStateElement(JsonElement root, string name, HashSet<string> seen)
+    {
+        if (!root.TryGetProperty(name, out var element)) return default;
+        if (element.ValueKind is not (JsonValueKind.Object or JsonValueKind.Null))
+            throw new JsonException($"Continuation envelope '{name}' must be an object, null, or absent.");
+        return element.Clone();
+    }
 
-    private static JsonElement ReadElement(JsonElement root, string name) =>
-        root.TryGetProperty(name, out var element) ? element.Clone() : default;
+    private static TEnum ReadEnum<TEnum>(JsonElement root, string name, HashSet<string> seen) where TEnum : struct, Enum =>
+        Enum.TryParse<TEnum>(ReadString(root, name, seen), ignoreCase: false, out var value) ? value
+            : throw new JsonException($"Continuation envelope has an unsupported '{name}'.");
 }

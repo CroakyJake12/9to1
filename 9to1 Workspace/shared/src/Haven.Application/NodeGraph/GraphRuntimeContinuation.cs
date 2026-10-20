@@ -36,48 +36,99 @@ public sealed record GraphRuntimeContinuation(
     public const int CurrentProtocolVersion = 1;
 }
 
-/// <summary>Deterministic SHA-256 digest over the canonical graph/revision/profile/schema snapshot and the pinned
-/// variables. Used to detect stale/tampered envelopes before any resumed callback reaches an owning adapter. It is
-/// not a permission or an authority grant — it only authenticates that the resumed binding matches the admitted state.</summary>
+/// <summary>Authoritative, owner-backed continuation binding. This is the ONLY descriptor the registry consumes for
+/// resume: the registered owning adapter must reload/claim/validate the persisted Run and the current caller before
+/// any resumed effects, then return/refuse this detached binding. A deserialized envelope, a public checksum/MAC
+/// string, or a public DTO/bool is never authority. SQL and actual approval issuance are lane6/Home integration;
+/// this contract lets those owners supply real checks without a private competing runtime.</summary>
+public sealed record GraphContinuationAdmission(
+    string OwnerRunId,
+    GraphContinuationKind Kind,
+    Guid NodeId,
+    DateTimeOffset? ResumeAt,
+    JsonElement Condition,
+    JsonElement OwnerState,
+    int AuthorizedStepLimit,
+    int StepsConsumedBeforeResume);
+
+/// <summary>Deterministic SHA-256 over a CANONICAL JSON encoding of the full resumed binding: graph/revision/profile/
+/// schema snapshot, pinned variables, and every continuation field (owner run, kind, node, resume-at, condition,
+/// owner state, consumed/limit). JSON with fixed, distinct keys gives an unambiguous tuple encoding (no delimiter
+/// concatenation of user-owned strings). Digest comparison is integrity evidence only, never permission.</summary>
 public static class GraphContinuationDigest
 {
-    public static string Compute(GraphDocument graph, JsonElement variables)
+    public static string Compute(GraphDocument graph, JsonElement variables, GraphContinuationAdmission binding)
     {
         ArgumentNullException.ThrowIfNull(graph);
-        var sb = new StringBuilder();
-        sb.Append(graph.SchemaVersion).Append('|');
-        sb.Append(graph.GraphId.ToString("D")).Append('|');
-        sb.Append(graph.Revision).Append('|');
-        sb.Append(graph.CapabilityProfileId).Append('|');
-        sb.Append((int)graph.State).Append('|');
-        foreach (var node in graph.Nodes.OrderBy(node => node.NodeId))
+        ArgumentNullException.ThrowIfNull(binding);
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
         {
-            sb.Append(node.NodeId.ToString("D")).Append('|');
-            sb.Append(node.TypeId).Append('|');
-            sb.Append(node.TypeVersion).Append('|');
-            sb.Append(node.AppId).Append('|');
-            sb.Append(node.CapabilityId).Append('|');
-            sb.Append(node.EntityId).Append('|');
-            sb.Append(node.Configuration.GetRawText()).Append('|');
-            foreach (var port in node.Ports.OrderBy(port => port.PortId))
+            writer.WriteStartObject();
+            writer.WriteNumber("schemaVersion", graph.SchemaVersion);
+            writer.WriteString("graphId", graph.GraphId.ToString("D"));
+            writer.WriteNumber("revision", graph.Revision);
+            writer.WriteString("capabilityProfileId", graph.CapabilityProfileId);
+            writer.WriteNumber("state", (int)graph.State);
+            writer.WritePropertyName("nodes");
+            writer.WriteStartArray();
+            foreach (var node in graph.Nodes.OrderBy(node => node.NodeId))
             {
-                sb.Append(port.PortId.ToString("D")).Append('|');
-                sb.Append(port.Key).Append('|');
-                sb.Append((int)port.Direction).Append('|');
-                sb.Append(port.DataType).Append('|');
-                sb.Append(port.Multiple).Append('|');
+                writer.WriteStartObject();
+                writer.WriteString("nodeId", node.NodeId.ToString("D"));
+                writer.WriteString("typeId", node.TypeId);
+                writer.WriteNumber("typeVersion", node.TypeVersion);
+                writer.WriteString("appId", node.AppId);
+                writer.WriteString("capabilityId", node.CapabilityId);
+                if (node.EntityId is { } entity) writer.WriteString("entityId", entity);
+                writer.WritePropertyName("configuration");
+                node.Configuration.WriteTo(writer);
+                writer.WritePropertyName("ports");
+                writer.WriteStartArray();
+                foreach (var port in node.Ports.OrderBy(port => port.PortId))
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("portId", port.PortId.ToString("D"));
+                    writer.WriteString("key", port.Key);
+                    writer.WriteNumber("direction", (int)port.Direction);
+                    writer.WriteString("dataType", port.DataType);
+                    writer.WriteBoolean("multiple", port.Multiple);
+                    writer.WriteEndObject();
+                }
+                writer.WriteEndArray();
+                writer.WriteEndObject();
             }
-            sb.Append(';');
+            writer.WriteEndArray();
+            writer.WritePropertyName("connections");
+            writer.WriteStartArray();
+            foreach (var connection in graph.Connections.OrderBy(connection => connection.ConnectionId))
+            {
+                writer.WriteStartObject();
+                writer.WriteString("connectionId", connection.ConnectionId.ToString("D"));
+                writer.WriteString("outputPortId", connection.OutputPortId.ToString("D"));
+                writer.WriteString("inputPortId", connection.InputPortId.ToString("D"));
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WritePropertyName("variables");
+            variables.WriteTo(writer);
+            writer.WriteString("ownerRunId", binding.OwnerRunId);
+            writer.WriteString("kind", binding.Kind.ToString());
+            writer.WriteString("nodeId", binding.NodeId.ToString("D"));
+            if (binding.ResumeAt is { } at) writer.WriteString("resumeAt", at.ToString("O"));
+            WriteElement(writer, "condition", binding.Condition);
+            WriteElement(writer, "ownerState", binding.OwnerState);
+            writer.WriteNumber("stepsConsumed", binding.StepsConsumedBeforeResume);
+            writer.WriteNumber("stepLimit", binding.AuthorizedStepLimit);
+            writer.WriteEndObject();
         }
-        sb.Append('@');
-        foreach (var connection in graph.Connections.OrderBy(connection => connection.ConnectionId))
-        {
-            sb.Append(connection.ConnectionId.ToString("D")).Append('|');
-            sb.Append(connection.OutputPortId.ToString("D")).Append('|');
-            sb.Append(connection.InputPortId.ToString("D")).Append(';');
-        }
-        sb.Append('#');
-        sb.Append(variables.GetRawText());
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString()))).ToLowerInvariant();
+        return Convert.ToHexString(SHA256.HashData(stream.ToArray())).ToLowerInvariant();
+    }
+
+    private static void WriteElement(Utf8JsonWriter writer, string name, JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Undefined) return; // absent vs present null distinguished
+        writer.WritePropertyName(name);
+        element.WriteTo(writer);
     }
 }
