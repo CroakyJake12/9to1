@@ -27,5 +27,6 @@
     "Show one Format (Aa) button that opens the floating formatting toolbar. Individual formatting commands belong inside that toolbar, not persistently exposed in the composer controls row. Preserve the expanded AND focused visibility rule for the Format and emoji buttons."
   ],
   "voice_clarified_at": "2026-10-20T12:17:07.536234+00:00",
-  "format_toolbar_clarified_at": "2026-10-20T14:59:18.728906+00:00"
+  "format_toolbar_clarified_at": "2026-10-20T14:59:18.728906+00:00",
+  "later_floating_bar_clarification": "../2026-10-20-floating-format-bar/owner-correction.json; explicit on/off floating icon toolbar, not provisional dropdown menu"
 }
