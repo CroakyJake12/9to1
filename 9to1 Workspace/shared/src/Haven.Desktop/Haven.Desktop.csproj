@@ -81,6 +81,7 @@
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
+    <EmbeddedResource Include="Views/Pages/Home/HavenNotifications.cui" LogicalName="Haven.Desktop.Home.HavenNotifications.cui" />
     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />

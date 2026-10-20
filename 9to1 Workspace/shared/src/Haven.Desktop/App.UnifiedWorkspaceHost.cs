@@ -509,7 +509,17 @@ public sealed partial class App
                 KeyDown -= OnWorkspaceKeyDown;
                 try { _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null; }
                 catch (Exception error) { AddAppCause(failures, error); }
-                try { _sharedPanelLoader?.Dispose(); _sharedPanelLoader = null; }
+                // Join the mounted shared panel's retained action/disposal settlement before
+                // disposing it so failed original tasks remain observable to this close.
+                try
+                {
+                    if (_sharedPanelLoader is { } panelLoader)
+                    {
+                        await Join(panelLoader.WhenActionsIdleAsync());
+                        panelLoader.Dispose();
+                        _sharedPanelLoader = null;
+                    }
+                }
                 catch (Exception error) { AddAppCause(failures, error); }
                 // A failed CreateAsync can retain an owner whose own cleanup failed.
                 // A null returned owner is therefore not proof that producers stopped.

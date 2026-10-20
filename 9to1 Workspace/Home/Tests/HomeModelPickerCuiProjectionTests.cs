@@ -205,6 +205,40 @@ public sealed class HomeModelPickerCuiProjectionTests
         Walk(surface.Document.Components, surface);
     }
 
+    [Fact]
+    public void Canonical_named_action_parameters_resolve_to_typed_selection_records()
+    {
+        var surface = HomeModelPickerCuiSurface.LoadDefault();
+        surface.ApplyState(State([Route("chat.active",
+            new("provider", "model", null, true, 0),
+            new("other", "model", "revision", false, 1))]));
+
+        var scope = Value<HomeModelPickerScopeSelection>(surface, "RefreshSelection");
+        Assert.Equal("global", scope.Scope);
+        Assert.Equal("chat", scope.Category);
+
+        var current = Value<HomeModelPickerRouteSelection>(surface, "CurrentRouteSelection");
+        Assert.Equal("chat.active", current.RouteId);
+
+        var routeRow = surface.Projection.Routes.Single();
+        var routeSelection = Value<HomeModelPickerRouteSelection>(routeRow, "Selection");
+        Assert.Equal("chat.active", routeSelection.RouteId);
+
+        var first = routeRow.Candidates[0];
+        var move = Value<HomeModelPickerCandidateSelection>(first, "Selection");
+        Assert.Equal("provider", move.ProviderId);
+        Assert.Equal("model", move.ModelId);
+        Assert.Null(move.ArtifactRevision);
+        var enable = Value<HomeModelPickerCandidateToggleSelection>(first, "EnableSelection");
+        Assert.True(enable.Enabled);
+        var disable = Value<HomeModelPickerCandidateToggleSelection>(first, "DisableSelection");
+        Assert.False(disable.Enabled);
+
+        var second = routeRow.Candidates[1];
+        var moveSecond = Value<HomeModelPickerCandidateSelection>(second, "Selection");
+        Assert.Equal("revision", moveSecond.ArtifactRevision);
+    }
+
     private static HomeModelPickerCuiSurface Surface() =>
         new(new CuiRichParser().Parse("<Cui><Page /></Cui>"));
 

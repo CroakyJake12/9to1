@@ -1,12 +1,13 @@
 #if !ANDROID
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using Avalonia.Controls;
-using Avalonia.Media;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Application.Haven;
 using Haven.Desktop.Accounts;
@@ -44,16 +45,20 @@ public sealed partial class App
             public bool OpenProfile() => _host.OpenProfilePanel();
         }
 
+        /// <summary>Monotonic generation for the currently mounted shared panel. A panel that
+        /// opened earlier is retired the moment another panel or close replaces it; stale async
+        /// completions from a retired panel must never mutate the replacement surface.</summary>
+        private long _sharedPanelGeneration;
+
+        /// <summary>Composes the authored main scene with a thin native placement seam. All
+        /// shared-panel structure, styling, dimming, visibility and interaction are authored in
+        /// packaged .cui documents; this host never builds modal UI in C#.</summary>
         private void ComposeSharedFrame()
         {
             Dispatcher.UIThread.VerifyAccess();
             var frame = _frameGrid = new Grid();
             frame.Children.Add(_scene!);
-            _sharedOverlay = new Border
-            {
-                IsVisible = false,
-                Background = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0)),
-            };
+            _sharedOverlay = new Border { IsVisible = false };
             frame.Children.Add(_sharedOverlay);
             Content = frame;
         }
@@ -61,8 +66,14 @@ public sealed partial class App
         private void ShowSharedPanel(CuiControlLoader loader, Control root)
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (_sharedOverlay is null) return;
-            _sharedPanelLoader?.Dispose();
+            if (_sharedOverlay is null) { loader.Dispose(); return; }
+            if (_sharedPanelLoader is { } previous)
+            {
+                // Join the replaced panel's retained action/disposal settlement before
+                // discarding it so its failed originals remain observable to host close.
+                previous.Dispose();
+                Track(previous.WhenActionsIdleAsync());
+            }
             _sharedPanelLoader = loader;
             _sharedOverlay.Child = root;
             _sharedOverlay.IsVisible = true;
@@ -71,24 +82,18 @@ public sealed partial class App
         private void HideSharedPanel()
         {
             Dispatcher.UIThread.VerifyAccess();
-            _sharedPanelLoader?.Dispose(); _sharedPanelLoader = null;
+            if (_sharedPanelLoader is { } present)
+            {
+                present.Dispose();
+                Track(present.WhenActionsIdleAsync());
+                _sharedPanelLoader = null;
+            }
             if (_sharedOverlay is not null)
             {
                 _sharedOverlay.Child = null;
                 _sharedOverlay.IsVisible = false;
             }
-        }
-
-        private void ObserveSharedGate(Task actual)
-        {
-            lock (_gate) _sources.Add(actual);
-            _ = ObserveSharedGateAsync(actual);
-        }
-
-        private static async void ObserveSharedGateAsync(Task actual)
-        {
-            try { await actual; }
-            catch (Exception failure) { System.Diagnostics.Trace.TraceError("Haven shared control retained failure: {0}", failure); }
+            Interlocked.Increment(ref _sharedPanelGeneration);
         }
 
         private bool OpenProfilePanel()
@@ -100,7 +105,7 @@ public sealed partial class App
             var window = TopLevel.GetTopLevel(this) as Window ?? throw new InvalidOperationException("The Haven host window is unavailable.");
             try
             {
-                ObserveSharedGate(owner.OpenAsync(window));
+                Track(owner.OpenAsync(window));
                 return true;
             }
             catch
@@ -109,68 +114,32 @@ public sealed partial class App
             }
         }
 
-        private const string NotificationsMarkup = """
-<Cui>
-  <Actions>
-    <Action name="CloseNotifications" command="9to1.Haven.ClosePanel" />
-    <Action name="MarkRead" command="9to1.Haven.MarkRead" parameter="{Binding n.Id}" />
-    <Action name="Dismiss" command="9to1.Haven.Dismiss" parameter="{Binding n.Id}" />
-  </Actions>
-  <Theme Name="user_preference">
-    <Page AccessibleName="Haven notifications">
-      <Container Type="Vertical Stack" Padding="24" CellGap="12" Width="520" MaxHeight="600" Background="{Resource CuiBackgroundBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12">
-        <Container Type="Grid" ColumnSizes="1fr Auto">
-          <Text Text="Notifications" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
-          <Button action="CloseNotifications" Column="1" AccessibleName="Close notifications" Tooltip="Close notifications" Width="32" Height="32" Padding="4" FontSize="16" Background="Transparent" BorderWidth="0" CornerRadius="8">×</Button>
-        </Container>
-        <Container Type="Vertical Stack" CellGap="8" VerticalScrolling="True" HorizontalScrolling="False">
-          <Repeat Source="{Binding Notifications}" As="n" Key="{Binding n.Id}">
-            <Container Type="Vertical Stack" CellGap="4" Padding="12" Background="{Resource CuiPanelBrush}" CornerRadius="8" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
-              <Text Text="{Binding n.Title}" FontWeight="SemiBold" />
-              <Text Text="{Binding n.Message}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
-              <Container Type="Horizontal Stack" CellGap="8">
-                <Text Text="{Binding n.Time}" FontSize="11" Foreground="{Resource CuiTextSoftBrush}" VerticalAlignment="Center" />
-                <Button action="MarkRead" Text="Mark read" Interactive="{Binding n.Unread}" AccessibleName="Mark this notification read" />
-                <Button action="Dismiss" Text="Dismiss" AccessibleName="Dismiss this notification" />
-              </Container>
-            </Container>
-          </Repeat>
-          <If condition="{Binding Empty}">
-            <Text Text="No notifications." Foreground="{Resource CuiTextSoftBrush}" />
-          </If>
-        </Container>
-      </Container>
-    </Page>
-  </Theme>
-</Cui>
-""";
-
         private bool OpenNotificationsPanel()
         {
             Dispatcher.UIThread.VerifyAccess();
             if (_closed || _startupRetirement) return false;
             var service = _services.GetService<HavenNotificationService>();
-            if (service is null) return false;
-            var bindings = new HavenNotificationsCuiBindings(this, service);
+            var theme = _homeTheme?.Context;
+            if (service is null || theme is null) return false;
+            var generation = checked(++_sharedPanelGeneration);
+            var profile = _actor?.ProfileId;
+            var bindings = new HavenNotificationsCuiBindings(this, service, generation, profile);
             var loader = new CuiControlLoader();
-            var (root, diagnostics) = loader.LoadMarkup(NotificationsMarkup, "HavenNotifications.cui");
-            if (root is null || diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
+            // Configure binding/theme/action context before loading so the authored Repeat
+            // captures this panel's real notification source and the genuine Home theme.
+            loader.SetThemePreferenceContext(theme);
+            loader.SetBindingContext(bindings);
+            loader.SetActionDispatcher(bindings);
+            var loaded = loader.TryLoad(HavenNotificationsCuiDocument.Load());
+            if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             {
                 loader.Dispose();
                 return false;
             }
-            loader.SetBindingContext(bindings);
-            loader.SetActionDispatcher(bindings);
-            loader.WireBindings(root);
-            ObserveSharedGate(LoadNotificationsAsync(bindings));
-            ShowSharedPanel(loader, root);
+            loader.WireBindings(loaded.Root);
+            Track(bindings.LoadAsync(CancellationToken.None));
+            ShowSharedPanel(loader, loaded.Root);
             return true;
-        }
-
-        private async Task LoadNotificationsAsync(HavenNotificationsCuiBindings bindings)
-        {
-            try { await bindings.LoadAsync(CancellationToken.None); }
-            catch (Exception failure) { System.Diagnostics.Trace.TraceError("Haven notifications refresh failed: {0}", failure); }
         }
 
         /// <summary>Opens the authentic Home Universal Model Picker for the current profile
@@ -181,7 +150,10 @@ public sealed partial class App
             Dispatcher.UIThread.VerifyAccess();
             if (_closed || _startupRetirement) return false;
             var provider = _services.GetService<IHomeModelPickerFeatureProvider>();
-            if (provider is null) return false;
+            var theme = _homeTheme?.Context;
+            if (provider is null || theme is null) return false;
+            var generation = checked(++_sharedPanelGeneration);
+            var profile = _actor?.ProfileId;
             HomeModelPickerCuiController controller;
             try
             {
@@ -192,6 +164,7 @@ public sealed partial class App
                 return false;
             }
             var loader = new CuiControlLoader();
+            loader.SetThemePreferenceContext(theme);
             loader.SetBindingContext(controller.Surface);
             loader.SetActionDispatcher(new HomeModelPickerDispatcher(controller, this));
             var loaded = loader.TryLoad(controller.Surface.Document);
@@ -201,22 +174,39 @@ public sealed partial class App
                 return false;
             }
             loader.WireBindings(loaded.Root);
-            ObserveSharedGate(RefreshModelPickerAsync(controller));
+            Track(RefreshModelPickerAsync(controller, generation, profile));
             ShowSharedPanel(loader, loaded.Root);
             return true;
         }
 
-        private async Task RefreshModelPickerAsync(HomeModelPickerCuiController controller)
+        private async Task RefreshModelPickerAsync(HomeModelPickerCuiController controller, long generation, string? profile)
         {
-            try { await controller.OpenAsync("user", "chat", CancellationToken.None); }
-            catch (Exception failure) { System.Diagnostics.Trace.TraceError("Haven model picker refresh failed: {0}", failure); }
+            await controller.OpenAsync("user", "chat", CancellationToken.None).ConfigureAwait(false);
+            if (!IsPanelCurrent(generation, profile)) return;
         }
 
-        /// <summary>Routes model-picker CUI actions through the Home controller. The authored
-        /// document conveys row-specific attributes (route/provider/model/capability) as action
-        /// metadata that the standard dispatcher contract does not deliver, so only the
-        /// self-contained structural actions are genuinely executed here; the parameter-bearing
-        /// mutations are a coordinated framework dependency and are never fabricated.</summary>
+        private bool IsPanelCurrent(long generation, string? profile) =>
+            !_closed && !_startupRetirement &&
+            generation == Volatile.Read(ref _sharedPanelGeneration) &&
+            StringComparer.Ordinal.Equals(profile, _actor?.ProfileId);
+
+        /// <summary>Reads the authored Haven notifications CUI document from the packaged
+        /// compiled transport rather than an inline C# string constant.</summary>
+        private static class HavenNotificationsCuiDocument
+        {
+            public static CuiDocument Load()
+            {
+                using var stream = typeof(App).Assembly.GetManifestResourceStream("Haven.Desktop.Home.HavenNotifications.cui")
+                    ?? throw new InvalidOperationException("The authored Haven notifications CUI document is missing.");
+                using var reader = new StreamReader(stream);
+                return new CuiRichParser().Parse(reader.ReadToEnd());
+            }
+        }
+
+        /// <summary>Routes model-picker CUI actions through the Home controller using canonical
+        /// named &lt;Action parameter=...&gt; declarations. Every parameter-bearing action builds its
+        /// typed request from the bound selection object; no command is a silent no-op unless the
+        /// feature provider is genuinely unavailable.</summary>
         private sealed class HomeModelPickerDispatcher(HomeModelPickerCuiController controller, UnifiedWorkspaceHost host)
             : ICuiActionDispatcher
         {
@@ -227,30 +217,62 @@ public sealed partial class App
             {
                 return command switch
                 {
-                    "Refresh" => DispatchAsync(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.Refresh), cancellationToken).AsTask()),
-                    "SaveRoute" => DispatchAsync(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.SaveRoute), cancellationToken).AsTask()),
-                    "FinishAudit" => DispatchAsync(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.FinishAudit), cancellationToken).AsTask()),
+                    "Refresh" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                        HomeModelPickerAction.Refresh,
+                        Scope: (parameter as HomeModelPickerScopeSelection)?.Scope ?? _controller.Surface.Scope,
+                        Category: (parameter as HomeModelPickerScopeSelection)?.Category ?? _controller.Surface.Category), cancellationToken)),
+                    "SelectCategory" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                        HomeModelPickerAction.SelectCategory, Category: parameter as string), cancellationToken)),
+                    "SelectRoute" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                        HomeModelPickerAction.SelectRoute, RouteId: (parameter as HomeModelPickerRouteSelection)?.RouteId), cancellationToken)),
+                    "SetCandidateEnabled" => DispatchCandidateToggle(parameter, cancellationToken),
+                    "MoveCandidateUp" => DispatchCandidateMove(HomeModelPickerAction.MoveCandidateUp, parameter, cancellationToken),
+                    "MoveCandidateDown" => DispatchCandidateMove(HomeModelPickerAction.MoveCandidateDown, parameter, cancellationToken),
+                    "SaveRoute" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.SaveRoute), cancellationToken)),
+                    "FinishAudit" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.FinishAudit), cancellationToken)),
+                    "PreviewResolution" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                        HomeModelPickerAction.PreviewResolution, Capability: parameter as string), cancellationToken)),
                     _ => ValueTask.CompletedTask
                 };
             }
 
-            private ValueTask DispatchAsync(Func<Task> action)
+            private ValueTask DispatchCandidateToggle(object? parameter, CancellationToken token) =>
+                parameter is HomeModelPickerCandidateToggleSelection sel
+                    ? Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                        HomeModelPickerAction.SetCandidateEnabled, ProviderId: sel.ProviderId, ModelId: sel.ModelId,
+                        ArtifactRevision: sel.ArtifactRevision, Enabled: sel.Enabled), token))
+                    : ValueTask.CompletedTask;
+
+            private ValueTask DispatchCandidateMove(HomeModelPickerAction action, object? parameter, CancellationToken token) =>
+                parameter is HomeModelPickerCandidateSelection sel
+                    ? Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(action,
+                        ProviderId: sel.ProviderId, ModelId: sel.ModelId, ArtifactRevision: sel.ArtifactRevision), token))
+                    : ValueTask.CompletedTask;
+
+            private ValueTask Dispatch(Func<Task> action)
             {
                 var task = action();
-                _host.ObserveSharedGate(task);
+                _host.Track(task);
                 return new(task);
             }
         }
 
-        /// <summary>Read-only CUI projection over the durable Home notification service.</summary>
-        private sealed class HavenNotificationsCuiBindings(UnifiedWorkspaceHost host, HavenNotificationService service)
+        /// <summary>Read-only CUI projection over the durable Home notification service. It
+        /// fences every completion against the panel generation/profile it was opened for, so a
+        /// retired panel can never publish or mutate a replacement surface.</summary>
+        private sealed class HavenNotificationsCuiBindings(UnifiedWorkspaceHost host, HavenNotificationService service,
+            long generation, string? profile)
             : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
         {
             private readonly UnifiedWorkspaceHost _host = host;
             private readonly HavenNotificationService _service = service;
+            private readonly long _generation = generation;
+            private readonly string? _profile = profile;
             private HavenNotificationRow[] _rows = [];
 
             public event PropertyChangedEventHandler? PropertyChanged;
+
+            private bool IsCurrent() => _host.IsPanelCurrent(_generation, _profile);
 
             public bool TryGetValue(string path, out object? value)
             {
@@ -263,9 +285,12 @@ public sealed partial class App
                 return value is not null;
             }
 
-            public async Task LoadAsync(CancellationToken token)
+            public Task LoadAsync(CancellationToken token) => LoadCoreAsync(token);
+
+            private async Task LoadCoreAsync(CancellationToken token)
             {
                 var items = await _service.GetRecentAsync(50, includeDismissed: false, token).ConfigureAwait(false);
+                if (!IsCurrent()) return;
                 _rows = items.Where(item => !item.IsDismissed)
                     .Select(item => new HavenNotificationRow(item.Id, item.Title, item.Message,
                         item.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture), !item.IsRead))
@@ -280,15 +305,33 @@ public sealed partial class App
                     case "9to1.Haven.ClosePanel":
                         _host.HideSharedPanel();
                         return ValueTask.CompletedTask;
-                    case "9to1.Haven.MarkRead":
-                        if (TryNotificationId(parameter, out var readId)) return MarkReadAsync(readId, true, token);
-                        return ValueTask.CompletedTask;
-                    case "9to1.Haven.Dismiss":
-                        if (TryNotificationId(parameter, out var dismissId)) return DismissAsync(dismissId, token);
-                        return ValueTask.CompletedTask;
+                    case "9to1.Haven.MarkRead" when TryNotificationId(parameter, out var readId):
+                        return Retain(MarkReadCoreAsync(readId, true, token));
+                    case "9to1.Haven.Dismiss" when TryNotificationId(parameter, out var dismissId):
+                        return Retain(DismissCoreAsync(dismissId, token));
                     default:
                         return ValueTask.CompletedTask;
                 }
+            }
+
+            private ValueTask Retain(Task task)
+            {
+                _host.Track(task);
+                return new(task);
+            }
+
+            private async Task MarkReadCoreAsync(Guid id, bool read, CancellationToken token)
+            {
+                await _service.MarkReadAsync(id, read, token).ConfigureAwait(false);
+                if (!IsCurrent()) return;
+                await LoadCoreAsync(token).ConfigureAwait(false);
+            }
+
+            private async Task DismissCoreAsync(Guid id, CancellationToken token)
+            {
+                await _service.DismissAsync(id, token).ConfigureAwait(false);
+                if (!IsCurrent()) return;
+                await LoadCoreAsync(token).ConfigureAwait(false);
             }
 
             private static bool TryNotificationId(object? parameter, out Guid id)
@@ -297,18 +340,6 @@ public sealed partial class App
                 if (parameter is string text && Guid.TryParse(text, out var parsed)) { id = parsed; return true; }
                 id = default;
                 return false;
-            }
-
-            private async ValueTask MarkReadAsync(Guid id, bool read, CancellationToken token)
-            {
-                try { await _service.MarkReadAsync(id, read, token); await LoadAsync(token); }
-                catch (Exception failure) { System.Diagnostics.Trace.TraceError("Haven notification read failed: {0}", failure); }
-            }
-
-            private async ValueTask DismissAsync(Guid id, CancellationToken token)
-            {
-                try { await _service.DismissAsync(id, token); await LoadAsync(token); }
-                catch (Exception failure) { System.Diagnostics.Trace.TraceError("Haven notification dismiss failed: {0}", failure); }
             }
         }
 

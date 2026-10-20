@@ -1,79 +1,104 @@
-# Lane 4 handoff — Shared Haven control cluster, host-aware rail, filled SVGs
+# Lane 4 handoff — Pass 2 (frozen review corrections)
 
 Date: 2026-10-20
 Worker: Mercury implementation worker (lane 4)
 Tree: `/workspace/9to1-mercury-haven`
-Baseline HEAD: `fb70840d` (tree `9aa0f24c…`, spec SHA `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`)
-
-## Scope (this lane)
-Persistent Haven-owned model/notifications/profile control cluster shared across embedded apps,
-host-aware embedded-vs-standalone rail, filled/rounded sidebar SVGs, truthful shared-control gateways.
-
-## Assignment boundaries
-- Only this assigned tree is writable. No commits/pushes/deployment; diff stays uncommitted.
-- TEXT ONLY / no .NET build or test execution (no slot assigned) → all authored tests are **NOT RUN**.
-- No subagents used.
+Baseline HEAD: `fb70840d` (first-pass frozen review:
+`/workspace/shared/9to1-test-evidence/parallel6-lane4-frozen-review-20261020.md`)
 
 ## Identity
-- Source authority: `docs/specification/9to1-development-specification-v2.md` (local).
-- Owner references read: 2026-10-18-haven-spaces, 2026-10-20-haven-shared-header,
-  2026-10-20-professional-app-accents, 2026-10-20-spaces-svg-icons,
-  2026-10-20-chat-composer-dulche, 2026-10-20-professional-spaces-heading,
-  2026-10-20-continuous-composer, 2026-10-20-floating-format-bar, 2026-10-20-sidebar-separation,
-  2026-10-20-composer-icons.
-- Contract decided earlier: `IHavenHostContext`/`IHavenSharedControlGateway` in `Haven.Application`
-  (lower-level assembly referenced by both Browse and Haven.Desktop). The host registers
-  `HavenPackagedSvgResolver.Resolve` on the Browse scene registry and passes an `IHavenHostContext`.
+- Source authority: `docs/specification/9to1-development-specification-v2.md` (SHA
+  `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`), read in full; plus
+  shared-header/single-app/SVG/composer owner references listed in the first-pass handoff.
+- No .NET/build/restore/app run (no serialized slot — lane 1 only). All tests remain **NOT RUN**.
+- No subagents; no credentials/provider/cap/global-config changes; no commits/pushes/deploy.
 
-## Files changed
-- `Haven.Application/Haven/HavenHostContext.cs` (new): interfaces `IHavenHostContext`, `IHavenSharedControlGateway`.
-- `Haven.Desktop/HavenUI/Backend/HavenPackagedSvgResolver.cs` (lane 1 asset, not edited): path/rect + currentColor resolver.
-- `Haven.Desktop/Assets/haven-model.svg`, `haven-notifications.svg`, `haven-profile.svg` (new): filled rounded, fill=currentColor, single `<path>`, CC0 provenance comments.
-- `Browse/NativeUI/BrowseNativeWorkspace.cs`: `_sharedControls` (gateway) → `_hostContext` (`IHavenHostContext`); ctor param `sharedContext`; bindings `Haven.Embedded/ModelAvailable/NotificationsAvailable/ProfileAvailable`.
-- `Browse/NativeUI/BrowseNativeWorkspace.SharedControls.cs`: availability via `_hostContext`; dispatch via `_hostContext.SharedControls`.
-- `Browse/NativeUI/UI/BrowseWorkspace.cui`: `HavenSharedRail` left column (Column=0, RowSpan=4) with Model/Notifications/Profile buttons, `Image Source="avares://Haven/Assets/haven-*.svg"`, `IsVisible="{Binding Haven.Embedded}"`.
-- `Haven.Desktop/App.UnifiedWorkspaceHost.cs`: register resolver on scene registry, build `HavenGateway` + `SharedHostContext`, pass into `BrowseNativeWorkspace`, compose shared frame, dispose shared panel loader on close.
-- `Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs` (new): `SharedHostContext`, `HavenGateway`, `ComposeSharedFrame`, `ShowSharedPanel`/`HideSharedPanel`, `OpenProfilePanel` (real `NativeCakeAccountUiOwner.OpenAsync(window)`), `OpenNotificationsPanel` (authored CUI over `HavenNotificationService.GetRecentAsync/SetReadAsync/DismissAsync`), `OpenModelPickerPanel` (real `HomeModelPickerCuiController` over `IHomeModelPickerFeatureProvider`, truthful degradation when provider absent), `HavenNotificationsCuiBindings`, `HomeModelPickerDispatcher`, `HavenNotificationRow`.
-- `Browse/NativeUI/Tests/BrowseSharedControlsTests.cs` (new): **NOT RUN** — availability/embedding, gateway routing, partial support.
+## What this pass fixed (primary review items 1–6)
+1. **Compile errors** (`App.UnifiedWorkspaceHost.SharedControls.cs`): removed `async void`
+   `ObserveSharedGateAsync` and the invalid `$ _ =` assignment; removed `.AsTask()` misuse on
+   `HomeModelPickerCuiController.ExecuteAsync` (which returns `Task<>`). All async custody now goes
+   through the host's existing `Track(original)` (`_sources`), which is joined at close.
+2. **CUI-only authoring**: notification markup moved out of the C# string constant into a packaged
+   authored `.cui` (`Haven.Desktop/Views/Pages/Home/HavenNotifications.cui`, embedded resource
+   `Haven.Desktop.Home.HavenNotifications.cui`). The modal backdrop/dimming is now authored inside
+   that CUI document; the C# host keeps only a thin, un-styled placement seam (`Grid` frame +
+   `Border` without any hardcoded brush or `IsVisible` policy).
+3. **Context-before-load + real Home theme**: `SetThemePreferenceContext(_homeTheme.Context)`,
+   `SetBindingContext(...)`, `SetActionDispatcher(...)` are all set **before** `TryLoad`, so the
+   authored `Repeat` captures this panel's real notification source and the genuine Home
+   `user_preference` theme (no default private copy).
+4. **Original-task custody / no forged success**: open/init/refresh/close originals are retained via
+   `Track`; `HideSharedPanel`/`ShowSharedPanel` join the replaced panel's `WhenActionsIdleAsync()`
+   settlement before discarding; host close joins the mounted panel loader's settlement before
+   dispose; MarkRead/Dismiss tasks are tracked in `_sources`; failures stay observable (no
+   catch-and-log success).
+5. **Model-picker named parameters**: `ModelPicker.cui` migrated from undelivered `action-*`
+   metadata to canonical `<Action name=... command=... parameter=...>` declarations. New typed
+   projection selections (`HomeModelPickerScopeSelection`, `HomeModelPickerRouteSelection`,
+   `HomeModelPickerCandidateSelection`, `HomeModelPickerCandidateToggleSelection`) are routed to
+   `HomeModelPickerActionRequest`. No enabled no-op commands remain for these actions.
+6. **Test custody**: `BrowseSharedControlsTests.cs` stays only in the owning `NativeUI.Tests`
+   project (default glob; not duplicated into `Host.Tests`). Cleanup switched from a non-existent
+   `workspace.CloseOriginalAsync()` to `DisposeAsync()`. Added real cases (refusing gateway,
+   retired-workspace fencing). Added a Home projection test for the new named action parameters.
 
-## Behavior
-- Embedded Haven frame: the persistent rail exposes Model/Notifications/Profile, bound to the real
-  gateway. Availability is resolved from real services (never invented):
-  - Profile = `NativeCakeAccountUiOwner` resolvable from DI → `OpenAsync(window)`.
-  - Notifications = `HavenNotificationService` resolvable → CUI centre over durable reads.
-  - Model = `IHomeModelPickerFeatureProvider` resolvable → authentic Home model picker surface
-    (User scope only; "global" unsupported). Provider is not registered in the Infrastructure DI
-    today, so the rail model button degrades truthfully to disabled.
-- Standalone Browse: `Haven.Embedded`=false → rail hidden; the app retains its own header semantics.
+## Files changed / created (pass 2)
+- `Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs` — rewritten (fixes 1–5).
+- `Haven.Desktop/App.UnifiedWorkspaceHost.cs` — close now joins shared-panel loader settlement.
+- `Haven.Desktop/Views/Pages/Home/HavenNotifications.cui` — new authored CUI panel (+embedded resource).
+- `Haven.Desktop/Haven.Desktop.csproj` — registers the notification `.cui` embedded resource.
+- `Home/UI/ModelPicker.cui` — canonical `<Action>` named parameters.
+- `Home/Source/Home/ModelPicker/HomeModelPickerCuiProjection.cs` — selection records + bindings.
+- `Home/Tests/HomeModelPickerCuiProjectionTests.cs` — new canonical-parameter test.
+- `Browse/NativeUI/Tests/BrowseSharedControlsTests.cs` — fixed + expanded (still in NativeUI.Tests).
 
-## Known dependencies / not yet verified
-- **No build/test run** (no slot). All new code and tests are NOT RUN; must be compiled and
-  exercised by the coordinator once a .NET slot is assigned.
-- **Model picker action routing (dependency/coordination):** the authored `ModelPicker.cui`
-  conveys row-scoped action args (`action-route-id`, `action-provider-id`, `action-model-id`,
-  `action-capability`, …) as action metadata. The standard CUI dispatcher contract delivers only
-  `(command, parameter)` and does not pass that metadata (verified in `framework/CUI` runtime:
-  `CuiActionInvocation.ResolveCurrentParameter` only uses a named `<Action>` parameter/binding).
-  So candidate selection/mutation/save-with-args/preview cannot be faithfully routed yet. Current
-  `HomeModelPickerDispatcher` executes only the self-contained structural actions (Refresh,
-  SaveRoute, FinishAudit) and refuses the rest. Queue this as a required extension/coordination
-  item with the owner before claiming the model picker interactive editing complete.
-- **Assistant rail (running → most-used → generic):** no real "running assistant" or
-  "most-used configured assistant" data source exists in the current codebase (searched;
-  only `AssistantUsageLimits` token/time cost fields). Implementing the selection without those
-  real inputs would fabricate state, so it is NOT implemented; it is recorded as a coordination
-  dependency requiring an owned run-state/usage query contract. Do not claim it complete.
-- **Standalone header** for Browse (all-four controls) is out of this lane's embedded focus; the
-  rail is embedded-only via `Haven.Embedded`.
+## Exact source hashes (pass 2, text-only)
+| path | SHA256 |
+|---|---|
+| `Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs` | `f3d7e554f124702700f5ee3861e2ed282c5f1465dea819a0aa0ecb03d96b598b` |
+| `Haven.Desktop/App.UnifiedWorkspaceHost.cs` | `6ae93fdf73e07524bf7899974bcaf13e5c5dc133c880077a6a434a4d09cf7b5e` |
+| `Haven.Desktop/Views/Pages/Home/HavenNotifications.cui` | `18dd0dcdff589c7a118f116a6e2fa0ff3afccb6c36a65dd4c20178334392d515` |
+| `Home/UI/ModelPicker.cui` | `0f2f8375e97f64ff0b7164b8fd558b5be4c2422157aeae7bf513f7e86854bcfb` |
+| `Home/Source/Home/ModelPicker/HomeModelPickerCuiProjection.cs` | `1c61c9c41ce5505c9c2974b513dc61947ec6dde9c9a2bd96e2c05cc8f78f8d56` |
+| `Browse/NativeUI/Tests/BrowseSharedControlsTests.cs` | `ade6233edd70bc68c7dfa89c3e0bec2f995c7a41218a85c84d935dc1fe26a60a` |
+| `Home/Tests/HomeModelPickerCuiProjectionTests.cs` | `7cba3043a78529234ce65f2f0408be7b4291ba7b6acda17b48f8bd631f8967bc` |
+| `Haven.Desktop/Haven.Desktop.csproj` | `dd452961f4a1754f212d08e26e2398bfd28b2f733661ae55746bbca434fa6004` |
+
+## Causal tests authored (NOT RUN until slot)
+- `BrowseNativeUiTests` (NativeUI.Tests):
+  `No_host_context_disables_shared_rail_and_refuses_actions`,
+  `Shared_context_routes_each_rail_action_to_the_typed_gateway`,
+  `Partial_support_refuses_only_the_unsupported_rail_actions`,
+  `Refusing_gateway_never_fabricates_an_open`,
+  `Retired_workspace_refuses_shared_rail_actions`.
+- `HomeModelPickerCuiProjectionTests` (Home.Tests):
+  `Canonical_named_action_parameters_resolve_to_typed_selection_records`.
+
+## Exact NOT-RUN commands (when root grants the serialized slot)
+- NativeUI.Tests:
+  `dotnet test "9to1 Workspace/Browse/NativeUI/Tests/HavenOS.Apps.Browse.NativeUI.Tests.csproj" --filter "FullyQualifiedName~BrowseNativeUiTests"` (expect nonzero executed count).
+- Home.Tests:
+  `dotnet test "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj" --filter "FullyQualifiedName~HomeModelPickerCuiProjectionTests"`.
+- Host integration (host-owned panels): verify via Host.Tests headless composition once the slot is
+  granted; the host-internal classes are exercised indirectly through real `HavenNotificationService`
+  and `IHomeModelPickerFeatureProvider` seams (see residuals).
+
+## Truthful residual dependencies (NOT closed by this lane)
+- **Host-aware topbar across all apps**: this lane wired the embedded Haven rail in Browse only.
+  Standalone apps keeping all four controls and embedded app headers being search-only across every
+  shared standalone/embedded app remain unverified/missing; they span other lanes' surfaces and are
+  **not** claimed complete.
+- **Assistants button progression (running → most-used → generic)**: no real run/usage data source
+  is established; not implemented, not waivered.
+- **Filled rounded SVG rendering**: real single-path/currentColor assets exist; actual rendering,
+  cutouts and theme behavior are NOT RUN (shared resolver is another lane's source ownership).
+- **Model-picker interactive completeness** requires the real `IHomeModelPickerFeatureProvider`
+  composition; when absent the rail button stays disabled (truthful). The named-parameter routing is
+  implemented; runtime verification pending slot.
 
 ## For the coordinator
-1. Compile `BrowseNativeUI`, `Haven.Application`, `Haven.Desktop` (guarded dotnet, `-m:1`).
-2. Run `BrowseSharedControlsTests` (NOT RUN) once a slot is assigned.
-3. Route the model-picker `action-*` metadata bridge and the assistant run/usage query contract
-   to the owner for a decision; hold only those claims until resolved.
-4. Independent acceptance should exercise: embedded rail appears and opens Profile/Notifications;
-   rail hidden in standalone; model button disabled (truthful) when provider absent.
-
-Next executable task after this handoff: resolve the two coordination dependencies (model-picker
-action metadata, assistant run/usage source), then author the assistant icon selection policy and
-wire it into Spaces Home with real inputs.
+1. Compile (guarded dotnet, `-m:1`): Browse NativeUI, Home, Haven.Desktop.
+2. Run the two test filters above; confirm nonzero executed counts.
+3. Queue the cross-app host-aware topbar + Assistant run/usage source decisions with the owner.
+4. Independent acceptance should verify: embedded rail opens Profile/Notifications and resolves the
+   model picker; panels load under the genuine Home theme; close joins all retained originals.
