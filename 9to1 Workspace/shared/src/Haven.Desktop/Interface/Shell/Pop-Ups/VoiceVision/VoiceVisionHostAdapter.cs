@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Application.Call;
 using Haven.Core;
@@ -16,6 +17,26 @@ namespace Haven.Desktop.Views.Shell.VoiceVision;
 /// real typed source; this record is never synthesized from heuristic text.
 /// </summary>
 public sealed record VoiceSessionStartPolicy(string EffectivePolicy, bool IsLocalOnly);
+
+/// <summary>
+/// Authored presentation-navigation intent raised by the Voice &amp; Vision documents. The host (the
+/// external owner) performs the actual mount/close; the adapter never loads a document from inside
+/// an action whose settlement it owns (see <see cref="VoiceVisionHostAdapter.CaptureActionSettlement"/>).
+/// </summary>
+public enum VoicePresentationIntent
+{
+    /// <summary>Toggle the floating pill (show if hidden, hide if shown).</summary>
+    TogglePill,
+
+    /// <summary>Hide the shared presentation without ending the session.</summary>
+    Hide,
+
+    /// <summary>Open the full Voice &amp; Vision surface.</summary>
+    OpenFull,
+
+    /// <summary>Return from the full surface to the floating pill.</summary>
+    ReturnToPill
+}
 
 /// <summary>
 /// Host adapter that owns the CUI loader and the shared Voice &amp; Vision runtime facade.
@@ -31,10 +52,12 @@ public sealed record VoiceSessionStartPolicy(string EffectivePolicy, bool IsLoca
 /// local-only claim, and it never infers local-only from policy text.
 ///
 /// Causal close/disposal ownership: the loader documents that an action must never await a
-/// snapshot containing itself, so presentation close and disposal capture the loader action
-/// settlement once and join it OUTSIDE any dispatched action, via the retained teardown
-/// completion below. Concurrent close/dispose callers share ONE retained completion, and a
-/// synchronous retirement followed by an async join is covered. The shared singleton runtime is
+/// snapshot containing itself, so presentation close captures a FRESH settlement snapshot at
+/// the actual close point and joins it OUTSIDE any dispatched action. Teardown reserves ONE
+/// retained operation identity before any external callback runs, seals actual admission before
+/// taking the final settlement snapshot, and then retires the runtime subscription and loader in
+/// returned real post-Dispose cleanup settlement — never under the ownership lock, never missing a
+/// later dispatch, and never performing reentrant double teardown. The shared singleton runtime is
 /// never End/disposed here; explicit End is the only real stop, and only runtime subscriptions
 /// owned by THIS adapter are retired after genuinely admitted work settles.
 /// </summary>
@@ -45,10 +68,9 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
     private readonly CuiControlLoader _loader;
     private readonly Func<VoiceSessionStartPolicy>? _policyAuthority;
     private readonly object _gate = new();
-    private bool _disposed;
-    private Task? _settlement;
     private Task? _teardown;
     private long _loadGeneration;
+    private volatile bool _retiring;
 
     public VoiceVisionHostAdapter(
         IVoiceVisionRuntime runtime,
@@ -57,7 +79,8 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
         Func<Guid?>? spaceIdProvider = null,
         Func<bool>? isLocalOnlyProvider = null,
         Func<string>? policyProvider = null,
-        Func<VoiceSessionStartPolicy>? policyAuthority = null)
+        Func<VoiceSessionStartPolicy>? policyAuthority = null,
+        CuiThemePreferenceContext? themePreference = null)
     {
         _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
         ConversationProvider = conversationProvider ?? throw new ArgumentNullException(nameof(conversationProvider));
@@ -70,6 +93,9 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
         _loader = new CuiControlLoader(VoiceVisionCuiDocument.CreateControlRegistry());
         _loader.SetBindingContext(_bindings);
         _loader.SetActionDispatcher(_bindings);
+        // Borrow the genuine current Home theme before any compiled document load. The source owner
+        // retains the context lifetime; the adapter only subscribes the loader (retired on teardown).
+        if (themePreference is not null) _loader.SetThemePreferenceContext(themePreference);
         _runtime.StateChanged += OnRuntimeStateChanged;
     }
 
@@ -99,12 +125,22 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
         get { lock (_gate) return Interlocked.Read(ref _loadGeneration); }
     }
 
-    /// <summary>Raised (with settlement) when the UI requests the full Voice &amp; Vision surface.</summary>
-    public event Func<Task>? RequestFullSurfaceAsync;
+    /// <summary>Raised when an authored navigation command requests a presentation change. The host
+    /// (external owner) accepts the typed intent and performs the actual mount/close; the adapter
+    /// never loads a document from inside an action whose settlement it owns.</summary>
+    public event Func<VoicePresentationIntent, Task>? PresentationIntentRequested;
 
     /// <summary>Raised only after the presentation has left the surface and admitted actions have
     /// settled. Closing a presentation is never End; this is the host's close-ACK signal.</summary>
     public event Func<Task>? PresentationClosedAsync;
+
+    /// <summary>
+    /// Captures the loader's CURRENT action-settlement snapshot. The external owner joins this
+    /// OUTSIDE the dispatching action (for example after a yield) and only then replaces the
+    /// presented surface, so a loader load never runs from inside the action whose settlement it
+    /// owns and no admitted later work is missed.
+    /// </summary>
+    public Task CaptureActionSettlement() => _loader.WhenActionsIdleAsync();
 
     public Control LoadPill()
     {
@@ -122,18 +158,17 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
 
     /// <summary>
     /// Closes the presentation: the shared projection leaves the surface WITHOUT ending the session
-    /// and WITHOUT disposing the loader/runtime. The loader action settlement is captured once and
-    /// awaited OUTSIDE any dispatched action (never from an included action's own dispatch), and the
-    /// close-ACK fires only after every admitted command has settled; there is no fire-and-forget
-    /// release signal.
+    /// and WITHOUT disposing the loader/runtime. A FRESH loader action settlement is captured at the
+    /// actual close point (never a stale cached snapshot), and the close-ACK fires only after every
+    /// admitted command has settled; there is no fire-and-forget release signal.
     /// </summary>
     public async Task ClosePresentationAsync(CancellationToken cancellationToken = default)
     {
-        var settlement = RetainLoaderSettlement();
+        var settlement = _loader.WhenActionsIdleAsync();
         _runtime.SetPresentation(VoiceVisionPresentationKind.None);
+        await settlement.ConfigureAwait(false);
         if (PresentationClosedAsync is { } closed)
             await closed().ConfigureAwait(false);
-        await settlement.ConfigureAwait(false);
     }
 
     private Control LoadDocument(CuiDocument document)
@@ -145,20 +180,11 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
         return loaded.Root;
     }
 
-    /// <summary>Captures the loader action-settlement snapshot once and shares it with every close and
-    /// disposal caller. It is captured outside any dispatch so no caller ever awaits a snapshot that
-    /// contains its own in-flight action.</summary>
-    private Task RetainLoaderSettlement()
-    {
-        lock (_gate)
-        {
-            if (_settlement is null) _settlement = _loader.WhenActionsIdleAsync();
-            return _settlement;
-        }
-    }
-
     internal async ValueTask DispatchCommandAsync(string command, object? parameter, CancellationToken cancellationToken)
     {
+        if (_retiring)
+            throw new ObjectDisposedException(nameof(VoiceVisionHostAdapter));
+
         switch (command)
         {
             case "voice.start":
@@ -200,8 +226,19 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
                 break;
 
             case "voice.open-full":
-                if (RequestFullSurfaceAsync is { } open)
-                    await open();
+                await RaisePresentationIntentAsync(VoicePresentationIntent.OpenFull);
+                break;
+
+            case "voice.return":
+                await RaisePresentationIntentAsync(VoicePresentationIntent.ReturnToPill);
+                break;
+
+            case "voice.toggle":
+                await RaisePresentationIntentAsync(VoicePresentationIntent.TogglePill);
+                break;
+
+            case "voice.hide":
+                await RaisePresentationIntentAsync(VoicePresentationIntent.Hide);
                 break;
 
             case "voice.submit-text":
@@ -215,6 +252,14 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
             default:
                 throw new InvalidOperationException($"Voice &amp; Vision command '{command}' is not handled by the host.");
         }
+    }
+
+    private async Task RaisePresentationIntentAsync(VoicePresentationIntent intent)
+    {
+        // The adapter only forwards the authored intent. The external owner joins the original action
+        // settlement OUTSIDE its own dispatch and then performs the actual mount/close.
+        if (PresentationIntentRequested is { } requested)
+            await requested(intent);
     }
 
     private async Task StartFromCommandAsync(object? parameter, CancellationToken cancellationToken)
@@ -295,30 +340,67 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
 
     private void OnRuntimeStateChanged(object? sender, EventArgs args) => _bindings.Refresh();
 
-    /// <summary>Synchronous retirement. Retires the loader and this adapter's runtime subscription, then
-    /// retains ONE completion so a later async join observes the exact same teardown (including original
-    /// and cleanup failures). The shared singleton runtime is never End/disposed here.</summary>
-    public void Dispose()
+    /// <summary>
+    /// Reserves the ONE retained teardown identity BEFORE any external callback runs and returns the
+    /// shared completion. Concurrent close/dispose callers share this exact completion; a synchronous
+    /// retirement followed by an async join is covered. Sealing actual admission is part of the runner.
+    /// </summary>
+    private Task BeginRetainedTeardown()
     {
         lock (_gate)
         {
-            if (_disposed) return;
-            _disposed = true;
-            var failures = new List<Exception>();
-            try { _runtime.StateChanged -= OnRuntimeStateChanged; }
-            catch (Exception error) { failures.Add(error); }
-            try { _loader.Dispose(); }
-            catch (Exception error) { failures.Add(error); }
-            var settlement = RetainLoaderSettlement();
-            _teardown = JoinSyncRetirementAsync(settlement, failures);
+            if (_teardown is not null) return _teardown;
+            if (_retiring)
+                throw new ObjectDisposedException(nameof(VoiceVisionHostAdapter));
+            _retiring = true;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _teardown = RunRetainedTeardownAsync(start.Task);
+            start.SetResult();
+            return _teardown;
         }
     }
 
-    private static async Task JoinSyncRetirementAsync(Task settlement, List<Exception> failures)
+    /// <summary>Retires only this adapter's owned runtime subscription and the loader after genuinely
+    /// admitted work settles. No callbacks/awaits run under the ownership lock.</summary>
+    private async Task RunRetainedTeardownAsync(Task start)
     {
-        try { await settlement.ConfigureAwait(false); }
+        await start.ConfigureAwait(false);
+        var failures = new List<Exception>();
+        try
+        {
+            // Seal actual admission (no new dispatches after this point) BEFORE taking the final
+            // settlement snapshot, so later in-flight admitted work is never missed and no work
+            // begins after this snapshot.
+            Task settlement;
+            lock (_gate) settlement = _loader.WhenActionsIdleAsync();
+            try { await settlement.ConfigureAwait(false); }
+            catch (Exception error) { failures.Add(error); }
+
+            // Retire this adapter's own runtime subscription only after admitted work has settled.
+            try { _runtime.StateChanged -= OnRuntimeStateChanged; }
+            catch (Exception error) { failures.Add(error); }
+
+            // Dispose the loader (outside the lock) then retain AND join the actual post-Dispose
+            // cleanup settlement, which includes the loader's terminal disposal task. This is the
+            // retained teardown/operation identity every close/dispose caller joins.
+            try { _loader.Dispose(); }
+            catch (Exception error) { failures.Add(error); }
+            Task terminal;
+            lock (_gate) terminal = _loader.WhenActionsIdleAsync();
+            try { await terminal.ConfigureAwait(false); }
+            catch (Exception error) { failures.Add(error); }
+        }
         catch (Exception error) { failures.Add(error); }
         ThrowTeardownFailures(failures);
+    }
+
+    /// <summary>Synchronous retirement. Reserves the retained teardown identity before any callback
+    /// runs; the actual external unsubscribe/dispose callbacks and awaits happen inside the retained
+    /// runner OUTSIDE the ownership lock, and a later async join observes the exact same teardown
+    /// (including original and cleanup failures). The shared singleton runtime is never End/disposed here.</summary>
+    public void Dispose()
+    {
+        _ = BeginRetainedTeardown();
     }
 
     /// <summary>Async retirement. Concurrent callers share the SAME retained teardown completion, and a
@@ -326,38 +408,8 @@ public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
     /// never End/disposed here.</summary>
     public async ValueTask DisposeAsync()
     {
-        Task teardown;
-        lock (_gate)
-        {
-            if (_teardown is not null)
-            {
-                teardown = _teardown;
-            }
-            else
-            {
-                _disposed = true;
-                var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                _teardown = RunTeardownAsync(start.Task);
-                start.SetResult();
-                teardown = _teardown;
-            }
-        }
+        var teardown = BeginRetainedTeardown();
         await teardown.ConfigureAwait(false);
-    }
-
-    private async Task RunTeardownAsync(Task start)
-    {
-        await start.ConfigureAwait(false);
-        var failures = new List<Exception>();
-        var settlement = RetainLoaderSettlement();
-        try { await settlement.ConfigureAwait(false); }
-        catch (Exception error) { failures.Add(error); }
-        // Retire this adapter's own runtime subscription only after admitted work has settled.
-        try { _runtime.StateChanged -= OnRuntimeStateChanged; }
-        catch (Exception error) { failures.Add(error); }
-        try { _loader.Dispose(); }
-        catch (Exception error) { failures.Add(error); }
-        ThrowTeardownFailures(failures);
     }
 
     private static void ThrowTeardownFailures(List<Exception> failures)

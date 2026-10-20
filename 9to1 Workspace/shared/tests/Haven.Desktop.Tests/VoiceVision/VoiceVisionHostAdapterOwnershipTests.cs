@@ -177,6 +177,61 @@ public sealed class VoiceVisionHostAdapterOwnershipTests
     }
 
     [Fact]
+    public async Task Presentation_intents_are_forwarded_to_the_host_without_start_or_end()
+    {
+        var runtime = new FakeRuntime();
+        var adapter = new VoiceVisionHostAdapter(
+            runtime,
+            () => Guid.NewGuid(),
+            () => new CallStartOptions(Model()),
+            policyAuthority: () => new VoiceSessionStartPolicy("default", false));
+
+        var intents = new List<VoicePresentationIntent>();
+        adapter.PresentationIntentRequested += intent => { intents.Add(intent); return Task.CompletedTask; };
+
+        await adapter.DispatchCommandAsync("voice.open-full", null, CancellationToken.None);
+        await adapter.DispatchCommandAsync("voice.return", null, CancellationToken.None);
+        await adapter.DispatchCommandAsync("voice.toggle", null, CancellationToken.None);
+        await adapter.DispatchCommandAsync("voice.hide", null, CancellationToken.None);
+
+        Assert.Equal(
+            [VoicePresentationIntent.OpenFull, VoicePresentationIntent.ReturnToPill,
+             VoicePresentationIntent.TogglePill, VoicePresentationIntent.Hide],
+            intents);
+        // Presentation changes never start or end the session.
+        Assert.Empty(runtime.Starts);
+        Assert.Equal(0, runtime.EndCalls);
+    }
+
+    [Fact]
+    public async Task Dispatch_command_after_retirement_throws_ObjectDisposed()
+    {
+        var runtime = new FakeRuntime();
+        var adapter = new VoiceVisionHostAdapter(runtime, () => Guid.NewGuid(), () => new CallStartOptions(Model()));
+        await adapter.DisposeAsync();
+
+        await Assert.ThrowsAsync<ObjectDisposedException>(() =>
+            adapter.DispatchCommandAsync("voice.start", null, CancellationToken.None).AsTask());
+        Assert.Empty(runtime.Starts);
+    }
+
+    [Fact]
+    public void Close_reopen_advances_mount_generation()
+    {
+        var runtime = new FakeRuntime();
+        var adapter = new VoiceVisionHostAdapter(runtime, () => Guid.NewGuid(), () => new CallStartOptions(Model()));
+        var first = adapter.MountGeneration;
+
+        adapter.LoadPill();
+        var pill = adapter.MountGeneration;
+        Assert.True(pill > first);
+
+        adapter.LoadSession();
+        var full = adapter.MountGeneration;
+        Assert.True(full > pill);
+    }
+
+    [Fact]
     public async Task Concurrent_repeated_disposal_shares_one_teardown_completion()
     {
         var runtime = new FakeRuntime();

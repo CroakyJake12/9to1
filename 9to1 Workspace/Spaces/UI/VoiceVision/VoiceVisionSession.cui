@@ -18,6 +18,8 @@
     <Action name="ToggleTranscript" command="voice.toggle-transcript" />
     <Action name="SubmitText" command="voice.submit-text" parameter="{Binding session.textInput}" />
     <Action name="SetMode" command="voice.set-mode" parameter="{Binding session.selectedModeIndex}" />
+    <Action name="ReturnToPill" command="voice.return" />
+    <Action name="Hide" command="voice.hide" />
   </Actions>
   <Theme Name="user_preference">
     <Page id="voice-session-page" role="main" accessible-name="Voice and Vision">
@@ -38,6 +40,14 @@
                     Tooltip="End the Voice session" IsEnabled="{Binding session.canEnd}"
                     Width="32" Height="32" Padding="6" IconOnly="True">
               <Image id="voice-session-end-icon" Source="icon:close" Width="16" Height="16" />
+            </Button>
+            <Button id="voice-session-return" action="ReturnToPill" accessible-name="Return to Voice pill"
+                    Tooltip="Return to the floating Voice pill" Width="32" Height="32" Padding="6" IconOnly="True">
+              <Image id="voice-session-return-icon" Source="icon:chevron-left" Width="16" Height="16" />
+            </Button>
+            <Button id="voice-session-hide" action="Hide" accessible-name="Hide Voice session"
+                    Tooltip="Hide the Voice session" Width="32" Height="32" Padding="6" IconOnly="True">
+              <Image id="voice-session-hide-icon" Source="icon:chevron-down" Width="16" Height="16" />
             </Button>
           </Container>
 

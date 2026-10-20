@@ -114,7 +114,7 @@ public sealed partial class MainView
             conversationProvider: () => VoiceConversationId(),
             startOptionsProvider: BuildVoiceStartOptions,
             spaceIdProvider: () => (CurrentPage as NewChatPage)?.CurrentConversation.SpaceId);
-        adapter.RequestFullSurfaceAsync += () => ShowFullVoiceSurfaceAsync();
+        adapter.PresentationIntentRequested += intent => HandleVoicePresentationIntentAsync(adapter, intent);
         adapter.PresentationClosedAsync += () =>
         {
             HideVoiceOverlay();
@@ -122,6 +122,46 @@ public sealed partial class MainView
         };
         _voiceAdapter = adapter;
         return adapter;
+    }
+
+    /// <summary>Accepts typed presentation intents from the adapter. Loading a compiled document is
+    /// deferred until the requesting action settles, so the loader never runs from inside an action
+    /// whose settlement it owns.</summary>
+    private async Task HandleVoicePresentationIntentAsync(VoiceVisionHostAdapter adapter, VoicePresentationIntent intent)
+    {
+        switch (intent)
+        {
+            case VoicePresentationIntent.OpenFull:
+                await DeferVoicePresentAsync(adapter, ShowFullVoiceSurfaceAsync);
+                break;
+
+            case VoicePresentationIntent.ReturnToPill:
+                if (_voiceSurfaceShowingFull)
+                    await DeferVoicePresentAsync(adapter, () => { ShowVoicePill(); return Task.CompletedTask; });
+                break;
+
+            case VoicePresentationIntent.TogglePill:
+                if (_voicePillControl?.IsVisible == true || _voiceSurfaceShowingFull)
+                    HideVoiceOverlay();
+                else
+                    await DeferVoicePresentAsync(adapter, () => { ShowVoicePill(); return Task.CompletedTask; });
+                break;
+
+            case VoicePresentationIntent.Hide:
+                HideVoiceOverlay();
+                break;
+        }
+    }
+
+    /// <summary>Yields, joins the original action settlement outside the dispatching action, then
+    /// performs the actual mount/close so a compiled load never happens inside an action's own
+    /// settlement.</summary>
+    private async Task DeferVoicePresentAsync(VoiceVisionHostAdapter adapter, Func<Task> present)
+    {
+        await Task.Yield();
+        var settlement = adapter.CaptureActionSettlement();
+        await settlement.ConfigureAwait(true);
+        await present().ConfigureAwait(true);
     }
 
     private Guid? VoiceConversationId() =>

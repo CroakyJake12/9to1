@@ -261,8 +261,8 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             }
             // Retire this session's Voice host (pill/full/adapter) with the rest of the tab. The
             // shared singleton runtime is never End/disposed here; only this adapter's owned surface
-            // and runtime subscription are retired.
-            DisposeVoiceOverlay();
+            // and runtime subscription are retired, joined into the SAME close/failure list.
+            await DisposeVoiceOverlayAsync(failures);
             if (_spacesPage is not null && _stateChangedHandlerSpaces is not null)
                 _spacesPage.Controller.StateChanged -= _stateChangedHandlerSpaces;
             foreach (var builder in _ownedBuilders.ToArray())
