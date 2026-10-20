@@ -1,0 +1,38 @@
+{
+  "$schema": "typed-handoff-2026-10-20",
+  "lane": "mercury-lane5",
+  "component": "HomeDulcheCapabilityReceiptIssuer",
+  "target_consumer": "mercury-extra15 (asset packager) — coordinate only, do NOT edit its Home/Source/Dulche packaging folders or Thunder/Strata/engine pins",
+  "status": "production_generation_axis_BLOCKED",
+  "blocked_reason": "A real capability production issuer requires a current verified generation-capability observation. No such engine evidence is available at startup (generation capability is intentionally never probed during Home startup) and no startup wiring binds a genuine broker/artifact receipt today. The unblocked issuer/validation contract is implemented with fixture-owned data; the production issuer wiring remains BLOCKED until genuine engine evidence exists. No receipt is fabricated.",
+  "issuer_contract": {
+    "produces": "HomeDulcheCapabilityObservation (typed generation-capability receipt)",
+    "requires": [
+      "HomeDulcheBrokerObservation — ACTUAL observed broker process/endpoint generation (PID + endpoint kind + endpoint/socket path). Never inferred from platform name.",
+      "HomeDulcheModelEvidence — VERIFIED model artifact with a 64-lowercase-hex SHA-256 that was actually matched by re-hashing the installed blob.",
+      "A current VERIFIED generation-capability observation (GenerationCapable=true of non-empty Evidence, same provider/model identity)."
+    ],
+    "absent_evidence": "returns null; the capability axis stays explicitly blocked (Degraded) — never inferred from names or project."
+  },
+  "packaged_model_asset_contract_for_extra15": {
+    "location": "model store root (default: XDG_DATA_HOME/haven/models)",
+    "manifest_dir": "manifests/*.json",
+    "content_address": "blobs/sha256/<sha[..2]>/<sha256>.gguf",
+    "manifest_required_fields": {
+      "id": "model id (e.g. local-model-q4)",
+      "displayName": "display name",
+      "sha256": "64 lowercase hex chars; must re-hash the blob exactly",
+      "blob": "canonical content-address relative path <sha[..2]>/<sha256>.gguf",
+      "size": "exact blob byte length (>= 8)",
+      "license": "license string",
+      "source": "source string"
+    },
+    "verification": "blob must exist, regular file, exact size, and SHA-256 must equal manifest sha256; else the model is refused/absent and the axis stays Degraded.",
+    "provider_id": "llamacpp"
+  },
+  "preserved": [
+    "default Degraded when actual startup assets/evidence are absent",
+    "canonical multi-engine Dulche routing",
+    "broker/transport/package adapters unchanged"
+  ]
+}

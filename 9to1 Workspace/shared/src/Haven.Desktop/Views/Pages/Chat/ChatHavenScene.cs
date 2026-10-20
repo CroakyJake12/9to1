@@ -845,9 +845,11 @@ internal sealed partial class ChatHavenScene : IDisposable
     /// <summary>The actual recovery loader action-settlement pipeline for the currently shown
     /// recovery surface, captured on the UI thread. External navigation owners join this snapshot
     /// outside any included action so the navigation settles only after the real recovery action
-    /// pipeline drains.</summary>
+    /// pipeline drains. The dispatcher invocation is flattened (Unwrap) so joining this task
+    /// actually awaits the genuine capture settlement instead of only the UI-thread call that
+    /// produced it (Task&lt;Task&gt; upcast).</summary>
     public Task RecoveryActionSettlement =>
-        Dispatcher.UIThread.InvokeAsync<Task>(() => RecoveryView.CaptureOriginalActionSettlement()).GetTask();
+        Dispatcher.UIThread.InvokeAsync<Task>(() => RecoveryView.CaptureOriginalActionSettlement()).GetTask().Unwrap();
 
     /// <summary>Starts the shared recovery surface's child close (retires its command admission
     /// and closes the scene host) and publishes the one close task the parent joins during cleanup.

@@ -247,7 +247,7 @@ public sealed class HomeDulcheRuntimeServiceTests
             AdmittedCapability());
         await using var service = new HomeDulcheRuntimeService(degradedSource);
 
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
+        var error = await Assert.ThrowsAnyAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
 
         Assert.Contains("HomeDulcheRuntimeUnavailable", error.Message);
         // The truthful degraded observation is retained for inspection even when start reports it.
@@ -346,7 +346,7 @@ public sealed class HomeDulcheRuntimeServiceTests
         var source = new DelegatingObservationSource(_ => Task.FromResult(emptyDegraded));
         await using var service = new HomeDulcheRuntimeService(source);
 
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
+        var error = await Assert.ThrowsAnyAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
 
         Assert.Contains("HomeDulcheRuntimeUnavailable", error.Message);
         Assert.Equal(HomeServiceLifecycleState.Degraded, service.CurrentObservation!.Lifecycle);
@@ -418,9 +418,9 @@ public sealed class HomeDulcheRuntimeServiceTests
         await using var service = new HomeDulcheRuntimeService(counting);
 
         var first = service.StartAsync(CancellationToken.None);
-        var firstError = await Assert.ThrowsAsync<InvalidOperationException>(() => first);
+        var firstError = await Assert.ThrowsAnyAsync<InvalidOperationException>(() => first);
         var second = service.StartAsync(CancellationToken.None);
-        var secondError = await Assert.ThrowsAsync<InvalidOperationException>(() => second);
+        var secondError = await Assert.ThrowsAnyAsync<InvalidOperationException>(() => second);
 
         Assert.Same(firstError, secondError);
         Assert.Equal(1, counting.ObserveCalls);
@@ -438,7 +438,7 @@ public sealed class HomeDulcheRuntimeServiceTests
             new FakeModelEvidenceSource(null));
         await using var service = new HomeDulcheRuntimeService(degradedSource);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
+        await Assert.ThrowsAnyAsync<InvalidOperationException>(() => service.StartAsync(CancellationToken.None));
         await service.StopAsync(CancellationToken.None); // must NOT rethrow the availability refusal
         Assert.Null(service.CurrentObservation);
     }
@@ -587,6 +587,85 @@ public sealed class HomeDulcheRuntimeServiceTests
         var unbound = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
             DateTimeOffset.UtcNow, "test-admission");
         Assert.False(unbound.IsSameGeneration(model, brokerRunning));
+    }
+
+    // ---------------------------------------------------------------- capability receipt issuer
+
+    [Fact]
+    public void Issue_binds_a_receipt_to_the_observed_broker_generation_and_verified_model_SHA()
+    {
+        var issuer = new HomeDulcheCapabilityReceiptIssuer();
+        var verified = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "verified same-generation model-use admission");
+        var model = VerifiedEvidence();
+
+        var receipt = issuer.Issue(verified, model, BrokerObservation);
+
+        Assert.NotNull(receipt);
+        Assert.True(receipt!.IsSameGeneration(model, BrokerObservation));
+        Assert.True(receipt.GenerationCapable);
+        Assert.Equal(model.ArtifactSha256, receipt.ModelArtifactSha256);
+        Assert.Same(BrokerObservation, receipt.Broker);
+    }
+
+    [Fact]
+    public void Issue_returns_null_when_no_verified_current_capability_observation_is_supplied()
+    {
+        var issuer = new HomeDulcheCapabilityReceiptIssuer();
+        // Preserve default Degraded: absent a current verified generation-capability observation the
+        // axis stays closed and no receipt is fabricated.
+        Assert.Null(issuer.Issue(null, VerifiedEvidence(), BrokerObservation));
+        Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(false, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "not capable"), VerifiedEvidence(), BrokerObservation));
+        Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, ""), VerifiedEvidence(), BrokerObservation));
+    }
+
+    [Fact]
+    public void Issue_returns_null_when_verified_model_or_live_broker_evidence_is_absent()
+    {
+        var issuer = new HomeDulcheCapabilityReceiptIssuer();
+        var verified = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "verified");
+        Assert.Null(issuer.Issue(verified, null, BrokerObservation));      // no verified model artifact
+        Assert.Null(issuer.Issue(verified, VerifiedEvidence(), null));      // no live broker observation
+        Assert.Null(issuer.Issue(verified, null, null));
+    }
+
+    [Fact]
+    public void Issue_rejects_a_verified_observation_that_describes_a_different_model_or_provider()
+    {
+        var issuer = new HomeDulcheCapabilityReceiptIssuer();
+        var model = VerifiedEvidence();
+        Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(true, "llamacpp", "other-model",
+            DateTimeOffset.UtcNow, "verified"), model, BrokerObservation));
+        Assert.Null(issuer.Issue(new HomeDulcheCapabilityObservation(true, "other-provider", "local-model-q4",
+            DateTimeOffset.UtcNow, "verified"), model, BrokerObservation));
+    }
+
+    [Fact]
+    public void Issued_receipt_fails_closed_after_the_same_identified_broker_restarts()
+    {
+        var issuer = new HomeDulcheCapabilityReceiptIssuer();
+        var verified = new HomeDulcheCapabilityObservation(true, "llamacpp", "local-model-q4",
+            DateTimeOffset.UtcNow, "verified");
+        var model = VerifiedEvidence();
+        var running = new HomeDulcheBrokerObservation(42, "http-loopback", Endpoint, DateTimeOffset.UtcNow);
+
+        var receipt = issuer.Issue(verified, model, running);
+        Assert.NotNull(receipt);
+        Assert.True(receipt!.IsSameGeneration(model, running));
+
+        // Same provider/model/endpoint identity but a NEW broker generation (PID changed): the same
+        // receipt must fail CLOSED against the restarted broker, exactly like the lifecycle owner.
+        var restarted = new HomeDulcheBrokerObservation(99, "http-loopback", Endpoint, DateTimeOffset.UtcNow);
+        Assert.False(receipt.IsSameGeneration(model, restarted));
+
+        // Re-issuing against the restarted broker binds a fresh receipt for the new generation.
+        var rebound = issuer.Issue(verified, model, restarted);
+        Assert.NotNull(rebound);
+        Assert.True(rebound!.IsSameGeneration(model, restarted));
+        Assert.False(rebound.IsSameGeneration(model, running));
     }
 
     private static void AssertOriginalPreserved(Exception root, Exception expected)
