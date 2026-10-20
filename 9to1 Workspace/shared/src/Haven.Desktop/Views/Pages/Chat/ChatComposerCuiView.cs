@@ -116,6 +116,12 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.SendLabel":
                 value = _source.IsEditing ? "Update" : "Send";
                 return true;
+            case "Composer.SendAccessibleName":
+                value = _source.IsEditing ? "Update message" : "Send message";
+                return true;
+            case "Composer.SendTooltip":
+                value = _source.IsEditing ? "Update the message being edited" : "Send message";
+                return true;
             case "Composer.ShowFormatting":
                 value = _expanded && (_focused || _settingsOpen || _emojiOpen);
                 return true;

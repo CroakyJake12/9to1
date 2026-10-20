@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Avalonia.Media;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Desktop.Prefabs;
@@ -48,6 +49,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
         public string? LastInserted { get; private set; }
         public int InsertCount { get; private set; }
         public int InsertCaret { get; private set; } = -1;
+        public int SendCount { get; private set; }
 
         public ValueTask InsertEmoji(string emoji)
         {
@@ -67,7 +69,7 @@ public sealed class ChatComposerEmojiPickerViewportTests
             return true;
         }
 
-        public ValueTask Send() => ValueTask.CompletedTask;
+        public ValueTask Send() { SendCount++; return ValueTask.CompletedTask; }
         public ValueTask Stop() => ValueTask.CompletedTask;
         public ValueTask Add() => ValueTask.CompletedTask;
         public ValueTask OpenSettings() => ValueTask.CompletedTask;
@@ -306,5 +308,201 @@ public sealed class ChatComposerEmojiPickerViewportTests
         }
         catch (Exception error) { testFailure = error; throw; }
         finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
+    public async Task Icon_tools_and_primary_action_render_44px_hit_targets_with_centered_svg_glyphs()
+    {
+        // Every icon tool and the primary action share one consistent 44x44 hit target, while the
+        // authored glyph extent is smaller and centered (icon extent and hit target are distinct).
+        var source = new DraftInsertingSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            foreach (var id in new[] { "add-button", "settings-button", "send-button" })
+            {
+                var button = FindButton(view, id);
+                Assert.NotNull(button);
+                Assert.True(button!.Bounds.Width >= 44 && button.Bounds.Height >= 44,
+                    $"{id} must expose a 44px hit target, got {button.Bounds}");
+
+                var image = Assert.IsType<Image>(button.Content);
+                Assert.IsType<DrawingImage>(image.Source); // genuine packaged-SVG decode
+                var toButton = image.TransformToVisual(button);
+                Assert.NotNull(toButton);
+                var imageInButton = new Rect(image.Bounds.Size).TransformToAABB(toButton!.Value);
+                var buttonLocal = new Rect(button.Bounds.Size);
+                Assert.True(buttonLocal.Contains(imageInButton), $"{id} glyph {imageInButton} clipped outside hit target {buttonLocal}");
+                Assert.True(Math.Abs(imageInButton.Center.X - buttonLocal.Center.X) < 1d
+                    && Math.Abs(imageInButton.Center.Y - buttonLocal.Center.Y) < 1d,
+                    $"{id} glyph must be centered in its hit target");
+            }
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
+    public async Task Settings_gear_action_opens_thread_settings_panel_not_permissions()
+    {
+        var source = new DraftInsertingSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var settings = FindButton(view, "settings-button");
+            Assert.NotNull(settings);
+            Assert.Equal("Thread settings", AutomationProperties.GetName(settings!));
+            Assert.Equal("Choose allowed actions and response style",
+                settings.GetValue(ToolTip.TipProperty)?.ToString());
+
+            settings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            var panel = FindContainer(view, "settings-panel");
+            Assert.NotNull(panel);
+            Assert.True(panel!.IsVisible, "settings trigger must open the thread-settings panel");
+
+            var texts = panel.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToArray();
+            Assert.Contains(texts, t => t.Contains("Actions:", StringComparison.Ordinal));
+            Assert.Contains(texts, t => t.Contains("Responses:", StringComparison.Ordinal));
+            Assert.DoesNotContain(texts, t => t.Contains("Permissions", StringComparison.OrdinalIgnoreCase));
+
+            // The gear is a genuine packaged-SVG control, not the intricate Unicode gear.
+            Assert.IsType<Image>(settings.Content);
+            Assert.IsType<DrawingImage>(Assert.IsType<Image>(settings.Content).Source);
+
+            settings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            Assert.False(panel.IsVisible, "settings trigger toggles the panel closed");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
+    public async Task Primary_send_action_accessibility_reflects_real_operation_and_availability()
+    {
+        var source = new DraftInsertingSource { CanSend = true, IsEditing = false };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var send = FindButton(view, "send-button");
+            Assert.NotNull(send);
+            Assert.True(send!.IsEnabled, "send must be enabled while CanSend");
+            Assert.Equal("Send message", send.GetValue(AutomationProperties.NameProperty)?.ToString());
+
+            // Edit state is the REAL current operation: accessible name becomes Update message.
+            source.IsEditing = true;
+            view.RefreshSurface(); Pump();
+            Assert.Equal("Update message", send.GetValue(AutomationProperties.NameProperty)?.ToString());
+
+            // Availability is truthful and bound to CanSend, never hidden to force an arrow.
+            source.CanSend = false;
+            view.RefreshSurface(); Pump();
+            Assert.False(send.IsEnabled, "send must be disabled while drafting is not sendable");
+
+            source.CanSend = true;
+            view.RefreshSurface(); Pump();
+            Assert.True(send.IsEnabled);
+            send.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(1, source.SendCount);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
+    public async Task Aa_and_emoji_triggers_are_chromeless_when_unselected_and_selected_when_open()
+    {
+        var source = new DraftInsertingSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var box = FindInput(view); Assert.NotNull(box);
+            box!.Focus(); Pump(); // expanded formatting shows Aa (emoji trigger
+
+            var format = FindButton(view, "format-button"); Assert.NotNull(format);
+            var emoji = FindButton(view, "emoji-button"); Assert.NotNull(emoji);
+
+            // Unselected: both triggers are plain/chromeless (no always-filled disk).
+            Assert.True(IsEffectivelyTransparent(format!.Background), "Aa must be chromeless when unselected");
+            Assert.True(IsEffectivelyTransparent(emoji!.Background), "emoji must be chromeless when unselected");
+
+            // Opening Aa selects it (visible selected affordance) and reveals the floating toolbar.
+            format.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            Assert.False(IsEffectivelyTransparent(format.Background), "Aa must show a selected affordance while open");
+            Assert.NotNull(FindContainer(view, "format-toolbar"));
+            format.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            Assert.True(IsEffectivelyTransparent(format.Background), "Aa returns to chromeless when closed");
+
+            // Opening the emoji picker selects the trigger; closing returns it to chromeless.
+            emoji.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            Assert.False(IsEffectivelyTransparent(emoji.Background), "emoji must show a selected affordance while open");
+            emoji.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            Assert.True(IsEffectivelyTransparent(emoji.Background), "emoji returns to chromeless when closed");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
+    public async Task Icon_tools_and_primary_action_are_keyboard_focus_reachable()
+    {
+        // The authored chrome must not suppress keyboard focus: each tool participates in focus.
+        var source = new DraftInsertingSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view); Assert.NotNull(box);
+            box!.Focus(); Pump(); // expand so Aa/emoji tools are live
+            foreach (var id in new[] { "add-button", "format-button", "settings-button", "send-button" })
+            {
+                var button = FindButton(view, id);
+                Assert.NotNull(button);
+                button!.Focus(); Pump();
+                Assert.True(button.IsKeyboardFocusWithin, $"{id} must be keyboard-focus reachable");
+            }
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    private static Rect WindowBounds(Control control, TopLevel top)
+    {
+        var origin = control.TranslatePoint(default, top) ?? default;
+        return new Rect(origin.X, origin.Y, control.Bounds.Width, control.Bounds.Height);
+    }
+
+    private static bool IsEffectivelyTransparent(IBrush? brush)
+    {
+        if (brush is null) return true;
+        if (brush.Opacity <= 0d) return true;
+        return brush is ISolidColorBrush solid && solid.Color.A == 0;
     }
 }

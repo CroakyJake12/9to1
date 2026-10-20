@@ -239,6 +239,122 @@ public sealed class ChatComposerCompiledTransportTests
         }
     }
 
+    [Fact]
+    public void Composer_authored_controls_declare_44px_hit_targets_and_image_glyphs()
+    {
+        // The authored composer standardises every icon tool and the primary action on one
+        // consistent 44x44 hit target (the accessible target), with the actual glyph delivered as
+        // a genuine packaged-SVG image child so icon extent and hit target stay distinct.
+        var artifact = ReadEmbeddedArtifact();
+        var doc = ComposerDocument(artifact);
+        var semantics = doc.Semantics;
+
+        string[] ids = ["add-button", "format-button", "emoji-button", "settings-button", "send-button"];
+        foreach (var id in ids)
+        {
+            var button = FindComponent(semantics, id);
+            Assert.NotNull(button);
+            Assert.Equal("44", Literal(button!, "Width"));
+            Assert.Equal("44", Literal(button!, "Height"));
+        }
+
+        // The add/glyph keeps its authored 6px padding and a packaged-SVG Image child.
+        var add = FindComponent(semantics, "add-button")!;
+        Assert.Equal("6", Literal(add, "Padding"));
+        Assert.True(HasImageChild(add, "plus.svg"), "add tool must render the packaged plus.svg");
+
+        // The settings control is a genuine SVG (not the intricate Unicode gear) and the primary
+        // action is a circular-arrow SVG.
+        var settings = FindComponent(semantics, "settings-button")!;
+        Assert.True(HasImageChild(settings, "settings.svg"), "settings must render the packaged settings.svg gear");
+        var send = FindComponent(semantics, "send-button")!;
+        Assert.True(HasImageChild(send, "send.svg"), "primary action must render the packaged send.svg arrow");
+
+        // Secondary icon tools share the quiet chromeless/transparent treatment as the emoji trigger.
+        Assert.Equal("Transparent", Literal(FindComponent(semantics, "format-button")!, "background"));
+        Assert.Equal("Transparent", Literal(FindComponent(semantics, "settings-button")!, "background"));
+    }
+
+    [Fact]
+    public void Composer_settings_action_is_thread_settings_not_permission_selector()
+    {
+        // The authored settings control's real action is composer.settings and its panel is Thread
+        // settings (Actions + Responses). It is NOT the canonical permission selector and must not
+        // be relabelled Permissions or manufacture a policy/owner permission.
+        var artifact = ReadEmbeddedArtifact();
+        var doc = ComposerDocument(artifact);
+        var semantics = doc.Semantics;
+
+        var settings = FindComponent(semantics, "settings-button")!;
+        var settingsAction = settings.Actions["action"]!.Name;
+        Assert.Equal("composer.settings", settingsAction);
+        Assert.True(settings.Properties.TryGetValue("accessible-name", out var name) && name.LiteralValue == "Thread settings");
+        Assert.True(settings.Properties.TryGetValue("tooltip", out var tip) && tip.LiteralValue!.Contains("allowed actions", StringComparison.Ordinal));
+
+        // The thread-settings modes/actions exist and no command in the model is a permission selector.
+        Assert.True(semantics.Actions.ContainsKey("composer.set-action-mode"));
+        Assert.True(semantics.Actions.ContainsKey("composer.set-response-mode"));
+        Assert.DoesNotContain(semantics.Actions.Keys, command => command.Contains("permission", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Composer_primary_send_action_is_authored_with_truthful_accessibility_bindings()
+    {
+        // The primary action stays the real composer.send, gated by the real CanSend availability and
+        // labelled from the REAL current operation (normal Send / edit Update) via read-only
+        // presentation bindings, never a fake arrow-only label.
+        var artifact = ReadEmbeddedArtifact();
+        var doc = ComposerDocument(artifact);
+        var semantics = doc.Semantics;
+
+        var send = FindComponent(semantics, "send-button")!;
+        Assert.Equal("composer.send", send.Actions["action"]!.Name);
+        Assert.True(send.Properties.TryGetValue("Interactive", out var interactive)
+            && interactive.Kind == CuiV2ValueKind.Binding
+            && interactive.BindingPath == "Composer.CanSend");
+        Assert.True(send.Properties.TryGetValue("accessible-name", out var name)
+            && name.Kind == CuiV2ValueKind.Binding
+            && name.BindingPath == "Composer.SendAccessibleName");
+        Assert.True(send.Properties.TryGetValue("tooltip", out var tip)
+            && tip.Kind == CuiV2ValueKind.Binding
+            && tip.BindingPath == "Composer.SendTooltip");
+    }
+
+    private static CuiV2Component? FindComponent(CuiV2Semantics semantics, string id)
+    {
+        foreach (var component in Flatten(semantics.Components))
+        {
+            if (string.Equals(component.Name, id, StringComparison.Ordinal)) return component;
+        }
+        return null;
+    }
+
+    private static IEnumerable<CuiV2Component> Flatten(IEnumerable<CuiV2Component> components)
+    {
+        foreach (var component in components)
+        {
+            yield return component;
+            foreach (var child in Flatten(component.Children)) yield return child;
+        }
+    }
+
+    private static string? Literal(CuiV2Component component, string property) =>
+        component.Properties.TryGetValue(property, out var value) && value.Kind == CuiV2ValueKind.Literal
+            ? value.LiteralValue
+            : null;
+
+    private static bool HasImageChild(CuiV2Component component, string asset)
+    {
+        foreach (var child in component.Children)
+        {
+            if (!string.Equals(child.Type, "Image", StringComparison.OrdinalIgnoreCase)) continue;
+            if (child.Properties.TryGetValue("Source", out var source)
+                && (source.LiteralValue?.Contains(asset, StringComparison.OrdinalIgnoreCase) ?? false))
+                return true;
+        }
+        return false;
+    }
+
     private static IReadOnlyList<CuiCompiledArtifactDocument> ReplaceDocument(
         CuiCompiledArtifact artifact, CuiCompiledArtifactDocument original, CuiCompiledArtifactDocument replacement) =>
         artifact.Documents.Select(d => ReferenceEquals(d, original) ? replacement : d).ToArray();
