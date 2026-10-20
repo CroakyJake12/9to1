@@ -27,18 +27,39 @@ The worker is compiled by the coordinator at root allocation with:
       -lcudart
 (no compiler installs, downloads, model execution, or Windows/GPU/PC acceptance are performed here).
 """
+import hashlib
+import os
 import pathlib
 import select
 import struct
 import subprocess
 import sys
+import time
 import unittest
+from contextlib import contextmanager
 
 NATIVE = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata"
 CANDIDATE_CPP = NATIVE / "dulche_strata_candidate_worker.cpp"
 CHILD_PROCESS_H = NATIVE / "dulche_child_process.h"
 # Where a root allocation would place the built worker (worktree-local). If absent, tests skip.
 BUILT_CANDIDATE = pathlib.Path("/workspace/9to1-mercury-thunder/work/pc-worker/thunder-benchmark/native-child-test/build/dulche-strata-candidate-worker")
+
+# Independent execution must run against a PINNED genuine binary. The root records the exact SHA256
+# of the built artifact; without it the tests refuse to consume a mutable/unpinned build.
+_EXPECTED_CANDIDATE_SHA256 = os.environ.get("DULCHE_NATIVE_CANDIDATE_SHA256")
+
+
+def _built_candidate_acceptable():
+    if not BUILT_CANDIDATE.is_file():
+        return False
+    if not _EXPECTED_CANDIDATE_SHA256:
+        return False
+    actual = hashlib.sha256(BUILT_CANDIDATE.read_bytes()).hexdigest()
+    return actual.lower() == _EXPECTED_CANDIDATE_SHA256.lower()
+
+
+class _FrameDeadlineExceeded(Exception):
+    pass
 
 
 def _command(op, body: bytes = b"") -> bytes:
@@ -56,32 +77,73 @@ def _text(s) -> bytes:
     return struct.pack("<I", len(b)) + b
 
 
-@unittest.skipUnless(BUILT_CANDIDATE.exists(), "root-allocation native fixture: built candidate worker not present")
+@unittest.skipUnless(_built_candidate_acceptable(),
+                     "root-allocation native fixture: built candidate worker not present or not pinned "
+                     "by DULCHE_NATIVE_CANDIDATE_SHA256")
 class NativeFixtureTests(unittest.TestCase):
+    @contextmanager
     def _spawn(self):
-        return subprocess.Popen([str(BUILT_CANDIDATE)], stdin=subprocess.PIPE,
+        proc = subprocess.Popen([str(BUILT_CANDIDATE)], stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            yield proc
+        finally:
+            # Guaranteed owned-process cleanup on any failure/timeout/assert path; never leave a
+            # hung child behind.
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        pass
+            for stream in (proc.stdin, proc.stdout, proc.stderr):
+                try:
+                    stream.close()
+                except Exception:
+                    pass
 
     def _read_frame(self, proc, timeout=15):
-        """Read one worker-output frame `[u32 type][u32 len][payload]` with a real read deadline.
-        Raises AssertionError if no frame arrives within `timeout` seconds (no indefinite block)."""
+        """Read one worker-output frame `[u32 type][u32 len][payload]` under ONE absolute deadline
+        applied to every chunk (header and body), so a partial/trickling frame can never block
+        indefinitely. Raises _FrameDeadlineExceeded on deadline/EOF."""
+        deadline = time.monotonic() + timeout
         fd = proc.stdout.fileno()
-        ready, _, _ = select.select([fd], [], [], timeout)
-        if not ready:
-            self.fail("native fixture: timed out waiting for a worker frame (blocked read)")
-        head = proc.stdout.read(8)
-        if len(head) != 8:
-            return None
+
+        def read_exact(n):
+            buf = b""
+            while len(buf) < n:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise _FrameDeadlineExceeded()
+                ready, _, _ = select.select([fd], [], [], max(remaining, 0.0))
+                if not ready:
+                    raise _FrameDeadlineExceeded()
+                chunk = os.read(fd, min(n - len(buf), 4096))
+                if not chunk:
+                    raise _FrameDeadlineExceeded()
+                buf += chunk
+            return buf
+
+        head = read_exact(8)
         ptype, length = struct.unpack("<II", head)
         if length > 1 << 24:
             self.fail("native fixture: implausible frame length")
-        payload = proc.stdout.read(length)
-        self.assertEqual(len(payload), length, "native fixture: truncated frame payload")
+        payload = read_exact(length)
         return ptype, payload
+
+    def _read_frame_or_fail(self, proc, timeout=15):
+        try:
+            return self._read_frame(proc, timeout)
+        except _FrameDeadlineExceeded:
+            self.fail("native fixture: timed out waiting for a worker frame (blocked/partial read)")
 
     def test_hello_frame_version2(self):
         with self._spawn() as proc:
-            ptype, payload = self._read_frame(proc)
+            ptype, payload = self._read_frame_or_fail(proc)
             self.assertEqual(ptype, 0)
             version, origin_len = struct.unpack("<II", payload[:8])
             self.assertEqual(version, 2)
@@ -91,14 +153,14 @@ class NativeFixtureTests(unittest.TestCase):
 
     def test_truncated_command_fails_cleanly(self):
         with self._spawn() as proc:
-            self._read_frame(proc)  # consume hello
+            self._read_frame_or_fail(proc)  # consume hello
             # Declare an 8-byte command body (op u32 + 4 more bytes) but send only the op, then
             # close stdin so the worker's fread hits EOF instead of blocking forever on an open
             # stream. This exercises the real bounded length/body path with a real deadline.
             proc.stdin.write(struct.pack("<I", 8) + struct.pack("<I", 1))
             proc.stdin.flush()
             proc.stdin.close()
-            ptype, payload = self._read_frame(proc)
+            ptype, payload = self._read_frame_or_fail(proc)
             self.assertEqual(ptype, 5)          # failure frame
             self.assertEqual(proc.wait(timeout=15), 72)  # bounded exceptional return
             # no leaked child, full stderr collection
@@ -106,10 +168,10 @@ class NativeFixtureTests(unittest.TestCase):
 
     def test_unknown_operation_fails_cleanly(self):
         with self._spawn() as proc:
-            self._read_frame(proc)
+            self._read_frame_or_fail(proc)
             proc.stdin.write(_command(99, _text("x")))
             proc.stdin.flush()
-            ptype, payload = self._read_frame(proc)
+            ptype, payload = self._read_frame_or_fail(proc)
             self.assertEqual(ptype, 5)
             self.assertEqual(proc.wait(timeout=15), 72)
 
@@ -119,13 +181,13 @@ class NativeFixtureTests(unittest.TestCase):
         # dependency cause, never crash, hang, or leak a child. This exercises the exception-safe
         # child-owner teardown (the pass-4 fatal-retirement fix) on the real code path.
         with self._spawn() as proc:
-            self._read_frame(proc)
+            self._read_frame_or_fail(proc)
             payload = (_text("/nonexistent/pack") + _text("qwen35moe")
                        + struct.pack("<I", 4096) + _text("")
                        + struct.pack("<I", 0))
             proc.stdin.write(_command(1, payload))
             proc.stdin.flush()
-            ptype, payload = self._read_frame(proc)
+            ptype, payload = self._read_frame_or_fail(proc)
             self.assertEqual(ptype, 5)
             code, count = struct.unpack("<II", payload[:8])
             self.assertEqual(code, 3)
@@ -139,13 +201,13 @@ class NativeFixtureTests(unittest.TestCase):
         # op 3 (stop) -> ack type 3 + exit 0, then EOF.
         proc.stdin.write(_command(3, b""))
         proc.stdin.flush()
-        ptype, payload = self._read_frame(proc)
+        ptype, payload = self._read_frame_or_fail(proc)
         self.assertEqual(ptype, 3)
         self.assertEqual(proc.wait(timeout=15), 0)
 
     def test_clean_stdin_eof_exits_zero(self):
         with self._spawn() as proc:
-            self._read_frame(proc)
+            self._read_frame_or_fail(proc)
             proc.stdin.close()
             self.assertEqual(proc.wait(timeout=15), 0)
 

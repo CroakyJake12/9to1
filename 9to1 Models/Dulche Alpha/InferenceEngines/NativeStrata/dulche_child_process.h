@@ -154,8 +154,15 @@ private:
                 break;
             }
             if (pfd[1].revents & (POLLIN | POLLHUP)) {
+                // Bounded wake consumption: stop_and_join() writes exactly ONE byte and keeps the
+                // write end open until after join, so an unbounded drain loop would block on the
+                // second read. Consume a single byte (retrying only on EINTR) and stop; a HUP
+                // without data simply exits here too.
                 char w;
-                while (::read(_wake[0], &w, 1) > 0) {}
+                for (;;) {
+                    const ssize_t r = ::read(_wake[0], &w, 1);
+                    if (r >= 0 || errno != EINTR) break;
+                }
                 break;
             }
             if (_stop.load(std::memory_order_relaxed)) break;
@@ -303,9 +310,11 @@ public:
         close_fd(_out_fd);                    //    close stdout read end (group kill already closed
                                               //    the child's write end, so a pending read returns EOF)
         _stderr.stop_and_join();              // 3. join the (unblocked) stderr drain
-        if (!_reaped) _wait_reap_bounded();   // 4. reap the exact pid with real bounds
-        _spawned = false;
-        _reaped = true;
+        if (!_reaped) _reaped = _wait_reap_bounded();  // 4. reap exact pid/handle with real bounds
+        // Only relinquish custody when the exact pid/handle is actually settled. If the bounded
+        // reap did not succeed, ownership (spawned state + process/handle) is retained so success
+        // is never fabricated; a later shutdown() retries settlement.
+        if (_reaped) _spawned = false;
     }
 
     int in_fd() const { return _in_fd; }
@@ -351,13 +360,28 @@ private:
 #endif
     }
 
+#if defined(_WIN32)
+    // Windows bounded settle: wait on the owned process handle with an absolute bound. Returns true
+    // only when the handle is actually closed and reaped (truthful, never fabricated).
+    bool _wait_reap_bounded() {
+        if (_reaped || !_hProcess) return _reaped;
+        if (WaitForSingleObject(_hProcess, 5000) == WAIT_OBJECT_0) {
+            CloseHandle(_hProcess);
+            _hProcess = nullptr;
+            _reaped = true;
+        }
+        return _reaped;
+    }
+#endif
+
 #if !defined(_WIN32)
-    void _wait_reap_bounded() {
+    bool _wait_reap_bounded() {
         auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(5000);
         while (!_reaped && std::chrono::steady_clock::now() < deadline) {
-            if (_try_reap()) return;
+            if (_try_reap()) return true;
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
+        return _reaped;
     }
 
     bool _spawn_posix(const SpawnSpec& spec) {

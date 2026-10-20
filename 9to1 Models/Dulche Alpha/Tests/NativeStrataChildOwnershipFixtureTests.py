@@ -86,8 +86,9 @@ class ChildOwnershipFixtureRunTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
             out = pathlib.Path(tmp) / "child-ownership-fixture"
             build = subprocess.run(
-                ["g++", "-std=c++20", "-O1", "-pthread", "-o", str(out), str(FIXTURE)],
-                capture_output=True, text=True)
+                ["g++", "-std=c++20", "-O1", "-pthread", "-I", str(NATIVE),
+                 "-o", str(out), str(FIXTURE)],
+                capture_output=True, text=True, timeout=120)
             self.assertEqual(build.returncode, 0, build.stderr)
             run = subprocess.run([str(out)], capture_output=True, text=True, timeout=60)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)

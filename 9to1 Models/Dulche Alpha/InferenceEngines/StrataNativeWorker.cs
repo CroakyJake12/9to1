@@ -20,7 +20,7 @@ public abstract class StrataOriginalModelLease : IAsyncDisposable
     public abstract void DemandCurrentOriginalBinding();
     public abstract ValueTask DisposeAsync();
 }
-public sealed record StrataBundledWorker(string ExecutablePath, string ExpectedSha256);
+public sealed record StrataBundledWorker(string ExecutablePath, string ExpectedSha256, string? PythonInterpreterPath = null);
 public sealed record StrataBuildObservation(string OriginCommit, bool CudaBuilt, bool NcclBuilt, IReadOnlyList<string> Registrations);
 public sealed record StrataGenerationObservation(long PromptTokens, long PrefillTokens, long DecodeTokens,
     double PrefillSeconds, double DecodeSeconds, long? ReusedPromptTokens, bool? IncrementalKvContinuation, bool Stopped);
@@ -656,6 +656,25 @@ public sealed class StrataCandidateWorker : IAsyncDisposable, IOriginalInference
     private StrataCandidateWorker(StrataBundledWorker binary, StrataOriginalModelLease model)
     { _binary=binary; _model=model; var requirements=model.Requirements; _requirements=requirements with {
         RequiredFeatures=requirements.RequiredFeatures.ToFrozenSet(StringComparer.Ordinal), PreferredEngines=requirements.PreferredEngines?.ToArray() }; }
+    /// <summary>Bind the approved tokenizer interpreter without inheriting ambient secrets. The
+    /// worker environment is deliberately cleared (never forwarding PATH or ambient secrets); we set
+    /// STRATA_PYTHON only when the binary/model owner supplies a validated absolute interpreter path.
+    /// Otherwise generation is refused precisely rather than silently falling back to an ambiguous
+    /// PATH scan.</summary>
+    private void BindApprovedPython(ProcessStartInfo start)
+    {
+        var approved = _binary.PythonInterpreterPath;
+        if (string.IsNullOrWhiteSpace(approved))
+            throw new NotSupportedException(
+                "This candidate worker requires an approved python3 interpreter for its bundled "
+                + "tokenizer helper; no STRATA_PYTHON path was supplied by the original worker owner. "
+                + "Generation is refused (precise missing-dependency refusal).");
+        if (!File.Exists(approved))
+            throw new InvalidDataException(
+                "Approved tokenizer interpreter path does not exist: " + approved);
+        start.Environment["STRATA_PYTHON"] = Path.GetFullPath(approved);
+    }
+
     /// <summary>The returned actual initialization driver must be owned before its publication gate opens.</summary>
     public static Task<StrataCandidateWorker> CreateCandidateAfterPublicationAsync(Task originalStart, StrataBundledWorker binary,
         StrataOriginalModelLease model, CancellationToken cancellationToken)
@@ -690,7 +709,9 @@ public sealed class StrataCandidateWorker : IAsyncDisposable, IOriginalInference
         finally { await Own(() => executable.DisposeAsync().AsTask()).ConfigureAwait(false); }
         var start = new ProcessStartInfo(_binary.ExecutablePath) { UseShellExecute=false, RedirectStandardInput=true, RedirectStandardOutput=true,
             RedirectStandardError=true, CreateNoWindow=true };
-        start.Environment.Clear(); start.Environment["LANG"]="C.UTF-8";
+        start.Environment.Clear();
+        start.Environment["LANG"]="C.UTF-8";
+        BindApprovedPython(start);
         var process = new Process { StartInfo=start, EnableRaisingEvents=true };
         _process=process;
         if (!Physical(process.Start)) throw new InvalidOperationException("The actual candidate worker did not start.");

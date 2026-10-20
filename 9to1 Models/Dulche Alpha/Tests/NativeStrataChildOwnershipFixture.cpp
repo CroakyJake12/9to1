@@ -7,8 +7,10 @@
 // STATUS: AUTHORED / COMPILE+RUN NOT RUN in this source-only checkpoint (no root portable-component
 // compile allocation was carried into this dispatch). It is written to compile with:
 //
-//   g++ -std=c++20 -O1 -pthread -o child-ownership-fixture \
+//   g++ -std=c++20 -O1 -pthread -I <native> -o child-ownership-fixture \
 //       dulche_child_ownership_fixture.cpp
+// where <native> is the absolute path of the InferenceEngines/NativeStrata directory containing
+// `dulche_child_process.h`.
 //
 // and is intended to be run by a root allocation (one compiler process, short timeout). No native
 // engine/model/CUDA symbols are required; this is pure process/IPC plumbing.
