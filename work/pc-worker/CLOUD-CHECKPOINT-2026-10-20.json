@@ -1,7 +1,7 @@
 {
   "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
-  "recorded_at": "2026-10-20T10:54:47.550366+00:00",
-  "source_commit": "5e99dc97602a575a635381178b9544daf379d451",
+  "recorded_at": "2026-10-20T11:33:02.901365+00:00",
+  "source_commit": "ebeb78cfb798bbf1493b7923ac0b2f5c301dc280",
   "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
   "branch": "codex/cloud-continuation-20261020",
   "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
@@ -142,6 +142,18 @@
       "native_evidence": "/workspace/shared/9to1-native-evidence/blue-dual-v1/native-journey.json",
       "native_observation": "1440x920: blue focus, no Dual status; draft visible and same SQLite text after graceful exit0; legacy composer and initial history still deficient",
       "plugin_integration": "NOT_RUN; removal of automatic first-party bar is not full Plugin implementation"
+    },
+    "sidebar_surface_separation": {
+      "source_base": "1272dead4eae48392cf06cb6938d172e7811fea5",
+      "source_patch_sha256": "b818d1024645576471c2c706cf5fced3624f9cd79e736aaedebf8119a7d3e4d7",
+      "main_commit": "ebeb78cf",
+      "build": "PASS0errors,1existingWebRtcwarning",
+      "changed_spaces_dll_sha256": "68c9cbc84170d010dda233ec8aaf5314a939ff858a7765ae64d73b4e9403cb25",
+      "native": "1440x920 and960x760; clear sidebar contrast, collapse/reexpand, visible draft and graceful exit0; same SQLite text/branch",
+      "independent_static_visual_review": "PASS at1440x920 only; no new geometry/clipping/readability blocker",
+      "evidence": "/workspace/shared/9to1-native-evidence/sidebar-separation-v1/native-journey.json",
+      "Light_HC": "NOT_RUN",
+      "whole_app": "NOT_RUN"
     }
   },
   "acceptance": {
@@ -175,11 +187,29 @@
     "mercury_activation_condition": "Only after confirmed OpenCode Beam usage exhaustion",
     "existing_mercury_spending_cap_usd": 5,
     "spending_controls_changed": false,
-    "mercury_requests_sent": "See private process/session receipts; fallback activation starting after recorded Beam provider.quota/FreeUsageLimitError. No credential stored in repository."
+    "mercury_requests_sent": "At least two completed authorised OpenCode turns, third active; exact provider request count/billed total UNKNOWN. Key remains outside Git; existing cap unchanged."
   },
   "allowance": {
     "beam_remaining": "EXHAUSTED: recorded provider.quota FreeUsageLimitError at2026-10-20T10:50:38Z",
     "codex_remaining": "UNKNOWN",
-    "paid_fallback_activated": "Starting authorised Mercury fallback, private process-scoped key, verified $5 cap untouched"
+    "paid_fallback_activated": "Authorised Mercury fallback active after Beam quota exhaustion; no spending control change"
+  },
+  "unaccepted_candidate": {
+    "worktree": "/workspace/9to1-chat-cui",
+    "base": "1862a75abad780da9eae0f91a7c2b787375ba8dc",
+    "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
+    "state": "FAIL; active repair in single OpenCode Mercury worker with exclusive serial .NET slot",
+    "first_compilation": "5actual C#adapter errors",
+    "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
+    "independent_source_blockers": [
+      "First input attachment terminally releases its port",
+      "Incomplete initialization/close and physical owner custody",
+      "Native/mode actions prematurely settle actual async work",
+      "Production scoped Home context/owner parameters remain unwired",
+      "Selection/emoji behavior diverges, Enter submit missing and response modes/model gates incomplete",
+      "Meaningful control/route/lifetime test coverage was weakened; restore actual production checks",
+      "CUI local presentation state requires framework implementation and authored CUI migration"
+    ],
+    "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof"
   }
 }
