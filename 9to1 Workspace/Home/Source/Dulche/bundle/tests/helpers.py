@@ -16,6 +16,8 @@ import json
 import pathlib
 import struct
 
+ELF64_MIN_HEADER_BYTES = 64
+
 
 def make_gguf(version: int = 3, payload: bytes = b"", tensor_count: int = 0, metadata_kv_count: int = 0) -> bytes:
     """A structurally valid GGUF v2/v3 primary header (24 bytes) plus payload.
@@ -32,6 +34,44 @@ def make_gguf(version: int = 3, payload: bytes = b"", tensor_count: int = 0, met
 def make_truncated_gguf(version: int = 3) -> bytes:
     """A 12-byte header-truncated GGUF (magic + version + 4 payload bytes)."""
     return b"GGUF" + struct.pack("<I", version) + b"\x00\x01\x02\x03"
+
+
+def make_gguf_single_tensor(
+    *,
+    version: int = 3,
+    dims: tuple[int, ...] = (1,),
+    ggml_type: int = 0,  # F32
+    data: bytes = b"\x01\x02\x03\x04",
+) -> bytes:
+    """A structurally valid GGUF with one tensor, uint64 dimensions and a real
+    aligned payload region. ``data`` must be at least the dtype's byte extent.
+    """
+    header = b"GGUF" + struct.pack("<IQQ", version, 1, 0)
+    name = b"x"
+    ti = struct.pack("<Q", len(name)) + name
+    ti += struct.pack("<I", len(dims))
+    for dim in dims:
+        ti += struct.pack("<Q", dim)
+    ti += struct.pack("<I", ggml_type)
+    offset = 0
+    ti += struct.pack("<Q", offset)
+    base = header + ti
+    data_start = (len(base) + 7) & ~7
+    padding = data_start - len(base)
+    return base + b"\x00" * padding + data
+
+
+def make_gguf_high_offset() -> bytes:
+    """A 57-byte GGUF declaring a rank-1 uint64 dimension but a 4GiB tensor
+    data offset with no payload. This mirrors the independent FAIL probe.
+    """
+    bad = b"GGUF" + struct.pack("<IQQ", 3, 1, 0)  # version 3, tensor_count 1, kv 0
+    bad += struct.pack("<Q", 1) + b"x"  # tensor name
+    bad += struct.pack("<I", 1)  # n_dimensions = 1
+    bad += struct.pack("<Q", 1)  # dimension (uint64) = 1
+    bad += struct.pack("<I", 0)  # ggml type F32
+    bad += struct.pack("<Q", 1 << 32)  # data offset = 4GiB
+    return bad
 
 
 def make_safetensors(tensor_count: int = 1) -> bytes:
@@ -98,6 +138,33 @@ def make_elf(machine: int = 62, *, data_little: int = 1, class64: int = 2) -> by
 def make_truncated_elf(machine: int = 62) -> bytes:
     """A 20-byte ELF64 header truncated far below the required 64 bytes."""
     return b"\x7fELF" + bytes([2, 1, 1]) + bytes(13) + struct.pack("<H", machine)
+
+
+def make_elf_with_program_table(
+    *,
+    machine: int = 62,
+    phoff: int = 64,
+    phentsize: int = 56,
+    phnum: int = 1,
+    append_table: bool = True,
+) -> bytes:
+    """A structurally valid 64-byte ELF64 header plus (optionally) a
+    program-header table.
+
+    Defaults declare one 56-byte program header at offset 64 (immediately after
+    the header) and append it, forming a valid bounded non-empty table. Set
+    ``append_table=False`` to produce a header that *declares* a table at
+    ``phoff`` without the table bytes actually present (out-of-bounds /
+    malformed). Pass non-default values to construct other malformed forms.
+    """
+    elf = bytearray(make_elf(machine))
+    struct.pack_into("<Q", elf, 32, phoff)  # e_phoff
+    struct.pack_into("<H", elf, 54, phentsize)  # e_phentsize
+    struct.pack_into("<H", elf, 56, phnum)  # e_phnum
+    head = bytes(elf)
+    if append_table and phnum > 0 and phoff >= ELF64_MIN_HEADER_BYTES:
+        head += b"\x00" * (phentsize * phnum)
+    return head
 
 
 def write_fixture(root: pathlib.Path, relative: str, data: bytes) -> pathlib.Path:

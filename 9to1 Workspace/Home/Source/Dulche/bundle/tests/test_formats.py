@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pathlib
+import struct
 import sys
 import tempfile
 import unittest
@@ -11,7 +12,10 @@ from bundle.formats import elf_machine_matches, sniff_format  # noqa: E402
 from bundle.identity import IdentityError  # noqa: E402
 from bundle.tests.helpers import (  # noqa: E402
     make_elf,
+    make_elf_with_program_table,
     make_gguf,
+    make_gguf_high_offset,
+    make_gguf_single_tensor,
     make_safetensors,
     make_safetensors_out_of_bounds,
     make_truncated_elf,
@@ -103,6 +107,85 @@ class FormatsTests(unittest.TestCase):
 
         header = _json.dumps({"__metadata__": {"format": "pt"}}, separators=(",", ":")).encode()
         data = _struct.pack("<Q", len(header)) + header
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "safetensors")
+
+    # --- Pass 3 causal regressions from the independent probe ---
+
+    def test_gguf_one_tensor_valid_u64_dims_with_payload(self) -> None:
+        meta = sniff_format(self._file(make_gguf_single_tensor(dims=(1,))), "gguf")
+        self.assertTrue(meta["structurallyComplete"])
+        self.assertEqual(1, meta["tensorCount"])
+        self.assertEqual(3, meta["ggufVersion"])
+
+    def test_gguf_high_offset_no_payload_rejected(self) -> None:
+        # The 57-byte rank-1 uint64-dimension + 4GiB offset probe must be
+        # rejected despite the (previously misaligned) parser reading offset 0.
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(make_gguf_high_offset()), "gguf")
+
+    def test_gguf_unknown_ggml_type_rejected(self) -> None:
+        # Unknown ggml tensor type cannot be declared structurally complete.
+        import struct as _struct
+
+        data = make_gguf_single_tensor(dims=(1,), ggml_type=99, data=b"\x00" * 4)
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "gguf")
+
+    def test_elf_program_header_table_out_of_bounds_rejected(self) -> None:
+        # 64-byte header declaring a 56-byte program header at offset 64 with no
+        # table present must be rejected.
+        bad = make_elf_with_program_table(phoff=64, phentsize=56, phnum=1, append_table=False)
+        self.assertEqual(64, len(bad))
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(bad), "elf")
+
+    def test_elf_valid_nonempty_program_table_passes(self) -> None:
+        # A header plus an actual appended 56-byte program header is bounded and
+        # structurally valid.
+        good = make_elf_with_program_table(phoff=64, phentsize=56, phnum=1)
+        self.assertEqual(64 + 56, len(good))
+        meta = sniff_format(self._file(good), "elf")
+        self.assertTrue(meta["structurallyComplete"])
+        self.assertEqual(62, meta["machine"])
+
+    def test_safetensors_declared_extent_truncated_rejected(self) -> None:
+        # F32 shape[1024] => 4096-byte extent, but offsets [0,1] with a 1-byte
+        # payload. This must be rejected as truncated/contradictory.
+        import json as _json
+
+        h = _json.dumps({"x": {"dtype": "F32", "shape": [1024], "data_offsets": [0, 1]}}, separators=(",", ":")).encode()
+        data = struct.pack("<Q", len(h)) + h + b"x"
+        self.assertEqual(66, len(data))
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "safetensors")
+
+    def test_safetensors_valid_scalar_empty_shape_passes(self) -> None:
+        # A legitimate scalar tensor has shape [] (1 element) and a matching
+        # 4-byte F32 extent. It must NOT be rejected.
+        import json as _json
+
+        h = _json.dumps({"s": {"dtype": "F32", "shape": [], "data_offsets": [0, 4]}}, separators=(",", ":")).encode()
+        data = struct.pack("<Q", len(h)) + h + b"\x00" * 4
+        meta = sniff_format(self._file(data), "safetensors")
+        self.assertTrue(meta["structurallyComplete"])
+        self.assertEqual(1, meta["tensors"])
+
+    def test_safetensors_zero_size_tensor_passes(self) -> None:
+        # shape[0] is a legitimate empty tensor with extent 0 (start == end).
+        import json as _json
+
+        h = _json.dumps({"z": {"dtype": "F32", "shape": [0], "data_offsets": [0, 0]}}, separators=(",", ":")).encode()
+        data = struct.pack("<Q", len(h)) + h
+        meta = sniff_format(self._file(data), "safetensors")
+        self.assertTrue(meta["structurallyComplete"])
+
+    def test_safetensors_unknown_dtype_rejected(self) -> None:
+        # Unknown dtype must not receive structurallyComplete:true.
+        import json as _json
+
+        h = _json.dumps({"q": {"dtype": "Q8_0", "shape": [16], "data_offsets": [0, 16]}}, separators=(",", ":")).encode()
+        data = struct.pack("<Q", len(h)) + h + b"\x00" * 16
         with self.assertRaises(IdentityError):
             sniff_format(self._file(data), "safetensors")
 

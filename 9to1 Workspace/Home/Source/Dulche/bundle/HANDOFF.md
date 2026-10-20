@@ -194,3 +194,89 @@ weights remain missing => BLOCKED.
 are owned by other workers and are not present/owned in this sparse worktree. No
 exact startup/installer gate is claimed and no hidden process/service launches
 were added.
+
+---
+
+# Pass 3 (frozen 1f6517357d14c2efad2431b267a5a08f36cfbb2c)
+
+## Independent probe (pass2) reproduced three malformed-structure FAILs; all fixed
+
+Probe: `/workspace/shared/9to1-test-evidence/extra15-bundle-pass2-independent-20261020/admission-probe.json`.
+The 50/50 bundle + 4/4 llamacpp suites still PASS independent; three additional
+malformed-structure probes FAILed (all returned `structurallyComplete:true`).
+The probe was copied unchanged into my work area and re-run: all three FAIL rows
+now produce `IdentityError` (PASS), and the two retained required-missing /
+contradictory-ready rows remain PASS.
+
+### Fix A — GGUF tensor dimension width (uint64) and data-region bounds
+Cause: `formats.py` skipped `4*n_dimensions`, but GGUF v2/v3 tensor dimensions
+are uint64 (8 bytes each). This misaligned the type/offset reads, so a 57-byte
+rank-1 dim=1 F32 offset=4GiB file read offset 0 (misaligned) and was marked
+complete.
+
+Fix:
+- Walk each dimension via `reader.u64()` (uint64). Element count accumulates over
+  the real dims; rank is capped at 64.
+- Only plain (non-quantized) ggml tensor types with known byte widths are
+  supported; any other ggml type fails closed with a precise `unsupported`
+  diagnostic rather than claiming completeness.
+- The tensor data section start is computed as the 8-byte-aligned position after
+  the tensor-info table; each tensor's offset is relative to that aligned data
+  region, and `data_section_start + offset + data_size <= file_size` must hold.
+- Reader was refactored to bounded seek/read (never `read()` the whole file)
+  with file-size arithmetic; all counts/lengths/offsets are bounds-checked
+  before any loop/allocation.
+- New fixtures/tests: valid one-tensor GGUF with real uint64 dimensions +
+  payload (positive); high-offset (probe) and unknown-ggml-type negatives.
+
+### Fix B — ELF64 declared program/section table bounds
+Cause: only `e_ehsize` was validated, so a 64-byte header declaring a 56-byte
+program header at offset 64 (with no table present) passed.
+
+Fix:
+- Validate `e_phoff + e_phentsize*e_phnum <= file_size` (when phnum>0) and
+  `e_shoff + e_shentsize*e_shnum <= file_size` (when shnum>0).
+- Require entry sizes >= 56 (Phdr) / >= 64 (Shdr) when a table is present.
+- Reject extended-count forms (PN_XNUM/SHN_XNUM) as unsupported.
+- New tests: missing-table negative (probe) and valid bounded non-empty program
+  table positive.
+
+### Fix C — safetensors dtype/shape extent semantics
+Cause: only header keys were checked, so F32 shape[1024] with offsets [0,1] and
+a 1-byte payload passed.
+
+Fix:
+- Map supported dtypes to byte widths; unknown dtype fails closed (no
+  `structurallyComplete:true`).
+- `element_count = product(shape)` with integer semantics; empty shape `[]` is a
+  legitimate scalar (extent = dtype bytes), `[0]` is a legitimate empty tensor
+  (extent 0) — these are NOT rejected.
+- Require `end - start >= extent` (truncation/contradiction rejected; padding
+  permitted) and `payload_begin + end <= file_size`.
+- New tests: truncated-extent negative (probe), valid scalar empty-shape
+  positive, zero-size tensor positive, unknown-dtype negative.
+
+Structural integrity stays distinct from usable inference readiness: no model is
+loaded, no weight contents decoded, no execution. Real licence-reviewed backend/
+weights remain missing => BLOCKED.
+
+## Pass-3 test results (all run, all passing)
+- `bundle/`: `python3 -m unittest discover -s tests -p "test_*.py"` => **59
+  tests OK** (was 50; +9 causal in test_formats).
+- `llamacpp/`: `python3 -m unittest tests.test_manifest_validation` => 4 OK.
+- `python3 -m py_compile` on all changed modules => OK.
+- Unchanged independent probe copied into my work area
+  (`/tmp/opencode/pass3-probe.py`): all 5 rows PASS (3 malformed rejects + 2
+  closure invalid), log saved; reviewer evidence file not overwritten.
+
+## Pass-3 changed-file SHA-256
+- `bundle/formats.py` `bba1106e36c0228cca00535d2fc7ca936ca372df81aff7f24ae33940f3fa0148`
+- `bundle/tests/helpers.py` `e9db2bafe706b2fbf34b1c2845d17a109da803530d8db2475209db30d369a4fd`
+- `bundle/tests/test_formats.py` `e85a82053ddee8ec6a4699ba1c309e7b39e0adba4b734b3f76079504dc93cfc9`
+- All prior pass1/pass2 files unchanged (hashes as recorded in earlier handoff
+  sections).
+
+## Integration status
+Unchanged: integration remains **BLOCKED**; the sketch diff is not applied and
+no model/runtime readiness is claimed. No .NET/app/model/subagent/provider/config/
+credentials/cap/commit/push/external actions performed.
