@@ -9,10 +9,11 @@ using Xunit;
 namespace HavenOS.Apps.Spaces.Tests;
 
 /// <summary>
-/// The Chat composer must consume the PACKAGED compiled CUI artifact with hard admission checks —
-/// never a silent raw-source reparse fallback. These tests verify the real embedded bundle round-
-/// trips through the shared codec and that an unsupported format/version/language/ABI/capability
-/// fails before any scene effects occur.
+/// The Chat composer must consume the DISTINCT packaged V2 compiled CUI artifact with hard admission
+/// checks — never a silent raw-source reparse fallback, and never a V1/raw fallback for this
+/// stateful composer. These tests verify the real embedded V2 bundle round-trips through the shared
+/// codec into the typed model and that unsupported formats/versions/language/ABI/capabilities and
+/// metadata/payload contradictions fail before any scene effects occur.
 /// </summary>
 public sealed class ChatComposerCompiledTransportTests
 {
@@ -23,6 +24,7 @@ public sealed class ChatComposerCompiledTransportTests
         var artifact = CuiCompiledArtifactCodec.ReadArtifact(ChatComposerCuiDocument.ReadEmbeddedArtifact());
         Assert.Equal(CuiCompiledArtifactCodec.FormatName, artifact.Format);
         Assert.Equal(CuiCompiledArtifactCodec.FormatVersion, artifact.FormatVersion);
+        Assert.Equal(CuiCompiledArtifactCodec.ResourceLogicalName, ChatComposerCuiDocument.CompiledArtifactResource);
         return artifact;
     }
 
@@ -30,13 +32,12 @@ public sealed class ChatComposerCompiledTransportTests
         Assert.Single(artifact.Documents, document => document.Source == ComposerSource);
 
     [Fact]
-    public void Embedded_bundle_round_trips_to_semantics_with_local_variable_and_toggle()
+    public void Embedded_v2_bundle_round_trips_to_semantics_with_local_variable_and_toggle()
     {
         var artifact = ReadEmbeddedArtifact();
         var semantics = ChatComposerCuiDocument.Load();
         Assert.NotNull(semantics);
 
-        // The compiled composer declares the local bool variable and the pure-local toggle.
         Assert.True(semantics.Variables.TryGetValue("FormattingOpen", out var variable));
         Assert.Equal("bool", variable!.Type);
         Assert.False(bool.Parse(variable.Value));
@@ -44,29 +45,26 @@ public sealed class ChatComposerCompiledTransportTests
         var toggle = Assert.Single(semantics.Actions.Values, action => action.Name == "composer.toggle-formatting");
         Assert.Equal("FormattingOpen", toggle.LocalTarget);
 
-        // The emitted metadata announces the local-state-toggle capability.
+        // The stateful composer requires the distinct V2 ABI and announces the local-state capability.
         var doc = ComposerDocument(artifact);
-        Assert.Contains(doc.Compilation.Metadata.RequiredCapabilities, capability => capability == "local-state-toggle");
+        Assert.Equal(CuiCompiledArtifactCodec.V2RuntimeAbiVersion, doc.Metadata.RuntimeAbiVersion);
+        Assert.Contains(doc.Metadata.RequiredCapabilities, capability => capability == "local-state-toggle");
     }
 
     [Fact]
-    public void Embedded_bundle_round_trips_to_choose_once_emoji_variable_and_capability()
+    public void Embedded_v2_bundle_round_trips_to_choose_once_emoji_variable_and_capability()
     {
         var artifact = ReadEmbeddedArtifact();
         var semantics = ChatComposerCuiDocument.Load();
         Assert.NotNull(semantics);
 
-        // The compiled composer declares the source-driven choose-once emoji trigger variable with
-        // the binding candidate pool and the RandomOnce selection strategy.
         Assert.True(semantics.Variables.TryGetValue("EmojiIcon", out var variable));
         Assert.Equal("string", variable!.Type);
         Assert.Equal("RandomOnce", variable!.Selection);
         Assert.Equal("Composer.EmojiIconCandidates", variable!.Source);
 
-        // The source-driven random-select slice must be announced as a required capability so older
-        // consumers fail admission rather than silently drop the trigger.
         var doc = ComposerDocument(artifact);
-        Assert.Contains(doc.Compilation.Metadata.RequiredCapabilities, capability => capability == "local-state-random-select");
+        Assert.Contains(doc.Metadata.RequiredCapabilities, capability => capability == "local-state-random-select");
     }
 
     [Fact]
@@ -92,27 +90,23 @@ public sealed class ChatComposerCompiledTransportTests
         var doc = ComposerDocument(artifact);
         var badMeta = new CuiCompilationMetadata(
             "99", artifact.Metadata.RuntimeAbiVersion, artifact.Metadata.ComponentRegistryVersion, artifact.Metadata.RequiredCapabilities);
-        var replaced = artifact with
-        {
-            Documents = artifact.Documents.Select(d => ReferenceEquals(d, doc) ? doc with { Compilation = doc.Compilation with { Metadata = badMeta } } : d).ToArray()
-        };
+        var replaced = artifact with { Documents = ReplaceDocument(artifact, doc, doc with { Metadata = badMeta }) };
         var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
         Assert.Equal("CUIR064", error.Diagnostic.Code);
     }
 
     [Fact]
-    public void Admission_rejects_incompatible_runtime_abi_before_effects()
+    public void Admission_rejects_stateful_document_without_abi2_even_when_capabilities_stripped()
     {
+        // Defense in depth: statefulness is read from the typed semantics, not from capability
+        // strings. Stripping the capability text AND downgrading the ABI cannot make a stateful
+        // composer a harmless V1 document.
         var artifact = ReadEmbeddedArtifact();
         var doc = ComposerDocument(artifact);
-        var badMeta = new CuiCompilationMetadata(
-            artifact.Metadata.LanguageVersion, "future-abi", artifact.Metadata.ComponentRegistryVersion, artifact.Metadata.RequiredCapabilities);
-        var replaced = artifact with
-        {
-            Documents = artifact.Documents.Select(d => ReferenceEquals(d, doc) ? doc with { Compilation = doc.Compilation with { Metadata = badMeta } } : d).ToArray()
-        };
+        var stripped = doc with { Metadata = BaseMeta(doc.Metadata, abi: "1") };
+        var replaced = artifact with { Documents = ReplaceDocument(artifact, doc, stripped) };
         var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
-        Assert.Equal("CUIR065", error.Diagnostic.Code);
+        Assert.Equal("CUIR074", error.Diagnostic.Code);
     }
 
     [Fact]
@@ -120,16 +114,44 @@ public sealed class ChatComposerCompiledTransportTests
     {
         var artifact = ReadEmbeddedArtifact();
         var doc = ComposerDocument(artifact);
-        var badMeta = new CuiCompilationMetadata(
-            artifact.Metadata.LanguageVersion, artifact.Metadata.RuntimeAbiVersion, artifact.Metadata.ComponentRegistryVersion,
-            artifact.Metadata.RequiredCapabilities.Append("future-capability"));
-        var replaced = artifact with
-        {
-            Documents = artifact.Documents.Select(d => ReferenceEquals(d, doc) ? doc with { Compilation = doc.Compilation with { Metadata = badMeta } } : d).ToArray()
-        };
+        var caps = doc.Metadata.RequiredCapabilities.Append("future-capability").ToArray();
+        var docWithCap = doc with { Metadata = BaseMeta(doc.Metadata, capabilities: caps) };
+        var envelopeWithCap = BaseMeta(artifact.Metadata, capabilities: artifact.Metadata.RequiredCapabilities.Append("future-capability").ToArray());
+        var replaced = artifact with { Metadata = envelopeWithCap, Documents = ReplaceDocument(artifact, doc, docWithCap) };
         var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
         Assert.Equal("CUIR067", error.Diagnostic.Code);
     }
+
+    [Fact]
+    public void Admission_rejects_envelope_document_abi_contradiction_before_effects()
+    {
+        var artifact = ReadEmbeddedArtifact();
+        var envelopeWithWrongAbi = BaseMeta(artifact.Metadata, abi: "1");
+        var replaced = artifact with { Metadata = envelopeWithWrongAbi };
+        var error = Assert.Throws<CuiRuntimeLoadException>(() => ChatComposerCuiDocument.Load(Serialize(replaced)));
+        Assert.Equal("CUIR075", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Missing_compiled_resource_has_no_raw_or_v1_fallback()
+    {
+        // The composer must never fall back to a raw embedded .cui resource or a V1 artifact.
+        var assembly = typeof(ChatComposerCuiDocument).Assembly;
+        Assert.Null(assembly.GetManifestResourceStream("HavenOS.Apps.Spaces.UI.Chat.ChatComposer.cui"));
+        Assert.Null(assembly.GetManifestResourceStream("CUI.Compilation.v1"));
+
+        // And an embedded V2 resource must be present.
+        Assert.NotNull(assembly.GetManifestResourceStream(ChatComposerCuiDocument.CompiledArtifactResource));
+    }
+
+    private static IReadOnlyList<CuiCompiledArtifactDocument> ReplaceDocument(
+        CuiCompiledArtifact artifact, CuiCompiledArtifactDocument original, CuiCompiledArtifactDocument replacement) =>
+        artifact.Documents.Select(d => ReferenceEquals(d, original) ? replacement : d).ToArray();
+
+    private static CuiCompilationMetadata BaseMeta(
+        CuiCompilationMetadata source, string? language = null, string? abi = null, IEnumerable<string>? capabilities = null) =>
+        new(language ?? source.LanguageVersion, abi ?? source.RuntimeAbiVersion, source.ComponentRegistryVersion,
+            capabilities ?? source.RequiredCapabilities);
 
     private static byte[] Serialize(CuiCompiledArtifact artifact) =>
         Encoding.UTF8.GetBytes(JsonSerializer.Serialize(artifact, CuiCompiledArtifactCodec.Options));

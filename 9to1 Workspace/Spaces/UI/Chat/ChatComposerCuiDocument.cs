@@ -1,50 +1,52 @@
 using CakeOS.Cui;
-using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 
 namespace HavenOS.Apps.Spaces.Chat;
 
 /// <summary>
-/// Loads the single shared canonical Chat composer component from the PACKAGED compiled CUI artifact
-/// embedded in the Spaces assembly (<c>CUI.Compilation.v1</c>). The composer is a stateful component
-/// (document-root local variables / pure-local toggles), so it must consume the validated compiled
-/// semantics with metadata/capability checks, never a silent raw-source reparse fallback.
+/// Loads the single shared canonical Chat composer component from the DISTINCT packaged V2 compiled
+/// CUI artifact embedded in the Spaces assembly (<c>CUI.Compilation.v2</c>). The composer is a
+/// stateful component (document-root local variables / pure-local toggles), so it consumes the
+/// validated typed semantics directly — never a raw-source reparse or a compiler/source-text
+/// reconstruction. A missing or rejected V2 artifact has no raw or V1 fallback.
 /// </summary>
 public static class ChatComposerCuiDocument
 {
-    public const string CompiledArtifactResource = "CUI.Compilation.v1";
+    public const string CompiledArtifactResource = CuiCompiledArtifactCodec.ResourceLogicalName;
     public const string CompiledSourceName = "UI/Chat/ChatComposer.cui";
 
     public static CuiDocument Load() => Load(ReadEmbeddedArtifact());
 
-    /// <summary>Reads the embedded compiled bundle into the shared codec. Exposed for identical
-    /// admission/validation without a resource stream (used by tests to inject an artifact).</summary>
+    /// <summary>Reads the embedded compiled V2 bundle. Exposed for identical admission/validation
+    /// without a resource stream (used by tests to inject an artifact).</summary>
     public static byte[] ReadEmbeddedArtifact()
     {
         var assembly = typeof(ChatComposerCuiDocument).Assembly;
         using var stream = assembly.GetManifestResourceStream(CompiledArtifactResource)
             ?? throw new InvalidOperationException(
-                $"Embedded compiled CUI artifact '{CompiledArtifactResource}' was not found. The project must emit the canonical compiled bundle.");
+                $"Embedded compiled CUI artifact '{CompiledArtifactResource}' was not found. The project must emit the canonical compiled V2 bundle.");
         using var buffer = new MemoryStream();
         stream.CopyTo(buffer);
         return buffer.ToArray();
     }
 
-    /// <summary>Loads and hard-validates a compiled bundle from raw bytes. A missing/unsupported
-    /// format, version, language, ABI, registry or capability fails before any effects occur.</summary>
+    /// <summary>Loads and hard-validates a compiled V2 bundle from raw bytes. A missing/unsupported
+    /// format, version, language, ABI, registry or capability fails before any effects occur. The
+    /// shared codec already enforces envelope/document consistency, unknown-kind rejection and the
+    /// stateful-requires-ABI2 rule from the typed semantics themselves.</summary>
     public static CuiDocument Load(byte[] artifactBytes)
     {
-        var artifact = CuiCompiledArtifactCodec.ReadArtifact(artifactBytes);
-
-        if (!string.Equals(artifact.Format, CuiCompiledArtifactCodec.FormatName, StringComparison.Ordinal))
+        CuiCompiledArtifact artifact;
+        try
+        {
+            artifact = CuiCompiledArtifactCodec.ReadArtifact(artifactBytes);
+        }
+        catch (CuiV2AdmissionException admission)
+        {
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                "CUIR060", CuiDiagnosticSeverity.Error,
-                $"Unsupported compiled CUI artifact format '{artifact.Format}'.", Span));
-        if (artifact.FormatVersion != CuiCompiledArtifactCodec.FormatVersion)
-            throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                "CUIR061", CuiDiagnosticSeverity.Error,
-                $"Unsupported compiled CUI artifact format version {artifact.FormatVersion}.", Span));
+                admission.Code, CuiDiagnosticSeverity.Error, admission.Message, Span));
+        }
 
         var document = artifact.Documents.FirstOrDefault(entry =>
             string.Equals(entry.Source, CompiledSourceName, StringComparison.Ordinal))
@@ -52,16 +54,9 @@ public static class ChatComposerCuiDocument
                 "CUIR062", CuiDiagnosticSeverity.Error,
                 $"Compiled CUI bundle does not contain '{CompiledSourceName}'.", Span));
 
-        ValidateCompiledMetadata(document.Compilation.Metadata);
+        ValidateRuntimeCompatibility(document.Metadata);
 
-        // The artifact owns a validated source snapshot; reconstruct the loadable model through the
-        // canonical parser only AFTER every admission check above passed. No loose raw-source path.
-        var parser = new CuiRichParser();
-        var semantics = parser.Parse(document.Compilation.SourceText, CompiledSourceName);
-        if (parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
-            throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                "CUIR068", CuiDiagnosticSeverity.Error,
-                $"Compiled CUI bundle for '{CompiledSourceName}' failed snapshot revalidation.", Span));
+        var semantics = document.Semantics.ToCuiDocument();
         if (semantics.Components.Count == 0)
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR063", CuiDiagnosticSeverity.Error,
@@ -69,18 +64,18 @@ public static class ChatComposerCuiDocument
         return semantics;
     }
 
-    /// <summary>Hard format/language/ABI/capability admission. An old consumer or an artifact
-    /// declaring an unsupported ABI/capability must fail before any scene effects occur.</summary>
-    private static void ValidateCompiledMetadata(CuiCompilationMetadata metadata)
+    /// <summary>Hard language/ABI/registry/capability admission. The composer is stateful, so it
+    /// requires the stateful V2 ABI — an unsupported ABI/capability fails before any scene effects.</summary>
+    private static void ValidateRuntimeCompatibility(CuiCompilationMetadata metadata)
     {
         if (!CuiRuntimeCompatibility.IsLanguageVersionCompatible(metadata.LanguageVersion))
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR064", CuiDiagnosticSeverity.Error,
                 $"Compiled CUI language version '{metadata.LanguageVersion}' is not supported by this runtime.", Span));
-        if (!string.Equals(metadata.RuntimeAbiVersion, CuiRuntimeCompatibility.RuntimeAbiVersion, StringComparison.Ordinal))
+        if (!string.Equals(metadata.RuntimeAbiVersion, CuiCompiledArtifactCodec.V2RuntimeAbiVersion, StringComparison.Ordinal))
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR065", CuiDiagnosticSeverity.Error,
-                $"Compiled CUI runtime ABI '{metadata.RuntimeAbiVersion}' does not match this runtime ABI '{CuiRuntimeCompatibility.RuntimeAbiVersion}'.", Span));
+                $"Compiled CUI runtime ABI '{metadata.RuntimeAbiVersion}' does not match the required stateful ABI '{CuiCompiledArtifactCodec.V2RuntimeAbiVersion}'.", Span));
         if (!string.Equals(metadata.ComponentRegistryVersion, CuiControlRegistry.ComponentRegistryVersion, StringComparison.Ordinal))
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR066", CuiDiagnosticSeverity.Error,

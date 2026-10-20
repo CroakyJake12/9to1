@@ -58,14 +58,18 @@
       <_CuiPackagedSource Remove="@(_CuiPackagedSource)" Condition="'%(Extension)' != '.cui' and '%(Extension)' != '.cui-theme' and '%(Extension)' != '.cui-prefab'" />
     </ItemGroup>
     <CakeOS.Cui.Build.CompileCuiSourcesTask Sources="@(Cui);@(CuiMarkup);@(_CuiPackagedSource)" ProjectDirectory="$(MSBuildProjectDirectory)"
-                                         OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)" ResourcesToSnapshot="@(_CuiPackagedSource)">
+                                         OutputFile="$(CuiCompilationArtifact)" RequiredCapabilities="@(CuiRequiredCapability)" ResourcesToSnapshot="@(_CuiPackagedSource)"
+                                         IntermediateOutputPath="$(IntermediateOutputPath)" OutputDirectory="$(OutputPath)" PublishDirectory="$(PublishDir)">
       <Output TaskParameter="CompiledArtifacts" ItemName="_CuiCompiledArtifact" />
       <Output TaskParameter="SnapshotResources" ItemName="_CuiSnapshotResource" />
       <Output TaskParameter="SourceSnapshots" ItemName="_CuiSourceSnapshot" />
+      <Output TaskParameter="StatefulPackagedSources" ItemName="_CuiStatefulPackagedSource" />
+      <Output TaskParameter="StaleOwnedOutputs" ItemName="_CuiStaleOwnedOutput" />
     </CakeOS.Cui.Build.CompileCuiSourcesTask>
     <ItemGroup>
-      <FileWrites Include="@(_CuiCompiledArtifact);@(_CuiSourceSnapshot)" />
-      <!-- Package the exact compiled bytes, preserving authored resource/copy identities. -->
+      <FileWrites Include="@(_CuiCompiledArtifact);@(_CuiSourceSnapshot);@(_CuiStaleOwnedOutput)" />
+      <!-- Package only ADMITTED stateless raw snapshots (SnapshotResources). Stateful sources were
+           compiled and provenance-snapshotted but are excluded from every shipped raw identity. -->
       <EmbeddedResource Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'EmbeddedResource'" />
       <Content Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'Content'" />
       <None Remove="@(_CuiPackagedSource)" Condition="'%(_CuiPackagedSource.CuiItemType)' == 'None'" />
@@ -76,7 +80,9 @@
       <None Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'None'" />
       <AvaloniaResource Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'AvaloniaResource'" />
       <CuiMarkup Include="@(_CuiSnapshotResource)" Condition="'%(_CuiSnapshotResource.CuiItemType)' == 'CuiMarkup'" />
-      <EmbeddedResource Include="@(_CuiCompiledArtifact)" LogicalName="CUI.Compilation.v1" />
+      <!-- Embed the compiled artifact under the resource identity returned by the task (V2 for
+           stateful, genuine V1 otherwise), never a hardcoded identity. -->
+      <EmbeddedResource Include="@(_CuiCompiledArtifact)" LogicalName="%(_CuiCompiledArtifact.CuiResourceLogicalName)" />
     </ItemGroup>
   </Target>
 </Project>
