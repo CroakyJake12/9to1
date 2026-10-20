@@ -1,0 +1,23 @@
+{
+  "source": "Direct owner corrections in current conversation on20October2026",
+  "recorded_at": "2026-10-20T16:41:55.668714+00:00",
+  "owner_words": [
+    "Make the emoji icon show a random actual emoji (with a few emoji blacklisted from showing as the icon that are often used for suggestive purposes 🤬💦🔞🍑🍆 etc)",
+    "The + icon should be an SVG and significantly larger. The emoji icon shouldn't have a background when not selected",
+    "And flags blacklisted too because a) they don't work on windows b) political controversy"
+  ],
+  "reference": {
+    "file": "1000014328.jpg",
+    "sha256": "ad29f4f0f9d764850b5cdbafb1cc186314a6e4d4305fdf78c018540e93df7ab7",
+    "kind": "Owner crop of current composer controls, not a completed-design illustration"
+  },
+  "requirements": [
+    "The emoji trigger displays a randomly selected genuine emoji sequence from the canonical emoji data. Exclude the explicit examples and other clearly suggestive trigger candidates; exclude ALL flags, including generic, country and subdivision flag sequences.",
+    "Apply this eligibility policy to the random trigger-icon pool. Preserve canonical emoji data and existing picker/search/insertion behavior.",
+    "Unselected emoji trigger has no visible background; preserve focus visibility, accessible name, hit target and genuine picker-open selected state.",
+    "Replace tiny font plus with a genuine packaged SVG plus, substantially larger in the existing centered accessible target. Preserve action and theme foreground; follow filled/rounded icon refinement.",
+    "CUI owns app presentation and state; use generic typed framework/data capabilities, not new app C# presentation caches or hidden orchestration. One shared composer in standalone/Haven."
+  ],
+  "routine_implementation_assumption": "Choose once per mounted composer and retain the emoji across typing, ordinary binding refresh, focus and theme changes; independent instances may randomly choose the same candidate. This is an implementation choice, not an owner quotation.",
+  "rendering_limit": "Current bundled NotoEmoji supports actual Unicode glyphs but is monochrome; no cross-platform color-rendering acceptance is implied."
+}

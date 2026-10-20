@@ -28,6 +28,7 @@
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceTabStateTests.cs" Link="UnifiedWorkspaceTabStateTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceSessionTests.cs" Link="UnifiedWorkspaceSessionTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/UnifiedWorkspaceSessionProjectionTests.cs" Link="UnifiedWorkspaceSessionProjectionTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/ProfessionalThemePreferenceRegressionTests.cs" Link="ProfessionalThemePreferenceRegressionTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/WorkspaceSessionTerminalSaveTests.cs" Link="WorkspaceSessionTerminalSaveTests.cs" />
     <Using Include="Xunit" />
     <PackageReference Include="Avalonia.Headless.XUnit" />

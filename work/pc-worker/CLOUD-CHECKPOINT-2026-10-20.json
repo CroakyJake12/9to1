@@ -1,0 +1,364 @@
+{
+  "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
+  "recorded_at": "2026-10-20T13:27:07.976371+00:00",
+  "source_commit": "ebeb78cfb798bbf1493b7923ac0b2f5c301dc280",
+  "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
+  "branch": "codex/cloud-continuation-20261020",
+  "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "engineering_state": "CHECKPOINT",
+  "implementation_mode": "One authorized Mercury OpenCode implementation request and one serial build slot; separate read-only Codex review. Beam exhausted; $5 cap unchanged, actual billing UNKNOWN.",
+  "requirements": [
+    "CUI dynamic-update/error-boundary and hot-reload contracts",
+    "Universal Model Picker stable identity and unknown/empty state",
+    "APP-AC-001 through APP-AC-007",
+    "Spaces sidebar safe activation; package/profile/selection/lifetime custody",
+    "LE-04 drafts and restored tabs; direct owner mockup/entry refinements"
+  ],
+  "source_sha256": {
+    "framework/CUI/Runtime/CuiRuntimeSurface.cs": "5c3a77fe7aeba64747f7252ece7efa0bc6f6d6525734b49580a3da2f4596587f",
+    "framework/CUI/Runtime.Tests/CuiRuntimeSurfaceTests.cs": "a8b2b22e4e9959cd2e76e70d675721aebd65221dcf8f6cecd462aa4d3905056a",
+    "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiScene.cs": "f50555e2f7aed7e2f3d67242e825d824f128097d620ab850bcf35e264629334b",
+    "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiProjection.cs": "9ecb62a682c1ba4e0bf4c6d23a03200b864a67548946fa70c3adec4b19af794b",
+    "9to1 Workspace/Home/UI/ModelPicker.cui": "db145cb6140b39ae937844e9e4034c53ef87213132f599d25c0895a537e21169",
+    "9to1 Workspace/Home/Tests/HomeModelPickerCuiProjectionTests.cs": "cb1bc4f0137c8605f5f17f401272fd900854a16f9314e5fa4a98f9163b090c3b",
+    "framework/CUI/Themes/CuiSurfacePaletteCatalog.cs": "b8f2efb3a1e070e605470bc54f883fb500a13d792d1d82fcf931b27add375040",
+    "framework/CUI/Runtime.Tests/CuiAppAccentTests.cs": "656e506460a35556d777f6381977e821d623e0bc877e43a44cabf1dcd18231c4",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/NewChatPage.cs": "eda0e63db46592d6c82bb11b0779ad23083d4f941f376967295554cc1c55f552",
+    "9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui": "7b1d26a91b490609f6555a427ef9f67d4b05bface25df9c5d2c3ffaeb08bff16",
+    "9to1 Workspace/Browse/Host.Tests/OverlayChatInitializationTests.cs": "c9b26ae29a7f389beff01974144257fed14459b7d5638dacff0cbc430e0db684"
+  },
+  "validation": {
+    "platform": "Debian13 linux-x64; SDK10.0.401; serialized -m:1",
+    "home_all": {
+      "passed": 232,
+      "failed": 0,
+      "skipped": 9,
+      "exit_code": 0
+    },
+    "home_model_picker": {
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "cui_runtime": {
+      "passed": 413,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "cui_compiler": {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "spaces": {
+      "passed": 220,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "evidence_location": "Task workspace: /workspace/shared/9to1-test-evidence/current-source; raw logs/TRX are not included in this source checkpoint",
+    "baseline_note": "Earlier main-based source had six compiler failures and an intermittent Home evidence-fixture collection race. These were recorded separately; the recovered PC-based source was validated anew. No tests or platform guards were removed.",
+    "spaces_activation_guards": {
+      "passed": 21,
+      "failed": 0,
+      "evidence": "/workspace/shared/9to1-test-evidence/spaces-final-fences-and-denial.log",
+      "independent_source_review": "PASS for narrow guard checkpoint"
+    },
+    "host_candidate_prior_v2": {
+      "passed": 274,
+      "failed": 4,
+      "baseline_whole_suite": {
+        "passed": 257,
+        "failed": 5
+      },
+      "note": "Three explicit Windows-only guards fail on Linux; same held-save lifecycle failure reproduced on baseline. No test weakened. Final denial fix received focused21-case check."
+    },
+    "native_linux_observations": {
+      "artifact": "/workspace/shared/9to1-native-evidence/spaces-candidate-v2/identity.json",
+      "artifact_precedes_final_guard_changes": true,
+      "native_start_create_type_close": "observed",
+      "direct_entry": "FAIL: summary interstitial",
+      "history_after_restart": "FAIL: empty projection despite persisted conversation",
+      "draft_after_restart": "FAIL: composer empty, SQLite text and current branch intact",
+      "formatting": "FAIL: user identifies mismatch with Professional mockups",
+      "effective_theme": "UNVERIFIED"
+    },
+    "theme_sidebar_candidate": {
+      "source": "38ad30a1 (cherry-picked as8927b057)",
+      "host_focused": {
+        "passed": 22,
+        "failed": 0
+      },
+      "spaces": {
+        "passed": 220,
+        "failed": 0
+      },
+      "canonical_real_source_compilation": {
+        "passed": 7,
+        "failed": 0
+      },
+      "baseline_regression": "Professional preference expected Professional, actual Glow; repaired regression passes",
+      "independent_source_review": "PASS for narrow theme bridge/sidebar layout",
+      "independent_native_visual_review": "PASS for bounded rail/sidebar/stage slice; wholeapp remains unaccepted"
+    },
+    "native_linux_layout_candidate": {
+      "artifact_sha256": "42a198f7af40c00776cfcad9528fe17a921bb8af4fc76e76edbebee46a405440",
+      "evidence": "/workspace/shared/9to1-native-evidence/spaces-layout-v1/native-journey.json",
+      "viewport": [
+        "1440x920",
+        "960x760"
+      ],
+      "preference": "Professional / SuperDark in actual private preference file",
+      "computed_native_theme_inspector": "NOT_CAPTURED",
+      "draft": "Visible after restart and preserved through collapse/reexpand and graceful close; actual SQLite text matches",
+      "history": "FAIL initially empty; populates after sidebar toggle",
+      "note": "No backend draft fix made; earlier v2 empty-composer observation is not an established current-source defect"
+    },
+    "real_sqlite_factory_draft_probe": {
+      "passed": 1,
+      "failed": 0,
+      "source": "baseline27303895 plus private independently authored probe patch",
+      "evidence": "/workspace/shared/9to1-test-evidence/real-sqlite-draft-probe.log",
+      "scope": "real SQLite adapter, actual OverlayChatSessionFactory page/mount/render commands/close. Does not replace full process or Spaces-route acceptance."
+    },
+    "professional_blue_and_default_dual": {
+      "source": "1272dead4eae48392cf06cb6938d172e7811fea5, cherry-picked as5e99dc97",
+      "relevant_theme_runtime": {
+        "passed": 38,
+        "failed": 0,
+        "skipped": 0
+      },
+      "focused_host": {
+        "passed": 41,
+        "failed": 0,
+        "skipped": 0
+      },
+      "baseline_red": "One genuine failure when old implementation creates default Dual control; real Dual service precondition armed",
+      "independent_source_review": "PASS narrow slice",
+      "native_artifact_sha256": "6bd4d18258aec731522aaac2ba1206866796ccd8bd80e839a736859d1099d83f",
+      "native_evidence": "/workspace/shared/9to1-native-evidence/blue-dual-v1/native-journey.json",
+      "native_observation": "1440x920: blue focus, no Dual status; draft visible and same SQLite text after graceful exit0; legacy composer and initial history still deficient",
+      "plugin_integration": "NOT_RUN; removal of automatic first-party bar is not full Plugin implementation"
+    },
+    "sidebar_surface_separation": {
+      "source_base": "1272dead4eae48392cf06cb6938d172e7811fea5",
+      "source_patch_sha256": "b818d1024645576471c2c706cf5fced3624f9cd79e736aaedebf8119a7d3e4d7",
+      "main_commit": "ebeb78cf",
+      "build": "PASS0errors,1existingWebRtcwarning",
+      "changed_spaces_dll_sha256": "68c9cbc84170d010dda233ec8aaf5314a939ff858a7765ae64d73b4e9403cb25",
+      "native": "1440x920 and960x760; clear sidebar contrast, collapse/reexpand, visible draft and graceful exit0; same SQLite text/branch",
+      "independent_static_visual_review": "PASS at1440x920 only; no new geometry/clipping/readability blocker",
+      "evidence": "/workspace/shared/9to1-native-evidence/sidebar-separation-v1/native-journey.json",
+      "Light_HC": "NOT_RUN",
+      "whole_app": "NOT_RUN"
+    }
+  },
+  "acceptance": {
+    "whole_cui_framework": "NOT_RUN",
+    "home_app": "NOT_RUN",
+    "spaces_app": "NOT_RUN",
+    "native_windows": "NOT_RUN",
+    "web": "NOT_RUN"
+  },
+  "remaining_gaps": [
+    "Actual mounted chat still uses legacy HavenScene authoring; canonical CUI migration/layout correction required without dropping behavior",
+    "Direct Space entry and initial history refresh remain deficient; current native draft restore observed working without backend change",
+    "Home model-manager actions and shipping host integration remain incomplete",
+    "Spaces CUI/Automation/Generative target resolvers and full native workflows remain unaccepted",
+    "Automation durable runtime Wait/resume and transition guards remain incomplete",
+    "Full Build and productivity-suite requirements remain pending",
+    "All-app embedded/standalone top bars and persistent Browse shared model/notifications/profile controls are required by direct owner refinement; implementation remains open",
+    "Pinned owner requirement: compare and consolidate actual standalone/Haven implementations; merge useful work or prefer a better newer implementation; no divergent copies",
+    "Filled rounded SVG assets and authorised running/most-used Assistant presentation remain incomplete",
+    "Bundled Home-owned Dulche startup/default model discovery/acquisition/routing and verified production assets remain incomplete"
+  ],
+  "programme_reconciliation": {
+    "native_observation_at": "2026-10-20T08:47:44Z",
+    "current_milestone_id": "R02",
+    "canonical_ledger_updated": false,
+    "reason": "Existing bridge exposes read operations only; checkpoint does not grant acceptance or replace the ledger"
+  },
+  "owner_constraints": {
+    "web_hosting": "9to1.uk via Cloudflare",
+    "gpt_sites_product_deployment": false,
+    "mercury_activation_condition": "Only after confirmed OpenCode Beam usage exhaustion",
+    "existing_mercury_spending_cap_usd": 5,
+    "spending_controls_changed": false,
+    "mercury_requests_sent": "Latest native-peer-parenting OpenCode turn ended0 with concretecheckpoint; originalconfigrestoredtrue. No modelactive at14:49 boundary. ActualHTTPrequest count/billedtotalUNKNOWN, capunchanged."
+  },
+  "allowance": {
+    "beam_remaining": "EXHAUSTED: recorded provider.quota FreeUsageLimitError at2026-10-20T10:50:38Z",
+    "codex_remaining": "UNKNOWN",
+    "paid_fallback_activated": "Authorised Mercury fallback active after Beam quota exhaustion; no spending control change"
+  },
+  "unaccepted_candidate": {
+    "worktree": "/workspace/9to1-chat-cui",
+    "base": "e7a1d2cae3da5906cccddab156cd7d51cacc9730",
+    "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
+    "state": "CLEAN/PUSHED isolated e7 checkpoint; independent40PASS and boundednativepeer/focus/multiline/save/reopenPASS; no model/build/app active; fullUIunaccepted",
+    "first_compilation": "5actual C#adapter errors",
+    "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
+    "note": "Candidate is not merged into main reviewed slices. Fresh actual composer screenshots and failures are preserved, not product acceptance.",
+    "latest_observation_at": "2026-10-20T14:50:27.216638+00:00",
+    "branch_pushed": "codex/cloud-native-chat-cui-20261020",
+    "pass3_frozen": {
+      "identity": "/workspace/shared/9to1-test-evidence/composer-pass3-frozen-20261020T120612Z/identity.json",
+      "patch_sha256": "1b94ec257a86d0fba56c89fa2d322edd2b62391464d8bac621c3513592470aa4",
+      "zip_sha256": "50ac61037aae3a021f7274b2fb6d13d21a00b06da05076ace0727a2044e0d8c6",
+      "intervention": "Coordinator SIGINT after actual tool children settled at12:06:12Z to return precise independent findings after repeated same-failure retries; exit1, original private config restoredtrue",
+      "latest_complete_host_trx": "84total/77passed/7failed BEFORE final source edits; not exact frozen-source acceptance",
+      "isolated_refused_send_check": "1passed in worker focused check; no blanket source/native acceptance",
+      "diagnostics": "Temporary synthetic debug instrumentation removed before frozen checkpoint; source scan found no matching draft debug logger"
+    },
+    "next_dispatch": {
+      "task": "actual-home-theme-context",
+      "state": "PREPARING fresh e7 scopedprompt; no slot/model allocated"
+    },
+    "pass4_intervention": {
+      "at": "2026-10-20T12:22:02Z",
+      "reason": "Worker reverted failed rendered-control helpers to internal bindings/source checks; rejected coverage substitution",
+      "scope": "Only private fourth OpenCode child, after tool settlement; source/logs/TRX protected",
+      "frozen": "/workspace/shared/9to1-test-evidence/composer-pass4-frozen-20261020T122202Z/identity.json",
+      "patch_sha256": "27a6da2e0a6b1cd99cf5ec3363a58e9586d50980f2c5f9929c8d88963c758f51",
+      "original_config_restored": true
+    },
+    "last_independent_qa": {
+      "source_base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
+      "source_patch_sha256": "d29692aee3a2c4c14d3b8ac51018677a370e5f8fc824c5c3f77133a72191b4a1",
+      "source_commit": "45a6959cb7f297a08adc8defbdedbbbcdbe9d821",
+      "evidence": "/workspace/shared/9to1-test-evidence/composer-pass6-independent-qa/identity.json",
+      "runs": {
+        "lifetime-after-qa": "12PASS0FAIL0SKIP",
+        "parent-fault-and-overlay": "21PASS0FAIL0SKIP, finalparentfault+20existingOverlay"
+      },
+      "precision": "Two runs,33distinct cases; product source unchanged; finaltestadditiononly betweenruns. SixOverlaycases renderactualproductionpage; others domain/lifetime.13componentcases useactual sharedcomposer; parenttests realnative renderer/mapping. Not fullappacceptance.",
+      "red_proof": "Actual reentrant edit-close sends later typedcallback expected0actual1 beforefix; sourcegate nowchecksbetweensubscribers with physical UIrelease onlyafterACK",
+      "remaining_matrix": "Additional independentinit/observer fault combinations not exhaustivelycovered",
+      "native_composer": "COMPLETED bounded Linux smoke: draft/navigation/resize/reopen PASS, history/visual/accessibility FAIL; input causeUNKNOWN",
+      "whole_app": "NOT_RUN"
+    },
+    "historical_pre_qa_blockers": [
+      "First input attachment terminally releases its port",
+      "Incomplete initialization/close and physical owner custody",
+      "Native/mode actions prematurely settle actual async work",
+      "Production scoped Home context/owner parameters remain unwired",
+      "Selection/emoji behavior diverges, Enter submit missing and response modes/model gates incomplete",
+      "Meaningful control/route/lifetime test coverage was weakened; restore actual production checks",
+      "CUI local presentation state requires framework implementation and authored CUI migration"
+    ],
+    "current_independent_source_gaps": [
+      "Full stale-HUI/native routing isolation and richer AT-SPI text/selection remain open; bounded e7 nativepeer/focus/multiline journey PASSES",
+      "Additional original-init/observer fault combinations require broader lifecycle matrix acceptance",
+      "Actual ordinary Stop request/Tasks command-driver forwarding",
+      "Actual current-profile Home context/appidentity/borrow guards",
+      "Full CUI presentation state and explicit controlpolicy/compiledartifactconsumer",
+      "Continuous visual and full semanticformat/Canvas/permission/Voice integration",
+      "SVG/Assistant/sharedHavencontrols/Dulche/history",
+      "Native Windows/web and completeappacceptance"
+    ],
+    "historical_third_turn_tests": {
+      "initial_host_core": "82total/50passed/32failed; includes production NativeHost registration failure subsequently corrected in active source",
+      "component_lifetime": "2passed/0failed, not whole-page or app acceptance",
+      "later_host": "84total/72passed/12failed at11:48UTC; actual queued-draft/model-gate regressions and obsolete Instruction reflection helpers still under repair",
+      "state": "ACTIVE source, not frozen; exclusive serialized .NET slot held by one OpenCode Mercury worker",
+      "rendered_control_coverage": "Still deficient: Overlay helper invokes bindings directly and reads source CanSend; must restore real authored Button event and IsEnabled coverage"
+    },
+    "pass5_partial": {
+      "ended_at": "2026-10-20T12:55:08.245750Z",
+      "exit_code": 0,
+      "outcome": "Natural blank final after incomplete edit, not programme/task completion",
+      "frozen": "/workspace/shared/9to1-test-evidence/composer-pass5-frozen-20261020T125508Z/identity.json",
+      "patch_sha256": "4191cfdaaeb3cf20f9de483dd131f4cf62f46da39d1886b08bc81204b504eecc",
+      "zip_sha256": "67a092b157249aa6a0fc35e9ac0744ffa2d09d05d72a0665c405ea56b32d4bd1",
+      "root_compile": "FAIL CS0191 readonly_released assignment and CS0169 unused_withdrawn; runtimeNOT_RUN",
+      "worker5PASS": "Earlier source only; source-TCS assertions insufficient for loader/close causality",
+      "config_restored": true,
+      "cap_changed": false
+    },
+    "pass6_partial": {
+      "ended_at": "2026-10-20T13:07:49.338158Z",
+      "exit_code": 0,
+      "final": "Natural model-reported stop with whitespace text; no final error/length evidence, not taskcompletion",
+      "frozen_patch_sha256": "2f517cf17cc2ccd0586b8226693df7e0e8078e2ca2c0d9f02175d3ed224fe09a",
+      "worker11PASS": "Before root reentry/producer/cleanup/native-mount refinements; not independent acceptance",
+      "config_restored": true,
+      "cap_changed": false
+    },
+    "native_smoke": {
+      "source": "e7a1d2ca",
+      "evidence": "/workspace/shared/9to1-native-evidence/composer-peer-v1",
+      "identity_sha256": "27a30a6b9904b91521dd4cd041b0a8734c2d9915cefacebefb55fd556d74d7c6",
+      "journey_sha256": "cf8947c9d521129efa68b5484630e8f8290358dfd9a79235a88e29c06ab41741",
+      "haven_dll_sha256": "07865909143f8b1cb800638dba227edb4f35f27eb6e611b6327c099467c19902",
+      "artifact_files": 766,
+      "all_artifact_files_unchanged": true,
+      "seed_profile_unchanged": true,
+      "build": "PASS0errors1existingWebRtcwarning",
+      "native_accessibility": "PASSbounded oneactualMessageentry in327nodecompleteATSPItree",
+      "native_input": "PASSverifiedfocus/per-characteralpha+ShiftEnter+beta",
+      "canonical_draft_and_reopen": "PASS exactalphaLFbeta, olddraftsintact, bothnativeexit0",
+      "new_messages": 0,
+      "old45a_input_cause": "UNISOLATED; no uniqueattribution",
+      "initial_history": "FAIL",
+      "visual_full_controls_icons_dulche": "FAIL/REQUIRED_PENDING",
+      "caret_selection": "UNSUPPORTEDdonorATSPImethods",
+      "standalone_alltheme_windows_web_fullapp": "NOT_RUN",
+      "full_acceptance": false
+    },
+    "prior_native_smoke_45a": {
+      "source": "45a6959cb7f297a08adc8defbdedbbbcdbe9d821",
+      "evidence": "/workspace/shared/9to1-native-evidence/composer-lifecycle-v1",
+      "identity_sha256": "ee1e42965245d52667d6a55ccb1db97e088e46040b5892d7767d2798d53c10f0",
+      "journey_sha256": "3420e765ad6b4174c94828fa663b0658f89fb5b41d341dd62fe5cd6e8f673feb",
+      "haven_dll_sha256": "76a607ee9fd699d3c8d5a72123387531076c9f369a25aae1039b34bd498e620e",
+      "artifact_file_count": 766,
+      "all_artifact_files_unchanged": true,
+      "private_seed_profile_unchanged": true,
+      "build": "PASS exit0,0errors1existingWebRtcwarning",
+      "pass": [
+        "normalstartup",
+        "NewChatactualroute",
+        "canonicalunsentdraft",
+        "sidebarcollapse/reopen",
+        "1440x920/960x760resizeretention",
+        "sameprofile/artifactreopen",
+        "bothnativeexit0"
+      ],
+      "fail": [
+        "initialfalseemptyhistory",
+        "continuouscomposer/control/icon/permission/idlewaveformintegration",
+        "missingnativechatinputin294nodeATSPItree"
+      ],
+      "input_cause": "UNKNOWN; observedShiftEnter/secondlineandexpandedcontrolsabsent, notprovenuniqueproductcause",
+      "new_sent_messages": 0,
+      "zero_network_calls_proven": false,
+      "standalone_voice_fulltheme_windows_web": "NOT_RUN",
+      "full_acceptance": false
+    },
+    "native_peer_independent_qa": {
+      "source_base": "45a6959c",
+      "patch_sha256": "6d6c32e0a0549fecbccef02749b653f6aa440b7ed9f779311f1a9566c4d69bab",
+      "equivalent_commit": "e7a1d2ca",
+      "evidence": "/workspace/shared/9to1-test-evidence/native-peer-independent-qa/identity.json",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0,
+      "metadata_red": "ActualaccessibleNamechange re-appliesclasses expected0 actual1; correctedAll->Paint",
+      "source_scope": "genericnativepeer/lifecycle/metadata; noappUIpolicy"
+    }
+  },
+  "latest_owner_ui_refinements": {
+    "source_commit": "a7cc05cb95bbe135301e141a2e5bcdffa5a1c53f",
+    "references": [
+      "docs/specification/owner-references/2026-10-20-professional-spaces-heading/owner-correction.json",
+      "docs/specification/owner-references/2026-10-20-continuous-composer/owner-correction.json"
+    ],
+    "priority": "Canonical specification takes priority over both illustrative images. Professional excludes mistaken decorative glow.",
+    "composer": "One continuous surface, no visible nested input box; genuine format/emoji under expanded-and-focused rule and canonical permission selector, separate from AI Read-only/Write.",
+    "icons": "Filled rounded SVGs and real running/most-used/configured Assistant state remain required and unimplemented."
+  },
+  "updated_at": "2026-10-20T14:50:27.216638+00:00"
+}

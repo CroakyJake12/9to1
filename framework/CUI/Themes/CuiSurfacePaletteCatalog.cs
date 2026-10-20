@@ -153,9 +153,21 @@ public static class CuiSurfacePaletteCatalog
     {
         if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));
         var hue = Hues.TryGetValue(surface, out var configured) ? configured : Hues["Home"];
-        var appColour = (owningAppId is null ? null : CuiAppAccentCatalog.Find(owningAppId)?.Colour)
-            ?? CuiAppAccentCatalog.Find(surface)?.Colour;
-        var anchors = accentOverride ?? (appColour is null ? null : ColourAnchors(appColour));
+        // An explicit owning app identity owns its accent. Only when no owner is supplied
+        // do we infer from the surface. Professional's unknown/absent owner falls back to
+        // blue below; other themes retain their historical surface inference for compatibility.
+        var appColour = owningAppId is null
+            ? CuiAppAccentCatalog.Find(surface)?.Colour
+            : CuiAppAccentCatalog.Find(owningAppId)?.Colour
+                ?? (theme == CuiTheme.Professional ? null : CuiAppAccentCatalog.Find(surface)?.Colour);
+        // Professional has no app-specific default accent for unknown/no-app surfaces;
+        // use the existing canonical blue anchors instead of the legacy surface hue
+        // (e.g. Spaces purple). This is palette resolution only: explicit Home
+        // accent overrides and persisted preference modes remain untouched.
+        var anchors = accentOverride
+            ?? (appColour is null
+                ? (theme == CuiTheme.Professional ? ColourAnchors("#2563EB") : null)
+                : ColourAnchors(appColour));
         var accent = anchors?.Primary ?? Color.Parse(hue.Accent);
         var secondary = anchors?.Secondary ?? Color.Parse(hue.Secondary);
         var strong = anchors?.Strong ?? Color.Parse(hue.Strong);

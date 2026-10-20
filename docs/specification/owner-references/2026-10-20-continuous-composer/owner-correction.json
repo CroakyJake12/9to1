@@ -1,0 +1,32 @@
+{
+  "source": "Direct owner messages and image attachment in the current chat, 20 October 2026",
+  "recorded_at": "2026-10-20T11:44:42.331792+00:00",
+  "authority": "Canonical specification v2 has priority over these illustrative references, as explicitly clarified by the owner. Direct textual refinements apply within that contract.",
+  "reference": {
+    "file": "1000014314.jpg",
+    "sha256": "8e16c0d1166b7f37bc31dc58b22eb1f87725b03c5e12e332e040c1a612e0361a",
+    "kind": "illustrative rough reference, not proof of implemented behavior"
+  },
+  "owner_words": [
+    "The chatbox in your current design doesn't match the spec. It should be continuous, not a visible box inside a box, and have format/emoji button/permission selector. See attached chatgpt compose for example.",
+    "The send button is also missing the wave voice thing when the compose area is empty. But that could be intentional at this point, awaiting further development on voice",
+    "The formatting should just be a single button thst opens a toolbar"
+  ],
+  "requirements": [
+    "Author one continuous composer surface; the text entry must not present a separate visible box inside the outer composer. Avoid an independent inner background, rounded outline or clipped inset glow.",
+    "The shared CUI composite treatment must prevent inner input background, border or focus adorner from recreating a nested box, while preserving a visible accessible outer-composer focus indication and genuine text-input behavior.",
+    "Provide genuine formatting and emoji controls with the specification visibility rule: next to + only when the composer is expanded AND focused, never in compact/mini mode.",
+    "Formatting is the genuine accessible floating CUI toolbar under SPUI-192, acting on the real semantic selection/caret and preserving canonical content, undo/redo, focus and selection. Emoji uses the real keyboard-operable CUI picker.",
+    "Provide a genuine permission selector bound to canonical effective policy/permission owners, with truthful available options and enforced scopes. Preserve the separately required persistent AI Read-only/Write access mode; do not conflate permission approval policy, AI access mode, or All/Basic/JustChat model capability modes. DEC-001 still leaves the exact Ask for Approval semantics open; this owner request establishes presence, not invented new grant semantics.",
+    "The ChatGPT screenshot illustrates continuous composition and control arrangement; it is not an instruction to copy branding, model text, warning icon, message text or personal/provider state.",
+    "Canonical v2 takes priority over example images; retain applicable complete composer requirements, compact/expanded behavior, accessibility, real attachment/Voice & Vision actions and canonical draft/conversation lifetimes.",
+    "The latest Spaces reference is Professional and its mistaken glow is excluded. Preserve other user-selected themes rather than removing their specified effects globally.",
+    "The idle empty composer must show the waveform Voice-mode control; switch to Send for a genuine pending message. Preserve canonical attachment/content applicability and active Stop/Resume/queue/edit semantics rather than selecting Voice merely because text is temporarily empty.",
+    "The waveform invokes the full canonical Voice & Vision session through the same ConversationID, SpaceID and Voice SessionID, with a floating voice pill over the still-usable chat. It is not a settings/model picker, dictation-only replacement or automatic navigation to the standalone app.",
+    "Respect actual audio/camera/screen permissions, persistent capture indicators and explicit sharing. Never silently enable camera or screen sharing. The owner noted this is still pending; that is not a waiver or evidence that Voice is implemented.",
+    "Show one Format (Aa) button that opens the floating formatting toolbar. Individual formatting commands belong inside that toolbar, not persistently exposed in the composer controls row. Preserve the expanded AND focused visibility rule for the Format and emoji buttons."
+  ],
+  "voice_clarified_at": "2026-10-20T12:17:07.536234+00:00",
+  "format_toolbar_clarified_at": "2026-10-20T14:59:18.728906+00:00",
+  "later_floating_bar_clarification": "../2026-10-20-floating-format-bar/owner-correction.json; explicit on/off floating icon toolbar, not provisional dropdown menu"
+}

@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
+using CakeOS.Cui.Themes;
 using Haven.Desktop.HavenUI.Tokens;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Settings;
@@ -25,6 +26,7 @@ public sealed class PersonalisationTests
     [AvaloniaFact]
     public void Glow_palette_matches_the_pre_theme_baseline()
     {
+        var previousActiveTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         HavenPersonalisation.Reset();
         try
         {
@@ -45,18 +47,22 @@ public sealed class PersonalisationTests
             var expectedHover = Blend(darkSoft, accent, 0.22);
             Assert.Equal(expectedHover, home.ButtonHover);
         }
-        finally { HavenPersonalisation.Reset(); }
+        finally { HavenPersonalisation.Reset(); CuiSurfacePaletteCatalog.ActiveTheme = previousActiveTheme; }
     }
 
     [Fact]
     public void Every_theme_resolves_for_every_surface_and_appearance()
     {
+        var previousActiveTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         HavenPersonalisation.Reset();
         try
         {
             foreach (var theme in Enum.GetValues<HavenUiTheme>())
             {
                 HavenPersonalisation.Theme = theme;
+                // CUI-owned surfaces resolve their theme through the CUI authority, so keep
+                // that authority aligned with the legacy projection under test.
+                CuiSurfacePaletteCatalog.ActiveTheme = LegacyCuiTheme(theme);
                 foreach (var appearance in Enum.GetValues<HavenUiAppearance>())
                 foreach (var surface in Enum.GetValues<HavenSurface>())
                 {
@@ -68,12 +74,13 @@ public sealed class PersonalisationTests
                 }
             }
         }
-        finally { HavenPersonalisation.Reset(); }
+        finally { HavenPersonalisation.Reset(); CuiSurfacePaletteCatalog.ActiveTheme = previousActiveTheme; }
     }
 
     [Fact]
     public void Non_glow_themes_change_interaction_treatment_without_changing_text_colours()
     {
+        var previousActiveTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         HavenPersonalisation.Reset();
         try
         {
@@ -94,7 +101,7 @@ public sealed class PersonalisationTests
             var cinematic = For(HavenUiTheme.Cinematic, HavenSurface.Chat, HavenUiAppearance.Dark);
             Assert.NotEqual(glow.Panel, cinematic.Panel);
         }
-        finally { HavenPersonalisation.Reset(); }
+        finally { HavenPersonalisation.Reset(); CuiSurfacePaletteCatalog.ActiveTheme = previousActiveTheme; }
     }
 
     [Fact]
@@ -141,12 +148,14 @@ public sealed class PersonalisationTests
     private static SurfacePaletteCatalog.Palette For(HavenUiTheme theme, HavenSurface surface, HavenUiAppearance appearance)
     {
         HavenPersonalisation.Theme = theme;
+        CuiSurfacePaletteCatalog.ActiveTheme = LegacyCuiTheme(theme);
         return SurfacePaletteCatalog.For(surface, appearance);
     }
 
     [Fact]
     public void Accent_override_replaces_surface_hues_while_off_keeps_them()
     {
+        var previousActiveTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         HavenPersonalisation.Reset();
         try
         {
@@ -166,7 +175,7 @@ public sealed class PersonalisationTests
             var restored = SurfacePaletteCatalog.For(HavenSurface.Tasks, HavenUiAppearance.Dark);
             Assert.Equal(Color.Parse("#FFFF5B19"), restored.AccentSecondary);
         }
-        finally { HavenPersonalisation.Reset(); }
+        finally { HavenPersonalisation.Reset(); CuiSurfacePaletteCatalog.ActiveTheme = previousActiveTheme; }
     }
 
     [Fact]
@@ -380,6 +389,16 @@ public sealed class PersonalisationTests
             (byte)Math.Round(first.G + (second.G - first.G) * weight),
             (byte)Math.Round(first.B + (second.B - first.B) * weight));
     }
+
+    private static CuiTheme LegacyCuiTheme(HavenUiTheme theme) => theme switch
+    {
+        HavenUiTheme.Glow => CuiTheme.Glow,
+        HavenUiTheme.Bubble => CuiTheme.Bubble,
+        HavenUiTheme.Retro => CuiTheme.Retro,
+        HavenUiTheme.Playful => CuiTheme.Playful,
+        HavenUiTheme.Cinematic => CuiTheme.Cinematic,
+        _ => CuiTheme.Glow
+    };
 
     private sealed class TemporaryPaths : IAppPaths, IDisposable
     {

@@ -77,7 +77,7 @@ public sealed class SpacesHomeCuiRenderingTests
                 Assert.Contains("Chat", rendered); // Selected-Space content remains labelled outside the rail.
                 Assert.Contains("Spaces", rendered);
                 var rail = Assert.Single(root.GetVisualDescendants().OfType<Control>(), control => control.Name == "spaces-sidebar");
-                Assert.Equal(72, rail.Bounds.Width);
+                Assert.Equal(70, rail.Bounds.Width);
                 Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible && !string.IsNullOrEmpty(text.Text));
                 var buttons = rail.GetVisualDescendants().OfType<Button>().Where(button => button.Name is "first-party-space-open" or "open-custom-space").ToArray();
                 Assert.Equal(3, buttons.Length);
@@ -157,7 +157,7 @@ public sealed class SpacesHomeCuiRenderingTests
                 }
 
                 Assert.True(bindings.TryGetValue("spaces.layoutColumns", out var expandedColumns));
-                Assert.Equal("72 260 1fr", expandedColumns);
+                Assert.Equal("70 280 1fr", expandedColumns);
 
                 var switcher = await Press("space-switcher");
                 Assert.Equal("Switch Space", AutomationProperties.GetName(switcher));
@@ -194,7 +194,7 @@ public sealed class SpacesHomeCuiRenderingTests
                 Assert.True(sidebar is null || !sidebar.IsEffectivelyVisible,
                     "The collapsed contextual sidebar must not be presented.");
                 Assert.True(bindings.TryGetValue("spaces.layoutColumns", out var collapsedColumns));
-                Assert.Equal("72 0 1fr", collapsedColumns);
+                Assert.Equal("70 0 1fr", collapsedColumns);
                 var expand = await Press("space-sidebar-expand");
                 Assert.Equal("Expand this Space's sidebar", AutomationProperties.GetName(expand));
                 Assert.Equal(("spaces.toggle-sidebar", (object?)null), Assert.Single(actions));

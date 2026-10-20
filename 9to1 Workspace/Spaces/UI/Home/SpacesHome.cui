@@ -50,15 +50,15 @@
   </Actions>
   <Theme Name="user_preference">
     <Page id="spaces-page" role="main" accessible-name="Spaces">
-      <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}">
-        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="16">
-          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="72" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8">
-            <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" Tooltip="Create a custom Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+      <Container id="spaces-body" Type="Grid" RowSizes="1fr" ColumnSizes="1fr" Interactive="{Binding spaces.canMutate}" Background="{Resource CuiBackgroundBrush}">
+        <Container id="spaces-layout" Type="Grid" RowSizes="1fr" ColumnSizes="{Binding spaces.layoutColumns}" CellGap="0" Background="{Resource CuiBackgroundBrush}">
+          <Container id="spaces-sidebar" role="navigation" accessible-name="Spaces navigation" width="70" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
+            <Button id="create-space" action="spaces.create" accessible-name="Create a custom Space" Tooltip="Create a custom Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="create-space-icon" Source="icon:plus" Width="24" Height="24" />
             </Button>
             <Repeat id="first-party-spaces" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
               <Container id="first-party-space" Type="Vertical Stack">
-                <Button id="first-party-space-open" action="SelectRow" accessible-name="{Binding space.openLabel}" Tooltip="{Binding space.tooltip}" Selected="{Binding space.isSelected}" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+                <Button id="first-party-space-open" action="SelectRow" accessible-name="{Binding space.openLabel}" Tooltip="{Binding space.tooltip}" Selected="{Binding space.isSelected}" Width="48" Height="48" Padding="12" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                   <Image id="first-party-space-icon" Source="{Binding space.iconSource}" Width="24" Height="24" />
                 </Button>
               </Container>
@@ -66,7 +66,7 @@
             <Container id="spaces-rail-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
             <Repeat id="custom-spaces" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
               <Container id="custom-space-row" role="listitem" accessible-name="{Binding space.customLabel}" Type="Vertical Stack">
-                <Button id="open-custom-space" action="SelectRow" accessible-name="{Binding space.openLabel}" Tooltip="{Binding space.tooltip}" Selected="{Binding space.isSelected}" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+                <Button id="open-custom-space" action="SelectRow" accessible-name="{Binding space.openLabel}" Tooltip="{Binding space.tooltip}" Selected="{Binding space.isSelected}" Width="48" Height="48" Padding="12" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                   <Image id="custom-space-icon" Source="{Binding space.iconSource}" Width="24" Height="24" />
                 </Button>
               </Container>
@@ -77,13 +77,13 @@
               entry for the selected user-created Space instead of a second navigation surface.
             -->
             <If Condition="{Binding selection.canEditDetails}">
-              <Button id="manage-selected-space" action="ManageSelected" accessible-name="Manage selected Space" Tooltip="Manage this Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+              <Button id="manage-selected-space" action="ManageSelected" accessible-name="Manage selected Space" Tooltip="Manage this Space" Width="48" Height="48" Padding="12" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                 <Image id="manage-selected-space-icon" Source="icon:settings" Width="24" Height="24" />
               </Button>
             </If>
             <!-- Collapsing the contextual sidebar keeps one explicit control to bring it back. -->
             <If Condition="{Binding spaces.sidebarCollapsed}">
-              <Button id="space-sidebar-expand" action="ToggleSidebar" accessible-name="Expand this Space's sidebar" Tooltip="Expand this Space's sidebar" Width="48" Height="48" Padding="12" HorizontalAlignment="Center">
+              <Button id="space-sidebar-expand" action="ToggleSidebar" accessible-name="Expand this Space's sidebar" Tooltip="Expand this Space's sidebar" Width="48" Height="48" Padding="12" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
                 <Image id="space-sidebar-expand-icon" Source="icon:chevron-right" Width="24" Height="24" />
               </Button>
             </If>
@@ -93,39 +93,44 @@
             recent conversations. It stays visible while a Space conversation is mounted, and it
             never becomes a cross-Space history list because the rows are scoped to the selection.
           -->
-          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8" IsVisible="{Binding spaces.sidebarExpanded}">
+          <Container id="space-context-sidebar" role="navigation" accessible-name="Selected Space sidebar" Column="1" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" Padding="12" CellGap="8" Background="{Resource CuiPanel3Brush}" IsVisible="{Binding spaces.sidebarExpanded}">
             <!--
               The header control displays the currently selected Space and switches Spaces when
               activated; the adjacent overflow control holds that Space's quick actions. Both popovers
               are deterministic (only one open at a time) and the whole sidebar collapses.
             -->
-            <Container id="space-context-header" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="6">
-              <Button Column="0" id="space-switcher" action="ToggleSwitcher" content="{Binding selection.name}" accessible-name="Switch Space" Tooltip="Switch to another Space" />
-              <Button Column="1" id="space-overflow" action="ToggleOverflow" accessible-name="Quick actions for this Space" Tooltip="Quick actions for this Space" Width="32" Height="32" Padding="6">
+            <Container id="space-context-header" Type="Grid" ColumnSizes="1fr Auto Auto" CellGap="4">
+              <Button Column="0" id="space-switcher" action="ToggleSwitcher" content="{Binding selection.name}" accessible-name="Switch Space" Tooltip="Switch to another Space" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
+              <Button Column="1" id="space-overflow" action="ToggleOverflow" accessible-name="Quick actions for this Space" Tooltip="Quick actions for this Space" Width="32" Height="32" Padding="6" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6">
                 <Image id="space-overflow-icon" Source="icon:more" Width="18" Height="18" />
               </Button>
-              <Button Column="2" id="space-sidebar-collapse" action="ToggleSidebar" accessible-name="Collapse this sidebar" Tooltip="Collapse this sidebar" Width="32" Height="32" Padding="6">
+              <Button Column="2" id="space-sidebar-collapse" action="ToggleSidebar" accessible-name="Collapse this sidebar" Tooltip="Collapse this sidebar" Width="32" Height="32" Padding="6" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6">
                 <Image id="space-sidebar-collapse-icon" Source="icon:chevron-left" Width="18" Height="18" />
               </Button>
             </Container>
             <If Condition="{Binding spaces.spaceSwitcherOpen}">
               <Container id="space-switcher-list" role="list" accessible-name="Spaces switcher" Type="Vertical Stack" CellGap="4">
                 <Repeat id="space-switcher-builtin" Source="{Binding spaces.builtIns}" As="space" Key="{Binding space.id}">
-                  <Button id="space-switcher-builtin-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" />
+                  <Button id="space-switcher-builtin-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
                 </Repeat>
                 <Repeat id="space-switcher-custom" Source="{Binding spaces.customSpaces}" As="space" Key="{Binding space.id}">
-                  <Button id="space-switcher-custom-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" />
+                  <Button id="space-switcher-custom-row" action="SelectRow" content="{Binding space.name}" accessible-name="{Binding space.openLabel}" Selected="{Binding space.isSelected}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
                 </Repeat>
               </Container>
             </If>
             <If Condition="{Binding spaces.spaceOverflowOpen}">
               <Container id="space-overflow-actions" role="menu" accessible-name="Space quick actions" Type="Vertical Stack" CellGap="4">
-                <Button id="space-overflow-manage" action="ManageSelected" content="Manage Space" accessible-name="Manage selected Space" Interactive="{Binding selection.canEditDetails}" />
-                <Button id="space-overflow-rename" action="RenameSelected" content="Rename Space" accessible-name="Rename selected Space" Interactive="{Binding selection.canEdit}" />
-                <Button id="space-overflow-archive" action="ArchiveSelected" content="Archive Space" accessible-name="Archive selected Space" Interactive="{Binding selection.canEdit}" />
+                <Button id="space-overflow-manage" action="ManageSelected" content="Manage Space" accessible-name="Manage selected Space" Interactive="{Binding selection.canEditDetails}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
+                <Button id="space-overflow-rename" action="RenameSelected" content="Rename Space" accessible-name="Rename selected Space" Interactive="{Binding selection.canEdit}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
+                <Button id="space-overflow-archive" action="ArchiveSelected" content="Archive Space" accessible-name="Archive selected Space" Interactive="{Binding selection.canEdit}" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="6" />
               </Container>
             </If>
-            <Button id="space-new-chat" action="NewChat" content="New chat" accessible-name="Start a new chat in this Space" />
+            <Button id="space-new-chat" action="NewChat" accessible-name="Start a new chat in this Space" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+              <Container Type="Horizontal Stack" CellGap="8">
+                <Image id="space-new-chat-icon" Source="icon:plus" Width="18" Height="18" VerticalAlignment="Center" />
+                <Text id="space-new-chat-label" text="New chat" font-size="14" />
+              </Container>
+            </Button>
             <!--
               Plugin/extension-declared sidebar elements for this Space sit directly beneath New chat,
               as an ordinary navigation row (icon left, readable label beside it). Each row is keyed by
@@ -133,15 +138,23 @@
               resolve stays visible but explicitly not actionable.
             -->
             <Repeat id="space-sidebar-items" Source="{Binding spaces.sidebarItems}" As="item" Key="{Binding item.sidebarItemId}">
-              <Container id="space-sidebar-item-row" role="listitem" accessible-name="{Binding item.label}" Type="Horizontal Stack" CellGap="8">
-                <Image id="space-sidebar-item-icon" Source="{Binding item.iconSource}" Width="20" Height="20" VerticalAlignment="Center" accessible-name="{Binding item.label}" />
-                <Button id="open-space-sidebar-item" action="OpenSidebarItem" content="{Binding item.label}" accessible-name="{Binding item.openLabel}" Interactive="{Binding item.isActionable}" />
-              </Container>
+              <Button id="open-space-sidebar-item" action="OpenSidebarItem" accessible-name="{Binding item.openLabel}" Interactive="{Binding item.isActionable}" Padding="14" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+                <Container id="space-sidebar-item-row" role="listitem" accessible-name="{Binding item.label}" Type="Horizontal Stack" CellGap="8">
+                  <Image id="space-sidebar-item-icon" Source="{Binding item.iconSource}" Width="20" Height="20" VerticalAlignment="Center" accessible-name="{Binding item.label}" />
+                  <Text id="space-sidebar-item-label" text="{Binding item.label}" font-size="14" />
+                </Container>
+              </Button>
             </Repeat>
+            <Text id="space-recent-chats-heading" text="Recent chats" font-size="12" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+            <Container id="space-recent-chats-divider" Type="Vertical Stack" Height="1" Background="{Resource CuiLineBrush}" />
             <Repeat id="space-conversations" Source="{Binding spaces.conversations}" As="conversation" Key="{Binding conversation.id}">
               <Container id="space-conversation-row" role="listitem" accessible-name="{Binding conversation.title}" Type="Vertical Stack" CellGap="2">
-                <Button id="open-space-conversation" action="OpenConversation" content="{Binding conversation.title}" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" />
-                <Text id="space-conversation-updated" text="{Binding conversation.updatedLabel}" foreground="{Resource CuiTextSoftBrush}" />
+                <Button id="open-space-conversation" action="OpenConversation" accessible-name="{Binding conversation.openLabel}" Selected="{Binding conversation.isCurrent}" Padding="12" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+                <Container Type="Vertical Stack" CellGap="2">
+                  <Text id="space-conversation-title" text="{Binding conversation.title}" font-size="14" />
+                  <Text id="space-conversation-updated" text="{Binding conversation.updatedLabel}" foreground="{Resource CuiTextSoftBrush}" font-size="12" />
+                </Container>
+              </Button>
               </Container>
             </Repeat>
             <If Condition="!{Binding spaces.hasConversations}">
@@ -156,7 +169,7 @@
             and the workspace, including its chat/history sidebar, stay on screen together. The
             summary returns when the workspace retires; nothing here invents a second navigation.
           -->
-          <Container id="space-app-content" accessible-name="Space workspace" Type="Overlay" Column="2" IsVisible="{Binding spaces.hasAppContent}" />
+          <Container id="space-app-content" accessible-name="Space workspace" Type="Overlay" Column="2" IsVisible="{Binding spaces.hasAppContent}" Background="{Resource CuiWorkspaceBrush}" CornerRadius="12" />
           <Container id="space-details" accessible-name="Selected Space" Column="2" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="10" IsVisible="{Binding spaces.hasSpaceSummary}">
             <Text id="spaces-heading" text="Spaces" font-size="24" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
             <Container id="spaces-search-controls" Type="Grid" RowSizes="Auto" ColumnSizes="24 1fr" CellGap="8">

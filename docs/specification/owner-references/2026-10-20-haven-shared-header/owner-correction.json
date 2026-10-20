@@ -1,0 +1,17 @@
+{
+  "source": "Direct owner clarification in current chat, 20 October 2026",
+  "recorded_at": "2026-10-20T10:02:06.343210+00:00",
+  "authority": "Later explicit owner refinement; canonical v2 remains sole general product authority",
+  "reference": "Supplied cropped pre-super-app mockup: model selector, search, notifications and profile",
+  "requirements": [
+    "When Spaces is opened inside Browse/Haven, this app header area exposes only search.",
+    "Model selection, unified notifications and profile reside on the persistent Browse/Haven sidebar and are shared across apps.",
+    "Standalone Spaces exposes all four controls: model, search, notifications and profile.",
+    "Preserve genuine Home-owned model/notification/profile identity and capabilities; do not duplicate state per app or fabricate model/account values.",
+    "The embedded versus standalone top-bar distinction applies across every app.",
+    "App-specific controls remain owned by the app; the shared model, notifications and profile cluster is supplied by Haven when embedded.",
+    "Use shared host-context/presentation contracts so each app does not duplicate model, notification or profile state."
+  ],
+  "clarified_at": "2026-10-20T10:05:10.162832+00:00",
+  "scope": "All applications, with host-aware top bars, not Spaces only"
+}

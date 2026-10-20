@@ -143,7 +143,7 @@ public sealed class SpacesHomeNativeRenderingTests
                 Assert.Contains("Spaces", rendered);
                 Assert.Contains("Chat", rendered);
                 var rail = Assert.Single(root.GetVisualDescendants().OfType<Control>(), item => item.Name == "spaces-sidebar");
-                Assert.Equal(72, rail.Bounds.Width);
+                Assert.Equal(70, rail.Bounds.Width);
                 Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBlock>(), item => item.IsEffectivelyVisible && !string.IsNullOrEmpty(item.Text));
                 Assert.Contains(rail.GetVisualDescendants().OfType<Button>(), item => AutomationProperties.GetName(item) == "Open Study");
 

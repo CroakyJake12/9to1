@@ -8,13 +8,17 @@ namespace CakeOS.Cui.Runtime;
 /// Applies CUI documents to a live content host. Candidate trees are fully built
 /// before the current tree is replaced, so a failed load leaves the last good UI intact.
 /// </summary>
-public sealed class CuiRuntimeSurface
+public sealed class CuiRuntimeSurface : IDisposable
 {
     private readonly ContentControl _host;
     private readonly CuiControlRegistry _registry;
     private readonly ICuiBindingContext? _bindingContext;
     private readonly ICuiActionDispatcher? _actionDispatcher;
     private CuiControlLoader? _activeLoader;
+    private CuiControlLoader? _retiringLoader;
+    private Control? _activeRoot;
+    private bool _applying;
+    private bool _disposed;
 
     public CuiRuntimeSurface(
         ContentControl host,
@@ -32,6 +36,22 @@ public sealed class CuiRuntimeSurface
 
     public bool TryApply(CuiDocument document, out IReadOnlyList<CuiDiagnostic> diagnostics)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_applying)
+            throw new InvalidOperationException("A CUI surface application is already in progress.");
+        _applying = true;
+        try
+        {
+            return TryApplyCore(document, out diagnostics);
+        }
+        finally
+        {
+            _applying = false;
+        }
+    }
+
+    private bool TryApplyCore(CuiDocument document, out IReadOnlyList<CuiDiagnostic> diagnostics)
+    {
         ArgumentNullException.ThrowIfNull(document);
         var version = document.RootProperties.TryGetValue("version", out var versionValue)
             ? versionValue is CuiLiteralValue literal ? literal.Value : null
@@ -48,28 +68,116 @@ public sealed class CuiRuntimeSurface
             return false;
         }
 
-        var candidateLoader = new CuiControlLoader(_registry);
-        if (_bindingContext is not null)
-            candidateLoader.SetBindingContext(_bindingContext);
-        if (_actionDispatcher is not null)
-            candidateLoader.SetActionDispatcher(_actionDispatcher);
-
-        var (candidate, loadDiagnostics) = candidateLoader.TryLoad(document);
-        diagnostics = loadDiagnostics;
-        if (candidate is null || loadDiagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
+        CuiControlLoader? candidateLoader = new(_registry);
+        try
         {
-            candidateLoader.Dispose();
-            return false;
+            if (_bindingContext is not null)
+                candidateLoader.SetBindingContext(_bindingContext);
+            if (_actionDispatcher is not null)
+                candidateLoader.SetActionDispatcher(_actionDispatcher);
+
+            var (candidate, loadDiagnostics) = candidateLoader.TryLoad(document);
+            diagnostics = loadDiagnostics;
+            if (candidate is null || loadDiagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
+            {
+                candidateLoader.Dispose();
+                return false;
+            }
+
+            var states = CaptureStates(CurrentRoot);
+            RestoreStates(candidate, states);
+            candidateLoader.WireBindings(candidate);
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
+            _retiringLoader = _activeLoader;
+            // Native Content notifications can synchronously dispose the surface or throw
+            // after publishing the new tree. Establish its owner before entering callbacks.
+            _activeLoader = candidateLoader;
+            _activeRoot = candidate;
+            candidateLoader = null;
+            try
+            {
+                _host.Content = candidate;
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                RestoreFocus(candidate, states);
+            }
+            catch (Exception failure)
+            {
+                CleanupAfterFailure(RetirePreviousLoader, failure);
+                throw;
+            }
+            RetirePreviousLoader();
+            return true;
+        }
+        catch (Exception failure)
+        {
+            if (candidateLoader is not null) CleanupAfterFailure(candidateLoader.Dispose, failure);
+            throw;
+        }
+    }
+
+    /// <summary>Revoke actions and subscriptions owned by this surface. Admitted asynchronous
+    /// actions receive cancellation; their owning dispatcher still observes their completion.</summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        var loader = _activeLoader;
+        var retiringLoader = _retiringLoader;
+        var root = _activeRoot;
+        _activeLoader = null;
+        _retiringLoader = null;
+        _activeRoot = null;
+
+        void DisposeOwnedLoaders()
+        {
+            try
+            {
+                loader?.Dispose();
+            }
+            catch (Exception failure)
+            {
+                if (retiringLoader is not null) CleanupAfterFailure(retiringLoader.Dispose, failure);
+                throw;
+            }
+            retiringLoader?.Dispose();
         }
 
-        var previous = CurrentRoot;
-        var states = CaptureStates(previous);
-        RestoreStates(candidate, states);
-        _host.Content = candidate;
-        _activeLoader?.Dispose();
-        _activeLoader = candidateLoader;
-        RestoreFocus(candidate, states);
-        return true;
+        void ClearOwnedContent()
+        {
+            if (root is not null && ReferenceEquals(_host.Content, root))
+                _host.Content = null;
+        }
+
+        try
+        {
+            DisposeOwnedLoaders();
+        }
+        catch (Exception failure)
+        {
+            CleanupAfterFailure(ClearOwnedContent, failure);
+            throw;
+        }
+        ClearOwnedContent();
+    }
+
+    private void RetirePreviousLoader()
+    {
+        var previousLoader = _retiringLoader;
+        _retiringLoader = null;
+        previousLoader?.Dispose();
+    }
+
+    private static void CleanupAfterFailure(Action cleanup, Exception failure)
+    {
+        try
+        {
+            cleanup();
+        }
+        catch (Exception cleanupFailure) when (!ReferenceEquals(failure, cleanupFailure))
+        {
+            throw new AggregateException("CUI surface preparation or publication and cleanup both failed.", failure, cleanupFailure);
+        }
     }
 
     private static Dictionary<string, ControlState> CaptureStates(Control? root)

@@ -1,0 +1,28 @@
+{
+  "source": "Direct owner correction in current chat on20October2026, responding to progress-email screenshot",
+  "recorded_at": "2026-10-20T15:51:30.156682+00:00",
+  "authority": "Direct later textual refinement; canonical v2 remains sole general specification. This clarifies the previous floating toolbar request and overrides the provisional menu interpretation.",
+  "owner_words": [
+    "It should toggle on/off a floating bar. Having a pop-up might be awkward to use. Use icons like B *I* rather than words.",
+    "Big white square behind pop-ups.",
+    "Also the contents of most buttons with visible container (background/border) should be vertically centered."
+  ],
+  "reference": {
+    "file": "1000014316.jpg",
+    "sha256": "316dfdb8bd43c2f3271bf8aa8985df63fc0d049fb5be238ee133af17c49a97fc",
+    "kind": "Owner annotation of actual emailed implementation screenshot; not a mockup to reproduce as finished UI"
+  },
+  "requirements": [
+    "Aa explicitly toggles a floating formatting bar on and off. Use a genuine toolbar with compact formatting symbols such as bold B and italic I and real labelled/keyboard-operable actions, rather than the provisional word-labelled dropdown menu.",
+    "Keep the bar usable for successive formatting operations and preserve the real text input, semantic selection, caret, draft and undo. Maintain canonical expanded AND focused placement of Aa/emoji; no new application C# state or hidden code-behind.",
+    "Correct the unwanted opaque white square/backing behind popups in the shared CUI popup/background/transparency/fallback path. Replacing this one formatting menu does not waive other popup correctness.",
+    "Contents of most buttons that have a visible background or border should be vertically centered. Apply coherent shared CUI control defaults and preserve genuinely intended explicit exceptions; do not patch only a single label.",
+    "Continue the one shared composer/app, Professional neutral/no decorative glow, real permission/Voice and full formatting requirements. This reference contains no permission to fake provider state or introduce a second app surface."
+  ],
+  "later_alignment_clarification": {
+    "recorded_at": "2026-10-20T15:57:47.317771+00:00",
+    "owner_words": "Too many buttons have weird alignment",
+    "evidence": "Two images embedded in the conversation: Haven tab titles/close and back/forward/reload/address controls; expanded composer plus/Aa/emoji. No separate attachment file pointer supplied for these crops.",
+    "requirement": "Audit shared CUI content geometry across actual Haven tabs, navigation and composer controls. Correct common defaults, including text and icon placement; preserve intentional authored alignment and accessible hit targets."
+  }
+}

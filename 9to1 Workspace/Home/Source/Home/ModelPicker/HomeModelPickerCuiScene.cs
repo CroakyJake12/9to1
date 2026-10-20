@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
@@ -33,7 +34,7 @@ public sealed record HomeModelPickerActionRequest(
     JsonElement? Context = null);
 
 /// <summary>Owns the authored Home model-picker CUI document and the typed action queue for its host.</summary>
-public sealed class HomeModelPickerCuiSurface
+public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPropertyChanged
 {
     private readonly Queue<HomeModelPickerActionRequest> _actions = new();
 
@@ -46,6 +47,11 @@ public sealed class HomeModelPickerCuiSurface
     public HomeModelPickerEditorState State { get; private set; } = HomeModelPickerEditorState.Initial;
     public string Scope { get; private set; } = "global";
     public string Category { get; private set; } = "chat";
+    public HomeModelPickerCuiProjection Projection { get; private set; } =
+        new(HomeModelPickerEditorState.Initial, "global", "chat");
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public bool TryGetValue(string path, out object? value) => Projection.TryGetValue(path, out value);
 
     public static HomeModelPickerCuiSurface LoadDefault()
     {
@@ -61,6 +67,8 @@ public sealed class HomeModelPickerCuiSurface
             Scope = snapshot.Scope;
             Category = snapshot.Category;
         }
+        Projection = new HomeModelPickerCuiProjection(State, Scope, Category);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
     public bool Request(HomeModelPickerActionRequest request)
