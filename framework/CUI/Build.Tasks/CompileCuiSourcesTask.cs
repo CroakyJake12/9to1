@@ -482,9 +482,10 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         target = target.Replace('\\', Path.DirectorySeparatorChar);
         if (Path.IsPathFullyQualified(target))
             throw new ArgumentException($"Unsafe absolute TargetPath '{target}' for CUI item '{item.GetMetadata("CuiOriginalFullPath")}'.");
-        var full = Path.GetFullPath(Path.Combine(outputRoot, target));
-        if (!full.StartsWith(outputRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-            && !string.Equals(full, outputRoot, StringComparison.Ordinal))
+        var rootNorm = NormalizeAbsolutePath(outputRoot);
+        var full = Path.GetFullPath(Path.Combine(rootNorm, target));
+        if (!full.StartsWith(rootNorm + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            && !string.Equals(full, rootNorm, StringComparison.Ordinal))
             throw new ArgumentException($"Unsafe TargetPath '{target}' escapes output root '{outputRoot}'.");
         if (!IsPhysicallyInside(full, outputRoot))
             throw new ArgumentException($"Unsafe TargetPath '{target}' resolves outside output root '{outputRoot}' (link/junction escape).");
@@ -534,7 +535,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     /// already-resolved parent, which matches actual platform path semantics.</summary>
     private static string ResolvePhysicalPath(string path)
     {
-        var full = Path.GetFullPath(path);
+        var full = NormalizeAbsolutePath(path);
         var root = Path.GetPathRoot(full);
         if (string.IsNullOrEmpty(root)) root = Path.DirectorySeparatorChar.ToString();
         var segments = new List<string>();
@@ -585,6 +586,21 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         Log.LogError("CUI", code, null, path, 1, 1, 1, 1, message);
 
     private static string BuildPath(string value) => value.Replace('\\', Path.DirectorySeparatorChar);
+
+    /// <summary>Returns the fully-qualified form of a path with any trailing directory separator
+    /// removed, preserving the path root (for example "C:\" or "/"). Configured output/publish roots
+    /// often end in a separator; stripping it keeps containment prefix comparisons consistent without
+    /// ever reducing a bare root to an empty/relative form.</summary>
+    private static string NormalizeAbsolutePath(string path)
+    {
+        var full = Path.GetFullPath(path);
+        var root = Path.GetPathRoot(full);
+        if (string.IsNullOrEmpty(root)) root = Path.DirectorySeparatorChar.ToString();
+        while (full.Length > root.Length
+               && (full[^1] == Path.DirectorySeparatorChar || full[^1] == Path.AltDirectorySeparatorChar))
+            full = full[..^1];
+        return full;
+    }
 
     private static void Publish(string destination, byte[] bytes)
     {

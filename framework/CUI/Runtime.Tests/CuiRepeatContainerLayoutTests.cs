@@ -22,7 +22,7 @@ public sealed class CuiRepeatContainerLayoutTests
 {
     private const string WrapMarkup = """
         <Cui>
-          <Container id="wrap" Type="Wrap" Width="200" CellGap="6">
+          <Container id="wrap" Type="Wrap" Width="260" CellGap="6">
             <Button id="before" Content="B" Width="50" Height="24" />
             <Repeat Source="{Binding Items}" As="it" Key="{Binding it.Id}">
               <Button Content="{Binding it.Label}" Width="50" Height="24" />
@@ -56,8 +56,11 @@ public sealed class CuiRepeatContainerLayoutTests
         await session.Dispatch(() =>
         {
             var model = new CuiViewModel();
-            // Eight fixed-width (50px) cells at 200px wrap width + 6px gaps -> 3 per row, so rows
-            // 0-2, 3-5, 6-7 wrap deterministically without depending on font metrics.
+            // Eight fixed-width (50px) cells at 260px wrap width + 6px gaps. The static before-button
+            // plus the first three repeat cells are 4 cells * 50 + 3 gaps * 6 = 218px <= 260px, so
+            // row 0 contains { before, item1, item2, item3 }; row 1 contains { item4..item7 }; the
+            // trailing static after-button wraps to row 2. This is the independent authored-layout
+            // baseline: a genuine multi-row wrap with deterministic cell positions, no font metrics.
             model.Set("Items", new[]
             {
                 Item("1", "1"), Item("2", "2"), Item("3", "3"),

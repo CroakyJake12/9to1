@@ -125,3 +125,68 @@ delivered the framework primitive + the composer picker.
 1. Grant lane-1 a .NET source-test slot to run `CuiRepeatContainerLayoutTests` (no artifact dependency).
 2. Rebuild `CUI.Compilation.v1` from the updated `ChatComposer.cui`, then run
    `ChatComposerEmojiPickerViewportTests`.
+
+---
+
+## Resume Pass 3 — coherent typed query integration (same session)
+
+**Date:** 2026-10-20 (later turn, exact checkpoint as537f2cec285/… / freeze e2cf5571933c)
+**Scope completed this pass (source/tests only; NOT RUN by worker):**
+
+1. **Runtime/state/query contract (generic, CUI-authored).** New `framework/CUI/Runtime/CuiQueryViewport.cs`
+   adds the canonical bounded-paged-query runtime scope:
+   - `CuiPageCursor` (opaque token), `CuiPagedResult`, `ICuiPagedSource` (typed data-only port).
+   - `CuiQueryViewport : CuiContainerControl` owns the **query string + cursor** (runtime state) and
+     exposes authored bindings `Items`, `TotalCount`, `HasPrevious`, `HasNext`, `PageStart`,
+     `PageEnd`, `PageLabel`, `Query`. It implements `ICuiWritableBindingContext` (search input
+     write-back), `ICuiRepeatItemBindingContext` (delegates item-field resolution to the app host)
+     and `ICuiActionDispatcher` (handles `composer.emoji-prev/next`; forwards everything else to the
+     app host). It holds NO per-view page cache beyond the single current window and owns no control
+     trees — children are authored CUI.
+   - Registered as `RegisterControlType("QueryViewport", …)` in `CuiControlRegistry` (compiler and
+     runtime share this registry, so **no compiler file change is required**; the compiled artifact
+     must simply be rebuilt from the updated `ChatComposer.cui`).
+   - `CuiContainerControl` unsealed so the viewport can subclass it.
+
+2. **Loader scope wiring (Runtime only).** `CuiControlLoader`:
+   - When loading a `CuiQueryViewport` subtree, captures the parent context/dispatcher, resolves its
+     typed `ICuiPagedSource` from `Composer.EmojiCatalogueSource`, sets `InnerContext/InnerDispatcher/
+     RefreshHost`, and pushes the viewport as the active binding context while loading children.
+   - `ObserveActionDispatch` resolves the nearest `CuiQueryViewport` ancestor at click time and routes
+     those controls' actions through the viewport (which forwards non-pager commands to the app host).
+
+3. **App C# page/query/cursor state REMOVED.** `ChatComposerCuiView.cs`:
+   - Deleted `EmojiPageSize`, `_emojiPage`, `_emojiQuery`, `_emojiCursor`, `ClampEmojiPage`,
+     `AllFilteredEmoji`, `EmojiPageEntries`, `EmojiPageLabel`, and the page/query/label binding
+     paths and dispatch cases.
+   - Added `Composer.EmojiCatalogueSource` → a typed `ICuiPagedSource` adapter over the pure
+     `ComposerEmojiCatalogueQuery` engine (data-only full-catalogue filtering incl. flags/suggestives;
+     trigger allowlist still applies only to the random-trigger icon pool).
+   - `Composer.EmojiIconCandidates` (random icon pool) unchanged.
+
+4. **CUI authoring.** `ChatComposer.cui` emoji panel now uses `<Container Type="QueryViewport">` with
+   the search input two-way to `Query`, the keyed grid Repeat bound to `Items`, and Prev/Next controls
+   bound to `HasPrevious/HasNext/PageLabel`. Full 3,944-entry reach, flags/suggestive inclusion,
+   bounded realization (48/page), scroll viewport, and editor insertion/focus/undo/lifetime unchanged.
+
+5. **Tests.**
+   - `CuiRepeatContainerLayoutTests`: uses `CuiBundledFontTestApplication` (Skia+Headless, font
+     initialization consistent with canonical fixtures, fixes the InvalidCastException geometry
+     failures). Wrap fixture width corrected 200→260 so the static before-button + first three repeat
+     cells share row 0 by the authored layout baseline, while genuine multi-row/multi-column wrap,
+     keyed identity, hit targets and strict assertions are retained.
+   - `ChatComposerEmojiPickerViewportTests`: rewritten to drive the REAL query viewport through UI
+     actions — Next-button paging to the final page (truthful total via page label), real search
+     input typing for flags/suggestives, bounded realized cells, and real caret-aware insertion.
+
+**Ownership:** only Repeat/query runtime, composer emoji viewport hunks, and their tests changed.
+Toolbar/plus/icons, Compiler/Core/Task/RuntimeCompatibility, transport, and root QA fixtures untouched.
+
+**Next executable gates (root):**
+1. Run Runtime group: 45 previous passes + corrected `CuiRepeatContainerLayoutTests` (font app +
+   wrap baseline) — expect full PASS.
+2. Rebuild the compiled ChatComposer artifact from the updated `.cui` (no compiler source change
+   needed), then run `ChatComposerEmojiPickerViewportTests` in Host.Tests (CompileInclude already
+   present in `HavenOS.Browse.Host.Tests.csproj`).
+3. Confirm no regression in `CuiTranscriptRepeatCapabilityTests`, `CuiRepeatedInputFocusTests`,
+   `HostComposerLifetimeTests`, and the 30-test compiler/codec suite.

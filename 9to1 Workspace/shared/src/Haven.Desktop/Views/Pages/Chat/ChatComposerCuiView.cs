@@ -62,14 +62,11 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     private readonly IChatComposerSource _source;
     private bool _settingsOpen;
     private bool _emojiOpen;
-    private string? _emojiQuery;
     private bool _focused;
     private bool _expanded;
-    /// <summary>Opaque cursor token for the picker's current window. It is never decoded or used
-    /// for arithmetic here: the non-visual catalogue query engine owns all pagination math and
-    /// returns the next/previous opaque cursors. The authored CUI binds to the projected result
-    /// metadata and advances the window only through those engine-provided tokens.</summary>
-    private ComposerEmojiCatalogueQuery.Cursor? _emojiCursor;
+    // Query/cursor/page state is authored in canonical CUI via the generic runtime QueryViewport
+    // (which owns the query string + opaque cursor) backed by the typed ICuiPagedSource port exposed
+    // below. No application C# page/query/selection cache exists here.
 
     public ChatComposerBindings(IChatComposerSource source)
     {
@@ -128,29 +125,12 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             case "Composer.ShowEmoji":
                 value = _emojiOpen;
                 return true;
-            case "Composer.EmojiQuery":
-                value = _emojiQuery ?? string.Empty;
-                return true;
-            case "Composer.EmojiEntries":
-                value = CurrentEmojiPage.Items;
-                return true;
-            case "Composer.EmojiTotalCount":
-                value = CurrentEmojiPage.TotalCount;
-                return true;
-            case "Composer.EmojiPageStart":
-                value = CurrentEmojiPage.StartOffset + 1;
-                return true;
-            case "Composer.EmojiPageEnd":
-                value = CurrentEmojiPage.StartOffset + CurrentEmojiPage.Items.Count;
-                return true;
-            case "Composer.EmojiHasPrevious":
-                value = CurrentEmojiPage.Prev is not null;
-                return true;
-            case "Composer.EmojiHasNext":
-                value = CurrentEmojiPage.Next is not null;
-                return true;
-            case "Composer.EmojiPageLabel":
-                value = EmojiPageLabel(CurrentEmojiPage);
+            case "Composer.EmojiCatalogueSource":
+                // Typed data-only port for the runtime QueryViewport. Query filtering/pagination
+                // operate on the FULL catalogue (including flags and trigger-excluded sequences);
+                // the neutral allowlist/flag/suggestive filters apply only to the random-trigger
+                // icon pool, never to the picker path.
+                value = EmojiCatalogueSource.Instance;
                 return true;
             case "Composer.EmojiIconCandidates":
                 // Read-only catalogue eligibility: the random-trigger pool. CUI owns the
@@ -170,63 +150,30 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
             return true;
         }
-        if (path == "Composer.EmojiQuery")
-        {
-            _emojiQuery = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
-            // A new query restarts the window at the first page: clear the opaque cursor token.
-            // The engine owns all page arithmetic; there is no local page state to clamp.
-            _emojiCursor = null;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-            return true;
-        }
         return false;
     }
 
-    /// <summary>All catalogue entries matching the current search query. Query filtering is
-    /// data-only and operates on the FULL catalogue (including flags and every trigger-excluded
-    /// sequence); the neutral allowlist/flag/suggestive filters apply only to the random-trigger
-    /// icon pool, never to the picker/search path.</summary>
-    private IReadOnlyList<ComposerEmoji> AllFilteredEmoji()
+    /// <summary>
+    /// The typed, data-only paged query port consumed by the runtime QueryViewport. It adapts the
+    /// pure <see cref="ComposerEmojiCatalogueQuery"/> engine to the generic
+    /// <see cref="ICuiPagedSource"/> contract. This is immutable catalogue data projection, never
+    /// per-view page/query/cursor state.
+    /// </summary>
+    private sealed class EmojiCatalogueSource : ICuiPagedSource
     {
-        var query = _emojiQuery?.Trim();
-        if (string.IsNullOrEmpty(query)) return ComposerEmojiCatalogue.Entries;
-        return ComposerEmojiCatalogue.Entries.Where(entry =>
-            entry.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-            || entry.Group.Contains(query, StringComparison.OrdinalIgnoreCase)
-            || entry.Text == query).ToArray();
-    }
+        public static readonly EmojiCatalogueSource Instance = new();
 
-    /// <summary>The bounded, windowed results for the current search + page. Only one window is
-    /// ever handed to the Repeat, so realized control count stays bounded while the full catalogue
-    /// remains reachable through the paging controls.</summary>
-    private IReadOnlyList<ComposerEmoji> EmojiPageEntries()
-    {
-        var all = AllFilteredEmoji();
-        var count = all.Count;
-        if (count == 0) return Array.Empty<ComposerEmoji>();
-        var start = EmojiPageStart - 1;
-        var take = Math.Min(EmojiPageSize, count - start);
-        return all.Skip(start).Take(take).ToArray();
-    }
-
-    private int EmojiTotalCount() => AllFilteredEmoji().Count;
-    private int EmojiPageStart => _emojiPage * EmojiPageSize + 1;
-    private int EmojiPageEnd => Math.Min((_emojiPage + 1) * EmojiPageSize, EmojiTotalCount());
-    private bool EmojiHasPrevious => _emojiPage > 0;
-    private bool EmojiHasNext => (_emojiPage + 1) * EmojiPageSize < EmojiTotalCount();
-    private string EmojiPageLabel => EmojiTotalCount() switch
-    {
-        0 => "No emoji found",
-        _ => $"{EmojiPageStart}–{EmojiPageEnd} of {EmojiTotalCount()}"
-    };
-
-    /// <summary>Clamp the current window to a valid page for the current total (called whenever the
-    /// query changes or the window advances).</summary>
-    private void ClampEmojiPage()
-    {
-        var total = EmojiTotalCount();
-        var maxPage = total == 0 ? 0 : (total - 1) / EmojiPageSize;
-        _emojiPage = Math.Clamp(_emojiPage, 0, maxPage);
+        public CuiPagedResult Evaluate(string? query, CuiPageCursor? cursor)
+        {
+            var result = ComposerEmojiCatalogueQuery.Evaluate(
+                query, cursor is null ? null : new ComposerEmojiCatalogueQuery.Cursor(cursor.Offset));
+            return new CuiPagedResult(
+                result.Items.Cast<object>().ToArray(),
+                result.TotalCount,
+                result.StartOffset,
+                result.Prev is null ? null : new CuiPageCursor(result.Prev.Value.Offset),
+                result.Next is null ? null : new CuiPageCursor(result.Next.Value.Offset));
+        }
     }
 
     public bool? IsActionAvailable(string command)
@@ -235,8 +182,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
         {
             "composer.send" => _source.CanSend,
             "composer.add" => _source.HasAdd,
-            "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert"
-                or "composer.emoji-prev" or "composer.emoji-next" => true,
+            "composer.emoji" or "composer.emoji-toggle" or "composer.emoji-search" or "composer.emoji-insert" => true,
             "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => true,
             _ => true
         };
@@ -278,22 +224,10 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 if (_emojiOpen) _expanded = true;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
                 return ValueTask.CompletedTask;
-            case "composer.emoji-search" when parameter is string query:
-                _emojiQuery = query ?? string.Empty;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-                return ValueTask.CompletedTask;
             case "composer.emoji-insert" when parameter is string emoji:
                 _emojiOpen = false;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
                 return _source.InsertEmoji(emoji);
-            case "composer.emoji-prev":
-                if (EmojiHasPrevious) _emojiPage--;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-                return ValueTask.CompletedTask;
-            case "composer.emoji-next":
-                if (EmojiHasNext) _emojiPage++;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-                return ValueTask.CompletedTask;
             case "composer.cancel-edit":
                 return _source.CancelEdit();
             default:

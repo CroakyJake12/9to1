@@ -72,26 +72,32 @@
 
     <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
-      <Input id="emoji-search" Type="Text" Value="{Binding Composer.EmojiQuery}" placeholdertext="Search emoji…" MinHeight="36" accessible-name="Search emoji" />
-      <!-- Bounded vertical scroll viewport over the wrapping grid: finite width (inherited from
-           the vertical panel) so the Wrap lays out multiple columns/rows, vertical scrolling only,
-           and a MaxHeight cap. The generic Repeat emits each generated cell directly into this Wrap
-           container's layout, so the grid is real rather than a hidden vertical column. -->
-      <Container id="emoji-grid-viewport" Type="Wrap" CellGap="6" MaxWidth="320" MaxHeight="150"
-            VerticalScrolling="True" HorizontalScrolling="False">
-        <Repeat Source="{Binding Composer.EmojiEntries}" As="emoji" Key="{Binding emoji.Text}">
-          <Button action="composer.emoji-insert.Text" content="{Binding emoji.Text}" font-size="18" accessible-name="Insert {Binding emoji.Name}" />
-        </Repeat>
-      </Container>
-      <!-- Real complete-catalogue paging: one bounded window is rendered; Prev/Next drive the typed
-           cursor so every one of the full catalogue entries (including flags and trigger-excluded
-           sequences) stays reachable. Full totals/result metadata stay truthful. -->
-      <Container id="emoji-pager" Type="Horizontal Stack" CellGap="8" padding="4">
-        <Button id="emoji-prev" action="composer.emoji-prev" content="‹" MinWidth="32" MinHeight="32"
-                IsVisible="{Binding Composer.EmojiHasPrevious}" accessible-name="Previous emoji page" />
-        <Text id="emoji-page-label" text="{Binding Composer.EmojiPageLabel}" font-size="12" VerticalAlignment="Center" />
-        <Button id="emoji-next" action="composer.emoji-next" content="›" MinWidth="32" MinHeight="32"
-                IsVisible="{Binding Composer.EmojiHasNext}" accessible-name="Next emoji page" />
+      <!-- The QueryViewport is the canonical CUI runtime state/query scope: it owns the search query
+           string and opaque cursor; the authored Repeat/input/pager bind to its bounded window and
+           metadata. All catalogue filtering/pagination stays behind the typed data port; no app C#
+           query/page/cursor state exists. -->
+      <Container id="emoji-query" Type="QueryViewport" CellGap="8">
+        <Input id="emoji-search" Type="Text" Value="{Binding Query}" placeholdertext="Search emoji…" MinHeight="36" accessible-name="Search emoji" />
+        <!-- Bounded vertical scroll viewport over the wrapping grid: finite width (inherited from
+             the vertical panel) so the Wrap lays out multiple columns/rows, vertical scrolling only,
+             and a MaxHeight cap. The generic Repeat emits each generated cell directly into this Wrap
+             container's layout, so the grid is real rather than a hidden vertical column. -->
+        <Container id="emoji-grid-viewport" Type="Wrap" CellGap="6" MaxWidth="320" MaxHeight="150"
+              VerticalScrolling="True" HorizontalScrolling="False">
+          <Repeat Source="{Binding Items}" As="emoji" Key="{Binding emoji.Text}">
+            <Button action="composer.emoji-insert.Text" content="{Binding emoji.Text}" font-size="18" accessible-name="Insert {Binding emoji.Name}" />
+          </Repeat>
+        </Container>
+        <!-- Real complete-catalogue paging: one bounded window is rendered; Prev/Next drive the typed
+             cursor so every one of the full catalogue entries (including flags and trigger-excluded
+             sequences) stays reachable. Full totals/result metadata stay truthful. -->
+        <Container id="emoji-pager" Type="Horizontal Stack" CellGap="8" padding="4">
+          <Button id="emoji-prev" action="composer.emoji-prev" content="‹" MinWidth="32" MinHeight="32"
+                  IsVisible="{Binding HasPrevious}" accessible-name="Previous emoji page" />
+          <Text id="emoji-page-label" text="{Binding PageLabel}" font-size="12" VerticalAlignment="Center" />
+          <Button id="emoji-next" action="composer.emoji-next" content="›" MinWidth="32" MinHeight="32"
+                  IsVisible="{Binding HasNext}" accessible-name="Next emoji page" />
+        </Container>
       </Container>
     </Container>
 

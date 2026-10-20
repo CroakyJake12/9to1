@@ -389,5 +389,34 @@ check('nonproduced-same-bytes-content-survives',
 check('nonproduced-same-bytes-embedded-survives',
       (pubdef_pub / 'DefaultInheritEmbedded.cui').read_text(encoding='utf-8') == (pubdef / 'DefaultInheritEmbedded.cui').read_text(encoding='utf-8'))
 
+# ---------------------------------------------------------------------------
+# Project 6: trailing-separator output/publish roots must behave identically to
+# normalized roots (regression for CUIB003 where OutputDirectory/PublishDir ended
+# in a directory separator and demanded a '//'-prefixed descendant).
+# ---------------------------------------------------------------------------
+tr = evidence / 'Lane2TrailingSeparator'
+write(tr / 'Safe.cui', STATELESS)
+trail_group = '<PropertyGroup><OutputPath>bin/Debug/net10.0/</OutputPath></PropertyGroup>'
+trail_items = '<Content Include="Safe.cui" Link="Sub/Safe.cui" TargetPath="Sub/Safe.cui" CopyToOutputDirectory="PreserveNewest" />'
+write(tr / 'Lane2TrailingSeparator.csproj', csproj(task, trail_items, trail_group))
+invoke(tr / 'Lane2TrailingSeparator.csproj', 'build', True, label='lane2-trailing-slash-output-root')
+check('trailing-slash-output-copied', (tr / 'bin/Debug/net10.0/Sub/Safe.cui').exists())
+check('trailing-slash-v1-artifact-emitted', (tr / 'obj/Debug/net10.0/Cui/compilation.v1.cuic.json').exists())
+
+# An escaping TargetPath must STILL fail closed under a trailing-separator root.
+write(tr / 'Lane2TrailingSeparatorEscape.csproj',
+      csproj(task, '<Content Include="Safe.cui" Link="x.cui" TargetPath="../escape.cui" CopyToOutputDirectory="PreserveNewest" />', trail_group))
+invoke(tr / 'Lane2TrailingSeparatorEscape.csproj', 'build', False, 'Unsafe',
+       label='lane2-trailing-slash-escape-targetpath')
+
+# A trailing-separator publish root still accepts a legitimate publish-only destination.
+tr_pub = evidence / 'publish-trailing-root'
+write(tr / 'Lane2TrailingPublish.csproj',
+      csproj(task, '<Content Include="Safe.cui" CopyToPublishDirectory="Always" />', trail_group))
+invoke(tr / 'Lane2TrailingPublish.csproj', 'publish', True,
+       extra=('-p:PublishDir=' + str(tr_pub) + '/'),
+       label='lane2-trailing-slash-publish-root')
+check('trailing-slash-publish-output-present', (tr_pub / 'Safe.cui').exists())
+
 
 print('ALL LANE2 V2 PACKAGING CHECKS PASSED')

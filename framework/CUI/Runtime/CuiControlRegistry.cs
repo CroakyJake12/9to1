@@ -36,6 +36,10 @@ public sealed class CuiControlRegistry
         RegisterObjectRenderer("Markdown", _ => new CuiMarkdownView(),
             ["Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole",
              "TextDecoration", "TextWrapping", "TextAlignment", "VerticalTextAlignment"]);
+        // QueryViewport is the generic runtime state/query contract for bounded paged pickers:
+        // it owns the query string + opaque cursor in the runtime and exposes one window to authored
+        // child bindings, while all data filtering/pagination stays behind a typed ICuiPagedSource.
+        RegisterControlType("QueryViewport", _ => new CuiQueryViewport());
     }
 
     /// <summary>Resolve host-owned, bounded image identities without opening arbitrary files or network locations.</summary>

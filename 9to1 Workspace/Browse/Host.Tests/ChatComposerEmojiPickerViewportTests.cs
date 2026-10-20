@@ -92,6 +92,14 @@ public sealed class ChatComposerEmojiPickerViewportTests
         root.GetVisualDescendants().OfType<TextBox>().SingleOrDefault(box =>
             AutomationProperties.GetAutomationId(box) == "composer-input");
 
+    private static TextBox? FindInput(ContentControl root, string automationId) =>
+        root.GetVisualDescendants().OfType<TextBox>().SingleOrDefault(box =>
+            AutomationProperties.GetAutomationId(box) == automationId);
+
+    private static TextBlock? FindLabel(ContentControl root, string automationId) =>
+        root.GetVisualDescendants().OfType<TextBlock>().SingleOrDefault(label =>
+            AutomationProperties.GetAutomationId(label) == automationId);
+
     private static void Pump() => Dispatcher.UIThread.RunJobs();
 
     private static void PumpLayout(Window window)
@@ -196,38 +204,52 @@ public sealed class ChatComposerEmojiPickerViewportTests
             var realized = viewport!.GetVisualDescendants().OfType<Button>().ToArray();
             Assert.True(realized.Length <= EmojiPageSize,
                 $"realized emoji buttons must stay bounded (<= {EmojiPageSize}), got {realized.Length}");
-            Assert.True(realized.Length <= 60, "realized emoji buttons must not approach the full 3,944 catalogue");
+            Assert.True(realized.Length >= 1, "first window must realize emoji cells");
 
-            // Truthful totals and first-page reach.
-            Assert.True(view.Bindings.TryGetValue("Composer.EmojiTotalCount", out var total) && total is int t && t == ComposerEmojiCatalogue.Entries.Count,
-                "total must equal the full catalogue count");
-            Assert.True(view.Bindings.TryGetValue("Composer.EmojiPageStart", out var start) && start is 1);
-
-            // Paging reaches the final page/entry and every intermediate page (complete-catalogue nav).
+            // Paging through the REAL Next button actions (routed through the runtime QueryViewport)
+            // reaches the final page while keeping realized cells bounded on every page.
             var next = FindButton(view, "emoji-next"); Assert.NotNull(next);
             var guard = 0;
             while (next!.IsVisible && guard < 200) { next.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump(); guard++; }
             Assert.True(guard < 200, "paging must terminate after the final page");
-            Assert.True(view.Bindings.TryGetValue("Composer.EmojiHasNext", out var hasNext) && hasNext is false, "final page must have no Next");
-            Assert.True(view.Bindings.TryGetValue("Composer.EmojiPageEnd", out var end) && end is int e && e == ComposerEmojiCatalogue.Entries.Count,
-                "final entry must be reachable through paging");
+            Assert.False(next.IsVisible, "final page must hide Next");
 
-            // Flags remain in the picker path (allowlist/flag filter never applies to the picker):
-            // search finds a flag-sequence entry, proving flags are reachable, not excluded.
-            view.Bindings.TrySetValue("Composer.EmojiQuery", "flag"); Pump();
-            Assert.True(view.Bindings.TryGetValue("Composer.EmojiEntries", out var results) && results is IReadOnlyList<ComposerEmoji> list
-                && list.Any(entry => entry.Group.Equals("Flags", StringComparison.Ordinal)),
-                "flags must be reachable through the picker/search (full catalogue)");
+            realized = viewport.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.True(realized.Length <= EmojiPageSize,
+                "final page must still realize a bounded window");
+            Assert.True(realized.Length >= 1, "final page must realize cells");
+
+            // The page label reports the truthful full-catalogue total on the final page.
+            var pageLabel = FindLabel(view, "emoji-page-label");
+            Assert.NotNull(pageLabel);
+            Assert.EndsWith($"of {ComposerEmojiCatalogue.Entries.Count}", pageLabel!.Text,
+                StringComparison.Ordinal);
+
+            // The final page's realized glyphs are genuine catalogue entries (complete reach).
+            var catalogueGlyphs = ComposerEmojiCatalogue.Entries.Select(e => e.Text).ToHashSet(StringComparer.Ordinal);
+            Assert.True(realized.All(b => b.Content is string g && catalogueGlyphs.Contains(g)),
+                "every realized cell must be a real catalogue sequence");
+
+            // Flags remain reachable through the REAL search input (typed two-way into the runtime
+            // QueryViewport): full-catalogue filtering, never the trigger-only icon-pool allowlist.
+            var search = FindInput(view, "emoji-search"); Assert.NotNull(search);
+            search!.Text = "flag"; Pump();
+            var flagButtons = viewport.GetVisualDescendants().OfType<Button>().ToArray();
+            var flagSet = ComposerEmojiCatalogueQuery.Evaluate("flag", null).Items
+                .Select(e => ((ComposerEmoji)e).Text).ToHashSet(StringComparer.Ordinal);
+            Assert.True(flagButtons.Any(b => b.Content is string s && flagSet.Contains(s)),
+                "flags must be reachable through real picker search");
 
             // A trigger-blacklisted/suggestive sequence also stays reachable in the picker.
-            view.Bindings.TrySetValue("Composer.EmojiQuery", "peach"); Pump();
-            Assert.True(view.Bindings.TryGetValue("Composer.EmojiEntries", out var peach) && peach is IReadOnlyList<ComposerEmoji> pl
-                && pl.Any(entry => entry.Text.Contains("\U0001F351", StringComparison.Ordinal)),
+            search.Text = "peach"; Pump();
+            var peachButtons = viewport.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.True(peachButtons.Any(b => b.Content is string p && p.Contains("\U0001F351", StringComparison.Ordinal)),
                 "trigger-excluded sequences must remain in the picker/search");
 
-            // Clearing search restores the full set again.
-            view.Bindings.TrySetValue("Composer.EmojiQuery", ""); Pump();
-            Assert.True(view.Bindings.TryGetValue("Composer.EmojiTotalCount", out var cleared) && cleared is int c && c == ComposerEmojiCatalogue.Entries.Count);
+            // Clearing search restores the full catalogue again (first window realizes again).
+            search.Text = ""; Pump();
+            Assert.True(viewport.GetVisualDescendants().OfType<Button>().Any(),
+                "clearing search must restore catalogue cells");
         }
         catch (Exception error) { testFailure = error; throw; }
         finally { await FinishComposerTestAsync(window, view, testFailure); }

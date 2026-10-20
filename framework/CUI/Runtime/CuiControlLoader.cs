@@ -260,7 +260,10 @@ public sealed class CuiControlLoader : IDisposable
         if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
             !TryGetActionInvocation(control, out var invocation)) return;
         var isLocal = invocation.Command == LocalToggleCommand;
-        var dispatcher = _actionDispatcher;
+        // A control inside a QueryViewport's authored subtree dispatches through that viewport (the
+        // generic runtime query/state owner); the viewport forwards unrelated commands to the scene
+        // host dispatcher. Outside such a scope, the scene/app dispatcher is used directly.
+        var dispatcher = !isLocal ? ScopedDispatcherFor(control) ?? _actionDispatcher : _actionDispatcher;
         if (!isLocal && dispatcher is null) return;
 
         if (control is MenuItem && !control.IsEffectivelyEnabled) return;
@@ -945,10 +948,45 @@ public sealed class CuiControlLoader : IDisposable
             _currentLayer = layer;
             try
             {
-                foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
+                // A QueryViewport is the generic runtime state/query scope for a bounded paged
+                // picker. While loading its authored subtree, the viewport becomes the active binding
+                // context and action dispatcher: child bindings (Items/Query/PageLabel/HasNext) and
+                // pager actions resolve against the viewport, which owns the query string + opaque
+                // cursor and delegates all data filtering/pagination to its typed ICuiPagedSource.
+                // The viewport defers nonlocal lookups and non-pager commands to the scene/app host,
+                // so the parent context/dispatcher are captured and restored around the subtree.
+                ICuiBindingContext? viewportPreviousContext = null;
+                ICuiActionDispatcher? viewportPreviousDispatcher = null;
+                var isQueryViewport = control is CuiQueryViewport viewport;
+                if (isQueryViewport)
                 {
-                    var childControl = LoadComponent(child, parent: control);
-                    if (childControl is not null) AddChild(control, childControl);
+                    viewport.InnerContext = _bindingContext;
+                    viewport.InnerDispatcher = _actionDispatcher;
+                    viewport.RefreshHost = () => OnBindingPropertyChanged(null);
+                    if (viewport.Source is null
+                        && _bindingContext?.TryGetValue("Composer.EmojiCatalogueSource", out var source) == true
+                        && source is ICuiPagedSource pagedSource)
+                        viewport.Source = pagedSource;
+                    viewportPreviousContext = _bindingContext;
+                    viewportPreviousDispatcher = _actionDispatcher;
+                    _bindingContext = viewport;
+                    _actionDispatcher = viewport;
+                }
+                try
+                {
+                    foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
+                    {
+                        var childControl = LoadComponent(child, parent: control);
+                        if (childControl is not null) AddChild(control, childControl);
+                    }
+                }
+                finally
+                {
+                    if (isQueryViewport)
+                    {
+                        _bindingContext = viewportPreviousContext;
+                        _actionDispatcher = viewportPreviousDispatcher;
+                    }
                 }
             }
             finally
@@ -2873,6 +2911,20 @@ public sealed class CuiControlLoader : IDisposable
         var liveParameter = _documentActions.TryGetValue(reference, out var boundDefinition)
             ? boundDefinition.Parameter as CuiBindingValue : null;
         _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null);
+    }
+
+    /// <summary>Resolve the nearest authored QueryViewport scope ancestor of a control, if any. The
+    /// viewport owns the paged-query runtime state and routes its authored controls' actions; the
+    /// viewport forwards non-pager commands to the scene host dispatcher.</summary>
+    private static ICuiActionDispatcher? ScopedDispatcherFor(Control control)
+    {
+        Control? current = control;
+        while (current is not null)
+        {
+            if (current is CuiQueryViewport viewport) return viewport;
+            current = current.GetVisualParent();
+        }
+        return null;
     }
 
     private bool TryGetActionInvocation(Control control, out CuiActionInvocation invocation)
