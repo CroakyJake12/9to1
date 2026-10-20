@@ -460,6 +460,7 @@ public sealed class CuiLocalStateRandomSelectRuntimeTests
         await session.Dispatch<bool>(async () =>
         {
             using var loader = new CuiControlLoader();
+            loader.RandomSelectionOverride = candidates => candidates[0];
             loader.SetSurface("Imagine");
             loader.SetAppearance(CuiAppearance.Dark);
             // The source getter synchronously reloads (mounts replacement B) before returning the
