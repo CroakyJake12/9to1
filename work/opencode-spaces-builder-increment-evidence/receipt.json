@@ -1,0 +1,26 @@
+{
+  "created": "2026-10-18T09:23:00Z",
+  "branch": "opencode/m3-shell-wiring-20261016",
+  "commit": "661a7fad",
+  "increment": "Canonical SpaceBuilder state + controller (revisioned Draft/Active, policy categories, conflict detection)",
+  "files": [
+    "9to1 Workspace/Spaces/UI/Builder/SpaceBuilderState.cs",
+    "9to1 Workspace/Spaces/UI/Builder/SpaceBuilderController.cs",
+    "9to1 Workspace/Spaces/Tests/SpaceBuilderControllerTests.cs"
+  ],
+  "tests": "183 passed, 0 failed (Spaces full suite)",
+  "runtime_theme_origin": "NOT VERIFIED this session. launch_isolated.py interface read; native fixture execution requires built Haven executable + disposable profile + 120s lease which was not run. Static custody notes in work/cui-desktop-bootstrap-evidence/runtime-origin-readonly-notes.json remain the only evidence.",
+  "remaining_gates": [
+    "Runtime template/property origin capture on Linux ARM64 candidate",
+    "Basic/Advanced/Expert CUI using only canonical vocabulary",
+    "Basic full capability toggles + Files/Skills/Plugins attach",
+    "Advanced policy rules + memory + model params + automations + theme/sidebar overrides + suggested prompts",
+    "Expert Boards-style 5 pages reusing Home Automations graph framework",
+    "Harness/Model/UserMessage logic nodes",
+    "Files nested resource system",
+    "Preview/Validate/Activate with revision history/rollback",
+    "Real-runtime acceptance SPUI-211 (8 criteria)",
+    "Professional/Glow inheritance, reduced motion, screen reader, touch"
+  ],
+  "honest_status": "Increment 1 of N. Full Builder (SPUI-201..211) NOT complete. No placeholder CUI in production route."
+}

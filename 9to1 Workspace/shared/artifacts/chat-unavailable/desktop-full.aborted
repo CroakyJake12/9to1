@@ -1,0 +1,17 @@
+ABORTED BY OWNER (Chat/Spaces lane), 2026-10-18.
+
+The full `Haven.Desktop.Tests` net10.0 run with a private fresh HAVEN_DATA_DIR was started
+in the background and had NOT completed after ~50 minutes; it was terminated so it would not
+hold the shared build lock (/tmp/9to1-authorised-build.lock) or be mistaken for a green suite.
+
+Observed while it ran (incomplete evidence, log preserved as desktop-full.log, NO exit code,
+NO TRX file, do not treat as a completed run):
+- failures were being reported in unrelated pre-existing classes (for example
+  HomeDashboardCuiRenderTests.Reopening_during_cancelled_refresh_reads_again_and_rejects_the_old_result
+  and other Avalonia initialisation tests), not in this lane's owned classes.
+
+This lane's actual verified measurement is the focused owned subset:
+  desktop-focused.log / desktop-focused.exit  -> EXIT=0, 39 passed, 0 failed, 0 skipped.
+The focused subset plus the full HavenOS.Browse.Host.Tests (154/154, EXIT=0) are the lane's
+acceptance evidence; the full Desktop suite remains unverified in this environment and is not
+claimed.

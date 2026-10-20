@@ -3,15 +3,18 @@
   "agent": {
     "build": {
       "mode": "primary",
-      "model": "openai/gpt-6-sol"
+      "model": "opencode-go/beam-free"
     },
     "general": {
       "mode": "subagent",
-      "model": "openai/gpt-6-luna"
+      "model": "opencode-go/beam-free"
     },
     "explore": {
       "mode": "subagent",
-      "model": "openai/gpt-6-luna"
+      "model": "opencode-go/beam-free"
     }
-  }
+  },
+  "plugins": [
+    "/home/jacob/Documents/Codex/2026-10-17/new-chat/work/opencode-retry-hook-audit/durable-supervision-v1"
+  ]
 }
