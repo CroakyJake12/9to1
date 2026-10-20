@@ -264,4 +264,38 @@ public sealed partial class BrowseNativeUiTests
         }
         finally { await workspace.DisposeAsync().AsTask(); }
     }
+
+    /// <summary>The authored topbar controls must route each genuine open through the SAME typed
+    /// gateway when mounted with an embedded host context. This proves the production layout (not
+    /// the command dispatch surface alone) settles the actual open, and the mounted controls are
+    /// enabled, visible and wired in the navigation bar.</summary>
+    [AvaloniaFact]
+    public async Task Authored_topbar_controls_route_each_open_to_the_typed_gateway()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var gateway = new SharedControlsFakeGateway();
+        var context = new SharedControlsFakeContext(gateway);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            var model = Find(window, "HavenModelButton");
+            var notifications = Find(window, "HavenNotificationsButton");
+            var profile = Find(window, "HavenProfileButton");
+            Assert.True(model.IsEffectivelyVisible); Assert.True(model.IsEnabled);
+            Assert.True(notifications.IsEffectivelyVisible); Assert.True(notifications.IsEnabled);
+            Assert.True(profile.IsEffectivelyVisible); Assert.True(profile.IsEnabled);
+            await Click(window, workspace, model);
+            Assert.Equal(1, gateway.ModelOpens);
+            await Click(window, workspace, notifications);
+            Assert.Equal(1, gateway.NotificationOpens);
+            await Click(window, workspace, profile);
+            Assert.Equal(1, gateway.ProfileOpens);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
 }
