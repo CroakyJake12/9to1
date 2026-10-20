@@ -23,9 +23,10 @@
   </Actions>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
-  <Container id="composer-surface" Type="Vertical Stack" CellGap="8" padding="12"
+  <Container id="composer-surface" Type="Overlay Float" padding="12"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
+    <Container id="composer-body" Type="Vertical Stack" CellGap="8">
     <Container id="chips-row" Type="Wrap" CellGap="6" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
         <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
@@ -41,16 +42,7 @@
              background="Transparent" padding="4" text-wrapping="Wrap" MinHeight="44" accessible-name="Message" />
     </Container>
 
-    <Container id="format-toolbar" Type="Horizontal Stack" CellGap="6" padding="8"
-          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
-          accessible-name="Formatting toolbar">
-      <Button action="composer.format.Bold" content="B" font-weight="Bold" MinWidth="36" MinHeight="36" accessible-name="Bold" tooltip="Bold" />
-      <Button action="composer.format.Italic" content="I" font-style="Italic" MinWidth="36" MinHeight="36" accessible-name="Italic" tooltip="Italic" />
-      <Button action="composer.format.Code" content="{ }" MinWidth="36" MinHeight="36" accessible-name="Inline code" tooltip="Inline code" />
-      <Button action="composer.format.Link" content="🔗" MinWidth="36" MinHeight="36" accessible-name="Link" tooltip="Link" />
-      <Button action="composer.format.Quote" content="❝" MinWidth="36" MinHeight="36" accessible-name="Quote" tooltip="Quote" />
-      <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
-    </Container>
+
 
     <Container id="controls-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
       <Container id="left-controls" Column="0" Type="Horizontal Stack" CellGap="6">
@@ -113,6 +105,20 @@
       <Button action="composer.set-response-mode.PreferVisual" content="Prefer visual" font-size="12" />
       <Button action="composer.set-response-mode.PreferText" content="Prefer text" font-size="12" />
       <Button action="composer.set-response-mode.AlwaysText" content="Always text" font-size="12" />
+    </Container>
+    </Container>
+
+    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above">
+    <Container id="format-toolbar" Type="Wrap" CellGap="6" padding="8"
+          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
+          accessible-name="Formatting toolbar">
+      <Button action="composer.format.Bold" content="B" font-weight="Bold" MinWidth="36" MinHeight="36" accessible-name="Bold" tooltip="Bold" />
+      <Button action="composer.format.Italic" content="I" font-style="Italic" MinWidth="36" MinHeight="36" accessible-name="Italic" tooltip="Italic" />
+      <Button action="composer.format.Code" content="{ }" MinWidth="36" MinHeight="36" accessible-name="Inline code" tooltip="Inline code" />
+      <Button action="composer.format.Link" content="🔗" MinWidth="36" MinHeight="36" accessible-name="Link" tooltip="Link" />
+      <Button action="composer.format.Quote" content="❝" MinWidth="36" MinHeight="36" accessible-name="Quote" tooltip="Quote" />
+      <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
+    </Container>
     </Container>
   </Container>
 </Cui>

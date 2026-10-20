@@ -33,6 +33,51 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     public bool CompoundFocusEnabled => _compoundFocusEnabled;
     /// <summary>The typed per-container focus/validation scope, or null until compound focus is enabled.</summary>
     public CuiCompoundFocusScope? CompoundFocusScope => _compoundFocusScope;
+    private string? _authoredTargetId;
+    private string? _authoredPlacement;
+
+    /// <summary>Raised when the authored floating relationship (Target/Placement) changes, so the
+    /// overlay-float panel can invalidate its cached anchor and rebind observers.</summary>
+    internal event EventHandler? RelationshipChanged;
+
+    /// <summary>Authored floating-relationship target (authored element id) for overlay-float placement.
+    /// This is authored CUI, never inferred by framework heuristics.</summary>
+    public string? AuthoredTargetId => _authoredTargetId;
+
+    /// <summary>Authored placement side relative to the target (Above/Under/LeftOf/RightOf).</summary>
+    public string? AuthoredPlacement => _authoredPlacement;
+
+    /// <summary>Typed effective-property setter for the authored Target. Validates the id and raises a
+    /// change notification so a live Target binding re-resolves the anchor. CUI-authored only; never
+    /// inferred by framework heuristics.</summary>
+    public void SetAuthoredTarget(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Target requires a non-empty authored element id.", nameof(value));
+        if (_authoredTargetId == value) return;
+        _authoredTargetId = value;
+        RelationshipChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Typed effective-property setter for the authored Placement. Accepts every accepted casing
+    /// of Above/Under/LeftOf/RightOf and normalizes it; any other value fails closed (never silently
+    /// treated as Above).</summary>
+    public void SetAuthoredPlacement(string? value)
+    {
+        var normalized = value?.Trim().ToLowerInvariant() switch
+        {
+            "above" => "Above",
+            "under" => "Under",
+            "leftof" => "LeftOf",
+            "rightof" => "RightOf",
+            _ => null,
+        };
+        if (normalized is null)
+            throw new ArgumentException("Placement must be Above, Under, LeftOf or RightOf.", nameof(value));
+        if (_authoredPlacement == normalized) return;
+        _authoredPlacement = normalized;
+        RelationshipChanged?.Invoke(this, EventArgs.Empty);
+    }
     public IReadOnlyList<Control> AuthoredChildren => _cells.Select(cell => cell.Child!).ToArray();
 
     public bool RemoveChild(Control child)
@@ -78,6 +123,8 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             "wrap" => new WrapPanel(),
             "absolute" => new CuiAbsolutePanel(),
             "overlay" => new Panel(),
+            "overlay float" => new CuiOverlayPanel(),
+            "floating" => new CuiFloatingLayer(),
             _ => throw new ArgumentOutOfRangeException(nameof(layoutType), layoutType, "Unknown canonical Container layout Type.")
         };
         Child = Layout;

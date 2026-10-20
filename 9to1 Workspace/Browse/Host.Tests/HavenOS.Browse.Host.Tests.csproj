@@ -31,6 +31,7 @@
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/ProfessionalThemePreferenceRegressionTests.cs" Link="ProfessionalThemePreferenceRegressionTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/WorkspaceSessionTerminalSaveTests.cs" Link="WorkspaceSessionTerminalSaveTests.cs" />
     <Compile Include="HostComposerLifetimeTests.cs" />
+    <Compile Include="FloatingFormatToolbarTests.cs" />
     <Compile Include="ChatComposerEmojiPickerViewportTests.cs" />
     <Compile Include="HavenPackagedSvgResolverStrictTests.cs" />
     <Using Include="Xunit" />

@@ -278,6 +278,10 @@ public static class CuiThemeResourceApplier
         // accessibility. Professional uses its strongly tinted backdrop surface;
         // other themes and high contrast retain the existing opaque material.
         resources["CuiPopupSurfaceBrush"] = material ? resources["CuiFloatingSurfaceMaterial"] : new SolidColorBrush(WithAlpha(palette.Panel2, 255));
+        // Distinct guaranteed-opaque semantic fallback for transparency negotiation. This is a plain
+        // opaque solid brush, never the material surface (whose ISolidColorBrush.Color is Transparent);
+        // TopLevel paints it only when per-pixel alpha cannot be negotiated.
+        resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(WithAlpha(palette.Panel2, 255));
         resources["CuiPopupPadding"] = new Thickness((professional ? 12 : 8) * spacing);
         resources["CuiPopupBorderBrush"] = professional && !settings.HighContrast ? Brushes.Transparent : resources["CuiLineBrush"];
         resources["CuiMenuItemPadding"] = new Thickness(10 * spacing, 7 * spacing);

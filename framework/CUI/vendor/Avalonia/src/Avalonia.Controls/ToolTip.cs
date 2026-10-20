@@ -113,6 +113,31 @@ namespace Avalonia.Controls
         private CompositeDisposable? _subscriptions;
 
         /// <summary>
+        /// Optional authored configuration applied to the retained popup before each show (idempotent).
+        /// Carries only the public <see cref="Popup"/> type. Used by CUI to route tooltip popups
+        /// through the same per-open transparency request/receipt seam. Established on the instance
+        /// before the retained popup's first Show (from <see cref="ConfigurePopupProperty"/> on the
+        /// adorned control); never a process-wide default.
+        /// </summary>
+        public Action<Popup>? ConfigurePopup { get; set; }
+
+        /// <summary>
+        /// Defines the ToolTip.ConfigurePopup attached property. The CUI runtime sets this on a control
+        /// that owns a CUI-authored tooltip so its retained <see cref="ToolTip"/> popup routes through
+        /// the shared per-open transparency request seam before the popup's first Show. Scoped per
+        /// control; never a process-wide registration/default policy, so unrelated non-CUI tooltip
+        /// producers are never configured.
+        /// </summary>
+        public static readonly AttachedProperty<Action<Popup>?> ConfigurePopupProperty =
+            AvaloniaProperty.RegisterAttached<ToolTip, Control, Action<Popup>?>("ConfigurePopup");
+
+        /// <summary>Gets the authored popup configuration for the adorned control.</summary>
+        public static Action<Popup>? GetConfigurePopup(Control element) => element.GetValue(ConfigurePopupProperty);
+
+        /// <summary>Sets the authored popup configuration for the adorned control.</summary>
+        public static void SetConfigurePopup(Control element, Action<Popup>? value) => element.SetValue(ConfigurePopupProperty, value);
+
+        /// <summary>
         /// Initializes static members of the <see cref="ToolTip"/> class.
         /// </summary>
         static ToolTip()
@@ -380,6 +405,10 @@ namespace Avalonia.Controls
                 }
 
                 toolTip.AdornedControl = control;
+                // Carry the authored (CUI) per-control popup configuration onto the ToolTip instance
+                // BEFORE its retained popup's first Show. Scoped to the control; never a process-wide
+                // default, so non-CUI tooltip producers are unaffected.
+                toolTip.ConfigurePopup = GetConfigurePopup(control);
                 toolTip.Open(control);
             }
             else if (control.GetValue(ToolTipProperty) is { } toolTip)
@@ -414,6 +443,12 @@ namespace Avalonia.Controls
                 _popup.Opened += OnPopupOpened;
                 _popup.Closed += OnPopupClosed;
             }
+
+            // Apply the authored transparency request before every show (RequestTransparency is
+            // idempotent). ConfigurePopup is established on this instance before the retained popup's
+            // first Show (from the per-control attached property in IsOpenChanged), so every open —
+            // including the very first — is routed through the seam.
+            ConfigurePopup?.Invoke(_popup);
 
             _subscriptions = new CompositeDisposable(new[]
             {

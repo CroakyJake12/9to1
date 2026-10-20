@@ -23,6 +23,11 @@ namespace CakeOS.Cui.Runtime;
 public static class CuiControlTemplates
 {
     private static readonly Lazy<ResourceDictionary> Catalogue = new(CreateCatalogue);
+
+    // NOTE: there is intentionally NO process-wide ToolTip.DefaultConfigurePopup registration here.
+    // Per-open transparency routing for CUI tooltips is established through the narrow per-control
+    // attached ConfigurePopup path (CuiControlLoader sets ToolTip.SetConfigurePopup on authored
+    // controls), so unrelated non-CUI tooltip producers are never configured by this runtime.
     public static void Populate(IResourceDictionary resources)
     { foreach(var entry in Catalogue.Value) resources[entry.Key]=entry.Value; }
     public static bool TryGet(Type backendType,out IControlTemplate? template)
@@ -121,6 +126,23 @@ public static class CuiControlTemplates
         // layers even when all visible chrome comes from CUI-owned templates.
         var layers = Name(new VisualLayerManager { Child = Presenter(owner, scope) }, "PART_VisualLayerManager", scope);
         var fallback = Name(new Border { IsHitTestVisible = false }, "PART_TransparencyFallback", scope);
+        // Popup roots host floating popup chrome whose rounded surface and shadow margin must remain
+        // transparent. The donor PopupRoot default Background is white, so an unmodified root would
+        // paint one opaque white rectangle behind every popup (the observed defect). CUI owns the
+        // popup backdrop: leave the root backing transparent and give TopLevel's transparency
+        // fallback a distinct guaranteed-Opaque semantic brush. The popup chrome (CuiMaterialBorder)
+        // keeps using CuiPopupSurfaceBrush, so material/transparency of the visible surface is
+        // preserved independently. The fallback border is driven by an alpha-aware, lifetime-owned
+        // projection (CuiTransparencyFallback): when real per-pixel alpha was negotiated it stays
+        // unpainted across theme changes; only a positively opaque destination paints the latest
+        // opaque semantic color. Normal full-window roots keep the shared Frame (owner-bound
+        // background).
+        if (owner is PopupRoot popupRoot)
+        {
+            owner.Bind(TopLevel.TransparencyBackgroundFallbackProperty, owner.GetResourceObservable("CuiPopupOpaqueFallbackBrush"));
+            CuiTransparencyFallback.Attach(popupRoot, fallback);
+            return new Panel { Children = { fallback, new CuiMaterialBorder { Child = layers } } };
+        }
         return new Panel { Children = { fallback, Frame(owner, layers) } };
     }
 
@@ -144,6 +166,8 @@ public static class CuiControlTemplates
         if(owner.ContextMenu is null)
         {
             var menu=new ContextMenu();
+            // Route the text-input context menu popup through the shared per-open transparency request seam.
+            menu.ConfigurePopup = CuiPopupPresentation.RequestTransparency;
             foreach(var (label,path,action) in new (string,string?,Action)[] { ("Cut","CanCut",owner.Cut),("Copy","CanCopy",owner.Copy),("Paste","CanPaste",owner.Paste),("Select all",null,owner.SelectAll) })
             {
                 var item=new CuiMenuItem { Header=label }; if(path is not null) Bind(item,Control.IsEnabledProperty,owner,path);
@@ -299,6 +323,7 @@ public static class CuiControlTemplates
         Grid.SetColumn(arrow,1); row.Children.Add(arrow);
         Bind(arrow, ToggleButton.IsCheckedProperty, owner, "IsDropDownOpen", true);
         var popup = Name(new Popup { PlacementTarget = owner, IsLightDismissEnabled = true }, "PART_Popup", scope);
+        CuiPopupPresentation.RequestTransparency(popup);
         popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable("CuiPopupHorizontalOffset"));
         popup.Bind(Popup.VerticalOffsetProperty, owner.GetResourceObservable("CuiPopupVerticalOffset"));
         Bind(popup, Popup.IsOpenProperty, owner, "IsDropDownOpen", true); Bind(popup, Control.MinWidthProperty, owner, "Bounds.Width");
@@ -349,6 +374,7 @@ public static class CuiControlTemplates
         };
         UpdateIcon();
         var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.Bottom : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
+        CuiPopupPresentation.RequestTransparency(popup);
         popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupHorizontalOffset" : "CuiSubmenuHorizontalOffset"));
         popup.Bind(Popup.VerticalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupVerticalOffset" : "CuiSubmenuVerticalOffset"));
         Bind(popup, Popup.IsOpenProperty, owner, "IsSubMenuOpen", true);
