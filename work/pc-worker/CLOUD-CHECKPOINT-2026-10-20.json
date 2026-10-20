@@ -187,7 +187,7 @@
     "mercury_activation_condition": "Only after confirmed OpenCode Beam usage exhaustion",
     "existing_mercury_spending_cap_usd": 5,
     "spending_controls_changed": false,
-    "mercury_requests_sent": "Four authorised OpenCode turns ended (third/fourth via coordinator safe-boundary interruption); no model request active at this boundary. Exact provider request count/billed total UNKNOWN. Key outside Git; existing cap unchanged."
+    "mercury_requests_sent": "One authorised successor OpenCode turn ACTIVE for native-peer-handoff. Prior turns preserved; exact HTTP request count/billed total UNKNOWN. No cap change; key outside Git."
   },
   "allowance": {
     "beam_remaining": "EXHAUSTED: recorded provider.quota FreeUsageLimitError at2026-10-20T10:50:38Z",
@@ -198,11 +198,11 @@
     "worktree": "/workspace/9to1-chat-cui",
     "base": "45a6959cb7f297a08adc8defbdedbbbcdbe9d821",
     "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
-    "state": "CLEAN/PUSHED isolated checkpoint after independent bounded QA; actual native build in progress, no model active",
+    "state": "Isolated45a checkpoint pushed; native smoke completed mixedPASS/FAIL; successor native-peer-handoff RUNNING sole implementation",
     "first_compilation": "5actual C#adapter errors",
     "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
-    "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof",
-    "latest_observation_at": "2026-10-20T13:27:07.976353+00:00",
+    "note": "Candidate is not merged into main reviewed slices. Fresh actual composer screenshots and failures are preserved, not product acceptance.",
+    "latest_observation_at": "2026-10-20T13:54:39.154842+00:00",
     "branch_pushed": "codex/cloud-native-chat-cui-20261020",
     "pass3_frozen": {
       "identity": "/workspace/shared/9to1-test-evidence/composer-pass3-frozen-20261020T120612Z/identity.json",
@@ -214,9 +214,10 @@
       "diagnostics": "Temporary synthetic debug instrumentation removed before frozen checkpoint; source scan found no matching draft debug logger"
     },
     "next_dispatch": {
-      "prompt": "/workspace/shared/9to1-private-task-prompts/home-spaces-theme-wiring-task-v2-9727ca0c.md",
-      "sha256": "02a5c1b78d7ac2fb954d0c712c95d56e95f2fe3bd0e5772feeac60059d4eb39b",
-      "state": "Prepared/peerreviewed; refresh45a source afterearlynative; no model/buildslot granted"
+      "task": "native-peer-handoff",
+      "prompt": "/workspace/shared/9to1-test-evidence/opencode-native-peer-handoff-dispatch.txt",
+      "sha256": "1815e1bb8db18b0378a83d2510f2f0f523036216333c5c51cf6bacdf165739fc",
+      "state": "RUNNING sameOpenCode session, sole .NET slot; rootdocs/read-onlyreview"
     },
     "pass4_intervention": {
       "at": "2026-10-20T12:22:02Z",
@@ -238,7 +239,7 @@
       "precision": "Two runs,33distinct cases; product source unchanged; finaltestadditiononly betweenruns. SixOverlaycases renderactualproductionpage; others domain/lifetime.13componentcases useactual sharedcomposer; parenttests realnative renderer/mapping. Not fullappacceptance.",
       "red_proof": "Actual reentrant edit-close sends later typedcallback expected0actual1 beforefix; sourcegate nowchecksbetweensubscribers with physical UIrelease onlyafterACK",
       "remaining_matrix": "Additional independentinit/observer fault combinations not exhaustivelycovered",
-      "native_composer": "BUILDING,NOT_RUN",
+      "native_composer": "COMPLETED bounded Linux smoke: draft/navigation/resize/reopen PASS, history/visual/accessibility FAIL; input causeUNKNOWN",
       "whole_app": "NOT_RUN"
     },
     "historical_pre_qa_blockers": [
@@ -251,6 +252,7 @@
       "CUI local presentation state requires framework implementation and authored CUI migration"
     ],
     "current_independent_source_gaps": [
+      "Actual native-host automation peer handoff/cache/parenting and causal native/HUI focus/input diagnosis; missing richer TextPattern remains separate",
       "Additional original-init/observer fault combinations require broader lifecycle matrix acceptance",
       "Actual ordinary Stop request/Tasks command-driver forwarding",
       "Actual current-profile Home context/appidentity/borrow guards",
@@ -286,6 +288,36 @@
       "worker11PASS": "Before root reentry/producer/cleanup/native-mount refinements; not independent acceptance",
       "config_restored": true,
       "cap_changed": false
+    },
+    "native_smoke": {
+      "source": "45a6959cb7f297a08adc8defbdedbbbcdbe9d821",
+      "evidence": "/workspace/shared/9to1-native-evidence/composer-lifecycle-v1",
+      "identity_sha256": "ee1e42965245d52667d6a55ccb1db97e088e46040b5892d7767d2798d53c10f0",
+      "journey_sha256": "3420e765ad6b4174c94828fa663b0658f89fb5b41d341dd62fe5cd6e8f673feb",
+      "haven_dll_sha256": "76a607ee9fd699d3c8d5a72123387531076c9f369a25aae1039b34bd498e620e",
+      "artifact_file_count": 766,
+      "all_artifact_files_unchanged": true,
+      "private_seed_profile_unchanged": true,
+      "build": "PASS exit0,0errors1existingWebRtcwarning",
+      "pass": [
+        "normalstartup",
+        "NewChatactualroute",
+        "canonicalunsentdraft",
+        "sidebarcollapse/reopen",
+        "1440x920/960x760resizeretention",
+        "sameprofile/artifactreopen",
+        "bothnativeexit0"
+      ],
+      "fail": [
+        "initialfalseemptyhistory",
+        "continuouscomposer/control/icon/permission/idlewaveformintegration",
+        "missingnativechatinputin294nodeATSPItree"
+      ],
+      "input_cause": "UNKNOWN; observedShiftEnter/secondlineandexpandedcontrolsabsent, notprovenuniqueproductcause",
+      "new_sent_messages": 0,
+      "zero_network_calls_proven": false,
+      "standalone_voice_fulltheme_windows_web": "NOT_RUN",
+      "full_acceptance": false
     }
   },
   "latest_owner_ui_refinements": {
@@ -297,5 +329,6 @@
     "priority": "Canonical specification takes priority over both illustrative images. Professional excludes mistaken decorative glow.",
     "composer": "One continuous surface, no visible nested input box; genuine format/emoji under expanded-and-focused rule and canonical permission selector, separate from AI Read-only/Write.",
     "icons": "Filled rounded SVGs and real running/most-used/configured Assistant state remain required and unimplemented."
-  }
+  },
+  "updated_at": "2026-10-20T13:54:39.154842+00:00"
 }
