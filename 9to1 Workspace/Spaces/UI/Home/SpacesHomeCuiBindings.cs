@@ -85,7 +85,7 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.sidebarExpanded" => !snapshot.SidebarCollapsed,
             "spaces.spaceSwitcherOpen" => snapshot.SpaceSwitcherOpen,
             "spaces.spaceOverflowOpen" => snapshot.SpaceOverflowOpen,
-            "spaces.layoutColumns" => snapshot.SidebarCollapsed ? "72 0 1fr" : "72 260 1fr",
+            "spaces.layoutColumns" => snapshot.SidebarCollapsed ? "70 0 1fr" : "70 280 1fr",
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,
             "spaces.customSpaces" => snapshot.CustomSpaces,
