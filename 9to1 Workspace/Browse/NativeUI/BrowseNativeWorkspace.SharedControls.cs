@@ -73,6 +73,12 @@ public sealed partial class BrowseNativeWorkspace
         Changed();
     }
 
+    /// <summary>Surfaces a structured shared-panel command refusal (stale/malformed) from a
+    /// borrowed shared surface to the rail status area. Genuine refusals are published, never
+    /// silently swallowed as if the command succeeded.</summary>
+    public void PublishSharedRefusal(string code, string message)
+        => PublishSharedStatus(code, message);
+
     private bool? HavenSharedActionAvailable(string command) => command switch
     {
         "9to1.Haven.OpenModel" => _hostContext?.ModelSupported == true,

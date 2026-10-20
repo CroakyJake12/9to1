@@ -85,11 +85,11 @@ reconciliation, provided for root to apply — lane4 did not edit the file.
 
 ### D.1 Register the route action policy (single owning policy source)
 
-In the `originalActionPolicies:` concatenation (base line 48), the list
-terminates with `... _actualGeneratedUiPolicy!])`. Append the canonical route policy:
+Exact base (clean line 48) — the `originalActionPolicies:` concatenation currently ends with
+`... _actualGeneratedUiPolicy!])`. Append the canonical route policy as the last element:
 
 ```csharp
-                    ... _actualGeneratedUiPolicy!, new HomeModelRouteActionPolicies()])
+                originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!, new HomeModelRouteActionPolicies()]),
 ```
 
 ### D.2 Register the two route owners inside configureOriginalResolvers BEFORE Resources is built
@@ -116,12 +116,15 @@ Exact base (clean lines ~63–77):
 
 Replace the returned resolver list with the same two plus the genuine Home route owners (using the
 SAME store/profile identity this composition already created — no new Home/store, no permissive
-private owner; exactly one owning resolver per resource kind):
+private owner; exactly one owning resolver per resource kind). NOTE: the lambda parameter is
+`ownership`, and the composed identity is `ownership.Identity` (it is the same `identity` object
+passed to `configureOriginalStores`, so `ownership.Identity.Profiles` / `ownership.Identity.StateStore`
+are the correct paths — a bare `identity` is out of scope here and would not compile):
 
 ```csharp
                     return new([resolver, sitesResolver,
-                        new HomeModelRouteProfileOwner(identity.Profiles),
-                        new HomeModelRouteOwner(identity.Profiles, new HomeVersionedModelRouteRepository(identity.StateStore))],
+                        new HomeModelRouteProfileOwner(ownership.Identity.Profiles),
+                        new HomeModelRouteOwner(ownership.Identity.Profiles, new HomeVersionedModelRouteRepository(ownership.Identity.StateStore))],
                         new Dictionary<Type, object>
                     {
                         [typeof(CanonicalProjectContextStoreReadOwner)] = projectContexts,
@@ -167,6 +170,34 @@ And declare the authored CUI source roots so the compiler discovers the shared d
 After applying, the compiled bundle includes `Views/Pages/Home/HavenNotifications.cui` and
 `Views/Pages/Home/HavenSharedPanelShell.cui`. Until lane2's typed semantic reconstruction is merged,
 the consumer truthfully refuses rather than reparsing raw source.
+
+### B.2 CUIB001 — legacy `.hui` embedded resources in Haven.Desktop (BLOCKED on canonical migration)
+
+Importing the CUI targets runs `ValidateCuiProjectItems`, which errors CUIB001 on any project item
+with a `.axaml`/`.xaml`/`.hui` extension. `Haven.Desktop.csproj` currently embeds legacy HUI
+templates that WILL trigger CUIB001 once the targets are imported. Narrowing `CuiSourceRoot` to
+`Views/Pages/Home` does NOT fix this because the validator scans `@(EmbeddedResource)` (and
+`@(None)`/`@(Content)`/`@(Compile)`), not just the CUI root.
+
+Exact legacy resource consumers (do NOT delete these working app capabilities to force a pass):
+
+- `Prefabs/**/*.hui` → `Prefabs/ChatAddMenu.hui`, `Prefabs/Chatbox.hui` are loaded by
+  `HavenMarkupParser(_prefabs)` in `Views/Pages/Chat/ChatHavenScene.cs` (and other chat scenes) to
+  author chat/prefab surfaces.
+- `DynamicUI/**/*.hui` → 18 templates (`ChatSidebarGroupRow`, `ChatAssistantMessage`, `PlanDayItem`,
+  `StudioFileRow`, `AgentCatalogCard`, …) are loaded by `HavenDynamicUITemplateCatalog.FromAssembly(...)`
+  in `ChatHavenScene`, `StudioProjectHavenView`, `ProjectHavenScene`, `AgentsHavenScene`, and the
+  Browser scenes for runtime-owned template instances.
+
+Minimal canonical migration/packaging dependency (owned by the framework/root lane, not this lane):
+the legacy HUI templates must be migrated to canonical `.cui` documents and the consuming hosts
+(`HavenDynamicUITemplateCatalog`, `HavenMarkupParser`) updated to consume the compiled/typed CUI
+transport, OR the framework guard must carve out a governed, non-CUI-authorized "legacy HUI asset"
+packaging path that still embeds them without whitelisting application-authored CUI. Neither is
+decided here; this lane does not remove the conformance guard (`ValidateCuiProjectItems` stays
+intact) and does not delete the working chat/prefab/DynamicUI capabilities. This dependency blocks
+the compiled-bundle emission for Haven.Desktop until resolved; it is recorded so it does not silently
+stop the independent source work below or let anyone claim the panels/build pass.
 
 ---
 

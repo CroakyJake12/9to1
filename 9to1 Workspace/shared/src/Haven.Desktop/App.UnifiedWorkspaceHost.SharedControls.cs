@@ -76,6 +76,11 @@ public sealed partial class App
         /// settlement is joined at close before borrowed owners are released.</summary>
         private CuiControlLoader? _sharedPanelLoader;
 
+        /// <summary>The authored root control of the currently mounted shared panel. It is the ONLY
+        /// child this host adds to the panel host; retirement removes exactly this view through real
+        /// CuiContainerControl authored bookkeeping and never clears unrelated/new children.</summary>
+        private Control? _sharedPanelRoot;
+
         /// <summary>Reserves a slot in the host original-task ledger BEFORE invoking an external
         /// owner/callback, preserving the caller's synchronization context and the original task
         /// identity/failure so close can join it (pattern: Host.cs RunObservation start-barrier).</summary>
@@ -120,7 +125,10 @@ public sealed partial class App
             {
                 shellLoader.SetThemePreferenceContext(_homeTheme.Context);
                 shellLoader.SetBindingContext(shellBindings);
-                shellLoader.SetActionDispatcher(shellBindings);
+                // The authored shell has no actions; it must NOT register a dispatcher.
+                // SharedPanelShellBindings is a binding/INotifyPropertyChanged context only,
+                // so registering it as an ICuiActionDispatcher was a compile error. The shell
+                // is CUI-owned; the host only changes HasOpenPanel and mounts the active panel.
                 var loaded = shellLoader.TryLoad(HavenSharedPanelShellDocument.Load());
                 if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
                 {
@@ -182,16 +190,26 @@ public sealed partial class App
             if (_sharedPanelHost is null) { RetireLoader(loader); return; }
             if (_sharedPanelLoader is { } present && !ReferenceEquals(present, loader))
             {
-                // Detach A as current BEFORE any synchronous dispose/cancel callback runs, so a
-                // callback that mounts a replacement B is preserved rather than overwritten by
-                // this outer retirement. Bump generation so stale A completions refuse.
+                // Capture exactly A's ownership (loader + authored root) before any callback runs.
+                var presentRoot = _sharedPanelRoot;
                 _sharedPanelLoader = null;
-                Interlocked.Increment(ref _sharedPanelGeneration);
+                _sharedPanelRoot = null;
+                // Remove only the exact retiring A view through real CUI container bookkeeping;
+                // never clear unrelated/new children.
+                if (presentRoot is not null) _sharedPanelHost.RemoveChild(presentRoot);
+                // Dispose A; a callback may synchronously mount a replacement B. B's mount is
+                // preserved: it took over _sharedPanelLoader/_sharedPanelRoot during A's settle.
+                // Do NOT bump the generation here: B reserved its exact generation when it opened
+                // (OpenModelPickerPanelAsync/OpenNotificationsPanelAsync), so a bump would invalidate
+                // B's own callbacks/controller PublicationGate. A's stale completions already refuse
+                // because A's captured generation predates B's.
                 RetireLoader(present);
+                // Recheck the same incoming owner after callbacks before installing B.
                 if (_sharedPanelLoader is { } replacement && !ReferenceEquals(replacement, loader))
                 { RetireLoader(loader); return; }
             }
             _sharedPanelLoader = loader;
+            _sharedPanelRoot = root;
             _sharedPanelHost.AddChild(root);
             if (_shellBindings is not null) _shellBindings.HasOpenPanel = true;
         }
@@ -199,16 +217,24 @@ public sealed partial class App
         private void HideSharedPanel()
         {
             Dispatcher.UIThread.VerifyAccess();
-            // Retire generation first so stale completions from the retired panel refuse immediately.
-            Interlocked.Increment(ref _sharedPanelGeneration);
-            if (_sharedPanelLoader is { } present)
+            // Capture/detach exact A ownership (loader + root) before any callback runs, so a
+            // synchronous dispose/cancel that mounts a replacement B is preserved.
+            var present = _sharedPanelLoader;
+            var root = _sharedPanelRoot;
+            _sharedPanelLoader = null;
+            _sharedPanelRoot = null;
+            if (present is null) { if (_shellBindings is not null) _shellBindings.HasOpenPanel = false; return; }
+            RetireLoader(present);
+            // Only mutate shared-panel state if no replacement was mounted during A's settle.
+            if (_sharedPanelLoader is null)
             {
-                _sharedPanelLoader = null;
-                RetireLoader(present);
+                // No replacement: ensure stale completions from the retired A refuse.
+                Interlocked.Increment(ref _sharedPanelGeneration);
+                if (_sharedPanelHost is not null && root is not null) _sharedPanelHost.RemoveChild(root);
+                if (_shellBindings is not null) _shellBindings.HasOpenPanel = false;
             }
-            if (_sharedPanelHost is not null)
-                foreach (var child in _sharedPanelHost.AuthoredChildren.ToArray()) _sharedPanelHost.RemoveChild(child);
-            if (_shellBindings is not null) _shellBindings.HasOpenPanel = false;
+            // If B mounted, B's own Show already set HasOpenPanel and reserved B's generation and
+            // root; A's stale completions already refuse against B's newer generation.
         }
 
         /// <summary>Full host currentness (app/window/chrome retirement) plus the mounted panel
@@ -218,6 +244,28 @@ public sealed partial class App
             IsCurrent &&
             generation == Volatile.Read(ref _sharedPanelGeneration) &&
             StringComparer.Ordinal.Equals(profile, _actor?.ProfileId);
+
+        /// <summary>Re-observe the ACTUAL current Home actor/auth revision and require it to
+        /// still match the profile a shared panel was opened for. Used by dispatcher admission
+        /// before any owning mutation; a stale panel refuses before touching the service.</summary>
+        internal async Task<bool> ReobserveActorAsync(string? expectedProfile, CancellationToken token)
+        {
+            try
+            {
+                var actor = await ObserveActorAsync(token);
+                return actor is not null && StringComparer.Ordinal.Equals(actor.ProfileId, expectedProfile);
+            }
+            catch { return false; }
+        }
+
+        /// <summary>Surfaces a structured shared-panel command refusal through the real rail
+        /// status channel. Genuine stale/malformed command refusals are published, never
+        /// silently swallowed.</summary>
+        internal void PublishSharedRefusal(string code, string message)
+        {
+            if (code is null || message is null) return;
+            _workspace?.PublishSharedRefusal(code, message);
+        }
 
         /// <summary>Joins the shared-panel settlement for host close: the mounted panel's retained
         /// action/disposal settlement (including any post-Dispose async cleanup), then disposal of
@@ -231,6 +279,7 @@ public sealed partial class App
             if (_sharedPanelLoader is { } panelLoader)
             {
                 _sharedPanelLoader = null;
+                _sharedPanelRoot = null;
                 try { panelLoader.Dispose(); } catch (Exception error) { AddAppCause(failures, error); }
                 try { await JoinOriginalAppTaskAsync(panelLoader.WhenActionsIdleAsync(), failures); }
                 catch (Exception error) { AddAppCause(failures, error); }
@@ -509,50 +558,92 @@ public sealed partial class App
             private readonly long _generation = generation;
             private readonly string? _profile = profile;
 
-            public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+            public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
             {
                 // Admission fence: refuse before invoking any owning operation when this panel is
                 // no longer the mounted/current one.
-                if (!_host.IsPanelCurrent(_generation, _profile)) return ValueTask.CompletedTask;
-                return command switch
+                if (!_host.IsPanelCurrent(_generation, _profile))
+                { _host.PublishSharedRefusal("StalePanel", "This model-picker panel is no longer current."); return; }
+                // Full current actor/admission re-validation BEFORE calling the owner, so a
+                // retired/actor-switched panel refuses before touching the owning service.
+                if (!await _host.ReobserveActorAsync(_profile, cancellationToken))
+                { _host.PublishSharedRefusal("ActorChanged", "The authenticated Home profile changed; reopen the model picker."); return; }
+                switch (command)
                 {
-                    "Refresh" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
-                        HomeModelPickerAction.Refresh,
-                        Scope: (parameter as HomeModelPickerScopeSelection)?.Scope ?? _controller.Surface.Scope,
-                        Category: (parameter as HomeModelPickerScopeSelection)?.Category ?? _controller.Surface.Category), cancellationToken)),
-                    "SelectCategory" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
-                        HomeModelPickerAction.SelectCategory, Category: parameter as string), cancellationToken)),
-                    "SelectRoute" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
-                        HomeModelPickerAction.SelectRoute, RouteId: (parameter as HomeModelPickerRouteSelection)?.RouteId), cancellationToken)),
-                    "SetCandidateEnabled" => DispatchCandidateToggle(parameter, cancellationToken),
-                    "MoveCandidateUp" => DispatchCandidateMove(HomeModelPickerAction.MoveCandidateUp, parameter, cancellationToken),
-                    "MoveCandidateDown" => DispatchCandidateMove(HomeModelPickerAction.MoveCandidateDown, parameter, cancellationToken),
-                    "SaveRoute" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.SaveRoute), cancellationToken)),
-                    "FinishAudit" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.FinishAudit), cancellationToken)),
-                    "PreviewResolution" => Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
-                        HomeModelPickerAction.PreviewResolution, Capability: parameter as string), cancellationToken)),
-                    _ => ValueTask.CompletedTask
-                };
+                    case "Refresh":
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.Refresh,
+                            Scope: (parameter as HomeModelPickerScopeSelection)?.Scope ?? _controller.Surface.Scope,
+                            Category: (parameter as HomeModelPickerScopeSelection)?.Category ?? _controller.Surface.Category), cancellationToken));
+                        return;
+                    case "SelectCategory" when parameter is string category:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.SelectCategory, Category: category), cancellationToken));
+                        return;
+                    case "SelectCategory":
+                        RefuseMalformed(command);
+                        return;
+                    case "SelectRoute" when parameter is HomeModelPickerRouteSelection route:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.SelectRoute, RouteId: route.RouteId), cancellationToken));
+                        return;
+                    case "SelectRoute":
+                        RefuseMalformed(command);
+                        return;
+                    case "SetCandidateEnabled" when parameter is HomeModelPickerCandidateToggleSelection toggle:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.SetCandidateEnabled, ProviderId: toggle.ProviderId, ModelId: toggle.ModelId,
+                            ArtifactRevision: toggle.ArtifactRevision, Enabled: toggle.Enabled), cancellationToken));
+                        return;
+                    case "SetCandidateEnabled":
+                        RefuseMalformed(command);
+                        return;
+                    case "MoveCandidateUp" or "MoveCandidateDown" when parameter is HomeModelPickerCandidateSelection move:
+                        var moveAction = command == "MoveCandidateUp" ? HomeModelPickerAction.MoveCandidateUp : HomeModelPickerAction.MoveCandidateDown;
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(moveAction,
+                            ProviderId: move.ProviderId, ModelId: move.ModelId, ArtifactRevision: move.ArtifactRevision), cancellationToken));
+                        return;
+                    case "MoveCandidateUp" or "MoveCandidateDown":
+                        RefuseMalformed(command);
+                        return;
+                    case "SaveRoute":
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.SaveRoute), cancellationToken));
+                        return;
+                    case "FinishAudit":
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(HomeModelPickerAction.FinishAudit), cancellationToken));
+                        return;
+                    case "PreviewResolution" when parameter is string capability:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.PreviewResolution, Capability: capability), cancellationToken));
+                        return;
+                    case "PreviewResolution":
+                        RefuseMalformed(command);
+                        return;
+                    default:
+                        _host.PublishSharedRefusal("UnknownCommand", $"Unknown model-picker command '{command}'.");
+                        return;
+                }
             }
 
-            private ValueTask DispatchCandidateToggle(object? parameter, CancellationToken token) =>
-                parameter is HomeModelPickerCandidateToggleSelection sel
-                    ? Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
-                        HomeModelPickerAction.SetCandidateEnabled, ProviderId: sel.ProviderId, ModelId: sel.ModelId,
-                        ArtifactRevision: sel.ArtifactRevision, Enabled: sel.Enabled), token))
-                    : ValueTask.CompletedTask;
-
-            private ValueTask DispatchCandidateMove(HomeModelPickerAction action, object? parameter, CancellationToken token) =>
-                parameter is HomeModelPickerCandidateSelection sel
-                    ? Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(action,
-                        ProviderId: sel.ProviderId, ModelId: sel.ModelId, ArtifactRevision: sel.ArtifactRevision), token))
-                    : ValueTask.CompletedTask;
+            private void RefuseMalformed(string command)
+                => _host.PublishSharedRefusal("MalformedCommand", $"The model-picker command '{command}' received a malformed parameter.");
 
             private ValueTask Dispatch(Func<Task> action)
             {
-                var task = action();
-                _host.Track(task);
-                return new(task);
+                // Reserve the retained original task slot in the host ledger BEFORE the owning
+                // action begins, so close joins a synchronous fault as reliably as an async one;
+                // never swallow a fault as successful dispatch.
+                var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var retained = Run(gate.Task, action);
+                _host.Track(retained);
+                gate.SetResult();
+                return new(retained);
+
+                static async Task Run(Task start, Func<Task> body)
+                {
+                    await start;
+                    await body();
+                }
             }
         }
 
@@ -619,22 +710,33 @@ public sealed partial class App
                 }).GetTask().ConfigureAwait(false);
             }
 
-            public ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default)
+            public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default)
             {
                 switch (command)
                 {
                     case "9to1.Haven.ClosePanel":
-                        if (!IsCurrent()) return ValueTask.CompletedTask;
+                        if (!IsCurrent()) { Refuse("StalePanel", "This notifications panel is no longer current."); return; }
                         _host.HideSharedPanel();
-                        return ValueTask.CompletedTask;
+                        return;
                     case "9to1.Haven.MarkRead" when TryNotificationId(parameter, out var readId):
-                        return Retain(MarkReadCoreAsync(readId, true, token));
+                        await Retain(MarkReadCoreAsync(readId, true, token));
+                        return;
+                    case "9to1.Haven.MarkRead":
+                        Refuse("MalformedCommand", "The notifications mark-read command received a malformed identifier.");
+                        return;
                     case "9to1.Haven.Dismiss" when TryNotificationId(parameter, out var dismissId):
-                        return Retain(DismissCoreAsync(dismissId, token));
+                        await Retain(DismissCoreAsync(dismissId, token));
+                        return;
+                    case "9to1.Haven.Dismiss":
+                        Refuse("MalformedCommand", "The notifications dismiss command received a malformed identifier.");
+                        return;
                     default:
-                        return ValueTask.CompletedTask;
+                        Refuse("UnknownCommand", $"Unknown notifications command '{command}'.");
+                        return;
                 }
             }
+
+            private void Refuse(string code, string message) => _host.PublishSharedRefusal(code, message);
 
             private ValueTask Retain(Task task)
             {
