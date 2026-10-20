@@ -24,6 +24,27 @@ public sealed class SpacesHomeControllerTests
     }
 
     [Fact]
+    public async Task ToggleManage_is_presentation_only_and_never_mutates_the_registry()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+
+        Assert.False(controller.State.IsManaging);
+        var selectionId = controller.State.Selection?.Id;
+        var customCountBefore = controller.State.CustomSpaces.Count;
+
+        controller.ToggleManage();
+        Assert.True(controller.State.IsManaging);
+        Assert.Equal(customCountBefore, controller.State.CustomSpaces.Count);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+
+        controller.ToggleManage();
+        Assert.False(controller.State.IsManaging);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+    }
+
+    [Fact]
     public async Task CreateCustomSpaceAsync_creates_selects_and_queues_builder()
     {
         var registry = new SpaceRegistry(new MemorySettingsStore());

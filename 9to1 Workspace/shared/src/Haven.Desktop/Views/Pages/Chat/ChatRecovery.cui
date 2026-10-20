@@ -2,8 +2,17 @@
   <Actions>
     <Action name="chat.recovery.manage" command="chat.recovery.manage" />
   </Actions>
-  <Button id="recovery-manage-button" content="Manage local models" font-size="12"
-          MinHeight="32" IsVisible="{Binding Recovery.Visible}" accessible-name="Manage local models">
-    <ActionEvent Type="Clicked" Action="chat.recovery.manage" />
-  </Button>
+  <!--
+    One compact canonical status row. It consolidates the genuine model-unavailable status
+    (projected read-only from the actual scene status) with the proportionate secondary
+    "Manage local models" action. The row wraps on narrow widths and uses semantic neutral
+    surfaces/text/focus with normal spacing; there is no full-width filled setup strip and no
+    duplicated tiny status sentence elsewhere.
+  -->
+  <Container id="recovery-status-row" Type="Wrap" CellGap="8" IsVisible="{Binding Recovery.Visible}">
+    <Text id="recovery-status-text" text="{Binding Recovery.Status}" font-size="12" foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+    <Button id="recovery-manage-button" content="Manage local models" font-size="12" MinHeight="28" accessible-name="Manage local models">
+      <ActionEvent Type="Clicked" Action="chat.recovery.manage" />
+    </Button>
+  </Container>
 </Cui>

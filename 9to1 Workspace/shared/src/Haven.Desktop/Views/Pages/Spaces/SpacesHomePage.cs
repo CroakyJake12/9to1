@@ -204,6 +204,14 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         if (path == "spaces.canMutate") { lock (_gate) value = CanAdmitHomeMutation(); return true; }
         if (path == "spaces.hasAppContent") { lock (_gate) value = _spaceWorkspace?.Content is not null; return true; }
         if (path == "spaces.hasSpaceSummary") { lock (_gate) value = _spaceWorkspace?.Content is null; return true; }
+        // The authored manager surface shows over a mounted Space workspace without detaching it:
+        // showSummary is true when there is no mounted content (normal view) OR the manager is open;
+        // showWorkspace is true only when a workspace is mounted AND the manager is closed. This is
+        // pure CUI presentation; the mounted chat/draft/selection/queue are never touched.
+        if (path == "spaces.showWorkspace")
+        { lock (_gate) value = _spaceWorkspace?.Content is not null && !_controller.State.IsManaging; return true; }
+        if (path == "spaces.showSummary")
+        { lock (_gate) value = _spaceWorkspace?.Content is null || _controller.State.IsManaging; return true; }
         if (path == "spaces.conversations") { lock (_gate) value = _conversations; return true; }
         if (path == "spaces.hasConversations") { lock (_gate) value = _conversations.Count > 0; return true; }
         if (path == "spaces.sidebarItems") { lock (_gate) value = _sidebarItems; return true; }
@@ -314,6 +322,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 break;
             case "spaces.toggle-space-overflow":
                 InvokeOriginalSource(_controller.ToggleSpaceOverflow);
+                break;
+            case "spaces.manage":
+                // Presentation-only manager open/return. It never mutates the registry, never
+                // selects a Space and never detaches the mounted workspace/chat or its draft.
+                InvokeOriginalSource(_controller.ToggleManage);
                 break;
             case "spaces.set-rename-draft":
                 InvokeOriginalSource(() => _controller.SetRenameDraft(parameter?.ToString()));
