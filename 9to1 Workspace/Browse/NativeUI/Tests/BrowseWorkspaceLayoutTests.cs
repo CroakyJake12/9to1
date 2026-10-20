@@ -136,8 +136,12 @@ public sealed partial class BrowseNativeUiTests
     /// the address entry when an embedded Haven host context is present. The removed vertical rail
     /// and its vacant layout column must be gone, and the browser engine surface must keep its
     /// proper host under the single remapped content column.</summary>
-    [AvaloniaFact]
-    public async Task Embedded_context_mounts_shared_cluster_in_navigation_bar_right_of_address()
+    [AvaloniaTheory]
+    [InlineData(1440)]
+    [InlineData(1280)]
+    [InlineData(390)]
+    [InlineData(360)]
+    public async Task Embedded_context_mounts_shared_cluster_in_navigation_bar_right_of_address(int width)
     {
         var factory = new FixtureFactory();
         var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
@@ -145,6 +149,7 @@ public sealed partial class BrowseNativeUiTests
         var context = new SharedControlsFakeContext(gateway);
         var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        window.Width = width;
         try
         {
             using (var validation = new CuiControlLoader(BrowseNativeSurface.CreateScene(workspace, new FixtureReadiness()).ControlRegistry!))
@@ -162,6 +167,13 @@ public sealed partial class BrowseNativeUiTests
 
             var nav = Named("BrowseNavigationBar");
             var address = Named("BrowseAddressBox");
+            var addressOrigin = address.TranslatePoint(default, window)!.Value;
+            Assert.True(address.IsEffectivelyVisible);
+            Assert.True(address.Bounds.Width >= 64 - .5,
+                $"Address entry is only {address.Bounds.Width}px at embedded width {width}.");
+            Assert.True(address.Bounds.Height > 0);
+            Assert.InRange(addressOrigin.X, -.5, window.ClientSize.Width - address.Bounds.Width + .5);
+            Assert.InRange(addressOrigin.Y, -.5, window.ClientSize.Height - address.Bounds.Height + .5);
             var addressRight = address.TranslatePoint(new Point(address.Bounds.Width, 0), window)!.Value.X;
             double previousRight = 0;
             foreach (var id in new[] { "HavenModelButton", "HavenNotificationsButton", "HavenProfileButton" })
@@ -172,6 +184,12 @@ public sealed partial class BrowseNativeUiTests
                 // The control must be a descendant of the persistent navigation bar.
                 Assert.Contains(nav, Ancestors(control));
                 var origin = control.TranslatePoint(default, window)!.Value;
+                Assert.True(control.Bounds.Width > 0 && control.Bounds.Height > 0,
+                    $"{id} must have usable bounds at embedded width {width}.");
+                Assert.InRange(origin.X, -.5, window.ClientSize.Width - control.Bounds.Width + .5);
+                Assert.InRange(origin.Y, -.5, window.ClientSize.Height - control.Bounds.Height + .5);
+                Assert.InRange(Math.Abs(origin.Y - addressOrigin.Y), 0, 1);
+                Assert.InRange(Math.Abs(origin.Y + control.Bounds.Height - addressOrigin.Y - address.Bounds.Height), 0, 1);
                 Assert.True(origin.X >= addressRight - .5, $"{id} is not right of the address field.");
                 // Ordering: model, notifications, profile left-to-right, no overlap.
                 Assert.True(origin.X >= previousRight - .5, $"{id} overlaps or precedes its neighbour.");

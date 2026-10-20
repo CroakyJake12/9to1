@@ -1,4 +1,5 @@
 using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using Haven.Application.Haven;
 using Haven.Browser;
