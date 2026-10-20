@@ -16,6 +16,7 @@
     <Compile Include="LinuxWebKitEngineAvailabilityTests.cs" />
     <Compile Include="OverlayChatInitializationTests.cs" />
     <Compile Include="AutomationRunContinuationPersistenceTests.cs" />
+    <Compile Include="ScheduledTaskCompletionTests.cs" />
     <Compile Include="SpacesConversationRouteTests.cs" />
     <Compile Include="SpacesSidebarContributionRouteTests.cs" />
     <Compile Include="SpacesDetailsRouteTests.cs" />

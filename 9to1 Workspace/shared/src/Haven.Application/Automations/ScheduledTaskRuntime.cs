@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using System.Text.Json;
 using Haven.Core;
 
@@ -172,8 +173,63 @@ public sealed class ScheduledTaskScheduleCalculator(TimeZoneInfo? timeZone = nul
             : fallback;
 }
 
-public sealed record ScheduledTaskBatchResult(int Due, int Started, int Succeeded, int Failed, int Skipped);
+public sealed record ScheduledTaskBatchResult(
+    int Due, int Started, int Succeeded, int Failed, int Skipped, int Uncertain);
 public sealed record ScheduledTaskConditionResult(bool ConditionMet, string Report);
+
+/// <summary>Immutable snapshot of a fully executed run whose terminal persistence is pending or was
+/// not acknowledged. It carries the EXACT desired completion payload, next schedule and the original
+/// execution failure/cancellation (if any) — never a rebuilt, re-read or mutated variant.</summary>
+public sealed record ScheduledTaskCompletionDraft(
+    AutomationRun Run,
+    DateTimeOffset? NextRunAt,
+    Exception? ExecutionFailure);
+
+/// <summary>Typed, inspectable persistence-uncertainty outcome surfaced by the runner when a terminal
+/// completion could not be acknowledged. Retains the EXACT desired completion payload and next schedule
+/// plus every original failure (execution and persistence), so a same-operation reconciliation can retry
+/// the identical payload without re-executing any model/graph/action work.</summary>
+public sealed class ScheduledTaskCompletionUncertaintyException : Exception
+{
+    public ScheduledTaskCompletionDraft Draft { get; }
+    public Exception PersistenceCause { get; }
+
+    public ScheduledTaskCompletionUncertaintyException(ScheduledTaskCompletionDraft draft, Exception persistenceCause)
+        : base($"The {draft.Run.Status} completion of Run {draft.Run.Id} could not be acknowledged; persistence outcome is unknown ({persistenceCause.Message}).", persistenceCause)
+    {
+        Draft = draft;
+        PersistenceCause = persistenceCause;
+    }
+
+    /// <summary>Stable machine-readable error code (spec API/error 120).</summary>
+    public string Code => "ScheduledTaskCompletionUncertain";
+    /// <summary>The owning Automation identity (target/action identity).</summary>
+    public Guid AutomationId => Draft.Run.AutomationId;
+    /// <summary>The Run identity whose completion is uncertain.</summary>
+    public Guid RunId => Draft.Run.Id;
+    /// <summary>This completion is recoverable by replaying only the exact payload through
+    /// <see cref="ScheduledTaskRunner.ReconcileCompletionAsync"/> (never a fresh lease or re-execution).</summary>
+    public bool IsRecoverable => true;
+}
+
+/// <summary>Classifies the outcome of reconciling one exact terminal completion against the idempotent store.</summary>
+public enum ScheduledTaskCompletionReconciliationKind
+{
+    /// <summary>The exact row already existed durably; the ACK is confirmed with no write.</summary>
+    ConfirmedNoWrite,
+    /// <summary>The exact row was written and acknowledged now.</summary>
+    ConfirmedWritten,
+    /// <summary>The store refused (for example a newer lease/conflict); nothing was written and the newer owner is never overwritten.</summary>
+    Refused,
+    /// <summary>Commit status remains unknown after the reconciliation attempt.</summary>
+    Unknown
+}
+
+/// <summary>Outcome of a bounded completion-reconciliation attempt.</summary>
+public sealed record ScheduledTaskCompletionReconciliation(
+    ScheduledTaskCompletionReconciliationKind Kind,
+    Guid RunId,
+    Exception? Cause);
 
 /// <summary>
 /// Executes persisted scheduled Tasks on demand. It deliberately owns no timer,
@@ -195,6 +251,7 @@ public sealed class ScheduledTaskRunner(
         var succeeded = 0;
         var failed = 0;
         var skipped = 0;
+        var uncertain = 0;
         foreach (var task in due)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -205,11 +262,20 @@ public sealed class ScheduledTaskRunner(
                 continue;
             }
             started++;
-            var run = await CompleteLeasedRunAsync(task, leaseToken, task.NextRunAt ?? now, cancellationToken).ConfigureAwait(false);
-            if (run.Status == AutomationRunStatus.Succeeded) succeeded++;
-            else if (run.Status == AutomationRunStatus.Failed) failed++;
+            try
+            {
+                var run = await CompleteLeasedRunAsync(task, leaseToken, task.NextRunAt ?? now, cancellationToken).ConfigureAwait(false);
+                if (run.Status == AutomationRunStatus.Succeeded) succeeded++;
+                else if (run.Status == AutomationRunStatus.Failed) failed++;
+            }
+            catch (ScheduledTaskCompletionUncertaintyException)
+            {
+                // Truthful: the completion is neither an ordinary failed execution nor acknowledged. It is
+                // never relaunched here and never counted as a failure; its exact payload stays reconcilable.
+                uncertain++;
+            }
         }
-        return new ScheduledTaskBatchResult(due.Count, started, succeeded, failed, skipped);
+        return new ScheduledTaskBatchResult(due.Count, started, succeeded, failed, skipped, uncertain);
     }
 
     public async Task<AutomationRun> RunOneAsync(
@@ -230,30 +296,133 @@ public sealed class ScheduledTaskRunner(
         DateTimeOffset scheduledFor,
         CancellationToken cancellationToken)
     {
+        // Allocate ONE stable Run identity/execution context BEFORE any execution work. It is reused
+        // across success, genuine failure/cancellation and every completion-acknowledgement attempt.
+        var draft = await ExecuteToTerminalDraftAsync(task, leaseToken, scheduledFor, cancellationToken).ConfigureAwait(false);
+
+        // Persist the single exact terminal payload once. A persistence fault never re-enters execution
+        // and never fabricates a different terminal identity. Cancellation while persistence is in flight
+        // has uncertain commit semantics until reconciled; it is never assumed to have rolled back and a
+        // successful execution is never relabelled Cancelled.
+        try
+        {
+            await repository.CompleteRunAsync(draft.Run, draft.NextRunAt, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception persistenceFault)
+        {
+            throw new ScheduledTaskCompletionUncertaintyException(draft, persistenceFault);
+        }
+
+        // Completion is durably acknowledged. Preserve the original observable control-flow semantics:
+        // a genuine execution cancellation is still surfaced as an OperationCanceledException, while a
+        // real execution failure is returned as the persisted Failed run.
+        if (draft.Run.Status == AutomationRunStatus.Cancelled)
+        {
+            if (draft.ExecutionFailure is OperationCanceledException cancellation) throw cancellation;
+            throw new OperationCanceledException(cancellationToken);
+        }
+        return draft.Run;
+    }
+
+    /// <summary>Executes the acquired run exactly once into a single terminal payload, allocating ONE
+    /// stable Run identity before any model/graph/action work and reusing it across all outcomes. The
+    /// execution phase is governed only by <see cref="ExecuteWithRetryAsync"/>; a persistence error can
+    /// never re-enter it.</summary>
+    private async Task<ScheduledTaskCompletionDraft> ExecuteToTerminalDraftAsync(
+        AutomationDefinition task,
+        string leaseToken,
+        DateTimeOffset scheduledFor,
+        CancellationToken cancellationToken)
+    {
+        var runId = Guid.NewGuid(); // ONE stable identity for this execution context
         var startedAt = DateTimeOffset.UtcNow;
+
         try
         {
             var result = await ExecuteWithRetryAsync(task, cancellationToken).ConfigureAwait(false);
             var completedAt = DateTimeOffset.UtcNow;
-            var run = new AutomationRun(Guid.NewGuid(), task.Id, AutomationRunStatus.Succeeded, scheduledFor, startedAt, completedAt, result, null, leaseToken);
-            await repository.CompleteRunAsync(run, NextRun(task, completedAt), cancellationToken).ConfigureAwait(false);
-            return run;
+            var succeeded = new AutomationRun(runId, task.Id, AutomationRunStatus.Succeeded, scheduledFor, startedAt, completedAt, result, null, leaseToken);
+            return new ScheduledTaskCompletionDraft(succeeded, NextRun(task, completedAt), null);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException cancellation) when (cancellationToken.IsCancellationRequested)
         {
             var completedAt = DateTimeOffset.UtcNow;
-            var run = new AutomationRun(Guid.NewGuid(), task.Id, AutomationRunStatus.Cancelled, scheduledFor, startedAt, completedAt, null, "Cancelled.", leaseToken);
-            await repository.CompleteRunAsync(run, NextRun(task, completedAt), CancellationToken.None).ConfigureAwait(false);
-            throw;
+            var cancelled = new AutomationRun(runId, task.Id, AutomationRunStatus.Cancelled, scheduledFor, startedAt, completedAt, null, "Cancelled.", leaseToken);
+            return new ScheduledTaskCompletionDraft(cancelled, NextRun(task, completedAt), cancellation);
         }
-        catch (Exception exception)
+        catch (Exception failure)
         {
             var completedAt = DateTimeOffset.UtcNow;
-            var run = new AutomationRun(Guid.NewGuid(), task.Id, AutomationRunStatus.Failed, scheduledFor, startedAt, completedAt, null, exception.Message, leaseToken);
-            await repository.CompleteRunAsync(run, NextRun(task, completedAt), CancellationToken.None).ConfigureAwait(false);
-            return run;
+            var failed = new AutomationRun(runId, task.Id, AutomationRunStatus.Failed, scheduledFor, startedAt, completedAt, null, failure.Message, leaseToken);
+            return new ScheduledTaskCompletionDraft(failed, NextRun(task, completedAt), failure);
         }
     }
+
+    /// <summary>Reconciles ONLY this exact terminal completion against the existing idempotent store
+    /// operation. It is bounded and explicit: it never re-executes any model/graph/action work, never
+    /// acquires a fresh lease or RunID, and preserves the exact payload. An already-committed identical
+    /// row is a confirmed no-write ACK and never touches a (possibly newer) definition lease/schedule.
+    /// A newer lease/conflict with no matching completed row is a typed refusal, never permission to
+    /// overwrite the newer owner or replay work.</summary>
+    public async Task<ScheduledTaskCompletionReconciliation> ReconcileCompletionAsync(
+        ScheduledTaskCompletionDraft draft,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+
+        // If the exact terminal row already exists durably, the ACK is confirmed with no write and we
+        // never touch a possibly newer definition lease/schedule.
+        var persisted = await ReadPersistedRunAsync(draft.Run.Id, draft.Run.AutomationId, cancellationToken).ConfigureAwait(false);
+        if (persisted is not null)
+        {
+            if (SamePersistedRun(persisted, draft.Run))
+                return new ScheduledTaskCompletionReconciliation(ScheduledTaskCompletionReconciliationKind.ConfirmedNoWrite, draft.Run.Id, null);
+            return new ScheduledTaskCompletionReconciliation(ScheduledTaskCompletionReconciliationKind.Refused, draft.Run.Id, null);
+        }
+
+        try
+        {
+            await repository.CompleteRunAsync(draft.Run, draft.NextRunAt, cancellationToken).ConfigureAwait(false);
+            return new ScheduledTaskCompletionReconciliation(ScheduledTaskCompletionReconciliationKind.ConfirmedWritten, draft.Run.Id, null);
+        }
+        catch (InvalidOperationException refusal)
+        {
+            // Semantic refusal (for example a newer definition lease, finality or conflict): nothing was
+            // written and the newer owner is never overwritten.
+            return new ScheduledTaskCompletionReconciliation(ScheduledTaskCompletionReconciliationKind.Refused, draft.Run.Id, refusal);
+        }
+        catch (Exception cause)
+        {
+            return new ScheduledTaskCompletionReconciliation(ScheduledTaskCompletionReconciliationKind.Unknown, draft.Run.Id, cause);
+        }
+    }
+
+    private async Task<AutomationRun?> ReadPersistedRunAsync(Guid runId, Guid automationId, CancellationToken cancellationToken)
+    {
+        var runs = await repository.GetRunsAsync(automationId, 10_000, cancellationToken).ConfigureAwait(false);
+        return runs.FirstOrDefault(run => run.Id == runId);
+    }
+
+    /// <summary>Compares every exact persisted Run field (including canonical revision/pin/admission/
+    /// continuation/details), not .NET record equality of the positional constructor alone.</summary>
+    private static bool SamePersistedRun(AutomationRun a, AutomationRun b) =>
+        a.Id == b.Id &&
+        a.AutomationId == b.AutomationId &&
+        a.Status == b.Status &&
+        a.ScheduledFor.ToUniversalTime() == b.ScheduledFor.ToUniversalTime() &&
+        UtcAt(a.StartedAt) == UtcAt(b.StartedAt) &&
+        UtcAt(a.CompletedAt) == UtcAt(b.CompletedAt) &&
+        a.Result == b.Result &&
+        a.Error == b.Error &&
+        a.LeaseToken == b.LeaseToken &&
+        a.Revision == b.Revision &&
+        a.DefinitionRevision == b.DefinitionRevision &&
+        a.PinnedGraph == b.PinnedGraph &&
+        a.AdmissionSnapshotJson == b.AdmissionSnapshotJson &&
+        a.ContinuationDescriptorJson == b.ContinuationDescriptorJson &&
+        a.Details == b.Details;
+
+    private static DateTimeOffset? UtcAt(DateTimeOffset? value) => value?.ToUniversalTime();
 
     private DateTimeOffset? NextRun(AutomationDefinition task, DateTimeOffset completedAt) =>
         task.IsEnabled ? schedules.GetNextRun(task, completedAt) : null;
