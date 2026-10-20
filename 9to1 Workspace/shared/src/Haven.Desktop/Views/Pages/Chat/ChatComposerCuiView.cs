@@ -351,15 +351,14 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         return availability;
     }
 
-    /// <summary>Publishes one child close task: withdraws producers and detaches watchers before
-    /// the underlying scene closes. A parent joins this exact task during its cleanup.</summary>
+    /// <summary>Publishes one child close task. The parent joins this exact task during cleanup;
+    /// repeated close requests share the SAME task, and no duplicate work is admitted after it.</summary>
     public Task CloseAsync()
     {
         lock (_closeGate)
         {
             if (_closeTask is not null) return _closeTask;
             _closing = true;
-            _input.Detach();
             _closeTask = CloseOriginalCoreAsync();
             return _closeTask;
         }
@@ -367,12 +366,31 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
 
     private async Task CloseOriginalCoreAsync()
     {
-        // Join the complete actual initialization (including any still-pending UI attach) before
-        // closing the underlying scene, so the child acknowledges settled work and a late attach
-        // can never publish after close. One task per initialize and per close is preserved.
-        await InitializeAsync().ConfigureAwait(false);
-        await _host.CloseOriginalAsync().ConfigureAwait(false);
-        _host.Dispose();
+        // Withdraw producers/action admission first: start the host close independently of the
+        // initialization, so a cancellation or fault in init can never skip withdrawal.
+        var hostClose = _host.CloseOriginalAsync();
+        var faults = new List<Exception>();
+        try { await hostClose.ConfigureAwait(false); }
+        catch (Exception error) { faults.Add(error); }
+
+        // Join the complete actual initialization independently, retaining its fault.
+        Task? initTask;
+        lock (_initGate) initTask = _initializeTask;
+        if (initTask is not null)
+        {
+            try { await initTask.ConfigureAwait(false); }
+            catch (Exception error) { faults.Add(error); }
+        }
+
+        // Only after the child acknowledged settled work is the physical input released.
+        // A late attach is already refused by `_closing`, so no publish can follow close.
+        _input.Detach();
+
+        try { _host.Dispose(); }
+        catch (Exception error) { faults.Add(error); }
+
+        if (faults.Count == 1) throw faults[0];
+        if (faults.Count > 1) throw new AggregateException(faults);
     }
 
     private void AttachInputOnce()
@@ -426,7 +444,7 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
     private TextBox? _attached;
     private string? _pendingText;
     private bool _released;
-    private EventHandler<TextChangedEventArgs>? _textChangedHandler;
+    private EventHandler<TextChangingEventArgs>? _textChangingHandler;
     private EventHandler<RoutedEventArgs>? _gotFocusHandler;
     private EventHandler<RoutedEventArgs>? _lostFocusHandler;
 
@@ -450,7 +468,7 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
     {
         if (_attached is { } previous && !ReferenceEquals(previous, box))
         {
-            if (_textChangedHandler is not null) previous.TextChanged -= _textChangedHandler;
+            if (_textChangingHandler is not null) previous.TextChanging -= _textChangingHandler;
             if (_gotFocusHandler is not null) previous.GotFocus -= _gotFocusHandler;
             if (_lostFocusHandler is not null) previous.LostFocus -= _lostFocusHandler;
         }
@@ -460,14 +478,18 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
             box.Text = _pendingText;
             _pendingText = null;
         }
-        _textChangedHandler = (_, _) =>
+        // The fork's TextBox raises TextChanging SYNCHRONOUSLY after the Text property is set
+        // (rendering not required), while TextChanged is posted to the dispatcher and only runs
+        // later. An edit followed immediately by the queue/send clear must be observed now, so
+        // the real value is captured before the clear: this is the actual edit signal.
+        _textChangingHandler = (_, _) =>
         {
             TextChanged?.Invoke(this, EventArgs.Empty);
             Invalidated?.Invoke(this, EventArgs.Empty);
         };
         _gotFocusHandler = (_, _) => _onFocusChanged?.Invoke(true);
         _lostFocusHandler = (_, _) => _onFocusChanged?.Invoke(false);
-        box.TextChanged += _textChangedHandler;
+        box.TextChanging += _textChangingHandler;
         box.GotFocus += _gotFocusHandler;
         box.LostFocus += _lostFocusHandler;
     }
@@ -478,11 +500,11 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
     {
         if (_attached is { } box)
         {
-            if (_textChangedHandler is not null) box.TextChanged -= _textChangedHandler;
+            if (_textChangingHandler is not null) box.TextChanging -= _textChangingHandler;
             if (_gotFocusHandler is not null) box.GotFocus -= _gotFocusHandler;
             if (_lostFocusHandler is not null) box.LostFocus -= _lostFocusHandler;
         }
-        _textChangedHandler = null;
+        _textChangingHandler = null;
         _gotFocusHandler = null;
         _lostFocusHandler = null;
         _attached = null;

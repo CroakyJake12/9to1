@@ -20,7 +20,9 @@ internal sealed partial class ChatHavenScene
         public bool IsSending => _scene._isSending;
         public bool IsSafetyLocked => _scene._safetyLocked;
         public bool HasAdd { get; set; } = true;
-        public bool CanSend => !_scene._safetyLocked && _scene._modelAvailable;
+        public bool CanSend => !_scene._safetyLocked &&
+            (_scene._isSending || (_scene._modelAvailable &&
+                (!string.IsNullOrWhiteSpace(_scene.Input.Text) || _scene.HasQueuedComposerMessages)));
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
 

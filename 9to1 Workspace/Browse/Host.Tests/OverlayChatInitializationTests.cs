@@ -1,8 +1,14 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using Avalonia.Automation;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using NativeButton = Avalonia.Controls.Button;
+using NativeTextBox = Avalonia.Controls.TextBox;
+using NativeWindow = Avalonia.Controls.Window;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop;
@@ -98,11 +104,14 @@ public sealed class OverlayChatInitializationTests
             var offered = Model("llama3");
             rig.Models.TrySetResult([offered]);
             page = await creating.WaitAsync(TimeSpan.FromSeconds(10));
+            rig.Mount(page);
 
             Assert.Equal(ChatModelAvailability.Available, page.ModelAvailability);
             Assert.Equal("llama3", page.SelectedModelName);
-            // The current, still-offered catalogue entry is fully actionable.
+            // The current, still-offered catalogue entry is fully actionable with a genuine
+            // eligible draft entered (an empty composer is not an actionable send).
             page.SelectModel(offered);
+            page.SetDraft("eligible draft");
             Assert.True(SendEnabled(page));
 
             // A held retry: the provider read never settles until this test releases it.
@@ -178,6 +187,7 @@ public sealed class OverlayChatInitializationTests
             var removed = Model("llama3");
             rig.Models.TrySetResult([removed]);
             page = await creating.WaitAsync(TimeSpan.FromSeconds(10));
+            rig.Mount(page);
             Assert.Equal("llama3", page.SelectedModelName);
 
             // A newer successful catalogue no longer offers the older picker's model.
@@ -192,6 +202,7 @@ public sealed class OverlayChatInitializationTests
             Assert.Equal(ChatModelAvailability.Available, page.ModelAvailability);
             Assert.Equal("qwen2", page.SelectedModelName);
             page.SelectModel(replacement);
+            page.SetDraft("eligible draft");
             Assert.True(SendEnabled(page)); // The current catalogue entry stays actionable.
 
             // The still-open old picker hands back its now-removed descriptor. The user's
@@ -251,6 +262,7 @@ public sealed class OverlayChatInitializationTests
         {
             page = await creating.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+            rig.Mount(page);
             Assert.Same(refused, page.ModelAvailabilityCause);
             Assert.False(SendEnabled(page));
 
@@ -441,6 +453,7 @@ public sealed class OverlayChatInitializationTests
         using var rig = new Rig();
         rig.Models.TrySetResult([Model("llama3")]);
         var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        rig.Mount(page);
         var conversation = page.CurrentConversation;
         try
         {
@@ -621,12 +634,68 @@ public sealed class OverlayChatInitializationTests
     }
 
     [AvaloniaFact]
+    public async Task Rendered_empty_stop_remains_actionable_during_a_held_catalogue_refresh()
+    {
+        using var rig = new Rig();
+        rig.AcceptMessages = true;
+        var model = Model("llama3");
+        rig.Models.TrySetResult([model]);
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        rig.Mount(page);
+        var send = SendButton(page);
+        var input = ComposerTextBox(page);
+        var heldWrite = new HeldConversationWrite();
+        var heldModels = new HeldModelRead();
+        Task? refreshing = null;
+        try
+        {
+            page.SetDraft("request to stop");
+            await WaitUntilAsync(() => rig.Drafts.Draft(page.ConversationId)?.Content == "request to stop");
+            rig.NextConversationWrite = heldWrite;
+            await page.SubmitOriginalInstructionAsync("request to stop").WaitAsync(TimeSpan.FromSeconds(10));
+            await heldWrite.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.True(page.IsSending);
+            Assert.Equal(string.Empty, input.Text);
+
+            var cancellation = Assert.IsAssignableFrom<CancellationTokenSource>(typeof(NewChatPage)
+                .GetField("_sendCancellation", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page));
+            Assert.False(cancellation.IsCancellationRequested);
+
+            rig.NextModelRead = heldModels;
+            refreshing = page.RefreshModelsAsync();
+            await heldModels.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(ChatModelAvailability.Discovering, page.ModelAvailability);
+            Assert.False(refreshing.IsCompleted);
+
+            // This is the current response's Stop, not admission of a new request through an
+            // unavailable catalogue. The real click must reach its existing cancellation owner.
+            Assert.True(send.IsEnabled);
+            send.RaiseEvent(new RoutedEventArgs(NativeButton.ClickEvent));
+            Assert.True(cancellation.IsCancellationRequested);
+        }
+        finally
+        {
+            heldModels.Result.TrySetResult([model]);
+            if (refreshing is not null) await refreshing.WaitAsync(TimeSpan.FromSeconds(10));
+            // Seal the page before releasing the held write, as in the queued-draft regression:
+            // cleanup must not accidentally admit a new provider call after this check ends.
+            page.RequestRetirement();
+            var closing = page.CloseAndDrainAsync();
+            heldWrite.Released.TrySetResult();
+            await closing.WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Queued_unsent_message_survives_close_in_its_canonical_draft()
     {
         using var rig = new Rig();
         rig.AcceptMessages = true;
         rig.Models.TrySetResult([Model("llama3")]);
         var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        rig.Mount(page);
+        var input = ComposerTextBox(page);
+        var send = SendButton(page);
         var conversation = page.CurrentConversation;
         var held = new HeldConversationWrite();
         try
@@ -642,8 +711,11 @@ public sealed class OverlayChatInitializationTests
             // presses Send: the REAL queue-aware control parks it in the in-memory queue and
             // clears the composer. That queued text has NOT been sent, so it must survive the
             // close in the canonical draft instead of being deleted with the empty composer.
-            page.SetDraft("queued unsent text");
-            InvokeSendControl(page);
+            // Exercise the physical input's synchronous change event and the already rendered
+            // button in the same callback: no port setter or dispatcher pump can hide a lost edit.
+            input.Text = "queued unsent text";
+            Assert.True(send.IsEnabled);
+            send.RaiseEvent(new RoutedEventArgs(NativeButton.ClickEvent));
             await WaitUntilAsync(() => ComposerText(page).Length == 0);
             Assert.Equal("queued unsent text", rig.Drafts.Draft(conversation.Id)?.Content);
 
@@ -666,6 +738,7 @@ public sealed class OverlayChatInitializationTests
             // canonical draft: the in-memory queue was disposed, but its recoverable text was not.
             rig.ExpectLaterModelRead([Model("llama3")]);
             var restored = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+            rig.Mount(restored);
             try
             {
                 await restored.LoadConversationAsync(conversation).WaitAsync(TimeSpan.FromSeconds(10));
@@ -847,14 +920,16 @@ public sealed class OverlayChatInitializationTests
     private static ModelDescriptor Model(string name) =>
         new(name, 1024, "llama", "1B", "Q4_0", new HashSet<ToolCapability>(), DateTimeOffset.UnixEpoch);
 
-    /// <summary>Dispatches the REAL send through the shared composer's typed action adapter, the
-    /// same queue-aware path a click on the authored send control owns. No second owner, no fake
-    /// page and no direct call into a test-only method.</summary>
-    private static void InvokeSendControl(NewChatPage page)
-    {
-        var bindings = Scene(page).ComposerView.Bindings;
-        _ = bindings.DispatchAsync("composer.send", null, CancellationToken.None);
-    }
+    // These lookups require the real page to have been mounted before the operation under test.
+    // Missing/duplicate controls must fail positive AND negative assertions. Never pump jobs here:
+    // doing so between the physical edit and click would hide the original ordering regression.
+    private static NativeButton SendButton(NewChatPage page) => Scene(page).ComposerView
+        .GetVisualDescendants().OfType<NativeButton>()
+        .Single(button => AutomationProperties.GetAutomationId(button) == "send-button");
+
+    private static NativeTextBox ComposerTextBox(NewChatPage page) => Scene(page).ComposerView
+        .GetVisualDescendants().OfType<NativeTextBox>()
+        .Single(input => AutomationProperties.GetAutomationId(input) == "composer-input");
 
     /// <summary>One later GetModelsAsync read the test explicitly arms and releases.</summary>
     private sealed class HeldModelRead
@@ -869,7 +944,7 @@ public sealed class OverlayChatInitializationTests
             .GetField("_scene", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
 
     private static bool SendEnabled(NewChatPage page) =>
-        Scene(page).ComposerView.Source.CanSend;
+        SendButton(page).IsEnabled;
 
     private static string ComposerText(NewChatPage page) => Scene(page).Input.Text ?? string.Empty;
 
@@ -975,6 +1050,7 @@ public sealed class OverlayChatInitializationTests
         }
         private int _modelReadCount;
         private readonly ServiceProvider _services;
+        private readonly List<NativeWindow> _windows = [];
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "9to1-chat-initialization-" + Guid.NewGuid().ToString("N"));
 
         public Rig()
@@ -1074,7 +1150,24 @@ public sealed class OverlayChatInitializationTests
 
         private Task SelectFresh() { ConversationSelections++; return Task.CompletedTask; }
         private Task<IReadOnlyList<ChatMessage>> SelectHistory() { ConversationSelections++; return Task.FromResult<IReadOnlyList<ChatMessage>>([]); }
-        public void Dispose() { _services.Dispose(); Directory.Delete(_directory, recursive: true); }
+        public void Mount(NewChatPage page)
+        {
+            var window = new NativeWindow { Width = 1100, Height = 800, Content = page };
+            _windows.Add(window);
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            Assert.True(ComposerTextBox(page).Bounds.Width > 0);
+            Assert.True(SendButton(page).Bounds.Width > 0);
+        }
+
+        public void Dispose()
+        {
+            // Each test drains its real page originals in finally before the fixture detaches it.
+            foreach (var window in _windows) window.Close();
+            _services.Dispose();
+            Directory.Delete(_directory, recursive: true);
+        }
     }
 
     /// <summary>One conversation write the test explicitly arms and releases: the real storage

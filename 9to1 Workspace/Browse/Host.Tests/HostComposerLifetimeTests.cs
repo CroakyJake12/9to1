@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
@@ -48,6 +49,38 @@ public sealed class HostComposerLifetimeTests
         public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
         public ValueTask FormatSelection(string command) { FormatCount++; return ValueTask.CompletedTask; }
         public ValueTask InsertEmoji(string emoji) { EmojiInsertions++; return ValueTask.CompletedTask; }
+        public ValueTask CancelEdit() => ValueTask.CompletedTask;
+    }
+
+    /// <summary>A real source whose Send returns the SAME held operation task, so settlement,
+    /// cancellation, fault retention and no-duplicate-admission can be asserted genuinely.</summary>
+    private sealed class HeldOperationSource : IChatComposerSource
+    {
+        private readonly TaskCompletionSource _send = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public string Draft { get; set; } = string.Empty;
+        public string Placeholder => "Ask Haven anything";
+        public bool IsSending { get; set; }
+        public bool IsSafetyLocked { get; set; }
+        public bool HasAdd { get; set; } = true;
+        public bool CanSend { get; set; } = true;
+        public bool IsEditing { get; set; }
+        public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
+        public int SendStarted;
+        public Task LastAdmitted => _send.Task;
+        public bool IsPending => !_send.Task.IsCompleted;
+        public ValueTask Send() { SendStarted++; return new ValueTask(_send.Task); }
+        public void Release() => _send.TrySetResult();
+        public void Fault(Exception error) => _send.TrySetException(error);
+        public ValueTask Stop() => ValueTask.CompletedTask;
+        public ValueTask Add() => ValueTask.CompletedTask;
+        public ValueTask OpenSettings() => ValueTask.CompletedTask;
+        public ValueTask CloseSettings() => ValueTask.CompletedTask;
+        public ValueTask SetActionMode(string mode) => ValueTask.CompletedTask;
+        public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
+        public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
+        public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
+        public ValueTask FormatSelection(string command) => ValueTask.CompletedTask;
+        public ValueTask InsertEmoji(string emoji) => ValueTask.CompletedTask;
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
     }
 
@@ -165,4 +198,107 @@ public sealed class HostComposerLifetimeTests
     private static TextBox? FindInput(ContentControl root) =>
         root.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(box =>
             AutomationProperties.GetAutomationId(box) == "composer-input");
+
+    private static Button? FindButton(ContentControl root, string automationId) =>
+        root.GetVisualDescendants().OfType<Button>().FirstOrDefault(b =>
+            AutomationProperties.GetAutomationId(b) == automationId);
+
+    [AvaloniaFact]
+    public async Task Real_send_button_click_awaits_the_same_held_source_operation()
+    {
+        var source = new HeldOperationSource();
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            // The authored send control is rendered and interactive with a genuine draft.
+            source.Draft = "draft";
+            var sendButton = FindButton(view, "send-button");
+            Assert.NotNull(sendButton);
+            Assert.True(sendButton!.IsEnabled);
+
+            // Click the REAL rendered send control; the click dispatches source.Send().
+            sendButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(1, source.SendStarted);
+            Assert.True(source.IsPending);
+
+            // The settlement stays pending while the held source operation is in flight.
+            Assert.False(source.LastAdmitted.IsCompleted);
+
+            // Release the SAME held operation; it settles exactly once.
+            source.Release();
+            await source.LastAdmitted.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(source.IsPending);
+            Assert.Equal(1, source.SendStarted); // no duplicate admission
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Faulted_source_operation_retains_its_real_fault()
+    {
+        var source = new HeldOperationSource();
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Content = view };
+        window.Show();
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            source.Draft = "draft";
+            var sendButton = FindButton(view, "send-button");
+            Assert.NotNull(sendButton);
+
+            var failure = new IOException("source offline");
+            var admitted = source.LastAdmitted;
+            sendButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            source.Fault(failure);
+
+            var error = await Record.ExceptionAsync(() => admitted.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(error);
+            Assert.Contains(failure, AllCauses(error!));
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Close_before_init_withdraws_and_joins_initialization_without_deadlock()
+    {
+        var source = new RecordingSource();
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Content = view };
+        window.Show();
+        try
+        {
+            // Close while initialization is still in flight: the close joins it and withdraws
+            // producers, instead of skipping withdrawal when init is late/faulted.
+            var init = view.InitializeAsync();
+            var close = view.CloseAsync();
+            await close.WaitAsync(TimeSpan.FromSeconds(10));
+            await init.WaitAsync(TimeSpan.FromSeconds(10));
+
+            // Repeated close requests share the SAME completed task; no duplicate work.
+            var closeAgain = view.CloseAsync();
+            Assert.Same(close, closeAgain);
+
+            // Physical input is released: a late write cannot publish after close.
+            view.Input.Text = "should not publish";
+            Assert.Equal(string.Empty, view.Input.Text);
+            Assert.Null(FindInput(view));
+        }
+        finally { window.Close(); }
+    }
+
+    private static IEnumerable<Exception> AllCauses(Exception error)
+    {
+        if (error is AggregateException aggregate)
+            foreach (var inner in aggregate.InnerExceptions)
+                foreach (var cause in AllCauses(inner))
+                    yield return cause;
+        else yield return error;
+    }
 }

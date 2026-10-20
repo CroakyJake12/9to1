@@ -1166,29 +1166,19 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             // so the next REAL change is compared against it, but it is never itself an edit.
             _originalComposerText = text;
         }
-        else if (!_originalWork.IsRetiring)
+        else if (!string.Equals(text, _originalComposerText, StringComparison.Ordinal))
         {
-            // A queue-while-sending clear is not a user deletion either: the queued text has NOT
-            // been sent, so the canonical draft must keep it instead of deleting it. This is
-            // handled even when the composer's observed text already matched (a typing edit that
-            // coalesced with the programmatic clear never updated `_originalComposerText`), so
-            // the queued snapshot is written here rather than relying on that earlier edit.
-            var clearingForQueuedSend = string.IsNullOrWhiteSpace(text) && _scene.HasQueuedComposerMessages;
-            if (clearingForQueuedSend)
+            _originalComposerText = text;
+            if (!_originalWork.IsRetiring)
             {
-                var queuedSave = CaptureUnsentDraftText(text, _scene.QueuedComposerMessages);
-                _originalComposerText = text;
-                if (!string.IsNullOrWhiteSpace(queuedSave))
-                {
-                    Interlocked.Increment(ref _originalComposerRevision);
-                    _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, queuedSave, _pendingAttachmentIds));
-                }
-            }
-            else if (!string.Equals(text, _originalComposerText, StringComparison.Ordinal))
-            {
-                _originalComposerText = text;
                 Interlocked.Increment(ref _originalComposerRevision);
-                _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, text, _pendingAttachmentIds));
+                // A queue-while-sending clear is not a user deletion either: the queued text has
+                // NOT been sent, so the canonical draft must keep it instead of deleting it. The
+                // typed edit that produced it was already observed synchronously and saved, so
+                // this programmatic clear is only ever skipped, never treated as deletion.
+                var clearingForQueuedSend = string.IsNullOrWhiteSpace(text) && _scene.HasQueuedComposerMessages;
+                if (!clearingForQueuedSend)
+                    _ = EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, text, _pendingAttachmentIds));
             }
         }
         RunOriginalChatNotification(() => OnComposerEditCompletedOriginalBody(sender, e));
