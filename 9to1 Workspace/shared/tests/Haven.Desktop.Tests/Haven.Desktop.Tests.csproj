@@ -126,5 +126,7 @@
     <Compile Include="ChatModelDiscoveryPolicyTests.cs" />
     <Compile Include="NewChatOriginalWorkLifetimeTests.cs" />
     <Compile Include="SpacesBrowseAppContentSessionRetirementTests.cs" />
+    <!-- Authored Spaces rail packaged-SVG icon family: source-level and rendered registration proof. -->
+    <Compile Include="SpacesRailSvgIconsTests.cs" />
   </ItemGroup>
 </Project>

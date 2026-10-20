@@ -76,7 +76,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         _workspaceCommandHost = workspaceCommandHost;
 
         Document = SpacesHomeCuiDocument.Load();
-        var controlRegistry = SpacesHomeCuiDocument.CreateControlRegistry();
+        // The desktop host registers its own control registry so the authored Spaces rail resolves
+        // its filled, rounded packaged-SVG icon family ahead of the shared canonical catalog. The
+        // Spaces project never references Haven.Desktop; this registration stays in this adapter.
+        var controlRegistry = new CuiControlRegistry();
+        SpacesRailPackagedIcons.Register(controlRegistry);
         // The authored workspace region is a stable host-owned mount, so a re-published scene
         // keeps the same control and the mounted workspace is never silently rebuilt empty.
         // A fresh publication builds a new tree, so the previous parent must release the mount
