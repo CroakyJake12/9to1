@@ -9,11 +9,12 @@ All under `/workspace/9to1-mercury-extra07-voice/9to1 Workspace/`:
 
 - `shared/src/Haven.Application/Call/VoiceVisionRuntimeState.cs` (new): typed projection record + `VoiceVisionPresentationKind` + `VoiceVisionBackendProfile` + `VoiceVisionStartRequest/Result` + `VoiceVisionOperation` + `IVoiceVisionRuntime` contract (includes `SetPresentation`).
 - `shared/src/Haven.Application/Call/IVoiceVisionRuntime.cs` (new): typed production contract; `SetPresentation` added at this verification pass.
-- `shared/src/Haven.Application/Call/VoiceVisionLiveRuntime.cs` (new): single-owner runtime facade over `ICallCoordinator` + `VisionVoiceSessionService` + `IVersionedSettingsStore` mapping store. Added `using Haven.Core;` (CallState) at this pass.
-- `shared/src/Haven.Desktop/Interface/Shell/Pop-Ups/VoiceVision/` (new): `VoiceVisionPill.cui`, `VoiceVisionSession.cui`, `VoiceVisionCuiDocument.cs`, `VoiceVisionCuiBindings.cs`, `VoiceVisionHostAdapter.cs`.
-- `shared/tests/Haven.Application.Tests/Call/VoiceVisionLiveRuntimeTests.cs` (new, auto-globbed): runtime contract tests. Fixed `HavenMode.AI` → `HavenMode.Chat` at this pass.
-- `shared/tests/Haven.Desktop.Tests/VoiceVision/VoiceVisionCuiPresentationTests.cs` (new, needs `Compile` line via patch): CUI parse + bindings. Added `using Haven.Desktop.Views.Shell.VoiceVision;` at this pass.
-- `work/pc-worker/voice-vision-integration.patch` (private, NOT applied): EmbeddedResource lines, Desktop.Tests `Compile` line, DI registration scaffold, host wiring notes.
+- `shared/src/Haven.Application/Call/VoiceVisionLiveRuntime.cs` (new): single-owner runtime facade over `ICallCoordinator` + `VisionVoiceSessionService` + `IVersionedSettingsStore` mapping store. Added `using Haven.Core;` (CallState) at this pass. **3 defects fixed** (bounded-retry swallowed fault; Start/End disposed-precheck vs reservation race; attach-existing mapping read/write escapes typed Start result).
+- `shared/src/Haven.Desktop/Interface/Shell/Pop-Ups/VoiceVision/` (new): `VoiceVisionPill.cui`, `VoiceVisionSession.cui`, `VoiceVisionCuiDocument.cs` (compiled-artifact loader, no raw fallback), `VoiceVisionCuiBindings.cs`, `VoiceVisionHostAdapter.cs` (async close-settlement, real providers).
+- `shared/tests/Haven.Application.Tests/Call/VoiceVisionLiveRuntimeTests.cs` (new, auto-globbed): runtime contract tests incl. 5 new defect-coverage tests; `FailEndAfterIdle` coordinator flag; `FailingReadMappingStore`/`HeldMappingReadStore`. Fixed `HavenMode.AI` → `HavenMode.Chat` at this pass.
+- `shared/tests/Haven.Desktop.Tests/VoiceVision/VoiceVisionCuiPresentationTests.cs` (new, needs `Compile` line via patch): CUI compiled-load + bindings; added `using Haven.Desktop.Views.Shell.VoiceVision;` at this pass; replaced raw-file parse with `LoadPill()/LoadSession()` compiled-load assertions.
+- `shared/tests/Haven.Desktop.Tests/VoiceVision/VoiceVisionCuiCompiledTests.cs` (new, needs `Compile` line via patch): headless compiled-load + admission-reject, mirroring `ChatComposerCompiledTransportTests`.
+- `work/pc-worker/voice-vision-integration.patch` (private, NOT applied): Spaces compiled-bundle registration, Desktop.Tests `Compile` × 2, DI singleton registration scaffold, host wiring notes, composer waveform→pill seam. Includes accurate preimage hashes.
 
 ## Assigned scope / requirement coverage
 - Spec `Voice & Vision` §[5901–6203]: one canonical multimodal surface; single canonical SessionID/ConversationID/SpaceID across pill/full; no second runtime; End is real stop/drain; closing presentation is not End; camera/screen NEVER auto-start from voice/model toggle; explicit permission; persistent capture indicators; local-only truthful (no silent cloud); capability-checked modes (do not claim Monologue/LiveListener/LiveTranslate operational).
@@ -38,12 +39,13 @@ All under `/workspace/9to1-mercury-extra07-voice/9to1 Workspace/`:
 6. `IVoiceVisionRuntime.cs`: added `SetPresentation(VoiceVisionPresentationKind)` (host calls it via the interface).
 
 ## Tests present (NOT run in this lane)
-- `VoiceVisionLiveRuntimeTests`: attach-existing-identity-without-Start; second-presentation-reuses-one-runtime/SessionID; closing-presentation-not-End + End-drains; late-callback-suppression-after-End; unsupported/denied camera → zero capture starts; stopping screen share → zero later frames; concurrent-starts-coalesce (single Start).
-- `VoiceVisionCuiPresentationTests`: both .cui documents parse without CUI errors; bindings project truthful capability-gated state (status, canStart/canEnd, muteOpacity, visualSources item labels); availability gating (empty vs active); known-command dispatch + unknown-command throws.
+- `VoiceVisionLiveRuntimeTests`: attach-existing-identity-without-Start; second-presentation-reuses-one-runtime/SessionID; closing-presentation-not-End + End-drains; late-callback-suppression-after-End; unsupported/denied camera → zero capture starts; stopping screen share → zero later frames; concurrent-starts-coalesce (single Start); retained-fault-not-swallowed (bounded retry); disposed-precheck/reservation atomicity; attach-existing mapping read/write failure → structured start result.
+- `VoiceVisionCuiPresentationTests`: pill + session load from the compiled bundle (non-empty components, canonical actions); bindings project truthful capability-gated state; availability gating; known-command dispatch + unknown-command throws.
+- `VoiceVisionCuiCompiledTests`: embedded bundle carries both Voice documents; pill/session load; admission-reject for unknown format/version/language/ABI/capability (mirrors `ChatComposerCompiledTransportTests`).
 
 ## Next steps owned by root/owner
-- Allocate the build slot; apply `voice-vision-integration.patch` seams (EmbeddedResource × 2, Desktop.Tests `Compile` × 1, DI singleton registration, host wiring incl. composer waveform toggle → pill and adapter `RequestFullSurface` → full surface; adapter `ClosePresentation()` on overlay close, never `EndAsync`).
-- Run `dotnet` (guarded entrypoint `/home/jacob/.local/bin/dotnet`, `-m:1`) build + the two new test files.
+- Allocate the build slot; apply `voice-vision-integration.patch` seams (Spaces compiled-bundle registration × 2 + move authored .cui to `Spaces/UI/VoiceVision/`, Desktop.Tests `Compile` × 2, DI singleton registration, host wiring incl. composer waveform toggle → pill and adapter `RequestFullSurfaceAsync` → full surface; adapter `ClosePresentationAsync()` on overlay close, never `EndAsync`).
+- Run `dotnet` (guarded entrypoint `/home/jacob/.local/bin/dotnet`, `-m:1`) build + the three new test files.
 - Report missing dedicated mic/camera/captions glyphs to the owning icon lane (canonical catalog best-fit keys used as stopgap).
 
 ## Unresolved / held decisions

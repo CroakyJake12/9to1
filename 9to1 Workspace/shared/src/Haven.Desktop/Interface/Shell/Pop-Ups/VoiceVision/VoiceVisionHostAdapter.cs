@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Application.Call;
@@ -19,9 +18,12 @@ namespace Haven.Desktop.Views.Shell.VoiceVision;
 /// pill and the full surface so both drive one canonical session.
 ///
 /// Ownership rules: opening a second surface reuses the same runtime (never a second run),
-/// and closing a presentation is NOT End. End is only the explicit End control.
+/// and closing a presentation is NOT End. End is only the explicit End control. The start
+/// path borrows REAL composition state (conversation, space, model/start options, policy and
+/// local-only fact) through providers; it never fabricates a default model or a permissive
+/// local-only claim.
 /// </summary>
-public sealed class VoiceVisionHostAdapter : IDisposable
+public sealed class VoiceVisionHostAdapter : IAsyncDisposable, IDisposable
 {
     private readonly IVoiceVisionRuntime _runtime;
     private readonly VoiceVisionCuiBindings _bindings;
@@ -30,12 +32,18 @@ public sealed class VoiceVisionHostAdapter : IDisposable
 
     public VoiceVisionHostAdapter(
         IVoiceVisionRuntime runtime,
-        Func<Guid?>? conversationProvider = null,
-        Func<CallStartOptions>? startOptionsProvider = null)
+        Func<Guid?> conversationProvider,
+        Func<CallStartOptions> startOptionsProvider,
+        Func<Guid?>? spaceIdProvider = null,
+        Func<bool>? isLocalOnlyProvider = null,
+        Func<string>? policyProvider = null)
     {
         _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
-        ConversationProvider = conversationProvider;
-        StartOptionsProvider = startOptionsProvider;
+        ConversationProvider = conversationProvider ?? throw new ArgumentNullException(nameof(conversationProvider));
+        StartOptionsProvider = startOptionsProvider ?? throw new ArgumentNullException(nameof(startOptionsProvider));
+        SpaceIdProvider = spaceIdProvider;
+        IsLocalOnlyProvider = isLocalOnlyProvider;
+        PolicyProvider = policyProvider;
         _bindings = new VoiceVisionCuiBindings(() => _runtime.State, DispatchCommandAsync);
         _loader = new CuiControlLoader(VoiceVisionCuiDocument.CreateControlRegistry());
         _loader.SetBindingContext(_bindings);
@@ -44,45 +52,60 @@ public sealed class VoiceVisionHostAdapter : IDisposable
     }
 
     /// <summary>Provides the canonical ConversationID a new session should attach to.</summary>
-    public Func<Guid?>? ConversationProvider { get; }
+    public Func<Guid?> ConversationProvider { get; }
 
-    /// <summary>Provides production call start options (model, devices, voice profile) for a new session.</summary>
-    public Func<CallStartOptions>? StartOptionsProvider { get; }
+    /// <summary>Provides the REAL production call start options (model, devices, voice profile) for
+    /// a new session. There is intentionally no fabricated fallback: without real options a session
+    /// cannot be started truthfully, so the host must wire this provider.</summary>
+    public Func<CallStartOptions> StartOptionsProvider { get; }
 
-    /// <summary>Raised when the UI requests the full Voice &amp; Vision surface.</summary>
-    public event Action? RequestFullSurface;
+    /// <summary>Provides the canonical SpaceID for a new session (null when no Space context).</summary>
+    public Func<Guid?>? SpaceIdProvider { get; }
 
-    /// <summary>Raised when the presentation is closed (pill/full overlay dismissed). Closing a
-    /// presentation is never End; this is the host's close-ACK signal so it can detach the
-    /// overlay AFTER the shared projection has returned to no surface.</summary>
-    public event Action? PresentationClosed;
+    /// <summary>Provides the truthful local-only fact for a new session (never invented).</summary>
+    public Func<bool>? IsLocalOnlyProvider { get; }
+
+    /// <summary>Provides the effective model policy for a new session (defaults to the runtime's
+    /// current effective policy when a session already exists).</summary>
+    public Func<string>? PolicyProvider { get; }
+
+    /// <summary>Raised (with settlement) when the UI requests the full Voice &amp; Vision surface.</summary>
+    public event Func<Task>? RequestFullSurfaceAsync;
+
+    /// <summary>Raised only after the presentation has left the surface and admitted actions have
+    /// settled. Closing a presentation is never End; this is the host's close-ACK signal.</summary>
+    public event Func<Task>? PresentationClosedAsync;
 
     public Control LoadPill()
     {
         _runtime.SetPresentation(VoiceVisionPresentationKind.Pill);
-        return LoadDocument(VoiceVisionCuiDocument.ParsePill());
+        return LoadDocument(VoiceVisionCuiDocument.LoadPill());
     }
 
     public Control LoadSession()
     {
         _runtime.SetPresentation(VoiceVisionPresentationKind.Full);
-        return LoadDocument(VoiceVisionCuiDocument.ParseSession());
+        return LoadDocument(VoiceVisionCuiDocument.LoadSession());
     }
 
-    /// <summary>Points the projection at no surface. Closing a presentation is never End. The
-    /// close-ACK (<see cref="PresentationClosed"/>) is raised only after the projection has
-    /// left the surface, so the host detaches the overlay thereafter.</summary>
-    public void ClosePresentation()
+    /// <summary>
+    /// Closes the presentation: the shared projection leaves the surface WITHOUT ending the session.
+    /// Loader action settlement is awaited before the close-ACK so the host detaches the overlay only
+    /// after every admitted command has settled; there is no fire-and-forget release signal.
+    /// </summary>
+    public async Task ClosePresentationAsync(CancellationToken cancellationToken = default)
     {
+        await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
         _runtime.SetPresentation(VoiceVisionPresentationKind.None);
-        PresentationClosed?.Invoke();
+        if (PresentationClosedAsync is { } closed)
+            await closed().ConfigureAwait(false);
     }
 
     private Control LoadDocument(CuiDocument document)
     {
         var loaded = _loader.TryLoad(document);
-        if (loaded.Root is null)
-            throw new InvalidOperationException("Voice &amp; Vision CUI returned no control.");
+        if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error))
+            throw new InvalidOperationException("Voice &amp; Vision CUI could not be rendered.");
         _loader.WireBindings(loaded.Root);
         return loaded.Root;
     }
@@ -130,7 +153,8 @@ public sealed class VoiceVisionHostAdapter : IDisposable
                 break;
 
             case "voice.open-full":
-                RequestFullSurface?.Invoke();
+                if (RequestFullSurfaceAsync is { } open)
+                    await open();
                 break;
 
             case "voice.submit-text":
@@ -148,21 +172,23 @@ public sealed class VoiceVisionHostAdapter : IDisposable
 
     private async Task StartFromCommandAsync(object? parameter, CancellationToken cancellationToken)
     {
-        var conversationId = ConversationProvider?.Invoke() ?? Guid.Empty;
-        if (conversationId == Guid.Empty) return;
+        var conversationId = ConversationProvider();
+        if (conversationId is null || conversationId == Guid.Empty) return;
 
         var mode = TryResolveMode(parameter, out var requested) ? requested : VisionVoiceMode.Conversational;
-        var options = StartOptionsProvider?.Invoke() ?? DefaultStartOptions();
-        var request = new VoiceVisionStartRequest(
-            conversationId,
-            SpaceId: null,
-            mode,
-            options,
-            EffectivePolicy(),
-            IsLocalOnly: true);
 
+        // Real production start options are required; there is no fabricated default model.
+        var options = StartOptionsProvider();
+        var spaceId = SpaceIdProvider?.Invoke();
+        var policy = PolicyProvider?.Invoke() ?? _runtime.State.EffectiveModelPolicy;
+        var localOnly = IsLocalOnlyProvider?.Invoke() ?? ResolveLocalOnly(policy);
+
+        var request = new VoiceVisionStartRequest(conversationId.Value, spaceId, mode, options, policy, localOnly);
         await _runtime.StartAsync(request, cancellationToken);
     }
+
+    private static bool ResolveLocalOnly(string policy) =>
+        !string.IsNullOrWhiteSpace(policy) && policy.Contains("local", StringComparison.OrdinalIgnoreCase);
 
     private static bool TryResolveMode(object? parameter, out VisionVoiceMode mode)
     {
@@ -181,18 +207,6 @@ public sealed class VoiceVisionHostAdapter : IDisposable
         }
     }
 
-    private string EffectivePolicy()
-    {
-        var policy = _runtime.State.EffectiveModelPolicy;
-        return string.IsNullOrWhiteSpace(policy) ? "local-default" : policy;
-    }
-
-    private static CallStartOptions DefaultStartOptions() => new(
-        new ModelDescriptor(
-            "default", 0, "default", string.Empty, string.Empty,
-            new HashSet<ToolCapability>(), DateTimeOffset.UtcNow),
-        InputMode: CallInputMode.HandsFree);
-
     private void OnRuntimeStateChanged(object? sender, EventArgs args) => _bindings.Refresh();
 
     public void Dispose()
@@ -201,5 +215,24 @@ public sealed class VoiceVisionHostAdapter : IDisposable
         _disposed = true;
         _runtime.StateChanged -= OnRuntimeStateChanged;
         _loader.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+        {
+            _loader.Dispose();
+            return;
+        }
+        _disposed = true;
+        _runtime.StateChanged -= OnRuntimeStateChanged;
+        try
+        {
+            await _loader.WhenActionsIdleAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _loader.Dispose();
+        }
     }
 }

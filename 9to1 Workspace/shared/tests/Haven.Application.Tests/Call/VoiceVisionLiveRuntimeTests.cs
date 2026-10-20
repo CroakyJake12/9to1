@@ -407,6 +407,108 @@ public sealed class VoiceVisionLiveRuntimeTests
         Assert.Equal(Guid.Empty, runtime.State.SessionId);
     }
 
+    [Fact]
+    public async Task End_that_inactivates_then_throws_is_not_ACKed_as_success_across_dispose_borrowers()
+    {
+        // Real EndCore marks the call Completed BEFORE its awaited durable settlement, so a session
+        // can become inactive and STILL throw. The retained stop fault must govern, not IsActive.
+        var coordinator = NewCoordinator();
+        coordinator.FailEndAfterIdle = true;
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+        await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+
+        // Two concurrent disposal borrowers share the real teardown original; both must observe the
+        // retained stop/persistence fault, never an ACK of success.
+        var d1 = runtime.DisposeAsync().AsTask();
+        var d2 = runtime.DisposeAsync().AsTask();
+
+        await Assert.ThrowsAnyAsync<InvalidOperationException>(() => d1);
+        await Assert.ThrowsAnyAsync<InvalidOperationException>(() => d2);
+
+        // Failed durable settlement retains custody: the live session is not cleared/unhooked.
+        Assert.NotEqual(Guid.Empty, runtime.State.SessionId);
+        Assert.Equal(MultimodalSessionState.Listening, runtime.State.State);
+    }
+
+    [Fact]
+    public async Task Concurrent_start_end_dispose_storm_never_leaks_disposed_semaphore_errors()
+    {
+        var coordinator = NewCoordinator();
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var tasks = new List<Task>();
+        for (var i = 0; i < 40; i++)
+        {
+            tasks.Add(Exercise(() => runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken)));
+            tasks.Add(Exercise(() => runtime.EndAsync(TestContext.Current.CancellationToken)));
+        }
+        tasks.Add(ExerciseDispose());
+
+        await Task.WhenAll(tasks);
+
+        // After dispose the runtime is sealed: further Start/End return typed failures, never
+        // disposed-semaphore exceptions or other thrown lifecycle errors.
+        var start = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        Assert.False(start.Succeeded);
+        var end = await runtime.EndAsync(TestContext.Current.CancellationToken);
+        Assert.False(end.Succeeded);
+
+        static async Task Exercise(Func<Task> operation)
+        {
+            try { await operation(); }
+            catch (OperationCanceledException) { }
+            // Any other exception (e.g. ObjectDisposedException) propagates and fails the test.
+        }
+
+        async Task ExerciseDispose()
+        {
+            try { await runtime.DisposeAsync(); }
+            catch (InvalidOperationException) { } // retained stop-fault leg
+            catch (OperationCanceledException) { }
+        }
+    }
+
+    [Fact]
+    public async Task Attach_existing_mapping_read_fault_returns_structured_failure_without_a_second_capture()
+    {
+        var coordinator = ActiveCoordinator();
+        var runtime = CreateRuntime(coordinator, new FailingReadMappingStore());
+
+        var result = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(VisionVoiceErrorCode.UnknownFailure, result.Error!.Code);
+        Assert.Equal(0, coordinator.StartCount);           // never started a second capture
+        Assert.Equal(Guid.Empty, runtime.State.SessionId); // no invented identity published
+    }
+
+    [Fact]
+    public async Task Attach_existing_mapping_write_fault_returns_structured_failure()
+    {
+        var coordinator = ActiveCoordinator();
+        var runtime = CreateRuntime(coordinator, new FailingMappingStore());
+
+        var result = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(VisionVoiceErrorCode.UnknownFailure, result.Error!.Code);
+        Assert.Equal(0, coordinator.StartCount);
+        Assert.Equal(Guid.Empty, runtime.State.SessionId);
+    }
+
+    [Fact]
+    public async Task Attach_existing_held_mapping_read_obeys_cancellation()
+    {
+        var coordinator = ActiveCoordinator();
+        var runtime = CreateRuntime(coordinator, new HeldMappingReadStore());
+
+        using var cts = new CancellationTokenSource();
+        var startTask = runtime.StartAsync(Request(ConvoId), cts.Token);
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => startTask);
+    }
+
     // -- fixed conversation identity --
     private static readonly Guid ConvoId = new("11111111-1111-1111-1111-111111111111");
 
@@ -547,6 +649,71 @@ public sealed class VoiceVisionLiveRuntimeTests
             => _inner.CompareExchangeAsync(key, expectedJson, replacementJson, cancellationToken);
     }
 
+    /// <summary>A settings store whose canonical conversation→SessionID mapping READ faults, while
+    /// session/metadata writes succeed. Proves attach-existing mapping-read failures surface as typed
+    /// start failures instead of escaping.</summary>
+    private sealed class FailingReadMappingStore : IVersionedSettingsStore, IVersionedSettingsCompareExchange
+    {
+        private readonly MemorySettingsStore _inner = new();
+
+        public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class
+        {
+            if (key.StartsWith("visionvoice.session-by-conversation.v1.", StringComparison.Ordinal))
+                throw new InvalidOperationException("mapping read unavailable");
+            return _inner.GetAsync<T>(key, cancellationToken);
+        }
+
+        public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken) where T : class
+            => _inner.SetAsync(key, value, cancellationToken);
+
+        public Task RemoveAsync(string key, CancellationToken cancellationToken) => _inner.RemoveAsync(key, cancellationToken);
+
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken)
+            => _inner.ExportAsync(cancellationToken);
+
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken cancellationToken)
+            => _inner.ImportAsync(manifest, cancellationToken);
+
+        public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson,
+            string? replacementJson, CancellationToken cancellationToken)
+            => _inner.CompareExchangeAsync(key, expectedJson, replacementJson, cancellationToken);
+    }
+
+    /// <summary>A settings store whose canonical mapping read holds until cancelled, proving the
+    /// held attach-existing read honours borrower cancellation rather than settling or corrupting.</summary>
+    private sealed class HeldMappingReadStore : IVersionedSettingsStore, IVersionedSettingsCompareExchange
+    {
+        private readonly MemorySettingsStore _inner = new();
+
+        public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class
+        {
+            if (key.StartsWith("visionvoice.session-by-conversation.v1.", StringComparison.Ordinal))
+                return HoldAsync<T>(cancellationToken);
+            return _inner.GetAsync<T>(key, cancellationToken);
+        }
+
+        private static async Task<T?> HoldAsync<T>(CancellationToken cancellationToken) where T : class
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+
+        public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken) where T : class
+            => _inner.SetAsync(key, value, cancellationToken);
+
+        public Task RemoveAsync(string key, CancellationToken cancellationToken) => _inner.RemoveAsync(key, cancellationToken);
+
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken)
+            => _inner.ExportAsync(cancellationToken);
+
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken cancellationToken)
+            => _inner.ImportAsync(manifest, cancellationToken);
+
+        public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson,
+            string? replacementJson, CancellationToken cancellationToken)
+            => _inner.CompareExchangeAsync(key, expectedJson, replacementJson, cancellationToken);
+    }
+
     private sealed class FakeCallCoordinator : ICallCoordinator
     {
         public CallState State { get; set; } = CallState.Idle;
@@ -573,6 +740,10 @@ public sealed class VoiceVisionLiveRuntimeTests
         public TaskCompletionSource<bool>? StartEntered { get; set; }
         public bool FailStart { get; set; }
         public bool FailEnd { get; set; }
+        // Simulates the real EndCore: mark the call idle/Completed BEFORE the awaited durable
+        // settlement throws. IsActive is therefore false while the retained persistence fault is
+        // still real.
+        public bool FailEndAfterIdle { get; set; }
 
         public async Task<CallSession> StartAsync(CallStartOptions options, SpeechModelInfo? speechModel, CancellationToken ct)
         {
@@ -611,6 +782,7 @@ public sealed class VoiceVisionLiveRuntimeTests
             State = CallState.Idle;
             IsScreenSharing = false;
             Events.Add("end-complete");
+            if (FailEndAfterIdle) throw new InvalidOperationException("durable settlement failed after the call ended");
             return Task.CompletedTask;
         }
 

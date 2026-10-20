@@ -1,29 +1,34 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using CakeOS.Cui.Language;
-using CakeOS.Cui.Runtime;
 using Haven.Application.Call;
 using Haven.Desktop.Views.Shell.VoiceVision;
 
 namespace Haven.Desktop.Tests.VoiceVision;
 
 /// <summary>
-/// Focused presentation-layer checks for the Voice &amp; Vision CUI:
-/// both authored documents parse without CUI errors, and the binding context projects
-/// truthful state, gates action availability by real capability, and routes known
-/// commands to the host. These tests read the authored .cui sources from the repository
-/// so they validate the exact shipped markup without relying on EmbeddedResource wiring.
+/// Focused presentation-layer checks for the Voice &amp; Vision CUI: the pill and full session
+/// documents load through the canonical PACKAGED compiled bundle (the same admission path as the
+/// shared composer), and the binding context projects truthful state, gates action availability by
+/// real capability, and routes known commands to the host. These tests never mutate a raw source
+/// reparse; they consume the compiled artifact the shipped markup is compiled into.
 /// </summary>
 public sealed class VoiceVisionCuiPresentationTests
 {
     [Fact]
-    public void Pill_and_session_documents_parse_without_CUI_errors()
+    public void Pill_and_session_documents_load_from_compiled_bundle()
     {
-        AssertValid(PillPath, "VoiceVisionPill.cui");
-        AssertValid(SessionPath, "VoiceVisionSession.cui");
+        var pill = VoiceVisionCuiDocument.LoadPill();
+        Assert.NotNull(pill);
+        Assert.NotEmpty(pill.Components);
+        Assert.True(pill.Actions.ContainsKey("Start"));
+        Assert.True(pill.Actions.ContainsKey("OpenFullSurface"));
+
+        var session = VoiceVisionCuiDocument.LoadSession();
+        Assert.NotNull(session);
+        Assert.NotEmpty(session.Components);
+        Assert.True(session.Actions.ContainsKey("ToggleTranscript"));
     }
 
     [Fact]
@@ -135,32 +140,4 @@ public sealed class VoiceVisionCuiPresentationTests
         AreCaptionsEnabled: true,
         IsTranscriptVisible: false,
         VisualSources: [new(Guid.NewGuid(), VisualSourceType.Camera, "camera", "Camera", VisualSourceState.Active, true, true, DateTimeOffset.UtcNow)]);
-
-    private static void AssertValid(string path, string sourceName)
-    {
-        if (!File.Exists(path))
-            throw new InvalidOperationException($"Authored Voice &amp; Vision CUI source not found at {path}.");
-        var parser = new CuiRichParser();
-        var document = parser.Parse(File.ReadAllText(path), sourceName);
-        Assert.NotNull(document);
-        Assert.DoesNotContain(parser.Diagnostics.Diagnostics, d => d.Severity == CuiDiagnosticSeverity.Error);
-    }
-
-    private static string PillPath => Path.Combine(RepoRoot, "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/Pop-Ups/VoiceVision/VoiceVisionPill.cui");
-    private static string SessionPath => Path.Combine(RepoRoot, "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/Pop-Ups/VoiceVision/VoiceVisionSession.cui");
-
-    private static string RepoRoot =>
-        LocateRepoRoot();
-
-    private static string LocateRepoRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            if (Directory.Exists(Path.Combine(directory.FullName, "9to1 Workspace")))
-                return directory.FullName;
-            directory = directory.Parent;
-        }
-        throw new InvalidOperationException("The repository root could not be located from the test base directory.");
-    }
 }

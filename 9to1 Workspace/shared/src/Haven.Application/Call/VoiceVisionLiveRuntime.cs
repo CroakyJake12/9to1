@@ -60,6 +60,11 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
     private int _gateBusy;
     private TaskCompletionSource? _gateIdleTcs;
 
+    // Serializes the admission "seal check + reservation" against the disposal seal so a Start/End
+    // can never pass the disposed precheck and then reserve AFTER Dispose has observed quiescence
+    // and disposed the semaphore. The lock is held only for non-blocking field/interlocked updates.
+    private readonly object _admissionLock = new();
+
     /// <summary>When false (after an explicit End), late coordinator callbacks are suppressed and
     /// the projection stays inactive until a new start/attach re-opens the session.</summary>
     private bool _acceptsRuntimeEvents = true;
@@ -89,17 +94,21 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         if (request.ConversationId == Guid.Empty)
             return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.InvalidRequest, "A canonical conversation is required.", "ConversationID", "StartSession", false));
 
-        // A sealed/disposed runtime admits no new session.
-        if (Volatile.Read(ref _disposed))
-            return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.SessionNotFound,
-                "The runtime is disposed; no session can be started.", "SessionID", "StartSession", true));
-
         // One published coalescing owner for identity resolution/creation/attachment: the whole
         // start runs under the lifecycle gate, so two callers continuing the same actual interaction
         // resolve the SAME canonical SessionID and never open a second runtime. An End that runs
         // while this start is queued bumps the lifetime generation, which rejects this stale wait.
-        var generationAtEntry = Volatile.Read(ref _generation);
-        BusyEnter();
+        // The disposed precheck and the busy reservation are atomic with the disposal seal, so
+        // Dispose can never dispose the semaphore between our precheck and reservation.
+        int generationAtEntry;
+        lock (_admissionLock)
+        {
+            if (Volatile.Read(ref _disposed))
+                return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.SessionNotFound,
+                    "The runtime is disposed; no session can be started.", "SessionID", "StartSession", true));
+            generationAtEntry = Volatile.Read(ref _generation);
+            BusyEnter();
+        }
         try
         {
             await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -128,15 +137,17 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
 
     public async Task<VoiceVisionOperation> EndAsync(CancellationToken cancellationToken)
     {
-        // A sealed/disposed runtime cannot end a session it no longer owns.
-        if (Volatile.Read(ref _disposed))
-            return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.SessionNotFound,
-                "The runtime is disposed; no session can be ended.", "SessionID", "EndSession", true));
-
         // Seal admission synchronously under the same lifecycle gate as Start, so a Start queued
         // before End cannot publish afterwards, and an in-flight Start has fully settled by the
-        // time we acquire the gate (Start holds it across its whole run).
-        BusyEnter();
+        // time we acquire the gate (Start holds it across its whole run). The disposed precheck
+        // and reservation are atomic with the disposal seal.
+        lock (_admissionLock)
+        {
+            if (Volatile.Read(ref _disposed))
+                return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.SessionNotFound,
+                    "The runtime is disposed; no session can be ended.", "SessionID", "EndSession", true));
+            BusyEnter();
+        }
         try
         {
             await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -387,7 +398,24 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         if (!_runtime.IsActive || _runtime.CurrentConversation is not { } live || live.Id != request.ConversationId)
             return null;
 
-        var sessionId = await GetCanonicalSessionIdAsync(request.ConversationId, cancellationToken).ConfigureAwait(false);
+        // A faulting canonical-mapping read must surface as a structured start failure. We never
+        // invent identity and never call Start again on the already-live shared runtime.
+        Guid? sessionId;
+        try
+        {
+            sessionId = await GetCanonicalSessionIdAsync(request.ConversationId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.UnknownFailure,
+                "The canonical session mapping could not be read for the live conversation; the runtime was left untouched.",
+                "SessionID", "StartSession", true));
+        }
+
         var session = sessionId is { } id ? await ReadSessionAsync(id, cancellationToken).ConfigureAwait(false) : null;
         if (session is null)
         {
@@ -403,7 +431,22 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
                 return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.UnknownFailure,
                     "The server returned success without a session; nothing was attached.", "SessionID", "StartSession", true));
             session = established;
-            await RememberCanonicalSessionAsync(request.ConversationId, session.SessionId, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await RememberCanonicalSessionAsync(request.ConversationId, session.SessionId, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // Faulting canonical-mapping write on the attach-existing path: durable settlement for
+                // the shared canonical SessionID failed. Do not publish a session we cannot address.
+                return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.UnknownFailure,
+                    "The canonical session mapping could not be persisted; the live session was not attached.",
+                    "SessionID", "StartSession", true));
+            }
         }
 
         _session = session;
@@ -684,10 +727,14 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         Exception? fault = null;
         try
         {
-            // Seal admission synchronously before any await. New Starts/Ends fail fast and the
-            // generation bump rejects anything already queued that has not yet run.
-            Volatile.Write(ref _disposed, true);
-            Interlocked.Increment(ref _generation);
+            // Seal admission synchronously before any await, atomically with every admission
+            // precheck+reservation. New Starts/Ends fail fast and the generation bump rejects
+            // anything already queued that has not yet run.
+            lock (_admissionLock)
+            {
+                Volatile.Write(ref _disposed, true);
+                Interlocked.Increment(ref _generation);
+            }
 
             // Join the already-admitted original (the in-flight Start/End that still holds the
             // gate) before we release runtime resources.
@@ -747,18 +794,27 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
     }
 
     /// <summary>Stops the live runtime with a bounded number of genuine owner-contract attempts.
-    /// A still-live runtime/capture retains custody and preserves the original fault identity.</summary>
+    /// A still-live runtime/capture retains custody and preserves the original fault identity.
+    /// The real CallCoordinator marks the call Completed BEFORE its awaited durable settlement, so
+    /// IsActive can turn false while that settlement still throws; we must never reinterpret that
+    /// now-inactive state as a success once a stop/persistence fault has been captured.</summary>
     private async Task StopWithBoundedRetryAsync()
     {
         const int maxAttempts = 3;
         Exception? fault = null;
         for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
-            if (!_runtime.IsActive) return;
+            if (!_runtime.IsActive)
+            {
+                // A captured stop/persistence fault takes precedence over a now-inactive runtime:
+                // break out of the retry loop so the fault is surfaced, never swallowed.
+                if (fault is not null) break;
+                return;
+            }
             try
             {
                 await _runtime.EndAsync(CancellationToken.None).ConfigureAwait(false);
-                if (!_runtime.IsActive) return;
+                if (!_runtime.IsActive && fault is null) return;
             }
             catch (OperationCanceledException)
             {
@@ -769,7 +825,8 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
                 fault ??= exception;
             }
         }
-        throw fault ?? new InvalidOperationException("The live Voice runtime could not be stopped; custody is retained.");
+        if (fault is not null) throw fault;
+        throw new InvalidOperationException("The live Voice runtime could not be stopped; custody is retained.");
     }
 
     private void BusyEnter() => Interlocked.Increment(ref _gateBusy);
