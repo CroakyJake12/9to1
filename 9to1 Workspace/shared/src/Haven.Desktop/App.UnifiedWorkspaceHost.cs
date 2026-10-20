@@ -2,24 +2,19 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
-using Haven.Application.Haven;
 using Haven.Browser;
 using Haven.Core;
-using Haven.Desktop.Accounts;
 using Haven.Desktop.Events;
 using Haven.Desktop.Dashboard;
-using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Home;
 using Haven.Desktop.Views.Shell;
 using HavenOS.Apps.Browse;
-using HavenOS.Home;
 using HavenOS.Home.Core;
 using HavenOS.Home.Discover;
 using Microsoft.Extensions.DependencyInjection;
@@ -71,10 +66,6 @@ public sealed partial class App
         private BrowseNativeWorkspace? _workspace;
         private UnifiedWorkspaceSession? _session;
         private AuthenticatedResourceActor? _actor;
-        private Grid? _frameGrid;
-        private Border? _sharedOverlay;
-        private CuiControlLoader? _sharedPanelLoader;
-        private HavenGateway? _sharedGateway;
         private volatile bool _closed;
         private volatile bool _startupRetirement;
 
@@ -301,13 +292,10 @@ public sealed partial class App
                 _services.GetRequiredService<IBrowserAutomationService>(), currentToken, apps, home, _actor.ProfileId, persistence));
             _chrome = await _chromeCreation;
             DemandCurrent();
-            _sharedGateway = new HavenGateway(this);
-            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent, sharedContext: new SharedHostContext(this));
+            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent);
             var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, _homeTheme.Context);
-            scene.ControlRegistry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
             _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
-            _scene = new CuiSceneHost(scene.ControlRegistry);
-            ComposeSharedFrame();
+            _scene = new CuiSceneHost(scene.ControlRegistry); Content = _scene;
             _sceneInitialization = Track(_scene.ShowAsync(scene, currentToken));
             var ready = await _sceneInitialization;
             _workspace.ObserveReadiness(ready);
@@ -508,18 +496,6 @@ public sealed partial class App
                 foreach (var actual in _acceptedChromeSources.Distinct()) await Join(actual);
                 KeyDown -= OnWorkspaceKeyDown;
                 try { _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null; }
-                catch (Exception error) { AddAppCause(failures, error); }
-                // Join the mounted shared panel's retained action/disposal settlement before
-                // disposing it so failed original tasks remain observable to this close.
-                try
-                {
-                    if (_sharedPanelLoader is { } panelLoader)
-                    {
-                        await Join(panelLoader.WhenActionsIdleAsync());
-                        panelLoader.Dispose();
-                        _sharedPanelLoader = null;
-                    }
-                }
                 catch (Exception error) { AddAppCause(failures, error); }
                 // A failed CreateAsync can retain an owner whose own cleanup failed.
                 // A null returned owner is therefore not proof that producers stopped.

@@ -187,7 +187,18 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     {
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
         if (IsActionAvailable(command) != true) return ValueTask.CompletedTask;
-        if (TryDispatchHavenShared(command)) return ValueTask.CompletedTask;
+        if (IsHavenSharedCommand(command))
+        {
+            // Shared rail opens are genuine retained operations: reserve admission before
+            // invoking the gateway and return the real settlement so the workspace's close
+            // joins actual show/init/account faults and refusals.
+            lock (_sourceGate) CheckAdmission(_originalOperations);
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var original = RunSharedOpenAsync(start.Task, command, token);
+            lock (_sourceGate) Retain(_originalOperations, original);
+            start.SetResult();
+            return new(original);
+        }
         if ((command is "9to1.Browse.SelectTab" or "9to1.Browse.CloseTabRow") && !IsCurrentTabTarget(parameter))
         { _status = "The tab row changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         if (command == "9to1.Browse.CloseTabRow" &&

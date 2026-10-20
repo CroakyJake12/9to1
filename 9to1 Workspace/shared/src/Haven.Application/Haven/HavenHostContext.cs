@@ -30,18 +30,34 @@ public interface IHavenHostContext
 }
 
 /// <summary>
-/// Typed gateway to the genuine Home-owned shared surfaces. Every method returns
-/// whether the requested surface was actually opened. A host that does not own a
-/// capability returns false rather than inventing state or a dead queue.
+/// The outcome of an attempt to open one of the genuine Home-owned shared surfaces.
+/// A host that does not own the capability returns <see cref="Denied"/> without
+/// inventing state or a dead queue. A real open never reports success until the
+/// borrowed surface's show/init/account panel has actually settled; faults and
+/// refusals are surfaced as structured <see cref="Code"/>/<see cref="Message"/>
+/// values rather than being swallowed as success.
+/// </summary>
+public readonly record struct HavenSharedOpenResult(bool Opened, string? Code = null, string? Message = null)
+{
+    public static readonly HavenSharedOpenResult Denied = new(false, "PermissionDenied", "The requested shared control capability is unavailable.");
+    public static HavenSharedOpenResult Refused(string code, string message) => new(false, code, message);
+    public static HavenSharedOpenResult Succeeded(string? message = null) => new(true, "Ready", message);
+}
+
+/// <summary>
+/// Typed gateway to the genuine Home-owned shared surfaces. Every method returns the
+/// actual asynchronous open task and never fabricates an open when the capability is
+/// unavailable. Callers (the Browse rail dispatcher and the host) await the real
+/// show/init/account open result and retain failures/refusals.
 /// </summary>
 public interface IHavenSharedControlGateway
 {
     /// <summary>Opens the real Home Universal Model Picker against the current profile.</summary>
-    bool OpenModelPicker();
+    Task<HavenSharedOpenResult> OpenModelPickerAsync(CancellationToken cancellationToken = default);
 
     /// <summary>Opens the durable Home notification centre/history.</summary>
-    bool OpenNotifications();
+    Task<HavenSharedOpenResult> OpenNotificationsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>Opens (or reactivates) the native CAKE account/profile window.</summary>
-    bool OpenProfile();
+    Task<HavenSharedOpenResult> OpenProfileAsync(CancellationToken cancellationToken = default);
 }

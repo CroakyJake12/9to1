@@ -13,18 +13,17 @@ public sealed partial class BrowseNativeUiTests
         public int ModelOpens;
         public int NotificationOpens;
         public int ProfileOpens;
-
-        public bool OpenModelPicker() { ModelOpens++; return true; }
-        public bool OpenNotifications() { NotificationOpens++; return true; }
-        public bool OpenProfile() { ProfileOpens++; return true; }
+        public Task<HavenSharedOpenResult> OpenModelPickerAsync(CancellationToken token = default) { ModelOpens++; return Task.FromResult(HavenSharedOpenResult.Succeeded()); }
+        public Task<HavenSharedOpenResult> OpenNotificationsAsync(CancellationToken token = default) { NotificationOpens++; return Task.FromResult(HavenSharedOpenResult.Succeeded()); }
+        public Task<HavenSharedOpenResult> OpenProfileAsync(CancellationToken token = default) { ProfileOpens++; return Task.FromResult(HavenSharedOpenResult.Succeeded()); }
     }
 
     private sealed class SharedControlsRefusingGateway : IHavenSharedControlGateway
     {
         public int Calls;
-        public bool OpenModelPicker() { Calls++; return false; }
-        public bool OpenNotifications() { Calls++; return false; }
-        public bool OpenProfile() { Calls++; return false; }
+        public Task<HavenSharedOpenResult> OpenModelPickerAsync(CancellationToken token = default) { Calls++; return Task.FromResult(HavenSharedOpenResult.Refused("Refused", "refused")); }
+        public Task<HavenSharedOpenResult> OpenNotificationsAsync(CancellationToken token = default) { Calls++; return Task.FromResult(HavenSharedOpenResult.Refused("Refused", "refused")); }
+        public Task<HavenSharedOpenResult> OpenProfileAsync(CancellationToken token = default) { Calls++; return Task.FromResult(HavenSharedOpenResult.Refused("Refused", "refused")); }
     }
 
     private sealed class SharedControlsFakeContext(
@@ -36,6 +35,22 @@ public sealed partial class BrowseNativeUiTests
         public bool NotificationsSupported => notifications;
         public bool ProfileSupported => profile;
         public IHavenSharedControlGateway? SharedControls => gateway;
+    }
+
+    private sealed class UnsettledGateway(TaskCompletionSource<HavenSharedOpenResult> pending) : IHavenSharedControlGateway
+    {
+        public int Calls;
+        public Task<HavenSharedOpenResult> OpenModelPickerAsync(CancellationToken token = default) { Calls++; return pending.Task; }
+        public Task<HavenSharedOpenResult> OpenNotificationsAsync(CancellationToken token = default) { Calls++; return pending.Task; }
+        public Task<HavenSharedOpenResult> OpenProfileAsync(CancellationToken token = default) { Calls++; return pending.Task; }
+    }
+
+    private sealed class FailingGateway : IHavenSharedControlGateway
+    {
+        public int Calls;
+        public Task<HavenSharedOpenResult> OpenModelPickerAsync(CancellationToken token = default) { Calls++; return Task.FromException<HavenSharedOpenResult>(new InvalidOperationException("original open failed")); }
+        public Task<HavenSharedOpenResult> OpenNotificationsAsync(CancellationToken token = default) { Calls++; return Task.FromException<HavenSharedOpenResult>(new InvalidOperationException("original open failed")); }
+        public Task<HavenSharedOpenResult> OpenProfileAsync(CancellationToken token = default) { Calls++; return Task.FromException<HavenSharedOpenResult>(new InvalidOperationException("original open failed")); }
     }
 
     /// <summary>The persistent Haven shared rail must degrade truthfully: with no host context
@@ -158,5 +173,54 @@ public sealed partial class BrowseNativeUiTests
         Assert.Equal(0, gateway.ModelOpens);
         Assert.Equal(0, gateway.NotificationOpens);
         Assert.Equal(0, gateway.ProfileOpens);
+    }
+
+    /// <summary>The shared gateway must return the ACTUAL unsettled open until the held surface
+    /// init settles, the the workspace's close must join that genuine settlement rather than
+    /// treating the rail action as an instantaneous bool.</summary>
+    [AvaloniaFact]
+    public async Task Shared_gateway_returns_unsettled_original_until_init_settles_and_close_joins_it()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var pending = new TaskCompletionSource<HavenSharedOpenResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gateway = new UnsettledGateway(pending);
+        var context = new SharedControlsFakeContext(gateway);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
+        workspace.ObserveReadiness(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "shared-rail-fixture", "Ready"));
+        try
+        {
+            var dispatch = workspace.DispatchAsync("9to1.Haven.OpenNotifications", null).AsTask();
+            await Task.Yield();
+            Assert.Equal(1, gateway.Calls);
+            Assert.False(dispatch.IsCompleted); // still unsettled; no fabricated success
+            pending.SetResult(HavenSharedOpenResult.Succeeded());
+            await dispatch;
+            Assert.True(dispatch.IsCompletedSuccessfully);
+        }
+        finally { await workspace.DisposeAsync().AsTask(); }
+    }
+
+    /// <summary>A real gateway fault must be retained as a failed original open and never
+    /// fabricated as success; the next rail action still works.</summary>
+    [AvaloniaFact]
+    public async Task Shared_gateway_fault_is_retained_and_never_fabricated_as_success()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var gateway = new FailingGateway();
+        var context = new SharedControlsFakeContext(gateway);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
+        workspace.ObserveReadiness(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "shared-rail-fixture", "Ready"));
+        try
+        {
+            var dispatch = workspace.DispatchAsync("9to1.Haven.OpenNotifications", null).AsTask();
+            await dispatch; // structured retention; does not throw to the caller
+            Assert.Equal(1, gateway.Calls);
+            var second = workspace.DispatchAsync("9to1.Haven.OpenProfile", null).AsTask();
+            await second;
+            Assert.Equal(2, gateway.Calls);
+        }
+        finally { await workspace.DisposeAsync().AsTask(); }
     }
 }

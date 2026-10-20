@@ -51,6 +51,9 @@ public sealed class HomeModelPickerCuiSurface : ICuiBindingContext, INotifyPrope
         new(HomeModelPickerEditorState.Initial, "global", "chat");
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    /// <summary>True once a real route snapshot has been applied to this surface.</summary>
+    public bool HasSnapshot => Projection.HasSnapshot;
+
     public bool TryGetValue(string path, out object? value) => Projection.TryGetValue(path, out value);
 
     public static HomeModelPickerCuiSurface LoadDefault()
@@ -107,13 +110,20 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
 
     public HomeModelPickerCuiSurface Surface { get; } = surface ?? HomeModelPickerCuiSurface.LoadDefault();
 
+    /// <summary>Optional currentness/publication seam. When set, it is revalidated immediately
+    /// before surface state is applied so a retired panel or an actor switch can never publish a
+    /// stale result. Null (standalone callers) publishes unconditionally.</summary>
+    public Func<bool>? PublicationGate { get; set; }
+
+    private bool CanPublish() => PublicationGate is null || PublicationGate();
+
     public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> OpenAsync(
         string scope = "global",
         string category = "chat",
         CancellationToken cancellationToken = default)
     {
         var result = await _editor.RefreshAsync(scope, category, cancellationToken: cancellationToken).ConfigureAwait(false);
-        Surface.ApplyState(_editor.Current);
+        if (CanPublish()) Surface.ApplyState(_editor.Current);
         return result;
     }
 
@@ -155,7 +165,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
         {
             result = Failure<object>("InvalidArgument", exception.Message);
         }
-        Surface.ApplyState(_editor.Current);
+        if (CanPublish()) Surface.ApplyState(_editor.Current);
         return result;
     }
 

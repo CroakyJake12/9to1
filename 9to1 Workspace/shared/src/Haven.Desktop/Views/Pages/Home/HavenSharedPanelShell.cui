@@ -1,0 +1,12 @@
+<Cui id="haven-shared-panel-shell" product="9-1" version="1">
+  <Theme Name="user_preference">
+    <Page>
+      <!-- The persistent shared-panel shell. All structure, backdrop/dimming, spacing and
+           visibility are authored here; the host only mounts the active panel control into
+           the named host element and flips the authored HasOpenPanel state. -->
+      <Container id="shared-shell-root" Type="Overlay" IsVisible="{Binding HasOpenPanel}" Background="#667F7F7F">
+        <Container id="shared-panel-host" Type="Vertical Stack" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" CellGap="12" Width="520" MaxHeight="600" Background="{Resource CuiBackgroundBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12"/>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>
