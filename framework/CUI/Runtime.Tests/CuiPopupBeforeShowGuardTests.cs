@@ -15,6 +15,11 @@ namespace CakeOS.Cui.Runtime.Tests;
 /// destination, no duplicate disposal, original callback errors preserved, retryable). Execution is
 /// slot-gated / NOT RUN here.
 /// </summary>
+/// <remarks>
+/// <see cref="Popup"/> is a <see cref="Control"/> (IPopupHostProvider) and is NOT IDisposable, so
+/// each fixture owns cleanup explicitly: it closes the popup (real Popup.Close) and closes the host
+/// Window, including when an assertion fails, without widening Popup/Control interfaces.
+/// </remarks>
 public sealed class CuiPopupBeforeShowGuardTests
 {
     private static Popup NewPopupInWindow(out Window window)
@@ -32,9 +37,11 @@ public sealed class CuiPopupBeforeShowGuardTests
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
-            using var popup = NewPopupInWindow(out var window);
+            Window window = null!;
+            Popup popup = null!;
             try
             {
+                popup = NewPopupInWindow(out window);
                 EventHandler<Popup.PopupBeforeShowEventArgs> handler = (_, _) => popup.Close();
                 popup.BeforeShow += handler;
                 popup.IsOpen = true;
@@ -48,7 +55,7 @@ public sealed class CuiPopupBeforeShowGuardTests
                 Dispatcher.UIThread.RunJobs();
                 Assert.True(popup.IsOpen);
             }
-            finally { window.Close(); }
+            finally { popup?.Close(); window?.Close(); }
         }, CancellationToken.None);
     }
 
@@ -58,9 +65,11 @@ public sealed class CuiPopupBeforeShowGuardTests
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
-            using var popup = NewPopupInWindow(out var window);
+            Window window = null!;
+            Popup popup = null!;
             try
             {
+                popup = NewPopupInWindow(out window);
                 var calls = 0;
                 EventHandler<Popup.PopupBeforeShowEventArgs> handler = (_, _) =>
                 {
@@ -79,7 +88,7 @@ public sealed class CuiPopupBeforeShowGuardTests
                 Assert.True(calls >= 1);
                 popup.BeforeShow -= handler;
             }
-            finally { window.Close(); }
+            finally { popup?.Close(); window?.Close(); }
         }, CancellationToken.None);
     }
 
@@ -89,9 +98,11 @@ public sealed class CuiPopupBeforeShowGuardTests
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
-            using var popup = NewPopupInWindow(out var window);
+            Window window = null!;
+            Popup popup = null!;
             try
             {
+                popup = NewPopupInWindow(out window);
                 var boom = new InvalidOperationException("boom");
                 EventHandler<Popup.PopupBeforeShowEventArgs> handler = (_, _) => throw boom;
                 popup.BeforeShow += handler;
@@ -104,7 +115,7 @@ public sealed class CuiPopupBeforeShowGuardTests
                 Dispatcher.UIThread.RunJobs();
                 Assert.True(popup.IsOpen);
             }
-            finally { window.Close(); }
+            finally { popup?.Close(); window?.Close(); }
         }, CancellationToken.None);
     }
 
@@ -114,9 +125,11 @@ public sealed class CuiPopupBeforeShowGuardTests
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
-            using var popup = NewPopupInWindow(out var window);
+            Window window = null!;
+            Popup popup = null!;
             try
             {
+                popup = NewPopupInWindow(out window);
                 // The handler BOTH closes the popup (which already retires and disposes the destination)
                 // and then throws. The original callback error must be preserved and there must be no
                 // duplicate disposal of the already-closed destination.
@@ -135,7 +148,7 @@ public sealed class CuiPopupBeforeShowGuardTests
                 Dispatcher.UIThread.RunJobs();
                 Assert.True(popup.IsOpen);
             }
-            finally { window.Close(); }
+            finally { popup?.Close(); window?.Close(); }
         }, CancellationToken.None);
     }
 }

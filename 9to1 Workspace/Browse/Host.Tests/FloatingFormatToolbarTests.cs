@@ -5,6 +5,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -488,9 +489,10 @@ public sealed class FloatingFormatToolbarTests
 
             var toolbar = FindContainer(view, "format-toolbar");
             Assert.NotNull(toolbar);
+            var tb = toolbar!;
             var layer = FindContainer(view, "composer-floating-layer")!;
             var cell = Assert.IsType<Border>(layer.GetVisualParent());
-            Assert.True(toolbar!.IsVisible, "with enough space the toolbar must be visible");
+            Assert.True(tb.IsVisible, "with enough space the toolbar must be visible");
             Assert.True(cell.IsVisible, "the floating cell must be present when placed");
 
             // Shrink the usable height until no side offers genuinely safe space. The toolbar must be
@@ -498,17 +500,31 @@ public sealed class FloatingFormatToolbarTests
             // arranged at a zero rect that still lets positive-sized buttons paint near the origin.
             window.Height = 100;
             PumpLayout(window);
-            Assert.False(cell.IsVisible, "no-safe-space must actually remove the floating cell's subtree");
-            // The authored FormattingOpen state is preserved (the authored toolbar is still "open").
-            Assert.True(FindContainer(view, "format-toolbar")!.IsVisible);
 
-            // Recovery: when safe space returns, the same authored cell is placed again.
+            // Genuine suppression: the panel-private wrapper is hidden, so the whole subtree loses
+            // paint/hit/focus/tab participation. The authored FormattingOpen state is preserved (the
+            // authored toolbar is still "open") — this is NOT a hidden-as-success conversion.
+            Assert.False(cell.IsVisible, "no-safe-space must actually remove the floating cell's subtree");
+            Assert.True(FindContainer(view, "format-toolbar")!.IsVisible);
+            var suppressedButton = ToolbarButton(tb, 0);
+            Assert.NotNull(suppressedButton);
+            Assert.False(suppressedButton!.IsEffectivelyVisible, "suppressed toolbar buttons must not be effectively visible (no paint/hit/tab/focus)");
+
+            // Recovery: when safe space returns, the SAME retained authored toolbar is placed again.
             window.Height = 700;
             PumpLayout(window);
             Assert.True(cell.IsVisible, "toolbar must recover once safe space returns");
-            Assert.True(toolbar.Bounds.Width > 0 && toolbar.Bounds.Height > 0);
+            Assert.True(tb.Bounds.Width > 0 && tb.Bounds.Height > 0);
+            Assert.Same(tb, FindContainer(view, "format-toolbar"), "recovery must restore the identical authored toolbar");
             var windowClient = new Rect(0, 0, window.Width, window.Height);
-            Assert.True(windowClient.Contains(WindowBounds(toolbar, window)), "recovered toolbar must stay in the viewport");
+            Assert.True(windowClient.Contains(WindowBounds(tb, window)), "recovered toolbar must stay in the viewport");
+
+            // The recovered toolbar's REAL button dispatches after expansion (not just re-shown).
+            Click(window, ToolbarButton(tb, 0)!);
+            await view.CaptureOriginalActionSettlement();
+            Assert.Equal("Bold", source.LastFormatCommand);
+            Assert.Equal(1, source.FormatCount);
+            Assert.True(tb.IsVisible);
         }
         catch (Exception error) { testFailure = error; throw; }
         finally

@@ -368,3 +368,41 @@ overriding six-worker text) is respected; this lane remains ONE worker with the 
 - `dotnet build "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj" -m:1`
 - `dotnet test "9to1 Workspace/Browse/Host.Tests/HavenOS.Browse.Host.Tests.csproj" -m:1 --filter "FullyQualifiedName~FloatingFormatToolbarTests"`
 - Also re-run the full `HavenOS.Browse.Host.Tests` + `CakeOS.Cui.Runtime.Tests` suites for regression.
+
+---
+
+# Pass 5 continuation 1 — repair exact pass5 blockers (source/test authoring only)
+
+Resumed the SAME session/worktree from the carried dirty source (frozen `3ddaffc659b9b2dc423e1ecd3240dd5a33353dfe`,
+parent `8569ce7efec9f6f10722487af27bbacac85ec5b9`). No reset/checkout/clean, no other worktrees,
+no provider/model/subagents/config/credentials/cap changes, no commits/push, no images, no
+.NET/build/tests (NOT RUN until the coordinator allocates the serial slot). Root owns
+integration/registry/feedback; root's separately prepared root-preserving pass5 integration patch is
+not overlaid.
+
+## Narrow delta against frozen 3ddaff
+1. **CuiOverlayPanel.cs — no `Control.Child`, measure authored host.** `ApplyFloatingPlacement` no
+   longer reads an unvalidated `cell.Child`; it validates the floating-cell contract through the
+   existing typed `FloatingHost` helper (Border whose direct child is a CuiContainerControl with a
+   CuiFloatingLayer layout). `Place` now takes the resolved host and measures the RETAINED AUTHORED
+   HOST (not the suppressed wrapper cell, whose DesiredSize resets to zero once hidden — which made
+   recovery unreachable). Restore of paint/hit/tab/focus participation happens only after a real safe
+   placement exists; authored FormattingOpen/IsVisible is preserved.
+2. **CuiPopupBeforeShowGuardTests.cs — correct Popup ownership.** `Popup` (Control/IPopupHostProvider)
+   is NOT IDisposable, so each fixture now owns explicit cleanup: real `Popup.Close()` + host Window
+   close in `finally`, including on assertion failure. No widening of Popup/Control interfaces.
+   Close/reentry/throw/cleanup-fault guards preserved.
+3. **Short_viewport_degrades... — real causal failing→passing regression.** Asserts genuine
+   suppression (wrapper hidden ⇒ toolbar button `IsEffectivelyVisible == false`, not a
+   hidden-as-success source-string check), then SAME retained toolbar recovers (`Assert.Same`) and its
+   REAL button dispatches `Bold` after expansion via real pointer click, preserving all existing strict
+   geometry/protected-body/no-shift/all-six-hit/focus tests.
+
+## Changed paths and hashes (pass 5 continuation 1)
+- `framework/CUI/Runtime/CuiOverlayPanel.cs` `ee704e0356a32953cb2fe861211ab1a091e8012a53bb465356204e8a1a89d8d9`
+- `framework/CUI/Runtime.Tests/CuiPopupBeforeShowGuardTests.cs` `e9cf9a1748601f7207192fe156fb3b183db48fc1cab4d652f9eacee33b6acfa1`
+- `9to1 Workspace/Browse/Host.Tests/FloatingFormatToolbarTests.cs` `a7171eb8f3efe14d5c2abca0961cb0ac7d2b63fb6834feb984279aa2538ab0e5`
+
+Other pass5 files unchanged (see pass5 hashes above). Working HEAD unchanged `fb70840d...`.
+Execution remains **NOT RUN** (slot-gated). Pre-creation capability/airspace dependency remains
+honestly pending (unknown retains native host).

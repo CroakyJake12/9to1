@@ -86,10 +86,8 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
             Math.Max(0, topLevel.Bounds.Width), Math.Max(0, topLevel.Bounds.Height));
     }
 
-    private Rect Place(Control cell, Rect viewport)
+    private Rect Place(Control cell, CuiContainerControl host, Rect viewport)
     {
-        var host = FloatingHost(cell);
-        if (host is null) return Unplaced();
         var target = ResolveTarget(cell, host);
         if (target is null) return Unplaced();
         var anchor = TranslateToPanel(target);
@@ -101,12 +99,17 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         if (side is null) return Unplaced();
 
         // Clamp the usable width BEFORE measuring the floating content, then remeasure at that width so
-        // wrap-based heights reflect the ACTUAL available width rather than a wider earlier measure.
+        // wrap-based heights reflect the ACTUAL available width rather than a wider earlier measure. We
+        // measure the RETAINED AUTHORED floating host (the validated CUI container inside the wrapper),
+        // NOT the suppressed wrapper cell: once the wrapper is hidden the cell's own DesiredSize is
+        // reset to zero by the framework, so measuring it would permanently report zero and make
+        // recovery unreachable. The host is authored-visible regardless of the panel-private wrapper
+        // state, so its measure reflects real content and keeps the placement decision truthful.
         var usableWidth = Math.Max(0, viewport.Width);
-        cell.Measure(new Size(usableWidth, double.PositiveInfinity));
+        host.Measure(new Size(usableWidth, double.PositiveInfinity));
         var size = new Size(
-            Math.Max(0, Math.Min(cell.DesiredSize.Width, usableWidth)),
-            Math.Max(0, cell.DesiredSize.Height));
+            Math.Max(0, Math.Min(host.DesiredSize.Width, usableWidth)),
+            Math.Max(0, host.DesiredSize.Height));
         if (size.Width <= 0 || size.Height <= 0) return Unplaced();
 
         // Try the authored side first, then its opposite, then the two perpendicular sides. A candidate
@@ -134,19 +137,30 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     /// </summary>
     private void ApplyFloatingPlacement(Control cell, Rect viewport)
     {
-        var rect = Place(cell, viewport);
-        if (rect.Width <= 0 || rect.Height <= 0)
+        // Validate the floating-cell contract through the existing typed helper (a Border whose direct
+        // child is a CuiContainerControl with a CuiFloatingLayer layout). We never read an unvalidated
+        // Control.Child — the wrapper is the panel-private Border; the authored content is the host.
+        var host = FloatingHost(cell);
+        if (host is null)
         {
-            // Genuine unplaced state: suppress the whole subtree (paint/hit/focus/tab stops) WITHOUT
-            // touching the authored child's visibility binding. Idempotent; recovery is handled by the
-            // next arrange once safe space returns.
             if (cell.IsVisible) cell.IsVisible = false;
             return;
         }
 
-        // Restore the wrapper to the authored child's effective visibility (mirrors authored state; the
+        var rect = Place(cell, host, viewport);
+        if (rect.Width <= 0 || rect.Height <= 0)
+        {
+            // Genuine unplaced state: suppress the whole subtree (paint/hit/focus/tab stops) WITHOUT
+            // touching the authored child's visibility binding. Idempotent; recovery is handled by the
+            // next arrange once safe space returns. Place() measures the authored host independently of
+            // this suppressed wrapper, so the next pass still sees real content size and can restore.
+            if (cell.IsVisible) cell.IsVisible = false;
+            return;
+        }
+
+        // Restore the wrapper to the authored host's effective visibility (mirrors authored state; the
         // wrapper is panel-private, never the authored binding).
-        var authoredVisible = cell.Child?.IsVisible ?? true;
+        var authoredVisible = host.IsVisible;
         if (cell.IsVisible != authoredVisible) cell.IsVisible = authoredVisible;
         cell.Arrange(rect);
     }
