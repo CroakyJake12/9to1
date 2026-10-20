@@ -148,6 +148,25 @@ public sealed class ChatComposerRichInputEngineTests
     }
 
     [Fact]
+    public void Enter_block_continuation_is_one_atomic_undo_transaction()
+    {
+        var engine = new ChatComposerRichInputEngine();
+        engine.ApplyCommand("Bullet", 0, 0); // "- "
+        engine.TypeText(2, "item");          // "- item"
+        // One native Enter must be ONE transaction: text newline + continued marker. Undo once
+        // must restore exactly "- item" (marker NOT left behind as a second transaction).
+        var tx = engine.TypeText(6, "\n");
+        Assert.NotEqual(0L, tx.Id);
+        Assert.Equal("- item\n- ", engine.Document.Text);
+        engine.Undo();
+        Assert.Equal("- item", engine.Document.Text);
+        // One more Undo restores the pre-typing bullet marker state.
+        engine.Undo();
+        Assert.Equal("- ", engine.Document.Text);
+        Assert.False(engine.Editor.CanUndo);
+    }
+
+    [Fact]
     public void Enter_inside_quote_continues_the_marker()
     {
         var engine = new ChatComposerRichInputEngine();

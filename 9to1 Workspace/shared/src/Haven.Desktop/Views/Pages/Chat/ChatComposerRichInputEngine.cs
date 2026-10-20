@@ -56,25 +56,27 @@ public sealed class ChatComposerRichInputEngine : IDisposable
     // ---------- Native editing operations (all recorded in the single history) ----------
 
     /// <summary>Types text at a caret. If the insertion contains a newline while the caret sits at
-    /// the end of a quoted/bulleted line, the block marker is continued onto the new line.</summary>
+    /// the end of a quoted/bulleted line, the block marker is continued onto the new line. The
+    /// whole input (typed text plus any continued block marker) is recorded as ONE atomic
+    /// transaction, so a single Enter is undone by one Undo.</summary>
     public ChatComposerEditTransaction TypeText(int caret, string text)
     {
         ThrowIfDisposed();
         if (string.IsNullOrEmpty(text)) return default;
         caret = Clamp(caret, Document.Length);
 
-        var tx = _editor.TypeText(caret, text);
-        // Block continuation: if we inserted a newline and the preceding line was a quote/bullet,
-        // append the matching marker to the freshly started line.
-        if (text.IndexOf('\n') >= 0 && tx.Id != 0)
+        var tx = _editor.RecordMutation("type", d =>
         {
-            ContinueBlockAfterNewline(caret, text);
-        }
+            d.Insert(caret, text, TypingStyle, null);
+            ContinueBlockAfterNewline(d, caret, text);
+        });
         Publish();
         return tx;
     }
 
-    /// <summary>Replaces the selected [anchor, caret) with text (or inserts at a collapsed caret).</summary>
+    /// <summary>Replaces the selected [anchor, caret) with text (or inserts at a collapsed caret).
+    /// Replacement with a newline performs block continuation in the SAME transaction, so the whole
+    /// paste/insert is one undo step.</summary>
     public ChatComposerEditTransaction ReplaceSelection(int anchor, int caret, string text)
     {
         ThrowIfDisposed();
@@ -86,11 +88,11 @@ public sealed class ChatComposerRichInputEngine : IDisposable
             Publish();
             return dtx;
         }
-        var tx = _editor.ReplaceRange(start, end, text);
-        if (text.IndexOf('\n') >= 0 && tx.Id != 0)
+        var tx = _editor.RecordMutation("replace", d =>
         {
-            ContinueBlockAfterNewline(start, text);
-        }
+            d.ReplaceSelection(start, end, text, TypingStyle);
+            ContinueBlockAfterNewline(d, start, text);
+        });
         Publish();
         return tx;
     }
@@ -216,26 +218,26 @@ public sealed class ChatComposerRichInputEngine : IDisposable
 
     // ---------- Helpers ----------
 
-    private void ContinueBlockAfterNewline(int insertionStart, string text)
+    private void ContinueBlockAfterNewline(ChatComposerRichTextDocument draft, int insertionStart, string text)
     {
-        // insertionStart is the boot where text was inserted; find the last newline in text.
+        // insertionStart is the position where text was inserted; find the last newline in text.
         int lastNl = text.LastIndexOf('\n');
         if (lastNl < 0) return;
         // The new line starts right after that newline within the inserted text.
         int anchor = insertionStart + lastNl + 1;
-        var (ls, le) = Document.LineBounds(anchor);
+        var (ls, le) = draft.LineBounds(anchor);
         // LineBounds(anchor) returns [start,end) of the line containing anchor; if anchor == start
         // this is the line that begins at the content pos. Determine the previous line's kind.
         if (ls > 0)
         {
-            var (pls, ple) = Document.LineBounds(ls - 1);
-            var kind = Document.LineKind(pls, ple);
+            var (pls, ple) = draft.LineBounds(ls - 1);
+            var kind = draft.LineKind(pls, ple);
             if (kind == ChatComposerBlockKind.Quote || kind == ChatComposerBlockKind.BulletItem)
             {
                 string marker = kind == ChatComposerBlockKind.Quote ? "> " : "- ";
                 // Only continue if the new line doesn't already carry a marker.
-                if (le - ls < marker.Length || Document.Text.Substring(ls, marker.Length) != marker)
-                    _editor.RecordMutation("block-continue", d => d.Insert(ls, marker, ChatComposerInlineMark.None, null));
+                if (le - ls < marker.Length || draft.Text.Substring(ls, marker.Length) != marker)
+                    draft.Insert(ls, marker, ChatComposerInlineMark.None, null);
             }
         }
     }

@@ -125,7 +125,9 @@ public sealed class ChatComposerFormattingPort
     }
 
     /// <summary>Inserts an emoji at the live caret (replacing any selection), or appends it to the
-    /// fallback draft.</summary>
+    /// fallback draft. When a rich engine is bound the emoji routes through the SAME retained
+    /// document/history as ordinary typing and formatting, so it participates in the shared
+    /// undo/redo history.</summary>
     public async ValueTask InsertEmojiAsync(string emoji, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(emoji)) return;
@@ -135,6 +137,15 @@ public sealed class ChatComposerFormattingPort
             var text = live.Text ?? string.Empty;
             var start = Math.Clamp(live.SelectionStart, 0, text.Length);
             var length = Math.Clamp(live.SelectionLength, 0, text.Length - start);
+            if (_richEngine is not null)
+            {
+                // Engine-bound: emoji insertion shares the retained document/history (and the
+                // renderer repaints from the Changed event; no live plain-text rewrite).
+                _richEngine.ReplaceSelection(start, start + length, emoji);
+                live.SetSelection(start + emoji.Length, start + emoji.Length);
+                live.Focus();
+                return;
+            }
             live.Text = text.Remove(start, length).Insert(start, emoji);
             live.SetSelection(start + emoji.Length, start + emoji.Length);
             live.Focus();
