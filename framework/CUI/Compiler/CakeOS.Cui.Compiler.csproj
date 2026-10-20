@@ -9,6 +9,15 @@
     <AssemblyName>CakeOS.Cui.Compiler</AssemblyName>
     <RootNamespace>CakeOS.Cui.Compiler</RootNamespace>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeCuiCompilerToolchain</TargetsForTfmSpecificContentInPackage>
+    <!-- CakeOS.Cui is a build-time toolchain package, not an application runtime.
+         Do not publish the compiler assembly under lib/ (it must never become a
+         consumer compile/runtime reference that could drag the desktop Avalonia
+         runtime into an app), suppress ProjectReference package dependencies (the
+         whole toolchain is self-contained under tools/), and mark it a development
+         dependency so it is not propagated to downstream projects. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />

@@ -7,6 +7,12 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <IsPackable>true</IsPackable>
     <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
+    <!-- Standalone build-task tool package: self-contained under tools/net10.0
+         (CopyLocalLockFileAssemblies), so the ProjectReference to the compiler must
+         not become a package dependency, and it is a development dependency rather
+         than an application runtime reference. -->
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Compiler/CakeOS.Cui.Compiler.csproj" />

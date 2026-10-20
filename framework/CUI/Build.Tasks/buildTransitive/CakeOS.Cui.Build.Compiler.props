@@ -1,4 +1,8 @@
 <Project>
+  <!-- Standalone CakeOS.Cui.Build.Compiler package layout: build output lands under
+       tools/net10.0 (BuildOutputTargetFolder=tools), distinct from the CakeOS.Cui
+       compiler package layout (tools/compiler in Compiler/buildTransitive/CakeOS.Cui.props).
+       Preserve the two actual layouts; do not flatten them into one path. -->
   <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)../tools/net10.0/CakeOS.Cui.Build.Compiler.dll')">
     <CuiCompilerTaskAssembly Condition="'$(CuiCompilerTaskAssembly)' == ''">$(MSBuildThisFileDirectory)../tools/net10.0/CakeOS.Cui.Build.Compiler.dll</CuiCompilerTaskAssembly>
     <CuiUsePrebuiltCompiler Condition="'$(CuiUsePrebuiltCompiler)' == ''">true</CuiUsePrebuiltCompiler>
