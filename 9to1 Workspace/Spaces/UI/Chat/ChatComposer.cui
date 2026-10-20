@@ -52,14 +52,14 @@
 
     <Container id="controls-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
       <Container id="left-controls" Column="0" Type="Horizontal Stack" CellGap="6">
-        <Button id="add-button" action="composer.add" Width="44" Height="44" CornerRadius="22" accessible-name="Add files or actions">
+        <Button id="add-button" action="composer.add" Width="44" Height="44" Padding="6" CornerRadius="22" accessible-name="Add files or actions">
           <Image Source="avares://Haven/Assets/plus.svg" Width="32" Height="32" />
         </Button>
         <Button id="format-button" action="composer.toggle-formatting" content="Aa" Width="44" Height="44"
                 CornerRadius="22" IsVisible="{Binding Composer.ShowFormatting}" accessible-name="Open formatting toolbar" />
         <Button id="emoji-button" action="composer.emoji" IsVisible="{Binding Composer.ShowFormatting}"
                 content="{Binding EmojiIcon}" font-size="24" background="Transparent" Width="44" Height="44"
-                CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" accessible-name="Insert emoji" />
+                CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" Chromeless="true" accessible-name="Insert emoji" />
       </Container>
       <Container id="right-controls" Column="2" Type="Horizontal Stack" CellGap="6">
         <Button id="settings-button" action="composer.settings" content="⚙" Width="44" Height="44" CornerRadius="22" accessible-name="Thread settings" />

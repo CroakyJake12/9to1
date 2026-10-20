@@ -64,20 +64,20 @@ public sealed class HavenPackagedSvgResolver
         ValidateAttributes(root);
         var viewBox = ParseViewBox(root);
 
-        // NonZero union: overlapping filled bars (the centred plus) must fill, not punch a hole
-        // (EvenOdd would XOR the centre). Per-element painting is not required for these assets.
-        var group = new GeometryGroup { FillRule = FillRule.NonZero };
+        var geometries = new List<Geometry>();
         foreach (var element in root.Elements())
         {
             if (element.Name.NamespaceName != SvgNamespace)
                 throw new InvalidOperationException($"An SVG child element '{element.Name}' is not in the SVG namespace.");
+            if (element.Elements().Any())
+                throw new InvalidOperationException($"An SVG '{element.Name.LocalName}' element in a packaged CUI asset must not contain nested elements.");
             switch (element.Name.LocalName)
             {
                 case "path":
-                    group.Children.Add(ParsePath(element));
+                    geometries.Add(ParsePath(element));
                     break;
                 case "rect":
-                    group.Children.Add(ParseRect(element));
+                    geometries.Add(ParseRect(element));
                     break;
                 default:
                     throw new InvalidOperationException(
@@ -96,7 +96,14 @@ public sealed class HavenPackagedSvgResolver
         if (!target.TryFindResource("CuiTextBrush", out var resource) || resource is not IBrush brush)
             throw new InvalidOperationException("The packaged SVG's scoped CUI text brush is unavailable.");
 
-        return new DrawingImage(new GeometryDrawing { Geometry = group, Brush = brush })
+        // Per-element painting: every path/rect becomes its own GeometryDrawing carrying its own
+        // geometry, so overlapping shapes paint independently (as a renderer would) and cannot
+        // cancel one another via cross-element opposite-winding interaction.
+        var group = new DrawingGroup();
+        foreach (var geometry in geometries)
+            group.Children.Add(new GeometryDrawing { Geometry = geometry, Brush = brush });
+
+        return new DrawingImage(group)
         {
             Viewbox = viewBox
         };
@@ -113,6 +120,10 @@ public sealed class HavenPackagedSvgResolver
         foreach (var attr in element.Attributes())
         {
             if (attr.IsNamespaceDeclaration) continue;
+            // Reject foreign namespaced attributes (for example f:x / f:viewBox) by their
+            // namespace rather than accepting the local name and looking it up plainly.
+            if (attr.Name.Namespace != XNamespace.None)
+                throw new InvalidOperationException($"Unsupported namespaced SVG attribute '{attr.Name}' on element '{element.Name.LocalName}' in packaged CUI asset.");
             var local = attr.Name.LocalName;
             var name = element.Name.LocalName;
             var allowed = name switch
@@ -183,12 +194,18 @@ public sealed class HavenPackagedSvgResolver
         var width = Attr(element, "width", 0, required: true);
         var height = Attr(element, "height", 0, required: true);
         if (width <= 0 || height <= 0) throw new InvalidOperationException("An SVG rect in a packaged CUI asset must have positive width/height.");
-        // Per SVG, a missing ry inherits rx; negative radii are an error and radii are clamped to
-        // half the box so the rounded end never exceeds the rect's extent.
-        var rx = Attr(element, "rx", 0);
-        var ry = Attr(element, "ry", rx);
-        rx = Math.Clamp(Math.Max(0, rx), 0, width / 2);
-        ry = Math.Clamp(Math.Max(0, ry), 0, height / 2);
+        // Per SVG, a missing rx/ry inherits the other; negative radii are an error; radii are
+        // clamped to half the box so the rounded end never exceeds the rect's extent.
+        var rxAttr = element.Attribute("rx");
+        var ryAttr = element.Attribute("ry");
+        var rx = rxAttr is null ? 0d : Attr(element, "rx", 0);
+        var ry = ryAttr is null ? 0d : Attr(element, "ry", 0);
+        if (rxAttr is null && ryAttr is not null) rx = ry;
+        else if (ryAttr is null && rxAttr is not null) ry = rx;
+        if (rx < 0 || ry < 0)
+            throw new InvalidOperationException("An SVG rect in a packaged CUI asset must not have a negative rounding radius.");
+        rx = Math.Min(rx, width / 2);
+        ry = Math.Min(ry, height / 2);
         return new RectangleGeometry(new Rect(x, y, width, height), rx, ry);
     }
 

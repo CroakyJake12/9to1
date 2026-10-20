@@ -380,13 +380,14 @@ public sealed class HostComposerLifetimeTests
             var image = Assert.IsType<Image>(addButton!.Content);
             Assert.True(image.Width >= 32 && image.Height >= 32);
 
-            // The plus is the genuine packaged SVG: a geometry of two rounded rects, filled with
-            // the scoped CUI text brush (live rethemed foreground).
+            // The plus is the genuine packaged SVG: two rounded rects painted per-element, each
+            // filled with the scoped CUI text brush (live rethemed foreground). Per-element
+            // painting means no cross-shape winding can cancel an overlapping fill.
             var drawing = Assert.IsType<DrawingImage>(image.Source);
-            var geometryDrawing = Assert.IsType<GeometryDrawing>(drawing.Drawing);
-            var group = Assert.IsType<GeometryGroup>(geometryDrawing.Geometry);
+            var group = Assert.IsType<DrawingGroup>(drawing.Drawing);
             Assert.Equal(2, group.Children.Count);
-            Assert.NotNull(geometryDrawing.Brush);
+            foreach (var child in group.Children)
+                Assert.NotNull(Assert.IsType<GeometryDrawing>(child).Brush);
         }
         catch (Exception error) { testFailure = error; throw; }
         finally

@@ -430,11 +430,11 @@ public static class CuiPropertyPresentation
                 if (_control.IsPointerOver) State("Background","CuiScrollThumbHoverBrush");
                 if (_dragging) State("Background","CuiScrollThumbPressedBrush");
             }
-            else if (!rail && !_compoundFocus && _control.IsPointerOver)
+            else if (!rail && !_compoundFocus && !_chromeless && _control.IsPointerOver)
             { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonHoverBrush" : AccentStateBackground("Hover")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonHoverForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
             { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush"); }
-            if (!rail && !_compoundFocus && _control is Button { IsPressed: true })
+            if (!rail && !_compoundFocus && !_chromeless && _control is Button { IsPressed: true })
             { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonPressedBrush" : AccentStateBackground("Pressed")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonPressedForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
             if (!_compoundFocus && _control.IsKeyboardFocusWithin)
             {
