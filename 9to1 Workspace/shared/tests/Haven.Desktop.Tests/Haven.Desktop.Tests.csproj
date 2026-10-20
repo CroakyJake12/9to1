@@ -57,6 +57,8 @@
     <Compile Include="OverlayControllerOriginalLifetimeTests.cs" />
     <Compile Include="WritePageOriginalLifetimeTests.cs;PresentPageOriginalLifetimeTests.cs;NativeSpacesPageLifecycleTests.cs;SpaceGeneratedSurfaceRendererTests.cs;OriginalInitialDocumentProductTests.cs;OriginalDocumentClosePreflightTests.cs" />
     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
+    <!-- Lane12 Build (Dev) native content binding: canonical address codec + central dev registration route. -->
+    <Compile Include="BuildBrowseAppContentIntegrationTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
     <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->
