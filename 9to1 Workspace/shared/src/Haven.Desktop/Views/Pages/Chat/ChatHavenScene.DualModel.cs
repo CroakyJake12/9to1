@@ -55,11 +55,12 @@ internal sealed partial class ChatHavenScene
         bar.Add(_dualToggle);
         bar.Add(_dualModelPicker);
 
-        // Re-append the chatbox so the affordance sits directly beside/above the composer controls
-        // while the chatbox keeps its bottom-anchored viewport position.
-        footer.Remove(Chatbox);
+        // Re-append the shared composer native transport so the affordance sits directly above the
+        // composer controls while the composer keeps its bottom-anchored viewport position. The
+        // composer itself is the single shared CUI ChatComposerCuiView carried by ComposerHost.
+        footer.Remove(ComposerHost);
         footer.Add(bar);
-        footer.Add(Chatbox);
+        footer.Add(ComposerHost);
 
         SetDualActive(false);
         SetDualSecondModel(null);

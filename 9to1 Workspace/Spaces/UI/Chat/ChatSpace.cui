@@ -91,20 +91,10 @@
           </Repeat>
         </Container>
 
-        <Container id="composer" Row="2" Type="Vertical Stack" CellGap="8" accessible-name="Message composer">
-          <Repeat Source="{Binding Composer.Attachments}" As="attachment" Key="{Binding attachment.Id}">
-            <Button action="chat.remove-attachment" action-argument="{Binding attachment.Id}" content="{Binding attachment.OriginalName}" accessible-name="Remove this attachment" />
-          </Repeat>
-          <Input id="composer-input" Type="Text" AcceptsReturn="True" MaxHeight="160" Value="{Binding Composer.Draft}" placeholdertext="Message" accessible-name="Message" />
-          <Container id="composer-actions" Type="Wrap" CellGap="8">
-            <Button id="attach" action="chat.attach" content="Attach" accessible-name="Attach a file" />
-            <Button id="send" action="chat.send" content="Send" accessible-name="Send message" Interactive="{Binding Composer.CanSend}" />
-            <If Condition="{Binding Composer.IsEditing}">
-              <Button id="update" action="chat.send" content="Update" accessible-name="Update edited message" Interactive="{Binding Composer.CanSend}" />
-              <Button action="chat.cancel-edit" content="Cancel" accessible-name="Cancel editing" />
-            </If>
-          </Container>
-        </Container>
+        <!-- The composer is the single shared CUI component (ChatComposer.cui) mounted here by
+             the shared Desktop ChatComposerCuiView through CuiControlRegistry.BindAuthoredControl.
+             This slot carries only the authored mount identity; no composer children are authored. -->
+        <Container id="composer-mount" Row="2" Type="Vertical Stack" CellGap="8" accessible-name="Message composer" />
 
         <Text id="chat-status" Row="3" text="{Binding Status.Message}" accessible-name="Chat status" />
       </Container>

@@ -1,0 +1,102 @@
+<Cui id="spaces.chat" version="1">
+  <Page id="chat-space" accessible-name="Chat Space">
+    <Container id="chat-layout" Type="Grid" ColumnSizes="1fr" RowSizes="1fr" CellGap="16">
+      <Container id="conversation" Type="Grid" RowSizes="Auto 1fr Auto Auto" Column="0" Row="0" CellGap="12" accessible-name="Conversation">
+        <Container id="conversation-toolbar" Type="Wrap" CellGap="8" accessible-name="Conversation controls">
+          <Text id="conversation-title" text="{Binding Conversation.Title}" font-size="24" text-wrapping="Wrap" />
+          <Input id="model-choice" Type="Select" ItemsSource="{Binding Models}" SelectedIndex="{Binding Composer.SelectedModelIndex}" accessible-name="Choose model" />
+          <Text id="model-choice-current" text="{Binding Composer.SelectedModelName}" accessible-name="Current model" />
+          <Input id="branch-choice" Type="Select" ItemsSource="{Binding Conversation.Branches}" SelectedIndex="{Binding SelectedBranchIndex}" accessible-name="Choose conversation branch" />
+          <Text id="branch-choice-current" text="{Binding Conversation.CurrentBranchId}" accessible-name="Current branch" />
+
+          <Container id="thread-settings" Type="Wrap" CellGap="8" accessible-name="Thread settings">
+            <Text text="Actions:" />
+            <Button action="chat.set-action-mode" action-argument="AllowAllActions" content="All" />
+            <Button action="chat.set-action-mode" action-argument="AllowBasicActions" content="Basic" />
+            <Button action="chat.set-action-mode" action-argument="JustChat" content="Just chat" />
+            <Text text="Responses:" />
+            <Button action="chat.set-response-mode" action-argument="Auto" content="Auto" />
+            <Button action="chat.set-response-mode" action-argument="AlwaysVisual" content="Visual" />
+            <Button action="chat.set-response-mode" action-argument="AlwaysText" content="Text" />
+          </Container>
+
+          <Container id="dual-model" Type="Wrap" CellGap="8" accessible-name="Dual model">
+            <If Condition="{Binding DualModel.IsActive}" Negate="true">
+              <Button action="chat.toggle-dual" content="Dual: Off" accessible-name="Turn on dual-model comparison" />
+            </If>
+            <If Condition="{Binding DualModel.IsActive}">
+              <Button action="chat.toggle-dual" content="Dual: On" accessible-name="Turn off dual-model comparison" />
+              <Input id="dual-second-model" Type="Select" ItemsSource="{Binding Models}" SelectedIndex="{Binding DualModel.SecondModelIndex}" accessible-name="Choose second model" />
+              <Button action="chat.select-dual-mode" action-argument="Compare" content="Compare" />
+              <Button action="chat.select-dual-mode" action-argument="Collaborate" content="Critique" />
+            </If>
+          </Container>
+        </Container>
+
+        <Container id="transcript" Row="1" Type="Vertical Stack" CellGap="12" accessible-name="Conversation messages" VerticalScrolling="true" FollowAtEnd="true">
+          <Repeat Source="{Binding Conversation.Messages}" As="message" Key="{Binding message.Id}">
+            <Container id="message" Type="Horizontal Stack" CellGap="8" accessible-name="One conversation message">
+              <If Condition="{Binding message.AvatarVisible}">
+                <Image id="message-avatar" Source="{Binding message.AvatarSource}" Width="28" Height="28" accessible-name="Sender avatar" />
+              </If>
+              <Container id="message-body-stack" Type="Vertical Stack" CellGap="6">
+                <Text text="{Binding message.SpeakerLabel}" font-weight="SemiBold" />
+              <Object Type="Markdown" id="message-content" Text="{Binding message.Content}" AccessibleName="Message content" />
+              <If Condition="{Binding message.IsStreaming}">
+                <Text text="{Binding message.ProgressLabel}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Message progress" />
+              </If>
+              <If Condition="{Binding message.HasThinking}">
+                <Container id="reasoning" Type="Vertical Stack" CellGap="4" background="{Resource CuiPanelBrush}" corner-radius="8" padding="8">
+                  <Text text="Reasoning" font-weight="SemiBold" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding message.Thinking}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" accessible-name="Assistant reasoning" />
+                </Container>
+              </If>
+              <Repeat Source="{Binding message.Attachments}" As="attachment" Key="{Binding attachment.Id}">
+                <Text text="{Binding attachment.OriginalName}" accessible-name="Attached file" />
+              </Repeat>
+              <Repeat Source="{Binding message.Citations}" As="citation" Key="{Binding citation.Number}">
+                <Text text="{Binding citation.Title}" text-wrapping="Wrap" accessible-name="Citation source" />
+              </Repeat>
+              <Repeat Source="{Binding message.ToolActivities}" As="activity" Key="{Binding activity.Id}">
+                <Container id="tool-activity" Type="Grid" ColumnSizes="88 1fr Auto" CellGap="8" background="{Resource CuiPanelBrush}" corner-radius="12" padding="10" accessible-name="Tool activity">
+                  <Text text="{Binding activity.Status}" Column="0" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding activity.Title}" Column="1" font-weight="SemiBold" />
+                  <Text text="{Binding activity.Meta}" Column="2" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
+                  <If Condition="{Binding activity.HasDetail}">
+                    <Text text="{Binding activity.Detail}" Column="1" Row="1" text-wrapping="Wrap" font-size="12" foreground="{Resource CuiTextSoftBrush}" />
+                  </If>
+                </Container>
+              </Repeat>
+              </Container>
+              <Container id="message-actions" Type="Wrap" CellGap="8" accessible-name="Message actions">
+                <Button action="chat.copy" action-argument="{Binding message.Id}" content="Copy" accessible-name="Copy this message" />
+                <Button action="chat.delete" action-argument="{Binding message.Id}" content="Delete" accessible-name="Delete this message" />
+                <Button action="chat.forget" action-argument="{Binding message.Id}" content="Forget" accessible-name="Forget this message from memory" />
+                <Button action="chat.edit" action-argument="{Binding message.Id}" content="Edit" accessible-name="Edit this message" Interactive="{Binding message.CanEdit}" />
+                <Button action="chat.branch" action-argument="{Binding message.Id}" content="Branch" accessible-name="Branch from this message" />
+                <Button action="chat.regenerate" action-argument="{Binding message.Id}" content="Regenerate" accessible-name="Regenerate this response" Interactive="{Binding message.CanRegenerate}" />
+              </Container>
+            </Container>
+          </Repeat>
+        </Container>
+
+        <Container id="composer" Row="2" Type="Vertical Stack" CellGap="8" accessible-name="Message composer">
+          <Repeat Source="{Binding Composer.Attachments}" As="attachment" Key="{Binding attachment.Id}">
+            <Button action="chat.remove-attachment" action-argument="{Binding attachment.Id}" content="{Binding attachment.OriginalName}" accessible-name="Remove this attachment" />
+          </Repeat>
+          <Input id="composer-input" Type="Text" AcceptsReturn="True" MaxHeight="160" Value="{Binding Composer.Draft}" placeholdertext="Message" accessible-name="Message" />
+          <Container id="composer-actions" Type="Wrap" CellGap="8">
+            <Button id="attach" action="chat.attach" content="Attach" accessible-name="Attach a file" />
+            <Button id="send" action="chat.send" content="Send" accessible-name="Send message" Interactive="{Binding Composer.CanSend}" />
+            <If Condition="{Binding Composer.IsEditing}">
+              <Button id="update" action="chat.send" content="Update" accessible-name="Update edited message" Interactive="{Binding Composer.CanSend}" />
+              <Button action="chat.cancel-edit" content="Cancel" accessible-name="Cancel editing" />
+            </If>
+          </Container>
+        </Container>
+
+        <Text id="chat-status" Row="3" text="{Binding Status.Message}" accessible-name="Chat status" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

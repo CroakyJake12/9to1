@@ -125,7 +125,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
         var pending = instruction?.Trim();
         if (string.IsNullOrWhiteSpace(pending)) return Task.CompletedTask;
         DemandOriginalChatPublication();
-        _scene.Instruction.Text = pending;
+        _composerInput.Text = pending;
         DemandOriginalChatPublication();
         _pendingInstruction = pending;
         _pendingInstructionPreservesDraft = false;
@@ -258,7 +258,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             if (_originalSend is { IsCompleted: false }) return _originalSend;
             var conversation = _conversation;
             var generation = _originalPresentationGeneration;
-            var instruction = _scene.Instruction.Text.Trim();
+            var instruction = _composerInput.Text.Trim();
             var returned = _originalWork.RunAsync(
                 original => SubmitCurrentInstructionOriginalBodyAsync(conversation, generation, instruction),
                 actual => _originalSend = actual);
@@ -321,7 +321,7 @@ public sealed partial class NewChatPage : Haven.Desktop.Services.IDesktopOrigina
             Attempt(() => _sendCancellation?.Cancel());
             Attempt(_sendProgressTimer.Stop);
             Attempt(() => _scene.StopRequested -= OnStopRequested);
-            Attempt(() => _scene.Instruction.Invalidated -= OnComposerEditCompleted);
+            Attempt(() => _composerInput.Invalidated -= OnComposerEditCompleted);
             Attempt(() => _scene.AttachmentRemoveRequested -= OnAttachmentRemoveRequested);
             Attempt(() => _scene.MessageActionRequested -= OnMessageActionRequested);
             Attempt(() => _scene.MarkdownCodeActionRequested -= OnMarkdownCodeActionRequested);

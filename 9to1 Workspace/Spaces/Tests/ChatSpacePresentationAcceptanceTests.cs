@@ -38,13 +38,18 @@ public sealed class ChatSpacePresentationAcceptanceTests
                 Dispatcher.UIThread.RunJobs();
                 window.Measure(new Size(width, height)); window.Arrange(new Rect(0, 0, width, height));
                 for (var pass = 0; pass < 3; pass++) { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); using var frame = window.CaptureRenderedFrame(); }
-                var input = root.GetVisualDescendants().OfType<TextBox>().Single(box => AutomationProperties.GetAutomationId(box) == "composer-input");
-                var position = input.TranslatePoint(default, root);
-                Assert.NotNull(position);
-                Assert.True(input.Bounds.Height > 0);
-                Assert.InRange(position.Value.Y + input.Bounds.Height, 1, height);
-                Assert.InRange(position.Value.X + input.Bounds.Width, 1, width);
-                Assert.True(input.AcceptsReturn);
+                // The composer is now the single shared CUI component mounted through the authored
+                // `composer-mount` slot (bound by the shared Desktop ChatComposerCuiView), so the
+                // authored ChatSpace.cui no longer owns a legacy composer input. The mount slot must
+                // remain present and inside the viewport.
+                Assert.DoesNotContain(root.GetVisualDescendants().OfType<TextBox>(),
+                    box => AutomationProperties.GetAutomationId(box) == "composer-input");
+                var mount = root.GetVisualDescendants().OfType<Control>()
+                    .Single(control => AutomationProperties.GetAutomationId(control) == "composer-mount");
+                var mountPosition = mount.TranslatePoint(default, root);
+                Assert.NotNull(mountPosition);
+                Assert.InRange(mountPosition.Value.Y + mount.Bounds.Height, 1, height);
+                Assert.InRange(mountPosition.Value.X + mount.Bounds.Width, 1, width);
                 var markdown = root.GetVisualDescendants().OfType<CuiMarkdownView>().ToArray();
                 Assert.Equal(state.Conversation!.Messages.Count, markdown.Length);
                 Assert.Contains(markdown, view => view.Text.Contains("**formatted**", StringComparison.Ordinal));

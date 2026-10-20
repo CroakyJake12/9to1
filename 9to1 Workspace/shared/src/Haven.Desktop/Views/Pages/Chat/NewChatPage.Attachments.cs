@@ -164,7 +164,7 @@ public sealed partial class NewChatPage
     private Task SavePendingAttachmentDraftOriginalBodyAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, _scene.Instruction.Text, _pendingAttachmentIds));
+        return EnqueueOriginalDraftMutationAsync(CaptureOriginalDraftMutation(OriginalDraftInputOwner, _composerInput.Text, _pendingAttachmentIds));
     }
 
     // ---- canonical conversation draft ---------------------------------------------------
@@ -286,7 +286,7 @@ public sealed partial class NewChatPage
     private OriginalDraftTransition CaptureOriginalDraftTransition()
     {
         var owner = OriginalDraftInputOwner;
-        var composerText = _scene.Instruction.Text ?? string.Empty;
+        var composerText = _composerInput.Text ?? string.Empty;
         var mutation = CaptureOriginalDraftMutation(owner, CaptureUnsentDraftText(composerText, _scene.QueuedComposerMessages), _pendingAttachmentIds);
         return new(mutation, composerText, Volatile.Read(ref _originalComposerRevision));
     }
@@ -297,7 +297,7 @@ public sealed partial class NewChatPage
     private void CommitOriginalDraftTransitionOwnership(Conversation incoming, OriginalDraftTransition transition)
     {
         if (_conversation.Id != incoming.Id) return; // A newer selection already committed its own.
-        _originalDraftInputOwner = string.IsNullOrEmpty(_scene.Instruction.Text) && !_scene.HasQueuedComposerMessages
+        _originalDraftInputOwner = string.IsNullOrEmpty(_composerInput.Text) && !_scene.HasQueuedComposerMessages
             ? incoming
             : transition.Outgoing.Target;
     }
@@ -433,7 +433,7 @@ public sealed partial class NewChatPage
             catch (Exception error) { original.Capture(inFlightSend, error); }
         }
         await WriteOriginalDraftAsync(CaptureOriginalDraftMutation(
-            OriginalDraftInputOwner, CaptureUnsentDraftText(_scene.Instruction.Text, _scene.QueuedComposerMessages),
+            OriginalDraftInputOwner, CaptureUnsentDraftText(_composerInput.Text, _scene.QueuedComposerMessages),
             _pendingAttachmentIds)).ConfigureAwait(false);
     }
 
@@ -486,8 +486,8 @@ public sealed partial class NewChatPage
         _suppressOriginalDraftSave = true;
         try
         {
-            _scene.Instruction.Text = text;
-            if (placeCaretAtEnd) _scene.Instruction.PlaceCaretAtEnd();
+            _composerInput.Text = text;
+            if (placeCaretAtEnd) _composerInput.PlaceCaretAtEnd();
         }
         finally { _suppressOriginalDraftSave = false; }
         _originalComposerText = text;
@@ -501,13 +501,13 @@ public sealed partial class NewChatPage
         if (string.IsNullOrEmpty(content)) return;
         if (Volatile.Read(ref _originalComposerRevision) != _originalDraftRestoreRevision) return;
         if (_conversation.Id != _originalDraftRestoreConversationId) return;
-        if (!string.IsNullOrEmpty(_scene.Instruction.Text)) return;
+        if (!string.IsNullOrEmpty(_composerInput.Text)) return;
         PublishOriginalComposerText(content, placeCaretAtEnd: true);
     }
 
     private void ClearOriginalComposerDraft()
     {
-        if (string.IsNullOrEmpty(_scene.Instruction.Text)) return;
+        if (string.IsNullOrEmpty(_composerInput.Text)) return;
         PublishOriginalComposerText(string.Empty, placeCaretAtEnd: false);
     }
 
@@ -516,7 +516,7 @@ public sealed partial class NewChatPage
     /// that an accepted user message already owns.</summary>
     private void RestoreUnsentOriginalInstruction(string instruction)
     {
-        if (string.IsNullOrEmpty(instruction) || !string.IsNullOrEmpty(_scene.Instruction.Text)) return;
+        if (string.IsNullOrEmpty(instruction) || !string.IsNullOrEmpty(_composerInput.Text)) return;
         PublishOriginalComposerText(instruction, placeCaretAtEnd: true);
     }
 

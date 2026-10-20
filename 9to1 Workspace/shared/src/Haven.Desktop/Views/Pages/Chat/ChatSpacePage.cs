@@ -32,6 +32,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
     private readonly CuiSceneHost _host;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly ChatSpaceCuiBindings _bindings;
+    private readonly ChatComposerCuiView _composerView;
     private readonly object _gate = new();
     [ThreadStatic] private static List<ChatSpacePage>? _sourceCallbacks;
     private bool _active;
@@ -56,7 +57,11 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         // loads once and never updates.
         _bindings.PropertyChanged += OnBindingsPropertyChanged;
         Document = ChatSpaceCuiDocument.Load();
-        _host = new CuiSceneHost();
+        // The shared canonical composer is mounted into the authored `composer-mount` slot below.
+        _composerView = new ChatComposerCuiView(new ChatSpaceComposerSource(() => _controller.State, DispatchAsync));
+        var controlRegistry = new CuiControlRegistry();
+        controlRegistry.BindAuthoredControl("composer-mount", _ => _composerView);
+        _host = new CuiSceneHost(controlRegistry);
         AutomationProperties.SetAutomationId(this, "ChatSpacePage");
         AutomationProperties.SetName(this, "Chat Space (CUI)");
         SizeChanged += (_, _) => _bindings.UpdateViewportWidth(Bounds.Width);
@@ -117,6 +122,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         {
             original.DemandPublication();
             _bindings.Refresh();
+            _composerView.RefreshSurface();
         }).GetTask()).ConfigureAwait(false);
     }
 
@@ -137,6 +143,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
                 {
                     if (!IsCurrent(generation)) return;
                     _bindings.Refresh();
+                    _composerView.RefreshSurface();
                 }).GetTask()).ConfigureAwait(false);
             }
             catch (InvalidOperationException)
@@ -354,6 +361,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         var actual = InvokeOriginalSource(() => Dispatcher.UIThread.InvokeAsync(() =>
             OwnNestedOriginalSource(() => { if (ReferenceEquals(Content, _host)) Content = null; })).GetTask());
         await actual.ConfigureAwait(false);
+        _composerView.Dispose();
     }
 
     public void Dispose() => RequestRetirement();

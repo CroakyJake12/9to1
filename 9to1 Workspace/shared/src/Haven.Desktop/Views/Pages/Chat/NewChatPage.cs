@@ -51,7 +51,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private readonly WorkflowTemplateRuntime _workflowTemplate;
     private readonly CustomTemplateRuntime _customTemplate;
     private readonly ChatHavenScene _scene;
-    private readonly List<ChatMessage> _messages = [];
+    private readonly IChatComposerInputPort _composerInput;    private readonly List<ChatMessage> _messages = [];
     private readonly Stack<ChatMessage> _redoMessages = [];
     private readonly HashSet<Guid> _streamingMessages = [];
     private readonly List<PromptDefinition> _activeInstructions = [];
@@ -160,12 +160,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         _customTemplate = customTemplate;
         _conversation = CreateConversation(HavenMode.Chat);
 
-        _scene = new ChatHavenScene();
+        _scene = new ChatHavenScene(_genUiNativeResolver);
         AutomationProperties.SetAutomationId(this, "HavenNativeChatPage");
         AutomationProperties.SetName(this, "9to1-native Chat page");
         Scene = new HavenSceneControl(new HavenAvaloniaImageResolver(), _genUiNativeResolver) { Root = _scene.Root };
         AutomationProperties.SetAutomationId(Scene, "HavenNativeChatScene");
         AutomationProperties.SetName(Scene, "9to1-native Chat");
+        _composerInput = _scene.Input;
         _originalWork = new NewChatOriginalWorkLifetime(StopOriginalPageAsync, CleanupOriginalPageAsync);
         Content = Scene;
         WireScene();
@@ -195,6 +196,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public HavenSceneControl Scene { get; }
 
+    /// <summary>Typed presentation-independent composer input port over the current owner's input.</summary>
+    public IChatComposerInputPort ComposerInput => _composerInput;
+
     public event EventHandler? ModelChanged;
     public event EventHandler? ConversationStateChanged;
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
@@ -203,10 +207,12 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;
+    public IReadOnlyList<ModelDescriptor> AdmittedModels => _admittedCatalogue;
     /// <summary>Truthful availability of configured model discovery. Unavailable is a
     /// terminal degraded observation that survives Fresh/Restore; model-backed actions
     /// remain honestly disabled while unrelated draft/navigation work continues.</summary>
     public ChatModelAvailability ModelAvailability => _modelAvailability;
+    public bool IsSafetyLocked => _safetyLocked;
     /// <summary>The exact actual discovery cause retained for inspection when
     /// <see cref="ModelAvailability"/> is Unavailable. Never a retirement failure.</summary>
     public Exception? ModelAvailabilityCause => _modelAvailabilityCause;
@@ -217,6 +223,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public string ActiveAgentName => _activeAgent?.Name ?? "No Agent (Default)";
     public ChatActionMode EffectiveChatActionMode => _chatActionModeOverride ?? ChatActionMode.AllowBasicActions;
     public bool IsSending => _isSending;
+
+    /// <summary>Typed access to the current pending composer attachments owned by this page.</summary>
+    public IReadOnlyList<MessageAttachment> PendingComposerAttachments => _persistedAttachments;
 
     public ChatProjectionState ProjectionState
     {
@@ -231,6 +240,14 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     /// Requests cancellation through the same cancellation source used by the full Chat surface.
     /// Returns false when no response is currently cancellable.
     /// </summary>
+    /// <summary>Requests the same queue-aware composer send operation owned by this page's scene.</summary>
+    public void RequestComposerSend()
+    {
+        DemandOriginalChatCurrent();
+        if (_originalWork.IsRetiring) return;
+        _scene.HandleComposerSend();
+    }
+
     public bool TryStopResponse()
     {
         if (_conversation.Mode == HavenMode.Tasks) return TryStopOriginalCanonicalTaskResponse();
@@ -404,14 +421,14 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public void FocusComposer()
     {
         DemandOriginalChatCurrent();
-        Scene.FocusElement(_scene.Instruction);
+        _composerInput.Focus();
     }
 
     public void SetDraft(string instruction)
     {
         DemandOriginalChatCurrent();
-        _scene.Instruction.Text = instruction ?? string.Empty;
-        _scene.Instruction.PlaceCaretAtEnd();
+        _composerInput.Text = instruction ?? string.Empty;
+        _composerInput.PlaceCaretAtEnd();
         FocusComposer();
     }
 
@@ -610,7 +627,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var outgoing = CaptureOriginalDraftTransition();
         await FlushOriginalConversationDraftAsync(outgoing);
         if (Volatile.Read(ref _originalComposerRevision) == outgoing.Revision &&
-            string.Equals(_scene.Instruction.Text, outgoing.ComposerText, StringComparison.Ordinal))
+            string.Equals(_composerInput.Text, outgoing.ComposerText, StringComparison.Ordinal))
             ClearOriginalComposerDraft();
         ResetToFreshConversation(_modeDefinition?.BaseMode ?? HavenMode.Chat, chatGroupId, null);
         CommitOriginalDraftTransitionOwnership(_conversation, outgoing);
@@ -625,7 +642,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         var outgoing = CaptureOriginalDraftTransition();
         await FlushOriginalConversationDraftAsync(outgoing);
         if (Volatile.Read(ref _originalComposerRevision) == outgoing.Revision &&
-            string.Equals(_scene.Instruction.Text, outgoing.ComposerText, StringComparison.Ordinal))
+            string.Equals(_composerInput.Text, outgoing.ComposerText, StringComparison.Ordinal))
             ClearOriginalComposerDraft();
         ResetToFreshConversation(mode, containerId, lessonId, spaceId);
         CommitOriginalDraftTransitionOwnership(_conversation, outgoing);
@@ -685,7 +702,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             // failed send's restored text) keeps its own outgoing owner.
             if (outbound.Outgoing.Target.Id != conversation.Id &&
                 Volatile.Read(ref _originalComposerRevision) == outbound.Revision &&
-                string.Equals(_scene.Instruction.Text, outbound.ComposerText, StringComparison.Ordinal))
+                string.Equals(_composerInput.Text, outbound.ComposerText, StringComparison.Ordinal))
                 ClearOriginalComposerDraft();
             CommitOriginalDraftTransitionOwnership(conversation, outbound);
         }
@@ -1074,7 +1091,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
 
         _scene.SendRequested += (_, _) => _ = SubmitCurrentInstructionAsync();
         _scene.StopRequested += OnStopRequested;
-        _scene.Instruction.Invalidated += OnComposerEditCompleted;
+        _composerInput.Invalidated += OnComposerEditCompleted;
         _scene.ResolveProblemsRequested += (_, _) =>
         {
             if (_originalWork.IsRetiring) return;
@@ -1124,11 +1141,6 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private void OnInputSubmittedOriginalBody(Input input)
     {
         if (_originalWork.IsRetiring) return;
-        if (ReferenceEquals(input, _scene.Instruction))
-        {
-            _ = SubmitCurrentInstructionAsync();
-            return;
-        }
         foreach (var surface in _generatedSurfaces.Values)
         {
             if (!surface.OwnsInput(input)) continue;
@@ -1146,7 +1158,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // revision/target/snapshot are captured OUTSIDE the notification original, so the raw
         // draft write never inherits a presentation publication demand; restore/clear
         // publications are recorded as observed text rather than saved.
-        var text = _scene.Instruction.Text ?? string.Empty;
+        var text = _composerInput.Text ?? string.Empty;
         if (_suppressOriginalDraftSave)
         {
             // A programmatic publication (send clear, draft restore, recovery text) is observed
@@ -1172,7 +1184,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     private void OnComposerEditCompletedOriginalBody(object? sender, EventArgs e)
     {
         if (_originalWork.IsRetiring) return;
-        if (ChatMentionQueryParser.TryParse(_scene.Instruction.Text, _scene.Instruction.CaretIndex, out var mention))
+        if (ChatMentionQueryParser.TryParse(_composerInput.Text, _composerInput.CaretIndex, out var mention))
         {
             _activeMention = mention;
             _scene.ShowMentionSearch(mention.Query);
@@ -1188,11 +1200,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         if (_activeMention is not { } mention) return;
         _activeMention = null;
-        var text = _scene.Instruction.Text;
+        var text = _composerInput.Text;
         if (mention.Start < 0 || mention.Length <= 0 || mention.Start + mention.Length > text.Length) return;
         if (text[mention.Start] != '@') return;
-        _scene.Instruction.Text = text.Remove(mention.Start, mention.Length);
-        _scene.Instruction.SetSelection(mention.Start, mention.Start);
+        _composerInput.Text = text.Remove(mention.Start, mention.Length);
+        _composerInput.SetSelection(mention.Start, mention.Start);
     }
 
     private void ShowResolveProblems()
@@ -1230,7 +1242,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             return;
         }
 
-        var preservedDraft = _scene.Instruction.Text;
+        var preservedDraft = _composerInput.Text;
         if (!CanUseSelectedModel)
         {
             _pendingInstruction = text;
@@ -1302,7 +1314,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         // newer draft typed or attached while the response streams is never retired or
         // mis-associated with an older user message.
         var acceptedSend = CaptureOriginalAcceptedSend(draftOwner, sendRevision,
-            _scene.Instruction.Text, _pendingAttachmentIds);
+            _composerInput.Text, _pendingAttachmentIds);
         void RestoreUnsentOriginalInstructionIfUnchanged()
         {
             // A refused/aborted admission must not lose the text, but newer typing wins — and the
@@ -2599,8 +2611,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
         }
         if (!CanUseSelectedModel || _isSending || string.IsNullOrWhiteSpace(_pendingInstruction)) return;
         var pending = _pendingInstruction;
-        var restoreDraft = _pendingInstructionPreservesDraft ? _scene.Instruction.Text : null;
-        _scene.Instruction.Text = pending;
+        var restoreDraft = _pendingInstructionPreservesDraft ? _composerInput.Text : null;
+        _composerInput.Text = pending;
         _pendingInstruction = null;
         _pendingInstructionPreservesDraft = false;
         _ = SubmitCurrentInstructionAsync();

@@ -35,6 +35,8 @@ public sealed class CuiCanonicalApplicationCompilationTests
     [Theory]
     [InlineData("9to1 Workspace/Spaces/UI/Home/SpacesHome.cui")]
     [InlineData("9to1 Workspace/Spaces/UI/Chat/ChatSpace.cui")]
+    [InlineData("9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui")]
+    [InlineData("9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Chat/Chat.cui")]
     [InlineData("9to1 Workspace/Spaces/UI/Tasks/SpaceTaskWidget.cui")]
     [InlineData("9to1 Workspace/Boards/app/Boards.cui")]
     [InlineData("9to1 Workspace/Home/UI/Home.cui")]

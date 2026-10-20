@@ -1,23 +1,15 @@
-using Avalonia.Threading;
-
 namespace Haven.Desktop.Views.Pages.Chat;
 
 internal sealed partial class ChatHavenScene
 {
-    private const int QueuedComposerMessageLimit = 8;
-    private readonly Queue<string> _queuedComposerMessages = new();
-    private DispatcherTimer? _queuedSendPump;
+    private ChatComposerQueue? _composerQueue;
     private bool _queuedSendingEnabled;
 
-    /// <summary>True while at least one typed message is parked in the in-memory send queue.
-    /// A queue-while-sending composer clear must not be read as a user deletion of the
-    /// canonical draft, because the queued text has not been sent yet.</summary>
-    internal bool HasQueuedComposerMessages => _queuedComposerMessages.Count > 0;
+    /// <summary>True while at least one typed message is parked in the in-memory send queue.</summary>
+    internal bool HasQueuedComposerMessages => _composerQueue?.HasQueuedComposerMessages ?? false;
 
-    /// <summary>The SAME unsent inputs still parked in this owner's in-memory queue, oldest
-    /// first. They have not been sent, so the canonical draft must be able to preserve them
-    /// across a close/reopen instead of deleting them with the empty composer.</summary>
-    internal IReadOnlyList<string> QueuedComposerMessages => _queuedComposerMessages.ToArray();
+    /// <summary>The SAME unsent inputs still parked in this owner's in-memory queue, oldest first.</summary>
+    internal IReadOnlyList<string> QueuedComposerMessages => _composerQueue?.QueuedComposerMessages ?? Array.Empty<string>();
 
     /// <summary>
     /// Replaces the streaming send-button handler with a queue-aware variant while preserving
@@ -27,77 +19,13 @@ internal sealed partial class ChatHavenScene
     {
         if (_queuedSendingEnabled) return;
         _queuedSendingEnabled = true;
-        SendButton.Invoked -= OnSendInvoked;
-        SendButton.Invoked += OnQueueAwareSendInvoked;
-    }
-
-    private void OnQueueAwareSendInvoked(object? sender, EventArgs e)
-    {
-        if (!_isSending)
-        {
-            SendRequested?.Invoke(this, EventArgs.Empty);
-            return;
-        }
-
-        var draft = Instruction.Text.Trim();
-        if (string.IsNullOrWhiteSpace(draft))
-        {
-            StopRequested?.Invoke(this, EventArgs.Empty);
-            return;
-        }
-
-        if (_queuedComposerMessages.Count >= QueuedComposerMessageLimit)
-        {
-            SetStatus($"Message queue is full ({QueuedComposerMessageLimit}). Wait for a queued message to send or stop the current response.");
-            return;
-        }
-
-        _queuedComposerMessages.Enqueue(draft);
-        Instruction.Text = string.Empty;
-        SetStatus(_queuedComposerMessages.Count == 1
-            ? "Message queued. Clear the composer and press Stop to cancel the active response."
-            : $"{_queuedComposerMessages.Count} messages queued.");
-        StartQueuedSendPump();
-    }
-
-    private void StartQueuedSendPump()
-    {
-        if (_queuedSendPump is not null)
-        {
-            if (!_queuedSendPump.IsEnabled) _queuedSendPump.Start();
-            return;
-        }
-
-        _queuedSendPump = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
-        _queuedSendPump.Tick += OnQueuedSendPumpTick;
-        _queuedSendPump.Start();
-    }
-
-    private void OnQueuedSendPumpTick(object? sender, EventArgs e)
-    {
-        if (_disposed)
-        {
-            _queuedSendPump?.Stop();
-            return;
-        }
-        if (_isSending || _safetyLocked) return;
-        if (_queuedComposerMessages.Count == 0)
-        {
-            _queuedSendPump?.Stop();
-            return;
-        }
-
-        // Never overwrite a draft the user typed after queueing. The queued item waits until
-        // the composer is empty, then uses the exact same SendRequested path as a normal send.
-        if (!string.IsNullOrWhiteSpace(Instruction.Text)) return;
-
-        var next = _queuedComposerMessages.Dequeue();
-        Instruction.Text = next;
-        SetStatus(_queuedComposerMessages.Count == 0
-            ? "Sending queued message…"
-            : $"Sending queued message… {_queuedComposerMessages.Count} still queued.");
-        SendRequested?.Invoke(this, EventArgs.Empty);
-
-        if (_queuedComposerMessages.Count == 0) _queuedSendPump?.Stop();
+        _composerQueue = new ChatComposerQueue(
+            () => Input.Text,
+            value => Input.Text = value,
+            () => _isSending,
+            () => _safetyLocked,
+            SetStatus,
+            () => SendRequested?.Invoke(this, EventArgs.Empty),
+            () => StopRequested?.Invoke(this, EventArgs.Empty));
     }
 }

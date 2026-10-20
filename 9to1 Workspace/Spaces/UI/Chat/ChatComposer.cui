@@ -1,0 +1,35 @@
+<Cui id="spaces.chat.composer" version="1">
+  <Container id="composer-surface" Type="Grid" ColumnSizes="Auto 1fr Auto Auto" RowSizes="Auto Auto" CellGap="6" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer">
+    <Button id="add-button" action="composer.add" content="+" Column="0" Width="44" Height="44" CornerRadius="22" accessible-name="Add files or actions" />
+    <Container id="input-column" Column="1" Type="Vertical Stack" CellGap="6" MaxHeight="170">
+      <Container id="chips-row" Type="Wrap" CellGap="6" IsVisible="{Binding Composer.HasChips}">
+        <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
+          <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
+            <Button action="composer.invoke-chip" action-argument="{Binding chip.Id}" content="{Binding chip.Label}" font-size="11" Interactive="{Binding chip.Invokable}" accessible-name="{Binding chip.Label}" />
+            <Button action="composer.remove-chip" action-argument="{Binding chip.Id}" content="✕" font-size="11" accessible-name="Remove chip" />
+          </Container>
+        </Repeat>
+      </Container>
+      <Input id="composer-input" Type="Text" AcceptsReturn="True" Value="{Binding Composer.Draft}" placeholdertext="{Binding Composer.Placeholder}" background="Transparent" padding="4" MinHeight="44" accessible-name="Message" />
+      <Container id="format-row" Type="Horizontal Stack" CellGap="6" IsVisible="{Binding Composer.ShowFormatting}">
+        <Button action="composer.format" action-argument="Bold" content="Aa" accessible-name="Format selected text" />
+        <Button action="composer.emoji" content="😀" accessible-name="Insert emoji" />
+      </Container>
+    </Container>
+    <Button id="settings-button" action="composer.settings" content="⚙" Column="2" Width="44" Height="44" CornerRadius="22" IsVisible="{Binding Composer.ShowFormatting}" accessible-name="Thread settings" />
+    <Container id="send-area" Column="3" Type="Horizontal Stack" CellGap="6">
+      <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
+      <Button id="send-button" action="composer.send" content="{Binding Composer.SendLabel}" MinHeight="44" Interactive="{Binding Composer.CanSend}" accessible-name="Send message" />
+    </Container>
+    <Container id="settings-panel" Column="0" ColumnSpan="4" Row="1" Type="Wrap" CellGap="8" padding="8" background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
+      <Text text="Actions:" font-size="12" font-weight="SemiBold" />
+      <Button action="composer.set-action-mode" action-argument="AllowAllActions" content="All" font-size="12" />
+      <Button action="composer.set-action-mode" action-argument="AllowBasicActions" content="Basic" font-size="12" />
+      <Button action="composer.set-action-mode" action-argument="JustChat" content="Just chat" font-size="12" />
+      <Text text="Responses:" font-size="12" font-weight="SemiBold" />
+      <Button action="composer.set-response-mode" action-argument="Auto" content="Auto" font-size="12" />
+      <Button action="composer.set-response-mode" action-argument="AlwaysVisual" content="Visual" font-size="12" />
+      <Button action="composer.set-response-mode" action-argument="AlwaysText" content="Text" font-size="12" />
+    </Container>
+  </Container>
+</Cui>

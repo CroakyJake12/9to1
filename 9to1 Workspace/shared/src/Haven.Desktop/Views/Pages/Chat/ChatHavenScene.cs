@@ -1,4 +1,5 @@
 ﻿using Haven.Core;
+using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.HavenUI.Tokens;
 using Haven.Desktop.Prefabs;
 using Haven.Desktop.Services;
@@ -51,6 +52,8 @@ internal sealed partial class ChatHavenScene : IDisposable
     private readonly Dictionary<Guid, Guid> _toolOwners = [];
     private readonly Dictionary<Guid, IReadOnlyList<HavenElement>> _generatedContent = [];
     private readonly ChatAddMenuSurface _addMenu;
+    private readonly IHavenAvaloniaNativeControlResolver _nativeResolver;
+    private readonly HavenComposerSource _composerSource;
     private PopupMenu? _activeMessagePopup;
     private bool _isSending;
     private bool _safetyLocked;
@@ -58,22 +61,28 @@ internal sealed partial class ChatHavenScene : IDisposable
     private bool _contextDismissed;
     private bool _disposed;
 
-    public ChatHavenScene()
+    /// <summary>Constructs a scene with its own transport resolver (used by tests/hosts that do
+    /// not share a scene-level native resolver).</summary>
+    public ChatHavenScene() : this(new ChatGenUiNativeControlResolver())
     {
+    }
+
+    public ChatHavenScene(IHavenAvaloniaNativeControlResolver nativeResolver)
+    {
+        ArgumentNullException.ThrowIfNull(nativeResolver);
+        _nativeResolver = nativeResolver;
         _prefabs = HavenPrefabCatalog.FromAssembly(typeof(ChatHavenScene).Assembly);
         _templates = HavenDynamicUITemplateCatalog.FromAssembly(typeof(ChatHavenScene).Assembly);
         Root = BuildRoot();
         _dynamicUi = new DynamicUI(Root, _templates, _prefabs);
-        Chatbox = Root.DescendantsAndSelf().OfType<Prefab>().Single(prefab => prefab.PrefabID == "Chatbox");
-        ChatboxRoot = Chatbox.GetComponent<Container>("ChatboxRoot");
-        AttachmentChips = Chatbox.GetComponent<Container>("AttachmentChips");
-        ComposerRow = Chatbox.GetComponent<Container>("ComposerRow");
-        InstructionViewport = Chatbox.GetComponent<Container>("InstructionViewport");
-        Instruction = Chatbox.GetComponent<Input>("Instruction");
-        AddButton = Chatbox.GetComponent<HavenButton>("AddMenu");
-        SendButton = Chatbox.GetComponent<HavenButton>("Send");
-        Chatbox.GetComponent<HavenButton>("ChatSettings").Accessibility.AccessibleName = "Manage chat response settings";
-        SendIcon = Chatbox.GetComponent<Icon>("SendIcon");
+
+        // The composer is the single shared CUI component transported through a narrow native
+        // control. The NativeHost element only supplies native measurement/placement/lifetime;
+        // all composer structure, styling, layout and state are CUI.
+        ComposerHost = Root.DescendantsAndSelf().OfType<NativeHost>().Single(element => element.Name == "ComposerHost");
+        _composerSource = new HavenComposerSource(this);
+        ComposerView = new ChatComposerCuiView(_composerSource);
+        _nativeResolver.Register(ComposerHost, ComposerView);
         Messages = (DynamicUIRuntime)Root.DescendantsAndSelf().Single(element => element.Name == "Messages");
         EmptyState = Root.DescendantsAndSelf().Single(element => element.Name == "EmptyState");
         Status = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "Status");
@@ -102,8 +111,6 @@ internal sealed partial class ChatHavenScene : IDisposable
         Root.Add(AddMenuPrefab);
         _addMenu = new ChatAddMenuSurface(AddMenuPrefab, composerOwnsSearch: true, showThreadSettings: false);
 
-        AddButton.Invoked += OnAddInvoked;
-        SendButton.Invoked += OnSendInvoked;
         ResolveProblems.Invoked += OnResolveInvoked;
         ContextToggle.Invoked += OnContextToggleInvoked;
         ContextClose.Invoked += OnContextCloseInvoked;
@@ -117,15 +124,17 @@ internal sealed partial class ChatHavenScene : IDisposable
     }
 
     public Page Root { get; }
-    public Prefab Chatbox { get; }
-    public Container ChatboxRoot { get; }
-    public Container AttachmentChips { get; }
-    public Container ComposerRow { get; }
-    public Container InstructionViewport { get; }
-    public Input Instruction { get; }
-    public HavenButton AddButton { get; }
-    public HavenButton SendButton { get; }
-    public Icon SendIcon { get; }
+
+    /// <summary>The narrow native transport host that carries the shared CUI composer into this scene.</summary>
+    public NativeHost ComposerHost { get; }
+
+    /// <summary>The single shared canonical composer view mounted at the Footer composer position.</summary>
+    public ChatComposerCuiView ComposerView { get; }
+
+    /// <summary>Typed composer input port over the real CUI input.</summary>
+    public IChatComposerInputPort Input => ComposerView.Input;
+
+    internal HavenComposerSource ComposerSource => _composerSource;
     public DynamicUIRuntime Messages { get; }
     public HavenElement EmptyState { get; }
     public HavenText Status { get; }
@@ -163,26 +172,23 @@ internal sealed partial class ChatHavenScene : IDisposable
     /// <summary>Gets a value indicating whether the user dismissed the Context card in this session; callers use it to avoid forcing it open again.</summary>
     internal bool ContextDismissed => _contextDismissed;
 
-    public void SetComposerPlaceholder(string value) => Instruction.Placeholder = value;
+    public void SetComposerPlaceholder(string value)
+    {
+        _composerSource.Placeholder = value ?? string.Empty;
+        ComposerView.RefreshSurface();
+    }
 
     public void SetSending(bool sending, bool modelAvailable)
     {
         _isSending = sending;
-        // Keep the composer editable while a response is streaming so the user can prepare
-        // their next message without interrupting the active response.
-        Instruction.SetValue(HavenProperties.Enabled, !_safetyLocked);
-        SendButton.SetValue(HavenProperties.Enabled, !_safetyLocked && (sending || modelAvailable));
-        SendButton.Accessibility.AccessibleName = sending ? "Stop response" : "Send message";
-        SendIcon.Key = sending ? "close" : "arrow-up";
+        ComposerView.RefreshSurface();
     }
 
     public void SetSafetyLocked(bool locked)
     {
         _safetyLocked = locked;
-        Instruction.SetValue(HavenProperties.Enabled, !locked);
-        SendButton.SetValue(HavenProperties.Enabled, !locked && (_isSending || !string.IsNullOrWhiteSpace(Instruction.Text)));
-        AddButton.SetValue(HavenProperties.Enabled, !locked);
         if (locked) HideAddMenu();
+        ComposerView.RefreshSurface();
     }
 
     public void SetStatus(string? value)
@@ -294,7 +300,11 @@ internal sealed partial class ChatHavenScene : IDisposable
         ResolveProblems.SetValue(HavenProperties.Visibility, hasMessages ? HavenVisibility.Visible : HavenVisibility.Collapsed);
     }
 
-    public void SetAddEnabled(bool enabled) => Chatbox.SetComponentEnabled("AddMenu", enabled);
+    public void SetAddEnabled(bool enabled)
+    {
+        _composerSource.HasAdd = enabled;
+        ComposerView.RefreshSurface();
+    }
 
     public void SetCatalogue(
         IReadOnlyList<AgentDefinition> agents,
@@ -717,12 +727,23 @@ internal sealed partial class ChatHavenScene : IDisposable
                   <Text Name="Status" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Text Name="AttachmentStatus" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Button Name="ManageAttachments" Variant="Ghost" Content="Manage attachments" MinHeight="32px" HorizontalAlignment="Center" Visibility="Collapsed" />
-                  <Prefab InstID="Main-Chatbox" ID="Chatbox" />
+                  <NativeHost Name="ComposerHost" Width="100%" MinHeight="44" />
                 </Container>
               </Container>
             </Page>
             """;
         return (Page)new HavenMarkupParser(_prefabs).Parse(markup, "ChatPage.hui");
+    }
+
+    /// <summary>Typed entry point for the same queue-aware composer send operation used by the
+    /// legacy Send button. Preserves empty-composer Stop and FIFO queue semantics.</summary>
+    public void HandleComposerSend()
+    {
+        EnsureQueuedSendingEnabled();
+        if (_composerQueue is not null)
+            _composerQueue.HandleSendInvoked();
+        else if (!_isSending)
+            SendRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public void Dispose()
@@ -733,13 +754,14 @@ internal sealed partial class ChatHavenScene : IDisposable
         _activeMessagePopup = null;
         _messageItems.Clear();
         _generatedContent.Clear();
-        AddButton.Invoked -= OnAddInvoked;
-        SendButton.Invoked -= OnSendInvoked;
         ResolveProblems.Invoked -= OnResolveInvoked;
         ContextToggle.Invoked -= OnContextToggleInvoked;
         ContextClose.Invoked -= OnContextCloseInvoked;
         _addMenu.AddActionSelected -= OnSharedAddActionSelected;
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
+        _composerQueue?.Dispose();
         _addMenu.Dispose();
+        _nativeResolver.Unregister(ComposerHost, ComposerView);
+        ComposerView.Dispose();
     }
 }
