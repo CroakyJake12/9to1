@@ -39,6 +39,24 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
 
     private sealed record RetainedOriginal(Task Original, string Identity);
 
+    /// <summary>The classified expected non-Ready startup refusal. It is a startup diagnostic for a
+    /// truthful non-Ready observation — NOT an acquired-resource cleanup failure — so a normal close
+    /// must succeed after it. Classification is bound to this service-created type, never to message
+    /// text, so a genuine source fault that merely looks similar stays observable.</summary>
+    private sealed class RuntimeUnavailableRefusal : InvalidOperationException
+    {
+        public RuntimeUnavailableRefusal(string message) : base(message) { }
+    }
+
+    /// <summary>The classified stale-start denial. A borrower whose start completes after the runtime
+    /// retired must be denied success; because nothing was acquired, a normal stop that caused the
+    /// retirement remains a truthful clean stop.</summary>
+    private sealed class StartRetiredException : InvalidOperationException
+    {
+        public StartRetiredException()
+            : base("The Dulche runtime retired before this start completed.") { }
+    }
+
     public HomeDulcheRuntimeService(IHomeDulcheRuntimeObservationSource source)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -97,8 +115,10 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
         lock (_sync)
         {
             // Stale completion guard: completion from an older generation never publishes after a
-            // stop/restart began. It still runs to completion but changes no state.
-            if (generation != _generation) return;
+            // stop/restart began. The stale borrower is DENIED success (nothing was acquired), while
+            // the normal stop that caused the retirement remains a truthful clean stop.
+            if (generation != _generation)
+                throw new StartRetiredException();
             ObjectDisposedException.ThrowIf(_disposed, this);
             _observation = observation;
         }
@@ -110,7 +130,7 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
             var reason = observation.Deficiencies.Count != 0
                 ? string.Join("; ", observation.Deficiencies)
                 : $"The shared Dulche runtime is {observation.Lifecycle} with no recorded diagnostic detail.";
-            throw new InvalidOperationException("HomeDulcheRuntimeUnavailable: " + reason);
+            throw new RuntimeUnavailableRefusal("HomeDulcheRuntimeUnavailable: " + reason);
         }
     }
 
@@ -170,7 +190,7 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
         // close and are retained.
         if (startTask is not null)
             try { await startTask.ConfigureAwait(false); }
-            catch (Exception error) { if (!IsExpectedReadinessRefusal(error)) Record(failures, error); }
+            catch (Exception error) { if (!IsExpectedDiagnostic(error)) Record(failures, error); }
         foreach (var original in retained)
             try { await original.ConfigureAwait(false); }
             catch (Exception error) { Record(failures, error); }
@@ -188,13 +208,12 @@ public sealed class HomeDulcheRuntimeService : IHomeCoreService, IAsyncDisposabl
         }
     }
 
-    /// <summary>True when a start fault is the classified expected readiness refusal raised for any
-    /// non-Ready observation. Such a refusal is preserved as Home startup diagnostics (HomeCoreRuntime
-    /// records it under <c>home.core</c> start failures) but must not poison a normal close that
-    /// acquired no resource.</summary>
-    private static bool IsExpectedReadinessRefusal(Exception error) =>
-        error is InvalidOperationException ioe &&
-        ioe.Message.StartsWith("HomeDulcheRuntimeUnavailable:", StringComparison.Ordinal);
+    /// <summary>True when a start fault is a classified expected startup diagnostic: the readiness
+    /// refusal for a truthful non-Ready observation, or the stale-start denial after retirement. Both
+    /// are preserved as Home startup diagnostics but must not poison a normal close that acquired no
+    /// resource. Classification is by the private service-created type, never by message text.</summary>
+    private static bool IsExpectedDiagnostic(Exception error) =>
+        error is StartRetiredException or RuntimeUnavailableRefusal;
 
     /// <summary>The last genuinely observed lifecycle/catalogue state, or null before start or after stop.</summary>
     public HomeDulcheRuntimeObservation? CurrentObservation

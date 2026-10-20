@@ -118,9 +118,9 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
     }
 
     /// <summary>Reads the live broker MainPID from systemd with cancellable, time-bounded async
-    /// stdout and exit observation. Unlike a synchronous ReadToEnd before WaitForExit, this honours
-    /// cancellation/timeout, checks the real exit status and never silently ignores a failed/partial
-    /// lookup child.</summary>
+    /// stdout and exit observation. The owned lookup child is ALWAYS terminated and reaped and its
+    /// redirected readers joined on every exit path (normal, cancellation, timeout, failure); cleanup
+    /// failures are surfaced truthfully instead of swallowed. It never touches the borrowed broker.</summary>
     private async Task<long?> DefaultBrokerPidSourceAsync(CancellationToken cancellationToken)
     {
         if (!OperatingSystem.IsLinux()) return null;
@@ -137,61 +137,100 @@ public sealed class HomeDulcheLinuxBrokerAdapter : IHomeDulcheBrokerAdapter
         psi.ArgumentList.Add("-p");
         psi.ArgumentList.Add("MainPID");
         psi.ArgumentList.Add("--value");
+
         using var process = new Process { StartInfo = psi };
         try
         {
             if (!process.Start()) return null;
-            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
-
-            bool exited;
-            try { exited = await RunToExitAsync(process, cancellationToken).ConfigureAwait(false); }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-            catch { return null; }
-
-            var output = await outputTask.ConfigureAwait(false);
-            _ = await errorTask.ConfigureAwait(false);
-            if (!exited || process.ExitCode != 0) return null;
-            return long.TryParse(output.Trim(), out var pid) && pid > 0 ? pid : null;
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception error)
         {
-            throw;
+            throw new AggregateException("The systemd broker identity lookup could not be started.", error);
         }
-        catch
-        {
-            return null;
-        }
-    }
 
-    /// <summary>Waits for a child process to exit within the configured bound. If the bound elapses
-    /// the child is killed and reaped and <c>false</c> is returned, so no zombie or orphaned
-    /// redirected reader is left behind. Caller cancellation propagates.</summary>
-    private async Task<bool> RunToExitAsync(Process process, CancellationToken cancellationToken)
-    {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(_commandTimeout);
-        bool exited;
+
+        var failures = new List<Exception>();
+        var outputTask = process.StandardOutput.ReadToEndAsync(CancellationToken.None);
+        var errorTask = process.StandardError.ReadToEndAsync(CancellationToken.None);
+
+        bool exitedNormally = false;
         try
         {
-            exited = await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+            await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+            exitedNormally = process.ExitCode == 0;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            throw;
+            TerminateOwnChild(process, failures);
+            await DrainReadersAsync(outputTask, errorTask, failures).ConfigureAwait(false);
+            if (failures.Count != 0)
+                throw new AggregateException("The broker identity lookup was cancelled and did not settle cleanly.", failures);
+            throw; // clean caller-cancellation propagation after confirming cleanup
         }
         catch (OperationCanceledException)
         {
-            TryKillAndReap(process);
-            return false;
+            TerminateOwnChild(process, failures);
+            await DrainReadersAsync(outputTask, errorTask, failures).ConfigureAwait(false);
+            if (failures.Count != 0)
+                throw new AggregateException("The broker identity lookup timed out and did not settle cleanly.", failures);
+            throw new TimeoutException("The broker identity lookup exceeded its configured time bound.");
         }
-        return exited;
+        catch (Exception error)
+        {
+            failures.Add(error);
+            TerminateOwnChild(process, failures);
+            await DrainReadersAsync(outputTask, errorTask, failures).ConfigureAwait(false);
+            throw new AggregateException("The broker identity lookup process failed.", failures);
+        }
+
+        // Normal exit: the child already settled; drain both readers fully and surface any read fault.
+        TerminateOwnChild(process, failures);
+        string? output = null;
+        try { output = await outputTask.ConfigureAwait(false); }
+        catch (Exception error) { failures.Add(error); }
+        try { _ = await errorTask.ConfigureAwait(false); }
+        catch (Exception error) { failures.Add(error); }
+        if (failures.Count != 0)
+            throw new AggregateException("The broker identity lookup did not settle cleanly.", failures);
+        if (!exitedNormally) return null;
+        return long.TryParse(output?.Trim(), out var pid) && pid > 0 ? pid : null;
     }
 
-    private static void TryKillAndReap(Process process)
+    /// <summary>Terminates ONLY the owned lookup child if it is still alive and reaps it, recording
+    /// any kill/reap failure. It never kills or shuts down the borrowed systemd broker.</summary>
+    private static void TerminateOwnChild(Process process, List<Exception> failures)
     {
-        try { if (!process.HasExited) process.Kill(entireProcessTree: true); } catch { }
-        try { process.WaitForExit(1000); } catch { }
+        if (process.HasExited) return;
+        try
+        {
+            process.Kill(entireProcessTree: true);
+        }
+        catch (Exception error)
+        {
+            failures.Add(new InvalidOperationException("Failed to terminate the owned systemd broker identity lookup child.", error));
+            return;
+        }
+        try
+        {
+            // Reap the actual child within a finite bound; if it still refuses to settle, cleanup is
+            // not confirmed and must be reported truthfully.
+            if (!process.WaitForExit(1000) && !process.HasExited)
+                failures.Add(new InvalidOperationException("The owned systemd broker identity lookup child did not settle after termination."));
+        }
+        catch (Exception error)
+        {
+            failures.Add(new InvalidOperationException("Failed to reap the owned systemd broker identity lookup child.", error));
+        }
+    }
+
+    private static async Task DrainReadersAsync(Task<string> outputTask, Task<string> errorTask, List<Exception> failures)
+    {
+        try { _ = await outputTask.ConfigureAwait(false); }
+        catch (Exception error) { failures.Add(error); }
+        try { _ = await errorTask.ConfigureAwait(false); }
+        catch (Exception error) { failures.Add(error); }
     }
 }
 

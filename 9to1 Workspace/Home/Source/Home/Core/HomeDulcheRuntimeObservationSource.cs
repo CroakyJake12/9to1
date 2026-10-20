@@ -89,7 +89,7 @@ public sealed class HomeDulcheRuntimeObservationSource : IHomeDulcheRuntimeObser
         var capabilitySupported = false;
         if (processRunning && endpointAvailable && modelVerified && model is not null &&
             _alreadyAdmittedCapability is { GenerationCapable: true } admitted &&
-            admitted.IsSameGeneration(model))
+            admitted.IsSameGeneration(model, broker))
         {
             capabilitySupported = true;
         }

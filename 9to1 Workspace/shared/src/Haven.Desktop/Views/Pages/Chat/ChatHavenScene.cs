@@ -847,7 +847,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     /// outside any included action so the navigation settles only after the real recovery action
     /// pipeline drains.</summary>
     public Task RecoveryActionSettlement =>
-        Dispatcher.UIThread.InvokeAsync(Task)(() => RecoveryView.CaptureOriginalActionSettlement()).GetTask().Unwrap();
+        Dispatcher.UIThread.InvokeAsync<Task>(() => RecoveryView.CaptureOriginalActionSettlement()).GetTask();
 
     /// <summary>Starts the shared recovery surface's child close (retires its command admission
     /// and closes the scene host) and publishes the one close task the parent joins during cleanup.

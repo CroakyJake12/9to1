@@ -121,9 +121,33 @@ public sealed record HomeDulcheCapabilityObservation(
     string ProviderId,
     string ModelId,
     DateTimeOffset ObservedAtUtc,
-    string Evidence)
+    string Evidence,
+    HomeDulcheBrokerObservation? Broker = null,
+    string? ModelArtifactSha256 = null)
 {
-    public bool IsSameGeneration(HomeDulcheModelEvidence model) =>
-        model is not null && string.Equals(ProviderId, model.ProviderId, StringComparison.Ordinal)
-        && string.Equals(ModelId, model.ModelId, StringComparison.Ordinal);
+    /// <summary>True only when this admission was recorded for the SAME observed broker process/
+    /// endpoint and the SAME verified model artifact as the current observation. Same provider/model
+    /// names alone never prove the same generation; an absent genuine broker/artifact binding fails
+    /// CLOSED (the capability axis stays blocked).</summary>
+    public bool IsSameGeneration(HomeDulcheModelEvidence model, HomeDulcheBrokerObservation? broker)
+    {
+        if (model is null) return false;
+        if (!string.Equals(ProviderId, model.ProviderId, StringComparison.Ordinal)) return false;
+        if (!string.Equals(ModelId, model.ModelId, StringComparison.Ordinal)) return false;
+        if (!SameBroker(broker)) return false;
+        if (ModelArtifactSha256 is null ||
+            !string.Equals(ModelArtifactSha256, model.ArtifactSha256, StringComparison.Ordinal))
+            return false;
+        return true;
+    }
+
+    private bool SameBroker(HomeDulcheBrokerObservation? observed)
+    {
+        if (Broker is null || observed is null) return false;
+        if (Broker.BrokerPid != observed.BrokerPid) return false;
+        if (!string.Equals(Broker.EndpointKind, observed.EndpointKind, StringComparison.Ordinal)) return false;
+        if (Broker.IsUnixSocket || observed.IsUnixSocket)
+            return string.Equals(Broker.SocketPath, observed.SocketPath, StringComparison.Ordinal);
+        return Broker.Endpoint is not null && Broker.Endpoint.Equals(observed.Endpoint);
+    }
 }
