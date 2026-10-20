@@ -1,6 +1,6 @@
 {
   "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
-  "recorded_at": "2026-10-20T13:02:48.771056+00:00",
+  "recorded_at": "2026-10-20T13:27:07.976371+00:00",
   "source_commit": "ebeb78cfb798bbf1493b7923ac0b2f5c301dc280",
   "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
   "branch": "codex/cloud-continuation-20261020",
@@ -196,13 +196,13 @@
   },
   "unaccepted_candidate": {
     "worktree": "/workspace/9to1-chat-cui",
-    "base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
+    "base": "45a6959cb7f297a08adc8defbdedbbbcdbe9d821",
     "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
-    "state": "ACTIVE pass6 close/loader causal repair on preserved dirty pass5; latest source compilation FAIL, no acceptance",
+    "state": "CLEAN/PUSHED isolated checkpoint after independent bounded QA; actual native build in progress, no model active",
     "first_compilation": "5actual C#adapter errors",
     "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
     "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof",
-    "latest_observation_at": "2026-10-20T13:02:48.771050+00:00",
+    "latest_observation_at": "2026-10-20T13:27:07.976353+00:00",
     "branch_pushed": "codex/cloud-native-chat-cui-20261020",
     "pass3_frozen": {
       "identity": "/workspace/shared/9to1-test-evidence/composer-pass3-frozen-20261020T120612Z/identity.json",
@@ -214,11 +214,9 @@
       "diagnostics": "Temporary synthetic debug instrumentation removed before frozen checkpoint; source scan found no matching draft debug logger"
     },
     "next_dispatch": {
-      "prompt": "/workspace/shared/9to1-test-evidence/opencode-composer-pass6-dispatch.txt",
-      "sha256": "3e988dec3eed13529354517819342d7d5cb5a5283fe5209d168fd74f1178b2f5",
-      "source": "9727ca0c+preserved4191cf\u2026dirty patch",
-      "scope": "close/rawShow/physical ownership and actual causal loader/parent tests only; Stop separate",
-      "state": "ACTIVE"
+      "prompt": "/workspace/shared/9to1-private-task-prompts/home-spaces-theme-wiring-task-v2-9727ca0c.md",
+      "sha256": "02a5c1b78d7ac2fb954d0c712c95d56e95f2fe3bd0e5772feeac60059d4eb39b",
+      "state": "Prepared/peerreviewed; refresh45a source afterearlynative; no model/buildslot granted"
     },
     "pass4_intervention": {
       "at": "2026-10-20T12:22:02Z",
@@ -229,18 +227,18 @@
       "original_config_restored": true
     },
     "last_independent_qa": {
-      "source_base": "9985a1392cd8fd1b299a8582856a877da5c1a6a7",
-      "source_patch_sha256": "e7f1e891a8cf32ff8fd416865b61e7b0d6b2638fbde71c13363a5da126975dc7",
-      "source_commit": "2c01d9b6",
-      "latest_owner_waveform_docs": "9727ca0c (main04a6091e)",
-      "evidence": "/workspace/shared/9to1-test-evidence/composer-pass4-independent-qa/identity-after-mounted-overlay-and-stop.json",
-      "suite": "OverlayChatInitializationTests20passed/0failed/0skipped",
-      "rendered_scope": "6actual-control cases mount the productionpage in1100x800Window; remainingcases realpage/factory domain/lifetime tests, not all20rendered",
-      "immediate_queued_edit": "ActualTextBox.Text then alreadycapturedButton.ClickEvent samecallback/no pump; realcanonicalqueued draftclose/reopen passes",
-      "stop_regression": "Genuinebefore-fix actualButton.IsEnabled=false while responseactive and catalogueheld; afterminimalbooleanfix actualbuttonclick cancels same CTS;20suitepasses",
-      "harness_reds": "Two initialStoptestsetup failures retained/classified; not productproof",
-      "new_component_lifetime_tests": "NOT_ACCEPTED; held-source-only tests do not prove loader settlement/close custody",
-      "native_composer": "NOT_RUN",
+      "source_base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
+      "source_patch_sha256": "d29692aee3a2c4c14d3b8ac51018677a370e5f8fc824c5c3f77133a72191b4a1",
+      "source_commit": "45a6959cb7f297a08adc8defbdedbbbcdbe9d821",
+      "evidence": "/workspace/shared/9to1-test-evidence/composer-pass6-independent-qa/identity.json",
+      "runs": {
+        "lifetime-after-qa": "12PASS0FAIL0SKIP",
+        "parent-fault-and-overlay": "21PASS0FAIL0SKIP, finalparentfault+20existingOverlay"
+      },
+      "precision": "Two runs,33distinct cases; product source unchanged; finaltestadditiononly betweenruns. SixOverlaycases renderactualproductionpage; others domain/lifetime.13componentcases useactual sharedcomposer; parenttests realnative renderer/mapping. Not fullappacceptance.",
+      "red_proof": "Actual reentrant edit-close sends later typedcallback expected0actual1 beforefix; sourcegate nowchecksbetweensubscribers with physical UIrelease onlyafterACK",
+      "remaining_matrix": "Additional independentinit/observer fault combinations not exhaustivelycovered",
+      "native_composer": "BUILDING,NOT_RUN",
       "whole_app": "NOT_RUN"
     },
     "historical_pre_qa_blockers": [
@@ -253,12 +251,13 @@
       "CUI local presentation state requires framework implementation and authored CUI migration"
     ],
     "current_independent_source_gaps": [
-      "Exact rawShow/action settlement, close/failed physical ownership and UI-affine cleanup",
-      "Typed Stop cancellation-request/Tasks stop-driver forwarding",
-      "Actual current-profile Home context and canonical app identity wiring",
-      "CUI-authored state/action-selection policy and real compiled-artifact consumption",
-      "Continuous composer, full semantic formatting/Canvas/permission/Voice integration",
-      "Native Windows/web and whole app acceptance"
+      "Additional original-init/observer fault combinations require broader lifecycle matrix acceptance",
+      "Actual ordinary Stop request/Tasks command-driver forwarding",
+      "Actual current-profile Home context/appidentity/borrow guards",
+      "Full CUI presentation state and explicit controlpolicy/compiledartifactconsumer",
+      "Continuous visual and full semanticformat/Canvas/permission/Voice integration",
+      "SVG/Assistant/sharedHavencontrols/Dulche/history",
+      "Native Windows/web and completeappacceptance"
     ],
     "historical_third_turn_tests": {
       "initial_host_core": "82total/50passed/32failed; includes production NativeHost registration failure subsequently corrected in active source",
@@ -276,6 +275,15 @@
       "zip_sha256": "67a092b157249aa6a0fc35e9ac0744ffa2d09d05d72a0665c405ea56b32d4bd1",
       "root_compile": "FAIL CS0191 readonly_released assignment and CS0169 unused_withdrawn; runtimeNOT_RUN",
       "worker5PASS": "Earlier source only; source-TCS assertions insufficient for loader/close causality",
+      "config_restored": true,
+      "cap_changed": false
+    },
+    "pass6_partial": {
+      "ended_at": "2026-10-20T13:07:49.338158Z",
+      "exit_code": 0,
+      "final": "Natural model-reported stop with whitespace text; no final error/length evidence, not taskcompletion",
+      "frozen_patch_sha256": "2f517cf17cc2ccd0586b8226693df7e0e8078e2ca2c0d9f02175d3ed224fe09a",
+      "worker11PASS": "Before root reentry/producer/cleanup/native-mount refinements; not independent acceptance",
       "config_restored": true,
       "cap_changed": false
     }
