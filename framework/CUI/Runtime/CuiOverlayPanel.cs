@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -66,7 +68,7 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
                 cell.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
                 continue;
             }
-            cell.Arrange(Place(cell, viewport));
+            ApplyFloatingPlacement(cell, viewport);
         }
         return finalSize;
     }
@@ -119,6 +121,36 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         return Unplaced();
     }
 
+    /// <summary>
+    /// Apply the resolved placement to a floating cell. A solved (non-empty) rect is arranged at that
+    /// rect with the wrapper visibility restored to the authored child's effective visibility. When no
+    /// safe rect exists the cell enters a genuine UNPLACED state: it is taken out of the render/input/
+    /// focus/tab path entirely (wrapper hidden) rather than merely arranged at a zero rect, which would
+    /// still let positive-sized descendants (e.g. MinWidth/MinHeight toolbar buttons) paint/hit/focus
+    /// un-clipped near the origin. The authored FormattingOpen/IsVisible state is never overwritten —
+    /// only the panel-private cell wrapper visibility is driven — and when safe space returns the next
+    /// arrange restores placement, so recovery is automatic. Hidden unplaced cells remain in Children so
+    /// their relationship/placement observers keep living and re-placement is re-evaluated on every pass.
+    /// </summary>
+    private void ApplyFloatingPlacement(Control cell, Rect viewport)
+    {
+        var rect = Place(cell, viewport);
+        if (rect.Width <= 0 || rect.Height <= 0)
+        {
+            // Genuine unplaced state: suppress the whole subtree (paint/hit/focus/tab stops) WITHOUT
+            // touching the authored child's visibility binding. Idempotent; recovery is handled by the
+            // next arrange once safe space returns.
+            if (cell.IsVisible) cell.IsVisible = false;
+            return;
+        }
+
+        // Restore the wrapper to the authored child's effective visibility (mirrors authored state; the
+        // wrapper is panel-private, never the authored binding).
+        var authoredVisible = cell.Child?.IsVisible ?? true;
+        if (cell.IsVisible != authoredVisible) cell.IsVisible = authoredVisible;
+        cell.Arrange(rect);
+    }
+
     /// <summary>A candidate is usable only when it is fully inside the owner viewport AND avoids the
     /// protected composer body. A positive rectangle alone does not mean usable space exists.</summary>
     private static bool Fits(Rect rect, Rect viewport, Rect anchor) =>
@@ -141,7 +173,9 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     }
 
     /// <summary>A failed relationship must not park the bar at (0,0): return an empty (invisible)
-    /// rect and leave the floating cell unplaced. Fallback becomes a live hidden state, never a
+    /// rect as the sentinel for the unplaced state. The caller (<see cref="ApplyFloatingPlacement"/>)
+    /// additionally suppresses the cell's render/input/focus/tab path so a zero rect by itself never
+    /// lets overflow descendants paint near the origin. Fallback is a live hidden state, never a
     /// silently misplaced origin-anchored surface.</summary>
     private static Rect Unplaced() => new(0, 0, 0, 0);
 
@@ -247,12 +281,17 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     /// and swaps observers to the new target. Subscriptions are bounded and lifetime-owned.</summary>
     private void EnsureRelationshipObservers()
     {
+        // Hosts currently present as floating cells in Children. Any previously observed host not in
+        // this set is retired and must have its handler subscription, host→cell mapping and any stale
+        // cached target pruned (not only on whole-panel detach).
+        var present = new HashSet<CuiContainerControl>(ReferenceEqualityComparer.Instance);
         foreach (var cell in Children)
         {
             if (!IsFloatingCell(cell)) continue;
-            var host = FloatingHost(cell);
-            if (host is null) continue;
-            _hostCells[host] = cell;
+            if (FloatingHost(cell) is not { } host) continue;
+            present.Add(host);
+            if (!_hostCells.TryGetValue(host, out var knownCell) || !ReferenceEquals(knownCell, cell))
+                _hostCells[host] = cell;
             if (_relationshipHandlers.ContainsKey(host)) continue;
             EventHandler handler = (_, _) =>
             {
@@ -263,6 +302,14 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
             };
             host.RelationshipChanged += handler;
             _relationshipHandlers[host] = handler;
+        }
+
+        if (_relationshipHandlers.Count <= present.Count) return;
+        foreach (var host in _relationshipHandlers.Keys.Where(host => !present.Contains(host)).ToArray())
+        {
+            host.RelationshipChanged -= _relationshipHandlers[host];
+            _relationshipHandlers.Remove(host);
+            if (_hostCells.Remove(host, out var retiredCell)) _targets.Remove(retiredCell);
         }
     }
 

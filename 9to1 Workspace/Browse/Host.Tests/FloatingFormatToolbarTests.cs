@@ -5,6 +5,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
@@ -458,6 +459,102 @@ public sealed class FloatingFormatToolbarTests
             Assert.Equal("Composer-Body", container.AuthoredTargetId);
             var failed = WindowBounds(toolbar!, window);
             Assert.True(failed.Width <= 0 || failed.Height <= 0, "wrong-case target must fail closed (hidden)");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Short_viewport_degrades_to_truly_hidden_and_recovers_when_space_returns()
+    {
+        var source = new Source { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            var layer = FindContainer(view, "composer-floating-layer")!;
+            var cell = Assert.IsType<Border>(layer.GetVisualParent());
+            Assert.True(toolbar!.IsVisible, "with enough space the toolbar must be visible");
+            Assert.True(cell.IsVisible, "the floating cell must be present when placed");
+
+            // Shrink the usable height until no side offers genuinely safe space. The toolbar must be
+            // ACTUALLY removed from paint/hit/focus (the panel-private cell wrapper hidden), NOT merely
+            // arranged at a zero rect that still lets positive-sized buttons paint near the origin.
+            window.Height = 100;
+            PumpLayout(window);
+            Assert.False(cell.IsVisible, "no-safe-space must actually remove the floating cell's subtree");
+            // The authored FormattingOpen state is preserved (the authored toolbar is still "open").
+            Assert.True(FindContainer(view, "format-toolbar")!.IsVisible);
+
+            // Recovery: when safe space returns, the same authored cell is placed again.
+            window.Height = 700;
+            PumpLayout(window);
+            Assert.True(cell.IsVisible, "toolbar must recover once safe space returns");
+            Assert.True(toolbar.Bounds.Width > 0 && toolbar.Bounds.Height > 0);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            Assert.True(windowClient.Contains(WindowBounds(toolbar, window)), "recovered toolbar must stay in the viewport");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Production_style_footer_mount_places_within_remaining_space_without_covering_footer()
+    {
+        var source = new Source { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var footer = new Border
+        {
+            Height = 48,
+            Background = Brushes.Gray,
+            Child = new TextBlock { Text = "status bar", VerticalAlignment = VerticalAlignment.Center }
+        };
+        var grid = new Grid { RowDefinitions = new("*,Auto") };
+        grid.Children.Add(view);
+        grid.Children.Add(footer);
+        Grid.SetRow(footer, 1);
+        var window = new Window { Width = 900, Height = 700, Content = grid };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            Assert.True(toolbar!.IsVisible);
+            var toolbarWin = WindowBounds(toolbar, window);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            var footerWin = WindowBounds(footer, window);
+            Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the owner viewport");
+            Assert.False(toolbarWin.Intersects(footerWin), "toolbar must not cover the mounted footer");
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover the editable input");
         }
         catch (Exception error) { testFailure = error; throw; }
         finally

@@ -1,3 +1,5 @@
+using Avalonia.Headless;
+using System.Threading;
 using CakeOS.Cui.Runtime;
 using Xunit;
 
@@ -53,5 +55,44 @@ public sealed class CuiContainerRelationshipTests
         Assert.Throws<ArgumentException>(() => container.SetAuthoredTarget("   "));
         // A failed set must not mutate the retained authored id.
         Assert.Equal("composer-body", container.AuthoredTargetId);
+    }
+
+    [Fact]
+    public async Task Loader_applies_authored_relationship_and_live_update_retains_valid_attached_target()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Cui><Container Type="Overlay Float" id="surface">
+                  <Container id="body"/>
+                  <Container id="footer"/>
+                  <Container id="float-layer" Type="Floating" Target="body" Placement="above"/>
+                </Container></Cui>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            // The authored relationship arrived through the REAL loader path (not a direct setter).
+            var floating = Assert.Single(loaded.Root!.GetVisualDescendants().OfType<CuiContainerControl>(),
+                c => c.AuthoredTargetId is not null);
+            Assert.Equal("body", floating.AuthoredTargetId);
+            Assert.Equal("Above", floating.AuthoredPlacement); // authored casing normalized
+
+            // Live update through the same typed path the loader uses to a STILL-ATTACHED target.
+            var changes = 0;
+            floating.RelationshipChanged += (_, _) => changes++;
+            floating.SetAuthoredTarget("footer");
+            Assert.Equal("footer", floating.AuthoredTargetId);
+            Assert.Equal(1, changes);
+
+            // Same-value re-set is idempotent — no orphan change notification.
+            floating.SetAuthoredTarget("footer");
+            Assert.Equal(1, changes);
+
+            // A re-target back to the original attached body still resolves and is normalized.
+            floating.SetAuthoredTarget("BODY");
+            Assert.Equal("BODY", floating.AuthoredTargetId); // authored ids are ordinal case-sensitive
+            Assert.Equal(2, changes);
+        }, CancellationToken.None);
     }
 }

@@ -2603,6 +2603,11 @@ public sealed class CuiControlLoader : IDisposable
                 // Automation / Accessibility
                 case "tooltip":
                     ToolTip.SetTip(control, resolved);
+                    // Narrow per-control popup routing for CUI-authored tooltips: establish the transparency
+                    // request seam on the adorned control so its retained ToolTip popup is configured
+                    // BEFORE its first Show via the per-instance attached ConfigurePopup path — never via
+                    // a process-wide default that would reconfigure unrelated non-CUI tooltips.
+                    ToolTip.SetConfigurePopup(control, CuiPopupPresentation.RequestTransparency);
                     break;
                 case "shortcut":
                     var gesture = Avalonia.Input.KeyGesture.Parse(resolved);

@@ -603,24 +603,46 @@ namespace Avalonia.Controls.Primitives
             // Narrow authored pre-show seam: notify subscribers (the CUI popup producers) just before
             // the fresh destination is shown so they can request per-pixel alpha BEFORE its first Show,
             // for every open of this popup. Only native popup-root destinations are notified; overlay
-            // hosts have no separate destination window. A subscriber exception must never leave the
-            // popup half-open: dispose the fresh host and clear the open state so Open() can retry.
+            // hosts have no separate destination window.
+            //
+            // The callback is synchronous after _openState is published, so a handler may Close()/
+            // retire/reopen this popup before returning. We therefore (1) capture the exact open state
+            // created here, (2) guard after the callback so we never Show a destination that was
+            // retired/disposed by the handler, and (3) on a subscriber fault retire the captured state
+            // exactly once via its own cleanup custody (never double-disposing a destination a handler
+            // already closed), preserving the original error and leaving the popup retryable.
             if (popupHost is PopupRoot popupRootDestination)
             {
+                var openedState = _openState;
+                Exception? callbackFault = null;
                 try
                 {
                     BeforeShow?.Invoke(this, new PopupBeforeShowEventArgs(popupRootDestination));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    popupHost.SetChild(null);
-                    popupHost.Hide();
-                    ((ISetLogicalParent)popupHost).SetParent(null);
-                    popupHost.Dispose();
-                    handlerCleanup.Dispose();
-                    _openState = null;
-                    throw;
+                    callbackFault = ex;
                 }
+
+                if (callbackFault is not null)
+                {
+                    // Retire the captured state exactly once through its own cleanup custody, only if it
+                    // is still the live open state (a handler may already have closed/retired it — never
+                    // double-dispose the destination). Preserve the original callback fault.
+                    if (ReferenceEquals(_openState, openedState) && openedState is not null)
+                    {
+                        try { openedState.Dispose(); }
+                        catch { /* retain the original callback fault */ }
+                        _openState = null;
+                    }
+                    throw callbackFault;
+                }
+
+                // Post-callback guard: only proceed when the live open state is STILL the one this Open()
+                // created (and so its destination was not retired by a Close()/reopen in the handler).
+                // Showing the captured destination after it was retired would operate on a disposed host.
+                if (!ReferenceEquals(_openState, openedState) || openedState is null)
+                    return;
             }
 
             popupHost.Show();

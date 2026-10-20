@@ -134,14 +134,15 @@ public sealed class CuiPopupBackingTests
                 Assert.Null(fallback.Background);
 
                 // Positive opaque receipt paints the latest guaranteed-opaque semantic color on the
-                // actual fallback border.
-                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.None);
+                // actual fallback border. Report through the real ITopLevelImpl.TransparencyLevelChanged
+                // delegate, not a manual receipt injection.
+                popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(WindowTransparencyLevel.None);
                 Assert.NotNull(fallback.Background);
                 var painted = Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!);
                 Assert.Equal(255, painted.Color.A);
 
                 // A later transparent negotiation clears the fallback (never repaints through).
-                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.Transparent);
+                popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(WindowTransparencyLevel.Transparent);
                 Assert.Null(fallback.Background);
 
                 // Close/reopen: the fresh popup root starts unobserved (unknown) again, and the prior
@@ -182,25 +183,26 @@ public sealed class CuiPopupBackingTests
                 var fallback = Assert.Single(popupRoot.GetVisualDescendants().OfType<Border>(),
                     border => border.Name == "PART_TransparencyFallback");
 
-                // Drive the ACTUAL TopLevel negotiation callback (the private method wired to
-                // ITopLevelImpl.TransparencyLevelChanged and OnApplyTemplate), not a manual injection.
-                var handle = typeof(TopLevel).GetMethod("HandleTransparencyLevelChanged",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                    ?? throw new InvalidOperationException("HandleTransparencyLevelChanged not found");
+                // Drive the ACTUAL platform negotiation callback delegate — ITopLevelImpl.
+                // TransparencyLevelChanged, which TopLevel wires to HandleTransparencyLevelChanged — so
+                // the real report pipeline (including unchanged re-reports) is exercised, not a private
+                // method invocation.
+                void Report(WindowTransparencyLevel level) =>
+                    popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(level);
 
                 // A genuine first None report paints the latest guaranteed-opaque semantic color.
-                handle.Invoke(popupRoot, new object[] { WindowTransparencyLevel.None });
+                Report(WindowTransparencyLevel.None);
                 Assert.NotNull(fallback.Background);
                 var painted = Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!);
                 Assert.Equal(255, painted.Color.A);
 
                 // An UNCHANGED None→None report must still be observed (the old projection only saw
                 // property changes and missed it); the fallback stays painted.
-                handle.Invoke(popupRoot, new object[] { WindowTransparencyLevel.None });
+                Report(WindowTransparencyLevel.None);
                 Assert.NotNull(fallback.Background);
 
                 // A negotiated-through surface keeps the fallback null.
-                handle.Invoke(popupRoot, new object[] { WindowTransparencyLevel.Transparent });
+                Report(WindowTransparencyLevel.Transparent);
                 Assert.Null(fallback.Background);
             }
             finally { window.Close(); }
@@ -267,22 +269,113 @@ public sealed class CuiPopupBackingTests
                 var fallback = Assert.Single(popupRoot.GetVisualDescendants().OfType<Border>(),
                     border => border.Name == "PART_TransparencyFallback");
 
+                // Drive real platform negotiation reports through ITopLevelImpl.TransparencyLevelChanged.
+                void Report(WindowTransparencyLevel level) =>
+                    popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(level);
+
                 // Opaque negotiated → painted. A later opaque-brush re-emission must NOT clear it
                 // (the causal regression: an unobserved projection cleared the fallback on resource
-                // emission). Re-emitting a NEW opaque brush keeps the latest guaranteed-opaque color.
-                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.None);
+                // emission). Re-emitting a NEW opaque brush paints the LATEST exact color (not merely
+                // any A=255 value).
+                Report(WindowTransparencyLevel.None);
                 Assert.NotNull(fallback.Background);
-                popupRoot.Resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(Colors.DarkSlateGray);
+                var firstColor = new SolidColorBrush(Colors.DarkSlateGray);
+                popupRoot.Resources["CuiPopupOpaqueFallbackBrush"] = firstColor;
                 Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
                 Assert.NotNull(fallback.Background);
-                Assert.Equal(255, Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!).Color.A);
+                Assert.Same(firstColor, Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!));
+
+                // Re-emit a DIFFERENT latest opaque color; the painted fallback must now be that exact
+                // latest color (the projection reads the live resource, not a once-captured value).
+                var latestColor = new SolidColorBrush(Color.FromArgb(255, 23, 142, 97));
+                popupRoot.Resources["CuiPopupOpaqueFallbackBrush"] = latestColor;
+                Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                Assert.Same(latestColor, Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!));
 
                 // Transparent negotiated → null; a later opaque-brush emission must still keep it null.
-                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.Transparent);
+                Report(WindowTransparencyLevel.Transparent);
                 Assert.Null(fallback.Background);
                 popupRoot.Resources["CuiPopupOpaqueFallbackBrush"] = new SolidColorBrush(Colors.DarkSlateGray);
                 Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
                 Assert.Null(fallback.Background);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Authored_context_menu_popup_routes_through_the_transparency_seam_per_open()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Cui><Container Type="Page"><Button Content="Owner"><Container Type="Context Menu">
+                  <Button Type="Menu Item" Content="Open"/>
+                </Container></Button></Container></Cui>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            var window = new Window { Content = loaded.Root, Width = 600, Height = 300 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var owner = Assert.Single(loaded.Root!.GetVisualDescendants().OfType<Button>());
+                var menu = Assert.IsType<ContextMenu>(owner.ContextMenu!);
+                var item = Assert.IsAssignableFrom<MenuItem>(Assert.Single(menu.Items));
+
+                // First open: the authored ContextMenu's retained popup is configured through the seam.
+                menu.Open(owner); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var firstRoot = Assert.Single(item.GetVisualAncestors().OfType<PopupRoot>());
+                Assert.Contains(WindowTransparencyLevel.Transparent, firstRoot.TransparencyLevelHint);
+
+                // Second open (reopen): a fresh destination receives the request again.
+                menu.Close(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                menu.Open(owner); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var secondRoot = Assert.Single(item.GetVisualAncestors().OfType<PopupRoot>());
+                Assert.NotSame(firstRoot, secondRoot);
+                Assert.Contains(WindowTransparencyLevel.Transparent, secondRoot.TransparencyLevelHint);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Authored_tooltip_popup_is_configured_before_first_show_via_per_control_path()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Cui><Container Type="Page"><Button Content="Save" tooltip="Save (Ctrl+S)"/>
+                <Button Content="Plain"/></Container></Cui>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            // A control WITHOUT an authored tooltip must NOT be configured (no process-wide leakage).
+            var buttons = loaded.Root!.GetVisualDescendants().OfType<Button>().ToArray();
+            var authoredButton = Assert.Single(buttons, b => (string?)b.Content == "Save");
+            var plainButton = Assert.Single(buttons, b => (string?)b.Content == "Plain");
+            Assert.Null(ToolTip.GetConfigurePopup(plainButton));
+            // The authored control carries the narrow per-control request path (established by the loader).
+            Assert.True(ToolTip.GetConfigurePopup(authoredButton) == CuiPopupPresentation.RequestTransparency,
+                "the loader must attach the narrow per-control tooltip request path");
+
+            var window = new Window { Content = loaded.Root, Width = 500, Height = 250 };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var tooltip = new ToolTip { Content = ToolTip.GetTip(authoredButton) };
+                ToolTip.SetTip(authoredButton, tooltip);
+                ToolTip.SetIsOpen(authoredButton, true); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+
+                // The configured has been carried onto the retained ToolTip instance BEFORE its popup's
+                // first show, and the fresh destination received the transparency hint.
+                Assert.NotNull(tooltip.ConfigurePopup);
+                var root = Assert.Single(tooltip.GetVisualAncestors().OfType<PopupRoot>());
+                Assert.Contains(WindowTransparencyLevel.Transparent, root.TransparencyLevelHint);
+
+                ToolTip.SetIsOpen(authoredButton, false); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
             }
             finally { window.Close(); }
         }, CancellationToken.None);

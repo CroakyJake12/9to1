@@ -286,3 +286,85 @@ network, no images, no .NET/app/native actions.
   - `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TopLevel.cs` `5045b3ec830365b2adb37efa210a4fdb28cd3aa90f9b51c1e79567e33afb27b5`
   - `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ContextMenu.cs` `8b9abee31ff9c09fa1c49ca56a8dc08275c8cef69c48250f5aa4eb579ecabef7`
   - `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ToolTip.cs` `c1d5d7bd14dc09537cfaf62f79b774a05ddadd1d115d6ca43ea87cbb4ede19b6`
+
+---
+
+# Pass 5 — close pass-4 acceptance gaps (source/test authoring only)
+
+Source identity (dirty, uncommitted; working HEAD remains `fb70840d` + carried source). All
+execution still **NOT RUN** — no .NET build/test/app until the coordinator grants a serialized slot
+plus a recompiled CUI composer bundle. Only source + static review this pass. No subagents, no
+commits, no network, no images, no .NET/app/native actions.
+
+Starting identity carried from the frozen pass-4 checkpoint:
+`8569ce7efec9f6f10722487af27bbacac85ec5b9` (parent `c25eb54a70b0c8706bb3ae2c94f36e0af251fc1b`),
+receipt `/workspace/shared/9to1-test-evidence/parallel6-toolbar-pass4-frozen-20261020T184438Z/identity.json`.
+Base commit `ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb`. Owner's 16-worker authorization (latest,
+overriding six-worker text) is respected; this lane remains ONE worker with the $5 cap unchanged.
+
+## Repaired findings (L3P5-001..005)
+
+- **001 — unplaced is real, not an arrange-only claim.** `CuiOverlayPanel` no longer "hides" a
+  floating cell merely by `cell.Arrange(Rect(0,0,0,0))` (which still let MinWidth/MinHeight toolbar
+  descendants paint/hit/focus near the origin). New `ApplyFloatingPlacement` drives a genuine
+  unplaced state: when no safe rect exists the panel-private cell wrapper is removed from
+  render/input/focus/tab path (`IsVisible=false`) while the authored FormattingOpen/IsVisible binding
+  is preserved; safe space returning re-arranges and restores placement (automatic recovery). Hidden
+  unplaced cells remain in Children so relationship/placement observers keep living.
+- **002 — no process-wide ToolTip default registration.** Removed the `CuiControlTemplates` static
+  ctor assignment `ToolTip.DefaultConfigurePopup = RequestTransparency` and the vendor static
+  `DefaultConfigurePopup`. CUI-authored tooltips now route through the narrow per-control attached
+  `ToolTip.ConfigurePopupProperty` path: the loader sets it on authored controls (`ToolTip.SetTip`
+  case), and the vendor ToolTip service copies it onto the instance BEFORE the retained popup's first
+  Show. Unrelated non-CUI tooltip producers are never configured.
+- **003 — guarded `Popup.BeforeShow`.** `Popup.Open` captures the exact `_openState`/destination,
+  guards after the synchronous callback (a handler that `Close()`/retires/reopens must never lead to
+  `Show()` on the disposed destination), and on subscriber fault retires the captured state exactly
+  once through its own cleanup custody — never double-disposing a destination a handler already
+  closed — preserving the original error and leaving the popup retryable. Original popup
+  dismissal/focus/open semantics are unchanged for the normal (no-handler) path.
+- **004 — causal tests, not source claims.** `CuiPopupBackingTests` now drive the real
+  `ITopLevelImpl.TransparencyLevelChanged` delegate (not reflection on a private handler), assert the
+  LATEST exact opaque color after re-emission (not just A=255), keep first+second open coverage, and
+  add real crafted ContextMenu and ToolTip path tests (including "ConfigurationPopup established before
+  first show" on the tooltip instance and no-leak on a plain control). New
+  `CuiPopupBeforeShowGuardTests` cover deterministic close/reentry/throw/cleanup-fault. Relationship
+  tests add a real loader-authored Target/Placement integration + live retarget (still-attached target,
+  casing, idempotent re-set).
+- **005 — prune retired relationship observers.** `CuiOverlayPanel.EnsureRelationshipObservers` now
+  removes handlers/host→cell mappings/stale cached targets for hosts no longer in Children, not only
+  on whole-panel detach. Scoped observations preserved.
+
+## Producer call map (real production wiring, pass 5)
+- Select (ComboBox) popup: `CuiControlTemplates.Select` → `CuiPopupPresentation.RequestTransparency(popup)`.
+- Submenu/MenuItem popup: `CuiControlTemplates.MenuItem` → `RequestTransparency(popup)`.
+- Authored ContextMenu: `CuiControlRegistry.CreateContextMenu()` → `menu.ConfigurePopup = RequestTransparency`.
+- TextInput context menu: `CuiControlTemplates.TextInput` → `menu.ConfigurePopup = RequestTransparency`.
+- CUI tooltip: `CuiControlLoader` "tooltip" case → `ToolTip.SetConfigurePopup(control, RequestTransparency)`;
+  vendor `ToolTip.IsOpenChanged` copies it to the instance before the popup's first `Show`; `Open()` invokes
+  `ConfigurePopup` before `IsOpen = true`.
+
+## Pre-show capability/airspace dependency (BLOCKED, not implemented)
+- Overlay-host adoption stays BLOCKED on a reviewed pre-show capability/airspace signal; native hosting
+  remains the shipping default and removes the white backing via the opaque fallback + alpha-aware
+  projection. `PreferOverlayHost`/`PreferOverlayHostUnknown`/`ApplyHostDecision`/
+  `RegisterAirspaceInspector`/`QueryAirspace` remain the typed seam with zero real callers. Not a claim
+  that the host matrix changed the shipping host.
+
+## Current file identity (SHA-256, pass 5)
+- `framework/CUI/Runtime/CuiOverlayPanel.cs` `6f3d5e394e2f375fd1ebabc511bcc17bcd82e23152e1e1dcc5bb5272e7c6e4fc`
+- `framework/CUI/Runtime/CuiControlTemplates.cs` `c18847ff03d75920db953540b2d62186d381cd0e481d87c40ef5d30cdca31e97`
+- `framework/CUI/Runtime/CuiControlLoader.cs` `94947e35554c6e697fb9616432f03ed9212d3452b9a37f71f7fb4ab879b9711f`
+- `framework/CUI/Runtime.Tests/CuiPopupBackingTests.cs` `aa40d6cfbc3d55356f1820e99b54fa4056fbe2b009a40cef150cb14ec85b0b28`
+- `framework/CUI/Runtime.Tests/CuiContainerRelationshipTests.cs` `166a9264b09ffead8c3e6a373c078a9d1e763fd8a029464f16df74968d298583`
+- `framework/CUI/Runtime.Tests/CuiPopupBeforeShowGuardTests.cs` `5d796eed67ce9ea70675f878c589461a407c0b1abdaace99c21c5cc3a545c166` (new)
+- `9to1 Workspace/Browse/Host.Tests/FloatingFormatToolbarTests.cs` `949a98276828b01fcb3d6fed8dc4f8c20c66db65a92d722b3ff9a9d9a7a4d241`
+- `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Primitives/Popup.cs` `5f30e8c037f5a236890dde7ecf8cd0c180e30746ce3c824d399d943284182f85`
+- `framework/CUI/vendor/Avalonia/src/Avalonia.Controls/ToolTip.cs` `6ee3ec5aa91f9b94a0d09b8e99fc4da6f423088ca4fa388efc65e1da76666860`
+
+## Exact unrun commands (unchanged; require slot grant + recompiled composer bundle)
+- `dotnet build framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj -m:1` (guarded dotnet entrypoint)
+- `dotnet test framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj -m:1 --filter "FullyQualifiedName~CuiPopupBackingTests|FullyQualifiedName~CuiPopupBeforeShowGuardTests|FullyQualifiedName~CuiContainerRelationshipTests"`
+- `dotnet build "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj" -m:1`
+- `dotnet test "9to1 Workspace/Browse/Host.Tests/HavenOS.Browse.Host.Tests.csproj" -m:1 --filter "FullyQualifiedName~FloatingFormatToolbarTests"`
+- Also re-run the full `HavenOS.Browse.Host.Tests` + `CakeOS.Cui.Runtime.Tests` suites for regression.

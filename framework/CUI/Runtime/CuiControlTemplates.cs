@@ -24,13 +24,10 @@ public static class CuiControlTemplates
 {
     private static readonly Lazy<ResourceDictionary> Catalogue = new(CreateCatalogue);
 
-    static CuiControlTemplates()
-    {
-        // Route every CUI-hosted tooltip through the shared per-open transparency request seam. The
-        // CUI runtime owns all tooltip surfaces in this host; hosts that never set this keep the
-        // default tooltip behavior unchanged.
-        ToolTip.DefaultConfigurePopup = CuiPopupPresentation.RequestTransparency;
-    }
+    // NOTE: there is intentionally NO process-wide ToolTip.DefaultConfigurePopup registration here.
+    // Per-open transparency routing for CUI tooltips is established through the narrow per-control
+    // attached ConfigurePopup path (CuiControlLoader sets ToolTip.SetConfigurePopup on authored
+    // controls), so unrelated non-CUI tooltip producers are never configured by this runtime.
     public static void Populate(IResourceDictionary resources)
     { foreach(var entry in Catalogue.Value) resources[entry.Key]=entry.Value; }
     public static bool TryGet(Type backendType,out IControlTemplate? template)
