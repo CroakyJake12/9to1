@@ -299,7 +299,7 @@ internal static class CuiV1ModelReader
     private static IReadOnlyList<CuiComponent> ReadComponents(JsonElement element, string name)
     {
         if (!element.TryGetProperty(name, out var list) || list.ValueKind != JsonValueKind.Array)
-            return Array.Empty<CuiComponent>();
+            return System.Array.Empty<CuiComponent>();
         var result = new List<CuiComponent>();
         foreach (var child in list.EnumerateArray()) result.Add(ReadComponent(child));
         return result;
@@ -362,7 +362,7 @@ internal static class CuiV1ModelReader
     private static IReadOnlyList<string> Array(JsonElement element, string property)
     {
         if (!element.TryGetProperty(property, out var list) || list.ValueKind != JsonValueKind.Array)
-            return Array.Empty<string>();
+            return System.Array.Empty<string>();
         var result = new List<string>();
         foreach (var item in list.EnumerateArray())
             if (item.ValueKind == JsonValueKind.String) result.Add(item.GetString() ?? "");

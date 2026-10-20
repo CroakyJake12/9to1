@@ -36,7 +36,7 @@ main_source = '<Cui>\n<Import Source="Shared.cui-prefab"/>\n<Page ID="main"><Sha
 main.write_text(main_source)
 shared.write_text('<Prefab (Definition) Type="dynamic" ID="Shared"><Text Text="Shared"/></Prefab>')
 theme.write_text('<Theme (Definition) Name="Example" Inherits="Professional"><Text (Definition) FontSize="14"/></Theme>')
-artifact = fixture / 'obj/Debug/net10.0/Cui/compilation.cuic.json'
+artifact = fixture / 'obj/Debug/net10.0/Cui/compilation.v1.cuic.json'
 rows = []
 def run(name, expected_ok, expected_text=None, extra=()):
     command = [str(args.dotnet), 'build', str(project), '-m:1', '--verbosity', 'minimal', *extra]
@@ -63,6 +63,7 @@ original = artifact.read_bytes()
 compiled = json.loads(original)
 check('all-family-files-compiled', {entry['source'] for entry in compiled['documents']} == {'Main.cui', 'Shared.cui-prefab', 'Palette.cui-theme'})
 check('actual-version-metadata', compiled['metadata']['LanguageVersion'] == '1' and compiled['metadata']['RuntimeAbiVersion'] == '1' and compiled['metadata']['ComponentRegistryVersion'] == '2.0')
+check('v1-artifact-format-identity', compiled.get('format') == 'cui-build-compilation' and compiled.get('formatVersion') == 1)
 check('typed-value-payload-preserved', b'CuiLiteralValue' in original and b'18' in original and b'caption' in original)
 check('source-maps-present', any(entry['AuthoredId'] == 'caption' for doc in compiled['documents'] for entry in doc['compilation']['SourceMap']))
 check('source-hashes-current', all(hashlib.sha256((fixture / entry['source']).read_bytes()).hexdigest() == entry['sha256'] for entry in compiled['documents']))
@@ -104,7 +105,7 @@ run('valid-after-repair', True)
 check('artifact-changed-on-valid-repair', artifact.read_bytes() != original)
 # Actual target-only entrypoints may supply backslashes even on Linux.
 run('msbuild-path-separators', True, extra=('-p:CuiCompilationArtifact=obj\\path-check\\compilation.cuic.json',))
-check('msbuild-path-normalized', (fixture / 'obj/path-check/compilation.cuic.json').exists())
+check('msbuild-path-normalized', (fixture / 'obj/path-check/compilation.v1.cuic.json').exists())
 
 run('missing-toolchain-fails', False, 'CUIB011', ('-p:CuiCompilerTaskAssembly=' + str(fixture / 'missing.dll'),))
 check('toolchain-not-shipped-as-app-dependency', not (fixture / 'bin/Debug/net10.0/CakeOS.Cui.Build.Compiler.dll').exists())
