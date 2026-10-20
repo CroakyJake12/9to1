@@ -1,6 +1,6 @@
 {
   "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
-  "recorded_at": "2026-10-20T12:50:06.341680+00:00",
+  "recorded_at": "2026-10-20T13:02:48.771056+00:00",
   "source_commit": "ebeb78cfb798bbf1493b7923ac0b2f5c301dc280",
   "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
   "branch": "codex/cloud-continuation-20261020",
@@ -198,11 +198,11 @@
     "worktree": "/workspace/9to1-chat-cui",
     "base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
     "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
-    "state": "ACTIVE one OpenCode composer-pass5 close/loader/typed Stop repair; base9727; exclusively allocated serial .NET slot",
+    "state": "ACTIVE pass6 close/loader causal repair on preserved dirty pass5; latest source compilation FAIL, no acceptance",
     "first_compilation": "5actual C#adapter errors",
     "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
     "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof",
-    "latest_observation_at": "2026-10-20T12:50:06.341672+00:00",
+    "latest_observation_at": "2026-10-20T13:02:48.771050+00:00",
     "branch_pushed": "codex/cloud-native-chat-cui-20261020",
     "pass3_frozen": {
       "identity": "/workspace/shared/9to1-test-evidence/composer-pass3-frozen-20261020T120612Z/identity.json",
@@ -214,12 +214,11 @@
       "diagnostics": "Temporary synthetic debug instrumentation removed before frozen checkpoint; source scan found no matching draft debug logger"
     },
     "next_dispatch": {
-      "prompt": "/workspace/shared/9to1-test-evidence/opencode-composer-pass5-dispatch.txt",
-      "sha256": "1d12d670914f259196845c0d0b02c33088462d0c3f932b072c5f99485dbeb1e2",
-      "source_base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
-      "started_at": "2026-10-20T12:47:10Z",
-      "state": "ACTIVE, no success claim",
-      "review_feedback": "/workspace/shared/9to1-test-evidence/implementation-review-feedback.json"
+      "prompt": "/workspace/shared/9to1-test-evidence/opencode-composer-pass6-dispatch.txt",
+      "sha256": "3e988dec3eed13529354517819342d7d5cb5a5283fe5209d168fd74f1178b2f5",
+      "source": "9727ca0c+preserved4191cf\u2026dirty patch",
+      "scope": "close/rawShow/physical ownership and actual causal loader/parent tests only; Stop separate",
+      "state": "ACTIVE"
     },
     "pass4_intervention": {
       "at": "2026-10-20T12:22:02Z",
@@ -267,6 +266,18 @@
       "later_host": "84total/72passed/12failed at11:48UTC; actual queued-draft/model-gate regressions and obsolete Instruction reflection helpers still under repair",
       "state": "ACTIVE source, not frozen; exclusive serialized .NET slot held by one OpenCode Mercury worker",
       "rendered_control_coverage": "Still deficient: Overlay helper invokes bindings directly and reads source CanSend; must restore real authored Button event and IsEnabled coverage"
+    },
+    "pass5_partial": {
+      "ended_at": "2026-10-20T12:55:08.245750Z",
+      "exit_code": 0,
+      "outcome": "Natural blank final after incomplete edit, not programme/task completion",
+      "frozen": "/workspace/shared/9to1-test-evidence/composer-pass5-frozen-20261020T125508Z/identity.json",
+      "patch_sha256": "4191cfdaaeb3cf20f9de483dd131f4cf62f46da39d1886b08bc81204b504eecc",
+      "zip_sha256": "67a092b157249aa6a0fc35e9ac0744ffa2d09d05d72a0665c405ea56b32d4bd1",
+      "root_compile": "FAIL CS0191 readonly_released assignment and CS0169 unused_withdrawn; runtimeNOT_RUN",
+      "worker5PASS": "Earlier source only; source-TCS assertions insufficient for loader/close causality",
+      "config_restored": true,
+      "cap_changed": false
     }
   },
   "latest_owner_ui_refinements": {
