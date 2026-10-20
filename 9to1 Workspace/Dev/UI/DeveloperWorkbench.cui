@@ -1,0 +1,48 @@
+<Cui id="dev.project-workbench" version="1">
+  <Page>
+    <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
+      <Text id="dev-project-title" text="{Binding ProjectTitle}" font-size="24" text-wrapping="Wrap" />
+      <Text text="{Binding ProjectSummary}" text-wrapping="Wrap" accessible-name="Existing project and task" />
+      <Container Type="Wrap">
+        <Button id="dev-refresh" action="dev.refresh" content="Refresh project" />
+        <Button id="dev-tree" action="dev.tree" content="Project files" />
+        <Button id="dev-git-status" action="dev.git-status" content="Git status" />
+        <Button id="dev-git-diff" action="dev.git-diff" content="Working-tree diff" />
+        <Button id="dev-git-branches" action="dev.git-branches" content="Branches" />
+      </Container>
+      <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" />
+      <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
+      <Button id="dev-open-source" action="dev.open-source" content="Open source" Interactive="{Binding CanOpenSource}" />
+      <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
+      <Button id="dev-search" action="dev.search" content="Search files" />
+      <Text text="{Binding SearchResults}" text-wrapping="Wrap" accessible-name="Actual file search results" />
+      <Text text="{Binding EditorTitle}" text-wrapping="Wrap" accessible-name="Selected source and draft revision" />
+      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" />
+      <Container Type="Wrap">
+        <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
+        <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />
+        <Button id="dev-revert-pass" action="dev.revert-pass" content="Prepare last pass revert" Interactive="{Binding CanRevert}" />
+      </Container>
+      <Text text="{Binding ReviewSummary}" text-wrapping="Wrap" accessible-name="This edit pass only" />
+      <Text text="Before this pass" font-size="18" />
+      <Object type="DeveloperReadonlySource" id="dev-pass-before" text="{Binding BeforeText}" font-family="monospace" min-height="100" accessible-name="Exact source before this pass" />
+      <Text text="After this pass" font-size="18" />
+      <Object type="DeveloperReadonlySource" id="dev-pass-after" text="{Binding AfterText}" font-family="monospace" min-height="100" accessible-name="Exact proposed source after this pass" />
+      <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" />
+      <Button id="dev-terminal-run" action="dev.run-command" content="Run command" />
+      <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" />
+      <Button id="dev-test-run" action="dev.run-tests" content="Run tests" />
+      <Input id="dev-stage-task" placeholdertext="Saved build task ID" accessible-name="Saved build task ID" Type="Text" Value="{Binding StageTaskId}" />
+      <Input id="dev-stage-id" placeholdertext="Saved build stage ID" accessible-name="Saved build stage ID" Type="Text" Value="{Binding StageId}" />
+      <Button id="dev-build-stage" action="dev.run-stage" content="Run saved build stage" />
+      <Input id="dev-branch-name" placeholdertext="Literal branch name" accessible-name="Git branch name" Type="Text" Value="{Binding BranchName}" />
+      <Container Type="Wrap">
+        <Button id="dev-create-branch" action="dev.create-branch" content="Create branch" />
+        <Button id="dev-switch-branch" action="dev.switch-branch" content="Switch branch" />
+      </Container>
+      <Text text="{Binding ProcessStatus}" text-wrapping="Wrap" accessible-name="Observed command exit and timeout" />
+      <Object type="DeveloperReadonlySource" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="180" accessible-name="Actual standard output and error" />
+      <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" />
+    </Container>
+  </Page>
+</Cui>

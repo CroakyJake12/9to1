@@ -3,6 +3,11 @@
   Where: HavenOS Apps/Dev/HavenOS.Dev.csproj, the standalone HavenOS Dev app surface package.
   What: Declares the bounded Dev surface and its dependencies on existing platform-neutral developer contracts.
   Why: Keeps Dev independently buildable without moving shared HUI, Studio, Terminal, or editor-extension implementation into the app.
+
+  The canonical CUI compiler/build-artifact pipeline is imported exactly like the reference app
+  (Spaces): the authored UI/DeveloperWorkbench.cui source is compiled into the embedded
+  CUI.Compilation.v1 bundle, which DeveloperWorkbenchCuiDocument loads through the typed runtime
+  contracts. No runtime source reparse path remains in this consumer.
 -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -10,9 +15,21 @@
     <RootNamespace>HavenOS.Apps.Dev</RootNamespace>
     <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*;Tests\**\*</DefaultItemExcludes>
   </PropertyGroup>
+  <Import Project="../../framework/CUI/Compiler/buildTransitive/CakeOS.Cui.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <!--
+      CUI Runtime supplies the compiled-artifact admission contracts the Dev document loader uses
+      (CuiRuntimeLoadException, CuiRuntimeCompatibility, CuiControlRegistry). Core alone only
+      carries the document/codec model, so this reference is required to load the authored
+      DeveloperWorkbench.cui from the packaged compiled bundle.
+    -->
+    <ProjectReference Include="..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
+    <EmbeddedResource Include="UI\DeveloperWorkbench.cui" LogicalName="HavenOS.Apps.Dev.UI.DeveloperWorkbench.cui" />
+    <None Update="UI\DeveloperWorkbench.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Import Project="../../framework/CUI/Compiler/buildTransitive/CakeOS.Cui.targets" />
 </Project>
