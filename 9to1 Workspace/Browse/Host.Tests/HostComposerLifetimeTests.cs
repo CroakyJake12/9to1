@@ -367,7 +367,11 @@ public sealed class HostComposerLifetimeTests
     {
         var source = new RecordingSource { CanSend = true };
         var view = new ChatComposerCuiView(source);
-        var window = new Window { Width = 900, Height = 700, Content = view };
+        // Place the composer at a nonzero ancestor offset so the same-space containment/center
+        // assertions cannot pass accidentally at the origin.
+        var host = new Panel { Margin = new Thickness(80, 60, 0, 0) };
+        host.Children.Add(view);
+        var window = new Window { Width = 900, Height = 700, Content = host };
         window.Show();
         Exception? testFailure = null;
         try
@@ -388,9 +392,17 @@ public sealed class HostComposerLifetimeTests
             Assert.Equal(new Thickness(6), addButton.Padding);
             Assert.True(image.Bounds.Width >= 31 && image.Bounds.Width <= 33, $"plus image arranged width {image.Bounds.Width}");
             Assert.True(image.Bounds.Height >= 31 && image.Bounds.Height <= 33, $"plus image arranged height {image.Bounds.Height}");
-            Assert.True(addButton.Bounds.Contains(image.Bounds), $"plus image {image.Bounds} clipped outside add button {addButton.Bounds}");
-            var imageCenter = image.Bounds.Center;
-            var buttonCenter = addButton.Bounds.Center;
+            // Compare the image and button in a SINGLE coordinate space: transform the image's arranged
+            // box (its Bounds.Size) into button-local coordinates against the button's own local box.
+            // Image.Bounds is relative to its ContentPresenter and Button.Bounds to the button's parent,
+            // so comparing them directly mixes bases; this same-space transform is base-immune.
+            var toButton = image.TransformToVisual(addButton);
+            Assert.NotNull(toButton);
+            var imageInButton = new Rect(image.Bounds.Size).TransformToAABB(toButton!.Value);
+            var buttonLocal = new Rect(addButton.Bounds.Size);
+            Assert.True(buttonLocal.Contains(imageInButton), $"plus image {imageInButton} clipped outside add button {buttonLocal}");
+            var imageCenter = imageInButton.Center;
+            var buttonCenter = buttonLocal.Center;
             Assert.True(Math.Abs(imageCenter.X - buttonCenter.X) < 1d && Math.Abs(imageCenter.Y - buttonCenter.Y) < 1d,
                 $"plus image center {imageCenter} not centered in add button center {buttonCenter}");
 

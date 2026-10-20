@@ -404,6 +404,12 @@ public sealed class CuiCompoundComposerTests
             ?? throw new InvalidOperationException($"Click requires an attached control; none for {control.GetType().Name}");
         root.UpdateLayout();
         Dispatcher.UIThread.RunJobs();
+        // Commit/capture the SAME actual TopLevel before hit testing: with the Skia compositing host,
+        // InputHitTest consults committed presentation readback, so a rendered frame must exist first.
+        using (var frame = root.CaptureRenderedFrame())
+        {
+            Assert.NotNull(frame);
+        }
         var point = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), root)!.Value;
         var hit = root.InputHitTest(point) as Visual;
         if (!(ReferenceEquals(hit, control) || hit?.GetVisualAncestors().Contains(control) == true))

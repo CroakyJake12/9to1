@@ -491,6 +491,7 @@ public sealed class CuiControlLoader : IDisposable
                     declaration, SnapshotRandomOnceCandidates(declaration, generation), generation));
             }
             else if (string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(declaration.Source)
                 && bool.TryParse(declaration.Value, out var parsed))
             {
                 pendingLocal[declaration.Name] = parsed;
@@ -505,9 +506,16 @@ public sealed class CuiControlLoader : IDisposable
                     $"Local variable '{declaration.Name}' has an invalid initializer shape; expected a bool literal or a string RandomOnce source selection.", declaration.Span));
             }
         }
-        // PASS 2: only after every declaration/pool has validated, pick once per frame.
+        // PASS 2: only after every declaration/pool has validated, pick once per frame. Reject a
+        // stale outer attempt BEFORE starting any selection and again immediately before retirement,
+        // so a reentrant reload/dispose cannot be overwritten by the outer continuation.
+        if (randomOncePlans.Count > 0 && !IsLoadAttemptCurrent(generation))
+            throw ReentrancyError(randomOncePlans[0].Declaration);
         foreach (var plan in randomOncePlans)
             pendingLocal[plan.Declaration.Name] = SelectRandomOnce(plan.Declaration, plan.Candidates, plan.Generation);
+
+        if (randomOncePlans.Count > 0 && !IsLoadAttemptCurrent(generation))
+            throw ReentrancyError(randomOncePlans[randomOncePlans.Count - 1].Declaration);
 
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
@@ -2000,6 +2008,10 @@ public sealed class CuiControlLoader : IDisposable
     /// second preflight pass.</summary>
     private sealed record RandomOncePlan(CuiVariableDeclaration Declaration, IReadOnlyList<string> Candidates, int Generation);
 
+    /// <summary>Upper bound for an explicit finite ordered typed candidate pool captured before any
+    /// allocation, so a hostile/lazy Count cannot force an unbounded snapshot.</summary>
+    private const int MaxRandomOncePoolSize = 8192;
+
     /// <summary>
     /// First-pass RandomOnce validation: checks every declaration shape and snapshots the typed
     /// candidate pool. No chooser is invoked here, so a later invalid declaration is discovered
@@ -2033,13 +2045,13 @@ public sealed class CuiControlLoader : IDisposable
             // dispose this loader. Reject a stale outer attempt after it returns (even when the
             // lookup itself failed).
             if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
-            candidates = SnapshotTypedStringPool(sourceValue, declaration);
+            candidates = SnapshotTypedStringPool(sourceValue, declaration, generation);
             if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
         }
         else
         {
             if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
-            candidates = [];
+            candidates = ImmutableStringList.Empty;
         }
 
         if (candidates.Count == 0)
@@ -2078,12 +2090,17 @@ public sealed class CuiControlLoader : IDisposable
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR080", CuiDiagnosticSeverity.Error,
                 $"Local variable '{declaration.Name}' RandomOnce chooser returned an empty candidate.", declaration.Span));
-        if (!candidates.Contains(chosen, StringComparer.Ordinal))
+        if (!ContainsOriginalCandidate(candidates, chosen))
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR081", CuiDiagnosticSeverity.Error,
                 $"Local variable '{declaration.Name}' RandomOnce chooser returned a candidate not present in the snapshotted pool.", declaration.Span));
         return chosen;
     }
+
+    /// <summary>Validates a chooser result against the private immutable original pool contents,
+    /// never against any view the chooser could mutate.</summary>
+    private static bool ContainsOriginalCandidate(IReadOnlyList<string> candidates, string chosen) =>
+        candidates is ImmutableStringList snapshot ? snapshot.Contains(chosen) : candidates.Contains(chosen, StringComparer.Ordinal);
 
     /// <summary>
     /// Snapshots the candidate pool under a truthful explicit finite ordered typed candidate-list
@@ -2094,21 +2111,18 @@ public sealed class CuiControlLoader : IDisposable
     /// sequences are retained verbatim, and the returned snapshot is an OWNED immutable copy, never
     /// the live host list, so later host mutation cannot affect this frame's chooser or consumers.
     /// </summary>
-    private static IReadOnlyList<string> SnapshotTypedStringPool(object? sourceValue, CuiVariableDeclaration declaration)
+    private IReadOnlyList<string> SnapshotTypedStringPool(object? sourceValue, CuiVariableDeclaration declaration, int generation)
     {
         switch (sourceValue)
         {
             case null:
-                return [];
+                return ImmutableStringList.Empty;
             case string or char:
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR072", CuiDiagnosticSeverity.Error,
                     $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' must be a typed string collection; got scalar '{sourceValue.GetType().Name}'.", declaration.Span));
             case IReadOnlyList<string> list:
-                ValidatePoolEntries(list, declaration);
-                // Owned immutable copy: the chooser and this frame keep a stable snapshot even if
-                // the host mutates the source list later (or a reentrant callback mutates it).
-                return list.ToArray();
+                return SnapshotOrderedStringList(list, declaration, generation);
             case System.Collections.IEnumerable:
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR072", CuiDiagnosticSeverity.Error,
@@ -2120,20 +2134,57 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
-    private static void ValidatePoolEntries(IReadOnlyList<string> list, CuiVariableDeclaration declaration)
+    /// <summary>Reads and validates the indexed pool exactly once. Count is captured ONCE, the load
+    /// attempt is checked immediately after it and after every attempted host Count/index read, and
+    /// an explicit supported size bound is enforced before allocation. The host enumerator/CopyTo/
+    /// ToArray are never invoked, so indexed and enumerated views cannot diverge.</summary>
+    private ImmutableStringList SnapshotOrderedStringList(IReadOnlyList<string> list, CuiVariableDeclaration declaration, int generation)
     {
-        for (var i = 0; i < list.Count; i++)
+        int count;
+        try { count = list.Count; }
+        catch (Exception error) { throw PoolReadError(declaration, $"failed to read the pool Count: {error.Message}"); }
+        if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+        if (count < 0 || count > MaxRandomOncePoolSize)
+            throw PoolReadError(declaration, $"has unsupported Count {count}; an explicit finite ordered typed pool supports 1..{MaxRandomOncePoolSize} entries");
+
+        var copy = new string[count];
+        for (var i = 0; i < count; i++)
         {
-            var item = list[i];
+            string item;
+            try { item = list[i]; }
+            catch (Exception error) { throw PoolReadError(declaration, $"failed to read pool index {i}: {error.Message}"); }
+            if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
             if (item is null)
-                throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                    "CUIR072", CuiDiagnosticSeverity.Error,
-                    $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' contains a null entry at index {i}.", declaration.Span));
+                throw PoolReadError(declaration, $"contains a null entry at index {i}");
             if (item.Length == 0)
-                throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                    "CUIR072", CuiDiagnosticSeverity.Error,
-                    $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' contains an empty entry at index {i}.", declaration.Span));
+                throw PoolReadError(declaration, $"contains an empty entry at index {i}");
+            copy[i] = item;
         }
+        return new ImmutableStringList(copy);
+    }
+
+    private static CuiRuntimeLoadException PoolReadError(CuiVariableDeclaration declaration, string detail) =>
+        new(new CuiDiagnostic(
+            "CUIR072", CuiDiagnosticSeverity.Error,
+            $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' {detail}.", declaration.Span));
+
+    /// <summary>A genuinely read-only owned snapshot of the finite ordered candidate pool. The
+    /// underlying array is private and never exposed, so a hostile caller cannot cast the
+    /// IReadOnlyList view back to a mutable string[] and mutate membership.</summary>
+    private sealed class ImmutableStringList : IReadOnlyList<string>
+    {
+        public static readonly ImmutableStringList Empty = new(Array.Empty<string>());
+        private readonly string[] _items;
+        public ImmutableStringList(string[] items) => _items = items;
+        public int Count => _items.Length;
+        public string this[int index] => _items[index];
+        /// <summary>Ordinal membership against the private original contents, never a caller-mutable view.</summary>
+        public bool Contains(string value) => Array.IndexOf(_items, value) >= 0;
+        public IEnumerator<string> GetEnumerator()
+        {
+            for (var i = 0; i < _items.Length; i++) yield return _items[i];
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     /// <summary>True while the named load attempt is still the current one and the loader is

@@ -18,7 +18,17 @@ public sealed record CuiActionDefinition(
     string Command,
     CuiValue? Parameter,
     CuiSourceSpan Span,
-    string? LocalTarget = null);
+    string? LocalTarget = null)
+{
+    // Preserve the CLR signature referenced by precompiled four-argument consumers.
+    public CuiActionDefinition(string name, string command, CuiValue? parameter, CuiSourceSpan span)
+        : this(name, command, parameter, span, LocalTarget: null)
+    {
+    }
+
+    public void Deconstruct(out string name, out string command, out CuiValue? parameter, out CuiSourceSpan span) =>
+        (name, command, parameter, span) = (Name, Command, Parameter, Span);
+}
 
 /// <summary>A document-root ordinary local CUI variable declaration (for example a typed bool
 /// used to drive a pure-local Toggle action, or a source-driven string selected once per mounted
