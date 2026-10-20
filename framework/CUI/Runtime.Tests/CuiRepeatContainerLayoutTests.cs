@@ -73,8 +73,8 @@ public sealed class CuiRepeatContainerLayoutTests
             {
                 var wrap = FindContainer(root, "wrap");
                 Assert.NotNull(wrap);
-                var before = Assert.Single(root.GetVisualDescendants().OfType<Button>().Where(b => b.Content is "B"));
-                var after = Assert.Single(root.GetVisualDescendants().OfType<Button>().Where(b => b.Content is "A"));
+                var before = Assert.Single(root.GetVisualDescendants().OfType<Button>(), b => b.Content is "B");
+                var after = Assert.Single(root.GetVisualDescendants().OfType<Button>(), b => b.Content is "A");
                 var items = ItemButtons(root);
                 Assert.Equal(8, items.Length);
 
@@ -133,9 +133,9 @@ public sealed class CuiRepeatContainerLayoutTests
                 window.UpdateLayout();
                 var reordered = ItemButtons(root);
                 Assert.Equal(3, reordered.Length);
-                Assert.Equal("3", (string)reordered[0].Content);
-                Assert.Equal("1", (string)reordered[1].Content);
-                Assert.Equal("2", (string)reordered[2].Content);
+                Assert.Equal("3", Assert.IsType<string>(reordered[0].Content));
+                Assert.Equal("1", Assert.IsType<string>(reordered[1].Content));
+                Assert.Equal("2", Assert.IsType<string>(reordered[2].Content));
                 Assert.Contains(before[2], reordered);
                 Assert.Contains(before[0], reordered);
                 Assert.Contains(before[1], reordered);
@@ -145,7 +145,7 @@ public sealed class CuiRepeatContainerLayoutTests
                 window.UpdateLayout();
                 var edited = ItemButtons(root);
                 Assert.Equal(3, edited.Length);
-                Assert.Equal("4", (string)edited[1].Content);
+                Assert.Equal("4", Assert.IsType<string>(edited[1].Content));
                 Assert.Contains(before[2], edited); // "3" survives
                 Assert.Contains(before[0], edited); // "1" survives
                 Assert.DoesNotContain(before[1], edited); // "2" removed
@@ -192,9 +192,9 @@ public sealed class CuiRepeatContainerLayoutTests
                 Assert.Equal(new[] { "S1", "a1", "a2", "MID", "b1", "S2" }, visible);
 
                 // Static siblings and both ranges share one authored order in the owning container.
-                var s1 = Assert.Single(root.GetVisualDescendants().OfType<Button>().Where(b => b.Content is "S1"));
-                var mid = Assert.Single(root.GetVisualDescendants().OfType<Button>().Where(b => b.Content is "MID"));
-                var s2 = Assert.Single(root.GetVisualDescendants().OfType<Button>().Where(b => b.Content is "S2"));
+                var s1 = Assert.Single(root.GetVisualDescendants().OfType<Button>(), b => b.Content is "S1");
+                var mid = Assert.Single(root.GetVisualDescendants().OfType<Button>(), b => b.Content is "MID");
+                var s2 = Assert.Single(root.GetVisualDescendants().OfType<Button>(), b => b.Content is "S2");
                 Assert.True(Pos(s1, host!).Y < Pos(mid, host!).Y);
                 Assert.True(Pos(mid, host!).Y < Pos(s2, host!).Y);
             }
