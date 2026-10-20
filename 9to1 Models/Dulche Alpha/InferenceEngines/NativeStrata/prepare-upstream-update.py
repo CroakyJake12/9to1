@@ -31,6 +31,35 @@ def git_blob_sha(body: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(body)).encode("ascii") + b"\0" + body).hexdigest()
 
 
+def member_body(archive: pathlib.Path, relative: str) -> bytes:
+    """Return the raw body of one regular member of the archive (by relative path)."""
+    with tarfile.open(archive, "r:gz") as source:
+        for member in source.getmembers():
+            if member.isdir() or not member.isfile():
+                continue
+            name = pathlib.PurePosixPath(member.name)
+            if len(name.parts) < 2:
+                continue
+            rel = pathlib.PurePosixPath(*name.parts[1:]).as_posix()
+            if rel == relative:
+                original = source.extractfile(member)
+                if original is None:
+                    raise ValueError("Missing source body: " + relative)
+                with original:
+                    return original.read()
+    raise ValueError("Member not found in archive: " + relative)
+
+
+def explained_eol_normalization(archive: pathlib.Path, path: str, tree_blob_sha: str) -> bool:
+    """Verify the ONLY allowed EOL export transform: CRLF->LF normalization of the exported body makes
+    its git blob hash equal the authenticated tree blob. A pathname is never exempt by itself."""
+    try:
+        body = member_body(archive, path)
+    except Exception:
+        return False
+    return git_blob_sha(body.replace(b"\r\n", b"\n")) == tree_blob_sha
+
+
 def extract_rows(archive: pathlib.Path):
     """Yield (relative_path, bytes, sha256, git_blob_sha) for every regular source file."""
     expected_root = None
@@ -108,22 +137,30 @@ def generate(args) -> int:
     # tree export and the committed blob).
     if getattr(args, "verified_tree_blobs", None) is not None:
         tree = json.loads(args.verified_tree_blobs.read_text())
+        # Header binding: the authenticated tree supplied MUST be the one selected as the lock's tree,
+        # never a different tree that merely happens to be attached to the argument.
+        if tree.get("treeSha") != args.tree:
+            raise ValueError("Tree cross-check header mismatch: authenticated tree %s != selected tree %s"
+                             % (tree.get("treeSha"), args.tree))
         blobs = tree.get("blobs") or {}
         missing = [r["path"] for r in lock["rows"] if r["path"] not in blobs]
         extra = [p for p in blobs if p not in {r["path"] for r in lock["rows"]}]
         mismatch = [r["path"] for r in lock["rows"] if r["path"] in blobs and blobs[r["path"]] != r["gitBlobSha"]]
-        exempt = set(tree.get("eolExportExempt") or [])
-        unexplained = [p for p in mismatch if p not in exempt]
+        # No blanket path exemption: every mismatch must be explained by recomputing the actual
+        # normalized (CRLF->LF) body blob hash against the authenticated tree. Anything else is
+        # unexplained and fails closed.
+        explained = [p for p in mismatch if explained_eol_normalization(args.archive, p, blobs[p])]
+        unexplained = [p for p in mismatch if p not in explained]
         if missing or extra or unexplained:
             raise ValueError(
                 "Tree cross-check failed: missing=%d extra=%d unexplained-mismatch=%d"
                 % (len(missing), len(extra), len(unexplained)))
         lock["treeCrossCheck"] = {
-            "treeSha": tree.get("treeSha") or args.tree,
+            "treeSha": args.tree,
             "blobMatches": len(lock["rows"]) - len(mismatch),
             "missingFromTree": missing,
             "extraInTree": extra,
-            "eolExportNormalized": sorted(mismatch),
+            "eolExportNormalized": sorted(explained),
         }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(lock, indent=2) + "\n")
@@ -135,19 +172,29 @@ def generate(args) -> int:
 
 
 def verify_tree(args) -> int:
-    """Cross-check a lock's rows against an authenticated Git tree blob map."""
+    """Cross-check a lock's rows against an authenticated Git tree blob map.
+
+    Every mismatch must be explained by recomputing the actual normalized (CRLF->LF) body blob hash
+    against the authenticated tree, and the authenticated tree must equal the lock's tree. There is
+    no blanket path exemption.
+    """
     lock = json.loads(args.lock.read_text())
     tree = json.loads(args.tree_blobs.read_text())
+    tree_sha = tree.get("treeSha")
+    if tree_sha != lock.get("gitCommitTree"):
+        print("tree cross-check FAILED: tree header %s != lock tree %s" % (tree_sha, lock.get("gitCommitTree")),
+              file=sys.stderr)
+        return 2
     blobs = tree.get("blobs") or {}
     rows = {r["path"]: r for r in lock["rows"]}
     missing = [p for p in rows if p not in blobs]
     extra = [p for p in blobs if p not in rows]
     mismatch = [p for p in rows if p in blobs and blobs[p] != rows[p]["gitBlobSha"]]
-    exempt = set(tree.get("eolExportExempt") or [])
-    unexplained = [p for p in mismatch if p not in exempt]
-    print("tree=%s lockRows=%d treeBlobs=%d" % (tree.get("treeSha"), len(rows), len(blobs)))
-    print("missingFromTree=%d extraInTree=%d mismatch=%d exemptEOL=%d unexplained=%d"
-          % (len(missing), len(extra), len(mismatch), len([p for p in mismatch if p in exempt]), len(unexplained)))
+    explained = [p for p in mismatch if explained_eol_normalization(args.archive, p, blobs[p])]
+    unexplained = [p for p in mismatch if p not in explained]
+    print("tree=%s lockRows=%d treeBlobs=%d" % (tree_sha, len(rows), len(blobs)))
+    print("missingFromTree=%d extraInTree=%d mismatch=%d explainedEOL=%d unexplained=%d"
+          % (len(missing), len(extra), len(mismatch), len(explained), len(unexplained)))
     if missing or extra or unexplained:
         print("tree cross-check FAILED", file=sys.stderr)
         return 2
@@ -219,6 +266,8 @@ def main() -> int:
     vt = sub.add_parser("verify-tree")
     vt.add_argument("--lock", type=pathlib.Path, required=True)
     vt.add_argument("--tree-blobs", type=pathlib.Path, required=True)
+    vt.add_argument("--archive", type=pathlib.Path, required=True,
+                    help="The donor source archive (used to recompute normalized EOL blob hashes).")
     vt.set_defaults(func=verify_tree)
 
     args = parser.parse_args()

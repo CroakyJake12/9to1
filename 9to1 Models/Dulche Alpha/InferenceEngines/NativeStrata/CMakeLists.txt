@@ -79,15 +79,21 @@ else()
   install(TARGETS strata RUNTIME DESTINATION runtimes/${_strata_target_dir}/engine)
 
   # Candidate relay worker: hosts the Dulche frame ABI on stdin/stdout and drives the upstream
-  # `strata --serve` engine as a dedicated sub-process. It does not link the engine.
+  # `strata --serve` engine as a dedicated sub-process. It does not link the engine; it does link
+  # cudart when the candidate CUDA build is enabled so the hardware probe is real.
   add_executable(dulche-strata-candidate-worker dulche_strata_candidate_worker.cpp)
   target_compile_definitions(dulche-strata-candidate-worker PRIVATE
-    STRATA_CANDIDATE_ENGINE="${CMAKE_BINARY_DIR}/upstream/${_strata_native_ext}"
+    STRATA_HAS_CUDA=1
+    STRATA_NATIVE_EXT="${_strata_native_ext}"
     DULCHE_STRATA_UPSTREAM_PATH="${DULCHE_STRATA_UPSTREAM}")
+  find_package(CUDAToolkit REQUIRED)
+  target_link_libraries(dulche-strata-candidate-worker PRIVATE CUDA::cudart)
   if(NOT WIN32)
     target_compile_options(dulche-strata-candidate-worker PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
   endif()
   install(TARGETS dulche-strata-candidate-worker RUNTIME DESTINATION runtimes/${_strata_target_dir}/native)
+  # Bundled tokenizer/chat-template helper (required, pinned runtime dependency of the text path).
+  install(FILES strata_tokenizer_helper.py DESTINATION runtimes/${_strata_target_dir}/native)
   # Candidate upstream license is MIT (© 2026 Niko1221 and Strata contributors). The original legacy
   # Apache-2.0 notice is preserved separately in the maintained fork/rollback and is not deleted.
   install(FILES "${DULCHE_STRATA_UPSTREAM}/LICENSE" DESTINATION licenses/strata)

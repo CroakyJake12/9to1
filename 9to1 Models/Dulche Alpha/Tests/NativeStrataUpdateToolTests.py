@@ -212,30 +212,136 @@ class VerifyTreeCrossCheckTests(unittest.TestCase):
         mod = load_tool()
         files = {"a.cpp": b"int main() { return 0; }\n"}
         with tempfile.TemporaryDirectory() as tmp:
-            lock_path, _ = self._make_archive_and_lock(files, tmp)
+            lock_path, archive_path = self._make_archive_and_lock(files, tmp)
             lock = json.loads(lock_path.read_text())
             # Build an authenticated blob map from the generated lock (same bytes).
             blobs = {r["path"]: r["gitBlobSha"] for r in lock["rows"]}
             tree_path = pathlib.Path(tmp) / "tree.json"
-            tree_path.write_text(json.dumps({"treeSha": "b" * 40, "blobs": blobs}))
+            tree_path.write_text(json.dumps({"treeSha": lock["gitCommitTree"], "blobs": blobs}))
             class Args:
                 pass
-            a = Args(); a.lock = lock_path; a.tree_blobs = tree_path
+            a = Args(); a.lock = lock_path; a.tree_blobs = tree_path; a.archive = archive_path
             self.assertEqual(mod.verify_tree(a), 0)
 
     def test_verify_tree_detects_unexplained_mismatch(self):
         mod = load_tool()
         files = {"a.cpp": b"int main() { return 0; }\n"}
         with tempfile.TemporaryDirectory() as tmp:
-            lock_path, _ = self._make_archive_and_lock(files, tmp)
+            lock_path, archive_path = self._make_archive_and_lock(files, tmp)
             lock = json.loads(lock_path.read_text())
             blobs = {r["path"]: ("0" * 40) for r in lock["rows"]}  # wrong tree blob
             tree_path = pathlib.Path(tmp) / "tree.json"
-            tree_path.write_text(json.dumps({"treeSha": "b" * 40, "blobs": blobs}))
+            tree_path.write_text(json.dumps({"treeSha": lock["gitCommitTree"], "blobs": blobs}))
             class Args:
                 pass
-            a = Args(); a.lock = lock_path; a.tree_blobs = tree_path
+            a = Args(); a.lock = lock_path; a.tree_blobs = tree_path; a.archive = archive_path
             self.assertEqual(mod.verify_tree(a), 2)
+
+    def test_verify_tree_rejects_header_mismatch(self):
+        # A tree whose header does not equal the lock's tree must fail even if blobs match.
+        mod = load_tool()
+        files = {"a.cpp": b"int main() { return 0; }\n"}
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path, archive_path = self._make_archive_and_lock(files, tmp)
+            lock = json.loads(lock_path.read_text())
+            blobs = {r["path"]: r["gitBlobSha"] for r in lock["rows"]}
+            tree_path = pathlib.Path(tmp) / "tree.json"
+            tree_path.write_text(json.dumps({"treeSha": "c" * 40, "blobs": blobs}))
+            class Args:
+                pass
+            a = Args(); a.lock = lock_path; a.tree_blobs = tree_path; a.archive = archive_path
+            self.assertEqual(mod.verify_tree(a), 2)
+
+    def test_generate_header_binding_and_blanket_exemption_removed(self):
+        # A body that differs from the tree only by a CRLF->LF export transform is EXPLAINED by
+        # recomputing the normalized hash; a pathname exemption alone must never accept it.
+        mod = load_tool()
+        body_crlf = b"int main() { return 0; }\r\n"
+        files = {"a.cpp": body_crlf}
+        archive = make_archive(files)
+        with tempfile.TemporaryDirectory() as tmp:
+            archive_path = pathlib.Path(tmp) / "src.tar.gz"
+            archive_path.write_bytes(archive)
+            lock_path = pathlib.Path(tmp) / "lock.json"
+            class Args:
+                pass
+            a = Args()
+            a.archive = archive_path
+            a.origin = "o"
+            a.commit = "a" * 40
+            a.tree = "b" * 40
+            a.archive_url = ""
+            a.out = lock_path
+            mod.generate(a)
+            # The authenticated tree stores the LF normalized blob for a.cpp.
+            tree_blob = mod.git_blob_sha(body_crlf.replace(b"\r\n", b"\n"))
+            tree = {"treeSha": "b" * 40, "blobs": {"a.cpp": tree_blob},
+                    "eolExportExempt": ["a.cpp"]}   # even if a legacy exempt list claims it
+            tree_path = pathlib.Path(tmp) / "tree.json"
+            tree_path.write_text(json.dumps(tree))
+            b = Args()
+            b.archive = archive_path
+            b.origin = "o"
+            b.commit = "a" * 40
+            b.tree = "b" * 40
+            b.archive_url = ""
+            b.verified_tree_blobs = tree_path
+            b.out = lock_path
+            self.assertEqual(mod.generate(b), 0)
+            lock = json.loads(lock_path.read_text())
+            self.assertEqual(lock["treeCrossCheck"]["eolExportNormalized"], ["a.cpp"])
+            # A header that does not match the selected tree must fail even though the EOL normalization
+            # would otherwise explain the body.
+            tree_bad = {"treeSha": "e" * 40, "blobs": tree["blobs"]}
+            tree_bad_path = pathlib.Path(tmp) / "tree_bad.json"
+            tree_bad_path.write_text(json.dumps(tree_bad))
+            c = Args()
+            c.archive = archive_path
+            c.origin = "o"
+            c.commit = "a" * 40
+            c.tree = "b" * 40
+            c.archive_url = ""
+            c.verified_tree_blobs = tree_bad_path
+            c.out = lock_path
+            with self.assertRaises(ValueError) as ctx:
+                mod.generate(c)
+            self.assertIn("header mismatch", str(ctx.exception))
+
+    def test_unexplained_mismatch_fails_despite_exempt_list(self):
+        # A genuinely different body is NOT explained by CRLF->LF normalization, and a pathname exempt
+        # list must NOT rescue it.
+        mod = load_tool()
+        files = {"a.cpp": b"int main() { return 0; }\n"}
+        archive = make_archive(files)
+        with tempfile.TemporaryDirectory() as tmp:
+            archive_path = pathlib.Path(tmp) / "src.tar.gz"
+            archive_path.write_bytes(archive)
+            lock_path = pathlib.Path(tmp) / "lock.json"
+            class Args:
+                pass
+            a = Args()
+            a.archive = archive_path
+            a.origin = "o"
+            a.commit = "a" * 40
+            a.tree = "b" * 40
+            a.archive_url = ""
+            a.out = lock_path
+            mod.generate(a)
+            tree = {"treeSha": "b" * 40, "blobs": {"a.cpp": "0" * 40},
+                    "eolExportExempt": ["a.cpp"]}
+            tree_path = pathlib.Path(tmp) / "tree.json"
+            tree_path.write_text(json.dumps(tree))
+            b = Args()
+            b.archive = archive_path
+            b.origin = "o"
+            b.commit = "a" * 40
+            b.tree = "b" * 40
+            b.archive_url = ""
+            b.verified_tree_blobs = tree_path
+            b.out = lock_path
+            with self.assertRaises(ValueError) as ctx:
+                mod.generate(b)
+            self.assertIn("cross-check failed", str(ctx.exception))
 
 
 if __name__ == "__main__":

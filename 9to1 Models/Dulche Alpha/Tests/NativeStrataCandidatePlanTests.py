@@ -1,8 +1,10 @@
 """Bounded build-free plan/guard checks for the candidate (v0.2.1) integration.
 
 These tests never compile, link, run inference, download models or install packages. They assert
-PROVENANCE/PLAN invariants and the presence of explicit FAIL-CLOSED blockers. They do NOT claim any
-native functionality: a source-string existence check is never evidence of a working engine.
+PROVENANCE/PLAN invariants and that the candidate worker implements a REAL portable transport
+(spawn/ready/relay/parse), that load/probe/shutdown are not unconditionally throwing, and that the
+remaining text-generation dependency is the bundled tokenizer helper (with an exact cause), not a
+blanket placeholder. A source-string existence check is never evidence of a working engine.
 """
 import importlib.util
 import json
@@ -29,14 +31,13 @@ class CandidateProfilePlanTests(unittest.TestCase):
 
     def test_cmake_candidate_branch_uses_real_donor_settings(self):
         cmake = (NATIVE / "CMakeLists.txt").read_text()
-        # candidate must enable the GPU/engine branch and keep native IQ expert quantisations, and must
-        # build/install the upstream `strata` engine + the relay worker.
         self.assertIn("STRATA_ENABLE_CUDA ON", cmake)
         self.assertIn("STRATA_NATIVE_EXPERTS ON", cmake)
         self.assertIn("dulche-strata-candidate-worker", cmake)
         self.assertIn("dulche-thunder-engine", cmake)
-        # UI/chat/agent/terminal app bundles are not built by the core CMake (they are separate
-        # Node/Tauri apps under apps/); assert we never install them as engine components.
+        self.assertIn("STRATA_HAS_CUDA=1", cmake)
+        self.assertIn("CUDA::cudart", cmake)
+        self.assertIn("strata_tokenizer_helper.py", cmake)
         self.assertNotIn("apps/desktop", cmake)
         self.assertNotIn("add_subdirectory(apps", cmake)
 
@@ -45,17 +46,30 @@ class CandidateProfilePlanTests(unittest.TestCase):
         self.assertIn("legacy", mod.PROFILES)
         self.assertIn("candidate", mod.PROFILES)
         defaults = {k: (v is None) for k, v in mod.DEFAULT_LOCKS.items()}
-        self.assertTrue(defaults["legacy"])   # legacy falls back to the maintained in-tree lock
-        self.assertTrue(defaults["candidate"])  # candidate requires an explicit --lock
+        self.assertTrue(defaults["legacy"])
+        self.assertTrue(defaults["candidate"])
 
-    def test_candidate_worker_has_fail_closed_blockers(self):
-        # The candidate worker is a source-only transport. It must FAIL CLOSED (native error) on
-        # load/generate until the engine CLI and a tokenizer provider are validated in a real build.
-        # These checks assert the explicit blockers exist; they are NOT functional evidence.
+    def test_build_package_receipt_covers_engine_helper_closure(self):
+        src = (NATIVE / "build-package.py").read_text()
+        self.assertIn("engineSha256", src)
+        self.assertIn("helperSha256", src)
+        self.assertIn("dependencyPinnedCommit", src)
+        self.assertIn("resolve_built", src)          # multi-config aware artifact resolution
+        self.assertIn("windows-x64", src)
+        self.assertIn("verify_windows_x64_pe", src)
+
+    def test_candidate_worker_implements_real_transport(self):
+        # The candidate worker must implement the real spawn/ready/relay/parse lifecycle rather than
+        # leaving all load/generate paths unconditionally throwing.
         src = (NATIVE / "dulche_strata_candidate_worker.cpp").read_text()
-        self.assertIn("candidate load blocker", src)
-        self.assertIn("candidate generate blocker", src)
-        self.assertIn("tokenize_messages", src)
+        for token in ("spawn_engine", "wait_ready", "build_gen_line", "parse_done",
+                      "locate_engine", "engine_send", "read_command", "write_frame"):
+            self.assertIn(token, src)
+        # The blanket "candidate load blocker" / "candidate generate blocker" strings are gone; the
+        # remaining text-generation block is the bundled tokenizer-helper dependency with an exact cause.
+        self.assertNotIn("candidate load blocker", src)
+        self.assertNotIn("candidate generate blocker", src)
+        self.assertIn("tokenizer helper", src)
         self.assertIn("kAbiVersion = 2", src)
         self.assertIn("SOURCE-ONLY", src)
 
@@ -69,9 +83,6 @@ class DependencyLockPlanTests(unittest.TestCase):
         self.assertIn("ggml-cpu", lock["dependency"])
 
     def test_candidate_requires_tree_distinct_from_commit(self):
-        # The historical candidate pin copied the commit as the tree (provenance error). The corrected
-        # candidate MUST record a distinct authenticated tree. This test guards the invariant at the
-        # tool level: generate() rejects commit==tree.
         tool = load_module("prepare_upstream_update", NATIVE / "prepare-upstream-update.py")
         import io as _io
         import tarfile as _tarfile

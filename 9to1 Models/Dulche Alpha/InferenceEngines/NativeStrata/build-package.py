@@ -145,7 +145,8 @@ def main():
     if args.profile == "legacy":
         files = ["CMakeLists.txt", "dulche_strata.h", "dulche_strata.cpp", "dulche_strata_worker.cpp"]
     else:
-        files = ["CMakeLists.txt", "dulche_strata.h", "dulche_strata_candidate_worker.cpp"]
+        files = ["CMakeLists.txt", "dulche_strata.h", "dulche_strata_candidate_worker.cpp",
+                 "strata_tokenizer_helper.py"]
     for filename in files:
         shutil.copyfile(overlay / filename, fork / filename)
     record = {"profile": args.profile, "target": args.target,
@@ -155,6 +156,19 @@ def main():
               "toolchain": {"cmake": tool_version(args.cmake, r"cmake version [\d.]+"),
                             "nvcc": tool_version(args.nvcc, r"release [\d.]+")},
               "qualification": "Verified source; no compilation, CUDA availability or model execution inferred."}
+    if args.profile == "candidate":
+        # Record the pinned dependency closure (llama.cpp/ggml) digests so a reproducible offline build
+        # can be checked against the exact pin rather than silently falling back to unverified FetchContent.
+        dep_lock = overlay / "llama.cpp-dependency-lock.json"
+        if dep_lock.exists():
+            dep = json.loads(dep_lock.read_text())
+            record["dependencyLockSha256"] = hashlib.sha256(dep_lock.read_bytes()).hexdigest()
+            record["dependencyPinnedCommit"] = dep.get("pinnedCommit")
+        if args.ggml_dir is not None:
+            ggml_marker = pathlib.Path(args.ggml_dir) / "CMakeLists.txt"
+            if not ggml_marker.exists():
+                raise ValueError("STRATA_GGML_DIR does not point to a real llama.cpp checkout")
+            record["ggmlDir"] = str(args.ggml_dir)
     (args.work / "source-verification.json").write_text(json.dumps(record, indent=2) + "\n")
     if not args.build:
         return
@@ -192,15 +206,37 @@ def main():
     else:
         # candidate relay worker (the upstream `strata` engine is installed as a sibling binary)
         binary_rel = pathlib.Path("dulche-strata-candidate-worker")
-    built = args.work / "build" / binary_rel
+    build_dir = args.work / "build"
+    # Windows multi-config generators place the artifact under <config>/; single-config (Make/Ninja)
+    # place it at the build root. Resolve the ACTUAL built artifact, never assume a single layout.
+    def resolve_built(rel):
+        candidates = [build_dir / rel, build_dir / "Release" / rel,
+                      build_dir / "RelWithDebInfo" / rel, build_dir / "Debug" / rel]
+        for c in candidates:
+            if c.exists():
+                return c
+        raise ValueError("Built binary not found in the build output: " + str(rel))
+    built = resolve_built(binary_rel)
     record["target"] = checker(built.read_bytes())
-    subprocess.run([args.cmake, "--install", str(args.work / "build")], check=True)
+    subprocess.run([args.cmake, "--install", str(build_dir)], check=True)
     binary = args.install / "runtimes" / args.target / "native" / binary_rel.name
     if not binary.exists() or binary.read_bytes() != built.read_bytes():
         raise ValueError("Installed worker must be the exact inspected build output")
     checker(binary.read_bytes())
     record["workerSha256"] = hashlib.sha256(binary.read_bytes()).hexdigest()
     record["workerBytes"] = binary.stat().st_size
+    if args.profile == "candidate":
+        # Installed engine + bundled helper + dependency-closure digests are part of the receipt, so
+        # the exact installed closure is reproducible and auditable, not just the worker hash.
+        engine = args.install / "runtimes" / args.target / "engine" / (("strata" + (".exe" if args.target == "windows-x64" else "")))
+        if not engine.exists():
+            raise ValueError("Installed engine binary is missing from the receipt closure: " + str(engine))
+        record["engineSha256"] = hashlib.sha256(engine.read_bytes()).hexdigest()
+        record["engineBytes"] = engine.stat().st_size
+        helper = args.install / "runtimes" / args.target / "native" / "strata_tokenizer_helper.py"
+        if helper.exists():
+            record["helperSha256"] = hashlib.sha256(helper.read_bytes()).hexdigest()
+            record["helperBytes"] = helper.stat().st_size
     record["qualification"] = "Actual build artifact; runtime CUDA-device/model/capability acceptance is separately required."
     shutil.copyfile(lock_path, args.install / "strata-source-lock.json")
     (args.install / "strata-build-receipt.json").write_text(json.dumps(record, indent=2) + "\n")
