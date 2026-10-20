@@ -187,7 +187,7 @@
     "mercury_activation_condition": "Only after confirmed OpenCode Beam usage exhaustion",
     "existing_mercury_spending_cap_usd": 5,
     "spending_controls_changed": false,
-    "mercury_requests_sent": "At least two completed authorised OpenCode turns, third active; exact provider request count/billed total UNKNOWN. Key remains outside Git; existing cap unchanged."
+    "mercury_requests_sent": "Three authorised OpenCode turns ended (third via coordinator interrupt); fourth now active. Exact provider request count/billed total UNKNOWN. Key outside Git; existing cap unchanged."
   },
   "allowance": {
     "beam_remaining": "EXHAUSTED: recorded provider.quota FreeUsageLimitError at2026-10-20T10:50:38Z",
@@ -196,9 +196,9 @@
   },
   "unaccepted_candidate": {
     "worktree": "/workspace/9to1-chat-cui",
-    "base": "1862a75abad780da9eae0f91a7c2b787375ba8dc",
+    "base": "9985a1392cd8fd1b299a8582856a877da5c1a6a7",
     "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
-    "state": "FAIL; active repair in single OpenCode Mercury worker with exclusive serial .NET slot",
+    "state": "UNACCEPTED; pass4 active in one OpenCode Mercury request with exclusive serialized .NET slot",
     "first_compilation": "5actual C#adapter errors",
     "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
     "independent_source_blockers": [
@@ -211,13 +211,28 @@
       "CUI local presentation state requires framework implementation and authored CUI migration"
     ],
     "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof",
-    "latest_observation_at": "2026-10-20T11:49:17.889596+00:00",
+    "latest_observation_at": "2026-10-20T12:09:14.536984+00:00",
     "third_turn_tests": {
       "initial_host_core": "82total/50passed/32failed; includes production NativeHost registration failure subsequently corrected in active source",
       "component_lifetime": "2passed/0failed, not whole-page or app acceptance",
       "later_host": "84total/72passed/12failed at11:48UTC; actual queued-draft/model-gate regressions and obsolete Instruction reflection helpers still under repair",
       "state": "ACTIVE source, not frozen; exclusive serialized .NET slot held by one OpenCode Mercury worker",
       "rendered_control_coverage": "Still deficient: Overlay helper invokes bindings directly and reads source CanSend; must restore real authored Button event and IsEnabled coverage"
+    },
+    "branch_pushed": "codex/cloud-native-chat-cui-20261020",
+    "pass3_frozen": {
+      "identity": "/workspace/shared/9to1-test-evidence/composer-pass3-frozen-20261020T120612Z/identity.json",
+      "patch_sha256": "1b94ec257a86d0fba56c89fa2d322edd2b62391464d8bac621c3513592470aa4",
+      "zip_sha256": "50ac61037aae3a021f7274b2fb6d13d21a00b06da05076ace0727a2044e0d8c6",
+      "intervention": "Coordinator SIGINT after actual tool children settled at12:06:12Z to return precise independent findings after repeated same-failure retries; exit1, original private config restoredtrue",
+      "latest_complete_host_trx": "84total/77passed/7failed BEFORE final source edits; not exact frozen-source acceptance",
+      "isolated_refused_send_check": "1passed in worker focused check; no blanket source/native acceptance",
+      "diagnostics": "Temporary synthetic debug instrumentation removed before frozen checkpoint; source scan found no matching draft debug logger"
+    },
+    "next_dispatch": {
+      "prompt": "/workspace/shared/9to1-test-evidence/opencode-composer-pass4-dispatch.txt",
+      "sha256": "7a19219e76213d053d1493775a01b363e8cbe685208c091d58a1c294142e69a7",
+      "scope": "Synchronous actual input/edit snapshots, queue/retirement durability, original-owned UI settlement, actual Button click/IsEnabled tests, live Home preference ownership"
     }
   },
   "latest_owner_ui_refinements": {
