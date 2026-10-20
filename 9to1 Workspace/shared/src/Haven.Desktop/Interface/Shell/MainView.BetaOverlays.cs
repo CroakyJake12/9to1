@@ -114,11 +114,11 @@ public sealed partial class MainView
             conversationProvider: () => VoiceConversationId(),
             startOptionsProvider: BuildVoiceStartOptions,
             spaceIdProvider: () => (CurrentPage as NewChatPage)?.CurrentConversation.SpaceId);
-        adapter.RequestFullSurfaceAsync = ShowFullVoiceSurfaceAsync;
-        adapter.PresentationClosedAsync = async () =>
+        adapter.RequestFullSurfaceAsync += () => ShowFullVoiceSurfaceAsync();
+        adapter.PresentationClosedAsync += () =>
         {
             HideVoiceOverlay();
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         };
         _voiceAdapter = adapter;
         return adapter;

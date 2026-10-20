@@ -131,7 +131,7 @@
     <Compile Include="AssistantRailIconProjectionTests.cs" />
     <Compile Include="HavenAppHeaderBindingsTests.cs" />
     <!-- Voice &amp; Vision pill/full CUI compiled-bundle + presentation bindings (source/tests only). -->
-    <Compile Include="VoiceVision/VoiceVisionCuiCompiledTests.cs;VoiceVision/VoiceVisionCuiPresentationTests.cs" />
+    <Compile Include="VoiceVision/VoiceVisionCuiCompiledTests.cs;VoiceVision/VoiceVisionCuiPresentationTests.cs;VoiceVision/VoiceVisionHostAdapterOwnershipTests.cs" />
     <!-- Shared composer Voice &amp; Vision seam: projection/availability/dispatch (source/tests only). -->
     <Compile Include="ChatComposerVoiceSeamTests.cs" />
   </ItemGroup>

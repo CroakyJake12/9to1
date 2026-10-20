@@ -146,7 +146,12 @@ public static class VoiceVisionCuiDocument
             if (root.ValueKind != JsonValueKind.Object) return ("", -1);
             var format = root.TryGetProperty("format", out var formatEl) && formatEl.ValueKind == JsonValueKind.String
                 ? formatEl.GetString() ?? "" : "";
-            var version = root.TryGetProperty("formatVersion", out var versionEl) && versionEl.TryGetInt32(out var parsed)
+            // Only a JSON number carries a V1 envelope version. Guard the kind BEFORE TryGetInt32 so a
+            // missing/string/object/array/null/overflow/unsupported value normalizes to the -1 sentinel
+            // (refused with CUIR061) instead of leaking a raw InvalidOperationException.
+            var version = root.TryGetProperty("formatVersion", out var versionEl)
+                && versionEl.ValueKind == JsonValueKind.Number
+                && versionEl.TryGetInt32(out var parsed)
                 ? parsed : -1;
             return (format, version);
         }

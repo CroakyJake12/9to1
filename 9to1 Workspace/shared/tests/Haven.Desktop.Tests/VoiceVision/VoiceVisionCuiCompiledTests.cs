@@ -177,6 +177,23 @@ public sealed class VoiceVisionCuiCompiledTests
         Assert.Equal("CUIR061", error.Diagnostic.Code);
     }
 
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("[1,2]")]
+    [InlineData("null")]
+    [InlineData("999999999999999999999999999999")]
+    public void Pill_load_rejects_other_malformed_format_version_kinds_before_effects(string versionToken)
+    {
+        // Missing/string/object/array/null/overflow/unsupported versions must all produce the
+        // intended typed format-version diagnostic (CUIR061) — never a leaked InvalidOperationException
+        // from TryGetInt32 on a non-number element.
+        var bytes = Encoding.UTF8.GetBytes(
+            $$"""{"format":"{{CuiV1ArtifactCodec.FormatName}}","formatVersion":{{versionToken}},"compilerSha256":"x","metadata":{},"documents":[]}""");
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
+        Assert.Equal("CUIR061", error.Diagnostic.Code);
+    }
+
     private static byte[] EnvelopeBytes(string format, int version) => Encoding.UTF8.GetBytes(
         $$"""{"format":"{{format}}","formatVersion":{{version}},"compilerSha256":"x","metadata":{},"documents":[]}""");
 

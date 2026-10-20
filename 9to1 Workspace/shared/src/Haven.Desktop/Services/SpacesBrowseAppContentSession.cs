@@ -259,6 +259,10 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 try { await chat.DisposeAsync(); _ownedChats.Remove(chat); }
                 catch (Exception error) { failures.Add(error); }
             }
+            // Retire this session's Voice host (pill/full/adapter) with the rest of the tab. The
+            // shared singleton runtime is never End/disposed here; only this adapter's owned surface
+            // and runtime subscription are retired.
+            DisposeVoiceOverlay();
             if (_spacesPage is not null && _stateChangedHandlerSpaces is not null)
                 _spacesPage.Controller.StateChanged -= _stateChangedHandlerSpaces;
             foreach (var builder in _ownedBuilders.ToArray())
@@ -690,29 +694,37 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
     /// navigation driver without awaiting its included action.</summary>
     private void WireChatRecovery(OverlayChatSessionFactory factory)
     {
-        factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
+        factory.WireHost = page =>
         {
-            if (_hostQueueNavigation is null)
-                throw new SpacesWorkspaceActionRefusal("No host navigation seam is available; local-model recovery cannot route.");
-            // A retired / no-longer-published page must never queue navigation.
-            if (!IsPublicationCurrent)
-                throw new SpacesWorkspaceActionRefusal("The Spaces session no longer owns a live page; local-model recovery is unrouted.");
-
-            var address = AppContentAddress.Parse("browse://home/models");
-            Task settlement;
-            try
+            // Wire the real shared same-session Voice opener (fresh and restored chats) before the
+            // original initialization/Fresh/Load replaces the conversation target. Providers read
+            // the page's CURRENT model/conversation/space at use time; no construction-time IDs are
+            // captured. Without a registered runtime the waveform toggle stays truthfully hidden.
+            WireVoiceIntoPage(page);
+            page.ManageLocalModelsRequested += (_, _) =>
             {
-                settlement = page.RecoveryActionSettlement;
-            }
-            catch (Exception failure) when (failure is not OperationCanceledException)
-            {
-                throw new SpacesWorkspaceActionRefusal("The recovery action settlement could not be captured: " + failure.Message);
-            }
+                if (_hostQueueNavigation is null)
+                    throw new SpacesWorkspaceActionRefusal("No host navigation seam is available; local-model recovery cannot route.");
+                // A retired / no-longer-published page must never queue navigation.
+                if (!IsPublicationCurrent)
+                    throw new SpacesWorkspaceActionRefusal("The Spaces session no longer owns a live page; local-model recovery is unrouted.");
 
-            var admitted = _hostQueueNavigation(
-                new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true), settlement);
-            if (!admitted)
-                throw new SpacesWorkspaceActionRefusal("The host navigation queue refused the local-model recovery route.");
+                var address = AppContentAddress.Parse("browse://home/models");
+                Task settlement;
+                try
+                {
+                    settlement = page.RecoveryActionSettlement;
+                }
+                catch (Exception failure) when (failure is not OperationCanceledException)
+                {
+                    throw new SpacesWorkspaceActionRefusal("The recovery action settlement could not be captured: " + failure.Message);
+                }
+
+                var admitted = _hostQueueNavigation(
+                    new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true), settlement);
+                if (!admitted)
+                    throw new SpacesWorkspaceActionRefusal("The host navigation queue refused the local-model recovery route.");
+            };
         };
     }
 
