@@ -65,9 +65,9 @@ public sealed class CuiQueryViewportRuntimeTests
                 : _data.Where(item => item.Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray();
             var offset = cursor?.Offset ?? 0;
             var window = all.Skip(offset).Take(PageSize).Select(item => (object)item).ToList();
-            var next = offset + window.Count < all.Length ? new CuiPageCursor(offset + window.Count) : null;
+            var next = offset + window.Count < all.Count ? new CuiPageCursor(offset + window.Count) : null;
             var prev = offset > 0 ? new CuiPageCursor(Math.Max(0, offset - PageSize)) : null;
-            return new CuiPagedResult(window, all.Length, offset, prev, next);
+            return new CuiPagedResult(window, all.Count, offset, prev, next);
         }
     }
 

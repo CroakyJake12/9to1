@@ -46,12 +46,20 @@ public sealed class CuiPopupBackingTests
     }
 
     [Theory]
-    [InlineData(WindowTransparencyLevel.Transparent)]
-    [InlineData(WindowTransparencyLevel.Blur)]
-    [InlineData(WindowTransparencyLevel.AcrylicBlur)]
-    [InlineData(WindowTransparencyLevel.Mica)]
-    public void Alpha_capable_destinations_keep_fallback_null(WindowTransparencyLevel level)
+    [InlineData(nameof(WindowTransparencyLevel.Transparent))]
+    [InlineData(nameof(WindowTransparencyLevel.Blur))]
+    [InlineData(nameof(WindowTransparencyLevel.AcrylicBlur))]
+    [InlineData(nameof(WindowTransparencyLevel.Mica))]
+    public void Alpha_capable_destinations_keep_fallback_null(string levelName)
     {
+        var level = levelName switch
+        {
+            nameof(WindowTransparencyLevel.Transparent) => WindowTransparencyLevel.Transparent,
+            nameof(WindowTransparencyLevel.Blur) => WindowTransparencyLevel.Blur,
+            nameof(WindowTransparencyLevel.AcrylicBlur) => WindowTransparencyLevel.AcrylicBlur,
+            nameof(WindowTransparencyLevel.Mica) => WindowTransparencyLevel.Mica,
+            _ => throw new ArgumentOutOfRangeException(nameof(levelName)),
+        };
         var opaque = new SolidColorBrush(Colors.DarkSlateGray);
         Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(level, opaque));
     }

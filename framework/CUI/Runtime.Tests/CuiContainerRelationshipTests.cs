@@ -1,3 +1,5 @@
+using Avalonia.VisualTree;
+using CakeOS.Cui.Themes;
 using Avalonia.Headless;
 using System.Threading;
 using CakeOS.Cui.Runtime;
