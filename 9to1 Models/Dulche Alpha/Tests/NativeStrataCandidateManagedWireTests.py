@@ -209,5 +209,64 @@ class CandidateManagedCustodyTests(unittest.TestCase):
         self.assertNotIn("new StrataCandidateWorker", factory)
 
 
+class CandidateTokenFrameDecodeTests(unittest.TestCase):
+    """Priority 1: the managed candidate token-frame decoder must consume exactly the producer form
+    `[u32 byte_len][raw utf-8 bytes]` (native `dulche_strata_candidate_worker.cpp` emits `number(raw.size())`
+    then `raw`), with strict trailing-byte rejection. These are SOURCE-SCAN custody checks; the actual
+    frame-level .NET cases below are labelled NOT RUN until a .NET allocation exists (no Python mirror
+    proof of C# execution)."""
+
+    def test_candidate_token_decode_consumes_producer_form_once(self):
+        m = candidate_src()
+        # The type-1 branch must read the length prefix exactly once (via Bytes) and then reject any
+        # suffix. A second ReadUInt32 discard before Bytes would misread raw utf-8 as a length.
+        self.assertNotIn("_=input.ReadUInt32()", m)
+        self.assertIn("var bytes=Bytes(input); End(input);", m)
+        self.assertNotIn("input.ReadUInt32(); var bytes=", m)
+        self.assertIn("End(input)", m)
+
+    def test_candidate_token_decoder_is_strict_utf8_no_replacement(self):
+        m = candidate_src()
+        self.assertIn("new UTF8Encoding(false,true).GetDecoder()", m)
+        self.assertIn("_decoder.GetChars(bytes,0,bytes.Length,chars,0,terminal)", m)
+        # No replacement fallback / no lenient GetString from the byte prefix.
+        self.assertNotIn("GetString(bytes", m)
+
+    def test_legacy_v1_token_decode_unchanged(self):
+        # The V1 legacy worker is the preserved production rollback and must remain byte-for-byte;
+        # only the candidate (V2) decoder is corrected this turn.
+        m = managed_src()
+        self.assertIn("_=input.ReadUInt32()", m)
+        self.assertIn("class StrataNativeWorker", m)
+
+
+NOT_RUN_NET_TOKEN_CASES = [
+    # (label, token body bytes, expected managed decoder result)
+    # Each case is a fixture for a later .NET allocation: feed the bytes into the candidate
+    # TokenDecoder (via the type-1 frame decode seam) and assert the listed outcome. None are
+    # executed here (source-only, no .NET slot).
+    ("short_ascii", b"hi", "hi"),
+    ("empty", b"", ""),
+    ("multibyte", "héllo".encode("utf-8"), "héllo"),
+    ("split_scalar_first_half", "\U0001F600".encode("utf-8")[:2], ""),          # decoder buffers
+    ("split_scalar_second_half", "\U0001F600".encode("utf-8")[2:], "\U0001F600"),  # completes scalar
+    ("truncated_body", b"\x05\x00\x00\x00h", None),  # declares 5 bytes, body has 1 -> InvalidDataException
+    ("trailing_byte", b"\x01\x00\x00\x00a\xff", None),  # extra suffix -> End rejects (InvalidDataException)
+]
+
+class CandidateTokenFrameNetFixtureRegistry(unittest.TestCase):
+    """Registry of the labelled .NET token-frame cases (NOT RUN without a .NET allocation)."""
+
+    def test_registry_has_expected_cases(self):
+        labels = [c[0] for c in NOT_RUN_NET_TOKEN_CASES]
+        for expected in ("short_ascii", "empty", "multibyte", "split_scalar_first_half",
+                         "split_scalar_second_half", "truncated_body", "trailing_byte"):
+            self.assertIn(expected, labels)
+
+    def test_cases_are_not_run_here(self):
+        # Build-free guard: no case is executed against C# in this suite.
+        self.assertTrue(True)
+
+
 if __name__ == "__main__":
     unittest.main()

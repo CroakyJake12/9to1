@@ -28,6 +28,7 @@ The worker is compiled by the coordinator at root allocation with:
 (no compiler installs, downloads, model execution, or Windows/GPU/PC acceptance are performed here).
 """
 import pathlib
+import select
 import struct
 import subprocess
 import sys
@@ -40,8 +41,14 @@ CHILD_PROCESS_H = NATIVE / "dulche_child_process.h"
 BUILT_CANDIDATE = pathlib.Path("/workspace/9to1-mercury-thunder/work/pc-worker/thunder-benchmark/native-child-test/build/dulche-strata-candidate-worker")
 
 
-def _frame(payload_type, payload: bytes = b"") -> bytes:
-    return struct.pack("<II", payload_type, len(payload)) + payload
+def _command(op, body: bytes = b"") -> bytes:
+    """Build a host->worker command frame.
+
+    The real worker's `read_command` (dulche_strata_candidate_worker.cpp) reads a u32 size, then
+    reads exactly `size` bytes as the command body, whose first u32 is the op. So a command frame is
+    `[u32 size][u32 op][body]`. (The Worker output envelope is different: `[u32 type][u32 len][payload]`,
+    parsed by `_read_frame`.)"""
+    return struct.pack("<I", 4 + len(body)) + struct.pack("<I", op) + body
 
 
 def _text(s) -> bytes:
@@ -55,12 +62,21 @@ class NativeFixtureTests(unittest.TestCase):
         return subprocess.Popen([str(BUILT_CANDIDATE)], stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    def _read_frame(self, proc):
+    def _read_frame(self, proc, timeout=15):
+        """Read one worker-output frame `[u32 type][u32 len][payload]` with a real read deadline.
+        Raises AssertionError if no frame arrives within `timeout` seconds (no indefinite block)."""
+        fd = proc.stdout.fileno()
+        ready, _, _ = select.select([fd], [], [], timeout)
+        if not ready:
+            self.fail("native fixture: timed out waiting for a worker frame (blocked read)")
         head = proc.stdout.read(8)
         if len(head) != 8:
             return None
         ptype, length = struct.unpack("<II", head)
+        if length > 1 << 24:
+            self.fail("native fixture: implausible frame length")
         payload = proc.stdout.read(length)
+        self.assertEqual(len(payload), length, "native fixture: truncated frame payload")
         return ptype, payload
 
     def test_hello_frame_version2(self):
@@ -76,19 +92,22 @@ class NativeFixtureTests(unittest.TestCase):
     def test_truncated_command_fails_cleanly(self):
         with self._spawn() as proc:
             self._read_frame(proc)  # consume hello
-            # declare a 4-byte frame but only send 2 bytes -> truncated length/body
-            proc.stdin.write(struct.pack("<II", 1, 4)[:4] + b"\x00\x00")
+            # Declare an 8-byte command body (op u32 + 4 more bytes) but send only the op, then
+            # close stdin so the worker's fread hits EOF instead of blocking forever on an open
+            # stream. This exercises the real bounded length/body path with a real deadline.
+            proc.stdin.write(struct.pack("<I", 8) + struct.pack("<I", 1))
             proc.stdin.flush()
+            proc.stdin.close()
             ptype, payload = self._read_frame(proc)
             self.assertEqual(ptype, 5)          # failure frame
             self.assertEqual(proc.wait(timeout=15), 72)  # bounded exceptional return
-            # no leaked child
+            # no leaked child, full stderr collection
             self.assertEqual(proc.stderr.read().decode("utf-8", "replace"), "")
 
     def test_unknown_operation_fails_cleanly(self):
         with self._spawn() as proc:
             self._read_frame(proc)
-            proc.stdin.write(_frame(99, _text("x")))
+            proc.stdin.write(_command(99, _text("x")))
             proc.stdin.flush()
             ptype, payload = self._read_frame(proc)
             self.assertEqual(ptype, 5)
@@ -104,7 +123,7 @@ class NativeFixtureTests(unittest.TestCase):
             payload = (_text("/nonexistent/pack") + _text("qwen35moe")
                        + struct.pack("<I", 4096) + _text("")
                        + struct.pack("<I", 0))
-            proc.stdin.write(_frame(1, payload))
+            proc.stdin.write(_command(1, payload))
             proc.stdin.flush()
             ptype, payload = self._read_frame(proc)
             self.assertEqual(ptype, 5)
@@ -118,7 +137,7 @@ class NativeFixtureTests(unittest.TestCase):
 
     def _stop_clean(self, proc):
         # op 3 (stop) -> ack type 3 + exit 0, then EOF.
-        proc.stdin.write(_frame(3, b""))
+        proc.stdin.write(_command(3, b""))
         proc.stdin.flush()
         ptype, payload = self._read_frame(proc)
         self.assertEqual(ptype, 3)

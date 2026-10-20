@@ -128,6 +128,80 @@ void set_binary_stdio() {
 #endif
 }
 
+// ---------------------------------------------------------------- platform fd primitives
+// POSIX is the implemented/tested path. Windows is NOT RUN (no Windows build claimed); these
+// wrappers keep the translation unit compiling on Windows and fail closed rather than fake success.
+#if defined(_WIN32)
+struct pollfd { int fd; short events; short revents; };
+typedef unsigned long nfds_t;
+constexpr short POLLIN = 0x001;
+constexpr short POLLOUT = 0x004;
+constexpr short POLLERR = 0x008;
+constexpr short POLLHUP = 0x010;
+#endif
+
+int os_write(int fd, const void* data, size_t n) {
+#if defined(_WIN32)
+    return _write(fd, data, static_cast<unsigned>(n));
+#else
+    return static_cast<int>(::write(fd, data, n));
+#endif
+}
+
+int os_read(int fd, void* data, size_t n) {
+#if defined(_WIN32)
+    return _read(fd, data, static_cast<unsigned>(n));
+#else
+    return static_cast<int>(::read(fd, data, n));
+#endif
+}
+
+// poll() shim. On POSIX it is the real poll. On Windows the worker is unsupported/not run, so it
+// fails closed (-1) rather than pretending the fds are selectable.
+int os_poll(struct pollfd* pfd, nfds_t n, int timeout_ms) {
+#if defined(_WIN32)
+    (void)pfd; (void)n; (void)timeout_ms;
+    errno = ENOSYS;
+    return -1;
+#else
+    return ::poll(pfd, n, timeout_ms);
+#endif
+}
+
+// Resolve an approved/existing interpreter for the bundled tokenizer helper. Uses a deliberate,
+// controlled resolution (env override then a constrained PATH search for python3); it never relies
+// on the current directory, and returns an absolute resolvable path or a resolved launcher.
+// No installs or network are performed.
+std::string resolve_python() {
+    const char* override_env = std::getenv("STRATA_PYTHON");
+    if (override_env && *override_env) {
+        std::filesystem::path p(override_env);
+        std::error_code ec;
+        if (std::filesystem::exists(p, ec) && !ec) return p.string();
+        throw std::invalid_argument("STRATA_PYTHON points to a missing interpreter path.");
+    }
+    const char* path_env = std::getenv("PATH");
+    if (path_env && *path_env) {
+        std::string path(path_env);
+        size_t start = 0;
+        while (start <= path.size()) {
+            const size_t sep = path.find(':', start);
+            const std::string dir = path.substr(
+                start, sep == std::string::npos ? std::string::npos : sep - start);
+            if (!dir.empty()) {
+                std::filesystem::path cand = std::filesystem::path(dir) / "python3";
+                std::error_code ec;
+                if (std::filesystem::exists(cand, ec) && !ec) return cand.string();
+            }
+            if (sep == std::string::npos) break;
+            start = sep + 1;
+        }
+    }
+    throw std::invalid_argument(
+        "candidate text generation dependency: could not resolve a python3 interpreter; set the "
+        "STRATA_PYTHON env var to an installed interpreter path or provide python3 on PATH.");
+}
+
 // ---------------------------------------------------------------- frame buffer (same envelope)
 template<class To, class From>
 To bit_pun(const From& src) {
@@ -308,7 +382,7 @@ bool write_all(int fd, const void* data, size_t n) {
     const char* p = static_cast<const char*>(data);
     size_t left = n;
     while (left > 0) {
-        const ssize_t w = ::write(fd, p, left);
+        const int w = os_write(fd, p, left);
         if (w < 0) {
             if (errno == EINTR) continue;
             return false;
@@ -323,7 +397,7 @@ bool read_exact(int fd, void* out, size_t n) {
     char* p = static_cast<char*>(out);
     size_t got = 0;
     while (got < n) {
-        const ssize_t r = ::read(fd, p + got, n - got);
+        const int r = os_read(fd, p + got, n - got);
         if (r < 0) {
             if (errno == EINTR) continue;
             return false;
@@ -357,12 +431,33 @@ bool helper_send(dulche::ChildProcess& h, const std::string& body) {
     return write_all(h.in_fd(), hdr, 4) && write_all(h.in_fd(), body.data(), body.size());
 }
 
+// Bounded readability wait: returns true when the fd becomes readable (data or EOF) within the
+// deadline; returns false on poll error or timeout. This keeps helper reads genuinely deadline-aware
+// so a silent/stalled helper cannot stall generation forever.
+bool wait_readable(int fd, int timeout_ms) {
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
+    while (std::chrono::steady_clock::now() < deadline) {
+        struct pollfd pfd;
+        pfd.fd = fd; pfd.events = POLLIN; pfd.revents = 0;
+        const int pr = os_poll(&pfd, 1, 200);
+        if (pr < 0) {
+            if (errno == EINTR) continue;
+            return false;
+        }
+        if (pr > 0) return true;
+    }
+    return false;
+}
+
 bool helper_recv(dulche::ChildProcess& h, std::string& body) {
+    // Real external read deadline; do not block past 30s waiting for the helper.
+    if (!wait_readable(h.out_fd(), 30000)) return false;
     unsigned char hdr[4];
     if (!read_exact(h.out_fd(), hdr, 4)) return false;
     const uint32_t len = (uint32_t)hdr[0] | ((uint32_t)hdr[1] << 8)
                        | ((uint32_t)hdr[2] << 16) | ((uint32_t)hdr[3] << 24);
     if (len > kLimit) return false;
+    if (!wait_readable(h.out_fd(), 30000)) return false;
     body.assign(len, '\0');
     return read_exact(h.out_fd(), body.data(), len);
 }
@@ -546,8 +641,17 @@ struct Session {
 // READY max-context is validated against the requested context.
 void wait_ready(dulche::ChildProcess& engine, dulche::LineReader& reader, uint32_t requested_context) {
     std::string line;
-    for (int i = 0; i < 200000; ++i) {
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(120);
+    while (std::chrono::steady_clock::now() < deadline) {
         if (!engine.alive()) throw std::runtime_error("Engine exited before READY (model load failed).");
+        struct pollfd pfd;
+        pfd.fd = engine.out_fd(); pfd.events = POLLIN; pfd.revents = 0;
+        const int pr = os_poll(&pfd, 1, 200);
+        if (pr < 0) {
+            if (errno == EINTR) continue;
+            break;  // poll error (incl. unsupported Windows) -> bounded fail-closed
+        }
+        if (pr == 0) continue;  // not readable yet: re-check alive() + deadline
         if (!reader.next(line)) throw std::runtime_error("Engine stdout ended before READY.");
         if (line.rfind("READY ", 0) == 0) {
             const auto tok = split_space(line);
@@ -576,11 +680,10 @@ void bind_helper(Session& session, int argc, char** argv) {
             "(strata_tokenizer_helper.py) could not be located next to the worker; refusing to "
             "fabricate token ids.");
     dulche::SpawnSpec spec;
-#if defined(_WIN32)
-    spec.exe = "py";
-#else
-    spec.exe = "python3";
-#endif
+    // Bind an approved resolved interpreter (env override, then constrained PATH search); the
+    // ChildProcess exec-failure handshake confirms the exec actually succeeded. No bare `python3`
+    // with execv (execv does not search PATH, so we resolve an absolute path first).
+    spec.exe = resolve_python();
     const std::string tokenizer_dir = (std::filesystem::path(session.pack_dir) / "tokenizer").string();
     spec.args.push_back(helper_path);
     spec.args.push_back("--tokenizer-dir");
@@ -657,7 +760,7 @@ void run_generation(Session& session, const GenerateRequest& req, int argc, char
             struct pollfd pfd[2];
             pfd[0].fd = 0; pfd[0].events = POLLIN; pfd[0].revents = 0;
             pfd[1].fd = session.engine.out_fd(); pfd[1].events = POLLIN; pfd[1].revents = 0;
-            const int pr = ::poll(pfd, 2, 200);
+            const int pr = os_poll(pfd, 2, 200);
             if (pr < 0) { if (errno == EINTR) continue; throw std::runtime_error("poll failed during generation."); }
             if (pfd[0].revents & (POLLIN | POLLHUP)) stdin_readable = true;
             if (pfd[1].revents & (POLLIN | POLLHUP | POLLERR)) engine_readable = true;

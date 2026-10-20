@@ -784,7 +784,10 @@ public sealed class StrataCandidateWorker : IAsyncDisposable, IOriginalInference
                     var frame=await ReadFrameAsync(linked.Token).ConfigureAwait(false);
                     using var input=frame.Reader();
                     if(frame.Type==1) {
-                        _=input.ReadUInt32(); var bytes=Bytes(input); End(input);
+                        // The candidate relay emits token frames as `[u32 byte_len][raw utf-8 bytes]`;
+                        // Bytes(input) consumes exactly that producer form and End(input) rejects any
+                        // trailing bytes, so no length is discarded before the read.
+                        var bytes=Bytes(input); End(input);
                         var token=decoder.Feed(bytes,false);
                         if(token.Length!=0) await output.Writer.WriteAsync(token,linked.Token).ConfigureAwait(false);
                     }
