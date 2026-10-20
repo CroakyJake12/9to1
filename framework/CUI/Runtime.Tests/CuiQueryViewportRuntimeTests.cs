@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
+using System.ComponentModel;
 using System.Threading;
 using Xunit;
 
@@ -93,10 +94,51 @@ public sealed class CuiQueryViewportRuntimeTests
         }
     }
 
+    private sealed class NotifyingHost : ICuiWritableBindingContext, INotifyPropertyChanged
+    {
+        private readonly Dictionary<string, object?> _values = new(StringComparer.Ordinal);
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public void Set(string path, object? value) => _values[path] = value;
+        public void SetNotify(string path, object? value)
+        {
+            _values[path] = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(path));
+        }
+        public bool TryGetValue(string path, out object? value) => _values.TryGetValue(path, out value);
+        public bool TrySetValue(string path, object? value) { _values[path] = value; return true; }
+    }
+
+    /// <summary>A typed source that swaps the host source to <paramref name="next"/> on its first
+    /// evaluation, synchronously, to deterministically force a nested replacement while the outer
+    /// evaluation is still in flight.</summary>
+    private sealed class ReplacingSource : ICuiPagedSource
+    {
+        private readonly NotifyingHost _host;
+        private readonly ICuiPagedSource _next;
+        private bool _swapped;
+        private int _evaluations;
+        public int Evaluations => _evaluations;
+        public ReplacingSource(NotifyingHost host, ICuiPagedSource next) { _host = host; _next = next; }
+        public CuiPagedResult Evaluate(string? query, CuiPageCursor? cursor)
+        {
+            _evaluations++;
+            if (!_swapped)
+            {
+                _swapped = true;
+                _host.SetNotify("Source", _next);
+            }
+            return new CuiPagedResult(new object[] { $"tmp{_evaluations}" }, 1, 0, null, null);
+        }
+    }
+
     private static void Pump() => Dispatcher.UIThread.RunJobs();
 
     private static T? Find<T>(Control root, string id) where T : class =>
         root.GetVisualDescendants().OfType<T>().FirstOrDefault(control => control is Control c && c.Name == id);
+
+    private static string[] Cells(Control root) =>
+        Find<Control>(root, "grid")!.GetVisualDescendants().OfType<Button>()
+            .Where(b => b.Name == "cell").Select(b => (string?)b.Content ?? "").ToArray();
 
     [Fact]
     public async Task Generic_query_viewport_publishes_bounded_window_numeric_labels_and_empty_state()
@@ -319,6 +361,206 @@ public sealed class CuiQueryViewportRuntimeTests
                 Pump();
                 Assert.NotNull(failure);
                 Assert.Equal("CUIA_FAILED", failure!.Code);
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Same_source_repeated_binding_application_does_not_recursively_evaluate()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var host = new HostContext();
+            var source = new PagedListSource("0", "1", "2");
+            host.Set("Source", source);
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(host);
+            var (root, diagnostics) = loader.LoadMarkup(PagerMarkup);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            var window = new Window { Content = root, Width = 400, Height = 340 };
+            window.Show(); Pump();
+            try
+            {
+                Assert.Equal(new[] { "0", "1", "2" }, Cells(root!));
+                var before = source.EvaluateCount;
+
+                // Re-applying the SAME typed source reference through the ordinary host refresh path
+                // must be idempotent: no re-evaluation, no re-publication feedback, no recursion.
+                loader.RefreshBindings(); Pump();
+                loader.RefreshBindings(); Pump();
+                loader.RefreshBindings(); Pump();
+
+                Assert.Equal(before, source.EvaluateCount);
+                Assert.Equal(new[] { "0", "1", "2" }, Cells(root!));
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Reentrant_source_replacement_during_refresh_settles_boundedly_without_stale_publication()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var host = new NotifyingHost();
+            var sourceA = new PagedListSource("a0", "a1", "a2");
+            var sourceC = new PagedListSource("c0", "c1", "c2");
+            var replacing = new ReplacingSource(host, sourceC);
+            host.Set("Source", sourceA);
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(host);
+            var (root, diagnostics) = loader.LoadMarkup(PagerMarkup);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            var window = new Window { Content = root, Width = 400, Height = 340 };
+            window.Show(); Pump();
+            try
+            {
+                Assert.Equal(new[] { "a0", "a1", "a2" }, Cells(root!));
+
+                // Replace with a source that swaps the host source to C DURING its own evaluation.
+                // The nested replacement must settle boundedly (each source evaluated exactly once)
+                // and the final window must be C's, with no stale publication from the interrupted
+                // intermediate producer.
+                host.SetNotify("Source", replacing);
+                loader.RefreshBindings(); Pump();
+
+                Assert.Equal(new[] { "c0", "c1", "c2" }, Cells(root!));
+                Assert.Equal(1, replacing.Evaluations);
+                Assert.Equal(1, sourceC.EvaluateCount);
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Query_pager_and_explicit_same_port_source_update_remain_functional_after_live_replacement()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var host = new HostContext();
+            var sourceA = new PagedListSource("0", "1", "2");
+            var sourceB = new PagedListSource("10", "11", "12", "13", "14");
+            host.Set("Source", sourceA);
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(host);
+            var (root, diagnostics) = loader.LoadMarkup(PagerMarkup);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            var window = new Window { Content = root, Width = 400, Height = 340 };
+            window.Show(); Pump();
+            try
+            {
+                Assert.Equal(new[] { "0", "1", "2" }, Cells(root!));
+                var next = Find<Button>(root!, "next")!;
+                var search = Find<TextBox>(root!, "search");
+
+                // Explicit same-port external update (live source replacement).
+                host.Set("Source", sourceB);
+                loader.RefreshBindings(); Pump();
+                Assert.Equal(new[] { "10", "11", "12" }, Cells(root!));
+
+                // Pager movement on the NEW source.
+                next.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync(); Pump();
+                Assert.Equal(new[] { "13", "14" }, Cells(root!));
+
+                // Query filtering on the NEW source.
+                search!.Text = "14"; Pump();
+                Assert.Equal(new[] { "14" }, Cells(root!));
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task No_global_dispatcher_authored_next_previous_button_clicks_work_before_and_after_reload()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var host = new HostContext();
+            host.Set("Source", new PagedListSource("0", "1", "2", "3"));
+            // No SetActionDispatcher: pager actions must resolve through the owning QueryViewport scope.
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(host);
+            var (root1, diagnostics1) = loader.LoadMarkup(PagerMarkup);
+            Assert.Empty(diagnostics1);
+            loader.WireBindings(root1!);
+            var window = new Window { Content = root1, Width = 400, Height = 340 };
+            window.Show(); Pump();
+            try
+            {
+                // BEFORE reload: a real authored Next click dispatches through the scoped viewport.
+                var prev = Find<Button>(root1!, "prev")!;
+                var next = Find<Button>(root1!, "next")!;
+                Assert.False(prev.IsVisible);
+                next.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync(); Pump();
+                Assert.Equal(new[] { "3" }, Cells(root1!));
+
+                // RELOAD into a new frame generation on the same loader.
+                var (root2, diagnostics2) = loader.LoadMarkup(PagerMarkup);
+                Assert.Empty(diagnostics2);
+                loader.WireBindings(root2!);
+                window.Content = root2; Pump();
+                var prev2 = Find<Button>(root2!, "prev")!;
+                var next2 = Find<Button>(root2!, "next")!;
+                Assert.False(prev2.IsVisible);
+                next2.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync(); Pump();
+                Assert.Equal(new[] { "3" }, Cells(root2!));
+                prev2.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync(); Pump();
+                Assert.Equal(new[] { "0", "1", "2" }, Cells(root2!));
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Unrelated_missing_handler_remains_truthful()
+    {
+        const string MissingHandlerMarkup = """
+            <Cui>
+              <Actions><Action name="ghost" command="not-a-real-command" /></Actions>
+              <Page><Container id="root" Type="Vertical Stack">
+                <Button id="ghost" action="ghost" content="Ghost" />
+              </Container></Page>
+            </Cui>
+            """;
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var loader = new CuiControlLoader();
+            loader.SetBindingContext(new HostContext());
+            var (root, diagnostics) = loader.LoadMarkup(MissingHandlerMarkup);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            var window = new Window { Content = root, Width = 200, Height = 100 };
+            window.Show(); Pump();
+            try
+            {
+                var ghost = Find<Button>(root!, "ghost")!;
+                // No global dispatcher, no owning QueryViewport scope, not a local toggle: the
+                // action is genuinely unwired and remains truthful (never broadly accepted).
+                Assert.False(loader.Inspect(ghost)!.ActionsWired);
+
+                CuiActionFailure? failure = null;
+                loader.ActionFailed += (_, f) => failure = f;
+                ghost.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync(); Pump();
+                Assert.Null(failure);
             }
             finally { window.Close(); }
             return true;

@@ -81,7 +81,11 @@ public sealed class CuiQueryViewport : CuiContainerControl,
 
     /// <summary>The typed data port. Assigning it re-evaluates the current window and republishes
     /// all result metadata to authored bindings. A non-null value that is not an
-    /// <see cref="ICuiPagedSource"/> is rejected; null clears the window.</summary>
+    /// <see cref="ICuiPagedSource"/> is rejected; null clears the window.
+    /// Assigning the SAME source reference is idempotent: it is a safe no-op that does not
+    /// re-evaluate, republish, or reenter the viewport, so the loader's ordinary refresh path
+    /// (which reapplies the parent Source binding) cannot feed back into this viewport's own
+    /// producer indefinitely.</summary>
     public ICuiPagedSource? Source
     {
         get => _source;
@@ -89,6 +93,7 @@ public sealed class CuiQueryViewport : CuiContainerControl,
         {
             if (value is not null && value is not ICuiPagedSource)
                 throw new InvalidOperationException("CUI QueryViewport Source must be an ICuiPagedSource.");
+            if (ReferenceEquals(value, _source)) return;
             _source = value;
             Reevaluate();
         }
@@ -152,6 +157,11 @@ public sealed class CuiQueryViewport : CuiContainerControl,
         else
         {
             var result = source.Evaluate(_query, _cursor);
+            // Fence the evaluation against a nested update (source replacement or withdrawal) that
+            // arrived while producing this window. Such a nested update has already published its
+            // own coherent result; publishing this now-stale outer window would overwrite the newer
+            // owner's state with an older producer's snapshot, so abort without mutating.
+            if (_withdrawn || !ReferenceEquals(_source, source)) return;
             _items.Clear();
             if (result.Items is not null) _items.AddRange(result.Items);
             _totalCount = result.TotalCount;

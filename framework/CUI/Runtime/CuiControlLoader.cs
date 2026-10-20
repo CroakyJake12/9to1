@@ -759,10 +759,17 @@ public sealed class CuiControlLoader : IDisposable
     private void WireBindingsRecursive(Control control, Control? contextMenuOwner = null)
     {
         // Native menu items use the same retained pipeline as native buttons. Pure-local toggles
-        // are wired even without an external dispatcher; external commands require one.
+        // are wired even without an external dispatcher; external commands require a dispatcher,
+        // either the scene/app one or the nearest owning QueryViewport scope (the generic runtime
+        // query/state owner). ObserveActionDispatch resolves the same scoped dispatcher, so admission
+        // and dispatch stay aligned: a button authored inside a mounted QueryViewport is wired even
+        // when no global dispatcher is configured, while a command with no resolvable dispatcher
+        // stays unwired (truthful, never broadly accepted).
         if (control is Button or MenuItem && !_wiredActions.Contains(control)
             && TryGetActionInvocation(control, out var actionInvocation)
-            && (_actionDispatcher is not null || actionInvocation.Command == LocalToggleCommand))
+            && (_actionDispatcher is not null
+                || actionInvocation.Command == LocalToggleCommand
+                || ScopedDispatcherFor(control) is not null))
         {
             EventHandler<RoutedEventArgs> handler = (_, args) =>
             {
