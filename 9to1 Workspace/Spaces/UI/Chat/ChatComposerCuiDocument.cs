@@ -1,4 +1,5 @@
 using CakeOS.Cui;
+using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 

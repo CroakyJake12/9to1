@@ -91,18 +91,21 @@ public sealed record CuiV2Value(
 
     public CuiValue ToCuiValue() => Kind switch
     {
-        CuiV2ValueKind.Literal => new CuiLiteralValue(LiteralValue ?? "", Span.RequiredValue("literal value")),
+        CuiV2ValueKind.Literal => new CuiLiteralValue(LiteralValue ?? "", Span.RequiredValue("literal value").ToCuiSourceSpan()),
         CuiV2ValueKind.Binding => new CuiBindingValue(
-            BindingPath.RequiredValue("binding path"),
+            BindingPath ?? throw new CuiV2AdmissionException("CUIR072", "A required binding path is missing."),
             BindingMode is { } mode && Enum.IsDefined(typeof(CuiBindingMode), mode)
                 ? (CuiBindingMode)mode
                 : throw new CuiV2AdmissionException("CUIR071", $"Unknown CUI binding mode {BindingMode}."),
             BindingFallback,
-            Span.RequiredValue("binding span"),
+            Span.RequiredValue("binding span").ToCuiSourceSpan(),
             BindingTargetType),
-        CuiV2ValueKind.Resource => new CuiResourceValue(ResourceKey.RequiredValue("resource key"), Span.RequiredValue("resource span")),
+        CuiV2ValueKind.Resource => new CuiResourceValue(
+            ResourceKey ?? throw new CuiV2AdmissionException("CUIR072", "A required resource key is missing."),
+            Span.RequiredValue("resource span").ToCuiSourceSpan()),
         CuiV2ValueKind.Invalid => new CuiInvalidValue(
-            InvalidRaw ?? "", InvalidCode ?? "", InvalidMessage ?? "", Span.RequiredValue("invalid span")),
+            InvalidRaw ?? "", InvalidCode ?? "", InvalidMessage ?? "",
+            Span.RequiredValue("invalid span").ToCuiSourceSpan()),
         _ => throw new CuiV2AdmissionException("CUIR071", $"Unsupported CUI value kind '{Kind}'.")
     };
 }
@@ -125,10 +128,10 @@ public sealed record CuiV2TextPart(
 
     public CuiTextPart ToCuiTextPart() => Kind switch
     {
-        CuiV2TextPartKind.Literal => new CuiLiteralTextPart(LiteralValue ?? "", Span.RequiredValue("literal text span")),
+        CuiV2TextPartKind.Literal => new CuiLiteralTextPart(LiteralValue ?? "", Span.RequiredValue("literal text span").ToCuiSourceSpan()),
         CuiV2TextPartKind.Expression => new CuiExpressionTextPart(
             ExpressionValue?.ToCuiValue() ?? throw new CuiV2AdmissionException("CUIR072", "Expression text part is missing its value."),
-            Span.RequiredValue("expression text span")),
+            Span.RequiredValue("expression text span").ToCuiSourceSpan()),
         _ => throw new CuiV2AdmissionException("CUIR071", $"Unsupported CUI text part kind '{Kind}'.")
     };
 }
@@ -277,8 +280,8 @@ public sealed record CuiV2Component(
         component.Type,
         component.Name,
         component.Classes.ToArray(),
-        component.Properties.ToDictionary(pair => pair.Key, pair => CuiV2Value.From(pair.Value), StringComparer.OrdinalIgnoreCase),
-        component.Actions.ToDictionary(pair => pair.Key, pair => CuiV2ActionReference.From(pair.Value), StringComparer.OrdinalIgnoreCase),
+        component.Properties.ToDictionary(pair => pair.Key, pair => CuiV2Value.From(pair.Value), StringComparer.Ordinal),
+        component.Actions.ToDictionary(pair => pair.Key, pair => CuiV2ActionReference.From(pair.Value), StringComparer.Ordinal),
         component.Children.Select(From).ToArray(),
         component.Condition is { } condition ? CuiV2Condition.From(condition) : null,
         component.List is { } list ? CuiV2List.From(list) : null,
@@ -296,8 +299,8 @@ public sealed record CuiV2Component(
         Type,
         Name,
         Classes.ToArray(),
-        Properties.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiValue(), StringComparer.OrdinalIgnoreCase),
-        Actions.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiActionReference(), StringComparer.OrdinalIgnoreCase),
+        Properties.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiValue(), StringComparer.Ordinal),
+        Actions.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiActionReference(), StringComparer.Ordinal),
         Children.Select(child => child.ToCuiComponent()).ToArray(),
         Condition is { } condition ? condition.ToCuiCondition() : null,
         List is { } list ? list.ToCuiList() : null,
@@ -310,7 +313,7 @@ public sealed record CuiV2Component(
         PropertyRegion is { } region ? region.ToCuiPropertyRegion() : null)
     {
         Text = Text,
-        TextParts = TextParts ?? Array.Empty<CuiTextPart>(),
+        TextParts = TextParts?.Select(part => part.ToCuiTextPart()).ToArray() ?? Array.Empty<CuiTextPart>(),
     };
 }
 
@@ -331,28 +334,28 @@ public sealed record CuiV2Semantics(
 {
     public static CuiV2Semantics From(CuiDocument document) => new(
         document.SourceName,
-        document.Resources.ToDictionary(pair => pair.Key, pair => CuiV2Resource.From(pair.Value), StringComparer.OrdinalIgnoreCase),
+        document.Resources.ToDictionary(pair => pair.Key, pair => CuiV2Resource.From(pair.Value), StringComparer.Ordinal),
         document.Styles.Select(CuiV2Style.From).ToArray(),
-        document.Actions.ToDictionary(pair => pair.Key, pair => CuiV2Action.From(pair.Value), StringComparer.OrdinalIgnoreCase),
-        document.Templates.ToDictionary(pair => pair.Key, pair => CuiV2Template.From(pair.Value), StringComparer.OrdinalIgnoreCase),
+        document.Actions.ToDictionary(pair => pair.Key, pair => CuiV2Action.From(pair.Value), StringComparer.Ordinal),
+        document.Templates.ToDictionary(pair => pair.Key, pair => CuiV2Template.From(pair.Value), StringComparer.Ordinal),
         document.Components.Select(CuiV2Component.From).ToArray(),
         CuiV2Span.From(document.Span),
-        document.RootProperties.ToDictionary(pair => pair.Key, pair => CuiV2Value.From(pair.Value), StringComparer.OrdinalIgnoreCase),
+        document.RootProperties.ToDictionary(pair => pair.Key, pair => CuiV2Value.From(pair.Value), StringComparer.Ordinal),
         document.Imports.Select(CuiV2Import.From).ToArray(),
-        document.Variables.ToDictionary(pair => pair.Key, pair => CuiV2Variable.From(pair.Value), StringComparer.OrdinalIgnoreCase));
+        document.Variables.ToDictionary(pair => pair.Key, pair => CuiV2Variable.From(pair.Value), StringComparer.Ordinal));
 
     public CuiDocument ToCuiDocument() => new(
         SourceName,
-        Resources.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiResource(), StringComparer.OrdinalIgnoreCase),
+        Resources.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiResource(), StringComparer.Ordinal),
         Styles.Select(style => style.ToCuiStyle()).ToArray(),
-        Actions.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiAction(), StringComparer.OrdinalIgnoreCase),
-        Templates.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiTemplate(), StringComparer.OrdinalIgnoreCase),
+        Actions.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiAction(), StringComparer.Ordinal),
+        Templates.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiTemplate(), StringComparer.Ordinal),
         Components.Select(component => component.ToCuiComponent()).ToArray(),
         Span.ToCuiSourceSpan())
     {
-        RootProperties = RootProperties.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiValue(), StringComparer.OrdinalIgnoreCase),
+        RootProperties = RootProperties.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiValue(), StringComparer.Ordinal),
         Imports = Imports.Select(import => import.ToCuiImport()).ToArray(),
-        Variables = Variables.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiVariable(), StringComparer.OrdinalIgnoreCase),
+        Variables = Variables.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiVariable(), StringComparer.Ordinal),
     };
 }
 

@@ -63,15 +63,7 @@ public static class CuiV1ArtifactCodec
     public static CuiV1LoadedArtifact ReadArtifact(byte[] utf8)
     {
         ArgumentNullException.ThrowIfNull(utf8);
-        using JsonDocument document;
-        try
-        {
-            document = JsonDocument.Parse(utf8);
-        }
-        catch (Exception error) when (error is JsonException)
-        {
-            throw new InvalidDataException($"The V1 compiled CUI artifact is malformed: {error.Message}.");
-        }
+        using var document = ParseOrThrow(utf8);
 
         var root = document.RootElement;
         var format = String(root, "format");
@@ -118,6 +110,18 @@ public static class CuiV1ArtifactCodec
             return new CuiCompilationMetadata(
                 String(element, "LanguageVersion"), String(element, "RuntimeAbiVersion"),
                 String(element, "ComponentRegistryVersion"), capabilities);
+        }
+    }
+
+    private static JsonDocument ParseOrThrow(byte[] utf8)
+    {
+        try
+        {
+            return JsonDocument.Parse(utf8);
+        }
+        catch (Exception error) when (error is JsonException)
+        {
+            throw new InvalidDataException($"The V1 compiled CUI artifact is malformed: {error.Message}.");
         }
     }
 
@@ -327,9 +331,14 @@ internal static class CuiV1ModelReader
 
     private static CuiSourceSpan ReadSpan(JsonElement element)
     {
-        var source = String(element, "SourceName");
+        // The writer nests each span under a "Span" object; some older V1 shapes carried the
+        // coordinates directly on the owning element. Read from the nested shape when present so a
+        // genuine V1 round-trip preserves the authored source coordinates instead of defaulting.
+        if (!element.TryGetProperty("Span", out var spanEl) || spanEl.ValueKind != JsonValueKind.Object)
+            spanEl = element;
+        var source = String(spanEl, "SourceName");
         (int line, int column) Pos(string property) =>
-            element.TryGetProperty(property, out var pos) && pos.ValueKind == JsonValueKind.Object
+            spanEl.TryGetProperty(property, out var pos) && pos.ValueKind == JsonValueKind.Object
                 ? (Int(pos, "Line"), Int(pos, "Column")) : (1, 1);
         var (sl, sc) = Pos("Start");
         var (el, ec) = Pos("End");

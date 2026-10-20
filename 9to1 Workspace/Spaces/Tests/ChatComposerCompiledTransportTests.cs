@@ -133,15 +133,24 @@ public sealed class ChatComposerCompiledTransportTests
     }
 
     [Fact]
-    public void Missing_compiled_resource_has_no_raw_or_v1_fallback()
+    public void Missing_compiled_composer_resource_has_no_raw_fallback_and_composer_is_not_in_v1()
     {
-        // The composer must never fall back to a raw embedded .cui resource or a V1 artifact.
+        // The stateful composer must never fall back to a raw embedded .cui resource and must never
+        // appear in a genuine V1 bundle. A mixed Spaces assembly may still legitimately emit a V1
+        // bundle for its stateless sibling documents — so we assert composer absence from V1 rather
+        // than global V1 absence.
         var assembly = typeof(ChatComposerCuiDocument).Assembly;
         Assert.Null(assembly.GetManifestResourceStream("HavenOS.Apps.Spaces.UI.Chat.ChatComposer.cui"));
-        Assert.Null(assembly.GetManifestResourceStream("CUI.Compilation.v1"));
-
-        // And an embedded V2 resource must be present.
         Assert.NotNull(assembly.GetManifestResourceStream(ChatComposerCuiDocument.CompiledArtifactResource));
+
+        using var v1 = assembly.GetManifestResourceStream(CuiCompiledArtifactCodec.V1ResourceLogicalName);
+        if (v1 is not null)
+        {
+            using var buffer = new MemoryStream();
+            v1.CopyTo(buffer);
+            var loaded = CuiV1ArtifactCodec.ReadArtifact(buffer.ToArray());
+            Assert.DoesNotContain(loaded.Documents, doc => doc.Source == ChatComposerCuiDocument.CompiledSourceName);
+        }
     }
 
     private static IReadOnlyList<CuiCompiledArtifactDocument> ReplaceDocument(

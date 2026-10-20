@@ -105,6 +105,25 @@ public static class CuiCompiledArtifactCodec
                 throw new CuiV2AdmissionException("CUIR072", $"Compiled document '{document.Source}' has no semantic payload.");
             ValidateSemantics(document.Semantics, document.Source);
 
+            if (document.SourceMap is null)
+                throw new CuiV2AdmissionException("CUIR072", $"Compiled document '{document.Source}' has no source-map projection.");
+            foreach (var entry in document.SourceMap)
+            {
+                if (entry is null || string.IsNullOrWhiteSpace(entry.StableId))
+                    throw new CuiV2AdmissionException("CUIR072",
+                        $"Compiled document '{document.Source}' has an invalid source-map entry.");
+            }
+
+            if (document.Dependencies is null)
+                throw new CuiV2AdmissionException("CUIR072", $"Compiled document '{document.Source}' has no dependency graph.");
+            foreach (var dependency in document.Dependencies.Entries)
+            {
+                if (dependency is null || string.IsNullOrWhiteSpace(dependency.StableId)
+                    || !ValidDependencyKinds.Contains(dependency.Kind))
+                    throw new CuiV2AdmissionException("CUIR071",
+                        $"Compiled document '{document.Source}' carries an unsupported dependency kind '{dependency?.Kind}'.");
+            }
+
             var stateful = RequiresAbi2(document.Semantics);
             if (stateful && !string.Equals(document.Metadata.RuntimeAbiVersion, V2RuntimeAbiVersion, StringComparison.Ordinal))
                 throw new CuiV2AdmissionException("CUIR074",
@@ -134,6 +153,16 @@ public static class CuiCompiledArtifactCodec
             || (semantics.Actions is not null && semantics.Actions.Values.Any(action => action.LocalTarget is not null));
     }
 
+    private static readonly HashSet<string> ValidDependencyKinds = new(StringComparer.Ordinal)
+    {
+        CuiV2DependencyKind.Definition,
+        CuiV2DependencyKind.Template,
+        CuiV2DependencyKind.Resource,
+        CuiV2DependencyKind.Variable,
+        CuiV2DependencyKind.Action,
+        CuiV2DependencyKind.Import,
+    };
+
     private static string? MaxAbi(string? current, string candidate)
     {
         if (current is null) return candidate;
@@ -147,8 +176,11 @@ public static class CuiCompiledArtifactCodec
         if (semantics.Components is null)
             throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has no component tree.");
         if (semantics.Resources is null || semantics.Actions is null || semantics.Templates is null
-            || semantics.RootProperties is null || semantics.Imports is null || semantics.Variables is null)
+            || semantics.RootProperties is null || semantics.Imports is null || semantics.Variables is null
+            || semantics.Styles is null)
             throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' is missing a required semantic collection.");
+
+        foreach (var style in semantics.Styles) ValidateStyle(style, source);
 
         var actionNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (name, action) in semantics.Actions)
@@ -201,6 +233,9 @@ public static class CuiCompiledArtifactCodec
             throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' contains a null component.");
         if (string.IsNullOrWhiteSpace(component.Type))
             throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' contains a component without a type.");
+        if (component.Span is null)
+            throw new CuiV2AdmissionException("CUIR072",
+                $"Component '{component.Type}' in '{source}' is missing its source span.");
         if (component.Classes is null || component.Properties is null || component.Actions is null
             || component.Children is null || component.ElseChildren is null || component.TextParts is null)
             throw new CuiV2AdmissionException("CUIR072",
@@ -237,10 +272,30 @@ public static class CuiCompiledArtifactCodec
         foreach (var child in component.ElseChildren) ValidateComponent(child, source);
     }
 
+    private static void ValidateStyle(CuiV2Style style, string source)
+    {
+        if (style is null)
+            throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' contains a null style.");
+        if (string.IsNullOrWhiteSpace(style.Selector) || style.Setters is null)
+            throw new CuiV2AdmissionException("CUIR072",
+                $"A style in '{source}' is missing its selector or setter list.");
+        if (style.Span is null)
+            throw new CuiV2AdmissionException("CUIR072", $"Style '{style.Selector}' in '{source}' is missing its source span.");
+        foreach (var setter in style.Setters)
+        {
+            if (setter is null || string.IsNullOrWhiteSpace(setter.Property) || setter.Span is null)
+                throw new CuiV2AdmissionException("CUIR072",
+                    $"Style '{style.Selector}' in '{source}' has an invalid setter.");
+            ValidateValue(setter.Value, source);
+        }
+    }
+
     private static void ValidateValue(CuiV2Value value, string source)
     {
         if (value is null)
             throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' contains a null value.");
+        if (value.Span is null)
+            throw new CuiV2AdmissionException("CUIR072", $"A value in '{source}' is missing its source span.");
         switch (value.Kind)
         {
             case CuiV2ValueKind.Literal:

@@ -32,6 +32,11 @@ public sealed class CuiV2TransportCodecTests
         new(CuiCompiledArtifactCodec.FormatName, CuiCompiledArtifactCodec.FormatVersion, "compiler",
             document.Metadata, [document]);
 
+    private static CuiCompilationMetadata Meta(string language, string abi) =>
+        new(language, abi, "2.0", []);
+
+    private static CuiV2Span SpanAt() => new("sample.cui", 1, 1, 1, 2);
+
     [Fact]
     public void Typed_v2_round_trip_preserves_every_semantic_distinction()
     {
@@ -190,7 +195,7 @@ public sealed class CuiV2TransportCodecTests
         Assert.Equal(CuiCompiledArtifactCodec.V1ResourceLogicalName, CuiCompiledArtifactCodec.V1ResourceLogicalName);
 
         var v1 = CuiV1ArtifactCodec.WriteBundle(
-            [new CuiV1Compiled(output, "sample.cui", Hash("stateless"))], "compiler");
+            [new CuiV1ArtifactCodec.CuiV1Compiled(output, "sample.cui", Hash("stateless"))], "compiler");
         var text = Encoding.UTF8.GetString(v1);
         // Genuine V1 retains the full typed compiled projection (typed value markers, source maps).
         Assert.Contains("CuiLiteralValue", text);
@@ -211,5 +216,136 @@ public sealed class CuiV2TransportCodecTests
             new CuiCompiledArtifact(CuiCompiledArtifactCodec.FormatName, CuiCompiledArtifactCodec.FormatVersion,
                 "compiler", v2Doc.Metadata, [v2Doc]));
         Assert.Throws<InvalidDataException>(() => CuiV1ArtifactCodec.ReadArtifact(v2));
+    }
+
+    [Fact]
+    public void Genuine_v1_span_round_trip_preserves_source_coordinates()
+    {
+        var (output, _) = Compile("<Cui><Page ID=\"root\"><Text Text=\"hi\" /></Page></Cui>");
+        var v1 = CuiV1ArtifactCodec.WriteBundle(
+            [new CuiV1ArtifactCodec.CuiV1Compiled(output, "sample.cui", Hash("stateless"))], "compiler");
+        var loaded = CuiV1ArtifactCodec.ReadArtifact(v1);
+        var doc = Assert.Single(loaded.Documents);
+
+        var originalRoot = output.Semantics.Components[0];
+        var root = Assert.Single(doc.Semantics.Components);
+        // The genuine V1 reader must recover the actual authored coordinates (not a default (1,1)).
+        Assert.Equal(originalRoot.Span.Start.Line, root.Span.Start.Line);
+        Assert.Equal(originalRoot.Span.Start.Column, root.Span.Start.Column);
+        Assert.Equal(originalRoot.Span.End.Line, root.Span.End.Line);
+    }
+
+    [Fact]
+    public void Case_distinct_symbols_round_trip_without_collapsing()
+    {
+        var span = SpanAt();
+        var value = new CuiV2Value(CuiV2ValueKind.Literal, LiteralValue: "True", Span: span);
+        var doc = new CuiV2Semantics(
+            "sample.cui",
+            new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal)
+            {
+                ["Flag"] = new CuiV2Resource("Flag", value, span),
+                ["flag"] = new CuiV2Resource("flag", value, span),
+            },
+            Array.Empty<CuiV2Style>(),
+            new Dictionary<string, CuiV2Action>(StringComparer.Ordinal),
+            new Dictionary<string, CuiV2Template>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Component>(),
+            span,
+            new Dictionary<string, CuiV2Value>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Import>(),
+            new Dictionary<string, CuiV2Variable>(StringComparer.Ordinal)
+            {
+                ["Flag"] = new CuiV2Variable("Flag", "bool", "True", span),
+                ["flag"] = new CuiV2Variable("flag", "bool", "False", span),
+            });
+        var document = new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "2"),
+            doc, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>()));
+        var artifact = MakeArtifact(document);
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(artifact);
+        var decoded = Assert.Single(CuiCompiledArtifactCodec.ReadArtifact(bytes).Documents).Semantics;
+
+        // Distinct symbols differing only by case must both survive; nothing collapses to
+        // OrdinalIgnoreCase or broadens a wrong-case lookup.
+        Assert.Equal(2, decoded.Resources.Count);
+        Assert.True(decoded.Resources.ContainsKey("Flag"));
+        Assert.True(decoded.Resources.ContainsKey("flag"));
+        Assert.Equal(2, decoded.Variables.Count);
+        Assert.True(decoded.Variables.ContainsKey("Flag"));
+        Assert.True(decoded.Variables.ContainsKey("flag"));
+
+        var reconstructed = decoded.ToCuiDocument();
+        Assert.True(reconstructed.Resources.ContainsKey("Flag"));
+        Assert.True(reconstructed.Resources.ContainsKey("flag"));
+        Assert.True(reconstructed.Variables.ContainsKey("Flag"));
+        Assert.True(reconstructed.Variables.ContainsKey("flag"));
+    }
+
+    [Fact]
+    public void Null_styles_collection_is_rejected()
+    {
+        var span = SpanAt();
+        var doc = new CuiV2Semantics(
+            "sample.cui",
+            new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal),
+            null!,
+            new Dictionary<string, CuiV2Action>(StringComparer.Ordinal),
+            new Dictionary<string, CuiV2Template>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Component>(),
+            span,
+            new Dictionary<string, CuiV2Value>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Import>(),
+            new Dictionary<string, CuiV2Variable>(StringComparer.Ordinal));
+        var artifact = MakeArtifact(new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            doc, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>())));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(artifact);
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR072", error.Code);
+    }
+
+    [Fact]
+    public void Unsupported_dependency_kind_is_rejected()
+    {
+        var span = SpanAt();
+        var doc = new CuiV2Semantics(
+            "sample.cui",
+            new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Style>(),
+            new Dictionary<string, CuiV2Action>(StringComparer.Ordinal),
+            new Dictionary<string, CuiV2Template>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Component>(),
+            span,
+            new Dictionary<string, CuiV2Value>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Import>(),
+            new Dictionary<string, CuiV2Variable>(StringComparer.Ordinal));
+        var graph = new CuiV2DependencyGraph([new CuiV2Dependency("gen:v1:1", "BogusKind", "y")]);
+        var artifact = MakeArtifact(new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            doc, Array.Empty<CuiV2SourceMapEntry>(), graph));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(artifact);
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR071", error.Code);
+    }
+
+    [Fact]
+    public void Missing_value_span_is_rejected_before_consumer_use()
+    {
+        var span = SpanAt();
+        var badValue = new CuiV2Value(CuiV2ValueKind.Literal, LiteralValue: "x", Span: null);
+        var doc = new CuiV2Semantics(
+            "sample.cui",
+            new Dictionary<string, CuiV2Resource>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Style>(),
+            new Dictionary<string, CuiV2Action>(StringComparer.Ordinal),
+            new Dictionary<string, CuiV2Template>(StringComparer.Ordinal),
+            Array.Empty<CuiV2Component>(),
+            span,
+            new Dictionary<string, CuiV2Value>(StringComparer.Ordinal) { ["V"] = badValue },
+            Array.Empty<CuiV2Import>(),
+            new Dictionary<string, CuiV2Variable>(StringComparer.Ordinal));
+        var artifact = MakeArtifact(new CuiCompiledArtifactDocument("sample.cui", Hash("x"), Meta("1", "1"),
+            doc, Array.Empty<CuiV2SourceMapEntry>(), new CuiV2DependencyGraph(Array.Empty<CuiV2Dependency>())));
+        var bytes = CuiCompiledArtifactCodec.WriteArtifact(artifact);
+        var error = Assert.Throws<CuiV2AdmissionException>(() => CuiCompiledArtifactCodec.ReadArtifact(bytes));
+        Assert.Equal("CUIR072", error.Code);
     }
 }

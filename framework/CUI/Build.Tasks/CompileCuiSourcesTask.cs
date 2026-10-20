@@ -112,41 +112,51 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
                 }
             }
 
-            var hasStateful = compiled.Any(entry => entry.Stateful);
             var compilerPath = typeof(CuiCompiler).Assembly.Location;
             var compilerSha256 = Hash(File.ReadAllBytes(compilerPath));
 
-            // Build the artifact before any effects. Failed compilation never publishes partial or
+            // Promote ABI/capability metadata for every stateful entry (local or promoted through the
+            // import/dependency closure) so its document genuinely declares the stateful ABI2 and the
+            // union of required capabilities across the closure it participates in. A stateless-looking
+            // importer of a stateful child must not keep declaring ABI1.
+            PromoteStatefulMetadata(compiled, byName);
+
+            var statefulEntries = compiled.Where(entry => entry.Stateful).ToArray();
+            var statelessEntries = compiled.Where(entry => !entry.Stateful).ToArray();
+
+            // Build artifacts before any effects. A mixed project emits a DISTINCT V2 artifact for the
+            // stateful subset and a genuine V1 bundle for the stateless subset, so precompiled V1
+            // consumers keep the stateless documents. Failed compilation never publishes partial or
             // current-success artifacts, and never destroys recoverable prior evidence.
-            byte[] artifactBytes;
-            string resourceIdentity;
-            if (hasStateful)
+            var artifactItems = new List<ITaskItem>();
+            if (statefulEntries.Length > 0)
             {
-                var envelope = AggregateMetadata(compiled.Select(entry => entry.Output.Metadata));
+                var envelope = AggregateMetadata(statefulEntries.Select(entry => entry.Output.Metadata));
                 var v2 = new CuiCompiledArtifact(
                     CuiCompiledArtifactCodec.FormatName,
                     CuiCompiledArtifactCodec.FormatVersion,
                     compilerSha256,
                     envelope,
-                    compiled.Select(entry => CuiV2Projection.ToDocument(entry.Output, entry.Input.Name, entry.Sha256)).ToArray());
-                artifactBytes = CuiCompiledArtifactCodec.WriteArtifact(v2);
-                resourceIdentity = CuiCompiledArtifactCodec.ResourceLogicalName;
+                    statefulEntries.Select(entry => CuiV2Projection.ToDocument(entry.Output, entry.Input.Name, entry.Sha256)).ToArray());
+                var dest = Path.GetFullPath(BuildPath(V2OutputFile(OutputFile)), root);
+                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                Publish(dest, CuiCompiledArtifactCodec.WriteArtifact(v2));
+                artifactItems.Add(ArtifactItem(dest, CuiCompiledArtifactCodec.ResourceLogicalName));
             }
-            else
+            if (statelessEntries.Length > 0)
             {
-                var bundle = compiled.Select(entry => new CuiV1Compiled(entry.Output, entry.Input.Name, entry.Sha256)).ToArray();
-                artifactBytes = CuiV1ArtifactCodec.WriteBundle(bundle, compilerSha256);
-                resourceIdentity = CuiCompiledArtifactCodec.V1ResourceLogicalName;
+                var bundle = statelessEntries.Select(entry =>
+                    new CuiV1ArtifactCodec.CuiV1Compiled(entry.Output, entry.Input.Name, entry.Sha256)).ToArray();
+                var dest = Path.GetFullPath(BuildPath(V1OutputFile(OutputFile)), root);
+                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                Publish(dest, CuiV1ArtifactCodec.WriteBundle(bundle, compilerSha256));
+                artifactItems.Add(ArtifactItem(dest, CuiCompiledArtifactCodec.V1ResourceLogicalName));
             }
-
-            var destination = Path.GetFullPath(BuildPath(OutputFile), root);
-            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            Publish(destination, artifactBytes);
 
             // Provenance snapshots: exact original bytes for every source (intermediate build
             // evidence). These are never shipped as unsupported raw app source.
             var snapshots = new Dictionary<string, string>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-            var sourcesDir = Path.Combine(Path.GetDirectoryName(destination)!, "sources");
+            var sourcesDir = Path.Combine(Path.GetFullPath(BuildPath(IntermediateOutputPath), root), "Cui", "sources");
             foreach (var input in inputs)
             {
                 var snapshot = Path.Combine(sourcesDir, Hash(input.Bytes) + Path.GetExtension(input.Path).ToLowerInvariant());
@@ -184,32 +194,28 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
                 mappedResources.Add(mapped);
             }
 
-            // Incremental raw-output ownership: remove only stale build-owned raw destinations that
-            // are no longer shipped (source became stateful or was removed), strictly under the
-            // validated output/publish roots. Never delete sources or unrelated/user files.
-            var manifestPath = Path.Combine(Path.GetFullPath(BuildPath(IntermediateOutputPath), root), "Cui", "packaged-raw-manifest.json");            var currentOwned = new List<OwnedRaw>();
+            // Incremental raw-output ownership: only claim ACTUAL build-owned copied outputs. Only
+            // copy-eligible items (Content/None with CopyToOutputDirectory) are materialized under the
+            // validated output/publish roots; a never-copied EmbeddedResource/None/AvaloniaResource/
+            // CuiMarkup must not create an ownership entry or deletion. Each entry records the exact
+            // artifact bytes expected at the destination, so stale cleanup refuses to delete a path
+            // whose current contents are no longer that owned artifact (preserving unrelated same-path
+            // files). Never delete sources or arbitrary/outside-root paths.
+            var manifestPath = Path.Combine(Path.GetFullPath(BuildPath(IntermediateOutputPath), root), "Cui", "packaged-raw-manifest.json");
             var outputRoot = Path.GetFullPath(BuildPath(OutputDirectory), root);
+            var publishRoot = string.IsNullOrWhiteSpace(PublishDirectory)
+                ? null : Path.GetFullPath(BuildPath(PublishDirectory), root);
+            var currentOwned = new List<OwnedRaw>();
             foreach (var item in mappedResources)
             {
-                var destinationRaw = ShippedDestination(outputRoot, root, item);
-                if (destinationRaw is null) continue;
-                currentOwned.Add(new OwnedRaw(item.GetMetadata("CuiOriginalFullPath"), destinationRaw));
-            }
-            if (!string.IsNullOrWhiteSpace(PublishDirectory))
-            {
-                var publishRoot = Path.GetFullPath(BuildPath(PublishDirectory), root);
-                foreach (var item in mappedResources)
-                {
-                    var destinationRaw = ShippedDestination(publishRoot, root, item);
-                    if (destinationRaw is null) continue;
-                    currentOwned.Add(new OwnedRaw(item.GetMetadata("CuiOriginalFullPath"), destinationRaw));
-                }
+                if (!IsCopyEligible(item)) continue;
+                SnapshotOwned(currentOwned, outputRoot, publishRoot, root, item);
             }
 
-            var stale = ComputeStaleOwnedOutputs(manifestPath, currentOwned, root, outputRoot);
+            var stale = ComputeStaleOwnedOutputs(manifestPath, currentOwned, root, outputRoot, publishRoot);
             foreach (var owned in stale)
             {
-                if (File.Exists(owned.Destination))
+                if (File.Exists(owned.Destination) && FileHashMatches(owned))
                 {
                     File.Delete(owned.Destination);
                     Log.LogMessage(MessageImportance.Low, "Removed stale build-owned raw CUI output: {0}", owned.Destination);
@@ -218,13 +224,11 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             StaleOwnedOutputs = stale.Select(owned => (ITaskItem)new TaskItem(owned.Destination)).ToArray();
             WriteManifest(manifestPath, currentOwned);
 
-            var artifactItem = new TaskItem(destination);
-            artifactItem.SetMetadata("CuiResourceLogicalName", resourceIdentity);
-            CompiledArtifacts = [artifactItem];
+            CompiledArtifacts = artifactItems.ToArray();
             SnapshotResources = mappedResources.ToArray();
             SourceSnapshots = snapshots.Values.Distinct(StringComparer.Ordinal).Select(path => (ITaskItem)new TaskItem(path)).ToArray();
             StatefulPackagedSources = statefulPackaged.ToArray();
-            Log.LogMessage(MessageImportance.High, "CUI compiled {0} source(s): {1} ({2})", inputs.Count, destination, resourceIdentity);
+            Log.LogMessage(MessageImportance.High, "CUI compiled {0} source(s): {1} compiled artifact(s)", inputs.Count, artifactItems.Count);
             return true;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or JsonException)
@@ -256,12 +260,52 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         return string.Compare(candidate, current, StringComparison.Ordinal) > 0 ? candidate : current;
     }
 
+    private static void PromoteStatefulMetadata(List<CompiledInput> compiled, Dictionary<string, CompiledInput> byName)
+    {
+        foreach (var entry in compiled.Where(e => e.Stateful))
+        {
+            if (entry.PromotedMetadata) continue;
+            var caps = new List<string>(entry.Output.Metadata.RequiredCapabilities);
+            void AddImported(string source)
+            {
+                if (!byName.TryGetValue(source, out var imported)) return;
+                if (imported.Stateful) caps.AddRange(imported.Output.Metadata.RequiredCapabilities);
+                foreach (var sub in imported.Output.Semantics.Imports) AddImported(sub.Source);
+            }
+            foreach (var import in entry.Output.Semantics.Imports) AddImported(import.Source);
+            var effective = new CuiCompilationMetadata(
+                entry.Output.Metadata.LanguageVersion,
+                CuiCompiledArtifactCodec.V2RuntimeAbiVersion,
+                entry.Output.Metadata.ComponentRegistryVersion,
+                caps.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
+            entry.Output = entry.Output with { Metadata = effective };
+            entry.PromotedMetadata = true;
+        }
+    }
+
+    private static string V2OutputFile(string outputFile) =>
+        Path.Combine(Path.GetDirectoryName(outputFile) ?? "", "compilation.v2.cuic.json");
+
+    private static string V1OutputFile(string outputFile) =>
+        Path.Combine(Path.GetDirectoryName(outputFile) ?? "", "compilation.v1.cuic.json");
+
+    private static ITaskItem ArtifactItem(string destination, string logicalName)
+    {
+        var item = new TaskItem(destination);
+        item.SetMetadata("CuiResourceLogicalName", logicalName);
+        return item;
+    }
+
     private static List<OwnedRaw> ComputeStaleOwnedOutputs(
-        string manifestPath, List<OwnedRaw> currentOwned, string projectRoot, string outputRoot)
+        string manifestPath, List<OwnedRaw> currentOwned, string projectRoot, string outputRoot, string? publishRoot)
     {
         var previous = ReadManifest(manifestPath);
         if (previous.Count == 0)
             return new List<OwnedRaw>();
+
+        var validRoots = new List<string>();
+        if (!string.IsNullOrEmpty(outputRoot)) validRoots.Add(outputRoot);
+        if (!string.IsNullOrEmpty(publishRoot)) validRoots.Add(publishRoot!);
 
         var currentByOrig = currentOwned
             .GroupBy(owned => owned.Original, OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
@@ -275,14 +319,46 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
             if (stillShipped) continue;
 
             var full = Path.GetFullPath(owned.Destination);
-            var isUnderOutput = full.StartsWith(outputRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-                || string.Equals(full, outputRoot, StringComparison.Ordinal);
-            var isSourceOrOutside = full.StartsWith(projectRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal)
-                && !isUnderOutput;
-            if (isUnderOutput && !isSourceOrOutside && !string.Equals(full, projectRoot, StringComparison.Ordinal))
-                stale.Add(owned);
+            if (string.Equals(full, projectRoot, StringComparison.Ordinal)) continue;
+            // Only delete paths inside a validated output/publish root; never a source path or an
+            // arbitrary/outside-root path.
+            var underAnyRoot = validRoots.Any(root =>
+                full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                || string.Equals(full, root, StringComparison.Ordinal));
+            if (underAnyRoot) stale.Add(owned);
         }
         return stale;
+    }
+
+    private static bool IsCopyEligible(ITaskItem item)
+    {
+        var type = item.GetMetadata("CuiItemType");
+        if (type is not ("Content" or "None")) return false;
+        return !string.IsNullOrWhiteSpace(item.GetMetadata("CopyToOutputDirectory"));
+    }
+
+    private static void SnapshotOwned(List<OwnedRaw> owned, string outputRoot, string? publishRoot, string projectRoot, ITaskItem item)
+    {
+        var original = item.GetMetadata("CuiOriginalFullPath");
+        if (string.IsNullOrEmpty(original)) return;
+        var snapshotPath = item.ItemSpec;
+        if (string.IsNullOrEmpty(snapshotPath) || !File.Exists(snapshotPath)) return;
+        var snapshotSha = Hash(File.ReadAllBytes(snapshotPath));
+
+        var outputDest = ShippedDestination(outputRoot, projectRoot, item);
+        if (outputDest is not null) owned.Add(new OwnedRaw(original, outputDest, snapshotSha));
+        if (publishRoot is not null)
+        {
+            var publishDest = ShippedDestination(publishRoot!, projectRoot, item);
+            if (publishDest is not null && !string.Equals(publishDest, outputDest, StringComparison.Ordinal))
+                owned.Add(new OwnedRaw(original, publishDest, snapshotSha));
+        }
+    }
+
+    private static bool FileHashMatches(OwnedRaw owned)
+    {
+        if (!File.Exists(owned.Destination)) return false;
+        return string.Equals(Hash(File.ReadAllBytes(owned.Destination)), owned.Sha256, StringComparison.Ordinal);
     }
 
     private static List<OwnedRaw> ReadManifest(string path)
@@ -291,7 +367,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         try
         {
             var model = JsonSerializer.Deserialize<ManifestModel>(File.ReadAllText(path));
-            return model?.Owned?.Select(entry => new OwnedRaw(entry.Original, entry.Destination)).ToList() ?? new List<OwnedRaw>();
+            return model?.Owned?.Select(entry => new OwnedRaw(entry.Original, entry.Destination, entry.Sha256 ?? "")).ToList() ?? new List<OwnedRaw>();
         }
         catch (JsonException)
         {
@@ -304,7 +380,7 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     private static void WriteManifest(string path, List<OwnedRaw> owned)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var model = new ManifestModel { Owned = owned.Select(entry => new OwnedRawModel(entry.Original, entry.Destination)).ToArray() };
+        var model = new ManifestModel { Owned = owned.Select(entry => new OwnedRawModel(entry.Original, entry.Destination, entry.Sha256)).ToArray() };
         File.WriteAllText(path, JsonSerializer.Serialize(model, new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -368,14 +444,15 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
         }
 
         public Input Input { get; }
-        public CuiCompiledDocument Output { get; }
+        public CuiCompiledDocument Output { get; set; }
         public string Sha256 { get; }
         public bool Stateful { get; set; }
+        public bool PromotedMetadata { get; set; }
     }
-    private sealed record OwnedRaw(string Original, string Destination);
+    private sealed record OwnedRaw(string Original, string Destination, string Sha256);
     private sealed class ManifestModel
     {
         public OwnedRawModel[] Owned { get; set; } = [];
     }
-    private sealed record OwnedRawModel(string Original, string Destination);
+    private sealed record OwnedRawModel(string Original, string Destination, string Sha256);
 }
