@@ -2,7 +2,7 @@
 
 ## Pinned owner requirement — one implementation per app
 
-Haven embeds the SAME standalone app implementations, canonical objects, data and services. Never maintain separate older Haven and newer standalone versions of an app. Host chrome/top bars may adapt to the surface as explicitly requested; app behavior and full applicable specification requirements remain shared. Existing Haven code may be reused only if these conditions hold. Verify actual production composition/routes and real runtime surfaces, not just names or duplicate source files. This is a direct owner requirement to keep pinned; read `docs/specification/owner-references/2026-10-20-single-app-implementation/owner-correction.json` at every handoff.
+Haven embeds the SAME standalone app implementations, canonical objects, data and services. Never maintain separate older Haven and newer standalone versions of an app. Host chrome/top bars may adapt to the surface as explicitly requested; app behavior and full applicable specification requirements remain shared. Existing Haven code may be reused only if these conditions hold. Where newer app implementations exist, merge complementary work where feasible or use the newer implementation when it is better. Choose against actual specification coverage and verified behavior, then consolidate into one shared app; do not preserve the older path merely because it is already wired. Verify actual production composition/routes and real runtime surfaces, not just names or duplicate source files. This is a direct owner requirement to keep pinned; read `docs/specification/owner-references/2026-10-20-single-app-implementation/owner-correction.json` at every handoff.
 
 ## Sole product authority
 
