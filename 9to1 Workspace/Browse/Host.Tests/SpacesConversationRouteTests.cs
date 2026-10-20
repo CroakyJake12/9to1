@@ -291,6 +291,132 @@ public sealed class SpacesConversationRouteTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Manager_return_preserves_exact_mounted_page_conversation_and_draft()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+
+            // Mount a real chat and leave an unsent draft.
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var mounted = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var mountedId = mounted.ConversationId;
+            mounted.SetDraft("unsent preserved draft");
+            Assert.Equal("unsent preserved draft", mounted.ComposerInput.Text);
+
+            // Open the manager: presentation-only, nothing created, the same page stays mounted.
+            await spaces.DispatchAsync("spaces.manage").AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+            Assert.Empty(spaces.Controller.State.CustomSpaces);
+            Assert.Same(mounted, spaces.SpaceWorkspaceContent);
+
+            // Return restores the SAME retained physical page/conversation/draft.
+            await spaces.DispatchAsync("spaces.manage").AsTask().WaitAsync(Bound);
+            Assert.False(spaces.Controller.State.IsManaging);
+            Assert.Same(mounted, spaces.SpaceWorkspaceContent);
+            Assert.Equal(mountedId, mounted.ConversationId);
+            Assert.Equal("unsent preserved draft", mounted.ComposerInput.Text);
+            Assert.Same(spaces, root.Content);
+        }
+        finally
+        {
+            if (session is not null)
+                try { await session.CloseAndDrainAsync().WaitAsync(Bound); } catch { }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); } catch { }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Real_navigation_closes_manager_and_reveals_the_new_chat()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var first = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var firstId = first.ConversationId;
+
+            // Open the manager, then navigate via a REAL new-chat publication. The manager must
+            // exit only after the publication succeeds, revealing the newly mounted chat.
+            await spaces.DispatchAsync("spaces.manage").AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+
+            await spaces.DispatchAsync("spaces.new-chat", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+
+            Assert.False(spaces.Controller.State.IsManaging);
+            var second = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotEqual(firstId, second.ConversationId);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, second.CurrentConversation.SpaceId);
+            Assert.Same(spaces, root.Content);
+        }
+        finally
+        {
+            if (session is not null)
+                try { await session.CloseAndDrainAsync().WaitAsync(Bound); } catch { }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); } catch { }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Refused_real_navigation_keeps_manager_and_old_mounted_page()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var mounted = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+
+            // Open the manager, then attempt a real conversation navigation that genuinely refuses
+            // (nonexistent conversation identity). Admission is not publication: the manager and
+            // the old mounted page must both remain.
+            await spaces.DispatchAsync("spaces.manage").AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+
+            await spaces.DispatchAsync("spaces.open-conversation", Guid.NewGuid()).AsTask().WaitAsync(Bound);
+            Assert.Contains("no longer available", spaces.Controller.State.StatusMessage);
+            Assert.True(spaces.Controller.State.IsManaging);
+            Assert.Same(mounted, spaces.SpaceWorkspaceContent);
+            Assert.Same(spaces, root.Content);
+        }
+        finally
+        {
+            if (session is not null)
+                try { await session.CloseAndDrainAsync().WaitAsync(Bound); } catch { }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); } catch { }
+        }
+    }
+
     private static NewChatPage Chat(SpacesBrowseAppContentSession session) =>
         (NewChatPage)typeof(SpacesBrowseAppContentSession).GetField("_chatPage", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(session)!;
 

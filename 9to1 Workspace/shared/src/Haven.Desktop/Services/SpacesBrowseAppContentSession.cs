@@ -403,7 +403,15 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         // together. Only when no Spaces Home region exists does Chat take the whole tab.
         var home = _spacesPage;
         if (home is not null && home.TryMountSpaceWorkspace(chat))
+        {
             SetRootContent(home);
+            // A real chat publication just succeeded and became current: the workspace is
+            // mounted, set as root content, and projected. Reveal it by exiting the
+            // presentation-only manager idempotently. A refused, canceled or merely
+            // queue-admitted navigation never reaches this point, so the manager and the
+            // previous view stay intact.
+            home.NotifyNavigationPublished();
+        }
         else
         {
             // The authored workspace may still hold this same page from an earlier in-place

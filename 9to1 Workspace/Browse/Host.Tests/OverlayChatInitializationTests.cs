@@ -6,6 +6,8 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using System.Linq;
+using Avalonia.Controls;
 using NativeButton = Avalonia.Controls.Button;
 using NativeTextBox = Avalonia.Controls.TextBox;
 using NativeWindow = Avalonia.Controls.Window;
@@ -168,6 +170,40 @@ public sealed class OverlayChatInitializationTests
         {
             Assert.Equal(ChatModelAvailability.Available, page.ModelAvailability);
             Assert.False(RecoveryButton(page).IsEffectivelyVisible);
+        }
+        finally
+        {
+            await DrainBackgroundPageOriginalsAsync(page);
+            await page.CloseAndDrainAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    // The genuine model-unavailable status and the Manage action are consolidated into ONE compact
+    // canonical row: the quiet status text and the secondary Manage button appear together under the
+    // same recovery surface, and the separate legacy status sentence is retired rather than duplicated
+    // below the row.
+    [AvaloniaFact]
+    public async Task Rendered_recovery_row_shows_status_and_manage_action_in_one_row()
+    {
+        using var rig = new Rig();
+        rig.Models.TrySetException(new HttpRequestException("Connection refused (127.0.0.1:11434)",
+            new SocketException((int)SocketError.ConnectionRefused)));
+        var page = await rig.Factory.CreateNewAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        rig.Mount(page);
+        try
+        {
+            Assert.Equal(ChatModelAvailability.Unavailable, page.ModelAvailability);
+
+            var statusText = RecoveryView(page)
+                .GetVisualDescendants().OfType<TextBlock>()
+                .Single(text => AutomationProperties.GetAutomationId(text) == "recovery-status-text");
+            Assert.True(statusText.IsEffectivelyVisible);
+            Assert.Contains("Local models are unavailable", statusText.Text, StringComparison.Ordinal);
+
+            // The Manage action is the proportionate secondary affordance in the same row, and the
+            // legacy status sentence is suppressed so the model status is not duplicated below it.
+            Assert.True(RecoveryButton(page).IsEffectivelyVisible);
+            Assert.True(string.IsNullOrWhiteSpace(Scene(page).Status.Content));
         }
         finally
         {
