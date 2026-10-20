@@ -1,0 +1,132 @@
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
+
+namespace Haven.Application.NodeGraph;
+
+/// <summary>Strictly versioned, bounded codec for the detached continuation envelope. It preserves the distinction
+/// between false, present null, absent, and redacted/unavailable/error representations rather than coercing them.
+/// Corruption, unknown versions and oversized payloads fail closed with structured errors. The envelope remains
+/// descriptive state — deserializing it never grants permission or authorizes execution.</summary>
+public sealed class GraphRuntimeContinuationCodec
+{
+    /// <summary>Bounded envelope size (1 MiB). Oversized continuations are rejected before any adapter effect.</summary>
+    public const int MaximumSerializedBytes = 1 << 20;
+
+    public string Serialize(GraphRuntimeContinuation continuation)
+    {
+        ArgumentNullException.ThrowIfNull(continuation);
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("protocolVersion", continuation.ProtocolVersion);
+            writer.WriteString("graphType", continuation.GraphType);
+            writer.WriteString("ownerRunId", continuation.OwnerRunId);
+            writer.WriteString("graphId", continuation.GraphId.ToString("D"));
+            writer.WriteNumber("revision", continuation.Revision);
+            writer.WriteString("capabilityProfileId", continuation.CapabilityProfileId);
+            writer.WriteNumber("schemaVersion", continuation.SchemaVersion);
+            writer.WriteString("startNodeId", continuation.StartNodeId.ToString("D"));
+            writer.WriteString("eventType", continuation.EventType);
+            writer.WriteString("sessionId", continuation.SessionId);
+            writer.WriteString("entityId", continuation.EntityId);
+            writer.WriteString("participantId", continuation.ParticipantId);
+            writer.WriteString("kind", continuation.Kind.ToString());
+            writer.WriteString("nodeId", continuation.NodeId.ToString("D"));
+            if (continuation.ResumeAt is { } at) writer.WriteString("resumeAt", at.ToString("O"));
+            WriteElement(writer, "condition", continuation.Condition);
+            WriteElement(writer, "ownerState", continuation.OwnerState);
+            writer.WriteNumber("stepsConsumed", continuation.StepsConsumed);
+            writer.WriteNumber("stepLimit", continuation.StepLimit);
+            writer.WriteString("digest", continuation.Digest);
+            writer.WriteEndObject();
+        }
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    public GraphRuntimeContinuation Deserialize(string json)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+        if (Encoding.UTF8.GetByteCount(json) > MaximumSerializedBytes)
+            throw new JsonException("Continuation envelope exceeds the maximum encoded size.");
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object) throw new JsonException("Continuation envelope must be a JSON object.");
+        var protocolVersion = ReadInt(root, "protocolVersion");
+        if (protocolVersion != GraphRuntimeContinuation.CurrentProtocolVersion)
+            throw new JsonException($"Unsupported continuation protocol version {protocolVersion}.");
+        return new GraphRuntimeContinuation(
+            protocolVersion,
+            ReadString(root, "graphType"),
+            ReadString(root, "ownerRunId"),
+            ReadGuid(root, "graphId"),
+            ReadLong(root, "revision"),
+            ReadString(root, "capabilityProfileId"),
+            ReadInt(root, "schemaVersion"),
+            ReadGuid(root, "startNodeId"),
+            ReadString(root, "eventType"),
+            ReadString(root, "sessionId"),
+            ReadString(root, "entityId"),
+            ReadString(root, "participantId"),
+            ReadEnum<GraphContinuationKind>(root, "kind"),
+            ReadGuid(root, "nodeId"),
+            ReadDateTime(root, "resumeAt"),
+            ReadElement(root, "condition"),
+            ReadElement(root, "ownerState"),
+            ReadInt(root, "stepsConsumed"),
+            ReadInt(root, "stepLimit"),
+            ReadString(root, "digest"));
+    }
+
+    public bool TryDeserialize(string json, out GraphRuntimeContinuation? continuation, out string? error)
+    {
+        try
+        {
+            continuation = Deserialize(json);
+            error = null;
+            return true;
+        }
+        catch (Exception exception) when (exception is JsonException or ArgumentException or FormatException or OverflowException)
+        {
+            continuation = null;
+            error = exception.Message;
+            return false;
+        }
+    }
+
+    private static void WriteElement(Utf8JsonWriter writer, string name, JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Undefined) return; // absent stays absent; null/false/object preserved
+        writer.WritePropertyName(name);
+        element.WriteTo(writer);
+    }
+
+    private static string ReadString(JsonElement root, string name) =>
+        root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.String ? element.GetString()!
+            : throw new JsonException($"Continuation envelope is missing or invalid '{name}'.");
+
+    private static int ReadInt(JsonElement root, string name) =>
+        root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var value)
+            ? value : throw new JsonException($"Continuation envelope is missing or invalid '{name}'.");
+
+    private static long ReadLong(JsonElement root, string name) =>
+        root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.Number && element.TryGetInt64(out var value)
+            ? value : throw new JsonException($"Continuation envelope is missing or invalid '{name}'.");
+
+    private static Guid ReadGuid(JsonElement root, string name) =>
+        Guid.TryParse(ReadString(root, name), out var guid) ? guid
+            : throw new JsonException($"Continuation envelope has an invalid '{name}'.");
+
+    private static DateTimeOffset? ReadDateTime(JsonElement root, string name) =>
+        root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.String
+            ? DateTimeOffset.Parse(element.GetString()!, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
+            : null;
+
+    private static TEnum ReadEnum<TEnum>(JsonElement root, string name) where TEnum : struct, Enum =>
+        Enum.TryParse<TEnum>(ReadString(root, name), ignoreCase: false, out var value) ? value
+            : throw new JsonException($"Continuation envelope has an unsupported '{name}'.");
+
+    private static JsonElement ReadElement(JsonElement root, string name) =>
+        root.TryGetProperty(name, out var element) ? element.Clone() : default;
+}
