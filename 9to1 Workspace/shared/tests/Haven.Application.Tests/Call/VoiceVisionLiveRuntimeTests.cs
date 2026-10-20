@@ -147,6 +147,150 @@ public sealed class VoiceVisionLiveRuntimeTests
         Assert.Equal(1, coordinator.StartCount);
     }
 
+    [Fact]
+    public async Task Simultaneous_attach_to_already_live_session_shares_one_canonical_SessionID()
+    {
+        var coordinator = ActiveCoordinator();
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var t1 = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var t2 = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+
+        var r1 = await t1;
+        var r2 = await t2;
+
+        Assert.True(r1.Succeeded);
+        Assert.True(r2.Succeeded);
+        Assert.Equal(r1.SessionId, r2.SessionId);
+        // The attach path must never invoke the real coordinator Start for either caller.
+        Assert.Equal(0, coordinator.StartCount);
+        Assert.True(r1.AttachedExisting);
+        Assert.True(r2.AttachedExisting);
+    }
+
+    [Fact]
+    public async Task End_joins_a_held_Start_before_draining()
+    {
+        var coordinator = NewCoordinator();
+        coordinator.StartRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var startTask = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        // Wait until the coordinator has entered Start and is blocked on its hold.
+        await WaitUntilAsync(() => coordinator.StartCount == 1);
+
+        var endTask = runtime.EndAsync(CancellationToken.None);
+        // End must NOT ACK while the shared Start is still settling.
+        await Task.Delay(50);
+        Assert.False(endTask.IsCompleted);
+        Assert.Equal(0, coordinator.EndCount);
+
+        // Release the held Start; only then End settles and drains the real runtime.
+        coordinator.StartRelease.SetResult(true);
+        var start = await startTask;
+        var end = await endTask;
+
+        Assert.True(start.Succeeded);
+        Assert.True(end.Succeeded);
+        Assert.Equal(1, coordinator.EndCount);
+        Assert.False(runtime.State.IsActive);
+
+        var si = coordinator.Events.IndexOf("start-enter");
+        var sc = coordinator.Events.IndexOf("start-complete");
+        var ee = coordinator.Events.IndexOf("end-enter");
+        var ec = coordinator.Events.IndexOf("end-complete");
+        Assert.True(si >= 0 && sc > si && ee > sc && ec > ee);
+    }
+
+    [Fact]
+    public async Task Dispose_joins_a_held_Start_and_drains_before_release()
+    {
+        var coordinator = NewCoordinator();
+        coordinator.StartRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var startTask = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        await WaitUntilAsync(() => coordinator.StartCount == 1);
+
+        var disposeTask = runtime.DisposeAsync().AsTask();
+        await Task.Delay(50);
+        Assert.False(disposeTask.IsCompleted);
+        Assert.Equal(0, coordinator.EndCount);
+
+        coordinator.StartRelease.SetResult(true);
+        await startTask;
+        await disposeTask;
+
+        Assert.Equal(1, coordinator.EndCount);
+    }
+
+    [Fact]
+    public async Task Cancelled_waiting_borrower_does_not_cancel_or_settle_a_shared_Start()
+    {
+        var coordinator = NewCoordinator();
+        coordinator.StartRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var owner = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        await WaitUntilAsync(() => coordinator.StartCount == 1);
+
+        using var cts = new CancellationTokenSource();
+        var borrower = runtime.StartAsync(Request(ConvoId), cts.Token);
+        await Task.Delay(50); // borrower is queued on the lifecycle gate
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => borrower);
+
+        // The shared, still-owned Start is unaffected and settles normally.
+        coordinator.StartRelease.SetResult(true);
+        var owned = await owner;
+        Assert.True(owned.Succeeded);
+        Assert.Equal(1, coordinator.StartCount);
+        Assert.True(runtime.State.IsActive);
+    }
+
+    [Fact]
+    public async Task Reentrant_End_is_idempotent_and_drains_once()
+    {
+        var coordinator = NewCoordinator();
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+        await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+
+        var first = await runtime.EndAsync(CancellationToken.None);
+        Assert.True(first.Succeeded);
+        Assert.Equal(1, coordinator.EndCount);
+
+        var second = await runtime.EndAsync(CancellationToken.None);
+        Assert.True(second.Succeeded);
+        Assert.Equal(1, coordinator.EndCount);
+        Assert.False(runtime.State.IsActive);
+    }
+
+    [Fact]
+    public async Task Start_fault_marks_session_failed_and_publishes_no_active_capture()
+    {
+        var coordinator = NewCoordinator();
+        coordinator.FailStart = true;
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var start = await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+
+        Assert.False(start.Succeeded);
+        Assert.Equal(VisionVoiceErrorCode.UnknownFailure, start.Error!.Code);
+        Assert.False(runtime.State.IsActive);
+        Assert.Equal(MultimodalSessionState.Failed, runtime.State.State);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        for (var i = 0; i < 200; i++)
+        {
+            if (condition()) return;
+            await Task.Delay(10);
+        }
+        throw new TimeoutException("Timed out waiting for coordinator state.");
+    }
+
     // -- fixed conversation identity --
     private static readonly Guid ConvoId = new("11111111-1111-1111-1111-111111111111");
 
@@ -279,19 +423,27 @@ public sealed class VoiceVisionLiveRuntimeTests
         public int ResumeCount { get; private set; }
         public int StopScreenShareCount { get; private set; }
         public List<string> SubmittedText { get; } = new();
+        public List<string> Events { get; } = new();
+        public TaskCompletionSource<bool>? StartRelease { get; set; }
+        public bool FailStart { get; set; }
 
-        public Task<CallSession> StartAsync(CallStartOptions options, SpeechModelInfo? speechModel, CancellationToken ct)
+        public async Task<CallSession> StartAsync(CallStartOptions options, SpeechModelInfo? speechModel, CancellationToken ct)
         {
             StartCount++;
+            Events.Add("start-enter");
+            ct.ThrowIfCancellationRequested();
+            if (FailStart) throw new InvalidOperationException("start failed");
             State = CallState.Listening;
             var conversationId = options.ConversationId ?? Guid.NewGuid();
             CurrentConversation = new Conversation(conversationId, HavenMode.Chat, ConversationKind.Chat,
                 "Voice", null, null, false, false, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
+            if (StartRelease is { } release) await release.Task.ConfigureAwait(false);
             var session = new CallSession(Guid.NewGuid(), conversationId, "model",
                 options.InputDeviceId, options.OutputDeviceId, options.VoiceName, options.InputMode, false,
                 CallSessionStatus.Active, DateTimeOffset.UtcNow);
             CurrentSession = session;
-            return Task.FromResult(session);
+            Events.Add("start-complete");
+            return session;
         }
 
         public Task SubmitTextAsync(string text, CancellationToken ct) { SubmittedText.Add(text); return Task.CompletedTask; }
@@ -303,7 +455,15 @@ public sealed class VoiceVisionLiveRuntimeTests
         public Task StartScreenShareAsync(CancellationToken ct) { IsScreenSharing = true; return Task.CompletedTask; }
         public Task StopScreenShareAsync(CancellationToken ct) { IsScreenSharing = false; StopScreenShareCount++; return Task.CompletedTask; }
         public Task InterruptAsync(CancellationToken ct) => Task.CompletedTask;
-        public Task EndAsync(CancellationToken ct) { EndCount++; State = CallState.Idle; IsScreenSharing = false; return Task.CompletedTask; }
+        public Task EndAsync(CancellationToken ct)
+        {
+            EndCount++;
+            Events.Add("end-enter");
+            State = CallState.Idle;
+            IsScreenSharing = false;
+            Events.Add("end-complete");
+            return Task.CompletedTask;
+        }
 
         public void RaiseState(CallState state, string status) => StateChanged?.Invoke(this, new(state, status));
         public void RaiseAudioLevel(double level) => AudioLevelChanged?.Invoke(this, new(level));

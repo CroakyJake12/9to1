@@ -140,7 +140,7 @@ public sealed class VoiceVisionHostAdapter : IDisposable
         var conversationId = ConversationProvider?.Invoke() ?? Guid.Empty;
         if (conversationId == Guid.Empty) return;
 
-        var mode = TryResolveMode(parameter, out var requested) ? requested : VoiceVisionMode.Conversational;
+        var mode = TryResolveMode(parameter, out var requested) ? requested : VisionVoiceMode.Conversational;
         var options = StartOptionsProvider?.Invoke() ?? DefaultStartOptions();
         var request = new VoiceVisionStartRequest(
             conversationId,
@@ -155,7 +155,7 @@ public sealed class VoiceVisionHostAdapter : IDisposable
 
     private static bool TryResolveMode(object? parameter, out VisionVoiceMode mode)
     {
-        mode = VoiceVisionMode.Conversational;
+        mode = VisionVoiceMode.Conversational;
         switch (parameter)
         {
             case string name when Enum.TryParse<VisionVoiceMode>(name, ignoreCase: true, out var parsed):

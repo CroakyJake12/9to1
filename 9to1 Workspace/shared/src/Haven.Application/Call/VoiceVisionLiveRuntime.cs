@@ -48,6 +48,7 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
     private string _permissionNotice = string.Empty;
     private bool _disposed;
     private bool _wired;
+    private int _generation;
 
     /// <summary>When false (after an explicit End), late coordinator callbacks are suppressed and
     /// the projection stays inactive until a new start/attach re-opens the session.</summary>
@@ -78,16 +79,19 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         if (request.ConversationId == Guid.Empty)
             return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.InvalidRequest, "A canonical conversation is required.", "ConversationID", "StartSession", false));
 
-        // Attach to an existing live runtime session for this SAME conversation before any double-start.
-        var attached = await TryAttachExistingAsync(request, cancellationToken).ConfigureAwait(false);
-        if (attached is not null) return attached;
-
+        // One published coalescing owner for identity resolution/creation/attachment: the whole
+        // start runs under the lifecycle gate, so two callers continuing the same actual interaction
+        // resolve the SAME canonical SessionID and never open a second runtime. An End that runs
+        // while this start is queued bumps the lifetime generation, which rejects this stale wait.
+        var generationAtEntry = Volatile.Read(ref _generation);
         await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // Coalesce concurrent starts: after the gate, re-check so a second caller observing the
-            // same interaction observes the same canonical SessionID and never starts a second runtime.
-            attached = await TryAttachExistingAsync(request, cancellationToken).ConfigureAwait(false);
+            if (_disposed || Volatile.Read(ref _generation) != generationAtEntry)
+                return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.SessionNotFound,
+                    "The runtime was sealed while this start was queued.", "SessionID", "StartSession", true));
+
+            var attached = await TryAttachExistingAsync(request, cancellationToken).ConfigureAwait(false);
             if (attached is not null) return attached;
             return await StartNewAsync(request, cancellationToken).ConfigureAwait(false);
         }
@@ -99,35 +103,48 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
 
     public async Task<VoiceVisionOperation> EndAsync(CancellationToken cancellationToken)
     {
-        if (_runtime.IsActive)
+        // Seal admission synchronously under the same lifecycle gate as Start, so a Start queued
+        // before End cannot publish afterwards, and an in-flight Start has fully settled by the
+        // time we acquire the gate (Start holds it across its whole run).
+        await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            try
+            Interlocked.Increment(ref _generation);
+
+            if (_runtime.IsActive)
             {
-                // End is a real runtime stop/drain: wait for the coordinator to stop capture/speech.
-                await _runtime.EndAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    // End is a real runtime stop/drain: wait for the coordinator to stop capture/speech.
+                    await _runtime.EndAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.SessionDisconnected, "End was cancelled before the runtime drained.", "SessionID", "EndSession", true));
+                }
+                catch (Exception exception)
+                {
+                    return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.UnknownFailure, exception.Message, "SessionID", "EndSession", true));
+                }
             }
-            catch (OperationCanceledException)
-            {
-                return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.SessionDisconnected, "End was cancelled before the runtime drained.", "SessionID", "EndSession", true));
-            }
-            catch (Exception exception)
-            {
-                return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.UnknownFailure, exception.Message, "SessionID", "EndSession", true));
-            }
+
+            if (_session is { } session && session.State is not MultimodalSessionState.Ended)
+                await TransitionSessionAsync(session, MultimodalSessionState.Ended, cancellationToken).ConfigureAwait(false);
+
+            _session = null;
+            _acceptsRuntimeEvents = false;
+            _audioLevel = 0;
+            _muted = false;
+            _paused = false;
+            _visualSources = [];
+            _permissionNotice = string.Empty;
+            OnStateChanged();
+            return VoiceVisionOperation.Ok;
         }
-
-        if (_session is { } session && session.State is not MultimodalSessionState.Ended)
-            await TransitionSessionAsync(session, MultimodalSessionState.Ended, cancellationToken).ConfigureAwait(false);
-
-        _session = null;
-        _acceptsRuntimeEvents = false;
-        _audioLevel = 0;
-        _muted = false;
-        _paused = false;
-        _visualSources = [];
-        _permissionNotice = string.Empty;
-        OnStateChanged();
-        return VoiceVisionOperation.Ok;
+        finally
+        {
+            _startGate.Release();
+        }
     }
 
     public async Task<VoiceVisionOperation> SetMutedAsync(bool muted, CancellationToken cancellationToken)
@@ -325,7 +342,7 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         if (!_runtime.IsActive || _runtime.CurrentConversation is not { } live || live.Id != request.ConversationId)
             return null;
 
-        var sessionId = GetCanonicalSessionId(request.ConversationId);
+        var sessionId = await GetCanonicalSessionIdAsync(request.ConversationId, cancellationToken).ConfigureAwait(false);
         var session = sessionId is { } id ? await ReadSessionAsync(id, cancellationToken).ConfigureAwait(false) : null;
         if (session is null)
         {
@@ -335,7 +352,7 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
                 request.EffectiveModelPolicy, request.IsLocalOnly, request.Languages, cancellationToken).ConfigureAwait(false);
             if (!created.IsSuccess) return VoiceVisionStartResult.Failure(created.Error!);
             session = created.Value;
-            RememberCanonicalSession(request.ConversationId, session.SessionId);
+            await RememberCanonicalSessionAsync(request.ConversationId, session.SessionId, cancellationToken).ConfigureAwait(false);
         }
 
         _session = session;
@@ -343,7 +360,7 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         _paused = _runtime.State == CallState.Paused;
         _muted = _runtime.IsMuted;
         OnStateChanged();
-        return VoiceVisionStartResult.Success(session.SessionId, AttachedExisting: true);
+        return VoiceVisionStartResult.Success(session.SessionId, attachedExisting: true);
     }
 
     private async Task<VoiceVisionStartResult> StartNewAsync(VoiceVisionStartRequest request, CancellationToken cancellationToken)
@@ -359,16 +376,19 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
 
         try
         {
+            // Reserve the canonical SessionID before any external work/callback so a concurrent
+            // End/Dispose cannot observe this interaction as unknown while the runtime starts.
+            await RememberCanonicalSessionAsync(request.ConversationId, session.SessionId, cancellationToken).ConfigureAwait(false);
+
             var runtimeOptions = request.RuntimeOptions with { ConversationId = request.ConversationId };
             var callSession = await _runtime.StartAsync(runtimeOptions, null, cancellationToken).ConfigureAwait(false);
             _session = session;
             _acceptsRuntimeEvents = true;
             _muted = false;
             _paused = false;
-            RememberCanonicalSession(request.ConversationId, session.SessionId);
             OnStateChanged();
             _ = callSession;
-            return VoiceVisionStartResult.Success(session.SessionId, AttachedExisting: false);
+            return VoiceVisionStartResult.Success(session.SessionId, attachedExisting: false);
         }
         catch (OperationCanceledException)
         {
@@ -402,12 +422,12 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         return result.IsSuccess ? result.Value : null;
     }
 
-    private Guid? GetCanonicalSessionId(Guid conversationId)
+    private async Task<Guid?> GetCanonicalSessionIdAsync(Guid conversationId, CancellationToken cancellationToken)
     {
         if (_sessionByConversation.TryGetValue(conversationId, out var cached)) return cached;
         if (_mappingStore is not null)
         {
-            var mapped = _mappingStore.GetAsync<SessionMapping>(SessionByConversationKey(conversationId), CancellationToken.None).GetAwaiter().GetResult();
+            var mapped = await _mappingStore.GetAsync<SessionMapping>(SessionByConversationKey(conversationId), cancellationToken).ConfigureAwait(false);
             if (mapped is not null)
             {
                 _sessionByConversation[conversationId] = mapped.SessionId;
@@ -417,11 +437,11 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         return null;
     }
 
-    private void RememberCanonicalSession(Guid conversationId, Guid sessionId)
+    private async Task RememberCanonicalSessionAsync(Guid conversationId, Guid sessionId, CancellationToken cancellationToken)
     {
         _sessionByConversation[conversationId] = sessionId;
         if (_mappingStore is not null)
-            _ = _mappingStore.SetAsync(SessionByConversationKey(conversationId), new SessionMapping(sessionId), CancellationToken.None);
+            await _mappingStore.SetAsync(SessionByConversationKey(conversationId), new SessionMapping(sessionId), cancellationToken).ConfigureAwait(false);
     }
 
     private static string SessionByConversationKey(Guid conversationId) => SessionByConversationKeyPrefix + conversationId.ToString("N");
@@ -579,18 +599,41 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
     private void OnStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
 
     private static VoiceVisionOperation FailureFrom(VisionVoiceError error) => VoiceVisionOperation.Failed(error);
-    private static VoiceVisionError OperationCancelled(string action) =>
+    private static VisionVoiceError OperationCancelled(string action) =>
         new(VisionVoiceErrorCode.SessionDisconnected, "The operation was cancelled.", "SessionID", action, true);
-    private static VoiceVisionError UnknownFailure(string action, Exception exception) =>
+    private static VisionVoiceError UnknownFailure(string action, Exception exception) =>
         new(VisionVoiceErrorCode.UnknownFailure, exception.Message, "SessionID", action, true);
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        if (_disposed) return ValueTask.CompletedTask;
-        _disposed = true;
-        UnwireRuntime();
-        _startGate.Dispose();
-        return ValueTask.CompletedTask;
+        if (_disposed) return;
+        // Join and settle any in-flight Start/action before unhooking or releasing the gate. A
+        // Dispose that races a held Start must wait for it to settle, then drain the real runtime.
+        await _startGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (_disposed) return;
+            _disposed = true;
+            Interlocked.Increment(ref _generation);
+
+            if (_runtime.IsActive)
+            {
+                try { await _runtime.EndAsync(CancellationToken.None).ConfigureAwait(false); }
+                catch { /* best-effort drain; disposal must still proceed */ }
+            }
+
+            if (_session is { } session && session.State is not MultimodalSessionState.Ended)
+                await TransitionSessionAsync(session, MultimodalSessionState.Ended, CancellationToken.None).ConfigureAwait(false);
+
+            _session = null;
+            _acceptsRuntimeEvents = false;
+            UnwireRuntime();
+        }
+        finally
+        {
+            _startGate.Release();
+            _startGate.Dispose();
+        }
     }
 
     /// <summary>Durable conversation→canonical SessionID mapping kept in the shared settings store.</summary>
