@@ -268,7 +268,7 @@ public sealed class CuiControlRegistry
 
         return type.ToLowerInvariant() switch
         {
-            "grid" or "vertical stack" or "horizontal stack" or "absolute" or "overlay" or "wrap" => new CuiContainerControl(type),
+            "grid" or "vertical stack" or "horizontal stack" or "absolute" or "overlay" or "overlay float" or "wrap" or "floating" => new CuiContainerControl(type),
             "menu" => new CuiMenu(),
             "context menu" => new ContextMenu(),
             _ => UnknownContainerType(type, out error),

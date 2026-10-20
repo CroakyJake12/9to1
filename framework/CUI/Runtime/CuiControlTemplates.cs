@@ -125,14 +125,17 @@ public static class CuiControlTemplates
         // transparent. The donor PopupRoot default Background is white, so an unmodified root would
         // paint one opaque white rectangle behind every popup (the observed defect). CUI owns the
         // popup backdrop: leave the root backing transparent and give TopLevel's transparency
-        // fallback a truthful semantic brush. When the compositor cannot negotiate alpha, TopLevel
-        // paints the theme surface (CuiPopupSurfaceBrush) instead of a fabricated white layer; when
-        // alpha works, TopLevel clears the fallback and the round cutout/shadow stay truly
-        // transparent. Normal full-window roots keep the shared Frame (owner-bound background).
-        if (owner is PopupRoot)
+        // fallback a distinct guaranteed-Opaque semantic brush. The popup chrome (CuiMaterialBorder)
+        // keeps using CuiPopupSurfaceBrush, so material/transparency of the visible surface is
+        // preserved independently. The fallback border is driven by an alpha-aware, lifetime-owned
+        // projection (CuiTransparencyFallback): when real per-pixel alpha was negotiated it stays
+        // unpainted across theme changes; only a positively opaque destination paints the latest
+        // opaque semantic color. Normal full-window roots keep the shared Frame (owner-bound
+        // background).
+        if (owner is PopupRoot popupRoot)
         {
-            fallback.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPopupSurfaceBrush"));
-            owner.Bind(TopLevel.TransparencyBackgroundFallbackProperty, owner.GetResourceObservable("CuiPopupSurfaceBrush"));
+            owner.Bind(TopLevel.TransparencyBackgroundFallbackProperty, owner.GetResourceObservable("CuiPopupOpaqueFallbackBrush"));
+            CuiTransparencyFallback.Attach(popupRoot, fallback);
             return new Panel { Children = { fallback, new CuiMaterialBorder { Child = layers } } };
         }
         return new Panel { Children = { fallback, Frame(owner, layers) } };

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Media;
 
 namespace CakeOS.Cui.Runtime;
 
@@ -47,4 +48,14 @@ public static class CuiPopupPresentation
     /// overlay safety from a default/unnegotiated transparency state.
     /// </summary>
     public static bool PreferOverlayHostUnknown() => false;
+
+    /// <summary>
+    /// Alpha-aware projection for the popup-root transparency fallback. Only a positively opaque
+    /// destination (<see cref="WindowTransparencyLevel.None"/>) paints the latest guaranteed-opaque
+    /// semantic color; Transparent and every alpha-capable surface (Blur/AcrylicBlur/Mica) keep the
+    /// fallback null (unpainted) so a later theme change never repaints a negotiated-through
+    /// backdrop. Unknown is never inferred as opaque from a default or a parent window's alpha.
+    /// </summary>
+    public static IBrush? ResolveOpaquePaint(WindowTransparencyLevel level, IBrush? opaqueBrush) =>
+        level == WindowTransparencyLevel.None ? opaqueBrush : null;
 }

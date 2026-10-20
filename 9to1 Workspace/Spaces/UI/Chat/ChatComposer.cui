@@ -21,11 +21,12 @@
   </Actions>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
-  <!-- The composer surface is an Overlay so the formatting bar can float above the normal-flow body
-       (chips / input / controls / emoji / settings) without occupying a stack row or moving the
-       input/controls baseline. The normal-flow column is grouped under composer-body; the toolbar
-       is a sibling overlay child, anchored to the surface and live within the same CUI scene. -->
-  <Container id="composer-surface" Type="Overlay" padding="12"
+  <!-- The composer surface is an out-of-flow overlay ("Overlay Float") so the formatting bar can
+       float above the normal-flow body (chips / input / controls / emoji / settings) without
+       occupying a stack row, moving the input/controls baseline, or inflating the surface's desired
+       size. The normal-flow column is grouped under composer-body; the toolbar lives in a Floating
+       layer that positions it adjacent to the editable input within the same CUI scene. -->
+  <Container id="composer-surface" Type="Overlay Float" padding="12"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
     <Container id="composer-body" Type="Vertical Stack" CellGap="8">
@@ -87,21 +88,23 @@
       </Container>
     </Container>
 
-    <!-- Floating, out-of-flow formatting bar. It is a sibling overlay child of composer-surface, not
-         part of composer-body's vertical flow, so it never moves/resizes the input or controls-row
-         baseline. It is nonmodal, lives in the same CUI scene, and is hit-testable only over its own
-         bounds (the wrapping cell is transparent). Visibility is still owned by the document-root
-         FormattingOpen toggle. -->
-    <Container id="format-toolbar" Type="Horizontal Stack" CellGap="6" padding="8"
-          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
-          HorizontalAlignment="Left" VerticalAlignment="Top"
-          accessible-name="Formatting toolbar">
+    <!-- Floating, out-of-flow formatting bar. It lives in a generic Floating layer (a sibling of
+         composer-body) that excludes it from the surface's desired size and positions it adjacent to
+         the editable input — flipping/clamping to the visible bounds so it never covers the first
+         editable line, the chip actions or the controls row. It is nonmodal, lives in the same CUI
+         scene, and is hit-testable only over its own bounds (the wrapping cells are transparent).
+         Visibility is still owned by the document-root FormattingOpen toggle. -->
+    <Container id="composer-floating-layer" Type="Floating">
+      <Container id="format-toolbar" Type="Horizontal Stack" CellGap="6" padding="8"
+            background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
+            accessible-name="Formatting toolbar">
       <Button action="composer.format.Bold" content="B" font-weight="Bold" MinWidth="36" MinHeight="36" accessible-name="Bold" tooltip="Bold" />
       <Button action="composer.format.Italic" content="I" font-style="Italic" MinWidth="36" MinHeight="36" accessible-name="Italic" tooltip="Italic" />
       <Button action="composer.format.Code" content="{ }" MinWidth="36" MinHeight="36" accessible-name="Inline code" tooltip="Inline code" />
       <Button action="composer.format.Link" content="🔗" MinWidth="36" MinHeight="36" accessible-name="Link" tooltip="Link" />
       <Button action="composer.format.Quote" content="❝" MinWidth="36" MinHeight="36" accessible-name="Quote" tooltip="Quote" />
       <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
+      </Container>
     </Container>
   </Container>
 </Cui>

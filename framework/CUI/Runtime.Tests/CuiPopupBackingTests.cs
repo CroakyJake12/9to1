@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Themes;
+using System.Threading;
 using Xunit;
 
 namespace CakeOS.Cui.Runtime.Tests;
@@ -14,8 +15,11 @@ namespace CakeOS.Cui.Runtime.Tests;
 /// Lane-3 coverage for the CUI popup backing fix. The donor PopupRoot default white Background and
 /// the TopLevel white TransparencyBackgroundFallback painted an opaque white rectangle behind native
 /// popups. CUI now owns both layers: a transparent popup-root backing (rounded surface + shadow
-/// margin stay transparent) and a truthful semantic fallback brush. These tests assert the matrix
-/// policy and the rendered popup-root template. Execution is slot-gated / NOT RUN here.
+/// margin stay transparent), a distinct guaranteed-Opaque semantic fallback brush (never the material
+/// surface, whose ISolidColorBrush.Color is Transparent), and an alpha-aware projection that keeps
+/// the fallback unpainted through theme changes whenever real per-pixel alpha was negotiated. These
+/// tests assert the host-matrix policy, the alpha-aware paint projection, and the rendered popup-root
+/// template. Execution is slot-gated / NOT RUN here.
 /// </summary>
 public sealed class CuiPopupBackingTests
 {
@@ -41,8 +45,51 @@ public sealed class CuiPopupBackingTests
         Assert.False(CuiPopupPresentation.PreferOverlayHostUnknown());
     }
 
+    [Theory]
+    [InlineData(WindowTransparencyLevel.Transparent)]
+    [InlineData(WindowTransparencyLevel.Blur)]
+    [InlineData(WindowTransparencyLevel.AcrylicBlur)]
+    [InlineData(WindowTransparencyLevel.Mica)]
+    public void Alpha_capable_destinations_keep_fallback_null(WindowTransparencyLevel level)
+    {
+        var opaque = new SolidColorBrush(Colors.DarkSlateGray);
+        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(level, opaque));
+    }
+
     [Fact]
-    public async Task Native_popup_root_uses_transparent_backing_and_semantic_fallback()
+    public void Opaque_destination_paints_latest_guaranteed_opaque_color()
+    {
+        var opaque = new SolidColorBrush(Colors.DarkSlateGray);
+        Assert.Same(opaque, CuiPopupPresentation.ResolveOpaquePaint(WindowTransparencyLevel.None, opaque));
+    }
+
+    [Fact]
+    public void Non_opaque_levels_never_paint_regardless_of_brush_emission()
+    {
+        // A non-None level (including Transparent trust alpha-capable surfaces) must keep the
+        // fallback null even when the opaque brush is re-emitted by a later theme change: opacity is
+        // never inferred from a level that is not positively None.
+        var opaque = new SolidColorBrush(Colors.DarkSlateGray);
+        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(WindowTransparencyLevel.Transparent, opaque));
+        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(WindowTransparencyLevel.Blur, opaque));
+        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(WindowTransparencyLevel.AcrylicBlur, opaque));
+        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(WindowTransparencyLevel.Mica, opaque));
+    }
+
+    [Fact]
+    public void Fallback_through_theme_changes_stays_null_only_when_alpha_negotiated()
+    {
+        // The projection is deterministic per level: a Transparent level ignores any later brush
+        // emission (theme change), while an opaque destination always uses the latest brush.
+        var first = new SolidColorBrush(Colors.Black);
+        var second = new SolidColorBrush(Colors.White);
+        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(TransparencyLevel.Transparent, first));
+        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(TransparencyLevel.Transparent, second));
+        Assert.Same(second, CuiPopupPresentation.ResolveOpaquePaint(TransparencyLevel.None, second));
+    }
+
+    [Fact]
+    public async Task Native_popup_root_uses_transparent_backing_and_distinct_opaque_fallback()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
@@ -72,11 +119,12 @@ public sealed class CuiPopupBackingTests
                 // and shadow margin transparent).
                 var frame = Assert.Single(templateRoot!.GetVisualChildren().OfType<CuiMaterialBorder>());
                 Assert.Null(frame.Background);
-                // The semantic fallback replaces the white default: TopLevel will paint this brush
-                // only when the compositor cannot negotiate alpha, and clear it otherwise.
+
+                // The semantic fallback is distinct and guaranteed-opaque (A=255): never the material
+                // surface whose ISolidColorBrush.Color is Transparent.
                 var fallbackBrush = Assert.IsAssignableFrom<ISolidColorBrush>(popupRoot.TransparencyBackgroundFallback);
-                Assert.NotEqual(Colors.White, fallbackBrush.Color);
-                Assert.True(fallbackBrush.Color.A > 0, "fallback must be a truthful opaque brush when alpha is unavailable");
+                Assert.Equal(255, fallbackBrush.Color.A);
+                Assert.False(fallbackBrush.Color.A == 0 || fallbackBrush.Color == Colors.White);
             }
             finally { window.Close(); }
         }, CancellationToken.None);

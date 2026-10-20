@@ -36,6 +36,10 @@ public static class CuiCustomThemeResourceApplier
         resources["CuiFloatingSurfaceMaterial"] = resources["CuiPanel2Brush"];
         if (resources["CuiPanel2Brush"] is ISolidColorBrush popup)
             resources["CuiPopupSurfaceBrush"] = new SolidColorBrush(Color.FromRgb(popup.Color.R, popup.Color.G, popup.Color.B)).ToImmutable();
+        // Opaque solid fallback for transparency negotiation (never a material/transparent brush).
+        resources["CuiPopupOpaqueFallbackBrush"] = resources["CuiPanel2Brush"] is ISolidColorBrush fallbackSource
+            ? new SolidColorBrush(Color.FromRgb(fallbackSource.Color.R, fallbackSource.Color.G, fallbackSource.Color.B)).ToImmutable()
+            : Brushes.Black;
         resources["CuiCustomTypography"] = value.Fonts;
         resources["CuiCustomFontScale"] = settings.DisplayScale;
         resources["CuiButtonRoundnessPercent"] = value.ButtonRoundnessPercent;

@@ -78,6 +78,8 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
             "wrap" => new WrapPanel(),
             "absolute" => new CuiAbsolutePanel(),
             "overlay" => new Panel(),
+            "overlay float" => new CuiOverlayPanel(),
+            "floating" => new CuiFloatingLayer(),
             _ => throw new ArgumentOutOfRangeException(nameof(layoutType), layoutType, "Unknown canonical Container layout Type.")
         };
         Child = Layout;
