@@ -249,6 +249,12 @@ public sealed class CuiCompiler
                     declaration.Span);
                 continue;
             }
+            if (!string.IsNullOrEmpty(declaration.Source))
+            {
+                diagnostics.Error("CUIC039",
+                    $"Local bool variable '{declaration.Name}' declares a Source without Selection; a bool literal cannot carry a candidate pool.",
+                    declaration.Span);
+            }
             if (!bool.TryParse(declaration.Value, out _))
             {
                 diagnostics.Error("CUIC031",

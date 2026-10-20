@@ -64,6 +64,27 @@ public sealed class CuiLocalStateAbiOutputTests
     }
 
     [Fact]
+    public void Bool_variable_with_source_without_selection_is_rejected_with_cuic039()
+    {
+        // A bool literal cannot carry a Source-driven candidate pool without a Selection; the
+        // compiler must reject it with CUIC039 at the declaration, matching the runtime's
+        // CUIR077 rejection, rather than failing on an unrelated Page/property diagnostic.
+        var source = """
+            <Cui>
+              <Variable Type="bool" ID="Flag" Source="{Binding Candidates}">true</Variable>
+              <Page />
+            </Cui>
+            """;
+        var result = new CuiCompiler().Compile(source, "bool-source.cui", Options());
+        Assert.False(result.Succeeded);
+        Assert.Null(result.Output);
+        var error = Assert.Single(result.Diagnostics.Where(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error));
+        Assert.Equal("CUIC039", error.Code);
+        Assert.Contains("Flag", error.Message);
+        Assert.Contains("Source", error.Message);
+    }
+
+    [Fact]
     public void Public_compatibility_record_keeps_core_clr_identity_via_forwarder()
     {
         // CuiCompilationMetadata historically lived in the Compiler assembly; it now lives in Core
