@@ -63,3 +63,7 @@ Preserve other workers' changes, user data, historical evidence that does not di
 Direct owner sidebar refinement on 20 October: the icon rail and secondary contextual sidebar need clear visual distinction. Read `docs/specification/owner-references/2026-10-20-sidebar-separation/owner-correction.json`; use theme-owned semantic surfaces and preserve collapse/reopen, readability and shared app state.
 
 Latest direct owner composer-icon refinement on 20 October: read `docs/specification/owner-references/2026-10-20-composer-icons/owner-correction.json`. Use a random actual emoji trigger with the specified suggestive examples and all flags excluded from its icon pool; no unselected background. Use a significantly larger genuine SVG plus. Preserve CUI ownership, actual emoji data, focused editing and shared standalone/Haven behavior.
+
+## Direct owner concurrency change — 20 October 2026
+
+The owner explicitly instructed: "Bump that up to 6" Mercury implementation agents. This supersedes the earlier single-implementation-worker/request limit. Run at most SIX Mercury implementation workers concurrently, using separate worktrees and assigned scopes. Keep the existing $5 spending cap unchanged. Serialize .NET builds and normal native acceptance through coordinator allocation; workers without that slot may implement source and tests but must not run .NET/app commands. Preserve all checkpoints and independently review/integrate the results.
