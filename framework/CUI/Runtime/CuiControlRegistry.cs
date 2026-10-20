@@ -358,7 +358,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited"
+            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -368,7 +368,7 @@ public sealed class CuiControlRegistry
         var input = common.Concat(new[]
         {
             "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "Foreground",
-            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest"
+            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var content = common.Concat(new[]
         {
@@ -479,7 +479,10 @@ public sealed class CuiControlRegistry
             ("VerticalTextAlignment", "symbol", typeof(Avalonia.Media.AlignmentY), true),
             ("IsHitTestVisible", "boolean", typeof(bool), true),
             ("HorizontalScrolling", "boolean", typeof(bool), true), ("VerticalScrolling", "boolean", typeof(bool), true),
-            ("FollowAtEnd", "boolean", typeof(bool), true)
+            ("FollowAtEnd", "boolean", typeof(bool), true),
+            ("CompoundFocus", "boolean", typeof(bool), false),
+            ("OwnsBackdrop", "boolean", typeof(bool), false),
+            ("EmbeddedInput", "boolean", typeof(bool), false)
         };
 
         return entries.ToFrozenDictionary(

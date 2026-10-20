@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.Media;
 
 namespace CakeOS.Cui.Runtime;
 
@@ -18,6 +20,19 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
     private Thickness _cellMargin;
     private readonly List<Border> _cells = [];
     private readonly List<(Control Control, EventHandler<AvaloniaPropertyChangedEventArgs> Handler)> _placementHandlers = [];
+    private bool _compoundFocusEnabled;
+    private IBrush? _focusBrush;
+    private IBrush? _validationBrush;
+    private double _focusThickness = 2;
+    private IDisposable? _focusBrushSubscription;
+    private IDisposable? _validationBrushSubscription;
+    private IDisposable? _focusThicknessSubscription;
+    private CuiCompoundFocusScope? _compoundFocusScope;
+    private EventHandler<AvaloniaPropertyChangedEventArgs>? _compoundFocusHandler;
+    /// <summary>True when this container owns the generic outer compound-focus ring.</summary>
+    public bool CompoundFocusEnabled => _compoundFocusEnabled;
+    /// <summary>The typed per-container focus/validation scope, or null until compound focus is enabled.</summary>
+    public CuiCompoundFocusScope? CompoundFocusScope => _compoundFocusScope;
     public IReadOnlyList<Control> AuthoredChildren => _cells.Select(cell => cell.Child!).ToArray();
 
     public bool RemoveChild(Control child)
@@ -67,6 +82,71 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
         };
         Child = Layout;
         _scroll.ScrollChanged += OnScrollChanged;
+    }
+
+    /// <summary>
+    /// Generic compound-focus contract: the container owns visible keyboard focus
+    /// for its embedded controls, drawing an outer ring instead of letting inner
+    /// inputs paint their own boxes. Selected generically by authored markup. The
+    /// ring is rendered through the CUI typed property store (stable geometry, live
+    /// theme/HC resource observation, precedence-respecting) and remains active while
+    /// a logically-owned menu popup holds focus, so the expanded composer surface and
+    /// its Aa trigger survive toolbar interaction.
+    /// </summary>
+    public void EnableCompoundFocus()
+    {
+        if (_compoundFocusEnabled) return;
+        _compoundFocusEnabled = true;
+        _focusBrushSubscription = this.GetResourceObservable("CuiFocusBrush").Subscribe(new ValueObserver(brush =>
+        {
+            _focusBrush = brush as IBrush;
+            ApplyCompoundFocus();
+        }));
+        _validationBrushSubscription = this.GetResourceObservable("CuiValidationBrush").Subscribe(new ValueObserver(brush =>
+        {
+            _validationBrush = brush as IBrush;
+            ApplyCompoundFocus();
+        }));
+        _focusThicknessSubscription = this.GetResourceObservable("CuiFocusIndicatorThickness").Subscribe(new ValueObserver(thickness =>
+        {
+            _focusThickness = thickness is double width ? width : 2;
+            ApplyCompoundFocus();
+        }));
+        // One generic declared per-container scope observes the actual owning top-level focus and
+        // its real descendant menu open/close lifecycle plus descendant validation. No global menu
+        // registry: only real owned menus keep this composite focused.
+        _compoundFocusScope = new CuiCompoundFocusScope(this);
+        _compoundFocusScope.FocusChanged += OnCompoundFocusChanged;
+        _compoundFocusScope.ValidationChanged += OnCompoundFocusChanged;
+        _compoundFocusScope.Attach();
+        // Reserve a constant focus thickness up front so geometry never shifts when
+        // the ring appears/disappears; only the brush changes with focus state.
+        CuiPropertyPresentation.Set(this, "BorderThickness", new Thickness(_focusThickness),
+            CuiPropertyLevel.Overlay, "CUI compound focus", -100);
+        _compoundFocusHandler = (_, change) =>
+        {
+            if (change.Property == InputElement.IsKeyboardFocusWithinProperty)
+                ApplyCompoundFocus();
+        };
+        PropertyChanged += _compoundFocusHandler;
+        ApplyCompoundFocus();
+    }
+
+    private void OnCompoundFocusChanged(object? sender, bool state) => ApplyCompoundFocus();
+
+    private void ApplyCompoundFocus()
+    {
+        var focused = _compoundFocusScope?.IsFocused ?? IsKeyboardFocusWithin;
+        var invalid = _compoundFocusScope?.HasValidationError ?? false;
+        // Truthful descendant validation wins over focus on the outer compound ring so a genuine
+        // error is never hidden; otherwise valid focused/rest state uses the theme-owned brush.
+        IBrush? brush;
+        if (invalid) brush = _validationBrush;
+        else brush = focused && _focusBrush is not null ? _focusBrush : Avalonia.Media.Brushes.Transparent;
+        CuiPropertyPresentation.Set(this, "BorderBrush", brush ?? Avalonia.Media.Brushes.Transparent,
+            CuiPropertyLevel.Overlay, "CUI compound focus", -100);
+        CuiPropertyPresentation.Set(this, "BorderThickness", new Thickness(_focusThickness),
+            CuiPropertyLevel.Overlay, "CUI compound focus", -100);
     }
 
     /// <summary>Follow new content only while the reader remains at the end of the vertical viewport.</summary>
@@ -150,7 +230,23 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
         }
     }
     public void Dispose()
-    { _scroll.ScrollChanged -= OnScrollChanged; foreach (var (control, handler) in _placementHandlers) control.PropertyChanged -= handler; _placementHandlers.Clear(); (Layout as IDisposable)?.Dispose(); }
+    {
+        if (_compoundFocusHandler is not null) { PropertyChanged -= _compoundFocusHandler; _compoundFocusHandler = null; }
+        if (_compoundFocusScope is not null) { _compoundFocusScope.FocusChanged -= OnCompoundFocusChanged; _compoundFocusScope.ValidationChanged -= OnCompoundFocusChanged; _compoundFocusScope.Dispose(); _compoundFocusScope = null; }
+        _focusBrushSubscription?.Dispose(); _validationBrushSubscription?.Dispose(); _focusThicknessSubscription?.Dispose();
+        _focusBrushSubscription = null; _validationBrushSubscription = null; _focusThicknessSubscription = null;
+        _scroll.ScrollChanged -= OnScrollChanged;
+        foreach (var (control, handler) in _placementHandlers) control.PropertyChanged -= handler;
+        _placementHandlers.Clear();
+        (Layout as IDisposable)?.Dispose();
+    }
+
+    private sealed class ValueObserver(Action<object?> next) : IObserver<object?>
+    {
+        public void OnNext(object? value) => next(value);
+        public void OnCompleted() { }
+        public void OnError(Exception error) => throw error;
+    }
 
     public void SetCellGap(double value)
     {

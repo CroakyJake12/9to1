@@ -17,7 +17,19 @@ public sealed record CuiActionDefinition(
     string Name,
     string Command,
     CuiValue? Parameter,
-    CuiSourceSpan Span);
+    CuiSourceSpan Span,
+    string? LocalTarget = null);
+
+/// <summary>A document-root ordinary local CUI variable declaration (for example a typed bool
+/// used to drive a pure-local Toggle action, or a source-driven string selected once per mounted
+/// frame). Local state is per loaded-document instance.</summary>
+public sealed record CuiVariableDeclaration(
+    string Name,
+    string Type,
+    string Value,
+    CuiSourceSpan Span,
+    string? Source = null,
+    string? Selection = null);
 
 public sealed record CuiTemplateDefinition(
     string Name,
@@ -248,4 +260,13 @@ public sealed record CuiDocument(
     /// through the alias; unaliased imports expose them directly in the document scope.
     /// </summary>
     public IReadOnlyList<CuiImportDefinition> Imports { get; init; } = Array.Empty<CuiImportDefinition>();
+
+    /// <summary>
+    /// Document-root ordinary local variable declarations. These define per-instance local state
+    /// (for example a typed bool drive by a pure-local Toggle action). Local variables are resolved
+    /// lexically at load time against this declaration table and never capture an arbitrary page or
+    /// prefab instance.
+    /// </summary>
+    public IReadOnlyDictionary<string, CuiVariableDeclaration> Variables { get; init; } =
+        new Dictionary<string, CuiVariableDeclaration>(StringComparer.Ordinal);
 }

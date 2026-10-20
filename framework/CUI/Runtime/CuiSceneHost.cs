@@ -53,6 +53,8 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
     private Avalonia.Controls.ResourceDictionary? _visualResources;
     private CuiSceneThemeBinding? _themeBinding;
     private CuiNativeScene? _currentScene;
+    private bool _ownsBackdrop;
+
     private readonly CancellationTokenSource _lifetime = new();
     private long _generation;
     private bool _disposed;
@@ -525,6 +527,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 new CuiRichParser().Parse("<Cui><Container Type=\"Vertical Stack\"><Text id=\"scene-availability\" text=\"{Binding AvailabilityMessage}\" accessible-name=\"Application availability\" /></Container></Cui>");
             var loaded = next.TryLoad(document);
             root = publication.Root = loaded.Root;
+            var ownsBackdrop = next.RootOwnsBackdrop;
             if (root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
                 throw new InvalidDataException("The canonical CUI scene did not produce a usable root control.");
             DemandPublicationCurrent(generation, isPublicationCurrent, cancellationToken, publication);
@@ -538,7 +541,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             Publish(() => Resources.MergedDictionaries.Add(visualResources));
             Publish(() => SetValue(ThemeVariantScope.RequestedThemeVariantProperty,
                 SceneResource<Avalonia.Styling.ThemeVariant>(visualResources, "CuiSceneThemeVariant")));
-            Publish(() => Background = SceneResource<Avalonia.Media.IBrush>(visualResources, "CuiBackgroundBrush"));
+            Publish(() => { _ownsBackdrop = ownsBackdrop; Background = ownsBackdrop ? Avalonia.Media.Brushes.Transparent : SceneResource<Avalonia.Media.IBrush>(visualResources, "CuiBackgroundBrush"); });
             Publish(() => Foreground = SceneResource<Avalonia.Media.IBrush>(visualResources, "CuiTextBrush"));
 
             previous = PublicationFor(_loader);
@@ -811,7 +814,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         SetValue(ThemeVariantScope.RequestedThemeVariantProperty,
             SceneResource<Avalonia.Styling.ThemeVariant>(resources, "CuiSceneThemeVariant"));
         if (!canPublish()) return;
-        Background = SceneResource<Avalonia.Media.IBrush>(resources, "CuiBackgroundBrush");
+        Background = _ownsBackdrop ? Avalonia.Media.Brushes.Transparent : SceneResource<Avalonia.Media.IBrush>(resources, "CuiBackgroundBrush");
         if (!canPublish()) return;
         Foreground = SceneResource<Avalonia.Media.IBrush>(resources, "CuiTextBrush");
     }

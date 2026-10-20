@@ -33,6 +33,8 @@ public static class CuiPropertyPresentation
     { if (Projections.TryGetValue(control, out var projection)) { projection.Dispose(); Projections.Remove(control); } }
     public static void Register(Control control, string name, Type valueType, object? builtInDefault, Action<object?> apply) =>
         Get(control).Register(name, valueType, builtInDefault, apply);
+    /// <summary>Mark an input as embedded: it owns no inner hover/focus box; the outer compound control owns visible focus.</summary>
+    public static void ConfigureCompoundFocus(Control control) => Get(control).SetCompoundFocus();
     public static void SetSelected(Control control, bool selected, string source = "CUI selected navigation") =>
         Get(control).Set("Selected", selected, CuiPropertyLevel.Instance, source, 0);
     private static Projection Get(Control control,bool ownsTemplate=true) => Projections.GetValue(control, target => new Projection(target,ownsTemplate));
@@ -88,6 +90,7 @@ public static class CuiPropertyPresentation
         private bool _applying;
         private bool _selected;
         private bool _dragging;
+        private bool _compoundFocus;
         private CuiFontRole _fontRole;
         private CuiAccentRole _accentRole;
         private CuiCustomFonts? _customFonts;
@@ -95,6 +98,24 @@ public static class CuiPropertyPresentation
         private double? _roundnessPercent;
         private TemplatePart? _part;
         public CuiEffectivePropertyStore Store { get; } = new();
+        public void SetCompoundFocus()
+        {
+            _compoundFocus = true;
+            // The generic embedded-input role selects the canonical template part and suppresses
+            // every independent inner background/border/hover/focus decoration; the outer compound
+            // control owns visible focus and validation.
+            ConfigurePart(TemplatePart.EmbeddedInput);
+            // Clear the independently installed FocusAdorner through the CUI effective-property
+            // store at overlay precedence. A raw native LocalValue loses to this projection's own
+            // Animation-priority write, so the null must win here in the typed store.
+            Set("FocusAdorner", null, CuiPropertyLevel.Overlay, "CUI embedded input", -100);
+            // A compound-focus embedded input preserves its REAL selection while focus moves to the
+            // owned toolbar/menu (the pinned native TextBox otherwise clears it in OnLostFocus).
+            // This is the generic backend capability of the embedded/compound role, applied through
+            // the typed store; no app-specific selection cache is introduced.
+            if (_control is TextBox)
+                Set("ClearSelectionOnLostFocus", false, CuiPropertyLevel.Overlay, "CUI embedded input", -100);
+        }
         public Projection(Control control,bool ownsTemplate)
         {
             _control = control;
@@ -392,7 +413,7 @@ public static class CuiPropertyPresentation
 
         private void UpdateState()
         {
-            RefreshFocusRing();
+            if (!_compoundFocus) RefreshFocusRing();
             // This is CUI's built-in state Style. Authored overlays use their own
             // source order, so they are not overridden by a donor selector.
             const string source = "CUI interaction state";
@@ -405,13 +426,13 @@ public static class CuiPropertyPresentation
                 if (_control.IsPointerOver) State("Background","CuiScrollThumbHoverBrush");
                 if (_dragging) State("Background","CuiScrollThumbPressedBrush");
             }
-            else if (!rail && _control.IsPointerOver)
+            else if (!rail && !_compoundFocus && _control.IsPointerOver)
             { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonHoverBrush" : AccentStateBackground("Hover")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonHoverForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
             if (_selected || _control is ToggleButton { IsChecked: true } or ListBoxItem { IsSelected: true } or MenuItem { IsSelected: true })
-            { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); State("BorderColor", "CuiSelectionIndicatorBrush"); }
-            if (!rail && _control is Button { IsPressed: true })
+            { State("Background", _control is MenuItem or ListBoxItem ? "CuiMenuSelectionBrush" : "CuiSelectionBrush"); if (!_compoundFocus) State("BorderColor", "CuiSelectionIndicatorBrush"); }
+            if (!rail && !_compoundFocus && _control is Button { IsPressed: true })
             { State("Background", _accentRole == CuiAccentRole.None ? "CuiButtonPressedBrush" : AccentStateBackground("Pressed")); State("Foreground", _accentRole == CuiAccentRole.None ? "CuiButtonPressedForegroundBrush" : $"CuiAccent{_accentRole}ForegroundBrush"); }
-            if (_control.IsKeyboardFocusWithin)
+            if (!_compoundFocus && _control.IsKeyboardFocusWithin)
             {
                 State("BorderColor", "CuiFocusBrush");
             }

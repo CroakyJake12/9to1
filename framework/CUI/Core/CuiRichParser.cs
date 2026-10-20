@@ -61,6 +61,9 @@ public sealed class CuiRichParser
             var actions = hasCuiDocumentRoot
                 ? ParseActions(root, sourceName)
                 : new Dictionary<string, CuiActionDefinition>(StringComparer.Ordinal);
+            var variables = hasCuiDocumentRoot
+                ? ParseVariables(root, sourceName)
+                : new Dictionary<string, CuiVariableDeclaration>(StringComparer.Ordinal);
             var templates = hasCuiDocumentRoot
                 ? ParseTemplates(root, sourceName)
                 : new Dictionary<string, CuiTemplateDefinition>(StringComparer.Ordinal);
@@ -86,6 +89,7 @@ public sealed class CuiRichParser
                     ? ParseRootProperties(root, sourceName)
                     : new Dictionary<string, CuiValue>(StringComparer.Ordinal),
                 Imports = imports,
+                Variables = variables,
             };
         }
         catch (XmlException ex)
@@ -223,16 +227,88 @@ public sealed class CuiRichParser
         {
             if (!IsKeyword(child, "Action")) continue;
             var name = ActionAttribute(child, "name", sourceName)?.Value;
-            var command = ActionAttribute(child, "command", sourceName)?.Value;
-            if (name is null || command is null) continue;
+            if (string.IsNullOrWhiteSpace(name)) continue;
 
             var span = SpanOf(child, sourceName);
+            var command = ActionAttribute(child, "command", sourceName)?.Value;
             var paramAttr = ActionAttribute(child, "parameter", sourceName);
             var parameter = paramAttr is not null ? ParseMarkupValue(paramAttr.Value, span) : null;
 
-            result[name] = new CuiActionDefinition(name, command, parameter, span);
+            // Pure-local Toggle form: <Action name="..." ><Toggle Target="Var"/></Action>.
+            string? localTarget = null;
+            var toggle = child.Elements().FirstOrDefault(element => IsKeyword(element, "Toggle"));
+            if (toggle is not null)
+            {
+                var target = toggle.Attribute("Target") ?? toggle.Attribute("target");
+                if (target is null || string.IsNullOrWhiteSpace(target.Value))
+                {
+                    _diagnostics.Error("CUI050", "A <Toggle> action requires a non-empty Target local-variable name.", SpanOf(toggle, sourceName));
+                    continue;
+                }
+                localTarget = target.Value;
+                if (command is not null)
+                    _diagnostics.Error("CUI051", "A local <Toggle> action cannot also declare a command.", span);
+            }
+
+            if (localTarget is null && command is null)
+            {
+                _diagnostics.Error("CUI052", "An Action requires a command or a local <Toggle> Target.", span);
+                continue;
+            }
+
+            result[name] = new CuiActionDefinition(name, command ?? string.Empty, parameter, span, localTarget);
         }
 
+        return result;
+    }
+
+    /// <summary>Parses document-root ordinary <c>&lt;Variable Type="..." ID="..."&gt;value&lt;/Variable&gt;</c>
+    /// declarations into the local-state table. Only root-level typed local variables are accepted;
+    /// nested/state-bearing declarations are handled (and rejected) by the compiler instead.</summary>
+    private IReadOnlyDictionary<string, CuiVariableDeclaration> ParseVariables(
+        XElement root, string sourceName)
+    {
+        var result = new Dictionary<string, CuiVariableDeclaration>(StringComparer.Ordinal);
+        foreach (var child in root.Elements())
+        {
+            if (!IsKeyword(child, "Variable")) continue;
+
+            var span = SpanOf(child, sourceName);
+            var idAttr = child.Attribute("ID") ?? child.Attribute("id") ?? child.Attribute("Name") ?? child.Attribute("name");
+            if (idAttr is null || string.IsNullOrWhiteSpace(idAttr.Value))
+            {
+                _diagnostics.Error("CUI053", "A document-root <Variable> requires an ID/Name.", span);
+                continue;
+            }
+            var typeAttr = child.Attribute("Type") ?? child.Attribute("type");
+            if (typeAttr is null || string.IsNullOrWhiteSpace(typeAttr.Value))
+            {
+                _diagnostics.Error("CUI054", $"Variable '{idAttr.Value}' requires a Type.", span);
+                continue;
+            }
+
+            var value = string.Concat(child.Nodes().OfType<XText>().Select(node => node.Value)).Trim();
+            if (value.Length == 0 && child.Attribute("value") is { } valueAttr)
+                value = valueAttr.Value;
+
+            // Optional source-driven selection contract: a <Variable> may declare a binding source
+            // (candidate pool) and a selection strategy (for example "RandomOnce" for a choose-once
+            // string). The source is parsed with the same binding grammar as every other CUI value.
+            var sourceAttr = child.Attribute("Source") ?? child.Attribute("source");
+            var selectionAttr = child.Attribute("Selection") ?? child.Attribute("selection");
+            string? sourcePath = null;
+            if (sourceAttr is not null && !string.IsNullOrWhiteSpace(sourceAttr.Value))
+            {
+                if (ParseValue(sourceAttr.Value, span) is CuiBindingValue binding)
+                    sourcePath = binding.Path;
+                else
+                    _diagnostics.Error("CUI056", $"Variable '{idAttr.Value}' Source must be a {{Binding}} expression.", span);
+            }
+            var selection = selectionAttr is { } sel && !string.IsNullOrWhiteSpace(sel.Value) ? sel.Value.Trim() : null;
+
+            if (!result.TryAdd(idAttr.Value, new CuiVariableDeclaration(idAttr.Value, typeAttr.Value, value, span, sourcePath, selection)))
+                _diagnostics.Error("CUI055", $"Variable ID '{idAttr.Value}' is duplicated at the document root.", span);
+        }
         return result;
     }
 
@@ -325,7 +401,8 @@ public sealed class CuiRichParser
                 // Inside <Cui>, top-level sections are Resources/Styles/Actions/Templates
                 var localName = child.Name.LocalName;
                 if (IsKeyword(child, "Resources") || IsKeyword(child, "Styles")
-                    || IsKeyword(child, "Actions") || IsKeyword(child, "Templates") || IsKeyword(child, "Import"))
+                    || IsKeyword(child, "Actions") || IsKeyword(child, "Templates") || IsKeyword(child, "Import")
+                    || IsKeyword(child, "Variable"))
                     continue;
             }
             elements.Add(child);

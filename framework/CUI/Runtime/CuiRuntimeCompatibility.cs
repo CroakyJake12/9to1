@@ -6,6 +6,14 @@ public static class CuiRuntimeCompatibility
     public const string LanguageVersion = "1";
     public const string RuntimeAbiVersion = "1";
 
+    /// <summary>Capability name for the bounded local-state Toggle slice (document-root typed bool
+    /// variables and pure-local toggle actions), used to gate compiled-artifact admission.</summary>
+    public const string LocalStateToggleCapability = "local-state-toggle";
+
+    /// <summary>Capability name for the bounded source-driven choose-once variable slice (a typed
+    /// string variable selected once per mounted frame from a binding source pool).</summary>
+    public const string LocalStateRandomSelectCapability = "local-state-random-select";
+
     public static IReadOnlySet<string> Capabilities { get; } = new HashSet<string>(StringComparer.Ordinal)
     {
         "native-controls",
@@ -15,6 +23,8 @@ public static class CuiRuntimeCompatibility
         "live-conditionals",
         "stable-control-identity",
         "atomic-tree-replacement",
+        LocalStateToggleCapability,
+        LocalStateRandomSelectCapability,
     };
 
     public static bool IsLanguageVersionCompatible(string? version)

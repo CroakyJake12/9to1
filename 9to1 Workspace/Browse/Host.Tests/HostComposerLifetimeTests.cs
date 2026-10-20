@@ -7,12 +7,14 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Desktop.HavenUI.Backend;
+using Haven.Desktop.Prefabs;
 using Haven.Desktop.Views.Pages.Chat;
 using Haven.UI;
 using System.Threading;
@@ -41,6 +43,7 @@ public sealed class HostComposerLifetimeTests
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
         public int SendCount;
         public int FormatCount;
+        public string? LastFormatCommand;
         public int EmojiInsertions;
         public int StopCount;
 
@@ -53,7 +56,7 @@ public sealed class HostComposerLifetimeTests
         public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
         public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
         public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
-        public ValueTask FormatSelection(string command) { FormatCount++; return ValueTask.CompletedTask; }
+        public ValueTask FormatSelection(string command) { LastFormatCommand = command; FormatCount++; return ValueTask.CompletedTask; }
         public ValueTask InsertEmoji(string emoji) { EmojiInsertions++; return ValueTask.CompletedTask; }
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
     }
@@ -198,6 +201,210 @@ public sealed class HostComposerLifetimeTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Shared_composer_aa_button_toggles_floating_toolbar_and_dispatches_format_with_selection_preserved()
+    {
+        // Production path: the REAL authored ChatComposerCuiView (not a hand-built fixture). The
+        // Aa button must toggle a same-scene floating toolbar (B/I/code/link/quote/list) on/off
+        // through pure-local state, dispatch genuine formatting commands with their parameters
+        // through the loader's retained action pipeline, keep the toolbar open across actions, and
+        // preserve the SAME input/draft/selection/caret throughout.
+        var source = new RecordingSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            view.Input.Text = "draft";
+            Assert.Equal("draft", view.Input.Text);
+            view.Input.SetSelection(0, 2);
+            Assert.Equal(2, view.Input.SelectionLength);
+            Assert.Equal("dr", view.Input.SelectedText);
+            box!.Focus(); Pump();
+            // A focused editor shows the expanded formatting controls.
+            Assert.True(view.Bindings.TryGetValue("Composer.ShowFormatting", out var sf) && sf is true);
+
+            // The floating toolbar is hidden until Aa toggles it open (not rendered while closed).
+            Assert.Null(FindContainer(view, "format-toolbar"));
+
+            var format = FindButton(view, "format-button");
+            Assert.NotNull(format);
+            format!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await view.CaptureOriginalActionSettlement(); Pump();
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            Assert.True(toolbar.IsVisible, "Aa must open the floating toolbar");
+
+            // The toolbar buttons are B (bold) then I (italic); each carries its parameter through
+            // the loader's retained action pipeline, never a direct Bindings bypass.
+            var bold = ToolbarButton(toolbar, 0);
+            var italic = ToolbarButton(toolbar, 1);
+            Assert.NotNull(bold);
+            Assert.NotNull(italic);
+
+            bold!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await view.CaptureOriginalActionSettlement();
+            Assert.Equal(1, source.FormatCount);
+            Assert.Equal("Bold", source.LastFormatCommand);
+            Assert.True(toolbar.IsVisible, "Bold dispatch must leave the toolbar open");
+            Assert.Equal(2, view.Input.SelectionLength);
+            Assert.Equal("dr", view.Input.SelectedText);
+
+            italic!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await view.CaptureOriginalActionSettlement();
+            Assert.Equal(2, source.FormatCount);
+            Assert.Equal("Italic", source.LastFormatCommand);
+            Assert.True(toolbar.IsVisible, "Italic dispatch must leave the toolbar open");
+            Assert.Equal("draft", box.Text);
+            Assert.Same(box, FindInput(view));
+            Assert.Equal(2, view.Input.SelectionLength);
+            Assert.Equal("dr", view.Input.SelectedText);
+
+            // Aa toggles the floating toolbar closed again; the SAME input/draft/selection survive.
+            format.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            Assert.False(toolbar.IsVisible);
+            Assert.Equal("draft", box.Text);
+            Assert.Same(box, FindInput(view));
+            Assert.Equal(2, view.Input.SelectionLength);
+            Assert.Equal("dr", view.Input.SelectedText);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [Fact]
+    public void Emoji_trigger_pool_excludes_flags_and_blacklisted_suggestive_sequences()
+    {
+        var candidates = ComposerEmojiIconPool.Candidates;
+        Assert.NotEmpty(candidates);
+
+        // No trigger candidate may come from the Flags group (generic/country/subdivision).
+        var flagTexts = ComposerEmojiCatalogue.Entries
+            .Where(entry => entry.Group.Equals("Flags", StringComparison.Ordinal))
+            .Select(entry => entry.Text)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.DoesNotContain(candidates, candidate => flagTexts.Contains(candidate));
+
+        // Explicit owner examples plus the adjacent clearly-suggestive sequences are all absent.
+        var blacklist = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "\U0001F92C", // 🤬 face with symbols over mouth
+            "\U0001F4A6", // 💦 sweat droplets
+            "\U0001F51E", // 🔞 no one under eighteen
+            "\U0001F351", // 🍑 peach
+            "\U0001F346", // 🍆 eggplant
+            "\U0001F34C", // 🍌 banana
+            "\U0001FAE6", // 🫦 biting lip
+            "\U0001F37E", // 🍾 bottle with popping cork
+            "\U0001F445", // 👅 tongue
+        };
+        Assert.DoesNotContain(candidates, candidate => blacklist.Contains(candidate));
+    }
+
+    [AvaloniaFact]
+    public async Task Shared_composer_emoji_trigger_renders_eligible_candidate_and_picker_preserves_editing()
+    {
+        var source = new RecordingSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            view.Input.Text = "draft";
+            view.Input.SetSelection(0, 2);
+            Assert.Equal("dr", view.Input.SelectedText);
+            box!.Focus(); Pump(); // expand formatting so editing trigger controls are live
+
+            // The trigger icon is a genuine, eligible candidate from the pool.
+            var emojiButton = FindButton(view, "emoji-button");
+            Assert.NotNull(emojiButton);
+            var content = Assert.IsType<string>(emojiButton!.Content);
+            Assert.Contains(content, ComposerEmojiIconPool.Candidates);
+
+            // Unselected trigger has no visible background.
+            Assert.True(IsEffectivelyTransparent(emojiButton.Background));
+
+            // The picker panel is closed before the trigger is pressed.
+            Assert.Null(FindContainer(view, "emoji-panel"));
+
+            // Opening the picker marks the trigger selected and reveals the genuine panel.
+            emojiButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Pump();
+            var panel = FindContainer(view, "emoji-panel");
+            Assert.NotNull(panel);
+            Assert.True(panel.IsVisible);
+            Assert.False(IsEffectivelyTransparent(emojiButton.Background));
+
+            // The draft, selection and real input survive the picker open round trip unchanged.
+            Assert.Equal("draft", box.Text);
+            Assert.Same(box, FindInput(view));
+            Assert.Equal(2, view.Input.SelectionLength);
+            Assert.Equal("dr", view.Input.SelectedText);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Shared_composer_add_button_renders_large_packaged_svg_plus()
+    {
+        var source = new RecordingSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var addButton = FindButton(view, "add-button");
+            Assert.NotNull(addButton);
+            var image = Assert.IsType<Image>(addButton!.Content);
+            Assert.True(image.Width >= 32 && image.Height >= 32);
+
+            // The plus is the genuine packaged SVG: a geometry of two rounded rects, filled with
+            // the scoped CUI text brush (live rethemed foreground).
+            var drawing = Assert.IsType<DrawingImage>(image.Source);
+            var geometryDrawing = Assert.IsType<GeometryDrawing>(drawing.Drawing);
+            var group = Assert.IsType<GeometryGroup>(geometryDrawing.Geometry);
+            Assert.Equal(2, group.Children.Count);
+            Assert.NotNull(geometryDrawing.Brush);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    private static Control? FindContainer(ContentControl root, string automationId) =>
+        root.GetVisualDescendants().OfType<Control>().SingleOrDefault(control =>
+            AutomationProperties.GetAutomationId(control) == automationId);
+
+    /// <summary>Returns the Nth Button inside the floating toolbar (B=0, I=1, then code/link/quote/list).</summary>
+    private static Button? ToolbarButton(Control toolbar, int index) =>
+        toolbar.GetVisualDescendants().OfType<Button>().ToArray().ElementAtOrDefault(index);
+
+    private static void Pump() => Dispatcher.UIThread.RunJobs();
+
     /// <summary>Runs a few dispatcher/layout passes so headless composition builds the visual tree
     /// and real bounds before assertions inspect the real rendered input.</summary>
     private static void PumpLayout(Window window)
@@ -214,6 +421,15 @@ public sealed class HostComposerLifetimeTests
     private static TextBox? FindInput(ContentControl root) =>
         root.GetVisualDescendants().OfType<TextBox>().SingleOrDefault(box =>
             AutomationProperties.GetAutomationId(box) == "composer-input");
+
+    /// <summary>True when the brush paints nothing visible (null, transparent opacity or a solid
+    /// transparent color). Used to assert the unselected trigger has no background.</summary>
+    private static bool IsEffectivelyTransparent(IBrush? brush)
+    {
+        if (brush is null) return true;
+        if (brush.Opacity <= 0d) return true;
+        return brush is ISolidColorBrush solid && solid.Color.A == 0;
+    }
 
     private static Button? FindButton(ContentControl root, string automationId) =>
         root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using CakeOS.Cui;
 using CakeOS.Cui.Compiler;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -66,24 +67,26 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
                 input.Document.Imports.Select(import => import.Source).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray())).ToArray();
             var metadata = new CuiCompilationMetadata(CuiRuntimeCompatibility.LanguageVersion,
                 CuiRuntimeCompatibility.RuntimeAbiVersion, CuiControlRegistry.ComponentRegistryVersion, RequiredCapabilities);
-            var documents = new List<object>();
+            var documents = new List<CuiCompiledArtifactDocument>();
             foreach (var input in inputs)
             {
                 var compilation = new CuiCompiler().Compile(input.Text, input.Name, new(metadata, imports));
                 foreach (var diagnostic in compilation.Diagnostics) Report(diagnostic, root);
                 if (compilation.Succeeded && compilation.Output is { } output)
-                    documents.Add(new { source = input.Name, sha256 = Hash(input.Bytes), compilation = output });
+                    documents.Add(new CuiCompiledArtifactDocument(
+                        input.Name, Hash(input.Bytes),
+                        new CuiCompiledArtifactCompilation(output.Metadata, input.Text)));
             }
             if (Log.HasLoggedErrors) return false;
 
             var compilerPath = typeof(CuiCompiler).Assembly.Location;
-            var artifact = new
-            {
-                format = "cui-build-compilation", formatVersion = 1,
-                compilerSha256 = Hash(File.ReadAllBytes(compilerPath)),
-                metadata, documents
-            };
-            var bytesOut = JsonSerializer.SerializeToUtf8Bytes(artifact, JsonOptions());
+            var artifact = new CuiCompiledArtifact(
+                CuiCompiledArtifactCodec.FormatName,
+                CuiCompiledArtifactCodec.FormatVersion,
+                Hash(File.ReadAllBytes(compilerPath)),
+                metadata,
+                documents);
+            var bytesOut = JsonSerializer.SerializeToUtf8Bytes(artifact, CuiCompiledArtifactCodec.Options);
             var destination = Path.GetFullPath(BuildPath(OutputFile), root);
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             var snapshots = new Dictionary<string, string>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
@@ -153,24 +156,6 @@ public sealed class CompileCuiSourcesTask : Microsoft.Build.Utilities.Task
     }
 
     private static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
-
-    private static JsonSerializerOptions JsonOptions()
-    {
-        var resolver = new DefaultJsonTypeInfoResolver();
-        resolver.Modifiers.Add(info =>
-        {
-            // Preserve typed values and text-expression payloads rather than serializing
-            // only their abstract base Span. Discriminators are internal artifact v1 data.
-            Type[] derived = info.Type == typeof(CuiValue)
-                ? [typeof(CuiLiteralValue), typeof(CuiBindingValue), typeof(CuiResourceValue), typeof(CuiInvalidValue)]
-                : info.Type == typeof(CuiTextPart)
-                    ? [typeof(CuiLiteralTextPart), typeof(CuiExpressionTextPart)] : [];
-            if (derived.Length == 0) return;
-            info.PolymorphismOptions = new JsonPolymorphismOptions();
-            foreach (var type in derived) info.PolymorphismOptions.DerivedTypes.Add(new JsonDerivedType(type, type.Name));
-        });
-        return new() { WriteIndented = true, TypeInfoResolver = resolver, Converters = { new JsonStringEnumConverter() } };
-    }
 
     private sealed record Input(string Path, string Name, byte[] Bytes, string Text, CuiDocument Document);
 }
