@@ -22,48 +22,56 @@
           <Button id="category-video" action="SelectCategory" action-category="video" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
         </Container>
         <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" />
-        <Repeat id="model-route-list" Source="{Binding Snapshot.Routes}" As="route" Key="{Binding route.RouteId}" Type="Vertical Stack">
-          <Container id="model-route-template" definition="true" margin="0 0 0 14" Type="Vertical Stack">
-            <Container id="model-route-card" background="{Resource CuiPanelBrush}" corner-radius="12" padding="18" margin="0 0 0 12" Type="Overlay" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
-              <Container Type="Vertical Stack">
-                <Container Type="Horizontal Stack">
-                  <Text id="model-route-title" text="{Binding route.RouteId}" font-size="17" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
-                  <Text id="model-route-scope" text="{Binding route.Scope}" foreground="{Resource CuiTextSoftBrush}" margin="12 4 0 0" />
-                  <Button id="model-route-select" action="SelectRoute" action-route-id="{Binding route.RouteId}" content="Edit route" margin="12 0 0 0" accessible-name="Edit this model route" />
-                </Container>
-                <Text id="model-route-category" text="{Binding route.Category}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 8" />
-                <Repeat id="model-route-candidates" Source="{Binding route.Candidates}" As="candidate" Key="{Binding candidate.ModelId}" Type="Vertical Stack">
-                  <Container id="model-candidate-template" definition="true" margin="0 8 0 0" Type="Horizontal Stack">
-                    <Text id="candidate-order" text="{Binding candidate.Order}" width="28" foreground="{Resource CuiTextSoftBrush}" />
-                    <Container width="360" Type="Vertical Stack">
-                      <Text id="candidate-model-id" text="{Binding candidate.ModelId}" foreground="{Resource CuiTextBrush}" />
-                      <Text id="candidate-provider" text="{Binding candidate.ProviderId}" foreground="{Resource CuiTextSoftBrush}" />
+        <Container id="model-route-list" Type="Vertical Stack">
+          <If condition="{Binding HasRoutes}">
+            <Repeat Source="{Binding Snapshot.Routes}" As="route" Key="{Binding route.RouteId}">
+              <Container id="model-route-template" margin="0 0 0 14" Type="Vertical Stack">
+                <Container id="model-route-card" background="{Resource CuiPanelBrush}" corner-radius="12" padding="18" margin="0 0 0 12" Type="Overlay" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+                  <Container Type="Vertical Stack">
+                    <Container Type="Horizontal Stack">
+                      <Text id="model-route-title" text="{Binding route.RouteId}" font-size="17" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+                      <Text id="model-route-scope" text="{Binding route.Scope}" foreground="{Resource CuiTextSoftBrush}" margin="12 4 0 0" />
+                      <Button id="model-route-select" action="SelectRoute" action-route-id="{Binding route.RouteId}" content="Edit route" margin="12 0 0 0" accessible-name="Edit this model route" />
                     </Container>
-                    <Text id="candidate-enabled" text="{Binding candidate.Enabled}" width="72" foreground="{Resource CuiTextSoftBrush}" />
-                    <Button id="candidate-move-up" action="MoveCandidateUp" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Up" accessible-name="Move model earlier in route" />
-                    <Button id="candidate-move-down" action="MoveCandidateDown" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Down" margin="6 0 0 0" accessible-name="Move model later in route" />
-                    <If Condition="{Binding candidate.Enabled}">
-                      <Button action="SetCandidateEnabled" action-enabled="false" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Disable" margin="6 0 0 0" accessible-name="Disable this route candidate" />
-                    </If>
-                    <Else>
-                      <Button action="SetCandidateEnabled" action-enabled="true" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
-                    </Else>
+                    <Text id="model-route-category" text="{Binding route.Category}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 8" />
+                    <Container id="model-route-candidates" Type="Vertical Stack">
+                      <If condition="{Binding route.HasCandidates}">
+                        <Repeat Source="{Binding route.Candidates}" As="candidate" Key="{Binding candidate.Identity}">
+                          <Container id="model-candidate-template" margin="0 8 0 0" Type="Horizontal Stack">
+                            <Text id="candidate-order" text="{Binding candidate.Order}" width="28" foreground="{Resource CuiTextSoftBrush}" />
+                            <Container width="360" Type="Vertical Stack">
+                              <Text id="candidate-model-id" text="{Binding candidate.ModelId}" foreground="{Resource CuiTextBrush}" />
+                              <Text id="candidate-provider" text="{Binding candidate.ProviderId}" foreground="{Resource CuiTextSoftBrush}" />
+                            </Container>
+                            <Text id="candidate-enabled" text="{Binding candidate.Enabled}" width="72" foreground="{Resource CuiTextSoftBrush}" />
+                            <Button id="candidate-move-up" action="MoveCandidateUp" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Up" accessible-name="Move model earlier in route" />
+                            <Button id="candidate-move-down" action="MoveCandidateDown" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Down" margin="6 0 0 0" accessible-name="Move model later in route" />
+                            <If condition="{Binding candidate.Enabled}">
+                              <Button action="SetCandidateEnabled" action-enabled="false" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Disable" margin="6 0 0 0" accessible-name="Disable this route candidate" />
+                            </If>
+                            <Else>
+                              <Button action="SetCandidateEnabled" action-enabled="true" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
+                            </Else>
+                          </Container>
+                        </Repeat>
+                      </If>
+                      <Else>
+                        <Container id="model-candidate-empty" padding="12" Type="Vertical Stack">
+                          <Text text="This route has no candidates." foreground="{Resource CuiTextSoftBrush}" />
+                        </Container>
+                      </Else>
+                    </Container>
                   </Container>
-                </Repeat>
-                <If Condition="!{Binding route.Candidates.Count}">
-                  <Container id="model-candidate-empty" definition="true" padding="12" Type="Vertical Stack">
-                    <Text text="This route has no candidates." foreground="{Resource CuiTextSoftBrush}" />
-                  </Container>
-                </If>
+                </Container>
               </Container>
+            </Repeat>
+          </If>
+          <Else>
+            <Container id="model-route-empty" padding="20" Type="Vertical Stack">
+              <Text text="No routes are configured for this category." foreground="{Resource CuiTextSoftBrush}" />
             </Container>
-          </Container>
-        </Repeat>
-        <If Condition="!{Binding Snapshot.Routes.Count}">
-          <Container id="model-route-empty" definition="true" padding="20" Type="Vertical Stack">
-            <Text text="No routes are configured for this category." foreground="{Resource CuiTextSoftBrush}" />
-          </Container>
-        </If>
+          </Else>
+        </Container>
         <Container id="model-route-actions" margin="0 12 0 8" Type="Horizontal Stack">
           <Button id="save-model-route" action="SaveRoute" content="Save route" accessible-name="Save model route changes" />
           <Button id="preview-text-route" action="PreviewResolution" action-capability="text" content="Preview text" margin="8 0 0 0" accessible-name="Preview text model routing" />
@@ -72,19 +80,23 @@
           <Button id="preview-audio-route" action="PreviewResolution" action-capability="audio-understanding" content="Preview audio" margin="8 0 0 0" accessible-name="Preview audio model routing" />
           <Button id="preview-video-route" action="PreviewResolution" action-capability="video-generation" content="Preview video" margin="8 0 0 0" accessible-name="Preview video model routing" />
         </Container>
-        <If Condition="{Binding Preview}">
+        <If condition="{Binding HasPreview}">
           <Container id="model-route-preview" margin="0 0 0 14" Type="Vertical Stack">
             <Text id="model-route-preview-state" text="{Binding Preview.ResolutionState}" foreground="{Resource CuiTextBrush}" />
-            <Repeat id="model-route-preview-trace" Source="{Binding Preview.Trace}" As="item" Key="{Binding item}" Type="Vertical Stack">
-              <Container id="model-route-trace-template" definition="true" Type="Vertical Stack">
-                <Text id="model-route-trace-entry" text="{Binding item}" foreground="{Resource CuiTextSoftBrush}" margin="0 2 0 0" />
-              </Container>
-            </Repeat>
-            <If Condition="!{Binding Preview.Trace.Count}">
-              <Container id="model-route-trace-empty" definition="true" Type="Vertical Stack">
-                <Text text="No candidates were skipped." foreground="{Resource CuiTextSoftBrush}" />
-              </Container>
-            </If>
+            <Container id="model-route-preview-trace" Type="Vertical Stack">
+              <If condition="{Binding HasTrace}">
+                <Repeat Source="{Binding Preview.Trace}" As="trace" Key="{Binding trace.Identity}">
+                  <Container id="model-route-trace-template" Type="Vertical Stack">
+                    <Text id="model-route-trace-entry" text="{Binding trace.Text}" foreground="{Resource CuiTextSoftBrush}" margin="0 2 0 0" />
+                  </Container>
+                </Repeat>
+              </If>
+              <Else>
+                <Container id="model-route-trace-empty" Type="Vertical Stack">
+                  <Text text="No candidates were skipped." foreground="{Resource CuiTextSoftBrush}" />
+                </Container>
+              </Else>
+            </Container>
           </Container>
         </If>
       </Container>
