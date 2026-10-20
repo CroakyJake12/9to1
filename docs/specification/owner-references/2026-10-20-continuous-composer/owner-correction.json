@@ -8,7 +8,8 @@
     "kind": "illustrative rough reference, not proof of implemented behavior"
   },
   "owner_words": [
-    "The chatbox in your current design doesn't match the spec. It should be continuous, not a visible box inside a box, and have format/emoji button/permission selector. See attached chatgpt compose for example."
+    "The chatbox in your current design doesn't match the spec. It should be continuous, not a visible box inside a box, and have format/emoji button/permission selector. See attached chatgpt compose for example.",
+    "The send button is also missing the wave voice thing when the compose area is empty. But that could be intentional at this point, awaiting further development on voice"
   ],
   "requirements": [
     "Author one continuous composer surface; the text entry must not present a separate visible box inside the outer composer. Avoid an independent inner background, rounded outline or clipped inset glow.",
@@ -18,6 +19,10 @@
     "Provide a genuine permission selector bound to canonical effective policy/permission owners, with truthful available options and enforced scopes. Preserve the separately required persistent AI Read-only/Write access mode; do not conflate permission approval policy, AI access mode, or All/Basic/JustChat model capability modes. DEC-001 still leaves the exact Ask for Approval semantics open; this owner request establishes presence, not invented new grant semantics.",
     "The ChatGPT screenshot illustrates continuous composition and control arrangement; it is not an instruction to copy branding, model text, warning icon, message text or personal/provider state.",
     "Canonical v2 takes priority over example images; retain applicable complete composer requirements, compact/expanded behavior, accessibility, real attachment/Voice & Vision actions and canonical draft/conversation lifetimes.",
-    "The latest Spaces reference is Professional and its mistaken glow is excluded. Preserve other user-selected themes rather than removing their specified effects globally."
-  ]
+    "The latest Spaces reference is Professional and its mistaken glow is excluded. Preserve other user-selected themes rather than removing their specified effects globally.",
+    "The idle empty composer must show the waveform Voice-mode control; switch to Send for a genuine pending message. Preserve canonical attachment/content applicability and active Stop/Resume/queue/edit semantics rather than selecting Voice merely because text is temporarily empty.",
+    "The waveform invokes the full canonical Voice & Vision session through the same ConversationID, SpaceID and Voice SessionID, with a floating voice pill over the still-usable chat. It is not a settings/model picker, dictation-only replacement or automatic navigation to the standalone app.",
+    "Respect actual audio/camera/screen permissions, persistent capture indicators and explicit sharing. Never silently enable camera or screen sharing. The owner noted this is still pending; that is not a waiver or evidence that Voice is implemented."
+  ],
+  "voice_clarified_at": "2026-10-20T12:17:07.536234+00:00"
 }
