@@ -36,6 +36,7 @@
     <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
     <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
+    <ProjectReference Include="..\Haven.SharedHeader\Haven.SharedHeader.csproj" />
     <ProjectReference Include="../../../Accounts/Remote/NineToOne.Accounts.Remote.csproj" />
     <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../../Assistants/HavenOS.Assistants.Core.csproj" />
@@ -57,8 +58,21 @@
     <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
     <Using Include="HavenOS.Files.NativeHost" />
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
-    <PackageReference Include="Avalonia" />
-    <PackageReference Include="Avalonia.Desktop" />
+    <!-- Select the approved source fork (framework/CUI/vendor/Avalonia) consistently across the
+         compile/runtime/build/publish graph instead of the NuGet Avalonia core/Desktop package
+         binaries. This mirrors framework/CUI/Runtime, which already builds against the source fork. -->
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj" />
+    <!-- Keep the approved fork's existing AXAML name/InitializeComponent generation as a
+         build-only analyzer dependency; it supplies no runtime presentation or theme. -->
+    <ProjectReference Include="../../../../framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <!-- Satisfy Avalonia.Controls.WebView's Avalonia>=12.0.0 package dependency without importing the
+         NuGet core binaries (no compile/runtime/build assets). The fork ProjectReferences above supply
+         the real Avalonia.Base/Controls/Desktop assemblies, so no second core implementation is restored. -->
+    <PackageReference Include="Avalonia" ExcludeAssets="all" />
     <PackageReference Include="Avalonia.Controls.WebView" />
     <!-- Wraps Avalonia's existing CoreWebView2 COM handle without importing WebView2's WPF/WinForms assemblies. -->
     <PackageReference Include="Microsoft.Web.WebView2" GeneratePathProperty="true" ExcludeAssets="all" Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'" />
@@ -81,8 +95,9 @@
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHome.cui" LogicalName="Haven.Desktop.Home.Unified.cui" />
     <EmbeddedResource Include="Views/Pages/Home/PreferenceRecovery.cui" LogicalName="Haven.Desktop.PreferenceRecovery.cui" />
     <EmbeddedResource Include="Views/Pages/Home/UnifiedHomeApps.cui" LogicalName="Haven.Desktop.Home.UnifiedApps.cui" />
-    <EmbeddedResource Include="Views/Pages/Home/HavenNotifications.cui" LogicalName="Haven.Desktop.Home.HavenNotifications.cui" />
-    <EmbeddedResource Include="Views/Pages/Home/HavenSharedPanelShell.cui" LogicalName="Haven.Desktop.Home.HavenSharedPanelShell.cui" />
+    <!-- The shared-header shell and notifications documents are owned and compiled by the
+         Haven.SharedHeader component (genuine V1 artifact resource "CUI.Compilation.v1"). They are
+         NOT raw-embedded here; this host consumes the emitted compiled bundle through the component. -->
     <EmbeddedResource Include="Views/Pages/Home/HavenAppHeader.cui" LogicalName="Haven.Desktop.Home.HavenAppHeader.cui" />
     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
@@ -110,6 +125,25 @@
          desktop does not grow a second, wider image-source path. -->
     <Compile Include="../../../../apps/Web/BrowserCanonicalIcons.cs" Link="Controls\BrowserCanonicalIcons.cs" />
   </ItemGroup>
+  <!-- Approved source-build resource pipeline (GenerateAvaloniaResourcesTask) for the AvaloniaResource
+       assets above, replacing the build targets that previously came from the NuGet Avalonia package.
+       BuildTargets.targets assigns AvaloniaUseCompiledBindingsByDefault=true unconditionally; restore
+       Desktop's existing explicit false immediately after the import. Keep this import before the
+       explicit App.axaml item removals so its default item includes cannot re-add App.axaml. -->
+  <Import Project="../../../../framework/CUI/vendor/Avalonia/build/BuildTargets.targets" />
+  <Import Project="../../../../framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.props" />
+  <!-- The WebView compatibility package graph can still contribute the NuGet generator
+       analyzer despite the core PackageReference exclusion. Keep only the approved fork's
+       source-built generator; the resolved metadata distinguishes it from this package item. -->
+  <Target Name="RemoveNuGetAvaloniaNameGenerator" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)"
+                Condition="'%(Analyzer.NuGetPackageId)' == 'Avalonia' and '%(Analyzer.Filename)' == 'Avalonia.Generators'" />
+    </ItemGroup>
+  </Target>
+  <PropertyGroup>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Remove="App.axaml" />
     <AvaloniaXaml Remove="App.axaml" />

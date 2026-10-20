@@ -25,7 +25,7 @@ public sealed class CuiPopupBeforeShowGuardTests
     private static Popup NewPopupInWindow(out Window window)
     {
         var target = new Border { Width = 120, Height = 40 };
-        window = new Window { Content = new Panel { Children = { target } }, Width = 400, Height = 300 };
+        window = CuiNativePopupFixture.New(new Panel { Children = { target } }, 400, 300);
         window.Show();
         window.UpdateLayout();
         return new Popup { PlacementTarget = target, Child = new TextBlock { Text = "x" } };

@@ -634,6 +634,19 @@ namespace Avalonia.Controls.Primitives
                         try { openedState.Dispose(); }
                         catch { /* retain the original callback fault */ }
                         _openState = null;
+
+                        // The popup was never actually shown (its destination is retired). Reflect the
+                        // retired state so IsOpen reports closed and a later genuine open (after the
+                        // faulting handler is removed) can be issued again. Mirror CloseCore's ignore
+                        // scope so this does not re-enter Open/Close.
+                        try
+                        {
+                            using (BeginIgnoringIsOpen())
+                            {
+                                SetCurrentValue(IsOpenProperty, false);
+                            }
+                        }
+                        catch { /* retain the original callback fault */ }
                     }
                     throw callbackFault;
                 }

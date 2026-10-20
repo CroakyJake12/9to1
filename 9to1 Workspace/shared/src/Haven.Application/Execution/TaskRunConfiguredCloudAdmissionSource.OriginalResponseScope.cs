@@ -81,8 +81,8 @@ public sealed partial class TaskRunConfiguredCloudAdmissionSource
             var current = await source.ReadAsync(() => _source._configurations.GetAsync(_configuration.Id, token)).ConfigureAwait(false);
             if (current is null || !current.IsEnabled || current.IsLocal || ConfigurationDigest(current) != ConfigurationDigest(_configuration))
                 throw new UnauthorizedAccessException("The actual cloud provider configuration changed or is disabled.");
-            if (current.Kind is not (Haven.Core.ModelProviderKind.OpenAI or Haven.Core.ModelProviderKind.OpenAICompatible
-                or Haven.Core.ModelProviderKind.Anthropic or Haven.Core.ModelProviderKind.Gemini or Haven.Core.ModelProviderKind.OpenRouter))
+            if (current.Kind is not (global::Haven.Core.ModelProviderKind.OpenAI or global::Haven.Core.ModelProviderKind.OpenAICompatible
+                or global::Haven.Core.ModelProviderKind.Anthropic or global::Haven.Core.ModelProviderKind.Gemini or global::Haven.Core.ModelProviderKind.OpenRouter))
                 throw new NotSupportedException("This provider has no maintained configured credential-presence adapter.");
             if (!string.IsNullOrWhiteSpace(current.Endpoint) && (!Uri.TryCreate(current.Endpoint, UriKind.Absolute, out var endpoint)
                 || endpoint.Scheme is not ("https" or "http") || endpoint.Scheme == "http" && !endpoint.IsLoopback))
