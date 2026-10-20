@@ -1,0 +1,62 @@
+--- a/shared/src/Haven.Desktop/Views/Pages/Chat/ChatHavenScene.Composer.cs	2026-10-20 19:11:19.046154970 +0000
++++ b/shared/src/Haven.Desktop/Views/Pages/Chat/ChatHavenScene.Composer.cs	2026-10-20 19:13:31.796587526 +0000
+@@ -1,3 +1,4 @@
++using System.Threading.Tasks;
+ using Haven.Core;
+ 
+ namespace Haven.Desktop.Views.Pages.Chat;
+@@ -40,42 +41,25 @@
+         public ValueTask CancelEdit() => ValueTask.CompletedTask;
+     }
+ 
+-    /// <summary>Formatting edits the current selection in the real CUI input using the actual
+-    /// selection endpoints, preserving forward/backward selection and the caret.</summary>
++    private ChatComposerFormattingPort? _composerFormatting;
++    private ChatComposerFormattingPort ComposerFormatting =>
++        _composerFormatting ??= new ChatComposerFormattingPort(() => Input);
++
++    /// <summary>Formatting edits the current selection through the shared non-visual rich-text
++    /// engine. The engine owns the canonical document and re-projects the editable draft, so the
++    /// same semantics apply here and in the standalone ChatSpace path. The live input path is
++    /// synchronous, so joining the port's ValueTask with GetResult does not block the dispatcher;
++    /// if a future host makes it genuinely asynchronous, the scene should await it instead.</summary>
+     public void FormatComposerSelection(string command)
+     {
+-        if (Input.SelectionLength <= 0) return;
+-        var start = Input.SelectionStart;
+-        var text = Input.Text;
+-        var selected = text.Substring(start, Input.SelectionLength);
+-        var wrapped = command switch
+-        {
+-            "Bold" => $"**{selected}**",
+-            "Italic" => $"_{selected}_",
+-            "Code" => $"`{selected}`",
+-            "Link" => $"[{selected}](url)",
+-            "Quote" => $"> {selected}",
+-            "Bullet" => $"- {selected}",
+-            "Strikethrough" => $"~~{selected}~~",
+-            _ => selected
+-        };
+-        if (string.Equals(wrapped, selected, StringComparison.Ordinal)) return;
+-        Input.Text = text.Remove(start, Input.SelectionLength).Insert(start, wrapped);
+-        Input.SetSelection(start, start + wrapped.Length);
++        ComposerFormatting.ApplyAsync(command).AsTask().GetAwaiter().GetResult();
+     }
+ 
+-    /// <summary>Inserts a chosen emoji at the real caret, replacing any active selection and
++    /// <summary>Inserts a chosen emoji through the shared port, replacing any active selection and
+     /// keeping focus in the composer input.</summary>
+     public void InsertComposerEmoji(string emoji)
+     {
+-        if (string.IsNullOrEmpty(emoji)) return;
+-        var text = Input.Text ?? string.Empty;
+-        var start = Math.Clamp(Input.SelectionStart, 0, text.Length);
+-        var length = Math.Clamp(Input.SelectionLength, 0, text.Length - start);
+-        var next = text.Remove(start, length).Insert(start, emoji);
+-        Input.Text = next;
+-        Input.SetSelection(start + emoji.Length, start + emoji.Length);
+-        Input.Focus();
++        ComposerFormatting.InsertEmojiAsync(emoji).AsTask().GetAwaiter().GetResult();
+     }
+ 
+     /// <summary>Emoji is inserted through the typed port (see <see cref="InsertComposerEmoji"/>);

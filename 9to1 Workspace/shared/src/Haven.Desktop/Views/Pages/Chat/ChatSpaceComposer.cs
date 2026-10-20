@@ -15,6 +15,7 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
     private readonly Func<ChatSpaceViewState> _state;
     private readonly Func<string, object?, CancellationToken, ValueTask> _dispatch;
     private readonly Func<IChatComposerInputPort?>? _inputPort;
+    private readonly ChatComposerFormattingPort _formatting;
 
     public ChatSpaceComposerSource(
         Func<ChatSpaceViewState> state,
@@ -24,13 +25,15 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
         _state = state ?? throw new ArgumentNullException(nameof(state));
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _inputPort = inputPort;
+        // One shared rich-text engine drives both the mounted CUI input and the unmounted whole-
+        // draft fallback, so formatting semantics are identical in standalone and Haven.
+        _formatting = new ChatComposerFormattingPort(
+            () => _inputPort?.Invoke(),
+            () => Snapshot.Composer.Draft,
+            (value, ct) => _dispatch("chat.update-draft", value, ct));
     }
 
     private ChatSpaceViewState Snapshot => _state();
-
-    /// <summary>The live shared composer input port, when the shared view is attached. Null when
-    /// not yet mounted, in which case editing falls back to the controller's whole-draft state.</summary>
-    private IChatComposerInputPort? LiveInput => _inputPort?.Invoke();
 
     public string Draft
     {
@@ -66,65 +69,9 @@ internal sealed class ChatSpaceComposerSource : IChatComposerSource
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask FormatSelection(string command)
-    {
-        var input = LiveInput;
-        if (input is not null && input.SelectionLength > 0)
-        {
-            var start = input.SelectionStart;
-            var text = input.Text;
-            var selected = text.Substring(start, input.SelectionLength);
-            var wrapped = Wrap(selected, command);
-            if (string.Equals(wrapped, selected, StringComparison.Ordinal)) return ValueTask.CompletedTask;
-            input.Text = text.Remove(start, input.SelectionLength).Insert(start, wrapped);
-            input.SetSelection(start, start + wrapped.Length);
-            return ValueTask.CompletedTask;
-        }
-        return FormatDraftWith(command);
-    }
+    public ValueTask FormatSelection(string command) => _formatting.ApplyAsync(command);
 
-    public ValueTask InsertEmoji(string emoji)
-    {
-        var input = LiveInput;
-        if (input is not null)
-        {
-            var text = input.Text ?? string.Empty;
-            var start = Math.Clamp(input.SelectionStart, 0, text.Length);
-            var length = Math.Clamp(input.SelectionLength, 0, text.Length - start);
-            input.Text = text.Remove(start, length).Insert(start, emoji);
-            input.SetSelection(start + emoji.Length, start + emoji.Length);
-            input.Focus();
-            return ValueTask.CompletedTask;
-        }
-        return InsertEmojiIntoDraft(emoji);
-    }
+    public ValueTask InsertEmoji(string emoji) => _formatting.InsertEmojiAsync(emoji);
 
     public ValueTask CancelEdit() => _dispatch("chat.cancel-edit", null, CancellationToken.None);
-
-    private static string Wrap(string text, string command) => command switch
-    {
-        "Bold" => $"**{text}**",
-        "Italic" => $"_{text}_",
-        "Code" => $"`{text}`",
-        "Link" => $"[{text}](url)",
-        "Quote" => $"> {text}",
-        "Bullet" => $"- {text}",
-        _ => text
-    };
-
-    private ValueTask FormatDraftWith(string command)
-    {
-        var draft = Snapshot.Composer.Draft ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(draft)) return ValueTask.CompletedTask;
-        var wrapped = Wrap(draft, command);
-        if (string.Equals(wrapped, draft, StringComparison.Ordinal)) return ValueTask.CompletedTask;
-        return _dispatch("chat.update-draft", wrapped, CancellationToken.None);
-    }
-
-    private ValueTask InsertEmojiIntoDraft(string emoji)
-    {
-        if (string.IsNullOrEmpty(emoji)) return ValueTask.CompletedTask;
-        var draft = Snapshot.Composer.Draft ?? string.Empty;
-        return _dispatch("chat.update-draft", draft + emoji, CancellationToken.None);
-    }
 }
