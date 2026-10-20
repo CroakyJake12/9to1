@@ -1,0 +1,12 @@
+{
+  "source": "Direct owner clarification in current chat, 20 October 2026",
+  "recorded_at": "2026-10-20T10:02:06.343210+00:00",
+  "authority": "Later explicit owner refinement; canonical v2 remains sole general product authority",
+  "reference": "Supplied cropped pre-super-app mockup: model selector, search, notifications and profile",
+  "requirements": [
+    "When Spaces is opened inside Browse/Haven, this app header area exposes only search.",
+    "Model selection, unified notifications and profile reside on the persistent Browse/Haven sidebar and are shared across apps.",
+    "Standalone Spaces exposes all four controls: model, search, notifications and profile.",
+    "Preserve genuine Home-owned model/notification/profile identity and capabilities; do not duplicate state per app or fabricate model/account values."
+  ]
+}
