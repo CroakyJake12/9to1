@@ -18,6 +18,8 @@ Direct owner accent clarification on 20 October: Professional uses per-app accen
 
 Direct owner icon clarification on 20 October: SVG icons closely match the mockups' filled, rounded appearance. The Assistants button uses the user's running assistant, otherwise their most-used assistant, otherwise a generic icon if none is configured. Read `docs/specification/owner-references/2026-10-20-spaces-svg-icons/owner-correction.json` and resolve from real authorised state.
 
+Direct owner composer/runtime clarification on 20 October: replace legacy chatbox with mockup/spec CUI presentation, correct text formatting and clipped shadow/glow. Bundled Dulche supplies the default path without an external-provider setup requirement. Dual is now a Plugin; remove the always-visible first-party Dual: Off control. Read `docs/specification/owner-references/2026-10-20-chat-composer-dulche/owner-correction.json` and verify real runtime/assets rather than hiding failures.
+
 ## CUI and product boundaries
 
 CUI is the only application-authoring language: structure, styling, state, interactions, behaviours, composition and orchestration use canonical versioned CUI and typed runtime/action contracts. C#, XAML/AXAML, HUI, HTML/CSS/JavaScript, React and native-control markup must not become application source or hidden code-behind. Mature donor engines, compiler/runtime/backend internals, OS adapters and external services may retain implementation languages behind reviewed typed infrastructure boundaries. Missing CUI expressiveness is a framework conformance gap to implement, not permission for a parallel authoring path.
