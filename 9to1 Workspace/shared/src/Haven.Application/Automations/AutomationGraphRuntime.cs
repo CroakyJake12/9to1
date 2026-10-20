@@ -24,7 +24,13 @@ public sealed record AutomationGraphNodeExecutionResult(
     string Message,
     string? Output = null,
     string? Branch = null,
-    IReadOnlyDictionary<string, AutomationGraphValue>? TypedOutputs = null);
+    IReadOnlyDictionary<string, AutomationGraphValue>? TypedOutputs = null)
+{
+    /// <summary>When set, the node yielded a durable Wait/Approval suspension instead of completing.
+    /// The owning runtime persists the continuation and releases execution resources; it never sleeps
+    /// in-process and never treats the yield as a completed side effect.</summary>
+    public AutomationGraphYield? Yield { get; init; }
+}
 public sealed record AutomationGraphNodeTrace(
     Guid NodeId,
     string Category,
@@ -164,6 +170,18 @@ public sealed class AutomationGraphRunner(IEnumerable<IAutomationGraphNodeExecut
                     nodeTypedOutputs = new Dictionary<string, AutomationGraphValue>();
                 }
             }
+            if (result.Succeeded && result.Yield is not null)
+            {
+                // A non-durable run cannot honestly sleep through or silently skip a durable Wait/Approval.
+                // Refuse loudly instead of pretending the node completed, and let the owning durable path
+                // (ResumeAsync + a continuation store) persist the suspension.
+                trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Failed,
+                    $"{result.Message} This {result.Yield.Kind} requires the durable run path to be persisted.", result.Output, result.Branch,
+                    new Dictionary<Guid, string?>(inputs), typedInputs));
+                foreach (var remaining in order.Where(candidate => trace.All(item => item.NodeId != candidate.Id)))
+                    trace.Add(new(remaining.Id, remaining.Category, AutomationGraphTraceStatus.Skipped, $"Not run because the graph yielded at node {node.Id}."));
+                return new(mode, false, startedAt, DateTimeOffset.UtcNow, [], trace, result.Message);
+            }
             if (!result.Succeeded)
             {
                 trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Failed, result.Message, result.Output, result.Branch, new Dictionary<Guid, string?>(inputs), typedInputs, result.TypedOutputs));
@@ -179,6 +197,149 @@ public sealed class AutomationGraphRunner(IEnumerable<IAutomationGraphNodeExecut
         }
         return new(mode, true, startedAt, DateTimeOffset.UtcNow, [], trace);
     }
+
+    /// <summary>Runs (or resumes) a graph from a detached, strictly versioned execution snapshot. The
+    /// caller supplies the canonical graph identity (GraphID/pinned definition revision/schema/source
+    /// digest) which is stamped into every yielded snapshot. Completed nodes and selected branches are
+    /// never replayed; only the exact next frontier runs. When a node yields a durable Wait/Approval,
+    /// the snapshot is returned so the owning runtime can persist it and release execution resources.
+    /// This is the durable truth path — the legacy RunAsync refuses yields honestly.</summary>
+    public async Task<AutomationGraphRunOutcome> ResumeAsync(
+        AutomationGraphDefinition graph,
+        AutomationGraphRunMode mode,
+        AutomationGraphContinuation? from,
+        Guid graphId,
+        long pinnedRevision,
+        int schemaVersion,
+        string sourceDigest,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(graph);
+        var startedAt = from?.StartedAt ?? DateTimeOffset.UtcNow;
+        var issues = Validate(graph);
+        if (issues.Count > 0)
+            return new AutomationGraphRunTerminal(new(mode, false, startedAt, DateTimeOffset.UtcNow, issues, [], "Workflow validation failed before execution."));
+
+        var order = TopologicalOrder(graph.Nodes, graph.Edges);
+        var activatedEdges = new HashSet<Guid>(from?.ActivatedEdges ?? []);
+        var outputs = new Dictionary<Guid, string?>(from?.Outputs ?? new Dictionary<Guid, string?>());
+        var typedOutputs = new Dictionary<(Guid NodeId, string PortId), AutomationGraphValue>();
+        if (from is not null)
+            foreach (var typed in from.TypedOutputs) typedOutputs[(typed.NodeId, typed.PortId)] = typed.Value;
+
+        var finishedStates = new List<AutomationGraphNodeState>(from?.CompletedNodes ?? []);
+        var finishedIds = new HashSet<Guid>(finishedStates.Select(state => state.NodeId));
+        var trace = new List<AutomationGraphNodeTrace>(finishedStates.Count + graph.Nodes.Count);
+        foreach (var state in finishedStates)
+            trace.Add(new(state.NodeId, Category(graph, state.NodeId), state.Status, state.Message, state.Output, state.Branch));
+        var consumedBudget = from?.ConsumedBudget ?? 0;
+
+        foreach (var node in order)
+        {
+            if (finishedIds.Contains(node.Id)) continue;
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var incoming = graph.Edges.Where(edge => edge.ToNodeId == node.Id).ToArray();
+            if (incoming.Length > 0 && !incoming.Any(edge => activatedEdges.Contains(edge.Id)))
+            {
+                var skipped = new AutomationGraphNodeState(node.Id, AutomationGraphTraceStatus.Skipped, "Skipped because no incoming branch was selected.");
+                finishedStates.Add(skipped);
+                finishedIds.Add(node.Id);
+                trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Skipped, skipped.Message));
+                continue;
+            }
+
+            consumedBudget++;
+            var activeIncoming = incoming.Where(edge => activatedEdges.Contains(edge.Id)).ToArray();
+            var inputs = activeIncoming.Where(edge => outputs.ContainsKey(edge.FromNodeId)).GroupBy(edge => edge.FromNodeId).ToDictionary(group => group.Key, group => outputs[group.Key]);
+            var typedInputs = BuildTypedInputs(activeIncoming, typedOutputs, node);
+
+            AutomationGraphNodeExecutionResult result;
+            IReadOnlyDictionary<string, AutomationGraphValue> nodeTypedOutputs;
+            var invalidTypedInput = typedInputs.Values.SelectMany(values => values)
+                .FirstOrDefault(value => value.State == AutomationGraphValueState.Error);
+            if (invalidTypedInput is not null)
+            {
+                result = new(false, invalidTypedInput.Message ?? "A graph input is invalid.");
+                nodeTypedOutputs = new Dictionary<string, AutomationGraphValue>();
+            }
+            else
+            {
+                try
+                {
+                    result = await ExecuteNodeAsync(new(node, mode, inputs, typedInputs), cancellationToken).ConfigureAwait(false);
+                    nodeTypedOutputs = result.Succeeded ? ResolveTypedOutputs(node, result) : new Dictionary<string, AutomationGraphValue>();
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception ex)
+                {
+                    result = new(false, ex.Message);
+                    nodeTypedOutputs = new Dictionary<string, AutomationGraphValue>();
+                }
+            }
+
+            if (result.Succeeded && result.Yield is not null)
+            {
+                // Record the yield trace for inspection but do NOT add the node to completed state: it
+                // is paused, and will be re-evaluated on resume. The snapshot carries the exact frontier.
+                trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Succeeded, result.Message, result.Output, result.Branch,
+                    new Dictionary<Guid, string?>(inputs), typedInputs, nodeTypedOutputs));
+                applied continuation = BuildSnapshot(graph, mode, startedAt, order, finishedStates, trace,
+                    activatedEdges, outputs, typedOutputs, consumedBudget, result.Yield,
+                    graphId, pinnedRevision, schemaVersion, sourceDigest);
+                return new AutomationGraphRunYield(continuation);
+            }
+
+            if (!result.Succeeded)
+            {
+                finishedStates.Add(new(node.Id, AutomationGraphTraceStatus.Failed, result.Message, result.Output, result.Branch));
+                trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Failed, result.Message, result.Output, result.Branch, new Dictionary<Guid, string?>(inputs), typedInputs, result.TypedOutputs));
+                foreach (var remaining in order.Where(candidate => !finishedIds.Contains(candidate.Id) && trace.All(item => item.NodeId != candidate.Id)))
+                    trace.Add(new(remaining.Id, remaining.Category, AutomationGraphTraceStatus.Skipped, $"Not run because workflow failed at node {node.Id}."));
+                return new AutomationGraphRunTerminal(new(mode, false, startedAt, DateTimeOffset.UtcNow, [], trace, result.Message));
+            }
+
+            outputs[node.Id] = result.Output;
+            foreach (var pair in nodeTypedOutputs)
+                typedOutputs[(node.Id, pair.Key)] = pair.Value;
+            finishedStates.Add(new(node.Id, AutomationGraphTraceStatus.Succeeded, result.Message, result.Output, result.Branch));
+            finishedIds.Add(node.Id);
+            trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Succeeded, result.Message, result.Output, result.Branch,
+                new Dictionary<Guid, string?>(inputs), typedInputs, nodeTypedOutputs));
+            foreach (var edge in graph.Edges.Where(edge => edge.FromNodeId == node.Id))
+                if (string.IsNullOrWhiteSpace(edge.Branch) || (!string.IsNullOrWhiteSpace(result.Branch) && string.Equals(edge.Branch, result.Branch, StringComparison.OrdinalIgnoreCase))) activatedEdges.Add(edge.Id);
+        }
+
+        return new AutomationGraphRunTerminal(new(mode, true, startedAt, DateTimeOffset.UtcNow, [], trace));
+    }
+
+    private static AutomationGraphContinuation BuildSnapshot(
+        AutomationGraphDefinition graph,
+        AutomationGraphRunMode mode,
+        DateTimeOffset startedAt,
+        IReadOnlyList<AutomationGraphNodeDefinition> order,
+        IReadOnlyList<AutomationGraphNodeState> finishedStates,
+        IReadOnlyList<AutomationGraphNodeTrace> trace,
+        IReadOnlySet<Guid> activatedEdges,
+        IReadOnlyDictionary<Guid, string?> outputs,
+        IReadOnlyDictionary<(Guid NodeId, string PortId), AutomationGraphValue> typedOutputs,
+        int consumedBudget,
+        AutomationGraphYield pendingYield,
+        Guid graphId, long pinnedRevision, int schemaVersion, string sourceDigest)
+    {
+        var finishedIds = finishedStates.Select(state => state.NodeId).ToHashSet();
+        var frontier = order.Where(node => !finishedIds.Contains(node.Id)).Select(node => node.Id).ToArray();
+        var typed = typedOutputs.Select(pair => new AutomationGraphTypedOutput(pair.Key.NodeId, pair.Key.PortId, pair.Value)).ToArray();
+        var resumeAt = pendingYield.Kind == AutomationGraphYieldKind.Wait ? pendingYield.ResumeAt : null;
+        return new AutomationGraphContinuation(
+            AutomationGraphContinuation.CurrentVersion, graphId, pinnedRevision, schemaVersion, sourceDigest,
+            startedAt, Array.AsReadOnly(finishedStates.ToArray()), Array.AsReadOnly(frontier),
+            Array.AsReadOnly(activatedEdges.ToArray()), new Dictionary<Guid, string?>(outputs),
+            Array.AsReadOnly(typed), consumedBudget, mode, resumeAt, pendingYield);
+    }
+
+    private static string Category(AutomationGraphDefinition graph, Guid nodeId) =>
+        graph.Nodes.FirstOrDefault(node => node.Id == nodeId)?.Category ?? string.Empty;
 
     private static IReadOnlyDictionary<string, IReadOnlyList<AutomationGraphValue>> BuildTypedInputs(
         IReadOnlyList<AutomationGraphEdgeDefinition> incoming,

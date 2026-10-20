@@ -8,6 +8,12 @@ public static class BuiltInAutomationNodeCategory
     public const string App = "App";
     public const string File = "File";
     public const string Action = "Action";
+    /// <summary>Durable Wait/Delay. In a durable run this yields a Wait continuation and releases
+    /// execution resources; it never sleeps an application thread/process.</summary>
+    public const string Wait = "Wait";
+    /// <summary>First-class approval/human review. In a durable run this yields an Approval
+    /// continuation and waits for an explicit decision; being due is never an approval.</summary>
+    public const string Approval = "Approval";
 }
 
 /// <summary>Executes the built-in non-DEVICE automation node families through existing Haven capability services.</summary>
@@ -39,7 +45,9 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
     public bool CanExecute(AutomationGraphNodeDefinition node) =>
         IsCategory(node, BuiltInAutomationNodeCategory.App)
         || IsCategory(node, BuiltInAutomationNodeCategory.File)
-        || IsCategory(node, BuiltInAutomationNodeCategory.Action);
+        || IsCategory(node, BuiltInAutomationNodeCategory.Action)
+        || IsCategory(node, BuiltInAutomationNodeCategory.Wait)
+        || IsCategory(node, BuiltInAutomationNodeCategory.Approval);
 
     public async Task<AutomationGraphNodeExecutionResult> ExecuteAsync(AutomationGraphNodeExecutionContext context, CancellationToken cancellationToken)
     {
@@ -50,11 +58,15 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         if (context.Mode == AutomationGraphRunMode.Test)
             return Preview(context);
 
+        if (IsCategory(context.Node, BuiltInAutomationNodeCategory.Wait))
+            return ExecuteWaitAsync(context);
+        if (IsCategory(context.Node, BuiltInAutomationNodeCategory.Approval))
+            return ExecuteApprovalAsync(context);
         if (IsCategory(context.Node, BuiltInAutomationNodeCategory.App))
             return await ExecuteAppAsync(context.Node, cancellationToken).ConfigureAwait(false);
         if (IsCategory(context.Node, BuiltInAutomationNodeCategory.File))
             return await ExecuteFileAsync(context.Node, cancellationToken).ConfigureAwait(false);
-        return await ExecuteActionAsync(context, cancellationToken).ConfigureAwait(false);
+        return ExecuteActionAsync(context);
     }
 
     public static IReadOnlyList<AutomationGraphValidationIssue> ValidateConfiguration(AutomationGraphNodeDefinition node)
@@ -89,6 +101,20 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
             else
             {
                 issues.Add(new AutomationGraphValidationIssue("file.operation.unsupported", "File nodes support read and search. Writes stay on 9to1's explicit permissioned file-action path.", node.Id));
+            }
+        }
+        else if (IsCategory(node, BuiltInAutomationNodeCategory.Wait) || IsCategory(node, BuiltInAutomationNodeCategory.Approval))
+        {
+            if (IsCategory(node, BuiltInAutomationNodeCategory.Wait))
+            {
+                var text = Parameter(node, "milliseconds", Parameter(node, "forMs", "0"));
+                if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds) || milliseconds is < 0 or > 31_536_000)
+                    issues.Add(new AutomationGraphValidationIssue("wait.duration.invalid", "Wait duration must be between 0 and 31536000 milliseconds.", node.Id));
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(Parameter(node, "action")))
+                    issues.Add(new AutomationGraphValidationIssue("approval.action.missing", "Approval must declare the intended action/decision being reviewed.", node.Id));
             }
         }
         else if (IsCategory(node, BuiltInAutomationNodeCategory.Action))
@@ -133,17 +159,46 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         return new(result.Succeeded, result.Message, LimitOutput(result.Content));
     }
 
-    private static async Task<AutomationGraphNodeExecutionResult> ExecuteActionAsync(AutomationGraphNodeExecutionContext context, CancellationToken cancellationToken)
+    private static AutomationGraphNodeExecutionResult ExecuteActionAsync(AutomationGraphNodeExecutionContext context)
     {
         var node = context.Node;
         var action = Parameter(node, "action", "emit");
         if (action.Equals("delay", StringComparison.OrdinalIgnoreCase))
         {
             var milliseconds = int.Parse(Parameter(node, "milliseconds", "1000"), CultureInfo.InvariantCulture);
-            if (milliseconds > 0) await Task.Delay(milliseconds, cancellationToken).ConfigureAwait(false);
-            return new(true, $"Delayed for {milliseconds} ms.", milliseconds.ToString(CultureInfo.InvariantCulture));
+            var resumeAt = DateTimeOffset.UtcNow.AddMilliseconds(Math.Max(0, milliseconds));
+            return new(true, $"Delayed until {resumeAt:O}.", milliseconds.ToString(CultureInfo.InvariantCulture))
+            {
+                Yield = new AutomationGraphYield(AutomationGraphYieldKind.Wait, ResumeAt: resumeAt)
+            };
         }
         return ResolveEmit(context, isPreview: false);
+    }
+
+    private static AutomationGraphNodeExecutionResult ExecuteWaitAsync(AutomationGraphNodeExecutionContext context)
+    {
+        var node = context.Node;
+        var text = Parameter(node, "milliseconds", Parameter(node, "forMs", "0"));
+        if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds)) milliseconds = 0;
+        var resumeAt = DateTimeOffset.UtcNow.AddMilliseconds(Math.Max(0, milliseconds));
+        var until = Parameter(node, "until");
+        var condition = string.IsNullOrWhiteSpace(until) ? null : until;
+        return new(true, $"Will resume {resumeAt:O}.", milliseconds.ToString(CultureInfo.InvariantCulture))
+        {
+            Yield = new AutomationGraphYield(AutomationGraphYieldKind.Wait, ResumeAt: resumeAt, Condition: condition)
+        };
+    }
+
+    private static AutomationGraphNodeExecutionResult ExecuteApprovalAsync(AutomationGraphNodeExecutionContext context)
+    {
+        var node = context.Node;
+        var action = Parameter(node, "action", "execute");
+        var summary = Parameter(node, "summary", "Approve this step.");
+        var intent = System.Text.Json.JsonSerializer.Serialize(new { action, summary });
+        return new(true, $"Waiting for approval of {action}.", summary)
+        {
+            Yield = new AutomationGraphYield(AutomationGraphYieldKind.Approval, ApprovalActionJson: intent, ApprovalNodeId: node.Id)
+        };
     }
 
     private static AutomationGraphNodeExecutionResult ResolveEmit(AutomationGraphNodeExecutionContext context, bool isPreview)
@@ -172,6 +227,10 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
     private static AutomationGraphNodeExecutionResult Preview(AutomationGraphNodeExecutionContext context)
     {
         var node = context.Node;
+        if (IsCategory(node, BuiltInAutomationNodeCategory.Wait))
+            return new(true, $"Test mode would wait {Parameter(node, "milliseconds", "0")} ms without waiting.");
+        if (IsCategory(node, BuiltInAutomationNodeCategory.Approval))
+            return new(true, $"Test mode would present the '{Parameter(node, "action", "execute")}' approval request without asking anyone.");
         if (IsCategory(node, BuiltInAutomationNodeCategory.App))
             return new(true, $"Test mode would launch {Parameter(node, "name")} without opening the application.");
         if (IsCategory(node, BuiltInAutomationNodeCategory.File))
