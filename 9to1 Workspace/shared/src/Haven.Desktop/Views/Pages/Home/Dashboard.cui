@@ -1,4 +1,15 @@
 <Cui id="home.dashboard" version="1">
+  <!--
+    Canonical CUI Home dashboard. The dashboard is a generative briefing surface, not a chat
+    landing page: every briefing row below is projected from real bounded DashboardSnapshot
+    agenda/recent rows by NewDashboardPageBriefingBindings, with stable canonical identity,
+    source provenance and honest loading/empty/stale/error states. Nothing here invents a
+    current result, fabricates generated provenance, or opens an arbitrary target.
+  -->
+  <Actions>
+    <Action name="OpenBriefingRow" command="dashboard.open-briefing-row" parameter="{Binding row.target}" />
+    <Action name="RefreshBriefing" command="dashboard.refresh-briefing" />
+  </Actions>
   <Theme Name="user_preference">
     <Page id="home-dashboard" AccessibleName="Home dashboard">
       <Container id="dashboard-root" Type="Grid" RowSizes="Auto 1fr Auto" Background="{Resource CuiBackgroundBrush}">
@@ -13,6 +24,56 @@
           <Container Type="Vertical Stack" CellGap="4">
             <Text id="dashboard-welcome" Text="Welcome" FontSize="32" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
             <Text id="dashboard-date" FontSize="15" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container id="dashboard-briefing" Type="Vertical Stack" CellGap="20">
+            <Container id="dashboard-agenda-section" Type="Vertical Stack" CellGap="10">
+              <Container Type="Horizontal Stack" CellGap="10">
+                <Text Text="Today" FontSize="22" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+                <If Condition="{Binding briefing.showRetry}">
+                  <Button id="dashboard-agenda-retry" action="RefreshBriefing" Content="Retry" AccessibleName="Retry loading today's brief" />
+                </If>
+              </Container>
+              <Text id="dashboard-agenda-status" Text="{Binding briefing.agendaStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Today agenda status" />
+              <If Condition="{Binding briefing.hasAgenda}">
+                <Repeat id="dashboard-agenda-rows" Source="{Binding briefing.agenda}" As="row" Key="{Binding row.id}">
+                  <Button id="dashboard-agenda-row" action="OpenBriefingRow" Interactive="{Binding row.canOpen}"
+                          Tooltip="{Binding row.detail}" AccessibleName="{Binding row.openLabel}" Padding="12">
+                    <Container Type="Vertical Stack" CellGap="4">
+                      <Text Text="{Binding row.title}" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+                      <Container Type="Wrap" CellGap="10">
+                        <Text Text="{Binding row.provenance}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Text Text="{Binding row.whenLabel}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Text Text="{Binding row.statusLabel}" FontSize="12" Foreground="{Resource CuiInformationBrush}" />
+                      </Container>
+                    </Container>
+                  </Button>
+                </Repeat>
+              </If>
+              <If Condition="{Binding briefing.noAgenda}">
+                <Text id="dashboard-agenda-empty" Text="{Binding briefing.agendaEmpty}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </If>
+            </Container>
+            <Container id="dashboard-recent-section" Type="Vertical Stack" CellGap="10">
+              <Text Text="Recent work" FontSize="22" FontWeight="Bold" Foreground="{Resource CuiTextBrush}" />
+              <Text id="dashboard-recent-status" Text="{Binding briefing.recentStatus}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" AccessibleName="Recent work status" />
+              <If Condition="{Binding briefing.hasRecent}">
+                <Repeat id="dashboard-recent-rows" Source="{Binding briefing.recentWork}" As="row" Key="{Binding row.id}">
+                  <Button id="dashboard-recent-row" action="OpenBriefingRow" Interactive="{Binding row.canOpen}"
+                          Tooltip="{Binding row.detail}" AccessibleName="{Binding row.openLabel}" Padding="12">
+                    <Container Type="Vertical Stack" CellGap="4">
+                      <Text Text="{Binding row.title}" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{Resource CuiTextBrush}" />
+                      <Container Type="Wrap" CellGap="10">
+                        <Text Text="{Binding row.provenance}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                        <Text Text="{Binding row.whenLabel}" FontSize="12" Foreground="{Resource CuiTextSoftBrush}" />
+                      </Container>
+                    </Container>
+                  </Button>
+                </Repeat>
+              </If>
+              <If Condition="{Binding briefing.noRecent}">
+                <Text id="dashboard-recent-empty" Text="{Binding briefing.recentEmpty}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+              </If>
+            </Container>
           </Container>
           <Container id="dashboard-pinned-section" Type="Vertical Stack" IsVisible="False" CellGap="12">
             <Container Type="Wrap" CellGap="12">

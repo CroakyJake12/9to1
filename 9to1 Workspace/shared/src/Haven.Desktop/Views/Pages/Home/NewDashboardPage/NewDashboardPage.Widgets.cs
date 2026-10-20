@@ -166,6 +166,10 @@ public sealed partial class NewDashboardPage
             var loaded = await Task.WhenAll(_widgetProviders.Select(provider => LoadWidgetAsync(provider, snapshot, staleSnapshot, token)));
             token.ThrowIfCancellationRequested();
 
+            // The briefing sections are projected from the same bounded snapshot already read above.
+            _briefingLastSnapshot = snapshot;
+            UpdateBriefing(snapshot, staleSnapshot, null);
+
             _widgetViews = AppendCustomWidgetViews(loaded.Select(item => item.View));
             foreach (var item in loaded)
             {
@@ -183,6 +187,9 @@ public sealed partial class NewDashboardPage
         catch (Exception ex)
         {
             if (token.IsCancellationRequested || _disposed || !_dashboardActive) return;
+            // A retained snapshot is surfaced only as stale and non-openable; with no prior data we
+            // show a truthful error state with no rows. Old data is never presented as current.
+            UpdateBriefing(_briefingLastSnapshot, stale: true, ex.Message);
             _widgetViews = AppendCustomWidgetViews(_widgetProviders.Select(provider =>
             {
                 if (_widgetCache.TryGetValue(provider.Definition.Key, out var cached))

@@ -35,6 +35,12 @@ public sealed partial class NewDashboardPage
         if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The Home dashboard CUI document is invalid.");
         var loader = _dashboardLoader = new CuiControlLoader();
+        // The authored briefing subtree is consumed through the canonical CUI binding path, not
+        // through native control substitution: it reads projected snapshot state and raises typed
+        // commands via NewDashboardPageBriefingBindings.
+        _briefingBindings = new NewDashboardPageBriefingBindings(() => _briefingState, DispatchBriefingCommandAsync);
+        loader.SetBindingContext(_briefingBindings);
+        loader.SetActionDispatcher(_briefingBindings);
         loader.BindAuthoredControl("dashboard-root", _ => _dashboardRoot = new CuiContainerControl("Grid"));
         loader.BindAuthoredControl("dashboard-widget-controls", _ => _widgetControls = new CuiContainerControl("Vertical Stack"));
         // Reuse the same live widget canvas, page state and typed callbacks. CUI owns their
@@ -60,6 +66,7 @@ public sealed partial class NewDashboardPage
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The Home dashboard CUI surface could not be rendered: " +
                 string.Join("; ", loaded.Diagnostics.Select(item => item.Message)));
+        loader.WireBindings(loaded.Root);
         Content = loaded.Root;
     }
 
