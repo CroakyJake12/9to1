@@ -16,7 +16,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var registry = new NodeGraphRuntimeRegistry(schemas, [legacy]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var activated = await registry.ActivateAsync(request);
+        var activated = await registry.ActivateAsync(request, TestContext.Current.CancellationToken);
 
         Assert.True(activated.Succeeded);
         Assert.Equal(GraphRunOutcome.Completed, activated.EffectiveOutcome);
@@ -28,7 +28,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var continuationAdapter = new RecordingContinuationAdapter(graph, profile, saved);
         var envelope = await YieldEnvelopeAsync(continuationAdapter, schemas, request);
 
-        var resumed = await registry.ResumeAsync(envelope, request);
+        var resumed = await registry.ResumeAsync(envelope, request, TestContext.Current.CancellationToken);
         Assert.False(resumed.Succeeded);
         Assert.Equal("graph.resume.unsupported", resumed.Code);
         Assert.Equal(1, legacy.ExecuteCount); // not called
@@ -44,7 +44,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var first = await actRegistry.ActivateAsync(request);
+        var first = await actRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
 
         Assert.True(first.Succeeded);
         Assert.Equal(GraphRunOutcome.Yielded, first.Outcome);
@@ -60,7 +60,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         // A genuine NEW owning adapter with the SAME authoritative saved state re-admits and resumes the same identity.
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.YieldFirstThenResumeComplete };
         var freshRegistry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
-        var second = await freshRegistry.ResumeAsync(roundTripped, request);
+        var second = await freshRegistry.ResumeAsync(roundTripped, request, TestContext.Current.CancellationToken);
 
         Assert.True(second.Succeeded);
         Assert.Equal(GraphRunOutcome.Completed, second.Outcome);
@@ -72,13 +72,29 @@ public sealed class NodeGraphContinuationRuntimeTests
     [Fact]
     public async Task Changed_revision_is_rejected_before_resumed_callback()
     {
-        await AssertRejectsBeforeCallbackAsync(envelope => envelope with { Revision = envelope.Revision + 1 }, "graph.resume.descriptor-mismatch");
+        await AssertRejectsBeforeCallbackAsync(envelope => envelope with { Revision = envelope.Revision + 1 }, "graph.resume.caller-mismatch");
     }
 
     [Fact]
     public async Task Changed_graph_id_is_rejected_before_resumed_callback()
     {
-        await AssertRejectsBeforeCallbackAsync(envelope => envelope with { GraphId = Guid.NewGuid() }, "graph.resume.descriptor-mismatch");
+        await AssertRejectsBeforeCallbackAsync(envelope => envelope with { GraphId = Guid.NewGuid() }, "graph.resume.caller-mismatch");
+    }
+
+    [Fact]
+    public async Task Changed_capability_profile_id_is_rejected_at_descriptor_guard_before_resumed_callback()
+    {
+        // Tampering only the capability profile leaves caller identity matching, so the registry reaches the
+        // descriptor/schema guard (not the earlier caller-binding guard) and rejects there with zero resume callback.
+        await AssertRejectsBeforeCallbackAsync(envelope => envelope with { CapabilityProfileId = "other-profile" },
+            "graph.resume.descriptor-mismatch");
+    }
+
+    [Fact]
+    public async Task Changed_schema_version_is_rejected_at_descriptor_guard_before_resumed_callback()
+    {
+        await AssertRejectsBeforeCallbackAsync(envelope => envelope with { SchemaVersion = envelope.SchemaVersion + 1 },
+            "graph.resume.descriptor-mismatch");
     }
 
     [Fact]
@@ -131,7 +147,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var registry = new NodeGraphRuntimeRegistry(schemas, [adapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var first = await registry.ActivateAsync(request);
+        var first = await registry.ActivateAsync(request, TestContext.Current.CancellationToken);
         Assert.NotNull(first.Envelope);
 
         // Mutate the caller/adapter-owned backing sets and JSON snap admission (the set reference is retained mutable).
@@ -142,7 +158,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var saved2 = new TestSavedRun();
         var referenceAdapter = new RecordingContinuationAdapter(graph, profile, saved2) { Mode = AdapterMode.YieldFirstThenResumeComplete };
         var referenceRegistry = new NodeGraphRuntimeRegistry(schemas, [referenceAdapter]);
-        var referenceFirst = await referenceRegistry.ActivateAsync(request);
+        var referenceFirst = await referenceRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(referenceFirst.Envelope!.Digest, first.Envelope!.Digest);
     }
@@ -156,15 +172,15 @@ public sealed class NodeGraphContinuationRuntimeTests
         var registry = new NodeGraphRuntimeRegistry(schemas, [adapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var result = await registry.ActivateAsync(request);
+        var result = await registry.ActivateAsync(request, TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(1, result.Transitions.Count);
+        Assert.Single(result.Transitions);
         Assert.Equal("{\"done\":true}", result.Transitions[0].Values.GetRawText());
 
         // Mutate the adapter-owned source list after return; the returned snapshot must remain unaffected.
         adapter.LastTransitions!.Add(new(Guid.NewGuid(), "injected", JsonDocument.Parse("{}").RootElement));
-        Assert.Equal(1, result.Transitions.Count);
+        Assert.Single(result.Transitions);
         Assert.Equal("{\"done\":true}", result.Transitions[0].Values.GetRawText());
     }
 
@@ -178,7 +194,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
         var stopwatch = Stopwatch.StartNew();
-        var first = await registry.ActivateAsync(request);
+        var first = await registry.ActivateAsync(request, TestContext.Current.CancellationToken);
         stopwatch.Stop();
 
         Assert.Equal(GraphRunOutcome.Yielded, first.Outcome);
@@ -195,7 +211,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var first = await actRegistry.ActivateAsync(request);
+        var first = await actRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
         Assert.Equal(GraphRunOutcome.Yielded, first.Outcome);
         Assert.Equal(GraphContinuationKind.Approval, first.Envelope!.Kind);
         Assert.True(first.Envelope.ResumeAt is { } && first.Envelope.ResumeAt < DateTimeOffset.UtcNow); // already due
@@ -204,7 +220,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         // must NOT auto-approve.
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.ApprovalPendingResume };
         var freshRegistry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
-        var second = await freshRegistry.ResumeAsync(first.Envelope, request);
+        var second = await freshRegistry.ResumeAsync(first.Envelope, request, TestContext.Current.CancellationToken);
 
         Assert.Equal(GraphRunOutcome.Blocked, second.Outcome); // still pending, not auto-approved
         Assert.Equal(GraphContinuationKind.Approval, second.Envelope!.Kind);
@@ -241,7 +257,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId, stepLimit: 3);
 
-        var first = await actRegistry.ActivateAsync(request);
+        var first = await actRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
         Assert.Equal(3, first.Envelope!.StepsConsumed);
         Assert.Equal(3, first.Envelope.StepLimit);
 
@@ -251,7 +267,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var envelope = first.Envelope;
         for (var i = 0; i < 2; i++)
         {
-            var resumed = await freshRegistry.ResumeAsync(envelope, request);
+            var resumed = await freshRegistry.ResumeAsync(envelope, request, TestContext.Current.CancellationToken);
             Assert.Equal(GraphRunOutcome.Blocked, resumed.Outcome);
             Assert.Equal("graph.budget.exhausted", resumed.Code);
             Assert.Equal(3, resumed.StepsConsumed);            // stays exhausted, never reset
@@ -270,12 +286,12 @@ public sealed class NodeGraphContinuationRuntimeTests
         var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var first = await actRegistry.ActivateAsync(request);
+        var first = await actRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
         var envelope = first.Envelope!;
 
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.BadAckResume };
         var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
-        var resumed = await registry.ResumeAsync(envelope, request);
+        var resumed = await registry.ResumeAsync(envelope, request, TestContext.Current.CancellationToken);
 
         Assert.True(resumed.NeedsRecovery);
         Assert.Equal("graph.result.needs-recovery", resumed.Code);
@@ -292,10 +308,10 @@ public sealed class NodeGraphContinuationRuntimeTests
         var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var first = await actRegistry.ActivateAsync(request);
+        var first = await actRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.FabricatedTransitionResume };
         var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
-        var resumed = await registry.ResumeAsync(first.Envelope!, request);
+        var resumed = await registry.ResumeAsync(first.Envelope!, request, TestContext.Current.CancellationToken);
 
         Assert.True(resumed.NeedsRecovery);
         Assert.Equal("graph.result.needs-recovery", resumed.Code);
@@ -311,14 +327,14 @@ public sealed class NodeGraphContinuationRuntimeTests
         var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var first = await actRegistry.ActivateAsync(request);
+        var first = await actRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
         // Build a direct in-memory envelope whose owner state alone exceeds the serialized size bound.
         var blob = "{\"blob\":\"" + new string('x', 2 * 1024 * 1024) + "\"}";
         var oversized = first.Envelope! with { OwnerState = JsonDocument.Parse(blob).RootElement };
 
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved);
         var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
-        var resumed = await registry.ResumeAsync(oversized, request);
+        var resumed = await registry.ResumeAsync(oversized, request, TestContext.Current.CancellationToken);
 
         Assert.False(resumed.Succeeded);
         Assert.Equal("graph.resume.envelope.oversized", resumed.Code);
@@ -334,10 +350,10 @@ public sealed class NodeGraphContinuationRuntimeTests
         var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
 
-        var first = await actRegistry.ActivateAsync(request);
+        var first = await actRegistry.ActivateAsync(request, TestContext.Current.CancellationToken);
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved) { DenyAdmission = true };
         var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
-        var resumed = await registry.ResumeAsync(first.Envelope!, request);
+        var resumed = await registry.ResumeAsync(first.Envelope!, request, TestContext.Current.CancellationToken);
 
         Assert.False(resumed.Succeeded);
         Assert.Equal("graph.resume.denied", resumed.Code);
@@ -375,13 +391,99 @@ public sealed class NodeGraphContinuationRuntimeTests
         using var sourceDoc = JsonDocument.Parse("{\"input\":1}");
         var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId, variables: sourceDoc.RootElement);
 
-        var task = registry.ActivateAsync(request);
+        var task = registry.ActivateAsync(request, TestContext.Current.CancellationToken);
         sourceDoc.Dispose(); // dispose the caller-owned source while Admit is held; the registry already cloned it
 
         var result = await task;
         Assert.True(result.Succeeded);
         Assert.Equal(GraphRunOutcome.Yielded, result.Outcome);
         Assert.NotNull(result.Envelope);
+    }
+
+    [Fact]
+    public async Task Already_disposed_caller_input_is_rejected_before_effects_with_precise_code()
+    {
+        var (schemas, graph, profile) = Fixture();
+        var saved = new TestSavedRun();
+        var actAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.YieldFirstThenResumeComplete };
+        var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
+        var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
+        var envelope = await YieldEnvelopeAsync(actAdapter, schemas, request);
+
+        // Recreate the envelope with an OwnerState backed by a document we control, then dispose that document so the
+        // registry's pre-await detach sees a disposed backing document instead of leaking ObjectDisposedException.
+        var disposedEnvelope = CreateDisposedEnvelope(envelope);
+
+        var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved);
+        var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
+        var result = await registry.ResumeAsync(disposedEnvelope, request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal("graph.resume.input.invalid", result.Code);
+        Assert.Equal(0, resumeAdapter.ResumeCount); // rejected before any owner effect / resume callback
+    }
+
+    [Fact]
+    public async Task Dispose_caller_envelope_while_admit_resume_is_held_does_not_affect_snapshot()
+    {
+        var (schemas, graph, profile) = Fixture();
+        var saved = new TestSavedRun();
+        var actAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.YieldFirstThenResumeComplete };
+        var actRegistry = new NodeGraphRuntimeRegistry(schemas, [actAdapter]);
+        var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
+        var envelope = await YieldEnvelopeAsync(actAdapter, schemas, request);
+
+        // Own a fresh backing document for the caller envelope so the test can dispose it mid-resume.
+        var envelopeDoc = JsonDocument.Parse(envelope.OwnerState.GetRawText());
+        var controlledEnvelope = envelope with { OwnerState = envelopeDoc.RootElement };
+
+        var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved)
+        { Mode = AdapterMode.YieldFirstThenResumeComplete, HoldAdmitResumeForDisposal = true };
+        var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
+
+        var task = registry.ResumeAsync(controlledEnvelope, request, TestContext.Current.CancellationToken);
+        // Wait until AdmitResumeAsync actually holds; the registry has already detached a snapshot before this await.
+        await resumeAdapter.AdmitResumeEntered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        envelopeDoc.Dispose(); // dispose the caller's envelope backing document while owner admission is held
+
+        resumeAdapter.ReleaseAdmitResume();
+        var result = await task;
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(GraphRunOutcome.Completed, result.Outcome);
+        Assert.Equal(1, resumeAdapter.ResumeCount); // detached snapshot survived the caller disposal
+    }
+
+    [Fact]
+    public async Task Owner_capture_disposal_after_publication_leaves_envelope_independent()
+    {
+        var (schemas, graph, profile) = Fixture();
+        var saved = new TestSavedRun();
+        var adapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.YieldFirstThenResumeComplete };
+        var registry = new NodeGraphRuntimeRegistry(schemas, [adapter]);
+        var request = MakeRequest(graph.GraphId, graph.Revision, graph.Nodes[0].NodeId);
+
+        var first = await registry.ActivateAsync(request, TestContext.Current.CancellationToken);
+        Assert.NotNull(first.Envelope);
+        var envelopeSnapshot = first.Envelope!.OwnerState.GetRawText();
+
+        // Dispose the owner's backing capture documents after publication; the returned envelope is a detached capture
+        // and must remain fully usable/independent.
+        adapter.DisposeOwnedCaptureDocuments();
+
+        var codec = new GraphRuntimeContinuationCodec();
+        var json = codec.Serialize(first.Envelope!);
+        var back = codec.Deserialize(json);
+        Assert.Equal(envelopeSnapshot, back.OwnerState.GetRawText());
+    }
+
+    private static GraphRuntimeContinuation CreateDisposedEnvelope(GraphRuntimeContinuation envelope)
+    {
+        var doc = JsonDocument.Parse(envelope.OwnerState.GetRawText());
+        var disposed = envelope with { OwnerState = doc.RootElement };
+        doc.Dispose();
+        return disposed;
     }
 
     private static void AssertContinuationEquivalent(GraphRuntimeContinuation expected, GraphRuntimeContinuation actual)
@@ -423,7 +525,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.YieldFirstThenResumeComplete };
         var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
 
-        var result = await registry.ResumeAsync(tamper(envelope), request);
+        var result = await registry.ResumeAsync(tamper(envelope), request, TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(expectedCode, result.Code);
@@ -444,7 +546,7 @@ public sealed class NodeGraphContinuationRuntimeTests
         var resumeAdapter = new RecordingContinuationAdapter(graph, profile, saved) { Mode = AdapterMode.YieldFirstThenResumeComplete };
         var registry = new NodeGraphRuntimeRegistry(schemas, [resumeAdapter]);
 
-        var result = await registry.ResumeAsync(envelope, request);
+        var result = await registry.ResumeAsync(envelope, request, TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(expectedCode, result.Code);
@@ -457,7 +559,7 @@ public sealed class NodeGraphContinuationRuntimeTests
     {
         adapter.Mode = AdapterMode.YieldFirstThenResumeComplete;
         var registry = new NodeGraphRuntimeRegistry(schemas, [adapter]);
-        var first = await registry.ActivateAsync(request);
+        var first = await registry.ActivateAsync(request, TestContext.Current.CancellationToken);
         Assert.NotNull(first.Envelope);
         return first.Envelope!;
     }
@@ -527,9 +629,13 @@ public sealed class NodeGraphContinuationRuntimeTests
         : INodeGraphOwnerBackedContinuationAdapter
     {
         private readonly Guid _waitNodeId = graph.Nodes[0].NodeId;
+        private readonly List<JsonDocument> _ownedCaptureDocuments = [];
 
         public AdapterMode Mode { get; set; }
         public bool DenyAdmission { get; set; }
+        public bool HoldAdmitResumeForDisposal { get; set; }
+        public TaskCompletionSource<bool> AdmitResumeEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<bool> AdmitResumeGate { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public int ExecuteCount { get; private set; }
         public int ResumeCount { get; private set; }
         public bool ResumeCalled { get; private set; }
@@ -592,14 +698,28 @@ public sealed class NodeGraphContinuationRuntimeTests
             throw new InvalidOperationException($"Unsupported execute mode {Mode}.");
         }
 
-        public ValueTask<GraphContinuationAdmission?> AdmitResumeAsync(GraphRuntimeContinuation continuation,
+        public async ValueTask<GraphContinuationAdmission?> AdmitResumeAsync(GraphRuntimeContinuation continuation,
             GraphActivationRequest request, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (DenyAdmission) return ValueTask.FromResult<GraphContinuationAdmission?>(null);
-            return ValueTask.FromResult<GraphContinuationAdmission?>(
-                new GraphContinuationAdmission(saved.RunId, saved.Kind, saved.NodeId, saved.ResumeAt,
-                    saved.Condition, saved.OwnerState, saved.Limit, saved.Consumed));
+            if (DenyAdmission) return null;
+            if (HoldAdmitResumeForDisposal)
+            {
+                // Signal the test that the adapter is now holding inside AdmitResumeAsync, so it may safely dispose
+                // the caller's envelope document; the registry already detached a snapshot before this await.
+                AdmitResumeEntered.TrySetResult(true);
+                await AdmitResumeGate.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            return new GraphContinuationAdmission(saved.RunId, saved.Kind, saved.NodeId, saved.ResumeAt,
+                saved.Condition, saved.OwnerState, saved.Limit, saved.Consumed);
+        }
+
+        public void ReleaseAdmitResume() => AdmitResumeGate.TrySetResult(true);
+
+        public void DisposeOwnedCaptureDocuments()
+        {
+            foreach (var document in _ownedCaptureDocuments) document.Dispose();
+            _ownedCaptureDocuments.Clear();
         }
 
         public ValueTask<GraphActivationResult> ResumeAsync(GraphRuntimeContinuation continuation, GraphActivationRequest request,
@@ -650,8 +770,12 @@ public sealed class NodeGraphContinuationRuntimeTests
             saved.Limit = budget.Limit;
         }
 
-        private GraphContinuationCapture Capture(string runId, GraphContinuationKind kind, DateTimeOffset? resumeAt) =>
-            new(runId, kind, _waitNodeId, resumeAt, default, JsonDocument.Parse("{\"frontier\":[1,2]}").RootElement);
+        private GraphContinuationCapture Capture(string runId, GraphContinuationKind kind, DateTimeOffset? resumeAt)
+        {
+            var document = JsonDocument.Parse("{\"frontier\":[1,2]}");
+            _ownedCaptureDocuments.Add(document);
+            return new(runId, kind, _waitNodeId, resumeAt, default, document.RootElement);
+        }
 
         private static GraphActivationResult Completed(GraphActivationRequest request, GraphExecutionBudget budget)
         {

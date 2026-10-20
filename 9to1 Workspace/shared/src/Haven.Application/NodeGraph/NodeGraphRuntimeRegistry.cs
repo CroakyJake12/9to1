@@ -133,6 +133,16 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
         ArgumentNullException.ThrowIfNull(continuation);
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
+
+        // Detach the caller-supplied envelope and request before the first await or owner callback. Optional Json
+        // elements follow one deliberate rule: Undefined stays Undefined/absent, present null stays null, and object
+        // state is deeply detached. A disposed backing document yields a structured refusal rather than leaking
+        // ObjectDisposedException.
+        if (!TryDetach(continuation, request, out var detached, out var detachedRequest))
+            return Reject("graph.resume.input.invalid");
+        continuation = detached;
+        request = detachedRequest;
+
         if (continuation.ProtocolVersion != GraphRuntimeContinuation.CurrentProtocolVersion) return Reject("graph.resume.version.unsupported");
         if (continuation.StepLimit is < 1 or > 10000 || continuation.StepsConsumed < 0 || continuation.StepsConsumed > continuation.StepLimit)
             return Reject("graph.resume.budget.tampered");
@@ -153,7 +163,6 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             !string.Equals(request.EntityId, continuation.EntityId, StringComparison.Ordinal) ||
             !string.Equals(request.ParticipantId, continuation.ParticipantId, StringComparison.Ordinal))
             return Reject("graph.resume.caller-mismatch");
-        request = request with { Variables = request.Variables.Clone() };
         var adapter = FindAdapter(request.GraphType);
         if (adapter is null) return Reject("graph.runtime.unavailable-or-ambiguous");
         if (adapter is not INodeGraphOwnerBackedContinuationAdapter ownerAdapter) return Reject("graph.resume.unsupported");
@@ -167,9 +176,18 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             return Reject("graph.resume.descriptor-mismatch");
         if (!normalized.Graph.Nodes.Any(node => node.NodeId == continuation.NodeId)) return Reject("graph.resume.node.missing");
 
-        // Owner-backed admission: THE authority. Reload/claim/validate persisted Run + current caller.
+        // Owner-backed admission: THE authority. Reload/claim/validate persisted Run + current caller. The returned
+        // binding is owner-supplied state; detach it safely without inventing authority.
         var binding = await ownerAdapter.AdmitResumeAsync(continuation, request, cancellationToken).ConfigureAwait(false);
         if (binding is null) return Reject("graph.resume.denied");
+        try
+        {
+            binding = binding with { Condition = SafeClone(binding.Condition), OwnerState = SafeClone(binding.OwnerState) };
+        }
+        catch (ObjectDisposedException)
+        {
+            return Reject("graph.resume.admission-invalid");
+        }
         var bindingError = ValidateBinding(binding, continuation, normalized.Graph);
         if (bindingError is not null) return Reject(bindingError);
 
@@ -200,12 +218,17 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             return new(false, "graph.result.needs-recovery", [], budget.StepsConsumed, true);
         var captureError = CaptureContinuation(result, request, admission, budget, out var envelope);
         if (captureError is not null) return captureError;
+        // Publish a detached capture too, with the optional Undefined rule above.
+        GraphContinuationCapture? detachedCapture = null;
+        if (result.Continuation is { } capture) detachedCapture = capture with
+        { Condition = SafeClone(capture.Condition), OwnerState = SafeClone(capture.OwnerState) };
         return result with
         {
             Transitions = Array.AsReadOnly(result.Transitions.Select(transition => transition with
                 { Values = transition.Values.Clone() }).ToArray()),
             Outcome = result.Outcome,
             NeedsRecovery = result.NeedsRecovery,
+            Continuation = detachedCapture,
             Envelope = envelope
         };
     }
@@ -218,36 +241,49 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
         if (outcome is not (GraphRunOutcome.Yielded or GraphRunOutcome.Blocked)) return null;
         if (result.Continuation is not { } capture)
             return new(false, "graph.result.missing-continuation", [], budget.StepsConsumed, true);
-        if (string.IsNullOrWhiteSpace(capture.OwnerRunId) || capture.NodeId == Guid.Empty ||
-            capture.Kind is not (GraphContinuationKind.Wait or GraphContinuationKind.Approval or GraphContinuationKind.Custom) ||
-            capture.Condition.ValueKind is not (JsonValueKind.Object or JsonValueKind.Null or JsonValueKind.Undefined) ||
-            capture.OwnerState.ValueKind is not (JsonValueKind.Object or JsonValueKind.Null or JsonValueKind.Undefined) ||
-            !admission.Graph.Nodes.Any(node => node.NodeId == capture.NodeId))
-            return new(false, "graph.result.continuation.invalid", [], budget.StepsConsumed, true);
-        var binding = new GraphContinuationAdmission(
-            capture.OwnerRunId, capture.Kind, capture.NodeId, capture.ResumeAt,
-            capture.Condition, capture.OwnerState, budget.Limit, budget.StepsConsumed);
-        envelope = new GraphRuntimeContinuation(
-            GraphRuntimeContinuation.CurrentProtocolVersion,
-            request.GraphType,
-            capture.OwnerRunId,
-            request.GraphId,
-            request.ExpectedRevision,
-            admission.Graph.CapabilityProfileId,
-            admission.Graph.SchemaVersion,
-            request.StartNodeId,
-            request.EventType,
-            request.SessionId,
-            request.EntityId,
-            request.ParticipantId,
-            capture.Kind,
-            capture.NodeId,
-            capture.ResumeAt,
-            capture.Condition.Clone(),
-            capture.OwnerState.Clone(),
-            budget.StepsConsumed,
-            budget.Limit,
-            GraphContinuationDigest.Compute(admission.Graph, request.Variables, binding));
+        GraphRuntimeContinuation? builtEnvelope;
+        try
+        {
+            // Detach optional owner state before validation/publication; Undefined stays absent, null stays null.
+            var condition = SafeClone(capture.Condition);
+            var ownerState = SafeClone(capture.OwnerState);
+            if (string.IsNullOrWhiteSpace(capture.OwnerRunId) || capture.NodeId == Guid.Empty ||
+                capture.Kind is not (GraphContinuationKind.Wait or GraphContinuationKind.Approval or GraphContinuationKind.Custom) ||
+                condition.ValueKind is not (JsonValueKind.Object or JsonValueKind.Null or JsonValueKind.Undefined) ||
+                ownerState.ValueKind is not (JsonValueKind.Object or JsonValueKind.Null or JsonValueKind.Undefined) ||
+                !admission.Graph.Nodes.Any(node => node.NodeId == capture.NodeId))
+                return new(false, "graph.result.continuation.invalid", [], budget.StepsConsumed, true);
+            var binding = new GraphContinuationAdmission(
+                capture.OwnerRunId, capture.Kind, capture.NodeId, capture.ResumeAt,
+                condition, ownerState, budget.Limit, budget.StepsConsumed);
+            builtEnvelope = new GraphRuntimeContinuation(
+                GraphRuntimeContinuation.CurrentProtocolVersion,
+                request.GraphType,
+                capture.OwnerRunId,
+                request.GraphId,
+                request.ExpectedRevision,
+                admission.Graph.CapabilityProfileId,
+                admission.Graph.SchemaVersion,
+                request.StartNodeId,
+                request.EventType,
+                request.SessionId,
+                request.EntityId,
+                request.ParticipantId,
+                capture.Kind,
+                capture.NodeId,
+                capture.ResumeAt,
+                condition,
+                ownerState,
+                budget.StepsConsumed,
+                budget.Limit,
+                GraphContinuationDigest.Compute(admission.Graph, request.Variables, binding));
+        }
+        catch (ObjectDisposedException)
+        {
+            // Disposed owner acknowledgement AFTER effects is uncertainty, never a claim that nothing executed.
+            return new(false, "graph.result.needs-recovery", [], budget.StepsConsumed, true);
+        }
+        envelope = builtEnvelope;
         return null;
     }
 
@@ -283,9 +319,33 @@ public sealed class NodeGraphRuntimeRegistry(NodeGraphSchemaRegistry schemas, IE
             var encoded = new GraphRuntimeContinuationCodec().Serialize(continuation);
             return Encoding.UTF8.GetByteCount(encoded) > GraphRuntimeContinuationCodec.MaximumSerializedBytes;
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException)
         {
             return true; // malformed/unsafe direct input fails closed
+        }
+    }
+
+    /// <summary>Deliberate optional-element snapshot rule: Undefined stays Undefined/absent, present null stays null,
+    /// and object state is deeply detached. Never coerce absent to null/false/empty object. A disposed backing
+    /// document surfaces as ObjectDisposedException so the caller can map it to a structured refusal.</summary>
+    private static JsonElement SafeClone(JsonElement element) =>
+        element.ValueKind == JsonValueKind.Undefined ? default : element.Clone();
+
+    private static bool TryDetach(GraphRuntimeContinuation continuation, GraphActivationRequest request,
+        out GraphRuntimeContinuation detached, out GraphActivationRequest detachedRequest)
+    {
+        detached = null!;
+        detachedRequest = null!;
+        try
+        {
+            detached = continuation with
+            { Condition = SafeClone(continuation.Condition), OwnerState = SafeClone(continuation.OwnerState) };
+            detachedRequest = request with { Variables = SafeClone(request.Variables) };
+            return true;
+        }
+        catch (ObjectDisposedException)
+        {
+            return false;
         }
     }
 

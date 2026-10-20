@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Haven.Application.NodeGraph;
 
 namespace Haven.Core.Tests;
@@ -25,6 +26,7 @@ public sealed class NodeGraphContinuationCodecTests
         var state = back.OwnerState;
         Assert.Equal(JsonValueKind.False, state.GetProperty("enabled").ValueKind);
         Assert.Equal(JsonValueKind.Null, state.GetProperty("value").ValueKind);
+        // Decoded value assertion: the escaped <redacted> decodes to the literal string.
         Assert.Equal("<redacted>", state.GetProperty("redacted").GetString());
         Assert.Equal("E1", state.GetProperty("error").GetProperty("code").GetString());
     }
@@ -41,6 +43,20 @@ public sealed class NodeGraphContinuationCodecTests
         var back = codec.Deserialize(json);
         Assert.Equal(JsonValueKind.Undefined, back.Condition.ValueKind);
         Assert.Equal(JsonValueKind.Undefined, back.OwnerState.ValueKind);
+    }
+
+    [Fact]
+    public void Absent_resume_at_is_valid_and_explicit_null_roundtrips_as_absent()
+    {
+        var codec = new GraphRuntimeContinuationCodec();
+        var withoutAt = Envelope(default, default) with { ResumeAt = null };
+        var json = codec.Serialize(withoutAt);
+        Assert.DoesNotContain("\"resumeAt\"", json);
+        var back = codec.Deserialize(json);
+        Assert.Null(back.ResumeAt);
+
+        var explicitNull = codec.Deserialize(json); // same wire form; present-null is encoded as absent
+        Assert.Null(explicitNull.ResumeAt);
     }
 
     [Fact]
@@ -98,32 +114,64 @@ public sealed class NodeGraphContinuationCodecTests
     {
         var codec = new GraphRuntimeContinuationCodec();
         var json = codec.Serialize(Envelope(default, default));
+        using var node = JsonNode.Parse(json)!;
+        node["protocolVersion"] = JsonNode.Parse("1");
+        // rebuild a JSON with a real duplicate key for the same field
         var duplicated = json.Replace("\"protocolVersion\":", "\"protocolVersion\":1,\"protocolVersion\":");
         Assert.False(codec.TryDeserialize(duplicated, out _, out var error));
         Assert.Contains("duplicate fields", error ?? string.Empty);
     }
 
     [Fact]
-    public void Unknown_kind_enum_is_rejected()
+    public void Unknown_fields_are_rejected()
     {
         var codec = new GraphRuntimeContinuationCodec();
-        var json = codec.Serialize(Envelope(default, default)).Replace("\"kind\":\"Wait\"", "\"kind\":\"Banana\"");
-        Assert.False(codec.TryDeserialize(json, out _, out _));
+        var json = codec.Serialize(Envelope(default, default));
+        var withExtra = json[..^1] + ",\"extra\":1}";
+        Assert.False(codec.TryDeserialize(withExtra, out _, out var error));
+        Assert.Contains("unknown field", error ?? string.Empty);
     }
 
     [Fact]
-    public void Invalid_date_is_rejected()
+    public void Unknown_kind_enum_is_rejected()
     {
         var codec = new GraphRuntimeContinuationCodec();
-        var json = codec.Serialize(Envelope(default, default)).Replace("\"resumeAt\":\"2026-10-20T12:00:00.0000000+00:00\"", "\"resumeAt\":\"not-a-date\"");
-        Assert.False(codec.TryDeserialize(json, out _, out _));
+        using var node = JsonNode.Parse(codec.Serialize(Envelope(default, default)))!;
+        node["kind"] = "Banana";
+        Assert.False(codec.TryDeserialize(node.ToJsonString(), out _, out _));
+    }
+
+    [Fact]
+    public void Numeric_kind_spelling_is_rejected()
+    {
+        var codec = new GraphRuntimeContinuationCodec();
+        using var node = JsonNode.Parse(codec.Serialize(Envelope(default, default)))!;
+        node["kind"] = "3";
+        Assert.False(codec.TryDeserialize(node.ToJsonString(), out _, out var error));
+        Assert.Contains("named enum", error ?? string.Empty);
+    }
+
+    [Fact]
+    public void Invalid_present_date_shape_is_rejected()
+    {
+        var codec = new GraphRuntimeContinuationCodec();
+        foreach (JsonNode? bad in new JsonNode?[] { "not-a-date", 12345, JsonNode.Parse("[]"), JsonNode.Parse("{}") })
+        {
+            using var node = JsonNode.Parse(codec.Serialize(Envelope(default, default)))!;
+            node["resumeAt"] = bad;
+            var json = node.ToJsonString();
+            Assert.Contains("\"resumeAt\"", json); // prove the tamper is actually present
+            Assert.False(codec.TryDeserialize(json, out _, out _));
+        }
     }
 
     [Fact]
     public void Malformed_typed_state_is_rejected()
     {
         var codec = new GraphRuntimeContinuationCodec();
-        var json = codec.Serialize(Envelope(default, default)).Replace("\"ownerState\":{\"frontier\":[1,2]}", "\"ownerState\":[1,2]");
+        var badState = JsonDocument.Parse("[1,2]").RootElement;
+        var json = codec.Serialize(Envelope(default, badState));
+        Assert.Contains("\"ownerState\":[1,2]", json); // prove the malformed state is actually present
         Assert.False(codec.TryDeserialize(json, out _, out var error));
         Assert.Contains("ownerState", error ?? string.Empty);
     }
@@ -148,12 +196,19 @@ public sealed class NodeGraphContinuationCodecTests
         Assert.Equal(expected.StepsConsumed, actual.StepsConsumed);
         Assert.Equal(expected.StepLimit, actual.StepLimit);
         Assert.Equal(expected.Digest, actual.Digest);
-        Assert.Equal(Canonical(expected.Condition), Canonical(actual.Condition));
-        Assert.Equal(Canonical(expected.OwnerState), Canonical(actual.OwnerState));
+        AssertElementEquivalent(expected.Condition, actual.Condition);
+        AssertElementEquivalent(expected.OwnerState, actual.OwnerState);
     }
 
-    private static string Canonical(JsonElement element) =>
-        element.ValueKind == JsonValueKind.Undefined ? "<absent>" : element.GetRawText();
+    private static void AssertElementEquivalent(JsonElement expected, JsonElement actual)
+    {
+        if (expected.ValueKind == JsonValueKind.Undefined || actual.ValueKind == JsonValueKind.Undefined)
+        {
+            Assert.Equal(expected.ValueKind, actual.ValueKind); // both must be Undefined (absent)
+            return;
+        }
+        Assert.True(JsonElement.DeepEquals(expected, actual), "Json elements should be semantically equal.");
+    }
 
     private static GraphRuntimeContinuation Envelope(JsonElement condition, JsonElement ownerState) =>
         new(GraphRuntimeContinuation.CurrentProtocolVersion, "TestGraph", "run-1", Guid.NewGuid(), 1, "profile1", 1,
