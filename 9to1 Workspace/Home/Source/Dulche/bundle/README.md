@@ -105,7 +105,11 @@ real asset is a supported engine.
 
 ## Integration (patch-only)
 
-`integration-patch.diff` contains an *optional, not-applied* consumer sketch for
-root/lane5 to call `verify_installed(...)` as a pre-admission gate in shared
-startup/installer staging. It is intentionally emitted as a patch and is not
-wired into any shared service.
+`integration-patch.diff` is an illustrative, NOT-applied consumer sketch.
+Integration is **BLOCKED**: the shared Home runtime surface
+(`ManagedDulcheRuntimeService.cs` and siblings) and an installer staging
+entrypoint are owned by other workers and are not present/owned in this sparse
+worktree, so no exact gate is claimed. Root/lane5 must integrate the verifier as
+a pre-admission gate on their owned surface. The sketch names the concrete
+discovered targets and the missing dependency; it is not applied and adds no
+hidden services.

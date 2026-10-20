@@ -13,6 +13,7 @@ from bundle.spec import parse_spec  # noqa: E402
 from bundle.tests.helpers import (  # noqa: E402
     make_elf,
     make_gguf,
+    make_truncated_gguf,
     minimal_spec,
     write_fixture,
 )
@@ -142,6 +143,26 @@ class PackagerTests(unittest.TestCase):
         result = pack_bundle(spec, assets)
         self.assertEqual("invalid", result.state)
         self.assertTrue(any("runtime-format" in r["reason"] for r in result.rejected))
+
+    def test_truncated_gguf_is_not_production_admitted(self) -> None:
+        # A header-truncated GGUF must be rejected as a production model asset,
+        # even if the asset is labelled TESTONLY in the source tree.
+        root, assets = self._set_up_root()
+        write_fixture(assets, "fixtures/smollm.gguf", make_truncated_gguf())
+        spec = parse_spec(minimal_spec())
+        result = pack_bundle(spec, assets)
+        self.assertEqual("invalid", result.state)
+        self.assertFalse(result.admitted)
+        self.assertTrue(any("runtime-format" in r["reason"] for r in result.rejected))
+
+    def test_structurally_valid_gguf_is_admitted(self) -> None:
+        root, assets = self._set_up_root()
+        write_fixture(assets, "fixtures/smollm.gguf", make_gguf())
+        spec = parse_spec(minimal_spec())
+        result = pack_bundle(spec, assets)
+        self.assertEqual("ready", result.state)
+        self.assertEqual(1, len(result.admitted))
+        self.assertTrue(result.admitted[0].format_meta.get("structurallyComplete"))
 
     def test_architecture_incompatible_binary_is_rejected(self) -> None:
         root, assets = self._set_up_root()

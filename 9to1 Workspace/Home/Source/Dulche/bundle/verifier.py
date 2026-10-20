@@ -24,6 +24,8 @@ from .identity import (
 )
 from .manifest import parse_manifest
 
+MISSING_RECORD_REQUIRED_FIELDS = ("logical", "kind", "engine", "required", "reason")
+
 
 @dataclass
 class AssetStatus:
@@ -44,10 +46,66 @@ class VerifyResult:
         return self.state == STATE_READY
 
 
-def _asset_state_from_statuses(statuses: list[AssetStatus]) -> str:
-    for status in statuses:
-        if status.state != "present":
-            return STATE_INVALID
+def _validate_missing_records(missing: list[Any]) -> None:
+    """Validate missingAssets entries. Malformed records are a hard invalid.
+
+    We never trust a possibly-rewritten ``state`` field; each record must itself
+    be well-formed so the verifier can recompute closure from it.
+    """
+    for item in missing:
+        if not isinstance(item, dict):
+            raise IdentityError("missingAssets entries must be objects")
+        missing_fields = [key for key in MISSING_RECORD_REQUIRED_FIELDS if key not in item]
+        if missing_fields:
+            raise IdentityError(f"missingAsset record missing fields: {', '.join(missing_fields)}")
+        if not isinstance(item.get("logical"), str) or not item.get("logical"):
+            raise IdentityError("missingAsset record must have a non-empty logical id")
+        if not isinstance(item.get("kind"), str) or not item.get("kind"):
+            raise IdentityError("missingAsset record must have a non-empty kind")
+        if not isinstance(item.get("engine"), str) or not item.get("engine"):
+            raise IdentityError("missingAsset record must have a non-empty engine")
+        if not isinstance(item.get("required"), bool):
+            raise IdentityError("missingAsset record 'required' must be a boolean")
+        if not isinstance(item.get("reason"), str) or not item.get("reason"):
+            raise IdentityError("missingAsset record must have a non-empty reason")
+
+
+def _recompute_state(
+    *,
+    missing: list[dict[str, Any]],
+    statuses: list[AssetStatus],
+    unexpected: list[str],
+    advertised_state: str,
+    assets_present: bool,
+) -> str:
+    """Recompute ready/degraded/invalid from the complete required closure.
+
+    This intentionally does NOT trust the manifest's ``state`` field. We derive
+    the effective state from:
+    - any required missingAssets entry (=> invalid),
+    - any installed-asset status other than present (=> invalid),
+    - a strict-closure unexpected file (=> invalid),
+    - optional-only missingAssets when everything else is fine (=> degraded),
+    - otherwise ready (provided at least one admitted asset exists).
+    A contradictory advertised state never grants readiness.
+    """
+    if not assets_present:
+        return STATE_INVALID
+
+    required_missing = any(item.get("required") for item in missing)
+    if required_missing:
+        return STATE_INVALID
+
+    if any(status.state != "present" for status in statuses):
+        return STATE_INVALID
+
+    if unexpected:
+        return STATE_INVALID
+
+    if missing:
+        # Only optional missing assets remain and everything present verified.
+        return STATE_DEGRADED
+
     return STATE_READY
 
 
@@ -64,6 +122,11 @@ def verify_installed(
     parsed = parse_manifest(raw, allow_invalid=True)
     root = pathlib.Path(install_root)
     host_arch = parsed["host"].get("arch", "")
+
+    try:
+        _validate_missing_records(parsed.get("missingAssets", []))
+    except IdentityError as exc:
+        return VerifyResult(state=STATE_INVALID, asset_statuses=[], unexpected_paths=[], manifest=parsed)
 
     statuses: list[AssetStatus] = []
     declared_install_paths: set[str] = set()
@@ -120,12 +183,13 @@ def verify_installed(
                 if rel not in declared_install_paths:
                     unexpected.append(rel)
 
-    if unexpected:
-        state = STATE_INVALID
-    else:
-        state = _asset_state_from_statuses(statuses)
-        if not parsed["assets"]:
-            state = STATE_INVALID
+    state = _recompute_state(
+        missing=parsed.get("missingAssets", []),
+        statuses=statuses,
+        unexpected=unexpected,
+        advertised_state=parsed.get("state", STATE_INVALID),
+        assets_present=bool(parsed["assets"]),
+    )
 
     return VerifyResult(state=state, asset_statuses=statuses, unexpected_paths=unexpected, manifest=parsed)
 

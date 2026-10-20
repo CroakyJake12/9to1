@@ -114,3 +114,83 @@ because those files are owned by other workers; root/lane5 may integrate it.
    a failed closure keeps the previous known-good bundle usable.
 3. Run the full llama.cpp lifecycle/installed-package acceptance when the real
    assets are present (these remain NOT RUN here).
+
+---
+
+# Pass 2 (frozen 5c7bcc712332771830f1cea1435a95392e9fcd6e)
+
+## Independent acceptance reproduced two FAILs; both fixed
+
+Probe: `/workspace/shared/9to1-test-evidence/extra15-bundle-independent-20261020/admission-probe.json`
+(40 bundle + 4 llamacpp tests still PASS independent; two additional probes FAILed).
+
+### Fix 1 — required missing asset became READY at installed verification
+
+Cause: `verify_installed` parsed the manifest (`allow_invalid=True`) but derived
+success only from statuses of assets that happened to be admitted, ignoring
+`manifest.state` / `missingAssets` / required-engine closure.
+
+Fix (`bundle/verifier.py`):
+- `_validate_missing_records` validates every `missingAssets` record (logical/
+  kind/engine/required-bool/reason); malformed records => hard invalid.
+- `_recompute_state` derives readiness from the complete required closure and
+  never trusts a rewritten `state` field:
+  - any required missingAssets => invalid,
+  - any installed-asset status != present => invalid,
+  - strict-closure unexpected file => invalid,
+  - optional-only missing when all present verified => degraded,
+  - otherwise ready (provided at least one admitted asset exists).
+- New tests: `test_required_missing_asset_pack_install_verify_not_ready`
+  (exact probe reproduction), `test_optional_missing_asset_verifies_degraded`,
+  `test_malformed_missing_record_verifies_invalid`,
+  `test_contradictory_advertised_ready_with_required_missing_is_invalid`.
+
+### Fix 2 — truncated headers production-admitted
+
+Cause: `sniff_gguf` read only 8 bytes; `sniff_elf` read only 20 bytes;
+`safetensors` checked only header keys without confirming declared data offsets
+fit the real file.
+
+Fix (`bundle/formats.py`) — bounded structural validation:
+- GGUF: read the full 24-byte primary header and walk the declared metadata KV
+  table and tensor-info table from the actual bytes; any read past EOF fails;
+  each tensor's declared data offset must lie within the file.
+- ELF: require the full 64-byte ELF64 header, validate magic/class/data/version
+  and `e_ehsize == 64`.
+- safetensors: validate `data_offsets` are in-bounds against the real file size
+  and that at least one tensor exists.
+- Format sniffers now return `structurallyComplete: true`; `opaque` explicitly
+  returns `structurallyComplete: false` (not evidence of usability).
+- New tests: truncated GGUF / truncated ELF / safetensors out-of-bounds /
+  zero-tensor rejection, plus pack-level truncated-GGUF-not-admitted and
+  structurally-valid-positive tests.
+
+Structural integrity is kept distinct from usable inference readiness: no model
+is loaded, no weight contents are decoded, and real licence-reviewed backend/
+weights remain missing => BLOCKED.
+
+## Pass-2 test results (all run, all passing)
+- `bundle/`: `python3 -m unittest discover -s tests -p "test_*.py"` => **50
+  tests OK** (was 40; +10 causal).
+- `llamacpp/`: `python3 -m unittest tests.test_manifest_validation` => 4 OK.
+- `python3 -m py_compile` on all changed modules => OK.
+- CLI smoke: pack with required-missing => `invalid`; install-only-present then
+  verify => `invalid` (NOT ready); truncated GGUF pack => `invalid` with
+  structured `runtime-format` rejection.
+
+## Pass-2 changed-file SHA-256
+- `bundle/formats.py` `8f7660250444bf2c6c38d693e68a59486a8caf7464f1738b6b8004cbad11927d`
+- `bundle/verifier.py` `2f80ed7277a4ec6efe69edf9477fe01f14c7235d659753daa7ff160eb79b6e70`
+- `bundle/tests/helpers.py` `075a3dc0c240bfb881c5bc727588c0750753f00cbbaa34a0e4073ab842a61bf1`
+- `bundle/tests/test_formats.py` `8d38d3a9443da48b673415e8fe79056c110f6c2bf3b3501f4f24216897f491ef`
+- `bundle/tests/test_packager.py` `1ec846e8b9b160fd313fd1d53a7e6f35da182824258ec9b178ec91af8f6f5627`
+- `bundle/tests/test_verifier.py` `109ce1250c40ed93c49b6d9b145d40aa2b12cda319ec25e1e5ff945b7ff074de`
+- `bundle/README.md` `65f39444d259b18f67a87343c7958ee0da379a7d6861f41972ad655d5275f194`
+- `bundle/integration-patch.diff` `79a880c15385c249d39e3fc9fc0cc3620eaa7f0156d1309aee5428cd5a988b01`
+
+## Integration status
+`bundle/integration-patch.diff` is a NOT-applied sketch only. Integration is
+**BLOCKED**: the shared Home runtime surface and installer staging entrypoint
+are owned by other workers and are not present/owned in this sparse worktree. No
+exact startup/installer gate is claimed and no hidden process/service launches
+were added.

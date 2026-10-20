@@ -1,59 +1,63 @@
 From ddb2a8b813c8189b31556ef2ee491ac4f6f2b4eb Mon Sep 17 00:00:00 2001
 From: Mercury extra15 bundle lane
 Date: Tue, 20 Oct 2026 00:00:00 +0000
-Subject: [NOT APPLIED] Optional pre-admission verification gate consumer
+Subject: [NOT APPLIED] Pre-admission verification consumer sketch
 
-This patch is a CONSUMER INTEGRATION SKETCH for root/lane5. It is intentionally
-NOT applied: it touches files owned by other workers (shared Home runtime and
-installer staging) and the bundle lane is not permitted to edit them. Merge/mud
-it by the owning worker/coordinator only after review.
+INTEGRATION STATUS: BLOCKED.
 
-It wires the bundle verifier as a pre-admission gate so a bundled Dulche runtime
-is only admitted after its installed closure is re-verified. It does not change
-provider/global configuration, spending, credentials or deployment.
+This file is a CONSUMER SKETCH ONLY. It is intentionally NOT applied and is NOT
+an exact startup/installer gate. It must not be presented as applied, integrated
+or exact.
+
+Actual discovered owning-surface signatures (read-only inspection, sparse
+worktree):
+  - 9to1 Workspace/shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.cs
+  - 9to1 Workspace/shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.InferenceSettings.cs
+  - 9to1 Workspace/shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.OriginalModelRequests.cs
+  - 9to1 Workspace/shared/src/Haven.Infrastructure/Models/ManagedDulcheInferenceComposition.cs
+These are the shared Home runtime's managed runtime service files (owned by other
+workers / root), and are the natural place for a pre-admission verify gate.
+
+Missing dependency blocking exact integration (name it precisely):
+  - No installer/bootstrap staging entrypoint (e.g. a stage-bundle.sh or the
+    "9to1 OS/packaging" tree referenced by existing llama.cpp packaging tests)
+    is present in this sparse worktree. A real gated installer consumer cannot
+    be authored against a nonexistent target.
+  - A public API binding for the bundle verifier does not yet exist in the
+    shared managed runtime; wiring it requires root/lane5 ownership of that
+    surface.
+
+Therefore: keep integration BLOCKED. Do not claim a shared startup/installer
+gate exists. Do not add hidden process/service launches to fake integration.
+
+Environment contract IF root/lane5 integrates (still not applied):
+  - DULCHE_BUNDLE_MANIFEST -> path to <prefix>-manifest.json
+  - DULCHE_BUNDLE_INSTALL  -> installed bundle root (owned assets subtree)
+  - Gate: verify_installed(install_root, manifest, strict_closure=True)
+    returns state == "ready" before ManagedDulcheRuntimeService surfaces Ready;
+    otherwise surface Degraded/Stopped, and do not activate.
 
 ---
  shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.cs | 14 ++++++++++++++
- eng/packaging/installer/stage-bundle.sh                              |  8 ++++++++
- 2 files changed, 22 insertions(+)
+ 1 file changed, 14 insertions(+)
 
 diff --git a/shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.cs b/shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.cs
 --- a/shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.cs
 +++ b/shared/src/Haven.Infrastructure/Models/ManagedDulcheRuntimeService.cs
 @@ -1,6 +1,20 @@
- // Example hook: before exposing Dulche as Ready, verify the installed bundle closure.
-+// The bundle verifier is executed by the shared startup path (root/lane5 owned).
-+// This block is a SKETCH ONLY and is NOT active in this repository.
+ // SKETCH ONLY - NOT APPLIED - integration BLOCKED (see patch header).
++// Before exposing Dulche as Ready, verify the installed bundle closure with the
++// bundle verifier (Home/Source/Dulche/bundle/verifier.py). This block is
++// illustrative; root/lane5 owns the actual managed-runtime surface.
 +//
-+// Env contract (implemented by the integration point):
-+//   DULCHE_BUNDLE_MANIFEST  -> path to <prefix>-manifest.json
-+//   DULCHE_BUNDLE_INSTALL   -> installed bundle root (owned assets subtree)
-+//
-+// Pseudocode gate (Python verifier exists in Home/Source/Dulche/bundle/verifier.py):
 +//   result = verify_installed(install_root, manifest, strict_closure=True)
-+//   if result.state != "ready": return DulcheState.Degraded / Stopped
-+//   else:                        return DulcheState.Ready
++//   if result.state != "ready":
++//       return DulcheState.Degraded   // or Stopped
++//   return DulcheState.Ready
 +//
 +// Rationale: Home Core exposes Starting/Ready/Degraded/Stopped. A bundle whose
-+// installed closure fails must never surface as Ready.
-
-diff --git a/eng/packaging/installer/stage-bundle.sh b/eng/packaging/installer/stage-bundle.sh
---- a/eng/packaging/installer/stage-bundle.sh
-+++ b/eng/packaging/installer/stage-bundle.sh
-@@ -1,6 +1,14 @@
- # Example hook: staged validation + atomic activation (spec LE-01 / package management).
-+# This block is a SKETCH ONLY and is NOT active in this repository.
-+#
-+#   python3 ".../Dulche/bundle/cli.py" verify \
-+#       --install-root "$INSTALL_ROOT" --manifest "$BUNDLE_MANIFEST"
-+#   rc=$?
-+#   if [ "$rc" -ne 0 ]; then
-+#       echo "bundle closure verification FAILED; keeping previous known-good" >&2
-+#       exit 1   # do not activate; previous known-good remains usable
-+#   fi
-+#
-+# Run BEFORE atomic activation so a failed validation leaves the previous
-+# known-good package usable (spec: staged validation and atomic activation).
++// installed closure fails (including required missing assets) must never
++// surface as Ready.
 
 -- 
 2.43.0
