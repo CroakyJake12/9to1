@@ -56,8 +56,9 @@ with:
   it validates the provider + `HomeNativeWindowsComposition` and retains the host/window lifetimes.
 
 `BuildBrowseAppContentIntegrationTests` (Haven.Desktop.Tests) proves this exact tuple is accepted by
-`NativeAppContentRegistry` and that a `9to1://dev/...` project-open address and the `9to1://dev`
-landing both route to a native session and publish.
+`NativeAppContentRegistry` and that a `9to1://dev` landing routes to a native session contract. The real
+landing (`DeveloperSavedProjectsPage`) publication and clean close is exercised by the authentic
+`BuildBrowseAppContentAuthenticTests` over the genuine Linux Home/Files/SQLite rig.
 
 ## Apply order
 
@@ -68,6 +69,8 @@ landing both route to a native session and publish.
 ## Notes
 
 - No other central App/DI/Spaces/Voice file is touched.
-- Build landing (`9to1://dev`) presents the saved-project discovery entry; project-open requires the
-  exact canonical Task/Run/context. The real session owns project/task effects and is exercised by
-  the Dev workbench tests once the SDK slot is available.
+- Build landing (`9to1://dev`) presents the real `DeveloperSavedProjectsPage` saved-project picker;
+  project-open opens the real `DeveloperProjectWorkbenchPage` for the exact canonical Task/Run/context.
+  The session borrows shared Dev/coordinator/Files owners and creates no project/task/grant/readiness.
+  Authentic landing publication/close is exercised by `BuildBrowseAppContentAuthenticTests`; the
+  workbench drive path is code-reviewed but awaits an SDK slot and a rig task snapshot.

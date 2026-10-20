@@ -11,12 +11,11 @@ using HavenOS.Apps.Dev;
 namespace Haven.Desktop.Tests;
 
 /// <summary>
-/// Exercises the typed Build (Dev) native content binding: the canonical address codec, the
-/// dev registration that the central host must bind into the <see cref="NativeAppContentRegistry"/>,
-/// and the native publication flow that a dev destination drives. These tests prove the exact
-/// registration tuple (canonical dev id, key "dev", <see cref="HavenAppRouteKind.Dev"/>) is valid
-/// and routes a project-open address to a real native session — the same wiring patch that opens a
-/// project in the workbench.
+/// Exercises the typed Build (Dev) native content binding: the canonical address codec and the
+/// dev registration that the central host must bind into the <see cref="NativeAppContentRegistry"/>.
+/// These tests prove the exact registration tuple (canonical dev id, key "dev", <see cref="HavenAppRouteKind.Dev"/>)
+/// is accepted and that a dev address routes to a native session contract. The production Build
+/// factory/session/workbench is exercised by the authentic owning-project tests (Haven.Desktop.Tests).
 /// </summary>
 public sealed class BuildBrowseAppContentIntegrationTests
 {
@@ -47,7 +46,7 @@ public sealed class BuildBrowseAppContentIntegrationTests
         var run = Guid.Parse("55555555-5555-5555-5555-555555555555");
         var ctx = Guid.Parse("66666666-6666-6666-6666-666666666666");
 
-        var address = AppContentAddress.Parse(BuildBrowseAppContentAddress.For(reference, task, run, ctx));
+        var address = BuildBrowseAppContentAddress.For(reference, task, run, ctx); // For returns AppContentAddress.
         var parsed = BuildBrowseAppContentAddress.Parse(address);
 
         Assert.Equal(reference, parsed.ProjectReference);
@@ -56,7 +55,7 @@ public sealed class BuildBrowseAppContentIntegrationTests
         Assert.Equal(ctx, parsed.ContextId);
 
         var reencoded = BuildBrowseAppContentAddress.For(parsed.ProjectReference!, parsed.TaskId, parsed.ExecutionId, parsed.ContextId);
-        Assert.Equal(address, AppContentAddress.Parse(reencoded));
+        Assert.Equal(address, reencoded);
     }
 
     [Fact]
@@ -71,10 +70,10 @@ public sealed class BuildBrowseAppContentIntegrationTests
         var ctx = Guid.Parse("66666666-6666-6666-6666-666666666666");
 
         var good = BuildBrowseAppContentAddress.For(reference, task, run, ctx);
-        Assert.Equal(reference, BuildBrowseAppContentAddress.Parse(AppContentAddress.Parse(good)).ProjectReference);
+        Assert.Equal(reference, BuildBrowseAppContentAddress.Parse(good).ProjectReference);
 
         // A swapped marker must be refused, not silently accepted.
-        var corrupted = good
+        var corrupted = good.Value
             .Replace("/wsrv/", "/prv/")
             .Replace("/workspace/", "/wsrv/");
         Assert.Throws<FormatException>(() => BuildBrowseAppContentAddress.Parse(AppContentAddress.Parse(corrupted)));
@@ -142,43 +141,10 @@ public sealed class BuildBrowseAppContentIntegrationTests
     }
 
     [AvaloniaFact]
-    public async Task Build_project_open_destination_is_admitted_to_native_publication()
+    public async Task Build_registered_dev_destination_routes_to_a_native_session_contract()
     {
-        var factory = new StubFactory("code");
-        var registry = new NativeAppContentRegistry(new DevModeRegistry(Dev),
-            [new NativeAppContentRegistration(Dev.Id, "dev", HavenAppRouteKind.Dev, factory)],
-            () => true);
-
-        var reference = new DeveloperProjectReference(
-            Guid.Parse("11111111-1111-1111-1111-111111111111"), 7,
-            Guid.Parse("22222222-2222-2222-2222-222222222222"), 3,
-            Guid.Parse("33333333-3333-3333-3333-333333333333"));
-        var address = AppContentAddress.Parse(BuildBrowseAppContentAddress.For(reference,
-            Guid.Parse("44444444-4444-4444-4444-444444444444"),
-            Guid.Parse("55555555-5555-5555-5555-555555555555"),
-            Guid.Parse("66666666-6666-6666-6666-666666666666")));
-        var request = new BrowseAppContentRequest(Guid.NewGuid(), address, "original-profile", BrowserTabPrivacy.Standard);
-
-        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(registry.CreateSession(request));
-        Assert.Equal(0, factory.Calls);
-        Assert.Throws<InvalidOperationException>(() => session.OriginalNativeView);
-
-        await session.InitializeAsync();
-
-        Assert.Equal(1, factory.Calls);
-        Assert.True(session.IsPublicationCurrent);
-        Assert.Same(factory.View, session.OriginalNativeView);
-        Assert.Equal("Build", session.Title);
-        Assert.Equal("code", session.IconKey);
-
-        Assert.True(await session.TryPrepareToCloseAsync());
-        await session.CloseAndDrainAsync();
-        Assert.True(session.CanRetireOriginalView);
-    }
-
-    [AvaloniaFact]
-    public async Task Build_landing_destination_is_admitted_as_a_native_session()
-    {
+        // Registry routing contract only: this stub proves the dev tuple routes a dev address to a
+        // native session. It does NOT exercise the production Build factory/session/workbench.
         var factory = new StubFactory("code");
         var registry = new NativeAppContentRegistry(new DevModeRegistry(Dev),
             [new NativeAppContentRegistration(Dev.Id, "dev", HavenAppRouteKind.Dev, factory)],
@@ -186,11 +152,10 @@ public sealed class BuildBrowseAppContentIntegrationTests
 
         var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://dev"), "original-profile", BrowserTabPrivacy.Standard);
         var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(registry.CreateSession(request));
-        await session.InitializeAsync();
-        Assert.Equal(1, factory.Calls);
-        Assert.True(session.IsPublicationCurrent);
+        Assert.Equal("Build", session.Title);
+        Assert.Equal("code", session.IconKey);
+        Assert.False(session.IsPublicationCurrent); // uninitialized stub session, no publication.
         await session.CloseAndDrainAsync();
-        Assert.True(session.CanRetireOriginalView);
     }
 
     [AvaloniaFact]

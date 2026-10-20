@@ -3,7 +3,7 @@
   "worktree": "/workspace/9to1-mercury-build-shipping",
   "branch": "codex/mercury-build-shipping-recovery-20261020",
   "currentRootSourceCheckpoint": "6ca569201fcf69500b881406be89ec4493cab859",
-  "status": "UNACCEPTED: source-only; no SDK/model/app runs performed. Lane12 Build host integration patch + tests authored.",
+  "status": "UNACCEPTED: source-only; no SDK/model/app runs performed. Lane12 Build host integration patch + tests authored. Real landing implemented via DeveloperSavedProjectsPage; authentic landing test added. All execution NOT RUN.",
   "integrationPatches": {
     "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs": {
       "preimageSha256": "a0b9f836433b8a94993b87567df739d6465b30f79206ffe676388cf20116ff29",
@@ -12,10 +12,12 @@
   },
   "ownedBuildFilesSha256": {
     "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentAddress.cs": "d16de5246a299f8b8ec7ff1adfb9cc671af18583a5f9edb5fd081449360f57a1",
-    "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentFactory.cs": "6581a6e72fee88810ba8900a7b5dcd23788e5c51604ab573eae13d18bafda574",
-    "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentSession.cs": "03199a740e72dbba8b3a7f3e17616622de4f69ec011408087379ef2f56ca223d",
-    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BuildBrowseAppContentIntegrationTests.cs": "7d1b93ba7a5da496bb2750ae98283c0b5ef71148207ac9894f9583f703885219",
-    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj": "9a16b9a3d52fcc8e6358cf20a3c1b4064fc533ea925522e67dcdc23b19bea39f"
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentFactory.cs": "efb81469c4146426a22c88fb4af1c8022bc709defd0d9c16c711361327b63163",
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentSession.cs": "5a02f869ee200d68a1a948225ea23bba635f1c43365aeda608c7f1e7cb4fb861",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Development/DeveloperProjectWorkbenchPage.cs": "42d602f4d3067f3108d6e2564eed25227cda897f5850c90eaaeca4ae4f39f19e",
+    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BuildBrowseAppContentIntegrationTests.cs": "0a81d06eafcc8f8badf03b1410017cd5521e2713a465daff435cbd5c09a15652",
+    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BuildBrowseAppContentAuthenticTests.cs": "b645d47b7e2b26ce897071c6f03db281ffb4e677fc958ae89ffc48f25395fa5d",
+    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj": "725d43c344e86abc200e03972b9c3059694e651605faabd6a76d665b03bf638d"
   },
   "carriedOwnedDevFilesSha256": {
     "9to1 Workspace/Dev/DeveloperWorkbenchCuiDocument.cs": "c23c45c5ede62015d1a55473501ef9a273bd61ebaa42198ce3024dc962007483",
@@ -24,10 +26,10 @@
     "9to1 Workspace/Dev/UI/DeveloperWorkbench.cui": "edb8671e61d36f78f43df5a97e786fecec9d6e882c6c5d691848495946bb972e"
   },
   "sharedTransportFilesSha256": {
-    "framework/CUI/Core/CuiV1Transport.cs": "43eb48d62c29dc6676d9b00e34aa1168c51bb27c9a9b177fbd2701d02bcebc00",
+    "framework/CUI/Core/CuiV1Transport.cs": "f30a2c26e2d0278a58e7085259f8ee46309251758c476d1a3ee10190541a7009",
     "framework/CUI/Compiler/CuiV1ArtifactCodec.cs": "17d65c7bc4dd1e5151703d0a520162caf859c99731cf79bf3290f20bc0ca22b3",
     "framework/CUI/Runtime/CuiRuntimeCompatibility.cs": "eba18e5f48893f4d46edaca49e0e54bcf75246b0472ccd8ba22aff28697fd038",
-    "framework/CUI/Compiler.Tests/CuiV1ReaderShimRegressionTests.cs": "57b1b2037bdb20e7a97aef1d1e3bf8d94f422ccd3b4cc8c0ad4e48891c86af19"
+    "framework/CUI/Compiler.Tests/CuiV1ReaderShimRegressionTests.cs": "5c9f2aa144ecd883f91826b24bd695986be7d02c482894c0711646f8592f1dde"
   },
   "realRootSparseCheckoutUnchanged": true
 }
