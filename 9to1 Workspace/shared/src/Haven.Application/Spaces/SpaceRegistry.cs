@@ -247,21 +247,24 @@ public sealed partial class SpaceRegistry
             if (existing.IsBuiltIn) throw new InvalidOperationException("Built-in Space configuration is protected.");
             if (existing.Revision != basedOnActiveRevision)
                 throw new SpaceRevisionConflictException(spaceId, basedOnActiveRevision, existing.Revision);
-            var currentDraft = (state.Drafts ?? []).SingleOrDefault(draft => draft.SpaceId == spaceId);
-            if (currentDraft is null)
+            var storedDraft = (state.Drafts ?? []).SingleOrDefault(item => item.SpaceId == spaceId);
+            if (storedDraft is null)
             {
                 if (expectedDraftRevision is not null)
                     throw new SpaceRevisionConflictException(spaceId, expectedDraftRevision.Value, 0);
             }
-            else if (expectedDraftRevision is null || currentDraft.DraftRevision != expectedDraftRevision.Value)
+            else if (expectedDraftRevision is null || storedDraft.DraftRevision != expectedDraftRevision.Value)
             {
-                throw new SpaceRevisionConflictException(spaceId, expectedDraftRevision ?? 0, currentDraft.DraftRevision);
+                throw new SpaceRevisionConflictException(spaceId, expectedDraftRevision ?? 0, storedDraft.DraftRevision);
             }
-            var nextRevision = (currentDraft?.DraftRevision ?? existing.Revision) + 1;
-            var draft = new SpaceDraft(spaceId, nextRevision, config, existing.Revision, _clock());
-            var drafts = (state.Drafts ?? []).Where(draft => draft.SpaceId != spaceId).Append(draft).ToArray();
-            return (state with { Drafts = drafts }, draft);
-        }, cancellationToken).ConfigureAwait(false);
+            var nextRevision = (storedDraft?.DraftRevision ?? existing.Revision) + 1;
+            var savedDraft = new SpaceDraft(spaceId, nextRevision, config, existing.Revision, _clock());
+            var drafts = (state.Drafts ?? [])
+                .Where(item => item.SpaceId != spaceId)
+                .Append(savedDraft)
+                .ToArray();
+            return (state with { Drafts = drafts }, savedDraft);
+        }, cancellationToken);
     }
 
     /// <summary>Validates the exact saved draft and, only when it passes, atomically promotes it to
