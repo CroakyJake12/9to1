@@ -6,7 +6,7 @@ public sealed partial class SpaceRegistry
 {
     private const string SettingsKey = "spaces.registry";
     private const string CurrentSpaceSettingsKey = "spaces.current";
-    private const int CurrentVersion = 3;
+    private const int CurrentVersion = 4;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -207,6 +207,135 @@ public sealed partial class SpaceRegistry
 
     public Task<SpaceDefinition> UpdateAsync(SpaceDefinition updated, CancellationToken cancellationToken) =>
         UpdateAsync(updated, expectedRevision: null, cancellationToken);
+
+    /// <summary>Reads the persisted Draft configuration for one Space, if any. A draft never
+    /// governs runtime behaviour; it is the exact validated candidate that activation promotes.</summary>
+    public async Task<SpaceDraft?> GetDraftAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAndReconcileAsync(cancellationToken).ConfigureAwait(false);
+            return (state.Drafts ?? []).SingleOrDefault(draft => draft.SpaceId == id);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>Persists a Draft configuration for a Space without touching its Active revision.
+    /// <paramref name="expectedDraftRevision"/> is the draft revision the caller loaded (null when the
+    /// caller had no draft); <paramref name="basedOnActiveRevision"/> is the Active revision the draft
+    /// is derived from. A mismatch on either is a conflict, never a silent clobber.</summary>
+    public Task<SpaceDraft> SaveDraftAsync(
+        Guid spaceId,
+        SpaceDefinition config,
+        long? expectedDraftRevision,
+        long basedOnActiveRevision,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        if (spaceId == Guid.Empty) throw new ArgumentException("A Space ID is required.", nameof(spaceId));
+        if (expectedDraftRevision is { } expected && expected < 1)
+            throw new ArgumentOutOfRangeException(nameof(expectedDraftRevision));
+        if (basedOnActiveRevision < 1) throw new ArgumentOutOfRangeException(nameof(basedOnActiveRevision));
+        return MutateAsync(state =>
+        {
+            var existing = FindRequired(state.Spaces, spaceId);
+            if (existing.IsArchived) throw new InvalidOperationException("An archived Space cannot be edited.");
+            if (existing.IsBuiltIn) throw new InvalidOperationException("Built-in Space configuration is protected.");
+            if (existing.Revision != basedOnActiveRevision)
+                throw new SpaceRevisionConflictException(spaceId, basedOnActiveRevision, existing.Revision);
+            var currentDraft = (state.Drafts ?? []).SingleOrDefault(draft => draft.SpaceId == spaceId);
+            if (currentDraft is null)
+            {
+                if (expectedDraftRevision is not null)
+                    throw new SpaceRevisionConflictException(spaceId, expectedDraftRevision.Value, 0);
+            }
+            else if (expectedDraftRevision is null || currentDraft.DraftRevision != expectedDraftRevision.Value)
+            {
+                throw new SpaceRevisionConflictException(spaceId, expectedDraftRevision ?? 0, currentDraft.DraftRevision);
+            }
+            var nextRevision = (currentDraft?.DraftRevision ?? existing.Revision) + 1;
+            var draft = new SpaceDraft(spaceId, nextRevision, config, existing.Revision, _clock());
+            var drafts = (state.Drafts ?? []).Where(draft => draft.SpaceId != spaceId).Append(draft).ToArray();
+            return (state with { Drafts = drafts }, draft);
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Validates the exact saved draft and, only when it passes, atomically promotes it to
+    /// the Active revision. A failed validation or a concurrent active/draft change leaves the previous
+    /// known-good Active revision untouched. <paramref name="validate"/> is an optional caller-owned
+    /// capability/permission check; fulfillment never grants access by itself.</summary>
+    public Task<SpaceDefinition> ActivateDraftAsync(
+        Guid spaceId,
+        long expectedDraftRevision,
+        Func<SpaceDefinition, IReadOnlyList<string>>? validate,
+        CancellationToken cancellationToken = default)
+    {
+        if (spaceId == Guid.Empty) throw new ArgumentException("A Space ID is required.", nameof(spaceId));
+        if (expectedDraftRevision < 1) throw new ArgumentOutOfRangeException(nameof(expectedDraftRevision));
+        return MutateAsync(state =>
+        {
+            var existing = FindRequired(state.Spaces, spaceId);
+            if (existing.IsArchived) throw new InvalidOperationException("An archived Space cannot be activated.");
+            if (existing.IsBuiltIn) throw new InvalidOperationException("Built-in Space configuration cannot be activated.");
+            var draft = (state.Drafts ?? []).SingleOrDefault(draft => draft.SpaceId == spaceId)
+                ?? throw new InvalidOperationException("There is no saved draft to activate for this Space.");
+            if (draft.DraftRevision != expectedDraftRevision)
+                throw new SpaceRevisionConflictException(spaceId, expectedDraftRevision, draft.DraftRevision);
+            if (draft.BasedOnActiveRevision != existing.Revision)
+                throw new SpaceRevisionConflictException(spaceId, draft.BasedOnActiveRevision, existing.Revision);
+            var now = _clock();
+            var promoted = existing with
+            {
+                Name = draft.Config.Name,
+                Description = draft.Config.Description,
+                IconKey = draft.Config.IconKey,
+                Instructions = draft.Config.Instructions,
+                ThinkingMode = draft.Config.ThinkingMode,
+                ModelPolicy = draft.Config.ModelPolicy,
+                ContextPolicy = draft.Config.ContextPolicy,
+                MemoryPolicy = draft.Config.MemoryPolicy,
+                CapabilityCategoryPolicy = draft.Config.CapabilityCategoryPolicy,
+                CapabilityBindings = draft.Config.CapabilityBindings?.ToArray() ?? [],
+                ContextReferences = draft.Config.ContextReferences?.ToArray() ?? [],
+                Shares = draft.Config.Shares?.ToArray() ?? [],
+                Files = draft.Config.Files?.ToArray() ?? [],
+                ExamplePairs = draft.Config.ExamplePairs?.ToArray() ?? [],
+                LayoutDocument = CloneLayout(draft.Config.LayoutDocument),
+                GeneratedSurface = draft.Config.GeneratedSurface,
+                Revision = checked(existing.Revision + 1),
+                UpdatedAt = now,
+                IsArchived = false
+            };
+            var errors = new List<string>();
+            try
+            {
+                ValidateDefinition(promoted, state.Spaces.Where(space => space.Id != spaceId).ToArray());
+            }
+            catch (Exception error) when (error is ArgumentException or InvalidOperationException)
+            {
+                errors.Add(error.Message);
+            }
+            if (validate is not null)
+            {
+                foreach (var error in validate(promoted) ?? [])
+                    if (!string.IsNullOrWhiteSpace(error)) errors.Add(error);
+            }
+            if (errors.Count > 0) throw new SpaceValidationException(errors);
+            var history = (state.ActiveHistory ?? [])
+                .Where(entry => entry.SpaceId != spaceId)
+                .Append(new SpaceActiveHistoryEntry(spaceId, existing.Revision, existing, now))
+                .OrderByDescending(entry => entry.ActivatedAt)
+                .Take(8)
+                .ToArray();
+            var spaces = state.Spaces.Select(space => space.Id == spaceId ? promoted : space).ToArray();
+            var drafts = (state.Drafts ?? []).Where(draft => draft.SpaceId != spaceId).ToArray();
+            return (state with { Spaces = spaces, Drafts = drafts, ActiveHistory = history }, promoted);
+        }, cancellationToken).ConfigureAwait(false);
+    }
 
     public async Task<SpaceDefinition> MoveAsync(
         Guid id,
@@ -420,6 +549,7 @@ public sealed partial class SpaceRegistry
             var result = requestedMutation(state);
             if (!allowPendingDeletion) EnsurePendingDeletionsUnchanged(state, result.State);
             ValidateDeletionState(result.State);
+            ValidateDraftsAndHistory(result.State);
             return result;
         };
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -429,8 +559,7 @@ public sealed partial class SpaceRegistry
                 return await MutateComparedAsync(mutation, cancellationToken).ConfigureAwait(false);
             var state = await LoadAndReconcileAsync(cancellationToken).ConfigureAwait(false);
             var (next, result) = mutation(state);
-            await _settings.SetAsync(SettingsKey,
-                next with { Spaces = next.Spaces.Select(CloneSpace).ToArray(), Deletions = next.Deletions?.ToArray() ?? [] }, cancellationToken).ConfigureAwait(false);
+            await _settings.SetAsync(SettingsKey, CloneState(next), cancellationToken).ConfigureAwait(false);
             return result is SpaceDefinition space ? (TResult)(object)CloneSpace(space) : result;
         }
         finally
@@ -451,7 +580,7 @@ public sealed partial class SpaceRegistry
                 var (snapshotState, reconcileNeeded) = ReadComparedState(raw);
                 if (!reconcileNeeded) return snapshotState;
                 admission ??= await CaptureAdmissionAsync(cancellationToken).ConfigureAwait(false);
-                if (await TryCommitAsync(SettingsKey, raw, JsonSerializer.Serialize(snapshotState),
+                if (await TryCommitAsync(SettingsKey, raw, JsonSerializer.Serialize(CloneState(snapshotState)),
                     new Dictionary<string, string?>(), admission, cancellationToken).ConfigureAwait(false)) return snapshotState;
             }
             throw new InvalidOperationException("The Space registry kept changing during reconciliation; reload and retry.");
@@ -460,19 +589,10 @@ public sealed partial class SpaceRegistry
             ?? new SpaceRegistryState(CurrentVersion, []);
         if (state.Version > CurrentVersion)
             throw new InvalidDataException($"Space registry version {state.Version} is newer than supported version {CurrentVersion}.");
-        ValidateDeletionState(state);
-        var spaces = state.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
-        ValidateRegistry(spaces);
-        var changed = state.Version != CurrentVersion;
-        foreach (var builtIn in BuiltIns())
-        {
-            if (spaces.Any(space => space.Id == builtIn.Id)) continue;
-            spaces.Add(builtIn);
-            changed = true;
-        }
-        if (!changed) return state with { Spaces = spaces.Select(CloneSpace).ToArray() };
-        var reconciled = state with { Version = CurrentVersion, Spaces = spaces, Deletions = state.Deletions?.ToArray() ?? [] };
-        await _settings.SetAsync(SettingsKey, reconciled, cancellationToken).ConfigureAwait(false);
+        var (reconciled, changed) = ReconcileCore(state);
+        if (!changed)
+            return reconciled with { Spaces = reconciled.Spaces.Select(CloneSpace).ToArray() };
+        await _settings.SetAsync(SettingsKey, CloneState(reconciled), cancellationToken).ConfigureAwait(false);
         return reconciled with { Spaces = reconciled.Spaces.Select(CloneSpace).ToArray() };
     }
 
@@ -502,16 +622,73 @@ public sealed partial class SpaceRegistry
         var stored = raw is null ? new SpaceRegistryState(CurrentVersion, []) :
             JsonSerializer.Deserialize<SpaceRegistryState>(raw) ?? throw new InvalidDataException("The Space registry is invalid.");
         if (stored.Version > CurrentVersion) throw new InvalidDataException("The Space registry schema is newer than supported.");
-        ValidateDeletionState(stored);
-        var spaces = stored.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
+        return ReconcileCore(stored);
+    }
+
+    /// <summary>Normalizes the stored registry to the current schema and validates it. Drafts and
+    /// active-history are optional persisted collections; their absence or a stored schema v3 is
+    /// reconciled without data loss (a v3 registry simply has no drafts or history yet).</summary>
+    private (SpaceRegistryState State, bool Changed) ReconcileCore(SpaceRegistryState state)
+    {
+        ValidateDeletionState(state);
+        var spaces = state.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
-        var changed = stored.Version != CurrentVersion;
+        var changed = state.Version != CurrentVersion;
         foreach (var builtIn in BuiltIns())
         {
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
-            spaces.Add(builtIn); changed = true;
+            spaces.Add(builtIn);
+            changed = true;
         }
-        return (stored with { Version = CurrentVersion, Spaces = spaces.Select(CloneSpace).ToArray(), Deletions = stored.Deletions?.ToArray() ?? [] }, changed);
+        var drafts = NormalizeDrafts(state.Drafts);
+        var history = NormalizeHistory(state.ActiveHistory);
+        var normalized = new SpaceRegistryState(CurrentVersion, spaces,
+            state.Deletions?.ToArray() ?? [], drafts, history);
+        return (normalized, changed);
+    }
+
+    private static SpaceRegistryState CloneState(SpaceRegistryState state) => new(
+        state.Version,
+        state.Spaces.Select(CloneSpace).ToArray(),
+        state.Deletions?.ToArray() ?? [],
+        state.Drafts?.Select(CloneDraft).ToArray() ?? [],
+        state.ActiveHistory?.Select(CloneHistory).ToArray() ?? []);
+
+    private static SpaceDraft CloneDraft(SpaceDraft draft) => draft with { Config = CloneSpace(draft.Config) };
+    private static SpaceActiveHistoryEntry CloneHistory(SpaceActiveHistoryEntry entry) => entry with { Snapshot = CloneSpace(entry.Snapshot) };
+
+    private static IReadOnlyList<SpaceDraft> NormalizeDrafts(IReadOnlyList<SpaceDraft>? drafts)
+    {
+        if (drafts is null || drafts.Count == 0) return [];
+        var seen = new HashSet<Guid>();
+        foreach (var draft in drafts)
+        {
+            if (draft is null || draft.SpaceId == Guid.Empty || draft.DraftRevision < 1 ||
+                draft.Config is null || draft.BasedOnActiveRevision < 1 || !seen.Add(draft.SpaceId))
+                throw new InvalidDataException("A stored Space draft is invalid.");
+        }
+        return drafts.Select(CloneDraft).ToArray();
+    }
+
+    private static IReadOnlyList<SpaceActiveHistoryEntry> NormalizeHistory(IReadOnlyList<SpaceActiveHistoryEntry>? history)
+    {
+        if (history is null || history.Count == 0) return [];
+        var seen = new HashSet<Guid>();
+        foreach (var entry in history)
+        {
+            if (entry is null || entry.SpaceId == Guid.Empty || entry.ActiveRevision < 1 ||
+                entry.Snapshot is null || entry.ActivatedAt == default)
+                throw new InvalidDataException("A stored Space active-history entry is invalid.");
+            if (seen.Contains(entry.SpaceId)) continue;
+            seen.Add(entry.SpaceId);
+        }
+        return history.Select(CloneHistory).ToArray();
+    }
+
+    private static void ValidateDraftsAndHistory(SpaceRegistryState state)
+    {
+        _ = NormalizeDrafts(state.Drafts);
+        _ = NormalizeHistory(state.ActiveHistory);
     }
 
     private async Task<TResult> MutateComparedAsync<TResult>(Func<SpaceRegistryState, (SpaceRegistryState Next, TResult Result)> mutation,
@@ -524,7 +701,7 @@ public sealed partial class SpaceRegistry
             exported.Settings.TryGetValue(SettingsKey, out var raw);
             var (state, _) = ReadComparedState(raw);
             var (next, result) = mutation(state);
-            var replacement = JsonSerializer.Serialize(next with { Spaces = next.Spaces.Select(CloneSpace).ToArray(), Deletions = next.Deletions?.ToArray() ?? [] });
+            var replacement = JsonSerializer.Serialize(CloneState(next));
             if (await TryCommitAsync(SettingsKey, raw, replacement, new Dictionary<string, string?>(), admission, token).ConfigureAwait(false))
                 return result is SpaceDefinition space ? (TResult)(object)CloneSpace(space) : result;
         }

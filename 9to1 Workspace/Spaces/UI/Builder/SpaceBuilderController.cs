@@ -13,6 +13,12 @@ public sealed class SpaceBuilderController
     private SpaceBuilderState _state;
     private SpaceBuilderDraft _baseline = SpaceBuilderDraft.Empty;
     private long _editVersion;
+    private SpaceDefinition? _active;
+
+    /// <summary>Optional caller-owned availability check used only during activation validation. When
+    /// set, an attached capability that is not installed/enabled (or is revoked) blocks activation;
+    /// it never installs, enables or grants the capability.</summary>
+    public Func<SpaceCapabilityBinding, bool>? CapabilityAvailable { get; set; }
 
     public SpaceBuilderController(SpaceRegistry registry, Guid spaceId)
     {
@@ -103,14 +109,19 @@ public sealed class SpaceBuilderController
                     StatusMessage = "This Space is unavailable. Your unsaved Builder configuration has been kept." });
                 return false;
             }
+            var draft = await _registry.GetDraftAsync(loading.SpaceId, token).ConfigureAwait(false);
             Change(state =>
             {
-                _baseline = SpaceBuilderDraft.From(space);
+                _active = space;
+                var baselineSource = draft?.Config ?? space;
+                _baseline = SpaceBuilderDraft.From(baselineSource);
                 _editVersion++;
-                return state with { DraftRevision = space.Revision, ActiveRevision = null,
+                var status = space.IsBuiltIn ? "Built-in Space configuration is protected."
+                    : draft is not null ? "Space Builder draft loaded. Save further edits or Activate to publish it."
+                    : "Space Builder configuration loaded (no draft yet).";
+                return state with { DraftRevision = draft?.DraftRevision, ActiveRevision = space.Revision,
                     Draft = _baseline, IsLoaded = true, IsReadOnly = space.IsBuiltIn,
-                    HasChanges = false, HasConflict = false,
-                    StatusMessage = space.IsBuiltIn ? "Built-in Space configuration is protected." : "Space Builder configuration loaded." };
+                    HasChanges = false, HasConflict = false, StatusMessage = status };
             });
             return true;
         }

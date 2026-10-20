@@ -159,4 +159,35 @@ public sealed class SpaceRevisionConflictException(Guid spaceId, long expectedRe
     public long ActualRevision { get; } = actualRevision;
 }
 
-internal sealed record SpaceRegistryState(int Version, IReadOnlyList<SpaceDefinition> Spaces, IReadOnlyList<SpaceDeletionOperation>? Deletions = null);
+/// <summary>One saved Draft configuration for a canonical Space, kept separate from its Active
+/// revision. A Draft never governs runtime behaviour until it is validated and activated. The
+/// full <see cref="Config"/> snapshot is the exact validated candidate that activation promotes;
+/// <see cref="BasedOnActiveRevision"/> records the Active revision the draft was forked from so a
+/// concurrent activation can be detected instead of silently overwriting newer published state.</summary>
+public sealed record SpaceDraft(
+    Guid SpaceId,
+    long DraftRevision,
+    SpaceDefinition Config,
+    long BasedOnActiveRevision,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>A retained prior Active snapshot, bounded and versioned, so a later activation can be
+/// inspected or rolled back without disturbing the current running configuration.</summary>
+public sealed record SpaceActiveHistoryEntry(
+    Guid SpaceId,
+    long ActiveRevision,
+    SpaceDefinition Snapshot,
+    DateTimeOffset ActivatedAt);
+
+/// <summary>Thrown when a Space configuration fails activation validation. The previous known-good
+/// Active revision is left completely untouched; only validation/diagnostic state changes.</summary>
+public sealed class SpaceValidationException(IReadOnlyList<string> errors)
+    : InvalidOperationException("Space configuration validation failed: " + string.Join("; ", errors))
+{
+    public IReadOnlyList<string> Errors { get; } = errors;
+}
+
+internal sealed record SpaceRegistryState(int Version, IReadOnlyList<SpaceDefinition> Spaces,
+    IReadOnlyList<SpaceDeletionOperation>? Deletions = null,
+    IReadOnlyList<SpaceDraft>? Drafts = null,
+    IReadOnlyList<SpaceActiveHistoryEntry>? ActiveHistory = null);
