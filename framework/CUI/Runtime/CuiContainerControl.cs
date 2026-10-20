@@ -189,7 +189,16 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
         _scroll.VerticalScrollBarVisibility = _verticalScrolling ? Avalonia.Controls.Primitives.ScrollBarVisibility.Auto : Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
     }
 
-    public void AddChild(Control child)
+    public void AddChild(Control child) => InsertAuthoredChild(AuthoredChildCount, child);
+
+    /// <summary>Number of authored children (cells) currently held by this container.</summary>
+    internal int AuthoredChildCount => _cells.Count;
+
+    /// <summary>Insert an authored child as a layout cell at a specific position in the container's
+    /// authored child range, reusing the same stable cell/placement machinery as AddChild. This is
+    /// the low-level primitive behind the canonical generic Repeat, which emits each generated item
+    /// into the owning Container's own layout instead of inventing a hidden sub-panel.</summary>
+    internal void InsertAuthoredChild(int index, Control child)
     {
         if (CuiAbsoluteLayout.HasPlacement(child) && Layout is not CuiAbsolutePanel)
             throw new InvalidOperationException("Free coordinates require a Container Type Absolute parent.");
@@ -214,7 +223,27 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
                 || change.Property == Canvas.LeftProperty || change.Property == Canvas.TopProperty || change.Property == IsVisibleProperty || change.Property == ZIndexProperty) Placement();
         };
         child.PropertyChanged += handler; _placementHandlers.Add((child, handler));
-        _cells.Add(cell); Placement();
+        index = Math.Clamp(index, 0, _cells.Count);
+        _cells.Insert(index, cell); Placement();
+    }
+
+    /// <summary>Move one authored cell within the container's authored child range, preserving the
+    /// cell's identity, subscriptions, native value stores and physical attachment ordering. Used
+    /// by the generic Repeat to apply a keyed reorder without clearing/re-adding sibling cells.</summary>
+    internal void MoveAuthoredChild(int fromIndex, int toIndex)
+    {
+        if (fromIndex == toIndex) return;
+        if (fromIndex < 0 || fromIndex >= _cells.Count) throw new ArgumentOutOfRangeException(nameof(fromIndex));
+        if (toIndex < 0 || toIndex >= _cells.Count) throw new ArgumentOutOfRangeException(nameof(toIndex));
+        var cell = _cells[fromIndex];
+        _cells.RemoveAt(fromIndex);
+        _cells.Insert(toIndex, cell);
+        if (cell.Child?.IsVisible != true) return;
+        var current = Layout.Children.IndexOf(cell);
+        var desired = _cells.TakeWhile(value => !ReferenceEquals(value, cell)).Count(value => Layout.Children.Contains(value));
+        desired = Math.Min(desired, Layout.Children.Count - 1);
+        if (current < 0) Layout.Children.Insert(desired, cell);
+        else if (current != desired) Layout.Children.Move(current, desired);
     }
 
     public void SetCellMargin(Thickness value)

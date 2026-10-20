@@ -18,6 +18,8 @@
     <Action name="composer.set-response-mode.PreferText" command="composer.set-response-mode" parameter="PreferText" />
     <Action name="composer.set-response-mode.AlwaysText" command="composer.set-response-mode" parameter="AlwaysText" />
     <Action name="composer.toggle-formatting"><Toggle Target="FormattingOpen" /></Action>
+    <Action name="composer.emoji-prev" command="composer.emoji-prev" />
+    <Action name="composer.emoji-next" command="composer.emoji-next" />
   </Actions>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
@@ -71,10 +73,25 @@
     <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
       <Input id="emoji-search" Type="Text" Value="{Binding Composer.EmojiQuery}" placeholdertext="Search emoji…" MinHeight="36" accessible-name="Search emoji" />
-      <Container Type="Wrap" CellGap="6" MaxHeight="180">
+      <!-- Bounded vertical scroll viewport over the wrapping grid: finite width (inherited from
+           the vertical panel) so the Wrap lays out multiple columns/rows, vertical scrolling only,
+           and a MaxHeight cap. The generic Repeat emits each generated cell directly into this Wrap
+           container's layout, so the grid is real rather than a hidden vertical column. -->
+      <Container id="emoji-grid-viewport" Type="Wrap" CellGap="6" MaxWidth="320" MaxHeight="150"
+            VerticalScrolling="True" HorizontalScrolling="False">
         <Repeat Source="{Binding Composer.EmojiEntries}" As="emoji" Key="{Binding emoji.Text}">
           <Button action="composer.emoji-insert.Text" content="{Binding emoji.Text}" font-size="18" accessible-name="Insert {Binding emoji.Name}" />
         </Repeat>
+      </Container>
+      <!-- Real complete-catalogue paging: one bounded window is rendered; Prev/Next drive the typed
+           cursor so every one of the full catalogue entries (including flags and trigger-excluded
+           sequences) stays reachable. Full totals/result metadata stay truthful. -->
+      <Container id="emoji-pager" Type="Horizontal Stack" CellGap="8" padding="4">
+        <Button id="emoji-prev" action="composer.emoji-prev" content="‹" MinWidth="32" MinHeight="32"
+                IsVisible="{Binding Composer.EmojiHasPrevious}" accessible-name="Previous emoji page" />
+        <Text id="emoji-page-label" text="{Binding Composer.EmojiPageLabel}" font-size="12" VerticalAlignment="Center" />
+        <Button id="emoji-next" action="composer.emoji-next" content="›" MinWidth="32" MinHeight="32"
+                IsVisible="{Binding Composer.EmojiHasNext}" accessible-name="Next emoji page" />
       </Container>
     </Container>
 
