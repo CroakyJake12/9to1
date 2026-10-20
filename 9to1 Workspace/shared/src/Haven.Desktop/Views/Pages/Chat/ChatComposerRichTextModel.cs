@@ -18,16 +18,30 @@ public enum ChatComposerInlineMark
     Code = 1 << 2,
     Link = 1 << 3,
     Strikethrough = 1 << 4,
+    Underline = 1 << 5,
+    Superscript = 1 << 6,
+    Subscript = 1 << 7,
+    Latex = 1 << 8,
 }
 
 /// <summary>Block-level kinds supported by the engine. Block kind is derived from the editable
-/// draft's line markers (<c>&gt; </c> for quotes, <c>- </c> for bullets), so block state is
-/// never dual-maintained with the visible text.</summary>
+/// draft's line markers, so block state is never dual-maintained with the visible text. The
+/// markers cover the canonical SPUI-192 block formatting surface (headings 1–6, quote, bullet,
+/// numbered and lettered lists, code block).</summary>
 public enum ChatComposerBlockKind
 {
     Paragraph = 0,
     Quote = 1,
     BulletItem = 2,
+    Heading1 = 3,
+    Heading2 = 4,
+    Heading3 = 5,
+    Heading4 = 6,
+    Heading5 = 7,
+    Heading6 = 8,
+    CodeBlock = 9,
+    OrderedList = 10,
+    LetteredList = 11,
 }
 
 /// <summary>
@@ -121,15 +135,71 @@ public sealed class ChatComposerRichTextDocument
     }
 
     /// <summary>The block kind of the line [start, end), derived from its leading marker.</summary>
-    internal ChatComposerBlockKind LineKind(int start, int end)
+    internal ChatComposerBlockKind LineKind(int start, int end) =>
+        TryMatchMarker(Text, start, end, out var kind, out _) ? kind : ChatComposerBlockKind.Paragraph;
+
+    /// <summary>The marker string for a block kind (empty for paragraph).</summary>
+    internal static string MarkerFor(ChatComposerBlockKind kind) => kind switch
     {
-        int len = end - start;
-        if (len >= 2)
+        ChatComposerBlockKind.Quote => "> ",
+        ChatComposerBlockKind.BulletItem => "- ",
+        ChatComposerBlockKind.OrderedList => "1. ",
+        ChatComposerBlockKind.LetteredList => "a. ",
+        ChatComposerBlockKind.Heading1 => "# ",
+        ChatComposerBlockKind.Heading2 => "## ",
+        ChatComposerBlockKind.Heading3 => "### ",
+        ChatComposerBlockKind.Heading4 => "#### ",
+        ChatComposerBlockKind.Heading5 => "##### ",
+        ChatComposerBlockKind.Heading6 => "###### ",
+        ChatComposerBlockKind.CodeBlock => "```",
+        _ => string.Empty,
+    };
+
+    /// <summary>Attempts to match a block marker at the start of the line [start, end). Returns the
+    /// matched kind and its marker length.</summary>
+    internal static bool TryMatchMarker(string text, int start, int end, out ChatComposerBlockKind kind, out int markerLength)
+    {
+        kind = ChatComposerBlockKind.Paragraph;
+        markerLength = 0;
+        if (end <= start || start < 0 || start >= text.Length) return false;
+
+        // Longest first so "###### " wins over "# ".
+        string[] markers =
         {
-            if (Text[start] == '>' && Text[start + 1] == ' ') return ChatComposerBlockKind.Quote;
-            if (Text[start] == '-' && Text[start + 1] == ' ') return ChatComposerBlockKind.BulletItem;
+            "###### ", "##### ", "#### ", "### ", "## ", "# ",
+            "1. ", "a. ",
+            "> ", "- ",
+            "```",
+        };
+        Array.Sort(markers, (a, b) => b.Length.CompareTo(a.Length));
+        foreach (var m in markers)
+        {
+            if (m.Length > end - start) continue;
+            bool match = true;
+            for (int i = 0; i < m.Length; i++)
+            {
+                if (text[start + i] != m[i]) { match = false; break; }
+            }
+            if (!match) continue;
+            kind = m switch
+            {
+                ">" => ChatComposerBlockKind.Quote,
+                "- " => ChatComposerBlockKind.BulletItem,
+                "1. " => ChatComposerBlockKind.OrderedList,
+                "a. " => ChatComposerBlockKind.LetteredList,
+                "# " => ChatComposerBlockKind.Heading1,
+                "## " => ChatComposerBlockKind.Heading2,
+                "### " => ChatComposerBlockKind.Heading3,
+                "#### " => ChatComposerBlockKind.Heading4,
+                "##### " => ChatComposerBlockKind.Heading5,
+                "###### " => ChatComposerBlockKind.Heading6,
+                "```" => ChatComposerBlockKind.CodeBlock,
+                _ => ChatComposerBlockKind.Paragraph,
+            };
+            markerLength = m.Length;
+            return true;
         }
-        return ChatComposerBlockKind.Paragraph;
+        return false;
     }
 
     /// <summary>The paragraph/quote/bullet kind of the line containing <paramref name="abs"/>.</summary>
@@ -271,9 +341,13 @@ public sealed class ChatComposerRichTextDocument
             var current = LineKind(ls, le);
             if (current == kind) continue; // already the requested kind -> leave unchanged
 
-            bool hadMarker = current == ChatComposerBlockKind.Quote || current == ChatComposerBlockKind.BulletItem;
-            if (hadMarker) RemoveRange(ls, ls + 2);
-            Insert(ls, kind == ChatComposerBlockKind.Quote ? "> " : "- ", ChatComposerInlineMark.None, null);
+            if (current != ChatComposerBlockKind.Paragraph && TryMatchMarker(Text, ls, le, out var hadKind, out var hadLen))
+            {
+                RemoveRange(ls, ls + hadLen);
+                le -= hadLen;
+            }
+            var marker = MarkerFor(kind);
+            if (!string.IsNullOrEmpty(marker)) Insert(ls, marker, ChatComposerInlineMark.None, null);
         }
         AssertSane();
     }

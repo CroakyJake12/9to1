@@ -18,6 +18,19 @@ internal enum ChatComposerFormatOp
     Strike,
     Quote,
     Bullet,
+    Underline,
+    Superscript,
+    Subscript,
+    Latex,
+    Heading1,
+    Heading2,
+    Heading3,
+    Heading4,
+    Heading5,
+    Heading6,
+    CodeBlock,
+    OrderedList,
+    LetteredList,
 }
 
 /// <summary>
@@ -37,20 +50,35 @@ public sealed class ChatComposerFormattingPort
     private readonly Func<IChatComposerInputPort?>? _liveInputProvider;
     private readonly Func<string>? _fallbackDraft;
     private readonly Func<string, CancellationToken, ValueTask>? _fallbackSetDraft;
+    private ChatComposerRichInputEngine? _richEngine;
     private readonly ChatComposerEditor _editor = new();
 
     public ChatComposerFormattingPort(
         Func<IChatComposerInputPort?>? liveInputProvider = null,
         Func<string>? fallbackDraft = null,
-        Func<string, CancellationToken, ValueTask>? fallbackSetDraft = null)
+        Func<string, CancellationToken, ValueTask>? fallbackSetDraft = null,
+        ChatComposerRichInputEngine? richEngine = null)
     {
         _liveInputProvider = liveInputProvider;
         _fallbackDraft = fallbackDraft;
         _fallbackSetDraft = fallbackSetDraft;
+        _richEngine = richEngine;
     }
 
-    /// <summary>The shared editor backing this port (exposed for host undo/redo wiring).</summary>
-    public ChatComposerEditor Editor => _editor;
+    /// <summary>The shared editor backing this port (exposed for host undo/redo wiring). When a
+    /// rich engine is bound this is the engine's editor.</summary>
+    public ChatComposerEditor Editor => _richEngine?.Editor ?? _editor;
+
+    /// <summary>The shared real engine, when one is bound (renderer-host path). Null in the
+    /// transitional plain-TextBox/Markdown mode.</summary>
+    public ChatComposerRichInputEngine? RichEngine => _richEngine;
+
+    /// <summary>Attaches the shared engine. Subsequent commands route directly into the engine's
+    /// retained document/history rather than re-parsing the draft.</summary>
+    public void AttachEngine(ChatComposerRichInputEngine engine)
+    {
+        _richEngine = engine ?? throw new ArgumentNullException(nameof(engine));
+    }
 
     /// <summary>
     /// Applies a named format command. Uses the live input port when mounted; otherwise falls back
@@ -63,12 +91,27 @@ public sealed class ChatComposerFormattingPort
         var op = ParseCommand(formatCommand);
         var live = _liveInputProvider?.Invoke();
 
+        // Primary path: the shared engine is bound (renderer host). Apply directly to the retained
+        // document/history; no draft re-parse and no plain-Markdown rewrite of the input.
+        if (_richEngine is not null && live is not null)
+        {
+            int anchor = Math.Clamp(live.SelectionStart, 0, live.Text?.Length ?? 0);
+            int length = Math.Clamp(live.SelectionLength, 0, (live.Text?.Length ?? 0) - anchor);
+            int caret = anchor + length;
+            _richEngine.ApplyCommand(formatCommand, anchor, caret);
+            return;
+        }
+
+        // Transitional path: a live plain-TextBox input attached without a bound engine. This keeps
+        // the Markdown-interchange behavior for hosts that have not yet mounted the renderer, but
+        // is NOT the completed rich-input path (see the engine branch above).
         if (live is not null)
         {
             ApplyToLive(live, op);
             return;
         }
 
+        // Unmounted whole-draft fallback.
         if (_fallbackDraft is not null && _fallbackSetDraft is not null)
         {
             var draft = _fallbackDraft() ?? string.Empty;
@@ -108,6 +151,11 @@ public sealed class ChatComposerFormattingPort
     /// live input.</summary>
     public void Undo()
     {
+        if (_richEngine is not null)
+        {
+            _richEngine.Undo();
+            return;
+        }
         var live = _liveInputProvider?.Invoke();
         if (live is null || !_editor.CanUndo) return;
         _editor.Undo();
@@ -117,26 +165,18 @@ public sealed class ChatComposerFormattingPort
     /// <summary>Re-applies the most recently undone engine transaction.</summary>
     public void Redo()
     {
+        if (_richEngine is not null)
+        {
+            _richEngine.Redo();
+            return;
+        }
         var live = _liveInputProvider?.Invoke();
         if (live is null || !_editor.CanRedo) return;
         _editor.Redo();
         RewriteLive(live, _editor.Document);
     }
 
-    private static ChatComposerFormatOp ParseCommand(string command)
-    {
-        return command?.Trim() switch
-        {
-            "Bold" => ChatComposerFormatOp.Bold,
-            "Italic" => ChatComposerFormatOp.Italic,
-            "Code" => ChatComposerFormatOp.Code,
-            "Link" => ChatComposerFormatOp.Link,
-            "Quote" => ChatComposerFormatOp.Quote,
-            "Bullet" => ChatComposerFormatOp.Bullet,
-            "Strikethrough" => ChatComposerFormatOp.Strike,
-            _ => throw new InvalidOperationException($"Unknown composer format command '{command}'."),
-        };
-    }
+    private static ChatComposerFormatOp ParseCommand(string command) => ChatComposerRichInputEngine.ParseCommand(command);
 
     private void ApplyToLive(IChatComposerInputPort live, ChatComposerFormatOp op)
     {

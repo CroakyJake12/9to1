@@ -8,7 +8,8 @@ namespace Haven.Desktop.Views.Pages.Chat;
 /// Bidirectional projection between the canonical rich-text document and its portable
 /// Markdown-compatible draft form. The draft is exactly what the plain composer input shows and
 /// what the existing send/storage pipeline carries, so the projection is lossless: a document
-/// serializes to a draft that parses back to an equal document.
+/// serializes to a draft that parses back to an equal document, and arbitrary literal delimiter
+/// text is preserved through backslash escaping.
 ///
 /// Delimiter rules (deterministic, so parser and serializer agree):
 /// <list type="bullet">
@@ -17,15 +18,15 @@ namespace Haven.Desktop.Views.Pages.Chat;
 /// <item>Combined marks nest outer-to-inner as: Link, Code, Bold, Italic, Strikethrough.</item>
 /// <item>Block markers <c>&gt; </c> and <c>- </c> are ordinary content characters; the parser
 /// derives block kind from them and does not strip them.</item>
+/// <item>Literal <c>*</c>, <c>_</c>, <c>~</c>, <c>`</c> and <c>[</c> inside content are escaped
+/// with a backslash so arbitrary text survives a round trip.</item>
 /// </list>
-///
-/// Known boundary (documented, not faked): backslash escaping of literal delimiter characters is
-/// not implemented in this checkpoint; a literal <c>*</c>, <c>_</c>, <c>~</c>, <c>`</c> or
-/// <c>[</c> authored through the plain input is treated as a delimiter candidate on re-parse.
-/// This is the standard Markdown ambiguity, not a hidden WYSIWYG manipulation.
 /// </summary>
 public static class ChatComposerMarkdown
 {
+    /// <summary>Characters that open a delimiter and must be escaped when literal.</summary>
+    private static bool IsDelimiterChar(char c) => c is '*' or '_' or '~' or '`' or '[';
+
     /// <summary>Serializes a document to its editable draft form (Markdown-compatible).</summary>
     public static string SerializeDraft(ChatComposerRichTextDocument document)
     {
@@ -40,19 +41,11 @@ public static class ChatComposerMarkdown
             int j = i + 1;
             while (j < n && document.Marks[j] == marks && document.Links[j] == link) j++;
             var content = document.Text.Substring(i, j - i);
-            sb.Append(WrapRun(content, marks, link));
+            sb.Append(RenderRun(content, marks, link));
             i = j;
         }
         return sb.ToString();
     }
-
-    /// <summary>
-    /// The lossless plain-text projection: the canonical text without inline emphasis markup.
-    /// Block markers (<c>&gt; </c>, <c>- </c>) are retained because they are real list/quote
-    /// structure. This is the "plain authoring text" view of the document and contains no
-    /// delimiters; emphasis is carried by the parallel mark arrays.
-    /// </summary>
-    public static string SerializePlainText(ChatComposerRichTextDocument document) => document?.Text ?? string.Empty;
 
     /// <summary>Serializes a document and also records, for every source character, its offset in
     /// the produced draft. Used to translate a post-edit selection back into draft coordinates.</summary>
@@ -70,50 +63,55 @@ public static class ChatComposerMarkdown
             int j = i + 1;
             while (j < n && document.Marks[j] == marks && document.Links[j] == link) j++;
             var content = document.Text.Substring(i, j - i);
-            var rendered = WrapRun(content, marks, link);
-            int draftStart = sb.Length;
-            sb.Append(rendered);
-            // Map each content character to its position inside the rendered run.
-            int contentCursor = 0;
-            for (int k = 0; k < rendered.Length; k++)
-            {
-                var c = rendered[k];
-                if (IsDelimiter(rendered, k))
-                {
-                    continue;
-                }
-                // The content region is the middle of the run; find content chars by scanning the
-                // rendered text skipping delimiters in the same order as 'content'.
-                if (contentCursor < content.Length && c == content[contentCursor])
-                {
-                    sourceToDraft[i + contentCursor] = draftStart + k;
-                    contentCursor++;
-                }
-            }
+            var run = RenderRun(content, marks, link, i, sourceToDraft);
+            sb.Append(run);
             i = j;
         }
         return sb.ToString();
     }
 
-    private static bool IsDelimiter(string rendered, int k) => rendered[k] is '*' or '_' or '`' or '~' or '[' or ']' or '(' or ')';
-
-    private static string WrapRun(string content, ChatComposerInlineMark marks, string? link)
+    /// <summary>Builds the rendered Markdown for one content run, writing per-source offsets into
+    /// <paramref name="destMap"/> (absolute positions) when provided.</summary>
+    private static string RenderRun(string content, ChatComposerInlineMark marks, string? link, int contentStart = 0, int[]? destMap = null)
     {
-        string inner = content;
-        if ((marks & ChatComposerInlineMark.Strikethrough) != 0) inner = "~~" + inner + "~~";
-        if ((marks & ChatComposerInlineMark.Italic) != 0) inner = "_" + inner + "_";
-        if ((marks & ChatComposerInlineMark.Bold) != 0) inner = "**" + inner + "**";
-        if ((marks & ChatComposerInlineMark.Code) != 0) inner = "`" + inner + "`";
+        // 1. Escape literal delimiter characters in the raw content.
+        var inner = new StringBuilder();
+        for (int k = 0; k < content.Length; k++)
+        {
+            char c = content[k];
+            int outBase = inner.Length;
+            if (IsDelimiterChar(c)) inner.Append('\\');
+            inner.Append(c);
+            if (destMap is not null) destMap[contentStart + k] = outBase;
+        }
+
+        // 2. Compute outer delimiters from the applied marks (link outermost).
+        string left = string.Empty, right = string.Empty;
+        if ((marks & ChatComposerInlineMark.Strikethrough) != 0) { left += "~~"; right = "~~" + right; }
+        if ((marks & ChatComposerInlineMark.Italic) != 0) { left += "_"; right = "_" + right; }
+        if ((marks & ChatComposerInlineMark.Bold) != 0) { left += "**"; right = "**" + right; }
+        if ((marks & ChatComposerInlineMark.Code) != 0) { left += "`"; right = "`" + right; }
         if ((marks & ChatComposerInlineMark.Link) != 0)
-            inner = "[" + inner + "](" + (link ?? ChatComposerRichTextDocument.DefaultLinkPlaceholder) + ")";
-        return inner;
+        {
+            left += "[";
+            right = "](" + (link ?? ChatComposerRichTextDocument.DefaultLinkPlaceholder) + ")" + right;
+        }
+
+        // 3. Shift recorded offsets by the left delimiter prefix.
+        if (destMap is not null && left.Length > 0)
+        {
+            for (int k = contentStart; k < contentStart + content.Length; k++)
+                destMap[k] += left.Length;
+        }
+
+        return left + inner + right;
     }
 
     /// <summary>
     /// Parses a draft back into a canonical document. Returns <c>false</c> only for a null input;
     /// otherwise a document is always produced (unbalanced delimiters are treated literally).
     /// Also fills <paramref name="draftToSource"/>, a per-draft-character map to the source index
-    /// (content) or -1 (delimiter).
+    /// (content) or -1 (delimiter / escape marker).
     /// </summary>
     public static bool TryParseDraft(string? draft, out ChatComposerRichTextDocument document, out int[] draftToSource)
     {
@@ -123,10 +121,7 @@ public static class ChatComposerMarkdown
         var links = new List<string?>();
         draftToSource = new int[draft.Length];
 
-        // Open delimiter frames; each frame contributes a mark to content between open/close.
         var stack = new List<(ChatComposerInlineMark Mark, bool IsLink, string? PendingUrl)>();
-        // Source index of the first character captured inside the current link frame, used to
-        // assign the resolved URL to every Link-marked character the frame covered.
         int linkOpenSource = -1;
 
         int i = 0;
@@ -135,23 +130,29 @@ public static class ChatComposerMarkdown
             char c = draft[i];
             char next = i + 1 < draft.Length ? draft[i + 1] : '\0';
 
+            // Literal escape: a backslash before a delimiter char emits that char literally.
+            if (c == '\\' && IsDelimiterChar(next))
+            {
+                draftToSource[i] = -1;
+                AppendContent(next, i + 1);
+                draftToSource[i + 1] = text.Length - 1;
+                i += 2;
+                continue;
+            }
+
             // Link close sequence "](" ... ")".
             if (c == ']' && stack.Count > 0 && stack[^1].IsLink)
             {
-                // Expect '(' next.
                 if (next == '(')
                 {
                     int close = draft.IndexOf(')', i + 2);
                     if (close >= 0)
                     {
                         var url = draft.Substring(i + 2, close - (i + 2));
-                        // Close link frame: assign the resolved URL to every character this link
-                        // frame covered (any nested marks still carry the Link mark).
                         for (int src = linkOpenSource; src >= 0 && src < links.Count; src++)
                         {
                             if ((marks[src] & ChatComposerInlineMark.Link) != 0) links[src] = url;
                         }
-                        // Consume "](" ... ")" as delimiters.
                         draftToSource[i] = -1;
                         draftToSource[i + 1] = -1;
                         for (int di = i + 2; di <= close; di++) draftToSource[di] = -1;
@@ -161,7 +162,6 @@ public static class ChatComposerMarkdown
                         continue;
                     }
                 }
-                // Malformed link close: treat ']' literally.
                 AppendContent(draft[i], i);
                 i++;
                 continue;
@@ -206,9 +206,12 @@ public static class ChatComposerMarkdown
             i++;
         }
 
-        // Tail: any still-open frames close at end-of-input (their marks already applied).
         document = new ChatComposerRichTextDocument();
-        SetDocument(document, text, marks, links);
+        var t = text.ToString();
+        var m = new ChatComposerInlineMark[t.Length];
+        var l = new string?[t.Length];
+        for (int k = 0; k < t.Length && k < marks.Count; k++) { m[k] = marks[k]; l[k] = links[k]; }
+        document.ApplyParsed(t, m, l);
         return true;
 
         void AppendContent(char ch, int draftIndex)
@@ -216,29 +219,18 @@ public static class ChatComposerMarkdown
             var effective = ChatComposerInlineMark.None;
             foreach (var frame in stack)
             {
-                if (!frame.IsLink) effective |= frame.Mark;
-                else effective |= ChatComposerInlineMark.Link;
+                if (frame.IsLink) effective |= ChatComposerInlineMark.Link;
+                else effective |= frame.Mark;
             }
             draftToSource[draftIndex] = text.Length;
             text.Append(ch);
             marks.Add(effective);
-            links.Add(null); // url filled when the enclosing link frame closes
+            links.Add(null);
         }
     }
 
-    private static void SetDocument(ChatComposerRichTextDocument document, StringBuilder text, List<ChatComposerInlineMark> marks, List<string?> links)
-    {
-        var t = text.ToString();
-        var m = new ChatComposerInlineMark[t.Length];
-        var l = new string?[t.Length];
-        for (int i = 0; i < t.Length && i < marks.Count; i++) { m[i] = marks[i]; l[i] = links[i]; }
-        // Push through the document's private setters.
-        document.ApplyParsed(t, m, l);
-    }
-
     /// <summary>Maps a draft selection [start, end) to the source range it covers. Offsets that
-    /// land on delimiters are clamped to the nearest content boundary. Returns <c>true</c> when a
-    /// non-empty source range can be produced.</summary>
+    /// land on delimiters are clamped to the nearest content boundary.</summary>
     public static bool MapDraftSelection(int[] draftToSource, int draftLength, int start, int end, int sourceLength, out int sourceStart, out int sourceEnd)
     {
         sourceStart = 0;
@@ -256,7 +248,6 @@ public static class ChatComposerMarkdown
 
         if (firstContent < 0 || lastContent < 0)
         {
-            // Selection entirely within delimiters (or empty): collapse to insert point.
             int caret = MapDraftCaret(draftToSource, draftLength, start, sourceLength);
             sourceStart = sourceEnd = caret;
             return true;
@@ -277,4 +268,8 @@ public static class ChatComposerMarkdown
             if (draftToSource[i] >= 0) return draftToSource[i] + 1;
         return sourceLength;
     }
+
+    /// <summary>Serializes the canonical plain text (block markers retained, no inline delimiters,
+    /// no escape markers). This is the accessible/plain authoring view of the document.</summary>
+    public static string SerializePlainText(ChatComposerRichTextDocument document) => document?.Text ?? string.Empty;
 }

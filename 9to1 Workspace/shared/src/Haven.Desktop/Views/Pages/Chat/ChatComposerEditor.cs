@@ -100,6 +100,28 @@ public sealed class ChatComposerEditor
         return Mutate("replace", d => d.ReplaceSelection(start, end, text, TypingStyle));
     }
 
+    /// <summary>Replaces [start, end) with text carrying an explicit mark (used by the engine for
+    /// paste/replacement where the mark is known directly, e.g. plain text paste).</summary>
+    public ChatComposerEditTransaction ReplaceRange(int start, int end, string text, ChatComposerInlineMark mark = ChatComposerInlineMark.None)
+    {
+        if (string.IsNullOrEmpty(text)) return default;
+        return Mutate("replace", d => d.ReplaceSelection(start, end, text, mark));
+    }
+
+    /// <summary>Records a low-level document mutation as one transaction (used by the engine for
+    /// native typing/backspace/delete and for block continuation). The caller supplies the concrete
+    /// document operation; the editor owns transaction bookkeeping.</summary>
+    internal ChatComposerEditTransaction RecordMutation(string kind, Action<ChatComposerRichTextDocument> change)
+        => Mutate(kind, change);
+
+    /// <summary>Deletes the range [start, end) as one transaction; <c>null</c> transaction when
+    /// the range is empty.</summary>
+    public ChatComposerEditTransaction DeleteRange(int start, int end)
+    {
+        if (end <= start) return default;
+        return Mutate("delete", d => d.RemoveRange(start, end));
+    }
+
     /// <summary>Reverses the most recent transaction. Returns the new revision.</summary>
     public long Undo()
     {
