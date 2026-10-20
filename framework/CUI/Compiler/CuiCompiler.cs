@@ -6,38 +6,6 @@ using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Cui.Compiler;
 
-/// <summary>Compatibility values written into each compiled CUI artifact.</summary>
-public sealed record CuiCompilationMetadata
-{
-    public CuiCompilationMetadata(
-        string languageVersion,
-        string runtimeAbiVersion,
-        string componentRegistryVersion,
-        IEnumerable<string>? requiredCapabilities = null)
-    {
-        LanguageVersion = RequireVersion(languageVersion, nameof(languageVersion));
-        RuntimeAbiVersion = RequireVersion(runtimeAbiVersion, nameof(runtimeAbiVersion));
-        ComponentRegistryVersion = RequireVersion(componentRegistryVersion, nameof(componentRegistryVersion));
-        RequiredCapabilities = Array.AsReadOnly((requiredCapabilities ?? [])
-            .Select(value => string.IsNullOrWhiteSpace(value)
-                ? throw new ArgumentException("Capability names cannot be empty.", nameof(requiredCapabilities))
-                : value.Trim())
-            .Distinct(StringComparer.Ordinal)
-            .Order(StringComparer.Ordinal)
-            .ToArray());
-    }
-
-    public string LanguageVersion { get; }
-    public string RuntimeAbiVersion { get; }
-    public string ComponentRegistryVersion { get; }
-    public IReadOnlyList<string> RequiredCapabilities { get; }
-
-    private static string RequireVersion(string value, string parameterName) =>
-        string.IsNullOrWhiteSpace(value)
-            ? throw new ArgumentException("A non-empty compatibility version is required.", parameterName)
-            : value.Trim();
-}
-
 public sealed record CuiCompilerOptions(
     CuiCompilationMetadata Metadata,
     IReadOnlyList<CuiImportedSymbols>? Imports = null);
@@ -188,6 +156,7 @@ public sealed class CuiCompiler
         CuiDefinitionDependencies.Validate(document, diagnostics);
         foreach (var diagnostic in CuiActionEventContract.Validate(document))
             diagnostics.Error(diagnostic.Code, diagnostic.Message, diagnostic.Span);
+        ValidateLocalState(document, diagnostics);
 
         if (diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
@@ -203,11 +172,115 @@ public sealed class CuiCompiler
         if (diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
 
-        var output = new CuiCompiledDocument(options.Metadata, compiledComponents, compiledTemplates, sourceMap, dependencies, document);
+        var effectiveMetadata = options.Metadata;
+        if (document.Variables.Count > 0
+            || document.Actions.Values.Any(action => action.LocalTarget is not null))
+        {
+            var capabilities = new List<string>(options.Metadata.RequiredCapabilities);
+            capabilities.Add(CuiRuntimeCompatibility.LocalStateToggleCapability);
+            if (document.Variables.Values.Any(declaration => !string.IsNullOrEmpty(declaration.Selection)))
+                capabilities.Add(CuiRuntimeCompatibility.LocalStateRandomSelectCapability);
+            effectiveMetadata = new CuiCompilationMetadata(
+                options.Metadata.LanguageVersion,
+                options.Metadata.RuntimeAbiVersion,
+                options.Metadata.ComponentRegistryVersion,
+                capabilities.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
+        }
+
+        var output = new CuiCompiledDocument(effectiveMetadata, compiledComponents, compiledTemplates, sourceMap, dependencies, document);
         return new CuiCompilation(document, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()))
         {
             Output = output
         };
+    }
+
+    /// <summary>
+    /// Validates the bounded local-state slice: document-root typed variables and pure-local Toggle
+    /// actions. Nested state-bearing Variable/Page/Definition/Prefab/static combinations are rejected
+    /// before any prior tree is retired, and a Toggle must target an unambiguous declared bool local
+    /// variable (never a host/undeclared target). Source-driven choose-once variables follow a
+    /// distinct strict contract: string type, a binding candidate-pool Source, no literal
+    /// initializer, and exactly one supported Selection strategy.
+    /// </summary>
+    private static void ValidateLocalState(CuiDocument document, CuiDiagnosticBag diagnostics)
+    {
+        foreach (var declaration in document.Variables.Values)
+        {
+            var selection = string.IsNullOrEmpty(declaration.Selection) ? null : declaration.Selection;
+            if (selection is not null)
+            {
+                if (!string.Equals(selection, "RandomOnce", StringComparison.OrdinalIgnoreCase))
+                {
+                    diagnostics.Error("CUIC035",
+                        $"Local variable '{declaration.Name}' declares unsupported Selection '{declaration.Selection}'; only 'RandomOnce' is supported.",
+                        declaration.Span);
+                    continue;
+                }
+                if (!string.Equals(declaration.Type, "string", StringComparison.OrdinalIgnoreCase))
+                {
+                    diagnostics.Error("CUIC036",
+                        $"RandomOnce local variable '{declaration.Name}' requires Type 'string'; got '{declaration.Type}'.",
+                        declaration.Span);
+                    continue;
+                }
+                if (string.IsNullOrWhiteSpace(declaration.Source))
+                {
+                    diagnostics.Error("CUIC037",
+                        $"RandomOnce local variable '{declaration.Name}' requires a Source binding candidate pool.",
+                        declaration.Span);
+                    continue;
+                }
+                if (declaration.Value.Length > 0)
+                {
+                    diagnostics.Error("CUIC038",
+                        $"RandomOnce local variable '{declaration.Name}' cannot also carry a literal initializer '{declaration.Value}'.",
+                        declaration.Span);
+                }
+                continue;
+            }
+            if (!string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase))
+            {
+                diagnostics.Error("CUIC030",
+                    $"Local variable '{declaration.Name}' has unsupported Type '{declaration.Type}'; only bool (or a string RandomOnce source select) is supported in this bounded slice.",
+                    declaration.Span);
+                continue;
+            }
+            if (!bool.TryParse(declaration.Value, out _))
+            {
+                diagnostics.Error("CUIC031",
+                    $"Local bool variable '{declaration.Name}' requires a literal true/false value.",
+                    declaration.Span);
+            }
+        }
+
+        // Reject state-bearing nested declarations anywhere in the visual tree (not the document root).
+        foreach (var component in AllComponents(document.Components))
+        {
+            if (component.Type.Equals("Variable", StringComparison.OrdinalIgnoreCase))
+            {
+                diagnostics.Error("CUIC032",
+                    "A Variable declaration is supported only at the document root in this bounded slice; nested Page/Definition/Prefab/static state is not supported.",
+                    component.Span);
+            }
+        }
+
+        foreach (var action in document.Actions.Values.Where(action => action.LocalTarget is not null))
+        {
+            var target = action.LocalTarget!;
+            if (!document.Variables.TryGetValue(target, out var declaration))
+            {
+                diagnostics.Error("CUIC033",
+                    $"Local Toggle action '{action.Name}' targets '{target}', which is not a declared document-root local variable.",
+                    action.Span);
+                continue;
+            }
+            if (!string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase))
+            {
+                diagnostics.Error("CUIC034",
+                    $"Local Toggle action '{action.Name}' targets non-bool variable '{target}'.",
+                    action.Span);
+            }
+        }
     }
 
     private static bool IsCuiSource(string sourceName) =>
@@ -455,6 +528,8 @@ public sealed class CuiCompiler
 
             if (value is CuiLiteralValue literal && !IsValidLiteral(property.LanguageType, literal.Value))
                 diagnostics.Error("CUIC015", $"Value '{literal.Value}' is not valid for {property.LanguageType} property '{property.Name}'.", value.Span);
+            else if (IsStaticDirective(property.Name) && value is not CuiLiteralValue)
+                diagnostics.Error("CUIC015", $"Property '{property.Name}' is a static boolean contract and requires a declared literal true/false.", value.Span);
             else if (value is CuiLiteralValue symbol && property.AllowedValues.Count > 0
                       && !property.AllowedValues.Contains(symbol.Value))
             {
@@ -465,6 +540,9 @@ public sealed class CuiCompiler
             }
         }
     }
+
+    private static bool IsStaticDirective(string propertyName) =>
+        propertyName is "CompoundFocus" or "OwnsBackdrop" or "EmbeddedInput";
 
     private static bool IsValidLiteral(string languageType, string value) => languageType switch
     {

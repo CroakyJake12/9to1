@@ -23,6 +23,11 @@ public sealed class CuiControlLoader : IDisposable
     private readonly CuiControlRegistry _controlRegistry;
     private readonly CancellationTokenSource _lifetime = new();
     private bool _disposed;
+    /// <summary>Incremented at the start of every Load attempt. External callbacks encountered
+    /// while mounting source-driven choose-once variables (source getter, enumerator, chooser) may
+    /// synchronously reload or dispose this loader; this generation/index the stale outer attempt
+    /// after any such callback so it cannot overwrite a replacement mount or resume after disposal.</summary>
+    private int _loadGeneration;
     private readonly object _actionTasksGate = new();
     private readonly HashSet<Task> _pendingActionTasks = [];
     private const int MaximumRetainedActionTasks = 128;
@@ -45,6 +50,16 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<ContextMenu, (EventHandler<AvaloniaPropertyChangedEventArgs> Opening, EventHandler<RoutedEventArgs> Closed)> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<string, CuiComponent> _typeDefinitions = new(StringComparer.Ordinal);
+    private const string LocalToggleCommand = "cui.local-toggle";
+    private readonly Dictionary<string, CuiVariableDeclaration> _declaredVariables = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, object?> _localState = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<CuiLiveBinding>> _localBindings = new(StringComparer.Ordinal);
+    /// <summary>Override for the generic random-choose chooser (deterministic tests/hosts set this
+    /// to a fixed pick; null uses the shared random source). The pool is never empty when invoked.</summary>
+    public Func<IReadOnlyList<string>, string>? RandomSelectionOverride { get; set; }
+    private bool _rootOwnsBackdrop;
+    private int _loadingDepth;
+    private bool _isCurrentRootControl;
     private CuiThemePreferenceContext? _themePreference;
     private CuiThemeDefinitionCatalog _localThemes = new();
     private readonly Stack<string> _themeNames = new();
@@ -243,7 +258,10 @@ public sealed class CuiControlLoader : IDisposable
     private void ObserveActionDispatch(Control control, Control? contextMenuOwner)
     {
         if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
-            _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(control, out var invocation)) return;
+            !TryGetActionInvocation(control, out var invocation)) return;
+        var isLocal = invocation.Command == LocalToggleCommand;
+        var dispatcher = _actionDispatcher;
+        if (!isLocal && dispatcher is null) return;
 
         if (control is MenuItem && !control.IsEffectivelyEnabled) return;
         if (contextMenuOwner is not null && (!contextMenuOwner.IsEffectivelyEnabled ||
@@ -260,7 +278,9 @@ public sealed class CuiControlLoader : IDisposable
             if (_pendingActionTasks.Count >= MaximumRetainedActionTasks)
                 _admissionFailureTask = RejectActionDispatchAsync(start.Task, control);
             else
-                _pendingActionTasks.Add(DispatchActionAsync(start.Task, control, dispatcher, invocation));
+                _pendingActionTasks.Add(isLocal
+                    ? DispatchLocalToggleAsync(start.Task, control, invocation)
+                    : DispatchActionAsync(start.Task, control, dispatcher!, invocation));
         }
         start.SetResult();
     }
@@ -292,6 +312,9 @@ public sealed class CuiControlLoader : IDisposable
                 Attempt(() => observable.PropertyChanged -= _bindingChangedHandler);
             _bindingChangedHandler = null;
             _liveBindings.Clear();
+            _localBindings.Clear();
+            _localState.Clear();
+            _declaredVariables.Clear();
             _liveConditionals.Clear();
             foreach (var repeat in _repeats.ToArray()) Attempt(repeat.Dispose);
             foreach (var scope in _scopeChangedHandlers.Keys.ToArray()) Attempt(() => UnsubscribeScope(scope));
@@ -381,6 +404,9 @@ public sealed class CuiControlLoader : IDisposable
         return !_disposed && _authoredControls.ContainsKey(control);
     }
 
+    /// <summary>Whether the loaded scene's root component declared ownership of its own backdrop.</summary>
+    public bool RootOwnsBackdrop => _rootOwnsBackdrop;
+
     /// <summary>Read-only diagnostic snapshot for a control created by this loader.</summary>
     public CuiControlDiagnostics? Inspect(Control control)
     {
@@ -429,6 +455,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         ArgumentNullException.ThrowIfNull(document);
         ObjectDisposedException.ThrowIf(_disposed, this);
+        var generation = ++_loadGeneration;
         if (!CuiProjectItems.IsCuiSourceFamily(document.SourceName))
             throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR051", CuiDiagnosticSeverity.Error, "Production CUI loading rejects non-CUI/AXAML/HUI application input.", document.Span));
         document = CuiThemeCreatorComponents.Compose(CuiAppComponents.Compose(document));
@@ -441,6 +468,55 @@ public sealed class CuiControlLoader : IDisposable
         // routes are merged, so reject conflicts before any prior lineage is retired.
         if (ValidateEffectiveActionEventComposition(document) is { } effectiveEventError)
             throw new CuiRuntimeLoadException(effectiveEventError);
+        // Preflight source-driven choose-once (Selection="RandomOnce") variables BEFORE retiring
+        // any prior lineage: strictly validate every declaration shape and snapshot its typed
+        // candidate pool, then select once. A failure leaves the previous valid tree/input/draft/
+        // actions operational; nothing has been retired yet. External callbacks (source getter,
+        // enumerator, chooser) may synchronously reload or dispose this loader; the load-attempt
+        // generation/dispose guard rejects any stale outer attempt rather than overwriting a
+        // replacement mount or resuming after disposal.
+        var pendingDeclared = new Dictionary<string, CuiVariableDeclaration>(StringComparer.Ordinal);
+        var pendingLocal = new Dictionary<string, object?>(StringComparer.Ordinal);
+        var randomOncePlans = new List<RandomOncePlan>();
+        // PASS 1: validate every declaration shape and snapshot every source-driven candidate pool
+        // BEFORE any chooser selection. This rejects malformed new-initializer shapes (including a
+        // Source presented without a Selection) before a single draw or any lineage retirement, and
+        // guarantees a later invalid declaration is discovered before an earlier valid one draws.
+        foreach (var declaration in document.Variables.Values)
+        {
+            pendingDeclared[declaration.Name] = declaration;
+            if (!string.IsNullOrEmpty(declaration.Selection))
+            {
+                randomOncePlans.Add(new RandomOncePlan(
+                    declaration, SnapshotRandomOnceCandidates(declaration, generation), generation));
+            }
+            else if (string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(declaration.Source)
+                && bool.TryParse(declaration.Value, out var parsed))
+            {
+                pendingLocal[declaration.Name] = parsed;
+            }
+            else
+            {
+                // Malformed local initializer: a string Source without Selection, a non-bool type
+                // outside RandomOnce, or a bool without a literal true/false. Reject loudly before
+                // any prior lineage is retired or any chooser draws.
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR077", CuiDiagnosticSeverity.Error,
+                    $"Local variable '{declaration.Name}' has an invalid initializer shape; expected a bool literal or a string RandomOnce source selection.", declaration.Span));
+            }
+        }
+        // PASS 2: only after every declaration/pool has validated, pick once per frame. Reject a
+        // stale outer attempt BEFORE starting any selection and again immediately before retirement,
+        // so a reentrant reload/dispose cannot be overwritten by the outer continuation.
+        if (randomOncePlans.Count > 0 && !IsLoadAttemptCurrent(generation))
+            throw ReentrancyError(randomOncePlans[0].Declaration);
+        foreach (var plan in randomOncePlans)
+            pendingLocal[plan.Declaration.Name] = SelectRandomOnce(plan.Declaration, plan.Candidates, plan.Generation);
+
+        if (randomOncePlans.Count > 0 && !IsLoadAttemptCurrent(generation))
+            throw ReentrancyError(randomOncePlans[randomOncePlans.Count - 1].Declaration);
+
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -454,8 +530,15 @@ public sealed class CuiControlLoader : IDisposable
         _authoredControls.Clear();
         _observedBindings.Clear();
         ClearActionHandlers();
+        _rootOwnsBackdrop = false;
         _actionInvocations.Clear();
         _documentActions = document.Actions;
+        // Commit the validated, pre-selected per-instance local-state frame.
+        _declaredVariables.Clear();
+        _localState.Clear();
+        _localBindings.Clear();
+        foreach (var (name, declaration) in pendingDeclared) _declaredVariables[name] = declaration;
+        foreach (var (name, value) in pendingLocal) _localState[name] = value;
         _runtimeDiagnostics.Clear();
         _themeStack = new CuiThemeScopeStack(_themePreference?.Current.Theme.BaseTheme ?? CuiSurfacePaletteCatalog.ActiveTheme);
         _currentLayer = 0;
@@ -500,6 +583,11 @@ public sealed class CuiControlLoader : IDisposable
 
         // The first component is the root
         var root = LoadComponent(visibleRoot);
+
+        // Record whether the authored root owns its own composite backdrop (so a
+        // rounded authored surface, not a square host fill, owns the scene).
+        _rootOwnsBackdrop = _authoredControls.TryGetValue(root, out var rootComponent)
+            && TryGetDeclaredBoolean(rootComponent, "ownsbackdrop");
 
         // Set DataContext for live bindings if we have a binding context
         if (_bindingContext is not null)
@@ -603,6 +691,30 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
+    /// <summary>Executes a pure-local Toggle in the loader's per-instance local-state frame without
+    /// any external dispatcher, then refreshes bindings that observe the changed variable. It joins
+    /// the same action admission/lifetime/failure pipeline as external dispatches.</summary>
+    private async Task DispatchLocalToggleAsync(Task start, Control control, CuiActionInvocation invocation)
+    {
+        await start;
+        var target = invocation.Parameter as string;
+        try
+        {
+            if (target is null || !_declaredVariables.ContainsKey(target))
+                throw new InvalidOperationException($"Local toggle target '{target}' is not a declared document-root variable.");
+            var current = _localState.TryGetValue(target, out var value) && value is true;
+            _localState[target] = !current;
+            RefreshLocalVariable(target);
+        }
+        catch (Exception error)
+        {
+            var failures = new List<Exception>();
+            AddDistinctFailure(failures, error);
+            RetainActionFailure(control, error, failures);
+            ThrowRetainedFailures(failures);
+        }
+    }
+
     private async Task RejectActionDispatchAsync(Task start, Control control)
     {
         await start;
@@ -643,9 +755,11 @@ public sealed class CuiControlLoader : IDisposable
 
     private void WireBindingsRecursive(Control control, Control? contextMenuOwner = null)
     {
-        // Native menu items use the same retained pipeline as native buttons.
-        if (control is Button or MenuItem && _actionDispatcher is not null && !_wiredActions.Contains(control)
-            && TryGetActionInvocation(control, out _))
+        // Native menu items use the same retained pipeline as native buttons. Pure-local toggles
+        // are wired even without an external dispatcher; external commands require one.
+        if (control is Button or MenuItem && !_wiredActions.Contains(control)
+            && TryGetActionInvocation(control, out var actionInvocation)
+            && (_actionDispatcher is not null || actionInvocation.Command == LocalToggleCommand))
         {
             EventHandler<RoutedEventArgs> handler = (_, args) =>
             {
@@ -803,41 +917,52 @@ public sealed class CuiControlLoader : IDisposable
         if (!component.IsDefinition && _documentTemplates.TryGetValue(component.Type, out var template))
             return InstantiateTemplate(component, template);
 
-        var control = CreateControl(component, definitionInstance);
-        CuiPropertyPresentation.Attach(control, ownsTemplate: component.Type.ToLowerInvariant() is not ("object" or "audio" or "video"));
-        CuiLifecycleProperties.Attach(control);
-        var parentLayer = _currentLayer;
-        var layer = ResolveLayer(component, parentLayer);
-        control.ZIndex = layer;
-        _authoredControls.Add(control, component);
-        CuiRuntimeIdentity.SetStableId(control, identityOverride ?? ComposeStableId(component.StableId));
-        if (!string.IsNullOrWhiteSpace(component.Name))
-        {
-            control.Name = component.Name;
-            Avalonia.Automation.AutomationProperties.SetAutomationId(control, component.Name);
-        }
-        // Typed resource references need the effective scope before authored values.
-        ApplyThemeToControlIfContainer(control);
-        ApplyProperties(control, component);
-        ApplyAuthoredText(control, component);
-        ApplyActionTag(control, component);
-        ApplyClasses(control, component);
-
-        _currentLayer = layer;
+        var isRoot = _loadingDepth == 0;
+        _loadingDepth++;
+        _isCurrentRootControl = isRoot;
         try
         {
-            foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
+            var control = CreateControl(component, definitionInstance);
+            CuiPropertyPresentation.Attach(control, ownsTemplate: component.Type.ToLowerInvariant() is not ("object" or "audio" or "video"));
+            CuiLifecycleProperties.Attach(control);
+            var parentLayer = _currentLayer;
+            var layer = ResolveLayer(component, parentLayer);
+            control.ZIndex = layer;
+            _authoredControls.Add(control, component);
+            CuiRuntimeIdentity.SetStableId(control, identityOverride ?? ComposeStableId(component.StableId));
+            if (!string.IsNullOrWhiteSpace(component.Name))
             {
-                var childControl = LoadComponent(child);
-                AddChild(control, childControl);
+                control.Name = component.Name;
+                Avalonia.Automation.AutomationProperties.SetAutomationId(control, component.Name);
             }
+            // Typed resource references need the effective scope before authored values.
+            ApplyThemeToControlIfContainer(control);
+            ApplyProperties(control, component);
+            ApplyAuthoredText(control, component);
+            ApplyActionTag(control, component);
+            ApplyClasses(control, component);
+
+            _currentLayer = layer;
+            try
+            {
+                foreach (var child in component.Children.Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child)))
+                {
+                    var childControl = LoadComponent(child);
+                    AddChild(control, childControl);
+                }
+            }
+            finally
+            {
+                _currentLayer = parentLayer;
+            }
+
+            return WrapScrollable(control, component);
         }
         finally
         {
-            _currentLayer = parentLayer;
+            _loadingDepth--;
+            _isCurrentRootControl = false;
         }
-
-        return WrapScrollable(control, component);
     }
 
     private static IEnumerable<CuiComponent> DefinitionsOutsideTheme(CuiComponent component)
@@ -1707,14 +1832,26 @@ public sealed class CuiControlLoader : IDisposable
             if (propName.Equals("Type", StringComparison.OrdinalIgnoreCase))
                 continue;
 
+            // Generic framework directives (compound focus, embedded input, local
+            // toggle, backdrop ownership) are behaviours, not native properties.
+            var normalizedDirective = NormalizeProperty(propName);
+            if (normalizedDirective is "compoundfocus" or "embeddedinput" or "localtoggle" or "ownsbackdrop")
+            {
+                ApplyDirective(control, normalizedDirective, value, value.Span);
+                continue;
+            }
+
             if (value is CuiInvalidValue invalid)
             {
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     invalid.DiagnosticCode, CuiDiagnosticSeverity.Error, invalid.Message, invalid.Span));
             }
 
-            // Live binding: if value is a CuiBindingValue, create a real Avalonia binding
-            if (value is CuiBindingValue binding && _bindingContext is not null)
+            // Live binding: if value is a CuiBindingValue, create a real Avalonia binding. A
+            // binding that targets a declared document-root local variable is registered even
+            // without an external binding context (pure-local state never depends on host it).
+            if (value is CuiBindingValue binding
+                && (_bindingContext is not null || _declaredVariables.ContainsKey(binding.Path)))
             {
                 ApplyLiveBinding(control, descriptor.Name, binding, component.Span);
                 continue;
@@ -1722,6 +1859,56 @@ public sealed class CuiControlLoader : IDisposable
 
             ApplyAuthoredValue(control, descriptor.Name, value);
         }
+    }
+
+    private void ApplyDirective(Control control, string normalizedName, CuiValue value, CuiSourceSpan span)
+    {
+        // These are registered static boolean contracts. Only a declared literal true/false is
+        // meaningful; malformed/invalid/bound/unsupported values are rejected consistently in the
+        // compiler and this actual direct loader before any scene state is produced.
+        if (!TryParseDeclaredBoolean(value, out var enabled))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR053", CuiDiagnosticSeverity.Error,
+                $"CUI directive '{normalizedName}' requires a declared true/false literal value.", span));
+
+        switch (normalizedName)
+        {
+            case "compoundfocus":
+                if (!enabled) break;
+                if (control is not CuiContainerControl container)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error,
+                        "CompoundFocus requires a Container.", span));
+                container.EnableCompoundFocus();
+                break;
+            case "embeddedinput":
+                if (!enabled) break;
+                if (control is not TextBox textBox)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error,
+                        "EmbeddedInput requires a text Input.", span));
+                CuiPropertyPresentation.ConfigureCompoundFocus(textBox);
+                break;
+            case "ownsbackdrop":
+                // Only the actual document root owns the scene backdrop; an arbitrary nested
+                // container must never claim it.
+                if (enabled && !_isCurrentRootControl)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error,
+                        "OwnsBackdrop belongs only to the document root container.", span));
+                break;
+        }
+    }
+
+    private static bool TryParseDeclaredBoolean(CuiValue value, out bool result)
+    {
+        result = false;
+        return value is CuiLiteralValue literal && bool.TryParse(literal.Value, out result);
+    }
+
+    private static bool TryGetDeclaredBoolean(CuiComponent component, string normalizedName)
+    {
+        foreach (var (key, value) in component.Properties)
+            if (NormalizeProperty(key) == normalizedName && TryParseDeclaredBoolean(value, out var parsed) && parsed)
+                return true;
+        return false;
     }
 
     private void ApplyAuthoredValue(Control control, string property, CuiValue value, CuiPropertyLevel level = CuiPropertyLevel.Instance)
@@ -1774,6 +1961,18 @@ public sealed class CuiControlLoader : IDisposable
 
     private void ApplyLiveBinding(Control control, string propName, CuiBindingValue binding, CuiSourceSpan sourceSpan)
     {
+        // A binding whose path resolves to a declared document-root local variable is owned by this
+        // loader's per-instance local-state frame. It never consults the external binding context
+        // and is refreshed by local Toggle mutations, not host notifications.
+        if (_declaredVariables.ContainsKey(binding.Path))
+        {
+            if (!_localBindings.TryGetValue(binding.Path, out var localBindings))
+                _localBindings[binding.Path] = localBindings = new List<CuiLiveBinding>();
+            localBindings.Add(new CuiLiveBinding(control, propName, binding, sourceSpan, null!));
+            ApplyObservedBinding(control, propName, binding, null!, sourceSpan);
+            return;
+        }
+
         // Live values update from host notifications; OneTime is a snapshot.
         if (binding.Mode != CuiBindingMode.OneTime)
             _liveBindings.Add(new CuiLiveBinding(control, propName, binding, sourceSpan, _bindingContext!));
@@ -1803,6 +2002,216 @@ public sealed class CuiControlLoader : IDisposable
         RefreshLiveConditionals(null);
         foreach (var repeat in _repeats.ToArray())
             RequestRepeatRefresh(repeat);
+    }
+
+    /// <summary>A validated, snapshotted RandomOnce plan awaiting once-per-frame selection in the
+    /// second preflight pass.</summary>
+    private sealed record RandomOncePlan(CuiVariableDeclaration Declaration, IReadOnlyList<string> Candidates, int Generation);
+
+    /// <summary>Upper bound for an explicit finite ordered typed candidate pool captured before any
+    /// allocation, so a hostile/lazy Count cannot force an unbounded snapshot.</summary>
+    private const int MaxRandomOncePoolSize = 8192;
+
+    /// <summary>
+    /// First-pass RandomOnce validation: checks every declaration shape and snapshots the typed
+    /// candidate pool. No chooser is invoked here, so a later invalid declaration is discovered
+    /// before an earlier valid one draws. The shared strict contract holds at runtime even when a
+    /// document bypasses the compiler (direct Load/LoadMarkup admission), not only after
+    /// compilation. A failure here retires nothing; the previous tree stays operational.
+    /// </summary>
+    private IReadOnlyList<string> SnapshotRandomOnceCandidates(CuiVariableDeclaration declaration, int generation)
+    {
+        if (!string.Equals(declaration.Selection, "RandomOnce", StringComparison.OrdinalIgnoreCase))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR074", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' declares unsupported Selection '{declaration.Selection}'; only 'RandomOnce' is supported.", declaration.Span));
+        if (!string.Equals(declaration.Type, "string", StringComparison.OrdinalIgnoreCase))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR075", CuiDiagnosticSeverity.Error,
+                $"RandomOnce local variable '{declaration.Name}' requires Type 'string'; got '{declaration.Type}'.", declaration.Span));
+        if (string.IsNullOrWhiteSpace(declaration.Source))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR070", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' requires a Source binding candidate pool.", declaration.Span));
+        if (declaration.Value.Length > 0)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR076", CuiDiagnosticSeverity.Error,
+                $"RandomOnce local variable '{declaration.Name}' cannot also carry a literal initializer '{declaration.Value}'.", declaration.Span));
+
+        IReadOnlyList<string> candidates;
+        if (_bindingContext is not null && _bindingContext.TryGetValue(declaration.Source, out var sourceValue))
+        {
+            // The binding-context getter is an external callback; it may synchronously reload or
+            // dispose this loader. Reject a stale outer attempt after it returns (even when the
+            // lookup itself failed).
+            if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+            candidates = SnapshotTypedStringPool(sourceValue, declaration, generation);
+            if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+        }
+        else
+        {
+            if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+            candidates = ImmutableStringList.Empty;
+        }
+
+        if (candidates.Count == 0)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR071", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' produced an empty candidate pool.", declaration.Span));
+        return candidates;
+    }
+
+    /// <summary>
+    /// Second-pass RandomOnce selection: invoked only after every declaration/pool validated. The
+    /// public chooser result is validated to be nonnull/nonempty and EXACTLY in the snapshotted
+    /// pool, and the load generation/dispose guard rejects a stale outer continuation after the
+    /// chooser callback reentered/replaced/disposed the loader.
+    /// </summary>
+    private string SelectRandomOnce(CuiVariableDeclaration declaration, IReadOnlyList<string> candidates, int generation)
+    {
+        var chooser = RandomSelectionOverride ?? DefaultRandomSelection;
+        string chosen;
+        try
+        {
+            chosen = chooser(candidates) ?? string.Empty;
+        }
+        catch (CuiRuntimeLoadException)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR079", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' RandomOnce chooser failed: {error.Message}", declaration.Span));
+        }
+        if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+        if (chosen.Length == 0)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR080", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' RandomOnce chooser returned an empty candidate.", declaration.Span));
+        if (!ContainsOriginalCandidate(candidates, chosen))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR081", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' RandomOnce chooser returned a candidate not present in the snapshotted pool.", declaration.Span));
+        return chosen;
+    }
+
+    /// <summary>Validates a chooser result against the private immutable original pool contents,
+    /// never against any view the chooser could mutate.</summary>
+    private static bool ContainsOriginalCandidate(IReadOnlyList<string> candidates, string chosen) =>
+        candidates is ImmutableStringList snapshot ? snapshot.Contains(chosen) : candidates.Contains(chosen, StringComparer.Ordinal);
+
+    /// <summary>
+    /// Snapshots the candidate pool under a truthful explicit finite ordered typed candidate-list
+    /// contract: only <see cref="IReadOnlyList{T}"/> of string (finite and ordered) is accepted.
+    /// Scalar strings (which would enumerate UTF-16 code units and split emoji), non-string and
+    /// arbitrary/unbounded enumerables (int[], mixed arrays, yield-based iterators, lazy sequences)
+    /// and null/empty entries are rejected rather than silently filtered. The full Unicode
+    /// sequences are retained verbatim, and the returned snapshot is an OWNED immutable copy, never
+    /// the live host list, so later host mutation cannot affect this frame's chooser or consumers.
+    /// </summary>
+    private IReadOnlyList<string> SnapshotTypedStringPool(object? sourceValue, CuiVariableDeclaration declaration, int generation)
+    {
+        switch (sourceValue)
+        {
+            case null:
+                return ImmutableStringList.Empty;
+            case string or char:
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR072", CuiDiagnosticSeverity.Error,
+                    $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' must be a typed string collection; got scalar '{sourceValue.GetType().Name}'.", declaration.Span));
+            case IReadOnlyList<string> list:
+                return SnapshotOrderedStringList(list, declaration, generation);
+            case System.Collections.IEnumerable:
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR072", CuiDiagnosticSeverity.Error,
+                    $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' must be an explicit finite ordered typed string list (IReadOnlyList&lt;string&gt;); got enumerable '{sourceValue.GetType().Name}'.", declaration.Span));
+            default:
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR072", CuiDiagnosticSeverity.Error,
+                    $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' is not a readable candidate pool ('{sourceValue.GetType().Name}').", declaration.Span));
+        }
+    }
+
+    /// <summary>Reads and validates the indexed pool exactly once. Count is captured ONCE, the load
+    /// attempt is checked immediately after it and after every attempted host Count/index read, and
+    /// an explicit supported size bound is enforced before allocation. The host enumerator/CopyTo/
+    /// ToArray are never invoked, so indexed and enumerated views cannot diverge.</summary>
+    private ImmutableStringList SnapshotOrderedStringList(IReadOnlyList<string> list, CuiVariableDeclaration declaration, int generation)
+    {
+        int count;
+        try { count = list.Count; }
+        catch (Exception error) { throw PoolReadError(declaration, $"failed to read the pool Count: {error.Message}"); }
+        if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+        if (count < 0 || count > MaxRandomOncePoolSize)
+            throw PoolReadError(declaration, $"has unsupported Count {count}; an explicit finite ordered typed pool supports 1..{MaxRandomOncePoolSize} entries");
+
+        var copy = new string[count];
+        for (var i = 0; i < count; i++)
+        {
+            string item;
+            try { item = list[i]; }
+            catch (Exception error) { throw PoolReadError(declaration, $"failed to read pool index {i}: {error.Message}"); }
+            if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+            if (item is null)
+                throw PoolReadError(declaration, $"contains a null entry at index {i}");
+            if (item.Length == 0)
+                throw PoolReadError(declaration, $"contains an empty entry at index {i}");
+            copy[i] = item;
+        }
+        return new ImmutableStringList(copy);
+    }
+
+    private static CuiRuntimeLoadException PoolReadError(CuiVariableDeclaration declaration, string detail) =>
+        new(new CuiDiagnostic(
+            "CUIR072", CuiDiagnosticSeverity.Error,
+            $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' {detail}.", declaration.Span));
+
+    /// <summary>A genuinely read-only owned snapshot of the finite ordered candidate pool. The
+    /// underlying array is private and never exposed, so a hostile caller cannot cast the
+    /// IReadOnlyList view back to a mutable string[] and mutate membership.</summary>
+    private sealed class ImmutableStringList : IReadOnlyList<string>
+    {
+        public static readonly ImmutableStringList Empty = new(Array.Empty<string>());
+        private readonly string[] _items;
+        public ImmutableStringList(string[] items) => _items = items;
+        public int Count => _items.Length;
+        public string this[int index] => _items[index];
+        /// <summary>Ordinal membership against the private original contents, never a caller-mutable view.</summary>
+        public bool Contains(string value) => Array.IndexOf(_items, value) >= 0;
+        public IEnumerator<string> GetEnumerator()
+        {
+            for (var i = 0; i < _items.Length; i++) yield return _items[i];
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    /// <summary>True while the named load attempt is still the current one and the loader is
+    /// not disposed. Used to reject stale outer attempts after an external callback reentered
+    /// (reloaded) or disposed the loader.</summary>
+    private bool IsLoadAttemptCurrent(int generation) => !_disposed && generation == _loadGeneration;
+
+    private static CuiRuntimeLoadException ReentrancyError(CuiVariableDeclaration declaration) =>
+        new(new CuiDiagnostic(
+            "CUIR073", CuiDiagnosticSeverity.Error,
+            $"Local variable '{declaration.Name}' RandomOnce source/chooser reentered the loader during mount; the attempted load was abandoned and the existing frame was left operational.", declaration.Span));
+
+    /// <summary>The generic random choose-once chooser used when no override is supplied.</summary>
+    public static Func<IReadOnlyList<string>, string> DefaultRandomSelection { get; } =
+        candidates => candidates[Random.Shared.Next(candidates.Count)];
+
+    /// <summary>Refreshes every live local binding that references the named document-root local
+    /// variable after a local Toggle mutation. Synchronous observer reentry is safe: the binding
+    /// list is snapshotted before notifications, and a reentrant toggle re-applies the new value.</summary>
+    private void RefreshLocalVariable(string name)
+    {
+        if (!_localBindings.TryGetValue(name, out var bindings)) return;
+        foreach (var record in bindings.ToArray())
+        {
+            if (_disposed) return;
+            ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, null!, record.Span);
+        }
     }
 
     private void OnBindingPropertyChanged(string? propertyName)
@@ -2431,6 +2840,11 @@ public sealed class CuiControlLoader : IDisposable
         object? parameter = null;
         if (_documentActions.TryGetValue(reference, out var definition))
         {
+            if (definition.LocalTarget is { } localTarget)
+            {
+                _actionInvocations[control] = new CuiActionInvocation(LocalToggleCommand, localTarget, null, null, ownedEvent is not null);
+                return;
+            }
             command = definition.Command;
             if (definition.Parameter is not null && definition.Parameter is not CuiBindingValue)
                 parameter = ResolveObject(definition.Parameter);
@@ -2612,6 +3026,11 @@ public sealed class CuiControlLoader : IDisposable
 
     private string? ResolveBindingValue(CuiBindingValue binding)
     {
+        // Local document-root variables resolve before any external/theme context; they are the
+        // sole owner of these names for this loaded document instance.
+        if (_localState.TryGetValue(binding.Path, out var local))
+            return Convert.ToString(local, System.Globalization.CultureInfo.InvariantCulture);
+
         // Check special theme-related bindings first
         var special = ResolveSpecialBinding(binding.Path);
         if (special is not null) return special;
@@ -2702,27 +3121,38 @@ public sealed class CuiControlLoader : IDisposable
         string? error = null;
         try
         {
-            value = ResolveSpecialBinding(binding.Path);
-            if (value is not null)
+            if (_localState.TryGetValue(binding.Path, out var local))
             {
-                sourceFound = true;
-                sourceType = "CUI theme context";
-            }
-            else if (context.TryGetValue(binding.Path, out var result))
-            {
-                // Diagnostics and rendering must use the same host snapshot.
-                // Re-reading can allocate fresh projections or observe a newer
-                // value than the one recorded for this binding refresh.
-                typedValue = result;
+                typedValue = local;
                 hasTypedValue = true;
                 sourceFound = true;
-                sourceType = result?.GetType().Name;
-                value = result?.ToString();
+                sourceType = "CUI local variable";
+                value = Convert.ToString(local, System.Globalization.CultureInfo.InvariantCulture);
             }
             else
             {
-                usedFallback = binding.Fallback is not null;
-                value = binding.Fallback;
+                value = ResolveSpecialBinding(binding.Path);
+                if (value is not null)
+                {
+                    sourceFound = true;
+                    sourceType = "CUI theme context";
+                }
+                else if (context.TryGetValue(binding.Path, out var result))
+                {
+                    // Diagnostics and rendering must use the same host snapshot.
+                    // Re-reading can allocate fresh projections or observe a newer
+                    // value than the one recorded for this binding refresh.
+                    typedValue = result;
+                    hasTypedValue = true;
+                    sourceFound = true;
+                    sourceType = result?.GetType().Name;
+                    value = result?.ToString();
+                }
+                else
+                {
+                    usedFallback = binding.Fallback is not null;
+                    value = binding.Fallback;
+                }
             }
         }
         catch (Exception exception)

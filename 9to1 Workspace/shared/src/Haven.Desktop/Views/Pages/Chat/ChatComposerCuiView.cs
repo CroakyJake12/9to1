@@ -10,6 +10,7 @@ using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.Core;
+using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Prefabs;
 using HavenOS.Apps.Spaces.Chat;
 
@@ -127,6 +128,11 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 return true;
             case "Composer.EmojiEntries":
                 value = FilteredEmoji();
+                return true;
+            case "Composer.EmojiIconCandidates":
+                // Read-only catalogue eligibility: the random-trigger pool. CUI owns the
+                // choose-once selection; this is only a bounded non-I/O typed query.
+                value = ComposerEmojiIconPool.Candidates;
                 return true;
             default:
                 return false;
@@ -266,6 +272,95 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
 }
 
+/// <summary>
+/// The bounded, read-only eligibility query behind the composer's random actual-emoji trigger. It
+/// draws from the real canonical Unicode catalogue and restricts the pool to an explicit neutral
+/// curated allowlist (friendly expressions, animals, plants, weather, art/science), intersected
+/// with the actual catalogue. Defence-in-depth also excludes every Flags-group sequence (generic,
+/// country and subdivision) and an explicit owner-variation-selector-normalized suggestive
+/// blacklist. The picker/search/insertion data remain the full catalogue; this pool governs only
+/// the random-trigger icon. This is immutable catalogue data, never per-instance selection state.
+/// </summary>
+public static class ComposerEmojiIconPool
+{
+    /// <summary>Variation Selector-16 (FE0F), stripped for robust sequence matching.</summary>
+    private const char VariationSelector = '\uFE0F';
+
+    /// <summary>Explicit owner-specified and adjacent clearly-suggestive trigger sequences.
+    /// Matching is variation-selector-normalized so a candidate with/without FE0F is still caught.</summary>
+    private static readonly string[] Suggestive = new[]
+    {
+        "\U0001F92C", // 🤬 face with symbols over mouth
+        "\U0001F4A6", // 💦 sweat droplets
+        "\U0001F51E", // 🔞 no one under eighteen
+        "\U0001F351", // 🍑 peach
+        "\U0001F346", // 🍆 eggplant
+        "\U0001F34C", // 🍌 banana
+        "\U0001FAE6", // 🫦 biting lip
+        "\U0001F37E", // 🍾 bottle with popping cork
+        "\U0001F445", // 👅 tongue
+        "\U0001F48B", // 💋 kiss mark
+        "\U0001F352", // 🍒 cherries
+        "\U0001F36D", // 🍭 lollipop
+    };
+
+    /// <summary>Neutral curated trigger sequences (friendly expressions, animals, plants, weather,
+    /// art/science). Each is a real Unicode sequence; matching is normalize against the catalogue.</summary>
+    private static readonly string[] Curated = new[]
+    {
+        // Friendly expressions
+        "\U0001F600", "\U0001F603", "\U0001F604", "\U0001F642", "\U0001F60A",
+        "\U0001F607", "\U0001F60C", "\U0001F63A", "\U0001F638", "\U0001F63D",
+        "\U0001F44B", "\U0001F44D", "\U0001F44F", "\U0001F64C", "\U0001F917", "\U0001F91D",
+        // Animals
+        "\U0001F436", "\U0001F431", "\U0001F42D", "\U0001F439", "\U0001F430",
+        "\U0001F98A", "\U0001F43B", "\U0001F43C", "\U0001F428", "\U0001F42F",
+        "\U0001F981", "\U0001F42E", "\U0001F437", "\U0001F438", "\U0001F435",
+        "\U0001F648", "\U0001F649", "\U0001F64A", "\U0001F984", "\U0001F427",
+        "\U0001F426", "\U0001F424", "\U0001F98B", "\U0001F422", "\U0001F419",
+        "\U0001F41A", "\U0001F420", "\U0001F42C", "\U0001F433", "\U0001F41D",
+        "\U0001F994", "\U0001F415", "\U0001F408",
+        // Plants
+        "\U0001F331", "\U0001F33F", "\u2618", "\U0001F340", "\U0001F335",
+        "\U0001F334", "\U0001F333", "\U0001F332", "\U0001F338", "\U0001F339",
+        "\U0001F33B", "\U0001F33C", "\U0001F337", "\U0001F308", "\U0001F33E", "\U0001F342",
+        // Weather
+        "\u2600", "\u2601", "\u26C5", "\U0001F325", "\U0001F326",
+        "\U0001F327", "\U0001F328", "\u2744", "\U0001F30A", "\U0001F32B",
+        "\U0001F324", "\U0001F32C",
+        // Art / science
+        "\U0001F52C", "\U0001F52D", "\U0001F4DA", "\U0001F4D6", "\u270F",
+        "\U0001F3A8", "\U0001F3B5", "\U0001F3B6", "\U0001F3B9", "\U0001F3BA",
+        "\U0001F3BB", "\u2B50", "\u2728", "\U0001F31F", "\U0001F30D",
+        "\U0001F9EA", "\U0001F9EB", "\U0001F9EC", "\U0001F4A1", "\U0001F48E",
+    };
+
+    private static readonly IReadOnlyList<string> Cached = Build();
+
+    /// <summary>Eligible trigger sequences from the real catalogue (neutral curated allowlist ∩
+    /// catalogue, all Flags excluded, variation-selector-normalized suggestive blacklist excluded).</summary>
+    public static IReadOnlyList<string> Candidates => Cached;
+
+    private static string Normalize(string value) => string.Concat(value.Where(ch => ch != VariationSelector));
+
+    private static IReadOnlyList<string> Build()
+    {
+        var curated = Curated.Select(Normalize).ToHashSet(StringComparer.Ordinal);
+        var blacklist = Suggestive.Select(Normalize).ToHashSet(StringComparer.Ordinal);
+        var pool = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var entry in ComposerEmojiCatalogue.Entries)
+        {
+            if (entry.Group.Equals("Flags", StringComparison.Ordinal)) continue;
+            var normalized = Normalize(entry.Text);
+            if (!curated.Contains(normalized)) continue;
+            if (blacklist.Contains(normalized)) continue;
+            pool.Add(entry.Text);
+        }
+        return pool.Count == 0 ? pool.ToArray() : ComposerEmojiCatalogue.Entries
+            .Select(entry => entry.Text).Where(pool.Contains).Distinct(StringComparer.Ordinal).ToArray();
+    }
+}
+
 /// <summary>Immediate readiness for the shared composer scene (the host page owns deeper readiness).</summary>
 internal sealed class ChatComposerReadiness : ICuiSceneReadiness
 {
@@ -313,6 +408,9 @@ public sealed class ChatComposerCuiView : ContentControl, IDisposable, IAsyncDis
         _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)));
         _readiness = readiness ?? ChatComposerReadiness.Instance;
         var registry = new CuiControlRegistry();
+        // Shared typed packaged-SVG image infrastructure for authored icon assets (e.g. the enlarged
+        // rounded plus). This is the one registered image-source resolver for the shared composer.
+        registry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
         _host = new CuiSceneHost(registry);
         AutomationProperties.SetAutomationId(this, "ChatComposerCuiView");
         AutomationProperties.SetName(this, "Chat composer");
@@ -498,8 +596,9 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
     private bool _released;
     private volatile bool _withdrawn;
     private EventHandler<TextChangingEventArgs>? _textChangingHandler;
-    private EventHandler<RoutedEventArgs>? _gotFocusHandler;
-    private EventHandler<RoutedEventArgs>? _lostFocusHandler;
+    private CuiCompoundFocusScope? _focusScope;
+    private EventHandler<bool>? _focusScopeHandler;
+    private int _attachVersion;
 
     public CuiComposerInputPort(Func<TextBox?> resolve, Action<bool>? onFocusChanged = null)
     {
@@ -539,10 +638,9 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
         if (_attached is { } previous && !ReferenceEquals(previous, box))
         {
             if (_textChangingHandler is not null) previous.TextChanging -= _textChangingHandler;
-            if (_gotFocusHandler is not null) previous.GotFocus -= _gotFocusHandler;
-            if (_lostFocusHandler is not null) previous.LostFocus -= _lostFocusHandler;
         }
         _attached = box;
+        _attachVersion++;
         if (_pendingText is not null)
         {
             box.Text = _pendingText;
@@ -557,11 +655,53 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
             NotifyLiveInputSubscribers(TextChanged);
             NotifyLiveInputSubscribers(Invalidated);
         };
-        _gotFocusHandler = (_, _) => { if (!_released && !_withdrawn) _onFocusChanged?.Invoke(true); };
-        _lostFocusHandler = (_, _) => { if (!_released && !_withdrawn) _onFocusChanged?.Invoke(false); };
         box.TextChanging += _textChangingHandler;
-        box.GotFocus += _gotFocusHandler;
-        box.LostFocus += _lostFocusHandler;
+        ObserveCompoundFocus(box);
+    }
+
+    /// <summary>
+    /// Focus membership is observed through the generic per-container compound-focus scope rather
+    /// than a deferred/retired input LostFocus callback. The scope reports the ACTUAL owning
+    /// top-level focus including descendant menu popups, Escape, outside click/focus, unrelated
+    /// menus, child removal and close, so the expanded composer surface never collapses during a
+    /// genuine toolbar interaction and never stays stuck focused after focus truly leaves.
+    /// </summary>
+    private void ObserveCompoundFocus(TextBox box)
+    {
+        UnobserveCompoundFocus();
+        if (_released || _withdrawn) return;
+        var scope = FindCompoundFocusScope(box)?.CompoundFocusScope;
+        if (scope is null)
+        {
+            _onFocusChanged?.Invoke(false);
+            return;
+        }
+        _focusScope = scope;
+        var capturedVersion = _attachVersion;
+        var capturedBox = box;
+        _focusScopeHandler = (_, focused) =>
+        {
+            // Reentrant port custody: a preceding scope observer may synchronously reattach the
+            // port to another scope/box during the same multicast event. Removing this scope's
+            // subscription does not remove its already-captured callback, so validate the captured
+            // scope, the actual attached box AND the attachment generation before publishing.
+            // B's current fact must survive a late A callback.
+            if (_released || _withdrawn) return;
+            if (!ReferenceEquals(_focusScope, scope)) return;
+            if (!ReferenceEquals(_attached, capturedBox)) return;
+            if (_attachVersion != capturedVersion) return;
+            _onFocusChanged?.Invoke(focused);
+        };
+        scope.FocusChanged += _focusScopeHandler;
+        _onFocusChanged?.Invoke(scope.IsFocused);
+    }
+
+    private void UnobserveCompoundFocus()
+    {
+        if (_focusScope is not null && _focusScopeHandler is not null)
+            _focusScope.FocusChanged -= _focusScopeHandler;
+        _focusScope = null;
+        _focusScopeHandler = null;
     }
 
     private void NotifyLiveInputSubscribers(EventHandler? subscribers)
@@ -576,6 +716,22 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
         }
     }
 
+    /// <summary>
+    /// Walks up from the real input to the generic compound-focus scope container (the authored
+    /// surface that owns the outer focus ring). Returns null when no compound scope is present; a
+    /// degraded scene then conservatively reports lost focus.
+    /// </summary>
+    private static CuiContainerControl? FindCompoundFocusScope(TextBox box)
+    {
+        Visual? current = box;
+        while (current is not null)
+        {
+            if (current is CuiContainerControl container && container.CompoundFocusEnabled) return container;
+            current = current.GetVisualParent();
+        }
+        return null;
+    }
+
     /// <summary>Terminal release: detaches every named watcher, clears retained textbox
     /// references and refuses any later attach. Used only on retirement/close.</summary>
     internal void Detach()
@@ -584,12 +740,9 @@ internal sealed class CuiComposerInputPort : IChatComposerInputPort
         if (_attached is { } box)
         {
             if (_textChangingHandler is not null) box.TextChanging -= _textChangingHandler;
-            if (_gotFocusHandler is not null) box.GotFocus -= _gotFocusHandler;
-            if (_lostFocusHandler is not null) box.LostFocus -= _lostFocusHandler;
         }
+        UnobserveCompoundFocus();
         _textChangingHandler = null;
-        _gotFocusHandler = null;
-        _lostFocusHandler = null;
         _attached = null;
         _pendingText = null;
         _released = true;
