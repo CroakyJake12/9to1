@@ -125,11 +125,13 @@ public sealed partial class App
         private void ComposeSharedFrame()
         {
             Dispatcher.UIThread.VerifyAccess();
+            var theme = _homeTheme?.Context
+                ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var shellBindings = new SharedPanelShellBindings();
             var shellLoader = new CuiControlLoader();
             try
             {
-                shellLoader.SetThemePreferenceContext(_homeTheme.Context);
+                shellLoader.SetThemePreferenceContext(theme);
                 shellLoader.SetBindingContext(shellBindings);
                 // The authored shell has no actions; it must NOT register a dispatcher.
                 // SharedPanelShellBindings is a binding/INotifyPropertyChanged context only,
@@ -339,7 +341,7 @@ public sealed partial class App
                 Task original;
                 try { original = owner.OpenAsync(window); }
                 catch (Exception error) { return HavenSharedOpenResult.Refused("ProfileOpenFailed", error.Message); }
-                Track(original);
+                original = Track(original);
                 try { await original; }
                 catch (Exception error) { return HavenSharedOpenResult.Refused("ProfileOpenFailed", error.Message); }
                 return HavenSharedOpenResult.Succeeded();
@@ -354,8 +356,9 @@ public sealed partial class App
             var theme = _homeTheme?.Context;
             if (service is null || theme is null)
                 return Task.FromResult(HavenSharedOpenResult.Refused("NotificationsUnavailable", "The durable Home notification service is unavailable."));
-            var generation = checked(++_sharedPanelGeneration);
             var actor = _actor;
+            if (actor is null) return Task.FromResult(HavenSharedOpenResult.Denied);
+            var generation = checked(++_sharedPanelGeneration);
             var bindings = new HavenNotificationsCuiBindings(this, service, generation, actor);
             var loader = new CuiControlLoader();
             // Configure binding/theme/action context before loading so the authored Repeat
@@ -520,7 +523,7 @@ public sealed partial class App
                     ?? throw new CuiRuntimeLoadException(new CuiDiagnostic(
                         "CUIR062", CuiDiagnosticSeverity.Error,
                         $"Compiled CUI bundle does not contain '{sourceName}'.", Span));
-                var metadata = document.Compilation.Metadata;
+                var metadata = document.Metadata;
                 if (!CuiRuntimeCompatibility.IsLanguageVersionCompatible(metadata.LanguageVersion))
                     throw new CuiRuntimeLoadException(new CuiDiagnostic(
                         "CUIR064", CuiDiagnosticSeverity.Error,

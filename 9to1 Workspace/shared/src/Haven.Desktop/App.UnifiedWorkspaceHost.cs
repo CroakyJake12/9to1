@@ -295,10 +295,14 @@ public sealed partial class App
             DemandCurrent();
             _sharedGateway = new HavenGateway(this);
             _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent, sharedContext: new SharedHostContext(this));
-            var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, _homeTheme.Context);
-            scene.ControlRegistry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
+            var theme = _homeTheme?.Context
+                ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
+            var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, theme);
+            var controlRegistry = scene.ControlRegistry
+                ?? throw new InvalidOperationException("The original Browse CUI control registry is unavailable.");
+            controlRegistry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
             _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null;
-            _scene = new CuiSceneHost(scene.ControlRegistry);
+            _scene = new CuiSceneHost(controlRegistry);
             ComposeSharedFrame();
             _sceneInitialization = Track(_scene.ShowAsync(scene, currentToken));
             var ready = await _sceneInitialization;
