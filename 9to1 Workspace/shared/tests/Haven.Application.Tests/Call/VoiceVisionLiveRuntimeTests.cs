@@ -11,7 +11,9 @@ namespace Haven.Application.Tests.Call;
 /// attach-existing identity without a second Start, ID preservation, no second runtime,
 /// start/end/close causal ordering, late-callback suppression after End, and camera/screen
 /// capture permission gates (denied/absent backend yields zero capture starts; stopping
-/// share yields zero later frames).
+/// share yields zero later frames). All tests carry the xUnit cancellation projection so a
+/// cancelled test run aborts promptly; the deliberate borrower-cancellation test uses its own
+/// token so it can cancel only that borrower's wait, never the shared original.
 /// </summary>
 public sealed class VoiceVisionLiveRuntimeTests
 {
@@ -21,14 +23,14 @@ public sealed class VoiceVisionLiveRuntimeTests
         var coordinator = ActiveCoordinator();
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var result = await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var result = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.True(result.AttachedExisting);
         Assert.Equal(0, coordinator.StartCount);
 
         // Reopening the same conversation preserves one canonical SessionID and never starts again.
-        var again = await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var again = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
         Assert.True(again.Succeeded);
         Assert.True(again.AttachedExisting);
         Assert.Equal(result.SessionId, again.SessionId);
@@ -41,13 +43,13 @@ public sealed class VoiceVisionLiveRuntimeTests
         var coordinator = NewCoordinator();
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var first = await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var first = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
         Assert.True(first.Succeeded);
         Assert.False(first.AttachedExisting);
         Assert.Equal(1, coordinator.StartCount);
 
         // A second surface opens while the session is live: it must attach, not start again.
-        var second = await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var second = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
         Assert.True(second.Succeeded);
         Assert.True(second.AttachedExisting);
         Assert.Equal(first.SessionId, second.SessionId);
@@ -59,14 +61,14 @@ public sealed class VoiceVisionLiveRuntimeTests
     {
         var coordinator = NewCoordinator();
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
-        await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
 
         // Close presentation (pill/full) must NOT end the runtime.
         runtime.SetPresentation(VoiceVisionPresentationKind.None);
         Assert.Equal(0, coordinator.EndCount);
 
         // End is the explicit stop/drain.
-        var end = await runtime.EndAsync(CancellationToken.None);
+        var end = await runtime.EndAsync(TestContext.Current.CancellationToken);
         Assert.True(end.Succeeded);
         Assert.Equal(1, coordinator.EndCount);
         Assert.False(runtime.State.IsActive);
@@ -77,8 +79,8 @@ public sealed class VoiceVisionLiveRuntimeTests
     {
         var coordinator = NewCoordinator();
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
-        await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
-        await runtime.EndAsync(CancellationToken.None);
+        await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        await runtime.EndAsync(TestContext.Current.CancellationToken);
 
         coordinator.RaiseAudioLevel(0.9);
         coordinator.RaiseState(CallState.Listening, "late");
@@ -96,7 +98,7 @@ public sealed class VoiceVisionLiveRuntimeTests
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
         Assert.False(runtime.State.CanUseCamera);
-        var camera = await runtime.SetCameraAsync(true, CancellationToken.None);
+        var camera = await runtime.SetCameraAsync(true, TestContext.Current.CancellationToken);
 
         Assert.False(camera.Succeeded);
         Assert.False(runtime.State.HasCameraSource);
@@ -113,12 +115,12 @@ public sealed class VoiceVisionLiveRuntimeTests
         var backend = VoiceVisionBackendProfile.Default with { SupportsScreenShare = true };
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore(), backend);
 
-        var start = await runtime.SetScreenShareAsync(true, CancellationToken.None);
+        var start = await runtime.SetScreenShareAsync(true, TestContext.Current.CancellationToken);
         Assert.True(start.Succeeded);
         Assert.True(runtime.State.IsScreenSharing);
         Assert.Contains(runtime.State.VisualSources, source => source.Type is VisualSourceType.DisplayShare);
 
-        var stop = await runtime.SetScreenShareAsync(false, CancellationToken.None);
+        var stop = await runtime.SetScreenShareAsync(false, TestContext.Current.CancellationToken);
         Assert.True(stop.Succeeded);
         Assert.Equal(1, coordinator.StopScreenShareCount);
         Assert.Empty(runtime.State.VisualSources);
@@ -134,8 +136,8 @@ public sealed class VoiceVisionLiveRuntimeTests
         var coordinator = NewCoordinator();
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var t1 = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
-        var t2 = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var t1 = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        var t2 = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
 
         var r1 = await t1;
         var r2 = await t2;
@@ -153,8 +155,8 @@ public sealed class VoiceVisionLiveRuntimeTests
         var coordinator = ActiveCoordinator();
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var t1 = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
-        var t2 = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var t1 = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        var t2 = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
 
         var r1 = await t1;
         var r2 = await t2;
@@ -173,15 +175,15 @@ public sealed class VoiceVisionLiveRuntimeTests
     {
         var coordinator = NewCoordinator();
         coordinator.StartRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        coordinator.StartEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var startTask = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
-        // Wait until the coordinator has entered Start and is blocked on its hold.
-        await WaitUntilAsync(() => coordinator.StartCount == 1);
+        var startTask = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        // Deterministic barrier: the coordinator has entered Start and holds the lifecycle gate.
+        await coordinator.StartEntered!.Task;
 
-        var endTask = runtime.EndAsync(CancellationToken.None);
+        var endTask = runtime.EndAsync(TestContext.Current.CancellationToken);
         // End must NOT ACK while the shared Start is still settling.
-        await Task.Delay(50);
         Assert.False(endTask.IsCompleted);
         Assert.Equal(0, coordinator.EndCount);
 
@@ -207,13 +209,14 @@ public sealed class VoiceVisionLiveRuntimeTests
     {
         var coordinator = NewCoordinator();
         coordinator.StartRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        coordinator.StartEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var startTask = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
-        await WaitUntilAsync(() => coordinator.StartCount == 1);
+        var startTask = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        await coordinator.StartEntered!.Task;
 
         var disposeTask = runtime.DisposeAsync().AsTask();
-        await Task.Delay(50);
+        // Dispose waits for the held Start to settle before draining; it cannot ACK early.
         Assert.False(disposeTask.IsCompleted);
         Assert.Equal(0, coordinator.EndCount);
 
@@ -229,14 +232,16 @@ public sealed class VoiceVisionLiveRuntimeTests
     {
         var coordinator = NewCoordinator();
         coordinator.StartRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        coordinator.StartEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var owner = runtime.StartAsync(Request(ConvoId), CancellationToken.None);
-        await WaitUntilAsync(() => coordinator.StartCount == 1);
+        var owner = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        await coordinator.StartEntered!.Task; // owner holds the gate; the borrower will queue
 
+        // Deliberate borrower cancellation: only the borrower's wait uses this token, so the
+        // shared original is never cancelled or settled by it.
         using var cts = new CancellationTokenSource();
         var borrower = runtime.StartAsync(Request(ConvoId), cts.Token);
-        await Task.Delay(50); // borrower is queued on the lifecycle gate
         cts.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => borrower);
@@ -254,13 +259,13 @@ public sealed class VoiceVisionLiveRuntimeTests
     {
         var coordinator = NewCoordinator();
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
-        await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
 
-        var first = await runtime.EndAsync(CancellationToken.None);
+        var first = await runtime.EndAsync(TestContext.Current.CancellationToken);
         Assert.True(first.Succeeded);
         Assert.Equal(1, coordinator.EndCount);
 
-        var second = await runtime.EndAsync(CancellationToken.None);
+        var second = await runtime.EndAsync(TestContext.Current.CancellationToken);
         Assert.True(second.Succeeded);
         Assert.Equal(1, coordinator.EndCount);
         Assert.False(runtime.State.IsActive);
@@ -273,7 +278,7 @@ public sealed class VoiceVisionLiveRuntimeTests
         coordinator.FailStart = true;
         var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
 
-        var start = await runtime.StartAsync(Request(ConvoId), CancellationToken.None);
+        var start = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
 
         Assert.False(start.Succeeded);
         Assert.Equal(VisionVoiceErrorCode.UnknownFailure, start.Error!.Code);
@@ -281,14 +286,125 @@ public sealed class VoiceVisionLiveRuntimeTests
         Assert.Equal(MultimodalSessionState.Failed, runtime.State.State);
     }
 
-    private static async Task WaitUntilAsync(Func<bool> condition)
+    [Fact]
+    public void Coordinator_transcript_event_is_raised_to_subscribed_observer()
     {
-        for (var i = 0; i < 200; i++)
-        {
-            if (condition()) return;
-            await Task.Delay(10);
-        }
-        throw new TimeoutException("Timed out waiting for coordinator state.");
+        var coordinator = NewCoordinator();
+        CallTranscriptEventArgs? received = null;
+        coordinator.TranscriptChanged += (_, args) => received = args;
+
+        coordinator.RaiseTranscript(Guid.NewGuid(), MessageRole.User, "hello", isDelta: false, isFinal: true);
+
+        Assert.NotNull(received);
+        Assert.Equal("hello", received!.Text);
+        Assert.Equal(MessageRole.User, received.Role);
+        Assert.True(received.IsFinal);
+    }
+
+    [Fact]
+    public async Task Dispose_coalesces_one_real_stop_and_queued_Start_End_fail()
+    {
+        var coordinator = NewCoordinator();
+        coordinator.StartRelease = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        coordinator.StartEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+
+        var startTask = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        await coordinator.StartEntered!.Task;
+
+        var dispose1 = runtime.DisposeAsync().AsTask();
+        var dispose2 = runtime.DisposeAsync().AsTask();
+        var queuedStart = runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+        var queuedEnd = runtime.EndAsync(TestContext.Current.CancellationToken);
+
+        // Dispose must still wait for the held Start; it cannot settle or ACK early.
+        Assert.False(dispose1.IsCompleted);
+        Assert.False(dispose2.IsCompleted);
+
+        coordinator.StartRelease.SetResult(true);
+        var start = await startTask;
+        Assert.True(start.Succeeded);
+
+        await dispose1;
+        await dispose2;
+
+        // Exactly one real stop ran for the single live runtime.
+        Assert.Equal(1, coordinator.EndCount);
+
+        // Queued Start/End were sealed and failed truthfully (no disposed-semaphore release).
+        var sf = await queuedStart;
+        Assert.False(sf.Succeeded);
+        var ef = await queuedEnd;
+        Assert.False(ef.Succeeded);
+
+        Assert.False(runtime.State.IsActive);
+        Assert.Equal(Guid.Empty, runtime.State.SessionId);
+    }
+
+    [Fact]
+    public async Task Faulting_stop_retains_custody_and_does_not_ACK_success()
+    {
+        var coordinator = NewCoordinator();
+        coordinator.FailEnd = true;
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+        await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+
+        var end = await runtime.EndAsync(TestContext.Current.CancellationToken);
+
+        // End must not ACK success when the real stop fails; custody of the live session is kept.
+        Assert.False(end.Succeeded);
+        Assert.True(runtime.State.IsActive);
+        Assert.NotEqual(Guid.Empty, runtime.State.SessionId);
+    }
+
+    [Fact]
+    public async Task Faulting_stop_during_dispose_retains_custody_and_throws()
+    {
+        var coordinator = NewCoordinator();
+        coordinator.FailEnd = true;
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+        await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+
+        // A failed real stop must not be swallowed: disposal surfaces it and retains custody.
+        await Assert.ThrowsAnyAsync<InvalidOperationException>(() => runtime.DisposeAsync().AsTask());
+
+        Assert.True(runtime.State.IsActive);
+        Assert.NotEqual(Guid.Empty, runtime.State.SessionId);
+    }
+
+    [Fact]
+    public async Task Mapping_failure_is_reported_truthfully_without_active_capture()
+    {
+        var coordinator = NewCoordinator();
+        var runtime = CreateRuntime(coordinator, new FailingMappingStore());
+
+        var result = await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+
+        // A failure to persist the canonical mapping must surface as a truthful start failure,
+        // never as a silently started session or an exception escaping to the caller.
+        Assert.False(result.Succeeded);
+        Assert.False(runtime.State.IsActive);
+        Assert.Empty(runtime.State.VisualSources);
+    }
+
+    [Fact]
+    public async Task Reentrant_close_is_safe_and_late_callbacks_do_not_resurrect()
+    {
+        var coordinator = NewCoordinator();
+        var runtime = CreateRuntime(coordinator, new MemorySettingsStore());
+        await runtime.StartAsync(Request(ConvoId), TestContext.Current.CancellationToken);
+
+        await runtime.DisposeAsync();
+        await runtime.DisposeAsync(); // reentrant close is safe/idempotent
+
+        Assert.Equal(1, coordinator.EndCount);
+
+        // Late callbacks after dispose must not resurrect a live session.
+        coordinator.RaiseAudioLevel(0.9);
+        coordinator.RaiseState(CallState.Listening, "late");
+
+        Assert.False(runtime.State.IsActive);
+        Assert.Equal(Guid.Empty, runtime.State.SessionId);
     }
 
     // -- fixed conversation identity --
@@ -322,7 +438,7 @@ public sealed class VoiceVisionLiveRuntimeTests
 
     private static VoiceVisionLiveRuntime CreateRuntime(
         FakeCallCoordinator coordinator,
-        MemorySettingsStore store,
+        IVersionedSettingsStore store,
         VoiceVisionBackendProfile? backend = null)
     {
         var service = new VisionVoiceSessionService(new MultimodalSessionStore(store));
@@ -402,6 +518,35 @@ public sealed class VoiceVisionLiveRuntimeTests
         }
     }
 
+    /// <summary>A settings store whose canonical conversation→SessionID mapping persistence fails,
+    /// while session/metadata writes succeed. Used to prove start failure is reported truthfully.</summary>
+    private sealed class FailingMappingStore : IVersionedSettingsStore, IVersionedSettingsCompareExchange
+    {
+        private readonly MemorySettingsStore _inner = new();
+
+        public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class
+            => _inner.GetAsync<T>(key, cancellationToken);
+
+        public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken) where T : class
+        {
+            if (key.StartsWith("visionvoice.session-by-conversation.v1.", StringComparison.Ordinal))
+                throw new InvalidOperationException("mapping store unavailable");
+            return _inner.SetAsync(key, value, cancellationToken);
+        }
+
+        public Task RemoveAsync(string key, CancellationToken cancellationToken) => _inner.RemoveAsync(key, cancellationToken);
+
+        public Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken)
+            => _inner.ExportAsync(cancellationToken);
+
+        public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken cancellationToken)
+            => _inner.ImportAsync(manifest, cancellationToken);
+
+        public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson,
+            string? replacementJson, CancellationToken cancellationToken)
+            => _inner.CompareExchangeAsync(key, expectedJson, replacementJson, cancellationToken);
+    }
+
     private sealed class FakeCallCoordinator : ICallCoordinator
     {
         public CallState State { get; set; } = CallState.Idle;
@@ -425,12 +570,15 @@ public sealed class VoiceVisionLiveRuntimeTests
         public List<string> SubmittedText { get; } = new();
         public List<string> Events { get; } = new();
         public TaskCompletionSource<bool>? StartRelease { get; set; }
+        public TaskCompletionSource<bool>? StartEntered { get; set; }
         public bool FailStart { get; set; }
+        public bool FailEnd { get; set; }
 
         public async Task<CallSession> StartAsync(CallStartOptions options, SpeechModelInfo? speechModel, CancellationToken ct)
         {
             StartCount++;
             Events.Add("start-enter");
+            StartEntered?.TrySetResult(true);
             ct.ThrowIfCancellationRequested();
             if (FailStart) throw new InvalidOperationException("start failed");
             State = CallState.Listening;
@@ -459,6 +607,7 @@ public sealed class VoiceVisionLiveRuntimeTests
         {
             EndCount++;
             Events.Add("end-enter");
+            if (FailEnd) throw new InvalidOperationException("end failed");
             State = CallState.Idle;
             IsScreenSharing = false;
             Events.Add("end-complete");
@@ -469,6 +618,8 @@ public sealed class VoiceVisionLiveRuntimeTests
         public void RaiseAudioLevel(double level) => AudioLevelChanged?.Invoke(this, new(level));
         public void RaiseScreenPreview() => ScreenPreviewChanged?.Invoke(this, new ScreenShareSnapshotEventArgs(
             new ScreenShareSnapshot("", 0, 0, DateTimeOffset.UtcNow)));
+        public void RaiseTranscript(Guid messageId, MessageRole role, string text, bool isDelta, bool isFinal) =>
+            TranscriptChanged?.Invoke(this, new CallTranscriptEventArgs(messageId, role, text, isDelta, isFinal));
         public ValueTask DisposeAsync() { State = CallState.Idle; return ValueTask.CompletedTask; }
     }
 }

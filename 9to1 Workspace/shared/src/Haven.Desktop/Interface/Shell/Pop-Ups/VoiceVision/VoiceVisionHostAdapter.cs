@@ -52,6 +52,11 @@ public sealed class VoiceVisionHostAdapter : IDisposable
     /// <summary>Raised when the UI requests the full Voice &amp; Vision surface.</summary>
     public event Action? RequestFullSurface;
 
+    /// <summary>Raised when the presentation is closed (pill/full overlay dismissed). Closing a
+    /// presentation is never End; this is the host's close-ACK signal so it can detach the
+    /// overlay AFTER the shared projection has returned to no surface.</summary>
+    public event Action? PresentationClosed;
+
     public Control LoadPill()
     {
         _runtime.SetPresentation(VoiceVisionPresentationKind.Pill);
@@ -64,8 +69,14 @@ public sealed class VoiceVisionHostAdapter : IDisposable
         return LoadDocument(VoiceVisionCuiDocument.ParseSession());
     }
 
-    /// <summary>Points the projection at no surface. Closing a presentation is never End.</summary>
-    public void ClosePresentation() => _runtime.SetPresentation(VoiceVisionPresentationKind.None);
+    /// <summary>Points the projection at no surface. Closing a presentation is never End. The
+    /// close-ACK (<see cref="PresentationClosed"/>) is raised only after the projection has
+    /// left the surface, so the host detaches the overlay thereafter.</summary>
+    public void ClosePresentation()
+    {
+        _runtime.SetPresentation(VoiceVisionPresentationKind.None);
+        PresentationClosed?.Invoke();
+    }
 
     private Control LoadDocument(CuiDocument document)
     {

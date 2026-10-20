@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Haven.Core;
 
 namespace Haven.Application.Call;
@@ -50,6 +51,15 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
     private bool _wired;
     private int _generation;
 
+    // Single-disposal / lifecycle-drain state. Dispose elects exactly one disposer and late
+    // callers join the same teardown, so a disposed semaphore is never Released by a stale
+    // waiter. _gateBusy counts operations inside admission (queued or admitted) so resources
+    // are disposed only after every one has drained.
+    private int _disposalStarted;
+    private TaskCompletionSource<bool>? _disposalCompletion;
+    private int _gateBusy;
+    private TaskCompletionSource? _gateIdleTcs;
+
     /// <summary>When false (after an explicit End), late coordinator callbacks are suppressed and
     /// the projection stays inactive until a new start/attach re-opens the session.</summary>
     private bool _acceptsRuntimeEvents = true;
@@ -79,12 +89,26 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         if (request.ConversationId == Guid.Empty)
             return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.InvalidRequest, "A canonical conversation is required.", "ConversationID", "StartSession", false));
 
+        // A sealed/disposed runtime admits no new session.
+        if (Volatile.Read(ref _disposed))
+            return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.SessionNotFound,
+                "The runtime is disposed; no session can be started.", "SessionID", "StartSession", true));
+
         // One published coalescing owner for identity resolution/creation/attachment: the whole
         // start runs under the lifecycle gate, so two callers continuing the same actual interaction
         // resolve the SAME canonical SessionID and never open a second runtime. An End that runs
         // while this start is queued bumps the lifetime generation, which rejects this stale wait.
         var generationAtEntry = Volatile.Read(ref _generation);
-        await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        BusyEnter();
+        try
+        {
+            await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            BusyLeave();
+            throw;
+        }
         try
         {
             if (_disposed || Volatile.Read(ref _generation) != generationAtEntry)
@@ -98,15 +122,30 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         finally
         {
             _startGate.Release();
+            BusyLeave();
         }
     }
 
     public async Task<VoiceVisionOperation> EndAsync(CancellationToken cancellationToken)
     {
+        // A sealed/disposed runtime cannot end a session it no longer owns.
+        if (Volatile.Read(ref _disposed))
+            return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.SessionNotFound,
+                "The runtime is disposed; no session can be ended.", "SessionID", "EndSession", true));
+
         // Seal admission synchronously under the same lifecycle gate as Start, so a Start queued
         // before End cannot publish afterwards, and an in-flight Start has fully settled by the
         // time we acquire the gate (Start holds it across its whole run).
-        await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        BusyEnter();
+        try
+        {
+            await _startGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            BusyLeave();
+            throw;
+        }
         try
         {
             Interlocked.Increment(ref _generation);
@@ -129,7 +168,12 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
             }
 
             if (_session is { } session && session.State is not MultimodalSessionState.Ended)
-                await TransitionSessionAsync(session, MultimodalSessionState.Ended, cancellationToken).ConfigureAwait(false);
+            {
+                var ended = await TransitionSessionAsync(session, MultimodalSessionState.Ended, cancellationToken).ConfigureAwait(false);
+                if (!ended)
+                    return VoiceVisionOperation.Failed(new(VisionVoiceErrorCode.UnknownFailure,
+                        "The session could not be transitioned to Ended; the session state is preserved.", "SessionID", "EndSession", true));
+            }
 
             _session = null;
             _acceptsRuntimeEvents = false;
@@ -144,6 +188,7 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         finally
         {
             _startGate.Release();
+            BusyLeave();
         }
     }
 
@@ -285,7 +330,7 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         try
         {
             var result = await _service.SetModeAsync(session.SessionId, session.Revision, mode, null, cancellationToken).ConfigureAwait(false);
-            if (!result.IsSuccess) return FailureFrom(result.Error!);
+            if (result.Error is { } error) return FailureFrom(error);
             _session = result.Value;
             OnStateChanged();
             return VoiceVisionOperation.Ok;
@@ -350,8 +395,14 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
             // metadata ONCE so every surface shares one SessionID; do not call Start again.
             var created = await _service.StartAsync(request.ConversationId, request.SpaceId, request.Mode,
                 request.EffectiveModelPolicy, request.IsLocalOnly, request.Languages, cancellationToken).ConfigureAwait(false);
-            if (!created.IsSuccess) return VoiceVisionStartResult.Failure(created.Error!);
-            session = created.Value;
+            if (created.Error is { } createError)
+                return VoiceVisionStartResult.Failure(createError);
+            // A success result must actually carry a session payload; without one, no identity or
+            // runtime effect may be published.
+            if (created.Value is not { } established)
+                return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.UnknownFailure,
+                    "The server returned success without a session; nothing was attached.", "SessionID", "StartSession", true));
+            session = established;
             await RememberCanonicalSessionAsync(request.ConversationId, session.SessionId, cancellationToken).ConfigureAwait(false);
         }
 
@@ -371,8 +422,11 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
 
         var created = await _service.StartAsync(request.ConversationId, request.SpaceId, request.Mode,
             request.EffectiveModelPolicy, request.IsLocalOnly, request.Languages, cancellationToken).ConfigureAwait(false);
-        if (!created.IsSuccess) return VoiceVisionStartResult.Failure(created.Error!);
-        var session = created.Value;
+        if (created.Error is { } createError)
+            return VoiceVisionStartResult.Failure(createError);
+        if (created.Value is not { } session)
+            return VoiceVisionStartResult.Failure(new(VisionVoiceErrorCode.UnknownFailure,
+                "The server returned success without a session; the session was not started.", "SessionID", "StartSession", true));
 
         try
         {
@@ -410,10 +464,15 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         OnStateChanged();
     }
 
-    private async Task TransitionSessionAsync(MultimodalSession session, MultimodalSessionState next, CancellationToken cancellationToken)
+    private async Task<bool> TransitionSessionAsync(MultimodalSession session, MultimodalSessionState next, CancellationToken cancellationToken)
     {
         var result = await _service.TransitionAsync(session.SessionId, session.Revision, next, cancellationToken).ConfigureAwait(false);
-        if (result.IsSuccess) _session = result.Value;
+        if (result.IsSuccess && result.Value is { } updated)
+        {
+            _session = updated;
+            return true;
+        }
+        return false;
     }
 
     private async Task<MultimodalSession?> ReadSessionAsync(Guid sessionId, CancellationToken cancellationToken)
@@ -571,7 +630,8 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
         else if (_runtime.State == CallState.Error)
         {
             _permissionNotice = args.Status;
-            _ = MarkFailedAsync(_session!, args.Status, CancellationToken.None);
+            if (_session is { } failedSession)
+                _ = MarkFailedAsync(failedSession, args.Status, CancellationToken.None);
         }
         OnStateChanged();
     }
@@ -606,34 +666,133 @@ public sealed class VoiceVisionLiveRuntime : IVoiceVisionRuntime, IAsyncDisposab
 
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
-        // Join and settle any in-flight Start/action before unhooking or releasing the gate. A
-        // Dispose that races a held Start must wait for it to settle, then drain the real runtime.
-        await _startGate.WaitAsync().ConfigureAwait(false);
+        // Elect one real disposal original; every late caller joins the same teardown so a
+        // disposed semaphore is never Released by a stale waiter.
+        var completion = _disposalCompletion;
+        if (completion is null)
+        {
+            var created = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            completion = Interlocked.CompareExchange(ref _disposalCompletion, created, null) ?? created;
+        }
+
+        if (Interlocked.CompareExchange(ref _disposalStarted, 1, 0) != 0)
+        {
+            await completion.Task.ConfigureAwait(false);
+            return;
+        }
+
+        Exception? fault = null;
         try
         {
-            if (_disposed) return;
-            _disposed = true;
+            // Seal admission synchronously before any await. New Starts/Ends fail fast and the
+            // generation bump rejects anything already queued that has not yet run.
+            Volatile.Write(ref _disposed, true);
             Interlocked.Increment(ref _generation);
 
-            if (_runtime.IsActive)
+            // Join the already-admitted original (the in-flight Start/End that still holds the
+            // gate) before we release runtime resources.
+            BusyEnter();
+            try
             {
-                try { await _runtime.EndAsync(CancellationToken.None).ConfigureAwait(false); }
-                catch { /* best-effort drain; disposal must still proceed */ }
+                await _startGate.WaitAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                BusyLeave();
+                throw;
             }
 
-            if (_session is { } session && session.State is not MultimodalSessionState.Ended)
-                await TransitionSessionAsync(session, MultimodalSessionState.Ended, CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                if (_runtime.IsActive)
+                    await StopWithBoundedRetryAsync().ConfigureAwait(false);
 
-            _session = null;
-            _acceptsRuntimeEvents = false;
-            UnwireRuntime();
-        }
-        finally
-        {
-            _startGate.Release();
+                if (_session is { } session && session.State is not MultimodalSessionState.Ended)
+                {
+                    var ended = await TransitionSessionAsync(session, MultimodalSessionState.Ended, CancellationToken.None).ConfigureAwait(false);
+                    if (!ended)
+                        throw new InvalidOperationException(
+                            "The session could not be transitioned to Ended; custody of the session is retained.");
+                }
+
+                _session = null;
+                _acceptsRuntimeEvents = false;
+                _audioLevel = 0;
+                _muted = false;
+                _paused = false;
+                _visualSources = [];
+                _permissionNotice = string.Empty;
+                UnwireRuntime();
+            }
+            finally
+            {
+                _startGate.Release();
+                BusyLeave();
+            }
+
+            // Wait for every queued/admitted operation (including cancelled borrowers) to drain
+            // before disposing the gate, so no waiter can finally Release a disposed semaphore.
+            await WaitForGateQuiescenceAsync().ConfigureAwait(false);
             _startGate.Dispose();
         }
+        catch (Exception exception)
+        {
+            fault = exception;
+        }
+
+        if (fault is not null) completion.TrySetException(fault);
+        else completion.TrySetResult(true);
+
+        if (fault is not null) throw fault;
+    }
+
+    /// <summary>Stops the live runtime with a bounded number of genuine owner-contract attempts.
+    /// A still-live runtime/capture retains custody and preserves the original fault identity.</summary>
+    private async Task StopWithBoundedRetryAsync()
+    {
+        const int maxAttempts = 3;
+        Exception? fault = null;
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            if (!_runtime.IsActive) return;
+            try
+            {
+                await _runtime.EndAsync(CancellationToken.None).ConfigureAwait(false);
+                if (!_runtime.IsActive) return;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                fault ??= exception;
+            }
+        }
+        throw fault ?? new InvalidOperationException("The live Voice runtime could not be stopped; custody is retained.");
+    }
+
+    private void BusyEnter() => Interlocked.Increment(ref _gateBusy);
+
+    private void BusyLeave()
+    {
+        if (Interlocked.Decrement(ref _gateBusy) == 0 &&
+            Volatile.Read(ref _gateIdleTcs) is { } idle)
+            idle.TrySetResult();
+    }
+
+    private async Task WaitForGateQuiescenceAsync()
+    {
+        if (Volatile.Read(ref _gateBusy) == 0) return;
+        var idle = _gateIdleTcs;
+        if (idle is null)
+        {
+            idle = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            idle = Interlocked.CompareExchange(ref _gateIdleTcs, idle, null) ?? idle;
+            if (Volatile.Read(ref _gateBusy) == 0)
+                idle.TrySetResult();
+        }
+        await idle.Task.ConfigureAwait(false);
     }
 
     /// <summary>Durable conversation→canonical SessionID mapping kept in the shared settings store.</summary>
