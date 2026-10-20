@@ -20,7 +20,7 @@ public sealed class AppAiAccessSelectorTests
         using var state = CreateState();
         using var selector = new AppAiAccessSelector(state);
 
-        Assert.Equal(AppAiAccessMode.ReadOnly, _.AccessMode);
+        Assert.Equal(AppAiAccessMode.ReadOnly, state.AccessMode);
         Assert.Equal(AppAiAccessMode.ReadOnly, selector.AccessMode);
         Assert.True(selector.IsReadOnly);
         Assert.False(selector.IsWriteMode);
@@ -160,10 +160,13 @@ public sealed class AppAiAccessSelectorTests
     [Fact]
     public void AuthoredSelectorIsCanonicalCuiWithSelectedTrigAndStatusPresentation()
     {
-        var path = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..", "..", "..", "..", "AI", "UI", "AiAccessSelector.cui"));
-        var document = new CuiRichParser().ParseFile(path);
+        // Load the packaged authored selector from the AI assembly's embedded resource (the same
+        // manifest identity `FloatingAiBarScene` uses), not an unverified deployment path.
+        using var stream = typeof(FloatingAiBarScene).Assembly.GetManifestResourceStream(
+                "NineToOne.Cui.AI.UI.AiAccessSelector.cui")
+            ?? throw new InvalidOperationException("The packaged AI access selector is not present.");
+        using var reader = new StreamReader(stream);
+        var document = new CuiRichParser().Parse(reader.ReadToEnd(), "AiAccessSelector.cui");
         var all = document.Components.SelectMany(component => component.DescendantsAndSelf()).ToArray();
 
         var readOnly = Assert.Single(all, component => component.AuthoredId == "ai-access-readonly");

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using NineToOne.Cui.AI;
@@ -12,27 +13,35 @@ namespace Haven.Desktop.Views.Pages.Chat;
 /// can be mounted by a host (the shared floating bar and/or the shared composer) with the SAME
 /// live AI access-mode state.
 ///
-/// This file belongs in the host project that already references CakeOS.Cui.Runtime (for example
-/// Haven.Desktop). The AI framework project (NineToOne.Cui.AI) intentionally does NOT depend on
-/// the CUI runtime, so this thin bridge keeps that boundary clean.
+/// Invalidation contract: this bridge subscribes ONCE to the shared
+/// <see cref="AppAiAccessSelector.Changed"/> and forwards every current-owner update through the
+/// CUI binding notification contract (<see cref="INotifyPropertyChanged"/>, the same mechanism
+/// <c>ChatComposerBindings</c> uses) with a null property name to refresh all bound surfaces.
+/// It keeps NO duplicate mode cache — every read reflects live state.
 ///
-/// All reads reflect live state; all selections delegate to the real authority; there is no
-/// second access-mode cache and no invented approval-policy semantics (DEC-001 is unresolved).
+/// Lifetime: disposing this bridge only unsubscribes ITS OWN handler. It never disposes the shared
+/// <see cref="AppAiAccessSelector"/> (nor the underlying <see cref="FloatingAiBarState"/>), which
+/// may be owned by another component. Late notifications captured after dispose are fenced out.
 /// </summary>
 public sealed class AppAiAccessSelectorBindings :
     ICuiWritableBindingContext,
     ICuiActionDispatcher,
     ICuiActionAvailability,
+    INotifyPropertyChanged,
     IDisposable
 {
     private readonly AppAiAccessSelector _selector;
+    private bool _disposed;
 
     public AppAiAccessSelectorBindings(AppAiAccessSelector selector)
     {
         _selector = selector ?? throw new ArgumentNullException(nameof(selector));
+        _selector.Changed += OnSelectorChanged;
     }
 
     public AppAiAccessSelector Selector => _selector;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public bool TryGetValue(string path, out object? value)
     {
@@ -87,5 +96,21 @@ public sealed class AppAiAccessSelectorBindings :
         }
     }
 
-    public void Dispose() => _selector.Dispose();
+    private void OnSelectorChanged(object? sender, EventArgs e)
+    {
+        // Fence late owner notifications captured after this bridge was disposed.
+        if (_disposed) return;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
+
+    /// <summary>
+    /// Unsubscribes only this bridge's handler. The shared selector (and its owned bar state) is
+    /// intentionally NOT disposed here; it may be owned by another component.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _selector.Changed -= OnSelectorChanged;
+    }
 }

@@ -1,145 +1,226 @@
-# extra09 integration patch — consuming the canonical AI access selector
+# extra09 integration patch (pass 2) — exact host/binding/scene wiring
 
 Lane: Mercury extra09 (permissions). Scope: reusable typed CUI AI-access/permission selector.
 
-This document is the **exact minimal integration patch** for the existing shared floating bar
-binding/host and the shared composer. The target files below are **read-only shared ownership**
-and were NOT edited by this lane. Root applies these patches and then executes the real
-render/action workflows (this lane is NOT RUN until root allocation).
+This document is the **exact, apply-able integration patch** against the identified real source
+signatures. The shared originals below are read-only and were NOT edited by this lane; every
+change ships as a patch here for root to apply. All execution is NOT RUN until root allocation.
 
-The new reusable component (owned by this lane) is:
+New reusable component (owned by this lane, present in the tree):
 
 | File | Role |
 | ---- | ---- |
-| `framework/CUI/AI/AppAiAccessSelector.cs` | Typed adapter over the real `FloatingAiBarState` + typed observation mapping. |
-| `framework/CUI/AI/UI/AiAccessSelector.cui` | Authored canonical CUI selector (current-mode label, selected/focus/disabled states, status presentation). |
-| `framework/CUI/AI.Tests/AppAiAccessSelectorTests.cs` | Causal tests over real sources/adapters. |
-| `work/extra09-handoff/AppAiAccessSelectorBindings.cs` | PROPOSED host-layer CUI bridge (lives in the host project, not in `NineToOne.Cui.AI`). |
+| `framework/CUI/AI/AppAiAccessSelector.cs` | Typed adapter over real `FloatingAiBarState` + typed observation mapping (DEC-001-safe wording). |
+| `framework/CUI/AI/UI/AiAccessSelector.cui` | Authored canonical CUI selector. |
+| `framework/CUI/AI.Tests/AppAiAccessSelectorTests.cs` | Causal tests (compiles; root runs). |
+| `work/extra09-handoff/AppAiAccessSelectorBindings.cs` | PROPOSED host bridge (INotifyPropertyChanged invalidation, subscribe-once, fenced dispose). |
+| `work/extra09-handoff/AiAccessSelectorScene.cs` | PROPOSED host loader of the packaged selector resource. |
+| `work/extra09-handoff/AppAiAccessSelectorBindingsTests.cs` | PROPOSED host bridge test (marked inclusion). |
 
 ---
 
-## 1. Shared floating bar host
+## 0. Real signatures this patch is anchored to (read, not changed)
 
-The shared bar (`framework/CUI/AI/UI/FloatingAiBar.cui`; state `FloatingAiBarState`) owns the
-persistent AI Read-only/Write mode. The current bar uses two unselected buttons
-(`SetReadOnly`/`SetWriteMode`). Replace them with the canonical selector so the selected/focus/
-disabled states and status presentation are authored CUI.
+- `HomeAppAiServices.Create(IAppAiContext, IAppAiActions, IAppAiDatabaseMutationGuard? = null)` returns
+  the single owner `FloatingAiBarState` (HomeAppAiServices.cs:52).
+- `FloatingAiBarState.SetAccessMode(AppAiAccessMode)` / `SetReadOnly()` / `SetWriteMode()` /
+  `AccessMode` / `Changed` (framework/CUI/AI/FloatingAiBarState.cs).
+- `FloatingAiBarScene.ReadSource()` reads the packaged bar resource; the selector resource
+  `NineToOne.Cui.AI.UI.AiAccessSelector.cui` is packaged by the existing
+  `<EmbeddedResource Include="UI\**\*.cui" />` wildcard.
+- `CuiNativeScene(string AppId, string Title, string Surface, CuiDocument Document, ...)` and
+  `CuiDocumentSource(string markup, string source)` (Runtime).
+- `ChatComposerCuiView` public ctor `(IChatComposerSource source, string? owningAppId = null,
+  CuiThemePreferenceContext? themePreference = null)` and internal ctor
+  `(source, ICuiSceneReadiness readiness, string? owningAppId = null, ... themePreference = null)`.
+- `ChatComposerBindings` implements `ICuiWritableBindingContext, ICuiActionDispatcher,
+  ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged`.
 
-### 1a. Host composition (production wiring)
+---
 
-In the host that already creates the `FloatingAiBarState` (e.g. `HomeAppAiServices.Create` /
-`AppAiCoordinatorFactory.Create`), build the selector and its CUI bindings:
+## 1. Owner state call-site wiring (exact)
+
+The single production owner state is the `FloatingAiBarState` returned by `HomeAppAiServices.Create`
+(or `AppAiCoordinatorFactory.Create`). At the call site, build the selector, bridge and scene from
+that **same** state (never a second bar/state):
 
 ```csharp
 using NineToOne.Cui.AI;
-using Haven.Desktop.Views.Pages.Chat; // proposed host bridge
+using Haven.Desktop.Views.Pages.Chat; // proposed host files
 
-FloatingAiBarState barState = ...; // the existing live state
-var accessSelector = new AppAiAccessSelector(barState, statusSource: /* optional IAppAiAccessStatusSource */);
-var selectorBindings = new AppAiAccessSelectorBindings(accessSelector);
+FloatingAiBarState ownerState = homeAppAiServices.Create(context, actions); // existing owner state
+var accessSelector = new AppAiAccessSelector(ownerState, statusSource: null); // statusSource optional
+var accessBindings = new AppAiAccessSelectorBindings(accessSelector);
+string selectorMarkup = AiAccessSelectorScene.ReadSource(); // packaged resource identity
 ```
 
-`statusSource` is optional and must be an actual `IAppAiAccessStatusSource` backed by real broker
-observations (mapped with `AppAiAccessStatusMapper`). If none is supplied, the selector shows no
-status — it never invents one.
-
-### 1b. FloatingAiBar.cui minimal patch
-
-Within the existing `shared-floating-ai-bar` page, replace the access-mode container:
-
-The authored selector surface (`AiAccessSelector.cui`) is a standalone `<Cui>` document that the
-host loads with `AppAiAccessSelectorBindings` as its binding/action context. Compose it into the
-floating bar host shell (e.g. as a sub-scene or an authored mount slot) so `Access.*` paths and
-`access.select-*` actions resolve to the **same** `FloatingAiBarState`.
-
-Equivalent authored markup (same bindings/actions) for direct inclusion in the bar's page:
-
-```xml
-<!-- Mount the shared selector (same live state, no second bar) -->
-<Container id="ai-access-selector-surface" accessible-name="AI access mode" Type="Horizontal Stack" CellGap="8">
-  <Text id="ai-access-current-mode" text="{Binding Access.CurrentModeLabel}"
-        accessible-name="Current AI access mode" font-weight="SemiBold" />
-  <Button id="ai-access-readonly" content="Read-only" action="access.select-readonly"
-          accessible-name="Set AI access to read-only" Selected="{Binding Access.IsReadOnly}"
-          Interactive="{Binding Access.CanChangeMode}" />
-  <Button id="ai-access-write" content="Write" action="access.select-write"
-          accessible-name="Set AI access to write mode" Selected="{Binding Access.IsWriteMode}"
-          Interactive="{Binding Access.CanChangeMode}" />
-  <Text id="ai-access-status" text="{Binding Access.StatusMessage}" accessible-name="AI access status"
-        IsVisible="{Binding Access.HasStatus}" font-size="12" />
-</Container>
-```
-
-This replaces the existing `<Text text="{Binding AccessModeLabel}" />` plus the two unselected
-`SetReadOnly`/`SetWriteMode` buttons. The bar's host must register `AppAiAccessSelectorBindings`
-as the source for the `Access.*` paths and the `access.select-*` actions (shared with the rest of
-the bar's commands).
-
-The host must dispose `AppAiAccessSelectorBindings` (and the `AppAiAccessSelector`) when the bar
-closes, so late state/status changes never publish into a closed view.
+If no `IAppAiAccessStatusSource` exists for a host, pass `null` — the selector shows no status and
+never invents one. This call-site is the ONLY place a `FloatingAiBarState` is consumed for the
+selector; there is no unconnected second bar.
 
 ---
 
-## 2. Shared composer integration
+## 2. Floating-bar host mount (compilable typed mount adapter)
 
-The shared composer (`ChatComposerCuiView` + `ChatComposer.cui`) must consume the **same** new
-selector and **same** existing state — not a second bar and not an app-specific permission UI.
-
-### 2a. Thread the shared AI access state into the composer
-
-`ChatComposerCuiView` currently receives an `IChatComposerSource`. Add an optional constructor
-parameter that accepts the shared `AppAiAccessSelector` (wraps the existing `FloatingAiBarState`):
+Truthful dependency: **this worktree contains no rendering host that currently mounts the
+`FloatingAiBar` scene** (no CUI scene/host consumes `FloatingAiBarScene.ReadSource()`).
+Therefore this lane cannot claim host acceptance for the bar. It supplies the compilable typed
+mount adapter for a genuinely supplied owner state:
 
 ```csharp
-public ChatComposerCuiView(IChatComposerSource source,
-                           AppAiAccessSelector? aiAccessSelector = null,
-                           string? owningAppId = null,
-                           CuiThemePreferenceContext? themePreference = null)
-    : this(source, aiAccessSelector, ChatComposerReadiness.Instance, owningAppId, themePreference)
+var document = new CuiDocumentSource(selectorMarkup, "AiAccessSelector.cui").Document;
+var scene = new CuiNativeScene("spaces.chat.ai-access", "AI access", "Chat",
+    document, accessBindings, accessBindings, readiness)
 {
-}
-
-// Internal ctor builds _aiAccessBindings = new AppAiAccessSelectorBindings(aiAccessSelector)
-// when aiAccessSelector != null, and registers it into the scene binding/action chain.
+    ThemePreference = themePreference,
+};
+var host = new CuiSceneHost(registry);
+await host.ShowAsync(scene, cancellationToken);
 ```
 
-### 2b. ChatComposer.cui minimal patch
-
-Add the selector (compact, same live state) into the composer controls row:
-
-```xml
-<Container id="composer-access-selector" Type="Horizontal Stack" CellGap="6"
-          IsVisible="{Binding Composer.HasAiAccessSelector}">
-  <Text text="{Binding Access.CurrentModeLabel}" font-weight="SemiBold" font-size="12" />
-  <Button action="access.select-readonly" content="Read-only" font-size="12"
-          Selected="{Binding Access.IsReadOnly}" Interactive="{Binding Access.CanChangeMode}" />
-  <Button action="access.select-write" content="Write" font-size="12"
-          Selected="{Binding Access.IsWriteMode}" Interactive="{Binding Access.CanChangeMode}" />
-  <Text text="{Binding Access.StatusMessage}" IsVisible="{Binding Access.HasStatus}" font-size="12" />
-</Container>
-```
-
-Add `"Access.CurrentModeLabel"`, `"Access.IsReadOnly"`, `"Access.IsWriteMode"`,
-`"Access.CanChangeMode"`, `"Access.HasStatus"`, `"Access.StatusMessage"` to
-`ChatComposerBindings.TryGetValue`, `"access.select-readonly"`/`"access.select-write"` to
-`DispatchAsync`, and `"Composer.HasAiAccessSelector"` to `TryGetValue`/`IsActionAvailable` so the
-selector row is only shown when a real AI access state is attached. Close/dispose the bindings
-with the composer lifetime.
-
-> Important: do NOT conflate this with `composer.set-action-mode` (`All/Basic/JustChat` model
-> capability modes) or the legacy `PermissionMode.Ask/AutoSafe/FullAccess`. The AI access mode is
-> the persistent Read-only/Write contract. Approval/permission status is rendered only from real
-> `IAppAiAccessStatusSource` observations.
+When the real bar render host lands, it mounts the selector the same way (replacing the legacy
+unselected `SetReadOnly`/`SetWriteMode` buttons). No acceptance is claimed for the bar in this
+lane.
 
 ---
 
-## 3. Behavioural invariants (preserved)
+## 3. Shared composer integration — exact diffs (apply-able, not applied)
 
-- Mode clicks delegate to `FloatingAiBarState.SetAccessMode` — they never manufacture a grant,
-  clear a real pending approval, or re-execute an action.
+### 3a. `ChatComposerCuiView.cs`
+
+Keep the existing ctor overloads intact; add a new ctor that consumes the shared selector, and
+extend the internal ctor with a **trailing** optional parameter (positional callers unchanged).
+
+```diff
+     public ChatComposerCuiView(IChatComposerSource source, string? owningAppId = null,
+         CuiThemePreferenceContext? themePreference = null)
+         : this(source, ChatComposerReadiness.Instance, owningAppId, themePreference)
+     {
+     }
+
++    /// <summary>Integration overload: threads the shared AI access selector into the composer.</summary>
++    public ChatComposerCuiView(IChatComposerSource source, AppAiAccessSelector aiAccessSelector,
++        string? owningAppId = null, CuiThemePreferenceContext? themePreference = null)
++        : this(source, ChatComposerReadiness.Instance, owningAppId, themePreference, aiAccessSelector)
++    {
++    }
+
+-    internal ChatComposerCuiView(IChatComposerSource source, ICuiSceneReadiness readiness,
+-        string? owningAppId = null, CuiThemePreferenceContext? themePreference = null)
++    internal ChatComposerCuiView(IChatComposerSource source, ICuiSceneReadiness readiness,
++        string? owningAppId = null, CuiThemePreferenceContext? themePreference = null,
++        AppAiAccessSelector? aiAccessSelector = null)
+     {
+-        _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)));
++        _bindings = new ChatComposerBindings(source ?? throw new ArgumentNullException(nameof(source)),
++            aiAccessSelector is null ? null : new AppAiAccessSelectorBindings(aiAccessSelector));
+         _readiness = readiness ?? ChatComposerReadiness.Instance;
+         ...
+     }
+```
+
+In `Dispose()`/`DisposeAsync()` dispose the bindings (which dispose the bridge; the shared
+selector and bar state are owned elsewhere and must NOT be disposed here).
+
+### 3b. `ChatComposerBindings.cs`
+
+Route the selector's `Access.*` paths and `access.*` actions through the existing binding/action
+chain and forward notifications over the existing `INotifyPropertyChanged`:
+
+```diff
+     public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActionDispatcher,
+         ICuiActionAvailability, ICuiRepeatItemBindingContext, INotifyPropertyChanged
+     {
+         private readonly IChatComposerSource _source;
++        private readonly AppAiAccessSelectorBindings? _aiAccess;
+         ...
+
+-        public ChatComposerBindings(IChatComposerSource source)
++        public ChatComposerBindings(IChatComposerSource source,
++            AppAiAccessSelectorBindings? aiAccess = null)
+         {
+             _source = source ?? throw new ArgumentNullException(nameof(source));
++            _aiAccess = aiAccess;
++            if (_aiAccess is not null) _aiAccess.PropertyChanged += OnAiAccessPropertyChanged;
+         }
+```
+
+In `TryGetValue`, before the trailing `default: return false;`:
+
+```diff
+             case "Composer.EmojiIconCandidates":
+                 value = ComposerEmojiIconPool.Candidates;
+                 return true;
++            case "Composer.HasAiAccessSelector":
++                value = _aiAccess is not null;
++                return true;
+             default:
++                if (_aiAccess is not null && _aiAccess.TryGetValue(path, out value)) return true;
+                 return false;
+         }
+     }
+```
+
+In `DispatchAsync`, before `default: return ValueTask.FromException(...)`:
+
+```diff
+             case "composer.cancel-edit":
+                 return _source.CancelEdit();
++            case "access.select-readonly" or "access.select-write" when _aiAccess is not null:
++                return _aiAccess.DispatchAsync(command, parameter, cancellationToken);
+             default:
+                 return ValueTask.FromException(...);
+```
+
+In `IsActionAvailable`:
+
+```diff
+             "composer.settings" or "composer.set-action-mode" or "composer.set-response-mode" => true,
++            "access.select-readonly" or "access.select-write" => _aiAccess?.IsActionAvailable(command),
+             _ => true
+```
+
+Forwarding callback (add once, unsubscribed on dispose):
+
+```csharp
+    private void OnAiAccessPropertyChanged(object? sender, PropertyChangedEventArgs e) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+```
+
+Add `public void Dispose()` (implement `IDisposable`) that unsubscribes `OnAiAccessPropertyChanged`.
+`ChatComposerCuiView` calls it on close; it never disposes the shared selector/state.
+
+---
+
+## 4. Bridge test inclusion (explicit)
+
+`work/extra09-handoff/AppAiAccessSelectorBindingsTests.cs` is a PROPOSED source patch for a host
+test project that references `CakeOS.Cui.Runtime`, `CakeOS.Cui`, `NineToOne.Cui.AI` and xunit
+(e.g. `Haven.Desktop.Tests` or `Browse/Host.Tests`). It is marked as proposed inclusion, not
+present executable coverage. Root may run it under a frozen-binary gate while Runtime source moves.
+
+---
+
+## 5. Behavioural invariants (preserved)
+
+- Mode clicks delegate to `FloatingAiBarState.SetAccessMode`; never manufacture a grant, clear a
+  real pending approval, or re-execute an action.
 - Permission pending/denied/unavailable presentation is backed only by supplied typed observations;
-  with no source, no status is shown.
-- Read-only/Write stay distinct from host Edit/Suggest/View state and from per-action approval.
-- The selector never caches a divergent access mode; it always reflects live state.
-- Dispose/unsubscribe unregisters `Changed` handlers so late state/status cannot publish into a
-  closed selector, and stale completions never overwrite the current owner.
+  with no source, no status is shown; wording never implies the mode switch awaits a grant.
+- Read-only/Write stay distinct from host Edit/Suggest/View, legacy `PermissionMode`, and
+  per-action approval.
+- The bridge keeps no duplicate mode cache; it forwards live owner updates once via
+  `INotifyPropertyChanged`, fences late notifications after dispose, and never disposes a shared
+  selector/state owned by another component.
+- Existing composer commands/input/close lifetime are preserved; no second bar/state is created.
+
+---
+
+## 6. NOT RUN / honest remaining host dependencies
+
+- [ ] No .NET/MSBuild/restore/test/app/display executed (all NOT RUN until root allocation).
+- [ ] No commit/push; no provider/cap/global/config changes; no extra models/subagents; no images.
+- [ ] Root applies patches (Home call-site, ChatComposerCuiView, ChatComposerBindings, host mount)
+      then runs: (1) `AI.Tests` compile/test gate, (2) selector render/action with the real bridge.
+- [ ] Shared floating bar render host is not present in this worktree — bar acceptance is NOT
+      claimed; the typed mount adapter is supplied for the genuine owner state.

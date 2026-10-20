@@ -32,6 +32,9 @@ public interface IAppAiAccessStatusSource
 /// <summary>
 /// Pure mapping from genuine typed owner observations to presentational status records.
 /// This does not grant, deny, queue, or clear anything: it only describes observed outcomes.
+/// It never implies that switching the persistent AI access mode itself acquires or awaits a
+/// grant — the Read-only/Write mode change is immediate and is separate from any per-action
+/// permission/approval observation (see DEC-001).
 /// </summary>
 public static class AppAiAccessStatusMapper
 {
@@ -39,11 +42,11 @@ public static class AppAiAccessStatusMapper
         outcome switch
         {
             AppAiApprovalOutcome.Pending => new(AppAiAccessStatusKind.Pending,
-                string.IsNullOrWhiteSpace(message) ? "Mode change is awaiting approval." : message),
+                string.IsNullOrWhiteSpace(message) ? "A permission decision is pending." : message),
             AppAiApprovalOutcome.Denied => new(AppAiAccessStatusKind.Denied,
-                string.IsNullOrWhiteSpace(message) ? "Mode change was not approved." : message),
+                string.IsNullOrWhiteSpace(message) ? "Permission was not granted." : message),
             AppAiApprovalOutcome.Unavailable => new(AppAiAccessStatusKind.Unavailable,
-                string.IsNullOrWhiteSpace(message) ? "Approval is currently unavailable." : message),
+                string.IsNullOrWhiteSpace(message) ? "Permission approval is unavailable." : message),
             _ => null
         };
 
