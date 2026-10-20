@@ -1,8 +1,13 @@
 {
   "origin": "https://github.com/Niko1221/Strata",
   "commit": "90767252f420e25223c739d604145ad15911d48b",
-  "gitCommitTree": "90767252f420e25223c739d604145ad15911d48b",
+  "gitCommitTree": "f7adcc9073dc4bc12d5b001f1c85b58f2c2e9ead",
   "archiveUrl": "https://codeload.github.com/Niko1221/Strata/tar.gz/refs/tags/v0.2.1",
+  "provenance": {
+    "commit": "90767252f420e25223c739d604145ad15911d48b",
+    "tree": "f7adcc9073dc4bc12d5b001f1c85b58f2c2e9ead",
+    "note": "Authenticated tag->commit->tree chain must be resolved independently and recorded; a commit is never its own tree."
+  },
   "archive": {
     "path": null,
     "bytes": 27912843,
@@ -26999,5 +27004,29 @@
       "gitBlobSha": "22c75b734d392630a7594ac3da08d720c2bdffa0",
       "sha256": "2d7d603d2be804521d4779983064e4bf23b5b02f46b335f84590cbb22330a69a"
     }
-  ]
+  ],
+  "treeCrossCheck": {
+    "treeSha": "f7adcc9073dc4bc12d5b001f1c85b58f2c2e9ead",
+    "blobMatches": 4482,
+    "missingFromTree": [],
+    "extraInTree": [],
+    "eolExportNormalized": [
+      "BENCH.bat",
+      "SETUP.bat",
+      "START-HERE.bat",
+      "UPDATE.bat",
+      "apps/desktop/scripts/fetch-node.ps1",
+      "bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-default.bat",
+      "bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-fused.bat",
+      "bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-plebatch0.bat",
+      "bench/results/2026-10-04-community-rtx-5070ti-windows/battery.ps1",
+      "bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/build.bat",
+      "bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/run-chat.bat",
+      "bin/strata.cmd",
+      "bin/strata.ps1",
+      "packaging/install.ps1",
+      "tools/hip/build_windows.bat",
+      "tools/windows/enable_large_pages.ps1"
+    ]
+  }
 }

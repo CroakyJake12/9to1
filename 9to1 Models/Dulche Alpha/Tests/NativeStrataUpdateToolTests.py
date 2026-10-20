@@ -15,6 +15,10 @@ import unittest
 TOOL = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata" / "prepare-upstream-update.py"
 
 
+class Args:
+    pass
+
+
 def load_tool():
     import importlib.util
     spec = importlib.util.spec_from_file_location("prepare_upstream_update", TOOL)
@@ -73,8 +77,8 @@ class GenerateVerifyRoundTripTests(unittest.TestCase):
             a = Args()
             a.archive = archive_path
             a.origin = "https://example.invalid/upstream"
-            a.commit = "c" * 40
-            a.tree = "t" * 40
+            a.commit = "a" * 40
+            a.tree = "b" * 40
             a.archive_url = "https://example.invalid/a.tar.gz"
             a.out = lock_path
             self.assertEqual(mod.generate(a), 0)
@@ -101,8 +105,8 @@ class GenerateVerifyRoundTripTests(unittest.TestCase):
             a = Args()
             a.archive = archive_path
             a.origin = "o"
-            a.commit = "c" * 40
-            a.tree = "t" * 40
+            a.commit = "a" * 40
+            a.tree = "b" * 40
             a.archive_url = ""
             a.out = lock_path
             mod.generate(a)
@@ -115,6 +119,123 @@ class GenerateVerifyRoundTripTests(unittest.TestCase):
             v.lock = lock_path
             with self.assertRaises(ValueError):
                 mod.verify(v)
+
+
+class ProvenanceGuardsTests(unittest.TestCase):
+    def _args(self, commit, tree, archive, out):
+        class Args:
+            pass
+        a = Args()
+        a.archive = archive
+        a.origin = "https://example.invalid/upstream"
+        a.commit = commit
+        a.tree = tree
+        a.archive_url = ""
+        a.verified_tree_blobs = None
+        a.out = out
+        return a
+
+    def test_generate_rejects_same_commit_tree(self):
+        mod = load_tool()
+        archive = make_archive({"a.cpp": b"int main() { return 0; }\n"})
+        with tempfile.TemporaryDirectory() as tmp:
+            archive_path = pathlib.Path(tmp) / "src.tar.gz"
+            archive_path.write_bytes(archive)
+            lock_path = pathlib.Path(tmp) / "lock.json"
+            a = self._args("c" * 40, "c" * 40, archive_path, lock_path)
+            with self.assertRaises(ValueError) as ctx:
+                mod.generate(a)
+            self.assertIn("Provenance", str(ctx.exception))
+
+    def test_generate_rejects_non_hex_identifiers(self):
+        mod = load_tool()
+        archive = make_archive({"a.cpp": b"int main() { return 0; }\n"})
+        with tempfile.TemporaryDirectory() as tmp:
+            archive_path = pathlib.Path(tmp) / "src.tar.gz"
+            archive_path.write_bytes(archive)
+            lock_path = pathlib.Path(tmp) / "lock.json"
+            a = self._args("c" * 40, "t" * 40, archive_path, lock_path)
+            with self.assertRaises(ValueError) as ctx:
+                mod.generate(a)
+            self.assertIn("40-hex", str(ctx.exception))
+
+    def test_generate_dictates_tree_from_tree_argument(self):
+        mod = load_tool()
+        archive = make_archive({"a.cpp": b"int main() { return 0; }\n"})
+        with tempfile.TemporaryDirectory() as tmp:
+            archive_path = pathlib.Path(tmp) / "src.tar.gz"
+            archive_path.write_bytes(archive)
+            lock_path = pathlib.Path(tmp) / "lock.json"
+            a = self._args("a" * 40, "b" * 40, archive_path, lock_path)
+            self.assertEqual(mod.generate(a), 0)
+            lock = json.loads(lock_path.read_text())
+            self.assertEqual(lock["commit"], "a" * 40)
+            self.assertEqual(lock["gitCommitTree"], "b" * 40)
+            self.assertNotEqual(lock["commit"], lock["gitCommitTree"])
+
+
+class DuplicateMemberTests(unittest.TestCase):
+    def test_extract_rows_rejects_duplicate_members(self):
+        mod = load_tool()
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+            for _ in range(2):
+                info = tarfile.TarInfo(name="upstream/a.cpp")
+                info.size = 4
+                tf.addfile(info, io.BytesIO(b"int\n"))
+        with tempfile.TemporaryDirectory() as tmp:
+            archive_path = pathlib.Path(tmp) / "dup.tar.gz"
+            archive_path.write_bytes(buf.getvalue())
+            with self.assertRaises(ValueError) as ctx:
+                mod.extract_rows(archive_path)
+            self.assertIn("Duplicate", str(ctx.exception))
+
+
+class VerifyTreeCrossCheckTests(unittest.TestCase):
+    def _make_archive_and_lock(self, files, tmp):
+        archive = make_archive(files)
+        archive_path = pathlib.Path(tmp) / "src.tar.gz"
+        archive_path.write_bytes(archive)
+        lock_path = pathlib.Path(tmp) / "lock.json"
+        a = Args()
+        a.archive = archive_path
+        a.origin = "https://example.invalid/upstream"
+        a.commit = "a" * 40
+        a.tree = "b" * 40
+        a.archive_url = ""
+        a.verified_tree_blobs = None
+        a.out = lock_path
+        load_tool().generate(a)
+        return lock_path, archive_path
+
+    def test_verify_tree_cross_check_ok(self):
+        mod = load_tool()
+        files = {"a.cpp": b"int main() { return 0; }\n"}
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path, _ = self._make_archive_and_lock(files, tmp)
+            lock = json.loads(lock_path.read_text())
+            # Build an authenticated blob map from the generated lock (same bytes).
+            blobs = {r["path"]: r["gitBlobSha"] for r in lock["rows"]}
+            tree_path = pathlib.Path(tmp) / "tree.json"
+            tree_path.write_text(json.dumps({"treeSha": "b" * 40, "blobs": blobs}))
+            class Args:
+                pass
+            a = Args(); a.lock = lock_path; a.tree_blobs = tree_path
+            self.assertEqual(mod.verify_tree(a), 0)
+
+    def test_verify_tree_detects_unexplained_mismatch(self):
+        mod = load_tool()
+        files = {"a.cpp": b"int main() { return 0; }\n"}
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path, _ = self._make_archive_and_lock(files, tmp)
+            lock = json.loads(lock_path.read_text())
+            blobs = {r["path"]: ("0" * 40) for r in lock["rows"]}  # wrong tree blob
+            tree_path = pathlib.Path(tmp) / "tree.json"
+            tree_path.write_text(json.dumps({"treeSha": "b" * 40, "blobs": blobs}))
+            class Args:
+                pass
+            a = Args(); a.lock = lock_path; a.tree_blobs = tree_path
+            self.assertEqual(mod.verify_tree(a), 2)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,23 @@ Qwen3.8-Flash-Next **subject to actual installed-identifier verification**.
 
 Historical Q2 ~90 tok/s and Q3 ~50 tok/s are uncontrolled observations, **not** baselines.
 
-## Fail-closed guard contract (for the future runner)
+## What this directory now contains (pass 2)
+
+- `thunder_bench.py` — source-only offline harness: fail-closed guard contract, interleaved
+  existing/upstream/optimised scheduling (≥5 valid runs/config), bounded process lifetime (kills the
+  whole process tree on timeout), candidate `strata --serve` protocol parser (GEN/T/DONE/ERR), raw
+  result recording, median/MAD aggregation. No measurement equals a result.
+- `test_thunder_bench.py` — 14 deterministic build-free tests (guards, parser, scheduling,
+  aggregation, subprocess lifetime). Pass: `python3 -m unittest test_thunder_bench`.
+- `COMPATIBILITY-MAP.md` — ABI v1 → candidate v0.2.1 entry-point map (honest deltas).
+- `prep/strata-v0.2.1-lock.candidate.json` — **corrected** candidate lock for v0.2.1: commit
+  `90767252f420e25223c739d604145ad15911d48b`, tree `f7adcc9073dc4bc12d5b001f1c85b58f2c2e9ead`
+  (distinct; provenance resolved from the GitHub tag→commit→tree chain).
+- `prep/strata-v0.2.1-tree-blobs.json` — authenticated tree blob map (path→git blob SHA) with the 16
+  `eol=crlf` export-normalized exemptions; cross-checked by `prepare-upstream-update.py verify-tree`.
+- `prep/provenance-v0.2.1.json` — the resolved chain evidence.
+
+## Fail-closed guard contract (implemented in `thunder_bench.py`)
 
 The runner MUST NOT begin (or continue) unless ALL of the following are true at execution time:
 
@@ -29,41 +45,40 @@ The runner MUST NOT begin (or continue) unless ALL of the following are true at 
 5. **No destructive changes** — never change drivers/clocks/voltage/power-limit/BIOS/OS-security;
    never kill unrelated processes; never expose credentials or personal files.
 6. **Rollback retained** — the known-good pre-upgrade engine build and original baseline artifacts
-   remain intact before any measurement (the current maintained pin is retained).
+   remain intact before any measurement (the current legacy pin is retained).
 
 On any revocation or at window end the runner stops immediately; it never extends by elapsed-time
 assumption. If any guard fails, record BLOCKED and do not emit results as passes.
 
-## Planned methodology
+## Candidate build plan (NOT executed)
 
-- Compare: existing embedded engine (current pin), latest unmodified upstream (candidate v0.2.1/
-  engine v0.1.46), and (optionally) optimised Thunder under identical model/quantisation/context/
-  prompts/decoding/configuration.
-- Metrics: prefill speed, decode tok/s, TTFT, peak VRAM/RAM, utilisation, short/long context,
-  correctness, stability.
-- Interleaved repeated measurements; medians and variability; **≥5 valid runs per configuration**;
-  separate load/prefill/steady-decode; distinguish gains from noise.
-- Priority if the window is short: baseline first, then the most promising optimisation.
+The candidate profile is source-ready: `NativeStrata/CMakeLists.txt` (`DULCHE_STRATA_PROFILE=candidate`),
+`build-package.py` (`--profile candidate --lock <candidate-lock> --target windows-x64|linux-x64`),
+the relay worker `dulche_strata_candidate_worker.cpp`, and the llama.cpp dependency lock
+`NativeStrata/llama.cpp-dependency-lock.json` (pinned `3cf03257f219afbe7334045ff7c6a06ac68c627d`).
 
-## Exact build/resource needs (for the coordinator's separate build slot)
+Required before any candidate build:
 
-The native Strata package build and CUDA compile are NOT permitted in this bounded source turn.
-When the root allocates the serialized heavy-build/native slot, the next steps are:
-
-1. Verify the candidate lock (generated today, in /tmp and reproducible via the tool):
+1. Verify the candidate lock + provenance:
    ```sh
    python3 "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prepare-upstream-update.py" \
-     verify --archive <v0.2.1.tar.gz> --lock <candidate-lock.json>
+     verify --archive <v0.2.1.tar.gz> --lock prep/strata-v0.2.1-lock.candidate.json
+   python3 "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prepare-upstream-update.py" \
+     verify-tree --lock prep/strata-v0.2.1-lock.candidate.json \
+                  --tree-blobs prep/strata-v0.2.1-tree-blobs.json
    ```
-2. **Adapter rework is required first** (see THUNDER-DISCOVERY-2026-10-20.md §3): the current
-   bridge symbols do not exist in v0.2.1's tree. Map ABI v1 functions to the new engine API, then
-   build:
+2. Provide a verified local llama.cpp checkout (`--ggml-dir` / `STRATA_GGML_DIR`) at the pinned
+   commit; do not fetch mutable/unrecorded dependencies during an offline build.
+3. Allocate the heavy-build slot (Linux x64 or Windows x64 toolchain, CUDA 12.8+, sm_120/RTX 50).
+   Then:
    ```sh
    python3 "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/build-package.py" \
      --archive <verified-v0.2.1.tar.gz> --work /new/build-work \
+     --profile candidate --lock prep/strata-v0.2.1-lock.candidate.json \
+     --target linux-x64 --ggml-dir <verified-llama-checkout> \
      --build --install /new/dulche-package
    ```
-   Requires Linux x64, C++20, CMake ≥3.24, CUDA ≥12.8 (engine sm_120/RTX 50 targets).
-3. Run the runtime/test suites in a build-enabled environment; retain known-good rollback.
-```
-. Continue only after the API mapping and build are proven; then benchmark per the guard contract.
+4. Bind a verified tokenizer provider (donor `tools/strata_tokenizer.py` or future C++ BPE); until
+   then the candidate relay fails closed on text generation.
+5. Only after proof of build + tokenizer + mapping: benchmark per the guard contract (interleaved
+   ≥5 runs/config; separate load/prefill/decode/TTFT/memory/correctness/stability).

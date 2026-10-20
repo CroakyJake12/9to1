@@ -1,0 +1,102 @@
+"""Bounded build-free plan/guard checks for the candidate (v0.2.1) integration.
+
+These tests never compile, link, run inference, download models or install packages. They assert
+PROVENANCE/PLAN invariants and the presence of explicit FAIL-CLOSED blockers. They do NOT claim any
+native functionality: a source-string existence check is never evidence of a working engine.
+"""
+import importlib.util
+import json
+import pathlib
+import unittest
+
+NATIVE = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata"
+
+
+def load_module(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class CandidateProfilePlanTests(unittest.TestCase):
+    def test_cmake_has_explicit_profile_selection(self):
+        cmake = (NATIVE / "CMakeLists.txt").read_text()
+        self.assertIn("DULCHE_STRATA_PROFILE", cmake)
+        self.assertIn('"legacy"', cmake)
+        self.assertIn("candidate", cmake)
+        self.assertIn("DULCHE_STRATA_PROFILESTREQUAL\"legacy\"", cmake.replace(" ", ""))
+
+    def test_cmake_candidate_branch_uses_real_donor_settings(self):
+        cmake = (NATIVE / "CMakeLists.txt").read_text()
+        # candidate must enable the GPU/engine branch and keep native IQ expert quantisations, and must
+        # build/install the upstream `strata` engine + the relay worker.
+        self.assertIn("STRATA_ENABLE_CUDA ON", cmake)
+        self.assertIn("STRATA_NATIVE_EXPERTS ON", cmake)
+        self.assertIn("dulche-strata-candidate-worker", cmake)
+        self.assertIn("dulche-thunder-engine", cmake)
+        # UI/chat/agent/terminal app bundles are not built by the core CMake (they are separate
+        # Node/Tauri apps under apps/); assert we never install them as engine components.
+        self.assertNotIn("apps/desktop", cmake)
+        self.assertNotIn("add_subdirectory(apps", cmake)
+
+    def test_build_package_requires_lock_for_candidate(self):
+        mod = load_module("strata_package", NATIVE / "build-package.py")
+        self.assertIn("legacy", mod.PROFILES)
+        self.assertIn("candidate", mod.PROFILES)
+        defaults = {k: (v is None) for k, v in mod.DEFAULT_LOCKS.items()}
+        self.assertTrue(defaults["legacy"])   # legacy falls back to the maintained in-tree lock
+        self.assertTrue(defaults["candidate"])  # candidate requires an explicit --lock
+
+    def test_candidate_worker_has_fail_closed_blockers(self):
+        # The candidate worker is a source-only transport. It must FAIL CLOSED (native error) on
+        # load/generate until the engine CLI and a tokenizer provider are validated in a real build.
+        # These checks assert the explicit blockers exist; they are NOT functional evidence.
+        src = (NATIVE / "dulche_strata_candidate_worker.cpp").read_text()
+        self.assertIn("candidate load blocker", src)
+        self.assertIn("candidate generate blocker", src)
+        self.assertIn("tokenize_messages", src)
+        self.assertIn("kAbiVersion = 2", src)
+        self.assertIn("SOURCE-ONLY", src)
+
+
+class DependencyLockPlanTests(unittest.TestCase):
+    def test_llama_dependency_lock_schema(self):
+        lock = json.loads((NATIVE / "llama.cpp-dependency-lock.json").read_text())
+        self.assertEqual(lock["pinnedCommit"], "3cf03257f219afbe7334045ff7c6a06ac68c627d")
+        self.assertTrue(lock["verification"]["commitAndTreeVetted"])
+        self.assertEqual(lock["verification"]["status"].split(";")[0], "METADATA-VERIFIED")
+        self.assertIn("ggml-cpu", lock["dependency"])
+
+    def test_candidate_requires_tree_distinct_from_commit(self):
+        # The historical candidate pin copied the commit as the tree (provenance error). The corrected
+        # candidate MUST record a distinct authenticated tree. This test guards the invariant at the
+        # tool level: generate() rejects commit==tree.
+        tool = load_module("prepare_upstream_update", NATIVE / "prepare-upstream-update.py")
+        import io as _io
+        import tarfile as _tarfile
+        import tempfile as _tempfile
+        buf = _io.BytesIO()
+        with _tarfile.open(fileobj=buf, mode="w:gz") as tf:
+            info = _tarfile.TarInfo(name="upstream/a.cpp")
+            info.size = 4
+            tf.addfile(info, _io.BytesIO(b"int\n"))
+        with _tempfile.TemporaryDirectory() as tmp:
+            archive = pathlib.Path(tmp) / "a.tar.gz"
+            archive.write_bytes(buf.getvalue())
+            class Args: pass
+            a = Args()
+            a.archive = archive
+            a.origin = "https://example.invalid/upstream"
+            a.commit = "a" * 40
+            a.tree = "a" * 40
+            a.archive_url = ""
+            a.verified_tree_blobs = None
+            a.out = pathlib.Path(tmp) / "lock.json"
+            with self.assertRaises(ValueError) as ctx:
+                tool.generate(a)
+            self.assertIn("Provenance", str(ctx.exception))
+
+
+if __name__ == "__main__":
+    unittest.main()

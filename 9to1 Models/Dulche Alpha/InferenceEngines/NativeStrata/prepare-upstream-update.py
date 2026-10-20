@@ -35,6 +35,7 @@ def extract_rows(archive: pathlib.Path):
     """Yield (relative_path, bytes, sha256, git_blob_sha) for every regular source file."""
     expected_root = None
     rows = []
+    seen = set()
     with tarfile.open(archive, "r:gz") as source:
         for member in source.getmembers():
             name = pathlib.PurePosixPath(member.name)
@@ -50,6 +51,9 @@ def extract_rows(archive: pathlib.Path):
             elif root != expected_root:
                 raise ValueError("Archive must have exactly one top-level root directory")
             relative = pathlib.PurePosixPath(*name.parts[1:]).as_posix()
+            if relative in seen:
+                raise ValueError("Duplicate archive member: " + relative)
+            seen.add(relative)
             original = source.extractfile(member)
             if original is None:
                 raise ValueError("Missing source body: " + relative)
@@ -65,6 +69,15 @@ def extract_rows(archive: pathlib.Path):
 
 
 def generate(args) -> int:
+    # Provenance guard: the archive is keyed by a commit and a tree that MUST be
+    # distinct Git object SHAs. A lock that copies the commit as the tree is a
+    # provenance error (the two object types are never the same identifier).
+    if not args.commit or not args.tree:
+        raise ValueError("Both --commit and --tree are required and must be distinct Git object SHAs.")
+    if args.commit == args.tree:
+        raise ValueError("Provenance error: --commit and --tree must differ (a commit SHA is never its tree SHA).")
+    if len(args.commit) != 40 or len(args.tree) != 40 or not all(c in "0123456789abcdef" for c in args.commit + args.tree):
+        raise ValueError("Provenance error: commit/tree must be 40-hex SHA-1 identifiers.")
     archive = args.archive.read_bytes()
     rows = extract_rows(args.archive)
     lock = {
@@ -72,6 +85,11 @@ def generate(args) -> int:
         "commit": args.commit,
         "gitCommitTree": args.tree,
         "archiveUrl": args.archive_url or "",
+        "provenance": {
+            "commit": args.commit,
+            "tree": args.tree,
+            "note": "Authenticated tag->commit->tree chain must be resolved independently and recorded; a commit is never its own tree.",
+        },
         "archive": {
             "path": None,
             "bytes": len(archive),
@@ -84,12 +102,56 @@ def generate(args) -> int:
             for r in rows
         ],
     }
+    # Optional authenticated-tree cross-check: verifies the archive's local blob
+    # hashes against the upstream tree blob SHAs, honouring EOL export exemption
+    # lists (e.g. .gitattributes `eol=crlf` paths that differ between the working
+    # tree export and the committed blob).
+    if getattr(args, "verified_tree_blobs", None) is not None:
+        tree = json.loads(args.verified_tree_blobs.read_text())
+        blobs = tree.get("blobs") or {}
+        missing = [r["path"] for r in lock["rows"] if r["path"] not in blobs]
+        extra = [p for p in blobs if p not in {r["path"] for r in lock["rows"]}]
+        mismatch = [r["path"] for r in lock["rows"] if r["path"] in blobs and blobs[r["path"]] != r["gitBlobSha"]]
+        exempt = set(tree.get("eolExportExempt") or [])
+        unexplained = [p for p in mismatch if p not in exempt]
+        if missing or extra or unexplained:
+            raise ValueError(
+                "Tree cross-check failed: missing=%d extra=%d unexplained-mismatch=%d"
+                % (len(missing), len(extra), len(unexplained)))
+        lock["treeCrossCheck"] = {
+            "treeSha": tree.get("treeSha") or args.tree,
+            "blobMatches": len(lock["rows"]) - len(mismatch),
+            "missingFromTree": missing,
+            "extraInTree": extra,
+            "eolExportNormalized": sorted(mismatch),
+        }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(lock, indent=2) + "\n")
     print("candidate lock written: %s" % args.out)
     print("origin=%s commit=%s tree=%s" % (args.origin, args.commit, args.tree))
     print("archive=%d bytes sha256=%s" % (len(archive), lock["archive"]["sha256"]))
     print("blobs=%d sourceBytes=%d" % (len(rows), lock["sourceBytes"]))
+    return 0
+
+
+def verify_tree(args) -> int:
+    """Cross-check a lock's rows against an authenticated Git tree blob map."""
+    lock = json.loads(args.lock.read_text())
+    tree = json.loads(args.tree_blobs.read_text())
+    blobs = tree.get("blobs") or {}
+    rows = {r["path"]: r for r in lock["rows"]}
+    missing = [p for p in rows if p not in blobs]
+    extra = [p for p in blobs if p not in rows]
+    mismatch = [p for p in rows if p in blobs and blobs[p] != rows[p]["gitBlobSha"]]
+    exempt = set(tree.get("eolExportExempt") or [])
+    unexplained = [p for p in mismatch if p not in exempt]
+    print("tree=%s lockRows=%d treeBlobs=%d" % (tree.get("treeSha"), len(rows), len(blobs)))
+    print("missingFromTree=%d extraInTree=%d mismatch=%d exemptEOL=%d unexplained=%d"
+          % (len(missing), len(extra), len(mismatch), len([p for p in mismatch if p in exempt]), len(unexplained)))
+    if missing or extra or unexplained:
+        print("tree cross-check FAILED", file=sys.stderr)
+        return 2
+    print("tree cross-check OK")
     return 0
 
 
@@ -144,6 +206,8 @@ def main() -> int:
     g.add_argument("--commit", required=True)
     g.add_argument("--tree", required=True)
     g.add_argument("--archive-url", default="")
+    g.add_argument("--verified-tree-blobs", type=pathlib.Path, default=None,
+                  help="Authenticated tree blob map JSON (path->git blob SHA) to cross-check the archive against.")
     g.add_argument("--out", type=pathlib.Path, required=True)
     g.set_defaults(func=generate)
 
@@ -151,6 +215,11 @@ def main() -> int:
     v.add_argument("--archive", type=pathlib.Path, required=True)
     v.add_argument("--lock", type=pathlib.Path, required=True)
     v.set_defaults(func=verify)
+
+    vt = sub.add_parser("verify-tree")
+    vt.add_argument("--lock", type=pathlib.Path, required=True)
+    vt.add_argument("--tree-blobs", type=pathlib.Path, required=True)
+    vt.set_defaults(func=verify_tree)
 
     args = parser.parse_args()
     try:
