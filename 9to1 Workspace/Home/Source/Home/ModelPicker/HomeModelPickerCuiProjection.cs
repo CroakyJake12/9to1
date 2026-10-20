@@ -52,10 +52,21 @@ public sealed class HomeModelPickerCuiProjection : ICuiBindingContext
             case "HasTrace": value = Trace.Count != 0; return true;
             case "Preview.ResolutionState": value = _state.Preview?.ResolutionState ?? string.Empty; return true;
             case "Preview.Trace": value = Trace; return true;
+            case "RefreshSelection": value = new HomeModelPickerScopeSelection(_scope, _category); return true;
+            case "CurrentRouteSelection": value = string.IsNullOrWhiteSpace(_state.SelectedRouteId)
+                ? null : new HomeModelPickerRouteSelection(_state.SelectedRouteId); return _state.SelectedRouteId is not null;
             default: value = null; return false;
         }
     }
 }
+
+/// <summary>Canonical typed CUI action parameters for the model picker. These are the only
+/// objects routed through named &lt;Action parameter=...&gt; declarations; no ad-hoc metadata
+/// attributes are transported.</summary>
+public sealed record HomeModelPickerScopeSelection(string Scope, string Category);
+public sealed record HomeModelPickerRouteSelection(string RouteId);
+public sealed record HomeModelPickerCandidateSelection(string ProviderId, string ModelId, string? ArtifactRevision);
+public sealed record HomeModelPickerCandidateToggleSelection(string ProviderId, string ModelId, string? ArtifactRevision, bool Enabled);
 
 public sealed class HomeModelPickerRouteRow : ICuiBindingContext
 {
@@ -79,6 +90,7 @@ public sealed class HomeModelPickerRouteRow : ICuiBindingContext
             case "Category": value = _route.Category; return true;
             case "Candidates": value = Candidates; return true;
             case "HasCandidates": value = Candidates.Count != 0; return true;
+            case "Selection": value = new HomeModelPickerRouteSelection(_route.RouteId); return true;
             default: value = null; return false;
         }
     }
@@ -107,6 +119,9 @@ public sealed class HomeModelPickerCandidateRow : ICuiBindingContext
             case "ArtifactRevision": value = _candidate.ArtifactRevision; return true;
             case "Enabled": value = _candidate.Enabled; return true;
             case "Order": value = _candidate.Order; return true;
+            case "Selection": value = new HomeModelPickerCandidateSelection(_candidate.ProviderId, _candidate.ModelId, _candidate.ArtifactRevision); return true;
+            case "EnableSelection": value = new HomeModelPickerCandidateToggleSelection(_candidate.ProviderId, _candidate.ModelId, _candidate.ArtifactRevision, true); return true;
+            case "DisableSelection": value = new HomeModelPickerCandidateToggleSelection(_candidate.ProviderId, _candidate.ModelId, _candidate.ArtifactRevision, false); return true;
             default: value = null; return false;
         }
     }

@@ -24,7 +24,9 @@ public sealed partial class BrowseChrome
     private static bool IsHomeAddress(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
         && address.Authority == "home" && address.ResourceSegments.Count == 0;
     private static bool IsOwnedCanvas(AppContentAddress address) => address.Namespace == AppContentNamespace.Browse
-        && address.Authority is "home" or "newtab" && address.ResourceSegments.Count == 0;
+        && ((address.Authority is "home" or "newtab" && address.ResourceSegments.Count == 0)
+            || (address.Authority == "home" && address.ResourceSegments.Count == 1
+                && address.ResourceSegments[0].Equals("models", StringComparison.Ordinal)));
     private static bool TryStoredAddress(string value, out AppContentAddress? address)
     {
         if (string.Equals(value, "about:blank", StringComparison.OrdinalIgnoreCase))

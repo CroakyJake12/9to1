@@ -534,6 +534,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             _services.GetRequiredService<CapabilityRegistryService>(),
             _services.GetRequiredService<ICatalogRepository>(),
             _services.GetRequiredService<IModeRegistry>());
+        WireChatRecovery(factory);
         var page = await factory.CreateNewAsync(token);
         _ownedChats.Add(page);
         var published = false;
@@ -668,11 +669,52 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         });
     }
 
-    private OverlayChatSessionFactory NewChatSessionFactory() => new(_services,
-        _services.GetRequiredService<IConversationRepository>(),
-        _services.GetRequiredService<CapabilityRegistryService>(),
-        _services.GetRequiredService<ICatalogRepository>(),
-        _services.GetRequiredService<IModeRegistry>());
+    private OverlayChatSessionFactory NewChatSessionFactory()
+    {
+        var factory = new OverlayChatSessionFactory(_services,
+            _services.GetRequiredService<IConversationRepository>(),
+            _services.GetRequiredService<CapabilityRegistryService>(),
+            _services.GetRequiredService<ICatalogRepository>(),
+            _services.GetRequiredService<IModeRegistry>());
+        WireChatRecovery(factory);
+        return factory;
+    }
+
+    /// <summary>Routes the genuine local-model recovery request through the host's typed
+    /// navigation seam. It opens the canonical Home Models surface in a separate tab so the current
+    /// conversation, draft, selection and focus are preserved; when this host cannot navigate, or
+    /// when this session is closing or no longer publishes its view, the request stays unrouted (no
+    /// fabricated navigation or state change) and surfaces a structured refusal instead of being
+    /// silently traced. The navigation settlement is the recovery surface's genuinely admitted
+    /// original action settlement, captured on the real loader/UI thread and handed to the external
+    /// navigation driver without awaiting its included action.</summary>
+    private void WireChatRecovery(OverlayChatSessionFactory factory)
+    {
+        factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
+        {
+            if (_hostQueueNavigation is null)
+                throw new SpacesWorkspaceActionRefusal("No host navigation seam is available; local-model recovery cannot route.");
+            // A retired / no-longer-published page must never queue navigation.
+            if (!IsPublicationCurrent)
+                throw new SpacesWorkspaceActionRefusal("The Spaces session no longer owns a live page; local-model recovery is unrouted.");
+
+            var address = AppContentAddress.Parse("browse://home/models");
+            Task settlement;
+            try
+            {
+                settlement = page.RecoveryActionSettlement;
+            }
+            catch (Exception failure) when (failure is not OperationCanceledException)
+            {
+                throw new SpacesWorkspaceActionRefusal("The recovery action settlement could not be captured: " + failure.Message);
+            }
+
+            var admitted = _hostQueueNavigation(
+                new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true), settlement);
+            if (!admitted)
+                throw new SpacesWorkspaceActionRefusal("The host navigation queue refused the local-model recovery route.");
+        };
+    }
 
     /// <summary>Starts a new conversation inside the selected Space from the contextual sidebar.
     /// It never creates another Space and never reuses an existing conversation.</summary>

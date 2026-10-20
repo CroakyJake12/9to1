@@ -67,6 +67,11 @@ internal sealed partial class ChatHavenScene : IDisposable
     private Task? _composerReleaseTask;
     private bool _composerReleased;
     private readonly object _composerCloseGate = new();
+    private Task? _recoveryClose;
+    private Task? _recoveryReleaseTask;
+    private bool _recoveryReleased;
+    private readonly object _recoveryCloseGate = new();
+    private readonly ChatRecoveryBindings _recoveryBindings;
 
     /// <summary>Constructs a scene with its own transport resolver (used by tests/hosts that do
     /// not share a scene-level native resolver).</summary>
@@ -96,6 +101,11 @@ internal sealed partial class ChatHavenScene : IDisposable
         Status = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "Status");
         AttachmentStatus = (HavenText)Root.DescendantsAndSelf().Single(element => element.Name == "AttachmentStatus");
         ManageAttachments = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "ManageAttachments");
+        RecoveryHost = Root.DescendantsAndSelf().OfType<NativeHost>().Single(element => element.Name == "RecoveryHost");
+        _recoveryBindings = new ChatRecoveryBindings();
+        _recoveryBindings.ManageLocalModelsRequested += (_, _) => ManageLocalModelsRequested?.Invoke(this, EventArgs.Empty);
+        RecoveryView = new ChatRecoveryCuiView(_recoveryBindings);
+        _nativeResolver.Register(RecoveryHost, RecoveryView);
         TaskActions = (Container)Root.DescendantsAndSelf().Single(element => element.Name == "TaskActions");
         NewTask = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "NewTask");
         TaskHistory = (HavenButton)Root.DescendantsAndSelf().Single(element => element.Name == "TaskHistory");
@@ -148,6 +158,8 @@ internal sealed partial class ChatHavenScene : IDisposable
     public HavenText Status { get; }
     public HavenText AttachmentStatus { get; }
     public HavenButton ManageAttachments { get; }
+    public NativeHost RecoveryHost { get; }
+    public ChatRecoveryCuiView RecoveryView { get; }
     public Container TaskActions { get; }
     public HavenButton NewTask { get; }
     public HavenButton TaskHistory { get; }
@@ -168,6 +180,7 @@ internal sealed partial class ChatHavenScene : IDisposable
     public event EventHandler? StopRequested;
     public event EventHandler? ResolveProblemsRequested;
     public event EventHandler? ManageAttachmentsRequested;
+    public event EventHandler? ManageLocalModelsRequested;
     public event EventHandler? NewTaskRequested;
     public event EventHandler? TaskHistoryRequested;
     public event EventHandler? ContextDismissRequested;
@@ -216,6 +229,15 @@ internal sealed partial class ChatHavenScene : IDisposable
 
     public void SetTaskMode(bool enabled) =>
         TaskActions.SetValue(HavenProperties.Visibility, enabled ? HavenVisibility.Visible : HavenVisibility.Collapsed);
+
+    /// <summary>Shows or hides the genuine CUI "Manage local models" recovery action next to the
+    /// chat status. It is a routing affordance only: it requests the shared Home local-model
+    /// management route and never fabricates a model or changes the send gate.</summary>
+    public void SetManageLocalModelsVisible(bool visible)
+    {
+        _recoveryBindings.Visible = visible;
+        RecoveryView.Refresh();
+    }
 
     /// <summary>
     /// Updates the one-line context summary shown on the Context card header; callers label token estimates clearly.
@@ -734,6 +756,7 @@ internal sealed partial class ChatHavenScene : IDisposable
                   </Container>
                   <Button Name="ResolveProblems" Variant="Ghost" Content="Resolve problems" MinHeight="34px" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Text Name="Status" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
+                  <NativeHost Name="RecoveryHost" Width="100%" MinHeight="32px" HorizontalAlignment="Center" />
                   <Text Name="AttachmentStatus" Content="" FontSize="11" Foreground="TextSecondary" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <Button Name="ManageAttachments" Variant="Ghost" Content="Manage attachments" MinHeight="32px" HorizontalAlignment="Center" Visibility="Collapsed" />
                   <NativeHost Name="ComposerHost" Width="100%" MinHeight="44px" />
@@ -819,6 +842,64 @@ internal sealed partial class ChatHavenScene : IDisposable
         _composerReleased = true;
     }
 
+    /// <summary>The actual recovery loader action-settlement pipeline for the currently shown
+    /// recovery surface, captured on the UI thread. External navigation owners join this snapshot
+    /// outside any included action so the navigation settles only after the real recovery action
+    /// pipeline drains. The dispatcher invocation is flattened (Unwrap) so joining this task
+    /// actually awaits the genuine capture settlement instead of only the UI-thread call that
+    /// produced it (Task&lt;Task&gt; upcast).</summary>
+    public Task RecoveryActionSettlement =>
+        Dispatcher.UIThread.InvokeAsync<Task>(() => RecoveryView.CaptureOriginalActionSettlement()).GetTask().Unwrap();
+
+    /// <summary>Starts the shared recovery surface's child close (retires its command admission
+    /// and closes the scene host) and publishes the one close task the parent joins during cleanup.
+    /// The SAME close original is returned on every call; no CompletedTask stand-in is ever
+    /// fabricated.</summary>
+    public Task StartRecoveryClose()
+    {
+        lock (_recoveryCloseGate)
+        {
+            _recoveryClose ??= RecoveryView.CloseAsync();
+            return _recoveryClose;
+        }
+    }
+
+    /// <summary>Joins the exact recovery-surface close and then releases the native resolver mapping
+    /// and physical view. ONE SAME release-attempt task is published before any Unregister/Dispose
+    /// callback can reenter; the child must ACK before any physical release, release-success is only
+    /// recorded after the native unregister and view dispose actually succeed, and a failed Unregister
+    /// stays the SAME retained fault (never silently retried on a later call).</summary>
+    public Task JoinRecoveryCloseAndReleaseAsync()
+    {
+        lock (_recoveryCloseGate)
+        {
+            if (_recoveryReleaseTask is not null) return _recoveryReleaseTask;
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _recoveryReleaseTask = JoinRecoveryCloseAndReleaseCoreAsync(start.Task);
+            start.SetResult(); // the release attempt is published before any Unregister/dispose callback
+            return _recoveryReleaseTask;
+        }
+    }
+
+    private async Task JoinRecoveryCloseAndReleaseCoreAsync(Task start)
+    {
+        await start.ConfigureAwait(false);
+        var close = StartRecoveryClose();
+        await close.ConfigureAwait(false); // child ACK required before any physical release
+        await Dispatcher.UIThread.InvokeAsync(ReleaseRecoveryUi).GetTask().ConfigureAwait(false);
+    }
+
+    private void ReleaseRecoveryUi()
+    {
+        if (_recoveryReleased) return;
+        // Unregister/dispose only after the child close acknowledged. Resolver unregister failures
+        // are not swallowed and do not set success state; they remain observable as the SAME
+        // retained release-attempt task.
+        _nativeResolver.Unregister(RecoveryHost, RecoveryView);
+        RecoveryView.Dispose();
+        _recoveryReleased = true;
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -834,6 +915,11 @@ internal sealed partial class ChatHavenScene : IDisposable
         _addMenu.CatalogItemSelected -= OnSharedCatalogItemSelected;
         _composerQueue?.Dispose();
         _addMenu.Dispose();
+        // Retire the authored recovery surface's command admission and start its child close. The
+        // physical native mapping/view release follows the joined ACK path
+        // (JoinRecoveryCloseAndReleaseAsync) owned by the page lifecycle, mirroring the composer.
+        _recoveryBindings.Retire();
+        StartRecoveryClose();
         // Synchronous Dispose requests the SAME child close but cannot claim the async join
         // completed or release the physical mapping early; that release follows the joined ACK
         // path (JoinComposerCloseAndReleaseAsync) owned by the page lifecycle.

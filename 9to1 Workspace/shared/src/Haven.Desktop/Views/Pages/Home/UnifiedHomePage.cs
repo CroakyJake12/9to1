@@ -56,7 +56,13 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
         _createDiscover = createDiscover; _queue = queue; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
-        _section = request.Address.Authority == "newtab" ? "newtab" : "apps";
+        _section = request.Address.Authority switch
+        {
+            "newtab" => "newtab",
+            _ when request.Address.ResourceSegments.Count == 1 &&
+                request.Address.ResourceSegments[0].Equals("models", StringComparison.Ordinal) => "models",
+            _ => "apps"
+        };
         _work = new(StopAsync, CleanupAsync);
         _appsBindings = new(() => _appsState, DispatchAppsCommandAsync);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")

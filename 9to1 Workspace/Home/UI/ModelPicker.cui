@@ -1,25 +1,45 @@
 <Cui id="home-model-picker" product="9-1" version="1">
+  <Actions>
+    <Action name="Refresh" command="Refresh" parameter="{Binding RefreshSelection}" />
+    <Action name="SelectCurrentRoute" command="SelectRoute" parameter="{Binding CurrentRouteSelection}" />
+    <Action name="SelectRoute" command="SelectRoute" parameter="{Binding route.Selection}" />
+    <Action name="ChatCategory" command="SelectCategory" parameter="chat" />
+    <Action name="ImageCategory" command="SelectCategory" parameter="image" />
+    <Action name="VoiceCategory" command="SelectCategory" parameter="voice" />
+    <Action name="AudioCategory" command="SelectCategory" parameter="audio" />
+    <Action name="VideoCategory" command="SelectCategory" parameter="video" />
+    <Action name="MoveCandidateUp" command="MoveCandidateUp" parameter="{Binding candidate.Selection}" />
+    <Action name="MoveCandidateDown" command="MoveCandidateDown" parameter="{Binding candidate.Selection}" />
+    <Action name="EnableCandidate" command="SetCandidateEnabled" parameter="{Binding candidate.EnableSelection}" />
+    <Action name="DisableCandidate" command="SetCandidateEnabled" parameter="{Binding candidate.DisableSelection}" />
+    <Action name="SaveRoute" command="SaveRoute" />
+    <Action name="PreviewText" command="PreviewResolution" parameter="text" />
+    <Action name="PreviewImage" command="PreviewResolution" parameter="image-generation" />
+    <Action name="PreviewVoice" command="PreviewResolution" parameter="voice" />
+    <Action name="PreviewAudio" command="PreviewResolution" parameter="audio-understanding" />
+    <Action name="PreviewVideo" command="PreviewResolution" parameter="video-generation" />
+  </Actions>
   <Theme Name="user_preference">
     <Page>
       <Container id="model-picker-root" background="{Resource CuiBackgroundBrush}" padding="24" Type="Vertical Stack">
         <Container id="compact-model-picker" background="{Resource CuiPanelBrush}" padding="12" margin="0 0 0 16" Type="Horizontal Stack">
           <Text id="compact-model-picker-label" text="Model route" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 0" />
           <Text id="compact-model-picker-selection" text="{Binding State.SelectedRouteId, fallback=Choose a route}" foreground="{Resource CuiTextBrush}" />
-          <Button id="compact-model-picker-edit" action="SelectRoute" action-route-id="{Binding State.SelectedRouteId}" content="Manage" margin="12 0 0 0" accessible-name="Manage the selected model route" />
+          <Button id="compact-model-picker-edit" action="SelectCurrentRoute" content="Manage" margin="12 0 0 0" accessible-name="Manage the selected model route" />
         </Container>
         <Container id="model-picker-header" margin="0 0 0 18" Type="Horizontal Stack">
           <Container width="620" Type="Vertical Stack">
             <Text id="model-picker-title" text="AI models and routes" font-size="26" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
             <Text id="model-picker-description" text="Choose a model route for each kind of work. Route order applies only after eligibility and policy checks." foreground="{Resource CuiTextSoftBrush}" margin="0 5 0 14" />
           </Container>
-          <Button id="model-picker-refresh" action="Refresh" action-scope="{Binding Scope}" action-category="{Binding Category}" content="Refresh" accessible-name="Refresh model routes" />
+          <Button id="model-picker-refresh" action="Refresh" content="Refresh" accessible-name="Refresh model routes" />
         </Container>
         <Container id="model-picker-categories" margin="0 0 0 18" Type="Horizontal Stack">
-          <Button id="category-chat" action="SelectCategory" action-category="chat" content="Chat" accessible-name="Show chat routes" />
-          <Button id="category-image" action="SelectCategory" action-category="image" content="Image" margin="8 0 0 0" accessible-name="Show image routes" />
-          <Button id="category-voice" action="SelectCategory" action-category="voice" content="Voice" margin="8 0 0 0" accessible-name="Show voice routes" />
-          <Button id="category-audio" action="SelectCategory" action-category="audio" content="Advanced audio" margin="8 0 0 0" accessible-name="Show advanced audio routes" />
-          <Button id="category-video" action="SelectCategory" action-category="video" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
+          <Button id="category-chat" action="ChatCategory" content="Chat" accessible-name="Show chat routes" />
+          <Button id="category-image" action="ImageCategory" content="Image" margin="8 0 0 0" accessible-name="Show image routes" />
+          <Button id="category-voice" action="VoiceCategory" content="Voice" margin="8 0 0 0" accessible-name="Show voice routes" />
+          <Button id="category-audio" action="AudioCategory" content="Advanced audio" margin="8 0 0 0" accessible-name="Show advanced audio routes" />
+          <Button id="category-video" action="VideoCategory" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
         </Container>
         <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" />
         <Container id="model-route-list" Type="Vertical Stack">
@@ -32,7 +52,7 @@
                     <Container Type="Horizontal Stack">
                       <Text id="model-route-title" text="{Binding route.RouteId}" font-size="17" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
                       <Text id="model-route-scope" text="{Binding route.Scope}" foreground="{Resource CuiTextSoftBrush}" margin="12 4 0 0" />
-                      <Button id="model-route-select" action="SelectRoute" action-route-id="{Binding route.RouteId}" content="Edit route" margin="12 0 0 0" accessible-name="Edit this model route" />
+                      <Button id="model-route-select" action="SelectRoute" content="Edit route" margin="12 0 0 0" accessible-name="Edit this model route" />
                     </Container>
                     <Text id="model-route-category" text="{Binding route.Category}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 8" />
                     <Container id="model-route-candidates" Type="Vertical Stack">
@@ -45,13 +65,13 @@
                               <Text id="candidate-provider" text="{Binding candidate.ProviderId}" foreground="{Resource CuiTextSoftBrush}" />
                             </Container>
                             <Text id="candidate-enabled" text="{Binding candidate.Enabled}" width="72" foreground="{Resource CuiTextSoftBrush}" />
-                            <Button id="candidate-move-up" action="MoveCandidateUp" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Up" accessible-name="Move model earlier in route" />
-                            <Button id="candidate-move-down" action="MoveCandidateDown" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Down" margin="6 0 0 0" accessible-name="Move model later in route" />
+                            <Button id="candidate-move-up" action="MoveCandidateUp" content="Up" accessible-name="Move model earlier in route" />
+                            <Button id="candidate-move-down" action="MoveCandidateDown" content="Down" margin="6 0 0 0" accessible-name="Move model later in route" />
                             <If condition="{Binding candidate.Enabled}">
-                              <Button action="SetCandidateEnabled" action-enabled="false" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Disable" margin="6 0 0 0" accessible-name="Disable this route candidate" />
+                              <Button action="DisableCandidate" content="Disable" margin="6 0 0 0" accessible-name="Disable this route candidate" />
                             </If>
                             <Else>
-                              <Button action="SetCandidateEnabled" action-enabled="true" action-provider-id="{Binding candidate.ProviderId}" action-model-id="{Binding candidate.ModelId}" action-artifact-revision="{Binding candidate.ArtifactRevision}" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
+                              <Button action="EnableCandidate" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
                             </Else>
                           </Container>
                         </Repeat>
@@ -76,11 +96,11 @@
         </Container>
         <Container id="model-route-actions" margin="0 12 0 8" Type="Horizontal Stack">
           <Button id="save-model-route" action="SaveRoute" content="Save route" accessible-name="Save model route changes" />
-          <Button id="preview-text-route" action="PreviewResolution" action-capability="text" content="Preview text" margin="8 0 0 0" accessible-name="Preview text model routing" />
-          <Button id="preview-image-route" action="PreviewResolution" action-capability="image-generation" content="Preview image" margin="8 0 0 0" accessible-name="Preview image model routing" />
-          <Button id="preview-voice-route" action="PreviewResolution" action-capability="voice" content="Preview voice" margin="8 0 0 0" accessible-name="Preview voice model routing" />
-          <Button id="preview-audio-route" action="PreviewResolution" action-capability="audio-understanding" content="Preview audio" margin="8 0 0 0" accessible-name="Preview audio model routing" />
-          <Button id="preview-video-route" action="PreviewResolution" action-capability="video-generation" content="Preview video" margin="8 0 0 0" accessible-name="Preview video model routing" />
+          <Button id="preview-text-route" action="PreviewText" content="Preview text" margin="8 0 0 0" accessible-name="Preview text model routing" />
+          <Button id="preview-image-route" action="PreviewImage" content="Preview image" margin="8 0 0 0" accessible-name="Preview image model routing" />
+          <Button id="preview-voice-route" action="PreviewVoice" content="Preview voice" margin="8 0 0 0" accessible-name="Preview voice model routing" />
+          <Button id="preview-audio-route" action="PreviewAudio" content="Preview audio" margin="8 0 0 0" accessible-name="Preview audio model routing" />
+          <Button id="preview-video-route" action="PreviewVideo" content="Preview video" margin="8 0 0 0" accessible-name="Preview video model routing" />
         </Container>
         <If condition="{Binding HasPreview}">
           <Container id="model-route-preview" margin="0 0 0 14" Type="Vertical Stack">
