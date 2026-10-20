@@ -417,12 +417,12 @@ public sealed class HostComposerLifetimeTests
             // The foreground is the live scoped CUI text brush resolved on the button itself, so a
             // theme change that repaints CuiTextBrush is what the icon reflects. Compare the painted
             // fill color to the scoped brush's color.
-            Assert.True(addButton.TryFindResource("CuiTextBrush", out var scoped) && scoped is IBrush scopedBrush);
-            var scopedSolid = Assert.IsType<ISolidColorBrush>(scopedBrush);
+            Assert.True(addButton.TryFindResource("CuiTextBrush", out var scoped));
+            var scopedSolid = Assert.IsAssignableFrom<ISolidColorBrush>(scoped);
             foreach (var child in group.Children)
             {
                 var geometryBrush = Assert.IsType<GeometryDrawing>(child).Brush;
-                var solid = Assert.IsType<ISolidColorBrush>(geometryBrush);
+                var solid = Assert.IsAssignableFrom<ISolidColorBrush>(geometryBrush);
                 Assert.Equal(scopedSolid.Color, solid.Color);
             }
         }

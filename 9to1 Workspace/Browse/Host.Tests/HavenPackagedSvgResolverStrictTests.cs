@@ -233,7 +233,8 @@ public sealed class HavenPackagedSvgResolverStrictTests
             """);
         var group = Assert.IsType<DrawingGroup>(drawing.Drawing);
         var pathDraw = Assert.Single(group.Children.OfType<GeometryDrawing>());
-        var geometry = Assert.NotNull(pathDraw.Geometry);
+        Assert.NotNull(pathDraw.Geometry);
+        var geometry = pathDraw.Geometry;
         // Centre inside the inner square is filled (nonzero), not a hole.
         Assert.True(geometry.FillContains(new Point(16, 16)));
         // The ring between the squares is also filled; a point fully outside is not.
