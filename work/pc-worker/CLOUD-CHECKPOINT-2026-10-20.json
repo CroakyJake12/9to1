@@ -1,12 +1,12 @@
 {
   "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
-  "recorded_at": "2026-10-20T11:33:02.901365+00:00",
+  "recorded_at": "2026-10-20T12:50:06.341680+00:00",
   "source_commit": "ebeb78cfb798bbf1493b7923ac0b2f5c301dc280",
   "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
   "branch": "codex/cloud-continuation-20261020",
   "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
   "engineering_state": "CHECKPOINT",
-  "implementation_mode": "One OpenCode implementation request at a time; separate Codex reviews/checks. Beam free-quota exhausted; owner-authorised Mercury fallback starting with unchanged $5 cap.",
+  "implementation_mode": "One authorized Mercury OpenCode implementation request and one serial build slot; separate read-only Codex review. Beam exhausted; $5 cap unchanged, actual billing UNKNOWN.",
   "requirements": [
     "CUI dynamic-update/error-boundary and hot-reload contracts",
     "Universal Model Picker stable identity and unknown/empty state",
@@ -198,27 +198,11 @@
     "worktree": "/workspace/9to1-chat-cui",
     "base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
     "second_patch_sha256": "79ae93664f92afdaa5461af1d65cee0b2a8336fc17519d546d839c90bb077b16",
-    "state": "CHECKPOINT, UNACCEPTED; no model request or .NET active at this source boundary; preparing concrete lifecycle/context tasks",
+    "state": "ACTIVE one OpenCode composer-pass5 close/loader/typed Stop repair; base9727; exclusively allocated serial .NET slot",
     "first_compilation": "5actual C#adapter errors",
     "second_compilation": "FAIL CUI010 invalid raw< in code-button attribute; runtime tests did not execute",
-    "independent_source_blockers": [
-      "First input attachment terminally releases its port",
-      "Incomplete initialization/close and physical owner custody",
-      "Native/mode actions prematurely settle actual async work",
-      "Production scoped Home context/owner parameters remain unwired",
-      "Selection/emoji behavior diverges, Enter submit missing and response modes/model gates incomplete",
-      "Meaningful control/route/lifetime test coverage was weakened; restore actual production checks",
-      "CUI local presentation state requires framework implementation and authored CUI migration"
-    ],
     "note": "No candidate app acceptance; no new composer screenshots misrepresented as product proof",
-    "latest_observation_at": "2026-10-20T12:39:23.972332+00:00",
-    "third_turn_tests": {
-      "initial_host_core": "82total/50passed/32failed; includes production NativeHost registration failure subsequently corrected in active source",
-      "component_lifetime": "2passed/0failed, not whole-page or app acceptance",
-      "later_host": "84total/72passed/12failed at11:48UTC; actual queued-draft/model-gate regressions and obsolete Instruction reflection helpers still under repair",
-      "state": "ACTIVE source, not frozen; exclusive serialized .NET slot held by one OpenCode Mercury worker",
-      "rendered_control_coverage": "Still deficient: Overlay helper invokes bindings directly and reads source CanSend; must restore real authored Button event and IsEnabled coverage"
-    },
+    "latest_observation_at": "2026-10-20T12:50:06.341672+00:00",
     "branch_pushed": "codex/cloud-native-chat-cui-20261020",
     "pass3_frozen": {
       "identity": "/workspace/shared/9to1-test-evidence/composer-pass3-frozen-20261020T120612Z/identity.json",
@@ -230,9 +214,12 @@
       "diagnostics": "Temporary synthetic debug instrumentation removed before frozen checkpoint; source scan found no matching draft debug logger"
     },
     "next_dispatch": {
-      "prompt": "/workspace/shared/9to1-test-evidence/opencode-composer-pass4-dispatch.txt",
-      "sha256": "7a19219e76213d053d1493775a01b363e8cbe685208c091d58a1c294142e69a7",
-      "scope": "Synchronous actual input/edit snapshots, queue/retirement durability, original-owned UI settlement, actual Button click/IsEnabled tests, live Home preference ownership"
+      "prompt": "/workspace/shared/9to1-test-evidence/opencode-composer-pass5-dispatch.txt",
+      "sha256": "1d12d670914f259196845c0d0b02c33088462d0c3f932b072c5f99485dbeb1e2",
+      "source_base": "9727ca0c281a09c3df78c6537da9f7f75a86ea6d",
+      "started_at": "2026-10-20T12:47:10Z",
+      "state": "ACTIVE, no success claim",
+      "review_feedback": "/workspace/shared/9to1-test-evidence/implementation-review-feedback.json"
     },
     "pass4_intervention": {
       "at": "2026-10-20T12:22:02Z",
@@ -256,6 +243,30 @@
       "new_component_lifetime_tests": "NOT_ACCEPTED; held-source-only tests do not prove loader settlement/close custody",
       "native_composer": "NOT_RUN",
       "whole_app": "NOT_RUN"
+    },
+    "historical_pre_qa_blockers": [
+      "First input attachment terminally releases its port",
+      "Incomplete initialization/close and physical owner custody",
+      "Native/mode actions prematurely settle actual async work",
+      "Production scoped Home context/owner parameters remain unwired",
+      "Selection/emoji behavior diverges, Enter submit missing and response modes/model gates incomplete",
+      "Meaningful control/route/lifetime test coverage was weakened; restore actual production checks",
+      "CUI local presentation state requires framework implementation and authored CUI migration"
+    ],
+    "current_independent_source_gaps": [
+      "Exact rawShow/action settlement, close/failed physical ownership and UI-affine cleanup",
+      "Typed Stop cancellation-request/Tasks stop-driver forwarding",
+      "Actual current-profile Home context and canonical app identity wiring",
+      "CUI-authored state/action-selection policy and real compiled-artifact consumption",
+      "Continuous composer, full semantic formatting/Canvas/permission/Voice integration",
+      "Native Windows/web and whole app acceptance"
+    ],
+    "historical_third_turn_tests": {
+      "initial_host_core": "82total/50passed/32failed; includes production NativeHost registration failure subsequently corrected in active source",
+      "component_lifetime": "2passed/0failed, not whole-page or app acceptance",
+      "later_host": "84total/72passed/12failed at11:48UTC; actual queued-draft/model-gate regressions and obsolete Instruction reflection helpers still under repair",
+      "state": "ACTIVE source, not frozen; exclusive serialized .NET slot held by one OpenCode Mercury worker",
+      "rendered_control_coverage": "Still deficient: Overlay helper invokes bindings directly and reads source CanSend; must restore real authored Button event and IsEnabled coverage"
     }
   },
   "latest_owner_ui_refinements": {
