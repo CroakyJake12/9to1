@@ -108,8 +108,8 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
             if (IsCategory(node, BuiltInAutomationNodeCategory.Wait))
             {
                 var text = Parameter(node, "milliseconds", Parameter(node, "forMs", "0"));
-                if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds) || milliseconds is < 0 or > 31_536_000)
-                    issues.Add(new AutomationGraphValidationIssue("wait.duration.invalid", "Wait duration must be between 0 and 31536000 milliseconds.", node.Id));
+                if (!long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds) || milliseconds is < 0 or > 31_536_000_000)
+                    issues.Add(new AutomationGraphValidationIssue("wait.duration.invalid", "Wait duration must be between 0 and 31536000000 milliseconds (365 days).", node.Id));
             }
             else
             {
@@ -165,11 +165,11 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         var action = Parameter(node, "action", "emit");
         if (action.Equals("delay", StringComparison.OrdinalIgnoreCase))
         {
-            var milliseconds = int.Parse(Parameter(node, "milliseconds", "1000"), CultureInfo.InvariantCulture);
+            if (!long.TryParse(Parameter(node, "milliseconds", "1000"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds)) milliseconds = 0;
             var resumeAt = DateTimeOffset.UtcNow.AddMilliseconds(Math.Max(0, milliseconds));
             return new(true, $"Delayed until {resumeAt:O}.", milliseconds.ToString(CultureInfo.InvariantCulture))
             {
-                Yield = new AutomationGraphYield(AutomationGraphYieldKind.Wait, ResumeAt: resumeAt)
+                Yield = new AutomationGraphYield(AutomationGraphYieldKind.Wait, YieldNodeId: node.Id, ResumeAt: resumeAt)
             };
         }
         return ResolveEmit(context, isPreview: false);
@@ -178,14 +178,21 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
     private static AutomationGraphNodeExecutionResult ExecuteWaitAsync(AutomationGraphNodeExecutionContext context)
     {
         var node = context.Node;
-        var text = Parameter(node, "milliseconds", Parameter(node, "forMs", "0"));
-        if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds)) milliseconds = 0;
-        var resumeAt = DateTimeOffset.UtcNow.AddMilliseconds(Math.Max(0, milliseconds));
         var until = Parameter(node, "until");
-        var condition = string.IsNullOrWhiteSpace(until) ? null : until;
-        return new(true, $"Will resume {resumeAt:O}.", milliseconds.ToString(CultureInfo.InvariantCulture))
+        DateTimeOffset resumeAt;
+        if (!string.IsNullOrWhiteSpace(until) && DateTimeOffset.TryParse(until, CultureInfo.InvariantCulture,
+                DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal, out var parsedUntil))
+            resumeAt = parsedUntil.ToUniversalTime();
+        else
         {
-            Yield = new AutomationGraphYield(AutomationGraphYieldKind.Wait, ResumeAt: resumeAt, Condition: condition)
+            var text = Parameter(node, "milliseconds", Parameter(node, "forMs", "0"));
+            if (!long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds)) milliseconds = 0;
+            resumeAt = DateTimeOffset.UtcNow.AddMilliseconds(Math.Max(0, milliseconds));
+        }
+        var condition = string.IsNullOrWhiteSpace(until) ? null : until;
+        return new(true, $"Will resume {resumeAt:O}.", resumeAt.ToString("O", CultureInfo.InvariantCulture))
+        {
+            Yield = new AutomationGraphYield(AutomationGraphYieldKind.Wait, YieldNodeId: node.Id, ResumeAt: resumeAt, Condition: condition)
         };
     }
 
@@ -197,7 +204,7 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         var intent = System.Text.Json.JsonSerializer.Serialize(new { action, summary });
         return new(true, $"Waiting for approval of {action}.", summary)
         {
-            Yield = new AutomationGraphYield(AutomationGraphYieldKind.Approval, ApprovalActionJson: intent, ApprovalNodeId: node.Id)
+            Yield = new AutomationGraphYield(AutomationGraphYieldKind.Approval, YieldNodeId: node.Id, ApprovalActionJson: intent, ApprovalNodeId: node.Id)
         };
     }
 

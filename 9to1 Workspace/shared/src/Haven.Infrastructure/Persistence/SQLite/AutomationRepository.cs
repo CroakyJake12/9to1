@@ -15,7 +15,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents automation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAutomationRepository, IAutomationRunContinuationStore
+public sealed partial class AutomationRepository(ISqliteConnectionFactory factory) : IAutomationRepository, IAutomationRunContinuationStore, IAutomationRunClaimStore
 {
     /// <summary>Exact maintained factory observation only; no READ, WRITE or scheduler authority.</summary>
     public bool HasOriginalSqliteFactory(ISqliteConnectionFactory sameActual) => ReferenceEquals(factory, sameActual);
@@ -38,10 +38,17 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = """
+        command.CommandText = $"""
             SELECT * FROM automations
             WHERE is_enabled=1 AND next_run_at IS NOT NULL AND next_run_at <= $now
               AND (lease_until IS NULL OR lease_until < $now)
+              AND NOT EXISTS (
+                  SELECT 1 FROM automation_runs r
+                  WHERE r.automation_id = automations.id
+                    AND r.lease_token IS NOT NULL
+                    AND r.lease_token = automations.lease_token
+                    AND r.status IN ({ActiveLeasedRunStatusList})
+              )
             ORDER BY next_run_at;
             """;
         command.Parameters.AddWithValue("$now", now.ToUniversalTime().ToString("O"));
@@ -297,6 +304,13 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
     /// rejected rather than silently accepted as a suspension.</summary>
     private static bool IsSupportedSuspendedStatus(AutomationRunStatus status) =>
         status is AutomationRunStatus.Waiting or AutomationRunStatus.ApprovalRequired or AutomationRunStatus.RetryPending;
+
+    /// <summary>Statuses of a Run that durably occupies its definition's execution. A long-wait Run
+    /// holds its definition lease token even after the 15-minute lease-derived expiry; a fresh
+    /// scheduler must never re-fire a definition whose current lease token is held by such an active
+    /// non-terminal Run, otherwise it would spawn a duplicate Run/token over the still-waiting one.</summary>
+    private static string ActiveLeasedRunStatusList =>
+        string.Join(",", new[] { AutomationRunStatus.Running, AutomationRunStatus.Waiting, AutomationRunStatus.ApprovalRequired, AutomationRunStatus.RetryPending, AutomationRunStatus.Paused, AutomationRunStatus.Blocked }.Select(status => (int)status));
 
     /// <summary>The exact persisted Run row, normalized for comparison.</summary>
     private sealed record AutomationRunRow(

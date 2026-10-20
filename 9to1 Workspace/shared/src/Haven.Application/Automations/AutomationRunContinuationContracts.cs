@@ -1,3 +1,5 @@
+using Haven.Core;
+
 namespace Haven.Application.Automations;
 
 /// <summary>Typed classification of a durable resume/decision refusal. These map to the specification's
@@ -73,11 +75,33 @@ public interface IAutomationRunClaimStore
     Task ReleaseRunClaimAsync(Guid runId, string claimToken, CancellationToken cancellationToken);
 }
 
+/// <summary>Result of resuming a claimed Run: either a terminal Run ready for <c>CompleteRunAsync</c>
+/// or a re-suspended Run ready for <c>SuspendRunAsync</c>, plus the typed outcome and the next schedule
+/// when terminal. Persistence is performed by the coordinator, never inside the resumer, so the
+/// suspension/terminal transaction stays under the claim with a single owner.</summary>
+public sealed record AutomationRunResumeResult(
+    AutomationRun? UpdatedRun,
+    DateTimeOffset? NextRunAt,
+    bool ReSuspended,
+    AutomationRunDecisionOutcome Outcome);
+
 /// <summary>Strategy that actually resumes a claimed Run from its persisted continuation. The
 /// coordinator handles claim acquisition and persistence transitions; this resumer performs the
-/// revalidated graph execution/decision work. It must revalidate the current original caller/scope and
-/// required capabilities before every resumed side effect through the owning admission/action paths.</summary>
+/// revalidated graph execution/decision work. It must route every resumed side effect through the
+/// owning admission/action paths and revalidate the current original caller/scope and required
+/// capabilities before them. Workflow approval is distinct from Home's permissionGranted flag: this
+/// resumer never sets that flag merely because human review was approved.</summary>
 public interface IAutomationRunResumer
 {
-    Task<AutomationRunDecisionOutcome> ResumeAsync(AutomationRun run, CancellationToken cancellationToken);
+    Task<AutomationRunResumeResult> ResumeAsync(AutomationRun run, CancellationToken cancellationToken);
+}
+
+/// <summary>Small, fail-closed typed seam for authoritative workflow-approval authority. It is the
+/// Home-owned decision/actor-ownership boundary: decisions require the current authorised original
+/// actor, not a stored actor string. When a host has not wired this seam, approval decisions are
+/// refused and the affected Approval stays pending/fail-closed — a fake auto-approval service/UI is
+/// never invented.</summary>
+public interface IAutomationApprovalAuth
+{
+    Task<bool> IsAuthorisedAsync(Guid automationId, string actorId, CancellationToken cancellationToken);
 }
