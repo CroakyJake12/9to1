@@ -1,7 +1,11 @@
 using Avalonia;
 using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -214,6 +218,326 @@ public sealed class HostComposerLifetimeTests
     private static Button? FindButton(ContentControl root, string automationId) =>
         root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>
             AutomationProperties.GetAutomationId(b) == automationId);
+
+    private static IEnumerable<AutomationPeer> AutomationDescendants(AutomationPeer peer)
+    {
+        foreach (var child in peer.GetChildren())
+        {
+            yield return child;
+            foreach (var descendant in AutomationDescendants(child)) yield return descendant;
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_composer_textbox_peer_appears_exactly_once_in_rendered_scene_tree()
+    {
+        // Production-style mount: only shared composer transported through the real HavenSceneControl
+        // with the same native registrar, so the automation walk exercises the actual surface.
+        var registrar = new RecordingRegistrar();
+        var scene = new ChatHavenScene(registrar);
+        var window = new Window
+        {
+            Width = 900, Height = 700,
+            Content = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = scene.Root }
+        };
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
+            var box = FindInput(scene.ComposerView);
+            Assert.NotNull(box);
+            Assert.True(box!.Bounds.Width > 0 && box.Bounds.Height > 0);
+
+            var scenePeer = ControlAutomationPeer.CreatePeerForElement((Control)window.Content!);
+            Assert.NotNull(scenePeer);
+            var peers = AutomationDescendants(scenePeer).ToArray();
+
+            // The real composer TextBox peer appears EXACTLY once, mapping to the same actual input.
+            var inputPeers = peers.Where(peer => peer.GetAutomationId() == "composer-input").ToArray();
+            Assert.Single(inputPeers);
+            var inputPeer = inputPeers[0];
+            Assert.Same(box, (inputPeer as TextBoxAutomationPeer)?.Owner);
+            Assert.Equal(AutomationControlType.Edit, inputPeer.GetAutomationControlType());
+            Assert.True(inputPeer.GetBoundingRectangle().Width > 0d);
+            Assert.True(inputPeer.GetBoundingRectangle().Height > 0d);
+
+            // The native peer that composes the composer control must be linked to a real parent
+            // whose recriprocal children contain the SAME native peer (NATIVE-004/006 base hook).
+            var nativePeers = peers.OfType<ControlAutomationPeer>()
+                .Where(p => ReferenceEquals(p.Owner, scene.ComposerView))
+                .ToArray();
+            Assert.Single(nativePeers);
+            var nativePeer = nativePeers[0];
+            var nativeParent = nativePeer.GetParent();
+            Assert.NotNull(nativeParent);
+            Assert.Contains(nativePeer, nativeParent!.GetChildren());
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, scene.ComposerView, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_composer_peer_remains_after_public_cache_walk_and_prunes_on_root_replacement()
+    {
+        // CACHE the peer tree first (public GetChildren path), then replace the actual scene root
+        // (mount/unmount the native composer), then walk the SAME public GetChildren path again to
+        // prove cache invalidation: the previous native subtree is removed and the current appears once.
+        var registrar = new RecordingRegistrar();
+        var scene = new ChatHavenScene(registrar);
+        var sceneControl = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar);
+        var window = new Window { Width = 900, Height = 700, Content = sceneControl };
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            sceneControl.Root = scene.Root;
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var scenePeer = ControlAutomationPeer.CreatePeerForElement(sceneControl);
+            Assert.NotNull(scenePeer);
+
+            // First walk caches/attaches peers; the real composer input must be present once.
+            var firstWalk = AutomationDescendants(scenePeer).Where(peer => peer.GetAutomationId() == "composer-input").ToArray();
+            Assert.Single(firstWalk);
+            var firstPeer = firstWalk[0];
+            Assert.True(firstPeer.GetBoundingRectangle().Width > 0d);
+            var nativeRoot = AutomationDescendants(scenePeer).OfType<ControlAutomationPeer>()
+                .Single(peer => ReferenceEquals(peer.Owner, scene.ComposerView));
+            var nativeParent = nativeRoot.GetParent();
+            Assert.NotNull(nativeParent);
+            Assert.Contains(nativeRoot, nativeParent!.GetChildren());
+
+            // HUI semantic exposure mutation: collapse the composer host, then rewalk the PUBLIC
+            // cached GetChildren path. The stale native subtree must prune WITHOUT root replacement.
+            var host = scene.ComposerHost;
+            host.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+            PumpLayout(window);
+            var exposureWalk = AutomationDescendants(scenePeer).Where(peer => peer.GetAutomationId() == "composer-input").ToArray();
+            Assert.Empty(exposureWalk);
+            Assert.Null(nativeRoot.GetParent());
+
+            // Restore exposure: the SAME native peer reappears exactly once.
+            host.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+            PumpLayout(window);
+            var restoredWalk = AutomationDescendants(scenePeer).Where(peer => peer.GetAutomationId() == "composer-input").ToArray();
+            Assert.Single(restoredWalk);
+            Assert.Same(firstPeer, restoredWalk[0]);
+            var restoredRoot = AutomationDescendants(scenePeer).OfType<ControlAutomationPeer>()
+                .Single(peer => ReferenceEquals(peer.Owner, scene.ComposerView));
+            Assert.Same(nativeRoot, restoredRoot);
+            Assert.Same(nativeParent, restoredRoot.GetParent());
+            Assert.Contains(restoredRoot, nativeParent.GetChildren());
+
+            // Replace the actual root with a plain empty container (no NativeHost/composer mount).
+            sceneControl.Root = new Haven.UI.Components.Container();
+            PumpLayout(window);
+            Assert.DoesNotContain(scene.ComposerView, window.GetVisualDescendants());
+
+            // Public GetChildren path again: the stale composer subtree is pruned.
+            var secondWalk = AutomationDescendants(scenePeer).Where(peer => peer.GetAutomationId() == "composer-input").ToArray();
+            Assert.Empty(secondWalk);
+            Assert.Null(nativeRoot.GetParent());
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, scene.ComposerView, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_peer_within_nested_semantic_group_links_to_intended_semantic_parent()
+    {
+        // A NESTED semantic Group -> role-None NativeHost -> real native control must expose the
+        // native peer as a child of the semantic parent peer, NOT flattened into the scene root,
+        // with reciprocal parent/child linking (NATIVE-004/006).
+        var registrar = new RecordingRegistrar();
+        var group = new Haven.UI.Components.Container { Name = "OuterGroup" };
+        var host = new Haven.UI.Components.NativeHost { Name = "NestedHost" };
+        group.Add(host);
+        var root = new Haven.UI.Components.Container { Name = "SceneRoot" };
+        root.Add(group);
+
+        var nativeBox = new TextBox { Text = "native" };
+        AutomationProperties.SetAutomationId(nativeBox, "nested-native-input");
+        registrar.Register(host, nativeBox);
+
+        var sceneControl = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = root };
+        var window = new Window { Width = 900, Height = 700, Content = sceneControl };
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            PumpLayout(window);
+            Assert.Contains(nativeBox, window.GetVisualDescendants());
+
+            var scenePeer = ControlAutomationPeer.CreatePeerForElement(sceneControl);
+            Assert.NotNull(scenePeer);
+            var peers = AutomationDescendants(scenePeer).ToArray();
+
+            var nativePeers = peers.OfType<ControlAutomationPeer>()
+                .Where(p => ReferenceEquals(p.Owner, nativeBox))
+                .ToArray();
+            Assert.Single(nativePeers);
+            var nativePeer = nativePeers[0];
+
+            // Intended semantic parent is the Group peer (role Group), not the scene root peer.
+            var groupPeer = peers.Single(p => p.GetAutomationId() == "OuterGroup");
+            Assert.Same(groupPeer, nativePeer.GetParent());
+            Assert.Contains(nativePeer, groupPeer.GetChildren());
+            Assert.DoesNotContain(nativePeer, scenePeer.GetChildren());
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            window.Close();
+            if (testFailure is not null) throw testFailure;
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_group_child_add_materializes_new_peer_during_cohort_invalidation_safely()
+    {
+        // NATIVE-009/010a: when a semantic child is added to a group, the group element invalidates
+        // and InvalidateCachedChildren iterates its peer cohort. A public ChildrenChanged observer
+        // that READS the subtree during that iteration materializes the NEW child's peer, mutating
+        // _elementPeers mid-foreach. The cohort must be snapshotted before notifications, else
+        // InvalidOperationException. This test reproduces that exact read during a member notification.
+        var registrar = new RecordingRegistrar();
+        var group = new Haven.UI.Components.Container { Name = "OuterGroup" };
+        var host = new Haven.UI.Components.NativeHost { Name = "NestedHost" };
+        group.Add(host);
+        var root = new Haven.UI.Components.Container { Name = "SceneRoot" };
+        root.Add(group);
+
+        var nativeBox = new TextBox { Text = "native" };
+        AutomationProperties.SetAutomationId(nativeBox, "nested-native-input");
+        registrar.Register(host, nativeBox);
+
+        var sceneControl = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = root };
+        var window = new Window { Width = 900, Height = 700, Content = sceneControl };
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            PumpLayout(window);
+            var scenePeer = ControlAutomationPeer.CreatePeerForElement(sceneControl);
+            Assert.NotNull(scenePeer);
+
+            // Initial walk caches the Group peer (and every currently-materialized peer).
+            var initialPeers = AutomationDescendants(scenePeer).ToArray();
+            var groupPeer = initialPeers.Single(p => p.GetAutomationId() == "OuterGroup");
+            Assert.Contains(nativeBox, initialPeers.OfType<ControlAutomationPeer>().Select(p => p.Owner));
+
+            // Observer reads the PUBLIC subtree whenever the group's children change. Reading creates
+            // peers and mutates _elementPeers while InvalidateCachedChildren iterates its cohort.
+            var reads = 0;
+            EventHandler reader = (_, _) => reads += AutomationDescendants(scenePeer).Count();
+            groupPeer.ChildrenChanged += reader;
+
+            // Add a brand-new semantic child never materialized as a peer. The group invalidates ->
+            // InvalidateAutomationTree -> cohort foreach includes groupPeer, whose ChildrenChanged
+            // fires the reentrant read that materializes FreshChild's peer mid-iteration.
+            var fresh = new Haven.UI.Components.Button { Name = "FreshChild" };
+            group.Add(fresh);
+            PumpLayout(window);
+
+            groupPeer.ChildrenChanged -= reader;
+            Assert.True(reads > 0, "reentrant read never executed during cohort invalidation");
+            Assert.Single(AutomationDescendants(scenePeer), p => p.GetAutomationId() == "FreshChild");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            window.Close();
+            if (testFailure is not null) throw testFailure;
+        }
+    }
+
+    [AvaloniaFact]
+    public void Accessibility_metadata_update_does_not_restart_class_reconciliation()
+    {
+        var probe = new Haven.UI.Components.Container { Name = "MetadataProbe" };
+        var root = new Haven.UI.Components.Container { Name = "SceneRoot" };
+        root.Add(probe);
+        var sceneControl = new HavenSceneControl(new HavenAvaloniaImageResolver()) { Root = root };
+        var window = new Window { Width = 900, Height = 700, Content = sceneControl };
+        window.Show();
+        try
+        {
+            PumpLayout(window);
+            var scenePeer = ControlAutomationPeer.CreatePeerForElement(sceneControl);
+            var originalPeer = Assert.Single(AutomationDescendants(scenePeer),
+                peer => peer.GetAutomationId() == "MetadataProbe");
+            var before = sceneControl.DiagApplyClassesRuns;
+
+            probe.Accessibility.AccessibleName = "Updated accessible name";
+
+            Assert.Equal("Updated accessible name", originalPeer.GetName());
+            Assert.Equal(before, sceneControl.DiagApplyClassesRuns);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Native_retained_descendant_role_mutation_updates_cached_peer_without_manual_invalidation()
+    {
+        // NATIVE-010b: Accessibility.Role is a plain auto-property with no dedicated invalidation event.
+        // The cached peer must still react to a direct Role mutation on a retained descendant WITHOUT a
+        // manual InvalidateAutomationTree/root reset/unrelated mutation. Role None <-> Group.
+        var registrar = new RecordingRegistrar();
+        var probe = new Haven.UI.Components.Container { Name = "RoleProbe" }; // default role Group
+        var root = new Haven.UI.Components.Container { Name = "SceneRoot" };
+        root.Add(probe);
+
+        var sceneControl = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = root };
+        var window = new Window { Width = 900, Height = 700, Content = sceneControl };
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            PumpLayout(window);
+            var scenePeer = ControlAutomationPeer.CreatePeerForElement(sceneControl);
+            Assert.NotNull(scenePeer);
+
+            // Cache the peer tree first via the PUBLIC GetChildren path.
+            var initialWalk = AutomationDescendants(scenePeer).ToArray();
+            var originalProbe = Assert.Single(initialWalk, p => p.GetAutomationId() == "RoleProbe");
+            Assert.Same(scenePeer, originalProbe.GetParent());
+            Assert.Contains(originalProbe, scenePeer.GetChildren());
+
+            // Direct Role mutation to None: the cached walk must EXCLUDE the probe. No manual
+            // invalidation, root reset, or unrelated mutation is applied.
+            probe.Accessibility.Role = HavenAccessibleRole.None;
+            PumpLayout(window);
+            var noneWalk = AutomationDescendants(scenePeer).ToArray();
+            Assert.DoesNotContain(noneWalk, p => p.GetAutomationId() == "RoleProbe");
+            Assert.Null(originalProbe.GetParent());
+
+            // Direct Role mutation back to Group: the SAME probe peer reappears with Group type.
+            probe.Accessibility.Role = HavenAccessibleRole.Group;
+            PumpLayout(window);
+            var groupWalk = AutomationDescendants(scenePeer).ToArray();
+            var back = Assert.Single(groupWalk, p => p.GetAutomationId() == "RoleProbe");
+            Assert.Same(originalProbe, back);
+            Assert.Equal(AutomationControlType.Group, back.GetAutomationControlType());
+            Assert.Same(scenePeer, back.GetParent());
+            Assert.Contains(back, scenePeer.GetChildren());
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            window.Close();
+            if (testFailure is not null) throw testFailure;
+        }
+    }
 
     [AvaloniaFact]
     public async Task Real_send_button_click_settles_actual_loader_snapshot()
@@ -823,6 +1147,53 @@ public sealed class HostComposerLifetimeTests
         if (failures.Count == 0) return;
         if (testFailure is not null) failures.Insert(0, testFailure);
         throw new AggregateException("Composer test and independent original cleanup failed.", failures);
+    }
+
+    [AvaloniaFact]
+    public async Task Native_composer_real_headless_keyboard_and_text_edit_actual_textbox()
+    {
+        // Honest native editing test: drive the ACTUAL headless Window/device keyboard+text
+        // transport (KeyTextInput/KeyPress/KeyRelease) at the focused Realm TextBox, not direct
+        // Text assignment. The native TextBox legally marks its own edits handled; we assert the
+        // actual native value/selection/focus instead of an invalid Handled=false expectation.
+        var registrar = new RecordingRegistrar();
+        var scene = new ChatHavenScene(registrar);
+        var window = new Window
+        {
+            Width = 900, Height = 700,
+            Content = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = scene.Root }
+        };
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(scene.ComposerView);
+            Assert.NotNull(box);
+            box!.Focus();
+            Assert.True(box.IsKeyboardFocusWithin);
+
+            var sceneControl = (HavenSceneControl)window.Content!;
+            Assert.True(sceneControl.IsNativeControlSource(box));
+
+            // Real headless text input at the retained native TextBox.
+            window.KeyTextInput("first line");
+            Assert.Equal("first line", box.Text);
+
+            // Shift+Enter through the real device route inserts a second line (AcceptsReturn).
+            window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.Shift);
+            window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.Shift);
+            window.KeyTextInput("second line");
+
+            Assert.Equal("first line\nsecond line", box.Text);
+            Assert.True(box.GetLineCount() >= 2);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, scene.ComposerView, testFailure);
+        }
     }
 
     private static IEnumerable<Exception> AllCauses(Exception error)

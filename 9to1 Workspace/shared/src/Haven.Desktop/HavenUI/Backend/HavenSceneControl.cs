@@ -34,6 +34,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     private readonly DispatcherTimer _animationTimer;
     private HavenElement? _root;
     private HavenInputRouter? _input;
+    private HavenSceneAutomationPeer? _automationPeer;
     private bool _processingMotion;
     private TopLevel? _topLevel;
 
@@ -84,7 +85,9 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     internal long DiagArrangeLayoutSkips { get; private set; }
 
     protected override Avalonia.Automation.Peers.AutomationPeer OnCreateAutomationPeer() =>
-        new HavenSceneAutomationPeer(this);
+        _automationPeer = new HavenSceneAutomationPeer(this);
+
+    internal void InvalidateAutomationTree() => _automationPeer?.InvalidateCachedChildren();
 
     public bool FocusElement(HavenElement element)
     {
@@ -124,6 +127,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             _motionSnapshots.Clear();
             _animations.StopAll();
             RefreshNativeControls();
+            InvalidateAutomationTree();
             if (_root is not null)
             {
                 _resources.ApplyClasses(_root);
@@ -411,6 +415,9 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+        // Native-origin keys (from a mounted native control such as the TextBox) must not feed the
+        // separate HUI router; leave ordinary Avalonia propagation/default commands intact.
+        if (IsNativeControlSource(e.Source)) return;
         ConfigureInputRouter();
         if (_input?.KeyDown(MapInputKey(e.Key), ToHavenModifiers(e.KeyModifiers)) != true) return;
         e.Handled = true;
@@ -421,6 +428,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     protected override void OnKeyUp(KeyEventArgs e)
     {
         base.OnKeyUp(e);
+        if (IsNativeControlSource(e.Source)) return;
         if (_input?.KeyUp(MapInputKey(e.Key)) != true) return;
         e.Handled = true;
         InvalidateScene();
@@ -429,6 +437,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
     protected override void OnTextInput(TextInputEventArgs e)
     {
         base.OnTextInput(e);
+        if (IsNativeControlSource(e.Source)) return;
         if (_input?.TextInput(e.Text) != true) return;
         e.Handled = true;
         InvalidateMeasure();
@@ -1052,6 +1061,11 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             InvalidateScene();
             return;
         }
+        // Invalidate the automation tree on ANY HUI change, including pure exposure mutations
+        // such as visibility/IsIncluded (which classify as Layout|Paint, not Style/Structure/Motion).
+        // The public cached GetChildren walk must recompose (NATIVE-006/007) so stale native peers
+        // prune immediately; recompute is lazy and cheap so unconditional clearing is safe.
+        InvalidateAutomationTree();
         var reconciliationKinds = HavenInvalidationKinds.Style | HavenInvalidationKinds.Structure | HavenInvalidationKinds.Motion;
         if (_root is not null && (kinds & reconciliationKinds) != 0)
         {
@@ -1074,20 +1088,31 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         InvalidateScene();
     }
 
+    /// <summary>Read-only lookup of the real native control currently admitted/mounted for a Haven
+    /// element (e.g. NativeHost → the shared composer). Used only by automation peers to compose the
+    /// actual native subtree; never calls the resolver again or fabricates a control.</summary>
+    internal bool TryGetNativeControl(HavenElement element, out Control? control) => _nativeControls.TryGetValue(element, out control);
+
     private void RefreshNativeControls()
     {
         var current = _root?.DescendantsAndSelf().Where(IsNativeElement).ToHashSet() ?? [];
+        bool changed = false;
         foreach (var removed in _nativeControls.Keys.Where(element => !current.Contains(element)).ToArray())
         {
             Children.Remove(_nativeControls[removed]);
             _nativeControls.Remove(removed);
+            changed = true;
         }
         foreach (var element in current.Where(element => !_nativeControls.ContainsKey(element)))
         {
             if (!_nativeControlResolver.TryCreate(element, out var control) || control is null) continue;
             _nativeControls.Add(element, control);
             Children.Add(control);
+            changed = true;
         }
+        // Native admission changed: the composed peer subtree must be refreshed so the public
+        // cached GetChildren walk never exposes a stale native peer/parent.
+        if (changed) InvalidateAutomationTree();
     }
 
     private void ArrangeNativeControls()
@@ -1100,7 +1125,7 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         }
     }
 
-    private bool IsNativeControlSource(object? source)
+    internal bool IsNativeControlSource(object? source)
     {
         if (source is not Visual visual) return false;
         return _nativeControls.Values.Any(control => ReferenceEquals(visual, control) || visual.GetVisualAncestors().Contains(control));

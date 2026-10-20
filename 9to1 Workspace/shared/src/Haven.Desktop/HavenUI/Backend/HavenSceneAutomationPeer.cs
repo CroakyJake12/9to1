@@ -35,7 +35,12 @@ internal sealed class HavenSceneAutomationPeer : ControlAutomationPeer
 
     protected override string? GetHelpTextCore() => _owner.Root?.Accessibility.Description;
 
-    protected override IReadOnlyList<AutomationPeer> GetOrCreateChildrenCore()
+    // Supply mixed semantic+native children via GetChildrenCore: the base
+    // ControlAutomationPeer.GetOrCreateChildrenCore owns caching, detach and the
+    // reciprocal TrySetParent linking (NATIVE-006 supported hook). Invalidate via
+    // InvalidateCachedChildren whenever the HUI structure/exposure/root/native
+    // admission changes so the public cached walk is never stale.
+    protected override IReadOnlyList<AutomationPeer>? GetChildrenCore()
     {
         if (_owner.Root is not { } root) return [];
         // A thumbnail navigator owns virtual slide items. It can itself be the
@@ -43,9 +48,7 @@ internal sealed class HavenSceneAutomationPeer : ControlAutomationPeer
         if (root is PresentThumbnailNavigator)
         {
             PruneDetachedElementPeers(root);
-            var navigatorPeer = GetOrCreateElementPeer(root);
-            navigatorPeer.AttachTo(this);
-            return [navigatorPeer];
+            return [GetOrCreateElementPeer(root)];
         }
         return GetChildrenFor(root, this);
     }
@@ -54,8 +57,19 @@ internal sealed class HavenSceneAutomationPeer : ControlAutomationPeer
     {
         if (ReferenceEquals(parent, _owner.Root)) PruneDetachedElementPeers(parent);
         var result = new List<AutomationPeer>();
-        foreach (var child in parent.Children) AddSemanticChild(child, parentPeer, result);
+        foreach (var child in parent.Children) AddSemanticChild(child, result);
         return result;
+    }
+
+    internal void InvalidateCachedChildren()
+    {
+        // Snapshot the live peer cohort BEFORE any notification: InvalidateChildren raises
+        // ChildrenChanged synchronously, and a public observer may read the tree (creating new
+        // element peers and mutating _elementPeers) while iterating. Iterating a stale snapshot
+        // avoids InvalidOperationException while still clearing every cached peer (NATIVE-009).
+        var cohort = _elementPeers.Values.ToArray();
+        InvalidateChildren();
+        foreach (var peer in cohort) peer.InvalidateCachedChildren();
     }
 
     internal int CachedElementPeerCount => _elementPeers.Count;
@@ -102,17 +116,25 @@ internal sealed class HavenSceneAutomationPeer : ControlAutomationPeer
         return bounds.Right <= viewport.X || bounds.Bottom <= viewport.Y || bounds.X >= viewport.Right || bounds.Y >= viewport.Bottom;
     }
 
-    private void AddSemanticChild(HavenElement element, AutomationPeer parentPeer, List<AutomationPeer> result)
+    private void AddSemanticChild(HavenElement element, List<AutomationPeer> result)
     {
         if (!IsExposed(element)) return;
         if (element.Accessibility.Role == HavenAccessibleRole.None)
         {
-            foreach (var child in element.Children) AddSemanticChild(child, parentPeer, result);
+            // A role-None element (e.g. NativeHost) may still carry a REAL admitted/mounted native
+            // control whose automation subtree must be exposed at this exact position. The base
+            // GetOrCreateChildrenCore will establish the reciprocal parent/child link (TrySetParent)
+            // when this list is returned from GetChildrenCore.
+            if (_owner.TryGetNativeControl(element, out var native) && native is not null)
+            {
+                var nativePeer = ControlAutomationPeer.CreatePeerForElement(native);
+                if (nativePeer is not null) result.Add(nativePeer);
+            }
+            foreach (var child in element.Children) AddSemanticChild(child, result);
             return;
         }
 
         var peer = GetOrCreateElementPeer(element);
-        peer.AttachTo(parentPeer);
         result.Add(peer);
     }
 
@@ -180,7 +202,7 @@ internal class HavenElementAutomationPeer : ControlAutomationPeer
     protected HavenElement Element => _element;
     protected bool CanInteract => IsEnabledCore();
 
-    internal void AttachTo(AutomationPeer parent) => _parent = parent;
+    internal void InvalidateCachedChildren() => InvalidateChildren();
 
     internal void Detach()
     {
@@ -190,13 +212,28 @@ internal class HavenElementAutomationPeer : ControlAutomationPeer
 
     protected virtual void OnSemanticStateInvalidated() { }
 
-    private void OnElementInvalidated(object? sender, EventArgs e) => OnSemanticStateInvalidated();
+    private void OnElementInvalidated(object? sender, EventArgs e)
+    {
+        // HUI semantic structure/exposure changes invalidate the cached child list so
+        // the public GetChildren path never returns stale semantic/native children.
+        InvalidateChildren();
+        OnSemanticStateInvalidated();
+    }
+
+    // The base ControlAutomationPeer.GetOrCreateChildrenCore calls this on each composed
+    // child, so we record the reciprocal semantic parent exactly as the base completes its
+    // cached traversal (NATIVE-006). No visual-tree guesswork.
+    protected override bool TrySetParent(AutomationPeer? parent)
+    {
+        _parent = parent;
+        return true;
+    }
 
     protected override AutomationControlType GetAutomationControlTypeCore() => HavenSceneAutomationPeer.MapRole(_element.Accessibility.Role);
     protected override string GetClassNameCore() => _element.GetType().Name;
     protected override string? GetAutomationIdCore() => _element.Name;
     protected override Rect GetBoundingRectangleCore() => _rootPeer.BoundsInTopLevel(_element);
-    protected override IReadOnlyList<AutomationPeer> GetOrCreateChildrenCore() => _rootPeer.GetChildrenFor(_element, this);
+    protected override IReadOnlyList<AutomationPeer>? GetChildrenCore() => _rootPeer.GetChildrenFor(_element, this);
     protected override AutomationPeer? GetParentCore() => _parent;
     protected override string? GetHelpTextCore() => _element.Accessibility.Description;
     protected override string? GetPlaceholderTextCore() => _element is Input input ? input.Placeholder : null;

@@ -41,6 +41,18 @@ public abstract class HavenElement
     public HavenRect Bounds { get; internal set; }
     public bool IsIncluded { get; internal set; } = true;
 
+    protected HavenElement()
+    {
+        // Accessibility mutations (role/name/exposure) have no HavenInvalidationKinds notification
+        // of their own; the peer composition depends on them, so route them into the normal
+        // invalidation stream so hosts refresh the automation tree (NATIVE-007/010).
+        Accessibility.Changed += OnAccessibilityChanged;
+    }
+
+    // Metadata changes refresh automation without restarting class application. Style
+    // reconciliation may itself update this metadata, so a Style invalidation can recurse.
+    private void OnAccessibilityChanged(object? sender, EventArgs e) => Invalidate(HavenInvalidationKinds.Paint);
+
     public event EventHandler? Invalidated;
     public event EventHandler? Invoked;
     public event EventHandler? SecondaryInvoked;
