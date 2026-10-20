@@ -123,3 +123,83 @@ Changes:
 - `dotnet build "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj" -m:1`
 - `dotnet test "9to1 Workspace/Browse/Host.Tests/HavenOS.Browse.Host.Tests.csproj" -m:1 --filter "FullyQualifiedName~FloatingFormatToolbarTests"`
 - Also re-run the full `HavenOS.Browse.Host.Tests` + `CakeOS.Cui.Runtime.Tests` suites for regression.
+
+---
+
+# Pass 3 — repair of the six pass-2 review blockers (source/test authoring only)
+
+Source identity (dirty, uncommitted; working HEAD remains `fb70840d` + carried source). All
+execution still **NOT RUN** — no .NET build/test/app until the coordinator grants a serialized slot
+plus a recompiled CUI composer bundle. Only source + static checks this pass.
+
+## Repaired findings (L3P2-001..006)
+
+- **001 — TypesFor omitted Overlay Float/Floating.** `CuiControlRegistry.TypesFor("container")` now
+  includes `"Overlay Float"` and `"Floating"`; `UnknownContainerType` message updated. The compiler
+  (`CuiCompiler.ValidateProperties`) and runtime `TryCreate` both consume TypesFor, so the authored
+  composer now passes the canonical compiler→artifact→runtime path instead of CUIC017 rejection.
+- **002 — static compilation defects.** `CuiOverlayPanel` uses the public imported method
+  `IsAttachedToVisualTree()` (vendor `VisualExtensions.cs:477`), not the internal `Visual` property.
+  `CuiPopupBackingTests` uses `WindowTransparencyLevel` (record struct) everywhere; the bogus
+  `TransparencyLevel` alias is gone.
+- **003 — placement inside protected composer content.** `CuiOverlayPanel` placement rule is now
+  authored: resolves the **whole protected `composer-body`** as the anchor (via the authored
+  `Target="composer-body"` `Id`), places within the **real owner top-level viewport**
+  (`TopLevel.GetTopLevel`), and flips/fits so it never covers chips, the editable input, or the
+  controls row. The panel's own bounds are only a degraded fallback, never claimed as the scene.
+- **004 — anchor ownership/live tracking unscoped.** Target resolution is scoped to this owner
+  subtree (`ValidTarget`: attached + effectively visible + same-owner descendant). Failed resolution
+  returns an **empty (invisible) rect — never (0,0)**. Observer tracking is lifetime-owned and
+  scoped to the panel, its coordinate ancestors up to the top-level, each target, and the target's
+  intermediate coordinate ancestors (so ancestor movement re-translates correctly); disposed on
+  detach/close.
+- **005 — producer alpha/hosting missing.** `CuiPopupPresentation.RequestTransparency(popup)`
+  (open-boundary alpha request) is wired into the Select (ComboBox) and MenuItem popup factories in
+  `CuiControlTemplates.cs`. `CuiTransparencyFallback` now models UNKNOWN/unobserved (`null
+  _observedLevel`) and paints only on positively observed `None`; `ResolveOpaquePaint` and the host
+  matrix keep native hosting for every Unknown/present state. `ApplyHostDecision` /
+  `RegisterAirspaceInspector` / `QueryAirspace` provide the typed seam.
+- **006 — popup projection lacks causal live-root tests.** `CuiPopupBackingTests` reworked to drive a
+  real `PopupRoot` (`ObserveDestinationAlpha` receipts: None paints the latest opaque semantics,
+  Transparent/Blur/AcrylicBlur/Mica keep the fallback border null; close/reopen resets to unknown).
+  Two new `FloatingFormatToolbarTests` added: **chips no-overlap** and **all 6 commands reachable at
+  300px width** (authored Wrap).
+
+## Authored placement contract
+- `composer-floating-layer` (`Type="Floating"`, sibling of `composer-body`) carries
+  `Target="composer-body" Placement="Above"`. `Target` names the whole protected composer body; the
+  side is composed `Placement` (`Above/Under/LeftOf/RightOf`). Never inferred from a first-input
+  heuristic.
+
+## Producer callers (real production wiring)
+- `CuiControlTemplates.Select` (ComboBox popup) and `CuiControlTemplates.MenuItem` (submenu popup)
+  each call `CuiPopupPresentation.RequestTransparency(popup)` after constructing their Popup.
+
+## Integration dependencies (documented, not claims of completion)
+- Loader maps authored `Target`/`Placement` onto `CuiContainerControl.AuthoredTargetId/AuthoredPlacement`
+  in `CuiControlLoader.ApplyLiteralProperty` (typed, validated, never heuristic).
+- `CuiContainerControl` gained the two authored-relationship properties; constructor already mapped
+  `overlay float`→`CuiOverlayPanel`, `floating`→`CuiFloatingLayer`.
+- Overlay-ne activation stays BLOCKED on a reviewed pre-show capability/airspace signal; native host is
+  the safe default and already removes the white backing via the opaque fallback + alpha-aware projection.
+- Lane-1 plus/emoji/state and lane-2 compiler/transport ownership untouched.
+
+## Current file identity (SHA-256, pass 3)
+- `9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui` `9679d2123eb5c81a054378d5dff9fece0e54daaab4864907ed12439c41c43f2b`
+- `9to1 Workspace/Browse/Host.Tests/FloatingFormatToolbarTests.cs` `1e6274585f9680242eb834d46b649918a799a14da213f9a5adb65472e8d8b92c`
+- `framework/CUI/Runtime/CuiFloatingLayer.cs` `b3fe77dc6a55c25d08992bab76d82766b57513d7967d87cbea13ce6b87ca6e96`
+- `framework/CUI/Runtime/CuiOverlayPanel.cs` `e51440187d21e801aeaa0f4c836e8e01605de1b6d7c73690bfd8b64283c9252c`
+- `framework/CUI/Runtime/CuiTransparencyFallback.cs` `847680b1e92494625a55543e5dbeffd44599acf2f2b70d3425fc51e0d04186f2`
+- `framework/CUI/Runtime/CuiPopupPresentation.cs` `8cad7e3415d54d4843c68312509807df7aca640220427af8f5cee57d04bf0e13`
+- `framework/CUI/Runtime/CuiControlTemplates.cs` `65e8fea9dbb18669106d47164a03544d3219ce3d8df82a4463f7ec75679eaaca`
+- `framework/CUI/Runtime/CuiControlRegistry.cs` `d4b67c863512c8c4417bc43349dfa83055adb10ea4e202b63e8e0459cea4efca`
+- `framework/CUI/Runtime/CuiContainerControl.cs` `3cd890c1970b329b88cf00e91da46e1fc146aeceb82bd4ccd743d4ddc2770db4`
+- `framework/CUI/Runtime/CuiControlLoader.cs` `f505cad6dbb4b532fd5e4e7d64f06984041d0941c211134c5f1d649940aac4aa`
+- `framework/CUI/Runtime.Tests/CuiPopupBackingTests.cs` `a895af434abdcbfa4451d3fd58e4c4c2628b3150787a3838e9b9d9b229ec7786`
+
+## Exact unrun commands (unchanged; require slot grant + recompiled composer bundle)
+- `dotnet build framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj -m:1` (guarded dotnet entrypoint)
+- `dotnet test framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj -m:1 --filter "FullyQualifiedName~CuiPopupBackingTests"`
+- `dotnet build "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj" -m:1`
+- `dotnet test "9to1 Workspace/Browse/Host.Tests/HavenOS.Browse.Host.Tests.csproj" -m:1 --filter "FullyQualifiedName~FloatingFormatToolbarTests"`
+- Also re-run the full `HavenOS.Browse.Host.Tests` + `CakeOS.Cui.Runtime.Tests` suites for regression.

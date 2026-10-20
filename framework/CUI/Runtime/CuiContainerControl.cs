@@ -33,6 +33,11 @@ public sealed class CuiContainerControl : CuiMaterialBorder, IDisposable
     public bool CompoundFocusEnabled => _compoundFocusEnabled;
     /// <summary>The typed per-container focus/validation scope, or null until compound focus is enabled.</summary>
     public CuiCompoundFocusScope? CompoundFocusScope => _compoundFocusScope;
+    /// <summary>Authored floating-relationship target (authored element id) for overlay-float placement.
+    /// This is authored CUI, never inferred by framework heuristics.</summary>
+    public string? AuthoredTargetId { get; set; }
+    /// <summary>Authored placement side relative to the target (Above/Under/LeftOf/RightOf).</summary>
+    public string? AuthoredPlacement { get; set; }
     public IReadOnlyList<Control> AuthoredChildren => _cells.Select(cell => cell.Child!).ToArray();
 
     public bool RemoveChild(Control child)

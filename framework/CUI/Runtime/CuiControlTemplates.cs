@@ -316,6 +316,7 @@ public static class CuiControlTemplates
         Grid.SetColumn(arrow,1); row.Children.Add(arrow);
         Bind(arrow, ToggleButton.IsCheckedProperty, owner, "IsDropDownOpen", true);
         var popup = Name(new Popup { PlacementTarget = owner, IsLightDismissEnabled = true }, "PART_Popup", scope);
+        CuiPopupPresentation.RequestTransparency(popup);
         popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable("CuiPopupHorizontalOffset"));
         popup.Bind(Popup.VerticalOffsetProperty, owner.GetResourceObservable("CuiPopupVerticalOffset"));
         Bind(popup, Popup.IsOpenProperty, owner, "IsDropDownOpen", true); Bind(popup, Control.MinWidthProperty, owner, "Bounds.Width");
@@ -366,6 +367,7 @@ public static class CuiControlTemplates
         };
         UpdateIcon();
         var popup = Name(new Popup { PlacementTarget = owner, Placement = owner.IsTopLevel ? PlacementMode.Bottom : PlacementMode.RightEdgeAlignedTop, IsLightDismissEnabled = false }, "PART_Popup", scope);
+        CuiPopupPresentation.RequestTransparency(popup);
         popup.Bind(Popup.HorizontalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupHorizontalOffset" : "CuiSubmenuHorizontalOffset"));
         popup.Bind(Popup.VerticalOffsetProperty, owner.GetResourceObservable(owner.IsTopLevel ? "CuiPopupVerticalOffset" : "CuiSubmenuVerticalOffset"));
         Bind(popup, Popup.IsOpenProperty, owner, "IsSubMenuOpen", true);

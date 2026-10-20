@@ -84,7 +84,7 @@ public sealed class CuiControlRegistry
 
     public static IReadOnlySet<string> TypesFor(string element) => (element.ToLowerInvariant() switch
     {
-        "container" => new[] { "Grid", "Vertical Stack", "Horizontal Stack", "Absolute", "Overlay", "Wrap", "Menu", "Context Menu" },
+        "container" => new[] { "Grid", "Vertical Stack", "Horizontal Stack", "Absolute", "Overlay", "Overlay Float", "Wrap", "Floating", "Menu", "Context Menu" },
         "input" => new[] { "Text", "Number", "Checkbox", "Radio", "Slider", "Select", "List", "Resize" },
         "button" => new[] { "Action", "Menu Item" },
         _ => Array.Empty<string>()
@@ -310,7 +310,7 @@ public sealed class CuiControlRegistry
 
     private static Control? UnknownContainerType(string type, out string? error)
     {
-        error = $"Unknown CUI Container Type '{type}'. Supported built-in types are Grid, Vertical Stack, Horizontal Stack, and Absolute.";
+        error = $"Unknown CUI Container Type '{type}'. Supported built-in types are Grid, Vertical Stack, Horizontal Stack, Absolute, Overlay, Overlay Float, Wrap, Floating, Menu, and Context Menu.";
         return null;
     }
 
@@ -358,7 +358,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop"
+            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -518,7 +518,7 @@ public sealed class CuiControlRegistry
             "AccentRole" => Enum.GetNames<CakeOS.Cui.Themes.CuiAccentRole>(),
             "Stretch" => new[] { "None", "Fill", "Uniform", "UniformToFill" },
             "Cursor" => new[] { "Arrow", "Hand", "IBeam", "Wait", "Cross", "SizeAll" },
-            "Placement" => new[] { "Top", "Bottom", "Left", "Right", "Center", "Absolute" },
+            "Placement" => new[] { "Top", "Bottom", "Left", "Right", "Center", "Absolute", "Above", "Under", "LeftOf", "RightOf" },
             _ => Array.Empty<string>(),
         };
         return values.ToFrozenSet(StringComparer.OrdinalIgnoreCase);

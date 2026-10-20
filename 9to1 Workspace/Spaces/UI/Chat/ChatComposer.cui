@@ -89,13 +89,16 @@
     </Container>
 
     <!-- Floating, out-of-flow formatting bar. It lives in a generic Floating layer (a sibling of
-         composer-body) that excludes it from the surface's desired size and positions it adjacent to
-         the editable input — flipping/clamping to the visible bounds so it never covers the first
-         editable line, the chip actions or the controls row. It is nonmodal, lives in the same CUI
-         scene, and is hit-testable only over its own bounds (the wrapping cells are transparent).
-         Visibility is still owned by the document-root FormattingOpen toggle. -->
-    <Container id="composer-floating-layer" Type="Floating">
-      <Container id="format-toolbar" Type="Horizontal Stack" CellGap="6" padding="8"
+         composer-body) that excludes it from the surface's desired size. The relationship is authored:
+         Target names the WHOLE protected composer body (never a first-TextBox heuristic) and Placement
+         requests Above; the overlay-float panel places the bar relative to that whole target within the
+         real scene viewport, flipping/fitting so it never covers chips, the editable input or the
+         controls row. It is nonmodal, lives in the same CUI scene, and is hit-testable only over its
+         own bounds. The toolbar is authored as a Wrap so every command stays reachable at narrow
+         widths (coherent wrapping at available width). Visibility is owned by the document-root
+         FormattingOpen toggle. -->
+    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above">
+      <Container id="format-toolbar" Type="Wrap" CellGap="6" padding="8"
             background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
             accessible-name="Formatting toolbar">
       <Button action="composer.format.Bold" content="B" font-weight="Bold" MinWidth="36" MinHeight="36" accessible-name="Bold" tooltip="Bold" />

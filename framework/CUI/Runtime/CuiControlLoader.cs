@@ -2228,6 +2228,19 @@ public sealed class CuiControlLoader : IDisposable
                 ApplyTypedProperty(control, propName, image, sourceSpan, level);
                 return;
             }
+            // Authored floating-relationship (Target + Placement) on a Container: this is the typed
+            // placement contract consumed by the overlay-float panel. It is authored CUI, validated by
+            // the compiler, and cannot be set by an element-id/app-id heuristic in framework code.
+            if (control is CuiContainerControl relationshipContainer
+                && (propName.Equals("Target", StringComparison.OrdinalIgnoreCase)
+                    || propName.Equals("Placement", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (propName.Equals("Target", StringComparison.OrdinalIgnoreCase))
+                    relationshipContainer.AuthoredTargetId = resolved;
+                else
+                    relationshipContainer.AuthoredPlacement = resolved;
+                return;
+            }
             if (CuiLifecycleProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
             if (CuiLayoutProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;
             if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, "CUI authored " + level, sourceSpan: sourceSpan)) return;

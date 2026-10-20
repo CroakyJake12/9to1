@@ -257,6 +257,85 @@ public sealed class FloatingFormatToolbarTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Floating_toolbar_does_not_cover_wrapped_chips_or_controls()
+    {
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = [new ChatComposerChip("c1", "Documents", false), new ChatComposerChip("c2", "Design", false)]
+        };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            var toolbarWin = WindowBounds(toolbar!, window);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the window viewport");
+            // The bar must never cover the editable input, the send control, or the wrapped chip row.
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover the editable input");
+            Assert.False(toolbarWin.Intersects(WindowBounds(FindButton(view, "send-button")!, window)), "toolbar must not cover send");
+            Assert.False(toolbarWin.Intersects(WindowBounds(FindContainer(view, "chips-row")!, window)), "toolbar must not cover chips");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Floating_toolbar_all_commands_stay_reachable_at_narrow_width()
+    {
+        var source = new Source { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 300, Height = 620, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            Assert.True(windowClient.Contains(WindowBounds(toolbar!, window)), "toolbar must stay inside the narrowed viewport");
+            // Every formatting command must itself be visible and hit-testable, not merely the toolbar
+            // outer rectangle: the authored Wrap keeps all six reachable at the narrowed width.
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            foreach (var button in commandButtons)
+            {
+                var b = WindowBounds(button, window);
+                Assert.True(b.Width > 0 && b.Height > 0, "each formatting command must remain visible");
+                Assert.True(windowClient.Contains(b), "each formatting command must stay inside the narrowed viewport");
+            }
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
     private static void Click(TopLevel top, Control target)
     {
         var center = Center(target, top);

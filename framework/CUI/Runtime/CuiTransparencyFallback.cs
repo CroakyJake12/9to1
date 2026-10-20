@@ -10,12 +10,15 @@ namespace CakeOS.Cui.Runtime;
 /// <summary>
 /// Alpha-aware, lifetime-owned projection that drives the CUI popup-root transparency fallback.
 /// It observes BOTH the actual transparency level of the owning <see cref="PopupRoot"/> AND the live
-/// opaque semantic fallback brush resource. When the destination negotiated real per-pixel alpha
-/// (<see cref="WindowTransparencyLevel.Transparent"/>), the fallback border stays UNPAINTED (null) through
-/// later theme changes — an independent LocalValue resource binding must not repaint it. When the
-/// destination is positively opaque (<see cref="WindowTransparencyLevel.None"/>), it paints the LATEST
-/// guaranteed-opaque semantic color. Unknown/unnegotiated levels never infer opacity from a default
-/// or from a parent window's alpha. All subscriptions are per-owner and disposed on detach/close.
+/// opaque semantic fallback brush resource. Destination alpha is modelled HONESTLY: until the owning
+/// top-level positively reports a transparency level (via <see cref="TopLevel.ActualTransparencyLevelProperty"/>
+/// or an explicit producer receipt), the state is UNKNOWN/unobserved and the fallback stays UNPAINTED.
+/// When the destination negotiated real per-pixel alpha (<see cref="WindowTransparencyLevel.Transparent"/>),
+/// the fallback border stays UNPAINTED (null) through later theme changes — an independent LocalValue
+/// resource binding must not repaint it. When the destination is positively opaque
+/// (<see cref="WindowTransparencyLevel.None"/>), it paints the LATEST guaranteed-opaque semantic color.
+/// A default/unnegotiated value is never inferred as a positive observation of opacity. All subscriptions
+/// are per-owner and disposed on detach/close.
 /// </summary>
 internal sealed class CuiTransparencyFallback : IDisposable
 {
@@ -24,6 +27,7 @@ internal sealed class CuiTransparencyFallback : IDisposable
     private readonly PopupRoot _owner;
     private readonly Border _fallback;
     private IBrush? _opaqueBrush;
+    private WindowTransparencyLevel? _observedLevel;
     private IDisposable? _brushSubscription;
     private bool _disposed;
 
@@ -46,9 +50,26 @@ internal sealed class CuiTransparencyFallback : IDisposable
         Instances.Add(owner, new CuiTransparencyFallback(owner, fallback));
     }
 
+    /// <summary>Record a producer receipt of the destination's negotiated transparency level. This is
+    /// the explicit observation channel; it is never inferred from a default or parent-window alpha.</summary>
+    internal static void Observe(PopupRoot owner, WindowTransparencyLevel level)
+    {
+        if (Instances.TryGetValue(owner, out var projection)) projection.OnObserved(level);
+    }
+
+    private void OnObserved(WindowTransparencyLevel level)
+    {
+        _observedLevel = level;
+        Apply();
+    }
+
     private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
     {
-        if (change.Property == TopLevel.ActualTransparencyLevelProperty) Apply();
+        if (change.Property == TopLevel.ActualTransparencyLevelProperty && change.NewValue is WindowTransparencyLevel level)
+        {
+            _observedLevel = level;
+            Apply();
+        }
     }
 
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs e) => Dispose();
@@ -56,10 +77,10 @@ internal sealed class CuiTransparencyFallback : IDisposable
     private void Apply()
     {
         if (_disposed) return;
-        var level = _owner.ActualTransparencyLevel;
-        // Only a definitively opaque destination paints; Transparent (and any unknown level) keeps
-        // the fallback null so a later theme change can never repaint a negotiated-through backdrop.
-        _fallback.Background = CuiPopupPresentation.ResolveOpaquePaint(level, _opaqueBrush);
+        // Only a positively observed opaque destination paints; unobserved/unknown and every
+        // alpha-capable level keep the fallback null so a later theme change never repaints a
+        // negotiated-through backdrop.
+        _fallback.Background = _observedLevel == WindowTransparencyLevel.None ? _opaqueBrush : null;
     }
 
     public void Dispose()

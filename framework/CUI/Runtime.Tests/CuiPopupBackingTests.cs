@@ -77,19 +77,22 @@ public sealed class CuiPopupBackingTests
     }
 
     [Fact]
-    public void Fallback_through_theme_changes_stays_null_only_when_alpha_negotiated()
+    public void Fallback_paint_is_driven_by_positively_observed_destination_level()
     {
-        // The projection is deterministic per level: a Transparent level ignores any later brush
-        // emission (theme change), while an opaque destination always uses the latest brush.
-        var first = new SolidColorBrush(Colors.Black);
-        var second = new SolidColorBrush(Colors.White);
-        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(TransparencyLevel.Transparent, first));
-        Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(TransparencyLevel.Transparent, second));
-        Assert.Same(second, CuiPopupPresentation.ResolveOpaquePaint(TransparencyLevel.None, second));
+        // The pure projection treats a positively opaque destination as painting the latest opaque
+        // semantic brush, and every alpha-capable level as keeping the fallback null (unpainted).
+        var opaque = new SolidColorBrush(Colors.DarkSlateGray);
+        Assert.Same(opaque, CuiPopupPresentation.ResolveOpaquePaint(WindowTransparencyLevel.None, opaque));
+        foreach (var level in new[]
+        {
+            WindowTransparencyLevel.Transparent, WindowTransparencyLevel.Blur,
+            WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Mica
+        })
+            Assert.Null(CuiPopupPresentation.ResolveOpaquePaint(level, opaque));
     }
 
     [Fact]
-    public async Task Native_popup_root_uses_transparent_backing_and_distinct_opaque_fallback()
+    public async Task Live_popup_root_fallback_tracks_observed_destination_level_and_resource_changes()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
@@ -110,10 +113,10 @@ public sealed class CuiPopupBackingTests
                 var item = owner.Items.OfType<CuiMenuItem>().First();
 
                 var popupRoot = Assert.Single(item.GetVisualAncestors().OfType<PopupRoot>());
-                // The CUI PopupRoot template must be the one applied (it owns PART_TransparencyFallback).
                 var fallback = Assert.Single(popupRoot.GetVisualDescendants().OfType<Border>(),
                     border => border.Name == "PART_TransparencyFallback");
                 var templateRoot = fallback.GetVisualParent();
+
                 // The transparent root frame is the sibling of the fallback in the template root; it
                 // must NOT paint the donor white Background (transparent backing keeps round cutouts
                 // and shadow margin transparent).
@@ -125,6 +128,30 @@ public sealed class CuiPopupBackingTests
                 var fallbackBrush = Assert.IsAssignableFrom<ISolidColorBrush>(popupRoot.TransparencyBackgroundFallback);
                 Assert.Equal(255, fallbackBrush.Color.A);
                 Assert.False(fallbackBrush.Color.A == 0 || fallbackBrush.Color == Colors.White);
+
+                // Unobserved/unknown: no positive receipt yet, so the ACTUAL fallback border stays
+                // unpainted regardless of the brush resource.
+                Assert.Null(fallback.Background);
+
+                // Positive opaque receipt paints the latest guaranteed-opaque semantic color on the
+                // actual fallback border.
+                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.None);
+                Assert.NotNull(fallback.Background);
+                var painted = Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!);
+                Assert.Equal(255, painted.Color.A);
+
+                // A later transparent negotiation clears the fallback (never repaints through).
+                CuiPopupPresentation.ObserveDestinationAlpha(popupRoot, WindowTransparencyLevel.Transparent);
+                Assert.Null(fallback.Background);
+
+                // Close/reopen: the fresh popup root starts unobserved (unknown) again, and the prior
+                // projection is detached with the closed popup.
+                owner.IsSubMenuOpen = false; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                owner.IsSubMenuOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var reopenedRoot = Assert.Single(item.GetVisualAncestors().OfType<PopupRoot>());
+                var reopenedFallback = Assert.Single(reopenedRoot.GetVisualDescendants().OfType<Border>(),
+                    border => border.Name == "PART_TransparencyFallback");
+                Assert.Null(reopenedFallback.Background);
             }
             finally { window.Close(); }
         }, CancellationToken.None);
