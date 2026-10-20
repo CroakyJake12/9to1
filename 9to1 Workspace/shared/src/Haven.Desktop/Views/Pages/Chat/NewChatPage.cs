@@ -221,6 +221,11 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     public event EventHandler<ChatProjectionStateChangedEventArgs>? ProjectionStateChanged;
     public event EventHandler<AddMenu.AddMenuAction>? AddActionSelected;
     public event EventHandler<AddMenuSelection>? AddCatalogItemSelected;
+    /// <summary>Wires the shared composer's waveform Voice toggle to the real Voice &amp; Vision
+    /// pill opener supplied by the shell. No opener keeps the toggle truthfully hidden. The opener
+    /// only requests presentation of the shared same-session pill; it never starts the runtime or
+    /// invents a model.</summary>
+    public void ConfigureVoiceOpener(Func<ValueTask>? openVoice) => _scene.SetVoiceOpener(openVoice);
 
     public string? SelectedModelName => _selectedModel?.Name;
     public ModelDescriptor? SelectedModel => _selectedModel;

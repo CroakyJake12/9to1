@@ -10,29 +10,30 @@ using Xunit;
 namespace Haven.Desktop.Tests.VoiceVision;
 
 /// <summary>
-/// The Voice &amp; Vision pill and full session must consume the PACKAGED compiled CUI artifact with
-/// hard admission checks — never a silent raw-source reparse fallback. These tests verify the real
-/// embedded bundle carries both Voice documents and that an unsupported format/version/language/ABI/
-/// capability fails before any scene effects occur, exactly as the shared composer does.
+/// The Voice &amp; Vision pill and full session must consume the PACKAGED genuine V1 compiled CUI
+/// bundle (the stateless V1 contract emitted by Spaces Build.Tasks) with hard admission checks —
+/// never a silent raw-source reparse fallback, and never the stateful V2 codec. These tests verify
+/// the real embedded V1 bundle carries both Voice documents, loads through the typed semantics, and
+/// that an unsupported envelope/document language/ABI/registry/capability fails before effects.
 /// </summary>
 public sealed class VoiceVisionCuiCompiledTests
 {
     private const string PillSource = "UI/VoiceVision/VoiceVisionPill.cui";
     private const string SessionSource = "UI/VoiceVision/VoiceVisionSession.cui";
 
-    private static CuiCompiledArtifact ReadEmbeddedArtifact()
+    private static CuiV1ArtifactCodec.CuiV1LoadedArtifact ReadEmbeddedArtifact()
     {
-        var artifact = CuiCompiledArtifactCodec.ReadArtifact(VoiceVisionCuiDocument.ReadEmbeddedArtifact());
-        Assert.Equal(CuiCompiledArtifactCodec.FormatName, artifact.Format);
-        Assert.Equal(CuiCompiledArtifactCodec.FormatVersion, artifact.FormatVersion);
+        var artifact = CuiV1ArtifactCodec.ReadArtifact(VoiceVisionCuiDocument.ReadEmbeddedArtifact());
+        Assert.Equal(CuiV1ArtifactCodec.FormatName, artifact.Format);
+        Assert.Equal(CuiV1ArtifactCodec.FormatVersion, artifact.FormatVersion);
         return artifact;
     }
 
-    private static CuiCompiledArtifactDocument Document(CuiCompiledArtifact artifact, string source) =>
+    private static CuiV1ArtifactCodec.CuiV1LoadedDocument Document(CuiV1ArtifactCodec.CuiV1LoadedArtifact artifact, string source) =>
         Assert.Single(artifact.Documents, document => document.Source == source);
 
     [Fact]
-    public void Embedded_bundle_carries_both_voice_documents()
+    public void Embedded_v1_bundle_carries_both_voice_documents()
     {
         var artifact = ReadEmbeddedArtifact();
         _ = Document(artifact, PillSource);
@@ -50,73 +51,172 @@ public sealed class VoiceVisionCuiCompiledTests
     [Fact]
     public void Pill_load_rejects_unknown_artifact_format_before_effects()
     {
-        var artifact = ReadEmbeddedArtifact() with { Format = "legacy-format" };
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => VoiceVisionCuiDocument.LoadWithArtifact(PillSource, Serialize(artifact)));
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, EnvelopeBytes("legacy-format", 1)));
         Assert.Equal("CUIR060", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Pill_load_rejects_unsupported_format_version_before_effects()
     {
-        var artifact = ReadEmbeddedArtifact() with { FormatVersion = 999 };
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => VoiceVisionCuiDocument.LoadWithArtifact(PillSource, Serialize(artifact)));
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, EnvelopeBytes(CuiV1ArtifactCodec.FormatName, 999)));
         Assert.Equal("CUIR061", error.Diagnostic.Code);
     }
 
     [Fact]
-    public void Session_load_rejects_unknown_artifact_format_before_effects()
+    public void Load_rejects_malformed_artifact_before_effects()
     {
-        var artifact = ReadEmbeddedArtifact() with { Format = "legacy-format" };
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => VoiceVisionCuiDocument.LoadWithArtifact(SessionSource, Serialize(artifact)));
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, Encoding.UTF8.GetBytes("{not json")));
         Assert.Equal("CUIR060", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Load_rejects_missing_document_before_effects()
+    {
+        var bytes = ArtifactBytes("UI/VoiceVision/VoiceVisionSession.cui", MetadataV1());
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
+        Assert.Equal("CUIR062", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Pill_load_rejects_unsupported_language_version_before_effects()
     {
-        var artifact = ReadEmbeddedArtifact();
-        var doc = Document(artifact, PillSource);
-        var badMeta = new CuiCompilationMetadata(
-            "99", artifact.Metadata.RuntimeAbiVersion, artifact.Metadata.ComponentRegistryVersion, artifact.Metadata.RequiredCapabilities);
-        var replaced = artifact with
-        {
-            Documents = artifact.Documents.Select(d => ReferenceEquals(d, doc) ? doc with { Compilation = doc.Compilation with { Metadata = badMeta } } : d).ToArray()
-        };
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => VoiceVisionCuiDocument.LoadWithArtifact(PillSource, Serialize(replaced)));
+        var bytes = ArtifactBytes(PillSource, MetadataV1(language: "99"));
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
         Assert.Equal("CUIR064", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Session_load_rejects_incompatible_runtime_abi_before_effects()
     {
-        var artifact = ReadEmbeddedArtifact();
-        var doc = Document(artifact, SessionSource);
-        var badMeta = new CuiCompilationMetadata(
-            artifact.Metadata.LanguageVersion, "future-abi", artifact.Metadata.ComponentRegistryVersion, artifact.Metadata.RequiredCapabilities);
-        var replaced = artifact with
-        {
-            Documents = artifact.Documents.Select(d => ReferenceEquals(d, doc) ? doc with { Compilation = doc.Compilation with { Metadata = badMeta } } : d).ToArray()
-        };
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => VoiceVisionCuiDocument.LoadWithArtifact(SessionSource, Serialize(replaced)));
+        var bytes = ArtifactBytes(SessionSource, MetadataV1(abi: "future-abi"));
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(SessionSource, bytes));
         Assert.Equal("CUIR065", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Pill_load_rejects_unsupported_component_registry_before_effects()
+    {
+        var bytes = ArtifactBytes(PillSource, MetadataV1(registry: "999.0"));
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
+        Assert.Equal("CUIR066", error.Diagnostic.Code);
     }
 
     [Fact]
     public void Pill_load_rejects_unsupported_required_capability_before_effects()
     {
-        var artifact = ReadEmbeddedArtifact();
-        var doc = Document(artifact, PillSource);
-        var badMeta = new CuiCompilationMetadata(
-            artifact.Metadata.LanguageVersion, artifact.Metadata.RuntimeAbiVersion, artifact.Metadata.ComponentRegistryVersion,
-            artifact.Metadata.RequiredCapabilities.Append("future-capability"));
-        var replaced = artifact with
-        {
-            Documents = artifact.Documents.Select(d => ReferenceEquals(d, doc) ? doc with { Compilation = doc.Compilation with { Metadata = badMeta } } : d).ToArray()
-        };
-        var error = Assert.Throws<CuiRuntimeLoadException>(() => VoiceVisionCuiDocument.LoadWithArtifact(PillSource, Serialize(replaced)));
+        var bytes = ArtifactBytes(PillSource, MetadataV1(capabilities: ["future-capability"]));
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
         Assert.Equal("CUIR067", error.Diagnostic.Code);
     }
 
-    private static byte[] Serialize(CuiCompiledArtifact artifact) =>
-        Encoding.UTF8.GetBytes(JsonSerializer.Serialize(artifact, CuiCompiledArtifactCodec.Options));
+    [Fact]
+    public void Pill_load_rejects_empty_semantics_before_effects()
+    {
+        var bytes = ArtifactBytes(PillSource, MetadataV1(), emptySemantics: true);
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
+        Assert.Equal("CUIR063", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Clean_document_rejects_unsupported_sibling_before_effects()
+    {
+        // The requested pill is clean, but its sibling (session) declares an unsupported language
+        // version. The loader must validate every document BEFORE selecting, so the sibling's
+        // defect refuses the whole bundle even though the requested peer would otherwise pass.
+        var bytes = ArtifactBytes([
+            (PillSource, MetadataV1(), true),
+            (SessionSource, MetadataV1(language: "99"), true)
+        ]);
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
+        Assert.Equal("CUIR064", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Load_rejects_array_root_envelope_before_effects()
+    {
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, Encoding.UTF8.GetBytes("[1,2,3]")));
+        Assert.Equal("CUIR060", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Load_rejects_non_object_envelope_before_effects()
+    {
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, Encoding.UTF8.GetBytes("42")));
+        Assert.Equal("CUIR060", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Pill_load_rejects_non_string_format_before_effects()
+    {
+        var bytes = Encoding.UTF8.GetBytes(
+            $$"""{"format":123,"formatVersion":{{CuiV1ArtifactCodec.FormatVersion}},"compilerSha256":"x","metadata":{},"documents":[]}""");
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
+        Assert.Equal("CUIR060", error.Diagnostic.Code);
+    }
+
+    [Fact]
+    public void Pill_load_rejects_non_numeric_format_version_before_effects()
+    {
+        var bytes = Encoding.UTF8.GetBytes(
+            $$"""{"format":"{{CuiV1ArtifactCodec.FormatName}}","formatVersion":"future","compilerSha256":"x","metadata":{},"documents":[]}""");
+        var error = Assert.Throws<CuiRuntimeLoadException>(() =>
+            VoiceVisionCuiDocument.LoadWithArtifact(PillSource, bytes));
+        Assert.Equal("CUIR061", error.Diagnostic.Code);
+    }
+
+    private static byte[] EnvelopeBytes(string format, int version) => Encoding.UTF8.GetBytes(
+        $$"""{"format":"{{format}}","formatVersion":{{version}},"compilerSha256":"x","metadata":{},"documents":[]}""");
+
+    private static (string Language, string Abi, string Registry, string[] Capabilities) MetadataV1(
+        string? language = null, string? abi = null, string? registry = null, IEnumerable<string>? capabilities = null) =>
+        (language ?? "1", abi ?? CuiCompiledArtifactCodec.V1RuntimeAbiVersion, registry ?? CuiControlRegistry.ComponentRegistryVersion,
+            capabilities?.ToArray() ?? []);
+
+    /// <summary>Builds a minimal genuine V1 artifact with one compiled document. The envelope and
+    /// document metadata are kept consistent. Empty semantics (no Components) is valid transport and
+    /// exercises the loader's empty-model rejection; non-empty semantics is used elsewhere.</summary>
+    private static byte[] ArtifactBytes(string source, (string Language, string Abi, string Registry, string[] Capabilities) meta, bool emptySemantics = false)
+        => ArtifactBytes(new[] { (source, meta, !emptySemantics) });
+
+    /// <summary>Builds a minimal genuine V1 artifact carrying multiple compiled documents so tests
+    /// can exercise sibling admission. Each tuple is (source, metadata, nonEmptySemantics).</summary>
+    private static byte[] ArtifactBytes(
+        IReadOnlyList<(string Source, (string Language, string Abi, string Registry, string[] Capabilities) Meta, bool NonEmpty)> documents)
+    {
+        var docsJson = string.Join(",", documents.Select(document => DocumentJson(document.Source, document.Meta, document.NonEmpty)));
+        var json = $$"""{"format":"{{CuiV1ArtifactCodec.FormatName}}","formatVersion":{{CuiV1ArtifactCodec.FormatVersion}},"compilerSha256":"x","metadata":{{MetadataJson(MetadataV1())}},"documents":[{{docsJson}}]}""";
+        return Encoding.UTF8.GetBytes(json);
+    }
+
+    private static string DocumentJson(string source, (string Language, string Abi, string Registry, string[] Capabilities) meta, bool nonEmpty)
+    {
+        var metadataJson = MetadataJson(meta);
+        var semanticsJson = nonEmpty ? NonEmptySemanticsJson : EmptySemanticsJson;
+        return $$"""{"source":"{{source}}","sha256":"x","compilation":{"Metadata":{{metadataJson}},"Semantics":{{semanticsJson}}}}""";
+    }
+
+    private static string MetadataJson((string Language, string Abi, string Registry, string[] Capabilities) meta)
+    {
+        var sectionJson = string.Join(",", meta.Capabilities.Select(cap => $"\"{cap}\""));
+        return $$"""{"LanguageVersion":"{{meta.Language}}","RuntimeAbiVersion":"{{meta.Abi}}","ComponentRegistryVersion":"{{meta.Registry}}","RequiredCapabilities":[{{sectionJson}}]}""";
+    }
+
+    private const string NonEmptySemanticsJson =
+        """{"SourceName":"x","Resources":{},"Styles":[],"Actions":{},"Templates":{},"Components":[{"Type":"Page","Name":"root","Properties":{},"Actions":{},"Children":[]}],"RootProperties":{},"Imports":[],"Variables":{}}""";
+
+    private const string EmptySemanticsJson =
+        """{"SourceName":"x","Resources":{},"Styles":[],"Actions":{},"Templates":{},"Components":[],"RootProperties":{},"Imports":[],"Variables":{}}""";
 }

@@ -8,6 +8,7 @@
  */
 
 using Haven.Application;
+using Haven.Application.Call;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Services;
@@ -54,6 +55,26 @@ public static class DesktopCallServiceRegistration
             _ = models.WarmDefaultSafelyAsync();
             return provider.GetRequiredService<ResponsiveCallCoordinator>();
         });
+
+        // Shared Voice &amp; Vision session store + service: the canonical MultimodalSession
+        // metadata graph, revisioned through the same versioned settings store used across the
+        // desktop. This is the one process-wide session service every surface (pill/full/composer)
+        // reads and writes; there is no second store or parallel session graph.
+        services.AddSingleton<MultimodalSessionStore>();
+        services.AddSingleton<VisionVoiceSessionService>();
+
+        // The single shared Voice &amp; Vision runtime. One singleton owns the ONE live
+        // ICallCoordinator: starting a session for a conversation attaches to the same canonical
+        // SessionID, presenting a second surface reuses the same runtime, and closing a
+        // presentation is never End (End is only the explicit runtime stop). The adapter
+        // (VoiceVisionHostAdapter) is intentionally NOT a DI singleton: its conversation/space/
+        // start-option providers are contextual per hosting surface, so each surface constructs it
+        // with its own truthful providers rather than fabricating a default model or a permissive
+        // local-only claim at composition time.
+        services.AddSingleton<IVoiceVisionRuntime>(provider => new VoiceVisionLiveRuntime(
+            provider.GetRequiredService<ICallCoordinator>(),
+            provider.GetRequiredService<VisionVoiceSessionService>(),
+            provider.GetRequiredService<IVersionedSettingsStore>()));
 
         services.AddSingleton<CallVoicePreviewController>(provider => new CallVoicePreviewController(
             provider.GetRequiredService<ISpeechOutputService>(),

@@ -42,7 +42,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
     private Task? _composerClose;
 
     public ChatSpacePage(IChatSpaceBackend backend, ICuiSceneReadiness readiness, Guid? conversationId = null, IPlatformShellService? clipboard = null,
-        Func<MessageRole, (bool Visible, string? Source)>? avatarResolver = null)
+        Func<MessageRole, (bool Visible, string? Source)>? avatarResolver = null, Func<ValueTask>? openVoice = null)
     {
         _controller = new ChatSpaceController(backend ?? throw new ArgumentNullException(nameof(backend)), clipboard, avatarResolver);
         _readiness = readiness ?? throw new ArgumentNullException(nameof(readiness));
@@ -61,7 +61,7 @@ public sealed partial class ChatSpacePage : UserControl, IActivatablePage,
         // The shared canonical composer is mounted into the authored `composer-mount` slot below.
         ChatComposerCuiView? composerView = null;
         composerView = new ChatComposerCuiView(new ChatSpaceComposerSource(
-            () => _controller.State, DispatchAsync, () => composerView!.Input));
+            () => _controller.State, DispatchAsync, () => composerView!.Input, openVoice));
         _composerView = composerView;
         var controlRegistry = new CuiControlRegistry();
         controlRegistry.BindAuthoredControl("composer-mount", _ => _composerView);

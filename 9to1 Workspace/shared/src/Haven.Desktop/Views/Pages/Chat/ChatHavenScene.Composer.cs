@@ -26,6 +26,16 @@ internal sealed partial class ChatHavenScene
         public bool IsEditing => false;
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
 
+        /// <summary>Whether this scene has wired a real Voice &amp; Vision opener. Defaults to false
+        /// so no fabricated voice toggle appears until the host provides an opener.</summary>
+        public bool HasVoice { get; set; }
+
+        /// <summary>Optional opener supplied by the host to start/present the shared Voice &amp;
+        /// Vision session. Null keeps HasVoice false (truthful).</summary>
+        public Func<ValueTask>? OpenVoiceDelegate { get; set; }
+
+        public ValueTask OpenVoice() => OpenVoiceDelegate?.Invoke() ?? ValueTask.CompletedTask;
+
         public ValueTask Send() => _scene.HandleComposerSendAsync();
         public ValueTask Stop() { _scene.StopRequested?.Invoke(_scene, EventArgs.Empty); return ValueTask.CompletedTask; }
         public ValueTask Add() { _scene.ShowAddMenu(); return ValueTask.CompletedTask; }
@@ -38,6 +48,19 @@ internal sealed partial class ChatHavenScene
         public ValueTask FormatSelection(string command) { _scene.FormatComposerSelection(command); return ValueTask.CompletedTask; }
         public ValueTask InsertEmoji(string emoji) { _scene.InsertComposerEmoji(emoji); return ValueTask.CompletedTask; }
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Wires the real Voice &amp; Vision opener into the shared composer. The waveform Voice toggle
+    /// (projected from <see cref="HavenComposerSource.HasVoice"/>) is surfaced only when a genuine
+    /// opener is supplied; no opener keeps it truthfully hidden. `openVoice` presents the shared
+    /// same-session Voice &amp; Vision pill; it never starts a runtime or invents a model.
+    /// </summary>
+    public void SetVoiceOpener(Func<ValueTask>? openVoice)
+    {
+        _composerSource.OpenVoiceDelegate = openVoice;
+        _composerSource.HasVoice = openVoice is not null;
+        ComposerView.RefreshSurface();
     }
 
     /// <summary>Formatting edits the current selection in the real CUI input using the actual

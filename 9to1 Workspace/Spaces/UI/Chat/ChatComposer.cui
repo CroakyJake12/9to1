@@ -54,6 +54,10 @@
         <Button id="emoji-button" action="composer.emoji" IsVisible="{Binding Composer.ShowFormatting}"
                 content="{Binding EmojiIcon}" font-size="24" background="Transparent" Width="44" Height="44"
                 CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" Chromeless="true" accessible-name="Insert emoji" />
+        <Button id="voice-button" action="composer.voice" IsVisible="{Binding Composer.HasVoice}"
+                Width="44" Height="44" Padding="6" CornerRadius="22" accessible-name="Open Voice and Vision">
+          <Image Source="avares://Haven/Assets/wave.svg" Width="20" Height="20" />
+        </Button>
       </Container>
       <Container id="right-controls" Column="2" Type="Horizontal Stack" CellGap="6">
         <Button id="settings-button" action="composer.settings" content="⚙" Width="44" Height="44" CornerRadius="22" accessible-name="Thread settings" />

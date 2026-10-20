@@ -6,12 +6,16 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Haven.Application;
+using Haven.Application.Call;
 using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.ViewModels;
 using Haven.Desktop.Views.Pages.Chat;
+using Haven.Desktop.Views.Shell.VoiceVision;
 using Haven.Desktop.Views.Shell.NativePresentation;
 using Haven.Desktop.Views.Shell.Overlays;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
 
@@ -28,6 +32,14 @@ public sealed partial class MainView
     private InChatCallWidgetViewModel? _globalCallViewModel;
     private NativeProjectsPage? _nativeProjectsPage;
     private readonly NativeProjectUiStateStore _nativeProjectUiStateStore = new();
+
+    // The shared Voice &amp; Vision CUI host (pill/full). One adapter owns one canonical session
+    // and borrows real composition state (conversation/space/model) from the active Chat surface;
+    // it never fabricates a default model or a permissive local-only claim.
+    private VoiceVisionHostAdapter? _voiceAdapter;
+    private Control? _voicePillControl;
+    private Control? _voiceFullSurface;
+    private bool _voiceSurfaceShowingFull;
 
     public void OpenVoiceSession()
     {
@@ -85,6 +97,111 @@ public sealed partial class MainView
         }
 
         OpenVoiceSession();
+    }
+
+    /// <summary>Resolves the shared Voice &amp; Vision runtime from the DI container and builds the
+    /// single canonical host adapter once, borrowing real composition state from the active Chat
+    /// surface. Returns null when no runtime is registered so the voice toggle truthfully stays
+    /// absent.</summary>
+    private VoiceVisionHostAdapter? EnsureVoiceAdapter()
+    {
+        if (_voiceAdapter is not null) return _voiceAdapter;
+        var runtime = Haven.Desktop.App.Services?.GetService<IVoiceVisionRuntime>();
+        if (runtime is null) return null;
+
+        var adapter = new VoiceVisionHostAdapter(
+            runtime,
+            conversationProvider: () => VoiceConversationId(),
+            startOptionsProvider: BuildVoiceStartOptions,
+            spaceIdProvider: () => (CurrentPage as NewChatPage)?.CurrentConversation.SpaceId);
+        adapter.RequestFullSurfaceAsync = ShowFullVoiceSurfaceAsync;
+        adapter.PresentationClosedAsync = async () =>
+        {
+            HideVoiceOverlay();
+            await Task.CompletedTask;
+        };
+        _voiceAdapter = adapter;
+        return adapter;
+    }
+
+    private Guid? VoiceConversationId() =>
+        CurrentPage switch
+        {
+            NewChatPage chat => chat.ConversationId,
+            ChatSpacePage space => space.InitialConversationId,
+            _ => null
+        };
+
+    private CallStartOptions BuildVoiceStartOptions()
+    {
+        // Real production start options only: a selected model from the active NewChatPage. There
+        // is no fabricated default model; without one a Voice session cannot start truthfully.
+        var model = (CurrentPage as NewChatPage)?.SelectedModel;
+        if (model is null)
+            throw new InvalidOperationException("No Voice-ready model is selected.");
+        return new CallStartOptions(model);
+    }
+
+    /// <summary>Presents the shared Voice &amp; Vision pill for the current conversation in the shell
+    /// floating layer. It reuses the one canonical adapter/runtime and never starts a second one.</summary>
+    private void ShowVoicePill()
+    {
+        AttachBetaOverlays();
+        var adapter = EnsureVoiceAdapter();
+        if (adapter is null) return;
+
+        if (_voicePillControl is null)
+        {
+            _voicePillControl = adapter.LoadPill();
+            _voicePillControl.HorizontalAlignment = HorizontalAlignment.Right;
+            _voicePillControl.VerticalAlignment = VerticalAlignment.Bottom;
+            _voicePillControl.Margin = new Thickness(20);
+            _voicePillControl.SetValue(Panel.ZIndexProperty, 40);
+            NativeOverlayLayer.Children.Add(_voicePillControl);
+        }
+
+        if (_voiceFullSurface is not null) _voiceFullSurface.IsVisible = false;
+        _voiceSurfaceShowingFull = false;
+        _voicePillControl.IsVisible = true;
+    }
+
+    /// <summary>Expands the shared Voice &amp; Vision pill into the full session surface using the same
+    /// canonical adapter/runtime (never a second runtime).</summary>
+    private async Task ShowFullVoiceSurfaceAsync()
+    {
+        var adapter = EnsureVoiceAdapter();
+        if (adapter is null) return;
+
+        if (_voiceFullSurface is null)
+        {
+            _voiceFullSurface = adapter.LoadSession();
+            _voiceFullSurface.HorizontalAlignment = HorizontalAlignment.Stretch;
+            _voiceFullSurface.VerticalAlignment = VerticalAlignment.Stretch;
+            _voiceFullSurface.SetValue(Panel.ZIndexProperty, 45);
+            NativeOverlayLayer.Children.Add(_voiceFullSurface);
+        }
+
+        if (_voicePillControl is not null) _voicePillControl.IsVisible = false;
+        _voiceFullSurface.IsVisible = true;
+        _voiceSurfaceShowingFull = true;
+        await Task.CompletedTask;
+    }
+
+    private void HideVoiceOverlay()
+    {
+        if (_voicePillControl is not null) _voicePillControl.IsVisible = false;
+        if (_voiceFullSurface is not null) _voiceFullSurface.IsVisible = false;
+        _voiceSurfaceShowingFull = false;
+    }
+
+    /// <summary>Closes the Voice presentation WITHOUT ending the session: the shared projection
+    /// leaves the surface and the adapter acknowledges close after loader settlement. End is only
+    /// the explicit End control inside the surface.</summary>
+    private async Task CloseVoicePresentationAsync()
+    {
+        AttachBetaOverlays();
+        if (_voiceAdapter is not null) await _voiceAdapter.ClosePresentationAsync();
+        else HideVoiceOverlay();
     }
 
     private void AttachBetaOverlays()
@@ -412,6 +529,8 @@ public sealed partial class MainView
         if (_globalCallWidget is not null) NativeOverlayLayer.Children.Remove(_globalCallWidget);
         if (_globalExecutionStatus is not null) NativeOverlayLayer.Children.Remove(_globalExecutionStatus);
 
+        DisposeVoiceOverlay();
+
         DisposeNativeProjectsPage();
         _legacyProjectsContent = null;
 
@@ -430,6 +549,29 @@ public sealed partial class MainView
         _globalExecutionStatus = null;
 
         DisableLegacyOverlayHost();
+    }
+
+    /// <summary>Detaches and disposes the Voice &amp; Vision overlay (pill/full) and its canonical
+    /// adapter together with the overlay layer. Closing the presentation never ends the session;
+    /// this disposal tears down the host owned by the overlay lifetime.</summary>
+    private void DisposeVoiceOverlay()
+    {
+        if (_voicePillControl is not null)
+        {
+            NativeOverlayLayer.Children.Remove(_voicePillControl);
+            _voicePillControl = null;
+        }
+        if (_voiceFullSurface is not null)
+        {
+            NativeOverlayLayer.Children.Remove(_voiceFullSurface);
+            _voiceFullSurface = null;
+        }
+        if (_voiceAdapter is not null)
+        {
+            _voiceAdapter.Dispose();
+            _voiceAdapter = null;
+        }
+        _voiceSurfaceShowingFull = false;
     }
 
     private void OnExecutionChanged(ChatExecutionSnapshot snapshot)
