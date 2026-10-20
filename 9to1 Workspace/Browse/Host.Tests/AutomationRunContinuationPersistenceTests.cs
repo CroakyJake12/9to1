@@ -139,11 +139,27 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var completed = suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Result = "ok", Revision = 8 };
         await fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token).WaitAsync(Bound, token);
 
-        // Reopen (reconstruct the same serialized payload from disk) as a restarted process would.
+        // Reopen (store recreation) and reconstruct the SAME serialized payload from the persisted row,
+        // not the original in-memory completed object. The ack must hold against the persisted form.
         var reopened = new AutomationRepository(NewDatabase());
-        var afterFirst = await ReadAutomationRowAsync(fx.AutomationId);
+        var reconstructed = Assert.Single(await reopened.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token),
+            run => run.Id == fx.RunId);
+        Assert.Equal(8, reconstructed.Revision);
+        Assert.Equal(AutomationRunStatus.Succeeded, reconstructed.Status);
+        Assert.Null(reconstructed.LeaseToken); // the definition lease was released by the completion
 
-        // A newer lease is acquired and the schedule is advanced behind the ack's back.
+        // ---- Phase 1: ack immediately after the definition lease release (currently null) ----
+        await InstallWriteBlockingTriggersAsync();
+
+        // A different nextRunAt proves the ack never reapplies a supplied schedule.
+        await reopened.CompleteRunAsync(reconstructed, fx.Now.AddYears(5), token).WaitAsync(Bound, token);
+        var afterImmediate = await ReadAutomationRowAsync(fx.AutomationId);
+        Assert.Null(afterImmediate.LeaseToken);
+        Assert.Equal(fx.Now.AddDays(2).ToUniversalTime().ToString("O"), afterImmediate.NextRunAt);
+
+        await DropWriteBlockingTriggersAsync();
+
+        // ---- Phase 2: ack after a newer lease/schedule arrived behind the ack's back ----
         Assert.True(await reopened.TryAcquireLeaseAsync(fx.AutomationId, "lease-2", fx.Now.AddMinutes(60), token));
         await using (var connection = await NewDatabase().OpenAsync(token))
         await using (var command = connection.CreateCommand())
@@ -154,27 +170,11 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
             await command.ExecuteNonQueryAsync(token);
         }
         var beforeNewer = await ReadAutomationRowAsync(fx.AutomationId);
+        Assert.Equal("lease-2", beforeNewer.LeaseToken);
 
-        // Write-blocking triggers prove the retry issues NO write to either table: any INSERT/UPDATE/
-        // DELETE on automation_runs or automations would raise and fail the test.
-        await using (var connection = await NewDatabase().OpenAsync(token))
-        await using (var command = connection.CreateCommand())
-        {
-            command.CommandText = """
-                CREATE TRIGGER block_run_insert BEFORE INSERT ON automation_runs
-                BEGIN SELECT RAISE(ABORT, 'blocked run insert'); END;
-                CREATE TRIGGER block_run_update BEFORE UPDATE ON automation_runs
-                BEGIN SELECT RAISE(ABORT, 'blocked run update'); END;
-                CREATE TRIGGER block_run_delete BEFORE DELETE ON automation_runs
-                BEGIN SELECT RAISE(ABORT, 'blocked run delete'); END;
-                CREATE TRIGGER block_def_update BEFORE UPDATE ON automations
-                BEGIN SELECT RAISE(ABORT, 'blocked definition update'); END;
-                """;
-            await command.ExecuteNonQueryAsync(token);
-        }
+        await InstallWriteBlockingTriggersAsync();
 
-        // The identical retry with a DIFFERENT nextRunAt must be a pure no-write acknowledgement.
-        await reopened.CompleteRunAsync(completed, fx.Now.AddYears(5), token).WaitAsync(Bound, token);
+        await reopened.CompleteRunAsync(reconstructed, fx.Now.AddYears(5), token).WaitAsync(Bound, token);
         Assert.Equal(beforeNewer, await ReadAutomationRowAsync(fx.AutomationId));
         Assert.Equal("lease-2", (await ReadAutomationRowAsync(fx.AutomationId)).LeaseToken);
         var runs = await reopened.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token);
@@ -222,10 +222,12 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var completed = suspended with { Status = AutomationRunStatus.Succeeded, CompletedAt = fx.Now.AddMinutes(1), Revision = 8 };
         await fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token).WaitAsync(Bound, token);
 
-        // Re-acquire a lease so the only thing preventing suspension is the terminal-state guard.
-        Assert.True(await fx.Store.TryAcquireLeaseAsync(fx.AutomationId, "lease-2", fx.Now.AddMinutes(60), token));
-        var resume = suspended with { Status = AutomationRunStatus.Waiting, ScheduledFor = fx.Now.AddMinutes(90), Revision = 9, LeaseToken = "lease-2" };
-        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.SuspendRunAsync(resume, token)).WaitAsync(Bound, token);
+        // Re-acquire the SAME original lease token A so the only thing preventing re-suspension is the
+        // terminal/finality guard, not the token-immutability guard (A->B would mask finality).
+        Assert.True(await fx.Store.TryAcquireLeaseAsync(fx.AutomationId, fx.Token, fx.Now.AddMinutes(60), token));
+        var resume = suspended with { Status = AutomationRunStatus.Waiting, ScheduledFor = fx.Now.AddMinutes(90), Revision = 9, LeaseToken = fx.Token };
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => fx.Store.SuspendRunAsync(resume, token)).WaitAsync(Bound, token);
+        Assert.Equal("A completed Run cannot be resumed or re-suspended.", ex.Message);
 
         var runs = await fx.Store.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token);
         var row = Assert.Single(runs);
@@ -295,7 +297,12 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         Assert.Equal(1, outcomes.Count(outcome => outcome.Ok));
         var loser = Assert.Single(outcomes.Where(outcome => !outcome.Ok));
         var conflict = Assert.IsType<InvalidOperationException>(loser!.Error);
-        Assert.Equal("Concurrent run transition conflict.", conflict.Message);
+        // The serialized loser re-reads the winning terminal row and rejects with finality, while the
+        // optimistic-CAS loser reports the revision conflict. Either is a legitimate, specific conflict
+        // outcome; any other exception type or a swallowed SQLITE_BUSY/setup fault fails the test.
+        Assert.True(
+            conflict.Message is "Concurrent run transition conflict." or "A completed Run cannot be mutated.",
+            $"Unexpected loser exception: {conflict.Message}");
 
         var aWon = outcomes[0].Ok;
         var runs = await fx.Store.GetRunsAsync(fx.AutomationId, 10, token).WaitAsync(Bound, token);
@@ -350,6 +357,39 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task Both_null_new_history_append_and_identical_reopened_ack_never_touch_the_definition()
+    {
+        var now = new DateTimeOffset(2026, 10, 19, 12, 0, 0, TimeSpan.Zero);
+        var automationId = Guid.NewGuid();
+        var database = NewDatabase();
+        await database.InitializeAsync(token).WaitAsync(Bound, token);
+        var store = new AutomationRepository(database);
+        await store.UpsertAsync(new AutomationDefinition(automationId, "History-only", HavenMode.Chat,
+            "append", AutomationScheduleKind.Daily, """{"time":"08:00"}""", now.AddDays(1),
+            null, true, now, now), token).WaitAsync(Bound, token);
+
+        var before = await ReadAutomationRowAsync(automationId);
+        Assert.Null(before.LeaseToken); // the definition is not leased either (both tokens null)
+
+        var historyId = Guid.NewGuid();
+        var history = new AutomationRun(historyId, automationId, AutomationRunStatus.Succeeded, now,
+            now, now, "history", null, null);
+        await store.CompleteRunAsync(history, now.AddDays(9), token).WaitAsync(Bound, token);
+
+        Assert.Equal(before, await ReadAutomationRowAsync(automationId));
+
+        // Reopen (store recreation), reconstruct the persisted history row, then re-ack identically under
+        // write-blocking triggers: a pure no-write acknowledgment that still leaves the definition alone.
+        var reopened = new AutomationRepository(NewDatabase());
+        var reconstructed = Assert.Single(await reopened.GetRunsAsync(automationId, 10, token).WaitAsync(Bound, token),
+            run => run.Id == historyId);
+
+        await InstallWriteBlockingTriggersAsync();
+        await reopened.CompleteRunAsync(reconstructed, now.AddYears(9), token).WaitAsync(Bound, token);
+        Assert.Equal(before, await ReadAutomationRowAsync(automationId));
+    }
+
+    [Fact]
     public async Task Suspend_leaves_schedule_and_lease_intact_and_reading_due_approval_does_not_approve()
     {
         var fx = await NewLeasedFixtureAsync();
@@ -366,6 +406,33 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var row = Assert.Single(due, run => run.Id == fx.RunId);
         Assert.Equal(AutomationRunStatus.ApprovalRequired, row.Status);
         Assert.NotEqual(AutomationRunStatus.Succeeded, row.Status);
+
+        Assert.Equal(before, await ReadAutomationRowAsync(fx.AutomationId));
+    }
+
+    [Fact]
+    public async Task RetryPending_suspend_is_persisted_and_reads_due_without_approving_or_executing()
+    {
+        var fx = await NewLeasedFixtureAsync();
+        var before = await ReadAutomationRowAsync(fx.AutomationId);
+
+        // A bounded-retry continuation uses the same durable suspension surface as Wait/Approval and is
+        // never an approval or execution grant.
+        var retry = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(30), fx.Now, revision: 7,
+            status: AutomationRunStatus.RetryPending);
+        await fx.Store.SuspendRunAsync(retry, token).WaitAsync(Bound, token);
+
+        Assert.Equal(before, await ReadAutomationRowAsync(fx.AutomationId));
+
+        // Reopen and read the due continuation: it stays RetryPending (not approved/executed) and the
+        // definition keeps its lease and schedule.
+        var reopened = new AutomationRepository(NewDatabase());
+        var due = await reopened.GetResumableRunsAsync(fx.Now.AddMinutes(30), 10, token).WaitAsync(Bound, token);
+        var row = Assert.Single(due, run => run.Id == fx.RunId);
+        Assert.Equal(AutomationRunStatus.RetryPending, row.Status);
+        Assert.NotEqual(AutomationRunStatus.Succeeded, row.Status);
+        Assert.Equal(7, row.Revision);
+        Assert.Contains("wait-2", row.ContinuationDescriptorJson);
 
         Assert.Equal(before, await ReadAutomationRowAsync(fx.AutomationId));
     }
@@ -445,8 +512,10 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
         var suspended = SuspendedRun(fx.RunId, fx.AutomationId, fx.Token, fx.Now.AddMinutes(45), fx.Now, revision: 7);
         await fx.Store.SuspendRunAsync(suspended, token).WaitAsync(Bound, token);
 
-        await AssertCompleteRejectedWithoutMutationAsync(fx, suspended with { Status = AutomationRunStatus.Waiting, Revision = 8 });
-        await AssertCompleteRejectedWithoutMutationAsync(fx, suspended with { Status = (AutomationRunStatus)999, Revision = 8 });
+        // Each invalid-status candidate otherwise carries a valid non-null completion timestamp so the
+        // rejection is causally from the status allow-list, not the completion-timestamp guard.
+        await AssertCompleteRejectedWithoutMutationAsync(fx, suspended with { Status = AutomationRunStatus.Waiting, CompletedAt = fx.Now.AddMinutes(1), Revision = 8 });
+        await AssertCompleteRejectedWithoutMutationAsync(fx, suspended with { Status = (AutomationRunStatus)999, CompletedAt = fx.Now.AddMinutes(1), Revision = 8 });
     }
 
     [Fact]
@@ -607,7 +676,9 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
     {
         var runBefore = await SerializeRunRowAsync(fx.RunId);
         var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
-        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token)).WaitAsync(Bound, token);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => fx.Store.CompleteRunAsync(completed, fx.Now.AddDays(2), token)).WaitAsync(Bound, token);
+        // The causal rejection is the status allow-list, not an earlier/timestamp guard.
+        Assert.Equal("Completion applies only to a known terminal status (Succeeded, Failed, or Cancelled).", ex.Message);
         Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
         Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
     }
@@ -616,7 +687,9 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
     {
         var runBefore = await SerializeRunRowAsync(fx.RunId);
         var defBefore = await SerializeDefinitionRowAsync(fx.AutomationId);
-        await Assert.ThrowsAnyAsync<Exception>(() => fx.Store.SuspendRunAsync(resume, token)).WaitAsync(Bound, token);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => fx.Store.SuspendRunAsync(resume, token)).WaitAsync(Bound, token);
+        // The causal rejection is the status allow-list, not the terminal/completion-timestamp guard.
+        Assert.Equal("Suspension applies only to Waiting, ApprovalRequired, or RetryPending states.", ex.Message);
         Assert.Equal(runBefore, await SerializeRunRowAsync(fx.RunId));
         Assert.Equal(defBefore, await SerializeDefinitionRowAsync(fx.AutomationId));
     }
@@ -639,6 +712,38 @@ public sealed class AutomationRunContinuationPersistenceTests : IDisposable
     {
         Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", _root);
         return new SqliteDatabase(new AppPaths());
+    }
+
+    /// <summary>Installs write-blocking triggers on both automation_runs and automations so that any
+    /// INSERT/UPDATE/DELETE in the current test would raise and fail it. Reads remain unaffected.</summary>
+    private async Task InstallWriteBlockingTriggersAsync()
+    {
+        await using var connection = await NewDatabase().OpenAsync(token);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TRIGGER block_run_insert BEFORE INSERT ON automation_runs
+            BEGIN SELECT RAISE(ABORT, 'blocked run insert'); END;
+            CREATE TRIGGER block_run_update BEFORE UPDATE ON automation_runs
+            BEGIN SELECT RAISE(ABORT, 'blocked run update'); END;
+            CREATE TRIGGER block_run_delete BEFORE DELETE ON automation_runs
+            BEGIN SELECT RAISE(ABORT, 'blocked run delete'); END;
+            CREATE TRIGGER block_def_update BEFORE UPDATE ON automations
+            BEGIN SELECT RAISE(ABORT, 'blocked definition update'); END;
+            """;
+        await command.ExecuteNonQueryAsync(token);
+    }
+
+    private async Task DropWriteBlockingTriggersAsync()
+    {
+        await using var connection = await NewDatabase().OpenAsync(token);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            DROP TRIGGER block_run_insert;
+            DROP TRIGGER block_run_update;
+            DROP TRIGGER block_run_delete;
+            DROP TRIGGER block_def_update;
+            """;
+        await command.ExecuteNonQueryAsync(token);
     }
 
     public void Dispose()

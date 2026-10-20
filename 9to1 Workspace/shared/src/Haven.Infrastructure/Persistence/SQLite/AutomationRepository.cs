@@ -234,8 +234,9 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
     }
 
     /// <summary>Persists a Run that has released its execution resource while it waits, awaits approval
-    /// or awaits a bounded retry. Suspension applies only to the Waiting/ApprovalRequired states, never a
-    /// terminal or unknown status, and a suspended Run cannot carry a completion timestamp. The
+    /// or awaits a bounded retry. Suspension applies only to the Waiting/ApprovalRequired/RetryPending
+    /// states, never a terminal or unknown status, and a suspended Run cannot carry a completion timestamp.
+    /// The
     /// suspending Run must still hold the definition lease (a lost or stolen token is rejected), and the
     /// ORIGINAL Run lease token is immutable across a transition. Suspension touches ONLY the Run row: it
     /// never advances the definition's schedule, clears its lease, or changes its timestamp, because the
@@ -246,7 +247,7 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
         if (run.LeaseToken is null)
             throw new InvalidOperationException("A Run cannot be suspended without a definition lease token.");
         if (!IsSupportedSuspendedStatus(run.Status))
-            throw new InvalidOperationException("Suspension applies only to Waiting or ApprovalRequired states.");
+            throw new InvalidOperationException("Suspension applies only to Waiting, ApprovalRequired, or RetryPending states.");
         if (run.Revision < 0)
             throw new InvalidOperationException("A Run revision cannot be negative.");
         if (run.CompletedAt is not null)
@@ -295,7 +296,7 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory) : IAu
     /// <summary>True only for the statuses a Run can be durably suspended in. Unknown/other values are
     /// rejected rather than silently accepted as a suspension.</summary>
     private static bool IsSupportedSuspendedStatus(AutomationRunStatus status) =>
-        status is AutomationRunStatus.Waiting or AutomationRunStatus.ApprovalRequired;
+        status is AutomationRunStatus.Waiting or AutomationRunStatus.ApprovalRequired or AutomationRunStatus.RetryPending;
 
     /// <summary>The exact persisted Run row, normalized for comparison.</summary>
     private sealed record AutomationRunRow(
