@@ -1,122 +1,104 @@
-using System.Runtime.InteropServices;
-
 namespace HavenOS.Home.Core;
 
-/// <summary>Independent axes of shared local Dulche runtime discovery. A single canonical
-/// lifecycle observation keeps each axis truthful so a missing runtime, missing model, altered
-/// hash, unsupported platform/transport and incompatible capability stay distinguishable.</summary>
-public enum HomeDulcheRuntimeAxis
+/// <summary>Validation helpers for the shared local Dulche runtime. A verified artifact SHA-256
+/// is always 64 lowercase hex digits; a string of length 64 that is not hex (or that was never
+/// actually matched against the artifact bytes) is NOT verification.</summary>
+public static class HomeDulcheHash
 {
-    /// <summary>The packaged local inference runtime/backend executable and its helper tools.</summary>
-    RuntimePackage,
-    /// <summary>A registered, verified, eligible local model artifact (weights/tokenizer).</summary>
-    ModelArtifact,
-    /// <summary>A supported process/transport adapter for the current platform.</summary>
-    Transport,
-    /// <summary>Required capability coverage of the installed runtime/model combination.</summary>
-    Capability,
+    public static bool IsValidSha256Hex(string? value)
+    {
+        if (value is not { Length: 64 }) return false;
+        for (var i = 0; i < value.Length; i++)
+        {
+            var c = value[i];
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return false;
+        }
+        return true;
+    }
 }
 
-/// <summary>Verified local model evidence. This is installation evidence only, never a
-/// permission, an execution grant or proof that the native backend is running.</summary>
+/// <summary>Genuinely verified local model evidence. This is installation evidence only: it is
+/// never a permission, an execution grant, or proof that the native backend is running or capable.
+/// It is produced only when the recorded artifact hash is a valid SHA-256 that was actually matched
+/// by re-hashing the installed artifact bytes.</summary>
 public sealed record HomeDulcheModelEvidence(
     string ModelId,
     string ProviderId,
     string ArtifactSha256,
     long SizeBytes,
-    DateTimeOffset VerifiedAtUtc);
+    DateTimeOffset VerifiedAtUtc)
+{
+    public bool IsVerifiedArtifact => HomeDulcheHash.IsValidSha256Hex(ArtifactSha256);
+}
 
-/// <summary>A single truthful discovery result for the shared Home-owned Dulche runtime.
-/// <see cref="Lifecycle"/> maps to the canonical <see cref="HomeServiceLifecycleState"/> used
-/// by the Home service registry; the axis booleans keep the underlying cause visible.</summary>
+/// <summary>A single truthful discovery result for the shared Home-owned Dulche runtime. Each axis
+/// is an independent, genuinely observed boolean; the lifecycle maps to the canonical
+/// <see cref="HomeServiceLifecycleState"/> used by the Home service registry. Verification of one
+/// axis never implies another (installed ≠ verified ≠ running ≠ capable ≠ Ready).</summary>
 public sealed record HomeDulcheRuntimeObservation(
     HomeServiceLifecycleState Lifecycle,
     bool RuntimeInstalled,
     bool RuntimeVerified,
     bool ModelInstalled,
     bool ModelVerified,
+    bool ProcessRunning,
+    bool EndpointAvailable,
     bool TransportSupported,
     bool CapabilitySupported,
     string Platform,
     string Architecture,
+    string? EligibleModelId,
     IReadOnlyList<string> Deficiencies);
 
-/// <summary>Owns the discovery/verification of the shared local Dulche runtime. Reading this
-/// surface never starts a process, downloads a model or grants a capability. A zero-observation
-/// source is a supported "no configured evidence" control for platform-neutral tests.</summary>
+/// <summary>Owns discovery/verification of the shared local Dulche runtime. Reading this surface
+/// never starts a process, downloads a model or grants a capability. A platform with no supported
+/// adapter remains explicitly unsupported and never reports Ready.</summary>
 public interface IHomeDulcheRuntimeObservationSource
 {
     Task<HomeDulcheRuntimeObservation> ObserveAsync(CancellationToken cancellationToken);
 }
 
-/// <summary>Default observation source. Performs only platform/package existence probes and
-/// calls the supplied model-evidence callback; it never fabricates a model, hash or Ready
-/// state. A missing evidence callback yields a truthful "no verified local model" result.</summary>
-public sealed class HomeDulcheRuntimeObservationSource(
-    Func<string, bool>? runtimeProbe = null,
-    Func<CancellationToken, Task<HomeDulcheModelEvidence?>>? modelEvidence = null,
-    string? platform = null,
-    string? architecture = null) : IHomeDulcheRuntimeObservationSource
+/// <summary>Resolves and verifies the installed runtime package for the current platform. A result
+/// is Verified only when the backend executable hash was actually computed and matched a pinned
+/// value; missing/altered/incompatible artifacts produce a structured recoverable result.</summary>
+public interface IHomeDulcheRuntimePackageSource
 {
-    private readonly Func<string, bool> _runtimeProbe = runtimeProbe ?? DefaultRuntimeProbe;
-    private readonly Func<CancellationToken, Task<HomeDulcheModelEvidence?>> _modelEvidence =
-        modelEvidence ?? (_ => Task.FromResult<HomeDulcheModelEvidence?>(null));
-    private readonly string _platform = platform ?? (OperatingSystem.IsWindows() ? "windows"
-        : OperatingSystem.IsLinux() ? "linux"
-        : OperatingSystem.IsAndroid() ? "android" : "unknown");
-    private readonly string _architecture = architecture ?? RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+    ValueTask<HomeDulchePackageResult> ProbeAsync(CancellationToken cancellationToken);
+}
 
-    public async Task<HomeDulcheRuntimeObservation> ObserveAsync(CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var deficiencies = new List<string>();
+public sealed record HomeDulchePackageResult(
+    bool Installed,
+    bool Verified,
+    string? ExecutablePath,
+    string? ExecutableSha256,
+    IReadOnlyList<string> Deficiencies);
 
-        var runtimeInstalled = _runtimeProbe(_platform) && !string.IsNullOrWhiteSpace(_platform) && _platform != "unknown";
-        if (!runtimeInstalled)
-            deficiencies.Add($"No verified local runtime package is installed for platform '{_platform}'.");
+/// <summary>A bounded process/transport owner behind typed OS/package adapters. An adapter may attach
+/// to an already-running supported broker (borrowed ownership) or own a process it started; it never
+/// fabricates a running observation. A platform with no adapter reports Supported=false.</summary>
+public interface IHomeDulcheBrokerAdapter
+{
+    string Platform { get; }
+    bool Supported { get; }
+    ValueTask<HomeDulcheBrokerObservation?> ObserveAsync(CancellationToken cancellationToken);
+}
 
-        var transportSupported = _platform is "linux" or "windows";
-        if (!transportSupported)
-            deficiencies.Add($"Local connection transport is not supported on platform '{_platform}'.");
+/// <summary>Positive current process/endpoint observation. This is only published after the adapter
+/// actually observes a live broker process and a healthy endpoint; it is never inferred from the
+/// platform name.</summary>
+public sealed record HomeDulcheBrokerObservation(
+    long BrokerPid,
+    string EndpointKind,
+    Uri Endpoint,
+    DateTimeOffset ObservedAtUtc);
 
-        HomeDulcheModelEvidence? model;
-        try
-        {
-            model = await _modelEvidence(cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception error) when (error is not OperationCanceledException)
-        {
-            model = null;
-            deficiencies.Add($"Local model evidence could not be verified: {error.Message}");
-        }
-        cancellationToken.ThrowIfCancellationRequested();
-        var modelInstalled = model is not null;
-        var modelVerified = model is { ArtifactSha256.Length: 64 };
-        if (!modelInstalled)
-            deficiencies.Add("No installed local model is registered and verified.");
-        else if (!modelVerified)
-            deficiencies.Add("The installed local model record is not verified against a SHA-256 pin.");
-
-        var capabilitySupported = _platform is "linux" or "windows";
-        if (runtimeInstalled && modelVerified && !capabilitySupported)
-            deficiencies.Add("The installed runtime/model has no verified capability probe on this platform.");
-
-        var ready = runtimeInstalled && modelVerified && transportSupported && capabilitySupported && deficiencies.Count == 0;
-        var lifecycle = ready ? HomeServiceLifecycleState.Ready : HomeServiceLifecycleState.Degraded;
-        return new(lifecycle, runtimeInstalled, runtimeInstalled, modelInstalled, modelVerified,
-            transportSupported, capabilitySupported, _platform, _architecture, deficiencies);
-    }
-
-    /// <summary>Probes the known installed runtime-package locations for the current platform.
-    /// Returns true only when the backend executable and its helper tools exist and are
-    /// non-empty; it never treats a directory or a zero-byte placeholder as installed.</summary>
-    internal static bool DefaultRuntimeProbe(string platform) => platform switch
-    {
-        "linux" => File.Exists("/usr/lib/haven/llama.cpp/llama-server")
-            && new FileInfo("/usr/lib/haven/llama.cpp/llama-server").Length > 0
-            && File.Exists("/usr/bin/haven-modelctl")
-            && File.Exists("/usr/lib/haven/inference/broker.py"),
-        "windows" => false, // No packaged Windows runtime transport exists yet; never fake a success.
-        _ => false,
-    };
+/// <summary>Obtains only registered, verified, eligible local model artifacts. Implementations must
+/// preserve the canonical model/provider/artifact identity and an explicit selection, and must not
+/// fabricate a model or a hash.</summary>
+public interface IHomeDulcheModelEvidenceSource
+{
+    /// <summary>Returns the eligible verified local model for the current route (an explicit
+    /// selection when one exists, otherwise an installed eligible default), or null when none is
+    /// installed and verified. Never returns unverified or non-hex evidence.</summary>
+    ValueTask<HomeDulcheModelEvidence?> FindEligibleAsync(CancellationToken cancellationToken);
 }

@@ -123,10 +123,28 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         Productivity = new();
         var permissionsService = new HomePermissionsCoreService(Permissions, Profiles);
         // The shared local Dulche runtime is owned by Home Core as one lifecycle service. The
-        // default observation source performs only real package/platform existence probes; it
-        // never fabricates a model or a Ready state, so a missing/altered runtime is reported
-        // truthfully as a recoverable degraded observation.
-        var dulcheSource = new HomeDulcheRuntimeObservationSource();
+        // observation source composes real package discovery, a bounded broker adapter and verified
+        // model evidence; it never fabricates a model or a Ready state, so a missing/altered/blocked
+        // axis is reported truthfully as a recoverable degraded observation. Linux uses the packaged
+        // runtime + systemd-loopback broker + content-addressed model store; other platforms use
+        // explicit unsupported adapters and can never report Ready.
+        IHomeDulcheRuntimeObservationSource dulcheSource;
+        if (OperatingSystem.IsLinux())
+        {
+            dulcheSource = new HomeDulcheRuntimeObservationSource(
+                new HomeDulcheLinuxRuntimePackageSource(),
+                new HomeDulcheLinuxBrokerAdapter(),
+                new HomeDulchePackagedModelEvidenceSource());
+        }
+        else
+        {
+            var platform = OperatingSystem.IsWindows() ? "windows"
+                : OperatingSystem.IsAndroid() ? "android" : "unknown";
+            dulcheSource = new HomeDulcheRuntimeObservationSource(
+                new HomeDulcheUnsupportedRuntimePackageSource(platform),
+                new HomeDulcheUnsupportedBrokerAdapter(platform),
+                new HomeDulchePackagedModelEvidenceSource());
+        }
         var dulcheRuntime = new HomeDulcheRuntimeService(dulcheSource);
         Runtime = new([new HomeCoreStateService(StateStore), permissionsService, Productivity, dulcheRuntime], Sessions);
         Api = api = new(Runtime, Sessions, Profiles);

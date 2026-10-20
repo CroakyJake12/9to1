@@ -15,6 +15,12 @@ internal sealed class OverlayChatSessionFactory(
     ICatalogRepository catalog,
     IModeRegistry modes)
 {
+    /// <summary>Optional typed host seam applied to every page the factory creates. Hosts use
+    /// it to wire page events (for example the local-model recovery request) to host-owned
+    /// navigation, so the real Spaces/Overlay composition routes recovery instead of relying on
+    /// the old MainView path alone.</summary>
+    public Action<NewChatPage>? WireHost { get; set; }
+
     public Task<NewChatPage> CreateNewAsync(CancellationToken cancellationToken) =>
         CreatePageAsync(page => page.StartFreshConversationAsync(), cancellationToken);
 
@@ -53,6 +59,7 @@ internal sealed class OverlayChatSessionFactory(
         // routed source instead of resolving the raw Ollama registration in the container.
         var routed = services.GetRequiredService<IProviderModelClient>();
         var page = ActivatorUtilities.CreateInstance<NewChatPage>(services, routed);
+        if (WireHost is not null) WireHost(page);
         try
         {
             // Construction starts original model discovery bound to the initial conversation.

@@ -534,6 +534,7 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
             _services.GetRequiredService<CapabilityRegistryService>(),
             _services.GetRequiredService<ICatalogRepository>(),
             _services.GetRequiredService<IModeRegistry>());
+        WireChatRecovery(factory);
         var page = await factory.CreateNewAsync(token);
         _ownedChats.Add(page);
         var published = false;
@@ -668,11 +669,38 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         });
     }
 
-    private OverlayChatSessionFactory NewChatSessionFactory() => new(_services,
-        _services.GetRequiredService<IConversationRepository>(),
-        _services.GetRequiredService<CapabilityRegistryService>(),
-        _services.GetRequiredService<ICatalogRepository>(),
-        _services.GetRequiredService<IModeRegistry>());
+    private OverlayChatSessionFactory NewChatSessionFactory()
+    {
+        var factory = new OverlayChatSessionFactory(_services,
+            _services.GetRequiredService<IConversationRepository>(),
+            _services.GetRequiredService<CapabilityRegistryService>(),
+            _services.GetRequiredService<ICatalogRepository>(),
+            _services.GetRequiredService<IModeRegistry>());
+        WireChatRecovery(factory);
+        return factory;
+    }
+
+    /// <summary>Routes the genuine local-model recovery request through the host's typed
+    /// navigation seam. It opens the canonical Home surface in a separate tab so the current
+    /// conversation, draft, selection and focus are preserved; when this host cannot navigate,
+    /// the request stays unrouted (no fabricated navigation or state change).</summary>
+    private void WireChatRecovery(OverlayChatSessionFactory factory)
+    {
+        factory.WireHost = page => page.ManageLocalModelsRequested += (_, _) =>
+        {
+            if (_hostQueueNavigation is null || _closing) return;
+            try
+            {
+                var address = AppContentAddress.Parse("9to1://home");
+                _hostQueueNavigation(new BrowseNavigationIntent(_request.TabId, address, OpenInNewTab: true),
+                    Task.CompletedTask);
+            }
+            catch (Exception failure) when (failure is not OperationCanceledException)
+            {
+                System.Diagnostics.Trace.TraceError("Spaces local-model recovery navigation failed: {0}", failure);
+            }
+        };
+    }
 
     /// <summary>Starts a new conversation inside the selected Space from the contextual sidebar.
     /// It never creates another Space and never reuses an existing conversation.</summary>

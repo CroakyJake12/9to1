@@ -1112,6 +1112,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
             _bus.Fire("Chat.Problems.Resolve.Click");
             ShowResolveProblems();
         };
+        _scene.ManageLocalModelsRequested += (_, _) =>
+        {
+            if (_originalWork.IsRetiring) return;
+            // The recovery action only requests the shared Home local-model management route; it
+            // never fabricates a model or changes the send gate.
+            RequestManageLocalModels();
+        };
         _scene.AddActionSelected += (_, action) =>
         {
             if (_originalWork.IsRetiring) return;
@@ -2671,6 +2678,9 @@ public sealed partial class NewChatPage : UserControl, IDisposable, IAsyncDispos
     {
         DemandOriginalChatCurrent();
         _scene.SetSending(_isSending, CanUseSelectedModel);
+        // The genuine local-model management recovery action is offered exactly while model
+        // discovery is a truthful terminal unavailable observation; it never fabricates a model.
+        _scene.SetManageLocalModelsVisible(_modelAvailability == ChatModelAvailability.Unavailable);
         DemandOriginalChatCurrent();
     }
 
