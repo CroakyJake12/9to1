@@ -121,6 +121,20 @@ public static class CuiControlTemplates
         // layers even when all visible chrome comes from CUI-owned templates.
         var layers = Name(new VisualLayerManager { Child = Presenter(owner, scope) }, "PART_VisualLayerManager", scope);
         var fallback = Name(new Border { IsHitTestVisible = false }, "PART_TransparencyFallback", scope);
+        // Popup roots host floating popup chrome whose rounded surface and shadow margin must remain
+        // transparent. The donor PopupRoot default Background is white, so an unmodified root would
+        // paint one opaque white rectangle behind every popup (the observed defect). CUI owns the
+        // popup backdrop: leave the root backing transparent and give TopLevel's transparency
+        // fallback a truthful semantic brush. When the compositor cannot negotiate alpha, TopLevel
+        // paints the theme surface (CuiPopupSurfaceBrush) instead of a fabricated white layer; when
+        // alpha works, TopLevel clears the fallback and the round cutout/shadow stay truly
+        // transparent. Normal full-window roots keep the shared Frame (owner-bound background).
+        if (owner is PopupRoot)
+        {
+            fallback.Bind(Border.BackgroundProperty, owner.GetResourceObservable("CuiPopupSurfaceBrush"));
+            owner.Bind(TopLevel.TransparencyBackgroundFallbackProperty, owner.GetResourceObservable("CuiPopupSurfaceBrush"));
+            return new Panel { Children = { fallback, new CuiMaterialBorder { Child = layers } } };
+        }
         return new Panel { Children = { fallback, Frame(owner, layers) } };
     }
 

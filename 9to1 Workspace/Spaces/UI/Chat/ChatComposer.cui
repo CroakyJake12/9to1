@@ -21,26 +21,80 @@
   </Actions>
   <Variable Type="bool" ID="FormattingOpen">False</Variable>
   <Variable Type="string" ID="EmojiIcon" Source="{Binding Composer.EmojiIconCandidates}" Selection="RandomOnce" />
-  <Container id="composer-surface" Type="Vertical Stack" CellGap="8" padding="12"
+  <!-- The composer surface is an Overlay so the formatting bar can float above the normal-flow body
+       (chips / input / controls / emoji / settings) without occupying a stack row or moving the
+       input/controls baseline. The normal-flow column is grouped under composer-body; the toolbar
+       is a sibling overlay child, anchored to the surface and live within the same CUI scene. -->
+  <Container id="composer-surface" Type="Overlay" padding="12"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
-    <Container id="chips-row" Type="Wrap" CellGap="6" IsVisible="{Binding Composer.HasChips}">
-      <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
-        <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
-          <Button action="composer.invoke-chip.Id" content="{Binding chip.Label}" font-size="11" Interactive="{Binding chip.Invokable}" accessible-name="{Binding chip.Label}" />
-          <Button action="composer.remove-chip.Id" content="✕" font-size="11" accessible-name="Remove chip" />
+    <Container id="composer-body" Type="Vertical Stack" CellGap="8">
+      <Container id="chips-row" Type="Wrap" CellGap="6" IsVisible="{Binding Composer.HasChips}">
+        <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
+          <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
+            <Button action="composer.invoke-chip.Id" content="{Binding chip.Label}" font-size="11" Interactive="{Binding chip.Invokable}" accessible-name="{Binding chip.Label}" />
+            <Button action="composer.remove-chip.Id" content="✕" font-size="11" accessible-name="Remove chip" />
+          </Container>
+        </Repeat>
+      </Container>
+
+      <Container id="input-column" Type="Vertical Stack" CellGap="4" MaxHeight="170">
+        <Input id="composer-input" Type="Text" AcceptsReturn="True" Value="{Binding Composer.Draft}"
+               placeholdertext="{Binding Composer.Placeholder}" embedded-input="true" BorderWidth="0"
+               background="Transparent" padding="4" text-wrapping="Wrap" MinHeight="44" accessible-name="Message" />
+      </Container>
+
+      <Container id="controls-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
+        <Container id="left-controls" Column="0" Type="Horizontal Stack" CellGap="6">
+          <Button id="add-button" action="composer.add" Width="44" Height="44" CornerRadius="22" accessible-name="Add files or actions">
+            <Image Source="avares://Haven/Assets/plus.svg" Width="32" Height="32" />
+          </Button>
+          <Button id="format-button" action="composer.toggle-formatting" content="Aa" Width="44" Height="44"
+                  CornerRadius="22" IsVisible="{Binding Composer.ShowFormatting}" accessible-name="Open formatting toolbar" />
+          <Button id="emoji-button" action="composer.emoji" IsVisible="{Binding Composer.ShowFormatting}"
+                  content="{Binding EmojiIcon}" font-size="24" background="Transparent" Width="44" Height="44"
+                  CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" accessible-name="Insert emoji" />
         </Container>
-      </Repeat>
+        <Container id="right-controls" Column="2" Type="Horizontal Stack" CellGap="6">
+          <Button id="settings-button" action="composer.settings" content="⚙" Width="44" Height="44" CornerRadius="22" accessible-name="Thread settings" />
+          <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
+          <Button id="send-button" action="composer.send" content="{Binding Composer.SendLabel}" MinHeight="44" Interactive="{Binding Composer.CanSend}" accessible-name="Send message" />
+        </Container>
+      </Container>
+
+      <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
+            background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
+        <Input id="emoji-search" Type="Text" Value="{Binding Composer.EmojiQuery}" placeholdertext="Search emoji…" MinHeight="36" accessible-name="Search emoji" />
+        <Container Type="Wrap" CellGap="6" MaxHeight="180">
+          <Repeat Source="{Binding Composer.EmojiEntries}" As="emoji" Key="{Binding emoji.Text}">
+            <Button action="composer.emoji-insert.Text" content="{Binding emoji.Text}" font-size="18" accessible-name="Insert {Binding emoji.Name}" />
+          </Repeat>
+        </Container>
+      </Container>
+
+      <Container id="settings-panel" Type="Wrap" CellGap="8" padding="8"
+            background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
+        <Text text="Actions:" font-size="12" font-weight="SemiBold" />
+        <Button action="composer.set-action-mode.AllowAllActions" content="All" font-size="12" />
+        <Button action="composer.set-action-mode.AllowBasicActions" content="Basic" font-size="12" />
+        <Button action="composer.set-action-mode.JustChat" content="Just chat" font-size="12" />
+        <Text text="Responses:" font-size="12" font-weight="SemiBold" />
+        <Button action="composer.set-response-mode.Auto" content="Auto" font-size="12" />
+        <Button action="composer.set-response-mode.AlwaysVisual" content="Always visual" font-size="12" />
+        <Button action="composer.set-response-mode.PreferVisual" content="Prefer visual" font-size="12" />
+        <Button action="composer.set-response-mode.PreferText" content="Prefer text" font-size="12" />
+        <Button action="composer.set-response-mode.AlwaysText" content="Always text" font-size="12" />
+      </Container>
     </Container>
 
-    <Container id="input-column" Type="Vertical Stack" CellGap="4" MaxHeight="170">
-      <Input id="composer-input" Type="Text" AcceptsReturn="True" Value="{Binding Composer.Draft}"
-             placeholdertext="{Binding Composer.Placeholder}" embedded-input="true" BorderWidth="0"
-             background="Transparent" padding="4" text-wrapping="Wrap" MinHeight="44" accessible-name="Message" />
-    </Container>
-
+    <!-- Floating, out-of-flow formatting bar. It is a sibling overlay child of composer-surface, not
+         part of composer-body's vertical flow, so it never moves/resizes the input or controls-row
+         baseline. It is nonmodal, lives in the same CUI scene, and is hit-testable only over its own
+         bounds (the wrapping cell is transparent). Visibility is still owned by the document-root
+         FormattingOpen toggle. -->
     <Container id="format-toolbar" Type="Horizontal Stack" CellGap="6" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
+          HorizontalAlignment="Left" VerticalAlignment="Top"
           accessible-name="Formatting toolbar">
       <Button action="composer.format.Bold" content="B" font-weight="Bold" MinWidth="36" MinHeight="36" accessible-name="Bold" tooltip="Bold" />
       <Button action="composer.format.Italic" content="I" font-style="Italic" MinWidth="36" MinHeight="36" accessible-name="Italic" tooltip="Italic" />
@@ -48,48 +102,6 @@
       <Button action="composer.format.Link" content="🔗" MinWidth="36" MinHeight="36" accessible-name="Link" tooltip="Link" />
       <Button action="composer.format.Quote" content="❝" MinWidth="36" MinHeight="36" accessible-name="Quote" tooltip="Quote" />
       <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
-    </Container>
-
-    <Container id="controls-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
-      <Container id="left-controls" Column="0" Type="Horizontal Stack" CellGap="6">
-        <Button id="add-button" action="composer.add" Width="44" Height="44" CornerRadius="22" accessible-name="Add files or actions">
-          <Image Source="avares://Haven/Assets/plus.svg" Width="32" Height="32" />
-        </Button>
-        <Button id="format-button" action="composer.toggle-formatting" content="Aa" Width="44" Height="44"
-                CornerRadius="22" IsVisible="{Binding Composer.ShowFormatting}" accessible-name="Open formatting toolbar" />
-        <Button id="emoji-button" action="composer.emoji" IsVisible="{Binding Composer.ShowFormatting}"
-                content="{Binding EmojiIcon}" font-size="24" background="Transparent" Width="44" Height="44"
-                CornerRadius="22" Selected="{Binding Composer.ShowEmoji}" accessible-name="Insert emoji" />
-      </Container>
-      <Container id="right-controls" Column="2" Type="Horizontal Stack" CellGap="6">
-        <Button id="settings-button" action="composer.settings" content="⚙" Width="44" Height="44" CornerRadius="22" accessible-name="Thread settings" />
-        <Button id="cancel-edit-button" action="composer.cancel-edit" content="Cancel" MinHeight="44" IsVisible="{Binding Composer.IsEditing}" accessible-name="Cancel editing" />
-        <Button id="send-button" action="composer.send" content="{Binding Composer.SendLabel}" MinHeight="44" Interactive="{Binding Composer.CanSend}" accessible-name="Send message" />
-      </Container>
-    </Container>
-
-    <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
-          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
-      <Input id="emoji-search" Type="Text" Value="{Binding Composer.EmojiQuery}" placeholdertext="Search emoji…" MinHeight="36" accessible-name="Search emoji" />
-      <Container Type="Wrap" CellGap="6" MaxHeight="180">
-        <Repeat Source="{Binding Composer.EmojiEntries}" As="emoji" Key="{Binding emoji.Text}">
-          <Button action="composer.emoji-insert.Text" content="{Binding emoji.Text}" font-size="18" accessible-name="Insert {Binding emoji.Name}" />
-        </Repeat>
-      </Container>
-    </Container>
-
-    <Container id="settings-panel" Type="Wrap" CellGap="8" padding="8"
-          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
-      <Text text="Actions:" font-size="12" font-weight="SemiBold" />
-      <Button action="composer.set-action-mode.AllowAllActions" content="All" font-size="12" />
-      <Button action="composer.set-action-mode.AllowBasicActions" content="Basic" font-size="12" />
-      <Button action="composer.set-action-mode.JustChat" content="Just chat" font-size="12" />
-      <Text text="Responses:" font-size="12" font-weight="SemiBold" />
-      <Button action="composer.set-response-mode.Auto" content="Auto" font-size="12" />
-      <Button action="composer.set-response-mode.AlwaysVisual" content="Always visual" font-size="12" />
-      <Button action="composer.set-response-mode.PreferVisual" content="Prefer visual" font-size="12" />
-      <Button action="composer.set-response-mode.PreferText" content="Prefer text" font-size="12" />
-      <Button action="composer.set-response-mode.AlwaysText" content="Always text" font-size="12" />
     </Container>
   </Container>
 </Cui>
