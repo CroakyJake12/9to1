@@ -70,4 +70,14 @@ public sealed class NodeGraphAutomationAdapter(NodeGraphSchemaRegistry schemas,
         return new(graph.GraphId, graph.Revision, graph.SchemaVersion, graph.CapabilityProfileId,
             Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(), detached);
     }
+
+    /// <summary>Returns true when the projection is exactly the Run's historical pin. A Run stays bound
+    /// to its starting revision even when a newer Active revision is published, so dispatch must pin the
+    /// exact revision/schema/digest and never repoint an existing Run at a newer Active revision. This
+    /// record is evidence, not dispatch admission — live authority is revalidated by the owning
+    /// admission/action paths on every resumed side effect.</summary>
+    public static bool MatchesPin(AutomationGraphProjection projection, AutomationGraphBinding pin, string? digest) =>
+        projection.SourceRevision == pin.Revision
+        && projection.GraphId == pin.GraphId
+        && (digest is null || string.Equals(projection.SourceDigest, digest, StringComparison.Ordinal));
 }

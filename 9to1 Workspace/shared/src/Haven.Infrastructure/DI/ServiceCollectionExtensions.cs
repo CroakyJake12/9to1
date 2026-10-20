@@ -9,6 +9,8 @@
 
 using System.Reflection;
 using Haven.Application;
+using Haven.Application.Automations;
+using Haven.Application.NodeGraph;
 using Haven.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -466,6 +468,32 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Haven.Application.Play.PlaySessionService>();
         services.AddSingleton<IApplicationLifecycle, ApplicationLifecycleService>();
         services.AddSingleton<ISingleInstanceService, SingleInstanceService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the real Automations durable Node Graph adapter into the shared
+    /// <see cref="NodeGraphRuntimeRegistry"/> adapter set. This is the production caller/registration seam
+    /// the adapter previously lacked: without it the shared registry cannot route automation graph
+    /// activations/resumes. The root host must also register the adapter's collaborators
+    /// (IVersionedNodeGraphRepository, IAutomationRepository, IAutomationRunContinuationStore,
+    /// IAutomationRunClaimStore, ScheduledTaskRunner, and the compiled NodeGraphAutomationAdapter). The
+    /// optional approval seam is the authoritative Home decision/actor boundary; when omitted, approval
+    /// resumes stay fail-closed.
+    /// </summary>
+    public static IServiceCollection AddAutomationNodeGraphDurableAdapter(
+        this IServiceCollection services,
+        NodeGraphAutomationAdapter compile,
+        IAutomationApprovalAuth? approvalAuth = null)
+    {
+        services.AddSingleton<INodeGraphRuntimeAdapter>(provider => AutomationNodeGraphDurableAdapter.Create(
+            compile,
+            provider.GetRequiredService<IVersionedNodeGraphRepository>(),
+            provider.GetRequiredService<IAutomationRepository>(),
+            provider.GetRequiredService<IAutomationRunContinuationStore>(),
+            provider.GetRequiredService<IAutomationRunClaimStore>(),
+            provider.GetRequiredService<ScheduledTaskRunner>(),
+            approvalAuth ?? provider.GetService<IAutomationApprovalAuth>()));
         return services;
     }
 
