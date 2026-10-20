@@ -43,6 +43,9 @@ GGUF_PLAIN_TYPE_BYTES = {
     18: 8,  # F64
 }
 GGUF_MAX_RANK = 64
+# GGUF tensor data begins aligned to the file's `general.alignment` metadata
+# value (uint32), which defaults to 32 bytes when absent.
+GGUF_DEFAULT_ALIGNMENT = 32
 
 ELF_MAGIC = b"\x7fELF"
 ELF_CLASS_64 = 2
@@ -160,28 +163,61 @@ class _Reader:
         self.take(n)
 
 
-def _read_gguf_metadata_value(reader: _Reader) -> None:
+def _decode_gguf_scalar(vtype: int, raw: bytes):
+    """Decode a scalar GGUF metadata value by its type tag."""
+    if vtype == GGUF_TYPE_UINT8:
+        return raw[0]
+    if vtype == GGUF_TYPE_INT8:
+        return struct.unpack("<b", raw)[0]
+    if vtype == GGUF_TYPE_UINT16:
+        return struct.unpack("<H", raw)[0]
+    if vtype == GGUF_TYPE_INT16:
+        return struct.unpack("<h", raw)[0]
+    if vtype == GGUF_TYPE_UINT32:
+        return struct.unpack("<I", raw)[0]
+    if vtype == GGUF_TYPE_INT32:
+        return struct.unpack("<i", raw)[0]
+    if vtype == GGUF_TYPE_FLOAT32:
+        return struct.unpack("<f", raw)[0]
+    if vtype == GGUF_TYPE_BOOL:
+        return raw[0] != 0
+    if vtype == GGUF_TYPE_UINT64:
+        return struct.unpack("<Q", raw)[0]
+    if vtype == GGUF_TYPE_INT64:
+        return struct.unpack("<q", raw)[0]
+    if vtype == GGUF_TYPE_FLOAT64:
+        return struct.unpack("<d", raw)[0]
+    raise AssertionError(f"unreachable GGUF scalar type {vtype}")
+
+
+def _read_gguf_metadata_value(reader: _Reader):
+    """Read one GGUF metadata value and return its decoded Python value.
+
+    Strings are decoded (lossy) to str; arrays become lists; scalars become
+    int/float/bool per their type tag. Unknown types fail closed with a precise
+    ``unsupported`` diagnostic.
+    """
     vtype = reader.u32()
     if vtype == GGUF_TYPE_STRING:
-        reader.string()
-        return
+        return reader.string().decode("utf-8", "replace")
     if vtype == GGUF_TYPE_ARRAY:
         elem_type = reader.u32()
         count = reader.u64()
         if count > reader.size:
             raise IdentityError("malformed GGUF array count exceeds file size")
+        values = []
         for _ in range(count):
             if elem_type == GGUF_TYPE_STRING:
-                reader.string()
+                values.append(reader.string().decode("utf-8", "replace"))
             elif elem_type in GGUF_SCALAR_SIZE:
-                reader.skip(GGUF_SCALAR_SIZE[elem_type])
+                values.append(_decode_gguf_scalar(elem_type, reader.take(GGUF_SCALAR_SIZE[elem_type])))
             else:
                 raise IdentityError(f"unknown GGUF array element type {elem_type}")
-        return
+        return values
     size = GGUF_SCALAR_SIZE.get(vtype)
     if size is None:
         raise IdentityError(f"unknown GGUF metadata value type {vtype}")
-    reader.skip(size)
+    return _decode_gguf_scalar(vtype, reader.take(size))
 
 
 def sniff_gguf(path: pathlib.Path) -> dict:
@@ -200,9 +236,29 @@ def sniff_gguf(path: pathlib.Path) -> dict:
         tensor_count = reader.u64()
         metadata_kv_count = reader.u64()
 
+        metadata: dict[str, object] = {}
         for _ in range(metadata_kv_count):
-            reader.string()  # key
-            _read_gguf_metadata_value(reader)
+            key = reader.string().decode("utf-8", "replace")
+            value = _read_gguf_metadata_value(reader)
+            if key in metadata:
+                raise IdentityError(f"duplicate GGUF metadata key {key!r}")
+            metadata[key] = value
+
+        # GGUF tensor data begins right after the tensor-info table, aligned to
+        # the file's declared `general.alignment` (uint32, default 32). Only an
+        # integer scalar is a supported alignment declaration; any other typed
+        # value (bool/float/string/array) or a non-positive value fails closed.
+        # We deliberately do not impose a power-of-two/multiple constraint: the
+        # GGUF contract admits any positive alignment and the alignment
+        # arithmetic below is exact for any positive integer.
+        alignment = GGUF_DEFAULT_ALIGNMENT
+        if "general.alignment" in metadata:
+            declared_alignment = metadata["general.alignment"]
+            if isinstance(declared_alignment, bool) or not isinstance(declared_alignment, int):
+                raise IdentityError("GGUF general.alignment must be an integer scalar")
+            if declared_alignment <= 0:
+                raise IdentityError("GGUF general.alignment must be a positive integer")
+            alignment = declared_alignment
 
         tensor_offsets: list[tuple[int, int]] = []  # (relative offset, byte extent)
         for _ in range(tensor_count):
@@ -227,9 +283,9 @@ def sniff_gguf(path: pathlib.Path) -> dict:
             offset = reader.u64()
             tensor_offsets.append((offset, data_size))
 
-        # The tensor data section begins after the tensor-info table, aligned to
-        # 8 bytes. Each tensor offset is relative to that aligned data region.
-        data_section_start = (reader.pos + 7) & ~7
+        # Align after the tensor-info table using the validated alignment. Each
+        # tensor offset is relative to this aligned data region.
+        data_section_start = ((reader.pos + alignment - 1) // alignment) * alignment
         for offset, data_size in tensor_offsets:
             if offset < 0:
                 raise IdentityError("GGUF tensor data offset is negative")
@@ -241,6 +297,7 @@ def sniff_gguf(path: pathlib.Path) -> dict:
         "ggufVersion": version,
         "tensorCount": tensor_count,
         "metadataKvCount": metadata_kv_count,
+        "dataAlignment": alignment,
         "structurallyComplete": True,
     }
 
@@ -266,8 +323,9 @@ def sniff_safetensors(path: pathlib.Path) -> dict:
     if not isinstance(parsed, dict):
         raise IdentityError("safetensors header must be a JSON object")
 
-    payload_begin = 8 + header_len
+    buffer_len = size - (8 + header_len)
     tensor_count = 0
+    intervals: list[tuple[int, int]] = []  # non-empty tensor slices (start, end)
     for name, tensor in parsed.items():
         if name == "__metadata__":
             continue
@@ -292,23 +350,42 @@ def sniff_safetensors(path: pathlib.Path) -> dict:
         if not (isinstance(offsets, list) and len(offsets) == 2):
             raise IdentityError(f"safetensors tensor {name!r} has malformed data_offsets")
         start, end = offsets
-        if not (isinstance(start, int) and isinstance(end, int)):
+        # Python bools are ints; they must NOT count as valid offset integers.
+        if (not isinstance(start, int)) or (not isinstance(end, int)) or isinstance(start, bool) or isinstance(end, bool):
             raise IdentityError(f"safetensors tensor {name!r} data_offsets must be integers")
         if start < 0 or end < start:
             raise IdentityError(f"safetensors tensor {name!r} has invalid data_offsets range")
-        if end - start < extent:
+        # The declared byte slice must exactly equal the dtype/shape extent; any
+        # larger slice (contradictory padding) or smaller slice (truncation) is
+        # rejected. Zero-size tensors (start == end) remain valid.
+        if end - start != extent:
             raise IdentityError(
                 f"safetensors tensor {name!r} declared byte extent {extent} "
-                f"does not fit in offsets [{start},{end})"
+                f"does not exactly match offsets [{start},{end})"
             )
-        if payload_begin + end > size:
+        if end > buffer_len:
             raise IdentityError(
                 f"safetensors tensor {name!r} declared data extends beyond end of file"
             )
+        if start < end:
+            intervals.append((start, end))
         tensor_count += 1
 
     if tensor_count == 0:
         raise IdentityError("safetensors file declares no tensors (not a usable model asset)")
+
+    # Non-empty tensor slices must be non-overlapping and must exactly tile the
+    # entire data buffer (no holes, no trailing uncovered bytes).
+    intervals.sort()
+    cursor = 0
+    for start, end in intervals:
+        if start < cursor:
+            raise IdentityError("safetensors tensor regions overlap")
+        if start != cursor:
+            raise IdentityError("safetensors tensor regions leave an uncovered gap")
+        cursor = end
+    if cursor != buffer_len:
+        raise IdentityError("safetensors tensor regions do not cover the whole data buffer")
 
     return {
         "format": "safetensors",

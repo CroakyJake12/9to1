@@ -74,6 +74,65 @@ def make_gguf_high_offset() -> bytes:
     return bad
 
 
+def _gguf_str(value: str) -> bytes:
+    encoded = value.encode("utf-8")
+    return struct.pack("<Q", len(encoded)) + encoded
+
+
+def make_gguf_probe_tensor(*, padding: int = 31, data: bytes = b"\x00" * 4) -> bytes:
+    """The exact 65-byte rank-1 F32 tensor-info table from the independent probe,
+    followed by ``padding`` zero bytes and ``data``.
+
+    With default GGUF alignment (32), padding=31 places the 4-byte payload at the
+    aligned data start (offset 96), a structurally valid positive fixture. With
+    padding=7 (the probe), the same 76-byte file is truncated relative to the
+    required 32-byte alignment and must be rejected.
+    """
+    table = b"GGUF" + struct.pack("<IQQ", 3, 1, 0)  # version 3, tensor_count 1, kv 0
+    table += struct.pack("<Q", 9) + b"tensor001"
+    table += struct.pack("<I", 1)  # n_dimensions = 1
+    table += struct.pack("<Q", 1)  # dimension (uint64) = 1
+    table += struct.pack("<I", 0)  # ggml type F32
+    table += struct.pack("<Q", 0)  # data offset, relative to aligned data start
+    assert len(table) == 65
+    return table + b"\x00" * padding + data
+
+
+def build_gguf(
+    *,
+    version: int = 3,
+    metadata_items: list[tuple[str, int, bytes]] | None = None,
+    tensors: list[tuple[str, tuple[int, ...], int, int, bytes]] | None = None,
+    alignment: int = 32,
+) -> bytes:
+    """Build a structurally valid GGUF with metadata and tensors aligned to
+    ``alignment``.
+
+    ``metadata_items`` are ``(key, value_type_tag, encoded_value_bytes)`` triples
+    (one per key). ``tensors`` are ``(name, dims, ggml_type, offset, data)``
+    tuples where ``offset`` is relative to the aligned data start and ``data`` is
+    appended in listed order. TESTONLY fixture builder only.
+    """
+    metadata_items = metadata_items or []
+    tensors = tensors or []
+    body = b"GGUF" + struct.pack("<IQQ", version, len(tensors), len(metadata_items))
+    for key, vtype, valbytes in metadata_items:
+        body += _gguf_str(key) + struct.pack("<I", vtype) + valbytes
+    for name, dims, ggml_type, offset, _data in tensors:
+        body += _gguf_str(name)
+        body += struct.pack("<I", len(dims))
+        for dim in dims:
+            body += struct.pack("<Q", dim)
+        body += struct.pack("<I", ggml_type)
+        body += struct.pack("<Q", offset)
+    table_end = len(body)
+    aligned = ((table_end + alignment - 1) // alignment) * alignment
+    body += b"\x00" * (aligned - table_end)
+    for _name, _dims, _ggml_type, _offset, data in tensors:
+        body += data
+    return body
+
+
 def make_safetensors(tensor_count: int = 1) -> bytes:
     """A structurally valid safetensors file with ``tensor_count`` tensors.
 

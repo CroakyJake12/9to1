@@ -280,3 +280,67 @@ weights remain missing => BLOCKED.
 Unchanged: integration remains **BLOCKED**; the sketch diff is not applied and
 no model/runtime readiness is claimed. No .NET/app/model/subagent/provider/config/
 credentials/cap/commit/push/external actions performed.
+
+---
+
+# Pass 4 (extra15 pass4)
+
+## Independent probe (pass3) reproduced three structural FAILs; all fixed
+
+Probe: `/workspace/shared/9to1-test-evidence/extra15-bundle-pass3-independent-20261020/additional-structural-probe.py`
+(three `structurallyComplete:true` FAIL rows). Copied unchanged into my work
+area and re-run with a fresh output file; all three now raise `IdentityError`
+(PASS), and the two retained closure rows stay PASS.
+
+### Fix 1 — GGUF alignment (default 32, `general.alignment` override)
+Cause: `formats.py` used a hardcoded 8-byte alignment for the tensor data section
+and discarded all metadata values, so a 65-byte tensor table padded to 72/76
+bytes passed despite the GGUF default 32-byte alignment requiring data start 96.
+Fix (`bundle/formats.py`):
+- Walk the real metadata KV table; decode scalar/string/array values.
+- Validate `general.alignment`: integer scalar only, positive; default 32 when
+  absent. Non-integer/bool/zero/negative fail closed. No power-of-two/multiple
+  constraint invented (GGUF admits any positive alignment); alignment arithmetic
+  is exact for any positive integer.
+- `data_section_start = ceil_align(reader.pos, alignment)`; tensor offsets/extents
+  validated against it.
+- New tests: default32 positive (table65+pad31+data4), exact truncated negative
+  (pad7+data4, the reproduced FAIL), explicit `general.alignment=64` positive,
+  zero/wrong-type alignment negatives, unknown metadata-type negative. ggml type
+  widths unchanged/exact (plain types only; quantized tags still fail closed).
+
+### Fix 2 — safetensors exact extent + non-overlapping complete coverage
+Cause: `end - start >= extent` and per-tensor checks let two F32[1] tensors both
+claim `[0,4]` in a 4-byte buffer, and one F32[1] tensor claim `[0,8]` (extent 4)
+pass.
+Fix (`bundle/formats.py`):
+- Require `end - start == extent` (exact; contradictions/truncation rejected).
+- Non-empty slices must be non-overlapping and exactly tile the whole data buffer
+  (no holes / trailing uncovered bytes).
+- Bool offsets rejected; scalar `[]` and zero-size tensors retained; unknown dtype
+  still fail-closed.
+- New tests: overlapping-regions negative (reproduced FAIL), extent-mismatch
+  negative (reproduced FAIL), valid adjacent two-tensor positive, gap negative,
+  trailing-uncovered negative, bool-offset negative, scalar/zero-size retained.
+
+## Pass-4 test results (all run, all passing)
+- `bundle/`: `python3 -m unittest discover -s tests -p "test_*.py"` => **71
+  tests OK** (was 59; +12 causal in test_formats).
+- `llamacpp/`: `python3 -m unittest tests.test_manifest_validation` => 4 OK
+  (files unchanged).
+- `python3 -m py_compile` on all changed modules => OK.
+- Unchanged additional probe copied into my work area: 3/3 FAIL rows now PASS
+  (exit 0), receipt saved; reviewer evidence file not overwritten.
+- Unchanged prior probe: 5/5 PASS (exit 0), saved.
+
+## Pass-4 changed-file SHA-256
+- `bundle/formats.py` `bc6772a32a5f0998422ed13a6c78b558c7e56ca32386ff6cdd2c545c6cac7788`
+- `bundle/tests/helpers.py` `f5ee5e727c09c27651291afca326079732971e7d516f7349a0d9954fc1288c85`
+- `bundle/tests/test_formats.py` `263c168f2c02155435950740a55930572aaabdd8e3861afc2d7b0ec93451cb0f`
+- `bundle/README.md` `1a2a27378d74d1b305d338a9657ddbd0d86a6270f19039042c2731d2a2bd7d33`
+- llamacpp manifest-validation files unchanged.
+
+## Integration status
+Unchanged: integration remains **BLOCKED**; no model/runtime readiness claimed.
+No .NET/app/model/subagent/provider/config/credentials/cap/commit/push/external
+actions performed.

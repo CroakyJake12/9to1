@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import pathlib
 import struct
 import sys
@@ -11,10 +12,12 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from bundle.formats import elf_machine_matches, sniff_format  # noqa: E402
 from bundle.identity import IdentityError  # noqa: E402
 from bundle.tests.helpers import (  # noqa: E402
+    build_gguf,
     make_elf,
     make_elf_with_program_table,
     make_gguf,
     make_gguf_high_offset,
+    make_gguf_probe_tensor,
     make_gguf_single_tensor,
     make_safetensors,
     make_safetensors_out_of_bounds,
@@ -188,6 +191,142 @@ class FormatsTests(unittest.TestCase):
         data = struct.pack("<Q", len(h)) + h + b"\x00" * 16
         with self.assertRaises(IdentityError):
             sniff_format(self._file(data), "safetensors")
+
+    # --- Pass 4 causal regressions from the additional structural probe ---
+    #
+    # GGUF alignment (default 32, general.alignment override):
+    # - default32 valid positive (table65 + padding31 + data4)
+    # - exact truncated negative (padding7 + data4)  -- the reproduced FAIL
+    # - supported explicit-alignment positive (general.alignment=64)
+    # - invalid metadata/alignment negative (zero / wrong type)
+
+    def test_gguf_default32_alignment_positive(self) -> None:
+        # 65-byte table + 31 pad bytes + 4 data bytes = 100 bytes. The data
+        # section starts at align32(65)=96, so the 4-byte payload [96,100)
+        # fits exactly.
+        data = make_gguf_probe_tensor(padding=31)
+        self.assertEqual(100, len(data))
+        meta = sniff_format(self._file(data), "gguf")
+        self.assertTrue(meta["structurallyComplete"])
+        self.assertEqual(32, meta["dataAlignment"])
+
+    def test_gguf_default32_alignment_truncated_rejected(self) -> None:
+        # The reproduced FAIL: 65-byte table + padding7 + data4 = 76 bytes. The
+        # default 32-byte alignment demands data start 96, so the extent lies
+        # beyond EOF and must be rejected.
+        data = make_gguf_probe_tensor(padding=7)
+        self.assertEqual(76, len(data))
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "gguf")
+
+    def test_gguf_explicit_alignment_positive(self) -> None:
+        # Supported explicit `general.alignment` = 64 (uint32) with a single F32
+        # tensor whose data region is aligned to 64. Must pass.
+        data = build_gguf(
+            metadata_items=[("general.alignment", 4, struct.pack("<I", 64))],
+            tensors=[("x", (1,), 0, 0, b"\x00" * 4)],
+            alignment=64,
+        )
+        meta = sniff_format(self._file(data), "gguf")
+        self.assertTrue(meta["structurallyComplete"])
+        self.assertEqual(64, meta["dataAlignment"])
+        self.assertEqual(1, meta["tensorCount"])
+
+    def test_gguf_invalid_alignment_zero_rejected(self) -> None:
+        # general.alignment = 0 is not a supported alignment; fail closed.
+        data = build_gguf(
+            metadata_items=[("general.alignment", 4, struct.pack("<I", 0))],
+            tensors=[("x", (1,), 0, 0, b"\x00" * 4)],
+            alignment=32,
+        )
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "gguf")
+
+    def test_gguf_invalid_alignment_wrong_type_rejected(self) -> None:
+        # general.alignment typed as a string is an unsupported declaration.
+        data = build_gguf(
+            metadata_items=[("general.alignment", 8, _gguf_str_for_test("64"))],
+            tensors=[("x", (1,), 0, 0, b"\x00" * 4)],
+            alignment=32,
+        )
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "gguf")
+
+    def test_gguf_unknown_metadata_value_type_rejected(self) -> None:
+        # An unknown metadata value type must fail closed even if no tensor data
+        # depends on it.
+        data = build_gguf(
+            metadata_items=[("some.key", 99, b"\x00\x00\x00\x00")],
+            tensors=[("x", (1,), 0, 0, b"\x00" * 4)],
+            alignment=32,
+        )
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "gguf")
+
+    # Safetensors exact extent / non-overlapping complete coverage:
+    # - overlapping nonempty slices rejected (reproduced FAIL)
+    # - extent-mismatch (contradictory padding) rejected (reproduced FAIL)
+    # - valid adjacent two-tensor positive
+    # - scalar / zero-size tensors retained
+    # - holes / trailing uncovered buffer / bool offsets rejected
+
+    @staticmethod
+    def _safetensors(obj: dict, payload: bytes) -> bytes:
+        h = json.dumps(obj, separators=(",", ":")).encode()
+        return struct.pack("<Q", len(h)) + h + payload
+
+    def test_safetensors_overlapping_regions_rejected(self) -> None:
+        # Two F32[1] tensors both declaring [0,4] in a 4-byte buffer overlap.
+        obj = {
+            "x": {"dtype": "F32", "shape": [1], "data_offsets": [0, 4]},
+            "y": {"dtype": "F32", "shape": [1], "data_offsets": [0, 4]},
+        }
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(self._safetensors(obj, b"\x00" * 4)), "safetensors")
+
+    def test_safetensors_extent_mismatch_rejected(self) -> None:
+        # F32[1] extent is 4, but the declared slice [0,8] is 8 bytes
+        # (contradictory padding). Must be rejected.
+        obj = {"x": {"dtype": "F32", "shape": [1], "data_offsets": [0, 8]}}
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(self._safetensors(obj, b"\x00" * 8)), "safetensors")
+
+    def test_safetensors_valid_adjacent_two_tensor_positive(self) -> None:
+        # Two F32[1] tensors adjacent in an 8-byte buffer, covering it exactly.
+        obj = {
+            "a": {"dtype": "F32", "shape": [1], "data_offsets": [0, 4]},
+            "b": {"dtype": "F32", "shape": [1], "data_offsets": [4, 8]},
+        }
+        meta = sniff_format(self._file(self._safetensors(obj, b"\x00" * 8)), "safetensors")
+        self.assertTrue(meta["structurallyComplete"])
+        self.assertEqual(2, meta["tensors"])
+
+    def test_safetensors_gap_rejected(self) -> None:
+        # Two tensors with an uncovered gap [4,8) between them.
+        obj = {
+            "a": {"dtype": "F32", "shape": [1], "data_offsets": [0, 4]},
+            "b": {"dtype": "F32", "shape": [1], "data_offsets": [12, 16]},
+        }
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(self._safetensors(obj, b"\x00" * 16)), "safetensors")
+
+    def test_safetensors_trailing_uncovered_rejected(self) -> None:
+        # A single tensor leaving trailing buffer bytes uncovered (a hole).
+        obj = {"x": {"dtype": "F32", "shape": [1], "data_offsets": [0, 4]}}
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(self._safetensors(obj, b"\x00" * 8)), "safetensors")
+
+    def test_safetensors_bool_offset_rejected(self) -> None:
+        # Python bools must not count as valid offset integers.
+        obj = {"x": {"dtype": "F32", "shape": [1], "data_offsets": [False, 4]}}
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(self._safetensors(obj, b"\x00" * 4)), "safetensors")
+
+
+def _gguf_str_for_test(value: str) -> bytes:
+    # Small local helper to build a GGUF string metadata value (length + bytes).
+    encoded = value.encode("utf-8")
+    return struct.pack("<Q", len(encoded)) + encoded
 
 
 if __name__ == "__main__":

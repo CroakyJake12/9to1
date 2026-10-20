@@ -44,6 +44,23 @@ must be able to:
 | --- | --- |
 | `identity.py` | safe regular-file access, SHA-256 hashing, path containment/symlink-escape rejection, atomic durable writes |
 | `formats.py` | runtime-format sniffers (GGUF, safetensors, ELF64, opaque) and architecture matching |
+
+## Structural format conformance (formats.py)
+
+- GGUF tensor data begins right after the tensor-info table, aligned to the
+  file's declared `general.alignment` metadata value (uint32, default **32**
+  bytes). Only an integer-scalar alignment is supported; non-integer / bool /
+  zero / negative alignment declarations fail closed. Tensor offsets/extents are
+  validated against the aligned data start.
+- Only plain (non-quantized) ggml tensor types with known byte widths are
+  admitted; any other ggml type fails closed as `unsupported`.
+- Safetensors requires each tensor's declared byte slice to **exactly** equal its
+  dtype/shape extent (no truncation or contradictory padding), and the non-empty
+  tensor slices must be **non-overlapping** and **completely cover** the data
+  buffer (no holes). Empty-shape scalars and zero-size tensors remain valid;
+  Python bool offsets are rejected.
+- These are bounded structural checks only: no weights are decoded, no model is
+  loaded, and passing them is not evidence of usable inference readiness.
 | `licence.py` | SPDX-ish licence id, source reference and redistribution-policy validation |
 | `spec.py` | the explicit input spec (which assets, engines, platforms, pins) |
 | `manifest.py` | the versioned manifest model: render, canonical dump, parse/validate |
