@@ -1,0 +1,70 @@
+# Voice & Vision integration patch (PRIVATE — DO NOT APPLY)
+# =========================================================
+# Owner: lane 7 (9to1-mercury-extra07-voice), codex/mercury-extra07-voice-20261020
+# Status: IN-PROGRESS / NOT APPLIED by design (root owns build/DI seam).
+# This file records the seams the delivered source/tests depend on. It is NOT a
+# request to apply; it is handed to the coordinator/root for integration.
+#
+# Source identity:
+#   - New Voice & Vision CUI/bindings/host under
+#     shared/src/Haven.Desktop/Interface/Shell/Pop-Ups/VoiceVision/
+#       VoiceVisionPill.cui, VoiceVisionSession.cui,
+#       VoiceVisionCuiDocument.cs, VoiceVisionCuiBindings.cs, VoiceVisionHostAdapter.cs
+#   - New Voice runtime contracts/implementation under shared/src/Haven.Application/Call/
+#       VoiceVisionRuntimeState.cs, IVoiceVisionRuntime.cs, VoiceVisionLiveRuntime.cs
+#   - New tests:
+#       shared/tests/Haven.Application.Tests/Call/VoiceVisionLiveRuntimeTests.cs (auto-globbed)
+#       shared/tests/Haven.Desktop.Tests/VoiceVision/VoiceVisionCuiPresentationTests.cs (needs Compile line below)
+#
+# 1) EmbeddedResource registration for the two authored CUI documents (Haven.Desktop.csproj)
+#    Insert after the Spaces SpaceDetailsDecision EmbeddedResource line (~line 85):
+# ---------------------------------------------------------------------------------------
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj b/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj
+@@ -85,6 +85,8 @@
+     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
++    <EmbeddedResource Include="Interface/Shell/Pop-Ups/VoiceVision/VoiceVisionPill.cui" LogicalName="Haven.Desktop.VoiceVision.Pill.cui" />
++    <EmbeddedResource Include="Interface/Shell/Pop-Ups/VoiceVision/VoiceVisionSession.cui" LogicalName="Haven.Desktop.VoiceVision.Session.cui" />
+     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
+# ---------------------------------------------------------------------------------------
+#
+# 2) Desktop test inclusion (Haven.Desktop.Tests.csproj, net10.0 explicit list).
+#    Add to the net10.0 <Compile> item group (~line 48 area). The Application.Tests
+#    project auto-globs, so its new test file needs no csproj edit.
+# ---------------------------------------------------------------------------------------
+diff --git a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
+--- a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
+@@ -48,6 +48,7 @@
+   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
++    <Compile Include="VoiceVision/VoiceVisionCuiPresentationTests.cs" />
+     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />
+# ---------------------------------------------------------------------------------------
+#
+# 3) DI registration (host composition — CONSULT OWNER before touching; never in this lane).
+#    Register a single shared VoiceVisionLiveRuntime singleton and its dependencies so the
+#    pill and full surface share one runtime/one coordinator:
+#       services.AddSingleton<IVersionedSettingsStore>(... existing settings store ...);
+#       services.AddSingleton(new MultimodalSessionStore(settings));
+#       services.AddSingleton(new VisionVoiceSessionService(new MultimodalSessionStore(settings)));
+#       services.AddSingleton<IVoiceVisionRuntime>(sp => new VoiceVisionLiveRuntime(
+#           sp.GetRequiredService<ICallCoordinator>(),
+#           sp.GetRequiredService<VisionVoiceSessionService>(),
+#           sp.GetRequiredService<IVersionedSettingsStore>()));
+#       services.AddSingleton<VoiceVisionHostAdapter>(sp => new VoiceVisionHostAdapter(
+#           sp.GetRequiredService<IVoiceVisionRuntime>(),
+#           conversationProvider: () => CurrentChat.ConversationId,
+#           startOptionsProvider: () => BuildCallStartOptions()));
+#
+# 4) Host wiring (MainView.BetaOverlays.cs replacement/alignment — CONSULT OWNER).
+#    Replace the legacy GlobalCallWidget/InChatCallWidgetViewModel overlay with the CUI
+#    VoiceVisionHostAdapter pill (NativeOverlayLayer child), keep the same drag/Z-order
+#    behavior, and have the composer waveform Voice toggle open the pill. Route the
+#    adapter's RequestFullSurface to load the full session surface. The adapter must be
+#    disposed together with the overlay and its ClosePresentation() called on overlay
+#    close (never EndAsync).
+#
+# 5) NOT RUN in this lane: no dotnet/MSBuild/restore/tests/apps/capture/display helpers
+#    were executed (root owns the build slot). Static review only.

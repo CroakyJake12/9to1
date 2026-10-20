@@ -1,0 +1,105 @@
+<Cui id="voicevision.pill" version="1">
+  <!--
+    Canonical CUI floating Voice pill (icon-first, compact) over the still-usable
+    conversation. Every control is capability-checked by VoiceVisionCuiBindings and
+    the Voice & Vision runtime projection: nothing here claims a mode or capture is
+    operational merely because an option exists. Dedicated mic/camera/captions glyphs
+    are absent from the canonical icon catalog; that gap is reported to the owning
+    icon lane, and available canonical keys are reused with explicit accessible names.
+
+    The pill drives the SAME canonical session as the full Voice & Vision surface.
+    Opening the full surface reuses the same runtime and SessionID; End is the only
+    real runtime stop -- closing a presentation is never End.
+  -->
+  <Actions>
+    <Action name="Start" command="voice.start" />
+    <Action name="End" command="voice.end" />
+    <Action name="ToggleMute" command="voice.mute" />
+    <Action name="TogglePause" command="voice.pause-resume" />
+    <Action name="ToggleScreenShare" command="voice.screen-share" />
+    <Action name="ToggleCamera" command="voice.camera" />
+    <Action name="ToggleCaptions" command="voice.captions" />
+    <Action name="OpenFullSurface" command="voice.open-full" />
+    <Action name="SetMode" command="voice.set-mode" parameter="{Binding pill.selectedModeIndex}" />
+  </Actions>
+  <Theme Name="user_preference">
+    <Page id="voice-pill-page" role="complementary" accessible-name="Voice session pill">
+      <Container id="voice-pill-root" Type="Vertical Stack" CellGap="8" Padding="12" MinWidth="360">
+
+        <!-- Truthful waveform / status strip -->
+        <Container id="voice-pill-status" Type="Horizontal Stack" CellGap="10">
+          <Image id="voice-pill-wave" Source="icon:wave" Width="20" Height="20"
+                 IsVisible="{Binding pill.isListening}" accessible-name="Waveform" />
+          <Text id="voice-pill-status-text" Text="{Binding pill.statusText}"
+                AccessibleName="Session status" FontRole="Body" FontWeight="SemiBold" />
+          <Text id="voice-pill-mode-text" Text="{Binding pill.modeLabel}"
+                AccessibleName="Voice mode" FontRole="Body" />
+          <Button id="voice-pill-end" action="End" accessible-name="End Voice session"
+                  Tooltip="End the Voice session" IsEnabled="{Binding pill.canEnd}"
+                  Width="32" Height="32" Padding="6" IconOnly="True">
+            <Image id="voice-pill-end-icon" Source="icon:close" Width="16" Height="16" />
+          </Button>
+        </Container>
+
+        <!-- Privacy / permission truthful notices -->
+        <If Condition="{Binding pill.hasPermissionNotice}">
+          <Text id="voice-pill-permission" Text="{Binding pill.permissionNotice}"
+                AccessibleName="Permission notice" FontRole="Body" FontSize="12" />
+        </If>
+        <If Condition="{Binding pill.isLocalOnly}">
+          <Text id="voice-pill-local" Text="Local-only policy in effect"
+                AccessibleName="Local-only policy" FontRole="Body" FontSize="12" />
+        </If>
+
+        <!-- Icon-first control row -->
+        <Container id="voice-pill-controls" Type="Horizontal Stack" CellGap="6">
+          <Button id="voice-pill-start" action="Start" accessible-name="Start Voice session"
+                  Tooltip="Start the Voice session" IsEnabled="{Binding pill.canStart}"
+                  Width="36" Height="36" Padding="6">
+            <Image id="voice-pill-start-icon" Source="icon:play" Width="18" Height="18" />
+          </Button>
+          <Button id="voice-pill-mute" action="ToggleMute" accessible-name="Mute or unmute"
+                  Tooltip="Mute or unmute the microphone" IsEnabled="{Binding pill.canToggleMute}"
+                  Width="36" Height="36" Padding="6">
+            <Image id="voice-pill-mute-icon" Source="icon:wave" Width="18" Height="18"
+                   Opacity="{Binding pill.muteOpacity}" />
+          </Button>
+          <Button id="voice-pill-pause" action="TogglePause" accessible-name="Pause or resume"
+                  Tooltip="Pause or resume the session" IsEnabled="{Binding pill.canPause}"
+                  Width="36" Height="36" Padding="6">
+            <Image id="voice-pill-pause-icon" Source="icon:play" Width="18" Height="18" />
+          </Button>
+          <Button id="voice-pill-screen" action="ToggleScreenShare" accessible-name="Share screen"
+                  Tooltip="Start or stop screen sharing" IsEnabled="{Binding pill.canShareScreen}"
+                  Width="36" Height="36" Padding="6">
+            <Image id="voice-pill-screen-icon" Source="icon:window" Width="18" Height="18" />
+          </Button>
+          <Button id="voice-pill-camera" action="ToggleCamera" accessible-name="Use camera"
+                  Tooltip="Start or stop camera capture" IsEnabled="{Binding pill.canUseCamera}"
+                  Width="36" Height="36" Padding="6">
+            <Image id="voice-pill-camera-icon" Source="icon:vision" Width="18" Height="18" />
+          </Button>
+          <Button id="voice-pill-captions" action="ToggleCaptions" accessible-name="Toggle captions"
+                  Tooltip="Show or hide live captions" IsEnabled="{Binding pill.canEnableCaptions}"
+                  Width="36" Height="36" Padding="6">
+            <Image id="voice-pill-captions-icon" Source="icon:text" Width="18" Height="18" />
+          </Button>
+          <Button id="voice-pill-open" action="OpenFullSurface" accessible-name="Open Voice and Vision"
+                  Tooltip="Open the full Voice &amp; Vision surface" IsEnabled="{Binding pill.canOpenFull}"
+                  Width="40" Height="36" Padding="6">
+            <Text id="voice-pill-open-label" Text="Open in Voice &amp; Vision" FontRole="Body" />
+          </Button>
+        </Container>
+
+        <!-- Mode selector (only meaningful while a session exists) -->
+        <Container id="voice-pill-mode" Type="Horizontal Stack" CellGap="8">
+          <Text id="voice-pill-mode-label" Text="Mode" FontRole="Body" FontSize="12" />
+          <Input id="voice-pill-mode-select" Type="Select"
+                 ItemsSource="{Binding pill.modeNames}"
+                 SelectedIndex="{Binding pill.selectedModeIndex, mode=TwoWay}"
+                 IsEnabled="{Binding pill.canEnd}" MinWidth="150" />
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>
