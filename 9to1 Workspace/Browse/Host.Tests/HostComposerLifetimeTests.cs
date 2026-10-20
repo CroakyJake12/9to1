@@ -380,14 +380,51 @@ public sealed class HostComposerLifetimeTests
             var image = Assert.IsType<Image>(addButton!.Content);
             Assert.True(image.Width >= 32 && image.Height >= 32);
 
-            // The plus is the genuine packaged SVG: two rounded rects painted per-element, each
-            // filled with the scoped CUI text brush (live rethemed foreground). Per-element
-            // painting means no cross-shape winding can cancel an overlapping fill.
+            // The authored target is a 44px accessible button with 6px padding; the arranged image
+            // surface must be the 32x32 content box, measured in real arranged bounds, centered and
+            // fully inside the button (no clipping).
+            Assert.True(addButton.Bounds.Width >= 44 && addButton.Bounds.Height >= 44,
+                $"add button should be at least 44x44, was {addButton.Bounds}");
+            Assert.Equal(new Thickness(6), addButton.Padding);
+            Assert.True(image.Bounds.Width >= 31 && image.Bounds.Width <= 33, $"plus image arranged width {image.Bounds.Width}");
+            Assert.True(image.Bounds.Height >= 31 && image.Bounds.Height <= 33, $"plus image arranged height {image.Bounds.Height}");
+            Assert.True(addButton.Bounds.Contains(image.Bounds), $"plus image {image.Bounds} clipped outside add button {addButton.Bounds}");
+            var imageCenter = image.Bounds.Center;
+            var buttonCenter = addButton.Bounds.Center;
+            Assert.True(Math.Abs(imageCenter.X - buttonCenter.X) < 1d && Math.Abs(imageCenter.Y - buttonCenter.Y) < 1d,
+                $"plus image center {imageCenter} not centered in add button center {buttonCenter}");
+
+            // The plus is the genuine packaged SVG: two rounded rects painted per-element, covering
+            // the centre without clipping. The painted geometry union stays inside the 32x32 view
+            // and its centre is genuinely painted.
             var drawing = Assert.IsType<DrawingImage>(image.Source);
             var group = Assert.IsType<DrawingGroup>(drawing.Drawing);
             Assert.Equal(2, group.Children.Count);
+            var first = true;
+            var union = default(Rect);
             foreach (var child in group.Children)
-                Assert.NotNull(Assert.IsType<GeometryDrawing>(child).Brush);
+            {
+                var geometryDrawing = Assert.IsType<GeometryDrawing>(child);
+                Assert.NotNull(geometryDrawing.Brush);
+                Assert.NotNull(geometryDrawing.Geometry);
+                Assert.True(geometryDrawing.Geometry!.FillContains(new Point(16, 16)));
+                var bounds = geometryDrawing.Geometry.Bounds;
+                union = first ? bounds : union.Union(bounds);
+                first = false;
+            }
+            Assert.True(new Rect(0, 0, 32, 32).Contains(union), $"plus painted bounds {union} exceed the 32x32 view");
+
+            // The foreground is the live scoped CUI text brush resolved on the button itself, so a
+            // theme change that repaints CuiTextBrush is what the icon reflects. Compare the painted
+            // fill color to the scoped brush's color.
+            Assert.True(addButton.TryFindResource("CuiTextBrush", out var scoped) && scoped is IBrush scopedBrush);
+            var scopedSolid = Assert.IsType<ISolidColorBrush>(scopedBrush);
+            foreach (var child in group.Children)
+            {
+                var geometryBrush = Assert.IsType<GeometryDrawing>(child).Brush;
+                var solid = Assert.IsType<ISolidColorBrush>(geometryBrush);
+                Assert.Equal(scopedSolid.Color, solid.Color);
+            }
         }
         catch (Exception error) { testFailure = error; throw; }
         finally

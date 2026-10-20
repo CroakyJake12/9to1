@@ -55,11 +55,13 @@ public sealed class HavenPackagedSvgResolverStrictTests
 
     private static XElement ParseRectElement(string rectXml) => XElement.Parse(rectXml);
 
-    private static DrawingImage Build(string xml)
+    private static DrawingImage Build(string xml) => BuildWithForeground(xml, Brushes.Red);
+
+    private static DrawingImage BuildWithForeground(string xml, IBrush brush)
     {
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
         var target = new Button();
-        target.Resources["CuiTextBrush"] = Brushes.Red;
+        target.Resources["CuiTextBrush"] = brush;
         return (DrawingImage)InvokeStatic("Build", stream, target);
     }
 
@@ -215,5 +217,71 @@ public sealed class HavenPackagedSvgResolverStrictTests
         {
             CultureInfo.CurrentCulture = previous;
         }
+    }
+
+    [AvaloniaFact]
+    public void Same_direction_nested_subpaths_fill_center_per_svg_nonzero_default()
+    {
+        // SVG's default fill-rule is nonzero: nested same-direction subpaths fill their centre.
+        // Avalonia's StreamGeometry mini-language defaults to evenodd, so the decoder must carry the
+        // SVG nonzero default through. Under evenodd the inner square would cancel and leave the
+        // centre empty; nonzero fills it.
+        var drawing = Build("""
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
+              <path d="M0 0H32V32H0Z M8 8H24V24H8Z"/>
+            </svg>
+            """);
+        var group = Assert.IsType<DrawingGroup>(drawing.Drawing);
+        var pathDraw = Assert.Single(group.Children.OfType<GeometryDrawing>());
+        var geometry = Assert.NotNull(pathDraw.Geometry);
+        // Centre inside the inner square is filled (nonzero), not a hole.
+        Assert.True(geometry.FillContains(new Point(16, 16)));
+        // The ring between the squares is also filled; a point fully outside is not.
+        Assert.True(geometry.FillContains(new Point(4, 16)));
+        Assert.False(geometry.FillContains(new Point(-1, -1)));
+    }
+
+    [Fact]
+    public void Path_non_svg_fill_rule_prefix_is_rejected()
+    {
+        var f1 = """<svg xmlns="http://www.w3.org/2000/svg"><path d="F1 M0 0H32V32H0Z"/></svg>""";
+        Assert.Throws<InvalidOperationException>(() => Build(f1));
+        var f0 = """<svg xmlns="http://www.w3.org/2000/svg"><path d="F0 M0 0H32V32H0Z"/></svg>""";
+        Assert.Throws<InvalidOperationException>(() => Build(f0));
+    }
+
+    [Fact]
+    public void Path_exponent_overflow_number_is_rejected()
+    {
+        var xml = """<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0L1e999 0H32V32H0Z"/></svg>""";
+        Assert.Throws<InvalidOperationException>(() => Build(xml));
+    }
+
+    [Fact]
+    public void Path_nonfinite_number_is_rejected()
+    {
+        var nan = """<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0NaN32V32H0Z"/></svg>""";
+        Assert.Throws<InvalidOperationException>(() => Build(nan));
+        var inf = """<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0LInfinity 0H32V32H0Z"/></svg>""";
+        Assert.Throws<InvalidOperationException>(() => Build(inf));
+    }
+
+    [AvaloniaFact]
+    public void Scoped_theme_foreground_is_resolved_live_per_build()
+    {
+        const string svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
+              <path d="M0 0H32V32H0Z"/>
+            </svg>
+            """;
+        var red = Brushes.Red;
+        var blue = Brushes.Blue;
+        var redImage = BuildWithForeground(svg, red);
+        var blueImage = BuildWithForeground(svg, blue);
+        IBrush SingleBrush(DrawingImage image) =>
+            Assert.IsType<GeometryDrawing>(Assert.Single(Assert.IsType<DrawingGroup>(image.Drawing).Children)).Brush!;
+        Assert.Same(red, SingleBrush(redImage));
+        Assert.Same(blue, SingleBrush(blueImage));
+        Assert.NotSame(red, blue);
     }
 }

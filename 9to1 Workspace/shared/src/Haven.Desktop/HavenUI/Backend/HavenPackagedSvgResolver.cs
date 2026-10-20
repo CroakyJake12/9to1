@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform;
 using System.Globalization;
+using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -164,14 +165,133 @@ public sealed class HavenPackagedSvgResolver
         var d = element.Attribute("d")?.Value
             ?? throw new InvalidOperationException("An SVG path in a packaged CUI asset requires a d attribute.");
         if (string.IsNullOrWhiteSpace(d)) throw new InvalidOperationException("An SVG path d in a packaged CUI asset is empty.");
+        // A bounded genuine SVG path grammar/lexer runs BEFORE the backend parse: it rejects the
+        // non-SVG fill-rule F0/F1 commands (CUI owns the fill rule) and any non-finite or
+        // exponent-overflow number. The backend then parses the already-validated data.
+        ValidatePathData(d);
         try
         {
-            return StreamGeometry.Parse(d);
+            // SVG's default fill-rule is nonzero, but Avalonia's StreamGeometry mini-language
+            // defaults to evenodd. After validating the genuine input, internally prepend an owned
+            // nonzero (F1) prefix so nested same-direction subpaths fill exactly as SVG specifies.
+            return StreamGeometry.Parse("F1 " + d);
         }
-        catch (Exception error) when (error is FormatException or NotSupportedException)
+        catch (Exception error) when (error is FormatException or NotSupportedException or InvalidDataException)
         {
             throw new InvalidOperationException("An SVG path d in a packaged CUI asset is invalid.", error);
         }
+    }
+
+    /// <summary>The only characters a genuine SVG path-data command may use.</summary>
+    private static readonly char[] SvgPathCommands = ['M', 'm', 'L', 'l', 'H', 'h', 'V', 'v', 'C', 'c', 'S', 's', 'Q', 'q', 'T', 't', 'A', 'a', 'Z', 'z'];
+
+    private static int SvgArgCount(char command) => char.ToUpperInvariant(command) switch
+    {
+        'M' or 'L' => 2,
+        'H' or 'V' => 1,
+        'C' => 6,
+        'S' or 'Q' => 4,
+        'T' => 2,
+        'A' => 7,
+        _ => 0
+    };
+
+    /// <summary>
+    /// Validates SVG path data with a bounded genuine grammar/lexer: commands must come from the
+    /// SVG path set, the path must open with a moveto, every number must be finite (rejecting NaN,
+    /// infinity and exponent-overflow), and fill-rule (F0/F1) commands are rejected because CUI
+    /// owns the fill rule. This runs before the backend parse so malformed or unsafe path data never
+    /// reaches StreamGeometry.
+    /// </summary>
+    private static void ValidatePathData(string pathData)
+    {
+        var i = 0;
+        char? pending = null;
+        var remaining = 0;
+        var firstCommand = true;
+        var sawMove = false;
+        while (i < pathData.Length)
+        {
+            SkipPathSeparators(pathData, ref i);
+            if (i >= pathData.Length) break;
+            var c = pathData[i];
+            if (Array.IndexOf(SvgPathCommands, c) >= 0)
+            {
+                if (remaining > 0)
+                    throw new InvalidOperationException("An SVG path has too few arguments before a command.");
+                if (firstCommand && c is not ('M' or 'm'))
+                    throw new InvalidOperationException("An SVG path must begin with a moveto (M/m) command.");
+                pending = c;
+                remaining = SvgArgCount(c);
+                firstCommand = false;
+                i++;
+                if (c is 'M' or 'm') sawMove = true;
+                if (c is 'Z' or 'z') pending = null;
+                continue;
+            }
+            if (c is 'F' or 'f')
+                throw new InvalidOperationException("A packaged CUI SVG path must not contain a fill-rule (F) command; CUI owns the SVG fill rule.");
+            if (pending is null)
+                throw new InvalidOperationException("An SVG path begins with a coordinate instead of a command.");
+            if (remaining == 0)
+            {
+                // A coordinate after a completed command starts an implicit repetition of the same
+                // drawing command. For a moveto the first implicit pair becomes a lineto, per SVG.
+                var command = pending.Value;
+                if (command is 'Z' or 'z')
+                    throw new InvalidOperationException("An SVG path cannot place a coordinate after a closepath (Z) command.");
+                if (command is 'M' or 'm') pending = char.IsUpper(command) ? 'L' : 'l';
+                remaining = SvgArgCount(pending.Value);
+            }
+            var value = ConsumeSvgNumber(pathData, ref i);
+            if (!double.IsFinite(value))
+                throw new InvalidOperationException("An SVG path contains a non-finite number.");
+            remaining--;
+        }
+        if (remaining > 0)
+            throw new InvalidOperationException("An SVG path ends with an incomplete command.");
+        if (!sawMove)
+            throw new InvalidOperationException("An SVG path contains no moveto command.");
+    }
+
+    private static void SkipPathSeparators(string s, ref int i)
+    {
+        while (i < s.Length && (char.IsWhiteSpace(s[i]) || s[i] == ',')) i++;
+    }
+
+    /// <summary>Consumes one SVG number token (sign? digits[.digits][e[sign]digits]) and parses
+    /// it with invariant culture. Any number that cannot be represented finitely throws.</summary>
+    private static double ConsumeSvgNumber(string s, ref int i)
+    {
+        var start = i;
+        if (i < s.Length && (s[i] == '+' || s[i] == '-')) i++;
+        var integerDigits = ConsumeSvgDigits(s, ref i);
+        var hasFractionDigits = false;
+        if (i < s.Length && s[i] == '.')
+        {
+            i++;
+            hasFractionDigits = ConsumeSvgDigits(s, ref i) > 0;
+        }
+        if (i < s.Length && (s[i] == 'e' || s[i] == 'E'))
+        {
+            i++;
+            if (i < s.Length && (s[i] == '+' || s[i] == '-')) i++;
+            if (ConsumeSvgDigits(s, ref i) == 0)
+                throw new InvalidOperationException("An SVG path has a malformed exponent.");
+        }
+        if (integerDigits == 0 && !hasFractionDigits)
+            throw new InvalidOperationException("An SVG path has a malformed number.");
+        var token = s.Substring(start, i - start);
+        if (!double.TryParse(token, NumberStyle, CultureInfo.InvariantCulture, out var value))
+            throw new InvalidOperationException("An SVG path has an invalid number that overflows or is malformed.");
+        return value;
+    }
+
+    private static int ConsumeSvgDigits(string s, ref int i)
+    {
+        var count = 0;
+        while (i < s.Length && s[i] >= '0' && s[i] <= '9') { i++; count++; }
+        return count;
     }
 
     private static Geometry ParseRect(XElement element)

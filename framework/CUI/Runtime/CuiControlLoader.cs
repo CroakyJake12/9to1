@@ -477,14 +477,37 @@ public sealed class CuiControlLoader : IDisposable
         // replacement mount or resuming after disposal.
         var pendingDeclared = new Dictionary<string, CuiVariableDeclaration>(StringComparer.Ordinal);
         var pendingLocal = new Dictionary<string, object?>(StringComparer.Ordinal);
+        var randomOncePlans = new List<RandomOncePlan>();
+        // PASS 1: validate every declaration shape and snapshot every source-driven candidate pool
+        // BEFORE any chooser selection. This rejects malformed new-initializer shapes (including a
+        // Source presented without a Selection) before a single draw or any lineage retirement, and
+        // guarantees a later invalid declaration is discovered before an earlier valid one draws.
         foreach (var declaration in document.Variables.Values)
         {
             pendingDeclared[declaration.Name] = declaration;
             if (!string.IsNullOrEmpty(declaration.Selection))
-                pendingLocal[declaration.Name] = PreflightRandomOnceVariable(declaration, generation);
-            else if (bool.TryParse(declaration.Value, out var parsed))
+            {
+                randomOncePlans.Add(new RandomOncePlan(
+                    declaration, SnapshotRandomOnceCandidates(declaration, generation), generation));
+            }
+            else if (string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase)
+                && bool.TryParse(declaration.Value, out var parsed))
+            {
                 pendingLocal[declaration.Name] = parsed;
+            }
+            else
+            {
+                // Malformed local initializer: a string Source without Selection, a non-bool type
+                // outside RandomOnce, or a bool without a literal true/false. Reject loudly before
+                // any prior lineage is retired or any chooser draws.
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR077", CuiDiagnosticSeverity.Error,
+                    $"Local variable '{declaration.Name}' has an invalid initializer shape; expected a bool literal or a string RandomOnce source selection.", declaration.Span));
+            }
         }
+        // PASS 2: only after every declaration/pool has validated, pick once per frame.
+        foreach (var plan in randomOncePlans)
+            pendingLocal[plan.Declaration.Name] = SelectRandomOnce(plan.Declaration, plan.Candidates, plan.Generation);
 
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
@@ -1973,17 +1996,19 @@ public sealed class CuiControlLoader : IDisposable
             RequestRepeatRefresh(repeat);
     }
 
+    /// <summary>A validated, snapshotted RandomOnce plan awaiting once-per-frame selection in the
+    /// second preflight pass.</summary>
+    private sealed record RandomOncePlan(CuiVariableDeclaration Declaration, IReadOnlyList<string> Candidates, int Generation);
+
     /// <summary>
-    /// Validates and mounts a source-driven choose-once (Selection="RandomOnce") local variable so
-    /// that every declaration shape and the typed candidate pool are strictly checked and the item
-    /// is chosen before any previous tree is retired. Called during the preflight pass of
-    /// <see cref="Load"/>; its result is committed to the local-state frame only after the old
-    /// lineage has been safely replaced.
+    /// First-pass RandomOnce validation: checks every declaration shape and snapshots the typed
+    /// candidate pool. No chooser is invoked here, so a later invalid declaration is discovered
+    /// before an earlier valid one draws. The shared strict contract holds at runtime even when a
+    /// document bypasses the compiler (direct Load/LoadMarkup admission), not only after
+    /// compilation. A failure here retires nothing; the previous tree stays operational.
     /// </summary>
-    private string PreflightRandomOnceVariable(CuiVariableDeclaration declaration, int generation)
+    private IReadOnlyList<string> SnapshotRandomOnceCandidates(CuiVariableDeclaration declaration, int generation)
     {
-        // The shared strict contract must hold at runtime even when a document bypasses the
-        // compiler (direct Load/LoadMarkup admission), not only after compilation.
         if (!string.Equals(declaration.Selection, "RandomOnce", StringComparison.OrdinalIgnoreCase))
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR074", CuiDiagnosticSeverity.Error,
@@ -2004,12 +2029,16 @@ public sealed class CuiControlLoader : IDisposable
         IReadOnlyList<string> candidates;
         if (_bindingContext is not null && _bindingContext.TryGetValue(declaration.Source, out var sourceValue))
         {
+            // The binding-context getter is an external callback; it may synchronously reload or
+            // dispose this loader. Reject a stale outer attempt after it returns (even when the
+            // lookup itself failed).
             if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
             candidates = SnapshotTypedStringPool(sourceValue, declaration);
             if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
         }
         else
         {
+            if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
             candidates = [];
         }
 
@@ -2017,19 +2046,53 @@ public sealed class CuiControlLoader : IDisposable
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
                 "CUIR071", CuiDiagnosticSeverity.Error,
                 $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' produced an empty candidate pool.", declaration.Span));
+        return candidates;
+    }
 
+    /// <summary>
+    /// Second-pass RandomOnce selection: invoked only after every declaration/pool validated. The
+    /// public chooser result is validated to be nonnull/nonempty and EXACTLY in the snapshotted
+    /// pool, and the load generation/dispose guard rejects a stale outer continuation after the
+    /// chooser callback reentered/replaced/disposed the loader.
+    /// </summary>
+    private string SelectRandomOnce(CuiVariableDeclaration declaration, IReadOnlyList<string> candidates, int generation)
+    {
         var chooser = RandomSelectionOverride ?? DefaultRandomSelection;
-        var chosen = chooser(candidates);
+        string chosen;
+        try
+        {
+            chosen = chooser(candidates) ?? string.Empty;
+        }
+        catch (CuiRuntimeLoadException)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR079", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' RandomOnce chooser failed: {error.Message}", declaration.Span));
+        }
         if (!IsLoadAttemptCurrent(generation)) throw ReentrancyError(declaration);
+        if (chosen.Length == 0)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR080", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' RandomOnce chooser returned an empty candidate.", declaration.Span));
+        if (!candidates.Contains(chosen, StringComparer.Ordinal))
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR081", CuiDiagnosticSeverity.Error,
+                $"Local variable '{declaration.Name}' RandomOnce chooser returned a candidate not present in the snapshotted pool.", declaration.Span));
         return chosen;
     }
 
     /// <summary>
-    /// Snapshots the candidate pool as an explicit typed string collection, rejecting scalar
-    /// strings (which would enumerate UTF-16 code units and split emoji), non-string enumerables
-    /// (int[], mixed arrays, etc.) and null/empty entries rather than silently filtering them.
-    /// The buff Unicode sequences are retained verbatim. The returned snapshot is read-only and
-    /// owned by this frame.
+    /// Snapshots the candidate pool under a truthful explicit finite ordered typed candidate-list
+    /// contract: only <see cref="IReadOnlyList{T}"/> of string (finite and ordered) is accepted.
+    /// Scalar strings (which would enumerate UTF-16 code units and split emoji), non-string and
+    /// arbitrary/unbounded enumerables (int[], mixed arrays, yield-based iterators, lazy sequences)
+    /// and null/empty entries are rejected rather than silently filtered. The full Unicode
+    /// sequences are retained verbatim, and the returned snapshot is an OWNED immutable copy, never
+    /// the live host list, so later host mutation cannot affect this frame's chooser or consumers.
     /// </summary>
     private static IReadOnlyList<string> SnapshotTypedStringPool(object? sourceValue, CuiVariableDeclaration declaration)
     {
@@ -2043,26 +2106,13 @@ public sealed class CuiControlLoader : IDisposable
                     $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' must be a typed string collection; got scalar '{sourceValue.GetType().Name}'.", declaration.Span));
             case IReadOnlyList<string> list:
                 ValidatePoolEntries(list, declaration);
-                return list;
-            case IEnumerable<string> strings:
-                var copy = new List<string>();
-                foreach (var item in strings)
-                {
-                    if (item is null)
-                        throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                            "CUIR072", CuiDiagnosticSeverity.Error,
-                            $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' contains a null entry.", declaration.Span));
-                    if (item.Length == 0)
-                        throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                            "CUIR072", CuiDiagnosticSeverity.Error,
-                            $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' contains an empty entry.", declaration.Span));
-                    copy.Add(item);
-                }
-                return copy;
+                // Owned immutable copy: the chooser and this frame keep a stable snapshot even if
+                // the host mutates the source list later (or a reentrant callback mutates it).
+                return list.ToArray();
             case System.Collections.IEnumerable:
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR072", CuiDiagnosticSeverity.Error,
-                    $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' must be an explicit typed string collection; got enumerable '{sourceValue.GetType().Name}'.", declaration.Span));
+                    $"Local variable '{declaration.Name}' RandomOnce source '{declaration.Source}' must be an explicit finite ordered typed string list (IReadOnlyList&lt;string&gt;); got enumerable '{sourceValue.GetType().Name}'.", declaration.Span));
             default:
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR072", CuiDiagnosticSeverity.Error,

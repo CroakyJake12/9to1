@@ -1,6 +1,7 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Language;
@@ -31,6 +32,29 @@ public sealed class CuiLocalStateRandomSelectRuntimeTests
         var host = new CuiViewModel();
         host.Set("Candidates", candidates);
         return host;
+    }
+
+    /// <summary>Markup with a real Input bound to a draft plus an authored action button, used to
+    /// prove an invalid reload leaves the prior real input editable and the action operational.</summary>
+    private const string OperationalMarkup = """
+        <Cui>
+          <Variable Type="string" ID="Chosen" Source="{Binding Candidates}" Selection="RandomOnce"/>
+          <Container Type="Vertical Stack">
+            <Input id="input" Type="Text" Value="{Binding Draft}" />
+            <Button id="act" action="do-it" content="Go" />
+            <Button id="show" content="{Binding Chosen}" />
+          </Container>
+        </Cui>
+        """;
+
+    private static (CuiViewModel Model, List<string> Actions) OperationalHost(params string[] candidates)
+    {
+        var model = new CuiViewModel();
+        model.Set("Candidates", candidates);
+        model.Set("Draft", "draft");
+        var actions = new List<string>();
+        model.On("do-it", _ => actions.Add("do-it"));
+        return (model, actions);
     }
 
     [Fact]
@@ -365,12 +389,14 @@ public sealed class CuiLocalStateRandomSelectRuntimeTests
             // The deterministic chooser synchronously reloads once (mounts replacement B) and then
             // returns a candidate; the stale outer attempt must be rejected, not committed.
             var reentered = false;
+            Control? rootB = null;
             loader.RandomSelectionOverride = list =>
             {
                 if (!reentered)
                 {
                     reentered = true;
-                    loader.LoadMarkup(Markup);
+                    var (b, diagB) = loader.LoadMarkup(Markup);
+                    rootB = b;
                 }
                 return list[0];
             };
@@ -378,6 +404,22 @@ public sealed class CuiLocalStateRandomSelectRuntimeTests
             var (root, diagnostics) = loader.LoadMarkup(Markup);
             Assert.Null(root);
             Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "CUIR073");
+
+            // The replacement B root mounted by the reentrant load survives and stays operational:
+            // its real button renders the B-frame selection and remains visible/interactive.
+            Assert.NotNull(rootB);
+            var surfaceB = Assert.IsType<CuiContainerControl>(rootB!);
+            loader.WireBindings(surfaceB);
+            var window = new Window { Content = rootB, Width = 400, Height = 200 };
+            window.Show(); Pump();
+            try
+            {
+                var button = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "show");
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+                Assert.True(button.IsVisible);
+                Assert.True(button.IsEnabled);
+            }
+            finally { window.Close(); }
             return true;
         }, CancellationToken.None);
     }
@@ -399,6 +441,20 @@ public sealed class CuiLocalStateRandomSelectRuntimeTests
             var (root, diagnostics) = loader.LoadMarkup(Markup);
             Assert.Null(root);
             Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "CUIR073");
+
+            // The replacement B root survives and remains operational (its button renders/works).
+            Assert.NotNull(reentrant.RootB);
+            var surfaceB = Assert.IsType<CuiContainerControl>(reentrant.RootB!);
+            loader.WireBindings(surfaceB);
+            var window = new Window { Content = reentrant.RootB, Width = 400, Height = 200 };
+            window.Show(); Pump();
+            try
+            {
+                var button = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "show");
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+                Assert.True(button.IsVisible);
+            }
+            finally { window.Close(); }
             return true;
         }, CancellationToken.None);
     }
@@ -413,16 +469,272 @@ public sealed class CuiLocalStateRandomSelectRuntimeTests
             _loader = loader;
             _pool = pool;
         }
+        public Control? RootB { get; private set; }
         public bool TryGetValue(string path, out object? value)
         {
             if (path == "Candidates" && !_reentered)
             {
                 _reentered = true;
-                _loader.LoadMarkup(Markup);
+                var (b, _) = _loader.LoadMarkup(Markup);
+                RootB = b;
             }
             value = _pool;
             return true;
         }
+    }
+
+    [Fact]
+    public async Task RandomOnce_invalid_reload_leaves_real_input_editable_and_button_action_operational()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            var (model, actions) = OperationalHost("A", "B");
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Imagine");
+            loader.SetAppearance(CuiAppearance.Dark);
+            loader.SetBindingContext(model);
+            loader.SetActionDispatcher(model);
+            loader.RandomSelectionOverride = list => list[0];
+
+            var (root, diagnostics) = loader.LoadMarkup(OperationalMarkup);
+            Assert.NotNull(root); Assert.Empty(diagnostics);
+            var surface = Assert.IsType<CuiContainerControl>(root!);
+            loader.WireBindings(surface);
+            var window = new Window { Content = root, Width = 400, Height = 200 };
+            window.Show(); Pump();
+            try
+            {
+                var input = Assert.Single(window.GetVisualDescendants().OfType<TextBox>(), b => AutomationProperties.GetAutomationId(b) == "input");
+                var act = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "act");
+                var show = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "show");
+                Assert.Equal("A", Assert.IsType<string>(show.Content));
+
+                // Real input editable: editing round-trips to the bound model draft; the authored
+                // button action dispatches through the real action dispatcher.
+                input.Text = "edited"; Pump();
+                Assert.Equal("edited", model.Get("Draft"));
+                act.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                Assert.Contains("do-it", actions);
+
+                // Strict-invalid reload (scalar pool) fails BEFORE retiring the tree: the old real
+                // input stays editable, the draft binding stays live and the button action works.
+                model.Set("Candidates", "\U0001F600"); // scalar pool -> CUIR072
+                var (root2, diagnostics2) = loader.LoadMarkup(OperationalMarkup);
+                Assert.Null(root2);
+                Assert.Contains(diagnostics2, diagnostic => diagnostic.Code == "CUIR072");
+
+                Assert.True(input.IsVisible);
+                input.Text = "still-editing"; Pump();
+                Assert.Equal("still-editing", model.Get("Draft"));
+                actions.Clear();
+                act.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await loader.WhenActionsIdleAsync();
+                Assert.Contains("do-it", actions);
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task RandomOnce_late_invalid_declaration_zero_draws()
+    {
+        // A document whose FIRST RandomOnce variable is valid but whose LATER declaration is
+        // malformed (a string Source without a Selection) must be rejected WITHOUT invoking the
+        // chooser even once: pass 1 validates every declaration before any draw.
+        const string lateInvalidMarkup = """
+            <Cui>
+              <Variable Type="string" ID="First" Source="{Binding Candidates}" Selection="RandomOnce"/>
+              <Variable Type="string" ID="Second" Source="{Binding Candidates}"/>
+              <Container Type="Vertical Stack"><Button content="{Binding First}" /></Container>
+            </Cui>
+            """;
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Imagine");
+            loader.SetAppearance(CuiAppearance.Dark);
+            loader.SetBindingContext(Host("A", "B"));
+            var draws = 0;
+            loader.RandomSelectionOverride = list => { draws++; return list[0]; };
+
+            var (root, diagnostics) = loader.LoadMarkup(lateInvalidMarkup);
+            Assert.Null(root);
+            Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "CUIR077");
+            Assert.Equal(0, draws); // no draw happened before the later invalid declaration is found
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task RandomOnce_chooser_invalid_result_is_rejected_and_preserves_prior_tree()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Imagine");
+            loader.SetAppearance(CuiAppearance.Dark);
+            loader.SetBindingContext(Host("A", "B"));
+            loader.RandomSelectionOverride = list => list[0];
+
+            var (root, diagnostics) = loader.LoadMarkup(Markup);
+            Assert.NotNull(root); Assert.Empty(diagnostics);
+            var surface = Assert.IsType<CuiContainerControl>(root!);
+            loader.WireBindings(surface);
+            var window = new Window { Content = root, Width = 400, Height = 200 };
+            window.Show(); Pump();
+            try
+            {
+                var button = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "show");
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+
+                // Chooser returning a candidate NOT in the snapshotted pool is rejected, and the
+                // valid mounted tree remains operational.
+                loader.RandomSelectionOverride = list => "Z";
+                var (root2, diagnostics2) = loader.LoadMarkup(Markup);
+                Assert.Null(root2);
+                Assert.Contains(diagnostics2, diagnostic => diagnostic.Code == "CUIR081");
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+
+                // Empty chooser result likewise fails strictly and preserves the mounted tree.
+                loader.RandomSelectionOverride = list => "";
+                var (root3, diagnostics3) = loader.LoadMarkup(Markup);
+                Assert.Null(root3);
+                Assert.Contains(diagnostics3, diagnostic => diagnostic.Code == "CUIR080");
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+                Assert.True(button.IsVisible);
+                Assert.True(button.IsEnabled);
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task RandomOnce_pool_copy_isolates_from_host_list_mutation()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Imagine");
+            loader.SetAppearance(CuiAppearance.Dark);
+            var pool = new List<string> { "A", "B" };
+            var host = new CuiViewModel();
+            host.Set("Candidates", pool);
+            loader.SetBindingContext(host);
+            loader.RandomSelectionOverride = list => list[0];
+
+            var (root, diagnostics) = loader.LoadMarkup(Markup);
+            Assert.NotNull(root); Assert.Empty(diagnostics);
+            var surface = Assert.IsType<CuiContainerControl>(root!);
+            loader.WireBindings(surface);
+            var window = new Window { Content = root, Width = 400, Height = 200 };
+            window.Show(); Pump();
+            try
+            {
+                var button = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "show");
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+
+                // Mutate the LIVE host list after mount: the frame's owned snapshot copy is
+                // unaffected, so ordinary refresh retains the chosen item and performs no redraw.
+                pool.Clear(); pool.Add("Y");
+                host.Set("Candidates", pool);
+                loader.RefreshBindings(); Pump();
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+            }
+            finally { window.Close(); }
+
+            // A FRESH mount after mutation observes the NEW pool, proving the earlier frame kept its
+            // own copy rather than the live host list.
+            using var loader2 = new CuiControlLoader();
+            loader2.SetSurface("Imagine");
+            loader2.SetAppearance(CuiAppearance.Dark);
+            loader2.SetBindingContext(host);
+            loader2.RandomSelectionOverride = list => list[0];
+            var (root2, diagnostics2) = loader2.LoadMarkup(Markup);
+            Assert.NotNull(root2); Assert.Empty(diagnostics2);
+            var surface2 = Assert.IsType<CuiContainerControl>(root2!);
+            loader2.WireBindings(surface2);
+            var window2 = new Window { Content = root2, Width = 400, Height = 200 };
+            window2.Show(); Pump();
+            try
+            {
+                var button2 = Assert.Single(window2.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "show");
+                Assert.Equal("Y", Assert.IsType<string>(button2.Content));
+            }
+            finally { window2.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task RandomOnce_exactly_one_draw_per_mounted_frame_zero_on_refresh()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Imagine");
+            loader.SetAppearance(CuiAppearance.Dark);
+            loader.SetBindingContext(Host("A", "B"));
+            var draws = 0;
+            loader.RandomSelectionOverride = list => { draws++; return list[0]; };
+
+            var (root, diagnostics) = loader.LoadMarkup(Markup);
+            Assert.NotNull(root); Assert.Empty(diagnostics);
+            Assert.Equal(1, draws); // exactly one draw for the mounted frame
+
+            var surface = Assert.IsType<CuiContainerControl>(root!);
+            loader.WireBindings(surface);
+            var window = new Window { Content = root, Width = 400, Height = 200 };
+            window.Show(); Pump();
+            try
+            {
+                var button = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "show");
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+
+                // Ordinary refresh never redraws; the mounted choice is stable.
+                loader.RefreshBindings(); Pump();
+                loader.RefreshBindings(); Pump();
+                Assert.Equal("A", Assert.IsType<string>(button.Content));
+                Assert.Equal(1, draws);
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task RandomOnce_chooser_dispose_is_rejected_by_generation_guard()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Imagine");
+            loader.SetAppearance(CuiAppearance.Dark);
+            loader.SetBindingContext(Host("A", "B"));
+            var disposed = false;
+            loader.RandomSelectionOverride = list =>
+            {
+                if (!disposed)
+                {
+                    disposed = true;
+                    loader.Dispose();
+                }
+                return list[0];
+            };
+
+            var (root, diagnostics) = loader.LoadMarkup(Markup);
+            Assert.Null(root);
+            Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "CUIR073");
+            return true;
+        }, CancellationToken.None);
     }
 
     private static void Pump() => Dispatcher.UIThread.RunJobs();

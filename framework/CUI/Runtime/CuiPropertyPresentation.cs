@@ -153,8 +153,12 @@ public static class CuiPropertyPresentation
                 Register("AccentRole", typeof(CuiAccentRole), CuiAccentRole.None, value =>
                 { _accentRole = (CuiAccentRole)value!; RefreshAccentRole(); RefreshFontRole(); });
                 // Generic chromeless/icon appearance: suppresses interaction (hover/pressed) paint
-                // while retaining the real selected background and visible keyboard focus.
-                Register("Chromeless", typeof(bool), false, value => _chromeless = value is true);
+                // while retaining the real selected background and visible keyboard focus. The
+                // setter refreshes the CUI interaction state immediately (mirroring the Selected
+                // setter) so that flipping the effective/bound value while a pointer is already
+                // hovered/pressed applies/clears the interaction paint without waiting for a new
+                // native pointer notification.
+                Register("Chromeless", typeof(bool), false, value => { _chromeless = value is true; UpdateState(); });
                 WatchCustom("CuiButtonRoundnessPercent", value =>
                 { _roundnessPercent = value is double percent ? percent : null; RefreshRoundness(); });
                 foreach (var tier in new[] { "Primary", "Secondary", "Tertiary" })

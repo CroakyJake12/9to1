@@ -75,14 +75,79 @@ public sealed class CuiChromelessAppearanceTests
                 Assert.True(normal.IsPointerOver);
                 Assert.False(IsEffectivelyTransparent(normal.Background));
 
-                // Press: chromeless stays transparent while pressed. Each press is completed with a
-                // matching release before moving to the next button so pointer capture never leaks
-                // across controls in the headless session.
-                PressReleasing(window, chromeless);
+                // Press: chromeless stays transparent while pressed. The paint is asserted INSIDE
+                // the held-press window (before release) via try/finally so the release always
+                // completes even if the assertion fails; pointer capture never leaks across controls.
+                WhilePressed(window, chromeless, () => Assert.True(IsEffectivelyTransparent(chromeless.Background)));
+
+                WhilePressed(window, normal, () => Assert.False(IsEffectivelyTransparent(normal.Background)));
+            }
+            finally { window.Close(); }
+            return true;
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Chromeless_toggle_repaints_current_hover_press_state_immediately()
+    {
+        // A chromeless value change must refresh the interaction state immediately, even when the
+        // pointer is already hovered/pressed (mirroring the Selected setter). true->false must
+        // surface the current hover/press paint; false->true must clear it while still held.
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            loader.SetSurface("Imagine");
+            loader.SetAppearance(CuiAppearance.Dark);
+
+            var (root, diagnostics) = loader.LoadMarkup(Markup);
+            Assert.Empty(diagnostics);
+            var surface = Assert.IsType<CuiContainerControl>(root!);
+            loader.WireBindings(surface);
+
+            var window = new Window { Content = root, Width = 300, Height = 200 };
+            window.Show(); Pump();
+            try
+            {
+                var chromeless = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "chromeless");
+                chromeless.Resources["CuiButtonHoverBrush"] = Brushes.Red;
+                chromeless.Resources["CuiButtonPressedBrush"] = Brushes.Blue;
+                chromeless.Resources["CuiButtonHoverForegroundBrush"] = Brushes.Black;
+                chromeless.Resources["CuiButtonPressedForegroundBrush"] = Brushes.Black;
+                Pump();
+
+                // Authored Chromeless=true: hover stays transparent.
+                Hover(window, chromeless);
+                Assert.True(chromeless.IsPointerOver);
                 Assert.True(IsEffectivelyTransparent(chromeless.Background));
 
-                PressReleasing(window, normal);
-                Assert.False(IsEffectivelyTransparent(normal.Background));
+                // Flip Chromeless=false while the pointer is ALREADY hovering: the hover paint must
+                // appear immediately, without any new native pointer notification.
+                CuiPropertyPresentation.Set(chromeless, "Chromeless", false, CuiPropertyLevel.Instance, "test");
+                Pump();
+                Assert.False(IsEffectivelyTransparent(chromeless.Background));
+
+                // Press and hold (pointer stays over the button). Non-chromeless: pressed paint is
+                // visible while IsPressed is genuinely true.
+                var point = chromeless.TranslatePoint(new Point(chromeless.Bounds.Width / 2, chromeless.Bounds.Height / 2), window)!.Value;
+                window.MouseDown(point, MouseButton.Left);
+                Pump();
+                try
+                {
+                    Assert.True(chromeless.IsPressed);
+                    Assert.False(IsEffectivelyTransparent(chromeless.Background));
+
+                    // Flip Chromeless back to true while STILL pressed/held: the pressed paint must
+                    // clear immediately (no release/move/notification required).
+                    CuiPropertyPresentation.Set(chromeless, "Chromeless", true, CuiPropertyLevel.Instance, "test");
+                    Pump();
+                    Assert.True(IsEffectivelyTransparent(chromeless.Background));
+                }
+                finally
+                {
+                    window.MouseUp(point, MouseButton.Left);
+                    Pump();
+                }
             }
             finally { window.Close(); }
             return true;
@@ -99,7 +164,10 @@ public sealed class CuiChromelessAppearanceTests
         Pump();
     }
 
-    private static void PressReleasing(Window window, Button button)
+    /// <summary>Holds a left-press on the button while <paramref name="asserted"/> runs, then
+    /// always releases in a finally. The assertion therefore observes paint while <c>IsPressed</c>
+    /// is genuinely true, which is exactly when a normal button paints its pressed state.</summary>
+    private static void WhilePressed(Window window, Button button, Action asserted)
     {
         window.UpdateLayout();
         Dispatcher.UIThread.RunJobs();
@@ -107,10 +175,17 @@ public sealed class CuiChromelessAppearanceTests
         var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
         window.MouseDown(point, MouseButton.Left);
         Pump();
-        // Confirm the button actually entered its pressed state before we assert on its paint.
-        Assert.True(button.IsPressed);
-        window.MouseUp(point, MouseButton.Left);
-        Pump();
+        try
+        {
+            // Confirm the button actually entered its pressed state before we assert on its paint.
+            Assert.True(button.IsPressed, "expected the button to be pressed while asserting its paint");
+            asserted();
+        }
+        finally
+        {
+            window.MouseUp(point, MouseButton.Left);
+            Pump();
+        }
     }
 
     private static bool IsEffectivelyTransparent(IBrush? brush)
