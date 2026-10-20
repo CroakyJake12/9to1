@@ -222,3 +222,11 @@ separate interfaces. The xUnit analyzer in `Browse/Host.Tests` also requires the
   `Avalonia.Dbus` `864a0528…`) or ~1520 CS0246 appear.
 - CUI lessons: an `<If>` host does not receive `ApplyProperties`, so `Column`/`Row` on `<If>` is
   ignored; `ColumnSizes` accepts a binding and is a supported dynamic property.
+
+## Cloud engineering checkpoint — 20 October 2026
+
+The owner supplied the actual PC implementation branch at `346891bef36e5f83f5f21c36350f7f80545b9a30`. Cloud changes are isolated on `codex/cloud-continuation-20261020`; the original PC session, source and services remain intact. Code at `612be73f` repairs CUI surface action/lifecycle ownership and Home model-route binding/availability. See [CLOUD-CHECKPOINT-2026-10-20.json](CLOUD-CHECKPOINT-2026-10-20.json) for exact file hashes and checks. This supplements the historical checkpoint above and does not edit or replace the native milestone ledger.
+
+The recovered source passes Home232 (9 Windows skips), CUI Runtime413, CUI Compiler101 and Spaces220 tests on Linux x64. These are engineering checks, not whole-app/native Windows/web acceptance. Home manager action/host integration, the remaining Spaces activation contracts, Automations durable execution, Build and the productivity suite remain open. The source is backed up on the existing GitHub repository. Raw test evidence remains in the task workspace.
+
+Owner clarification: all 9to1 web hosting/deployment targets `9to1.uk` through Cloudflare. The existing Sites-backed coordinator is used for programme evidence/status only; no 9to1 product site has been deployed there. Mercury remains unused until Beam quota exhaustion; its verified $5 cap is unchanged and its credential remains outside Git.

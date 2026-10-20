@@ -1,0 +1,90 @@
+{
+  "record_type": "cloud_engineering_checkpoint_not_canonical_milestone_ledger",
+  "recorded_at": "2026-10-20T09:57:54.129057+01:00",
+  "source_commit": "612be73f4cc0af6e9a10f038aeac5ff9994bb2c6",
+  "source_base": "346891bef36e5f83f5f21c36350f7f80545b9a30",
+  "branch": "codex/cloud-continuation-20261020",
+  "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "engineering_state": "CHECKPOINT",
+  "implementation_mode": "OpenCode Beam implements; separate Codex review and execution checks",
+  "requirements": [
+    "CUI dynamic-update/error-boundary and hot-reload contracts",
+    "Universal Model Picker stable identity and unknown/empty state",
+    "APP-AC-001 through APP-AC-007"
+  ],
+  "source_sha256": {
+    "framework/CUI/Runtime/CuiRuntimeSurface.cs": "5c3a77fe7aeba64747f7252ece7efa0bc6f6d6525734b49580a3da2f4596587f",
+    "framework/CUI/Runtime.Tests/CuiRuntimeSurfaceTests.cs": "a8b2b22e4e9959cd2e76e70d675721aebd65221dcf8f6cecd462aa4d3905056a",
+    "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiScene.cs": "f50555e2f7aed7e2f3d67242e825d824f128097d620ab850bcf35e264629334b",
+    "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerCuiProjection.cs": "9ecb62a682c1ba4e0bf4c6d23a03200b864a67548946fa70c3adec4b19af794b",
+    "9to1 Workspace/Home/UI/ModelPicker.cui": "db145cb6140b39ae937844e9e4034c53ef87213132f599d25c0895a537e21169",
+    "9to1 Workspace/Home/Tests/HomeModelPickerCuiProjectionTests.cs": "cb1bc4f0137c8605f5f17f401272fd900854a16f9314e5fa4a98f9163b090c3b"
+  },
+  "validation": {
+    "platform": "Debian13 linux-x64; SDK10.0.401; serialized -m:1",
+    "home_all": {
+      "passed": 232,
+      "failed": 0,
+      "skipped": 9,
+      "exit_code": 0
+    },
+    "home_model_picker": {
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "cui_runtime": {
+      "passed": 413,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "cui_compiler": {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "spaces": {
+      "passed": 220,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "evidence_location": "Task workspace: /workspace/shared/9to1-test-evidence/current-source; raw logs/TRX are not included in this source checkpoint",
+    "baseline_note": "Earlier main-based source had six compiler failures and an intermittent Home evidence-fixture collection race. These were recorded separately; the recovered PC-based source was validated anew. No tests or platform guards were removed."
+  },
+  "acceptance": {
+    "whole_cui_framework": "NOT_RUN",
+    "home_app": "NOT_RUN",
+    "spaces_app": "NOT_RUN",
+    "native_windows": "NOT_RUN",
+    "web": "NOT_RUN"
+  },
+  "remaining_gaps": [
+    "Home model-manager actions and shipping host integration are incomplete",
+    "Spaces extension target-kind, delayed-selection, UI-dispatcher and original-action settlement repairs are in progress",
+    "Automation continuation completion/revision guards and durable runtime Wait/resume remain incomplete",
+    "Full Build and productivity-suite requirements remain pending"
+  ],
+  "programme_reconciliation": {
+    "native_observation_at": "2026-10-20T08:47:44Z",
+    "current_milestone_id": "R02",
+    "canonical_ledger_updated": false,
+    "reason": "Existing bridge exposes read operations only; checkpoint does not grant acceptance or replace the ledger"
+  },
+  "owner_constraints": {
+    "web_hosting": "9to1.uk via Cloudflare",
+    "gpt_sites_product_deployment": false,
+    "mercury_activation_condition": "Only after confirmed OpenCode Beam usage exhaustion",
+    "existing_mercury_spending_cap_usd": 5,
+    "spending_controls_changed": false,
+    "mercury_requests_sent": 0
+  },
+  "allowance": {
+    "beam_remaining": "UNKNOWN",
+    "codex_remaining": "UNKNOWN",
+    "paid_fallback_activated": false
+  }
+}
