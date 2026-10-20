@@ -31,17 +31,6 @@
             <Button action="chat.set-response-mode" action-argument="AlwaysText" content="Text" />
           </Container>
 
-          <Container id="dual-model" Type="Wrap" CellGap="8" accessible-name="Dual model">
-            <If Condition="{Binding DualModel.IsActive}" Negate="true">
-              <Button action="chat.toggle-dual" content="Dual: Off" accessible-name="Turn on dual-model comparison" />
-            </If>
-            <If Condition="{Binding DualModel.IsActive}">
-              <Button action="chat.toggle-dual" content="Dual: On" accessible-name="Turn off dual-model comparison" />
-              <Input id="dual-second-model" Type="Select" ItemsSource="{Binding Models}" SelectedIndex="{Binding DualModel.SecondModelIndex}" accessible-name="Choose second model" />
-              <Button action="chat.select-dual-mode" action-argument="Compare" content="Compare" />
-              <Button action="chat.select-dual-mode" action-argument="Collaborate" content="Critique" />
-            </If>
-          </Container>
         </Container>
 
         <Container id="transcript" Row="1" Type="Vertical Stack" CellGap="12" accessible-name="Conversation messages" VerticalScrolling="true" FollowAtEnd="true">
