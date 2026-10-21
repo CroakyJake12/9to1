@@ -244,6 +244,148 @@ public sealed class NativeComposerFloatingPortalTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Two_native_scenes_protect_their_own_recovery_rows_and_follow_live_row_layout()
+    {
+        var firstRegistrar = new RecordingRegistrar();
+        var secondRegistrar = new RecordingRegistrar();
+        var first = new ChatHavenScene(firstRegistrar);
+        var second = new ChatHavenScene(secondRegistrar);
+        var firstHost = new HavenSceneControl(new HavenAvaloniaImageResolver(), firstRegistrar) { Root = first.Root };
+        var secondHost = new HavenSceneControl(new HavenAvaloniaImageResolver(), secondRegistrar) { Root = second.Root };
+        var grid = new Grid { ColumnDefinitions = new("*,*") };
+        Grid.SetColumn(firstHost, 0); Grid.SetColumn(secondHost, 1);
+        grid.Children.Add(firstHost); grid.Children.Add(secondHost);
+        var window = new Window { Width = 2000, Height = 1000, Content = grid };
+        var firstManageRequests = 0; var secondManageRequests = 0;
+        first.ManageLocalModelsRequested += (_, _) => firstManageRequests++;
+        second.ManageLocalModelsRequested += (_, _) => secondManageRequests++;
+        first.SetStatus("No local model is available."); first.SetManageLocalModelsVisible(true);
+        second.SetStatus("No local model is available."); second.SetManageLocalModelsVisible(true);
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            await Task.WhenAll(first.ComposerInitialization, second.ComposerInitialization,
+                first.RecoveryView.InitializeAsync(), second.RecoveryView.InitializeAsync()).WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var firstInput = FindInput(first.ComposerView);
+            var secondInput = FindInput(second.ComposerView);
+            Assert.NotNull(firstInput); Assert.NotNull(secondInput); Assert.NotSame(firstInput, secondInput);
+            first.Input.Text = "first draft"; second.Input.Text = "second draft";
+            var firstRow = first.RecoveryView.GetVisualDescendants().OfType<Control>()
+                .Single(c => AutomationProperties.GetAutomationId(c) == "recovery-status-row");
+            var secondRow = second.RecoveryView.GetVisualDescendants().OfType<Control>()
+                .Single(c => AutomationProperties.GetAutomationId(c) == "recovery-status-row");
+            var firstManage = first.RecoveryView.GetVisualDescendants().OfType<Button>()
+                .Single(c => AutomationProperties.GetAutomationId(c) == "recovery-manage-button");
+            var secondManage = second.RecoveryView.GetVisualDescendants().OfType<Button>()
+                .Single(c => AutomationProperties.GetAutomationId(c) == "recovery-manage-button");
+            Assert.NotSame(firstRow, secondRow);
+            Assert.True(firstRow.IsEffectivelyVisible); Assert.True(secondRow.IsEffectivelyVisible);
+            Assert.False(WindowBounds(firstRow, window).Intersects(WindowBounds(secondRow, window)));
+            Click(firstManage);
+            await first.RecoveryView.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(1, firstManageRequests); Assert.Equal(0, secondManageRequests);
+
+            Click(secondInput!);
+            await second.ComposerView.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            second.Input.SetSelection(0, 6);
+            Click(FindButton(second.ComposerView, "format-button")!);
+            await second.ComposerView.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            SettleNativeSceneLayout(window);
+            var toolbar = FindToolbarAnywhere(window, second.ComposerView);
+            Assert.NotNull(toolbar); Assert.True(toolbar!.IsEffectivelyVisible);
+            var floatingHost = toolbar.GetVisualAncestors().OfType<CuiContainerControl>()
+                .Single(c => c.AuthoredTargetId is not null);
+            var secondOwner = second.ComposerView.GetVisualDescendants().OfType<CuiContainerControl>()
+                .Single(c => c.LayoutType == "Overlay Float");
+            var firstOwner = first.ComposerView.GetVisualDescendants().OfType<CuiContainerControl>()
+                .Single(c => c.LayoutType == "Overlay Float");
+            Assert.Contains(secondOwner.AuthoredChildren, child => ReferenceEquals(child, floatingHost));
+            Assert.DoesNotContain(firstOwner.AuthoredChildren, child => ReferenceEquals(child, floatingHost));
+            var windowClient = new Rect(window.Bounds.Size);
+            var before = WindowBounds(toolbar, window);
+            Assert.True(windowClient.Contains(before));
+            Assert.False(before.Intersects(WindowBounds(secondRow, window)),
+                "second scene's toolbar must protect its OWN packaged recovery row, not the first same-ID row");
+            Assert.False(before.Intersects(WindowBounds(secondManage, window)));
+            Assert.Equal("first draft", first.Input.Text); Assert.Equal("second draft", second.Input.Text);
+            Assert.Equal("second", second.Input.SelectedText);
+
+            // An unrelated same-ID row releases no region belonging to the second scene.
+            first.SetManageLocalModelsVisible(false);
+            SettleNativeSceneLayout(window);
+            Assert.False(firstRow.IsEffectivelyVisible);
+            Assert.True(secondRow.IsEffectivelyVisible);
+            Assert.Equal(before, WindowBounds(toolbar, window));
+            first.SetManageLocalModelsVisible(true);
+            SettleNativeSceneLayout(window);
+
+            // Reflow the ACTUAL owned recovery view using its measured action width. No fixed
+            // offsets or product pixel nudges: real status wrapping changes the row's live geometry.
+            var rowBeforeWrap = WindowBounds(secondRow, window);
+            second.RecoveryView.MaxWidth = secondManage.Bounds.Width;
+            SettleNativeSceneLayout(window);
+            var rowAfterWrap = WindowBounds(secondRow, window);
+            Assert.NotEqual(rowBeforeWrap, rowAfterWrap);
+            Assert.True(rowAfterWrap.Height > rowBeforeWrap.Height, "actual status/action wrapping must change row height");
+            Assert.True(toolbar.IsEffectivelyVisible);
+            Assert.False(WindowBounds(toolbar, window).Intersects(rowAfterWrap),
+                "placement must follow the actual owned recovery row's live wrapped bounds");
+            Assert.False(WindowBounds(toolbar, window).Intersects(WindowBounds(secondManage, window)));
+
+            second.SetManageLocalModelsVisible(false);
+            SettleNativeSceneLayout(window);
+            Assert.False(secondRow.IsEffectivelyVisible);
+            Assert.True(toolbar.IsEffectivelyVisible);
+            Assert.True(windowClient.Contains(WindowBounds(toolbar, window)));
+            second.SetManageLocalModelsVisible(true);
+            SettleNativeSceneLayout(window);
+            Assert.True(secondRow.IsEffectivelyVisible);
+            Assert.False(WindowBounds(toolbar, window).Intersects(WindowBounds(secondRow, window)),
+                "re-showing the actual own recovery row must immediately restore its protection");
+            second.RecoveryView.MaxWidth = double.PositiveInfinity;
+            SettleNativeSceneLayout(window);
+            Assert.False(WindowBounds(toolbar, window).Intersects(WindowBounds(secondRow, window)));
+
+            var commands = toolbar.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commands.Length);
+            var expected = new[] { "**x**", "_x_", "`x`", "[x](url)", "> x", "- x" };
+            for (var index = 0; index < commands.Length; index++)
+            {
+                Assert.True(commands[index].IsEffectivelyVisible);
+                Assert.True(windowClient.Contains(WindowBounds(commands[index], window)));
+                second.Input.Text = "x"; second.Input.SetSelection(0, 1);
+                Click(commands[index]);
+                await second.ComposerView.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.Equal(expected[index], second.Input.Text);
+                Assert.Equal("first draft", first.Input.Text);
+            }
+            Assert.Same(secondInput, FindInput(second.ComposerView)); Assert.True(secondInput!.IsKeyboardFocusWithin);
+            Click(secondManage);
+            await second.RecoveryView.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(1, firstManageRequests); Assert.Equal(1, secondManageRequests);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            try
+            {
+                await Task.WhenAll(first.JoinComposerCloseAndReleaseAsync(), first.JoinRecoveryCloseAndReleaseAsync(),
+                    second.JoinComposerCloseAndReleaseAsync(), second.JoinRecoveryCloseAndReleaseAsync()).WaitAsync(TimeSpan.FromSeconds(10));
+            }
+            finally { window.Close(); }
+            if (testFailure is not null) throw testFailure;
+        }
+    }
+
+    // Run only genuine queued layout; never force Window.Measure/Arrange or manually re-place the float.
+    private static void SettleNativeSceneLayout(Window window)
+    {
+        for (var cycle = 0; cycle < 10; cycle++) { Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    }
+
     /// <summary>Send a real pointer move/down/up to the ACTUAL owning top level of the target (the
     /// window for in-tree content, the portal's popup root for portaled content) at the translated live
     /// bounds. No RaiseEvent / direct service invocation / synthetic action routing.</summary>

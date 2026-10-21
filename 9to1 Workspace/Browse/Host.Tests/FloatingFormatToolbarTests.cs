@@ -778,12 +778,12 @@ public sealed class FloatingFormatToolbarTests
     }
 
     [AvaloniaFact]
-    public async Task Floating_toolbar_protects_genuine_recovery_row_and_all_six_commands_stay_reachable()
+    public async Task Floating_toolbar_protects_structural_recovery_row_and_all_six_commands_stay_reachable()
     {
         // Native16 recovery-overlap refinement: the floating toolbar must not cover the genuine
         // recovery status row (and its Manage local models action) which is an adjacent scene rendered
         // in the same top-level above the composer. This regression mounts the ACTUAL shared composer
-        // plus a genuine recovery row scene (same authored ids/structure as ChatRecovery.cui) and
+        // plus a structural recovery-row fixture (matching authored ids/structure of ChatRecovery.cui) and
         // asserts real geometry and pointer reachability for BOTH the recovery action and all six
         // formatting commands, plus Aa off/on identity preservation.
         var source = new Source { CanSend = true };
@@ -1091,10 +1091,10 @@ public sealed class FloatingFormatToolbarTests
         return new Window { Width = width, Height = height, Content = grid };
     }
 
-    /// <summary>Build a genuine recovery row scene with the SAME authored structure/ids as the production
+    /// <summary>Build a structural recovery row fixture with matching authored structure/ids from production
     /// ChatRecovery.cui (recovery-status-row Wrap container with a status text and the Manage local models
     /// action). It is loaded through the real shared CUI loader so the authored ids and geometry are
-    /// genuine, not hand-built controls.</summary>
+    /// exercised through the CUI loader; this is not the packaged recovery scene or its owner action.</summary>
     private static Control BuildRecoveryRow()
     {
         var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
