@@ -99,17 +99,21 @@ public sealed partial class App
                 var registry = provider.GetRequiredService<IModelProviderRegistry>();
                 var routes = new HomeVersionedModelRouteRepository(actualHome.StateStore);
                 var personal = new HomePersonalModelRoutes(actualHome.Profiles, routes, actualHome.Resources);
-                var denFactory = provider.GetRequiredService<HomePersonalDenFactory>();
                 // Advertised reasoning IDs from the AUTHORISED single personal Den model record
                 // (never a second Den), keyed by the GENUINE provider+model pair so another provider's
-                // same-named model can never authorise this model's advertised scale. Null on transient
-                // open/read failure is a truthful unknown.
+                // same-named model can never authorise this model's advertised scale. The single Den
+                // factory is resolved lazily on use, only after the app lease has actually acquired a
+                // personal Den; before any explicit open/create the truthful result is null (unknown),
+                // so ordinary Home/Chat start without an assistant and without creating a fake Den.
                 Func<string, string, CancellationToken, Task<IReadOnlyList<string>?>> advertisedLevels =
                     async (providerId, modelId, ct) =>
                     {
+                        if (personalDen?.HasAcquiredProvider != true)
+                            return null;
                         try
                         {
-                            var session = await denFactory.OpenAsync(ct);
+                            var homePersonalDenFactory = provider.GetRequiredService<HomePersonalDenFactory>();
+                            var session = await homePersonalDenFactory.OpenAsync(ct);
                             var record = await session.Den.GetModelByID(modelId, cancellationToken: ct);
                             // Guard against a provider-scoped store returning another provider's same-named
                             // model: only accept metadata for the exact resolved provider identity.
