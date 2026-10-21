@@ -843,6 +843,23 @@ public sealed class FloatingFormatToolbarTests
             Click(window, manage);
             Assert.True(manageClicked, "the Manage local models action must be pointer-reachable");
 
+            // Manage is outside the composer. Per the expanded-and-focused rule Aa is absent after
+            // that deliberate focus departure; return through the REAL input before testing Aa again.
+            var draftBeforeRefocus = view.Input.Text;
+            var selectedBeforeRefocus = view.Input.SelectedText;
+            var selectionStartBeforeRefocus = view.Input.SelectionStart;
+            var selectionLengthBeforeRefocus = view.Input.SelectionLength;
+            var caretBeforeRefocus = view.Input.CaretIndex;
+            var anchorBeforeRefocus = caretBeforeRefocus == selectionStartBeforeRefocus
+                ? selectionStartBeforeRefocus + selectionLengthBeforeRefocus : selectionStartBeforeRefocus;
+            Click(window, box!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            view.Input.SetSelection(anchorBeforeRefocus, caretBeforeRefocus);
+            Assert.True(box!.IsKeyboardFocusWithin);
+            Assert.Equal(draftBeforeRefocus, view.Input.Text);
+            Assert.Equal(selectedBeforeRefocus, view.Input.SelectedText);
+            Assert.Equal(selectionLengthBeforeRefocus, view.Input.SelectionLength);
+
             // Aa off/on preserves input identity and focus within the protected scene, and the reopened
             // toolbar still protects the recovery action.
             Click(window, FindButton(view, "format-button")!);
