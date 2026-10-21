@@ -290,6 +290,9 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         var cell = new Border { Child = child, Padding = _cellMargin };
         void Placement()
         {
+            // Record whether the retained cell is present in this container's layout before applying the
+            // authored placement, so the measure gate below fires only on a genuine membership transition.
+            var wasPresent = Layout.Children.Contains(cell);
             Grid.SetRow(cell, Grid.GetRow(child)); Grid.SetColumn(cell, Grid.GetColumn(child));
             Grid.SetRowSpan(cell, Grid.GetRowSpan(child)); Grid.SetColumnSpan(cell, Grid.GetColumnSpan(child));
             Canvas.SetLeft(cell, Canvas.GetLeft(child)); Canvas.SetTop(cell, Canvas.GetTop(child));
@@ -301,14 +304,16 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
                 var position = _cells.TakeWhile(value => !ReferenceEquals(value, cell)).Count(value => Layout.Children.Contains(value));
                 Layout.Children.Insert(Math.Min(position, Layout.Children.Count), cell);
             }
-            // A child visibility change mutates the live content (the child enters/leaves the layout).
-            // Invalidate THIS container's own measure so a re-measure reflects the new content. This is
-            // required even when the container itself sits inside a suppressed/hidden outer wrapper (e.g.
-            // an unplaced or portaled floating cell): the normal layout-manager descendant remeasurement
-            // is blocked by the hidden ancestor, so without an explicit invalidation here the container's
-            // cached DesiredSize would stay stale (e.g. 0,0 from when the child was hidden) and the owner
-            // would keep mis-reading the floating content size.
-            InvalidateMeasure();
+            // A child crossing the visible threshold enters/leaves the retained layout, mutating this
+            // container's live content size. Invalidate THIS container's own measure exactly on that
+            // genuine transition so a re-measure reflects the new content. This is required even when the
+            // container sits inside a suppressed/hidden outer wrapper (e.g. an unplaced or portaled
+            // floating cell): the normal layout-manager descendant remeasurement is blocked by the hidden
+            // ancestor, so without an explicit invalidation here the container's cached DesiredSize stays
+            // stale (e.g. 0,0 from when the child was hidden) and the owner mis-reads the floating content
+            // size. The gate is bounded to the membership transition (not grid/span/canvas/ZIndex
+            // coordinate cascades), so generic placement property changes never trigger re-measure cycles.
+            if (Layout.Children.Contains(cell) != wasPresent) InvalidateMeasure();
         }
         EventHandler<AvaloniaPropertyChangedEventArgs> handler = (_, change) =>
         {

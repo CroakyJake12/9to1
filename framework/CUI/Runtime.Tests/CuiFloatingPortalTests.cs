@@ -41,6 +41,21 @@ public sealed class CuiFloatingPortalTests
         </Cui>
         """;
 
+    private const string ClosedInnerMarkup = """
+        <Cui>
+          <Actions><Action name="toggle-fmt"><Toggle Target="FormattingOpen" /></Action></Actions>
+          <Variable Type="bool" ID="FormattingOpen">False</Variable>
+          <Container Type="Overlay Float" id="surface" padding="30">
+            <Container id="body" Type="Vertical Stack"/>
+            <Container id="float-layer" Type="Floating" Target="body" Placement="above" action="toggle-fmt">
+              <Container id="inner-bar" Type="Wrap" CellGap="6" IsVisible="{Binding FormattingOpen}">
+                <Button id="f0" content="B" MinWidth="36" MinHeight="36"/>
+              </Container>
+            </Container>
+          </Container>
+        </Cui>
+        """;
+
     private const string FailureMarkup = """
         <Cui>
           <Actions><Action name="toggle-bad"><Toggle Target="UndefinedVar" /></Action></Actions>
@@ -230,9 +245,12 @@ public sealed class CuiFloatingPortalTests
     [Fact]
     public async Task Closed_inner_content_under_hidden_wrapper_recovers_host_measure_when_opened()
     {
-        // Regression for the cached-measure gate: opening the inner authored content must make the
+        // Regression for the cached-measure gate: opening the bound inner authored content must make the
         // always-visible floating host re-measure, even though the host sits under a suppressed/hidden
         // wrapper (unplaced/portaled) where the normal layout-manager descendant remeasurement is blocked.
+        // Authored FormattingOpen begins False so the closed precondition is the real authored zero-size
+        // state, and the open transition goes through the loader's canonical toggle-fmt close-gesture
+        // action path (FloatingCloseRequested -> ObserveActionDispatch -> local toggle) with its real ledger.
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(async () =>
         {
@@ -240,30 +258,31 @@ public sealed class CuiFloatingPortalTests
             Window window = null!;
             try
             {
-                var panel = LoadSurface(loader, out var surface, out var authoredHost, out window);
-                var f0 = FindButton(authoredHost, "f0");
-                Assert.NotNull(f0);
+                var panel = Mount(loader, ClosedInnerMarkup, out var surface, out var authoredHost, out window);
 
-                // Closed inner content: the floating host measures zero (the inner cell is not in the
-                // layer), so Place resolves to the genuinely-hidden unplaced state and no portal engages.
-                f0!.IsVisible = false;
-                PumpLayout(window);
+                // Closed inner content (FormattingOpen=False): inner-bar is hidden, so the floating host
+                // measures zero and Place resolves to the genuinely-hidden unplaced state (no portal).
                 Assert.Empty(panel.ActivePortals);
                 Assert.Contains(authoredHost, surface.GetVisualDescendants());
                 Assert.True(authoredHost.DesiredSize.Width <= 0 && authoredHost.DesiredSize.Height <= 0,
                     $"closed floating host must measure zero (DesiredSize={authoredHost.DesiredSize})");
 
-                // Open the inner content. The host must re-measure its now-visible child even though it
-                // sits under the hidden wrapper; otherwise the cached 0,0 DesiredSize leaves the toolbar
-                // unplaced/invisible forever.
-                f0.IsVisible = true;
+                // Open the bound inner-bar through the canonical authored toggle action and join its ledger.
+                Assert.NotNull(authoredHost.FloatingCloseRequested);
+                authoredHost.FloatingCloseRequested!.Invoke();
+                await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
                 PumpLayout(window);
+
+                // The host must re-measure the now-visible content even under the hidden wrapper; otherwise
+                // the cached 0,0 DesiredSize leaves the toolbar unplaced/invisible forever.
                 Assert.True(authoredHost.DesiredSize.Width > 0 && authoredHost.DesiredSize.Height > 0,
                     $"floating host must re-measure opened content (DesiredSize={authoredHost.DesiredSize})");
                 var reopened = Assert.Single(panel.ActivePortals);
                 Assert.True(reopened.IsOpen);
                 Assert.Same(authoredHost, reopened.Host);
-                Assert.True(f0.IsEffectivelyVisible, "the reopened command must be effectively visible through the portal");
+                var f0 = FindButton(authoredHost, "f0");
+                Assert.NotNull(f0);
+                Assert.True(f0!.IsEffectivelyVisible, "the reopened command must be effectively visible through the portal");
             }
             finally { window?.Close(); }
         }, CancellationToken.None);
