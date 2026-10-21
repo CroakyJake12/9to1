@@ -168,7 +168,18 @@ public sealed record ScheduledGraphAutomationPayload(
     Guid TriggerNodeId,
     string WorkflowName,
     string GraphJson,
-    string? WatchCondition);
+    string? WatchCondition)
+{
+    /// <summary>Canonical graph identity captured when the scheduled run is created. This is the
+    /// starting definition revision/pinned canonical graph used for NEW durable Runs. Persisted
+    /// AdmissionSnapshotJson/OwnerBinding/actor strings are NEVER a live permission or current actor;
+    /// they are evidence to revalidate only.</summary>
+    public Guid? GraphId { get; init; }
+    public long? SourceRevision { get; init; }
+    public int? SchemaVersion { get; init; }
+    public string? SourceDigest { get; init; }
+    public string? CapabilityProfileId { get; init; }
+}
 
 public static class ScheduledGraphAutomationPayloadCodec
 {
@@ -176,12 +187,21 @@ public static class ScheduledGraphAutomationPayloadCodec
     private const string Prefix = "haven:scheduled-graph:v1:";
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
 
-    public static string Serialize(Guid workflowId, Guid triggerNodeId, string workflowName, string graphJson, string? watchCondition)
+    public static string Serialize(Guid workflowId, Guid triggerNodeId, string workflowName, string graphJson, string? watchCondition,
+        Guid? graphId = null, long? sourceRevision = null, int? schemaVersion = null, string? sourceDigest = null,
+        string? capabilityProfileId = null)
     {
         if (workflowId == Guid.Empty) throw new ArgumentException("Workflow ID is required.", nameof(workflowId));
         if (triggerNodeId == Guid.Empty) throw new ArgumentException("Trigger node ID is required.", nameof(triggerNodeId));
         if (!AutomationGraphCodec.TryDeserialize(graphJson, out _)) throw new ArgumentException("Graph JSON is invalid.", nameof(graphJson));
-        var payload = new ScheduledGraphAutomationPayload(CurrentVersion, workflowId, triggerNodeId, workflowName?.Trim() ?? string.Empty, graphJson, watchCondition?.Trim());
+        var payload = new ScheduledGraphAutomationPayload(CurrentVersion, workflowId, triggerNodeId, workflowName?.Trim() ?? string.Empty, graphJson, watchCondition?.Trim())
+        {
+            GraphId = graphId,
+            SourceRevision = sourceRevision,
+            SchemaVersion = schemaVersion,
+            SourceDigest = sourceDigest,
+            CapabilityProfileId = capabilityProfileId
+        };
         return Prefix + JsonSerializer.Serialize(payload, Options);
     }
 

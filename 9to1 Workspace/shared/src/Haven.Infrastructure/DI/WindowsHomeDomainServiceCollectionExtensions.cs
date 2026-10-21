@@ -1,4 +1,6 @@
 using Haven.Application;
+using Haven.Application.NodeGraph;
+using Haven.Infrastructure.Automations;
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,6 +78,37 @@ public static class WindowsHomeDomainServiceCollectionExtensions
         services.AddSingleton<IHomeCoreApi>(sameHome.Api);
         return services;
     }
+
+    /// <summary>
+    /// Registers the real Home-backed <see cref="IAutomationRunAuthority"/> (the shipping caller/action
+    /// boundary for automation Run/effect execution) from the SAME actual Home tuple. It must be called
+    /// after <see cref="AddHavenOwnedWindowsHomeDomain"/>. When this is not wired, the durable adapter keeps
+    /// its prior behavior, but a shipping host MUST call this so fresh and resume entry points admit the
+    /// actual Home caller before any effect.
+    /// </summary>
+    public static IServiceCollection AddHavenAutomationRunAuthority(this IServiceCollection services,
+        HomeNativeWindowsComposition sameHome)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(sameHome);
+        services.AddSingleton<IAutomationRunAuthority>(new HomeAutomationRunAuthority(sameHome.Profiles, sameHome.Broker));
+        return services;
+    }
+
+    /// <summary>The bounded canonical resource resolver for the automation run/effect action. Wire this into
+    /// the Home composition's <c>configureOriginalResolvers</c> (real production composition), never as a
+    /// blanket allow-all. The repository/graph sources are deferred factories so the Home composition can be
+    /// built before the lazily-created repository singletons resolve; evaluation fails closed when they are
+    /// absent or when the canonical object is not owned by the current profile/actor/revision.</summary>
+    public static IEnumerable<ICanonicalResourceAccessResolver> AutomationRunResourceResolvers(
+        Func<IAutomationRepository?>? repository = null,
+        Func<IVersionedNodeGraphRepository?>? graphs = null) =>
+        [new HomeAutomationRunResourceResolver(repository, graphs)];
+
+    /// <summary>The trusted action catalogue for the automation run/effect action. Wire this into the Home
+    /// composition's <c>configureOriginalActionPolicies</c> (real production composition).</summary>
+    public static IEnumerable<IHomeActionPolicySource> AutomationRunActionPolicies() =>
+        [new HomeAutomationRunActionPolicySource()];
 
     /// <summary>Reference validation for subsequent trusted host registrations only.
     /// This never issues a permission, native session or installed-peer observation.</summary>

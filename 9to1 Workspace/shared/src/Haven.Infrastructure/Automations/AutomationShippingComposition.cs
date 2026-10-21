@@ -1,0 +1,68 @@
+using Haven.Application;
+using Haven.Application.Automations;
+using Haven.Application.NodeGraph;
+using HavenOS.Home.Core;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Haven.Infrastructure.Automations;
+
+/// <summary>
+/// The production shipping registration for the durable Automations Node Graph adapter and its real Home
+/// caller/action authority. A shipping host MUST call <see cref="AddAutomationShipping"/> from its real
+/// composition (the guarded App integration hunk) so fresh AND resume entry points route through the SAME
+/// shared registry/owner with actual Home currentness before admission and immediately before every
+/// protected effect.
+///
+/// This requires the Home composition to have been built with the bounded automation run/effect resolver
+/// and action catalogue (see <see cref="WindowsHomeDomainServiceCollectionExtensions.AutomationRunResourceResolvers"/>
+/// and <see cref="WindowsHomeDomainServiceCollectionExtensions.AutomationRunActionPolicies"/>). This method wires
+/// the same canonical object/action authority from the SAME actual Home tuple.
+/// </summary>
+public static class AutomationShippingComposition
+{
+    /// <summary>
+    /// Registers the real Home-backed <see cref="IAutomationRunAuthority"/> from the SAME actual Home tuple,
+    /// the canonical run/effect resource resolver, the maintained claim/continuation store aliases, and the
+    /// durable adapter into the shared registry adapter set. Call this exactly once after
+    /// <see cref="WindowsHomeDomainServiceCollectionExtensions.AddHavenOwnedWindowsHomeDomain"/> in the
+    /// shipping composition. When <paramref name="compile"/> is omitted the production schema/bindings from
+    /// <see cref="HomeAutomationNodeGraphSchemas"/> are used.
+    /// </summary>
+    public static IServiceCollection AddAutomationShipping(this IServiceCollection services,
+        HomeNativeWindowsComposition home, NodeGraphAutomationAdapter? compile = null)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(home);
+        compile ??= new NodeGraphAutomationAdapter(
+            HomeAutomationNodeGraphSchemas.Create().Schemas,
+            HomeAutomationNodeGraphSchemas.Create().Bindings);
+
+        // The maintained AutomationRepository singleton is the SAME store for runs, continuation and claims.
+        if (!services.Any(row => row.ServiceType == typeof(IAutomationRunClaimStore)))
+            services.AddSingleton<IAutomationRunClaimStore>(provider =>
+                (IAutomationRunClaimStore)provider.GetRequiredService<IAutomationRepository>());
+        if (!services.Any(row => row.ServiceType == typeof(IAutomationRunContinuationStore)))
+            services.AddSingleton<IAutomationRunContinuationStore>(provider =>
+                (IAutomationRunContinuationStore)provider.GetRequiredService<IAutomationRepository>());
+
+        // The canonical graph repository is the SAME Home state store owner (deferred, like the Home resolver
+        // pattern), so the durable adapter resolves the real maintained graph at runtime.
+        if (!services.Any(row => row.ServiceType == typeof(IVersionedNodeGraphRepository)))
+            services.AddSingleton<IVersionedNodeGraphRepository>(provider => new HomeVersionedNodeGraphRepository(
+                provider.GetRequiredService<IHomeCoreStateStore>(),
+                HomeAutomationNodeGraphSchemas.Create().Schemas));
+
+        // The bounded canonical run/effect resolver, repository-backed and owner/current-profile checked.
+        // It is registered here for DI consumers; the Home composition itself receives the same resolver via
+        // AutomationRunResourceResolvers() and the production wiring in the shipping host.
+        if (!services.Any(row => row.ServiceType == typeof(ICanonicalResourceAccessResolver) &&
+            row.ImplementationType == typeof(HomeAutomationRunResourceResolver)))
+            services.AddSingleton<ICanonicalResourceAccessResolver>(provider => new HomeAutomationRunResourceResolver(
+                () => provider.GetService<IAutomationRepository>(),
+                () => provider.GetService<IVersionedNodeGraphRepository>()));
+
+        services.AddHavenAutomationRunAuthority(home);
+        services.AddAutomationNodeGraphDurableAdapter(compile);
+        return services;
+    }
+}

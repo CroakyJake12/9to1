@@ -1,5 +1,6 @@
 #if !ANDROID
 using Haven.Application;
+using Haven.Application.NodeGraph;
 using Haven.Infrastructure;
 using Haven.Desktop.Services;
 using HavenOS.Apps.Assistants.Canonical;
@@ -44,8 +45,8 @@ public sealed partial class App
             _actualWindowsHome = new(new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "Home", "state.json")),
                 principal, paths, new("9to1.home.desktop.v1"),
                 protectedInstalledPeerVerifier: rootClient,
-                originalResourceResolvers: OriginalWindowsDeveloperResolvers().Concat(OriginalInstalledHomeAppsResolvers()).Concat([_actualAssistantTaskContextWriteResolver!, _actualAssistantMemoryWriteResolver!, _actualAssistantCapabilityInitializationResolver!, _actualAssistantMiniComputerOperationResolver!, _actualAssistantMiniComputerIdentityResolver!, _actualAutomationLibraryWriteResolver!, _actualAssistantAttachmentReadResolver!, _actualAssistantAttachmentImportResolver!, _actualAssistantAttachmentEgressResolver!, _actualGeneratedUiResolver!]),
-                originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!]),
+                originalResourceResolvers: OriginalWindowsDeveloperResolvers().Concat(OriginalInstalledHomeAppsResolvers()).Concat([_actualAssistantTaskContextWriteResolver!, _actualAssistantMemoryWriteResolver!, _actualAssistantCapabilityInitializationResolver!, _actualAssistantMiniComputerOperationResolver!, _actualAssistantMiniComputerIdentityResolver!, _actualAutomationLibraryWriteResolver!, _actualAssistantAttachmentReadResolver!, _actualAssistantAttachmentImportResolver!, _actualAssistantAttachmentEgressResolver!, _actualGeneratedUiResolver!]).Concat(AutomationRunResourceResolvers(() => _services?.GetService<IAutomationRepository>(), () => _services?.GetService<IVersionedNodeGraphRepository>())),
+                originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!]).Concat(AutomationRunActionPolicies()),
                 configureOriginalOwners: owners => CaptureOriginalHomeRootOwnerComponents(original, owners, rootClient,
                     new SiteNativeAuthoringSession(sites!, owners.Profiles, owners.Resources, owners.Broker)),
                 configureOriginalStores: identity =>
@@ -77,6 +78,7 @@ public sealed partial class App
                 });
             original.DemandPublication();
             collection.AddHavenOwnedWindowsHomeDomain(_actualWindowsHome, paths, principal);
+            ConfigureOriginalAutomationShippingRegistrations(collection, _actualWindowsHome);
             RegisterOriginalHomeRootOwners(collection, _actualWindowsHome, rootClient);
             collection.AddSingleton(files!); collection.AddSingleton(authority!); collection.AddSingleton(resolver!);
             collection.AddSingleton(personalDen!);
