@@ -55,6 +55,20 @@ public sealed class CuiCompoundFocusScope : IDisposable
     /// <summary>True when genuine keyboard focus currently lives inside this composite scope.</summary>
     public bool IsFocused => _focused;
 
+    /// <summary>The scope's primary embedded (compound-focus) text input, if any. This is the typed
+    /// focus-return target for the surface's floating/toolbar content: it is resolved through the
+    /// CUI embedded-input marker rather than by scanning for the first visible text box, so an
+    /// auxiliary input (for example an emoji search box) never shadows the composer's editable line.</summary>
+    internal TextBox? PrimaryEmbeddedInput
+    {
+        get
+        {
+            foreach (var box in _inputObservation.Keys)
+                if (CuiPropertyPresentation.IsEmbeddedInput(box)) return box;
+            return null;
+        }
+    }
+
     /// <summary>True when any embedded input owned by this scope currently has a validation error.</summary>
     public bool HasValidationError => _hasValidationError;
 

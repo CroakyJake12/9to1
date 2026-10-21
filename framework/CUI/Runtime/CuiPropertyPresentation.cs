@@ -31,6 +31,14 @@ public static class CuiPropertyPresentation
     internal static void ConfigurePart(Control control, TemplatePart part) => Get(control).ConfigurePart(part);
     public static void Detach(Control control)
     { if (Projections.TryGetValue(control, out var projection)) { projection.Dispose(); Projections.Remove(control); } }
+    /// <summary>True when the control is configured as a CUI embedded (compound-focus) input — the typed
+    /// marker used to identify a surface's primary editable input without scanning for the first visible
+    /// text box (which would be ambiguous when auxiliary inputs such as a search box are present).</summary>
+    public static bool IsEmbeddedInput(Control control)
+    {
+        if (!Projections.TryGetValue(control, out var projection)) return false;
+        return projection.IsEmbeddedInput;
+    }
     public static void Register(Control control, string name, Type valueType, object? builtInDefault, Action<object?> apply) =>
         Get(control).Register(name, valueType, builtInDefault, apply);
     /// <summary>Mark an input as embedded: it owns no inner hover/focus box; the outer compound control owns visible focus.</summary>
@@ -91,6 +99,8 @@ public static class CuiPropertyPresentation
         private bool _selected;
         private bool _dragging;
         private bool _compoundFocus;
+        /// <summary>True once the control is configured as an embedded (compound-focus) input.</summary>
+        public bool IsEmbeddedInput => _compoundFocus;
         private bool _chromeless;
         private CuiFontRole _fontRole;
         private CuiAccentRole _accentRole;

@@ -518,6 +518,64 @@ public sealed class FloatingFormatToolbarTests
     }
 
     [AvaloniaFact]
+    public async Task Floating_toolbar_command_clicks_return_focus_to_composer_input_with_competing_emoji_search()
+    {
+        // Floating-toolbar command clicks must return keyboard focus to the composer's embedded input
+        // even when an auxiliary text input (the emoji search box) is simultaneously visible in the same
+        // surface. This guards against resolving the wrong input (first-visible scanning) and proves the
+        // typed embedded-input focus-return contract across all six real command dispatches.
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = [new ChatComposerChip("c0", "Chip 0 label", false)]
+        };
+        var view = new ChatComposerCuiView(source);
+        var window = CreateFooterWindow(view, 900, 700);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            // Open the emoji panel too, so its search input is a visible competing text box.
+            Click(window, FindButton(view, "emoji-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var emojiSearch = FindContainer(view, "emoji-search");
+            Assert.NotNull(emojiSearch);
+            Assert.True(emojiSearch!.IsEffectivelyVisible, "emoji search must be visible as a competing input");
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+                // Focus must have returned to the composer input, not the competing emoji search.
+                Assert.True(box.IsKeyboardFocusWithin, $"focus must return to composer input after command {i}");
+            }
+
+            Assert.Same(box, FindInput(view));
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Live_target_retarget_reanchors_swaps_observers_and_matches_ids_case_sensitively()
     {
         var source = new Source

@@ -129,10 +129,15 @@ public static class CuiPopupPresentation
     private static void EstablishBacking(PopupRoot destination)
     {
         if (destination is null) return;
-        // Lightweight projection: no templated-control setup is required to carry one overridden
-        // property. If a full projection already exists (installed by the CUI popup template), the
-        // lookup returns it and preserves its existing state.
-        CuiPropertyPresentation.Attach(destination, ownsTemplate: false);
+        // Attach the FULL CUI projection (ownsTemplate) FIRST so the genuine CUI popup template is
+        // installed on the destination. The full projection explicitly installs the CUI-owned
+        // PopupRoot template, which builds the PART_TransparencyFallback border inside TopLevelContent.
+        // Attaching a lightweight (ownsTemplate:false) projection here would be cached by the
+        // ConditionalWeakTable and shadow the full projection, leaving the template/border absent while
+        // only the property write survives. A full projection is the correct custody: it keeps the
+        // typed template ownership (and thus the fallback border) and the backing write below. If a
+        // full projection already exists, the lookup returns it unchanged.
+        CuiPropertyPresentation.Attach(destination);
         CuiPropertyPresentation.Set(destination, "Background", Brushes.Transparent,
             CuiPropertyLevel.Overlay, "CUI popup backing", -100);
     }

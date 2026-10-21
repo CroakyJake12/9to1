@@ -125,7 +125,12 @@ internal sealed class CuiFloatingPortal : IDisposable
             _cell.Child = null;
             _cell.IsVisible = false;
             _wrapper = new Border { Child = _host };
-            _wrapper.PointerReleased += _wrapperPointerReleased;
+            // Observe the handled pointer lifecycle: toolbar/command buttons mark PointerReleased handled
+            // (Button.OnPointerReleased sets e.Handled=true), so a normal bubbling subscription never
+            // sees the release after an action. Register with handledEventsToo:true so the portal sees
+            // every completed left-click and can return focus to the owning input afterward.
+            _wrapper.AddHandler(InputElement.PointerReleasedEvent, _wrapperPointerReleased,
+                RoutingStrategies.Bubble, handledEventsToo: true);
             _popup.Child = _wrapper;
             _owner.AdoptPortalLogically(_popup);
             _adopted = true;
@@ -311,10 +316,12 @@ internal sealed class CuiFloatingPortal : IDisposable
     /// Return keyboard focus to the owning surface's primary embedded input after a pointer action on
     /// the portaled floating content (e.g. a toolbar command button). The global pointer-focus
     /// mechanism gives the clicked control keyboard focus, so without this the composer would lose its
-    /// editable input after each toolbar interaction. We restore only when the pointer gesture landed
-    /// focus on a NON-input control inside this portal, and only to a real visible/focusable input of
-    /// the owning compound-focus surface — never when the user is interacting with a genuine input
-    /// hosted here. The restore is deferred until the click/action routing settles.
+    /// editable input after each toolbar interaction. We observe the handled button pointer lifecycle
+    /// (Button marks PointerReleased handled) so the restore runs even after a dispatched action. We
+    /// restore only when the pointer gesture landed focus on a NON-input control inside this portal,
+    /// and only to a real visible/focusable embedded input of the owning compound-focus surface — never
+    /// when the user is interacting with a genuine input hosted here. The restore is deferred until the
+    /// click/action routing settles.
     /// </summary>
     private void OnWrapperPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
@@ -328,29 +335,24 @@ internal sealed class CuiFloatingPortal : IDisposable
             // Only restore when focus currently lives inside this portal's hosted content and is not
             // the primary input itself (the click landed on a transient control such as a command).
             if (!ReferenceEquals(focusedVisual, _host) && !_host.IsVisualAncestorOf(focusedVisual)) return;
-            var input = FindOwnerInput();
+            var input = ResolveOwnerInput();
             if (input is null || !input.IsEffectivelyVisible || !input.Focusable || !input.IsAttachedToVisualTree()) return;
             if (!ReferenceEquals(manager?.GetFocusedElement(), input))
                 input.Focus(NavigationMethod.Pointer);
         });
     }
 
-    /// <summary>Locate the owning compound-focus surface's primary visible embedded text input. The
-    /// walking is the same visual-ancestor search the overlay panel uses to resolve the surface scope:
-    /// nearest compound-focus-enabled authored container, then its first visible/focusable text input
-    /// (the composer's editable line; hidden auxiliary inputs such as a closed emoji search are skipped).</summary>
-    private TextBox? FindOwnerInput()
+    /// <summary>Resolve the owning compound-focus surface's primary embedded text input through the typed
+    /// CUI input/focus contract. The walk is the same visual-ancestor search the overlay panel uses to
+    /// resolve the surface scope; the scope then returns its typed embedded input, so an auxiliary input
+    /// (such as an emoji search box) never shadows the composer's editable line.</summary>
+    private TextBox? ResolveOwnerInput()
     {
         Visual? current = _owner;
         while (current is not null)
         {
-            if (current is CuiContainerControl { CompoundFocusEnabled: true } container)
-            {
-                foreach (var descendant in container.GetVisualDescendants())
-                    if (descendant is TextBox box && box.IsEffectivelyVisible && box.Focusable && box.IsAttachedToVisualTree())
-                        return box;
-                return null;
-            }
+            if (current is CuiContainerControl { CompoundFocusEnabled: true } container && container.CompoundFocusScope is { } scope)
+                return scope.PrimaryEmbeddedInput;
             current = current.GetVisualParent();
         }
         return null;
@@ -361,7 +363,7 @@ internal sealed class CuiFloatingPortal : IDisposable
         if (_wrapper is not null)
         {
             _wrapper.LayoutUpdated -= _layoutUpdated;
-            _wrapper.PointerReleased -= _wrapperPointerReleased;
+            _wrapper.RemoveHandler(InputElement.PointerReleasedEvent, _wrapperPointerReleased);
             _wrapper = null;
         }
         _host.KeyDown -= OnPortalKeyDown;
