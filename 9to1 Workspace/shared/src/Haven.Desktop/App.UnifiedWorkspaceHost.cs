@@ -263,13 +263,11 @@ public sealed partial class App
             var build = BuildBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement));
             var modes = _services.GetRequiredService<IModeRegistry>();
+            // The SAME production registration helper builds the genuine native-app set (files, spaces,
+            // dev) and is exercised verbatim by the routing regression (NativeAppContentRegistryTests).
+            // Chat is canonicalized to the Spaces Chat resource by HomeLaunchRouteResolver before admission.
             var apps = new NativeAppContentRegistry(modes,
-                [new NativeAppContentRegistration(Guid.Parse("a0000000-0000-0000-0000-000000000030"),
-                    "files", HavenAppRouteKind.Files, files),
-                 new NativeAppContentRegistration(Guid.Parse("a0000000-0000-0000-0000-000000000022"),
-                    "spaces", HavenAppRouteKind.Spaces, spaces),
-                 new NativeAppContentRegistration(Guid.Parse("a0000000-0000-0000-0000-000000000028"),
-                    "dev", HavenAppRouteKind.Dev, build)], () => IsCurrent);
+                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build), () => IsCurrent);
             var catalogue = _app.RetainOriginalModelCatalogueRegistry(_services.GetRequiredService<IServiceProvider>());
             var privacy = _services.GetRequiredService<IPrivacyPreferenceStore>();
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,

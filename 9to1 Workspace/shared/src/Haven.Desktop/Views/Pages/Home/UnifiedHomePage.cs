@@ -268,7 +268,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (string.IsNullOrWhiteSpace(key)) return false;
         var app = _appsCatalogue.FirstOrDefault(entry => entry.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
         if (app is null) return false;
-        address = AppContentAddress.Parse("9to1://" + app.Key);
+        // Real Chat is owned by the canonical Spaces Chat space; canonicalize before strict native
+        // admission so the registered Spaces owner receives the resource. Other apps keep their plain route.
+        address = HomeLaunchRouteResolver.Resolve(app.Key);
         return true;
     }
     private void OnDashboardApp(object? sender, ModeDefinition mode)

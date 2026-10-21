@@ -1,6 +1,6 @@
 {
   "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
-  "patch_sha256": "b95d25560d8ecd5459c4e2a3bab715c287bc34ef6f9c7cf9105c4ce22f1b3f24",
+  "patch_sha256": "434d74c3033d456c8690fbb07476561f731ecf6a316d658eeee3857649529d01",
   "patch_digest_scope": "SHA256 of git diff --binary --full-index --no-renames 2596258c3282e6c0d058cc7a4fb5f410b7fed06d FINAL_PRODUCT_TREE -- . :(exclude).github; excludes all CI metadata and this identity to avoid circular hashes. Exact product patch retained in reviewer packet.",
   "original_native16_patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
   "successful_native_ci_base": "8b629f0fbab657975009c9da851f075fe1326d66",
@@ -124,6 +124,17 @@
       "Home26": "TENTATIVE_UNACCEPTED rail14; previous selected normalreceipts historical pending finalcombinedimage",
       "Dulche25": "Genuine corrected causal helper; native early-close AND fullyinitializedHome-close pending, previous589bothFAILED",
       "Welcome7_plus_genuine8": "Required authored7 setup with genuine8 pureLocalSet wiring fix included; normal tests pending, actual fresh Start/NotNow/modelskip/persistrestart REQUIRED"
+    },
+    "Home28_canonical_Chat_route": {
+      "production_patch_sha256": "a63d0e32b7892880eb55db077665c6e39a854d91f64e9628a4da534721ecdcaa",
+      "base_patch_target": "5893fc7d63715898ad6024d8d84ac5edb125252a",
+      "merge_target": "ab7bc6b8b2d72a0c97d3b56423d93e0f4f5a466a",
+      "actual_effect": "Validated realChatcataloguekey resolves canonicalSpaces selected ChatSpaceId BEFORE unchanged strictnative admission. SharedsameSpacesfactory; no directChat alias/modeidentity weakening.",
+      "composition": "Clean3way merge of4productionpaths retains all newerWelcome/actorQA/D25/Chromium/Home26rail bytes",
+      "normal_tests": "NOT RUN",
+      "actual_native_UI": "NOT RUN",
+      "other_unregistered_app_tiles": "OPEN",
+      "integration_acceptance": "TENTATIVE_UNACCEPTED; no dispatch until Root actualproof decision"
     }
   },
   "changed_files_sha256": {
@@ -251,7 +262,7 @@
     "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalLifetime.cs": "9134ddabdf865ab03a2379ab46ff4806cad901ac8f13204f3f9190ea8575b772",
     "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalWindowsHome.cs": "a940ee126885d39b35a4899a8c41286ab51d5a193c50475e57c47ce1a58c3157",
     "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs": "3ed6e61b28d5a4cadd720d11d57b3774a5394b315808f5e31ab521c3c582e386",
-    "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs": "0247051b0bd6da9266a14644d5251673cfba387644f3463876f9be690068ae9b",
+    "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs": "0bd1ae4c289a87bed5d89e03b4a4a9822992201a67eed17cdd9c2e2603c45f97",
     "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs": "71f721181bba0a55d4c7486e7e597813097c557a5e0e9d23e3e9f01329933544",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/HomeRail/home-rail-apps.svg": "ca0f95b9b05ae892c77f9e2f33b01dda93f2854d442dc3e80fa59d15f6522026",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/HomeRail/home-rail-calendar.svg": "8b38308e28a3ceafde85c7b1b9518e76499dc242843a85c564b90f4ff0f55c85",
@@ -270,6 +281,8 @@
     "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentAddress.cs": "d16de5246a299f8b8ec7ff1adfb9cc671af18583a5f9edb5fd081449360f57a1",
     "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentFactory.cs": "456378e994fbb00c2d51bde67bc58ab9dac35c6072159a4c6800087d05d9aaae",
     "9to1 Workspace/shared/src/Haven.Desktop/Services/BuildBrowseAppContentSession.cs": "86b5d4c68cd0434a9b6c39b22fee24d87e1fd174a49ee34aef4d4f9b1a70022c",
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/HomeLaunchRouteResolver.cs": "c22ad5106752a7f7f7c0a502978fca14f3b344a27b9504883cb27fb525c58228",
+    "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeAppContentRegistry.cs": "6795191c691f88ee04bc802770ce0ef06945ca1ad274e781f65c07b71ddf4a30",
     "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeFilesDesktopRoute.BuildRevalidation.cs": "2bf5cd749ae942cd068ff4e872ddcefeefd742e5917403dd2391c0538952071d",
     "9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalTaskExecutionServiceCollectionExtensions.cs": "46a255b9b1b8d18b34cd5c7cf284b29f6121e4ae7b7f8fec836e12e5d5ed5f76",
     "9to1 Workspace/shared/src/Haven.Desktop/Services/SpacesBrowseAppContentSession.cs": "8f589e6ff955a2b904a1afc41b132e6517c3f50e75ebe0dcec81a8311d01f4a3",
@@ -283,7 +296,7 @@
     "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/HomeRailCuiBindings.cs": "24348c56d121994683cc43d613bd5b7712176d5f0fa669e4a80a62748d68d8c5",
     "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/HomeRailPackagedIcons.cs": "e66c8fe120de60a3bcc1f11a4e77f0f5da2f1b4491f862f2bef22bfb949a6bf3",
     "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHome.cui": "eaeb54bce9ff8d3626b0d39b471a9a1e2ae5048d8b84ab3dea2836877f45e5c3",
-    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHomePage.cs": "e391a9fda9afb65d4402875ba1a28ee678b1cd9dfa8a696cc0de93c1e8a5e338",
+    "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/UnifiedHomePage.cs": "1d0b62ab81c5d134213c6baac5030e8021115711c063284702abaddd234fdadf",
     "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/SpacesHomePage.cs": "bb7ad1efcc84469098f3c396dafd60bd16368f6ad1e742fd4af2b90bccd51b4b",
     "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/SpacesRailPackagedIcons.cs": "69d315d53bef646816d354a18e8313a78f2cc4c3d03fd5b7f88b558ad1bb26b8",
     "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs": "16a491814fa2a02e030b29c6f22421c7d8553bad4e9a9558726dea2e3cf07d7b",
@@ -340,7 +353,7 @@
     "framework/CUI/Runtime/CuiPropertyPresentation.cs": "ecdb15f0b7340d749a8ef78bb55f2024cf5948245f0ce61ea99210f5dc89c114",
     "framework/CUI/Runtime/CuiRuntimeCompatibility.cs": "e3b1fb264a1333724cf4d64edd08c3a8d3e7b66713997188f6108ee5531f09ed"
   },
-  "source_identity_scope": "Final212 exact rows: all prior166 plus genuine25/Onboarding7QA/Browser13/Home26 source and literalICU78/external CI driver. All rehashed; identity excludes itself; product patch excludes.github to avoid circularselfhash.",
+  "source_identity_scope": "Prospective214 exactsource rows: prior212 preserved/rehashed plus actualHome28canonicalroutehelper. Selfexcluded; sourceproductdigest excludes.github. Not dispatched or accepted.",
   "original_native16_provenance": {
     "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
     "patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
@@ -446,7 +459,7 @@
     "scope": "Full current main HEAD plus every tracked WIP diff/deletion and untracked nonignored file; v16 build identity, NOT acceptance",
     "untracked_archive_sha256": "3e442bdee9f325da0d49edbc90b8ae230cc39f9f75c8a80c0253d7cdf1219bc0"
   },
-  "prepared_at": "2026-10-21T11:38:13.767441+00:00",
+  "prepared_at": "2026-10-21T11:45:08.289017+00:00",
   "acceptance": {
     "component_normal_tests": "Historical changed-source receipts do not establish new combined acceptance; exact new checks pending",
     "combined_native_build": "NOT RUN",
@@ -456,8 +469,9 @@
     "owner_laptop_ARM64": "NOT RUN",
     "Ubuntu26ARM": "Full runtime Depends resolves against official Ubuntu26ARM metadata; actual ownerOS install/execution NOT RUN",
     "ordinary_browsing": "UNACCEPTED native integration; actual installedChromium/snap availability and realpageembedding NOT RUN",
-    "manual_coding_candidate": "FAILED/UNACCEPTED newer changes excluded"
+    "manual_coding_candidate": "FAILED/UNACCEPTED newer changes excluded",
+    "Home_Chat_tile": "NOT RUN: prospectiveHome28canonicalroute correction; realSpaceflow/native firstresponse and normalclose stillpending"
   },
-  "predecessor_exact_source_commit": "5893fc7d63715898ad6024d8d84ac5edb125252a",
-  "predecessor_product_patch_sha256": "5b074f98f63a2c9cbfd558172937eb60977177ebb640d5d35127cd3c9c764718"
+  "predecessor_exact_source_commit": "ab7bc6b8b2d72a0c97d3b56423d93e0f4f5a466a",
+  "predecessor_product_patch_sha256": "b95d25560d8ecd5459c4e2a3bab715c287bc34ef6f9c7cf9105c4ce22f1b3f24"
 }
