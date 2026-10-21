@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
     inputs:
       # Keep the original default Windows .NET job unchanged; Thunder runs ONLY when an explicit
-      # owner/Root dispatches the `thunder-cuda-compile` pipeline. The choice value is never
-      # interpolated into any shell code (used only in a strict `if` comparison).
+      # owner/Root dispatches the `thunder-cuda-compile` or `thunder-artifact-audit` pipeline. The
+      # choice value is never interpolated into any shell code (used only in a strict `if` comparison).
       pipeline:
         description: Pipeline to run
         required: true
@@ -18,7 +18,28 @@ on:
         options:
           - validate
           - thunder-cuda-compile
+          - thunder-artifact-audit
         default: validate
+
+      # Manual artifact-audit inputs (only read by the gated `thunder-artifact-audit` job). These are
+      # passed to that job via env and strictly validated inside the audit script before any GitHub API
+      # use: decimal IDs and a 40-hex expected build head SHA. They are not interpolated into shell.
+      audit_build_run_id:
+        description: Original build workflow run ID (decimal) to audit
+        required: false
+        type: string
+      audit_evidence_artifact_id:
+        description: Evidence artifact ID (decimal) from that build run
+        required: false
+        type: string
+      audit_install_artifact_id:
+        description: Install-closure artifact ID (decimal) from that build run
+        required: false
+        type: string
+      audit_expected_head_sha:
+        description: Expected 40-hex build head SHA for the original build run
+        required: false
+        type: string
 
 concurrency:
   group: haven-chat-model-ci-${{ github.workflow }}-${{ github.ref }}
@@ -147,5 +168,73 @@ jobs:
         with:
           name: thunder-cuda-compile-install-closure
           path: work/pc-worker/thunder-cuda-compile/install/
+          if-no-files-found: error
+          retention-days: 3
+
+  # Manual, read-only artifact-audit of a prior CUDA compile/install closure. Explicitly gated to the
+  # `thunder-artifact-audit` pipeline; never runs for default `validate` or the compile pipeline. It
+  # does NOT recompile, download models, touch GPU/driver, or claim runtime readiness. It binds the
+  # prior build run/head to explicit expected inputs (NOT the current github.sha) and fetches both
+  # prior artifacts into fresh scoped runner folders via actions/download-artifact@v4. The audit
+  # script itself is stdlib + static readelf only and never executes engine/relay/DSO/ldd/CUDA.
+  thunder-artifact-audit:
+    if: github.event.inputs.pipeline == 'thunder-artifact-audit'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    env:
+      PIPELINE: thunder-artifact-audit
+      # Read-only job token for the audit script's private-repo API preflight. Never printed.
+      GITHUB_TOKEN: ${{ github.token }}
+      # User-supplied audit inputs reach the script only via env; they are strictly validated inside
+      # the script (decimal IDs, 40-hex SHA) before any API call. Never interpolated into shell.
+      AUDIT_BUILD_RUN_ID: ${{ github.event.inputs.audit_build_run_id }}
+      AUDIT_EVIDENCE_ARTIFACT_ID: ${{ github.event.inputs.audit_evidence_artifact_id }}
+      AUDIT_INSTALL_ARTIFACT_ID: ${{ github.event.inputs.audit_install_artifact_id }}
+      AUDIT_EXPECTED_HEAD_SHA: ${{ github.event.inputs.audit_expected_head_sha }}
+      CANDIDATE_LOCK: 9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/strata-v0.2.2-lock.candidate.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Validate inputs + read-only GitHub metadata (same repo/run/head, run SUCCESS, artifacts not
+      # expired/names exact/under cap) + runner disk/memory budget. Fails before any fetch.
+      - name: Preflight inputs + metadata + runner budget
+        run: python3 .github/scripts/thunder-artifact-audit.py --preflight
+
+      # Fetch by the VALIDATED artifact ids (not by name) from the same build run. The script's
+      # preflight already proved these ids map to the exact artifacts on the exact run/head.
+      - name: Fetch prior evidence artifact by id (same build run)
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ github.event.inputs.audit_evidence_artifact_id }}
+          run-id: ${{ github.event.inputs.audit_build_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Single prevalidated id; merge-multiple puts the artifact's files directly in `path`
+          # (otherwise the action nests them under an artifact-named subdir, which the audit
+          # script's direct-root layout does not expect).
+          merge-multiple: true
+          path: work/pc-worker/thunder-artifact-audit/evidence
+
+      - name: Fetch prior install-closure artifact by id (same build run)
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ github.event.inputs.audit_install_artifact_id }}
+          run-id: ${{ github.event.inputs.audit_build_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          merge-multiple: true
+          path: work/pc-worker/thunder-artifact-audit/install
+
+      - name: Audit closure + receipt + static ELF dependency inventory (bounded)
+        run: python3 .github/scripts/thunder-artifact-audit.py --audit
+
+      - name: Upload bounded structured audit report (success or failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thunder-artifact-audit-report
+          path: work/pc-worker/thunder-artifact-audit-report/
           if-no-files-found: error
           retention-days: 3
