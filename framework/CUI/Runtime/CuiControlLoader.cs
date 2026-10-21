@@ -18,7 +18,7 @@ namespace CakeOS.Cui.Runtime;
 /// Loads a CuiDocument and instantiates live Avalonia control trees.
 /// This is the bridge between the CUI language model and the Avalonia rendering pipeline.
 /// </summary>
-public sealed class CuiControlLoader : IDisposable
+public sealed partial class CuiControlLoader : IDisposable
 {
     private readonly CuiControlRegistry _controlRegistry;
     private readonly CancellationTokenSource _lifetime = new();
@@ -43,6 +43,12 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<RepeatItemScope, PropertyChangedEventHandler> _scopeChangedHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiComponent> _authoredControls = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
+    /// <summary>Per-control typed input presentation state: an authored read-only friendly
+    /// DisplayValue shown while the input is unfocused, the raw writable Value revealed on focus
+    /// (so native edit/copy operate on the canonical value), and genuine user edits tracked so a
+    /// later focus reveal never resurrects a stale value. Programmatic presentation switches are
+    /// fenced so they never write back to the writable binding.</summary>
+    private readonly Dictionary<Control, InputPresentationState> _inputPresentation = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiActionInvocation> _actionInvocations = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
@@ -255,6 +261,12 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
+    /// <summary>Internal diagnostic: current count of retained original action/close receipts.</summary>
+    internal int PendingActionCount
+    {
+        get { lock (_actionTasksGate) return _pendingActionTasks.Count; }
+    }
+
     private void ObserveActionDispatch(Control control, Control? contextMenuOwner)
     {
         if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
@@ -299,10 +311,10 @@ public sealed class CuiControlLoader : IDisposable
         {
             if (_disposed) return;
             _disposed = true;
-            var actions = _admissionFailureTask is null ? _pendingActionTasks.ToArray()
-                : _pendingActionTasks.Append(_admissionFailureTask).ToArray();
-            // Retain the actual terminal task before cancellation or unsubscribe reentry.
-            _disposalTask = CompleteDisposalAsync(start.Task, actions, failures);
+            // Retain the actual terminal task before cancellation or unsubscribe reentry. It quiesces
+            // to ALL original receipts — including physical-close receipts published late during
+            // DetachPresentation/cleanup — never an early snapshot.
+            _disposalTask = CompleteDisposalAsync(start.Task, failures);
         }
         void Attempt(Action cleanup)
         {
@@ -326,11 +338,17 @@ public sealed class CuiControlLoader : IDisposable
             foreach (var scope in _scopeChangedHandlers.Keys.ToArray()) Attempt(() => UnsubscribeScope(scope));
             _repeats.Clear();
             foreach (var (control, handler) in _actionHandlers.ToArray()) Attempt(() => UnwireAction(control, handler));
-            foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
-            foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
             _actionHandlers.Clear();
+            // Close input/action admission FIRST (unwire actions, clear gestures). Owned physical close
+            // admission stays alive because each portal holds its own publisher lease; native close
+            // receipts published during CloseOwnedContextMenu/DetachPresentation are then joined by
+            // CompleteDisposalAsync's post-cleanup snapshot.
+            ClearFloatingCloseGestures();
             _wiredActions.Clear();
             _actionInvocations.Clear();
+            foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
+            foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
+            _inputPresentation.Clear();
             _currentRepeatIdentity = null;
         }
         catch (Exception error) { AddDistinctFailure(failures, error); }
@@ -339,10 +357,18 @@ public sealed class CuiControlLoader : IDisposable
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
-    private async Task CompleteDisposalAsync(Task start, Task[] actions, List<Exception> cleanupFailures)
+    private async Task CompleteDisposalAsync(Task start, List<Exception> cleanupFailures)
     {
         await start;
-        // Copy only after all synchronous cleanup attempts have settled and opened the gate.
+        // Snapshot AFTER all synchronous cleanup has settled and opened the gate, so every original
+        // receipt — including physical-close receipts published during DetachPresentation — joins the
+        // disposal quiescence. An early snapshot would omit those late receipts.
+        Task[] actions;
+        lock (_actionTasksGate)
+        {
+            actions = _admissionFailureTask is null ? _pendingActionTasks.ToArray()
+                : _pendingActionTasks.Append(_admissionFailureTask).ToArray();
+        }
         var failures = new List<Exception>(cleanupFailures);
         foreach (var action in actions.Concat(_contextMenuCloses.Values).Distinct<Task>(ReferenceEqualityComparer.Instance))
         {
@@ -535,6 +561,7 @@ public sealed class CuiControlLoader : IDisposable
         _controlThemeNames.Clear(); _controlThemeResources.Clear(); _appliedThemeKeys.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
         _authoredControls.Clear();
         _observedBindings.Clear();
+        _inputPresentation.Clear();
         ClearActionHandlers();
         _rootOwnsBackdrop = false;
         _actionInvocations.Clear();
@@ -771,7 +798,14 @@ public sealed class CuiControlLoader : IDisposable
         // wired even when no global dispatcher is configured and even when it is hidden/detached at
         // wire time (its owner is recorded, not lost), while a command with no resolvable dispatcher
         // stays unwired (truthful, never broadly accepted).
-        if (control is Button or MenuItem && !_wiredActions.Contains(control)
+        if (IsFloatingHost(control))
+        {
+            // A Floating-authored host has no native activation; its referenced action IS its close
+            // gesture. The generic escape portal invokes it when the user closes the floating bar. It
+            // joins the SAME ObserveActionDispatch admission/ledger pipeline as any authored action.
+            WireFloatingCloseGesture((CuiContainerControl)control, contextMenuOwner);
+        }
+        else if (control is Button or MenuItem && !_wiredActions.Contains(control)
             && TryGetActionInvocation(control, out var actionInvocation)
             && (_actionDispatcher is not null
                 || actionInvocation.Command == LocalToggleCommand
@@ -824,6 +858,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         foreach (var (control, handler) in _actionHandlers) UnwireAction(control, handler);
         _actionHandlers.Clear();
+        ClearFloatingCloseGestures();
         _wiredActions.Clear();
     }
 
@@ -1398,29 +1433,46 @@ public sealed class CuiControlLoader : IDisposable
     private void DetachControlTree(Control root)
     {
         var removed = EnumerateControls(root).ToHashSet<Control>(ReferenceEqualityComparer.Instance);
+
+        // Phase 1 — revoke the ENTIRE removed subtree's executable action admission, exact loader-owned
+        // action/floating gestures and owned callback entries BEFORE any presentation/native/focus/
+        // disposal callback can run (repeat.Dispose, UnsubscribeScope, DetachPresentation, context-menu
+        // close). A previously captured old gesture is therefore rejected by the _wiredActions guard,
+        // and a newer same-ID replacement is unaffected because it is freshly wired on its own control.
+        foreach (var control in removed)
+        {
+            RetireFloatingCloseGesture(control);
+            _wiredActions.Remove(control);
+            _actionInvocations.Remove(control);
+            if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
+            _observedBindings.Remove(control);
+            _controlThemeNames.Remove(control); _controlThemeResources.Remove(control); _appliedThemeKeys.Remove(control);
+            _authoredControls.Remove(control);
+        }
+
+        // Phase 2 — live binding/bookkeeping that does not invoke authored callbacks.
+        _liveBindings.RemoveAll(binding => removed.Contains(binding.Control));
+        _liveConditionals.RemoveAll(conditional => removed.Contains(conditional.Host));
+
+        // Phase 3 — callback-producing retirement (repeats, scopes, presentations, native context menus).
         foreach (var repeat in _repeats.Where(repeat => repeat.HostControl is not null && removed.Contains(repeat.HostControl)).ToArray())
         {
             foreach (var item in repeat.Items.Values) UnsubscribeScope(item.Scope);
             repeat.Dispose();
             _repeats.Remove(repeat);
         }
-        _liveBindings.RemoveAll(binding => removed.Contains(binding.Control));
-        _liveConditionals.RemoveAll(conditional => removed.Contains(conditional.Host));
         foreach (var control in removed)
         {
             DetachPresentation(control);
-            _controlThemeNames.Remove(control); _controlThemeResources.Remove(control); _appliedThemeKeys.Remove(control);
-            _authoredControls.Remove(control);
-            _observedBindings.Remove(control);
-            _actionInvocations.Remove(control);
-            _wiredActions.Remove(control);
-            if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
             CloseOwnedContextMenu(control);
         }
     }
 
-    private static void DetachPresentation(Control control)
+    private void DetachPresentation(Control control)
     {
+        // Retire owned input presentation state first (unsubscribe focus/lostfocus/textchanged
+        // handlers that close over this loader/control) so a retired control never fires.
+        RetireInputPresentation(control);
         // Retire an owned QueryViewport scope on the canonical teardown path (frame reload, close,
         // conditional/repeat retirement). Withdraw clears the typed source, inner context/dispatcher
         // and refresh callback without raising notifications, evaluating, or dispatching, so a
@@ -1430,6 +1482,20 @@ public sealed class CuiControlLoader : IDisposable
         CuiLifecycleProperties.Detach(control);
         CuiPropertyPresentation.Detach(control);
         if (control is CuiContainerControl container) container.Dispose();
+    }
+
+    /// <summary>Unsubscribes a retired input's handlers and drops its presentation state. This
+    /// runs on reload/dispose/teardown so anonymous closures from a retired control cannot fire on
+    /// a newer frame; it is idempotent.</summary>
+    private void RetireInputPresentation(Control control)
+    {
+        if (!_inputPresentation.Remove(control, out var state)) return;
+        if (state.Wired && control is TextBox box)
+        {
+            if (state.GotFocus is not null) box.GotFocus -= state.GotFocus;
+            if (state.LostFocus is not null) box.LostFocus -= state.LostFocus;
+            if (state.TextChanged is not null) box.TextChanged -= state.TextChanged;
+        }
     }
 
     private string CreateRepeatIdentityPrefix(CuiComponent component, string key)
@@ -2787,6 +2853,9 @@ public sealed class CuiControlLoader : IDisposable
                     if (control is TextBox ptb)
                         ptb.PlaceholderText = resolved;
                     break;
+                case "displayvalue":
+                    ApplyInputPresentationBinding(control, resolved);
+                    break;
                 // Actions / events: store in Tag for wiring
                 case "action":
                 case "on:click":
@@ -3284,7 +3353,20 @@ public sealed class CuiControlLoader : IDisposable
                 return;
             }
             if (CuiInputValidationProperties.GetHasError(control) && resolved == previous && NormalizeProperty(property) is "value" or "text" or "checked" or "selectedindex") return;
+            // Bounded typed input presentation: DisplayValue is presentation metadata, not a native
+            // control property. It is kept in the per-control presentation state so the friendly
+            // display never corrupts the writable raw value.
+            if (NormalizeProperty(property) is "displayvalue")
+            {
+                ApplyInputPresentationBinding(control, resolved);
+                return;
+            }
+            if (NormalizeProperty(property) is "value" or "text") CaptureInputRaw(control, resolved);
             if (resolved is not null) ApplyLiteralProperty(control, property, resolved, span);
+            // A host-side writable update must not leave the friendly unfocused location looking like
+            // the raw text (which can carry a route GUID). Restore the display whenever the input is
+            // unfocused; the raw binding value stays intact and a focused edit is never overridden.
+            if (NormalizeProperty(property) is "value" or "text") RestoreFriendlyIfUnfocused(control);
         }
         catch
         {
@@ -3598,6 +3680,85 @@ public sealed class CuiControlLoader : IDisposable
                 foreach (var descendant in EnumerateControls(item)) yield return descendant;
                 break;
         }
+    }
+
+    /// <summary>Bounded typed presentation state for a text Input. The friendly DisplayValue is
+    /// shown while the input is unfocused; the raw writable Value is revealed on focus so native
+    /// edit/copy always operate on the canonical value; Raw tracks the last genuine user text so a
+    /// later focus reveal never resurrects a stale host-published value. Handlers are retained for
+    /// unsubscription on retirement.</summary>
+    private sealed class InputPresentationState
+    {
+        public string? Display;
+        public string? Raw;
+        public bool Focused;
+        public bool Wired;
+        public EventHandler<RoutedEventArgs>? GotFocus;
+        public EventHandler<RoutedEventArgs>? LostFocus;
+        public EventHandler<TextChangedEventArgs>? TextChanged;
+    }
+
+    private void ApplyInputPresentationBinding(Control control, string? value)
+    {
+        if (!_inputPresentation.TryGetValue(control, out var state))
+            _inputPresentation[control] = state = new InputPresentationState { Raw = (control as TextBox)?.Text };
+        state.Display = value;
+        EnsureInputPresentationWiring(control, state);
+        // Reflect the authored display immediately when the input is not focused; the raw editable
+        // value stays untouched so the writable port is never corrupted by friendly presentation.
+        if (!state.Focused && control is TextBox box) SetInputShownText(box, state.Display);
+    }
+
+    private void CaptureInputRaw(Control control, string? raw)
+    {
+        if (_inputPresentation.TryGetValue(control, out var state)) state.Raw = raw;
+    }
+
+    private void EnsureInputPresentationWiring(Control control, InputPresentationState state)
+    {
+        if (state.Wired || control is not TextBox box) return;
+        state.Wired = true;
+        state.GotFocus = (_, _) =>
+        {
+            state.Focused = true;
+            // Reveal the full canonical editable value on focus (never the friendly label) so
+            // native selection/caret/undo and copy operate on the genuine value.
+            SetInputShownText(box, state.Raw ?? box.Text);
+        };
+        state.TextChanged = (_, _) =>
+        {
+            // Track genuine user edits (outside the host-value fence) so a later focus reveal keeps
+            // the user's latest text rather than a stale host-published value.
+            if (state.Focused && !_applyingHostValues.Contains(box)) state.Raw = box.Text;
+        };
+        state.LostFocus = (_, _) =>
+        {
+            state.Focused = false;
+            // Resume the readable friendly location while leaving the raw binding value intact.
+            if (state.Display is not null) SetInputShownText(box, state.Display);
+        };
+        box.GotFocus += state.GotFocus;
+        box.TextChanged += state.TextChanged;
+        box.LostFocus += state.LostFocus;
+    }
+
+    /// <summary>Swaps a Text input's shown text inside the host-value fence so the generic writable
+    /// write-back never treats a programmatic presentation change as a user edit.</summary>
+    private void SetInputShownText(TextBox box, string? text)
+    {
+        try { _applyingHostValues.Add(box); box.Text = text; }
+        finally { _applyingHostValues.Remove(box); }
+    }
+
+    /// <summary>Restores the friendly Display while the input is unfocused after a host-side
+    /// writable value update. Never touches the raw binding value and never overrides a focused
+    /// edit.</summary>
+    private void RestoreFriendlyIfUnfocused(Control control)
+    {
+        if (control is not TextBox box) return;
+        if (!_inputPresentation.TryGetValue(control, out var state)) return;
+        if (!state.Focused && state.Display is not null)
+            SetInputShownText(box, state.Display);
     }
 
     private sealed record CuiLiveBinding(

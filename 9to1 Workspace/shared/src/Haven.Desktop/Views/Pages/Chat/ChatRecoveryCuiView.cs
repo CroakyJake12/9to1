@@ -21,6 +21,7 @@ internal sealed class ChatRecoveryBindings : ICuiWritableBindingContext, ICuiAct
 {
     private const string ManageCommand = "chat.recovery.manage";
     private bool _visible;
+    private string? _status;
     private bool _retired;
 
     /// <summary>Observed visibility of the authored recovery affordance; driven by the owner page's
@@ -32,6 +33,20 @@ internal sealed class ChatRecoveryBindings : ICuiWritableBindingContext, ICuiAct
         {
             if (_visible == value) return;
             _visible = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        }
+    }
+
+    /// <summary>Read-only projection of the ACTUAL existing chat scene status. It reflects the real
+    /// model-availability sentence from the owner page/scene; the authored recovery row renders it
+    /// alongside the Manage action, and it never fabricates a status or readiness.</summary>
+    internal string? Status
+    {
+        get => _status;
+        set
+        {
+            if (_status == value) return;
+            _status = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
         }
     }
@@ -49,6 +64,9 @@ internal sealed class ChatRecoveryBindings : ICuiWritableBindingContext, ICuiAct
         {
             case "Recovery.Visible":
                 value = _visible;
+                return true;
+            case "Recovery.Status":
+                value = _status;
                 return true;
             default:
                 return false;

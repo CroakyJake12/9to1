@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
 using CakeOS.Cui;
 using Xunit;
@@ -83,6 +84,50 @@ public sealed class CuiObjectTextBindingTests
                 Assert.Equal(refreshed[1].Text, refreshed[1].Label.Text);
                 var scope = Assert.IsAssignableFrom<ICuiBindingContext>(refreshed[1].DataContext);
                 Assert.True(scope.TryGetValue("message", out var row)); Assert.Same(current, row);
+            }
+            finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
+            return true;
+        }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Builtin_readonly_text_preserves_selection_copy_and_live_owner_updates_but_refuses_typing()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        Assert.True(await session.Dispatch<bool>(async () =>
+        {
+            var model = new CuiViewModel(); model.Set("Source", "alpha\nbeta");
+            var registry = new CuiControlRegistry();
+            using var loader = new CuiControlLoader(registry); loader.SetBindingContext(model);
+            var (tree, diagnostics) = loader.LoadMarkup("""
+                <Cui><Page><Object Type="ReadOnlyText" Text="{Binding Source}"
+                    FontFamily="monospace" MinHeight="100" AccessibleName="Exact source" /></Page></Cui>
+                """);
+            Assert.Empty(diagnostics); var root = Assert.IsAssignableFrom<Panel>(tree); loader.WireBindings(root);
+            var text = Assert.IsType<TextBox>(Assert.Single(root.Children));
+            var window = new Window { Width = 600, Height = 400, Content = root };
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                Assert.Equal("alpha\nbeta", text.Text);
+                Assert.True(text.IsReadOnly); Assert.True(text.AcceptsReturn);
+                Assert.True(text.IsEnabled); Assert.True(text.Focusable);
+                Assert.Equal("monospace", text.FontFamily.Name);
+                Assert.True(text.Bounds.Width > 0 && text.Bounds.Height > 0);
+                Assert.True(text.Focus());
+                text.SelectionStart = 0; text.SelectionEnd = 5;
+                Assert.Equal("alpha", text.SelectedText); Assert.True(text.CanCopy);
+                var clipboard = Assert.IsAssignableFrom<IClipboard>(window.Clipboard);
+                text.Copy();
+                Assert.Equal("alpha", await clipboard.TryGetTextAsync());
+                window.KeyTextInput("typed replacement"); window.UpdateLayout();
+                Assert.Equal("alpha\nbeta", text.Text);
+                Assert.True(model.TryGetValue("Source", out var original)); Assert.Equal("alpha\nbeta", original);
+                model.Set("Source", "current\nowner source"); window.UpdateLayout();
+                Assert.Same(text, Assert.Single(root.Children));
+                Assert.Equal("current\nowner source", text.Text); Assert.True(text.IsReadOnly);
+                loader.Dispose(); await loader.WhenActionsIdleAsync();
+                model.Set("Source", "After close"); Assert.Equal("current\nowner source", text.Text);
             }
             finally { loader.Dispose(); await loader.WhenActionsIdleAsync(); window.Close(); }
             return true;

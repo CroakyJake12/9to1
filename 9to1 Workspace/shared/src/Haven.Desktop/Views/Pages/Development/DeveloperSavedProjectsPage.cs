@@ -25,7 +25,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
     private readonly ICuiSceneReadiness? _originalHomeReadiness;
     private readonly Action? _demandOriginalHomeJoin;
     private readonly Func<SpaceDeveloperView, Task>? _openExistingTask;
-    private readonly Func<Guid, Task>? _openExistingSpace;
+    private readonly Func<Guid, Task, Task>? _openExistingSpace;
     private readonly CancellationToken _connectionLifetime, _windowLifetime;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly object _gate = new();
@@ -39,7 +39,7 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
 
     public DeveloperSavedProjectsPage(SpaceDevelopmentReferenceCatalog originalCatalog, SpaceRegistry originalSpaces,
         ICuiSceneReadiness originalHomeReadiness, Action demandOriginalHomeJoin,
-        Func<SpaceDeveloperView, Task> openExistingTask, Func<Guid, Task> openExistingSpace,
+        Func<SpaceDeveloperView, Task> openExistingTask, Func<Guid, Task, Task> openExistingSpace,
         CancellationToken originalConnectionLifetime, CancellationToken originalWindowLifetime,
         Action<DeveloperSavedProjectsPage> retainActualPartial)
     {
@@ -232,9 +232,18 @@ public sealed class DeveloperSavedProjectsPage : UserControl, IActivatablePage, 
             if (after.State != CuiSceneAvailabilityState.Ready)
             { await PublishAsync(original, () => { _page = null; _metadataAvailable = false; _status = after.Message; }).ConfigureAwait(false); return; }
             original.DemandPublication();
-            var opened = InvokeOriginalSource(() => command == "dev.references.open-task"
-                ? _openExistingTask!(current) : _openExistingSpace!(current.Space.Id));
-            await original.AwaitAsync(opened).ConfigureAwait(false); // Borrowed shell joins its genuine existing Task frame acquisition.
+            if (command == "dev.references.open-task")
+            {
+                var opened = InvokeOriginalSource(() => _openExistingTask!(current));
+                await original.AwaitAsync(opened).ConfigureAwait(false); // Borrowed shell joins its genuine existing Task frame acquisition.
+                return;
+            }
+            // Open Space: supply the GENUINE admitted original action settlement to the host driver
+            // unchanged. The external host driver awaits it; this included action never awaits its
+            // encompassing navigation settlement. The settlement completes only when this real open
+            // action resolves (success, cancellation or fault), never independently.
+            var enqueued = InvokeOriginalSource(() => _openExistingSpace!(current.Space.Id, original.Task));
+            await original.AwaitAsync(enqueued).ConfigureAwait(false);
         }));
     }
 

@@ -24,6 +24,82 @@ public sealed class SpacesHomeControllerTests
     }
 
     [Fact]
+    public async Task ToggleManage_is_presentation_only_and_never_mutates_the_registry()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+
+        Assert.False(controller.State.IsManaging);
+        var selectionId = controller.State.Selection?.Id;
+        var customCountBefore = controller.State.CustomSpaces.Count;
+
+        controller.ToggleManage();
+        Assert.True(controller.State.IsManaging);
+        Assert.Equal(customCountBefore, controller.State.CustomSpaces.Count);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+
+        controller.ToggleManage();
+        Assert.False(controller.State.IsManaging);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+    }
+
+    [Fact]
+    public async Task Manager_and_sidebar_presentation_survive_reload_and_explicit_creation()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        var selectionId = controller.State.Selection?.Id;
+
+        controller.ToggleManage();
+        await controller.LoadAsync();
+        Assert.True(controller.State.IsManaging);
+        Assert.False(controller.State.SidebarCollapsed);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+        Assert.Empty(controller.State.CustomSpaces);
+
+        controller.ToggleSidebar();
+        Assert.True(controller.State.SidebarCollapsed);
+        await controller.LoadAsync();
+        Assert.True(controller.State.IsManaging);
+        Assert.True(controller.State.SidebarCollapsed);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+        Assert.Empty(controller.State.CustomSpaces);
+
+        await controller.CreateCustomSpaceAsync();
+        Assert.True(controller.State.IsManaging);
+        Assert.True(controller.State.SidebarCollapsed);
+        Assert.Equal("New Space", Assert.Single(controller.State.CustomSpaces).Name);
+    }
+
+    [Fact]
+    public async Task CloseManage_is_idempotent_and_never_opens_the_manager()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var controller = new SpacesHomeController(registry);
+        await controller.LoadAsync();
+        var selectionId = controller.State.Selection?.Id;
+        var customCountBefore = controller.State.CustomSpaces.Count;
+
+        // Closed manager: CloseManage must be a no-op that never opens it.
+        controller.CloseManage();
+        Assert.False(controller.State.IsManaging);
+        Assert.Equal(customCountBefore, controller.State.CustomSpaces.Count);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+
+        // Open, then close idempotently.
+        controller.ToggleManage();
+        Assert.True(controller.State.IsManaging);
+        controller.CloseManage();
+        Assert.False(controller.State.IsManaging);
+        controller.CloseManage();
+        Assert.False(controller.State.IsManaging);
+        Assert.Equal(customCountBefore, controller.State.CustomSpaces.Count);
+        Assert.Equal(selectionId, controller.State.Selection?.Id);
+    }
+
+    [Fact]
     public async Task CreateCustomSpaceAsync_creates_selects_and_queues_builder()
     {
         var registry = new SpaceRegistry(new MemorySettingsStore());

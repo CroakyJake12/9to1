@@ -33,6 +33,7 @@
     <Compile Include="HostComposerLifetimeTests.cs" />
     <Compile Include="FloatingFormatToolbarTests.cs" />
     <Compile Include="ChatComposerEmojiPickerViewportTests.cs" />
+    <Compile Include="NativeComposerFloatingPortalTests.cs" />
     <Compile Include="HavenPackagedSvgResolverStrictTests.cs" />
     <Using Include="Xunit" />
     <!-- Use the same approved fork as the real desktop/runtime, including headless hosting. -->

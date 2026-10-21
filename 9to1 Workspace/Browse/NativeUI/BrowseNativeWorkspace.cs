@@ -111,7 +111,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "EmptyBookmarks" => _bookmarkRows.Length == 0,
             "EmptyHistory" => _historyRows.Length == 0,
             "EmptyDownloads" => _downloadRows.Length == 0,
-            "Address" => _address, "FindQuery" => _find, "Status" => _status,
+            "Address" => _address, "AddressDisplay" => ResolveAddressDisplay(selected), "FindQuery" => _find, "Status" => _status,
             "Security" => _snapshot.Security.Label + " · " + _snapshot.Security.Explanation,
             "Profile" => selected.Privacy == BrowserTabPrivacy.Private ? "Private tab · isolated temporary profile" : "Standard profile",
             "Engine" => selected.Engine == BrowseEngineKind.Gecko ? "Firefox" : "Chromium",
@@ -376,6 +376,33 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (!_addressDraft) _address = snapshot.SelectedTab.Address.ToString();
         _status = snapshot.Status; Changed();
     }
+    /// <summary>Resolves the unfocused, readable location for the selected tab. Web addresses keep
+    /// their exact canonical text. First-party app/Space/conversation locations show the genuinely
+    /// admitted content-session title when one is published; otherwise the canonical address is
+    /// retained rather than an invented friendly name or a GUID route leak. The raw writable
+    /// Address port is never replaced by this presentation value.</summary>
+    private string ResolveAddressDisplay(BrowseTabSnapshot tab)
+    {
+        // Web locations keep their exact canonical address text.
+        if (tab.Address.IsWeb) return tab.Address.ToString();
+        // First-party surface: show the genuinely admitted content-session title when one is
+        // published (including a real Spaces session titled "Spaces"). Only when no genuine title
+        // exists surface the top-level surface address (scheme://authority) — never the raw route,
+        // which can carry opaque GUID segments.
+        var title = tab.Title;
+        if (!string.IsNullOrWhiteSpace(title)) return title;
+        return SurfaceAddress(tab.Address);
+    }
+
+    private static string SurfaceAddress(AppContentAddress address) =>
+        (address.Namespace switch
+        {
+            AppContentNamespace.Browse => "browse",
+            AppContentNamespace.Cui => "cui",
+            AppContentNamespace.NativeApp => "9to1",
+            _ => string.Empty
+        }) + "://" + address.Authority;
+
     private void Changed() => PropertyChanged?.Invoke(this, new(string.Empty));
     private void CheckAdmission(List<Task> sources)
     {

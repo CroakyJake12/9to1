@@ -179,7 +179,30 @@ public sealed partial class App
         }
 
         private static CuiContainerControl? FindNamedContainer(Control root, string name) =>
-            root.GetLogicalDescendants().OfType<CuiContainerControl>().FirstOrDefault(control => control.Name == name);
+            FindNamedContainerRecursive(root, name);
+
+        private static CuiContainerControl? FindNamedContainerRecursive(Control control, string name)
+        {
+            if (control is CuiContainerControl named && named.Name == name) return named;
+            switch (control)
+            {
+                case CuiContainerControl container:
+                    // Every authored child (including hidden cells no longer in the active layout)
+                    // is part of the retained authored graph.
+                    foreach (var child in container.AuthoredChildren)
+                        if (FindNamedContainerRecursive(child, name) is { } found) return found;
+                    break;
+                case Panel panel:
+                    foreach (var child in panel.Children)
+                        if (FindNamedContainerRecursive(child, name) is { } found) return found;
+                    break;
+                case Decorator { Child: Control child }:
+                    return FindNamedContainerRecursive(child, name);
+                case ContentControl { Content: Control child }:
+                    return FindNamedContainerRecursive(child, name);
+            }
+            return null;
+        }
 
         /// <summary>Retires a panel loader and retains BOTH disposal phases: the synchronous
         /// Dispose runs unsubscribe/cancel callbacks (which may reenter and mount a replacement),
