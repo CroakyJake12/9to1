@@ -68,9 +68,12 @@ if cpu_max_raw:
         cpu_quota = parse_limit(parts[0])
         cpu_period = parse_limit(parts[1])
 
-eff_cpu = float(ncpu)
+# Effective CPU capacity = min(host CPU, cgroup quota/period when finite). Never exceed the host or
+# the enclosing cgroup; do NOT clamp a fractional/quota value upward.
 if cpu_quota is not None and cpu_period:
-    eff_cpu = max(1.0, cpu_quota / float(cpu_period))
+    eff_cpu = min(float(ncpu), cpu_quota / float(cpu_period))
+else:
+    eff_cpu = float(ncpu)
 
 # PID headroom = pids.max - pids.current when both known.
 pids_headroom = None
@@ -85,12 +88,24 @@ CPU_CAP = 2
 MEM_CAP_MIB = 6144       # <= 6 GiB
 PIDS_CAP = 512           # <= 512
 
-RESERVE_MIB = 1024       # leave headroom
+RESERVE_MIB = 1024       # memory headroom
+PID_RESERVE = 64         # pid headroom
+MIN_BUILD_MEM_MIB = 4096  # minimum build memory that must fit within effective headroom
+MIN_BUILD_CPU = 1.0
+MIN_PIDS_BOUND = 64
 
+# Memory bound derived DOWNWARD: at most effective headroom minus reserve; never floor upward past it.
+if eff_avail is not None:
+    mem_bound = min(MEM_CAP_MIB, max(0, int(eff_avail - RESERVE_MIB)))
+else:
+    mem_bound = None
+
+# CPU bound: at most the conservative cap and the effective (host+cgroup) capacity.
 cpus_bound = min(CPU_CAP, max(1, int(eff_cpu)))
-mem_bound = min(MEM_CAP_MIB, max(4096, eff_avail - RESERVE_MIB)) if eff_avail is not None else None
+
+# PID bound: capped downward to headroom minus reserve; never exceed headroom.
 if pids_headroom is not None:
-    pids_bound = min(PIDS_CAP, max(128, pids_headroom))
+    pids_bound = min(PIDS_CAP, pids_headroom - PID_RESERVE)
 else:
     pids_bound = PIDS_CAP
 
@@ -102,6 +117,7 @@ rec = {
     "cgroupCpuMax": cpu_max_raw,
     "hostCPU": ncpu,
     "effectiveCPUs": round(eff_cpu, 3),
+    "pidsHeadroom": pids_headroom,
     "diskFreeMiB": free_mib,
     "recommendedContainerMemoryMiB": mem_bound,
     "recommendedContainerCPUs": cpus_bound,
@@ -109,15 +125,18 @@ rec = {
 }
 (ev / "preflight-runner.json").write_text(json.dumps(rec, indent=2) + "\n")
 
-# Fail clearly before compiling if inadequate.
-if eff_avail is None or eff_avail < 4096:
-    print("FAIL_RESOURCE: runner effective memory too low: %s MiB" % eff_avail, file=sys.stderr)
+# Fail clearly before compiling if inadequate (never oversubscribe beyond actual effective capacity).
+if eff_avail is None or mem_bound < MIN_BUILD_MEM_MIB:
+    print("FAIL_RESOURCE: runner effective memory too low: %s MiB (reserved %s MiB)" % (eff_avail, RESERVE_MIB), file=sys.stderr)
     sys.exit(1)
 if free_mib < 20480:
     print("FAIL_RESOURCE: runner disk free too low: %s MiB" % free_mib, file=sys.stderr)
     sys.exit(1)
-if eff_cpu < 1.0:
-    print("FAIL_RESOURCE: runner CPU capacity unreadable (%s)" % eff_cpu, file=sys.stderr)
+if eff_cpu < MIN_BUILD_CPU:
+    print("FAIL_RESOURCE: runner effective CPU too low: %s" % eff_cpu, file=sys.stderr)
+    sys.exit(1)
+if pids_bound < MIN_PIDS_BOUND:
+    print("FAIL_RESOURCE: runner pid headroom too low: %s (reserved %s)" % (pids_headroom, PID_RESERVE), file=sys.stderr)
     sys.exit(1)
 
 print("MEMORY_MB=%d" % mem_bound)

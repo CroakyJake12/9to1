@@ -383,5 +383,27 @@ class ThunderInventoryFixture(unittest.TestCase):
         self.assertIn("THUNDER-INVENTORY-FIXTURE-OK", proc.stdout)
 
 
+class ThunderShellFailureJsonFixture(unittest.TestCase):
+    """Runs the bounded shell fixture proving the EXIT-trap shell-only fallback emits parseable JSON
+    when python3 is hidden (no network/SDK/apt)."""
+
+    def test_thunder_shell_failure_json_fixture(self):
+        fixture = pathlib.Path(__file__).resolve().parent / "NativeStrataThunderShellFailureJsonFixture.sh"
+        proc = subprocess.run(["bash", str(fixture)], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, "stderr: " + proc.stderr)
+        self.assertIn("THUNDER-SHELL-FAILURE-JSON-FIXTURE-OK", proc.stdout)
+
+
+class ThunderPythonBootstrapFixture(unittest.TestCase):
+    """Runs the bounded shell fixture proving the bootstrap selects FULL python3 and verifies stdlib
+    before preflight, including the present-but-incomplete repair path (no network/SDK/apt)."""
+
+    def test_thunder_python_bootstrap_fixture(self):
+        fixture = pathlib.Path(__file__).resolve().parent / "NativeStrataThunderPythonBootstrapFixture.sh"
+        proc = subprocess.run(["bash", str(fixture)], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, "stderr: " + proc.stderr)
+        self.assertIn("THUNDER-PYTHON-BOOTSTRAP-FIXTURE-OK", proc.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

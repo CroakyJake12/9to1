@@ -90,6 +90,64 @@ PY
 }
 
 # ------------------------------------------------------------------------------------------------
+# POSIX shell JSON string escaper (used by the EXIT-trap shell fallback when Python is unavailable).
+# Escapes backslash, double-quote, tab, LF, CR and wraps the result in double quotes so the emitted
+# record is genuinely parseable JSON. Pure function; no python/network/apt.
+# ------------------------------------------------------------------------------------------------
+thunder_json_str() {
+  local s="$1"
+  s=${s//\\/\\\\}
+  s=${s//\"/\\\"}
+  s=${s//$'\t'/\\t}
+  s=${s//$'\n'/\\n}
+  s=${s//$'\r'/\\r}
+  printf '"%s"' "$s"
+}
+
+# ------------------------------------------------------------------------------------------------
+# Python bootstrap boundary (pure; main-guarded so a no-network fixture can call it with explicitly
+# labelled fake apt/interpreter command stubs). The minimal NVIDIA devel image must not be assumed to
+# include python3 or the full stdlib; presence of an interpreter is NOT enough. We select FULL python3
+# (never python3-minimal) and verify the required stdlib imports BEFORE any structured preflight/build
+# metadata is emitted. Env overrides for the fixture only (never set in production):
+#   THUNDER_PYTHON_BIN   interpreter used for probing (default: python3)
+#   THUNDER_APT_UPDATE    apt update command (default: apt-get update -qq)
+#   THUNDER_APT_INSTALL   full-python install command (default: apt-get install -y -qq
+#                         --no-install-recommends python3)
+# ------------------------------------------------------------------------------------------------
+thunder_python_usable() {
+  local py="${THUNDER_PYTHON_BIN:-python3}"
+  if ! command -v "$py" >/dev/null 2>&1; then
+    echo "THUNDER-PYTHON-MISSING" >&2
+    return 1
+  fi
+  if ! "$py" -c 'import json, hashlib, os, pathlib, re, shutil, struct, subprocess, sys, tarfile, ssl' >/dev/null 2>&1; then
+    echo "THUNDER-PYTHON-STDLIB-INCOMPLETE" >&2
+    return 1
+  fi
+  return 0
+}
+
+thunder_install_python_full() {
+  local upd="${THUNDER_APT_UPDATE:-apt-get update -qq}"
+  local inst="${THUNDER_APT_INSTALL:-apt-get install -y -qq --no-install-recommends python3}"
+  $upd || true
+  $inst
+}
+
+thunder_bootstrap_python() {
+  if thunder_python_usable >/dev/null 2>&1; then
+    echo "THUNDER-PYTHON-OK"
+    return 0
+  fi
+  STAGE="${STAGE:-bootstrap-python-install}"
+  thunder_install_python_full || return 1
+  # Repair path: after full install, verify stdlib really is present (an interpreter alone is not
+  # enough). Fail clearly if the full package still does not supply the required stdlib.
+  thunder_python_usable || return 1
+}
+
+# ------------------------------------------------------------------------------------------------
 # EXIT trap: preserves the original status and emits a bounded failure receipt/log for ANY nonzero
 # stage, including explicit `exit 1` and failures early in bootstrap/apt/preflight (the trap is
 # installed before those steps). Never masks failure; a successful run sets THUNDER_DONE before
@@ -101,8 +159,10 @@ thunder_on_exit() {
     return 0
   fi
   mkdir -p "$EVIDENCE" 2>/dev/null || true
-  if command -v python3 >/dev/null 2>&1; then
-    python3 - "$rc" "$STAGE" "$EVIDENCE" "$REPO" "$LOG" <<'PY' || true
+  # Prefer the structured Python writer, but only when its own required stdlib (json/pathlib) is
+  # present AND the writer actually succeeds; otherwise fall back to the shell-only JSON record. The
+  # original nonzero exit status is preserved either way (never lost via the fallback).
+  if thunder_python_usable >/dev/null 2>&1 && python3 - "$rc" "$STAGE" "$EVIDENCE" "$REPO" "$LOG" <<'PY'
 import json, os, pathlib, sys
 rc = int(sys.argv[1]); stage = sys.argv[2]; ev = pathlib.Path(sys.argv[3])
 repo = sys.argv[4]; log = sys.argv[5]
@@ -126,13 +186,19 @@ if sv.exists():
 (ev / "thunder-cuda-compile-failure.json").write_text(json.dumps(rec, indent=2) + "\n")
 print("THUNDER-CUDA-COMPILE-FAILED stage=%s exit=%s" % (stage, rc))
 PY
+  then
+    :
   else
-    # Shell-only fallback when Python is not available (e.g. very early bootstrap failure).
-    printf '{"workflow":"haven-chat-model-ci.yml","job":"thunder-cuda-compile","stage":%s,"exitCode":%s,"success":false,"compileOnly":{"gpu":"NOT RUN","driver":"NOT RUN","model":"NOT RUN"},"pythonUnavailable":true,"log":%s}\n' \
-      "$(printf '%s' "$STAGE" | sed 's/"/\\"/g')" "$rc" \
-      "$(printf '%s' "$LOG" | sed 's/"/\\"/g')" \
+    # Shell-only fallback: Python is unavailable OR its writer stdlib is missing/incomplete. Every
+    # string value is emitted via thunder_json_str so the record is valid JSON.
+    printf '{"workflow":%s,"job":%s,"stage":%s,"exitCode":%s,"success":false,"compileOnly":{"gpu":%s,"driver":%s,"model":%s},"pythonUnavailable":true,"log":%s}\n' \
+      "$(thunder_json_str "haven-chat-model-ci.yml")" \
+      "$(thunder_json_str "thunder-cuda-compile")" \
+      "$(thunder_json_str "$STAGE")" "$rc" \
+      "$(thunder_json_str "NOT RUN")" "$(thunder_json_str "NOT RUN")" "$(thunder_json_str "NOT RUN")" \
+      "$(thunder_json_str "$LOG")" \
       > "$EVIDENCE/thunder-cuda-compile-failure.json" 2>/dev/null || true
-    echo "THUNDER-CUDA-COMPILE-FAILED stage=$STAGE exit=$rc (python unavailable)"
+    echo "THUNDER-CUDA-COMPILE-FAILED stage=$STAGE exit=$rc (python writer unavailable)"
   fi
 }
 
@@ -228,14 +294,13 @@ thunder_main() {
   export THUNDER_DONE=0
   trap thunder_on_exit EXIT
 
-  # Bootstrap Python under the EXIT/failure-log path first: the minimal NVIDIA devel image must not
-  # be assumed to include python3. The EXIT trap has a shell fallback if Python cannot be obtained.
+  # Bootstrap Python under the EXIT/failure-log path first. The minimal NVIDIA devel image must not be
+  # assumed to include python3 or the full stdlib. We install FULL python3 (never python3-minimal) and
+  # verify the required stdlib imports BEFORE emitting any structured metadata. If the full install or
+  # its stdlib verification fails, the EXIT trap records the failure (with the shell fallback if the
+  # Python writer is unusable).
   STAGE="bootstrap-python"
-  if ! command -v python3 >/dev/null 2>&1; then
-    STAGE="bootstrap-python-install"
-    apt-get update -qq || true
-    apt-get install -y -qq --no-install-recommends python3-minimal
-  fi
+  thunder_bootstrap_python || exit 1
 
   STAGE="start"
   python3 - "$EVIDENCE" "$CUDA_IMAGE" <<'PY'
