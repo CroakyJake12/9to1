@@ -156,6 +156,8 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
             var landing = new DeveloperSavedProjectsPage(_catalog, _spaces, readiness, demandJoin,
                 OpenExistingProjectAsync,
                 OpenExistingSpaceAsync,
+                _workspaces,
+                OpenExistingManualProjectAsync,
                 _token, _token,
                 actual => { if (retained is not null && !ReferenceEquals(retained, actual)) throw new InvalidOperationException("The Build landing factory acquired multiple different partial pages."); retained = actual; _landing = actual; });
             if (!ReferenceEquals(retained, landing))
@@ -251,6 +253,60 @@ internal sealed class BuildBrowseAppContentSession : IBrowseNativeAppContentSess
         // its full retirement happens at session close (never from inside its own callback).
         await AcquireWorkbenchAsync(view.Project, snapshot, token);
         if (_landing is { } landing) landing.Deactivate();
+    }
+
+    /// <summary>Manual (no-AI) open of a normally saved project. It resolves the REAL workspace-
+    /// store identity (no Task/Run/context/model, no generation, no fabricated context) and opens the
+    /// SAME compiled-CUI workbench in manual mode. Read/tree/search operate on the actual saved root;
+    /// edits and process execution fail closed (they require a separate current authorized Task/
+    /// execution authority).</summary>
+    private Task OpenExistingManualProjectAsync(DeveloperProjectReference reference)
+    {
+        DemandAlive();
+        ArgumentNullException.ThrowIfNull(reference);
+        return Dispatcher.UIThread.InvokeAsync<Task>(() => OpenExistingManualProjectCoreAsync(reference, _token)).GetTask().Unwrap();
+    }
+
+    private async Task OpenExistingManualProjectCoreAsync(DeveloperProjectReference reference, CancellationToken caller)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        DemandAlive();
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
+        var token = linked.Token;
+        await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
+        var resolved = await ResolveAsync(reference, token);
+        DemandAlive(); token.ThrowIfCancellationRequested();
+        await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
+        await AcquireManualWorkbenchAsync(resolved, token);
+        if (_landing is { } landing) landing.Deactivate();
+    }
+
+    /// <summary>Acquires the SAME compiled-CUI workbench in manual mode for the exact resolved saved
+    /// project. Every acquired candidate (including a failed activation) is retained and drained at
+    /// close; the published live page is set only after successful activation and swap.</summary>
+    private async Task AcquireManualWorkbenchAsync(DeveloperResolvedProject resolved, CancellationToken token)
+    {
+        var readiness = Borrowed.BorrowOriginalHomeReadiness();
+        DeveloperProjectWorkbenchPage? retained = null;
+        var page = _factory.CreateManual(resolved,
+            p => new BuildWorkbenchReadiness(p, readiness),
+            actual =>
+            {
+                if (retained is not null && !ReferenceEquals(retained, actual))
+                    throw new InvalidOperationException("The Build manual workbench factory acquired multiple different partial pages.");
+                retained = actual; RetainWorkbench(actual);
+            },
+            token);
+        if (!ReferenceEquals(retained, page))
+            throw new InvalidOperationException("The SAME Build manual workbench page was not retained before publication.");
+        await page.ActivateAsync(token);
+        await Borrowed.RevalidateOriginalAppContentAsync(_request.ProfileId, token);
+        DemandAlive(); token.ThrowIfCancellationRequested();
+        _view.Child = page;
+        _workbenchMode = true;
+        lock (_gate) _page = page;
+        _published = true;
+        CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
     }
 
     /// <summary>Genuine host Spaces navigation for the saved-reference picker's Open Space action.

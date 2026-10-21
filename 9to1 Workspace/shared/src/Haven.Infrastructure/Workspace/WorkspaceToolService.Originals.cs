@@ -74,10 +74,16 @@ public sealed partial class WorkspaceToolService
             _reservedWrites = new(comparer);
             _declaredWrites = new(comparer);
             _expectedPreimageHashes = new(comparer);
-            if (_call.Name == "write_file") _declaredWrites.Add(ResolveDeclared(RequiredText("path")), Text("content"));
-            else if (_call.Name == "replace_in_file") _declaredWrites.Add(ResolveDeclared(RequiredText("path")), string.Empty);
-            else if (_call.Name is "apply_change_set" or "preview_change_set")
+            if (_call.Name == "write_file")
             {
+                _declaredWrites.Add(ResolveDeclared(RequiredText("path")), Text("content"));
+                // A genuine manual (no-AI) Home edit binds the reviewed BEFORE digest directly into the
+                // retained native writer preimage check, so a before-change during staging is refused.
+                if (fence is IWorkspaceManualEditFinalFence manualFence)
+                    _expectedPreimageHashes.Add(ResolveDeclared(RequiredText("path")), manualFence.ReviewedBeforeSha256);
+            }
+            else if (_call.Name == "replace_in_file") _declaredWrites.Add(ResolveDeclared(RequiredText("path")), string.Empty);
+            else if (_call.Name is "apply_change_set" or "preview_change_set")            {
                 var entries = JsonSerializer.Deserialize<DeclaredChange[]>(RequiredText("changes_json"),
                     new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? throw new ArgumentException("A changes array is required.");
                 if (entries.Length is < 1 or > 50) throw new ArgumentException("The original change set requires 1 to 50 entries.");

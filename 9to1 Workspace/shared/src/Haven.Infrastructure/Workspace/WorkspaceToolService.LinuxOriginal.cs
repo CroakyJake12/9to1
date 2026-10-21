@@ -19,10 +19,12 @@ public sealed partial class WorkspaceToolService
         SafeFileHandle? parent = null; SafeFileHandle? original = null; SafeFileHandle? beforeTarget = null; FileStream? stream = null;
         LinuxIdentity? beforeIdentity = null;
         OriginalEffect? effect = null; IAsyncDisposable? pin = null;
+        IAsyncDisposable? homeEntry = null;
         Task<IAsyncDisposable?>? actualAcquire = null; Task? actualStage = null;
         var errors = new List<Exception>(); var admitted = false; var linked = false; var renamed = false;
         var stageName = ".haven-anonymous-" + Guid.NewGuid().ToString("N"); var leaf = Path.GetFileName(path);
         var digest = WorkspaceToolOriginalDigest.Text(content);
+        var manualFence = invocation.Fence as IWorkspaceManualEditFinalFence;
         try
         {
             cancellationToken.ThrowIfCancellationRequested(); invocation.DemandOriginalLinuxRoot();
@@ -38,12 +40,23 @@ public sealed partial class WorkspaceToolService
 
             actualAcquire = invocation.Fence.AcquireOriginalCommitPinAsync(cancellationToken).AsTask();
             pin = await actualAcquire.ConfigureAwait(false) ?? throw new UnauthorizedAccessException("The actual original Linux staging pin is unavailable.");
-            invocation.DemandOriginalLinuxRoot(); invocation.Fence.DemandOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
-            original = invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
-            {
-                cancellationToken.ThrowIfCancellationRequested(); admitted = true;
-                return OpenLinuxAt(parent, ".", LinuxAnonymousWrite, 0x180); // 0600, O_TMPFILE
-            });
+            invocation.DemandOriginalLinuxRoot();
+            // The anonymous O_TMPFILE stage is private pre-commit work: the cheap pin permits it,
+            // but it never commits the reviewed file into place. The final swap below requires the
+            // real held Home entry.
+            if (manualFence is not null) manualFence.DemandOriginalStage(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
+            else invocation.Fence.DemandOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
+            original = manualFence is not null
+                ? manualFence.RunOriginalStage(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested(); admitted = true;
+                    return OpenLinuxAt(parent, ".", LinuxAnonymousWrite, 0x180); // 0600, O_TMPFILE
+                })
+                : invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested(); admitted = true;
+                    return OpenLinuxAt(parent, ".", LinuxAnonymousWrite, 0x180); // 0600, O_TMPFILE
+                });
             // Existing ordinary permission bits remain part of the SAME original file metadata;
             // a new file stays private 0600. Never manufacture privileged mode/ownership.
             if (beforeIdentity is { } metadata && LinuxFchmod(LinuxDescriptor(original), (uint)(metadata.Mode & 0x1ff)) != 0)
@@ -63,6 +76,16 @@ public sealed partial class WorkspaceToolService
                 if (!ReadLinuxIdentity(beforeTarget).SameReadVersion(preimage))
                     throw new IOException("The original Linux target metadata changed while staging.");
             }
+            // The genuine Home edit entry is acquired freshly only immediately before the final native
+            // swap — never held across asynchronous staging. If the reviewed BEFORE/target/scope or the
+            // actual Home claim has diverted, this refuses with zero effects.
+            if (manualFence is not null)
+            {
+                homeEntry = await manualFence.AcquireOriginalHomeCommitEntryAsync(cancellationToken).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("The original Home edit entry is unavailable immediately before the native swap.");
+            }
+            // The finite committed swap is guarded by the SAME held Home entry: the final effect gate
+            // refuses with zero effects when no real entry is held. Cheap pins never grant commit.
             invocation.Fence.DemandOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
             invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
             {
@@ -78,11 +101,15 @@ public sealed partial class WorkspaceToolService
             if (LinuxFsync(LinuxDescriptor(parent)) != 0)
                 throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "The original Linux parent commit flush failed.");
             invocation.DemandOriginalLinuxRoot(); DemandLinuxDescriptorPath(parent, Path.GetDirectoryName(path)!);
-            DemandLinuxDescriptorPath(original, path);
+            // The anonymous O_TMPFILE staged hold was linked+renamed into the published path; its
+            // original fd still resolves to an anonymous dentry name, so no pathname assertion is
+            // valid on it after commit. Verify the intended path on the freshly reopened PUBLISHED
+            // leaf and require the SAME staged inode whose bytes were flushed above.
             SafeFileHandle? observed = null; var observedErrors = new List<Exception>();
             try
             {
                 observed = OpenLinuxAt(parent, leaf, LinuxCloseOnExec | LinuxNonBlocking);
+                DemandLinuxDescriptorPath(observed, path);
                 if (!ReadLinuxIdentity(observed).SameFile(originalIdentity)) throw new IOException("The Linux committed target is not the same staged inode.");
             }
             catch (Exception error) { AddOriginalErrors(observedErrors, null, error); }
@@ -112,6 +139,9 @@ public sealed partial class WorkspaceToolService
             Task? actualPinClose = null;
             try { if (pin is not null) { actualPinClose = pin.DisposeAsync().AsTask(); await actualPinClose.ConfigureAwait(false); } }
             catch (Exception error) { AddOriginalErrors(errors, actualPinClose, error); }
+            Task? actualHomeClose = null;
+            try { if (homeEntry is not null) { actualHomeClose = homeEntry.DisposeAsync().AsTask(); await actualHomeClose.ConfigureAwait(false); } }
+            catch (Exception error) { AddOriginalErrors(errors, actualHomeClose, error); }
             if (effect is not null) invocation.FinishEffect(effect, admitted, renamed, renamed, eligible: renamed && errors.Count == 0);
         }
         ThrowOriginalErrors(errors, actualAcquire?.IsCanceled == true || actualStage?.IsCanceled == true);

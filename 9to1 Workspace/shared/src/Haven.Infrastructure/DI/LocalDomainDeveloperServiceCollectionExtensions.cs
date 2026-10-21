@@ -61,6 +61,29 @@ public static class LocalDomainDeveloperServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddHavenOwnedDeveloperSourceEdits(this IServiceCollection services,
+        HomeLocalDomainComposition sameHome,
+        Func<IServiceProvider, IDeveloperProjectOriginalEditScopeSource> actualEdits,
+        HomeDeveloperProjectEditResourceResolver originalResolver,
+        HomeDeveloperProjectEditActionPolicySource originalPolicy)
+    {
+        ArgumentNullException.ThrowIfNull(actualEdits); ArgumentNullException.ThrowIfNull(originalResolver);
+        ArgumentNullException.ThrowIfNull(originalPolicy); RequireDomain(services, sameHome);
+        RequireAbsent(services, typeof(HomeDeveloperProjectEditAdmissionSource), typeof(IDeveloperProjectOriginalEditAdmissionSource),
+            typeof(HomeDeveloperProjectEditResourceResolver), typeof(HomeDeveloperProjectEditActionPolicySource));
+        if (services.Count(item => item.ServiceType == typeof(WorkspaceTaskRunEffectAuthority)) != 1)
+            throw new InvalidOperationException("One actual Workspace effect authority must already be configured.");
+        services.AddSingleton(originalResolver); services.AddSingleton(originalPolicy);
+        services.AddSingleton<HomeDeveloperProjectEditAdmissionSource>(provider =>
+            new(sameHome.StateStore, sameHome.Profiles, sameHome.Broker, sameHome.Permissions,
+                () => actualEdits(provider) ?? throw new InvalidOperationException("The actual Files edit-scope owner is unavailable."),
+                provider.GetRequiredService<WorkspaceTaskRunEffectAuthority>()));
+        services.AddSingleton<IDeveloperProjectOriginalEditAdmissionSource>(provider => provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>());
+        services.AddSingleton<IWorkspaceManualEditFinalFenceValidator>(provider => provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>());
+        services.AddSingleton<Func<IWorkspaceManualEditFinalFenceValidator>>(provider => () => provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>());
+        return services;
+    }
+
     public static IServiceCollection AddHavenOwnedDeveloperExecutionConsent(this IServiceCollection services,
         HomeLocalDomainComposition sameHome,
         Func<IServiceProvider, IDeveloperWorkspaceOriginalExecutionBindingSource> actualBindings,

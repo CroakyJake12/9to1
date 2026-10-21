@@ -13,7 +13,9 @@ public enum WorkspaceToolEffectKind { AtomicWrite, RollbackDelete, ProcessStart 
 /// executes a finite synchronous native Move/Delete/Start operation. No await or observer callback.</summary>
 public interface IWorkspaceToolFinalFence
 {
-    TaskRunAttemptAdmission OriginalAttempt { get; }
+    /// <summary>Task-attempt admission when this fence is AI Task-bound. Genuine manual
+    /// (no-AI) Home-edit fences supply null here — they never fabricate a task admission.</summary>
+    TaskRunAttemptAdmission? OriginalAttempt { get; }
     Guid ActionId { get; }
     string CanonicalWorkspaceRoot { get; }
     OllamaToolCall OriginalCall { get; }

@@ -80,6 +80,7 @@ public sealed partial class MainView
                     binding.HomeReadiness, binding.Files.DemandExternalOriginalRetirementJoin,
                     view => OpenOriginalDevelopmentCatalogTaskAsync(binding, view),
                     (spaceId, _) => OpenOriginalCanonicalTaskSpaceAsync(spaceId),
+                    null, null, // Shell canonical tab opens existing Task references; no manual no-AI rows here.
                     binding.ConnectionLifetime, binding.WindowLifetime, CapturePartial));
                 DemandOriginalDevelopmentCatalog(binding);
             }

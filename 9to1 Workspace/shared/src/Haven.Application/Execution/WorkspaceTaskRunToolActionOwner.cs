@@ -13,18 +13,31 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
     private readonly IPermissionOriginalEffectFence _effects;
     private readonly object _sync = new();
     private readonly HashSet<Fence> _issued = [];
+    private readonly Func<IWorkspaceManualEditFinalFenceValidator>? _manualValidator;
     public WorkspaceTaskRunEffectAuthority(TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
         IPermissionOriginalEffectFence effects)
         : this(tasks, policy, effects, null) { }
     public WorkspaceTaskRunEffectAuthority(TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
-        IPermissionOriginalEffectFence effects, Func<IWorkspaceOriginalProcessStartConsentSource>? processConsents)
+        IPermissionOriginalEffectFence effects, Func<IWorkspaceOriginalProcessStartConsentSource>? processConsents,
+        Func<IWorkspaceManualEditFinalFenceValidator>? manualValidator = null)
     {
         _processConsents = processConsents;
+        _manualValidator = manualValidator;
         if (!ReferenceEquals(policy, effects)) throw new ArgumentException("SAME central policy/effect writer gate required.");
         _tasks = tasks; _policy = policy; _effects = effects;
     }
     public bool IsIssuedOriginal(IWorkspaceToolFinalFence originalFence)
-    { lock (_sync) return originalFence is Fence original && _issued.Contains(original); }
+    {
+        lock (_sync)
+        {
+            if (originalFence is Fence original && _issued.Contains(original)) return true;
+            // Genuine manual (no-AI) Home fences are recognized only by the configured genuine Home
+            // issuer's private validator. No arbitrary fence can register itself, and no
+            // AlwaysAllow/TestFence workaround can fabricate membership.
+            var validator = _manualValidator?.Invoke();
+            return validator is not null && validator.IsIssuedOriginal(originalFence);
+        }
+    }
     internal Task ValidateOriginalToolAsync(TaskRunAttemptAdmission original, string toolName, CancellationToken token) =>
         _tasks.ValidateOriginalToolAsync(original, toolName, token);
     internal Fence IssueOriginal(TaskRunAttemptAdmission original, Guid actionId, string root,
@@ -74,15 +87,16 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
         internal async Task ValidateOriginalActionAsync(CancellationToken token)
         {
             ITaskRunToolActionPreparation preparation; ITaskRunOriginalActionAdmissionSource source;
+            var attempt = OriginalAttempt ?? throw new UnauthorizedAccessException("Original task action validation requires a genuine task attempt.");
             lock (_sync)
             {
                 if (_closed) throw new UnauthorizedAccessException("Original workspace action fence retired.");
                 preparation = _preparation ?? throw new UnauthorizedAccessException("Original preparation is not bound.");
                 source = _actionSource ?? throw new InvalidOperationException("Actual canonical action admission source is unavailable.");
             }
-            var receipt = source.RequireOriginalActionAdmission(preparation, OriginalAttempt);
+            var receipt = source.RequireOriginalActionAdmission(preparation, attempt);
             Task validation;
-            try { validation = source.ValidateOriginalActionAdmissionAsync(receipt, preparation, OriginalAttempt, token); }
+            try { validation = source.ValidateOriginalActionAdmissionAsync(receipt, preparation, attempt, token); }
             catch (OperationCanceledException error) { throw new AggregateException("Synchronous original action validation source fault.", error); }
             lock (_sync)
             {
@@ -100,10 +114,11 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
             if (_closed || _preparation is null || _actionSource is null || _actionReceipt is null ||
                 _actionValidations.Count == 0 || _actionValidations.Any(task => !task.IsCompletedSuccessfully))
                 throw new UnauthorizedAccessException("SAME successful original action validation required.");
+            var attempt = OriginalAttempt ?? throw new UnauthorizedAccessException("Original task action admission requires a genuine task attempt.");
             // Source Demand is metadata-only, without callbacks or repository/policy I/O.
-            _actionSource.DemandOriginalActionAdmission(_actionReceipt, _preparation, OriginalAttempt);
+            _actionSource.DemandOriginalActionAdmission(_actionReceipt, _preparation, attempt);
         }
-        public TaskRunAttemptAdmission OriginalAttempt { get; } = original;
+        public TaskRunAttemptAdmission? OriginalAttempt { get; } = original;
         public Guid ActionId { get; } = actionId;
         public string CanonicalWorkspaceRoot { get; } = root;
         public OllamaToolCall OriginalCall { get; } = call;
@@ -111,9 +126,9 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
         {
             // Canonical actor/model/privacy I/O occurs BEFORE native owner locks. The returned pin
             // is raw retirement custody only and never acquires Home/Files/SQLite/Context locks.
-            if (!issuer.IsIssuedOriginal(this) || OriginalAttempt.Lease is not ITaskRunAdmissionCommitLease actual) return null;
+            if (!issuer.IsIssuedOriginal(this) || OriginalAttempt is not { } attempt || attempt.Lease is not ITaskRunAdmissionCommitLease actual) return null;
             await ValidateOriginalActionAsync(token).ConfigureAwait(false);
-            await issuer._tasks.ValidateOriginalToolAsync(OriginalAttempt, OriginalCall.Name, token).ConfigureAwait(false);
+            await issuer._tasks.ValidateOriginalToolAsync(attempt, OriginalCall.Name, token).ConfigureAwait(false);
             var pin = await actual.AcquireOriginalCommitPinAsync(token).ConfigureAwait(false);
             if (pin is null) return null;
             try { await AcquireOriginalProcessStartEntryAsync(token).ConfigureAwait(false); }
@@ -180,8 +195,9 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
         public async ValueTask RevalidateOriginalReadAsync(CancellationToken token)
         {
             await ValidateOriginalActionAsync(token).ConfigureAwait(false);
+            var attempt = OriginalAttempt ?? throw new UnauthorizedAccessException("Original task read revalidation requires a genuine task attempt.");
             Task validation;
-            try { validation = issuer._tasks.ValidateOriginalToolAsync(OriginalAttempt, OriginalCall.Name, token); }
+            try { validation = issuer._tasks.ValidateOriginalToolAsync(attempt, OriginalCall.Name, token); }
             catch (OperationCanceledException error)
             { throw new AggregateException("Synchronous original read authority source fault.", error); }
             lock (_sync) _readValidations.Add(validation);

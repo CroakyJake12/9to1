@@ -18,24 +18,26 @@ public static class SpaceDevelopmentReferencesCuiDocument
 
     public const string Markup = """
         <Cui id="dev.saved-projects" version="1">
-          <Page id="dev-saved-projects-page" role="main" accessible-name="Saved development projects" font-family="Montserrat" layout="vertical" scalable-text="true" high-contrast="semantic" reduced-motion="respect">
-            <Heading level="1">Dev</Heading>
-            <Text>Open a saved project and its existing task. Opening keeps the same task and run.</Text>
-            <Row id="dev-saved-project-controls" wrap="true" accessible-name="Saved project controls">
-              <Button id="dev-refresh-saved-projects" action="dev.references.refresh" enabled="{CanRefresh}" accessible-name="Refresh saved development projects" touch-target="44">Refresh</Button>
-              <Button id="dev-open-selected-space" action="dev.references.open-space" enabled="{CanOpenSpace}" accessible-name="Open the selected Space" touch-target="44">Open Space</Button>
-            </Row>
-            <List id="dev-saved-projects" binding="Projects" role="list" accessible-name="Saved projects and original tasks" empty-text="No matching saved project is available in the selected Spaces">
-              <Article repeat="Projects" role="listitem" accessible-name="{Title}">
-                <Heading level="2" binding="Title" />
-                <Text binding="Summary" />
-                <Text binding="TaskLabel" tone="muted" />
-                <Text binding="CheckpointLabel" tone="muted" />
-                <Button action="dev.references.open-task" action-argument="{SelectionKey}" enabled="{CanOpen}" accessible-name="Open the existing task for {Title}" touch-target="44">Open task and project</Button>
-              </Article>
-            </List>
-            <Text id="dev-reference-coverage" binding="Coverage" tone="muted" accessible-name="Saved project observation coverage" />
-            <Text id="dev-reference-status" binding="Status" role="status" live="polite" accessible-name="Development project status" />
+          <Page id="dev-saved-projects-page" role="main" accessible-name="Saved development projects">
+            <Container id="dev-saved-projects-root" margin="16" Type="Vertical Stack" CellGap="12">
+              <Text id="dev-title" text="Dev" font-size="24" />
+              <Text text="Open a saved project and its existing task. Opening keeps the same task and run." text-wrapping="Wrap" />
+              <Container id="dev-saved-project-controls" Type="Horizontal Stack" CellGap="8">
+                <Button id="dev-refresh-saved-projects" action="dev.references.refresh" content="Refresh" Interactive="{Binding CanRefresh}" accessible-name="Refresh saved development projects" />
+                <Button id="dev-open-selected-space" action="dev.references.open-space" content="Open Space" Interactive="{Binding CanOpenSpace}" accessible-name="Open the selected Space" />
+              </Container>
+              <Repeat id="dev-saved-projects" Source="{Binding Projects}" As="item" Key="{Binding item.SelectionKey}">
+                <Container id="dev-saved-project-item" Type="Vertical Stack">
+                  <Text id="dev-project-title" text="{Binding item.Title}" />
+                  <Text text="{Binding item.Summary}" text-wrapping="Wrap" />
+                  <Text text="{Binding item.TaskLabel}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Text text="{Binding item.CheckpointLabel}" foreground="{Resource CuiTextSoftBrush}" />
+                  <Button id="dev-open-task" action="dev.references.open-task" action-argument="{Binding item.SelectionKey}" content="Open task and project" Interactive="{Binding item.CanOpen}" accessible-name="Open the existing task for {Binding item.Title}" />
+                </Container>
+              </Repeat>
+              <Text id="dev-reference-coverage" text="{Binding Coverage}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Saved project observation coverage" />
+              <Text id="dev-reference-status" text="{Binding Status}" accessible-name="Development project status" />
+            </Container>
           </Page>
         </Cui>
         """;

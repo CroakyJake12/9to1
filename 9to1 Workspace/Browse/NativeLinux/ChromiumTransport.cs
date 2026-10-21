@@ -146,11 +146,15 @@ internal sealed class ChromiumClient : IChromiumEndpoint
     public async Task<string> CreateTargetAsync(string url, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(url);
+        // The target is a normal (non-new-window) foreground tab owned by this Haven
+        // browser; installed Chromium rejects window bounds on such targets with
+        // "Target position can only be set for new windows". Bounds are also
+        // unnecessary here: the surface viewport is sized by the engine's
+        // Page.startScreencast maxWidth/maxHeight, not by Target.createTarget. Send
+        // only the url so the payload is accepted by real Chromium.
         var parameters = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
-            ["url"] = url,
-            ["width"] = 1280,
-            ["height"] = 800
+            ["url"] = url
         };
         var result = await SendAsync(null, "Target.createTarget", parameters, cancellationToken).ConfigureAwait(false);
         return result.GetProperty("targetId").GetString()!;

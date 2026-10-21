@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace HavenOS.Apps.Dev;
@@ -8,6 +9,11 @@ public interface IDeveloperWorkspaceStore
     Task<DeveloperOperationResult<DeveloperWorkspace>> CreateAsync(DeveloperWorkspace workspace, CancellationToken cancellationToken = default);
     Task<DeveloperOperationResult<DeveloperWorkspace>> GetAsync(Guid workspaceId, CancellationToken cancellationToken = default);
     Task<DeveloperOperationResult<DeveloperWorkspace>> SaveAsync(DeveloperWorkspace workspace, long expectedRevision, CancellationToken cancellationToken = default);
+
+    /// <summary>Enumerates the saved workspace identities in this store (metadata only; no READ or
+    /// execution authority, never a grant). Stores without a census observe an empty set.</summary>
+    Task<DeveloperOperationResult<IReadOnlyList<DeveloperWorkspace>>> ListAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult(DeveloperOperationResult<IReadOnlyList<DeveloperWorkspace>>.Success(Array.Empty<DeveloperWorkspace>()));
 }
 
 /// <summary>
@@ -106,6 +112,49 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
             return StorageFailure<DeveloperWorkspace>(workspaceId, exception);
         }
     }
+
+    /// <summary>Enumerates the saved workspace metadata files in this store. It is an observation
+    /// of once-created workspace identities only; it grants no READ, source-selection or execution
+    /// authority. Unreadable/unsupported files are skipped so the view still lists the rest, but a
+    /// stored workspace is never assumed current — callers re-read and revalidate a specific saved
+    /// reference before opening it.</summary>
+    public async Task<DeveloperOperationResult<IReadOnlyList<DeveloperWorkspace>>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        string[] paths;
+        try
+        {
+            if (!Directory.Exists(_workspaceDirectory)) return DeveloperOperationResult<IReadOnlyList<DeveloperWorkspace>>.Success(Array.Empty<DeveloperWorkspace>());
+            paths = Directory.GetFiles(_workspaceDirectory, "*.json", SearchOption.TopDirectoryOnly);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return StorageFailureList(exception);
+        }
+        var workspaces = new List<DeveloperWorkspace>();
+        foreach (var path in paths)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Guid id;
+            try { id = Guid.Parse(Path.GetFileNameWithoutExtension(path)); }
+            catch (Exception) { continue; } // Save a non-workspace file; never treat it as a grant.
+            try
+            {
+                await using var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    16 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                using var document = await JsonDocument.ParseAsync(input, cancellationToken: cancellationToken).ConfigureAwait(false);
+                var decoded = DecodeOriginalDocument(document.RootElement, id);
+                if (decoded.Succeeded && decoded.Value is not null) workspaces.Add(decoded.Value);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (Exception) { continue; }
+        }
+        return DeveloperOperationResult<IReadOnlyList<DeveloperWorkspace>>.Success(workspaces);
+    }
+
+    private static DeveloperOperationResult<IReadOnlyList<DeveloperWorkspace>> StorageFailureList(Exception exception) =>
+        DeveloperOperationResult<IReadOnlyList<DeveloperWorkspace>>.Failure(DeveloperOperationErrorCode.StorageUnavailable,
+            exception is UnauthorizedAccessException ? "Dev cannot access its workspace-data location." :
+            "Dev could not read its workspace-data directory.", string.Empty, recoverable: true, retryable: exception is IOException);
 
     /// <summary>Decode already observed metadata with this store's maintained schema.
     /// This performs no IO and grants no READ, source-selection or execution authority.</summary>
