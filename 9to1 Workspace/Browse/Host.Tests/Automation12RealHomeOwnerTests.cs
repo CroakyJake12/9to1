@@ -59,12 +59,12 @@ public sealed class Automation12RealHomeOwnerTests
         var resolver = new HomeAutomationRunResourceResolver(() => repo, () => graphs);
 
         var scope = new ResourceScope("automation.run", graphId.ToString("D"), "12", ResourceAccess.Execute);
-        var positive = await resolver.EvaluateAsync(actor, HomeAutomationRunResourceResolver.RunEffectAction, scope, token).WaitAsync(Bound, token);
+        var positive = await resolver.EvaluateAsync(actor, HomeAutomationRunResourceResolver.RunEffectAction, scope, token).AsTask().WaitAsync(Bound, token);
         Assert.True(positive.Allowed, positive.Code);
 
         // Nonexistent object must be denied despite a well-formed id/revision.
         var unknown = await resolver.EvaluateAsync(actor, HomeAutomationRunResourceResolver.RunEffectAction,
-            new ResourceScope("automation.run", Guid.NewGuid().ToString("D"), "12", ResourceAccess.Execute), token).WaitAsync(Bound, token);
+            new ResourceScope("automation.run", Guid.NewGuid().ToString("D"), "12", ResourceAccess.Execute), token).AsTask().WaitAsync(Bound, token);
         Assert.False(unknown.Allowed);
 
         // Other-profile object must be denied even though the id/revision/action are well-formed.
@@ -76,17 +76,17 @@ public sealed class Automation12RealHomeOwnerTests
         var foreignRepo = new FakeAutomationRepository([foreignDefinition]);
         var foreignResolver = new HomeAutomationRunResourceResolver(() => foreignRepo, () => graphs);
         var foreign = await foreignResolver.EvaluateAsync(actor, HomeAutomationRunResourceResolver.RunEffectAction,
-            new ResourceScope("automation.run", foreignDefinition.Id.ToString("D"), "12", ResourceAccess.Execute), token).WaitAsync(Bound, token);
+            new ResourceScope("automation.run", foreignDefinition.Id.ToString("D"), "12", ResourceAccess.Execute), token).AsTask().WaitAsync(Bound, token);
         Assert.False(foreign.Allowed);
 
         // Stale revision (not the current Active) must be denied: no persisted pin to fall back on.
         var stale = await resolver.EvaluateAsync(actor, HomeAutomationRunResourceResolver.RunEffectAction,
-            new ResourceScope("automation.run", graphId.ToString("D"), "11", ResourceAccess.Execute), token).WaitAsync(Bound, token);
+            new ResourceScope("automation.run", graphId.ToString("D"), "11", ResourceAccess.Execute), token).AsTask().WaitAsync(Bound, token);
         Assert.False(stale.Allowed);
 
         // No canonical catalogue -> fail closed, never grant.
         var unwired = await new HomeAutomationRunResourceResolver().EvaluateAsync(actor,
-            HomeAutomationRunResourceResolver.RunEffectAction, scope, token).WaitAsync(Bound, token);
+            HomeAutomationRunResourceResolver.RunEffectAction, scope, token).AsTask().WaitAsync(Bound, token);
         Assert.False(unwired.Allowed);
     }
 
@@ -115,14 +115,14 @@ public sealed class Automation12RealHomeOwnerTests
         var repoWithPin = new FakeAutomationRepository([definition], [waitingRun]);
         var withPin = new HomeAutomationRunResourceResolver(() => repoWithPin, () => graphs);
         var resumePin = await withPin.EvaluateAsync(actor, HomeAutomationRunResourceResolver.RunEffectAction,
-            new ResourceScope("automation.run", graphId.ToString("D"), "4", ResourceAccess.Execute), token).WaitAsync(Bound, token);
+            new ResourceScope("automation.run", graphId.ToString("D"), "4", ResourceAccess.Execute), token).AsTask().WaitAsync(Bound, token);
         Assert.True(resumePin.Allowed, resumePin.Code);
 
         // The SAME scope shape with no persisted pin stays refused: a fresh stale V4 is not current.
         var repoNoPin = new FakeAutomationRepository([definition]);
         var noPinResolver = new HomeAutomationRunResourceResolver(() => repoNoPin, () => graphs);
         var noPin = await noPinResolver.EvaluateAsync(actor, HomeAutomationRunResourceResolver.RunEffectAction,
-            new ResourceScope("automation.run", graphId.ToString("D"), "4", ResourceAccess.Execute), token).WaitAsync(Bound, token);
+            new ResourceScope("automation.run", graphId.ToString("D"), "4", ResourceAccess.Execute), token).AsTask().WaitAsync(Bound, token);
         Assert.False(noPin.Allowed);
         Assert.Contains("REVISION_NOT_CURRENT", noPin.Code, StringComparison.Ordinal);
     }
@@ -141,7 +141,7 @@ public sealed class Automation12RealHomeOwnerTests
         var adapter4 = BuildAdapter(store, fx, activeRevision: 4, historicalRevisions: [], authority);
         var registry4 = BuildRegistry(adapter4, fx, activeRevision: 4);
         var request4 = ActivationRequest(fx, expectedRevision: 4) with { ParticipantId = "local-profile:actor-1" };
-        var activation4 = await registry4.ActivateAsync(request4, token).WaitAsync(Bound, token);
+        var activation4 = await registry4.ActivateAsync(request4, token).AsTask().WaitAsync(Bound, token);
         Assert.True(activation4.Succeeded, activation4.Code);
         var all4 = await store.GetAllAsync(token).WaitAsync(Bound, token);
         Assert.Single(all4);
@@ -150,7 +150,7 @@ public sealed class Automation12RealHomeOwnerTests
         var adapter5 = BuildAdapter(store, fx, activeRevision: 5, historicalRevisions: [4], authority);
         var registry5 = BuildRegistry(adapter5, fx, activeRevision: 5);
         var request5 = ActivationRequest(fx, expectedRevision: 5) with { ParticipantId = "local-profile:actor-1" };
-        var activation5 = await registry5.ActivateAsync(request5, token).WaitAsync(Bound, token);
+        var activation5 = await registry5.ActivateAsync(request5, token).AsTask().WaitAsync(Bound, token);
         Assert.True(activation5.Succeeded, activation5.Code);
         var all5 = await store.GetAllAsync(token).WaitAsync(Bound, token);
         var maintained = Assert.Single(all5); // one maintained Automation, stable id
@@ -172,7 +172,7 @@ public sealed class Automation12RealHomeOwnerTests
         var registry = BuildRegistry(adapter, fx, activeRevision: 4);
         var request = ActivationRequest(fx, expectedRevision: 4) with { ParticipantId = "local-profile:actor-1" };
 
-        var activation = await registry.ActivateAsync(request, token).WaitAsync(Bound, token);
+        var activation = await registry.ActivateAsync(request, token).AsTask().WaitAsync(Bound, token);
         Assert.True(activation.Succeeded, activation.Code);
         Assert.Equal(GraphRunOutcome.Completed, activation.EffectiveOutcome);
         // Trigger + Action A + Action B each evaluated once -> exactly three shared budget steps.
@@ -191,6 +191,7 @@ public sealed class Automation12RealHomeOwnerTests
     public async Task Shipping_composition_wires_real_home_gateway_registry_authority_and_adapter()
     {
         var root = Directory.CreateTempSubdirectory("haven-automation12-shipping-").FullName;
+        var previousDataDir = Environment.GetEnvironmentVariable("HAVEN_DATA_DIR");
         try
         {
             Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", root);
@@ -249,9 +250,206 @@ public sealed class Automation12RealHomeOwnerTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", null);
+            Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", previousDataDir);
             try { Directory.Delete(root, recursive: true); } catch (IOException) { }
         }
+    }
+
+    // ---- Test 5b: the registered gateway itself (production caller) + real Home approval, fresh + resume ----
+
+    [Fact]
+    public async Task Shipping_real_gateway_production_caller_real_home_approval_fresh_and_resume_B_after_newer_active()
+    {
+        var root = Directory.CreateTempSubdirectory("haven-automation12-gw-").FullName;
+        var previousDataDir = Environment.GetEnvironmentVariable("HAVEN_DATA_DIR");
+        try
+        {
+            Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", root);
+            var paths = new AppPaths();
+            var principal = new ScriptedPrincipal { Current = "test-principal-a" };
+            var now = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero);
+            var fx = BuildWaitGraph();
+
+            // ---- Fresh composition over the REAL SQLite store ----
+            var database = new SqliteDatabase(new AppPaths());
+            await database.InitializeAsync(token).WaitAsync(Bound, token);
+            var repo = new AutomationRepository(database);
+            var automationId = Guid.NewGuid();
+            var (schemas4, graphDoc4) = BuildGraphDocument(fx, activeRevision: 4);
+            var graphs4 = new StoredGraphRepository(graphDoc4, fx.GraphId, activeRevision: 4, historicalRevisions: []);
+            var runner4 = new ScheduledTaskRunner(repo, new FakeModelClient(""), new ScheduledTaskScheduleCalculator(), null,
+                new BuiltInAutomationActionNodeExecutor(), continuationStore: repo);
+
+            var home4 = new HomeNativeWindowsComposition(
+                new FileHomeCoreStateStore(Path.Combine(root, "home.json")),
+                principal, paths, new HomeNativeWindowsEndpoint("haven-automation12-gw-fresh"),
+                originalResourceResolvers: WindowsHomeDomainServiceCollectionExtensions.AutomationRunResourceResolvers(
+                    () => repo, () => graphs4),
+                originalActionPolicies: WindowsHomeDomainServiceCollectionExtensions.AutomationRunActionPolicies());
+
+            var services4 = new ServiceCollection();
+            services4.AddSingleton<IAppPaths>(paths);
+            services4.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
+            services4.AddSingleton<IAutomationRepository>(repo);
+            services4.AddSingleton<ScheduledTaskRunner>(runner4);
+            services4.AddSingleton<IVersionedNodeGraphRepository>(graphs4);
+            services4.AddHavenOwnedWindowsHomeDomain(home4, paths, principal);
+            services4.AddAutomationShipping(home4);
+            var sp4 = services4.BuildServiceProvider();
+
+            var gateway4 = sp4.GetRequiredService<AutomationShippingComposition.IAutomationRunGateway>();
+            var authority4 = (HomeAutomationRunAuthority)sp4.GetRequiredService<IAutomationRunAuthority>();
+            var permissions4 = sp4.GetRequiredService<HomePermissionTrustService>();
+            var actor = await home4.Profiles.GetCurrentAsync(token).AsTask().WaitAsync(Bound, token)
+                ?? throw new InvalidOperationException("Real Home profile unavailable.");
+
+            // Seed the maintained automation owned by the current actor so the real resolver grants it.
+            var owned = WaitDefinition(automationId, fx, now, pinRevision: 4) with
+            {
+                OwnerBinding = new AutomationOwnerBinding(Guid.NewGuid(), actor.ProfileId, actor.ActorId,
+                    actor.AuthenticationRevision, null, null)
+            };
+            await repo.UpsertAsync(owned, token).WaitAsync(Bound, token);
+
+            // Fresh request + the EXACT operation the adapter will admit under real Home authority.
+            var freshRequest = ActivationRequest(fx, expectedRevision: 4) with
+            {
+                ParticipantId = actor.ActorId,
+                SessionId = "session-gw-fresh",
+                Variables = JsonSerializer.SerializeToElement(new { run = Guid.NewGuid() })
+            };
+            var freshContext = new AutomationRunAuthorityContext(fx.GraphId, 4,
+                HomeAutomationRunResourceResolver.RunEffectAction, freshRequest.SessionId, freshRequest.EntityId,
+                freshRequest.ParticipantId,
+                [new ResourceScope("automation.run", fx.GraphId.ToString("D"), "4", ResourceAccess.Execute)],
+                freshRequest.Variables.Clone());
+
+            // Real Home ADMISSION then a genuine Accept of that original review.
+            var admitted = await authority4.AuthorizeAsync(freshContext, token).AsTask().WaitAsync(Bound, token);
+            Assert.True(admitted.Allowed, admitted.Code);
+            Assert.True((await permissions4.DecideAsync(admitted.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+
+            // Invoke the REAL registered gateway: controlled A runs, then durable Wait yields.
+            var activation = await gateway4.ActivateAsync(freshRequest, token).AsTask().WaitAsync(Bound, token);
+            Assert.True(activation.Succeeded, activation.Code);
+            Assert.Equal(GraphRunOutcome.Yielded, activation.EffectiveOutcome);
+            // Trigger + Action A evaluated before the Wait yield -> exactly two consumed steps.
+            Assert.Equal(2, activation.StepsConsumed);
+            var waiting = Assert.Single(await repo.GetRunsAsync(automationId, 10, token).WaitAsync(Bound, token));
+            Assert.Equal(AutomationRunStatus.Waiting, waiting.Status);
+            Assert.Empty(authority4.PendingAuditFailures);
+
+            // ---- Reopen the SAME store; a NEWER Active V5 now supersedes V4, which is still pinned ----
+            var reopened = new AutomationRepository(new SqliteDatabase(new AppPaths()));
+            var (schemas5, graphDoc5) = BuildGraphDocument(fx, activeRevision: 5);
+            var graphs5 = new StoredGraphRepository(graphDoc5, fx.GraphId, activeRevision: 5, historicalRevisions: [4]);
+            var runner5 = new ScheduledTaskRunner(reopened, new FakeModelClient(""), new ScheduledTaskScheduleCalculator(), null,
+                new BuiltInAutomationActionNodeExecutor(), continuationStore: reopened);
+            var home5 = new HomeNativeWindowsComposition(
+                new FileHomeCoreStateStore(Path.Combine(root, "home5.json")),
+                principal, paths, new HomeNativeWindowsEndpoint("haven-automation12-gw-resume"),
+                originalResourceResolvers: WindowsHomeDomainServiceCollectionExtensions.AutomationRunResourceResolvers(
+                    () => reopened, () => graphs5),
+                originalActionPolicies: WindowsHomeDomainServiceCollectionExtensions.AutomationRunActionPolicies());
+            var services5 = new ServiceCollection();
+            services5.AddSingleton<IAppPaths>(paths);
+            services5.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
+            services5.AddSingleton<IAutomationRepository>(reopened);
+            services5.AddSingleton<ScheduledTaskRunner>(runner5);
+            services5.AddSingleton<IVersionedNodeGraphRepository>(graphs5);
+            services5.AddHavenOwnedWindowsHomeDomain(home5, paths, principal);
+            services5.AddAutomationShipping(home5);
+            var sp5 = services5.BuildServiceProvider();
+            var gateway5 = sp5.GetRequiredService<AutomationShippingComposition.IAutomationRunGateway>();
+            var authority5 = (HomeAutomationRunAuthority)sp5.GetRequiredService<IAutomationRunAuthority>();
+            var permissions5 = sp5.GetRequiredService<HomePermissionTrustService>();
+
+            // Resume request/actor identity: same participant/session/variables as the stored run.
+            var resumeRequest = ActivationRequest(fx, expectedRevision: 4) with
+            {
+                ParticipantId = actor.ActorId,
+                SessionId = "session-gw-fresh",
+                Variables = freshRequest.Variables.Clone()
+            };
+            var envelope = await BuildEnvelopeFromStored(reopened, automationId, fx, resumeRequest).WaitAsync(Bound, token);
+
+            // Pre-approve the resume operation (automation id, pinned V4) under real Home authority.
+            var resumeContext = new AutomationRunAuthorityContext(automationId, 4,
+                HomeAutomationRunResourceResolver.RunEffectAction, resumeRequest.SessionId, resumeRequest.EntityId,
+                resumeRequest.ParticipantId,
+                [new ResourceScope("automation.run", automationId.ToString("D"), "4", ResourceAccess.Execute)],
+                resumeRequest.Variables.Clone());
+            var resumeAdmitted = await authority5.AuthorizeAsync(resumeContext, token).AsTask().WaitAsync(Bound, token);
+            Assert.True(resumeAdmitted.Allowed, resumeAdmitted.Code);
+            Assert.True((await permissions5.DecideAsync(resumeAdmitted.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+
+            // Resume through the REAL gateway: B runs after newer Active, SAME cumulative budget.
+            var resume = await gateway5.ResumeAsync(envelope, resumeRequest, token).AsTask().WaitAsync(Bound, token);
+            Assert.True(resume.Succeeded, resume.Code);
+            Assert.Equal(GraphRunOutcome.Completed, resume.EffectiveOutcome);
+            // Trigger + A + Wait + B = exactly four total steps across the durable run.
+            Assert.Equal(4, resume.StepsConsumed);
+            var finalRow = Assert.Single(await reopened.GetRunsAsync(automationId, 10, token).WaitAsync(Bound, token));
+            Assert.Equal(AutomationRunStatus.Succeeded, finalRow.Status);
+            Assert.Empty(authority5.PendingAuditFailures);
+
+            // The production scheduler owns the same gateway instance and drains cleanly (no held audits).
+            var scheduler = sp5.GetRequiredService<AutomationShippingScheduler>();
+            Assert.Same(scheduler.Gateway, gateway5);
+            Assert.Equal(0, await scheduler.DrainPendingAuditsAsync(token).WaitAsync(Bound, token));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", previousDataDir);
+            try { Directory.Delete(root, recursive: true); } catch (IOException) { }
+        }
+    }
+
+    private static async Task<GraphRuntimeContinuation> BuildEnvelopeFromStored(
+        AutomationRepository store, Guid automationId, GraphFixture fx, GraphActivationRequest request)
+    {
+        var runs = await store.GetRunsAsync(automationId, 10, CancellationToken.None).ConfigureAwait(false);
+        var run = runs.FirstOrDefault(r => r.Status == AutomationRunStatus.Waiting);
+        if (run is null)
+            throw new InvalidOperationException("Could not locate the suspended Run for envelope derivation.");
+        if (!AutomationGraphContinuationCodec.TryDeserialize(run.ContinuationDescriptorJson, out var cont) ||
+            cont.PendingYield is not { } pending)
+            throw new InvalidOperationException("The stored Run has no pending yield.");
+
+        var nodeId = pending.Kind == AutomationGraphYieldKind.Approval
+            ? (pending.ApprovalNodeId ?? Guid.Empty) : (pending.YieldNodeId ?? Guid.Empty);
+        var condition = DeriveCondition(cont);
+        var ownerState = DeriveOwnerState(cont);
+        var kind = pending.Kind == AutomationGraphYieldKind.Approval ? GraphContinuationKind.Approval : GraphContinuationKind.Wait;
+        var binding = new GraphContinuationAdmission(run.Id.ToString(), kind, nodeId, cont.ResumeAt, condition, ownerState,
+            request.StepLimit, cont.ConsumedBudget);
+
+        var (_, graph) = BuildGraphDocument(fx, activeRevision: request.ExpectedRevision);
+        var active = graph with { Revision = request.ExpectedRevision };
+        var digest = GraphContinuationDigest.Compute(active, request.Variables, binding);
+
+        return new GraphRuntimeContinuation(
+            GraphRuntimeContinuation.CurrentProtocolVersion,
+            AutomationNodeGraphDurableAdapter.GraphTypeValue,
+            run.Id.ToString(),
+            fx.GraphId, request.ExpectedRevision, "automations", 1, request.StartNodeId, request.EventType,
+            request.SessionId, request.EntityId, request.ParticipantId,
+            kind, nodeId, cont.ResumeAt, condition, ownerState, cont.ConsumedBudget, request.StepLimit, digest);
+    }
+
+    private static JsonElement DeriveCondition(AutomationGraphContinuation c)
+    {
+        var condition = c.PendingYield?.Condition;
+        if (string.IsNullOrWhiteSpace(condition)) return JsonSerializer.SerializeToElement(new { });
+        try { using var doc = JsonDocument.Parse(condition); return doc.RootElement.Clone(); }
+        catch (JsonException) { return JsonSerializer.SerializeToElement(new { value = condition }); }
+    }
+
+    private static JsonElement DeriveOwnerState(AutomationGraphContinuation c)
+    {
+        var trace = c.Trace.Select(item => string.Format("{0}:{1}", item.NodeId.ToString("D"), (int)item.Status)).ToArray();
+        var frontier = c.Frontier.Select(id => id.ToString("D")).ToArray();
+        return JsonSerializer.SerializeToElement(new { trace, frontier });
     }
 
     // ---- Test 6: real Home authority — pending -> approved once -> effect completes ----
@@ -262,16 +460,16 @@ public sealed class Automation12RealHomeOwnerTests
         using var rig = await BuildRealHomeAsync(principal: "test-principal-a");
 
         // Admission creates a real pending Home permission submission (never auto-granted).
-        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).WaitAsync(Bound, token);
+        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.True(admitted.Allowed, admitted.Code);
         Assert.False(string.IsNullOrWhiteSpace(admitted.RequestId));
         var pending = await rig.Permissions.GetAuthorizationAsync(admitted.RequestId, token).WaitAsync(Bound, token);
         Assert.Equal(HomePermissionRequestState.PendingApproval, pending.State);
 
         // The single real decision approves the ORIGINAL review; the effect boundary then proceeds.
-        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
 
-        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).WaitAsync(Bound, token);
+        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.True(effect.Allowed, effect.Code);
         Assert.Equal("HOME_AUTOMATION_RUN_EFFECT_AUTHORIZED", effect.Code);
 
@@ -288,11 +486,11 @@ public sealed class Automation12RealHomeOwnerTests
     {
         using var rig = await BuildRealHomeAsync(principal: "test-principal-a");
 
-        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).WaitAsync(Bound, token);
+        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.True(admitted.Allowed, admitted.Code);
-        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Decline)).Succeeded);
+        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Decline, cancellationToken: token)).Succeeded);
 
-        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).WaitAsync(Bound, token);
+        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.False(effect.Allowed);
         Assert.Contains("UNAVAILABLE", effect.Code, StringComparison.Ordinal);
         Assert.Empty(rig.Authority.PendingAuditFailures);
@@ -305,13 +503,13 @@ public sealed class Automation12RealHomeOwnerTests
     {
         using var rig = await BuildRealHomeAsync(principal: "test-principal-a");
 
-        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).WaitAsync(Bound, token);
+        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.True(admitted.Allowed, admitted.Code);
-        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
 
         // The operating-system principal changes to a different profile before the effect boundary.
         rig.Principal.Current = "test-principal-b";
-        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).WaitAsync(Bound, token);
+        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.False(effect.Allowed);
         Assert.Contains("ACTOR_CHANGED", effect.Code, StringComparison.Ordinal);
         Assert.Empty(rig.Authority.PendingAuditFailures);
@@ -328,17 +526,17 @@ public sealed class Automation12RealHomeOwnerTests
             [new ResourceScope("automation.run", rig.GraphId.ToString("D"), rig.ActiveRevision.ToString(), ResourceAccess.Execute)],
             JsonSerializer.SerializeToElement(new { run = Guid.NewGuid() }));
 
-        var a = await rig.Authority.AuthorizeAsync(rig.Context, token).WaitAsync(Bound, token);
-        var b = await rig.Authority.AuthorizeAsync(secondContext, token).WaitAsync(Bound, token);
+        var a = await rig.Authority.AuthorizeAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
+        var b = await rig.Authority.AuthorizeAsync(secondContext, token).AsTask().WaitAsync(Bound, token);
         Assert.True(a.Allowed);
         Assert.True(b.Allowed);
         Assert.NotEqual(a.RequestId, b.RequestId); // distinct operations, distinct Home reviews
 
-        Assert.True((await rig.Permissions.DecideAsync(a.RequestId, HomeApprovalChoice.Accept)).Succeeded);
-        Assert.True((await rig.Permissions.DecideAsync(b.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        Assert.True((await rig.Permissions.DecideAsync(a.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        Assert.True((await rig.Permissions.DecideAsync(b.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
 
-        var effectA = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).WaitAsync(Bound, token);
-        var effectB = await rig.Authority.AuthorizeEffectAsync(secondContext, token).WaitAsync(Bound, token);
+        var effectA = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
+        var effectB = await rig.Authority.AuthorizeEffectAsync(secondContext, token).AsTask().WaitAsync(Bound, token);
         Assert.True(effectA.Allowed, effectA.Code);
         Assert.True(effectB.Allowed, effectB.Code);
 
@@ -355,10 +553,10 @@ public sealed class Automation12RealHomeOwnerTests
     {
         using var rig = await BuildRealHomeAsync(principal: "test-principal-a");
 
-        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).WaitAsync(Bound, token);
+        var admitted = await rig.Authority.AuthorizeAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.True(admitted.Allowed, admitted.Code);
-        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Accept)).Succeeded);
-        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).WaitAsync(Bound, token);
+        Assert.True((await rig.Permissions.DecideAsync(admitted.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var effect = await rig.Authority.AuthorizeEffectAsync(rig.Context, token).AsTask().WaitAsync(Bound, token);
         Assert.True(effect.Allowed);
 
         // Cancel-before-record: the completion audit is attempted on a cancelled token, so the broker's
@@ -412,7 +610,7 @@ public sealed class Automation12RealHomeOwnerTests
         var scripted = new ScriptedPrincipal { Current = principal };
         var store = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
         var profiles = new HomeLocalProfileIdentity(store, scripted);
-        var actor = await profiles.GetCurrentAsync(token).WaitAsync(Bound, token)
+        var actor = await profiles.GetCurrentAsync(token).AsTask().WaitAsync(Bound, token)
             ?? throw new InvalidOperationException("Real Home profile unavailable.");
 
         var graphId = Guid.NewGuid();
@@ -539,12 +737,20 @@ public sealed class Automation12RealHomeOwnerTests
 
     private static AutomationRepository NewStore(DateTimeOffset now, GraphFixture fx, Guid automationId, long pinRevision)
     {
-        Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", Directory.CreateTempSubdirectory("haven-automation12-").FullName);
-        var database = new SqliteDatabase(new AppPaths());
-        var store = new AutomationRepository(database);
-        var task = WaitDefinition(automationId, fx, now, pinRevision);
-        store.UpsertAsync(task, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
-        return store;
+        var previousDataDir = Environment.GetEnvironmentVariable("HAVEN_DATA_DIR");
+        try
+        {
+            Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", Directory.CreateTempSubdirectory("haven-automation12-").FullName);
+            var database = new SqliteDatabase(new AppPaths());
+            var store = new AutomationRepository(database);
+            var task = WaitDefinition(automationId, fx, now, pinRevision);
+            store.UpsertAsync(task, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
+            return store;
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HAVEN_DATA_DIR", previousDataDir);
+        }
     }
 
     private static AutomationDefinition WaitDefinition(Guid automationId, GraphFixture fx, DateTimeOffset now, long pinRevision)

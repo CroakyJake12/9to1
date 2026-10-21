@@ -91,7 +91,9 @@ public static class WindowsHomeDomainServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(sameHome);
-        services.AddSingleton<IAutomationRunAuthority>(new HomeAutomationRunAuthority(sameHome.Profiles, sameHome.Broker));
+        var authority = new HomeAutomationRunAuthority(sameHome.Profiles, sameHome.Broker);
+        services.AddSingleton<IAutomationRunAuthority>(authority);
+        services.AddSingleton<IAutomationRunAuditDrain>(authority);
         return services;
     }
 

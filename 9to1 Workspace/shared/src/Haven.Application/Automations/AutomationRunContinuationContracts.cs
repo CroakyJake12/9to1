@@ -209,6 +209,16 @@ public interface IAutomationRunAuthority
         bool succeeded, string code, string message, CancellationToken cancellationToken);
 }
 
+/// <summary>Explicit seam a shipping host uses to settle retained Home execution audits (claim-loser /
+/// cancel-before-record / uncertain persistence) on close, WITHOUT re-running graph effects. The real
+/// Home authority implements it; a host that does not wire Home leaves it absent so the drain is a no-op.</summary>
+public interface IAutomationRunAuditDrain
+{
+    /// <summary>Replays each retained exact detached outcome through the real broker settlement. Returns
+    /// the number of operations still unsettled after the best-effort drain.</summary>
+    Task<int> DrainPendingAuditsAsync(CancellationToken cancellationToken);
+}
+
 /// <summary>Thrown when an uncertain settlement (a durable outcome/receipt for an exact persistence
 /// operation that could not be acknowledged) cannot itself be recorded durably. It preserves BOTH the
 /// original persistence/execution cause and the independent recording failure — never a single message

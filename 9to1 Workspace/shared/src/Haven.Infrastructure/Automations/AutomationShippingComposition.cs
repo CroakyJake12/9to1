@@ -75,6 +75,16 @@ public static class AutomationShippingComposition
         services.AddSingleton<IAutomationRunGateway>(provider =>
             new NodeGraphAutomationRunGateway(provider.GetRequiredService<NodeGraphRuntimeRegistry>()));
 
+        // The real shipping consumer: the production Run/scheduler/resume entry points drive this gateway
+        // (SAME shared registry + durable adapter + real Home authority), and it owns the retained Home
+        // audit drain for clean close. This is the production caller the gateway previously lacked.
+        services.AddSingleton(provider => new AutomationShippingScheduler(
+            provider.GetRequiredService<AutomationShippingComposition.IAutomationRunGateway>(),
+            provider.GetRequiredService<IAutomationRepository>(),
+            provider.GetRequiredService<ScheduledTaskRunner>(),
+            provider.GetService<IAutomationRunAuditDrain>(),
+            provider.GetService<IAuthenticatedResourceActorSource>()));
+
         return services;
     }
 

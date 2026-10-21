@@ -294,7 +294,7 @@ public sealed class AutomationGraphDurableContinuationTests : IDisposable
 
         var continuation = new AutomationGraphContinuation(
             AutomationGraphContinuation.CurrentVersion, graphId, 4, 1, "digest", now,
-            [], [approvalNodeId], [], new Dictionary<Guid, string?>(), [], 0, AutomationGraphRunMode.Real,
+            [], [approvalNodeId], [], new Dictionary<Guid, string?>(), [], 0, 0, AutomationGraphRunMode.Real,
             null, new AutomationGraphYield(AutomationGraphYieldKind.Approval, YieldNodeId: approvalNodeId,
                 ApprovalActionJson: """{"action":"execute","summary":"transmit"}""", ApprovalNodeId: approvalNodeId));
         var runId = Guid.NewGuid();

@@ -28,6 +28,11 @@ public sealed partial class MainView
         _automationCancellation = null;
         // The same CTS is retained until the actual RunDue original has settled.
         source?.Cancel();
+        // Settle any retained Home audit (claim-loser / cancel-before-record) on close as the real
+        // shipping consumer; the authority keeps the exact detached outcome replay, never a graph effect.
+        if (_automationShipping is { } shipping && !IsDisposed)
+            _ = _originalShellWork.RunAsync(original => original.AwaitAsync(AcquireOriginalShellSynchronous(original,
+                () => shipping.DrainPendingAuditsAsync(CancellationToken.None))));
     }
 
     private Task RunDueAutomationsTickAsync() => _originalShellWork.RunAsync(RunOriginalDueAutomationsTickAsync);
@@ -39,7 +44,10 @@ public sealed partial class MainView
         var cancellationToken = cancellationSource is { IsCancellationRequested: false } ? cancellationSource.Token : CancellationToken.None;
         try
         {
-            var result = await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () => _automationRunner.RunDueAsync(DateTimeOffset.UtcNow, cancellationToken))).ConfigureAwait(true);
+            var result = await original.AwaitAsync(AcquireOriginalShellSynchronous(original, () =>
+                _automationShipping is { } shipping
+                    ? shipping.RunDueAsync(DateTimeOffset.UtcNow, cancellationToken)
+                    : _automationRunner.RunDueAsync(DateTimeOffset.UtcNow, cancellationToken))).ConfigureAwait(true);
             if (result.Started > 0)
                 _bus.Fire("Shell.Automations.DueRan");
         }

@@ -11,6 +11,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Application.Automations;
+using Haven.Infrastructure.Automations;
 
 using Haven.Browser;
 using Haven.Core;
@@ -81,6 +82,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private readonly BrowserDataService _browserData;
 
     private readonly ScheduledTaskRunner _automationRunner;
+    private readonly AutomationShippingScheduler? _automationShipping;
     private readonly ScheduledTaskScheduleCalculator _scheduleCalculator;
     private readonly UserPreferencesService _preferences;
     private readonly IPrivacyPreferenceStore _privacy;
@@ -219,7 +221,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         IModeRegistry modeRegistry,
         IModeUsageRepository modeUsage,
         IPinRepository pins,
-        AgentTaskRuntimeService? agentRuntime = null)
+        AgentTaskRuntimeService? agentRuntime = null,
+        AutomationShippingScheduler? automationShipping = null)
     {
         _eventBus = bus;
         _bus = bus;
@@ -259,6 +262,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _browserData = browserData;
 
         _automationRunner = automationRunner;
+        _automationShipping = automationShipping;
         _scheduleCalculator = scheduleCalculator;
         _preferences = preferences;
         _privacy = privacy;

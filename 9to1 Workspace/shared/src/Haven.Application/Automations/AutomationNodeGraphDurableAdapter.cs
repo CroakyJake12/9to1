@@ -316,7 +316,19 @@ public sealed class AutomationNodeGraphDurableAdapter : INodeGraphOwnerBackedCon
             run.Revision, run.Status, ownerCont.ComputeDigest());
         var claim = await _claimStore.TryAcquireRunClaimAsync(claimRequest, cancellationToken).ConfigureAwait(false);
         if (!claim.Acquired)
-            return Reject("graph.automation.claim.lost", budget);
+        {
+            // Claim-loser: zero effects ran. Settle the already-claimed Home handle honestly so it is neither
+            // stranded nor fabricated complete — this operation did not proceed because another worker won the
+            // exact SQLite claim. The retained audit (if any) surfaces via NeedsRecovery / the authority drain.
+            var claimAuditSettled = true;
+            if (effectDecision is not null)
+                claimAuditSettled = await CompleteAuthorityEffectAsync(effectContext, effectDecision, false,
+                    "graph.automation.claim.lost",
+                    "resume did not proceed; the SQLite claim was acquired by another worker", cancellationToken).ConfigureAwait(false);
+            return WithUnsettledAudit(
+                new GraphActivationResult(false, "graph.automation.claim.lost", Array.Empty<GraphRuntimeTransition>(), budget.StepsConsumed),
+                claimAuditSettled);
+        }
         var claimToken = claim.ClaimToken;
 
         AutomationRunResumeResult result;

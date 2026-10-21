@@ -305,7 +305,7 @@ public sealed class AutomationPass8UncertainSettlementAndPinTests : IDisposable
 
         var continuation = new AutomationGraphContinuation(
             AutomationGraphContinuation.CurrentVersion, graphId, 4, 1, "digest", now,
-            [], [approvalNodeId], [], new Dictionary<Guid, string?>(), [], 0, AutomationGraphRunMode.Real,
+            [], [approvalNodeId], [], new Dictionary<Guid, string?>(), [], 0, 0, AutomationGraphRunMode.Real,
             null, new AutomationGraphYield(AutomationGraphYieldKind.Approval, YieldNodeId: approvalNodeId,
                 ApprovalActionJson: """{"action":"execute","summary":"transmit"}""", ApprovalNodeId: approvalNodeId));
         var targetId = Guid.NewGuid();
@@ -408,7 +408,7 @@ public sealed class AutomationPass8UncertainSettlementAndPinTests : IDisposable
         Assert.True(await store.TryAcquireLeaseAsync(approvalAutomationId, approvalLease, now.AddMinutes(30), token));
         var approvalContinuation = new AutomationGraphContinuation(
             AutomationGraphContinuation.CurrentVersion, approvalGraphId, 4, 1, "digest", now,
-            [], [approvalNodeId], [], new Dictionary<Guid, string?>(), [], 0, AutomationGraphRunMode.Real,
+            [], [approvalNodeId], [], new Dictionary<Guid, string?>(), [], 0, 0, AutomationGraphRunMode.Real,
             null, new AutomationGraphYield(AutomationGraphYieldKind.Approval, YieldNodeId: approvalNodeId,
                 ApprovalActionJson: """{"action":"execute","summary":"transmit"}""", ApprovalNodeId: approvalNodeId));
         var approvalRunId = Guid.NewGuid();

@@ -6,6 +6,7 @@ using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Components;
+using Haven.Infrastructure.Automations;
 using Haven.Desktop.HavenUI.Components.Buttons;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +26,7 @@ public sealed class PlanScheduledTaskControl : UserControl, IDisposable
     private readonly IAutomationRepository? _repository;
     private readonly ScheduledTaskScheduleCalculator? _schedules;
     private readonly ScheduledTaskRunner? _runner;
+    private readonly AutomationShippingScheduler? _automationShipping;
     private readonly HavenTextInput _name = new() { PlaceholderText = "Task name" };
     private readonly HavenMultilineInput _instruction = new()
     {
@@ -56,6 +58,7 @@ public sealed class PlanScheduledTaskControl : UserControl, IDisposable
             _repository = App.Services.GetService<IAutomationRepository>();
             _schedules = App.Services.GetService<ScheduledTaskScheduleCalculator>();
             _runner = App.Services.GetService<ScheduledTaskRunner>();
+            _automationShipping = App.Services.GetService<AutomationShippingScheduler>();
         }
 
         _onceDate.SelectedDate = DateTime.Today.AddDays(1);
@@ -299,6 +302,15 @@ public sealed class PlanScheduledTaskControl : UserControl, IDisposable
 
     private async Task RunNowAsync(AutomationDefinition definition)
     {
+        if (_automationShipping is not null)
+        {
+            var run = await _automationShipping.RunNowAsync(definition, DateTimeOffset.UtcNow, CancellationToken.None).ConfigureAwait(false);
+            await Dispatcher.UIThread.InvokeAsync(() => _status.Text = run.Status == AutomationRunStatus.Succeeded
+                ? $"{definition.Name} finished. {SummariseRun(run)}"
+                : $"{definition.Name} did not finish successfully. {SummariseRun(run)}");
+            await RefreshAsync().ConfigureAwait(false);
+            return;
+        }
         if (_runner is null)
         {
             _status.Text = "The Tasks runner is unavailable.";

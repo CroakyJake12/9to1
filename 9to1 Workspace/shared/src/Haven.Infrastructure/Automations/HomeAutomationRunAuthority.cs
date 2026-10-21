@@ -34,7 +34,7 @@ namespace Haven.Infrastructure.Automations;
 /// actor, and never uses <c>WithPermission(bool)</c> as authority. When Home/permission/provenance is absent
 /// every decision fails closed.
 /// </summary>
-public sealed class HomeAutomationRunAuthority : IAutomationRunAuthority
+public sealed class HomeAutomationRunAuthority : IAutomationRunAuthority, IAutomationRunAuditDrain
 {
     private const string TargetAppId = "automations";
 
@@ -43,6 +43,9 @@ public sealed class HomeAutomationRunAuthority : IAutomationRunAuthority
     private readonly ConcurrentDictionary<string, Entry> _bindings = new();
     private readonly ConcurrentDictionary<string, HomeResourceExecutionCapability> _active = new();
     private readonly ConcurrentDictionary<string, PendingAudit> _pendingAudits = new();
+    // Serializes overlapping/identical admits so concurrent identical contexts coalesce into ONE original Home
+    // review/admission (never two broker submissions racing to overwrite each other).
+    private readonly System.Threading.SemaphoreSlim _authorizeGate = new(1, 1);
 
     private sealed record Entry(AuthenticatedResourceActor Actor, string RequestId);
     // Retains the EXACT detached terminal outcome with the same capability before cancellable completion, so a
@@ -70,37 +73,51 @@ public sealed class HomeAutomationRunAuthority : IAutomationRunAuthority
 
         var key = OperationKey(context);
 
-        // Retain the EXACT original Home review/operation. A later retry of the same operation observes this
-        // same request — never a freshly minted broker Guid — so a manual review can admit the original run.
-        if (_bindings.TryGetValue(key, out var retained))
-        {
-            if (!string.Equals(retained.Actor.ActorId, actor.ActorId, StringComparison.Ordinal))
-                return Deny("HOME_AUTOMATION_RUN_ACTOR_CHANGED");
-            return new AutomationRunAuthorityDecision(true, "HOME_AUTOMATION_RUN_ADMITTED", actor.ActorId, retained.RequestId);
-        }
-
-        HomePermissionAuthorization authorization;
+        // Serialize overlapping/identical admits so two simultaneous identical contexts coalesce into ONE
+        // original Home review/admission — never two concurrent broker submissions racing to overwrite each
+        // other. Independent operations (different key) also serialize here, which is acceptable for the
+        // short, synchronous review-admission step and preserves exact original custody.
+        await _authorizeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            authorization = await _broker.AuthorizeForActorAsync(actor, TargetAppId, context.ActionId,
-                context.Scopes, context.Arguments, "Run an automation graph effect", null, context.SessionId, cancellationToken)
-                .ConfigureAwait(false);
+            // Retain the EXACT original Home review/operation. A later retry of the same operation observes this
+            // same request — never a freshly minted broker Guid — so a manual review can admit the original run.
+            if (_bindings.TryGetValue(key, out var retained))
+            {
+                if (!string.Equals(retained.Actor.ActorId, actor.ActorId, StringComparison.Ordinal))
+                    return Deny("HOME_AUTOMATION_RUN_ACTOR_CHANGED");
+                return new AutomationRunAuthorityDecision(true, "HOME_AUTOMATION_RUN_ADMITTED", actor.ActorId, retained.RequestId);
+            }
+
+            HomePermissionAuthorization authorization;
+            try
+            {
+                authorization = await _broker.AuthorizeForActorAsync(actor, TargetAppId, context.ActionId,
+                    context.Scopes, context.Arguments, "Run an automation graph effect", null, context.SessionId, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException)
+            {
+                return Deny("HOME_AUTOMATION_RUN_DENIED");
+            }
+            if (authorization is null || string.IsNullOrWhiteSpace(authorization.RequestId))
+                return Deny("HOME_AUTOMATION_RUN_DENIED");
+
+            // A definitively declined/blocked review refuses admission. A PendingApproval or Approved request is
+            // retained and admitted; its real decision is observed once at the effect boundary so a manual review
+            // can later admit the original operation without re-submitting a new broker request.
+            if (authorization.State is HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked)
+                return Deny("HOME_AUTOMATION_RUN_DENIED");
+
+            // Publish under the gate: the first admit wins, and every identical concurrent caller observes the
+            // SAME original review/admission (never a duplicate broker submission that would strand a pending review).
+            _bindings[key] = new(actor, authorization.RequestId);
+            return new AutomationRunAuthorityDecision(true, "HOME_AUTOMATION_RUN_ADMITTED", actor.ActorId, authorization.RequestId);
         }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException)
+        finally
         {
-            return Deny("HOME_AUTOMATION_RUN_DENIED");
+            _authorizeGate.Release();
         }
-        if (authorization is null || string.IsNullOrWhiteSpace(authorization.RequestId))
-            return Deny("HOME_AUTOMATION_RUN_DENIED");
-
-        // A definitively declined/blocked review refuses admission. A PendingApproval or Approved request is
-        // retained and admitted; its real decision is observed once at the effect boundary so a manual review
-        // can later admit the original operation without re-submitting a new broker request.
-        if (authorization.State is HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked)
-            return Deny("HOME_AUTOMATION_RUN_DENIED");
-
-        _bindings[key] = new(actor, authorization.RequestId);
-        return new AutomationRunAuthorityDecision(true, "HOME_AUTOMATION_RUN_ADMITTED", actor.ActorId, authorization.RequestId);
     }
 
     public async ValueTask<AutomationRunAuthorityDecision> AuthorizeEffectAsync(AutomationRunAuthorityContext context, CancellationToken cancellationToken)

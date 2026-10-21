@@ -116,9 +116,13 @@ public sealed class HomeAutomationRunResourceResolver : ICanonicalResourceAccess
             {
                 try
                 {
+                    // EXACT persisted-run pin only: a genuine resumable Run carrying an explicit PinnedGraph
+                    // at EXACTLY the requested revision (never a loose DefinitionRevision fallback, never any
+                    // of the most recent waiting rows) authorizes the historical resume. A fresh stale start
+                    // with no such exact pin stays refused.
                     var runs = await repository.GetRunsAsync(definition.Id, 200, cancellationToken).ConfigureAwait(false);
                     granted = runs.Any(run => run is { Status: AutomationRunStatus.Waiting or AutomationRunStatus.ApprovalRequired } &&
-                        (run.PinnedGraph?.Revision ?? run.DefinitionRevision) == expectedRevision);
+                        run.PinnedGraph is { } pin && pin.Revision == expectedRevision);
                 }
                 catch (Exception)
                 {

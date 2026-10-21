@@ -12,6 +12,7 @@ using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Browser;
 using Haven.Core;
+using Haven.Infrastructure.Automations;
 
 namespace Haven.Desktop.ViewModels;
 
@@ -417,6 +418,12 @@ public sealed class AutomationsPageViewModel : ObservableObject
     /// </summary>
     private readonly ScheduledTaskRunner _runner;
     /// <summary>
+    /// The real shipping consumer (registered gateway + durable adapter + real Home authority) when the
+    /// production composition provides it. When absent, the legacy runner is used; when present, graph
+    /// automations route through the genuine Home-owned shipping path.
+    /// </summary>
+    private readonly AutomationShippingScheduler? _automationShipping;
+    /// <summary>
     /// Stores schedules locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly ScheduledTaskScheduleCalculator _schedules;
@@ -449,11 +456,13 @@ public sealed class AutomationsPageViewModel : ObservableObject
         IAutomationRepository repository,
         object registration,
         ScheduledTaskRunner runner,
-        ScheduledTaskScheduleCalculator schedules)
+        ScheduledTaskScheduleCalculator schedules,
+        AutomationShippingScheduler? automationShipping = null)
     {
         _repository = repository;
         _registration = registration;
         _runner = runner;
+        _automationShipping = automationShipping;
         _schedules = schedules;
         RefreshCommand = new AsyncRelayCommand(RefreshAsync);
         RegisterWorkerCommand = new AsyncRelayCommand(RegisterWorkerAsync);
@@ -589,7 +598,9 @@ public sealed class AutomationsPageViewModel : ObservableObject
         if (item is null) return;
         var now = DateTimeOffset.UtcNow;
         await _repository.UpsertAsync(item.Definition with { IsEnabled = true, NextRunAt = now, UpdatedAt = now }, CancellationToken.None);
-        var result = await _runner.RunDueAsync(now, CancellationToken.None);
+        var result = _automationShipping is { } shipping
+            ? await shipping.RunDueAsync(now, CancellationToken.None)
+            : await _runner.RunDueAsync(now, CancellationToken.None);
         await RefreshAsync();
         Status = $"Run pass: {result.Succeeded} succeeded, {result.Failed} failed, {result.Skipped} skipped.";
     }

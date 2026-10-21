@@ -14,6 +14,13 @@ public sealed class GraphRuntimeContinuationCodec
     /// <summary>Bounded envelope size (1 MiB). Payloads strictly larger than this are rejected before any adapter effect.</summary>
     public const int MaximumSerializedBytes = 1 << 20;
 
+    private static readonly HashSet<string> AllowedKeys = new(StringComparer.Ordinal)
+    {
+        "protocolVersion", "graphType", "ownerRunId", "graphId", "revision", "capabilityProfileId", "schemaVersion",
+        "startNodeId", "eventType", "sessionId", "entityId", "participantId", "kind", "nodeId", "resumeAt",
+        "condition", "ownerState", "stepsConsumed", "stepLimit", "digest",
+    };
+
     public string Serialize(GraphRuntimeContinuation continuation)
     {
         ArgumentNullException.ThrowIfNull(continuation);
@@ -55,8 +62,11 @@ public sealed class GraphRuntimeContinuationCodec
         var root = document.RootElement;
         if (root.ValueKind != JsonValueKind.Object) throw new JsonException("Continuation envelope must be a JSON object.");
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        if (root.EnumerateObject().Any(property => !seen.Add(property.Name)))
-            throw new JsonException("Continuation envelope contains duplicate fields.");
+        foreach (var property in root.EnumerateObject())
+        {
+            if (!seen.Add(property.Name)) throw new JsonException("Continuation envelope contains duplicate fields.");
+            if (!AllowedKeys.Contains(property.Name)) throw new JsonException($"Continuation envelope contains unknown field '{property.Name}'.");
+        }
         var protocolVersion = ReadInt(root, "protocolVersion", seen);
         if (protocolVersion != GraphRuntimeContinuation.CurrentProtocolVersion)
             throw new JsonException($"Unsupported continuation protocol version {protocolVersion}.");
@@ -122,10 +132,16 @@ public sealed class GraphRuntimeContinuationCodec
         Guid.TryParse(ReadString(root, name, seen), out var guid) ? guid
             : throw new JsonException($"Continuation envelope has an invalid '{name}'.");
 
-    private static DateTimeOffset? ReadDateTime(JsonElement root, string name, HashSet<string> seen) =>
-        root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.String
-            ? DateTimeOffset.Parse(element.GetString()!, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
-            : null;
+    private static DateTimeOffset? ReadDateTime(JsonElement root, string name, HashSet<string> seen)
+    {
+        if (!root.TryGetProperty(name, out var element)) return null; // absent optional ResumeAt is valid
+        if (element.ValueKind != JsonValueKind.String)
+            throw new JsonException($"Continuation envelope '{name}' must be a JSON string when present.");
+        var text = element.GetString()!;
+        if (!DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var value))
+            throw new JsonException($"Continuation envelope '{name}' is not a valid timestamp.");
+        return value;
+    }
 
     private static JsonElement ReadStateElement(JsonElement root, string name, HashSet<string> seen)
     {
@@ -135,7 +151,13 @@ public sealed class GraphRuntimeContinuationCodec
         return element.Clone();
     }
 
-    private static TEnum ReadEnum<TEnum>(JsonElement root, string name, HashSet<string> seen) where TEnum : struct, Enum =>
-        Enum.TryParse<TEnum>(ReadString(root, name, seen), ignoreCase: false, out var value) ? value
-            : throw new JsonException($"Continuation envelope has an unsupported '{name}'.");
+    private static TEnum ReadEnum<TEnum>(JsonElement root, string name, HashSet<string> seen) where TEnum : struct, Enum
+    {
+        var text = ReadString(root, name, seen);
+        // The wire contract uses named enums. Reject numeric spellings and undefined values.
+        if (long.TryParse(text, out _)) throw new JsonException($"Continuation envelope '{name}' must be a named enum, not numeric.");
+        if (!Enum.TryParse<TEnum>(text, ignoreCase: false, out var value) || !Enum.IsDefined(value))
+            throw new JsonException($"Continuation envelope has an unsupported '{name}'.");
+        return value;
+    }
 }
