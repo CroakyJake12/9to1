@@ -81,6 +81,24 @@ public sealed class ScheduledGraphAutomationTests
         Assert.DoesNotContain(scoped.Nodes, node => node.Id == manualAction.Id);
     }
 
+    [Fact]
+    public void Payload_round_trip_preserves_canonical_sn_identity()
+    {
+        var schedule = Node("Schedule", "Recurrence", ("recurrence", "hourly"));
+        var graph = new AutomationGraphDefinition(1, [schedule], []);
+        var graphJson = AutomationGraphCodec.Serialize(graph);
+        var graphId = Guid.NewGuid();
+        var encoded = ScheduledGraphAutomationPayloadCodec.Serialize(Guid.NewGuid(), schedule.Id, "Demo", graphJson, null,
+            graphId: graphId, sourceRevision: 7, schemaVersion: 1, sourceDigest: "aabbccdd", capabilityProfileId: "automations");
+
+        Assert.True(ScheduledGraphAutomationPayloadCodec.TryDeserialize(encoded, out var payload));
+        Assert.Equal(graphId, payload.GraphId);
+        Assert.Equal(7, payload.SourceRevision);
+        Assert.Equal(1, payload.SchemaVersion);
+        Assert.Equal("aabbccdd", payload.SourceDigest);
+        Assert.Equal("automations", payload.CapabilityProfileId);
+    }
+
     private static AutomationGraphNodeDefinition Node(string category, string title, params (string Key, string Value)[] parameters) =>
         new(Guid.NewGuid(), category, null, null, parameters.ToDictionary(item => item.Key, item => item.Value, StringComparer.OrdinalIgnoreCase))
         { Title = title };
