@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 16
           submodules: false
           persist-credentials: false
       - name: Initialize only exact approved source dependencies
