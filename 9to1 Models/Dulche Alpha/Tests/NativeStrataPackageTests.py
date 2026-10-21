@@ -4,7 +4,9 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 import pathlib
+import shutil
 import struct
 import subprocess
 import sys
@@ -350,6 +352,47 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
         with self.assertRaises(ValueError):
             self._invoke_prepare(self._lock(archive, rows, []), archive)
 
+    def test_relative_work_path_relink_resolves_real_bodies(self):
+        # Production prepare driven from a controlled cwd with a RELATIVE --work path. This is the
+        # demonstrated CLI bug: the old symlink stored a relative target (work/upstream/...), which
+        # resolved relative to work/dulche-fork/third_party and dangled. The corrected production
+        # prepare normalizes the verified vendor directory to absolute, so BOTH real pinned tq bodies
+        # resolve through the fork alias with their exact SHA-256 values.
+        tq = _tq_bodies()
+        files = {"README.md": b"# hello\n"}
+        archive = _build_donor_tar_with_tq(_make_donor_tar("strata-v0.2.2", files))
+        rows = [
+            {"path": "README.md", "bytes": len(files["README.md"]),
+             "gitBlobSha": _git_blob_sha(files["README.md"]),
+             "sha256": hashlib.sha256(files["README.md"]).hexdigest()},
+        ] + _tq_rows()
+        lock = self._lock(archive, rows, [])
+        with tempfile.TemporaryDirectory(prefix="thunder-relwork-") as td:
+            lpath = pathlib.Path(td) / "lock.json"
+            lpath.write_text(json.dumps(lock))
+            apath = pathlib.Path(td) / "donor.tar.gz"
+            apath.write_bytes(archive)
+            old_cwd = os.getcwd()
+            old_argv = sys.argv[:]
+            try:
+                os.chdir(td)
+                sys.argv = ["build-package.py", "--profile", "candidate",
+                            "--lock", str(lpath), "--archive", str(apath),
+                            "--work", "work"]
+                _build_package_module().main()
+            finally:
+                sys.argv = old_argv
+                os.chdir(old_cwd)
+            link = pathlib.Path(td) / "work" / "dulche-fork" / "third_party" / "ggml-tq"
+            self.assertTrue(link.is_symlink())
+            # The alias target must be the canonical ABSOLUTE upstream vendor directory.
+            self.assertTrue(pathlib.Path(link.readlink()).is_absolute())
+            for rel, body in tq.items():
+                member = rel.split("/")[-1]
+                with self.subTest(member=member):
+                    self.assertEqual(hashlib.sha256((link / member).read_bytes()).hexdigest(),
+                                     hashlib.sha256(body).hexdigest())
+
 
 class GgmlCheckoutVerifierControls(unittest.TestCase):
     """--ggml-dir must require a real git work tree pinned to the lock commit/tree, clean closed."""
@@ -459,6 +502,185 @@ class ThunderPythonBootstrapFixture(unittest.TestCase):
         proc = subprocess.run(["bash", str(fixture)], capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, "stderr: " + proc.stderr)
         self.assertIn("THUNDER-PYTHON-BOOTSTRAP-FIXTURE-OK", proc.stdout)
+
+
+class InstallIdentityParityControls(unittest.TestCase):
+    """Real build/install byte-parity controls for the actual packaging closure.
+
+    The accepted contract is that every installed native artifact (worker, engine, optional
+    K-quant MMQ DSO) is byte-for-byte the exact inspected build output. A post-install RPATH
+    rewrite (CMake "Set non-toolchain portion of runtime path ... to ''") changes the installed ELF
+    bytes and must be rejected, not silently accepted. These are functional predicates over the real
+    production helper, not source-string mirrors.
+    """
+
+    def setUp(self):
+        self.mod = _build_package_module()
+        self.td = tempfile.TemporaryDirectory(prefix="thunder-parity-")
+        self.built = pathlib.Path(self.td.name) / "built.bin"
+        self.installed = pathlib.Path(self.td.name) / "installed.bin"
+        payload = b"\x7fELF" + b"\x00" * 60 + b"payload"
+        self.built.write_bytes(payload)
+        self.installed.write_bytes(payload)
+
+    def tearDown(self):
+        self.td.cleanup()
+
+    def test_identical_build_install_accepted(self):
+        self.mod.verify_installed_identical(self.built, self.installed, "worker")
+
+    def test_missing_installed_rejected(self):
+        self.installed.unlink()
+        with self.assertRaises(ValueError):
+            self.mod.verify_installed_identical(self.built, self.installed, "worker")
+
+    def test_missing_built_rejected(self):
+        self.built.unlink()
+        with self.assertRaises(ValueError):
+            self.mod.verify_installed_identical(self.built, self.installed, "worker")
+
+    def test_installed_differs_from_built_rejected(self):
+        # The exact defect pattern: the install produced a different binary (e.g. RPATH scrubbed).
+        self.installed.write_bytes(self.built.read_bytes() + b"\x01")
+        with self.assertRaises(ValueError):
+            self.mod.verify_installed_identical(self.built, self.installed, "worker")
+
+    def test_installed_empty_rejected(self):
+        self.installed.write_bytes(b"")
+        with self.assertRaises(ValueError):
+            self.mod.verify_installed_identical(self.built, self.installed, "worker")
+
+    def test_error_message_names_the_artifact(self):
+        with self.assertRaisesRegex(ValueError, "K-quant MMQ DSO"):
+            self.mod.verify_installed_identical(self.built, self.built.parent / "nope", "K-quant MMQ DSO")
+
+
+class PackagingConfigParityControls(unittest.TestCase):
+    """Configuration guards that enforce the build/install parity fix and the optional K-quant MMQ
+    closure install. These guard the CMake/driver wiring; the behavioral parity is exercised by
+    InstallIdentityParityControls and the CI-native RpathParityBuildFixture."""
+
+    def _cmake_src(self):
+        path = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata" / "CMakeLists.txt"
+        return path.read_text()
+
+    def test_cmake_builds_with_install_rpath(self):
+        src = self._cmake_src()
+        self.assertIn("CMAKE_BUILD_WITH_INSTALL_RPATH", src)
+        self.assertIn("set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)", src)
+
+    def test_cmake_installs_kq_dso_beside_engine(self):
+        src = self._cmake_src()
+        self.assertIn("TARGET strata_kq", src)
+        self.assertIn("strata_kq", src)
+        self.assertIn("runtimes/${_strata_target_dir}/engine", src)
+
+    def test_build_package_verifies_engine_and_kq_parity_and_closure(self):
+        src = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata" / "build-package.py"
+        text = src.read_text()
+        self.assertIn("verify_installed_identical", text)
+        self.assertIn("Installed engine binary is missing", text)
+        self.assertIn("K-quant MMQ DSO", text)
+        self.assertIn("kqDsoSha256", text)
+        self.assertIn("kqDsoBytes", text)
+
+
+class RpathParityBuildFixture(unittest.TestCase):
+    """A SMALL REAL CMake RPATH fixture proving the inspected BUILD artifact is byte-identical to the
+    INSTALLED artifact under CMAKE_BUILD_WITH_INSTALL_RPATH=ON.
+
+    NOTRUN locally: this environment has no local cmake/native toolchain (source-only worker). It
+    runs in the supported CI only when the harness explicitly opts in via
+    THUNDER_RUN_NATIVE_FIXTURE=1. It never downloads anything and builds only the tiny fixture.
+    """
+
+    FIXTURE = "NativeStrataRpathParityFixture"
+
+    def test_build_install_byte_parity(self):
+        if os.environ.get("THUNDER_RUN_NATIVE_FIXTURE") != "1":
+            self.skipTest("NOTRUN: native CMake fixture requires CI (no local cmake/native)")
+        if shutil.which("cmake") is None:
+            self.skipTest("NOTRUN: cmake unavailable")
+        fixture = pathlib.Path(__file__).resolve().parent / self.FIXTURE
+        with tempfile.TemporaryDirectory(prefix="thunder-rpath-fixture-") as td:
+            td = pathlib.Path(td)
+            build = td / "build"
+            install = td / "install"
+            subprocess.run(["cmake", "-S", str(fixture), "-B", str(build),
+                            "-DCMAKE_INSTALL_PREFIX=" + str(install)], check=True)
+            subprocess.run(["cmake", "--build", str(build)], check=True)
+            subprocess.run(["cmake", "--install", str(build)], check=True)
+            built = build / "rpath_probe"
+            installed = install / "bin" / "rpath_probe"
+            self.assertTrue(built.is_file())
+            self.assertTrue(installed.is_file())
+            self.assertEqual(built.read_bytes(), installed.read_bytes(),
+                             "installed probe must be byte-identical to the built probe")
+
+
+class TargetArtifactResolutionControls(unittest.TestCase):
+    """Functional, deterministic resolution of ACTUAL built artifacts from declared CMake target
+    output locations (included-upstream layout for the engine/DSO; build root for the relay worker).
+
+    These exercise the production resolver with real filesystem layouts: single-config upstream
+    (`build/upstream/strata`), Windows-style multi-config (`build/upstream/<CONFIG>/strata`), build
+    root worker, and the `libstrata_kq.so` DSO. Ambiguous and missing outputs must be rejected, not
+    resolved by a free first scan (no ordinary filename-string mirror).
+    """
+
+    def setUp(self):
+        self.mod = _build_package_module()
+        self.td = tempfile.TemporaryDirectory(prefix="thunder-targetres-")
+        self.build = pathlib.Path(self.td.name) / "build"
+        self.build.mkdir()
+
+    def tearDown(self):
+        self.td.cleanup()
+
+    def _touch(self, rel):
+        p = self.build / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(b"ELF" + rel.encode())
+        return p
+
+    def test_engine_resolves_in_included_upstream_layout(self):
+        # add_subdirectory(upstream EXCLUDE_FROM_ALL) -> single-config engine at build/upstream/strata.
+        engine = self._touch("upstream/strata")
+        got = self.mod.resolve_built_artifact(self.build, "strata", ["upstream"], "engine")
+        self.assertEqual(got, engine)
+
+    def test_multi_config_engine_resolves_under_upstream_config(self):
+        # Windows multi-config layout: no build/upstream/strata, only build/upstream/Release/strata.
+        cfg = self._touch("upstream/Release/strata")
+        got = self.mod.resolve_built_artifact(self.build, "strata", ["upstream"], "engine")
+        self.assertEqual(got, cfg)
+
+    def test_worker_resolves_at_buildroot(self):
+        w = self._touch("dulche-strata-candidate-worker")
+        got = self.mod.resolve_built_artifact(self.build, "dulche-strata-candidate-worker", ["."], "worker")
+        self.assertEqual(got, w)
+
+    def test_dso_resolves_in_upstream(self):
+        d = self._touch("upstream/libstrata_kq.so")
+        got = self.mod.resolve_built_artifact(self.build, "libstrata_kq.so", ["upstream"], "K-quant MMQ DSO")
+        self.assertEqual(got, d)
+
+    def test_ambiguous_target_rejected(self):
+        # Both single-config and multi-config outputs present -> ambiguous, never silently pick one.
+        self._touch("upstream/strata")
+        self._touch("upstream/Release/strata")
+        with self.assertRaises(ValueError):
+            self.mod.resolve_built_artifact(self.build, "strata", ["upstream"], "engine")
+
+    def test_missing_target_rejected(self):
+        with self.assertRaises(ValueError):
+            self.mod.resolve_built_artifact(self.build, "strata", ["upstream"], "engine")
+
+    def test_not_a_free_first_scan(self):
+        # An unrelated stale binary elsewhere must NOT satisfy the resolver (no rglob/name-only match).
+        self._touch("other/libstrata_kq.so")
+        with self.assertRaises(ValueError):
+            self.mod.resolve_built_artifact(self.build, "libstrata_kq.so", ["upstream"], "K-quant MMQ DSO")
 
 
 if __name__ == "__main__":

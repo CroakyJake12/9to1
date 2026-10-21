@@ -69,6 +69,15 @@ else()
   set(STRATA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   set(STRATA_BUILD_CONVERSATION_TESTS OFF CACHE BOOL "" FORCE)
   set(STRATA_WERROR OFF CACHE BOOL "" FORCE)
+  # Candidate-only build/install parity (legacyV1 default semantics are untouched): build with the
+  # INSTALL RPATH so the inspected BUILD artifacts (engine, relay worker, optional K-quant MMQ DSO)
+  # are byte-identical to the INSTALLED artifacts. Without this, `cmake --install` rewrites each
+  # binary's RPATH ("Set non-toolchain portion of runtime path ... to ''"), changing installed ELF
+  # bytes and tripping the byte-equality acceptance check. Set BEFORE add_subdirectory so the
+  # upstream engine/DSO targets inherit it. Empty install RPATH is correct here: the engine loads
+  # the optional libstrata_kq.so from its own folder by explicit path, and the workers link only
+  # system/toolchain libraries.
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)  # must precede the upstream add_subdirectory
   # Exclude upstream GUI/chat/agent/terminal application bundles: they are separate Node/Tauri apps
   # under apps/ and are NOT part of the core CMake build; only the `strata` engine target is built.
   add_subdirectory("${DULCHE_STRATA_UPSTREAM}" upstream EXCLUDE_FROM_ALL)
@@ -76,6 +85,20 @@ else()
   # The engine server binary (the `strata` CLI, used in --serve mode). Built as part of ALL so a
   # normal `cmake --build` produces both the engine and the relay worker, then installed as a sibling.
   add_custom_target(dulche-thunder-engine ALL DEPENDS strata)
+
+  # Coherent compiled runtime closure: the pinned upstream CMake builds the `strata_kq` SHARED
+  # library for the OPTIONAL K-quant MMQ prompt kernels. Upstream runtime behavior is OPTIONAL: the
+  # engine loads it from its own folder by explicit path (mmq_kq_loader.cpp: own_folder() +
+  # STRATA_KQ_LIB_NAME) only when STRATA_MMQ_KQ=1; without it the K-quants keep the FP16 prompt
+  # path. We never auto-enable it (no STRATA_MMQ_KQ is set). At the PACKAGE/closure level, however,
+  # this DSO is part of the installed engine closure on the supported CUDA13 target and is
+  # hard-required there, not silently omitted. Install it BESIDE the engine and build it alongside
+  # it (loaded at runtime, so not a link dependency).
+  if(TARGET strata_kq)
+    add_dependencies(dulche-thunder-engine strata_kq)
+    install(TARGETS strata_kq RUNTIME DESTINATION runtimes/${_strata_target_dir}/engine
+                           LIBRARY DESTINATION runtimes/${_strata_target_dir}/engine)
+  endif()
   install(TARGETS strata RUNTIME DESTINATION runtimes/${_strata_target_dir}/engine)
 
   # Candidate relay worker: hosts the Dulche frame ABI on stdin/stdout and drives the upstream

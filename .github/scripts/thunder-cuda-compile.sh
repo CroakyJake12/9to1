@@ -56,6 +56,7 @@ import hashlib, json, pathlib, sys
 install = pathlib.Path(sys.argv[1]); out = pathlib.Path(sys.argv[2])
 expected = [
     "runtimes/linux-x64/engine/strata",
+    "runtimes/linux-x64/engine/libstrata_kq.so",
     "runtimes/linux-x64/native/dulche-strata-candidate-worker",
     "runtimes/linux-x64/native/strata_tokenizer_helper.py",
     "runtimes/linux-x64/native/strata_tokenizer.py",

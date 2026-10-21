@@ -26,6 +26,7 @@ make_complete() {
            "$install/runtimes/linux-x64/native" \
            "$install/licenses"
   : > "$install/runtimes/linux-x64/engine/strata"
+  : > "$install/runtimes/linux-x64/engine/libstrata_kq.so"
   : > "$install/runtimes/linux-x64/native/dulche-strata-candidate-worker"
   : > "$install/runtimes/linux-x64/native/strata_tokenizer_helper.py"
   : > "$install/runtimes/linux-x64/native/strata_tokenizer.py"
@@ -50,10 +51,11 @@ python3 - "$out_a" <<'PY'
 import json, sys
 items = json.load(open(sys.argv[1]))
 paths = [it["path"] for it in items]
-assert len(items) == 9, "expected 9 named closure files, got %d" % len(items)
+assert len(items) == 10, "expected 10 named closure files, got %d" % len(items)
 assert paths == sorted(paths), "inventory not sorted"
 assert all({"bytes", "sha256"} <= set(it) for it in items), "missing size/sha metadata"
 for rel in ("runtimes/linux-x64/engine/strata",
+            "runtimes/linux-x64/engine/libstrata_kq.so",
             "runtimes/linux-x64/native/dulche-strata-candidate-worker",
             "runtimes/linux-x64/native/strata_tokenizer_helper.py",
             "runtimes/linux-x64/native/strata_tokenizer.py",
@@ -63,7 +65,7 @@ for rel in ("runtimes/linux-x64/engine/strata",
             "strata-build-receipt.json"):
     assert rel in paths, "missing %s" % rel
 PY
-echo "OK: complete closure inventory (9 named files)"
+echo "OK: complete closure inventory (10 named files)"
 
 # 2. Missing notice/receipt -> fail.
 install_b="$tmp/install-b"
@@ -88,6 +90,14 @@ ln -s /etc/hostname "$install_d/escape"
 out_d="$tmp/inventory-d.json"
 if thunder_inventory_install "$install_d" "$out_d" >/dev/null 2>&1; then
   echo "FAIL: symlink escape accepted"; exit 1
+fi
+
+# 5. Missing K-quant DSO -> fail independently of notices/receipt.
+install_e="$tmp/install-e"
+make_complete "$install_e"
+rm -f "$install_e/runtimes/linux-x64/engine/libstrata_kq.so"
+if thunder_inventory_install "$install_e" "$tmp/inventory-e.json" >/dev/null 2>&1; then
+  echo "FAIL: missing K-quant DSO accepted"; exit 1
 fi
 
 echo "THUNDER-INVENTORY-FIXTURE-OK"

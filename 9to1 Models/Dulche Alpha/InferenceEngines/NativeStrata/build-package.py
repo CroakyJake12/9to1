@@ -92,6 +92,49 @@ BINARY_CHECKERS = {
 }
 
 
+def verify_installed_identical(built, installed, what):
+    """The installed artifact must be the EXACT inspected build output (byte-for-byte).
+
+    Any post-install mutation — for example a CMake install-time RPATH rewrite that changes the
+    installed ELF bytes ("Set non-toolchain portion of runtime path ... to '') — breaks the
+    accepted build/install parity contract and must fail closed. Both paths must exist.
+    """
+    if not built.is_file() or not installed.is_file() or built.read_bytes() != installed.read_bytes():
+        raise ValueError("Installed " + what + " must be the exact inspected build output")
+
+
+OUTPUT_CONFIG_DIRS = ("Release", "RelWithDebInfo", "Debug", "MinSizeRel")
+
+
+def resolve_built_artifact(build_dir, leaf, bases, what):
+    """Determine the ACTUAL built artifact at a declared CMake target output location.
+
+    Targets defined in an `add_subdirectory(upstream ...)` end up under `build/<base>/` (here
+    `build/upstream/` for the engine and the K-quant MMQ DSO; `build/` for the relay worker). We
+    resolve deterministically from these DECLARED known output dirs, honoring Windows multi-config
+    behavior (artifact under `<base>/<CONFIG>/`). Fail closed: exactly one file must exist.
+    Ambiguous (multiple candidate matches) and missing outputs are rejected — never a free first
+    scan (rglob) that could pick an unrelated stale binary.
+    """
+    found = []
+    for base in bases:
+        root = build_dir if base == "." else build_dir / base
+        found.append(root / leaf)
+        for cfg in OUTPUT_CONFIG_DIRS:
+            found.append(root / cfg / leaf)
+    matches = []
+    for p in found:
+        if p.is_file() and p not in matches:
+            matches.append(p)
+    if not matches:
+        raise ValueError("Built " + what + " not found in declared CMake target output locations: "
+                         + leaf + " under " + ", ".join(bases))
+    if len(matches) > 1:
+        raise ValueError("Ambiguous built " + what + " outputs; expected exactly one declared target "
+                         "output: " + ", ".join(str(p) for p in matches))
+    return matches[0]
+
+
 def git_blob_sha(body: bytes) -> str:
     """Git blob object SHA-1 (uses the blob header with the exact body length)."""
     return hashlib.sha1(b"blob " + str(len(body)).encode() + b"\0" + body).hexdigest()
@@ -156,6 +199,11 @@ def verify_and_relink_fork_tq(fork, upstream, rows):
 
     Fail-closed custody: both required vendored members must be present in the verified upstream and
     match their pinned lock rows (size + SHA-256) exactly; the fork path must be fresh.
+
+    The alias target is normalized to its strict canonical ABSOLUTE path (resolve(strict=True), so a
+    missing vendor directory fails closed) — a RELATIVE `--work` (relative upstream/fork paths) still
+    yields a well-formed symlink: a relative target would otherwise be interpreted from the symlink's
+    own directory and dangle.
     """
     tq_members = ("third_party/ggml-tq/tq.cuh", "third_party/ggml-tq/tq-mmq-tiles.cuh")
     expected = {r["path"]: r for r in rows}
@@ -170,7 +218,7 @@ def verify_and_relink_fork_tq(fork, upstream, rows):
         if len(body) != row["bytes"] or hashlib.sha256(body).hexdigest() != row["sha256"]:
             raise ValueError("Pinned trellis vendor member mismatch: " + rel)
     fork_tq = fork / "third_party" / "ggml-tq"
-    upstream_tq = upstream / "third_party" / "ggml-tq"
+    upstream_tq = (upstream / "third_party" / "ggml-tq").resolve(strict=True)
     if fork_tq.exists() or fork_tq.is_symlink():
         raise ValueError("Fork trellis vendor path already exists: " + str(fork_tq))
     fork_tq.parent.mkdir(parents=True, exist_ok=True)
@@ -385,21 +433,15 @@ def main():
         # candidate relay worker (the upstream `strata` engine is installed as a sibling binary)
         binary_rel = pathlib.Path("dulche-strata-candidate-worker")
     build_dir = args.work / "build"
-    # Windows multi-config generators place the artifact under <config>/; single-config (Make/Ninja)
-    # place it at the build root. Resolve the ACTUAL built artifact, never assume a single layout.
-    def resolve_built(rel):
-        candidates = [build_dir / rel, build_dir / "Release" / rel,
-                      build_dir / "RelWithDebInfo" / rel, build_dir / "Debug" / rel]
-        for c in candidates:
-            if c.exists():
-                return c
-        raise ValueError("Built binary not found in the build output: " + str(rel))
-    built = resolve_built(binary_rel)
+    # The relay worker is defined in the fork root, so its declared target output base is the build
+    # root (single-config) or the multi-config subdirectory (Windows). Resolve deterministically from
+    # declared target output locations; never scan arbitrary paths.
+    worker_exe = binary_rel.name + (".exe" if args.target == "windows-x64" else "")
+    built = resolve_built_artifact(build_dir, worker_exe, ["."], "worker")
     record["target"] = checker(built.read_bytes())
     subprocess.run([args.cmake, "--install", str(build_dir)], check=True)
     binary = args.install / "runtimes" / args.target / "native" / binary_rel.name
-    if not binary.exists() or binary.read_bytes() != built.read_bytes():
-        raise ValueError("Installed worker must be the exact inspected build output")
+    verify_installed_identical(built, binary, "worker")
     checker(binary.read_bytes())
     record["workerSha256"] = hashlib.sha256(binary.read_bytes()).hexdigest()
     record["workerBytes"] = binary.stat().st_size
@@ -409,8 +451,30 @@ def main():
         engine = args.install / "runtimes" / args.target / "engine" / (("strata" + (".exe" if args.target == "windows-x64" else "")))
         if not engine.exists():
             raise ValueError("Installed engine binary is missing from the receipt closure: " + str(engine))
+        # The engine and the optional K-quant MMQ DSO are defined by the upstream add_subdirectory, so
+        # their declared target output base is build/upstream/. The installed engine, worker and DSO
+        # are all verified byte-identical to the inspected built outputs (no post-install rewrite).
+        engine_exe = "strata" + (".exe" if args.target == "windows-x64" else "")
+        built_engine = resolve_built_artifact(build_dir, engine_exe, ["upstream"], "engine")
+        verify_installed_identical(built_engine, engine, "engine")
         record["engineSha256"] = hashlib.sha256(engine.read_bytes()).hexdigest()
         record["engineBytes"] = engine.stat().st_size
+        # Optional K-quant MMQ DSO closure. Upstream runtime treats absence as the FP16 prompt fallback
+        # (the feature stays OFF — STRATA_MMQ_KQ is never auto-enable), but at PACKAGE level the DSO
+        # is part of the installed engine closure on the supported target and is hard-required there,
+        # not silently omitted. We assert it only on the CUDA13 linux-x64 target where the real
+        # strata_kq SHARED build was proven (CI run 39652902260); no unsupported Windows/non-CUDA
+        # DSO name or support is claimed without source evidence.
+        if args.target == "linux-x64":
+            kq_lib = "libstrata_kq.so"
+            installed_kq = engine.parent / kq_lib
+            if not installed_kq.is_file():
+                raise ValueError("Installed engine closure is missing the K-quant MMQ DSO: "
+                                 + str(installed_kq))
+            built_kq = resolve_built_artifact(build_dir, kq_lib, ["upstream"], "K-quant MMQ DSO")
+            verify_installed_identical(built_kq, installed_kq, "K-quant MMQ DSO")
+            record["kqDsoSha256"] = hashlib.sha256(installed_kq.read_bytes()).hexdigest()
+            record["kqDsoBytes"] = installed_kq.stat().st_size
         native = args.install / "runtimes" / args.target / "native"
         helper = native / "strata_tokenizer_helper.py"
         # The text-path runtime closure is REQUIRED (not optional): the helper plus the donor modules
