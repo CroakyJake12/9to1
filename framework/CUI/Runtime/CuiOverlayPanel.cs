@@ -152,6 +152,13 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     /// usable viewport width and report its bounded content size.</summary>
     private static Size MeasureHost(CuiContainerControl host, double usableWidth)
     {
+        // Always discard a stale cached measure so the retained authored host reports its LIVE content
+        // size. Avalonia's Measure only recomputes when the measure is invalid or the constraint changed;
+        // a hidden/suppressed wrapper (unplaced/portaled) blocks the normal layout-manager descendant
+        // remeasurement, leaving a stale valid 0,0 DesiredSize that would keep a freshly opened bar
+        // unplaced/invisible forever. Forcing the host to re-measure from its actual visible content
+        // fixes that generic opening path here, for both the in-tree floating and escape-portaled callers.
+        host.InvalidateMeasure();
         host.Measure(new Size(usableWidth, double.PositiveInfinity));
         return new Size(
             Math.Max(0, Math.Min(host.DesiredSize.Width, usableWidth)),

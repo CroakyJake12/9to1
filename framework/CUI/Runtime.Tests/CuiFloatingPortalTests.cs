@@ -112,6 +112,34 @@ public sealed class CuiFloatingPortalTests
         out CuiContainerControl surface, out CuiContainerControl authoredHost, out Window window) =>
         Mount(loader, Markup, out surface, out authoredHost, out window);
 
+    /// <summary>Mount a compact composer surface and drive ONLY the real layout manager/dispatcher
+    /// (window.Show + Dispatcher.RunJobs + UpdateLayout) — never manual Measure/Arrange — so the portal's
+    /// per-pass wrapper LayoutUpdated behavior is exercised through the genuine render/dispatcher cycle.</summary>
+    private static CuiOverlayPanel MountReal(CuiControlLoader loader, string markup,
+        out CuiContainerControl surface, out CuiContainerControl authoredHost, out Window window)
+    {
+        var loaded = loader.LoadMarkup(markup);
+        Assert.Empty(loaded.Diagnostics);
+        surface = (CuiContainerControl)loaded.Root!;
+        loader.WireBindings(surface);
+        authoredHost = surface.GetVisualDescendants().OfType<CuiContainerControl>()
+            .Single(c => c.AuthoredTargetId is not null);
+
+        var wrapper = new Border { Width = 200, Height = 120, Child = surface };
+        var canvas = new Canvas();
+        canvas.Children.Add(wrapper);
+        Canvas.SetLeft(wrapper, 20);
+        Canvas.SetTop(wrapper, 130);
+        window = CuiNativePopupFixture.New(canvas, 400, 300);
+        window.Show();
+        for (var i = 0; i < 10; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+        }
+        return (CuiOverlayPanel)surface.Layout;
+    }
+
     private static Button? FindButton(Control root, string id) =>
         root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>
             AutomationProperties.GetAutomationId(b) == id);
@@ -283,6 +311,73 @@ public sealed class CuiFloatingPortalTests
                 var f0 = FindButton(authoredHost, "f0");
                 Assert.NotNull(f0);
                 Assert.True(f0!.IsEffectivelyVisible, "the reopened command must be effectively visible through the portal");
+            }
+            finally { window?.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Real_dispatcher_cycles_settle_unchanged_portal_geometry_without_rescheduling()
+    {
+        // Regression for the unconditional wrapper.LayoutUpdated invalidation loop. Open the authored
+        // composer through the real action path, then drive ONLY the real layout manager/dispatcher cycle
+        // (never manual Measure/Arrange) and assert the wrapper layout-update rate settles instead of
+        // growing without bound when the portal geometry is unchanged.
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            Window window = null!;
+            try
+            {
+                var panel = MountReal(loader, ClosedInnerMarkup, out var surface, out var authoredHost, out window);
+
+                // Closed inner content: no portal yet.
+                Assert.Empty(panel.ActivePortals);
+
+                // Open via the canonical authored toggle action and join its real ledger.
+                Assert.NotNull(authoredHost.FloatingCloseRequested);
+                authoredHost.FloatingCloseRequested!.Invoke();
+                await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+                for (var i = 0; i < 10; i++)
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    window.UpdateLayout();
+                }
+
+                var portal = Assert.Single(panel.ActivePortals);
+                Assert.True(portal.IsOpen);
+                Assert.Same(authoredHost, portal.Host);
+
+                var wrapper = portal.Popup.Child as Border;
+                Assert.NotNull(wrapper);
+                var layoutUpdates = 0;
+                EventHandler counter = (_, _) => layoutUpdates++;
+                wrapper!.LayoutUpdated += counter;
+                try
+                {
+                    var previous = -1;
+                    var settled = false;
+                    for (var cycle = 0; cycle < 80; cycle++)
+                    {
+                        Dispatcher.UIThread.RunJobs();
+                        window.UpdateLayout();
+                        if (layoutUpdates == previous)
+                        {
+                            settled = true;
+                            break;
+                        }
+                        previous = layoutUpdates;
+                    }
+                    Assert.True(settled,
+                        $"unchanged portal geometry kept rescheduling layout ({layoutUpdates} wrapper layout updates)");
+                    Assert.Equal(previous, layoutUpdates);
+                    // The portal still owns the SAME authored host, still open, after settling.
+                    Assert.True(portal.IsOpen);
+                    Assert.Same(authoredHost, portal.Host);
+                    Assert.True(authoredHost.IsAttachedToVisualTree(), "the retained authored host must stay mounted after settling");
+                }
+                finally { wrapper!.LayoutUpdated -= counter; }
             }
             finally { window?.Close(); }
         }, CancellationToken.None);

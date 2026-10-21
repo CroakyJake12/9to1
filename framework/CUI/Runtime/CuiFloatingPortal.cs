@@ -42,6 +42,13 @@ internal sealed class CuiFloatingPortal : IDisposable
     private bool _disposed;
     private bool _adopted;
     private bool _invalidating;
+    // Last observed hosted-content signature used to gate per-pass owner invalidation. The wrapper's
+    // own bounds are fixed to the solved rect, so an unchanged render pass must NOT dirty the owner
+    // again (that would reschedule an endless layout/render loop). Only a genuine change in the
+    // authored content's measured size or effective visibility requests replacement.
+    private Size _lastContentSize;
+    private bool _lastContentVisible;
+    private bool _haveContentBaseline;
     private IInputElement? _restoreFocus;
     private readonly EventHandler<AvaloniaPropertyChangedEventArgs> _hostPropertyChanged;
     private readonly EventHandler _layoutUpdated;
@@ -67,7 +74,7 @@ internal sealed class CuiFloatingPortal : IDisposable
         _publisherLease = host.FloatingCloseLedgerPublisher;
         _cell = cell ?? throw new ArgumentNullException(nameof(cell));
         _hostPropertyChanged = OnHostPropertyChanged;
-        _layoutUpdated = (_, _) => RequestOwnerReplacement();
+        _layoutUpdated = (_, _) => OnWrapperLayoutUpdated();
         _popup = new Popup
         {
             PlacementTarget = owner,
@@ -254,9 +261,40 @@ internal sealed class CuiFloatingPortal : IDisposable
         if (e.Property == Visual.IsVisibleProperty) RequestOwnerReplacement();
     }
 
-    /// <summary>Bridge visible-content/size invalidation of the hosted popup subtree (e.g. the authored
-    /// INNER format toolbar collapsing when FormattingOpen flips off) to the owning panel's bounded
-    /// re-placement/retirement. Coalesced; the arrange pass then re-measures live retained content.</summary>
+    /// <summary>Handle a wrapper layout pass. A layout pass fires for EVERY render/arrange, including
+    /// unchanged ones, so the portal must not re-place the owner unless the retained authored content
+    /// actually changed shape/size/visibility. The wrapper's own bounds are fixed to the solved rect,
+    /// so the only meaningful signal here is the freshly laid-out content signature (the host's actual
+    /// measured size and effective visibility, both current at LayoutUpdated time since layout already
+    /// ran). Compare against the last applied signature and request replacement only on a real change —
+    /// otherwise unchanged geometry would schedule an endless re-layout loop. This read is side-effect
+    /// free: it never invalidates/queues layout, so an unchanged pass cannot reschedule another one.</summary>
+    private void OnWrapperLayoutUpdated()
+    {
+        if (_disposed || _wrapper is null) return;
+        var size = _host.DesiredSize;
+        var visible = _host.IsEffectivelyVisible;
+
+        if (!_haveContentBaseline)
+        {
+            _lastContentSize = size;
+            _lastContentVisible = visible;
+            _haveContentBaseline = true;
+            return;
+        }
+
+        if (size == _lastContentSize && visible == _lastContentVisible)
+            return;
+
+        _lastContentSize = size;
+        _lastContentVisible = visible;
+        RequestOwnerReplacement();
+    }
+
+    /// <summary>Bridge a genuine visible-content/size change of the hosted popup subtree (e.g. the
+    /// authored INNER format toolbar collapsing when FormattingOpen flips off) to the owning panel's
+    /// bounded re-placement/retirement. Coalesced; the arrange pass then re-measures live retained content.
+    /// Callers must only invoke this when a real change occurred — never from an unconditional layout pass.</summary>
     private void RequestOwnerReplacement()
     {
         if (_invalidating) return;
