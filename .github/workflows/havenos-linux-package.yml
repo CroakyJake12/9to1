@@ -1,143 +1,74 @@
-# Root-reviewed isolated source-only preview branch; never merges to main.
-name: 9to1 Native16 ARM64 source build and startup
+name: 9to1 exact ARM64 package UI acceptance (no rebuild)
 on:
   workflow_dispatch:
     inputs:
       upload_draft_asset:
-        description: Also upload NEW native package to existing INTERNAL unpublished draft
+        description: Must remain false; package-only acceptance does not publish or upload releases
         type: boolean
         required: true
         default: false
 permissions:
   contents: read
+  actions: read
 jobs:
-  native-arm64:
+  exact-package-ui:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 40
-    # Needed only for the explicit optional same-repo unpublished draft asset upload.
-    permissions:
-      contents: write
-      actions: read
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout only reviewed acceptance tools
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 16
-          submodules: false
+          path: acceptance-tools
           persist-credentials: false
-      - name: Initialize only exact approved source dependencies
+          sparse-checkout: .github/scripts/lesson-chat-package-acceptance
+      - name: Checkout exact application source CLI metadata (no build)
+        uses: actions/checkout@v4
+        with:
+          ref: 057515059da6f3b2a2e8d979d080404689c076af
+          path: exact-source
+          persist-credentials: false
+          sparse-checkout: |
+            .github/scripts/native16-arm64
+            docs/specification
+      - name: Record native platform and both exact source identities
         shell: bash
         run: |
           set -euo pipefail
+          test "${{ inputs.upload_draft_asset }}" = false
           test "$(uname -m)" = aarch64
           test "$(dpkg --print-architecture)" = arm64
+          test "$(id -u)" != 0
           mkdir evidence
-          echo "NUGET_PACKAGES=$RUNNER_TEMP/9to1-native16-nuget" >> "$GITHUB_ENV"
           uname -a > evidence/native-platform.txt
           cat /etc/os-release >> evidence/native-platform.txt
-          getconf GNU_LIBC_VERSION >> evidence/native-platform.txt
-          git submodule update --init --recursive --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus
-          git submodule status --recursive -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus > evidence/source-submodule-pins.txt
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.301
-      - name: Install native runtime and display dependencies on disposable runner
+          git -C acceptance-tools rev-parse HEAD > evidence/acceptance-tools-commit.txt
+          git -C exact-source rev-parse HEAD > evidence/exact-app-source-commit.txt
+          test "$(cat evidence/exact-app-source-commit.txt)" = 057515059da6f3b2a2e8d979d080404689c076af
+          cp exact-source/.github/scripts/native16-arm64/native16-source-identity.json evidence/exact-app-source-identity.json
+      - name: Download exact actual package artifact once and verify provider ZIP plus inner package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 acceptance-tools/.github/scripts/lesson-chat-package-acceptance/download-exact-package.py
+      - name: Install native display/accessibility dependencies and exact package on disposable runner
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends binutils libfontconfig1 libfreetype6 libx11-6 libxext6 libxrandr2 libxi6 libxcursor1 libice6 libsm6 libgl1 libegl1 libdbus-1-3 libgomp1 libicu74 libssl3t64 zlib1g xvfb openbox wmctrl x11-utils imagemagick dbus-x11 fonts-dejavu-core
-          dotnet --info > evidence/dotnet-info.txt
-      - name: Export exact corresponding source (before generated outputs)
-        run: python3 .github/scripts/native16-arm64/export-corresponding-source.py
-      - name: Validate exact same-repository Bookworm artifact identity
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 .github/scripts/native16-arm64/inference_stage.py --validate-artifact-only evidence/bookworm-artifact-metadata.json --provider-zip "${{ runner.temp }}/9to1-pinned-bookworm-provider.zip"
-      - name: Download exact previously verified Bookworm build using standard Actions
-        uses: actions/download-artifact@v4
-        with:
-          repository: CroakyJake12/9to1
-          run-id: 39562111673
-          artifact-ids: '12328502225'
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/9to1-pinned-bookworm-artifact
-      - name: Verify pinned engine and model then prepare canonical data-only package stage
-        run: >-
-          python3 .github/scripts/native16-arm64/inference_stage.py
-          --artifact-root "${{ runner.temp }}/9to1-pinned-bookworm-artifact"
-          --artifact-metadata evidence/bookworm-artifact-metadata.json
-          --output-root "${{ runner.temp }}/9to1-preview-inference"
-      - name: Build host tools and full normal ARM product graph then assemble NEW internal package
-        run: python3 .github/scripts/native16-arm64/build-native-arm64.py
-      - name: Install exact newly built package
+          sudo apt-get install -y --no-install-recommends xvfb openbox wmctrl xdotool x11-utils imagemagick dbus-x11 at-spi2-core python3-pyatspi fonts-dejavu-core
+          sudo apt-get install -y --no-install-recommends "$EXACT_PREVIEW_DEB"
+          dpkg-query -W 9to1-preview > evidence/installed-package.txt
+          sha256sum "$EXACT_PREVIEW_DEB" > evidence/installed-deb.sha256
+          cp /usr/share/doc/9to1-preview/source-and-build.json evidence/installed-source-and-build.json
+      - name: Actual fresh normal-user startup, UI prompt and persistence journey
         shell: bash
         run: |
           set -euo pipefail
-          test "$(dpkg-deb --field "$PREVIEW_DEB" Architecture)" = arm64
-          sha256sum "$PREVIEW_DEB" > evidence/native-package.sha256
-          sudo apt-get install -y --no-install-recommends "$PREVIEW_DEB"
-          file /opt/9to1-preview/Haven > evidence/apphost-file.txt
-          ldd /opt/9to1-preview/Haven > evidence/apphost-ldd.txt
-          ! grep -F 'not found' evidence/apphost-ldd.txt
-      - name: Fresh-profile native window and normal close (bounded startup only)
-        shell: bash
-        run: |
-          set -euo pipefail
-          dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' python3 .github/scripts/native16-arm64/native-window-smoke.py
-      - name: Optional same-repository INTERNAL draft asset upload (never publishes release)
-        if: ${{ success() && inputs.upload_draft_asset }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh api repos/CroakyJake12/9to1/releases/419289496 > evidence/internal-draft-before.json
-          python3 - <<'PY'
-          import json
-          x=json.load(open('evidence/internal-draft-before.json'))
-          assert x['id']==419289496 and x['draft'] is True and x['published_at'] is None
-          assert x['tag_name']=='internal-native16-arm64-20261021'
-          PY
-          # Ephemeral workflow token, standard GitHub upload. No owner credential extraction,
-          # clobber, public promotion or retry bypass. A failure remains a failure.
-          gh release upload internal-native16-arm64-20261021 "$PREVIEW_DEB" --repo CroakyJake12/9to1
-          gh api repos/CroakyJake12/9to1/releases/419289496 > evidence/internal-draft-after.json
-          python3 - <<'PY'
-          import json
-          x=json.load(open('evidence/internal-draft-after.json'))
-          assert x['draft'] is True and x['published_at'] is None
-          PY
-      - name: Upload actual package plus SHA/provenance (no profile/database)
-        if: ${{ always() && env.PREVIEW_PACKAGE_DIR != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: 9to1-native16-arm64-internal-package
-          path: |
-            ${{ env.PREVIEW_PACKAGE_DIR }}/*.deb
-            ${{ env.PREVIEW_PACKAGE_DIR }}/SHA256SUMS
-            ${{ env.PREVIEW_PACKAGE_DIR }}/package-receipt.json
-          retention-days: 1
-          if-no-files-found: error
-      - name: Upload unchanged corresponding upstream engine source (no inference executable or weights)
-        if: ${{ always() && env.PREVIEW_INFERENCE_SOURCE != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: 9to1-pinned-llamacpp-upstream-source
-          path: ${{ env.PREVIEW_INFERENCE_SOURCE }}
-          retention-days: 1
-          if-no-files-found: error
-      - name: Preserve inference acquisition and data-stage identity evidence
-        if: ${{ always() && env.PREVIEW_INFERENCE_RECEIPT != '' }}
-        shell: bash
-        run: cp "$PREVIEW_INFERENCE_RECEIPT" evidence/inference-stage-receipt.json
-      - name: Upload bounded evidence and exact source archive
+          dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' /usr/bin/python3 acceptance-tools/.github/scripts/lesson-chat-package-acceptance/package-ui-journey.py
+      - name: Preserve only bounded actual evidence (no package/profile/database/model/key)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 9to1-native16-arm64-source-and-startup-evidence
+          name: 9to1-arm64-exact-package-ui-acceptance
           path: evidence/
           retention-days: 1
           if-no-files-found: error
