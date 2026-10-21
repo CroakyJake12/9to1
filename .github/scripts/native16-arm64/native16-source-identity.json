@@ -1,6 +1,6 @@
 {
   "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
-  "patch_sha256": "4b8680fbadb63dc9153f177469adc3b9ef8e1a18759976fe368ca63389e5f7a6",
+  "patch_sha256": "66119e946ee0a1251536ea59cd06ac5c465f77ea3399586f0c15a67230154748",
   "patch_digest_scope": "SHA256 of git diff --binary --full-index --no-renames 2596258c3282e6c0d058cc7a4fb5f410b7fed06d FINAL_PRODUCT_TREE -- . :(exclude).github; excludes all CI metadata and this identity to avoid circular hashes. Exact product patch retained in reviewer packet.",
   "original_native16_patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
   "successful_native_ci_base": "8b629f0fbab657975009c9da851f075fe1326d66",
@@ -183,6 +183,24 @@
       },
       "actual_change": "Only legal url in Target.createTarget payload; bounds remain in existing setWindowBounds path",
       "native_HTTP_rendering": "NOT RUN on this private child; current separate normal14 native proof running without a result at preparation"
+    },
+    "Composer22_optical_plus": {
+      "production_patch_sha256": "8372d8dcf3fb101e4ab40fa81f12aa9d829b5fc9446ac0af6222da645541e556",
+      "production_source_sha256": "788cae0ebcedfe8dfdb9dbebebbb2b4f7bc4c640febaefe977d220ddd32cb93a",
+      "genuine_worker": {
+        "model": "mercury/mercury-3",
+        "session_id": "ses_ea1883298ffeX3qq4yy1Ao3GAj",
+        "pid": 1127268,
+        "started_at": "2026-10-21T12:37:51.563335+00:00",
+        "ended_at": "2026-10-21T12:38:04.983563+00:00",
+        "exit_code": 0,
+        "cap_usd": 5,
+        "cap_changed": false,
+        "global_config_unchanged": true
+      },
+      "actual_change": "Only actual SVG plus Image Width/Height28\u219222, 44px click target and all bindings/features unchanged",
+      "SDK_and_native_visual": "NOT RUN for22px candidate; source-only independently reviewed",
+      "native_prior28px": "Separate Browser14 capture, not candidate22px acceptance"
     }
   },
   "changed_files_sha256": {
@@ -301,7 +319,7 @@
     "9to1 Workspace/Home/UI/Onboarding.cui": "1051afce6344794ef3859caa305770d7632cf9662ccf38668df03c42931be0c1",
     "9to1 Workspace/Spaces/Tests/SpacesHomeControllerTests.cs": "cab11f7c4bf1303491163379a4afa26ed57929009e3d5229c70c55ad398dc524",
     "9to1 Workspace/Spaces/Tests/SpacesHomeNativeRenderingTests.cs": "d03a97fc8bd7cc5b73abbb133baf65331a19e01c4a8294b25a898745a2a0a9c0",
-    "9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui": "7c76207e9d424406648a44f2fbf825cc961260d599f1cd34a6a185d5964fcb19",
+    "9to1 Workspace/Spaces/UI/Chat/ChatComposer.cui": "788cae0ebcedfe8dfdb9dbebebbb2b4f7bc4c640febaefe977d220ddd32cb93a",
     "9to1 Workspace/Spaces/UI/Development/SpaceDevelopmentReferencesCuiDocument.cs": "97cf6470f2c6e231d605d024a953591bdc6c45d2b30c8e79e35297f277908bff",
     "9to1 Workspace/Spaces/UI/Home/SpacesHome.cui": "054fa0977d288585610ee91af1d771f1e6a4338a71a1758a788c9a967dc853f1",
     "9to1 Workspace/Spaces/UI/Home/SpacesHomeController.cs": "aacf436660956cba2647f56ba1038c2304dd15821bf6998467fdf0fef3dd9372",
@@ -428,7 +446,7 @@
     "framework/CUI/Runtime/CuiPropertyPresentation.cs": "ecdb15f0b7340d749a8ef78bb55f2024cf5948245f0ce61ea99210f5dc89c114",
     "framework/CUI/Runtime/CuiRuntimeCompatibility.cs": "e3b1fb264a1333724cf4d64edd08c3a8d3e7b66713997188f6108ee5531f09ed"
   },
-  "source_identity_scope": "Private next engineering child: complete 241 cumulative source postimages, rehashed from final index; identity excluded from itself; product patch excludes .github. Not pushed/dispatched/native accepted.",
+  "source_identity_scope": "Private engineering child with reviewed composer22 optical delta: all241 sourcepostimages reverified; metadata/self excluded from product digest; not dispatched/accepted.",
   "original_native16_provenance": {
     "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
     "patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
@@ -534,7 +552,7 @@
     "scope": "Full current main HEAD plus every tracked WIP diff/deletion and untracked nonignored file; v16 build identity, NOT acceptance",
     "untracked_archive_sha256": "3e442bdee9f325da0d49edbc90b8ae230cc39f9f75c8a80c0253d7cdf1219bc0"
   },
-  "prepared_at": "2026-10-21T12:37:56.367800+00:00",
+  "prepared_at": "2026-10-21T12:43:46.264398+00:00",
   "acceptance": {
     "component_normal_tests": "Historical changed-source receipts do not establish new combined acceptance; exact new checks pending",
     "combined_native_build": "NOT RUN",
@@ -548,8 +566,9 @@
     "Home_Chat_tile": "NOT RUN: prospectiveHome28canonicalroute correction; realSpaceflow/native firstresponse and normalclose stillpending",
     "Build20": "PASS normal49 checkpoint only; actual native manual edit/save/reopen, fullBuild GUI/one-app/seven gates NOT RUN/OPEN",
     "Browser14": "PASS normal57 + strict Desktop artifact freeze; native browser rendering pending on separate artifact, NOT RUN on this child",
-    "current_private_child": "UNACCEPTED engineering source composition only. Predecessor ab7 build/install/welcome subset passed but three normal closes failed and model/Send unavailable. No new ready/laptop delivery claim."
+    "current_private_child": "UNACCEPTED engineering source composition only. Predecessor ab7 build/install/welcome subset passed but three normal closes failed and model/Send unavailable. No new ready/laptop delivery claim.",
+    "Composer22": "UNACCEPTED native visual; one-line genuine source review only"
   },
-  "predecessor_exact_source_commit": "c5e8c188eee762d1e773f0cd84e83d410f7c7388",
-  "predecessor_product_patch_sha256": "434d74c3033d456c8690fbb07476561f731ecf6a316d658eeee3857649529d01"
+  "predecessor_exact_source_commit": "cacd9a8e6d12dcc39b23e27ccbcee9e5ef837b62",
+  "predecessor_product_patch_sha256": "4b8680fbadb63dc9153f177469adc3b9ef8e1a18759976fe368ca63389e5f7a6"
 }

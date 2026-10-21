@@ -49,7 +49,7 @@
         <Button id="add-button" action="composer.add" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true"
                 accessible-name="Add files or actions" tooltip="Add files or actions">
-          <Image Source="avares://Haven/Assets/plus.svg" Width="28" Height="28" />
+          <Image Source="avares://Haven/Assets/plus.svg" Width="22" Height="22" />
         </Button>
         <Button id="format-button" action="composer.toggle-formatting" content="Aa" Width="44" Height="44" Padding="6"
                 CornerRadius="22" font-size="22" background="Transparent" Chromeless="true"
