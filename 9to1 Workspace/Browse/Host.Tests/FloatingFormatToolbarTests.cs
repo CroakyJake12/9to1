@@ -61,6 +61,35 @@ public sealed class FloatingFormatToolbarTests
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
     }
 
+    /// <summary>Minimal genuine source that records emoji insertions so the floating-layer dual-open
+    /// coverage can assert insertion actually dispatches through the shared popup layer.</summary>
+    private sealed class EmojiRecordingSource : IChatComposerSource
+    {
+        public string Draft { get; set; } = string.Empty;
+        public string Placeholder => "Ask Haven anything";
+        public bool IsSending { get; set; }
+        public bool IsSafetyLocked { get; set; }
+        public bool HasAdd { get; set; } = true;
+        public bool CanSend { get; set; } = true;
+        public bool IsEditing { get; set; }
+        public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
+        public int InsertCount;
+        public string? LastInserted;
+
+        public ValueTask Send() => ValueTask.CompletedTask;
+        public ValueTask Stop() => ValueTask.CompletedTask;
+        public ValueTask Add() => ValueTask.CompletedTask;
+        public ValueTask OpenSettings() => ValueTask.CompletedTask;
+        public ValueTask CloseSettings() => ValueTask.CompletedTask;
+        public ValueTask SetActionMode(string mode) => ValueTask.CompletedTask;
+        public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
+        public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
+        public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
+        public ValueTask FormatSelection(string command) => ValueTask.CompletedTask;
+        public ValueTask InsertEmoji(string emoji) { LastInserted = emoji; InsertCount++; return ValueTask.CompletedTask; }
+        public ValueTask CancelEdit() => ValueTask.CompletedTask;
+    }
+
     [AvaloniaFact]
     public async Task Aa_toggles_same_scene_floating_toolbar_out_of_flow_without_covering_input_or_controls()
     {
@@ -1086,6 +1115,190 @@ public sealed class FloatingFormatToolbarTests
                 Assert.Equal(expected[i], source.LastFormatCommand);
             }
             Assert.True(box.IsKeyboardFocusWithin);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    /// <summary>
+    /// Boundary regression exposing the intrinsic Auto-footer constraint path directly: the composer is
+    /// mounted in an Auto row (which measures its child with infinite available height), so the only
+    /// genuine finite budget is the owning viewport. At high DisplayScale the composed surface must
+    /// still report a height bounded by the viewport (never the unbounded content height), so the Aa
+    /// control stays inside the client and is reachable by a real pointer gesture.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task High_scale_auto_footer_budget_propagates_surface_height_to_viewport()
+    {
+        const double scale = 5;
+        var source = new Source { CanSend = true };
+        var theme = new CuiThemePreferenceContext(new ScaleThemeSource(scale));
+        var view = new ChatComposerCuiView(source, null, theme);
+        var window = CreateFooterWindow(view, 300, 620);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var surface = FindContainer(view, "composer-surface");
+            Assert.NotNull(surface);
+            Assert.True(surface!.Bounds.Height <= window.Height + 0.01,
+                $"surface must be bounded to the viewport under an Auto footer (surface={surface.Bounds.Height}, client={window.Height})");
+            var box = FindInput(view); Assert.NotNull(box);
+            box!.Focus(); Pump();
+            var aa = FindButton(view, "format-button");
+            Assert.NotNull(aa);
+            var aaCenter = Center(aa!, window);
+            Assert.True(new Rect(0, 0, window.Width, window.Height).Contains(aaCenter),
+                $"Aa must be reachable inside the client under the Auto footer (center={aaCenter})");
+            Click(window, aa!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            Assert.True(toolbar!.IsVisible);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    /// <summary>
+    /// Latest owner layering requirement: formatting, emoji and settings are ALL authored floating
+    /// Layers above normal content (never inline body children, never globally modal). This test opens
+    /// formatting AND emoji together with real pointer gestures and verifies both popups are reachable,
+    /// non-obstructing, keep the draft/input/selection identity, independently dismiss, and that emoji
+    /// search/insertion still dispatch through the floating layer.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Dual_open_formatting_and_emoji_floating_layers_keep_both_reachable_and_independent()
+    {
+        var emojiSource = new EmojiRecordingSource { CanSend = true };
+        var view = new ChatComposerCuiView(emojiSource);
+        var window = CreateFooterWindow(view, 900, 700);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view); Assert.NotNull(box);
+            view.Input.Text = "draft"; view.Input.SetSelection(0, 2);
+            box!.Focus(); Pump();
+
+            // Open formatting via a real pointer click on Aa.
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
+
+            // Open emoji while formatting stays open (dual-open, same floating layer).
+            Click(window, FindButton(view, "emoji-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var emojiPanel = FindContainer(view, "emoji-panel");
+            Assert.NotNull(emojiPanel);
+            Assert.True(emojiPanel!.IsVisible, "emoji floating layer must open");
+            Assert.True(toolbar!.IsVisible, "formatting must stay open while emoji opens");
+
+            // Both are out-of-flow floating layers — neither is an inline composer-body child.
+            var body = FindContainer(view, "composer-body");
+            Assert.DoesNotContain(body, toolbar.GetVisualAncestors());
+            Assert.DoesNotContain(body, emojiPanel.GetVisualAncestors());
+
+            // Draft/input/selection identity survives the dual-open round trip.
+            Assert.Equal("draft", box!.Text);
+            Assert.Same(box, FindInput(view));
+            Assert.Equal(2, view.Input.SelectionLength);
+            Assert.Equal("dr", view.Input.SelectedText);
+
+            // Neither popup obstructs the editable input.
+            var inputWin = WindowBounds(box, window);
+            Assert.False(WindowBounds(toolbar, window).Intersects(inputWin), "formatting must not cover input");
+            Assert.False(WindowBounds(emojiPanel, window).Intersects(inputWin), "emoji must not cover input");
+
+            // Formatting commands remain reachable while emoji is open.
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                Assert.True(commandButtons[i].IsEffectivelyVisible);
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+            }
+
+            // Emoji search + insertion are reachable through the floating layer.
+            var search = emojiPanel.GetVisualDescendants().OfType<TextBox>()
+                .SingleOrDefault(t => AutomationProperties.GetAutomationId(t) == "emoji-search");
+            Assert.NotNull(search);
+            search!.Text = "flag"; PumpLayout(window);
+            var emojiCells = emojiPanel.GetVisualDescendants().OfType<Button>()
+                .Where(b => string.Equals(b.Tag as string, "composer.emoji-insert.Text", StringComparison.Ordinal)).ToArray();
+            Assert.True(emojiCells.Length >= 1, "search must realize emoji cells in the floating layer");
+            var before = emojiSource.InsertCount;
+            Click(window, emojiCells[0]);
+            await view.CaptureOriginalActionSettlement();
+            Assert.True(emojiSource.InsertCount > before, "emoji insertion must dispatch from the floating layer");
+
+            // Independent dismissals: closing emoji leaves formatting open; closing formatting leaves none.
+            Click(window, FindButton(view, "emoji-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            Assert.Null(FindContainer(view, "emoji-panel"));
+            Assert.True(toolbar.IsVisible);
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            Assert.Null(FindContainer(view, "format-toolbar"));
+
+            // Real input focus/caret/selection preserved throughout.
+            Assert.True(box.IsKeyboardFocusWithin);
+            Assert.Equal("draft", box.Text);
+            Assert.Equal("dr", view.Input.SelectedText);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    /// <summary>
+    /// Settings is also an authored floating Layer. It opens independently, stays non-obstructing,
+    /// keeps the draft/input identity, dispatches an action, and dismisses independently.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Settings_floating_layer_opens_independently_and_releases_without_obstructing()
+    {
+        var source = new Source { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = CreateFooterWindow(view, 900, 700);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view); Assert.NotNull(box);
+            view.Input.Text = "draft"; view.Input.SetSelection(0, 2);
+            box!.Focus(); Pump();
+
+            Click(window, FindButton(view, "settings-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var settings = FindContainer(view, "settings-panel");
+            Assert.NotNull(settings);
+            Assert.True(settings!.IsVisible, "settings floating layer must open");
+            Assert.Equal("draft", box!.Text);
+            Assert.Same(box, FindInput(view));
+            Assert.Equal(2, view.Input.SelectionLength);
+            var inputWin = WindowBounds(box, window);
+            Assert.False(WindowBounds(settings, window).Intersects(inputWin), "settings must not cover input");
+
+            var modeButton = settings.GetVisualDescendants().OfType<Button>()
+                .FirstOrDefault(b => b.Content as string == "All");
+            Assert.NotNull(modeButton);
+            Click(window, modeButton!);
+            await view.CaptureOriginalActionSettlement();
+
+            Click(window, FindButton(view, "settings-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            Assert.Null(FindContainer(view, "settings-panel"));
+            Assert.True(box.IsKeyboardFocusWithin);
+            Assert.Equal("draft", box.Text);
         }
         catch (Exception error) { testFailure = error; throw; }
         finally { await FinishComposerTestAsync(window, view, testFailure); }

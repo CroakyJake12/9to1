@@ -72,15 +72,33 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
             width = Math.Max(width, cell.DesiredSize.Width);
             height = Math.Max(height, cell.DesiredSize.Height);
         }
-        // Bound the composed surface to the real usable space handed to it. At high DisplayScale in a
-        // narrow viewport the authored content (chips, input, controls) is genuinely taller than the
-        // client; instead of reporting an unbounded desired size that pushes the controls below the
-        // viewport, report the available height and let the authored body scroll internally
-        // (VerticalScrolling), keeping every control pointer/keyboard reachable through genuine
-        // overflow. This is measurement of the real available space, never a fixed/magic cap.
-        if (double.IsFinite(availableSize.Height))
-            height = Math.Min(height, Math.Max(0, availableSize.Height));
+        // Bound the composed surface to a genuine finite presentation/viewport budget. At high
+        // DisplayScale in a narrow viewport the authored content (chips, input, controls) is genuinely
+        // taller than the client. The host often measures this panel with INFINITE available height
+        // (e.g. an intrinsic/Auto footer row sizes its child by desired size), so the finite budget
+        // cannot come from the passed constraint alone. We derive it from the actual owning top-level
+        // viewport when the constraint is unbounded, so the surface reports a bounded size and the
+        // authored body scrolls internally (VerticalScrolling), yielding space to pinned, still-
+        // accessible input and controls. This is measurement of the real available space, never a
+        // fixed/magic cap, and only ever shrinks (never inflates) the reported height.
+        if (FiniteHeightBudget(availableSize) is { } budget)
+            height = Math.Min(height, budget);
         return new Size(width, height);
+    }
+
+    /// <summary>Derive the finite height budget for this composed surface. The passed constraint is
+    /// used when it is finite (direct/constrained host mounts). When the host measures the panel with
+    /// infinite height (an intrinsic Auto row sizes children by desired size), the genuine finite
+    /// viewport budget is obtained from the actual owning top-level, so the composed surface never
+    /// claims more vertical space than the real viewport regardless of how it is hosted.</summary>
+    private double? FiniteHeightBudget(Size availableSize)
+    {
+        if (double.IsFinite(availableSize.Height))
+            return Math.Max(0, availableSize.Height);
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return null;
+        var height = topLevel.Bounds.Height;
+        return height > 0 ? height : null;
     }
 
     protected override Size ArrangeOverride(Size finalSize)

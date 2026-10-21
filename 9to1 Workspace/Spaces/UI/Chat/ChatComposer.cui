@@ -26,7 +26,7 @@
   <Container id="composer-surface" Type="Overlay Float" padding="12"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
-    <Container id="composer-body" Type="Grid" RowSizes="1fr Auto Auto Auto" CellGap="8">
+    <Container id="composer-body" Type="Grid" RowSizes="1fr Auto" CellGap="8">
     <Container id="composer-scroll" Row="0" Type="Vertical Stack" CellGap="8" VerticalScrolling="True">
     <Container id="chips-row" Type="Wrap" CellGap="6" MaxRows="2" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
@@ -74,8 +74,23 @@
         </Button>
       </Container>
     </Container>
+    </Container>
 
-    <Container id="emoji-panel" Row="2" Type="Vertical Stack" CellGap="8" padding="8"
+    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.toggle-formatting" Protect="recovery-status-row">
+    <Container id="format-toolbar" Type="Wrap" CellGap="6" padding="8"
+          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
+          accessible-name="Formatting toolbar">
+      <Button action="composer.format.Bold" content="B" font-weight="Bold" MinWidth="36" MinHeight="36" accessible-name="Bold" tooltip="Bold" />
+      <Button action="composer.format.Italic" content="I" font-style="Italic" MinWidth="36" MinHeight="36" accessible-name="Italic" tooltip="Italic" />
+      <Button action="composer.format.Code" content="{ }" MinWidth="36" MinHeight="36" accessible-name="Inline code" tooltip="Inline code" />
+      <Button action="composer.format.Link" content="🔗" MinWidth="36" MinHeight="36" accessible-name="Link" tooltip="Link" />
+      <Button action="composer.format.Quote" content="❝" MinWidth="36" MinHeight="36" accessible-name="Quote" tooltip="Quote" />
+      <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
+    </Container>
+    </Container>
+
+    <Container id="emoji-floating-layer" Type="Floating" Target="composer-body" Placement="Under" Protect="recovery-status-row">
+    <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
       <!-- The QueryViewport is the canonical CUI runtime state/query scope: it owns the search query
            string and opaque cursor; the authored Repeat/input/pager bind to its bounded window and
@@ -109,8 +124,10 @@
         </Container>
       </Container>
     </Container>
+    </Container>
 
-    <Container id="settings-panel" Row="3" Type="Wrap" CellGap="8" padding="8"
+    <Container id="settings-floating-layer" Type="Floating" Target="composer-body" Placement="Under" Protect="recovery-status-row">
+    <Container id="settings-panel" Type="Wrap" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
       <Text text="Actions:" font-size="12" font-weight="SemiBold" />
       <Button action="composer.set-action-mode.AllowAllActions" content="All" font-size="12" />
@@ -122,19 +139,6 @@
       <Button action="composer.set-response-mode.PreferVisual" content="Prefer visual" font-size="12" />
       <Button action="composer.set-response-mode.PreferText" content="Prefer text" font-size="12" />
       <Button action="composer.set-response-mode.AlwaysText" content="Always text" font-size="12" />
-    </Container>
-    </Container>
-
-    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.toggle-formatting" Protect="recovery-status-row">
-    <Container id="format-toolbar" Type="Wrap" CellGap="6" padding="8"
-          background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
-          accessible-name="Formatting toolbar">
-      <Button action="composer.format.Bold" content="B" font-weight="Bold" MinWidth="36" MinHeight="36" accessible-name="Bold" tooltip="Bold" />
-      <Button action="composer.format.Italic" content="I" font-style="Italic" MinWidth="36" MinHeight="36" accessible-name="Italic" tooltip="Italic" />
-      <Button action="composer.format.Code" content="{ }" MinWidth="36" MinHeight="36" accessible-name="Inline code" tooltip="Inline code" />
-      <Button action="composer.format.Link" content="🔗" MinWidth="36" MinHeight="36" accessible-name="Link" tooltip="Link" />
-      <Button action="composer.format.Quote" content="❝" MinWidth="36" MinHeight="36" accessible-name="Quote" tooltip="Quote" />
-      <Button action="composer.format.Bullet" content="•" MinWidth="36" MinHeight="36" accessible-name="Bullet list" tooltip="Bullet list" />
     </Container>
     </Container>
   </Container>
