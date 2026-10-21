@@ -1012,9 +1012,37 @@ public sealed class FloatingFormatToolbarTests
             Assert.NotNull(scroller);
             Assert.True(scroller!.Extent.Height > scroller.Viewport.Height, "chips must overflow at high scale");
 
-            Click(window, FindButton(view, "format-button")!);
-            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            // Private acceptance diagnostic only: observe the ORIGINAL physical Aa gesture without
+            // changing focus, authored state, hit testing, layout, dispatch or the original assertions.
+            var aaDiagnosticButton = FindButton(view, "format-button")!;
+            var beforeAaDiagnostic = DescribeNarrowAaState(view, window, aaDiagnosticButton);
+            var aaPresses = 0; var aaReleases = 0; var aaClicks = 0;
+            EventHandler<PointerPressedEventArgs> aaPressed = (_, _) => aaPresses++;
+            EventHandler<PointerReleasedEventArgs> aaReleased = (_, _) => aaReleases++;
+            EventHandler<RoutedEventArgs> aaClicked = (_, _) => aaClicks++;
+            aaDiagnosticButton.AddHandler(InputElement.PointerPressedEvent, aaPressed,
+                RoutingStrategies.Bubble, handledEventsToo: true);
+            aaDiagnosticButton.AddHandler(InputElement.PointerReleasedEvent, aaReleased,
+                RoutingStrategies.Bubble, handledEventsToo: true);
+            aaDiagnosticButton.AddHandler(Button.ClickEvent, aaClicked,
+                RoutingStrategies.Bubble, handledEventsToo: true);
+            try
+            {
+                Click(window, aaDiagnosticButton);
+                await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            }
+            finally
+            {
+                aaDiagnosticButton.RemoveHandler(InputElement.PointerPressedEvent, aaPressed);
+                aaDiagnosticButton.RemoveHandler(InputElement.PointerReleasedEvent, aaReleased);
+                aaDiagnosticButton.RemoveHandler(Button.ClickEvent, aaClicked);
+            }
             var toolbar = FindContainer(view, "format-toolbar");
+            if (toolbar is null)
+                Console.Error.WriteLine("NARROW-AA-DIAGNOSTIC original NotNull still enforced\n"
+                    + $"real gesture receipts presses={aaPresses} releases={aaReleases} clicks={aaClicks}\n"
+                    + "BEFORE\n" + beforeAaDiagnostic + "AFTER\n"
+                    + DescribeNarrowAaState(view, window, aaDiagnosticButton));
             Assert.NotNull(toolbar);
             Assert.True(toolbar!.IsVisible, "toolbar must open");
 
@@ -1116,6 +1144,53 @@ public sealed class FloatingFormatToolbarTests
             "placed toolbar must participate in actual rendering/input\n" + diagnostic);
         Assert.True(toolbar.Bounds.Width > 0 && toolbar.Bounds.Height > 0,
             "placed toolbar must have a positive physical rectangle\n" + diagnostic);
+    }
+
+    // Read-only, failure-only diagnostic; typed retained ownership is observed, never substituted
+    // for FindContainer or used to accept an absent/hidden toolbar. Original NotNull is unchanged.
+    private static string DescribeNarrowAaState(ContentControl view, Window window, Button aa)
+    {
+        var text = new System.Text.StringBuilder();
+        try
+        {
+            text.AppendLine($"window-client={new Rect(window.Bounds.Size)} focus={window.FocusManager?.GetFocusedElement()?.GetType().Name ?? "<null>"}");
+            text.AppendLine("aa " + Describe(aa));
+            text.AppendLine("aa-state " + (CuiPropertyPresentation.TryGetExisting(aa, out var store) && store is not null
+                ? string.Join("; ", store.Inspect().Where(p => p.Name is "Selected" or "IsVisible" or "IsEnabled")
+                    .Select(p => $"{p.Name}={p.Value} level={p.Level} source={p.Source}")) : "<no projection>"));
+            var top = TopLevel.GetTopLevel(aa);
+            var origin = top is null ? null : aa.TranslatePoint(default, top);
+            if (top is not null && origin is not null)
+            {
+                var center = new Point(origin.Value.X + aa.Bounds.Width / 2, origin.Value.Y + aa.Bounds.Height / 2);
+                var hit = top.InputHitTest(center);
+                text.AppendLine($"aa-owner={top.GetType().Name} aa-center={center} client-contains-center={new Rect(top.Bounds.Size).Contains(center)} hit={hit?.GetType().Name ?? "<null>"} hit-is-aa={ReferenceEquals(hit, aa)} hit-within-aa={hit is Visual visual && aa.IsVisualAncestorOf(visual)}");
+            }
+            foreach (var parent in aa.GetVisualAncestors().OfType<Control>().Take(8))
+                text.AppendLine("aa-parent " + Describe(parent) + $" clip-to-bounds={parent.ClipToBounds}");
+            var surface = view.GetVisualDescendants().OfType<CuiContainerControl>()
+                .SingleOrDefault(c => AutomationProperties.GetAutomationId(c) == "composer-surface");
+            text.AppendLine("surface " + (surface is null ? "<absent>" : Describe(surface)));
+            var host = surface?.AuthoredChildren.OfType<CuiContainerControl>()
+                .SingleOrDefault(c => AutomationProperties.GetAutomationId(c) == "composer-floating-layer");
+            text.AppendLine("same-owner-retained-host " + (host is null ? "<absent>" : Describe(host)));
+            if (host is not null)
+            {
+                text.AppendLine($"retained-host-membership={surface!.AuthoredChildren.Any(c => ReferenceEquals(c, host))} target={host.AuthoredTargetId} placement={host.AuthoredPlacement}");
+                var retained = host.AuthoredChildren.SingleOrDefault(c => AutomationProperties.GetAutomationId(c) == "format-toolbar");
+                text.AppendLine("same-host-retained-toolbar " + (retained is null ? "<absent>" : Describe(retained)));
+                foreach (var parent in host.GetVisualAncestors().OfType<Control>().Take(5))
+                    text.AppendLine("host-parent " + Describe(parent));
+            }
+        }
+        catch (Exception error)
+        {
+            // A diagnostic lookup must never replace/mask the ORIGINAL product assertion.
+            text.AppendLine("diagnostic-unavailable=" + error.GetType().Name + ": " + error.Message);
+        }
+        return text.ToString();
+        static string Describe(Control control) =>
+            $"{control.GetType().Name}#{AutomationProperties.GetAutomationId(control) ?? ""} visible={control.IsVisible} effective={control.IsEffectivelyVisible} attached={control.IsAttachedToVisualTree()} focused={control.IsKeyboardFocusWithin} bounds={control.Bounds} desired={control.DesiredSize}";
     }
 
     private static string PlacementDiagnostic(Control toolbar)

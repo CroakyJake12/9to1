@@ -154,6 +154,96 @@ public sealed class NativeComposerFloatingPortalTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Native_scene_packaged_recovery_action_and_floating_commands_both_remain_reachable()
+    {
+        var registrar = new RecordingRegistrar();
+        var scene = new ChatHavenScene(registrar);
+        var window = new Window
+        {
+            Width = 1500, Height = 900,
+            Content = new HavenSceneControl(new HavenAvaloniaImageResolver(), registrar) { Root = scene.Root }
+        };
+        var manageRequests = 0;
+        scene.ManageLocalModelsRequested += (_, _) => manageRequests++;
+        scene.SetStatus("No local model is available.");
+        scene.SetManageLocalModelsVisible(true);
+        Exception? testFailure = null;
+        window.Show();
+        try
+        {
+            await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
+            await scene.RecoveryView.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var view = scene.ComposerView;
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            Click(box!);
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            view.Input.Text = "alpha\nbeta";
+            view.Input.SetSelection(0, 5);
+            var recoveryRow = scene.RecoveryView.GetVisualDescendants().OfType<Control>()
+                .Single(c => AutomationProperties.GetAutomationId(c) == "recovery-status-row");
+            var manage = scene.RecoveryView.GetVisualDescendants().OfType<Button>()
+                .Single(c => AutomationProperties.GetAutomationId(c) == "recovery-manage-button");
+            Assert.True(recoveryRow.IsEffectivelyVisible);
+            Assert.True(manage.IsEffectivelyVisible);
+            Assert.True(registrar.IsRegistered(scene.RecoveryHost));
+            Click(FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var toolbar = FindToolbarAnywhere(window, view);
+            Assert.NotNull(toolbar);
+            Assert.True(toolbar!.IsEffectivelyVisible);
+            var host = toolbar.GetVisualAncestors().OfType<CuiContainerControl>()
+                .Single(c => c.AuthoredTargetId is not null);
+            var owner = view.GetVisualDescendants().OfType<CuiContainerControl>()
+                .Single(c => c.LayoutType == "Overlay Float");
+            Assert.Contains(owner.AuthoredChildren, child => ReferenceEquals(child, host));
+            var windowClient = new Rect(window.Bounds.Size);
+            var toolbarWin = WindowBounds(toolbar, window);
+            Assert.True(windowClient.Contains(toolbarWin));
+            Assert.False(toolbarWin.Intersects(WindowBounds(recoveryRow, window)),
+                "floating toolbar must not cover the ACTUAL packaged recovery row");
+            Assert.False(toolbarWin.Intersects(WindowBounds(manage, window)),
+                "floating toolbar must not cover the genuine owner-routed recovery action");
+            Assert.False(toolbarWin.Intersects(WindowBounds(box!, window)));
+            Assert.Equal("alpha\nbeta", view.Input.Text);
+            Assert.Equal("alpha", view.Input.SelectedText);
+            Assert.Same(box, FindInput(view));
+            var commands = toolbar.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commands.Length);
+            var expected = new[] { "**x**", "_x_", "`x`", "[x](url)", "> x", "- x" };
+            for (var index = 0; index < commands.Length; index++)
+            {
+                Assert.True(commands[index].IsEffectivelyVisible);
+                Assert.True(windowClient.Contains(WindowBounds(commands[index], window)));
+                view.Input.Text = "x"; view.Input.SetSelection(0, 1);
+                Click(commands[index]);
+                await view.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.Equal(expected[index], view.Input.Text);
+            }
+            Assert.Same(box, FindInput(view));
+            Assert.True(box!.IsKeyboardFocusWithin);
+            // The actual packaged CUI action must reach its owning scene event/ledger, not just Click.
+            Click(manage);
+            await scene.RecoveryView.CaptureOriginalActionSettlement().WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(1, manageRequests);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            try { await scene.JoinComposerCloseAndReleaseAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+            finally
+            {
+                try { await scene.JoinRecoveryCloseAndReleaseAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+                finally { window.Close(); }
+            }
+            if (testFailure is not null) throw testFailure;
+        }
+    }
+
     /// <summary>Send a real pointer move/down/up to the ACTUAL owning top level of the target (the
     /// window for in-tree content, the portal's popup root for portaled content) at the translated live
     /// bounds. No RaiseEvent / direct service invocation / synthetic action routing.</summary>

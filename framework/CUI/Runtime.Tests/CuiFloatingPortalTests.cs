@@ -1063,9 +1063,13 @@ public sealed class CuiFloatingPortalTests
     /// scene) in the same top-level.</summary>
     private static Rect WindowBoundsOf(Control control, Window window)
     {
-        var origin = control.TranslatePoint(default, window)
-            ?? throw new InvalidOperationException("control is not translateable in this window");
-        return new Rect(origin.X, origin.Y, control.Bounds.Width, control.Bounds.Height);
+        var actualTop = TopLevel.GetTopLevel(control);
+        Assert.NotNull(actualTop);
+        var origin = control.TranslatePoint(default, actualTop!)
+            ?? throw new InvalidOperationException("control is not translateable in its actual top level");
+        var screen = actualTop!.PointToScreen(origin);
+        Assert.True(double.IsFinite(screen.X) && double.IsFinite(screen.Y), "non-finite screen origin");
+        return new Rect(window.PointToClient(screen), control.Bounds.Size);
     }
 
     private static void PumpLayout(Window window)
