@@ -401,7 +401,20 @@ public sealed partial class App
             ThrowAppCauses(failures); // SAME actual origin/handoff terminal before encompassing retirement.
             if (!attempt.Prepared) return;
             Dispatcher.UIThread.VerifyAccess();
-            if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
+            if (!IsOriginalDocumentCloseAttemptCurrent(attempt))
+            {
+#if !ANDROID
+                // A startup lease (captured while initialization/loading was pending) becomes non-current
+                // when the actual owned startup transition completes and creates chrome/workspace. That
+                // is a benign invalidation, not a failure: retain the ONE approved user close by joining/
+                // aborting the old unaccepted lease and reacquiring the CURRENT preparation WITHOUT waiting
+                // for the whole startup or any user Welcome input. Genuine save-vetoes / declined closes,
+                // foreign OCE and IO/fault siblings are never re-driven or cleared.
+                if (!await TryReplanStaleStartupLeaseAsync(attempt, failures)) return;
+#else
+                return;
+#endif
+            }
 #if !ANDROID
             if (attempt.Unified is { } unified)
             {
@@ -467,6 +480,87 @@ public sealed partial class App
         (_actualDocumentClosePrimaryShell is { } primary ? new[] { primary } : Array.Empty<MainView>())
             .Concat(desktop.Windows.OfType<MainWindow>().Select(window => window.DataContext).OfType<MainView>())
             .Distinct<MainView>(ReferenceEqualityComparer.Instance).ToArray();
+
+    /// <summary>Retains ONE approved user close across ONLY the benign loading→Apps startup-transition
+    /// invalidation. A startup lease captured while initialization/loading was pending becomes non-current
+    /// once the actual owned startup completes and creates chrome/workspace. Instead of dropping the close
+    /// (the pre-fix loss), this joins/aborts the old unaccepted lease and reacquires the CURRENT
+    /// preparation immediately — it does NOT wait for the whole startup or any user Welcome action. A
+    /// genuine save-veto / declined close ends the request without auto-retry; foreign OCE and IO/fault
+    /// siblings stay retained as exact causes and are never cleared or repeated.</summary>
+    private async Task<bool> TryReplanStaleStartupLeaseAsync(OriginalDocumentCloseAttempt attempt, List<Exception> failures)
+    {
+#if !ANDROID
+        var stale = attempt.UnifiedLease;
+        var unified = attempt.Unified;
+        if (stale is not { Startup: true } || unified is null) return false;
+        if (_originalAppWork.IsRetiring || _actualShutdownDelivery is not null) return false;
+        Task<UnifiedWorkspaceHost.ClosePreparation?> reprepared = Task.FromResult<UnifiedWorkspaceHost.ClosePreparation?>(null);
+        var replanned = await StartupTransitionCloseReplanner.ReplanAsync<UnifiedWorkspaceHost.ClosePreparation>(
+            stale,
+            () => attempt.UnifiedAbort ??= stale.AbortAsync(),
+            () => { var t = unified.PrepareCloseAsync(CancellationToken.None); reprepared = t; return t; },
+            failures);
+        if (replanned is null) return false; // declined / genuine fault retained; request ends
+        // The old lease's actual abort was joined by the sequencer above. Release the alias so a NEW
+        // (replaced) lease that later fails/refuses gets its OWN exact abort original rather than reusing
+        // the old completed one. Raw custody of the old lease/task remains with the already-tracked source.
+        attempt.UnifiedAbort = null;
+        // Point the attempt at the reacquired CURRENT lease so the existing begin-close path uses it.
+        attempt.UnifiedPreparation = reprepared;
+        attempt.UnifiedLease = replanned;
+        return IsOriginalDocumentCloseAttemptCurrent(attempt);
+#else
+        return false;
+#endif
+    }
+
+    /// <summary>Extracted production-path sequencer used by both the App wiring and the portable tests. It
+    /// owns the ordering (join/abort the old unaccepted lease BEFORE reacquiring a current one) and the
+    /// raw-fault retention rule (the SAME actual task is captured outside the await/try and fully joined, so
+    /// EVERY AggregateException.InnerExceptions reference is preserved; synchronous acquisition faults are
+    /// genuine too). A genuine abort/reprepare fault is retained and never auto-repeated; a declined/no-prep
+    /// ends the request. It performs NO waiting on startup/Welcome and no detached fire-and-forget — the
+    /// caller owns and awaits its dispatch. Generic over the lease type so tests drive it with controlled
+    /// gate values while production passes the real ClosePreparation leases.</summary>
+    internal static class StartupTransitionCloseReplanner
+    {
+        internal static async Task<T?> ReplanAsync<T>(T staleLease, Func<Task> startAbort,
+            Func<Task<T?>> startAcquire, List<Exception> failures)
+            where T : class
+        {
+            // Abort leg: capture the RAW actual task OUTSIDE the await/try so its complete terminal state
+            // stays inspectable; synchronous acquisition exceptions are genuine too. No normalization here
+            // and never a fake completed task.
+            Task abortTask;
+            try { abortTask = startAbort(); }
+            catch (Exception sync) { Add(failures, sync); return null; }
+            await JoinRawFaultsAsync(abortTask, failures);
+            if (failures.Count > 0) return null; // genuine abort fault(s) retained; never reacquire/retry.
+
+            // Reacquire leg: same raw-task capture/join; extract the result only on clean success.
+            Task<T?> acquireTask;
+            try { acquireTask = startAcquire(); }
+            catch (Exception sync) { Add(failures, sync); return null; }
+            await JoinRawFaultsAsync(acquireTask!, failures);
+            if (failures.Count > 0) return null; // genuine prep fault(s) retained; no commit.
+            return acquireTask!.GetAwaiter().GetResult();
+        }
+
+        private static async Task JoinRawFaultsAsync(Task actual, List<Exception> failures)
+        {
+            try { await actual; }
+            catch (Exception error)
+            {
+                if (actual.Exception is { InnerExceptions.Count: > 0 } group)
+                    foreach (var inner in group.InnerExceptions) Add(failures, inner);
+                else Add(failures, error);
+            }
+        }
+
+        internal static void Add(List<Exception> failures, Exception error)
+        { if (!failures.Any(item => ReferenceEquals(item, error))) failures.Add(error); }
+    }
 
     private TaskCompletionSource? AcquireOriginalDesktopShutdownDelivery()
     {

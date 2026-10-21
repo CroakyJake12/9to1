@@ -16,6 +16,7 @@ using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Home;
 using Haven.Desktop.Views.Shell;
 using HavenOS.Apps.Browse;
+using HavenOS.Home;
 using HavenOS.Home.Core;
 using HavenOS.Home.Discover;
 using Microsoft.Extensions.DependencyInjection;
@@ -247,6 +248,10 @@ public sealed partial class App
                 callback => Dispatcher.UIThread.Post(callback));
             await Track(_homeTheme.RefreshAsync(currentToken));
             currentToken.ThrowIfCancellationRequested(); DemandCurrent();
+            // First-run gate: a fresh profile must complete (or recover) onboarding before normal
+            // Home/Browse publication. Returning completed profiles bypass directly.
+            await RunFirstRunOnboardingGateAsync(_actor.ProfileId, currentToken);
+            currentToken.ThrowIfCancellationRequested(); DemandCurrent();
             var coordinator = _services.GetRequiredService<WorkspaceSessionCoordinator>();
             var restored = await Track(coordinator.LoadAsync(currentToken));
             currentToken.ThrowIfCancellationRequested(); DemandCurrent();
@@ -286,7 +291,7 @@ public sealed partial class App
                 AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false);
             IBrowseEngineHostFactory? engines = null;
             if (!OperatingSystem.IsWindows())
-                engines = new LinuxWebKitEngineFactory();
+                engines = new ChromiumEngineFactory();
 #if HAVEN_WINDOWS_DESKTOP
             engines = new WindowsChromiumEngineFactory((tab, engine, origin, kind) =>
                 (_chrome ?? throw new InvalidOperationException("The original Browse owner is not published."))
@@ -312,6 +317,140 @@ public sealed partial class App
             var ready = await _sceneInitialization;
             _workspace.ObserveReadiness(ready);
             if (ready.State != CuiSceneAvailabilityState.Ready) throw new InvalidOperationException(ready.Message);
+        }
+
+        /// <summary>
+        /// First-run gate. A fresh profile (or one with structured damaged/unavailable completion)
+        /// must complete or recover the authored onboarding flow before Home/Browse is published.
+        /// Returning completed profiles bypass directly. The durable read runs off the UI thread;
+        /// all loader/control/Content work is marshaled back onto the UI thread. The loader is owned
+        /// by this host before any callback/await, action admission is closed on retirement, and the
+        /// same actual origin/disposal task pipeline is joined from outside dispatch (the host
+        /// shutdown awaits it via <see cref="_sources"/>). No Home is published for a damaged or
+        /// failed state.
+        /// </summary>
+        private async Task RunFirstRunOnboardingGateAsync(string profileId, CancellationToken token)
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            var onboarding = _services.GetRequiredService<HomeOnboardingService>();
+
+            // Genuine durable I/O reads off the UI thread; marshal back before touching controls.
+            var read = await onboarding.ReadCompletionAsync(profileId, token).ConfigureAwait(false);
+            if (read.IsCompleted) return; // healthy returning profile bypasses.
+            token.ThrowIfCancellationRequested();
+
+            // Marshal the ENTIRE mount + wait + retirement onto the UI thread and await the SAME
+            // mount+retirement task (never a void/async-void/two-level-yield surrogate). Passing the
+            // method group directly makes InvokeAsync's returned task represent the full mount,
+            // including the loader drain, so the gate cannot publish Home before real retirement.
+            await Dispatcher.UIThread.InvokeAsync(() => MountOnboardingUiAsync(onboarding, read, token));
+        }
+
+        /// <summary>Mounts the authored onboarding CUI on the UI thread and awaits durable completion
+        /// (or cancellation). Structured damaged/unavailable reads project a recovery page; bytes are
+        /// preserved, never auto-completed and never published as fresh/complete. It uses the SAME
+        /// thin production helper (<see cref="FirstRunOnboardingFlow.Mount"/>) as the normal Desktop
+        /// owning tests, and retains+awaits the SAME real drain before returning.</summary>
+        private async Task MountOnboardingUiAsync(HomeOnboardingService onboarding,
+            HomeOnboardingCompletionRead read, CancellationToken token)
+        {
+            Dispatcher.UIThread.VerifyAccess(); DemandCurrent();
+
+            var recovery = read.State switch
+            {
+                HomeOnboardingReadState.Corrupt or HomeOnboardingReadState.IncompatibleSchema
+                    or HomeOnboardingReadState.Conflict or HomeOnboardingReadState.Unavailable =>
+                    new HomeOnboardingRecoveryInfo(read.Code ?? "DamagedState",
+                        read.Message ?? "The local onboarding state could not be read safely."),
+                _ => null,
+            };
+
+            var actor = _actor ?? throw new InvalidOperationException("The current Home profile is unavailable.");
+            var session = FirstRunOnboardingFlow.Mount(onboarding, actor.ProfileId, recovery,
+                onQuit: () => Dispatcher.UIThread.Post(RequestRetirement));
+
+            // Retain ownership IMMEDIATELY after acquisition, before any fallible operation (the
+            // startup-loader dispose below or any fault in DemandCurrent/registration). If retention
+            // fails, retire the freshly mounted session so it is never leaked, then propagate.
+            Task run;
+            try
+            {
+                lock (_gate)
+                {
+                    DemandCurrent();
+                    run = RunSessionToPublicationAsync(session, token);
+                    _sources.Add(run);
+                }
+            }
+            catch
+            {
+                try { await session.RetireAsync(); }
+                catch { /* best-effort cleanup; the original fault propagates */ }
+                throw;
+            }
+
+            // Unconditional cleanup after retirement: the run task itself retires the session in its
+            // own finally and propagates wait/cleanup faults. The startup-loader dispose must not
+            // abort the run (which would abandon the already-mounted session); its faults are
+            // retained and aggregated with the run's.
+            var failures = new List<Exception>();
+            try
+            {
+                try { _startupLoadingLoader?.Dispose(); _startupLoadingLoader = null; }
+                catch (Exception exception) { failures.Add(exception); }
+                try { await run; }
+                catch (Exception exception) { failures.Add(exception); }
+            }
+            finally
+            {
+                if (!run.IsCompleted)
+                {
+                    try { await run; }
+                    catch (Exception exception) { failures.Add(exception); }
+                }
+            }
+            if (failures.Count > 0)
+            {
+                if (failures.Count == 1)
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+                throw new AggregateException("Onboarding mount/cleanup failed.", failures);
+            }
+        }
+
+        /// <summary>Runs a mounted onboarding session to durable completion (or cancellation) and
+        /// retires it via the helper's real drain. Content is published only on genuine completion;
+        /// cleanup runs unconditionally even after retirement (no DemandCurrent gate) and every
+        /// wait/cleanup fault is retained and propagated, never swallowed.</summary>
+        private async Task RunSessionToPublicationAsync(FirstRunOnboardingSession session, CancellationToken token)
+        {
+            var root = session.Root;
+            Content = root;
+            var completed = false;
+            var failures = new List<Exception>();
+            try
+            {
+                // Stay on the UI thread through the wait and retirement: ConfigureAwait(default)
+                // re-captures the UI SynchronizationContext, so dispose/drain/Content below never
+                // run off-UI.
+                await session.CompletionTask.WaitAsync(token);
+                completed = true;
+            }
+            catch (Exception exception)
+            {
+                failures.Add(exception);
+            }
+            finally
+            {
+                try { await session.RetireAsync(); }
+                catch (Exception exception) { failures.Add(exception); }
+                if (!completed && ReferenceEquals(Content, root)) Content = null;
+            }
+            if (failures.Count > 0)
+            {
+                if (failures.Count == 1)
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+                throw new AggregateException("Onboarding mount/cleanup failed.", failures);
+            }
         }
 
         private NewDashboardPage CreateDashboard()

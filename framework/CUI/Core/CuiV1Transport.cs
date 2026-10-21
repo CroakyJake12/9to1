@@ -327,7 +327,8 @@ public static class CuiV1ArtifactReader
                 var parameter = TryGetPropertySafe(actionEl, "Parameter", out var parameterEl) && parameterEl.ValueKind == JsonValueKind.Object
                     ? ReadValue(parameterEl, source) : null;
                 actions[pair.Name] = new CuiActionDefinition(String(actionEl, "Name"), String(actionEl, "Command"),
-                    parameter, ReadSpan(actionEl), NullableString(actionEl, "LocalTarget"));
+                    parameter, ReadSpan(actionEl), NullableString(actionEl, "LocalTarget"),
+                    ReadActionSets(actionEl, source), NullableString(actionEl, "ResultTarget"));
             }
         }
 
@@ -383,12 +384,58 @@ public static class CuiV1ArtifactReader
             }
         }
 
+        var effects = ReadEffects(element, source);
+
         return new CuiDocument(String(element, "SourceName"), resources, styles, actions, templates, components, ReadSpan(element))
         {
             RootProperties = rootProperties,
             Imports = imports,
             Variables = variables,
+            Effects = effects,
         };
+    }
+
+    /// <summary>Reads document-root declarative auto-invocation effects from a compiled V1
+    /// semantic projection. Each effect carries a name, a typed condition, the referenced action
+    /// name and its source span; the action is resolved/validated by the runtime and by the V2
+    /// compiled-artifact validator, not here.</summary>
+    private static IReadOnlyList<CuiEffectDefinition> ReadEffects(JsonElement element, string source)
+    {
+        var result = new List<CuiEffectDefinition>();
+        if (!TryGetPropertySafe(element, "Effects", out var effectsEl)) return result;
+        if (effectsEl.ValueKind != JsonValueKind.Array)
+            throw Admission("CUIR072", $"The effects of document '{source}' are not a JSON array.");
+        foreach (var effectEl in effectsEl.EnumerateArray())
+        {
+            if (effectEl.ValueKind != JsonValueKind.Object)
+                throw Admission("CUIR072", $"An effect of document '{source}' is not a JSON object.");
+            var conditionEl = RequireObject(effectEl, "Condition", "effect condition");
+            var condition = new CuiCondition(
+                ReadValue(RequireObject(conditionEl, "Test", "effect condition test value"), source),
+                Bool(conditionEl, "Negate"), ReadSpan(conditionEl), Bool(conditionEl, "IsLive", true));
+            result.Add(new CuiEffectDefinition(
+                String(effectEl, "Name"), condition,
+                String(effectEl, "Action"), ReadSpan(effectEl)));
+        }
+        return result;
+    }
+
+    private static IReadOnlyList<CuiSetDirective> ReadActionSets(JsonElement actionEl, string source)
+    {
+        if (!TryGetPropertySafe(actionEl, "Sets", out var setsEl) || setsEl.ValueKind != JsonValueKind.Array)
+            return System.Array.Empty<CuiSetDirective>();
+        var sets = new List<CuiSetDirective>();
+        foreach (var setEl in setsEl.EnumerateArray())
+        {
+            CuiCondition? when = null;
+            if (TryReadOptionalObject(setEl, "When", out var whenEl))
+                when = new CuiCondition(
+                    ReadValue(RequireObject(whenEl, "Test", "set guard test value"), source),
+                    Bool(whenEl, "Negate"), ReadSpan(whenEl), Bool(whenEl, "IsLive", true));
+            sets.Add(new CuiSetDirective(String(setEl, "Target"),
+                ReadValue(RequireObject(setEl, "Value", "set value"), source), ReadSpan(setEl), when));
+        }
+        return sets;
     }
 
     private static CuiComponent ReadComponent(JsonElement element, string source)

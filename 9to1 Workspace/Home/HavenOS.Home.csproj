@@ -17,6 +17,7 @@
     <Compile Include="Source\Home\Apps\*.cs" />
     <Compile Include="Source\Home\Discover\*.cs" />
     <Compile Include="Source\Home\ModelPicker\*.cs" />
+    <Compile Include="Source\Home\Onboarding\*.cs" />
     <Compile Include="Source\Home\PermissionsTrustNotifications\*.cs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
@@ -27,6 +28,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="UI\ModelPicker.cui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UI\Onboarding.cui">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

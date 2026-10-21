@@ -1,7 +1,7 @@
 """Actual installed-package UI journey. Standard accessibility + xdotool; no application hooks/database writes."""
 from pathlib import Path
 import os,subprocess,time,json,datetime,hashlib,sqlite3,sys,traceback
-import re
+import re,runpy
 HEAD=os.environ['GITHUB_SHA'];assert re.fullmatch(r'[0-9a-f]{40}',HEAD);PROMPT='What is 2 + 2? Answer briefly and explain your calculation.'
 OUT=Path(os.environ['GITHUB_WORKSPACE'])/'evidence';PROFILE=Path(os.environ['RUNNER_TEMP'])/'9to1-chat-package-fresh';assert os.geteuid()!=0;assert not PROFILE.exists();assert os.uname().machine=='aarch64';OUT.mkdir(exist_ok=True)
 receipt={'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source_head':HEAD,'prompt':PROMPT,'normal_user_uid':os.geteuid(),'fresh_profile_initially_absent':True,'desktop':'Xvfb1280x900+openbox','installed_package':'NOT VERIFIED','startup_window_and_close':'NOT RUN','actual_UI_chat':'NOT RUN','streaming':'NOT OBSERVED','persistence_database':'NOT RUN','visual_reopen':'NOT RUN','owner_laptop':'NOT RUN','independent_screenshot_review':'REQUIRED','stages':[]};app=None;wm=None;logs=[]
@@ -39,8 +39,22 @@ def launch(label):
  app=subprocess.Popen(['/usr/bin/9to1-preview'],env=env,stdout=f,stderr=subprocess.STDOUT);win=wait_window();command(['wmctrl','-ir',win,'-b','add,maximized_vert,maximized_horz']);command(['wmctrl','-ia',win]);event('APP_WINDOW',label=label,pid=app.pid,window=win);return win
 
 def normal_close(win,label):
- command(['wmctrl','-ic',win]);code=app.wait(timeout=35);event('NORMAL_CLOSE',label=label,exit_code=code)
- if code!=0:raise RuntimeError('Actual normal close returned '+str(code))
+ try:
+  command(['wmctrl','-ic',win]);code=app.wait(timeout=35);event('NORMAL_CLOSE',label=label,exit_code=code)
+  if code!=0:raise RuntimeError('Actual normal close returned '+str(code))
+  return True
+ except Exception as error:
+  receipt.setdefault('required_phase_failures',[]).append({'phase':label+'-normal-close','error':repr(error),'traceback':traceback.format_exc()})
+  event('REQUIRED_NORMAL_CLOSE_FAILURE',label=label,error=repr(error))
+  try:shot(label+'-close-failure');dump(label+'-close-failure')
+  except Exception:pass
+  if app.poll() is None:
+   app.terminate()
+   try:app.wait(timeout=10)
+   except subprocess.TimeoutExpired:app.kill();app.wait()
+   event('OWNED_FAILURE_CLEANUP',label=label,method='SIGTERM_OR_SIGKILL; not normal-close acceptance')
+  # Continue the independent chat/reopen checks; the final receipt and exit remain failures.
+  return False
 
 def nodes():
  try:
@@ -75,13 +89,13 @@ def wait_home(label):
  while time.monotonic()<end:
   if app.poll() is not None:raise RuntimeError('App exited before actual Home '+str(app.returncode))
   attempt+=1;rows=nodes();names={name.casefold() for n,name,_,_ in rows if n.get('showing')}
-  if 'search or enter web address' in names and ('home dashboard' in names or {'edit dashboard page','open home discover model catalogue'}.issubset(names)):
-   event('ACTUAL_HOME_READY',method='AT-SPI',label=label);shot(label+'-actual-home');return
+  kind=Driver.home_kind([n for n,_,_,_ in rows])
+  if kind:
+   event('ACTUAL_HOME_READY',method='AT-SPI',home_kind=kind,dashboard_acceptance='NOT CLAIMED',label=label);shot(label+'-actual-home');return
   p=shot(label+'-waiting-'+str(attempt))
   try:
    r=command(['tesseract',p,'stdout','--psm','11'],check=False);text=r.stdout.lower();(OUT/(label+'-waiting-'+str(attempt)+'.ocr.txt')).write_text(r.stdout)
-   if 'welcome' in text and 'edit page' in text and 'discover models' in text and 'checking required home services' not in text and 'could not start' not in text:
-    event('ACTUAL_HOME_READY',method='Visible screenshot OCR; review required',label=label);return
+   # OCR is evidence only; genuine typed Apps/Dashboard controls determine readiness.
   except Exception as e:event('OCR_OBSERVATION_UNAVAILABLE',error=repr(e))
   time.sleep(2)
  raise RuntimeError('Actual Home NOT OBSERVED within180seconds; Loading window is not readiness')
@@ -98,8 +112,16 @@ def db_messages():
 try:
  installed=json.loads(Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text());assert installed['source_head']==HEAD and installed['build_kind']=='LESSON_PREVIEW_ARM64';receipt['installed_package']='SOURCE_PROVENANCE_MATCH';receipt['installed_build_provenance']=installed
  wm_log=(OUT/'openbox.stderr.log').open('w');logs.append(wm_log);wm=subprocess.Popen(['openbox'],stdout=wm_log,stderr=subprocess.STDOUT);wait_wm()
- w=launch('first-fresh-launch');wait_home('01-fresh-home');shot('01-fresh-profile-first-screen');normal_close(w,'fresh-first-launch');receipt['startup_window_and_close']='PASS_WINDOW_AND_CLOSE_REQUIRES_SCREENSHOT_REVIEW';save()
- w=launch('actual-chat-launch');wait_home('02-home');shot('02-home-before-navigation');xkey('ctrl+l');type_text('9to1://spaces');xkey('Return');time.sleep(4);shot('03-spaces');dump('03-spaces')
+ Driver=runpy.run_path(str(Path(__file__).resolve().with_name('onboarding-driver.py')))['OnboardingDriver']
+ w=launch('first-fresh-launch')
+ driver=Driver(app.pid,w,PROFILE,OUT,'chat-fresh',event,lambda:app.poll() is None)
+ completed=driver.fresh();receipt['fresh_onboarding']='ACTUAL_START_NOT_NOW_MODEL_DECISION_AND_DURABLE_COMPLETION'
+ wait_home('01-fresh-home');shot('01-fresh-profile-first-screen');first_close_ok=normal_close(w,'fresh-first-launch')
+ driver.saved(expected=completed);receipt['startup_window_and_close']='PASS_WINDOW_AND_CLOSE_REQUIRES_SCREENSHOT_REVIEW' if first_close_ok else 'FAIL_RETAINED_NORMAL_CLOSE_FAILURE';save()
+ w=launch('actual-chat-launch')
+ driver=Driver(app.pid,w,PROFILE,OUT,'chat-returning',event,lambda:app.poll() is None)
+ driver.returning(completed);receipt['same_profile_onboarding_bypass']='ACTUAL_DIRECT_HOME_AND_SAME_COMPLETION_RECORD'
+ wait_home('02-home');shot('02-home-before-navigation');click(['Search or enter web address']);xkey('ctrl+a');type_text('9to1://spaces');click(['Go to address']);time.sleep(4);shot('03-spaces');dump('03-spaces')
  click(['Open Chat']);time.sleep(2);shot('03-chat-selected');click(['Start a new chat in this Space']);time.sleep(2);click(['Message']);type_text(PROMPT);shot('04-real-prompt-before-send');dump('04-real-prompt-before-send');click(['Send message'],timeout=180)
  end=time.monotonic()+180;assistant=None;observations=[];ui_growth=[]
  while time.monotonic()<end:
@@ -120,7 +142,7 @@ try:
  normal_close(w,'after-response');persisted=db_messages();assert any(r['id']==assistant['id'] and r['content']==assistant['content'] for r in persisted);receipt['persistence_database']='SAME_ASSISTANT_ID_CONTENT_AFTER_NORMAL_CLOSE';(OUT/'actual-prompt-and-response.json').write_text(json.dumps(persisted,indent=2)+'\n')
  w=launch('reopen-same-created-profile');time.sleep(5);shot('07-reopened-same-profile');rows=dump('07-reopened-same-profile');visible='\n'.join(n+'\n'+t for _,n,_,t in rows)
  receipt['visual_reopen']='PROMPT_AND_RESPONSE_VISIBLE' if PROMPT in visible and assistant['content'].strip()[:80] in visible else 'NOT VERIFIED; screenshot review or real recent-chat selection required'
- normal_close(w,'after-reopen');receipt['status']='CHECKPOINT_ACTUAL_UI_JOURNEY_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW';receipt['full_app_acceptance']='NOT ACCEPTED'
+ normal_close(w,'after-reopen');driver.saved(expected=completed);receipt['status']='FAIL_RETAINED_NATIVE_CLOSE_FAILURES_AFTER_ACTUAL_UI_JOURNEY' if receipt.get('required_phase_failures') else 'CHECKPOINT_ACTUAL_UI_JOURNEY_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW';receipt['full_app_acceptance']='NOT ACCEPTED'
 except LookupError as e:
  receipt['status']='BLOCKED_ACTUAL_UI_CONTROL_UNAVAILABLE';receipt['error']=repr(e);shot('blocked-ui-controls')
 except BaseException as e:

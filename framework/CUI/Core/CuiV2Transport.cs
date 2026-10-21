@@ -166,17 +166,44 @@ public sealed record CuiV2Action(
     string Command,
     CuiV2Value? Parameter,
     CuiV2Span Span,
-    string? LocalTarget = null)
+    string? LocalTarget = null,
+    string? ResultTarget = null,
+    IReadOnlyList<CuiV2Set>? Sets = null)
 {
     public static CuiV2Action From(CuiActionDefinition action) =>
         new(action.Name, action.Command,
             action.Parameter is { } parameter ? CuiV2Value.From(parameter) : null,
-            CuiV2Span.From(action.Span), action.LocalTarget);
+            CuiV2Span.From(action.Span), action.LocalTarget, action.ResultTarget,
+            action.Sets is { Count: > 0 } ? action.Sets.Select(CuiV2Set.From).ToArray() : null);
 
     public CuiActionDefinition ToCuiAction() =>
         new(Name, Command,
             Parameter is { } parameter ? parameter.ToCuiValue() : null,
-            Span.ToCuiSourceSpan(), LocalTarget);
+            Span.ToCuiSourceSpan(), LocalTarget,
+            Sets?.Select(set => set.ToCuiSet()).ToArray(), ResultTarget);
+}
+
+public sealed record CuiV2Set(string Target, CuiV2Value Value, CuiV2Span Span, CuiV2Condition? When = null)
+{
+    public static CuiV2Set From(CuiSetDirective set) =>
+        new(set.Target, CuiV2Value.From(set.Value), CuiV2Span.From(set.Span),
+            set.When is { } when ? CuiV2Condition.From(when) : null);
+
+    public CuiSetDirective ToCuiSet() =>
+        new(Target, Value.ToCuiValue(), Span.ToCuiSourceSpan(),
+            When is { } when ? when.ToCuiCondition() : null);
+}
+
+/// <summary>Wire-safe mirror of <see cref="CuiEffectDefinition"/> (declarative auto-invocation
+/// effect) so authored automatic-flow orchestration survives the V2 codec.</summary>
+public sealed record CuiV2Effect(string Name, CuiV2Condition Condition, string ActionName, CuiV2Span Span)
+{
+    public static CuiV2Effect From(CuiEffectDefinition effect) =>
+        new(effect.Name, CuiV2Condition.From(effect.Condition), effect.ActionName,
+            CuiV2Span.From(effect.Span));
+
+    public CuiEffectDefinition ToCuiEffect() =>
+        new(Name, Condition.ToCuiCondition(), ActionName, Span.ToCuiSourceSpan());
 }
 
 public sealed record CuiV2ActionReference(string Name, CuiV2Span Span)
@@ -330,7 +357,8 @@ public sealed record CuiV2Semantics(
     CuiV2Span Span,
     IReadOnlyDictionary<string, CuiV2Value> RootProperties,
     IReadOnlyList<CuiV2Import> Imports,
-    IReadOnlyDictionary<string, CuiV2Variable> Variables)
+    IReadOnlyDictionary<string, CuiV2Variable> Variables,
+    IReadOnlyList<CuiV2Effect>? Effects = null)
 {
     public static CuiV2Semantics From(CuiDocument document) => new(
         document.SourceName,
@@ -342,7 +370,8 @@ public sealed record CuiV2Semantics(
         CuiV2Span.From(document.Span),
         document.RootProperties.ToDictionary(pair => pair.Key, pair => CuiV2Value.From(pair.Value), StringComparer.Ordinal),
         document.Imports.Select(CuiV2Import.From).ToArray(),
-        document.Variables.ToDictionary(pair => pair.Key, pair => CuiV2Variable.From(pair.Value), StringComparer.Ordinal));
+        document.Variables.ToDictionary(pair => pair.Key, pair => CuiV2Variable.From(pair.Value), StringComparer.Ordinal),
+        document.Effects.Select(CuiV2Effect.From).ToArray());
 
     public CuiDocument ToCuiDocument() => new(
         SourceName,
@@ -356,6 +385,7 @@ public sealed record CuiV2Semantics(
         RootProperties = RootProperties.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiValue(), StringComparer.Ordinal),
         Imports = Imports.Select(import => import.ToCuiImport()).ToArray(),
         Variables = Variables.ToDictionary(pair => pair.Key, pair => pair.Value.ToCuiVariable(), StringComparer.Ordinal),
+        Effects = Effects?.Select(effect => effect.ToCuiEffect()).ToArray() ?? Array.Empty<CuiEffectDefinition>(),
     };
 }
 

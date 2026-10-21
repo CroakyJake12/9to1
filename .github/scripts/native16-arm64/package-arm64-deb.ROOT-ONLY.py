@@ -33,7 +33,7 @@ Priority: optional
 Architecture: arm64
 Maintainer: {args.maintainer}
 Installed-Size: {installed_kb}
-Depends: libc6 (>= {libc_floor}){python_dep}, libgcc-s1, libstdc++6 (>= 11), zlib1g, libssl3t64 | libssl3, libicu76 | libicu74 | libicu72 | libicu70, libfontconfig1, libfreetype6, libx11-6, libxext6, libxrandr2, libxi6, libxcursor1, libice6, libsm6, libgl1, libegl1, libdbus-1-3, libgomp1
+Depends: libc6 (>= {libc_floor}){python_dep}, libgcc-s1, libstdc++6 (>= 11), zlib1g, libssl3t64 | libssl3, libicu78 | libicu76 | libicu74 | libicu72 | libicu70, libfontconfig1, libfreetype6, libx11-6, libxext6, libxrandr2, libxi6, libxcursor1, libice6, libsm6, libgl1, libegl1, libdbus-1-3, libgomp1
 Recommends: fonts-dejavu-core, xdg-utils
 Suggests: libasound2t64 | libasound2, libespeak-ng1
 Homepage: https://9to1.uk

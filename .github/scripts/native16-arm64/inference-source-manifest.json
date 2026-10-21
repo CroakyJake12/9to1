@@ -6,8 +6,8 @@
   "files": [
     {
       "path": ".github/scripts/native16-arm64/PREVIEW-README.md",
-      "sha256": "aba867c4e327fad06940f9283b27ea51f7b9ffa94d722b2f5979dae123fb6bff",
-      "size": 2643
+      "sha256": "dfb9f90fce5770a8ed5fa095b5fbb4b9513c1b9d841a888b59c926675f2230b8",
+      "size": 3180
     },
     {
       "path": ".github/scripts/native16-arm64/build-native-arm64.py",
@@ -21,8 +21,8 @@
     },
     {
       "path": ".github/scripts/native16-arm64/package-arm64-deb.ROOT-ONLY.py",
-      "sha256": "d223fa431da2f6b3477f7544b8f7557cab2de48361f6ce468641ac7a932ffc5a",
-      "size": 6757
+      "sha256": "cbb8099d92aa1d99c2854629484c4f961bb821a67b07b6fd1945068f7d1945ca",
+      "size": 6768
     },
     {
       "path": ".github/scripts/native16-arm64/qwen3-06b-q6k.json",
@@ -31,8 +31,8 @@
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
-      "sha256": "b023af59ff296deb7551432389968587bf6b9857f62f2235be37425819e379f6",
-      "size": 8292
+      "sha256": "eec120f5a28b0c0e14dbc13d258e899028cb7babea8f40fda2ad2d87b53d12e7",
+      "size": 10018
     },
     {
       "path": "9to1 Workspace/Home/Source/Dulche/bundle/HANDOFF.md",
@@ -220,5 +220,7 @@
       "size": 2155
     }
   ],
-  "final_preview_kind": "LESSON_PREVIEW_ARM64"
+  "final_preview_kind": "LESSON_PREVIEW_ARM64",
+  "engineering_parent_source": "5893fc7d63715898ad6024d8d84ac5edb125252a",
+  "metadata_note": "Only exact source-input hashes/sizes refreshed after authored welcome/close/browser/Home integration and literallibicu78 packaging; inference acquisition algorithms, model/engine pins, binary/source/licence/export rules unchanged."
 }

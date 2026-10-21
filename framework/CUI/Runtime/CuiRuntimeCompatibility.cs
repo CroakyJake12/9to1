@@ -47,6 +47,12 @@ public static class CuiRuntimeCompatibility
     /// capability can execute bounded paged query documents.</summary>
     public const string QueryViewportCapability = "query-viewport";
 
+    /// <summary>Capability name for declarative auto-invocation effects (document-root Effects
+    /// blocks that dispatch a named action on a rising-edge condition). A host that does not
+    /// advertise this must reject such documents at admission rather than silently dropping the
+    /// authored auto-flow.</summary>
+    public const string DeclarativeEffectsCapability = "declarative-effects";
+
     public static IReadOnlySet<string> Capabilities { get; } = new HashSet<string>(StringComparer.Ordinal)
     {
         "native-controls",
@@ -59,6 +65,7 @@ public static class CuiRuntimeCompatibility
         LocalStateToggleCapability,
         LocalStateRandomSelectCapability,
         QueryViewportCapability,
+        DeclarativeEffectsCapability,
     };
 
     public static bool IsLanguageVersionCompatible(string? version)

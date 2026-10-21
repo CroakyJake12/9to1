@@ -92,16 +92,41 @@ jobs:
           file /opt/9to1-preview/Haven > evidence/apphost-file.txt
           ldd /opt/9to1-preview/Haven > evidence/apphost-ldd.txt
           ! grep -F 'not found' evidence/apphost-ldd.txt
-      - name: Fresh-profile native window and normal close (bounded startup only)
+      - name: Fresh-profile native welcome setup, Home and normal close
+        id: startup
+        continue-on-error: true
+        timeout-minutes: 10
         shell: bash
         run: |
           set -euo pipefail
           dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' python3 .github/scripts/native16-arm64/native-window-smoke.py
-      - name: Actual installed-package local-text chat and persistence (no rebuild)
+      - name: Independent installed-package welcome, local-text chat and persistence
+        id: chat
+        if: ${{ !cancelled() && steps.startup.outcome != 'skipped' }}
+        continue-on-error: true
+        timeout-minutes: 12
         shell: bash
         run: |
           set -euo pipefail
           dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' /usr/bin/python3 .github/scripts/native16-arm64/package-ui-journey.py
+      - name: Aggregate actual raw setup/Home/chat receipts without hiding any failed close
+        if: always()
+        env:
+          STARTUP_OUTCOME: ${{ steps.startup.outcome }}
+          CHAT_OUTCOME: ${{ steps.chat.outcome }}
+        shell: python
+        run: |
+          from pathlib import Path
+          import os,json,sys,datetime
+          out=Path('evidence');out.mkdir(exist_ok=True)
+          def load(name):
+              p=out/name
+              return json.loads(p.read_text()) if p.is_file() else {'status':'NOT RUN: raw receipt missing'}
+          startup=load('native-startup-receipt.json');chat=load('package-ui-journey-receipt.json')
+          ok=os.environ['STARTUP_OUTCOME']=='success' and os.environ['CHAT_OUTCOME']=='success' and startup.get('status','').startswith('PASS_BOUNDED_') and chat.get('status')=='CHECKPOINT_ACTUAL_UI_JOURNEY_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW'
+          receipt={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source_head':os.environ['GITHUB_SHA'],'startup_step_outcome':os.environ['STARTUP_OUTCOME'],'chat_step_outcome':os.environ['CHAT_OUTCOME'],'startup_raw_status':startup.get('status'),'chat_raw_status':chat.get('status'),'status':'PASS_CHECKPOINT_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW' if ok else 'FAIL_OR_BLOCKED','owner_laptop':'NOT RUN','automatic_full_application_acceptance':False}
+          (out/'combined-package-journey-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          sys.exit(0 if ok else 1)
       - name: Optional same-repository INTERNAL draft asset upload (never publishes release)
         if: ${{ success() && inputs.upload_draft_asset }}
         env:

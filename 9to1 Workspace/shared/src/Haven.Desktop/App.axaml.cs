@@ -94,6 +94,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<WorkspaceWindowService>();
 #if !ANDROID
         ConfigureOriginalWindowsHomeRegistrations(collection);
+        ConfigureOriginalOnboardingRegistrations(collection);
         ConfigureOriginalNativeDevelopmentRegistrations(collection);
         ConfigureOriginalWindowsDeveloperRegistrations(collection);
         ConfigureOriginalAssistantDevelopmentOwnerRegistrations(collection);

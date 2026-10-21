@@ -37,6 +37,30 @@ public interface ICuiActionAvailability
     bool? IsActionAvailable(string command);
 }
 
+/// <summary>A typed outcome of an invoked CUI command. CUI may bind to its fields (for example
+/// <c>{Binding Result.Succeeded}</c>, <c>{Binding Result.Code}</c>, <c>{Binding Result.Message}</c>)
+/// so authored transitions can branch on the result without C# deciding which screen follows.
+/// Long-running commands remain non-blocking: the value is written only after the command settles.</summary>
+public sealed record CuiCommandOutcome(
+    bool Succeeded,
+    bool Cancelled,
+    string? Code,
+    string? Message,
+    object? Value)
+{
+    public static CuiCommandOutcome Running => new(false, false, "Running", null, null);
+}
+
+/// <summary>Optional host-owned result-reporting action dispatch. A dispatcher that implements this
+/// supplies a typed outcome for every command; the loader stores it in the CUI-visible <c>result</c>
+/// variable declared on the action. A dispatcher that does not implement this is treated as
+/// succeeding without an explicit result (code "Succeeded").</summary>
+public interface ICuiResultReportingDispatcher : ICuiActionDispatcher
+{
+    ValueTask<CuiCommandOutcome> DispatchWithOutcomeAsync(string command, object? parameter,
+        CancellationToken cancellationToken = default);
+}
+
 public static class CuiBindingEvaluator
 {
     public static object? Evaluate(CuiValue value, ICuiBindingContext context)

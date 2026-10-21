@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Browse.NativeLinux</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Browse</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
+    <!-- NativeUI supplies the IBrowseNativeEngineTab surface contract and the
+         approved-CUI/Avalonia runtime; Core (and its contracts) come transitively.
+         Only the low-level engine adapter lives here; CUI owns all app chrome. -->
+    <ProjectReference Include="..\NativeUI\HavenOS.Apps.Browse.NativeUI.csproj" />
+  </ItemGroup>
+</Project>
