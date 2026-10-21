@@ -23,7 +23,8 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
         "spaces.select-move-parent",
         "spaces.edit-extensions", "spaces.edit-graph", "spaces.edit-details",
         "spaces.new-chat", "spaces.open-conversation", "spaces.open-sidebar-item",
-        "spaces.toggle-sidebar", "spaces.toggle-space-switcher", "spaces.toggle-space-overflow"
+        "spaces.toggle-sidebar", "spaces.toggle-space-switcher", "spaces.toggle-space-overflow",
+        "spaces.manage"
     };
 
     private readonly CuiViewModel _values = new();
@@ -85,6 +86,13 @@ public sealed class SpacesHomeCuiBindings : ICuiWritableBindingContext, ICuiActi
             "spaces.sidebarExpanded" => !snapshot.SidebarCollapsed,
             "spaces.spaceSwitcherOpen" => snapshot.SpaceSwitcherOpen,
             "spaces.spaceOverflowOpen" => snapshot.SpaceOverflowOpen,
+            // Manager visibility is presentation-only: the authored space-details management surface
+            // shows over a mounted workspace when IsManaging is true, and returns to the SAME mounted
+            // workspace when false. The native Haven owner overrides these two derived projections with
+            // its real mounted-content state (see SpacesHomePage.TryGetValue).
+            "spaces.isManaging" => snapshot.IsManaging,
+            "spaces.showWorkspace" => false,
+            "spaces.showSummary" => true,
             "spaces.layoutColumns" => snapshot.SidebarCollapsed ? "70 0 1fr" : "70 280 1fr",
             "spaces.query" => snapshot.Query,
             "spaces.builtIns" => snapshot.BuiltIns,

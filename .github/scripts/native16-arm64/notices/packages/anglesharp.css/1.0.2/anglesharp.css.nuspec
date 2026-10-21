@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>AngleSharp.Css</id>
+    <version>1.0.2</version>
+    <authors>AngleSharp.Css</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>logo.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://anglesharp.github.io/</projectUrl>
+    <description>Extends the CSSOM from the core AngleSharp library.</description>
+    <releaseNotes>https://github.com/AngleSharp/AngleSharp.Css/blob/main/CHANGELOG.md</releaseNotes>
+    <tags>html html5 css css3 dom styling library anglesharp angle</tags>
+    <repository type="git" url="https://github.com/AngleSharp/AngleSharp.Css" branch="refs/heads/main" commit="d158478f58882dad1d595dc7bb2286f3da4bf6ea" />
+    <dependencies>
+      <group targetFramework="net10.0">
+        <dependency id="AngleSharp" version="[1.5.0, 2.0.0)" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETFramework4.6.2">
+        <dependency id="AngleSharp" version="[1.5.0, 2.0.0)" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.5" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETFramework4.7.2">
+        <dependency id="AngleSharp" version="[1.5.0, 2.0.0)" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.5" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net8.0">
+        <dependency id="AngleSharp" version="[1.5.0, 2.0.0)" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="AngleSharp" version="[1.5.0, 2.0.0)" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.5.5" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

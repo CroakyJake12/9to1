@@ -79,7 +79,7 @@ public sealed partial class MainView
                 page = AcquireOriginalShellSynchronous(original, () => new DeveloperSavedProjectsPage(binding.Catalog, SpacesRegistry,
                     binding.HomeReadiness, binding.Files.DemandExternalOriginalRetirementJoin,
                     view => OpenOriginalDevelopmentCatalogTaskAsync(binding, view),
-                    spaceId => OpenOriginalCanonicalTaskSpaceAsync(spaceId),
+                    (spaceId, _) => OpenOriginalCanonicalTaskSpaceAsync(spaceId),
                     binding.ConnectionLifetime, binding.WindowLifetime, CapturePartial));
                 DemandOriginalDevelopmentCatalog(binding);
             }

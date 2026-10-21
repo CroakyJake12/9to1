@@ -1,3 +1,5 @@
+using Avalonia.VisualTree;
+using Avalonia.Automation;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using Avalonia.Controls;
@@ -12,6 +14,7 @@ using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Chat;
 using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Browse;
+using HavenOS.Apps.Spaces;
 using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -176,6 +179,85 @@ public sealed class SpacesConversationRouteTests
         }
     }
 
+    /// <summary>
+    /// The native13 false-empty regression: on initial restored-Chat startup, the selected Space's
+    /// REAL recent history must be projected from the canonical repository at the admitted bootstrap
+    /// boundary, BEFORE any manager toggle, extra selection call, or explicit refresh. Stored IDs and
+    /// the current marker are asserted, and unrelated-Space/archived/temporary entries are excluded.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Initial_restored_chat_startup_publishes_real_selected_space_history()
+    {
+        using var rig = new Rig(withHome: true);
+        var failures = new List<Exception>();
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            // A genuine saved selected-Space/Chat route requires a real, non-archived Space.
+            var space = await rig.Spaces.CreateAsync("History fixture");
+            var spaceId = space.Id;
+
+            // Seed the controlled canonical repository fixture with stable identities: two live
+            // conversations in the selected Space, one archived, one temporary, one in another Space.
+            var restored = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat,
+                "Restored chat", null, null, false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch,
+                SpaceId: spaceId);
+            var recent = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat,
+                "Recent chat", null, null, false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch,
+                SpaceId: spaceId);
+            var archived = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat,
+                "Archived chat", null, null, false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch,
+                IsArchived: true, SpaceId: spaceId);
+            var temporary = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat,
+                "Temporary chat", null, null, false, true, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch,
+                SpaceId: spaceId);
+            var unrelated = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat,
+                "Other-space chat", null, null, false, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch,
+                SpaceId: Guid.NewGuid());
+
+            rig.Row = restored;
+            rig.Written[restored.Id] = restored;
+            rig.Written[recent.Id] = recent;
+            rig.Written[archived.Id] = archived;
+            rig.Written[temporary.Id] = temporary;
+            rig.Written[unrelated.Id] = unrelated;
+
+            // Real process-local Linux Home admission in an isolated directory, then the public
+            // init path over the saved selected-Space/Chat route.
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session($"9to1://spaces/selected/{spaceId:D}/chat/{restored.Id:D}", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+
+            // Assert the projected history IMMEDIATELY after init, before any manager toggle, extra
+            // selection call, or explicit refresh.
+            Assert.True(spaces.TryGetValue("spaces.conversations", out var projected));
+            var stored = Assert.IsAssignableFrom<IReadOnlyList<SpacesHomeConversationRow>>(projected);
+            Assert.True(spaces.TryGetValue("spaces.hasConversations", out var hasHistory));
+            Assert.Equal(true, hasHistory);
+            Assert.Contains(stored, row => row.Id == restored.Id && row.Title == restored.Title && row.IsCurrent);
+            Assert.Contains(stored, row => row.Id == recent.Id && row.Title == recent.Title && !row.IsCurrent);
+            Assert.Equal(2, stored.Count); // Only the two live rows of the selected Space.
+            Assert.DoesNotContain(stored, row => row.Id == archived.Id);
+            Assert.DoesNotContain(stored, row => row.Id == temporary.Id);
+            Assert.DoesNotContain(stored, row => row.Id == unrelated.Id);
+        }
+        catch (Exception failure) { failures.Add(failure); }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            catch (Exception failure) { failures.Add(failure); }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+            catch (Exception failure) { failures.Add(failure); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Initial Spaces history and independent cleanup failed.", failures);
+    }
+
     [AvaloniaTheory]
     [InlineData("9to1://spaces/chat/not-a-conversation")]
     [InlineData("9to1://spaces/chat/00000000-0000-0000-0000-000000000000")]
@@ -338,6 +420,191 @@ public sealed class SpacesConversationRouteTests
         if (failures.Count > 1) throw new AggregateException("Spaces close boundary and independent cleanup failed.", failures);
     }
 
+    [AvaloniaFact]
+    public async Task Manager_return_preserves_exact_mounted_page_conversation_and_draft()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        var failures = new List<Exception>();
+        SpacesBrowseAppContentSession? session = null;
+        Window? window = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+            window = new Window { Width = 1100, Height = 800, Content = root };
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+
+            // Mount the real chat in the actual root before observing its physical input.
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var mounted = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var mountedId = mounted.ConversationId;
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            var physicalInput = RenderedComposerTextBox(mounted);
+            Assert.True(physicalInput.Bounds.Width > 0 && physicalInput.Bounds.Height > 0);
+            var physicalMount = spaces.SpaceWorkspaceMount;
+            Assert.NotNull(physicalMount);
+            const string draft = "alpha\nbeta";
+            mounted.SetDraft(draft);
+            Assert.Equal(draft, mounted.ComposerInput.Text);
+            Assert.Equal(draft, physicalInput.Text);
+
+            // Open the manager: presentation-only, nothing created, the same page stays mounted.
+            await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+            Assert.Empty(spaces.Controller.State.CustomSpaces);
+            Assert.Same(mounted, spaces.SpaceWorkspaceContent);
+
+            // Return restores the SAME retained physical page/conversation/draft.
+            await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
+            Assert.False(spaces.Controller.State.IsManaging);
+            Assert.Same(mounted, spaces.SpaceWorkspaceContent);
+            Assert.Equal(mountedId, mounted.ConversationId);
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+            Assert.Equal(draft, mounted.ComposerInput.Text);
+            Assert.Same(physicalInput, RenderedComposerTextBox(mounted));
+            Assert.Equal(draft, physicalInput.Text);
+            Assert.Same(physicalMount, spaces.SpaceWorkspaceMount);
+            Assert.Same(spaces, root.Content);
+        }
+        catch (Exception failure) { failures.Add(failure); }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            catch (Exception failure) { failures.Add(failure); }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+            catch (Exception failure) { failures.Add(failure); }
+            try { window?.Close(); }
+            catch (Exception failure) { failures.Add(failure); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Spaces manager navigation and independent cleanup failed.", failures);
+    }
+
+    [AvaloniaFact]
+    public async Task Real_navigation_closes_manager_and_reveals_the_new_chat()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        var failures = new List<Exception>();
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var first = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var firstId = first.ConversationId;
+            var visiblePublications = new List<(Guid ConversationId, string Address)>();
+            session.StateChanged += (_, _) =>
+            {
+                if (!spaces.Controller.State.IsManaging && spaces.SpaceWorkspaceContent is NewChatPage visible)
+                    visiblePublications.Add((visible.ConversationId, session.Address.Value));
+            };
+
+            // Open the manager, then navigate via a REAL new-chat publication. The manager must
+            // exit only after the publication succeeds, revealing the newly mounted chat.
+            await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+
+            await spaces.DispatchAsync("spaces.new-chat", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+
+            Assert.False(spaces.Controller.State.IsManaging);
+            var second = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotEqual(firstId, second.ConversationId);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, second.CurrentConversation.SpaceId);
+            Assert.Same(spaces, root.Content);
+            Assert.NotEmpty(visiblePublications);
+            Assert.All(visiblePublications, observed => Assert.Equal(
+                $"9to1://spaces/selected/{SpaceRegistry.ChatSpaceId:D}/chat/{observed.ConversationId:D}", observed.Address));
+
+            // Ordinary Chat navigation also exits management after the actual cached-page publication.
+            var writesBeforeCachedOpen = rig.ConversationWrites;
+            await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            Assert.False(spaces.Controller.State.IsManaging);
+            Assert.Same(second, spaces.SpaceWorkspaceContent);
+            Assert.Same(spaces, root.Content);
+            Assert.Equal(writesBeforeCachedOpen, rig.ConversationWrites);
+        }
+        catch (Exception failure) { failures.Add(failure); }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            catch (Exception failure) { failures.Add(failure); }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+            catch (Exception failure) { failures.Add(failure); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Spaces manager navigation and independent cleanup failed.", failures);
+    }
+
+    [AvaloniaFact]
+    public async Task Refused_real_navigation_keeps_manager_and_old_mounted_page()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        var failures = new List<Exception>();
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var mounted = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+
+            // Open the manager, then attempt a real conversation navigation that genuinely refuses
+            // (nonexistent conversation identity). Admission is not publication: the manager and
+            // the old mounted page must both remain.
+            await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
+            Assert.True(spaces.Controller.State.IsManaging);
+
+            await spaces.DispatchAsync("spaces.open-conversation", Guid.NewGuid()).AsTask().WaitAsync(Bound);
+            Assert.Contains("no longer available", spaces.Controller.State.StatusMessage);
+            Assert.True(spaces.Controller.State.IsManaging);
+            Assert.Same(mounted, spaces.SpaceWorkspaceContent);
+            Assert.Same(spaces, root.Content);
+        }
+        catch (Exception failure) { failures.Add(failure); }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            catch (Exception failure) { failures.Add(failure); }
+            try { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+            catch (Exception failure) { failures.Add(failure); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Spaces manager navigation and independent cleanup failed.", failures);
+    }
+
+    private static Avalonia.Controls.TextBox RenderedComposerTextBox(NewChatPage page) => page
+        .GetVisualDescendants().OfType<Avalonia.Controls.TextBox>()
+        .Single(input => AutomationProperties.GetAutomationId(input) == "composer-input");
+
     private static async Task CloseSettledRouteAsync(SpacesBrowseAppContentSession session)
     {
         // These checks concern a settled restored page. Let its genuinely queued
@@ -383,7 +650,11 @@ public sealed class SpacesConversationRouteTests
                 "UpsertConversationAsync" => allowConversationWrites ? RecordConversationWrite((Conversation)args![0]!) : RecordUnexpectedWrite(),
                 _ => throw Unexpected(name)
             });
-            var ollama = Proxy<IOllamaClient>((name, _) => name == "GetModelsAsync" ? Models() : throw Unexpected(name));
+            // The actual factory requires the shared routed source; preserve the real caller token.
+            var routed = Proxy<IProviderModelClient>((name, args) => name == "GetModelsAsync"
+                ? Models((CancellationToken)args![0]!) : throw Unexpected(name));
+            // Keep raw transport distinct: accidental raw discovery/chat is an unexpected I/O call.
+            var ollama = Proxy<IOllamaClient>((name, _) => throw Unexpected("Raw Ollama: " + name));
             var safety = Proxy<IConversationSafetyService>((name, args) => name == "GetSnapshotAsync"
                 ? Task.FromResult(new ConversationSafetySnapshot((Guid)args![0]!, 0, ConversationSafetyState.Active, null, 0)) : throw Unexpected(name));
             var paths = Proxy<IAppPaths>((name, _) => name switch
@@ -398,9 +669,10 @@ public sealed class SpacesConversationRouteTests
             });
             var instances = new GenUiInstanceStore();
             var services = new ServiceCollection().AddSingleton(new HavenEventBus()).AddSingleton(conversations)
-                .AddSingleton(ollama).AddSingleton(safety).AddSingleton(Spaces)
+                .AddSingleton<IProviderModelClient>(routed).AddSingleton<IOllamaClient>(ollama)
+                .AddSingleton(safety).AddSingleton(Spaces)
                 .AddSingleton(Proxy<IConversationVersioningService>()).AddSingleton(new UserPreferencesService(paths))
-                .AddSingleton(new ChatSessionService(conversations, ollama, new CapabilityPreflightService(), safety,
+                .AddSingleton(new ChatSessionService(conversations, routed, new CapabilityPreflightService(), safety,
                     new WorkspaceToolRuntime(Proxy<IWorkspaceToolService>()), new ComputerToolRuntime(Proxy<IComputerToolService>())))
                 .AddSingleton(new GenUiLocalActionRegistry()).AddSingleton(instances)
                 .AddSingleton(new GenerativeUiEventRouter([], Proxy<IGenUiEventAuditSink>(), instances))
@@ -450,7 +722,12 @@ public sealed class SpacesConversationRouteTests
             Row = conversation;
             return Task.CompletedTask;
         }
-        private Task<IReadOnlyList<ModelDescriptor>> Models() { ModelReads++; return Task.FromResult<IReadOnlyList<ModelDescriptor>>([]); }
+        private Task<IReadOnlyList<ModelDescriptor>> Models(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ModelReads++;
+            return Task.FromResult<IReadOnlyList<ModelDescriptor>>([]);
+        }
         internal SpacesBrowseAppContentSession Session(string address, Guid? tabId = null, string profileId = "profile",
             BrowserTabPrivacy privacy = BrowserTabPrivacy.Standard,
             Func<BrowseNavigationIntent, Task, bool>? queueNavigation = null) => new(

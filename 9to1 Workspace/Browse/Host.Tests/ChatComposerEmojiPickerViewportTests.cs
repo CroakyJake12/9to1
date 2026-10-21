@@ -14,6 +14,7 @@ using CakeOS.Cui.Runtime;
 using Haven.Desktop.Prefabs;
 using Haven.Desktop.Views.Pages.Chat;
 using System.Globalization;
+using System.IO;
 using Xunit;
 
 namespace HavenOS.Browse.Host.Tests;
@@ -84,6 +85,54 @@ public sealed class ChatComposerEmojiPickerViewportTests
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
     }
 
+    /// <summary>A real source whose InsertEmoji returns the SAME held operation task; the edit is
+    /// applied only when that operation is released/faulted, so pending editor state, exact-once
+    /// settlement, fault retention and close-join can be asserted genuinely.</summary>
+    private sealed class HeldEmojiSource : IChatComposerSource
+    {
+        private readonly TaskCompletionSource _insert = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public string Draft { get; set; } = string.Empty;
+        public string Placeholder => "Ask Haven anything";
+        public bool IsSending { get; set; }
+        public bool IsSafetyLocked { get; set; }
+        public bool HasAdd { get; set; } = true;
+        public bool CanSend { get; set; } = true;
+        public bool IsEditing { get; set; }
+        public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
+        public int InsertCount { get; private set; }
+        public string? LastInserted { get; private set; }
+        public int InsertCaret { get; set; } = -1;
+        public bool InsertPending => !_insert.Task.IsCompleted;
+
+        public ValueTask InsertEmoji(string emoji)
+        {
+            InsertCount++;
+            LastInserted = emoji;
+            return new ValueTask(_insert.Task);
+        }
+
+        public void Release()
+        {
+            if (_insert.Task.IsCompleted) return;
+            var caret = Math.Clamp(InsertCaret, 0, Draft.Length);
+            Draft = Draft[..caret] + LastInserted + Draft[caret..];
+            _insert.TrySetResult();
+        }
+
+        public void Fault(Exception error) => _insert.TrySetException(error);
+        public ValueTask Send() => ValueTask.CompletedTask;
+        public ValueTask Stop() => ValueTask.CompletedTask;
+        public ValueTask Add() => ValueTask.CompletedTask;
+        public ValueTask OpenSettings() => ValueTask.CompletedTask;
+        public ValueTask CloseSettings() => ValueTask.CompletedTask;
+        public ValueTask SetActionMode(string mode) => ValueTask.CompletedTask;
+        public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
+        public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
+        public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
+        public ValueTask FormatSelection(string command) => ValueTask.CompletedTask;
+        public ValueTask CancelEdit() => ValueTask.CompletedTask;
+    }
+
     private static Control? FindContainer(ContentControl root, string automationId) =>
         root.GetVisualDescendants().OfType<Control>().SingleOrDefault(control =>
             AutomationProperties.GetAutomationId(control) == automationId);
@@ -130,18 +179,46 @@ public sealed class ChatComposerEmojiPickerViewportTests
         }
     }
 
-    private static async Task FinishComposerTestAsync(Window window, ChatComposerCuiView view, Exception? testFailure)
+    private static async Task FinishComposerTestAsync(Window window, ChatComposerCuiView view,
+        Exception? testFailure, Action? release = null, Task?[]? additionalOriginals = null,
+        Exception? expectedCause = null, bool allowOwnerWithdrawal = false)
     {
         var failures = new List<Exception>();
-        try { await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+        var originals = new List<Task>();
+        try { release?.Invoke(); }
         catch (Exception error) { failures.Add(error); }
-        try { await view.CloseAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+        // Acquire both duties independently: a failed acquisition/join cannot skip its sibling.
+        try { originals.Add(view.InitializeAsync()); }
         catch (Exception error) { failures.Add(error); }
+        try { originals.Add(view.CloseAsync()); }
+        catch (Exception error) { failures.Add(error); }
+        if (additionalOriginals is not null)
+            originals.AddRange(additionalOriginals.OfType<Task>());
+        foreach (var original in originals.Distinct())
+        {
+            try { await original.WaitAsync(TimeSpan.FromSeconds(10)); }
+            catch (Exception error)
+            {
+                var causes = AllCauses(error).ToArray();
+                if (causes.Length > 0 && causes.All(cause => ReferenceEquals(cause, expectedCause) ||
+                    (allowOwnerWithdrawal && cause is OperationCanceledException))) continue;
+                failures.Add(error);
+            }
+        }
         try { window.Close(); }
         catch (Exception error) { failures.Add(error); }
         if (failures.Count == 0) return;
         if (testFailure is not null) failures.Insert(0, testFailure);
         throw new AggregateException("Composer picker test and original cleanup failed.", failures);
+    }
+
+    private static IEnumerable<Exception> AllCauses(Exception error)
+    {
+        if (error is AggregateException aggregate)
+            foreach (var inner in aggregate.InnerExceptions)
+                foreach (var cause in AllCauses(inner))
+                    yield return cause;
+        else yield return error;
     }
 
     private static Button OpenPicker(ChatComposerCuiView view, Window window)
@@ -155,6 +232,31 @@ public sealed class ChatComposerEmojiPickerViewportTests
         PumpLayout(window);
         return emojiButton;
     }
+
+    /// <summary>Scrolls to a noninitial row and returns a real visible emoji cell on it plus its
+    /// exact authored Unicode sequence, ready for a pointer click.</summary>
+    private static (Button Target, string Expected) PickNonInitialTarget(
+        ChatComposerCuiView view, Window window)
+    {
+        var viewport = FindContainer(view, "emoji-grid-viewport"); Assert.NotNull(viewport);
+        var scroller = viewport!.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+        Assert.NotNull(scroller);
+        if (scroller!.Extent.Height > scroller.Viewport.Height)
+        {
+            scroller.Offset = new Vector(0, Math.Min(60, scroller.Extent.Height - scroller.Viewport.Height));
+            PumpLayout(window);
+        }
+        var cells = EmojiCells(viewport);
+        Assert.True(cells.Length >= 2, "need a noninitial cell to click");
+        var clip = Assert.Single(scroller.GetVisualDescendants().OfType<ScrollContentPresenter>());
+        var clipBounds = new Rect(clip.Bounds.Size);
+        var target = cells.Skip(1).LastOrDefault(button => button.IsEffectivelyVisible
+            && clipBounds.Contains(new Rect(OriginIn(button, clip), button.Bounds.Size)));
+        Assert.NotNull(target);
+        var expected = Assert.IsType<string>(target!.Content);
+        return (target!, expected);
+    }
+
 
     [AvaloniaFact]
     public async Task Picker_opens_a_real_multi_column_wrap_grid_inside_a_bounded_scroll_viewport()
@@ -337,6 +439,192 @@ public sealed class ChatComposerEmojiPickerViewportTests
         }
         catch (Exception error) { testFailure = error; throw; }
         finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_emoji_insertion_stays_pending_until_editor_reflects_exact_unicode()
+    {
+        // The original action must remain genuinely pending through BOTH the real source insertion
+        // and the required UI projection: the retained editor reflects the exact Unicode only when
+        // the held insertion is released, and settlement completes only after that projection.
+        var source = new HeldEmojiSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        Task? pipeline = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var box = FindInput(view); Assert.NotNull(box);
+            view.Input.Text = "alpha\nbeta";
+            view.Input.SetSelection(5, 5);
+            source.InsertCaret = 5;
+            box!.Focus(); Pump();
+
+            OpenPicker(view, window);
+            var (target, expected) = PickNonInitialTarget(view, window);
+
+            var origin = OriginIn(target, window);
+            var center = origin + new Vector(target.Bounds.Width / 2, target.Bounds.Height / 2);
+            window.MouseMove(center);
+            window.MouseDown(center, MouseButton.Left);
+            window.MouseUp(center, MouseButton.Left);
+            PumpLayout(window);
+
+            // The genuine source operation is admitted once and held.
+            Assert.Equal(1, source.InsertCount);
+            Assert.Equal(expected, source.LastInserted);
+            Assert.True(source.InsertPending);
+
+            // The actual loader action snapshot is genuinely pending while the insertion AND the
+            // required editor projection are held.
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+
+            // The retained editor has NOT yet reflected the inserted sequence.
+            Assert.Equal("alpha\nbeta", box.Text);
+            Assert.Equal("alpha\nbeta", source.Draft);
+
+            // Release the genuine insertion; only then must the editor reflect the exact Unicode and
+            // the original action settle.
+            await Task.Run(() => source.Release());
+            await pipeline.WaitAsync(TimeSpan.FromSeconds(10));
+
+            Assert.False(source.InsertPending);
+            Assert.Equal(1, source.InsertCount); // exactly once
+            Assert.Equal($"alpha{expected}\nbeta", source.Draft);
+            var boxAfter = FindInput(view); Assert.NotNull(boxAfter);
+            Assert.Same(box, boxAfter);
+            Assert.Equal($"alpha{expected}\nbeta", boxAfter!.Text);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release,
+                additionalOriginals: pipeline is null ? null : [pipeline]);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Faulted_emoji_insertion_settles_real_fault_without_projecting_stale_draft()
+    {
+        // A real insertion failure must remain observable through the original action settlement, and
+        // the picker-closing projection must NOT publish an uncommitted/stale draft into the editor.
+        var source = new HeldEmojiSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        Task? pipeline = null;
+        var failure = new IOException("emoji source offline");
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var box = FindInput(view); Assert.NotNull(box);
+            view.Input.Text = "alpha\nbeta";
+            view.Input.SetSelection(5, 5);
+            source.InsertCaret = 5;
+            box!.Focus(); Pump();
+
+            OpenPicker(view, window);
+            var (target, _) = PickNonInitialTarget(view, window);
+
+            var origin = OriginIn(target, window);
+            var center = origin + new Vector(target.Bounds.Width / 2, target.Bounds.Height / 2);
+            window.MouseMove(center);
+            window.MouseDown(center, MouseButton.Left);
+            window.MouseUp(center, MouseButton.Left);
+            PumpLayout(window);
+
+            Assert.True(source.InsertPending);
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+
+            await Task.Run(() => source.Fault(failure));
+            var pipelineError = await Record.ExceptionAsync(() => pipeline.WaitAsync(TimeSpan.FromSeconds(10)));
+            Assert.NotNull(pipelineError);
+            Assert.Contains(failure, AllCauses(pipelineError!));
+
+            // The failed insertion must NOT project any uncommitted edit into the retained editor.
+            Assert.Equal("alpha\nbeta", box.Text);
+            var boxAfter = FindInput(view); Assert.NotNull(boxAfter);
+            Assert.Same(box, boxAfter);
+            Assert.Equal("alpha\nbeta", boxAfter!.Text);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release,
+                additionalOriginals: pipeline is null ? null : [pipeline], expectedCause: failure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Held_emoji_insertion_joins_close_and_is_refused_after_sealing()
+    {
+        // An already-admitted held insertion must remain genuinely joined through close/retirement:
+        // close stays pending until the real source releases, and after sealing no late edit reaches
+        // the retained editor. The original source/host lifetime owns the whole flow.
+        var source = new HeldEmojiSource { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var window = new Window { Width = 900, Height = 700, Content = view };
+        window.Show();
+        Exception? testFailure = null;
+        Task? pipeline = null;
+        Task? close = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+
+            var box = FindInput(view); Assert.NotNull(box);
+            view.Input.Text = "alpha\nbeta";
+            view.Input.SetSelection(5, 5);
+            source.InsertCaret = 5;
+            box!.Focus(); Pump();
+
+            OpenPicker(view, window);
+            var (target, expected) = PickNonInitialTarget(view, window);
+
+            var origin = OriginIn(target, window);
+            var center = origin + new Vector(target.Bounds.Width / 2, target.Bounds.Height / 2);
+            window.MouseMove(center);
+            window.MouseDown(center, MouseButton.Left);
+            window.MouseUp(center, MouseButton.Left);
+            PumpLayout(window);
+
+            Assert.True(source.InsertPending);
+            pipeline = view.CaptureOriginalActionSettlement();
+            Assert.False(pipeline.IsCompleted);
+
+            // Close while the genuine insertion is held: the already-admitted action stays joined
+            // through retirement, and close remains genuinely pending until the source releases.
+            close = view.CloseAsync();
+            Assert.False(close.IsCompleted);
+
+            // After sealing, no late write reaches the retained editor.
+            view.Input.Text = "late write";
+            Assert.Equal("alpha\nbeta", box.Text);
+
+            await Task.Run(() => source.Release());
+            await pipeline.WaitAsync(TimeSpan.FromSeconds(10));
+            await close.WaitAsync(TimeSpan.FromSeconds(10));
+
+            Assert.False(source.InsertPending);
+            Assert.Equal(1, source.InsertCount);
+            Assert.Equal($"alpha{expected}\nbeta", source.Draft);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure, release: source.Release,
+                additionalOriginals: pipeline is null || close is null ? null : [pipeline, close]);
+        }
     }
 
     [AvaloniaFact]

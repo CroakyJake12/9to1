@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>WebRtcVadSharp</id>
+    <version>1.3.2</version>
+    <title>WebRtcVadSharp</title>
+    <authors>ladenedge</authors>
+    <owners>ladenedge</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <projectUrl>https://github.com/ladenedge/WebRtcVadSharp</projectUrl>
+    <description>.NET Standard interface for the WebRTC voice activity detection (VAD) component.</description>
+    <copyright>Copyright (c) 2020 Jay Miller</copyright>
+    <tags>webrtc vad voice detection recognition</tags>
+    <repository type="git" url="https://github.com/ladenedge/WebRtcVadSharp.git" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+    </dependencies>
+  </metadata>
+</package>

@@ -425,6 +425,37 @@ class FormatsTests(unittest.TestCase):
             sniff_format(self._file(self._safetensors(obj2, b"\x00" * 4)), "safetensors")
 
 
+    def test_gguf_rejects_non_power_of_two_uint32_alignment(self) -> None:
+        # Same real UINT32 metadata and a physically present aligned F32 payload:
+        # rejection must be caused by the upstream power-of-two contract.
+        data = build_gguf(
+            metadata_items=[("general.alignment", 4, struct.pack("<I", 3))],
+            tensors=[("x", (1,), 0, 0, b"\x00" * 4)], alignment=3,
+        )
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "gguf")
+
+    def test_gguf_preserves_upstream_positive_alignment_values(self) -> None:
+        for alignment in (1, 2, 32, 2097152):
+            with self.subTest(alignment=alignment):
+                data = build_gguf(
+                    metadata_items=[("general.alignment", 4, struct.pack("<I", alignment))],
+                    tensors=[("x", (1,), 0, 0, b"\x00" * 4)], alignment=alignment,
+                )
+                result = sniff_format(self._file(data), "gguf")
+                self.assertTrue(result["structurallyComplete"])
+                self.assertEqual(alignment, result["dataAlignment"])
+
+    def test_gguf_rejects_rank_beyond_official_ggml_limit(self) -> None:
+        data = build_gguf(tensors=[("x", (1, 1, 1, 1, 1), 0, 0, b"\x00" * 4)])
+        with self.assertRaises(IdentityError):
+            sniff_format(self._file(data), "gguf")
+
+    def test_gguf_preserves_the_official_rank_four_boundary(self) -> None:
+        data = build_gguf(tensors=[("x", (1, 1, 1, 1), 0, 0, b"\x00" * 4)])
+        self.assertTrue(sniff_format(self._file(data), "gguf")["structurallyComplete"])
+
+
 def _gguf_str_for_test(value: str) -> bytes:
     # Small local helper to build a GGUF string metadata value (length + bytes).
     encoded = value.encode("utf-8")

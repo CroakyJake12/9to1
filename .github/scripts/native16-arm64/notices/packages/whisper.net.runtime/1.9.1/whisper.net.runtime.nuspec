@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Whisper.net.Runtime</id>
+    <version>1.9.1</version>
+    <title>Whisper.Net.Runtime</title>
+    <authors>Sandro Hanea</authors>
+    <owners>Sandro Hanea</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>content/readme.md</readme>
+    <projectUrl>https://github.com/sandrohanea/whisper.net</projectUrl>
+    <description>Whisper.net.Runtime contains the native runtime libraries to enable Whisper on .NET apps with Whisper.Net.</description>
+    <summary>Cross-platform dotnet runtimes for Whisper.</summary>
+    <tags>whisper;ios;android;linux;windows;macos;cross-platform</tags>
+    <dependencies>
+      <dependency id="Whisper.net.Runtime.Metal" version="1.9.1" />
+    </dependencies>
+  </metadata>
+</package>

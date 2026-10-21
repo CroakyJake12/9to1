@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>AvaloniaUI.DiagnosticsSupport</id>
+    <version>2.2.3</version>
+    <authors>AvaloniaUI OÜ</authors>
+    <icon>icon.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://avaloniaui.net/</projectUrl>
+    <description>The Diagnostics Support package is responsible for establishing a connection bridge between the user app and AvaloniaUI Developer Tools process.</description>
+    <copyright>Copyright 2019-2026 © AvaloniaUI OÜ</copyright>
+    <repository type="git" commit="92df9d92acf0bbe8b2ffa96370c1bf848df81d27" />
+    <dependencies>
+      <group targetFramework="net10.0">
+        <dependency id="Microsoft.Extensions.Logging.Abstractions" version="8.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.IO.RecyclableMemoryStream" version="3.0.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.Extensions.Logging.Abstractions" version="8.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.IO.RecyclableMemoryStream" version="3.0.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

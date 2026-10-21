@@ -168,6 +168,14 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
                 }
                 _page = _root;
                 _published = true;
+                // The bootstrap publication guard is now set, so the selected Space's real recent
+                // history can be read for the FINAL restored selection through the canonical provider
+                // (ReadSpaceConversationsAsync). This is the genuine initial read: it runs at the
+                // admitted startup boundary, it is part of this initialization task (original task /
+                // cancellation / failure custody), and it never waits for a later presentation toggle,
+                // a detached fire-and-forget read, a forced manager open or a second repository. It
+                // reads the current controller selection, which after restore is the restored Space.
+                await RefreshSpacesConversationsAsync(token);
             }
             catch
             {
@@ -417,6 +425,12 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         _chatPage = chat;
         _publishedChatRoute = new(chat, ConversationAddress(chat.CurrentConversation));
         _address = _publishedChatRoute.Address;
+        // Close the presentation-only manager only after the successful setter AND
+        // current chat/route projection. StateChanged observers must see that same tuple.
+        // This synchronous callback has no await between the current mount and notification.
+        if (home is not null && ReferenceEquals(_root.Content, home) &&
+            ReferenceEquals(home.SpaceWorkspaceContent, chat))
+            home.NotifyNavigationPublished();
     }
 
     /// <summary>Detaches a Space workspace that failed or was retired without replacement and

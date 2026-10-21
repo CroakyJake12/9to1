@@ -1,0 +1,422 @@
+[
+  {
+    "path": "actual-package-metadata/avaloniaui.diagnosticssupport/2.2.3/README.md",
+    "size": 2050,
+    "sha256": "7ee79cbde719153ffc134258204355366ec0813621ec03caf630d3dc6568e0f6"
+  },
+  {
+    "path": "actual-package-metadata/avaloniaui.diagnosticssupport/2.2.3/avaloniaui.diagnosticssupport.nuspec",
+    "size": 1280,
+    "sha256": "f1240390840adf7e4dfce4bc8313dd0350bdf11b36d573f3f7c107a74dc921c2"
+  },
+  {
+    "path": "actual-package-metadata/whisper.net/1.9.1/whisper.net.nuspec",
+    "size": 2984,
+    "sha256": "a4a1f6c405dc3ca15eb5d22ae03fc488c4fc1a126c8788026d9637f378a72cba"
+  },
+  {
+    "path": "actual-package-metadata/whisper.net.runtime/1.9.1/whisper.net.runtime.nuspec",
+    "size": 1009,
+    "sha256": "f0ca2f72d2f9be90aa27a3a16f600c90a5d898c6e8fe679028f15b19bff60b6d"
+  },
+  {
+    "path": "actual-package-metadata/whisper.net.runtime.metal/1.9.1/whisper.net.runtime.metal.nuspec",
+    "size": 868,
+    "sha256": "3afffb9f3eda027a46932b4a5d54e9d233b2811dbee70c4d1ccd304fb037a7d2"
+  },
+  {
+    "path": "actual-package-metadata/whisper.net.runtime.noavx/1.9.1/whisper.net.runtime.noavx.nuspec",
+    "size": 937,
+    "sha256": "6aeb3dc1290ed503d7e45776b94560be8cf9a14f0538adcb95e449259398b108"
+  },
+  {
+    "path": "actual-package-metadata-provenance.json",
+    "size": 1863,
+    "sha256": "09f3c63df1365e78b52910f371f256d600cc37375b8178e4500476f08a4a0c90"
+  },
+  {
+    "path": "avalonia/docs-main-commit.json",
+    "size": 23545,
+    "sha256": "7390f7dfb9c2677ab387b60f195e244756f596987e1017a6e33ca6e903a15be5"
+  },
+  {
+    "path": "avalonia/legal.html",
+    "size": 524456,
+    "sha256": "b27923a5685391ca53eed261991f277eb95603f2237ad5d312ea988566ae9c0b"
+  },
+  {
+    "path": "avalonia/nuget-2.2.3.html",
+    "size": 98403,
+    "sha256": "27a65ebee96e53428f275a9d88e39719bdd8fc01ab310db9ec0cc138bd9db87f"
+  },
+  {
+    "path": "avalonia/terms-of-service.html",
+    "size": 110775,
+    "sha256": "02873b6a3a65675effa52624ad875a359aabd7c21cb04d7ee4145aab5de40da6"
+  },
+  {
+    "path": "avalonia/tools/developer-tools/installation.md",
+    "size": 5976,
+    "sha256": "321f13d718b226e94b032f4d641eecd6df23ad220b9c3da64de615ab244e4523"
+  },
+  {
+    "path": "avalonia/tools/faq.md",
+    "size": 10575,
+    "sha256": "a2f789651e5d48b990a757223d0c8d04e836bbaf46bcdd1b120954fbbf84a650"
+  },
+  {
+    "path": "closure-summary.json",
+    "size": 5069,
+    "sha256": "1e1a5a334cc91bf012f987d1ce299bfe2282711cb960bb36db292a4710cdedb2"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-LICENSE.md",
+    "size": 1233,
+    "sha256": "153d157c35f9f8229a206036450040952268da4d8d6c28a833c6d0463f56263d"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-01.txt",
+    "size": 186,
+    "sha256": "0a9a9b1aa2977bfad24840c101bbb23af8beb6d3f99fd3da6157021ed4412268"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-02.txt",
+    "size": 187,
+    "sha256": "0c267766dfb7a287b1d6d859f194c180b5d60a9fe475862a72e0c8f02b38a0ae"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-03.txt",
+    "size": 278,
+    "sha256": "0ce1d76a7066fd1b422bd189a898a1c4f43c5716eb3873edf2131d925ec2d498"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-04.txt",
+    "size": 175,
+    "sha256": "0e7f4ea5788bb86512e81180662d1be335e3dcd170e22c60e9293de5e2c17eb0"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-05.txt",
+    "size": 182,
+    "sha256": "10bb2698a0a11c3ca5ce869174b5f85ecb0420e97b9791e8fbdd372907e363cb"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-06.txt",
+    "size": 175,
+    "sha256": "129d98a730a13696d5b7fdb08a87a4147c0b32bc78f82bacdc74183d6c2806c4"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-07.txt",
+    "size": 1082,
+    "sha256": "1a77eeb464b0da3cea0337ca34e7d7de184b81a2eac23924627cc9d9968e9952"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-08.txt",
+    "size": 187,
+    "sha256": "24d8c6f9522367df2db82bb03512a5a7e7c6a9674b7dce532667ee9211119ef8"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-09.txt",
+    "size": 1178,
+    "sha256": "305eb20e1ff01b4034175ada546e98fedef22c8d892d3fb3fad6219c148f7455"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-10.txt",
+    "size": 180,
+    "sha256": "33806494bd8cf41a223595369384c575c7014a56a8429b979ff37e600156a0df"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-11.txt",
+    "size": 173,
+    "sha256": "3614e1ab5d34db10b176daa48fb86f2e00a2b6a6d5a754a5f73ef4190af6f242"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-12.txt",
+    "size": 1198,
+    "sha256": "3a0a88183779d6226cc5cd19133e519f065fb50c2b03f4661237b12207e6fd1c"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-13.txt",
+    "size": 177,
+    "sha256": "3de49cc306f117da253fd1a6e767fe4f4e2c90e883ac2fbd3a394f605ea84487"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-14.txt",
+    "size": 177,
+    "sha256": "3f2f27159074021ddaab93df4199e1d3c201e37b88e5057b5f8bf1d9b012fe9e"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-15.txt",
+    "size": 179,
+    "sha256": "442277db645c3e2034aa701812d421d3abf677fab9fa53ee17fb8212f195a015"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-16.txt",
+    "size": 186,
+    "sha256": "558658f810158caa9882096c2e2a3b8afacb5e06b62e652628b4212c4e83bde4"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-17.txt",
+    "size": 175,
+    "sha256": "5d62f31159376d5b59ecae6676909fdc4795da38020a0cdef33df6c51e1f72f9"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-18.txt",
+    "size": 1081,
+    "sha256": "62a2e16b8e078fdc767874c1945d116b4491b8b47570f546753af6fd3953d123"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-19.txt",
+    "size": 1205,
+    "sha256": "66b2392fac01902df0d3dd98b33efda966fe96bedb366d05eff903f1a2c6ebbc"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-20.txt",
+    "size": 187,
+    "sha256": "6ac5a6c4e91689a1f86dd3de926dcf180010f7eab6c2588c3ac3a22d94167e21"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-21.txt",
+    "size": 172,
+    "sha256": "6dadea4bb35b3da1a4000af4e073f950bd3d3f301537a84218ae9261aa4828c4"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-22.txt",
+    "size": 185,
+    "sha256": "6e88b2b745f03ce4b3c1bd970a20578d41373255ab9eec299dd714e9152a8fb5"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-23.txt",
+    "size": 191,
+    "sha256": "7e205c6b172e665bbbfc4c8f345e93e499c449866288b9df0f22e55c70847fac"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-24.txt",
+    "size": 183,
+    "sha256": "7e758cc73b8fc1ac3c9b6dafa133d71421d6b2a38004f935d0c431e35300fd23"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-25.txt",
+    "size": 183,
+    "sha256": "7fad2eefbbf4a9ffbcce0da1f2277ffd28b62a2433dbb289508f856fd3df99f0"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-26.txt",
+    "size": 174,
+    "sha256": "808d1998a35f60d3377d937a6c9ecc28bb5068ce5ac735f3fd5d6367670edcf1"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-27.txt",
+    "size": 181,
+    "sha256": "88bd68ed66666dc7b4f602a9316cb1aff31017ea1a0670de3909825f5d2ae148"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-28.txt",
+    "size": 186,
+    "sha256": "89096761afc10fff1704f52e9d515e2aa5a525e8907d797df4e6ea9c9766e657"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-29.txt",
+    "size": 191,
+    "sha256": "89308ff7a47cd2b0ad937166989ea54c13278356842c803bba981f4e67195b88"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-30.txt",
+    "size": 177,
+    "sha256": "903660b241e57fd2a87ac03c38cd5f690e4fee7362c91df691cdecd4d68adf18"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-31.txt",
+    "size": 198,
+    "sha256": "943f511ed058f502e49e7fb7c9273da4c5084632f344ef3164f175c5cc0187c7"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-32.txt",
+    "size": 187,
+    "sha256": "9714db367a19518080106b6d8b56b67f1ebc31ce586d709fa32cfb689b65a94b"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-33.txt",
+    "size": 175,
+    "sha256": "99a9133cddc344657bd7598741f9d7029e5972319f43ca581a2ab89a40fc4c6f"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-34.txt",
+    "size": 174,
+    "sha256": "99b937e0b648c67c6e7a15ea504fbb5320ca99b73945487fd3c07c1d31528f95"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-35.txt",
+    "size": 186,
+    "sha256": "9ca76da69e096dc2f80c587150e07cb72735c310de2fd8f8934eb3d6f3783cb6"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-36.txt",
+    "size": 180,
+    "sha256": "9f1aea2ce27c1c3115a864a57b8bba9bf229da8b0bd9308c3595e164d8d3ecd2"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-37.txt",
+    "size": 178,
+    "sha256": "9f8697861333ddd46b039e2b1cf0374bff2b0c92405491b8ae439ab8946fdda0"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-38.txt",
+    "size": 183,
+    "sha256": "b35a97c42b8f62b6b2f658e0cd0215d1d592e6b7920d1a741af64c8f9ee9955f"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-39.txt",
+    "size": 190,
+    "sha256": "b428f5ea45750a25c0d795d3532dee19c385d2115a30e32442584a1b1e71ed04"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-40.txt",
+    "size": 184,
+    "sha256": "bb9a77aaf97af5438c170510a2821723a4ef47afad9a7ac600dc407e48de6341"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-41.txt",
+    "size": 185,
+    "sha256": "bc6417181074f02878a10ebf518d7ef4976f810da0ffd7979cd2af089a0bb3a1"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-42.txt",
+    "size": 185,
+    "sha256": "c21001698c84e9347c30d6b429c991ad13479b4b47bbcc06822b531f0be6bbf0"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-43.txt",
+    "size": 189,
+    "sha256": "c325d6beb70e27e22fae229f7a978a544868b163ee000ef465edbb1ee0b3b490"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-44.txt",
+    "size": 251,
+    "sha256": "c5420f16a93f490dbdb70e15034ee847ff29e7608f541c38af62c761063a6576"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-45.txt",
+    "size": 180,
+    "sha256": "c5cc6ca5a855980e8e20c53d38770ef5c1a5f2de8f8c2034d691be514581ffa3"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-46.txt",
+    "size": 202,
+    "sha256": "c94ba629d1ef9435d8bad61e0dfdddaab2512361ad2f8e3b2e3901f031b9d339"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-47.txt",
+    "size": 180,
+    "sha256": "cbd9563ac0081782233a4dc32ce4b533e0aa5a32e8f918ca3e37d79a968c9e19"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-48.txt",
+    "size": 196,
+    "sha256": "d3ad4c2152b4e191638d4c2c2a405855c6f8e399027fbf7225ba56039300c4db"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-49.txt",
+    "size": 182,
+    "sha256": "e446908e7068ba6220ced98b3381f7a12552268e9c14f42b503bff4c55fe8e04"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-50.txt",
+    "size": 183,
+    "sha256": "ea548ca393ffd353e9ea1e43f30b5de20c9c8a425883e69dd5a59857c5edc40c"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-51.txt",
+    "size": 179,
+    "sha256": "ebb53b2503f8af00ce9145c3e1a76af27e7c7c76b50e678f78d4d7c2337b6be5"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-52.txt",
+    "size": 178,
+    "sha256": "f30a2a92c30fd0d0e8a7e3f0d29d9e752cf5510ccba78be9e461e0fb7d962ac5"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-53.txt",
+    "size": 181,
+    "sha256": "fe10573c584827a06b3a1d14e2df1d3961d176e061b7476216b7f4de38a6c709"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-54.txt",
+    "size": 188,
+    "sha256": "ff6c7f8bdf8ac569c4a69da8c0f8ead8a8a5d8d9a0853e5ce38f83e6ac452280"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-source-notices/notice-55.txt",
+    "size": 187,
+    "sha256": "ff9cd375201fa11a804e733ba14156c9ca4ac982f1173a755c84047b3a5e92b6"
+  },
+  {
+    "path": "opentk-roboto/OpenTK-tag-reference.json",
+    "size": 347,
+    "sha256": "1732aeeb00412ccc8bc8936ca1ec593cbf8fbcf65b4ca4b9b4152449454ed78b"
+  },
+  {
+    "path": "opentk-roboto/Roboto-LICENSE.txt",
+    "size": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "path": "opentk-roboto/Roboto-Light-exact-font-attribution.txt",
+    "size": 158,
+    "sha256": "79d0722ec47f10640593c4a41021e3b8029de2ac2c6e85cb8f14dbd967f243f1"
+  },
+  {
+    "path": "opentk-roboto/Roboto-METADATA.pb",
+    "size": 2954,
+    "sha256": "647f76a18633ad6f4c44c995526c0790fa1adc5e1a8e4c4f8d130571b4238076"
+  },
+  {
+    "path": "opentk-roboto/nuspec/OpenTK.Audio.OpenAL.nuspec",
+    "size": 3019,
+    "sha256": "066c80cd654bad25d2cf7b53b29c97d46d3bd33da012c64b0a126737e0cd31ab"
+  },
+  {
+    "path": "opentk-roboto/nuspec/OpenTK.Core.nuspec",
+    "size": 2832,
+    "sha256": "405326638c8bd33b3f2fe00f3e482c1e81f74c711a87cc9db37efb074bfaa166"
+  },
+  {
+    "path": "opentk-roboto/nuspec/OpenTK.Mathematics.nuspec",
+    "size": 2957,
+    "sha256": "1808544d63d716d3237f7ce5d1e9fa11435de207598f6684f61766c2799cd19c"
+  },
+  {
+    "path": "opentk-roboto/provenance.json",
+    "size": 40507,
+    "sha256": "afa69c5b0a55bf0dcdf5e9f21a64f7752c4cf3dd84d735449adf7f316895d3b7"
+  },
+  {
+    "path": "public-source-provenance.json",
+    "size": 4742,
+    "sha256": "2423afe4118fb6f744a54d1712bfd8d5baa8d08d02095fed77fa49fd3e04e4b4"
+  },
+  {
+    "path": "whisper/whisper.cpp-f24588-LICENSE",
+    "size": 1078,
+    "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+  },
+  {
+    "path": "whisper/whisper.cpp-source-tree.json",
+    "size": 520417,
+    "sha256": "c037a5f21e09672f9cc5debfc6ae5dfd5bbb70b3c4b30ee3522b06995ea18e8a"
+  },
+  {
+    "path": "whisper/whispernet-gitmodules.txt",
+    "size": 98,
+    "sha256": "bd227d42d580afde50dcaf3b6918e73dcf6eccce8dd685b8e5d6e11cf2b99059"
+  },
+  {
+    "path": "whisper/whispernet-package-source-tree.json",
+    "size": 102707,
+    "sha256": "2a6e98ba04208b4ceb10ed17c0d96bf818b1811f04a54188640193e975fbad59"
+  },
+  {
+    "path": "whisper/whispernet-release-tag.json",
+    "size": 706,
+    "sha256": "78c85b21234e0f1d07a1ba4f4d533c757bcd877e3d4b151a4f816b2403a09e7b"
+  }
+]

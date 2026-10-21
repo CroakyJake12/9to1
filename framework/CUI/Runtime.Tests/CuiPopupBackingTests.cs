@@ -389,6 +389,81 @@ public sealed class CuiPopupBackingTests
         }, CancellationToken.None);
     }
 
+    [Fact]
+    public async Task Floating_portal_popup_root_backing_is_transparent_and_fallback_tracks_negotiation()
+    {
+        // The white-corner defect is produced by the REAL FloatingPortal producer, not only menu/
+        // tooltip fixtures: the portal opens a native popup whose PopupRoot used to paint the donor
+        // white default Background behind the rounded chrome. This regression drives the actual portal
+        // path and asserts the root backing is transparent (never white) and the alpha-aware fallback
+        // projection behaves on the live portal destination: unobserved/unknown stays unpainted, a
+        // positively opaque destination paints the latest guaranteed-opaque semantic brush, and a
+        // positively alpha-capable destination stays unpainted.
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Cui><Actions><Action name="toggle-fmt"><Toggle Target="FormattingOpen" /></Action></Actions>
+                <Variable Type="bool" ID="FormattingOpen">True</Variable>
+                <Container Type="Overlay Float" id="surface" padding="30">
+                  <Container id="body" Type="Vertical Stack"/>
+                  <Container id="float-layer" Type="Floating" Target="body" Placement="above" action="toggle-fmt">
+                    <Container id="inner-bar" Type="Wrap" CellGap="6" IsVisible="{Binding FormattingOpen}">
+                      <Button id="f0" content="B" MinWidth="36" MinHeight="36"/>
+                    </Container>
+                  </Container>
+                </Container></Cui>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            var surface = (CuiContainerControl)loaded.Root!;
+            loader.WireBindings(surface);
+            var authoredHost = surface.GetVisualDescendants().OfType<CuiContainerControl>()
+                .Single(c => c.AuthoredTargetId is not null);
+            var wrapper = new Border { Width = 200, Height = 120, Child = surface };
+            var canvas = new Canvas();
+            canvas.Children.Add(wrapper);
+            Canvas.SetLeft(wrapper, 20);
+            Canvas.SetTop(wrapper, 130);
+            var window = CuiNativePopupFixture.New(canvas, 400, 300);
+            window.Show();
+            for (var i = 0; i < 10; i++) { Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+            try
+            {
+                var panel = (CuiOverlayPanel)surface.Layout;
+                var portal = Assert.Single(panel.ActivePortals);
+                Assert.True(portal.IsOpen);
+                Assert.Same(authoredHost, portal.Host);
+
+                // The REAL portal producer hosts the retained authored content in a native popup root.
+                var content = portal.Popup.Child as Control;
+                Assert.NotNull(content);
+                var popupRoot = Assert.Single(content!.GetVisualAncestors().OfType<PopupRoot>());
+
+                // The root backing is transparent — never the donor PopupRoot white default that painted
+                // the observed white rectangle corners behind the rounded bar.
+                Assert.Equal(Brushes.Transparent, popupRoot.Background);
+
+                var fallback = Assert.Single(popupRoot.GetVisualDescendants().OfType<Border>(),
+                    border => border.Name == "PART_TransparencyFallback");
+
+                // Unobserved/unknown: no positive receipt yet, so the fallback stays unpainted.
+                Assert.Null(fallback.Background);
+
+                // A genuine positive opaque report paints the latest guaranteed-opaque semantic brush.
+                popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(WindowTransparencyLevel.None);
+                Assert.NotNull(fallback.Background);
+                var painted = Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!);
+                Assert.Equal(255, painted.Color.A);
+
+                // A positively alpha-capable destination keeps the fallback unpainted.
+                popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(WindowTransparencyLevel.Transparent);
+                Assert.Null(fallback.Background);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
     private static PopupRoot PopupRootOf(ComboBox combo)
     {
         var popup = Assert.Single(combo.GetVisualDescendants().OfType<Popup>());

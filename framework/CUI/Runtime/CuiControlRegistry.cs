@@ -36,6 +36,15 @@ public sealed class CuiControlRegistry
         RegisterObjectRenderer("Markdown", _ => new CuiMarkdownView(),
             ["Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole",
              "TextDecoration", "TextWrapping", "TextAlignment", "VerticalTextAlignment"]);
+        // ReadOnlyText is the neutral shared readonly text/code renderer behind Object's typed
+        // boundary. It carries an explicit text + typography contract (declared properties, not a
+        // global allow) so the DEFAULT compiler registry and the shared runtime accept authored
+        // font-family/min-height/accessible-name/text while the rendered TextBox stays read-only
+        // (native selection/copy preserved). App-specific ids, content, state and actions remain in
+        // authored CUI; this type never names an application or Build/Dev surface.
+        RegisterObjectRenderer("ReadOnlyText", _ => new TextBox { IsReadOnly = true, AcceptsReturn = true },
+            ["Text", "Foreground", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole",
+             "TextDecoration", "TextWrapping", "TextAlignment", "VerticalTextAlignment"]);
         // QueryViewport is the generic runtime state/query contract for bounded paged pickers:
         // it owns the query string + opaque cursor in the runtime and exposes one window to authored
         // child bindings, while all data filtering/pagination stays behind a typed ICuiPagedSource.
@@ -370,7 +379,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement"
+            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -380,7 +389,7 @@ public sealed class CuiControlRegistry
         var input = common.Concat(new[]
         {
             "Type", "Text", "Value", "Checked", "IsChecked", "PlaceholderText", "AcceptsReturn", "Foreground",
-            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput"
+            "Background", "FontFamily", "FontSize", "FontWeight", "FontStyle", "FontRole", "TextWrapping", "ItemsSource", "SelectedIndex", "Minimum", "Maximum", "Increment", "ResizeEdge", "PasswordChar", "Watermark", "Padding", "CornerRadius", "Content", "WriteBack", "Border", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness", "FocusRequested", "SelectOnFocusRequest", "EmbeddedInput", "DisplayValue", "VerticalContentAlignment"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var content = common.Concat(new[]
         {
@@ -439,6 +448,7 @@ public sealed class CuiControlRegistry
             ("Hidden", "boolean", typeof(bool), true), ("IsVisible", "boolean", typeof(bool), true),
             ("IsEnabled", "boolean", typeof(bool), true), ("Focusable", "boolean", typeof(bool), true),
             ("FocusRequested", "boolean", typeof(bool), true), ("SelectOnFocusRequest", "boolean", typeof(bool), true),
+            ("DisplayValue", "text", typeof(string), false),
             ("DefaultAction", "boolean", typeof(bool), true), ("CancelAction", "boolean", typeof(bool), true),
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),

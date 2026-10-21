@@ -1,0 +1,47 @@
+{
+  "at": "2026-10-21T08:04:05.076624+00:00",
+  "files": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Interop.Generated.cs",
+      "bytes": 669279,
+      "sha256": "16afccdb8a300c4a39440bd8dac69136eb32dc6ef58e2bdf747abe603e20ef4a",
+      "mode": "100644",
+      "kind": "ignored actual generated source, not output binary"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/DComposition/DComp.Generated.cs",
+      "bytes": 174307,
+      "sha256": "9fe29120958fbd92021d67f07a6b01458cc285adf6a22ad2ee4782df7dccc89a",
+      "mode": "100644",
+      "kind": "ignored actual generated source, not output binary"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/DirectX/directx.Generated.cs",
+      "bytes": 287811,
+      "sha256": "6ccc43b7d2049b9e4985eb9a2fd27e4c9966770dc36c69624f94decfc4ee1e3d",
+      "mode": "100644",
+      "kind": "ignored actual generated source, not output binary"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Win32Com/Win32.Generated.cs",
+      "bytes": 141202,
+      "sha256": "047dd9009d85816e3d34886edfef507bae9c82eb1a436b0ee6bc840d4989c32c",
+      "mode": "100644",
+      "kind": "ignored actual generated source, not output binary"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/WinRT/WinRT.Generated.cs",
+      "bytes": 653475,
+      "sha256": "b91bf301b7df62b053413be386de1ba79ca099efded3557a535d7e16122c9032",
+      "mode": "100644",
+      "kind": "ignored actual generated source, not output binary"
+    }
+  ],
+  "provenance": "Exact actual approved local fork files used in source closure; no regeneration or edits",
+  "base_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+  "tracked_fork_files": 3025,
+  "submodules": {
+    "framework/CUI/vendor/Avalonia/external/XamlX": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52",
+    "framework/CUI/vendor/Avalonia/external/Avalonia.DBus": "864a05282841bf04006890f04d11d60d1a046aa9"
+  }
+}

@@ -215,8 +215,25 @@ internal sealed partial class ChatHavenScene : IDisposable
 
     public void SetStatus(string? value)
     {
-        Status.Content = value ?? string.Empty;
-        Status.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(value) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+        // The authored recovery row is the single canonical home for the model-unavailable status.
+        // It projects the ACTUAL scene status read-only. The legacy status sentence is retired
+        // exactly while that row is the active projection (recovery visible); other genuine chat
+        // error/progress statuses remain visible through the legacy node whenever recovery is not
+        // shown. The suppression is recomputed here and in SetManageLocalModelsVisible so either
+        // call order yields exactly one presentation.
+        _recoveryBindings.Status = value;
+        RefreshLegacyStatusPresentation();
+    }
+
+    /// <summary>Applies the legacy chat status node from the ACTUAL scene status, suppressing it
+    /// only while the authored recovery row is the active projection so the model status is never
+    /// duplicated below that row.</summary>
+    private void RefreshLegacyStatusPresentation()
+    {
+        var text = _recoveryBindings.Status ?? string.Empty;
+        var showLegacy = !_recoveryBindings.Visible && !string.IsNullOrWhiteSpace(text);
+        Status.Content = showLegacy ? text : string.Empty;
+        Status.SetValue(HavenProperties.Visibility, showLegacy ? HavenVisibility.Visible : HavenVisibility.Collapsed);
     }
 
     public void SetAttachmentStatus(string? value)
@@ -237,6 +254,10 @@ internal sealed partial class ChatHavenScene : IDisposable
     {
         _recoveryBindings.Visible = visible;
         RecoveryView.Refresh();
+        // Re-evaluate the legacy status suppression: when the recovery row becomes the active
+        // projection the duplicate model status sentence is retired, and when it closes any genuine
+        // remaining status returns to the legacy node.
+        RefreshLegacyStatusPresentation();
     }
 
     /// <summary>

@@ -204,6 +204,14 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
         if (path == "spaces.canMutate") { lock (_gate) value = CanAdmitHomeMutation(); return true; }
         if (path == "spaces.hasAppContent") { lock (_gate) value = _spaceWorkspace?.Content is not null; return true; }
         if (path == "spaces.hasSpaceSummary") { lock (_gate) value = _spaceWorkspace?.Content is null; return true; }
+        // The authored manager surface shows over a mounted Space workspace without detaching it:
+        // showSummary is true when there is no mounted content (normal view) OR the manager is open;
+        // showWorkspace is true only when a workspace is mounted AND the manager is closed. This is
+        // pure CUI presentation; the mounted chat/draft/selection/queue are never touched.
+        if (path == "spaces.showWorkspace")
+        { lock (_gate) value = _spaceWorkspace?.Content is not null && !_controller.State.IsManaging; return true; }
+        if (path == "spaces.showSummary")
+        { lock (_gate) value = _spaceWorkspace?.Content is null || _controller.State.IsManaging; return true; }
         if (path == "spaces.conversations") { lock (_gate) value = _conversations; return true; }
         if (path == "spaces.hasConversations") { lock (_gate) value = _conversations.Count > 0; return true; }
         if (path == "spaces.sidebarItems") { lock (_gate) value = _sidebarItems; return true; }
@@ -315,6 +323,11 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             case "spaces.toggle-space-overflow":
                 InvokeOriginalSource(_controller.ToggleSpaceOverflow);
                 break;
+            case "spaces.manage":
+                // Presentation-only manager open/return. It never mutates the registry, never
+                // selects a Space and never detaches the mounted workspace/chat or its draft.
+                InvokeOriginalSource(_controller.ToggleManage);
+                break;
             case "spaces.set-rename-draft":
                 InvokeOriginalSource(() => _controller.SetRenameDraft(parameter?.ToString()));
                 break;
@@ -383,6 +396,14 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
             return true;
         });
     }
+
+    /// <summary>Called by the native Spaces owner right after a REAL chat/workspace publication has
+    /// succeeded and become current (mounted into this region, set as root content, and projected).
+    /// It exits the presentation-only manager idempotently so the freshly published workspace is
+    /// revealed instead of remaining behind the management surface. A refused, canceled or merely
+    /// queue-admitted navigation never reaches this point, so the manager and the previous view stay
+    /// intact. It never touches the mounted content, the draft, the selection or the registry.</summary>
+    internal void NotifyNavigationPublished() => _controller.CloseManage();
 
     /// <summary>Detaches the workspace Root has retired from the authored region and restores the
     /// selected Space summary. A non-matching <paramref name="expected"/> leaves the live

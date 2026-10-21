@@ -1,0 +1,66 @@
+{
+  "diagnostics_support": {
+    "package": "AvaloniaUI.DiagnosticsSupport 2.2.3",
+    "actual_nuspec_repository_commit": "92df9d92acf0bbe8b2ffa96370c1bf848df81d27",
+    "actual_nuspec_repository_url": null,
+    "license_expression_or_file": null,
+    "official_faq_source_commit": "f7a01da51c0ad0bb8e7f4fdce61b39b0629527d7",
+    "official_faq_source_copy": "avalonia/tools/faq.md",
+    "official_faq_quotes": [
+      "On its own, it doesn't require any license, and can be referenced in public projects.",
+      "Tool can be useful for internal testing of Release builds. And it's not necessary to only include it with Debug builds.",
+      "But it is still advised to exclude this package on production builds for security and bundle size reasons."
+    ],
+    "assessment": "Official support documentation explicitly permits public project references without a separate licence and inclusion in release/internal testing builds. No licence-based removal requirement is established for this INTERNAL baseline. No formal SPDX/source licence grant was found for exact2.2.3, and the repository commit could not be resolved in public source. Do not label it MIT. If public redistribution needs an explicit contractual binary redistribution grant, producer clarification remains open.",
+    "ruled_out_assumptions": [
+      "The MIT licence of AvaloniaUI/Avalonia.Diagnostics applies to the legacy in-process package, not this differently named support package.",
+      "The public AvaloniaUI.DeveloperTools repository contains samples/docs, not the private exact92df source; its MIT licence does not establish the licence for shipped DiagnosticsSupport2.2.3.",
+      "Generic paid commercial Component redistribution clauses from the Avalonia legal center do not establish applicability to this package."
+    ]
+  },
+  "whisper_upstream": {
+    "package_version": "1.9.1",
+    "managed_package_repository_commit": "98278acc38ae23590cdfa9859f78f089abae52a7",
+    "release_tag_1.9.1_resolves_same_commit": true,
+    "submodule_path": "whisper.cpp",
+    "submodule_url": "https://github.com/ggerganov/whisper.cpp.git",
+    "submodule_commit": "f24588a272ae8e23280d9c220536437164e6ed28",
+    "license_copy": "whisper/whisper.cpp-f24588-LICENSE",
+    "license_text": "MIT License; Copyright (c) 2023-2026 The ggml authors",
+    "license_sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+    "scope": "Exact upstream repository root licence at package source submodule pin, including the vendored ggml source in that tree; no separate ggml/LICENSE or ggml submodule exists in pinned recursive tree.",
+    "limit": "Runtime native NuGet packages declare MIT but omit repository SHA. Version-level source linkage is through the same1.9.1 upstream release/managed nuspec, not an independently reproduced source-to-binary attestation. No claim that all embedded third-party code notices are exhaustively established."
+  },
+  "prior_completed_audit": "/tmp/9to1-arm64-baseline-notices-audit-20261021 remains unchanged",
+  "opentk": {
+    "packages": [
+      "OpenTK.Core",
+      "OpenTK.Mathematics",
+      "OpenTK.Audio.OpenAL"
+    ],
+    "version": "5.0.0-pre.13",
+    "official_tag": "5.0-pre.13",
+    "commit": "f6652e6c493587fe174d379e9b553176b114b163",
+    "evidence": "All three exact package PDB SourceLink URLs pin the same commit; independent official package downloads byte-match cached nupkg and package DLLs byte-match publish.",
+    "license_copy": "opentk-roboto/OpenTK-LICENSE.md",
+    "license": "MIT; Copyright2006-2019 Stefanos Apostolopoulos",
+    "license_sha256": "153d157c35f9f8229a206036450040952268da4d8d6c28a833c6d0463f56263d",
+    "source_attribution_headers": "opentk-roboto/OpenTK-source-notices/ (55 deduplicated exact public source headers)",
+    "remaining_gap": "Root LICENSE.md references THIRD_PARTIES.md, absent at exact pinned commit; no exhaustive third-party clearance claimed.",
+    "provenance_copy": "opentk-roboto/provenance.json"
+  },
+  "roboto": {
+    "font": "Roboto-Light, Version2.137;2017",
+    "published_assembly": "Avalonia.Dialogs.dll",
+    "exact_font_source_match": "Official Avalonia commit bce1eb1325502d5cdabf961bcd61548115179c81 contains exactly matching font bytes.",
+    "font_copyright": "Copyright2011 Google Inc. All Rights Reserved.",
+    "designer": "Christian Robertson",
+    "font_license_metadata": "Apache License, Version2.0; http://www.apache.org/licenses/LICENSE-2.0",
+    "official_google_fonts_commit": "724bf98e9f5cb98a1d3d5044f45a2e286b817401",
+    "apache_text_copy": "opentk-roboto/Roboto-LICENSE.txt",
+    "apache_text_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "attribution_copy": "opentk-roboto/Roboto-Light-exact-font-attribution.txt",
+    "boundary": "Google Fonts v2.137 font differs from bundled font in head/name tables; outline/metrics/layout tables are byte-identical. Exact font identity is established with Avalonia source, not with the complete Google font binary.",
+    "provenance_copy": "opentk-roboto/provenance.json"
+  }
+}

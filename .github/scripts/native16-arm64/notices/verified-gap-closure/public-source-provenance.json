@@ -1,0 +1,90 @@
+[
+  {
+    "url": "https://api.github.com/repos/AvaloniaUI/avalonia-docs/commits/main",
+    "final_url": "https://api.github.com/repos/AvaloniaUI/avalonia-docs/commits/main",
+    "copy": "avalonia/docs-main-commit.json",
+    "size": 23545,
+    "sha256": "7390f7dfb9c2677ab387b60f195e244756f596987e1017a6e33ca6e903a15be5",
+    "retrieved_utc": "2026-10-21T07:51:53.087339+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/AvaloniaUI/avalonia-docs/f7a01da51c0ad0bb8e7f4fdce61b39b0629527d7/tools/faq.md",
+    "final_url": "https://raw.githubusercontent.com/AvaloniaUI/avalonia-docs/f7a01da51c0ad0bb8e7f4fdce61b39b0629527d7/tools/faq.md",
+    "copy": "avalonia/tools/faq.md",
+    "size": 10575,
+    "sha256": "a2f789651e5d48b990a757223d0c8d04e836bbaf46bcdd1b120954fbbf84a650",
+    "retrieved_utc": "2026-10-21T07:51:53.273282+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/AvaloniaUI/avalonia-docs/f7a01da51c0ad0bb8e7f4fdce61b39b0629527d7/tools/developer-tools/installation.md",
+    "final_url": "https://raw.githubusercontent.com/AvaloniaUI/avalonia-docs/f7a01da51c0ad0bb8e7f4fdce61b39b0629527d7/tools/developer-tools/installation.md",
+    "copy": "avalonia/tools/developer-tools/installation.md",
+    "size": 5976,
+    "sha256": "321f13d718b226e94b032f4d641eecd6df23ad220b9c3da64de615ab244e4523",
+    "retrieved_utc": "2026-10-21T07:51:53.497822+00:00"
+  },
+  {
+    "url": "https://www.nuget.org/packages/AvaloniaUI.DiagnosticsSupport/2.2.3",
+    "final_url": "https://www.nuget.org/packages/AvaloniaUI.DiagnosticsSupport/2.2.3",
+    "copy": "avalonia/nuget-2.2.3.html",
+    "size": 98403,
+    "sha256": "27a65ebee96e53428f275a9d88e39719bdd8fc01ab310db9ec0cc138bd9db87f",
+    "retrieved_utc": "2026-10-21T07:51:56.574448+00:00"
+  },
+  {
+    "url": "https://api.github.com/repos/sandrohanea/whisper.net/git/trees/98278acc38ae23590cdfa9859f78f089abae52a7?recursive=1",
+    "final_url": "https://api.github.com/repos/sandrohanea/whisper.net/git/trees/98278acc38ae23590cdfa9859f78f089abae52a7?recursive=1",
+    "copy": "whisper/whispernet-package-source-tree.json",
+    "size": 102707,
+    "sha256": "2a6e98ba04208b4ceb10ed17c0d96bf818b1811f04a54188640193e975fbad59",
+    "retrieved_utc": "2026-10-21T07:51:57.032273+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/sandrohanea/whisper.net/98278acc38ae23590cdfa9859f78f089abae52a7/.gitmodules",
+    "final_url": "https://raw.githubusercontent.com/sandrohanea/whisper.net/98278acc38ae23590cdfa9859f78f089abae52a7/.gitmodules",
+    "copy": "whisper/whispernet-gitmodules.txt",
+    "size": 98,
+    "sha256": "bd227d42d580afde50dcaf3b6918e73dcf6eccce8dd685b8e5d6e11cf2b99059",
+    "retrieved_utc": "2026-10-21T07:51:57.110156+00:00"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/ggml-org/whisper.cpp/f24588a272ae8e23280d9c220536437164e6ed28/LICENSE",
+    "final_url": "https://raw.githubusercontent.com/ggml-org/whisper.cpp/f24588a272ae8e23280d9c220536437164e6ed28/LICENSE",
+    "copy": "whisper/whisper.cpp-f24588-LICENSE",
+    "size": 1078,
+    "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+    "retrieved_utc": "2026-10-21T07:51:57.163446+00:00"
+  },
+  {
+    "url": "https://api.github.com/repos/ggml-org/whisper.cpp/git/trees/f24588a272ae8e23280d9c220536437164e6ed28?recursive=1",
+    "final_url": "https://api.github.com/repos/ggml-org/whisper.cpp/git/trees/f24588a272ae8e23280d9c220536437164e6ed28?recursive=1",
+    "copy": "whisper/whisper.cpp-source-tree.json",
+    "size": 520417,
+    "sha256": "c037a5f21e09672f9cc5debfc6ae5dfd5bbb70b3c4b30ee3522b06995ea18e8a",
+    "retrieved_utc": "2026-10-21T07:51:57.622665+00:00"
+  },
+  {
+    "url": "https://api.github.com/repos/sandrohanea/whisper.net/git/tags/c6821abbde5ae021e398ebe875c94dea9d66c9e1",
+    "final_url": "https://api.github.com/repos/sandrohanea/whisper.net/git/tags/c6821abbde5ae021e398ebe875c94dea9d66c9e1",
+    "copy": "whisper/whispernet-release-tag.json",
+    "size": 706,
+    "sha256": "78c85b21234e0f1d07a1ba4f4d533c757bcd877e3d4b151a4f816b2403a09e7b",
+    "retrieved_utc": "2026-10-21T07:51:57.957258+00:00"
+  },
+  {
+    "url": "https://avaloniaui.net/legal",
+    "final_url": "https://avaloniaui.net/legal",
+    "copy": "avalonia/legal.html",
+    "size": 524456,
+    "sha256": "b27923a5685391ca53eed261991f277eb95603f2237ad5d312ea988566ae9c0b",
+    "retrieved_utc": "2026-10-21T07:53:00.805523+00:00"
+  },
+  {
+    "url": "https://avaloniaui.net/legal/terms-of-service",
+    "final_url": "https://avaloniaui.net/legal/terms-of-service",
+    "copy": "avalonia/terms-of-service.html",
+    "size": 110775,
+    "sha256": "02873b6a3a65675effa52624ad875a359aabd7c21cb04d7ee4145aab5de40da6",
+    "retrieved_utc": "2026-10-21T07:53:01.214284+00:00"
+  }
+]

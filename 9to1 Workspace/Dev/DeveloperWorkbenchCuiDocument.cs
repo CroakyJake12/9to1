@@ -1,67 +1,80 @@
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 
 namespace HavenOS.Apps.Dev;
 
-/// <summary>One maintained document for native/web Dev. Actual project, source and command
-/// results are supplied by the canonical owner; controls never infer authority from a login.</summary>
+/// <summary>
+/// Loads the single shared canonical Build development workbench document from the genuine V1
+/// compiled CUI artifact embedded in the Dev assembly (<c>CUI.Compilation.v1</c>). The workbench is
+/// stateless, so its compiled bundle is a genuine V1 projection carrying full typed semantics.
+///
+/// The typed bundle is recovered through the Core <see cref="CuiV1ArtifactReader"/> (never a runtime
+/// source reparse and never a compiler invocation), then admitted against this runtime's real
+/// host-support contract for the WHOLE required bundle (language, component registry, minimum/current
+/// ABI range, capability set) before any document is returned or scene effect occurs. A missing,
+/// malformed, unsupported-version, unsupported-ABI or unsupported-capability artifact fails closed —
+/// there is no raw-source fallback and no parallel codec.
+///
+/// Actual project, source, review, search, diff, command and build results continue to be supplied by
+/// the canonical owner bindings; this document never infers authority from a login.
+/// </summary>
 public static class DeveloperWorkbenchCuiDocument
 {
-    public static CuiDocument Load()
+    public const string CompiledArtifactResource = "CUI.Compilation.v1";
+    public const string CompiledSourceName = "UI/DeveloperWorkbench.cui";
+
+    public static CuiDocument Load() => Load(ReadEmbeddedArtifact());
+
+    /// <summary>Reads the embedded compiled V1 bundle. Exposed for identical admission/validation
+    /// without a resource stream (used by tests to inject an artifact).</summary>
+    public static byte[] ReadEmbeddedArtifact()
     {
-        var parser = new CuiRichParser(); var document = parser.Parse(Markup, "DeveloperWorkbench.cui");
-        if (parser.Diagnostics.Diagnostics.Any(value => value.Severity == CuiDiagnosticSeverity.Error))
-            throw new InvalidDataException("The maintained Dev document is invalid.");
-        return document;
+        var assembly = typeof(DeveloperWorkbenchCuiDocument).Assembly;
+        using var stream = assembly.GetManifestResourceStream(CompiledArtifactResource)
+            ?? throw new InvalidOperationException(
+                $"Embedded compiled CUI artifact '{CompiledArtifactResource}' was not found. The project must emit the canonical compiled V1 bundle.");
+        using var buffer = new MemoryStream();
+        stream.CopyTo(buffer);
+        return buffer.ToArray();
     }
-    public const string Markup = """
-<Cui id="dev.project-workbench" version="1">
-  <Page>
-    <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
-      <Text id="dev-project-title" text="{Binding ProjectTitle}" font-size="24" text-wrapping="Wrap" />
-      <Text text="{Binding ProjectSummary}" text-wrapping="Wrap" accessible-name="Existing project and task" />
-      <Container Type="Wrap">
-        <Button id="dev-refresh" action="dev.refresh" content="Refresh project" />
-        <Button id="dev-tree" action="dev.tree" content="Project files" />
-        <Button id="dev-git-status" action="dev.git-status" content="Git status" />
-        <Button id="dev-git-diff" action="dev.git-diff" content="Working-tree diff" />
-        <Button id="dev-git-branches" action="dev.git-branches" content="Branches" />
-      </Container>
-      <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" />
-      <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
-      <Button id="dev-open-source" action="dev.open-source" content="Open source" Interactive="{Binding CanOpenSource}" />
-      <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
-      <Button id="dev-search" action="dev.search" content="Search files" />
-      <Text text="{Binding SearchResults}" text-wrapping="Wrap" accessible-name="Actual file search results" />
-      <Text text="{Binding EditorTitle}" text-wrapping="Wrap" accessible-name="Selected source and draft revision" />
-      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" />
-      <Container Type="Wrap">
-        <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
-        <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />
-        <Button id="dev-revert-pass" action="dev.revert-pass" content="Prepare last pass revert" Interactive="{Binding CanRevert}" />
-      </Container>
-      <Text text="{Binding ReviewSummary}" text-wrapping="Wrap" accessible-name="This edit pass only" />
-      <Text text="Before this pass" font-size="18" />
-      <Object type="DeveloperReadonlySource" id="dev-pass-before" text="{Binding BeforeText}" font-family="monospace" min-height="100" accessible-name="Exact source before this pass" Multiline="true" />
-      <Text text="After this pass" font-size="18" />
-      <Object type="DeveloperReadonlySource" id="dev-pass-after" text="{Binding AfterText}" font-family="monospace" min-height="100" accessible-name="Exact proposed source after this pass" Multiline="true" />
-      <Input id="dev-terminal-command" placeholdertext="Explicit command in this project" accessible-name="Terminal command" Type="Text" Value="{Binding Command}" />
-      <Button id="dev-terminal-run" action="dev.run-command" content="Run command" />
-      <Input id="dev-test-command" placeholdertext="Explicit test command" accessible-name="Test command" Type="Text" Value="{Binding TestCommand}" />
-      <Button id="dev-test-run" action="dev.run-tests" content="Run tests" />
-      <Input id="dev-stage-task" placeholdertext="Saved build task ID" accessible-name="Saved build task ID" Type="Text" Value="{Binding StageTaskId}" />
-      <Input id="dev-stage-id" placeholdertext="Saved stage ID" accessible-name="Saved build stage ID" Type="Text" Value="{Binding StageId}" />
-      <Button id="dev-build-stage" action="dev.run-stage" content="Run saved build stage" />
-      <Input id="dev-branch-name" placeholdertext="Literal branch name" accessible-name="Git branch name" Type="Text" Value="{Binding BranchName}" />
-      <Container Type="Wrap">
-        <Button id="dev-create-branch" action="dev.create-branch" content="Create branch" />
-        <Button id="dev-switch-branch" action="dev.switch-branch" content="Switch branch" />
-      </Container>
-      <Text text="{Binding ProcessStatus}" text-wrapping="Wrap" accessible-name="Observed command exit and timeout" />
-      <Object type="DeveloperReadonlySource" id="dev-terminal-output" text="{Binding ProcessOutput}" font-family="monospace" min-height="180" accessible-name="Actual standard output and error" Multiline="true" />
-      <Text text="{Binding Status}" text-wrapping="Wrap" accessible-name="Development operation status" />
-    </Container>
-  </Page>
-</Cui>
-""";
+
+    /// <summary>Loads and hard-validates a compiled V1 bundle from raw bytes. A missing/unsupported
+    /// format, version, language, ABI, registry or capability fails before any effects occur. The
+    /// genuine Core reader reconstructs the typed canonical model without reparsing source; host
+    /// support is admitted for the whole bundle before any document/scene effect.</summary>
+    public static CuiDocument Load(byte[] artifactBytes)
+    {
+        CuiV1LoadedArtifact artifact;
+        try
+        {
+            artifact = CuiV1ArtifactReader.ReadArtifact(artifactBytes);
+        }
+        catch (CuiV1AdmissionException admission)
+        {
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                admission.Code, CuiDiagnosticSeverity.Error, admission.Message, Span));
+        }
+
+        // Real host-support admission for the WHOLE required bundle (envelope + every document/closure)
+        // against this runtime's supported language, component registry, minimum/current ABI range and
+        // capability set, before any reconstruction or scene/control effect. Genuine stateless V1
+        // (minimum ABI1) remains admitted on the stateful-aware runtime (current ABI2).
+        CuiRuntimeCompatibility.ValidateArtifactHostSupport(artifact, Span);
+
+        var document = artifact.Documents.FirstOrDefault(entry =>
+            string.Equals(entry.Source, CompiledSourceName, StringComparison.Ordinal))
+            ?? throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR062", CuiDiagnosticSeverity.Error,
+                $"Compiled CUI bundle does not contain '{CompiledSourceName}'.", Span));
+
+        var semantics = document.Semantics;
+        if (semantics.Components.Count == 0)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIR063", CuiDiagnosticSeverity.Error,
+                $"Compiled semantic model for '{CompiledSourceName}' is empty.", Span));
+        return semantics;
+    }
+
+    private static readonly CuiSourceSpan Span = CuiSourceSpan.At(CompiledSourceName, 1, 1);
 }

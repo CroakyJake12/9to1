@@ -118,6 +118,45 @@ public static class CuiRuntimeCompatibility
         }
     }
 
+    /// <summary>
+    /// Admits a decoded genuine-V1 compiled artifact against the REAL host-support contract: this
+    /// runtime's supported CUI language, component registry, minimum/current ABI range and capability
+    /// set. Genuine stateless V1 documents carry minimum ABI1 and are valid on the stateful-aware
+    /// runtime (current ABI2); a document or envelope declaring an ABI/capability outside the
+    /// supported range fails before any reconstruction/effect. This overload covers the whole
+    /// required bundle (envelope and every loaded document/closure) so a required sibling whose
+    /// ABI/capability the host does not support cannot escape whole-bundle admission.
+    /// </summary>
+    public static void ValidateArtifactHostSupport(CuiV1LoadedArtifact artifact, CuiSourceSpan diagnosticSpan)
+    {
+        if (artifact is null)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIB003", CuiDiagnosticSeverity.Error, "A compiled CUI artifact is required.", diagnosticSpan));
+        if (artifact.Metadata is null)
+            throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                "CUIB003", CuiDiagnosticSeverity.Error,
+                "The compiled CUI artifact is missing envelope compatibility metadata.", diagnosticSpan));
+
+        // Envelope requirements (the conservative whole-bundle boundary). Genuine stateless V1
+        // documents carry minimum ABI1 and are admitted on this stateful-aware runtime (ABI2).
+        RequireLanguage(artifact.Metadata.LanguageVersion, diagnosticSpan);
+        RequireRegistry(artifact.Metadata.ComponentRegistryVersion, diagnosticSpan);
+        RequireAbi(artifact.Metadata.RuntimeAbiVersion, diagnosticSpan);
+        RequireCapabilities(artifact.Metadata.RequiredCapabilities, diagnosticSpan, Capabilities);
+
+        if (artifact.Documents is not null)
+        {
+            foreach (var document in artifact.Documents)
+            {
+                if (document?.Metadata is null) continue;
+                RequireLanguage(document.Metadata.LanguageVersion, diagnosticSpan);
+                RequireRegistry(document.Metadata.ComponentRegistryVersion, diagnosticSpan);
+                RequireAbi(document.Metadata.RuntimeAbiVersion, diagnosticSpan);
+                RequireCapabilities(document.Metadata.RequiredCapabilities, diagnosticSpan, Capabilities);
+            }
+        }
+    }
+
     private static void RequireLanguage(string? version, CuiSourceSpan span)
     {
         if (!IsLanguageVersionCompatible(version))

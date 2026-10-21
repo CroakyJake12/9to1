@@ -1,0 +1,3145 @@
+{
+  "source_publish": "/tmp/9to1-preview-arm64-20261021-01/publish",
+  "deps_sha256": "3ebbfed2f46975dbbee6d1875831163cc14bdc9d248c93594d7c88cf8f908c70",
+  "runtimeconfig_sha256": "756eaa0a48ff05678849462aed99b5c15edc80c56313399faee0e494e6ee74d8",
+  "deps_package_count": 81,
+  "items": [
+    {
+      "identity": "AngleSharp/1.7.2",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/anglesharp/1.7.2",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/AngleSharp.dll": {
+            "assemblyVersion": "1.7.2.0",
+            "fileVersion": "1.7.2.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/anglesharp/1.7.2/anglesharp.nuspec",
+          "copy": "packages/anglesharp/1.7.2/anglesharp.nuspec",
+          "sha256": "dd38d3344466d89ab88a791138faf429df9fbf54ee8d56200d84b107b8563a79",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "Copyright 2013-2026, AngleSharp.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AngleSharp/AngleSharp",
+        "branch": "refs/heads/main",
+        "commit": "3718d6804dd3a3781efcd1ccd7bdcb10a4352edd"
+      },
+      "nuspec_version": "1.7.2"
+    },
+    {
+      "identity": "AngleSharp.Css/1.0.2",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/anglesharp.css/1.0.2",
+      "published_assets": {
+        "dependencies": {
+          "AngleSharp": "1.7.2"
+        },
+        "runtime": {
+          "lib/net10.0/AngleSharp.Css.dll": {
+            "assemblyVersion": "1.0.2.0",
+            "fileVersion": "1.0.2.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/anglesharp.css/1.0.2/anglesharp.css.nuspec",
+          "copy": "packages/anglesharp.css/1.0.2/anglesharp.css.nuspec",
+          "sha256": "a16630808ce8d5acde435eb516d5a2d00e4c97610fca69b8e85133cbd902c8e4",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": null,
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AngleSharp/AngleSharp.Css",
+        "branch": "refs/heads/main",
+        "commit": "d158478f58882dad1d595dc7bb2286f3da4bf6ea"
+      },
+      "nuspec_version": "1.0.2"
+    },
+    {
+      "identity": "Avalonia.Controls.WebView/12.0.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/avalonia.controls.webview/12.0.1",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/Avalonia.Controls.WebView.dll": {
+            "assemblyVersion": "12.0.1.0",
+            "fileVersion": "12.0.1.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/avalonia.controls.webview/12.0.1/avalonia.controls.webview.nuspec",
+          "copy": "packages/avalonia.controls.webview/12.0.1/avalonia.controls.webview.nuspec",
+          "sha256": "1d83497554c260c55819ec9f114db81e34d5aef31715ee9e057f7049c25c8ea4",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "Copyright 2019-2026 \u00a9 AvaloniaUI O\u00dc",
+      "repository": {
+        "type": "git",
+        "commit": "8ae0a848102ad68a7cff54c48712871f78df7b9b"
+      },
+      "nuspec_version": "12.0.1"
+    },
+    {
+      "identity": "AvaloniaUI.DiagnosticsSupport/2.2.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/avaloniaui.diagnosticssupport/2.2.3",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.IO.RecyclableMemoryStream": "3.0.1"
+        },
+        "runtime": {
+          "lib/net10.0/AvaloniaUI.DiagnosticsSupport.Avalonia.dll": {
+            "assemblyVersion": "2.2.3.0",
+            "fileVersion": "2.2.3.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/avaloniaui.diagnosticssupport/2.2.3/avaloniaui.diagnosticssupport.nuspec",
+          "copy": "packages/avaloniaui.diagnosticssupport/2.2.3/avaloniaui.diagnosticssupport.nuspec",
+          "sha256": "f1240390840adf7e4dfce4bc8313dd0350bdf11b36d573f3f7c107a74dc921c2",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": null,
+      "license_value": null,
+      "license_url": null,
+      "copyright": "Copyright 2019-2026 \u00a9 AvaloniaUI O\u00dc",
+      "repository": {
+        "type": "git",
+        "commit": "92df9d92acf0bbe8b2ffa96370c1bf848df81d27"
+      },
+      "nuspec_version": "2.2.3"
+    },
+    {
+      "identity": "BouncyCastle.Cryptography/2.7.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/bouncycastle.cryptography/2.7.0",
+      "published_assets": {
+        "runtime": {
+          "lib/net6.0/BouncyCastle.Cryptography.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.7.0.16391"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/bouncycastle.cryptography/2.7.0/bouncycastle.cryptography.nuspec",
+          "copy": "packages/bouncycastle.cryptography/2.7.0/bouncycastle.cryptography.nuspec",
+          "sha256": "89c51e6b51c6d804b0ca2bfc55e00e797ef5e5d79656680d769616995832efc1",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/bouncycastle.cryptography/2.7.0/LICENSE.md",
+          "copy": "packages/bouncycastle.cryptography/2.7.0/LICENSE.md",
+          "sha256": "be0592a6c76f398356fbf252a4fb43476fb3ca3c45331428c2f4f22c499e8311",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "Copyright \u00a9 Legion of the Bouncy Castle Inc. 2000-2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/bcgit/bc-csharp",
+        "branch": "refs/heads/release/v2.7",
+        "commit": "4007498b13582d90ee1eda5d9920c324428b98b3"
+      },
+      "nuspec_version": "2.7.0"
+    },
+    {
+      "identity": "CSharpMath/1.0.0-pre.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/csharpmath/1.0.0-pre.1",
+      "published_assets": {
+        "runtime": {
+          "lib/netstandard2.0/CSharpMath.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/csharpmath/1.0.0-pre.1/csharpmath.nuspec",
+          "copy": "packages/csharpmath/1.0.0-pre.1/csharpmath.nuspec",
+          "sha256": "f8cd3a015aad8a991529b0fbad75475fa212eedb65d4dfb3462dcbd7168a2dbd",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 CSharpMath Contributors 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/verybadcat/CSharpMath.git",
+        "branch": "master",
+        "commit": "d6feac52d2cf4b186f1f275ca4c84fd7564cc470"
+      },
+      "nuspec_version": "1.0.0-pre.1"
+    },
+    {
+      "identity": "CSharpMath.Rendering/1.0.0-pre.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/csharpmath.rendering/1.0.0-pre.1",
+      "published_assets": {
+        "dependencies": {
+          "CSharpMath": "1.0.0-pre.1"
+        },
+        "runtime": {
+          "lib/netstandard2.0/CSharpMath.Rendering.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/csharpmath.rendering/1.0.0-pre.1/csharpmath.rendering.nuspec",
+          "copy": "packages/csharpmath.rendering/1.0.0-pre.1/csharpmath.rendering.nuspec",
+          "sha256": "f59afb764ddf4a2b2102e0b7e3cb7a19e918312853d54dc964c1010e96fc68ec",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 CSharpMath Contributors 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/verybadcat/CSharpMath.git",
+        "branch": "master",
+        "commit": "d6feac52d2cf4b186f1f275ca4c84fd7564cc470"
+      },
+      "nuspec_version": "1.0.0-pre.1"
+    },
+    {
+      "identity": "CSharpMath.SkiaSharp/1.0.0-pre.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/csharpmath.skiasharp/1.0.0-pre.1",
+      "published_assets": {
+        "dependencies": {
+          "CSharpMath.Rendering": "1.0.0-pre.1",
+          "SkiaSharp": "3.119.3-preview.1.1"
+        },
+        "runtime": {
+          "lib/netstandard2.0/CSharpMath.SkiaSharp.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/csharpmath.skiasharp/1.0.0-pre.1/csharpmath.skiasharp.nuspec",
+          "copy": "packages/csharpmath.skiasharp/1.0.0-pre.1/csharpmath.skiasharp.nuspec",
+          "sha256": "713315d77ea4568f83bea7077292ae7b80b9e87dfcfb51efcb19acdd4b8ccb3b",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 CSharpMath Contributors 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/verybadcat/CSharpMath.git",
+        "branch": "master",
+        "commit": "d6feac52d2cf4b186f1f275ca4c84fd7564cc470"
+      },
+      "nuspec_version": "1.0.0-pre.1"
+    },
+    {
+      "identity": "HarfBuzzSharp/8.3.1.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp/8.3.1.3",
+      "published_assets": {
+        "runtime": {
+          "lib/net8.0/HarfBuzzSharp.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "8.3.1.3"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp/8.3.1.3/harfbuzzsharp.nuspec",
+          "copy": "packages/harfbuzzsharp/8.3.1.3/harfbuzzsharp.nuspec",
+          "sha256": "dc37c8a3c466e1a2ab3a8f9bdecb78d619ac9ae9089b6ce05c291729f4ed7b4a",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp/8.3.1.3/LICENSE.txt",
+          "copy": "packages/harfbuzzsharp/8.3.1.3/LICENSE.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.2",
+        "commit": "2888c737ad016d584c74525e2d35db5097ea8576"
+      },
+      "nuspec_version": "8.3.1.3"
+    },
+    {
+      "identity": "HarfBuzzSharp.NativeAssets.Linux/8.3.1.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp.nativeassets.linux/8.3.1.3",
+      "published_assets": {
+        "native": {
+          "runtimes/linux-arm64/native/libHarfBuzzSharp.so": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/harfbuzzsharp.nativeassets.linux.nuspec",
+          "copy": "packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/harfbuzzsharp.nativeassets.linux.nuspec",
+          "sha256": "0aa61be16ff5d9e7a8379e5b162cccbce0754a5c360b3f33ab463c25d4d7618e",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/LICENSE.txt",
+          "copy": "packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/LICENSE.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/THIRD-PARTY-NOTICES.txt",
+          "copy": "packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/THIRD-PARTY-NOTICES.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.2",
+        "commit": "2888c737ad016d584c74525e2d35db5097ea8576"
+      },
+      "nuspec_version": "8.3.1.3"
+    },
+    {
+      "identity": "HtmlSanitizer/9.2.1039",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/htmlsanitizer/9.2.1039",
+      "published_assets": {
+        "dependencies": {
+          "AngleSharp": "1.7.2",
+          "AngleSharp.Css": "1.0.2"
+        },
+        "runtime": {
+          "lib/net8.0/HtmlSanitizer.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.2.1039.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/htmlsanitizer/9.2.1039/htmlsanitizer.nuspec",
+          "copy": "packages/htmlsanitizer/9.2.1039/htmlsanitizer.nuspec",
+          "sha256": "bf841dfcdcfddf29fd4e9afe7db07380e12ddfe19a0e3fe9ddd8262aced82495",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "Copyright 2013-2026 Michael Ganss",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/mganss/HtmlSanitizer",
+        "commit": "0417018d81765e3e15126a65f5a49d71e55f0920"
+      },
+      "nuspec_version": "9.2.1039"
+    },
+    {
+      "identity": "KokoroSharp/0.6.7",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/kokorosharp/0.6.7",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.ML.OnnxRuntime.Managed": "1.22.0",
+          "NAudio": "2.3.0",
+          "NumSharp": "0.30.0",
+          "OpenTK.Audio.OpenAL": "5.0.0-pre.13",
+          "System.Numerics.Tensors": "9.0.5"
+        },
+        "runtime": {
+          "lib/net8.0/KokoroSharp.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/kokorosharp/0.6.7/kokorosharp.nuspec",
+          "copy": "packages/kokorosharp/0.6.7/kokorosharp.nuspec",
+          "sha256": "2b0f1e57a6b681f3c5b1d2f3e4ab67d44ae468a0bdff403580ad9ff8c869d699",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/kokorosharp/0.6.7/content/espeak/LICENSE",
+          "copy": "packages/kokorosharp/0.6.7/content/espeak/LICENSE",
+          "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+          "cache_only_nested_content": true
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": null,
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Lyrcaxis/KokoroSharp",
+        "commit": "5e6c862e78d363e42e1778e22d003c94a3ac163b"
+      },
+      "nuspec_version": "0.6.7"
+    },
+    {
+      "identity": "KokoroSharp.CPU/0.6.7",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/kokorosharp.cpu/0.6.7",
+      "published_assets": {
+        "dependencies": {
+          "KokoroSharp": "0.6.7",
+          "Microsoft.ML.OnnxRuntime": "1.22.0"
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/kokorosharp.cpu/0.6.7/kokorosharp.cpu.nuspec",
+          "copy": "packages/kokorosharp.cpu/0.6.7/kokorosharp.cpu.nuspec",
+          "sha256": "972c4489f5794618776417b81697e61ab22cef3093e0fde60edc3adc3dbeb6ba",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": null,
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Lyrcaxis/KokoroSharp",
+        "commit": "5e6c862e78d363e42e1778e22d003c94a3ac163b"
+      },
+      "nuspec_version": "0.6.7"
+    },
+    {
+      "identity": "MailKit/4.18.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/mailkit/4.18.0",
+      "published_assets": {
+        "dependencies": {
+          "MimeKit": "4.18.0"
+        },
+        "runtime": {
+          "lib/net10.0/MailKit.dll": {
+            "assemblyVersion": "4.18.0.0",
+            "fileVersion": "4.18.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/mailkit/4.18.0/mailkit.nuspec",
+          "copy": "packages/mailkit/4.18.0/mailkit.nuspec",
+          "sha256": "5081e1304c3c0ee83716bff2b12fbd1b0866d871d20ef0b8f888087cd6427e10",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": ".NET Foundation and Contributors",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/jstedfast/MailKit"
+      },
+      "nuspec_version": "4.18.0"
+    },
+    {
+      "identity": "MicroCom.Runtime/0.11.4",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microcom.runtime/0.11.4",
+      "published_assets": {
+        "runtime": {
+          "lib/net5.0/MicroCom.Runtime.dll": {
+            "assemblyVersion": "0.11.4.0",
+            "fileVersion": "0.11.4.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microcom.runtime/0.11.4/microcom.runtime.nuspec",
+          "copy": "packages/microcom.runtime/0.11.4/microcom.runtime.nuspec",
+          "sha256": "a167c870d58621682728e3e9972289420aa17cac01bd3b9b931e6969ccd83ff6",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "Copyright 2021 \u00a9 Nikita Tsukanov",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/kekekeks/MicroCom",
+        "commit": "28850f85fb586488828ab7267ed4a87e8c970b51"
+      },
+      "nuspec_version": "0.11.4"
+    },
+    {
+      "identity": "Microsoft.Data.Sqlite.Core/10.0.9",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.data.sqlite.core/10.0.9",
+      "published_assets": {
+        "dependencies": {
+          "SQLitePCLRaw.core": "3.0.3"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Data.Sqlite.dll": {
+            "assemblyVersion": "10.0.9.0",
+            "fileVersion": "10.0.926.27113"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.data.sqlite.core/10.0.9/microsoft.data.sqlite.core.nuspec",
+          "copy": "packages/microsoft.data.sqlite.core/10.0.9/microsoft.data.sqlite.core.nuspec",
+          "sha256": "efbc478ca17d65a9783a9d499cde86afe6d66159cbc098cbdb54429e6909bce9",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "901ca941248413c79832d2fdbd709da0c4386353"
+      },
+      "nuspec_version": "10.0.9"
+    },
+    {
+      "identity": "Microsoft.Extensions.AI.Abstractions/10.8.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.ai.abstractions/10.8.3",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll": {
+            "assemblyVersion": "10.8.0.0",
+            "fileVersion": "10.800.326.37702"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.ai.abstractions/10.8.3/microsoft.extensions.ai.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.ai.abstractions/10.8.3/microsoft.extensions.ai.abstractions.nuspec",
+          "sha256": "9f2e355f903f871fd84582786988d347a5e9fefdd0896925044efa1aa6916a72",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/extensions",
+        "commit": "ccb356f31db9d894807c4fd0c97c2f41553d1524"
+      },
+      "nuspec_version": "10.8.3"
+    },
+    {
+      "identity": "Microsoft.Extensions.Caching.Abstractions/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.caching.abstractions/10.0.10",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Caching.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.caching.abstractions/10.0.10/microsoft.extensions.caching.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.caching.abstractions/10.0.10/microsoft.extensions.caching.abstractions.nuspec",
+          "sha256": "f711589381828be613ead1bc3dd1f0f1fedb2dc06c7eb63893aa57be75f3822a",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.caching.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.caching.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration/10.0.0/microsoft.extensions.configuration.nuspec",
+          "copy": "packages/microsoft.extensions.configuration/10.0.0/microsoft.extensions.configuration.nuspec",
+          "sha256": "34693997ad3738ce76702051669f5380fb7c6614804804102b10ec7a704a6ca1",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration.Abstractions/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.abstractions/10.0.10",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.abstractions/10.0.10/microsoft.extensions.configuration.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.configuration.abstractions/10.0.10/microsoft.extensions.configuration.abstractions.nuspec",
+          "sha256": "9782906731f192523e01dde11f749492c342738614c73f2fb794b13232eb5e8c",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration.Binder/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.binder/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.Binder.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.binder/10.0.0/microsoft.extensions.configuration.binder.nuspec",
+          "copy": "packages/microsoft.extensions.configuration.binder/10.0.0/microsoft.extensions.configuration.binder.nuspec",
+          "sha256": "10a186eb097268352bfaa01d9e78256557f8c3ef7fc0a370d05fc8952b03dca4",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.binder/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration.binder/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration.CommandLine/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.commandline/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.CommandLine.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.commandline/10.0.0/microsoft.extensions.configuration.commandline.nuspec",
+          "copy": "packages/microsoft.extensions.configuration.commandline/10.0.0/microsoft.extensions.configuration.commandline.nuspec",
+          "sha256": "dd78023cc57fdd2f9d1699be3575a31cd8b2d42c7080f1064c7c2584d5524e81",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.commandline/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration.commandline/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.environmentvariables/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.EnvironmentVariables.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.environmentvariables/10.0.0/microsoft.extensions.configuration.environmentvariables.nuspec",
+          "copy": "packages/microsoft.extensions.configuration.environmentvariables/10.0.0/microsoft.extensions.configuration.environmentvariables.nuspec",
+          "sha256": "d983844f640f57fe17180056f9720d4380ace835d4d66e79747b04357862e7f9",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.environmentvariables/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration.environmentvariables/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration.FileExtensions/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.fileextensions/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.10",
+          "Microsoft.Extensions.FileProviders.Physical": "10.0.0",
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.FileExtensions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.fileextensions/10.0.0/microsoft.extensions.configuration.fileextensions.nuspec",
+          "copy": "packages/microsoft.extensions.configuration.fileextensions/10.0.0/microsoft.extensions.configuration.fileextensions.nuspec",
+          "sha256": "e81b3c90d1008a92e4474df4eddff7d027a0de16675da23c5ea22bd57e91d024",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.fileextensions/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration.fileextensions/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration.Json/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.json/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Configuration.FileExtensions": "10.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.Json.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.json/10.0.0/microsoft.extensions.configuration.json.nuspec",
+          "copy": "packages/microsoft.extensions.configuration.json/10.0.0/microsoft.extensions.configuration.json.nuspec",
+          "sha256": "e47acd71617f1e87773f3d5235abb32d6fb8f5a8cabb0a5594c2a866bdc96100",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.json/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration.json/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Configuration.UserSecrets/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.usersecrets/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Configuration.Json": "10.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.10",
+          "Microsoft.Extensions.FileProviders.Physical": "10.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.UserSecrets.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.usersecrets/10.0.0/microsoft.extensions.configuration.usersecrets.nuspec",
+          "copy": "packages/microsoft.extensions.configuration.usersecrets/10.0.0/microsoft.extensions.configuration.usersecrets.nuspec",
+          "sha256": "b080a3b7bb06d54e13f3fbf0ab00bb61b84876507ecbd24cfbca10cb32496179",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.configuration.usersecrets/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.configuration.usersecrets/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.DependencyInjection/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.dependencyinjection/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.DependencyInjection.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.dependencyinjection/10.0.0/microsoft.extensions.dependencyinjection.nuspec",
+          "copy": "packages/microsoft.extensions.dependencyinjection/10.0.0/microsoft.extensions.dependencyinjection.nuspec",
+          "sha256": "0f3b7bc57edb81ae05a1c59b0828d99cd2c1bd6b5de34dcce9b7519081461904",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.dependencyinjection/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.dependencyinjection/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.dependencyinjection.abstractions/10.0.10",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.dependencyinjection.abstractions/10.0.10/microsoft.extensions.dependencyinjection.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.dependencyinjection.abstractions/10.0.10/microsoft.extensions.dependencyinjection.abstractions.nuspec",
+          "sha256": "0c95e70ef7abddd0120b259dd80f5677c22b4f638fb8c5aa50846c03c65a7569",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.dependencyinjection.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.dependencyinjection.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.Diagnostics/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.diagnostics/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Diagnostics.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options.ConfigurationExtensions": "10.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Diagnostics.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.diagnostics/10.0.0/microsoft.extensions.diagnostics.nuspec",
+          "copy": "packages/microsoft.extensions.diagnostics/10.0.0/microsoft.extensions.diagnostics.nuspec",
+          "sha256": "927c3ce4fa78b2f9fb144a1e3da6686c0036d8252f2a25e1c21966320623e090",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.diagnostics/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.diagnostics/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Diagnostics.Abstractions/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.diagnostics.abstractions/10.0.10",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Diagnostics.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.diagnostics.abstractions/10.0.10/microsoft.extensions.diagnostics.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.diagnostics.abstractions/10.0.10/microsoft.extensions.diagnostics.abstractions.nuspec",
+          "sha256": "343d515100c9dd789f91cb1dffcd966ef482b688cdc5711c2b4de20adfb82474",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.diagnostics.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.diagnostics.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.FileProviders.Abstractions/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.fileproviders.abstractions/10.0.10",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.FileProviders.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.fileproviders.abstractions/10.0.10/microsoft.extensions.fileproviders.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.fileproviders.abstractions/10.0.10/microsoft.extensions.fileproviders.abstractions.nuspec",
+          "sha256": "7c4a745071335ffaf8c632cef40da244796bed7c529948e73343bc52f74cbbed",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.fileproviders.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.fileproviders.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.FileProviders.Physical/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.fileproviders.physical/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.10",
+          "Microsoft.Extensions.FileSystemGlobbing": "10.0.0",
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.FileProviders.Physical.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.fileproviders.physical/10.0.0/microsoft.extensions.fileproviders.physical.nuspec",
+          "copy": "packages/microsoft.extensions.fileproviders.physical/10.0.0/microsoft.extensions.fileproviders.physical.nuspec",
+          "sha256": "8ea7f6042fbfd1fed27d4c52b5449e3fcaa6779aa049aaaf86402bd07afba72f",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.fileproviders.physical/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.fileproviders.physical/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.FileSystemGlobbing/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.filesystemglobbing/10.0.0",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.FileSystemGlobbing.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.filesystemglobbing/10.0.0/microsoft.extensions.filesystemglobbing.nuspec",
+          "copy": "packages/microsoft.extensions.filesystemglobbing/10.0.0/microsoft.extensions.filesystemglobbing.nuspec",
+          "sha256": "c3a54ab0c0d2724aa84a3afde4377d31608a33c0d9d51b5bb67d96851b54994c",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.filesystemglobbing/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.filesystemglobbing/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Hosting/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.hosting/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Configuration.Binder": "10.0.0",
+          "Microsoft.Extensions.Configuration.CommandLine": "10.0.0",
+          "Microsoft.Extensions.Configuration.EnvironmentVariables": "10.0.0",
+          "Microsoft.Extensions.Configuration.FileExtensions": "10.0.0",
+          "Microsoft.Extensions.Configuration.Json": "10.0.0",
+          "Microsoft.Extensions.Configuration.UserSecrets": "10.0.0",
+          "Microsoft.Extensions.DependencyInjection": "10.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Diagnostics": "10.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.10",
+          "Microsoft.Extensions.FileProviders.Physical": "10.0.0",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging.Configuration": "10.0.0",
+          "Microsoft.Extensions.Logging.Console": "10.0.0",
+          "Microsoft.Extensions.Logging.Debug": "10.0.0",
+          "Microsoft.Extensions.Logging.EventLog": "10.0.0",
+          "Microsoft.Extensions.Logging.EventSource": "10.0.0",
+          "Microsoft.Extensions.Options": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Hosting.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.hosting/10.0.0/microsoft.extensions.hosting.nuspec",
+          "copy": "packages/microsoft.extensions.hosting/10.0.0/microsoft.extensions.hosting.nuspec",
+          "sha256": "f5a23c3e7020c4a2924e2940e9f7c835d107b8e75304f92e979527583d002875",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.hosting/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.hosting/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Hosting.Abstractions/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.hosting.abstractions/10.0.10",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Diagnostics.Abstractions": "10.0.10",
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Hosting.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.hosting.abstractions/10.0.10/microsoft.extensions.hosting.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.hosting.abstractions/10.0.10/microsoft.extensions.hosting.abstractions.nuspec",
+          "sha256": "26d203bead3f6166038cd3b07befe2cd69c94918a085cb352eba94d995291c7b",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.hosting.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.hosting.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.Http/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.http/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Diagnostics": "10.0.0",
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Http.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.http/10.0.0/microsoft.extensions.http.nuspec",
+          "copy": "packages/microsoft.extensions.http/10.0.0/microsoft.extensions.http.nuspec",
+          "sha256": "8826810e3ffa5fbda7941c08d42a74b5cb64859f1bd91160fac6fa2b14878b10",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.http/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.http/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Logging/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Logging.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging/10.0.0/microsoft.extensions.logging.nuspec",
+          "copy": "packages/microsoft.extensions.logging/10.0.0/microsoft.extensions.logging.nuspec",
+          "sha256": "a98260030de003de5c14cb84e56a8bbc9937df42e3174e627e683fe64beace23",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.logging/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Logging.Abstractions/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.abstractions/10.0.10",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.abstractions/10.0.10/microsoft.extensions.logging.abstractions.nuspec",
+          "copy": "packages/microsoft.extensions.logging.abstractions/10.0.10/microsoft.extensions.logging.abstractions.nuspec",
+          "sha256": "bedb09d9a04ea6d879e6566e886f200ae741a364d1d5b234e09376217a948e56",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.logging.abstractions/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.Logging.Configuration/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.configuration/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Configuration.Binder": "10.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options": "10.0.10",
+          "Microsoft.Extensions.Options.ConfigurationExtensions": "10.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Logging.Configuration.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.configuration/10.0.0/microsoft.extensions.logging.configuration.nuspec",
+          "copy": "packages/microsoft.extensions.logging.configuration/10.0.0/microsoft.extensions.logging.configuration.nuspec",
+          "sha256": "d19e44fe80416905850f91045907bcfb23de39a8cb9b96b9d6a55a795ddf3807",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.configuration/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.logging.configuration/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Logging.Console/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.console/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging.Configuration": "10.0.0",
+          "Microsoft.Extensions.Options": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Logging.Console.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.console/10.0.0/microsoft.extensions.logging.console.nuspec",
+          "copy": "packages/microsoft.extensions.logging.console/10.0.0/microsoft.extensions.logging.console.nuspec",
+          "sha256": "00a1d908bdc7a4d7534dfad36231c093364b191eb49a3956729e40cf81574fdf",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.console/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.logging.console/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Logging.Debug/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.debug/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Logging.Debug.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.debug/10.0.0/microsoft.extensions.logging.debug.nuspec",
+          "copy": "packages/microsoft.extensions.logging.debug/10.0.0/microsoft.extensions.logging.debug.nuspec",
+          "sha256": "9576df1e2be39fcce1385dcc61fbd5d650c0d5fb7840e6cb6301fde77014832f",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.debug/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.logging.debug/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Logging.EventLog/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.eventlog/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options": "10.0.10",
+          "System.Diagnostics.EventLog": "10.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Logging.EventLog.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.eventlog/10.0.0/microsoft.extensions.logging.eventlog.nuspec",
+          "copy": "packages/microsoft.extensions.logging.eventlog/10.0.0/microsoft.extensions.logging.eventlog.nuspec",
+          "sha256": "aa8b2c9dfc7f78608aa101094b08cdf48dcbf10dd4a298e5c4c13034ee678658",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.eventlog/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.logging.eventlog/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Logging.EventSource/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.eventsource/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Logging": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options": "10.0.10",
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Logging.EventSource.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.eventsource/10.0.0/microsoft.extensions.logging.eventsource.nuspec",
+          "copy": "packages/microsoft.extensions.logging.eventsource/10.0.0/microsoft.extensions.logging.eventsource.nuspec",
+          "sha256": "211724e1e7b5780583ab976fc4f9febac1f6c7dca80934f577e9e2acaf075176",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.logging.eventsource/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.logging.eventsource/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Options/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.options/10.0.10",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Options.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.options/10.0.10/microsoft.extensions.options.nuspec",
+          "copy": "packages/microsoft.extensions.options/10.0.10/microsoft.extensions.options.nuspec",
+          "sha256": "ee55c6f0fca958a27d90d3c9a9d974ff1b8dd7e625565bb8219d84c3bed4e894",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.options/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.options/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.options.configurationextensions/10.0.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Configuration.Binder": "10.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Options": "10.0.10",
+          "Microsoft.Extensions.Primitives": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Options.ConfigurationExtensions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.options.configurationextensions/10.0.0/microsoft.extensions.options.configurationextensions.nuspec",
+          "copy": "packages/microsoft.extensions.options.configurationextensions/10.0.0/microsoft.extensions.options.configurationextensions.nuspec",
+          "sha256": "30ba601042f9ea75eef8de3826fa8fbdd41f1bd935c38c76dc0ebc74d828cb07",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.options.configurationextensions/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.options.configurationextensions/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Microsoft.Extensions.Primitives/10.0.10",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.primitives/10.0.10",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Primitives.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.primitives/10.0.10/microsoft.extensions.primitives.nuspec",
+          "copy": "packages/microsoft.extensions.primitives/10.0.10/microsoft.extensions.primitives.nuspec",
+          "sha256": "7c5215df6da89c10f7a9813d8f5c8968a7ac6870afb71129fd045c37f5861bbe",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.extensions.primitives/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.extensions.primitives/10.0.10/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+      },
+      "nuspec_version": "10.0.10"
+    },
+    {
+      "identity": "Microsoft.IdentityModel.Abstractions/8.14.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.abstractions/8.14.0",
+      "published_assets": {
+        "runtime": {
+          "lib/net9.0/Microsoft.IdentityModel.Abstractions.dll": {
+            "assemblyVersion": "8.14.0.0",
+            "fileVersion": "8.14.0.60815"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.abstractions/8.14.0/microsoft.identitymodel.abstractions.nuspec",
+          "copy": "packages/microsoft.identitymodel.abstractions/8.14.0/microsoft.identitymodel.abstractions.nuspec",
+          "sha256": "4049fb99213889eee0d67fcc3f851732cbd49507b890a9c20fa89f572be22fcc",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+        "commit": "c8f7d87bcda35557a68f6cb9c55856a2ee733856"
+      },
+      "nuspec_version": "8.14.0"
+    },
+    {
+      "identity": "Microsoft.IdentityModel.JsonWebTokens/8.14.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.jsonwebtokens/8.14.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.IdentityModel.Tokens": "8.14.0"
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll": {
+            "assemblyVersion": "8.14.0.0",
+            "fileVersion": "8.14.0.60815"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.jsonwebtokens/8.14.0/microsoft.identitymodel.jsonwebtokens.nuspec",
+          "copy": "packages/microsoft.identitymodel.jsonwebtokens/8.14.0/microsoft.identitymodel.jsonwebtokens.nuspec",
+          "sha256": "f97f9011b73ee8998d956dccb33262ff4b33740eb9af0a74e69b528588ef34c0",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+        "commit": "c8f7d87bcda35557a68f6cb9c55856a2ee733856"
+      },
+      "nuspec_version": "8.14.0"
+    },
+    {
+      "identity": "Microsoft.IdentityModel.Logging/8.14.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.logging/8.14.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.IdentityModel.Abstractions": "8.14.0"
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.IdentityModel.Logging.dll": {
+            "assemblyVersion": "8.14.0.0",
+            "fileVersion": "8.14.0.60815"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.logging/8.14.0/microsoft.identitymodel.logging.nuspec",
+          "copy": "packages/microsoft.identitymodel.logging/8.14.0/microsoft.identitymodel.logging.nuspec",
+          "sha256": "fc2d254c36c0b10c95343d1281348243530057be54e945f7855b54d24e057884",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+        "commit": "c8f7d87bcda35557a68f6cb9c55856a2ee733856"
+      },
+      "nuspec_version": "8.14.0"
+    },
+    {
+      "identity": "Microsoft.IdentityModel.Tokens/8.14.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.tokens/8.14.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10",
+          "Microsoft.IdentityModel.Logging": "8.14.0"
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.IdentityModel.Tokens.dll": {
+            "assemblyVersion": "8.14.0.0",
+            "fileVersion": "8.14.0.60815"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.identitymodel.tokens/8.14.0/microsoft.identitymodel.tokens.nuspec",
+          "copy": "packages/microsoft.identitymodel.tokens/8.14.0/microsoft.identitymodel.tokens.nuspec",
+          "sha256": "d759b47c6299a5922271b889b774d90e48e35072df9297c3fde4794e1c59d9ab",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+        "commit": "c8f7d87bcda35557a68f6cb9c55856a2ee733856"
+      },
+      "nuspec_version": "8.14.0"
+    },
+    {
+      "identity": "Microsoft.IO.RecyclableMemoryStream/3.0.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.io.recyclablememorystream/3.0.1",
+      "published_assets": {
+        "runtime": {
+          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
+            "assemblyVersion": "3.0.1.0",
+            "fileVersion": "3.0.1.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.io.recyclablememorystream/3.0.1/microsoft.io.recyclablememorystream.nuspec",
+          "copy": "packages/microsoft.io.recyclablememorystream/3.0.1/microsoft.io.recyclablememorystream.nuspec",
+          "sha256": "fc55ca81055b708f2ed866249fc50fd343d4ad4f76a0550b51873df18273d771",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream",
+        "commit": "e29a28387da9018fa9605a1dcb3f7a0435aa9974"
+      },
+      "nuspec_version": "3.0.1"
+    },
+    {
+      "identity": "Microsoft.ML.OnnxRuntime/1.22.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime/1.22.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.ML.OnnxRuntime.Managed": "1.22.0"
+        },
+        "native": {
+          "runtimes/linux-arm64/native/libonnxruntime.so": {
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-arm64/native/libonnxruntime_providers_shared.so": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime/1.22.0/microsoft.ml.onnxruntime.nuspec",
+          "copy": "packages/microsoft.ml.onnxruntime/1.22.0/microsoft.ml.onnxruntime.nuspec",
+          "sha256": "fd40c8faa7e2c85676db1ab20da14cbbb4c0ec0aa048ca4d63fc2611ede3f9eb",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime/1.22.0/LICENSE",
+          "copy": "packages/microsoft.ml.onnxruntime/1.22.0/LICENSE",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime/1.22.0/ThirdPartyNotices.txt",
+          "copy": "packages/microsoft.ml.onnxruntime/1.22.0/ThirdPartyNotices.txt",
+          "sha256": "e00f828e0a33de591a355ae6606d2625f5758da7d2c844db7821c9dd3e3647b6",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "file",
+      "license_value": "LICENSE",
+      "license_url": "https://aka.ms/deprecateLicenseUrl",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/onnxruntime.git",
+        "commit": "f217402897f40ebba457e2421bc0a4702771968e"
+      },
+      "nuspec_version": "1.22.0"
+    },
+    {
+      "identity": "Microsoft.ML.OnnxRuntime.Managed/1.22.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime.managed/1.22.0",
+      "published_assets": {
+        "dependencies": {
+          "System.Numerics.Tensors": "9.0.5"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.ML.OnnxRuntime.dll": {
+            "assemblyVersion": "1.22.0.0",
+            "fileVersion": "1.22.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime.managed/1.22.0/microsoft.ml.onnxruntime.managed.nuspec",
+          "copy": "packages/microsoft.ml.onnxruntime.managed/1.22.0/microsoft.ml.onnxruntime.managed.nuspec",
+          "sha256": "1c5df4c00ce7089934bd45700a3e171c794e7c8bf2dfed4c80e0b2f9178e84b2",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime.managed/1.22.0/LICENSE.txt",
+          "copy": "packages/microsoft.ml.onnxruntime.managed/1.22.0/LICENSE.txt",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime.managed/1.22.0/ThirdPartyNotices.txt",
+          "copy": "packages/microsoft.ml.onnxruntime.managed/1.22.0/ThirdPartyNotices.txt",
+          "sha256": "e00f828e0a33de591a355ae6606d2625f5758da7d2c844db7821c9dd3e3647b6",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "file",
+      "license_value": "LICENSE.txt",
+      "license_url": "https://aka.ms/deprecateLicenseUrl",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/onnxruntime",
+        "commit": "f217402897f40ebba457e2421bc0a4702771968e"
+      },
+      "nuspec_version": "1.22.0"
+    },
+    {
+      "identity": "MimeKit/4.18.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/mimekit/4.18.0",
+      "published_assets": {
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.7.0",
+          "System.Security.Cryptography.Pkcs": "10.0.13"
+        },
+        "runtime": {
+          "lib/net10.0/MimeKit.dll": {
+            "assemblyVersion": "4.18.0.0",
+            "fileVersion": "4.18.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/mimekit/4.18.0/mimekit.nuspec",
+          "copy": "packages/mimekit/4.18.0/mimekit.nuspec",
+          "sha256": "b100d936b7c61e4ff18ab2e5e875c3bd51bc73502cd4b9078ca6c76bf18f43e3",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": ".NET Foundation and Contributors",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/jstedfast/MimeKit"
+      },
+      "nuspec_version": "4.18.0"
+    },
+    {
+      "identity": "ModelContextProtocol/2.2.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/modelcontextprotocol/2.2.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.Caching.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.10",
+          "ModelContextProtocol.Core": "2.2.0"
+        },
+        "runtime": {
+          "lib/net10.0/ModelContextProtocol.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/modelcontextprotocol/2.2.0/modelcontextprotocol.nuspec",
+          "copy": "packages/modelcontextprotocol/2.2.0/modelcontextprotocol.nuspec",
+          "sha256": "b226feb3d8bddefccc36106e0545382888b150c7b8ea53520999c5abba33e7f0",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "Apache-2.0",
+      "license_url": "https://licenses.nuget.org/Apache-2.0",
+      "copyright": "\u00a9 Model Context Protocol a Series of LF Projects, LLC.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/modelcontextprotocol/csharp-sdk",
+        "commit": "6fa3825973949a9c4f0cd8af344e15a8db09dc35"
+      },
+      "nuspec_version": "2.2.0"
+    },
+    {
+      "identity": "ModelContextProtocol.Core/2.2.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/modelcontextprotocol.core/2.2.0",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.8.3",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net10.0/ModelContextProtocol.Core.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/modelcontextprotocol.core/2.2.0/modelcontextprotocol.core.nuspec",
+          "copy": "packages/modelcontextprotocol.core/2.2.0/modelcontextprotocol.core.nuspec",
+          "sha256": "1c25587a2aa82c679dcfd74b3089732eaa76012bb676b3be8cdd5915b900ceb0",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "Apache-2.0",
+      "license_url": "https://licenses.nuget.org/Apache-2.0",
+      "copyright": "\u00a9 Model Context Protocol a Series of LF Projects, LLC.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/modelcontextprotocol/csharp-sdk",
+        "commit": "6fa3825973949a9c4f0cd8af344e15a8db09dc35"
+      },
+      "nuspec_version": "2.2.0"
+    },
+    {
+      "identity": "NAudio/2.3.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio/2.3.0",
+      "published_assets": {
+        "dependencies": {
+          "NAudio.Asio": "2.3.0",
+          "NAudio.Core": "2.3.0",
+          "NAudio.Midi": "2.3.0",
+          "NAudio.Wasapi": "2.3.0",
+          "NAudio.WinMM": "2.3.0"
+        },
+        "runtime": {
+          "lib/net6.0/NAudio.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio/2.3.0/naudio.nuspec",
+          "copy": "packages/naudio/2.3.0/naudio.nuspec",
+          "sha256": "c5122033d436055170fc34c3b8b0d8d899243ac486c187cf70cdcf0f5ab73040",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Mark Heath 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/naudio/NAudio",
+        "commit": "c89fee940ee6f8d7374d18714a6b85d8b7a18ab0"
+      },
+      "nuspec_version": "2.3.0"
+    },
+    {
+      "identity": "NAudio.Asio/2.3.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.asio/2.3.0",
+      "published_assets": {
+        "dependencies": {
+          "NAudio.Core": "2.3.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/NAudio.Asio.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.asio/2.3.0/naudio.asio.nuspec",
+          "copy": "packages/naudio.asio/2.3.0/naudio.asio.nuspec",
+          "sha256": "a19d2cb18bbe78fc9db335fef55f91251a9fcffd643fa3ed997dc4f9ecf0b459",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Mark Heath 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/naudio/NAudio",
+        "commit": "c89fee940ee6f8d7374d18714a6b85d8b7a18ab0"
+      },
+      "nuspec_version": "2.3.0"
+    },
+    {
+      "identity": "NAudio.Core/2.3.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.core/2.3.0",
+      "published_assets": {
+        "runtime": {
+          "lib/netstandard2.0/NAudio.Core.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.core/2.3.0/naudio.core.nuspec",
+          "copy": "packages/naudio.core/2.3.0/naudio.core.nuspec",
+          "sha256": "d26edde5528478c92bc41bbbb2d3d751330f7ae9921dccc65e9e301e9824babe",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Mark Heath 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/naudio/NAudio",
+        "commit": "c89fee940ee6f8d7374d18714a6b85d8b7a18ab0"
+      },
+      "nuspec_version": "2.3.0"
+    },
+    {
+      "identity": "NAudio.Midi/2.3.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.midi/2.3.0",
+      "published_assets": {
+        "dependencies": {
+          "NAudio.Core": "2.3.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/NAudio.Midi.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.midi/2.3.0/naudio.midi.nuspec",
+          "copy": "packages/naudio.midi/2.3.0/naudio.midi.nuspec",
+          "sha256": "e3b5b9bc2628cac6aab9fe111ce1e07fa8f951637008fd7ec95a5a6911c14797",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Mark Heath 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/naudio/NAudio",
+        "commit": "c89fee940ee6f8d7374d18714a6b85d8b7a18ab0"
+      },
+      "nuspec_version": "2.3.0"
+    },
+    {
+      "identity": "NAudio.Wasapi/2.3.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.wasapi/2.3.0",
+      "published_assets": {
+        "dependencies": {
+          "NAudio.Core": "2.3.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/NAudio.Wasapi.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.wasapi/2.3.0/naudio.wasapi.nuspec",
+          "copy": "packages/naudio.wasapi/2.3.0/naudio.wasapi.nuspec",
+          "sha256": "c2b4eb8729a3dc5061ce6715abf1f3859343f210d9715804220b8aceb68e786c",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Mark Heath 2026",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/naudio/NAudio",
+        "commit": "c89fee940ee6f8d7374d18714a6b85d8b7a18ab0"
+      },
+      "nuspec_version": "2.3.0"
+    },
+    {
+      "identity": "NAudio.WinMM/2.3.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.winmm/2.3.0",
+      "published_assets": {
+        "dependencies": {
+          "NAudio.Core": "2.3.0"
+        },
+        "runtime": {
+          "lib/net6.0/NAudio.WinMM.dll": {
+            "assemblyVersion": "2.3.0.0",
+            "fileVersion": "2.3.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/naudio.winmm/2.3.0/naudio.winmm.nuspec",
+          "copy": "packages/naudio.winmm/2.3.0/naudio.winmm.nuspec",
+          "sha256": "1b4fa0e6320f11a70193bce4e378c6d21c38a5d92670e6a29145486e9ff67062",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Mark Heath 2023",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/naudio/NAudio",
+        "commit": "c89fee940ee6f8d7374d18714a6b85d8b7a18ab0"
+      },
+      "nuspec_version": "2.3.0"
+    },
+    {
+      "identity": "NumSharp/0.30.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/numsharp/0.30.0",
+      "published_assets": {
+        "runtime": {
+          "lib/netstandard2.0/NumSharp.dll": {
+            "assemblyVersion": "0.30.0.0",
+            "fileVersion": "0.30.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/numsharp/0.30.0/numsharp.nuspec",
+          "copy": "packages/numsharp/0.30.0/numsharp.nuspec",
+          "sha256": "818c3155513ab16eda432cbc2a6c7deba541f758091b6c2aa677216cb53152f5",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/numsharp/0.30.0/LICENSE",
+          "copy": "packages/numsharp/0.30.0/LICENSE",
+          "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "file",
+      "license_value": "LICENSE",
+      "license_url": "https://aka.ms/deprecateLicenseUrl",
+      "copyright": "2021 \u00a9 SciSharp STACK Team",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/SciSharp"
+      },
+      "nuspec_version": "0.30.0"
+    },
+    {
+      "identity": "OpenTK.Audio.OpenAL/5.0.0-pre.13",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.audio.openal/5.0.0-pre.13",
+      "published_assets": {
+        "dependencies": {
+          "OpenTK.Core": "5.0.0-pre.13",
+          "OpenTK.Mathematics": "5.0.0-pre.13"
+        },
+        "runtime": {
+          "lib/net8.0/OpenTK.Audio.OpenAL.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.audio.openal/5.0.0-pre.13/opentk.audio.openal.nuspec",
+          "copy": "packages/opentk.audio.openal/5.0.0-pre.13/opentk.audio.openal.nuspec",
+          "sha256": "066c80cd654bad25d2cf7b53b29c97d46d3bd33da012c64b0a126737e0cd31ab",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": null,
+      "license_value": null,
+      "license_url": null,
+      "copyright": null,
+      "repository": null,
+      "nuspec_version": "5.0-pre.13"
+    },
+    {
+      "identity": "OpenTK.Core/5.0.0-pre.13",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.core/5.0.0-pre.13",
+      "published_assets": {
+        "runtime": {
+          "lib/net8.0/OpenTK.Core.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.core/5.0.0-pre.13/opentk.core.nuspec",
+          "copy": "packages/opentk.core/5.0.0-pre.13/opentk.core.nuspec",
+          "sha256": "405326638c8bd33b3f2fe00f3e482c1e81f74c711a87cc9db37efb074bfaa166",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": null,
+      "license_value": null,
+      "license_url": null,
+      "copyright": null,
+      "repository": null,
+      "nuspec_version": "5.0-pre.13"
+    },
+    {
+      "identity": "OpenTK.Mathematics/5.0.0-pre.13",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.mathematics/5.0.0-pre.13",
+      "published_assets": {
+        "runtime": {
+          "lib/net8.0/OpenTK.Mathematics.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.mathematics/5.0.0-pre.13/opentk.mathematics.nuspec",
+          "copy": "packages/opentk.mathematics/5.0.0-pre.13/opentk.mathematics.nuspec",
+          "sha256": "1808544d63d716d3237f7ce5d1e9fa11435de207598f6684f61766c2799cd19c",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": null,
+      "license_value": null,
+      "license_url": null,
+      "copyright": null,
+      "repository": null,
+      "nuspec_version": "5.0-pre.13"
+    },
+    {
+      "identity": "SkiaSharp/3.119.3-preview.1.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp/3.119.3-preview.1.1",
+      "published_assets": {
+        "runtime": {
+          "lib/net8.0/SkiaSharp.dll": {
+            "assemblyVersion": "3.119.0.0",
+            "fileVersion": "3.119.3.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp/3.119.3-preview.1.1/skiasharp.nuspec",
+          "copy": "packages/skiasharp/3.119.3-preview.1.1/skiasharp.nuspec",
+          "sha256": "8fc84578711bd6635e2ec11d97c387db1160f1124b2f5bc18bc3d3444c65c7cc",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp/3.119.3-preview.1.1/LICENSE.txt",
+          "copy": "packages/skiasharp/3.119.3-preview.1.1/LICENSE.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.3-preview.1",
+        "commit": "fffd3fe4e869647ad526bd9bb20ee6aea5bf98e9"
+      },
+      "nuspec_version": "3.119.3-preview.1.1"
+    },
+    {
+      "identity": "SkiaSharp.NativeAssets.Linux/3.119.3-preview.1.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1",
+      "published_assets": {
+        "native": {
+          "runtimes/linux-arm64/native/libSkiaSharp.so": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/skiasharp.nativeassets.linux.nuspec",
+          "copy": "packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/skiasharp.nativeassets.linux.nuspec",
+          "sha256": "b396de3d78d141e0bb4f9d453e2321c65b80a9f56a5235473b060d3181a7ab7b",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/LICENSE.txt",
+          "copy": "packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/LICENSE.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/THIRD-PARTY-NOTICES.txt",
+          "copy": "packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/THIRD-PARTY-NOTICES.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.3-preview.1",
+        "commit": "fffd3fe4e869647ad526bd9bb20ee6aea5bf98e9"
+      },
+      "nuspec_version": "3.119.3-preview.1.1"
+    },
+    {
+      "identity": "SourceGear.sqlite3/3.50.4.5",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sourcegear.sqlite3/3.50.4.5",
+      "published_assets": {
+        "native": {
+          "runtimes/linux-arm64/native/libe_sqlite3.so": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sourcegear.sqlite3/3.50.4.5/sourcegear.sqlite3.nuspec",
+          "copy": "packages/sourcegear.sqlite3/3.50.4.5/sourcegear.sqlite3.nuspec",
+          "sha256": "4708deb3b3a384701b62c87ddeb658d5846954cffc4ce04be74b36d51503eaab",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sourcegear.sqlite3/3.50.4.5/LICENSE.txt",
+          "copy": "packages/sourcegear.sqlite3/3.50.4.5/LICENSE.txt",
+          "sha256": "99464c3a88df7b708ce59e462cdcb85f72dfc9b1335b4fcc68be56131b634b95",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "file",
+      "license_value": "LICENSE.txt",
+      "license_url": "https://aka.ms/deprecateLicenseUrl",
+      "copyright": "Copyright 2014-2025 SourceGear, LLC",
+      "repository": {
+        "type": "git",
+        "commit": "f0b7ea54c8141ff1a209d9371a854307cb6bd8a2"
+      },
+      "nuspec_version": "3.50.4.5"
+    },
+    {
+      "identity": "SQLitePCLRaw.bundle_e_sqlite3/3.0.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.bundle_e_sqlite3/3.0.3",
+      "published_assets": {
+        "dependencies": {
+          "SQLitePCLRaw.config.e_sqlite3": "3.0.3",
+          "SourceGear.sqlite3": "3.50.4.5"
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.bundle_e_sqlite3/3.0.3/sqlitepclraw.bundle_e_sqlite3.nuspec",
+          "copy": "packages/sqlitepclraw.bundle_e_sqlite3/3.0.3/sqlitepclraw.bundle_e_sqlite3.nuspec",
+          "sha256": "84b96161b2149b7f61873c1b445b707162aed9cda0d7f9b7cb4a9f50dc3e6afb",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "Apache-2.0",
+      "license_url": "https://licenses.nuget.org/Apache-2.0",
+      "copyright": "Copyright 2014-2026 SourceGear, LLC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw"
+      },
+      "nuspec_version": "3.0.3"
+    },
+    {
+      "identity": "SQLitePCLRaw.config.e_sqlite3/3.0.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.config.e_sqlite3/3.0.3",
+      "published_assets": {
+        "dependencies": {
+          "SQLitePCLRaw.provider.e_sqlite3": "3.0.3"
+        },
+        "runtime": {
+          "lib/net8.0/SQLitePCLRaw.batteries_v2.dll": {
+            "assemblyVersion": "3.0.3.3048",
+            "fileVersion": "3.0.3.3048"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.config.e_sqlite3/3.0.3/sqlitepclraw.config.e_sqlite3.nuspec",
+          "copy": "packages/sqlitepclraw.config.e_sqlite3/3.0.3/sqlitepclraw.config.e_sqlite3.nuspec",
+          "sha256": "edd55a8d7d5c2b2bc825d0b98bedc02dbc271b5a4cb37e5daef9fd6f41e51b73",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "Apache-2.0",
+      "license_url": "https://licenses.nuget.org/Apache-2.0",
+      "copyright": "Copyright 2014-2026 SourceGear, LLC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw",
+        "commit": "96043b8cff323f21919df86a431c136655d81b4a"
+      },
+      "nuspec_version": "3.0.3"
+    },
+    {
+      "identity": "SQLitePCLRaw.core/3.0.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.core/3.0.3",
+      "published_assets": {
+        "runtime": {
+          "lib/net8.0/SQLitePCLRaw.core.dll": {
+            "assemblyVersion": "3.0.3.3048",
+            "fileVersion": "3.0.3.3048"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.core/3.0.3/sqlitepclraw.core.nuspec",
+          "copy": "packages/sqlitepclraw.core/3.0.3/sqlitepclraw.core.nuspec",
+          "sha256": "919536f6c822c5171cd3ffbeec2095ad0db70abf7b3a67ebd9858d25607fd15d",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "Apache-2.0",
+      "license_url": "https://licenses.nuget.org/Apache-2.0",
+      "copyright": "Copyright 2014-2025 SourceGear, LLC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw",
+        "commit": "f3f967adafad853375597a6387cacb7573c5b343"
+      },
+      "nuspec_version": "3.0.3"
+    },
+    {
+      "identity": "SQLitePCLRaw.provider.e_sqlite3/3.0.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.provider.e_sqlite3/3.0.3",
+      "published_assets": {
+        "dependencies": {
+          "SQLitePCLRaw.core": "3.0.3"
+        },
+        "runtime": {
+          "lib/net8.0/SQLitePCLRaw.provider.e_sqlite3.dll": {
+            "assemblyVersion": "3.0.3.3048",
+            "fileVersion": "3.0.3.3048"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.provider.e_sqlite3/3.0.3/sqlitepclraw.provider.e_sqlite3.nuspec",
+          "copy": "packages/sqlitepclraw.provider.e_sqlite3/3.0.3/sqlitepclraw.provider.e_sqlite3.nuspec",
+          "sha256": "8ab3cfd53943c6695e22db9977b6f28e8979e8ab1bce4a7b4a70cddd9a0fe055",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "Apache-2.0",
+      "license_url": "https://licenses.nuget.org/Apache-2.0",
+      "copyright": "Copyright 2014-2025 SourceGear, LLC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw",
+        "commit": "f3f967adafad853375597a6387cacb7573c5b343"
+      },
+      "nuspec_version": "3.0.3"
+    },
+    {
+      "identity": "SQLitePCLRaw.provider.winsqlite3/3.0.3",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.provider.winsqlite3/3.0.3",
+      "published_assets": {
+        "dependencies": {
+          "SQLitePCLRaw.core": "3.0.3"
+        },
+        "runtime": {
+          "lib/netstandard2.0/SQLitePCLRaw.provider.winsqlite3.dll": {
+            "assemblyVersion": "3.0.3.3048",
+            "fileVersion": "3.0.3.3048"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sqlitepclraw.provider.winsqlite3/3.0.3/sqlitepclraw.provider.winsqlite3.nuspec",
+          "copy": "packages/sqlitepclraw.provider.winsqlite3/3.0.3/sqlitepclraw.provider.winsqlite3.nuspec",
+          "sha256": "e4f880bcee862b6ffd91544545829134fa2991f3add3e228d4521c0ec58283a1",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "Apache-2.0",
+      "license_url": "https://licenses.nuget.org/Apache-2.0",
+      "copyright": "Copyright 2014-2025 SourceGear, LLC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw",
+        "commit": "f3f967adafad853375597a6387cacb7573c5b343"
+      },
+      "nuspec_version": "3.0.3"
+    },
+    {
+      "identity": "System.Diagnostics.EventLog/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.diagnostics.eventlog/10.0.0",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/System.Diagnostics.EventLog.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.diagnostics.eventlog/10.0.0/system.diagnostics.eventlog.nuspec",
+          "copy": "packages/system.diagnostics.eventlog/10.0.0/system.diagnostics.eventlog.nuspec",
+          "sha256": "3be6967c3a2667676dda9f330ab072553deb295a294e2018d705e527a3615258",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.diagnostics.eventlog/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/system.diagnostics.eventlog/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "System.Numerics.Tensors/9.0.5",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.numerics.tensors/9.0.5",
+      "published_assets": {
+        "runtime": {
+          "lib/net9.0/System.Numerics.Tensors.dll": {
+            "assemblyVersion": "9.0.0.5",
+            "fileVersion": "9.0.525.21509"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.numerics.tensors/9.0.5/system.numerics.tensors.nuspec",
+          "copy": "packages/system.numerics.tensors/9.0.5/system.numerics.tensors.nuspec",
+          "sha256": "ae6a1d6454c2ef0ff31dbe7ea9537a4ee3a9d817a66798645553760892b8e638",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.numerics.tensors/9.0.5/LICENSE.TXT",
+          "copy": "packages/system.numerics.tensors/9.0.5/LICENSE.TXT",
+          "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.numerics.tensors/9.0.5/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/system.numerics.tensors/9.0.5/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "40686c6447a7d5b5d3693068e4571b5f483d7ed335aeee773ef662440de4c5d5",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/runtime",
+        "commit": "e36e4d1a8f8dfb08d7e3a6041459c9791d732c01"
+      },
+      "nuspec_version": "9.0.5"
+    },
+    {
+      "identity": "System.Security.Cryptography.Pkcs/10.0.13",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.security.cryptography.pkcs/10.0.13",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/System.Security.Cryptography.Pkcs.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1326.50504"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.security.cryptography.pkcs/10.0.13/system.security.cryptography.pkcs.nuspec",
+          "copy": "packages/system.security.cryptography.pkcs/10.0.13/system.security.cryptography.pkcs.nuspec",
+          "sha256": "733efcb3d5563332e6a441368f03c29fce22d32d33b9ce998571d8dd14239123",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.security.cryptography.pkcs/10.0.13/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/system.security.cryptography.pkcs/10.0.13/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      },
+      "nuspec_version": "10.0.13"
+    },
+    {
+      "identity": "System.Speech/10.0.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.speech/10.0.0",
+      "published_assets": {
+        "runtime": {
+          "lib/net10.0/System.Speech.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.speech/10.0.0/system.speech.nuspec",
+          "copy": "packages/system.speech/10.0.0/system.speech.nuspec",
+          "sha256": "c6f2faa5709b31a9d5bb249afebd9d1b83752c60aadb74972a85d4a7cd63b8d3",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/system.speech/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/system.speech/10.0.0/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "nuspec_version": "10.0.0"
+    },
+    {
+      "identity": "Tmds.DBus.Protocol/0.92.0",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/tmds.dbus.protocol/0.92.0",
+      "published_assets": {
+        "runtime": {
+          "lib/net9.0/Tmds.DBus.Protocol.dll": {
+            "assemblyVersion": "0.92.0.0",
+            "fileVersion": "0.92.0.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/tmds.dbus.protocol/0.92.0/tmds.dbus.protocol.nuspec",
+          "copy": "packages/tmds.dbus.protocol/0.92.0/tmds.dbus.protocol.nuspec",
+          "sha256": "92e750f2659b91c68d66a76b1cf703d9e1066fbf1079218bada9a9d5610b07a5",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "Tom Deseyn",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/tmds/Tmds.DBus.git",
+        "branch": "refs/heads/release/0.92",
+        "commit": "282acebca8d4e4e3ba211646ac650911ee94edfd"
+      },
+      "nuspec_version": "0.92.0"
+    },
+    {
+      "identity": "WebRtcVadSharp/1.3.2",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/webrtcvadsharp/1.3.2",
+      "published_assets": {
+        "runtime": {
+          "lib/netstandard2.0/WebRtcVadSharp.dll": {
+            "assemblyVersion": "1.3.2.0",
+            "fileVersion": "1.3.2.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/webrtcvadsharp/1.3.2/webrtcvadsharp.nuspec",
+          "copy": "packages/webrtcvadsharp/1.3.2/webrtcvadsharp.nuspec",
+          "sha256": "1d1180270e5a970d1ff219e206f18daded11e14c4bee491e64db83b804e2efab",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "Copyright (c) 2020 Jay Miller",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ladenedge/WebRtcVadSharp.git"
+      },
+      "nuspec_version": "1.3.2"
+    },
+    {
+      "identity": "Whisper.net/1.9.1",
+      "kind": "deps",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net/1.9.1",
+      "published_assets": {
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.8.3"
+        },
+        "runtime": {
+          "lib/net10.0/Whisper.net.dll": {
+            "assemblyVersion": "1.9.1.0",
+            "fileVersion": "1.9.1.0"
+          }
+        }
+      },
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net/1.9.1/whisper.net.nuspec",
+          "copy": "packages/whisper.net/1.9.1/whisper.net.nuspec",
+          "sha256": "a4a1f6c405dc3ca15eb5d22ae03fc488c4fc1a126c8788026d9637f378a72cba",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net/1.9.1/LICENSE",
+          "copy": "packages/whisper.net/1.9.1/LICENSE",
+          "sha256": "d9ca846bbb028d80a87027b886dc7db63ba22dfc6a5e17c4aace03f62ab644ec",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "file",
+      "license_value": "LICENSE",
+      "license_url": "https://aka.ms/deprecateLicenseUrl",
+      "copyright": null,
+      "repository": {
+        "type": "GIT",
+        "url": "https://github.com/sandrohanea/whisper.net",
+        "commit": "98278acc38ae23590cdfa9859f78f089abae52a7"
+      },
+      "nuspec_version": "1.9.1"
+    },
+    {
+      "identity": "Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+      "kind": "runtimepack",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12",
+      "published_assets": {},
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/microsoft.netcore.app.runtime.linux-arm64.nuspec",
+          "copy": "packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/microsoft.netcore.app.runtime.linux-arm64.nuspec",
+          "sha256": "280c8af29739f9d9ec446867b6d6391e0a8a8ba0163f392e20ccd683d39cae26",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/THIRD-PARTY-NOTICES.TXT",
+          "copy": "packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/THIRD-PARTY-NOTICES.TXT",
+          "sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+          "cache_only_nested_content": false
+        },
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/LICENSE.TXT",
+          "copy": "packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/LICENSE.TXT",
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": "\u00a9 Microsoft Corporation. All rights reserved.",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "nuspec_version": "10.0.12"
+    },
+    {
+      "identity": "Whisper.net.Runtime/1.9.1",
+      "kind": "published native content",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1",
+      "published_assets": {},
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/whisper.net.runtime.nuspec",
+          "copy": "packages/whisper.net.runtime/1.9.1/whisper.net.runtime.nuspec",
+          "sha256": "f0ca2f72d2f9be90aa27a3a16f600c90a5d898c6e8fe679028f15b19bff60b6d",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": null,
+      "repository": null,
+      "nuspec_version": "1.9.1"
+    },
+    {
+      "identity": "Whisper.net.Runtime.NoAvx/1.9.1",
+      "kind": "published native content",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1",
+      "published_assets": {},
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/whisper.net.runtime.noavx.nuspec",
+          "copy": "packages/whisper.net.runtime.noavx/1.9.1/whisper.net.runtime.noavx.nuspec",
+          "sha256": "6aeb3dc1290ed503d7e45776b94560be8cf9a14f0538adcb95e449259398b108",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": null,
+      "repository": null,
+      "nuspec_version": "1.9.1"
+    },
+    {
+      "identity": "Whisper.net.Runtime.Metal/1.9.1",
+      "kind": "published native content",
+      "package_directory": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.metal/1.9.1",
+      "published_assets": {},
+      "copies": [
+        {
+          "source": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.metal/1.9.1/whisper.net.runtime.metal.nuspec",
+          "copy": "packages/whisper.net.runtime.metal/1.9.1/whisper.net.runtime.metal.nuspec",
+          "sha256": "3afffb9f3eda027a46932b4a5d54e9d233b2811dbee70c4d1ccd304fb037a7d2",
+          "cache_only_nested_content": false
+        }
+      ],
+      "license_type": "expression",
+      "license_value": "MIT",
+      "license_url": "https://licenses.nuget.org/MIT",
+      "copyright": null,
+      "repository": null,
+      "nuspec_version": "1.9.1"
+    }
+  ]
+}
