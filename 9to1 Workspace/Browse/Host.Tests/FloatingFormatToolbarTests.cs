@@ -1099,10 +1099,10 @@ public sealed class FloatingFormatToolbarTests
     {
         var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
         var loaded = loader.LoadMarkup("""
-            <Cui><Page><Container id="recovery-status-row" Type="Wrap" OwnsBackdrop="True" CellGap="8" IsVisible="True">
+            <Cui><Container id="recovery-status-row" Type="Wrap" OwnsBackdrop="True" CellGap="8" IsVisible="True">
               <Text id="recovery-status-text" text="Model unavailable" font-size="12" TextWrapping="Wrap" VerticalAlignment="Center" />
               <Button id="recovery-manage-button" content="Manage local models" font-size="12" MinHeight="28" accessible-name="Manage local models" />
-            </Container></Page></Cui>
+            </Container></Cui>
             """);
         Assert.Empty(loaded.Diagnostics);
         return loaded.Root!;
@@ -1126,7 +1126,7 @@ public sealed class FloatingFormatToolbarTests
     }
 
     private static Control? FindRecoveryStatusRow(Control root) =>
-        root.GetVisualDescendants().OfType<Control>().SingleOrDefault(c =>
+        new[] { root }.Concat(root.GetVisualDescendants().OfType<Control>()).SingleOrDefault(c =>
             AutomationProperties.GetAutomationId(c) == "recovery-status-row");
 
     private static Button? FindRecoveryManageButton(Control root) =>
