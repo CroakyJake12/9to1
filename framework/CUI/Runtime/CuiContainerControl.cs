@@ -115,6 +115,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     {
         var clean = ids?.Select(id => id?.Trim())
             .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id!)
             .Distinct(StringComparer.Ordinal)
             .ToArray() ?? [];
         if (_authoredProtectedIds.SequenceEqual(clean, StringComparer.Ordinal)) return;
