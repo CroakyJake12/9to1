@@ -1,4 +1,4 @@
-name: 9to1 exact ab7 ARM64 package isolation experiment (no rebuild)
+name: 9to1 exact ab7 engine retained-socket double-start (no rebuild)
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +15,7 @@ env:
 jobs:
   exact-package-isolation:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 22
+    timeout-minutes: 8
     steps:
       - name: Checkout reviewed acceptance tools only
         uses: actions/checkout@v4
@@ -62,48 +62,14 @@ jobs:
           dpkg-query -W 9to1-preview > evidence/installed-package.txt
           sha256sum "$EXACT_PREVIEW_DEB" > evidence/installed-deb.sha256
           cp /usr/share/doc/9to1-preview/source-and-build.json evidence/installed-source-and-build.json
-      - name: Original native early-close, real Welcome Home and same-profile restart gates in separate XDG contexts
-        id: startup
-        continue-on-error: true
-        run: dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' /usr/bin/python3 acceptance-tools/.github/scripts/native16-arm64/native-window-smoke.py
-      - name: Independent original real UI prompt response and read-only persistence journey
-        id: chat
-        if: ${{ !cancelled() && steps.startup.outcome != 'skipped' }}
-        continue-on-error: true
-        run: dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' /usr/bin/python3 acceptance-tools/.github/scripts/native16-arm64/package-ui-journey.py
-      - name: Retain underlying outcomes and every required gate failure
-        if: ${{ always() }}
-        env:
-          STARTUP_OUTCOME: ${{ steps.startup.outcome }}
-          CHAT_OUTCOME: ${{ steps.chat.outcome }}
-        shell: bash
-        run: |
-          /usr/bin/python3 - <<'PY'
-          import os,json,pathlib,sys,datetime
-          out=pathlib.Path('evidence');out.mkdir(exist_ok=True)
-          raw={}
-          for name in ('native-startup-receipt.json','package-ui-journey-receipt.json'):
-              p=out/name
-              raw[name]=json.loads(p.read_text()) if p.is_file() else {'status':'NOT RUN_OR_NO_RECEIPT'}
-          startup=raw['native-startup-receipt.json'];chat=raw['package-ui-journey-receipt.json']
-          passed=(os.environ['STARTUP_OUTCOME']=='success' and os.environ['CHAT_OUTCOME']=='success'
-                  and startup.get('status','').startswith('PASS_BOUNDED_')
-                  and chat.get('status')=='CHECKPOINT_ACTUAL_UI_JOURNEY_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW'
-                  and not startup.get('required_phase_failures') and not chat.get('required_phase_failures'))
-          result={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'package_source_head':os.environ['EXPECTED_SOURCE_HEAD'],
-                  'acceptance_tools_head':os.environ['GITHUB_SHA'],'startup_underlying_outcome':os.environ['STARTUP_OUTCOME'],
-                  'chat_underlying_outcome':os.environ['CHAT_OUTCOME'],'raw_receipts':raw,
-                  'status':'CHECKPOINT_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW' if passed else 'FAIL_OR_BLOCKED',
-                  'hypothesis':'Shared XDG/socket/orphan contamination remains unproven until physical comparison.',
-                  'owner_laptop':'NOT RUN','full_app_acceptance':'NOT CLAIMED','rebuild':False}
-          (out/'combined-isolation-experiment-receipt.json').write_text(json.dumps(result,indent=2)+'\n')
-          sys.exit(0 if passed else 1)
-          PY
+      - name: Exact installed engine double-start with retained socket and live same-peer health
+        id: double_start
+        run: /usr/bin/python3 acceptance-tools/.github/scripts/native16-arm64/engine-double-start.py --diagnostic-logging
       - name: Preserve bounded raw evidence even on failure (no package profiles databases weights or credentials)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 9to1-ab7-arm64-package-isolation-evidence
+          name: 9to1-ab7-arm64-engine-double-start-evidence
           path: evidence/
           retention-days: 1
           if-no-files-found: error
