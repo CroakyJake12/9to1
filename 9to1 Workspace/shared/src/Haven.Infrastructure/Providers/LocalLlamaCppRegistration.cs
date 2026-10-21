@@ -203,7 +203,7 @@ public sealed class LlamaCppPreviewLifecycle : IAsyncDisposable
                 // right after Process.Start races a missing socket/503 and would mislabel a healthy
                 // start as a failed child disposal.
                 var provider = _services.GetRequiredService<LlamaCppModelProvider>();
-                await WaitForWorkerReadinessAsync(provider, runtime, cancellationToken).ConfigureAwait(false);
+                await WaitForWorkerReadinessAsync(provider, runtime, endpoint.SocketPath!, cancellationToken).ConfigureAwait(false);
                 await provider.ProbeOriginalCapabilitiesAsync(includeAutomaticToolProbe: true, cancellationToken).ConfigureAwait(false);
                 _ready = true;
             }
@@ -226,16 +226,21 @@ public sealed class LlamaCppPreviewLifecycle : IAsyncDisposable
         }
     }
 
-    /// <summary>Bounded, cancellation-aware readiness wait for the owned worker. It waits until the
-    /// actual configured socket/health serves the SAME expected loaded model identity (via the routed
-    /// provider's genuine endpoint observation) before capability probes run. Process.Start, metadata,
-    /// state.Enabled and arbitrary delay are deliberately NOT treated as readiness.</summary>
+    /// <summary>Bounded, cancellation-aware readiness wait for the owned worker. It uses the routed
+    /// provider's OWNED typed readiness acquisition: an exact "Loading model" 503 and a pre-binding socket
+    /// connect while the SAME owned child is still live are reported as benign preparing/Starting values
+    /// (never a durable fault), and only a genuinely ready health+model-identity observation returns.
+    /// Genuine faults (500/unexpected-503/invalid-peer/IO/foreign-cancel/wrong-peer) propagate and remain
+    /// durably retained. Capability probes run after this returns. Process.Start, metadata, state.Enabled
+    /// and arbitrary delay are deliberately NOT treated as readiness.</summary>
     private async Task WaitForWorkerReadinessAsync(
         LlamaCppModelProvider provider,
         LlamaCppRuntime runtime,
+        string socketPath,
         CancellationToken cancellationToken)
     {
         var deadline = DateTimeOffset.UtcNow.Add(_readinessTimeout);
+        var starting = new OwnedStartReadinessContext(socketPath, () => runtime.Status.Running);
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -244,22 +249,23 @@ public sealed class LlamaCppPreviewLifecycle : IAsyncDisposable
             if (!runtime.Status.Running)
                 throw new InvalidOperationException("The local llama.cpp worker exited before it became ready.");
 
-            try
-            {
-                await provider.ObserveOriginalEndpointAsync(cancellationToken).ConfigureAwait(false);
+            var readiness = await provider.ObserveOriginalEndpointReadinessAsync(cancellationToken, starting).ConfigureAwait(false);
+            if (readiness.Ready)
                 return; // real socket reachable and the expected model identity is observed
-            }
-            catch (OperationCanceledException) { throw; }
-            catch (Exception)
-            {
-                // Not ready yet (model still loading / socket not yet served). Bound the retry by a
-                // real deadline so a stalled worker cannot hang startup forever; cancellation and
-                // child exit are re-checked on the next iteration.
-                if (DateTimeOffset.UtcNow >= deadline)
-                    throw new TimeoutException("The local llama.cpp worker did not become ready within the readiness window.");
-                await Task.Delay(_readinessPollInterval, cancellationToken).ConfigureAwait(false);
-            }
+
+            // Preparing (model still loading / socket not yet bound). Bound the retry by a real deadline
+            // so a stalled worker cannot hang startup forever; cancellation and child exit are re-checked
+            // next iteration.
+            if (DateTimeOffset.UtcNow >= deadline)
+                throw new TimeoutException("The local llama.cpp worker did not become ready within the readiness window.");
+            await Task.Delay(_readinessPollInterval, cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    private sealed class OwnedStartReadinessContext(string socketPath, Func<bool> isStarting) : ILlamaCppStartReadinessContext
+    {
+        public string SocketPath => socketPath;
+        public bool IsOwnedChildStarting => isStarting();
     }
 
     public ValueTask DisposeAsync()

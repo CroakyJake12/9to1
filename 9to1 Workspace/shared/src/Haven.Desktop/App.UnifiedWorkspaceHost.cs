@@ -193,13 +193,36 @@ public sealed partial class App
             // Closing/preflight/shutdown owner. That graph owns all borrowers.
         }
 
+        /// <summary>Compatibility admission wrapper preserving the prior genuine-invalid-admission
+        /// semantics (throws <see cref="ObjectDisposedException"/> when the host is no longer admitting).
+        /// The App startup path uses <see cref="TryAcquireInitialization"/> instead so an EXPECTED accepted
+        /// retirement can be distinguished from a genuine unexpected fault; this wrapper keeps the prior
+        /// contract available for any existing caller.</summary>
         internal Task InitializeAsync(CancellationToken token)
+        {
+            var initialization = TryAcquireInitialization(token);
+            if (initialization is null) throw new ObjectDisposedException(nameof(UnifiedWorkspaceHost));
+            return initialization;
+        }
+
+        /// <summary>Gates late startup source admission on this host's OWN admission/retirement state,
+        /// not just the App parent token. The host can accept a cooperative startup retirement (with
+        /// <c>_initialization</c> still null) while the App owner remains open and its token is NOT yet
+        /// canceled — <c>JoinOriginalAppProducers</c> drains the host before the App lifetime. In that
+        /// window a late initialization must not fault into the disposed host. This returns null for
+        /// exactly that expected accepted retirement (benign, no task issued, no fabricated completion
+        /// witness); genuine unexpected faults inside real initialization still propagate through the
+        /// returned task.</summary>
+        internal Task? TryAcquireInitialization(CancellationToken token)
         {
             Dispatcher.UIThread.VerifyAccess();
             lock (_gate)
             {
                 if (_initialization is not null) return _initialization;
-                if (OriginalClose is not null) throw new ObjectDisposedException(nameof(UnifiedWorkspaceHost));
+                // Expected accepted retirement (startup retirement accepted, close pending, or closed)
+                // → no source is issued and no completion is fabricated.
+                if (OriginalClose is not null || _pendingClose is not null || _startupRetirement || _closed)
+                    return null;
                 ShowStartupLoading();
                 var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 _initialization = InitializeCoreAsync(start.Task, token);

@@ -1,6 +1,6 @@
 {
   "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
-  "patch_sha256": "66119e946ee0a1251536ea59cd06ac5c465f77ea3399586f0c15a67230154748",
+  "patch_sha256": "de8631c6d1ea4d44509b63535e2f290c856fff9cd438454f732e60263c0c8fee",
   "patch_digest_scope": "SHA256 of git diff --binary --full-index --no-renames 2596258c3282e6c0d058cc7a4fb5f410b7fed06d FINAL_PRODUCT_TREE -- . :(exclude).github; excludes all CI metadata and this identity to avoid circular hashes. Exact product patch retained in reviewer packet.",
   "original_native16_patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
   "successful_native_ci_base": "8b629f0fbab657975009c9da851f075fe1326d66",
@@ -201,6 +201,15 @@
       "actual_change": "Only actual SVG plus Image Width/Height28\u219222, 44px click target and all bindings/features unchanged",
       "SDK_and_native_visual": "NOT RUN for22px candidate; source-only independently reviewed",
       "native_prior28px": "Separate Browser14 capture, not candidate22px acceptance"
+    },
+    "Dulche33": {
+      "genuine_source_checkpoint": "0d749c0a3107677073090903d390751e9674e6a1",
+      "product_patch_sha256": "e4f89410a4db80d41f219d9a205c9a2cb21ea17c0c006eea9d53e2425e52928c",
+      "reviewerQA": "Approved declaredCount compiler seed is included in genuine33 source; no extra reviewer source changes",
+      "actual_normal_receipt": "/tmp/9to1-dulche33-focused-native16-owning-20261021/receipt.json",
+      "actual_normal_receipt_sha256": "6fea1dd97304dd3ac53934cab1448b7195c961e9cde7fc5e44b4a476e15554c6",
+      "actual_normal_result": "PASS: Infrastructure58/58; exact unchangedDesktop12PASS reused; combinednativeNOTRUN",
+      "native_UI": "NOT RUN on this child"
     }
   },
   "changed_files_sha256": {
@@ -342,8 +351,8 @@
     "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalWindowsDevelopment.cs": "a33b14ad05779ae03010bedf48ef723e3f214f2462f5e77aeee21210e86addd8",
     "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalWindowsHome.cs": "a940ee126885d39b35a4899a8c41286ab51d5a193c50475e57c47ce1a58c3157",
     "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs": "3ed6e61b28d5a4cadd720d11d57b3774a5394b315808f5e31ab521c3c582e386",
-    "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs": "0bd1ae4c289a87bed5d89e03b4a4a9822992201a67eed17cdd9c2e2603c45f97",
-    "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs": "71f721181bba0a55d4c7486e7e597813097c557a5e0e9d23e3e9f01329933544",
+    "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs": "3c599ba61353cbcecd9d713aa8a559e661309690b346f32e10521b1cb996a0d5",
+    "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs": "ad386779499dc7e9765eb05fcede84b02ac8da819e4c59afe5732cb952ac0c3e",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/HomeRail/home-rail-apps.svg": "ca0f95b9b05ae892c77f9e2f33b01dda93f2854d442dc3e80fa59d15f6522026",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/HomeRail/home-rail-calendar.svg": "8b38308e28a3ceafde85c7b1b9518e76499dc242843a85c564b90f4ff0f55c85",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/HomeRail/home-rail-dashboard.svg": "d99a596fc2e966314c7bf20cad9f9843db19917e9c541b096ab9ea36834f628e",
@@ -387,10 +396,10 @@
     "9to1 Workspace/shared/src/Haven.Infrastructure/DI/LocalDomainDeveloperServiceCollectionExtensions.cs": "6f8ad234325c532863e4e68f17dd65f8df327fb64296dba7bae7d306a97ac7d4",
     "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs": "16a491814fa2a02e030b29c6f22421c7d8553bad4e9a9558726dea2e3cf07d7b",
     "9to1 Workspace/shared/src/Haven.Infrastructure/DI/WindowsDomainDeveloperServiceCollectionExtensions.cs": "44d15b5447beb40f835d4802d4d9ad5021b7ab783f7eef16018dbdda15b47969",
-    "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/LlamaCppModelProvider.cs": "a2353f26df8a234e5e28ea35a40520c91ad54f472a395898a8fb341b2c4d7276",
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/LlamaCppModelProvider.cs": "512cac3baa76f8dec7ddb059f535c231b6f77712d5ce031f6a2db5930c933772",
     "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/LlamaCppPreviewBootstrap.cs": "9e6a0b77888c3928636e21be7aca1919e149162253f8e3df0a59ad42005aebad",
     "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/LlamaCppRuntime.cs": "46a24e52dc8c33bbdba815b152ff83aac7330b3ca63583814feb9b7ec0f624f8",
-    "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/LocalLlamaCppRegistration.cs": "bf85ba41eb79891c32d23a9882dabcbcc1f4a626cec69f741634bb4891d7e322",
+    "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/LocalLlamaCppRegistration.cs": "0d2a76bce1e2eec1bf99494cea55a3341e2e096532a224a0b2d434839d5e14d8",
     "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/NamedReasoningDispatch.cs": "813ea8cc9b9363aaff1d4ce92687ff1b0c083d60425453eed5330cfa9e7d49bf",
     "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ProviderRoutingModelClient.cs": "6880e81cb25d9e33a7fa975c94362eab5928aa2d83ce0dbb12b428531e5acd0d",
     "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.OriginalModelRequests.cs": "768fdc7a60c44775316c2206b2c12e607de84bd65583b24c167f99b75092a283",
@@ -446,7 +455,7 @@
     "framework/CUI/Runtime/CuiPropertyPresentation.cs": "ecdb15f0b7340d749a8ef78bb55f2024cf5948245f0ce61ea99210f5dc89c114",
     "framework/CUI/Runtime/CuiRuntimeCompatibility.cs": "e3b1fb264a1333724cf4d64edd08c3a8d3e7b66713997188f6108ee5531f09ed"
   },
-  "source_identity_scope": "Private engineering child with reviewed composer22 optical delta: all241 sourcepostimages reverified; metadata/self excluded from product digest; not dispatched/accepted.",
+  "source_identity_scope": "UNACCEPTED private engineering child of exact be4; all cumulative source postimages rehashed; D33 Infrastructure58PASS component evidence; no new native/owner delivery claim.",
   "original_native16_provenance": {
     "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
     "patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
@@ -552,7 +561,7 @@
     "scope": "Full current main HEAD plus every tracked WIP diff/deletion and untracked nonignored file; v16 build identity, NOT acceptance",
     "untracked_archive_sha256": "3e442bdee9f325da0d49edbc90b8ae230cc39f9f75c8a80c0253d7cdf1219bc0"
   },
-  "prepared_at": "2026-10-21T12:43:46.264398+00:00",
+  "prepared_at": "2026-10-21T13:27:18.616758+00:00",
   "acceptance": {
     "component_normal_tests": "Historical changed-source receipts do not establish new combined acceptance; exact new checks pending",
     "combined_native_build": "NOT RUN",
@@ -566,9 +575,10 @@
     "Home_Chat_tile": "NOT RUN: prospectiveHome28canonicalroute correction; realSpaceflow/native firstresponse and normalclose stillpending",
     "Build20": "PASS normal49 checkpoint only; actual native manual edit/save/reopen, fullBuild GUI/one-app/seven gates NOT RUN/OPEN",
     "Browser14": "PASS normal57 + strict Desktop artifact freeze; native browser rendering pending on separate artifact, NOT RUN on this child",
-    "current_private_child": "UNACCEPTED engineering source composition only. Predecessor ab7 build/install/welcome subset passed but three normal closes failed and model/Send unavailable. No new ready/laptop delivery claim.",
-    "Composer22": "UNACCEPTED native visual; one-line genuine source review only"
+    "current_private_child": "UNACCEPTED engineering review only. Prior32 failed readiness evidence retained; current33 component normal58PASS; no merge/push/dispatch/delivery.",
+    "Composer22": "UNACCEPTED native visual; one-line genuine source review only",
+    "Dulche33": "PASS58 component normal; combined normal close/native chat NOT RUN/UNACCEPTED"
   },
-  "predecessor_exact_source_commit": "cacd9a8e6d12dcc39b23e27ccbcee9e5ef837b62",
-  "predecessor_product_patch_sha256": "4b8680fbadb63dc9153f177469adc3b9ef8e1a18759976fe368ca63389e5f7a6"
+  "predecessor_exact_source_commit": "be4ef0640b0a5bdc3212050452a23fecfa39109c",
+  "predecessor_product_patch_sha256": "66119e946ee0a1251536ea59cd06ac5c465f77ea3399586f0c15a67230154748"
 }

@@ -259,6 +259,10 @@ public sealed partial class App : Avalonia.Application
             // stays usable. The routed provider still observes the genuine verified/configured
             // endpoint state when the verified provider becomes available later.
             BeginPreviewModelBootstrapBackground(services);
+            // Cooperative close may cancel the App owner while startup is still progressing. Stop
+            // sourcing further shell/host/UI work once the owner token is canceled or the App is
+            // retiring, so the startup original joins cleanly instead of continuing past close.
+            if (original.Token.IsCancellationRequested || _originalAppWork.IsRetiring) return;
             if (shell is not null)
             {
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));
@@ -272,7 +276,15 @@ public sealed partial class App : Avalonia.Application
             else
             {
                 var workspace = _actualUnifiedWorkspace ?? throw new InvalidOperationException("The original unified host is unavailable.");
-                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => workspace.InitializeAsync(original.Token)));
+                // Gate late host/UI source admission on the Unified host's OWN admission/retirement state,
+                // inside the SAME App source-acquisition physical guard. The host accepts a cooperative
+                // startup retirement while the App owner is still open and its token is NOT yet canceled
+                // (JoinOriginalAppProducers drains the host before the App lifetime). An expected accepted
+                // retirement yields no task and no fault — the startup original joins cleanly. Genuine
+                // faults inside real initialization are retained by the guard and propagate.
+                var initialization = AcquireOriginalAppSynchronous(original, () => workspace.TryAcquireInitialization(original.Token));
+                if (initialization is null) return;
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => initialization!));
             }
 #endif
 
