@@ -6,6 +6,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -669,17 +670,27 @@ public sealed class FloatingFormatToolbarTests
 
     private static void Click(TopLevel top, Control target)
     {
-        var center = Center(target, top);
-        top.MouseMove(center);
-        top.MouseDown(center, MouseButton.Left);
-        top.MouseUp(center, MouseButton.Left);
+        // Dispatch genuine pointer input on the target's actual top level, including an owned portal.
+        var actualTop = TopLevel.GetTopLevel(target);
+        Assert.NotNull(actualTop);
+        var center = Center(target, actualTop!);
+        actualTop!.MouseMove(center);
+        actualTop.MouseDown(center, MouseButton.Left);
+        actualTop.MouseUp(center, MouseButton.Left);
         Pump();
     }
 
     private static Rect WindowBounds(Control control, TopLevel top)
     {
-        var origin = control.TranslatePoint(default, top) ?? default;
-        return new Rect(origin.X, origin.Y, control.Bounds.Width, control.Bounds.Height);
+        // A retained toolbar may physically live in its owned popup top level. Cross the real
+        // client/screen transforms rather than silently substituting origin when translation fails.
+        var actualTop = TopLevel.GetTopLevel(control);
+        Assert.NotNull(actualTop);
+        var origin = control.TranslatePoint(default, actualTop!)
+            ?? throw new InvalidOperationException("WindowBounds: control translation to its top level failed");
+        var screen = actualTop!.PointToScreen(origin);
+        Assert.True(double.IsFinite(screen.X) && double.IsFinite(screen.Y), "WindowBounds: non-finite screen origin");
+        return new Rect(top.PointToClient(screen), control.Bounds.Size);
     }
 
     private static Point Center(Control control, TopLevel top)
@@ -688,9 +699,33 @@ public sealed class FloatingFormatToolbarTests
         return new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
     }
 
-    private static Control? FindContainer(ContentControl root, string automationId) =>
-        root.GetVisualDescendants().OfType<Control>().SingleOrDefault(control =>
-            AutomationProperties.GetAutomationId(control) == automationId);
+    private static Control? FindContainer(ContentControl root, string automationId)
+    {
+        // Follow ONLY this composer's physical tree and its own logical popup custody. Never find an
+        // arbitrary matching toolbar elsewhere in the window. Hidden detached authored children are
+        // not searched, so the existing closed-state Assert.Null remains meaningful.
+        var matches = new HashSet<Control>(ReferenceEqualityComparer.Instance);
+        foreach (var control in root.GetVisualDescendants().OfType<Control>()
+            .Concat(root.GetLogicalDescendants().OfType<Control>()))
+            if (AutomationProperties.GetAutomationId(control) == automationId) matches.Add(control);
+        var found = matches.SingleOrDefault();
+        if (found is null || root.IsVisualAncestorOf(found)) return found;
+
+        // Prove that the discovered popup content is the SAME retained authored Floating host owned
+        // by this composer's actual overlay. AuthoredChildren keeps this identity while cell.Child
+        // is physically detached into the portal; the owning logical Popup must hold that same host.
+        var host = (found as CuiContainerControl)?.AuthoredTargetId is not null
+            ? (CuiContainerControl)found
+            : found.GetVisualAncestors().OfType<CuiContainerControl>().FirstOrDefault(c => c.AuthoredTargetId is not null);
+        Assert.NotNull(host);
+        var owner = root.GetVisualDescendants().OfType<CuiContainerControl>().SingleOrDefault(c =>
+            c.LayoutType == "Overlay Float" && c.AuthoredChildren.Any(child => ReferenceEquals(child, host)));
+        Assert.NotNull(owner);
+        Assert.Contains(host!, owner!.AuthoredChildren);
+        Assert.Contains(root.GetLogicalDescendants().OfType<Avalonia.Controls.Primitives.Popup>(), popup =>
+            popup.Child is Control child && (ReferenceEquals(child, host) || child.IsVisualAncestorOf(host!)));
+        return found;
+    }
 
     private static Button? FindButton(ContentControl root, string automationId) =>
         root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>
