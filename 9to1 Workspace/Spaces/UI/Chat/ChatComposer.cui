@@ -125,7 +125,7 @@
     </Container>
     </Container>
 
-    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.toggle-formatting">
+    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.toggle-formatting" Protect="recovery-status-row">
     <Container id="format-toolbar" Type="Wrap" CellGap="6" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
           accessible-name="Formatting toolbar">

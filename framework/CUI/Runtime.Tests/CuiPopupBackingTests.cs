@@ -464,6 +464,55 @@ public sealed class CuiPopupBackingTests
         }, CancellationToken.None);
     }
 
+    [Fact]
+    public async Task Fallback_is_rounded_to_theme_popup_radius_not_a_square()
+    {
+        // The Native16 dark-rectangle refinement defect: PART_TransparencyFallback was a full square
+        // Border behind the rounded popup chrome, so a positively opaque destination painted a dark
+        // rectangle at the corners outside the rounded surface. The fallback must now be rounded to the
+        // SAME theme-owned popup radius that rounds the chrome (and the authored floating surface), so it
+        // never pokes out beyond the rounded surface. The alpha-aware paint projection is unchanged.
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(() =>
+        {
+            using var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+            var loaded = loader.LoadMarkup("""
+                <Theme Name="Professional"><Container Type="Menu"><Button Type="Menu Item" Content="File">
+                  <Button Type="Menu Item" Content="Open"/>
+                </Button></Container></Theme>
+                """);
+            Assert.Empty(loaded.Diagnostics);
+            var window = CuiNativePopupFixture.New(loaded.Root, 600, 300);
+            try
+            {
+                window.Show(); window.UpdateLayout();
+                var owner = Assert.Single(loaded.Root!.GetVisualDescendants().OfType<CuiMenuItem>());
+                owner.IsSubMenuOpen = true; Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                var item = owner.Items.OfType<CuiMenuItem>().First();
+                var popupRoot = Assert.Single(item.GetVisualAncestors().OfType<PopupRoot>());
+                var fallback = Assert.Single(popupRoot.GetVisualDescendants().OfType<Border>(),
+                    border => border.Name == "PART_TransparencyFallback");
+
+                // Rounded to the theme popup radius (never a square), and it tracks the theme resource.
+                Assert.True(popupRoot.TryFindResource("CuiPopupRadius", out var radiusValue),
+                    "CuiPopupRadius must resolve on the popup root");
+                var expected = Assert.IsType<CornerRadius>(radiusValue);
+                Assert.True(expected.TopLeft > 0, "the theme popup radius must be positive (not a square)");
+                Assert.Equal(expected, fallback.CornerRadius);
+
+                // The alpha-aware projection is unchanged: opaque paints the latest opaque semantic brush,
+                // alpha-capable keeps it null.
+                popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(WindowTransparencyLevel.None);
+                Assert.NotNull(fallback.Background);
+                var painted = Assert.IsAssignableFrom<ISolidColorBrush>(fallback.Background!);
+                Assert.Equal(255, painted.Color.A);
+                popupRoot.PlatformImpl?.TransparencyLevelChanged?.Invoke(WindowTransparencyLevel.Transparent);
+                Assert.Null(fallback.Background);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
     private static PopupRoot PopupRootOf(ComboBox combo)
     {
         var popup = Assert.Single(combo.GetVisualDescendants().OfType<Popup>());

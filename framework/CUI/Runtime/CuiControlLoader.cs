@@ -2625,12 +2625,16 @@ public sealed partial class CuiControlLoader : IDisposable
             // so live anchors re-resolve; invalid values become CUIR053 source diagnostics below.
             if (control is CuiContainerControl relationshipContainer
                 && (propName.Equals("Target", StringComparison.OrdinalIgnoreCase)
-                    || propName.Equals("Placement", StringComparison.OrdinalIgnoreCase)))
+                    || propName.Equals("Placement", StringComparison.OrdinalIgnoreCase)
+                    || propName.Equals("Protect", StringComparison.OrdinalIgnoreCase)))
             {
                 if (propName.Equals("Target", StringComparison.OrdinalIgnoreCase))
                     relationshipContainer.SetAuthoredTarget(resolved);
-                else
+                else if (propName.Equals("Placement", StringComparison.OrdinalIgnoreCase))
                     relationshipContainer.SetAuthoredPlacement(resolved);
+                else
+                    relationshipContainer.SetAuthoredProtected(
+                        resolved.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
                 return;
             }
             if (CuiLifecycleProperties.SetLiteral(control, propName, resolved, level, "CUI authored " + level)) return;

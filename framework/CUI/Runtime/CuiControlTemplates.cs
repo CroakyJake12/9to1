@@ -125,7 +125,15 @@ public static class CuiControlTemplates
         // Popups, menu light-dismiss and text selection require the native root
         // layers even when all visible chrome comes from CUI-owned templates.
         var layers = Name(new VisualLayerManager { Child = Presenter(owner, scope) }, "PART_VisualLayerManager", scope);
+        // The alpha-aware transparency fallback must MATCH the rounded chrome it backs. When a
+        // positively opaque destination paints the guaranteed-opaque semantic brush, a square fallback
+        // shows as a dark rectangle at the corners outside the rounded popup surface. Its CornerRadius
+        // therefore follows the theme's popup radius (the same theme-owned value that rounds the generic
+        // popup chrome and the authored floating surface, whose authored radius is always <= the theme
+        // radius), so the painted fallback never pokes out beyond the rounded surface. Rounded
+        // appearance stays theme-owned; the fallback is never force-rounded by a global overlay.
         var fallback = Name(new Border { IsHitTestVisible = false }, "PART_TransparencyFallback", scope);
+        Resource(fallback, Border.CornerRadiusProperty, "CuiPopupRadius");
         // Popup roots host floating popup chrome whose rounded surface and shadow margin must remain
         // transparent. The donor PopupRoot default Background is white, so an unmodified root would
         // paint one opaque white rectangle behind every popup (the observed defect). CUI owns the

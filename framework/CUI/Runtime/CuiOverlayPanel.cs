@@ -143,9 +143,10 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
 
         // Try the authored side first, then its opposite, then the two perpendicular sides. A candidate
         // is acceptable only when it fits ENTIRELY inside the usable owner viewport AND does not intersect
-        // the protected composer body (the authored target). If no side offers genuinely safe space, fall
-        // back to an explicit bounded unplaced/degraded state rather than covering editing/actions.
-        return FitPlacement(host, anchor.Value, size, viewport) ?? Unplaced();
+        // the protected composer body (the authored target) or any authored protected region (e.g. an
+        // adjacent genuine status/recovery act). If no side offers genuinely safe space, fall back to
+        // an explicit bounded unplaced/degraded state rather than covering editing/actions/recovery.
+        return FitPlacement(host, anchor.Value, size, viewport, ProtectedRects(host)) ?? Unplaced();
     }
 
     /// <summary>Measure the retained authored floating host (not the suppressible wrapper cell) at the
@@ -177,7 +178,7 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         var usableWidth = Math.Max(0, viewport.Width);
         var size = MeasureHost(host, usableWidth);
         if (size.Width <= 0 || size.Height <= 0) return Unplaced();
-        return FitPlacement(host, anchor.Value, size, viewport) ?? Unplaced();
+        return FitPlacement(host, anchor.Value, size, viewport, ProtectedRects(host)) ?? Unplaced();
     }
 
     /// <summary>Choose the first candidate side that fits entirely inside the owner viewport and does not
@@ -185,14 +186,15 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     /// free axis (e.g. a centered bar overflowing one viewport edge by a few pixels) is first nudged into
     /// the viewport along that free axis, so available space is used rather than failing merely because
     /// centering pushed an edge out. Returns null when no side offers genuinely safe space.</summary>
-    private static Rect? FitPlacement(CuiContainerControl host, Rect anchor, Size size, Rect viewport)
+    private static Rect? FitPlacement(CuiContainerControl host, Rect anchor, Size size, Rect viewport,
+        IReadOnlyList<Rect> protectedRects)
     {
         var side = SideOf(host);
         if (side is null) return null;
         foreach (var candidateSide in OrderedSides(side))
         {
             var rect = ClampFreeAxis(Preferred(candidateSide, anchor, size), viewport, candidateSide);
-            if (Fits(rect, viewport, anchor)) return rect;
+            if (Fits(rect, viewport, anchor, protectedRects)) return rect;
         }
         return null;
     }
@@ -454,9 +456,15 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     }
 
     /// <summary>A candidate is usable only when it is fully inside the owner viewport AND avoids the
-    /// protected composer body. A positive rectangle alone does not mean usable space exists.</summary>
-    private static bool Fits(Rect rect, Rect viewport, Rect anchor) =>
-        viewport.Contains(rect) && !rect.Intersects(anchor);
+    /// protected composer body AND every authored protected region (adjacent genuine interactive scene,
+    /// for example the recovery row). A positive rectangle alone does not mean usable space exists.</summary>
+    private static bool Fits(Rect rect, Rect viewport, Rect anchor, IReadOnlyList<Rect> protectedRects)
+    {
+        if (!viewport.Contains(rect) || rect.Intersects(anchor)) return false;
+        foreach (var protectedRect in protectedRects)
+            if (rect.Intersects(protectedRect)) return false;
+        return true;
+    }
 
     private static IEnumerable<string> OrderedSides(string side)
     {
@@ -506,6 +514,35 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         var target = this.GetVisualDescendants().OfType<Control>()
             .FirstOrDefault(c => string.Equals(AutomationProperties.GetAutomationId(c), id, StringComparison.Ordinal));
         return target is not null && ValidTarget(target) ? target : null;
+    }
+
+    /// <summary>
+    /// Resolve the authored protected regions for a floating host in THIS panel's coordinate space. A
+    /// protected id may name an element in the owner scene or an adjacent genuine scene rendered in the
+    /// same top-level (for example the recovery status row, which lives outside this overlay-float
+    /// subtree). Only elements that are attached AND effectively visible contribute avoidance, so a
+    /// protected sibling that is hidden (recovery-row show/hide) releases its region naturally. An id
+    /// that cannot be resolved or translated contributes no avoidance (graceful degradation), never a
+    /// fabricated rectangle. Resolved fresh each arrange so live sibling movement/visibility is honored.
+    /// </summary>
+    private List<Rect> ProtectedRects(CuiContainerControl host)
+    {
+        var rects = new List<Rect>();
+        var ids = host.AuthoredProtectedIds;
+        if (ids.Count == 0) return rects;
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return rects;
+        var candidates = topLevel.GetVisualDescendants().OfType<Control>().ToArray();
+        foreach (var id in ids)
+        {
+            var element = candidates.FirstOrDefault(c =>
+                string.Equals(AutomationProperties.GetAutomationId(c), id, StringComparison.Ordinal));
+            if (element is null || !element.IsAttachedToVisualTree() || !element.IsEffectivelyVisible) continue;
+            var origin = element.TranslatePoint(default, this);
+            if (origin is not { } o) continue;
+            rects.Add(new Rect(o.X, o.Y, element.Bounds.Width, element.Bounds.Height));
+        }
+        return rects;
     }
 
     /// <summary>The target must be inside THIS owner subtree (a descendant of this overlay panel) and

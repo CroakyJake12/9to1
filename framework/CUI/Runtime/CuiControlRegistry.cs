@@ -379,7 +379,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "MaxRows", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
+            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "MaxRows", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Protect", "Selected"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -490,7 +490,8 @@ public sealed class CuiControlRegistry
             ("ZIndex", "integer", typeof(int), true), ("Interactive", "boolean", typeof(bool), true),
             ("ActiveIndependently", "boolean", typeof(bool), true), ("Target", "text", typeof(string), true),
             ("Modal", "boolean", typeof(bool), true), ("Layer", "integer", typeof(int), true),
-            ("Placement", "symbol", typeof(string), true), ("Left", "length", typeof(double), true),
+            ("Placement", "symbol", typeof(string), true), ("Protect", "text", typeof(string), true),
+            ("Left", "length", typeof(double), true),
             ("Top", "length", typeof(double), true),
             ("IsChecked", "boolean", typeof(bool), true), ("Rotate", "angle", typeof(double), true),
             ("Scale", "number", typeof(double), true), ("ScaleX", "number", typeof(double), true),

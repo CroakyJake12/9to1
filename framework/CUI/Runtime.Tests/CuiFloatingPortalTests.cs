@@ -647,6 +647,82 @@ public sealed class CuiFloatingPortalTests
         }, CancellationToken.None);
     }
 
+    [Fact]
+    public async Task Floating_placement_protects_authored_sibling_and_releases_when_hidden()
+    {
+        // The Native16 recovery-overlap refinement is a framework-level typed-protection contract: an
+        // authored floating layer may declare Protect="<id>" and the overlay-float placement must never
+        // cover that element's live on-screen rect — even when the element lives OUTSIDE this overlay
+        // subtree in the same top-level (like the genuine recovery row). This hermetic test mounts the
+        // float layer with Protect="protected-sibling" and a real sibling scene above the surface (the
+        // exact region "Above" naturally wants), asserts the protected id is typed-parsed, that the
+        // placed toolbar genuinely avoids the sibling, and that hiding the sibling RELEASES the region.
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            Window window = null!;
+            try
+            {
+                var loaded = loader.LoadMarkup(ProtectedSiblingMarkup);
+                Assert.Empty(loaded.Diagnostics);
+                var surface = (CuiContainerControl)loaded.Root!;
+                loader.WireBindings(surface);
+                var authoredHost = surface.GetVisualDescendants().OfType<CuiContainerControl>()
+                    .Single(c => c.AuthoredTargetId is not null);
+
+                // The Protect attribute is typed-parsed into AuthoredProtectedIds (never inferred).
+                Assert.Equal(new[] { "protected-sibling" }, authoredHost.AuthoredProtectedIds);
+
+                // Mount the surface plus a genuine sibling scene ABOVE it (outside the overlay subtree,
+                // like the recovery row), sized/sited to sit exactly where "Above" would naturally land.
+                var sibling = new Border { Width = 220, Height = 60, IsVisible = true };
+                AutomationProperties.SetAutomationId(sibling, "protected-sibling");
+                var wrapper = new Border { Width = 220, Height = 160, Child = surface };
+                var canvas = new Canvas();
+                canvas.Children.Add(sibling);
+                canvas.Children.Add(wrapper);
+                Canvas.SetLeft(sibling, 40); Canvas.SetTop(sibling, 170);
+                Canvas.SetLeft(wrapper, 40); Canvas.SetTop(wrapper, 190);
+                window = CuiNativePopupFixture.New(canvas, 520, 560);
+                window.Show();
+                PumpLayout(window);
+
+                var panel = (CuiOverlayPanel)surface.Layout;
+                var portal = Assert.Single(panel.ActivePortals);
+                Assert.True(portal.IsOpen);
+                Assert.Same(authoredHost, portal.Host);
+
+                var siblingRect = WindowBoundsOf(sibling, window);
+                var protectedRect = WindowBoundsOf(authoredHost, window);
+                Assert.True(protectedRect.Width > 0 && protectedRect.Height > 0, "the protected toolbar must be placed");
+                Assert.False(protectedRect.Intersects(siblingRect),
+                    $"floating toolbar must avoid the authored protected sibling (float={protectedRect}, sibling={siblingRect})");
+
+                // Hiding the protected sibling RELEASES its region: the toolbar may move back over it.
+                sibling.IsVisible = false;
+                PumpLayout(window);
+                Assert.Same(authoredHost, Assert.Single(panel.ActivePortals).Host);
+                var releasedRect = WindowBoundsOf(authoredHost, window);
+                Assert.True(releasedRect.Intersects(siblingRect),
+                    $"hiding the protected sibling must release its region (released={releasedRect}, sibling={siblingRect})");
+            }
+            finally { window?.Close(); }
+        }, CancellationToken.None);
+    }
+
+    private const string ProtectedSiblingMarkup = """
+        <Cui>
+          <Container Type="Overlay Float" id="surface" padding="30">
+            <Container id="body" Type="Vertical Stack"/>
+            <Container id="float-layer" Type="Floating" Target="body" Placement="above" Protect="protected-sibling">
+              <Button id="f0" content="B" MinWidth="36" MinHeight="36"/>
+              <Button id="f1" content="I" MinWidth="36" MinHeight="36"/>
+            </Container>
+          </Container>
+        </Cui>
+        """;
+
     private const string ConditionalMarkup = """
         <Cui>
           <Actions><Action name="toggle-fmt"><Toggle Target="FormattingOpen" /></Action></Actions>
@@ -981,6 +1057,16 @@ public sealed class CuiFloatingPortalTests
         error is AggregateException agg
             ? string.Join(" | ", agg.InnerExceptions.Select(e => e.Message))
             : error.Message;
+
+    /// <summary>The on-screen (window-space) rect of a control: its translated origin plus Bounds. Used
+    /// to compare real geometry across different subtrees (e.g. a portaled float vs an adjacent sibling
+    /// scene) in the same top-level.</summary>
+    private static Rect WindowBoundsOf(Control control, Window window)
+    {
+        var origin = control.TranslatePoint(default, window)
+            ?? throw new InvalidOperationException("control is not translateable in this window");
+        return new Rect(origin.X, origin.Y, control.Bounds.Width, control.Bounds.Height);
+    }
 
     private static void PumpLayout(Window window)
     {

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -38,9 +39,10 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     public CuiCompoundFocusScope? CompoundFocusScope => _compoundFocusScope;
     private string? _authoredTargetId;
     private string? _authoredPlacement;
+    private string[] _authoredProtectedIds = [];
 
-    /// <summary>Raised when the authored floating relationship (Target/Placement) changes, so the
-    /// overlay-float panel can invalidate its cached anchor and rebind observers.</summary>
+    /// <summary>Raised when the authored floating relationship (Target/Placement/Protect) changes, so
+    /// the overlay-float panel can invalidate its cached anchor/protected regions and rebind observers.</summary>
     internal event EventHandler? RelationshipChanged;
 
     /// <summary>
@@ -96,6 +98,27 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             throw new ArgumentException("Placement must be Above, Under, LeftOf or RightOf.", nameof(value));
         if (_authoredPlacement == normalized) return;
         _authoredPlacement = normalized;
+        RelationshipChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Authored protected element ids (typed element ids) whose on-screen bounds the float
+    /// placement must not intersect. This is authored CUI, never inferred by framework heuristics. The
+    /// ids may name elements in the SAME owner scene (composer body/input/chips/controls) or an
+    /// adjacent genuine scene rendered in the same top-level (for example the recovery status row), so
+    /// an out-of-flow floating bar never covers a live interactive sibling.</summary>
+    public IReadOnlyList<string> AuthoredProtectedIds => _authoredProtectedIds;
+
+    /// <summary>Typed effective-property setter for the authored Protect ids. Accepts a list of comma
+    /// separated element ids, trims each, drops empties and duplicates, and raises a change notification
+    /// so a live authored Protect re-resolves the protected regions. CUI-authored only.</summary>
+    public void SetAuthoredProtected(IEnumerable<string>? ids)
+    {
+        var clean = ids?.Select(id => id?.Trim())
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray() ?? [];
+        if (_authoredProtectedIds.SequenceEqual(clean, StringComparer.Ordinal)) return;
+        _authoredProtectedIds = clean;
         RelationshipChanged?.Invoke(this, EventArgs.Empty);
     }
     public IReadOnlyList<Control> AuthoredChildren => _cells.Select(AuthoredChildOf).Where(c => c is not null).Select(c => c!).ToArray();

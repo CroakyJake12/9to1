@@ -777,6 +777,89 @@ public sealed class FloatingFormatToolbarTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Floating_toolbar_protects_genuine_recovery_row_and_all_six_commands_stay_reachable()
+    {
+        // Native16 recovery-overlap refinement: the floating toolbar must not cover the genuine
+        // recovery status row (and its Manage local models action) which is an adjacent scene rendered
+        // in the same top-level above the composer. This regression mounts the ACTUAL shared composer
+        // plus a genuine recovery row scene (same authored ids/structure as ChatRecovery.cui) and
+        // asserts real geometry and pointer reachability for BOTH the recovery action and all six
+        // formatting commands, plus Aa off/on identity preservation.
+        var source = new Source { CanSend = true };
+        var view = new ChatComposerCuiView(source);
+        var recovery = BuildRecoveryRow();
+        var window = CreateRecoveryFooterWindow(view, recovery, 1500, 800);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+
+            var recoverRow = FindRecoveryStatusRow(recovery);
+            var manage = FindRecoveryManageButton(recovery);
+            Assert.NotNull(recoverRow);
+            Assert.NotNull(manage);
+            Assert.True(manage!.IsEffectivelyVisible, "the genuine recovery action must be visible");
+            var manageWin = WindowBounds(manage, window);
+
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
+            var toolbarWin = WindowBounds(toolbar!, window);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            Assert.True(windowClient.Contains(toolbarWin), "floating toolbar must stay inside the viewport");
+
+            // The toolbar must not cover the genuine recovery status row, its Manage action, or input.
+            Assert.False(toolbarWin.Intersects(manageWin),
+                "floating toolbar must not cover the Manage local models recovery action");
+            Assert.False(toolbarWin.Intersects(WindowBounds(recoverRow!, window)),
+                "floating toolbar must not cover the recovery status row");
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "floating toolbar must not cover input");
+
+            // All six formatting commands stay visible and pointer-reachable.
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                var b = WindowBounds(commandButtons[i], window);
+                Assert.True(b.Width > 0 && b.Height > 0, $"format command {i} must remain visible");
+                Assert.True(windowClient.Contains(b), $"format command {i} must stay inside the viewport");
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+            }
+
+            // The recovery Manage action itself is pointer-reachable: a real click reaches the button.
+            var manageClicked = false;
+            manage.Click += (_, _) => manageClicked = true;
+            Click(window, manage);
+            Assert.True(manageClicked, "the Manage local models action must be pointer-reachable");
+
+            // Aa off/on preserves input identity and focus within the protected scene, and the reopened
+            // toolbar still protects the recovery action.
+            Click(window, FindButton(view, "format-button")!);
+            PumpLayout(window);
+            Assert.False(FindContainer(view, "format-toolbar") is { IsVisible: true });
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            Assert.True(toolbar.IsVisible);
+            Assert.Same(box, FindInput(view));
+            Assert.True(box.IsKeyboardFocusWithin);
+            Assert.False(WindowBounds(toolbar, window).Intersects(manageWin),
+                "reopened toolbar must still protect the recovery action");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
     // Match the production ChatHavenScene's intrinsic Auto footer allocation. A direct
     // full-window stretched composer consumes its own toolbar's safe placement space.
     [AvaloniaFact]
@@ -979,6 +1062,48 @@ public sealed class FloatingFormatToolbarTests
         Grid.SetRow(view, 1);
         return new Window { Width = width, Height = height, Content = grid };
     }
+
+    /// <summary>Build a genuine recovery row scene with the SAME authored structure/ids as the production
+    /// ChatRecovery.cui (recovery-status-row Wrap container with a status text and the Manage local models
+    /// action). It is loaded through the real shared CUI loader so the authored ids and geometry are
+    /// genuine, not hand-built controls.</summary>
+    private static Control BuildRecoveryRow()
+    {
+        var loader = new CuiControlLoader(); loader.SetAppearance(CuiAppearance.Dark);
+        var loaded = loader.LoadMarkup("""
+            <Cui><Page><Container id="recovery-status-row" Type="Wrap" OwnsBackdrop="True" CellGap="8" IsVisible="True">
+              <Text id="recovery-status-text" text="Model unavailable" font-size="12" TextWrapping="Wrap" VerticalAlignment="Center" />
+              <Button id="recovery-manage-button" content="Manage local models" font-size="12" MinHeight="28" accessible-name="Manage local models" />
+            </Container></Page></Cui>
+            """);
+        Assert.Empty(loaded.Diagnostics);
+        return loaded.Root!;
+    }
+
+    /// <summary>Mount the genuine recovery row DIRECTLY above the actual shared composer in a centered
+    /// MaxWidth column (mirroring the production Footer), so the floating toolbar's natural Above placement
+    /// would otherwise collide with the recovery row unless typed placement protects it.</summary>
+    private static Window CreateRecoveryFooterWindow(ChatComposerCuiView view, Control recoveryRow, double width, double height)
+    {
+        var column = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            MaxWidth = 900,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Stretch
+        };
+        column.Children.Add(recoveryRow);
+        column.Children.Add(view);
+        return new Window { Width = width, Height = height, Content = new Panel { Children = { column } } };
+    }
+
+    private static Control? FindRecoveryStatusRow(Control root) =>
+        root.GetVisualDescendants().OfType<Control>().SingleOrDefault(c =>
+            AutomationProperties.GetAutomationId(c) == "recovery-status-row");
+
+    private static Button? FindRecoveryManageButton(Control root) =>
+        root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>
+            AutomationProperties.GetAutomationId(b) == "recovery-manage-button");
 
     private static void AssertPlaced(Control toolbar)
     {
