@@ -1,63 +1,79 @@
-# FILE DOCUMENTATION
-# Where: .github/workflows/havenos-linux-package.yml in repository CI/build support.
-# What: Verifies the Ubuntu-compatible Haven.Desktop publish path and uploads the tarball produced from real dotnet publish output.
-# Why: Gives the Linux packaging seam direct Ubuntu-runner evidence without changing Windows targeting or claiming HavenOS VM launch.
-name: HavenOS Linux package
-
+# Private review proposal: replace this EXISTING dispatchable workflow only on
+# a dedicated preview branch, preserving main. No 9to1 application/vendor build.
+name: 9to1 pinned CPU engine ARM64 compatibility
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "9to1 Workspace/Directory.Build.props"
-      - "9to1 Workspace/shared/src/**"
-      - "9to1 Workspace/shared/eng/publish-haven-linux.sh"
-      - '.github/workflows/havenos-linux-package.yml'
-  push:
-    branches:
-      - main
-      
-    paths:
-      - "9to1 Workspace/Directory.Build.props"
-      - "9to1 Workspace/shared/src/**"
-      - "9to1 Workspace/shared/eng/publish-haven-linux.sh"
-      - '.github/workflows/havenos-linux-package.yml'
-
+    inputs:
+      debian_base:
+        description: Older native build ABI; use bookworm only if actual bullseye compiler fails or target permits2.36
+        type: choice
+        required: true
+        default: bookworm
+        options:
+          - bullseye
+          - bookworm
 permissions:
   contents: read
-
 jobs:
-  publish-linux-x64:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-
+  pinned-engine-native-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    container:
+      image: ${{ inputs.debian_base == 'bookworm' && 'debian@sha256:991827bb788d78bbc130dcb851913beecff43296360f48838aca7cbdfae4375c' || 'debian@sha256:29e60bc6b8355ce47307cecadb843f25c9a1ee332ed8458039cc435262677bdc' }}
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      PREVIEW_DEBIAN_BASE: ${{ inputs.debian_base }}
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Install .NET 10 SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Publish and package Haven for Linux
-        shell: bash
-        run: bash "9to1 Workspace/shared/eng/publish-haven-linux.sh"
-
-      - name: Verify packaged publish artifacts
+      - name: Install native build tools in disposable older Debian
         shell: bash
         run: |
-          package='artifacts/linux/linux-x64/haven-linux-linux-x64.tar.gz'
-          test -s "$package"
-          tar -tzf "$package" | grep -Fx './Haven'
-          tar -tzf "$package" | grep -Fx './Haven.dll'
-          tar -tzf "$package" | grep -Fx './Haven.runtimeconfig.json'
-
-      - name: Upload Linux package
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(dpkg --print-architecture)" = arm64
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential cmake ninja-build git ca-certificates python3 binutils curl
+      - name: Checkout ONLY reviewed infra scripts (no application/vendor dependency)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: eng/preview-arm64
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+      - name: Build exact official CPU source, inspect closure, real local HTTP smoke
+        shell: bash
+        run: bash eng/preview-arm64/build-pinned-engine.sh
+      - name: Retain binary, exact source/model/licence/build/HTTP evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: haven-linux-x64
-          path: artifacts/linux/linux-x64/haven-linux-linux-x64.tar.gz
+          name: 9to1-llamacpp-b10809-arm64-${{ inputs.debian_base }}
+          path: engine-artifact/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
+
+  official-prebuilt-native-arm64-baseline:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - name: Checkout bounded smoke scripts only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: eng/preview-arm64
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
+      - name: Official exact-pin ARM CPU baseline, genuine prompt/stream/cancel
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          mkdir -p engine-artifact/evidence
+          python3 eng/preview-arm64/prebuilt-baseline.py
+      - name: Retain actual official-baseline evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 9to1-official-b10809-native-arm64-baseline
+          path: engine-artifact/
+          if-no-files-found: error
+          retention-days: 1
