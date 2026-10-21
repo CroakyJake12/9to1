@@ -31,8 +31,8 @@ try:
  donorraw=subprocess.check_output(donorquery,text=True).strip();(evidence/'donor-task-target-path.txt').write_text(donorraw+'\n');donortask=Path(donorraw)
  if not donortask.is_absolute() or not donortask.is_file():raise RuntimeError('Actual same-source donor compiler output missing: '+donorraw)
  receipt['donor_host_compiler']={'path':str(donortask),'sha256':sha(donortask),'project':donorproj,'target_path_query':donorquery}
- run('host-tool-restore',['dotnet','restore',hostproj,*common,*props(hostart)])
- run('host-tool-build',['dotnet','build',hostproj,'-c','Release','--no-restore',*common,*props(hostart)])
+ run('host-tool-restore',['dotnet','restore',hostproj,*common,*props(hostart),'-p:AvaloniaBuildTasksLocation='+str(donortask)])
+ run('host-tool-build',['dotnet','build',hostproj,'-c','Release','--no-restore',*common,*props(hostart),'-p:AvaloniaBuildTasksLocation='+str(donortask)])
  task=hostart/'bin/CakeOS.Cui.Build.Compiler/release/CakeOS.Cui.Build.Compiler.dll'
  if not task.is_file():raise RuntimeError('Actual same-source compiler output missing')
  receipt['host_compiler']={'path':str(task),'sha256':sha(task),'native_host':'arm64'}
