@@ -26,7 +26,8 @@
   <Container id="composer-surface" Type="Overlay Float" padding="12"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
-    <Container id="composer-body" Type="Vertical Stack" CellGap="8">
+    <Container id="composer-body" Type="Grid" RowSizes="* Auto Auto Auto" CellGap="8">
+    <Container id="composer-scroll" Row="0" Type="Vertical Stack" CellGap="8" VerticalScrolling="True">
     <Container id="chips-row" Type="Wrap" CellGap="6" MaxRows="2" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
         <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
@@ -41,10 +42,9 @@
              placeholdertext="{Binding Composer.Placeholder}" embedded-input="true" BorderWidth="0"
              background="Transparent" padding="4" text-wrapping="Wrap" MinHeight="44" accessible-name="Message" />
     </Container>
+    </Container>
 
-
-
-    <Container id="controls-row" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
+    <Container id="controls-row" Row="1" Type="Grid" ColumnSizes="Auto 1fr Auto" CellGap="8">
       <Container id="left-controls" Column="0" Type="Horizontal Stack" CellGap="6">
         <Button id="add-button" action="composer.add" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true"
@@ -75,7 +75,7 @@
       </Container>
     </Container>
 
-    <Container id="emoji-panel" Type="Vertical Stack" CellGap="8" padding="8"
+    <Container id="emoji-panel" Row="2" Type="Vertical Stack" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowEmoji}" accessible-name="Emoji panel">
       <!-- The QueryViewport is the canonical CUI runtime state/query scope: it owns the search query
            string and opaque cursor; the authored Repeat/input/pager bind to its bounded window and
@@ -110,7 +110,7 @@
       </Container>
     </Container>
 
-    <Container id="settings-panel" Type="Wrap" CellGap="8" padding="8"
+    <Container id="settings-panel" Row="3" Type="Wrap" CellGap="8" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding Composer.ShowSettings}" accessible-name="Thread settings panel">
       <Text text="Actions:" font-size="12" font-weight="SemiBold" />
       <Button action="composer.set-action-mode.AllowAllActions" content="All" font-size="12" />

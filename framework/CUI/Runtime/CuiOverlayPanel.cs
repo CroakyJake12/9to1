@@ -72,6 +72,14 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
             width = Math.Max(width, cell.DesiredSize.Width);
             height = Math.Max(height, cell.DesiredSize.Height);
         }
+        // Bound the composed surface to the real usable space handed to it. At high DisplayScale in a
+        // narrow viewport the authored content (chips, input, controls) is genuinely taller than the
+        // client; instead of reporting an unbounded desired size that pushes the controls below the
+        // viewport, report the available height and let the authored body scroll internally
+        // (VerticalScrolling), keeping every control pointer/keyboard reachable through genuine
+        // overflow. This is measurement of the real available space, never a fixed/magic cap.
+        if (double.IsFinite(availableSize.Height))
+            height = Math.Min(height, Math.Max(0, availableSize.Height));
         return new Size(width, height);
     }
 
@@ -524,25 +532,75 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     /// protected sibling that is hidden (recovery-row show/hide) releases its region naturally. An id
     /// that cannot be resolved or translated contributes no avoidance (graceful degradation), never a
     /// fabricated rectangle. Resolved fresh each arrange so live sibling movement/visibility is honored.
+    /// The id lookup is scoped to THIS overlay's owning scene composition (see
+    /// <see cref="ResolveProtectedScope"/>), so independently hosted same-ID scenes stay separate: a
+    /// floating host protects the row that belongs to its OWN scene, never the first same-ID row
+    /// elsewhere in the top level.
     /// </summary>
     private List<Rect> ProtectedRects(CuiContainerControl host)
     {
         var rects = new List<Rect>();
-        var ids = host.AuthoredProtectedIds;
-        if (ids.Count == 0) return rects;
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel is null) return rects;
-        var candidates = topLevel.GetVisualDescendants().OfType<Control>().ToArray();
-        foreach (var id in ids)
+        if (host.AuthoredProtectedIds.Count == 0) return rects;
+        foreach (var element in ResolveProtectedElements(host))
         {
-            var element = candidates.FirstOrDefault(c =>
-                string.Equals(AutomationProperties.GetAutomationId(c), id, StringComparison.Ordinal));
-            if (element is null || !element.IsAttachedToVisualTree() || !element.IsEffectivelyVisible) continue;
+            if (!element.IsEffectivelyVisible) continue;
             var origin = element.TranslatePoint(default, this);
             if (origin is not { } o) continue;
             rects.Add(new Rect(o.X, o.Y, element.Bounds.Width, element.Bounds.Height));
         }
         return rects;
+    }
+
+    /// <summary>
+    /// Resolve the authored protected element identities for a floating host within the owning scene
+    /// composition. Returns every attached matching element (regardless of current visibility) so the
+    /// caller can both compute live avoidance and observe the element for show/hide/movement reflow.
+    /// </summary>
+    private IEnumerable<Control> ResolveProtectedElements(CuiContainerControl host)
+    {
+        var ids = host.AuthoredProtectedIds;
+        if (ids.Count == 0) yield break;
+        var scope = ResolveProtectedScope();
+        if (scope is null) yield break;
+        var candidates = scope.GetVisualDescendants().OfType<Control>().ToArray();
+        foreach (var id in ids)
+        {
+            var element = candidates.FirstOrDefault(c =>
+                string.Equals(AutomationProperties.GetAutomationId(c), id, StringComparison.Ordinal));
+            if (element is null || !element.IsAttachedToVisualTree()) continue;
+            yield return element;
+        }
+    }
+
+    /// <summary>
+    /// Resolve the subtree whose authored element ids form the composition owned by THIS overlay panel.
+    /// The panel walks up to its nearest <see cref="CuiSceneHost"/> ancestor (<c>myHost</c>) — the
+    /// host of the composition this floating toolbar belongs to — then walks further up to the nearest
+    /// ancestor that contains a DIFFERENT (sibling) <see cref="CuiSceneHost"/>. That ancestor bounds
+    /// the owning scene composition (for example a scene's Footer containing both the composer host and
+    /// the recovery host). Protected ids are resolved only within that subtree, so a scene's toolbar
+    /// protects its OWN same-ID recovery row rather than an unrelated same-ID row in a sibling scene.
+    /// When no <see cref="CuiSceneHost"/> ancestor exists (hermetic framework tests), the whole top
+    /// level is used, preserving same-top-level protected-sibling avoidance.
+    /// </summary>
+    private Control? ResolveProtectedScope()
+    {
+        var myHost = this.GetVisualAncestors().OfType<CuiSceneHost>().FirstOrDefault();
+        // Hermetic framework tests (and structural fixtures that mount a raw same-top-level sibling
+        // outside any scene host) host the protected sibling without a distinct second scene host; in
+        // those cases fall back to whole-top-level scoping so the sibling is still protected.
+        if (myHost is null) return TopLevel.GetTopLevel(this);
+        var current = myHost.GetVisualParent();
+        while (current is not null)
+        {
+            if (current.GetVisualDescendants().OfType<CuiSceneHost>()
+                .Any(host => !ReferenceEquals(host, myHost)))
+                return current;
+            current = current.GetVisualParent();
+        }
+        // No distinct sibling scene host in any ancestor: this composition is the only one, so scope to
+        // the whole top level (preserving same-top-level protected-sibling avoidance).
+        return TopLevel.GetTopLevel(this) ?? myHost;
     }
 
     /// <summary>The target must be inside THIS owner subtree (a descendant of this overlay panel) and
@@ -625,6 +683,15 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         {
             foreach (var child in host.AuthoredChildren)
                 if (!targets.Contains(child)) targets.Add(child);
+            // Observe the authored protected elements (e.g. the owning scene's recovery row) and their
+            // coordinate ancestors so live show/hide/movement/wrapping reflows recompute placement. This
+            // is the same bounded re-derive/unsubscribe pattern as target/ancestor observation.
+            foreach (var element in ResolveProtectedElements(host))
+            {
+                if (!targets.Contains(element)) targets.Add(element);
+                foreach (var ancestor in element.GetVisualAncestors().OfType<Control>())
+                    if (!targets.Contains(ancestor)) targets.Add(ancestor);
+            }
         }
 
         if (_observed.Count == targets.Count
