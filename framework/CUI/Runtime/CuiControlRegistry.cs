@@ -379,7 +379,7 @@ public sealed class CuiControlRegistry
         var container = common.Concat(new[]
         {
             "Type", "Padding", "Background", "Foreground", "BorderColor", "BorderWidth", "BorderBrush", "BorderThickness",
-            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
+            "CornerRadius", "Orientation", "HorizontalScrolling", "VerticalScrolling", "MaxRows", "FollowAtEnd", "ColumnSizes", "RowSizes", "Rows", "Columns", "CellGap", "CellMargin", "Border", "XInherited", "YInherited", "CompoundFocus", "OwnsBackdrop", "Target", "Placement", "Selected"
         }).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
         var text = common.Concat(new[]
         {
@@ -464,6 +464,7 @@ public sealed class CuiControlRegistry
             ("ColumnSizes", "grid-sizes", typeof(Avalonia.Controls.ColumnDefinitions), true),
             ("RowSizes", "grid-sizes", typeof(Avalonia.Controls.RowDefinitions), true),
             ("Columns", "integer", typeof(int), true), ("Rows", "integer", typeof(int), true),
+            ("MaxRows", "integer", typeof(int), true),
             ("Column", "integer", typeof(int), true), ("Row", "integer", typeof(int), true),
             ("ColumnSpan", "integer", typeof(int), true), ("RowSpan", "integer", typeof(int), true),
             ("FontFamily", "font-family", typeof(Avalonia.Media.FontFamily), true), ("FontSize", "length", typeof(double), true),

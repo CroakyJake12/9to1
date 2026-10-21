@@ -19,6 +19,8 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     private bool _horizontalScrolling, _verticalScrolling;
     private bool _followAtEnd, _followingLatest = true;
     private Thickness _cellMargin;
+    private int _maxRows;
+    private IDisposable? _maxRowsSubscription;
     private readonly List<Border> _cells = [];
     private readonly List<(Control Control, EventHandler<AvaloniaPropertyChangedEventArgs> Handler)> _placementHandlers = [];
     private bool _compoundFocusEnabled;
@@ -124,6 +126,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         foreach (var item in _placementHandlers.Where(item => ReferenceEquals(item.Control, child)).ToArray())
         { child.PropertyChanged -= item.Handler; _placementHandlers.Remove(item); }
         Layout.Children.Remove(cell); cell.Child = null; _cells.Remove(cell);
+        if (_maxRows > 0) RecomputeMaxRowsHeight();
         return true;
     }
 
@@ -323,6 +326,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         child.PropertyChanged += handler; _placementHandlers.Add((child, handler));
         index = Math.Clamp(index, 0, _cells.Count);
         _cells.Insert(index, cell); Placement();
+        if (_maxRows > 0) RecomputeMaxRowsHeight();
     }
 
     /// <summary>Move one authored cell within the container's authored child range, preserving the
@@ -362,6 +366,7 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         if (_compoundFocusScope is not null) { _compoundFocusScope.FocusChanged -= OnCompoundFocusChanged; _compoundFocusScope.ValidationChanged -= OnCompoundFocusChanged; _compoundFocusScope.Dispose(); _compoundFocusScope = null; }
         _focusBrushSubscription?.Dispose(); _validationBrushSubscription?.Dispose(); _focusThicknessSubscription?.Dispose();
         _focusBrushSubscription = null; _validationBrushSubscription = null; _focusThicknessSubscription = null;
+        _maxRowsSubscription?.Dispose(); _maxRowsSubscription = null;
         _scroll.ScrollChanged -= OnScrollChanged;
         foreach (var (control, handler) in _placementHandlers) control.PropertyChanged -= handler;
         _placementHandlers.Clear();
@@ -385,5 +390,45 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
             case WrapPanel wrap: wrap.ItemSpacing = value; wrap.LineSpacing = value; break;
             default: throw new InvalidOperationException($"CellGap is not meaningful for Container Type '{LayoutType}'.");
         }
+        if (_maxRows > 0) RecomputeMaxRowsHeight();
+    }
+
+    /// <summary>
+    /// Authored row-capacity on a scrolling Wrap container. Instead of a fixed pixel cap (which cannot
+    /// guarantee a complete themed row at high DisplayScale), the container derives its MaxHeight from
+    /// the genuine single-line height of the tallest visible cell (measured at the current DisplayScale)
+    /// plus the inter-row line spacing, so exactly <paramref name="rows"/> complete themed rows are always
+    /// reachable at any supported scale. This keeps the bounded scroll viewport size scale-aware while
+    /// preserving a finite, maintained composition.
+    /// </summary>
+    public void SetMaxRows(int rows)
+    {
+        if (rows < 0 || rows > 100) throw new ArgumentOutOfRangeException(nameof(rows));
+        if (_maxRows == rows) return;
+        _maxRows = rows;
+        // The row height depends on the scale-aware control-height resource; observe it so a live
+        // DisplayScale/theme change re-derives the viewport capacity.
+        if (rows > 0 && _maxRowsSubscription is null)
+            _maxRowsSubscription = this.GetResourceObservable("CuiControlMinHeight")
+                .Subscribe(new ValueObserver(_ => RecomputeMaxRowsHeight()));
+        RecomputeMaxRowsHeight();
+    }
+
+    private void RecomputeMaxRowsHeight()
+    {
+        if (_maxRows <= 0 || Layout is not WrapPanel wrap) return;
+        // Measure the genuine single-line height of the tallest visible cell (the real authored chip
+        // chrome at the current DisplayScale), so the capacity always fits complete themed rows without
+        // relying on a hard-coded pixel literal or a fixed-pitch assumption.
+        var rowHeight = 0d;
+        foreach (var cell in _cells)
+        {
+            if (!cell.IsVisible || cell.Child is null) continue;
+            cell.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            if (cell.DesiredSize.Height > rowHeight) rowHeight = cell.DesiredSize.Height;
+        }
+        if (rowHeight <= 0) return; // no content yet; keep the existing capacity until chips appear
+        var lineSpacing = wrap.LineSpacing;
+        MaxHeight = _maxRows * rowHeight + (_maxRows - 1) * lineSpacing;
     }
 }

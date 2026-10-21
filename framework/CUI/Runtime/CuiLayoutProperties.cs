@@ -57,6 +57,9 @@ public static class CuiLayoutProperties
                 case "HorizontalScrolling": case "VerticalScrolling": case "FollowAtEnd":
                     if (_control is not CuiContainerControl) return false;
                     value = bool.Parse(text); type = typeof(bool); initial = false; break;
+                case "MaxRows":
+                    if (_control is not CuiContainerControl) return false;
+                    value = int.Parse(text, CultureInfo.InvariantCulture); type = typeof(int); initial = 0; break;
                 default: return false;
             }
             var key = (name, level, source);
@@ -102,6 +105,7 @@ public static class CuiLayoutProperties
                 case "HorizontalScrolling": ((CuiContainerControl)_control).SetScrolling(horizontal: (bool)property.Value!); break;
                 case "VerticalScrolling": ((CuiContainerControl)_control).SetScrolling(vertical: (bool)property.Value!); break;
                 case "FollowAtEnd": ((CuiContainerControl)_control).SetFollowAtEnd((bool)property.Value!); break;
+                case "MaxRows": ((CuiContainerControl)_control).SetMaxRows((int)property.Value!); break;
             }
         }
         public void Dispose() { }

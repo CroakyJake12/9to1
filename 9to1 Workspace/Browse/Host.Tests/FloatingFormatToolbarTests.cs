@@ -12,6 +12,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Prefabs;
 using Haven.Desktop.Views.Pages.Chat;
@@ -778,6 +779,199 @@ public sealed class FloatingFormatToolbarTests
 
     // Match the production ChatHavenScene's intrinsic Auto footer allocation. A direct
     // full-window stretched composer consumes its own toolbar's safe placement space.
+    [AvaloniaFact]
+    public async Task High_scale_chip_row_access_at_display_scale_half()
+        => await RunScaleChipRowAccessAsync(0.5, 900, 700);
+
+    [AvaloniaFact]
+    public async Task High_scale_chip_row_access_at_display_scale_one()
+        => await RunScaleChipRowAccessAsync(1.0, 900, 700);
+
+    [AvaloniaFact]
+    public async Task High_scale_chip_row_access_at_display_scale_two_point_five()
+        => await RunScaleChipRowAccessAsync(2.5, 1200, 800);
+
+    [AvaloniaFact]
+    public async Task High_scale_chip_row_access_at_display_scale_five()
+        => await RunScaleChipRowAccessAsync(5.0, 1600, 1000);
+
+    /// <summary>
+    /// Shared shared-composer regression for high-scale attachment-chip row access. Runs through the genuine
+    /// Professional accessibility/theme path (DisplayScale injected via <see cref="CuiThemePreferenceContext"/>),
+    /// asserts the effective scale/resource values so the test cannot pass accidentally unscaled, overflows
+    /// the bounded chips row, reaches the LAST chip, proves its entire remove hit target lies inside the actual
+    /// visible scroll clip, dispatches a real pointer action to the exact chip id, and verifies floating command
+    /// reachability when the geometry fits.
+    /// </summary>
+    private static async Task RunScaleChipRowAccessAsync(double scale, double width, double height)
+    {
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = Enumerable.Range(0, 14).Select(i =>
+                new ChatComposerChip($"c{i}", $"Chip {i} label", i % 4 != 0)).ToArray()
+        };
+        var theme = new CuiThemePreferenceContext(new ScaleThemeSource(scale));
+        var view = new ChatComposerCuiView(source, null, theme);
+        var window = CreateFooterWindow(view, width, height);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+
+            var chipsRow = FindContainer(view, "chips-row")!;
+
+            // Genuine Professional accessibility/theme path: assert effective scale/resource values.
+            Assert.True(chipsRow.TryFindResource("CuiDisplayScale", out var scaleValue), "CuiDisplayScale resource must resolve");
+            Assert.Equal(scale, Assert.IsType<double>(scaleValue), 3);
+            Assert.True(chipsRow.TryFindResource("CuiControlMinHeight", out var minHValue), "CuiControlMinHeight resource must resolve");
+            Assert.Equal(34 * scale, Assert.IsType<double>(minHValue), 3);
+
+            var scroller = chipsRow.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            Assert.NotNull(scroller);
+            // MaxRows=2 → the scale-aware capacity must hold two complete themed rows and lift the legacy
+            // fixed 84px cap at high scale.
+            Assert.True(scroller!.Viewport.Height >= 2 * (34 * scale + 8),
+                "viewport must hold two complete themed rows at the current scale");
+            if (scale > 1)
+                Assert.True(scroller.Viewport.Height > 84, "high-scale viewport must exceed the legacy fixed 84px cap");
+            Assert.True(scroller.Extent.Height > scroller.Viewport.Height, "wrapped chips must overflow the bounded row");
+
+            // Reach the LAST chip.
+            scroller.Offset = new Vector(0, scroller.Extent.Height - scroller.Viewport.Height);
+            PumpLayout(window);
+            Assert.True(scroller.Offset.Y > 0, "chips row must scroll to reveal later rows");
+            var lastLabel = view.GetVisualDescendants().OfType<Button>()
+                .Single(b => b.Content is string s && s == "Chip 13 label");
+            var chipContainer = lastLabel.GetVisualAncestors().OfType<CuiContainerControl>()
+                .FirstOrDefault(c => c.AuthoredChildren.Any(child => ReferenceEquals(child, lastLabel)));
+            Assert.NotNull(chipContainer);
+            var removeButton = chipContainer!.AuthoredChildren.OfType<Button>()
+                .Single(b => (string?)b.Content == "✕");
+            Assert.True(removeButton.IsEffectivelyVisible, "last-chip remove hit target must be effectively visible");
+
+            // Entire remove hit target inside the ACTUAL visible clip.
+            var clip = Assert.Single(scroller.GetVisualDescendants().OfType<ScrollContentPresenter>());
+            var clipBounds = new Rect(clip.Bounds.Size);
+            var removeOrigin = removeButton.TranslatePoint(default, clip);
+            Assert.NotNull(removeOrigin);
+            Assert.True(clipBounds.Contains(new Rect(removeOrigin.Value, removeButton.Bounds.Size)),
+                "last-chip remove hit target must lie inside the visible scroll clip");
+
+            // Real pointer dispatch on the exact last chip id.
+            var removeCountBefore = source.RemoveCount;
+            Click(window, removeButton);
+            await view.CaptureOriginalActionSettlement();
+            Assert.Equal("c13", source.LastRemovedId);
+            Assert.Equal(removeCountBefore + 1, source.RemoveCount);
+
+            // Floating command reachability when geometry fits at this scale.
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
+            var windowClient = new Rect(0, 0, width, height);
+            var toolbarWin = WindowBounds(toolbar!, window);
+            Assert.True(windowClient.Contains(toolbarWin), $"toolbar must fit inside {width}x{height}");
+            Assert.False(toolbarWin.Intersects(WindowBounds(chipsRow, window)), "toolbar must not cover chips");
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover input");
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                var b = WindowBounds(commandButtons[i], window);
+                Assert.True(b.Width > 0 && b.Height > 0, $"format command {i} must remain visible");
+                Assert.True(windowClient.Contains(b), $"format command {i} must stay inside the viewport");
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+            }
+            Assert.True(box.IsKeyboardFocusWithin, "focus must return to composer input after toolbar clicks");
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    [AvaloniaFact]
+    public async Task High_scale_narrow_viewport_toolbar_withdraws_instead_of_overlapping_and_fits_after_resize()
+    {
+        const double scale = 5;
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = Enumerable.Range(0, 10).Select(i =>
+                new ChatComposerChip($"c{i}", $"Chip {i} label", i % 4 != 0)).ToArray()
+        };
+        var theme = new CuiThemePreferenceContext(new ScaleThemeSource(scale));
+        var view = new ChatComposerCuiView(source, null, theme);
+        var window = CreateFooterWindow(view, 300, 620);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+
+            var chipsRow = FindContainer(view, "chips-row")!;
+            Assert.True(chipsRow.TryFindResource("CuiDisplayScale", out var scaleValue));
+            Assert.Equal(scale, Assert.IsType<double>(scaleValue), 3);
+            var scroller = chipsRow.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            Assert.NotNull(scroller);
+            Assert.True(scroller!.Extent.Height > scroller.Viewport.Height, "chips must overflow at high scale");
+
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            Assert.True(toolbar!.IsVisible, "toolbar must open");
+
+            // Truthful withdrawal: never overlap the protected chips row or the composer input even when
+            // the narrow viewport cannot fully accommodate the scaled toolbar.
+            var toolbarWin = WindowBounds(toolbar, window);
+            Assert.False(toolbarWin.Intersects(WindowBounds(chipsRow, window)), "toolbar must not cover chips on narrow viewport");
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover input on narrow viewport");
+
+            // Live resize wider → the same toolbar's commands become reachable.
+            window.Width = 1200; window.Height = 900;
+            PumpLayout(window);
+            AssertPlaced(toolbar);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            var commandButtons = toolbar.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                var b = WindowBounds(commandButtons[i], window);
+                Assert.True(windowClient.Contains(b), $"format command {i} must fit after resize");
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+            }
+            Assert.True(box.IsKeyboardFocusWithin);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally { await FinishComposerTestAsync(window, view, testFailure); }
+    }
+
+    /// <summary>Minimal genuine Home-theme source that pins a Professional theme at a fixed DisplayScale.</summary>
+    private sealed class ScaleThemeSource(double displayScale) : ICuiThemePreferenceSource
+    {
+        public CuiThemePreferenceSnapshot Current { get; } = new(
+            "Professional", 1, "composer-scale-test", false,
+            new CuiAccessibilitySettings { DisplayScale = displayScale }, CuiAppearance.Dark);
+        public event EventHandler? Changed { add { } remove { } }
+    }
+
     private static Window CreateFooterWindow(ChatComposerCuiView view, double width, double height)
     {
         var grid = new Grid { RowDefinitions = new("*,Auto") };
