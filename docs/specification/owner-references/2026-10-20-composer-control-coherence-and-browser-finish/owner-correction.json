@@ -12,5 +12,15 @@
     "Preserve original address and typed navigation semantics, full address copying/editing and normal web addresses; friendly view must derive from real canonical app/Space/conversation state, no illustrative names.",
     "Resource percentage must derive from actual authoritative available measurement; absent measurement remains unknown/unavailable, never an invented percentage.",
     "Shared model/notifications/profile remain on Haven top bar; embedded app search only; standalone allfour; one app and genuine Home owners."
-  ]
+  ],
+  "specification_interpretation": {
+    "requirements": [
+      "SPUI-133",
+      "SPUI-134",
+      "SPUI-135",
+      "SPUI-136"
+    ],
+    "meaning": "Percentage beside model name remains the real selected reasoning-effort tier. Usage/context are distinct labelled metrics with actual provenance. Latest owner feedback requests clearer presentation and does not explicitly change this existing semantic contract.",
+    "unavailable": "No configurable effort means no invented reasoning percentage. No trustworthy usage/context denominator means no invented progress. Preserve local/remote usage visibility rules and separate M marker where specified."
+  }
 }
