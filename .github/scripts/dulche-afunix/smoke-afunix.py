@@ -41,8 +41,8 @@ license_bytes=urllib.request.urlopen(source['base_license_url'],timeout=30).read
 save(out/'model-source.json',source)
 runtime=Path(tempfile.mkdtemp(prefix='d15-afunix-'));runtime.chmod(0o700);sock=runtime/'inference.sock';assert len(os.fsencode(sock))<=100 and str(sock).endswith('.sock')
 alias='qwen3-06b-q6k'
-command=[str(server),'--model',str(model),'--alias',alias,'--host',str(sock),'--no-ui','--no-slots','--log-disable','--offline','--parallel','1','--ctx-size','32768','--cache-ram','0']
-receipt={'started_at':now(),'status':'RUNNING','transport':'AF_UNIX_ONLY','command':command,'artifact':LOCK['artifact'],'engine':LOCK['engine'],'model':source,'platform':platform.uname()._asdict(),'runtime_directory':str(runtime),'socket_path':str(sock),'stages':[],'application_acceptance':'NOT RUN','laptop_acceptance':'NOT RUN','model_in_artifact':False}
+command=[str(server),'--model',str(model),'--alias',alias,'--host',str(sock),'--no-ui','--no-slots','--log-disable','--offline','--parallel','1','--ctx-size','32768','--cache-ram','0','--jinja','--reasoning','off']
+receipt={'started_at':now(),'status':'RUNNING','transport':'AF_UNIX_ONLY','configuration_scope':'Diagnostic bundled Qwen profile; app runtime update pending. Same32-token probe and all assertions retained','command':command,'artifact':LOCK['artifact'],'engine':LOCK['engine'],'model':source,'platform':platform.uname()._asdict(),'runtime_directory':str(runtime),'socket_path':str(sock),'stages':[],'application_acceptance':'NOT RUN','laptop_acceptance':'NOT RUN','model_in_artifact':False}
 proc=None;failure=None;log=(out/'engine.stdout.log').open('w');peer_records=[]
 class UnixHTTP(http.client.HTTPConnection):
  def __init__(self,timeout):super().__init__('llamacpp.local',timeout=timeout)
