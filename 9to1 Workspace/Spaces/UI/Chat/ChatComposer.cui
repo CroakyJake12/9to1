@@ -26,7 +26,7 @@
   <Container id="composer-surface" Type="Overlay Float" padding="12"
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
-    <Container id="composer-body" Type="Grid" RowSizes="* Auto Auto Auto" CellGap="8">
+    <Container id="composer-body" Type="Grid" RowSizes="*,Auto,Auto,Auto" CellGap="8">
     <Container id="composer-scroll" Row="0" Type="Vertical Stack" CellGap="8" VerticalScrolling="True">
     <Container id="chips-row" Type="Wrap" CellGap="6" MaxRows="2" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
