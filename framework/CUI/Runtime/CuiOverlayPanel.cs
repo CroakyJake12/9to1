@@ -583,7 +583,7 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     /// When no <see cref="CuiSceneHost"/> ancestor exists (hermetic framework tests), the whole top
     /// level is used, preserving same-top-level protected-sibling avoidance.
     /// </summary>
-    private Control? ResolveProtectedScope()
+    private Visual? ResolveProtectedScope()
     {
         var myHost = this.GetVisualAncestors().OfType<CuiSceneHost>().FirstOrDefault();
         // Hermetic framework tests (and structural fixtures that mount a raw same-top-level sibling
