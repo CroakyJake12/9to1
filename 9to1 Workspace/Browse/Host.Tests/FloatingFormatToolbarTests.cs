@@ -468,9 +468,13 @@ public sealed class FloatingFormatToolbarTests
 
             var lastLabel = view.GetVisualDescendants().OfType<Button>()
                 .Single(b => b.Content is string s && s == "Chip 9 label");
-            var chipContainer = lastLabel.Parent as Control;
+            // Parent is the renderer-private cell Border; use the actual retained authored chip owner
+            // to find the sibling remove button without relying on a private wrapper's descendants.
+            var chipContainer = lastLabel.GetVisualAncestors().OfType<CuiContainerControl>()
+                .FirstOrDefault(c => c.AuthoredChildren.Any(child => ReferenceEquals(child, lastLabel)));
             Assert.NotNull(chipContainer);
-            var removeButton = chipContainer!.GetVisualDescendants().OfType<Button>()
+            Assert.Contains(lastLabel, chipContainer!.AuthoredChildren);
+            var removeButton = chipContainer.AuthoredChildren.OfType<Button>()
                 .Single(b => (string?)b.Content == "✕");
             Assert.True(removeButton.IsEffectivelyVisible, "last-chip remove hit target must be effectively visible");
 
