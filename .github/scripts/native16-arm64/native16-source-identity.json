@@ -1,6 +1,6 @@
 {
   "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
-  "patch_sha256": "9464d550338d6b4ee1c765bad5bad97c373ea4d55690b36387dea516b3b464d0",
+  "patch_sha256": "5b074f98f63a2c9cbfd558172937eb60977177ebb640d5d35127cd3c9c764718",
   "patch_digest_scope": "SHA256 of git diff --binary --full-index --no-renames 2596258c3282e6c0d058cc7a4fb5f410b7fed06d FINAL_PRODUCT_TREE -- . :(exclude).github; excludes all CI metadata and this identity to avoid circular hashes. Exact product patch retained in reviewer packet.",
   "original_native16_patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
   "successful_native_ci_base": "8b629f0fbab657975009c9da851f075fe1326d66",
@@ -41,16 +41,26 @@
       "compiler_QA": "Root explicitly approved one null-safe expression: personalDen?.HasAcquiredProvider != true; missing means truthful unknown. No Den creation/permission relaxation.",
       "actual_regression_tests": "NOT RUN; copied-lambda tests rejected and excluded",
       "native_startup_and_chat": "NOT RUN; previous exact057 fresh app exited1 in run39581203077; current candidate must run normal native full build+actual UI."
+    },
+    "Dulche21_owned_background_startup": {
+      "source_checkpoint": "5b6071ff14b5dc8104be118356372d50b97a38e4",
+      "actual_end": "2026-10-21T10:48:01.620186+00:00",
+      "actual_exit_code": 0,
+      "reviewed_shipping405_patch_sha256": "4318c1a7419d43325bdffb10e8d93dcd675c1edb69b19336c27daed8a805600c",
+      "minimal_transplant": "Actual18-to21 clean source delta on shipping405; exact4 merged posthashes retained, including current App instead of stale full worker overwrite",
+      "normal_focused_tests": "NOT RUN by this source-only reviewer; Root queued",
+      "native_startup_and_chat": "NOT RUN",
+      "supersedes": "Dulche20 raw-cancellation qualification and test-close ordering defects retained in prior failed evidence; corrected genuine21 source used."
     }
   },
   "changed_files_sha256": {
     ".github/scripts/native16-arm64/PREVIEW-README.md": "aba867c4e327fad06940f9283b27ea51f7b9ffa94d722b2f5979dae123fb6bff",
     ".github/scripts/native16-arm64/build-native-arm64.py": "d0cc2cebdeb12052b850c1479a398f542bda342b6ea81051a4339f2c4c964aec",
-    ".github/scripts/native16-arm64/inference-source-manifest.json": "4fa09d68fb6e3a2b072eb1c823298dfbf3fd4d82ea80544470e9884e90008d92",
+    ".github/scripts/native16-arm64/inference-source-manifest.json": "f269b89bdf9e9c319ac638121d53569e41ab0539f0c1c72c06938db20ecf843c",
     ".github/scripts/native16-arm64/inference_stage.py": "3d08b56b586644a774444e766eb93d8adc5503c676b456a46ba51f8e9c47d386",
     ".github/scripts/native16-arm64/package-arm64-deb.ROOT-ONLY.py": "d223fa431da2f6b3477f7544b8f7557cab2de48361f6ce468641ac7a932ffc5a",
     ".github/scripts/native16-arm64/qwen3-06b-q6k.json": "e3e7ca140494ae346c155c3c95642677fa47cc968bac72d4d7ae4dcbcd383732",
-    ".github/workflows/havenos-linux-package.yml": "87f3dc7a87c10a5458f9235959eb84b7d6448ac1c350c6a13cd6429f421812c6",
+    ".github/workflows/havenos-linux-package.yml": "b023af59ff296deb7551432389968587bf6b9857f62f2235be37425819e379f6",
     "9to1 Models/Dulche Alpha/Contracts.cs": "0b8d677447d7bbc7529bf2487766a101d5454eb42f01b805f3f4a7639126051a",
     "9to1 Workspace/Browse/Host.Tests/ChatComposerEmojiPickerViewportTests.cs": "2855e4cbc753be82cdbcb82e0dba4f56bb416d66ca1e4e48ec55e35e227b1513",
     "9to1 Workspace/Browse/Host.Tests/ChatSessionSelectedReasoningProducerTests.cs": "2f780fdee88a86486ba70ee2308d1bb6e1aa7a4e0a2e0c1284f197d43ad3f3a9",
@@ -144,7 +154,7 @@
     "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalWindowsHome.cs": "a940ee126885d39b35a4899a8c41286ab51d5a193c50475e57c47ce1a58c3157",
     "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.SharedControls.cs": "3ed6e61b28d5a4cadd720d11d57b3774a5394b315808f5e31ab521c3c582e386",
     "9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs": "c7773f03a97945425e69e287ac6874d17ce2a4f3c1712282c8b9a5394479502f",
-    "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs": "fcb00e3cfe231c0f363ad41df773a14a9301b26f6300eab94a5ddc4f1f99370e",
+    "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs": "43e8a4f8c7c4fbcfe8b2ad8c760f4a23445b0bc51c5c185c5a475d8bd7c9b9f7",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/SpacesRail/spaces-rail-manage-spaces.svg": "5784866d763554cb5b7cdc8c2b872dfda7d5ce32fcac91c9695be9b58a5ed5d1",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/composer-settings.svg": "4c40c6ffd9356a0ef3e915549a6d0b6000a85a670ddc15994c39acd60f7e4289",
     "9to1 Workspace/shared/src/Haven.Desktop/Assets/haven-model.svg": "33086b2bca8561d3373212d8b94923efe0f117e7cdff4b5497da1f71de3cb4d5",
@@ -178,7 +188,7 @@
     "9to1 Workspace/shared/tests/Haven.Core.Tests/ReasoningScaleTests.cs": "d4a6a29bc63ab7a2701d2497d7f86318ac8422d8fef1bc6ac4c468f83b104954",
     "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BuildBrowseAppContentAuthenticTests.cs": "4a34f4ffe52cdf86ad1f1f596e4c76bce94708bbc87c588e070adac3efadfe6c",
     "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BuildBrowseAppContentIntegrationTests.cs": "0a81d06eafcc8f8badf03b1410017cd5521e2713a465daff435cbd5c09a15652",
-    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj": "0d056e0290bbbd86035014f523bae66b2b7b07665c07ce4cc2f4322a2fb40abc",
+    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj": "4d20cdc788ab92f341ca00396a983e2c8ea39474ff62e1f3e10e38dfd5db84d1",
     "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHomePageTests.cs": "9b50e0f0beb6c1a37c2065a0c36e700134b55fb4ba3e15a7de0b709c66666d09",
     "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesRailSvgIconsTests.cs": "ed5c9b68da21f47eebffeb7ed5155f48fdbd21d3edb1ef2d2a5dea3d67a036a3",
     "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/LlamaCppPreviewBootstrapModelCtlProcessTests.cs": "22d262c4a39fdfc075cadbf32540862b00af47c0a1826f6990b05e0d610afc1b",
@@ -205,10 +215,13 @@
     "framework/CUI/Runtime/CuiPopupPresentation.cs": "d42fcaba2bdb5b09cb7bd55a21354ab41531073c05c414ef3334bf38d680bcdd",
     "framework/CUI/Runtime/CuiPropertyPresentation.cs": "ecdb15f0b7340d749a8ef78bb55f2024cf5948245f0ce61ea99210f5dc89c114",
     "framework/CUI/Runtime/CuiRuntimeCompatibility.cs": "eba18e5f48893f4d46edaca49e0e54bcf75246b0472ccd8ba22aff28697fd038",
-    ".github/scripts/native16-arm64/native-window-smoke.py": "ecfaca64a9661258e0d22df82a76d46a6bc2e6946d8975f6e19d4beda8975842",
-    ".github/scripts/native16-arm64/package-ui-journey.py": "83493a6ada16f8224779e29719c19e34708f427a0837d8a29d2db21ffcb51985"
+    ".github/scripts/native16-arm64/native-window-smoke.py": "ce0eb41563c5b3a3cc6f2e274aa1a697aaa42efc507ca96c80c31e83a1c38906",
+    ".github/scripts/native16-arm64/package-ui-journey.py": "7dd60a8f15f6bccd7204e3fd8b8a8aececb692cfa7515864d06324f6149702e6",
+    "9to1 Workspace/shared/tests/Haven.Desktop.Tests/AppOriginalPreviewBootstrapBackgroundLifetimeTests.cs": "ccc0c38a799f0c895e4b1631bc2d454a6242dce101f07aa6bc0b3331ac94a0f9",
+    "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalLifetime.cs": "8f9d52c76439792fb76859a1a2d939fcf3aae56fadcd5a77e5cb57ba89300521",
+    ".github/scripts/native16-arm64/desktop-observe.py": "52fb37f3232aa6ae49137e428fa53e54132cd0ede168de5c84a9516cc9d60e7a"
   },
-  "source_identity_scope": "Final163 union: prior exact057 161 rows rehashed after one genuine Home24 production fix + approved one-expression compiler QA and CI readiness/workflow changes, plus native-window and actual-package UI driver. Identity excludes itself; product digest excludes all.github metadata.",
+  "source_identity_scope": "Final166 rows: prior163 rehashed after exact reviewed4-path Dulche21 transplant plus actual UI/readiness CI updates and external desktop observer. Identity excludes itself; combined product digest excludes all.github metadata.",
   "original_native16_provenance": {
     "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
     "patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
@@ -314,15 +327,15 @@
     "scope": "Full current main HEAD plus every tracked WIP diff/deletion and untracked nonignored file; v16 build identity, NOT acceptance",
     "untracked_archive_sha256": "3e442bdee9f325da0d49edbc90b8ae230cc39f9f75c8a80c0253d7cdf1219bc0"
   },
-  "prepared_at": "2026-10-21T10:15:19.515287+00:00",
+  "prepared_at": "2026-10-21T10:52:33.815147+00:00",
   "acceptance": {
     "component_normal_tests": "Prior unchanged-source component receipts are historical; changed Home24 production path requires new normal native build/startup proof. No copied-lambda regression accepted.",
     "combined_native_build": "NOT RUN",
-    "packaged_chat": "NOT RUN",
-    "fresh_profile_native_UI": "NOT RUN",
+    "packaged_chat": "NOT RUN; actual Chat selection/new conversation/text input/response/persistence required",
+    "fresh_profile_native_UI": "NOT RUN; real early-loading close and actual Home-ready close now separate, Loading alone rejected",
     "owner_laptop_ARM64": "NOT RUN",
     "manual_coding_candidate": "FAILED/UNACCEPTED changes excluded; original baseline preserved"
   },
-  "predecessor_exact_source_commit": "057515059da6f3b2a2e8d979d080404689c076af",
-  "predecessor_product_patch_sha256": "822d078a7fd7fc10f49095922e7d5b0fb7b6ec04dc7ed412edce3af0981a2773"
+  "predecessor_exact_source_commit": "405329cd953522f5ea78d6f330b498b77c29d5dc",
+  "predecessor_product_patch_sha256": "9464d550338d6b4ee1c765bad5bad97c373ea4d55690b36387dea516b3b464d0"
 }

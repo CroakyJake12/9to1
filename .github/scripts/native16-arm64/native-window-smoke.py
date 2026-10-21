@@ -1,52 +1,84 @@
-import os,pathlib,subprocess,time,json,sys,datetime,re
-out=pathlib.Path('evidence');profile=pathlib.Path(os.environ['RUNNER_TEMP'])/'9to1-preview-arm64-fresh'
-if profile.exists():raise SystemExit('Fresh profile already exists')
-if os.geteuid()==0:raise SystemExit('Native acceptance must run as normal user')
-log=(out/'app.stdout.log').open('w');env=dict(os.environ,HAVEN_DATA_DIR=str(profile));app=None
-wm_log=(out/'openbox.stdout.log').open('w');wm=subprocess.Popen(['openbox'],stdout=wm_log,stderr=subprocess.STDOUT)
-result={'architecture':'aarch64','fresh_profile':True,'native_window':'NOT OBSERVED','normal_close':'NOT RUN','lesson_workflow':'NOT RUN','app_functionality':'NOT ACCEPTED; actual screenshot review required','baseline':'LESSON_PREVIEW_ARM64','wm_readiness':[]}
+"""Installed native package only: separate immediate-close and real Home-ready/close observations."""
+from pathlib import Path
+import subprocess,os,time,json,datetime,sys,re,traceback
+OUT=Path('evidence');OUT.mkdir(exist_ok=True);assert os.geteuid()!=0;assert os.uname().machine=='aarch64';HERE=Path(__file__).resolve().parent
+result={'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'build_kind':'LESSON_PREVIEW_ARM64','early_close':'NOT RUN','early_loading_visible':'NOT OBSERVED','actual_Home_readiness':'NOT OBSERVED','normal_Home_close':'NOT RUN','window_alone_is_ready':False,'independent_screenshot_review':'REQUIRED','owner_laptop':'NOT RUN','events':[]};app=None;wm=None;logs=[]
+def now():return datetime.datetime.now(datetime.timezone.utc).isoformat()
+def save():(OUT/'native-startup-receipt.json').write_text(json.dumps(result,indent=2)+'\n')
+def event(kind,**data):result['events'].append({'at':now(),'kind':kind,**data});save()
+def cmd(args,timeout=10):return subprocess.run(args,capture_output=True,text=True,timeout=timeout)
+def screenshot(name):
+ p=OUT/(name+'.png');r=cmd(['import','-window','root',str(p)]);event('SCREENSHOT',path=str(p),exit_code=r.returncode);return p
+
+def observe(name):
+ try:
+  r=cmd(['/usr/bin/python3',str(HERE/'desktop-observe.py')],6);data=json.loads(r.stdout) if r.returncode==0 else {'rows':[],'error':r.stderr[:1000]}
+ except Exception as e:data={'rows':[],'error':repr(e)}
+ (OUT/(name+'.accessibility.json')).write_text(json.dumps(data,indent=2)+'\n');return data
+
+def ocr(p):
+ try:
+  r=cmd(['tesseract',str(p),'stdout','--psm','11'],8);(OUT/(p.stem+'.ocr.txt')).write_text(r.stdout);return r.stdout.lower()
+ except Exception as e:event('OCR_UNAVAILABLE',error=repr(e));return ''
+
+def wait_wm():
+ end=time.monotonic()+25
+ while time.monotonic()<end:
+  if wm.poll() is not None:raise RuntimeError('Window manager exited '+str(wm.returncode))
+  p=cmd(['xprop','-root','_NET_SUPPORTING_WM_CHECK']);c=cmd(['wmctrl','-lp'])
+  if p.returncode==0 and re.search(r'0x[1-9a-fA-F][0-9a-fA-F]*',p.stdout) and c.returncode==0:event('EWMH_READY',actual=p.stdout.strip());return
+  event('WM_WAIT',wmctrl_exit=c.returncode,stderr=c.stderr[:500]);time.sleep(.25)
+ raise RuntimeError('No EWMH/client-list readiness in25seconds')
+
+def launch(label):
+ global app
+ profile=Path(os.environ['RUNNER_TEMP'])/('9to1-'+label+'-fresh');assert not profile.exists();log=(OUT/(label+'.stdout.log')).open('w');logs.append(log)
+ env=dict(os.environ,HAVEN_DATA_DIR=str(profile),NO_AT_BRIDGE='0');env.pop('GH_TOKEN',None);env.pop('GITHUB_TOKEN',None)
+ app=subprocess.Popen(['/usr/bin/9to1-preview'],env=env,stdout=log,stderr=subprocess.STDOUT);end=time.monotonic()+60
+ while time.monotonic()<end:
+  if app.poll() is not None:raise RuntimeError(label+' app exited before actual window: '+str(app.returncode))
+  r=cmd(['wmctrl','-lp'])
+  if r.returncode==0:
+   for line in r.stdout.splitlines():
+    x=line.split()
+    if len(x)>2 and x[2]==str(app.pid):
+     win=x[0];cmd(['wmctrl','-ir',win,'-b','add,maximized_vert,maximized_horz']);event('ACTUAL_WINDOW',label=label,pid=app.pid,window=win);return win
+  time.sleep(.2)
+ raise RuntimeError(label+' no real window within60seconds')
+
+def close(win,label):
+ r=cmd(['wmctrl','-ic',win]);event('NORMAL_CLOSE_REQUEST',label=label,wmctrl_exit=r.returncode);code=app.wait(timeout=35);event('NORMAL_CLOSE_RESULT',label=label,exit_code=code)
+ if code!=0:raise RuntimeError(label+' normal close exited '+str(code))
+
+def home_ready():
+ end=time.monotonic()+180;attempt=0
+ while time.monotonic()<end:
+  if app.poll() is not None:raise RuntimeError('App exited while waiting for actual Home: '+str(app.returncode))
+  attempt+=1;data=observe('home-readiness-'+str(attempt));names={r['name'].casefold() for r in data.get('rows',[]) if r.get('showing')};has_address='search or enter web address' in names;has_home='home dashboard' in names or {'edit dashboard page','open home discover model catalogue'}.issubset(names)
+  if has_address and has_home:event('ACTUAL_HOME_UI_OBSERVED',method='AT-SPI',attempt=attempt);screenshot('actual-home-ready');return
+  p=screenshot('home-readiness-'+str(attempt));text=ocr(p)
+  # Actual visible dashboard content, not title/loading/timeout substitution. Root still reviews image.
+  if 'welcome' in text and 'edit page' in text and 'discover models' in text and 'could not start' not in text and 'checking required home services' not in text:
+   event('ACTUAL_HOME_UI_OBSERVED',method='Actual screenshot OCR: Welcome+Edit page+Discover models',attempt=attempt);return
+  event('HOME_NOT_READY',attempt=attempt,address_observed=has_address,home_observed=has_home,loading_text='checking required home services' in text);time.sleep(2)
+ raise RuntimeError('Actual Home controls/content NOT OBSERVED within180seconds; Loading window is not readiness')
 try:
-    deadline=time.monotonic()+25
-    while time.monotonic()<deadline:
-        if wm.poll() is not None:raise RuntimeError('Owned window manager exited '+str(wm.returncode))
-        supporting=subprocess.run(['xprop','-root','_NET_SUPPORTING_WM_CHECK'],text=True,capture_output=True)
-        clients=subprocess.run(['wmctrl','-lp'],text=True,capture_output=True)
-        if supporting.returncode==0 and re.search(r'0x[1-9a-fA-F][0-9a-fA-F]*',supporting.stdout) and clients.returncode==0:
-            result['wm_readiness'].append({'state':'READY','supporting_wm':supporting.stdout.strip()});break
-        result['wm_readiness'].append({'wmctrl_exit':clients.returncode,'stderr':clients.stderr[:500]});time.sleep(.25)
-    else:raise RuntimeError('Window manager EWMH/client-list readiness timed out25seconds')
-    app=subprocess.Popen(['/usr/bin/9to1-preview'],env=env,stdout=log,stderr=subprocess.STDOUT)
-    deadline=time.monotonic()+60;win=None
-    while time.monotonic()<deadline:
-        if app.poll() is not None:raise RuntimeError('Actual app exited before observed window: '+str(app.returncode))
-        clients=subprocess.run(['wmctrl','-lp'],text=True,capture_output=True)
-        if clients.returncode:time.sleep(.25);continue
-        hits=[x.split()[0] for x in clients.stdout.splitlines() if len(x.split())>2 and x.split()[2]==str(app.pid)]
-        if hits:win=hits[0];break
-        time.sleep(.25)
-    if not win:raise RuntimeError('No actual native app window in60seconds')
-    result['native_window']='OBSERVED';result['window_id']=win
-    result['window_title']=subprocess.check_output(['wmctrl','-l'],text=True)
-    if 'startup failed' in result['window_title'].lower():raise RuntimeError('Bootstrap failure window, not native app readiness')
-    time.sleep(3)
-    if app.poll() is not None:raise RuntimeError('Actual app exited after window observation: '+str(app.returncode))
-    subprocess.run(['import','-window','root',str(out/'fresh-arm64-window.png')],check=True)
-    (out/'windows.txt').write_text(subprocess.check_output(['wmctrl','-lp'],text=True))
-    subprocess.run(['wmctrl','-ic',win],check=True);code=app.wait(timeout=35);result['normal_exit_code']=code
-    if code!=0:raise RuntimeError('Normal window close returned '+str(code))
-    result['normal_close']='PASS';result['status']='PASS_NATIVE_WINDOW_AND_CLOSE_ONLY_NEEDS_SCREENSHOT_REVIEW'
-    result['installed_build_provenance']=json.loads(pathlib.Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text())
+ provenance=json.loads(Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text());assert provenance['source_head']==os.environ['GITHUB_SHA'];result['installed_build_provenance']=provenance
+ f=(OUT/'openbox.stdout.log').open('w');logs.append(f);wm=subprocess.Popen(['openbox'],stdout=f,stderr=subprocess.STDOUT);wait_wm()
+ w=launch('early-close');image=screenshot('early-window-before-immediate-close');close(w,'early-window');result['early_close']='PASS_REAL_IMMEDIATE_WINDOW_CLOSE';text=ocr(image)
+ result['early_loading_visible']='OBSERVED' if any(x in text for x in ['checking required home services','starting 9to1','loading']) else 'NOT OBSERVED; early-close alone does not prove visible Loading state'
+ w=launch('home-ready');home_ready();result['actual_Home_readiness']='ACTUAL_HOME_CONTENT_OBSERVED_REQUIRES_SCREENSHOT_REVIEW';close(w,'actual-home');result['normal_Home_close']='PASS';result['status']='PASS_BOUNDED_STARTUP_AND_HOME_CLOSE_CHECKPOINT_REQUIRES_SCREENSHOT_REVIEW'
 except BaseException as e:
-    result['status']='FAIL';result['error']=repr(e)
-    try:subprocess.run(['import','-window','root',str(out/'fresh-arm64-failure.png')],check=True)
-    except Exception:pass
-    if app is not None and app.poll() is None:
-        app.terminate()
-        try:app.wait(timeout=10)
-        except subprocess.TimeoutExpired:app.kill();app.wait()
-        result['failure_cleanup']='OWNED_PROCESS_TERMINATED; not normal-close proof'
+ result['status']='FAIL';result['error']=repr(e);result['traceback']=traceback.format_exc()
+ try:screenshot('native-startup-failure');observe('native-startup-failure')
+ except Exception:pass
 finally:
-    log.close();wm_log.close()
-    if wm.poll() is None:wm.terminate();wm.wait(timeout=10)
-    result['at']=datetime.datetime.now(datetime.timezone.utc).isoformat();(out/'native-startup-receipt.json').write_text(json.dumps(result,indent=2)+'\n')
-sys.exit(0 if result.get('status')=='PASS_NATIVE_WINDOW_AND_CLOSE_ONLY_NEEDS_SCREENSHOT_REVIEW' else 1)
+ if app is not None and app.poll() is None:
+  app.terminate()
+  try:app.wait(timeout=10)
+  except subprocess.TimeoutExpired:app.kill();app.wait()
+  result['failure_cleanup']='OWNED_APP_TERMINATED; not normal-close acceptance'
+ if wm is not None and wm.poll() is None:wm.terminate();wm.wait(timeout=10)
+ for f in logs:f.close()
+ result['ended_at']=now();save()
+sys.exit(0 if result.get('status','').startswith('PASS_BOUNDED_') else 1)

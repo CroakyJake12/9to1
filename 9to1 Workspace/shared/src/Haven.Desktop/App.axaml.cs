@@ -249,13 +249,15 @@ public sealed partial class App : Avalonia.Application
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<ModeSeedService>().SeedBuiltInModesAsync(CancellationToken.None)));
             var migration = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => services.GetRequiredService<ILegacyStateMigrator>().MigrateIfNeededAsync(CancellationToken.None)));
-            // The verified local preview child starts under the Home/App original lifetime BEFORE any
-            // shell/workspace model-catalogue consumer can resolve providers, so the routed provider
-            // observes the genuine verified/configured endpoint state (never the initial disabled
-            // default). Genuine capability probes run inside the routed provider on first Chat use,
-            // only after this load; a start failure/cancellation is retained and surfaces via recovery.
-            await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
-                () => services.GetRequiredService<LlamaCppPreviewLifecycle>().StartIfReadyAsync(original.Token)));
+            // The verified local preview child bootstrap/readiness runs under an OWNED TRACKED
+            // background original (BeginPreviewModelBootstrapBackground), NOT on the App startup
+            // critical path: normal Home/browser navigation and unrelated local app use are not
+            // blocked waiting for model readiness. The background original joins actual children at
+            // retirement and treats expected cooperative shutdown cancellation as benign; a genuine
+            // startup/model fault is retained and surfaces via recovery/close while unrelated Home
+            // stays usable. The routed provider still observes the genuine verified/configured
+            // endpoint state when the verified provider becomes available later.
+            BeginPreviewModelBootstrapBackground(services);
             if (shell is not null)
             {
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));
@@ -323,13 +325,19 @@ public sealed partial class App : Avalonia.Application
         catch (Exception ex)
         {
             original.Retain(ex);
-            try
+            // Do not spawn a late LogExceptionAsync diagnostic after the App original work has begun
+            // retiring/disposing: RunAsync would throw ObjectDisposedException and only obscure the
+            // real cause. Known cooperative shutdown/cancellation is benign and needs no diagnostic.
+            if (!_originalAppWork.IsRetiring)
             {
-                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => LogExceptionAsync("startup-failed", ex, correlationId)));
-            }
-            catch (Exception diagnosticFailure)
-            {
-                original.Retain(diagnosticFailure); // Never hide the primary or actual sink failure.
+                try
+                {
+                    await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => LogExceptionAsync("startup-failed", ex, correlationId)));
+                }
+                catch (Exception diagnosticFailure)
+                {
+                    original.Retain(diagnosticFailure); // Never hide the primary or actual sink failure.
+                }
             }
 
             var userMessage = $"9to1 could not finish starting. Diagnostic reference: {correlationId}.";
@@ -350,6 +358,78 @@ public sealed partial class App : Avalonia.Application
                 original.Retain(toastFailure); // Persistent UI status still exists; failed original remains inspectable.
             }
         }
+    }
+
+    /// <summary>Runs the verified bundled-model bootstrap/readiness under an OWNED TRACKED background
+    /// original so normal Home startup and unrelated local app use are not blocked on model readiness.
+    /// Only a QUALIFIED same-owner cooperative close cancellation (owner lifetime token) is normalized to
+    /// benign; every genuine cause (IOException, unrelated OCE, sibling/cleanup failure) stays retained
+    /// and observable via close/recovery. No late LogExceptionAsync work after retirement.</summary>
+    private void BeginPreviewModelBootstrapBackground(IServiceProvider services)
+    {
+        if (_originalAppWork.IsRetiring) return; // Retirement admits no new original; no late RunAsync.
+        _originalAppWork.RunAsync(async background =>
+        {
+            try
+            {
+                await background.AwaitAsync(RunOwnedSourceAsync(background,
+                    token => AcquireOriginalAppSynchronous(background,
+                        () => services.GetRequiredService<LlamaCppPreviewLifecycle>().StartIfReadyAsync(token))));
+            }
+            catch (Exception failure)
+            {
+                background.Retain(failure); // Genuine startup/model fault stays retained/observable.
+            }
+        }, actual => _actualPreviewBootstrap = actual);
+    }
+
+    /// <summary>Genuinely awaits/joins the owned startup source (which settles its own children/drain on
+    /// cancellation) and normalizes ONLY a qualified same-owner cooperative close cancellation. The owner
+    /// lifetime token must be requested AND every surfaced cause must be a cancellation pinned to that exact
+    /// token; otherwise the cause propagates so the awaiter retains the exact fault. This is the SAME
+    /// source-backed helper used by production and by the focused lifecycle tests.</summary>
+    internal static async Task RunOwnedSourceAsync(DesktopOriginalWorkLifetime.Original original, Func<CancellationToken, Task> start)
+    {
+        // Capture the SAME raw source Task OUTSIDE the await/try so its complete terminal state
+        // (canceled vs faulted, and the ENTIRE fault sibling set) stays inspectable.
+        var source = start(original.Token);
+
+        try { await source; }
+        catch (Exception failure)
+        {
+            // Normalize ONLY a genuinely CANCELED raw source with verified same-owner token provenance
+            // and current retirement; a faulted source is never accepted as raw-canceled.
+            if (source.IsCanceled)
+            {
+                if (failure is OperationCanceledException oce && IsSameOwnerCooperativeClose(original, oce))
+                    return;
+            }
+
+            // Genuine terminal state: propagate the ENTIRE raw fault sibling set (e.g. OCE + IOException),
+            // never only the exception that `await` surfaced first, so every original cause reference is kept.
+            if (source.IsFaulted && source.Exception is { InnerExceptions.Count: > 1 } fullFault)
+                throw fullFault;
+
+            throw;
+        }
+    }
+
+    private static bool IsSameOwnerCooperativeClose(DesktopOriginalWorkLifetime.Original original, Exception failure)
+    {
+        if (!original.Token.IsCancellationRequested) return false;
+        return IsOwnerTokenCancellation(original.Token, failure);
+    }
+
+    private static bool IsOwnerTokenCancellation(CancellationToken ownerToken, Exception failure)
+    {
+        if (failure is OperationCanceledException oce && oce.CancellationToken.Equals(ownerToken)) return true;
+        if (failure is AggregateException aggregate && aggregate.InnerExceptions.Count > 0)
+        {
+            foreach (var inner in aggregate.InnerExceptions)
+                if (!IsOwnerTokenCancellation(ownerToken, inner)) return false;
+            return true;
+        }
+        return false;
     }
 
     private void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)

@@ -18,6 +18,7 @@ public sealed partial class App
     [ThreadStatic] private static List<App>? _synchronousAppSources;
     private IUpdateService? _actualSubscribedUpdates;
     private Task? _actualStartupOriginal;
+    private Task? _actualPreviewBootstrap;
     private DesktopOriginalShutdownSequence? _actualShutdownSequence;
     private Task? _actualShutdownDelivery;
     private Task? _actualDocumentClosePreflightAttempt;

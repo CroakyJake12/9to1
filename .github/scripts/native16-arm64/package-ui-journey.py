@@ -1,7 +1,6 @@
 """Actual installed-package UI journey. Standard accessibility + xdotool; no application hooks/database writes."""
 from pathlib import Path
 import os,subprocess,time,json,datetime,hashlib,sqlite3,sys,traceback
-import pyatspi
 import re
 HEAD=os.environ['GITHUB_SHA'];assert re.fullmatch(r'[0-9a-f]{40}',HEAD);PROMPT='What is 2 + 2? Answer briefly and explain your calculation.'
 OUT=Path(os.environ['GITHUB_WORKSPACE'])/'evidence';PROFILE=Path(os.environ['RUNNER_TEMP'])/'9to1-chat-package-fresh';assert os.geteuid()!=0;assert not PROFILE.exists();assert os.uname().machine=='aarch64';OUT.mkdir(exist_ok=True)
@@ -9,7 +8,7 @@ receipt={'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'
 def now():return datetime.datetime.now(datetime.timezone.utc).isoformat()
 def save(): (OUT/'package-ui-journey-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
 def event(kind,**kw):receipt['stages'].append({'at':now(),'kind':kind,**kw});save()
-def command(args,check=True):return subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=check)
+def command(args,check=True):return subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=check,timeout=8)
 def shot(name):
  p=OUT/(name+'.png');command(['import','-window','root',str(p)]);return str(p)
 def xkey(k):command(['xdotool','key','--clearmodifiers',k])
@@ -44,16 +43,12 @@ def normal_close(win,label):
  if code!=0:raise RuntimeError('Actual normal close returned '+str(code))
 
 def nodes():
- desktop=pyatspi.Registry.getDesktop(0);found=[];stack=[desktop]
- while stack and len(found)<1800:
-  n=stack.pop()
-  try:
-   name=n.name or '';role=n.getRoleName();text=''
-   try:t=n.queryText();text=t.getText(0,min(t.characterCount,6000))
-   except Exception:pass
-   found.append((n,name,role,text));stack.extend(n[i] for i in range(min(n.childCount,500)))
-  except Exception:pass
- return found
+ try:
+  r=command(['/usr/bin/python3',str(Path(__file__).resolve().parent/'desktop-observe.py')],check=False)
+  data=json.loads(r.stdout) if r.returncode==0 else {'rows':[],'error':r.stderr[:1000]}
+ except Exception as e:data={'rows':[],'error':repr(e)}
+ return [(n,n.get('name',''),n.get('role',''),n.get('text','')) for n in data.get('rows',[])]
+
 
 def dump(label):
  rows=nodes();(OUT/(label+'.accessibility.json')).write_text(json.dumps([{'name':n,'role':r,'text':t} for _,n,r,t in rows],indent=2)+'\n');return rows
@@ -65,16 +60,32 @@ def find(names,timeout=35):
   for node,name,role,text in nodes():
    if name.casefold() in [x.casefold() for x in names]:
     try:
-     state=node.getState()
-     if state.contains(pyatspi.STATE_SHOWING) and state.contains(pyatspi.STATE_ENABLED):return node
+     if node.get('showing') and node.get('enabled'):return node
     except Exception:pass
   time.sleep(.5)
  dump('missing-control');raise LookupError('Actual enabled accessible control unavailable: '+str(names))
 
-def click(names):
- n=find(names);rect=n.queryComponent().getExtents(pyatspi.DESKTOP_COORDS)
- if rect.width<=0 or rect.height<=0:raise LookupError('Actual control has no visible extent '+str(names))
- command(['xdotool','mousemove',str(rect.x+rect.width//2),str(rect.y+rect.height//2),'click','1']);event('ACTUAL_UI_CLICK',control=n.name,rectangle=[rect.x,rect.y,rect.width,rect.height]);return n
+def click(names,timeout=35):
+ n=find(names,timeout);rect=n.get('rectangle')
+ if not rect or rect[2]<=0 or rect[3]<=0:raise LookupError('Actual control has no visible extent '+str(names))
+ command(['xdotool','mousemove',str(rect[0]+rect[2]//2),str(rect[1]+rect[3]//2),'click','1']);event('ACTUAL_UI_CLICK',control=n['name'],rectangle=rect);return n
+
+def wait_home(label):
+ end=time.monotonic()+180;attempt=0
+ while time.monotonic()<end:
+  if app.poll() is not None:raise RuntimeError('App exited before actual Home '+str(app.returncode))
+  attempt+=1;rows=nodes();names={name.casefold() for n,name,_,_ in rows if n.get('showing')}
+  if 'search or enter web address' in names and ('home dashboard' in names or {'edit dashboard page','open home discover model catalogue'}.issubset(names)):
+   event('ACTUAL_HOME_READY',method='AT-SPI',label=label);shot(label+'-actual-home');return
+  p=shot(label+'-waiting-'+str(attempt))
+  try:
+   r=command(['tesseract',p,'stdout','--psm','11'],check=False);text=r.stdout.lower();(OUT/(label+'-waiting-'+str(attempt)+'.ocr.txt')).write_text(r.stdout)
+   if 'welcome' in text and 'edit page' in text and 'discover models' in text and 'checking required home services' not in text and 'could not start' not in text:
+    event('ACTUAL_HOME_READY',method='Visible screenshot OCR; review required',label=label);return
+  except Exception as e:event('OCR_OBSERVATION_UNAVAILABLE',error=repr(e))
+  time.sleep(2)
+ raise RuntimeError('Actual Home NOT OBSERVED within180seconds; Loading window is not readiness')
+
 
 def db_messages():
  p=PROFILE/'haven.db'
@@ -87,9 +98,9 @@ def db_messages():
 try:
  installed=json.loads(Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text());assert installed['source_head']==HEAD and installed['build_kind']=='LESSON_PREVIEW_ARM64';receipt['installed_package']='SOURCE_PROVENANCE_MATCH';receipt['installed_build_provenance']=installed
  wm_log=(OUT/'openbox.stderr.log').open('w');logs.append(wm_log);wm=subprocess.Popen(['openbox'],stdout=wm_log,stderr=subprocess.STDOUT);wait_wm()
- w=launch('first-fresh-launch');time.sleep(8);shot('01-fresh-profile-first-screen');normal_close(w,'fresh-first-launch');receipt['startup_window_and_close']='PASS_WINDOW_AND_CLOSE_REQUIRES_SCREENSHOT_REVIEW';save()
- w=launch('actual-chat-launch');time.sleep(5);shot('02-home-before-navigation');xkey('ctrl+l');type_text('9to1://spaces');xkey('Return');time.sleep(4);shot('03-spaces');dump('03-spaces')
- click(['Start a new chat in this Space']);time.sleep(2);click(['Message']);type_text(PROMPT);shot('04-real-prompt-before-send');dump('04-real-prompt-before-send');click(['Send message'])
+ w=launch('first-fresh-launch');wait_home('01-fresh-home');shot('01-fresh-profile-first-screen');normal_close(w,'fresh-first-launch');receipt['startup_window_and_close']='PASS_WINDOW_AND_CLOSE_REQUIRES_SCREENSHOT_REVIEW';save()
+ w=launch('actual-chat-launch');wait_home('02-home');shot('02-home-before-navigation');xkey('ctrl+l');type_text('9to1://spaces');xkey('Return');time.sleep(4);shot('03-spaces');dump('03-spaces')
+ click(['Open Chat']);time.sleep(2);shot('03-chat-selected');click(['Start a new chat in this Space']);time.sleep(2);click(['Message']);type_text(PROMPT);shot('04-real-prompt-before-send');dump('04-real-prompt-before-send');click(['Send message'],timeout=180)
  end=time.monotonic()+180;assistant=None;observations=[];ui_growth=[]
  while time.monotonic()<end:
   if app.poll() is not None:raise RuntimeError('App exited during actual response')
@@ -107,7 +118,7 @@ try:
  variants={x['content'] for x in observations}
  if len(variants)>1:receipt['streaming']='MULTIPLE_PERSISTED_CONTENT_STATES_OBSERVED_NEEDS_UI_REVIEW'
  normal_close(w,'after-response');persisted=db_messages();assert any(r['id']==assistant['id'] and r['content']==assistant['content'] for r in persisted);receipt['persistence_database']='SAME_ASSISTANT_ID_CONTENT_AFTER_NORMAL_CLOSE';(OUT/'actual-prompt-and-response.json').write_text(json.dumps(persisted,indent=2)+'\n')
- w=launch('reopen-same-created-profile');time.sleep(8);shot('07-reopened-same-profile');rows=dump('07-reopened-same-profile');visible='\n'.join(n+'\n'+t for _,n,_,t in rows)
+ w=launch('reopen-same-created-profile');time.sleep(5);shot('07-reopened-same-profile');rows=dump('07-reopened-same-profile');visible='\n'.join(n+'\n'+t for _,n,_,t in rows)
  receipt['visual_reopen']='PROMPT_AND_RESPONSE_VISIBLE' if PROMPT in visible and assistant['content'].strip()[:80] in visible else 'NOT VERIFIED; screenshot review or real recent-chat selection required'
  normal_close(w,'after-reopen');receipt['status']='CHECKPOINT_ACTUAL_UI_JOURNEY_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW';receipt['full_app_acceptance']='NOT ACCEPTED'
 except LookupError as e:
