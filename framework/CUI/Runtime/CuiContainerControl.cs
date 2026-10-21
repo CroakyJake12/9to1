@@ -301,6 +301,14 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
                 var position = _cells.TakeWhile(value => !ReferenceEquals(value, cell)).Count(value => Layout.Children.Contains(value));
                 Layout.Children.Insert(Math.Min(position, Layout.Children.Count), cell);
             }
+            // A child visibility change mutates the live content (the child enters/leaves the layout).
+            // Invalidate THIS container's own measure so a re-measure reflects the new content. This is
+            // required even when the container itself sits inside a suppressed/hidden outer wrapper (e.g.
+            // an unplaced or portaled floating cell): the normal layout-manager descendant remeasurement
+            // is blocked by the hidden ancestor, so without an explicit invalidation here the container's
+            // cached DesiredSize would stay stale (e.g. 0,0 from when the child was hidden) and the owner
+            // would keep mis-reading the floating content size.
+            InvalidateMeasure();
         }
         EventHandler<AvaloniaPropertyChangedEventArgs> handler = (_, change) =>
         {

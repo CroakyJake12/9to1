@@ -228,6 +228,48 @@ public sealed class CuiFloatingPortalTests
     }
 
     [Fact]
+    public async Task Closed_inner_content_under_hidden_wrapper_recovers_host_measure_when_opened()
+    {
+        // Regression for the cached-measure gate: opening the inner authored content must make the
+        // always-visible floating host re-measure, even though the host sits under a suppressed/hidden
+        // wrapper (unplaced/portaled) where the normal layout-manager descendant remeasurement is blocked.
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            Window window = null!;
+            try
+            {
+                var panel = LoadSurface(loader, out var surface, out var authoredHost, out window);
+                var f0 = FindButton(authoredHost, "f0");
+                Assert.NotNull(f0);
+
+                // Closed inner content: the floating host measures zero (the inner cell is not in the
+                // layer), so Place resolves to the genuinely-hidden unplaced state and no portal engages.
+                f0!.IsVisible = false;
+                PumpLayout(window);
+                Assert.Empty(panel.ActivePortals);
+                Assert.Contains(authoredHost, surface.GetVisualDescendants());
+                Assert.True(authoredHost.DesiredSize.Width <= 0 && authoredHost.DesiredSize.Height <= 0,
+                    $"closed floating host must measure zero (DesiredSize={authoredHost.DesiredSize})");
+
+                // Open the inner content. The host must re-measure its now-visible child even though it
+                // sits under the hidden wrapper; otherwise the cached 0,0 DesiredSize leaves the toolbar
+                // unplaced/invisible forever.
+                f0.IsVisible = true;
+                PumpLayout(window);
+                Assert.True(authoredHost.DesiredSize.Width > 0 && authoredHost.DesiredSize.Height > 0,
+                    $"floating host must re-measure opened content (DesiredSize={authoredHost.DesiredSize})");
+                var reopened = Assert.Single(panel.ActivePortals);
+                Assert.True(reopened.IsOpen);
+                Assert.Same(authoredHost, reopened.Host);
+                Assert.True(f0.IsEffectivelyVisible, "the reopened command must be effectively visible through the portal");
+            }
+            finally { window?.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Escape_on_hosted_root_closes_via_authored_action_ledger()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
