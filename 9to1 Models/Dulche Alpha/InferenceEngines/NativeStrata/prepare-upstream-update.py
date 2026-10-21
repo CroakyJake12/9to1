@@ -114,6 +114,7 @@ def generate(args) -> int:
         "commit": args.commit,
         "gitCommitTree": args.tree,
         "archiveUrl": args.archive_url or "",
+        "lockSchema": 2,
         "provenance": {
             "commit": args.commit,
             "tree": args.tree,
@@ -162,6 +163,11 @@ def generate(args) -> int:
             "extraInTree": extra,
             "eolExportNormalized": sorted(explained),
         }
+        # Stamp the INDEPENDENTLY authenticated canonical GitHub tree blob SHA onto each explained
+        # EOL-normalized row; the raw archive blob stays pinned as gitBlobSha.
+        by_path = {r["path"]: r for r in lock["rows"]}
+        for p in explained:
+            by_path[p]["treeBlobSha"] = blobs[p]
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(lock, indent=2) + "\n")
     print("candidate lock written: %s" % args.out)

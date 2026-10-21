@@ -1,0 +1,18 @@
+{
+"BENCH.bat": "f54bc90dcd7e138abbb3e42563c9b3038ce7e75d",
+"SETUP.bat": "d2e6541c843c579a280623d6559770f185bd3188",
+"START-HERE.bat": "5f255c07446c2b8960d9884eaad52e5c2efdbaa2",
+"UPDATE.bat": "c0fd78a14dcff6e5b7b41bd7df47477eeccf19fd",
+"apps/desktop/scripts/fetch-node.ps1": "2d833a9bf05eb3110fa67d6f38f05e5ed08065cc",
+"bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-default.bat": "e953bad1507e6df741a8e99a7e2012c4b6d8f311",
+"bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-fused.bat": "ad927e049f75afe005a13e4cb50652966fd7ccbe",
+"bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-plebatch0.bat": "62353cb7ef47efc22d0d5b7ad6df066c129d5cd2",
+"bench/results/2026-10-04-community-rtx-5070ti-windows/battery.ps1": "43cffe90c556ad9393de0904c0b0ac51b67e9192",
+"bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/build.bat": "951ff8050fd5ee67c1bfe5eb72fc0d38f8a21bd0",
+"bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/run-chat.bat": "c88a86af274c0948cb78578434bccc7fca0e435d",
+"bin/strata.cmd": "e7a2baf061c8e87b13f8ccba0e515c8060805181",
+"bin/strata.ps1": "885650be19d3f5da114190666163b79bb1cf7ff7",
+"packaging/install.ps1": "5f1b4231e885a549e5642be794c4dc419d7c8ea9",
+"tools/hip/build_windows.bat": "1f7b3e10afdcff258431e698cbd0db76c8c654e0",
+"tools/windows/enable_large_pages.ps1": "046d2d836b1fd51842ffc0b66eb3011d5d3499d2"
+}

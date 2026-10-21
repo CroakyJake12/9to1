@@ -146,7 +146,8 @@
       "path": "BENCH.bat",
       "bytes": 969,
       "gitBlobSha": "a9eeb40d2515bf452b7fd404b3d1866406202de5",
-      "sha256": "40e90aafa0d5a288f8af2c75a5c444cfea2349b2ae673a9e54f8c33de9dad0ad"
+      "sha256": "40e90aafa0d5a288f8af2c75a5c444cfea2349b2ae673a9e54f8c33de9dad0ad",
+      "treeBlobSha": "f54bc90dcd7e138abbb3e42563c9b3038ce7e75d"
     },
     {
       "path": "CMakeLists.txt",
@@ -224,19 +225,22 @@
       "path": "SETUP.bat",
       "bytes": 134,
       "gitBlobSha": "7e574c56feca57e6ef442ae951d92a6fc1b4b3e7",
-      "sha256": "846c522854853727398ed92d97db822f3d4dc285f705b82d30d7a51fe60ef2a5"
+      "sha256": "846c522854853727398ed92d97db822f3d4dc285f705b82d30d7a51fe60ef2a5",
+      "treeBlobSha": "d2e6541c843c579a280623d6559770f185bd3188"
     },
     {
       "path": "START-HERE.bat",
       "bytes": 3000,
       "gitBlobSha": "a943e05b88ea3e5235dd5a3468c6cc96fcb028a4",
-      "sha256": "0352283bc441dcee5158a25ecebc6e66f4e3eca6eeca7e11acb202762809205e"
+      "sha256": "0352283bc441dcee5158a25ecebc6e66f4e3eca6eeca7e11acb202762809205e",
+      "treeBlobSha": "5f255c07446c2b8960d9884eaad52e5c2efdbaa2"
     },
     {
       "path": "UPDATE.bat",
       "bytes": 4000,
       "gitBlobSha": "deb68b8c08e59ca6c9cab01212843b8b7b6b201c",
-      "sha256": "24195574b05a0019666be32cb030be1ef13ef02671907e8eafab6f733460b319"
+      "sha256": "24195574b05a0019666be32cb030be1ef13ef02671907e8eafab6f733460b319",
+      "treeBlobSha": "c0fd78a14dcff6e5b7b41bd7df47477eeccf19fd"
     },
     {
       "path": "apps/desktop/package-lock.json",
@@ -266,7 +270,8 @@
       "path": "apps/desktop/scripts/fetch-node.ps1",
       "bytes": 3585,
       "gitBlobSha": "5a7ef1223fa688a91ee7d985786b0e7609437462",
-      "sha256": "827db602ce4d7f786e8e09328d95885323cfe71fe17c0f66931ed4d26532d620"
+      "sha256": "827db602ce4d7f786e8e09328d95885323cfe71fe17c0f66931ed4d26532d620",
+      "treeBlobSha": "2d833a9bf05eb3110fa67d6f38f05e5ed08065cc"
     },
     {
       "path": "apps/desktop/scripts/fetch-node.sh",
@@ -8738,19 +8743,22 @@
       "path": "bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-default.bat",
       "bytes": 345,
       "gitBlobSha": "bc34e656a0076c0e1b34daf5076ba667998b9148",
-      "sha256": "0df464ef89cd88cc6264a559b19555007150c0b8d60604e2a18bff1b7e4d729b"
+      "sha256": "0df464ef89cd88cc6264a559b19555007150c0b8d60604e2a18bff1b7e4d729b",
+      "treeBlobSha": "e953bad1507e6df741a8e99a7e2012c4b6d8f311"
     },
     {
       "path": "bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-fused.bat",
       "bytes": 423,
       "gitBlobSha": "e9a0089f57d20a5b7a6abc7aa9e1a03d4c9713ab",
-      "sha256": "178dac06a58c44e54b349a7fbbb9a3e750b3a789b8689a6814d4b6a91e37efa6"
+      "sha256": "178dac06a58c44e54b349a7fbbb9a3e750b3a789b8689a6814d4b6a91e37efa6",
+      "treeBlobSha": "ad927e049f75afe005a13e4cb50652966fd7ccbe"
     },
     {
       "path": "bench/results/2026-10-03-community-r9700-windows/run-iq2_xs-plebatch0.bat",
       "bytes": 426,
       "gitBlobSha": "1b0a66922cf76fbbed4bafafb8c56ebe2fbd8c8b",
-      "sha256": "7d67ea815fb6d0e80abbcfdd8c4eecfe8bcf1ee533c5f17449055b942515db26"
+      "sha256": "7d67ea815fb6d0e80abbcfdd8c4eecfe8bcf1ee533c5f17449055b942515db26",
+      "treeBlobSha": "62353cb7ef47efc22d0d5b7ad6df066c129d5cd2"
     },
     {
       "path": "bench/results/2026-10-03-community-r9700-windows/strata-iq2_xs.json",
@@ -10502,7 +10510,8 @@
       "path": "bench/results/2026-10-04-community-rtx-5070ti-windows/battery.ps1",
       "bytes": 1623,
       "gitBlobSha": "1669b0bb51ce8006592231933d17fc238cd0ee04",
-      "sha256": "d4364df6eaa849e421445d5493fae9d90b1b0dcc357b1ba509503d68bd6e3a51"
+      "sha256": "d4364df6eaa849e421445d5493fae9d90b1b0dcc357b1ba509503d68bd6e3a51",
+      "treeBlobSha": "43cffe90c556ad9393de0904c0b0ac51b67e9192"
     },
     {
       "path": "bench/results/2026-10-04-community-rtx-5070ti-windows/model-provenance.json",
@@ -16580,7 +16589,8 @@
       "path": "bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/build.bat",
       "bytes": 1799,
       "gitBlobSha": "2a051f25762232a4fc2df4c9e988b6d04ae9d757",
-      "sha256": "218994da7cf3a7f3a1bcea39df2cc9d16e774af10db1fb1e17d288e39da02dfa"
+      "sha256": "218994da7cf3a7f3a1bcea39df2cc9d16e774af10db1fb1e17d288e39da02dfa",
+      "treeBlobSha": "951ff8050fd5ee67c1bfe5eb72fc0d38f8a21bd0"
     },
     {
       "path": "bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/guard.py",
@@ -16610,7 +16620,8 @@
       "path": "bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/run-chat.bat",
       "bytes": 957,
       "gitBlobSha": "ee74cca47584e4bcb2c61e116a741729a2139af0",
-      "sha256": "e9d678452994e1c1434e274a184b351077177ffc2c1fcce7f642f50b642c4ca5"
+      "sha256": "e9d678452994e1c1434e274a184b351077177ffc2c1fcce7f642f50b642c4ca5",
+      "treeBlobSha": "c88a86af274c0948cb78578434bccc7fca0e435d"
     },
     {
       "path": "bench/results/2026-10-09-community-rtx-5080-w7-2475x-ud-iq4xs-786k/strata-ud-iq4_xs-786k.json",
@@ -18332,13 +18343,15 @@
       "path": "bin/strata.cmd",
       "bytes": 2163,
       "gitBlobSha": "3663c1b4627a56af0a1e5aba1350bf5760ec3f58",
-      "sha256": "ff05a97f3aae9c57c46d8f8e83e7c88ecf02e5eedd5d6df587aa33754972b31f"
+      "sha256": "ff05a97f3aae9c57c46d8f8e83e7c88ecf02e5eedd5d6df587aa33754972b31f",
+      "treeBlobSha": "e7a2baf061c8e87b13f8ccba0e515c8060805181"
     },
     {
       "path": "bin/strata.ps1",
       "bytes": 2765,
       "gitBlobSha": "ff4342490fe37bf55366313c26c0c8da52923240",
-      "sha256": "3cfeb80576286b63d2874900bd8d027f95108d05ea1bcfbedef7dedfbeeb3328"
+      "sha256": "3cfeb80576286b63d2874900bd8d027f95108d05ea1bcfbedef7dedfbeeb3328",
+      "treeBlobSha": "885650be19d3f5da114190666163b79bb1cf7ff7"
     },
     {
       "path": "chat.py",
@@ -21020,7 +21033,8 @@
       "path": "packaging/install.ps1",
       "bytes": 10803,
       "gitBlobSha": "2a988c59c969427f396af4cf49bf4073a8136894",
-      "sha256": "2539103acb0d548e0d4976fe2fb87ddcabe6eebba39a880b1781548650d3b03d"
+      "sha256": "2539103acb0d548e0d4976fe2fb87ddcabe6eebba39a880b1781548650d3b03d",
+      "treeBlobSha": "5f1b4231e885a549e5642be794c4dc419d7c8ea9"
     },
     {
       "path": "packaging/install.sh",
@@ -26618,7 +26632,8 @@
       "path": "tools/hip/build_windows.bat",
       "bytes": 8327,
       "gitBlobSha": "a932fb434c5ad9682993435fcc2e0329367e98c6",
-      "sha256": "079742d80b78493b3ccac2428751ffc136e2689ed932be32e60156850f54a5f4"
+      "sha256": "079742d80b78493b3ccac2428751ffc136e2689ed932be32e60156850f54a5f4",
+      "treeBlobSha": "1f7b3e10afdcff258431e698cbd0db76c8c654e0"
     },
     {
       "path": "tools/hip/dll_closure.py",
@@ -27758,7 +27773,8 @@
       "path": "tools/windows/enable_large_pages.ps1",
       "bytes": 4587,
       "gitBlobSha": "65763f6c2a1d05bc95e3c357b393b20c85ee1c5d",
-      "sha256": "a1ddd02eff9040184202d8979d37662ae60b2f7ef8c6e1059f1875dae7c404c6"
+      "sha256": "a1ddd02eff9040184202d8979d37662ae60b2f7ef8c6e1059f1875dae7c404c6",
+      "treeBlobSha": "046d2d836b1fd51842ffc0b66eb3011d5d3499d2"
     },
     {
       "path": "update.sh",
@@ -27790,5 +27806,6 @@
       "tools/hip/build_windows.bat",
       "tools/windows/enable_large_pages.ps1"
     ]
-  }
+  },
+  "lockSchema": 2
 }

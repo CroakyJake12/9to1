@@ -179,7 +179,8 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
              "gitBlobSha": _git_blob_sha(files["README.md"]),
              "sha256": hashlib.sha256(files["README.md"]).hexdigest()},
             {"path": "BENCH.bat", "bytes": len(files["BENCH.bat"]),
-             "gitBlobSha": _git_blob_sha(files["BENCH.bat"].replace(b"\r\n", b"\n")),
+             "gitBlobSha": _git_blob_sha(files["BENCH.bat"]),
+             "treeBlobSha": _git_blob_sha(files["BENCH.bat"].replace(b"\r\n", b"\n")),
              "sha256": hashlib.sha256(files["BENCH.bat"]).hexdigest()},
         ]
         rec, extracted = self._invoke_prepare(self._lock(archive, rows, ["BENCH.bat"]), archive)
@@ -241,15 +242,16 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
         with self.assertRaises(ValueError):
             self._invoke_prepare(self._lock(archive, rows, ["BENCH.bat"], tree="0" * 40), archive)
 
-    def test_declared_normalization_blob_mismatch_rejected(self):
-        # Declared official name with CRLF, but the normalized LF blob does not equal the locked
-        # gitBlobSha -> must be refused (exact explained conversion required).
+    def test_declared_canonical_blob_mismatch_rejected(self):
+        # Declared official name with CRLF and correct raw archive blob, but the canonical tree blob
+        # does not match the LF-normalized body -> must be refused (exact explained conversion required).
         root = "strata-v0.2.2"
         files = {"BENCH.bat": b"@echo off\r\necho hi\r\n"}
         archive = _make_donor_tar(root, files)
         rows = [
             {"path": "BENCH.bat", "bytes": len(files["BENCH.bat"]),
-             "gitBlobSha": "a" * 40,  # wrong locked normalized blob
+             "gitBlobSha": _git_blob_sha(files["BENCH.bat"]),
+             "treeBlobSha": "a" * 40,  # wrong canonical tree blob
              "sha256": hashlib.sha256(files["BENCH.bat"]).hexdigest()},
         ]
         with self.assertRaises(ValueError):

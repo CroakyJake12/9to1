@@ -97,6 +97,55 @@ def git_blob_sha(body: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(body)).encode() + b"\0" + body).hexdigest()
 
 
+def validate_eol_declaration(lock: dict, expected: dict) -> set:
+    """Fail-closed validation of the lock's declared EOL export-normalization set.
+
+    A non-empty declared set is accepted ONLY for the verified candidate pin/tree and must equal the
+    exact official 16-name allowlist; every declared name must be present in the lock rows. Legacy
+    locks (empty set) return an empty set and are verified unchanged.
+    """
+    eol_normalized = set(lock.get("treeCrossCheck", {}).get("eolExportNormalized", []) or [])
+    if not eol_normalized:
+        return eol_normalized
+    if lock.get("commit") != CANDIDATE_COMMIT_PIN:
+        raise ValueError("Candidate lock commit does not match the verified pin")
+    tree_sha = lock.get("treeCrossCheck", {}).get("treeSha")
+    if lock.get("gitCommitTree") != CANDIDATE_TREE_PIN or tree_sha != CANDIDATE_TREE_PIN:
+        raise ValueError("Candidate lock tree does not match the verified pin tree")
+    if not (eol_normalized <= EOL_ALLOWLIST):
+        raise ValueError("Declared eolExportNormalized contains names outside the official 16-name allowlist")
+    if set(expected) & eol_normalized != eol_normalized:
+        raise ValueError("Declared eolExportNormalized names are not all present in the lock rows")
+    return eol_normalized
+
+
+def verify_archive_member(relative: str, body: bytes, row: dict, eol_normalized) -> bytes:
+    """Fail-closed verification of exactly one source member against its lock row.
+
+    Always pins the EXACT raw archive size and SHA-256. For the declared official EOL-normalized
+    members (the GitHub CRLF -> LF export transform) the raw git blob stays pinned (gitBlobSha) and
+    the LF-normalized body must additionally match the INDEPENDENTLY sourced canonical GitHub tree blob
+    (treeBlobSha); missing canonical provenance fails closed. Every other member must equal its raw
+    git blob byte-for-byte (no normalization is ever permitted).
+    """
+    if len(body) != row["bytes"] or hashlib.sha256(body).hexdigest() != row["sha256"]:
+        raise ValueError("Pinned source body mismatch: " + relative)
+    if relative in eol_normalized:
+        if b"\r\n" not in body:
+            raise ValueError("Declared EOL-normalized member has no CRLF to explain: " + relative)
+        if git_blob_sha(body) != row["gitBlobSha"]:
+            raise ValueError("Pinned source blob mismatch: " + relative)
+        canonical_tree_blob = row.get("treeBlobSha")
+        if not canonical_tree_blob:
+            raise ValueError("Missing canonical GitHub tree blob provenance for declared EOL-normalized member: " + relative)
+        if git_blob_sha(body.replace(b"\r\n", b"\n")) != canonical_tree_blob:
+            raise ValueError("Explained CRLF->LF normalization does not match the canonical tree blob: " + relative)
+    else:
+        if git_blob_sha(body) != row["gitBlobSha"]:
+            raise ValueError("Pinned source blob mismatch: " + relative)
+    return body
+
+
 def verify_ggml_checkout(ggml_dir: pathlib.Path, dep: dict) -> dict:
     """Require a real llama.cpp checkout pinned to the dependency lock's commit AND tree, and clean.
 
@@ -194,23 +243,10 @@ def main():
     expected = {row["path"]: row for row in lock["rows"]}
     # The lock's treeCrossCheck records the EXACT 16 archive members whose git export was EOL-normalized
     # (CRLF -> LF) to match the authenticated git tree blob. For those names ONLY we accept the blob hash
-    # of the LF-normalized body; every other member must match its raw git blob byte-for-byte. A non-empty
-    # exception set is accepted ONLY for the verified candidate pin/tree and must equal the exact official
-    # 16-name allowlist; a legacy lock (empty set) is verified unchanged.
-    eol_normalized = set(lock.get("treeCrossCheck", {}).get("eolExportNormalized", []) or [])
-    if eol_normalized:
-        lock_commit = lock.get("commit")
-        lock_tree = lock.get("gitCommitTree")
-        tree_sha = lock.get("treeCrossCheck", {}).get("treeSha")
-        if lock_commit != CANDIDATE_COMMIT_PIN:
-            raise ValueError("Candidate lock commit does not match the verified pin")
-        if lock_tree != CANDIDATE_TREE_PIN or tree_sha != CANDIDATE_TREE_PIN:
-            raise ValueError("Candidate lock tree does not match the verified pin tree")
-        if not (eol_normalized <= EOL_ALLOWLIST):
-            raise ValueError("Declared eolExportNormalized contains names outside the official 16-name allowlist")
-    declared_present = set(expected) & eol_normalized if eol_normalized else set()
-    if eol_normalized and declared_present != eol_normalized:
-        raise ValueError("Declared eolExportNormalized names are not all present in the lock rows")
+    # of the LF-normalized body against the INDEPENDENTLY sourced canonical tree blob (treeBlobSha);
+    # every other member must match its raw git blob byte-for-byte. Declared-set validation (pin/tree
+    # gate + exact official 16-name allowlist + presence) is fail-closed and shared with tests.
+    eol_normalized = validate_eol_declaration(lock, expected)
     verified = {}
     with tarfile.open(args.archive, "r:gz") as source:
         roots = set()
@@ -232,22 +268,7 @@ def main():
                 raise ValueError("Missing original source body")
             with original:
                 body = original.read(row["bytes"] + 1)
-            # Retain the EXACT per-file size and raw SHA-256 (never loosened for any member).
-            if len(body) != row["bytes"] or hashlib.sha256(body).hexdigest() != row["sha256"]:
-                raise ValueError("Pinned source body mismatch: " + relative)
-            if relative in eol_normalized:
-                # Only the pinned, tree-verified declared names may use the EOL transform, and only when
-                # the raw body actually contains CRLF. The explained conversion (CRLF -> LF) must match the
-                # exact locked git blob SHA; an undeclared/malicious body can never be normalized.
-                if b"\r\n" not in body:
-                    raise ValueError("Declared EOL-normalized member has no CRLF to explain: " + relative)
-                if git_blob_sha(body.replace(b"\r\n", b"\n")) != row["gitBlobSha"]:
-                    raise ValueError("Explained CRLF->LF normalization does not match the locked blob: " + relative)
-            else:
-                # All other members must equal their raw git blob exactly; no normalization is permitted.
-                if git_blob_sha(body) != row["gitBlobSha"]:
-                    raise ValueError("Pinned source blob mismatch: " + relative)
-            verified[relative] = body
+            verified[relative] = verify_archive_member(relative, body, row, eol_normalized)
         if len(roots) != 1 or set(verified) != set(expected) or len(verified) != lock["blobCount"]:
             raise ValueError("Incomplete immutable donor closure")
     args.work.mkdir(parents=True)
