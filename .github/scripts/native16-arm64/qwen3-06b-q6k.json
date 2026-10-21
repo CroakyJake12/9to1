@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "qwen3-06b-q6k",
+  "displayName": "Qwen3 0.6B Q6_K",
+  "sha256": "1c15a88244c9e852516e5ba0e394fc97f2182f1f2757413fb99fe6a9214c033b",
+  "size": 495107776,
+  "blob": "1c/1c15a88244c9e852516e5ba0e394fc97f2182f1f2757413fb99fe6a9214c033b.gguf",
+  "license": "Apache-2.0",
+  "source": "https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/50968a4468ef4233ed78cd7c3de230dd1d61a56b/Qwen3-0.6B-Q6_K.gguf",
+  "ggufVersions": [
+    3
+  ],
+  "capabilities": [
+    "chat"
+  ],
+  "redistribution": "allowed"
+}

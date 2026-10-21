@@ -98,6 +98,61 @@ public sealed class HomeModelPickerCuiControllerTests
         Assert.Equal("InvalidArgument", result.Code);
     }
 
+    [Fact]
+    public async Task SetReasoningLevel_action_dispatches_to_editor_and_marks_unsaved_draft()
+    {
+        var route = new HomeModelRouteContract("chat.active", 4, "User", "chat", null, null,
+            [new("provider", "model", "rev", true, 0)], JsonSerializer.SerializeToElement(new { }));
+        var snapshot = new HomeModelPickerSnapshot(7, "User", "chat", [route]);
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(new StubProvider(snapshot)),
+            new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>")));
+        await controller.OpenAsync("User", "chat");
+
+        var result = await controller.ExecuteAsync(new HomeModelPickerActionRequest(
+            HomeModelPickerAction.SetReasoningLevel, ProviderId: "provider", ModelId: "model",
+            ArtifactRevision: "rev", ReasoningLevelId: "medium"));
+
+        Assert.True(result.Succeeded);
+        var candidate = Assert.Single(controller.Surface.State.Candidates);
+        Assert.Equal("medium", candidate.ReasoningLevelId);
+        Assert.True(controller.Surface.State.HasUnsavedChanges);
+        Assert.Equal("UnsavedChanges", controller.Surface.State.StatusCode);
+    }
+
+    [Fact]
+    public async Task ClearReasoningLevel_action_clears_the_draft_candidate_default()
+    {
+        var route = new HomeModelRouteContract("chat.active", 4, "User", "chat", null, null,
+            [new("provider", "model", "rev", true, 0, "medium")], JsonSerializer.SerializeToElement(new { }));
+        var snapshot = new HomeModelPickerSnapshot(7, "User", "chat", [route]);
+        var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(new StubProvider(snapshot)),
+            new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>")));
+        await controller.OpenAsync("User", "chat");
+
+        var result = await controller.ExecuteAsync(new HomeModelPickerActionRequest(
+            HomeModelPickerAction.SetReasoningLevel, ProviderId: "provider", ModelId: "model",
+            ArtifactRevision: "rev", ReasoningLevelId: null));
+
+        Assert.True(result.Succeeded);
+        var candidate = Assert.Single(controller.Surface.State.Candidates);
+        Assert.Null(candidate.ReasoningLevelId);
+        Assert.True(controller.Surface.State.HasUnsavedChanges);
+    }
+
+    [Fact]
+    public async Task SetReasoningLevel_rejects_blank_supplied_level_structurally()
+    {
+        var editor = new HomeModelPickerRouteEditor(new StubProvider(new HomeModelPickerSnapshot(0, "User", "chat", [])));
+        var controller = new HomeModelPickerCuiController(editor,
+            new HomeModelPickerCuiSurface(new CuiRichParser().Parse("<Cui><Page/></Cui>")));
+
+        var result = await controller.ExecuteAsync(new HomeModelPickerActionRequest(
+            HomeModelPickerAction.SetReasoningLevel, ProviderId: "p", ModelId: "m", ReasoningLevelId: " "));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal("InvalidReasoningLevel", result.Code);
+    }
+
     private static HomeModelRouteContract Route(string id, params HomeModelRouteCandidate[] candidates) =>
         new(id, 4, "User", "chat", null, null, candidates, JsonSerializer.SerializeToElement(new { }));
 }

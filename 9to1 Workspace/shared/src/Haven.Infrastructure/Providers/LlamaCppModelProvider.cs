@@ -29,7 +29,9 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
 {
     private const int Capacity = 128;
     private readonly object _sync = new();
-    private readonly LlamaCppLocalEndpointOptions _options;
+    private LlamaCppLocalEndpointOptions _options;
+    private readonly LlamaCppPreviewBootstrapState? _verifiedPreviewState;
+    private bool _verifiedBound;
     private readonly IProviderConfigurationStore _configurations;
     private readonly HttpClient _http;
     private readonly CancellationTokenSource _stop = new();
@@ -46,10 +48,12 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
     private bool _closing;
     private Exception? _capacityRefusal;
 
-    public LlamaCppModelProvider(LlamaCppLocalEndpointOptions options, IProviderConfigurationStore configurations)
+    public LlamaCppModelProvider(LlamaCppLocalEndpointOptions options, IProviderConfigurationStore configurations,
+        LlamaCppPreviewBootstrapState? verifiedPreviewState = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _configurations = configurations ?? throw new ArgumentNullException(nameof(configurations));
+        _verifiedPreviewState = verifiedPreviewState;
         var handler = new SocketsHttpHandler
         {
             UseProxy = false, AllowAutoRedirect = false,
@@ -138,6 +142,7 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
     }
     public async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken token)
     {
+        EnsureVerifiedPreviewOptionsApplied();
         if (!_options.Enabled) return [];
         LocalModelEndpointObservation observation;
         try { observation = await ObserveOriginalEndpointAsync(token).ConfigureAwait(false); }
@@ -323,8 +328,32 @@ public sealed partial class LlamaCppModelProvider : IOriginalPrivateContextModel
         if (model != observation.ModelId || !observation.ObservedCapabilities.Contains(capability))
             throw new NotSupportedException("This actual local model/capability has no original successful probe.");
     }
+    /// <summary>Binds the shared verified preview endpoint options into this provider exactly once,
+    /// before any peer/work/probe use. The provider may be built early (ConfigureServices
+    /// registry/authority resolution) while the verified state is still the initial disabled default.
+    /// Binding is therefore DEFERRED until verified ENABLED endpoint state is available: an early
+    /// pre-bootstrap query stays honestly empty/degraded without permanently pinning the disabled
+    /// defaults, and once the bootstrap applies verified state, this SAME provider binds once and
+    /// reaches the real socket/model identity. The explicit-option path passes no state and is
+    /// unaffected. Idempotent, lock-guarded, and never rebinds after a verified binding.</summary>
+    private void EnsureVerifiedPreviewOptionsApplied()
+    {
+        var state = _verifiedPreviewState;
+        if (state is null || _verifiedBound) return;
+        lock (_sync)
+        {
+            if (_verifiedBound || _verifiedPreviewState is not { } s) return;
+            // Defer finalisation until verified enabled endpoint state is present. A pre-bootstrap
+            // disabled snapshot is NOT captured, so the provider can bind the later verified state.
+            if (!s.Endpoint.Enabled) return;
+            _options = s.Endpoint;
+            _verifiedBound = true;
+        }
+    }
+
     private void ValidateOptions()
     {
+        EnsureVerifiedPreviewOptionsApplied();
         if (!_options.Enabled) throw new InvalidOperationException("The explicit local endpoint is disabled.");
         if (!IsPosixAbsolute(_options.SocketPath) || Encoding.UTF8.GetByteCount(_options.SocketPath!) > 100
             || !IsPosixAbsolute(_options.ModelPath) || string.IsNullOrWhiteSpace(_options.ModelAlias))

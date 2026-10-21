@@ -128,6 +128,31 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
         return Success(draft, state.Snapshot?.Revision ?? 0);
     }
 
+    /// <summary>Sets the exact advertised reasoning-level ID on a draft candidate. A null/blank value
+    /// clears the selection. This is a scoped personal route default; it is persisted only through the
+    /// real guarded CAS route-edit owner on save.</summary>
+    public HomeCoreOperationResult<HomeModelRouteContract> SetCandidateReasoningLevel(
+        string providerId, string modelId, string? artifactRevision, string? reasoningLevelId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId) || string.IsNullOrWhiteSpace(modelId) || (artifactRevision is not null && string.IsNullOrWhiteSpace(artifactRevision)))
+            return Fail<HomeModelRouteContract>("InvalidModelIdentity", "A provider and stable model ID are required; a supplied artifact revision must be valid.");
+        if (reasoningLevelId is not null && string.IsNullOrWhiteSpace(reasoningLevelId))
+            return Fail<HomeModelRouteContract>("InvalidReasoningLevel", "A reasoning level, when supplied, must be a non-blank exact advertised ID.");
+        var state = Current;
+        if (state.IsBusy) return Fail<HomeModelRouteContract>("OperationInProgress", "Wait for the current model operation to finish.");
+        if (state.DraftRoute is not { } route) return Fail<HomeModelRouteContract>("RouteNotSelected", "Select a model route first.");
+        var index = FindCandidate(route, providerId, modelId, artifactRevision);
+        if (index < 0) return Fail<HomeModelRouteContract>("CandidateNotFound", "That model is not in the selected route.");
+        var existing = route.Candidates[index].ReasoningLevelId;
+        if (string.Equals(existing, reasoningLevelId, StringComparison.Ordinal)) return Success(route, state.Snapshot?.Revision ?? 0);
+        var candidates = Ordered(route.Candidates).ToArray();
+        var currentIndex = Array.FindIndex(candidates, candidate => SameIdentity(candidate, providerId, modelId, artifactRevision));
+        candidates[currentIndex] = candidates[currentIndex] with { ReasoningLevelId = reasoningLevelId };
+        var draft = route with { Candidates = Array.AsReadOnly(candidates) };
+        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, PendingApprovalRequestId = null, Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "Reasoning-level default is not saved." });
+        return Success(draft, state.Snapshot?.Revision ?? 0);
+    }
+
     public HomeCoreOperationResult<HomeModelRouteContract> MoveCandidate(
         string providerId, string modelId, string? artifactRevision, int destinationIndex)
     {

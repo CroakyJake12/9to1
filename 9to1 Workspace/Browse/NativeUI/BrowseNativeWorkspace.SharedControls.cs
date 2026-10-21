@@ -79,6 +79,12 @@ public sealed partial class BrowseNativeWorkspace
     public void PublishSharedRefusal(string code, string message)
         => PublishSharedStatus(code, message);
 
+    /// <summary>Publishes a model projection refresh to the real Browse consumer after the host
+    /// recomputed the genuine selected model/provider/route/effort (initial compose, universal-picker
+    /// change or panel close). The bindings read the snapshot live from <see cref="IHavenHostContext.ModelInfo"/>,
+    /// so this only raises the bound-surface change notification; it never invents state.</summary>
+    public void PublishModelProjectionChanged() => Changed();
+
     private bool? HavenSharedActionAvailable(string command) => command switch
     {
         "9to1.Haven.OpenModel" => _hostContext?.ModelSupported == true,

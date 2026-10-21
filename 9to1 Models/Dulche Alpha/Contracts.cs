@@ -113,7 +113,7 @@ public sealed record ModelRoute(string RouteId, int Version, IReadOnlyList<Model
 public sealed record RouteSelection(ModelIdentity Model, string Reason, IReadOnlyList<string> Skipped);
 public enum ModelRouteScope { User, App, Agent, Task }
 public enum ModelCapabilityCategory { Active, Background, Chat, Image, Voice, Audio, Video }
-public sealed record ModelRouteCandidate(ModelIdentity Model, bool Enabled = true, int Order = 0);
+public sealed record ModelRouteCandidate(ModelIdentity Model, bool Enabled = true, int Order = 0, string? ReasoningLevelId = null);
 public sealed record ConfiguredModelRoute(string RouteId, long Revision, ModelRouteScope Scope, string ScopeId, ModelCapabilityCategory Category, IReadOnlyList<ModelRouteCandidate> Candidates, ProviderPolicy Policy);
 public sealed record ModelCatalogueEntry(ModelIdentity Identity, string DisplayName, string ProviderName, bool IsLocal, IReadOnlySet<string> Capabilities, int? ContextWindow, ModelState? State, Metric<long> StorageBytes, string? PrivacyResidency = null, string? Alias = null);
 public sealed record ModelRouteResolutionPreview(ConfiguredModelRoute Route, RouteSelection? Selection, IReadOnlyList<string> Trace, DulcheError? Error);

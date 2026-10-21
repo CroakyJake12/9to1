@@ -1,13 +1,15 @@
-# 9to1 internal native ARM baseline — incomplete
+# 9to1 lesson preview for Linux ARM64 — incomplete
 
-This package is for installation and startup testing of the frozen Native16 desktop baseline. It is not the finished 9to1 release or the final laptop lesson preview. Newer application and Dulche work has not been integrated. AI responses, voice and ordinary web browsing are not promised by this baseline.
+This LESSON_PREVIEW_ARM64 source combines the Native16 desktop baseline, Home model-selection updates, Dulche's local-model startup integration and the reviewed bundled-inference packaging stage. It is a test preview. A package build, installation or visible window does not establish working chat or lesson acceptance.
 
-It is a Linux AArch64/arm64 Debian package with a self-contained .NET10 runtime. It requires glibc2.34 or newer and the system packages declared in its Debian metadata. Install through `sudo apt install ./9to1-preview_0.1.0~internal.native16.20261021.1_arm64.deb`, then launch `9to1-preview` as your normal user. A system .NET installation is unnecessary. Do not launch the application with sudo.
+The intended package includes a pinned llama.cpp CPU runtime and Qwen3 0.6B Q6_K starter model, assembled together into the same Debian package. Models and runtime binaries are acquired and verified during the authorized CI build; weights, executable runtime payloads, credentials and user profiles are not stored in the source repository. Native startup, first response and streaming with a fresh profile still require actual testing. Voice, ordinary web browsing and full application workflows are not accepted by this preview. Newer unaccepted manual-coding changes are excluded.
 
-The launcher defaults to a new private data folder `${XDG_CONFIG_HOME:-$HOME/.config}/9to1-preview`, using the application's existing data selector. It does not copy developer accounts, model credentials or databases. An existing explicit HAVEN_DATA_DIR is respected. Do not pass the Windows-only create-private-store option on Linux.
+The package targets Linux AArch64/arm64 with a self-contained .NET 10 runtime. Bundled inference requires at least glibc 2.36, or the higher actual application dependency floor recorded by the package. Install the resulting file with `sudo apt install ./9to1-preview_<version>_arm64.deb`, then launch `9to1-preview` as your normal user. A system .NET installation is unnecessary. Do not run the app with sudo.
 
-The internal check must capture the actual first screen, verify a clean fresh-profile launch and normal close, and record failures. A window or package installation alone does not establish working apps or lesson acceptance. The final laptop preview still needs the actual requested create/edit/save/reopen and AI workflow tested on the laptop.
+The launcher defaults to a private data folder `${XDG_CONFIG_HOME:-$HOME/.config}/9to1-preview`, using the application's existing selector. It does not copy developer accounts, credentials or databases. An explicit `HAVEN_DATA_DIR` is respected. Do not pass the Windows-only create-private-store option on Linux.
 
-To remove the test application, use `sudo apt remove 9to1-preview`. This preserves user data. Keep the prior package and data backup for rollback; do not erase the profile or install arbitrary system-library replacements to force compatibility.
+Acceptance must record the actual fresh-profile first screen, native startup, a local-model response, streaming, normal close and any failures. The source component tests are recorded in build provenance; they are not proof that the assembled package works on the owner's laptop. Installation, native chat and laptop lesson acceptance remain NOT RUN until their actual evidence is recorded.
 
-Source/build details and exact dependency notices are under `/usr/share/doc/9to1-preview/`. This internal baseline is not claimed to satisfy full release or source-offer requirements.
+Remove the test app with `sudo apt remove 9to1-preview`; this preserves user data. Keep the previous package and a data backup for rollback. Do not replace arbitrary system libraries or erase a profile to force compatibility.
+
+Exact source/build identity, dependency licences and notices are installed under `/usr/share/doc/9to1-preview/`. Corresponding tracked source and pinned gitlink sources are exported as a separate CI artifact. Applicable source licences and the existing source exporter are preserved; this preview is not a claim of full release acceptance.

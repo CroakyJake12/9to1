@@ -93,6 +93,10 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
     public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit,
         CancellationToken cancellationToken = default) => UpdateRouteCoreAsync(null, edit, cancellationToken);
 
+    public async Task<HomePermissionAuthorization?> GetApprovalAuthorizationAsync(string requestId,
+        CancellationToken cancellationToken = default) =>
+        await operations.GetAuthorizationAsync(requestId, cancellationToken).ConfigureAwait(false);
+
     public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteForActorAsync(
         AuthenticatedResourceActor expectedActor, HomeModelRouteEdit edit, CancellationToken cancellationToken = default)
     {
@@ -121,7 +125,7 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         catch (Exception exception) when (exception is JsonException or InvalidOperationException) { return Invalid<HomeModelPickerSnapshot>(); }
         var candidates = input.Candidates.ToArray();
         if (candidates.Any(item => item is null || string.IsNullOrWhiteSpace(item.ProviderId) || string.IsNullOrWhiteSpace(item.ModelId) ||
-            item.ArtifactRevision is not null || item.Order < 0) || candidates.Select(item => new ModelIdentity(item.ProviderId, item.ModelId).StableKey).Distinct(StringComparer.OrdinalIgnoreCase).Count() != candidates.Length ||
+            item.ArtifactRevision is not null || item.Order < 0 || (item.ReasoningLevelId is not null && string.IsNullOrWhiteSpace(item.ReasoningLevelId))) || candidates.Select(item => new ModelIdentity(item.ProviderId, item.ModelId).StableKey).Distinct(StringComparer.OrdinalIgnoreCase).Count() != candidates.Length ||
             candidates.Select(item => item.Order).Distinct().Count() != candidates.Length) return Invalid<HomeModelPickerSnapshot>();
         if (routes is not IHomeGuardedModelRouteRepository guardedRoutes) return Denied<HomeModelPickerSnapshot>();
         var actor = await ActorAsync("models.routes.update", ResourceAccess.Write, cancellationToken).ConfigureAwait(false);
@@ -129,7 +133,7 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
             input.AppId is not null || input.OverrideIdentity is not null) return Denied<HomeModelPickerSnapshot>();
         // Detach payloads before any approval or owner lookup. Provider descriptors currently do not attest artifact revisions.
         var route = new ConfiguredModelRoute(input.RouteId, input.Version, ModelRouteScope.User, actor.ProfileId, category,
-            Array.AsReadOnly(candidates.Select(item => new ModelRouteCandidate(new(item.ProviderId, item.ModelId), item.Enabled, item.Order)).ToArray()),
+            Array.AsReadOnly(candidates.Select(item => new ModelRouteCandidate(new(item.ProviderId, item.ModelId), item.Enabled, item.Order, item.ReasoningLevelId)).ToArray()),
             policy with { AllowedProviders = policy.AllowedProviders?.ToHashSet(StringComparer.Ordinal), RequiredCapabilities = policy.RequiredCapabilities?.ToHashSet(StringComparer.Ordinal) });
         var current = await routes.GetAsync(route.RouteId, cancellationToken).ConfigureAwait(false);
         if (current is not null && !Owns(current, actor)) return Denied<HomeModelPickerSnapshot>();
@@ -207,7 +211,8 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         static string Describe(ConfiguredModelRoute route)
         {
             var lines = route.Candidates.OrderBy(candidate => candidate.Order).Select(candidate =>
-                $"Priority {candidate.Order}: {(candidate.Enabled ? "enabled" : "disabled")} provider {JsonSerializer.Serialize(candidate.Model.ProviderId)}, model {JsonSerializer.Serialize(candidate.Model.ModelId)}");
+                $"Priority {candidate.Order}: {(candidate.Enabled ? "enabled" : "disabled")} provider {JsonSerializer.Serialize(candidate.Model.ProviderId)}, model {JsonSerializer.Serialize(candidate.Model.ModelId)}" +
+                (string.IsNullOrWhiteSpace(candidate.ReasoningLevelId) ? string.Empty : $", reasoning level {JsonSerializer.Serialize(candidate.ReasoningLevelId)}"));
             var candidates = route.Candidates.Count == 0 ? "No candidates." : string.Join("\n", lines);
             // Only typed routing fields are displayed. JSON string escaping prevents control characters or
             // provider/model labels from impersonating another line; no provider credentials/configuration are read.
@@ -247,7 +252,7 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         Enum.TryParse(category, true, out value) && Enum.IsDefined(value) && string.Equals(scope, "User", StringComparison.OrdinalIgnoreCase);
     private static HomeModelPickerSnapshot Snapshot(ConfiguredModelRoute route) => new(route.Revision, "User", route.Category.ToString(),
         [new(route.RouteId, route.Revision, "User", route.Category.ToString(), null, null,
-            Array.AsReadOnly(route.Candidates.Select(item => new HomeModelRouteCandidate(item.Model.ProviderId, item.Model.ModelId, item.Model.ArtifactRevision, item.Enabled, item.Order)).ToArray()),
+            Array.AsReadOnly(route.Candidates.Select(item => new HomeModelRouteCandidate(item.Model.ProviderId, item.Model.ModelId, item.Model.ArtifactRevision, item.Enabled, item.Order, item.ReasoningLevelId)).ToArray()),
             JsonSerializer.SerializeToElement(route.Policy), route.ScopeId)]);
     private static HomeCoreOperationResult<T> Denied<T>() => new(false, "PermissionDenied", "Current canonical Home profile and route ownership are required.");
     private static HomeCoreOperationResult<T> Unsupported<T>() => new(false, "OwnerUnavailable", "This route scope requires its actual app, Agent or task owner authority.");

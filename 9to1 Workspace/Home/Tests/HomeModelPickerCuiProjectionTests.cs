@@ -150,7 +150,7 @@ public sealed class HomeModelPickerCuiProjectionTests
     private static T Value<T>(ICuiBindingContext context, string path)
     {
         Assert.True(context.TryGetValue(path, out var value), $"Missing projection value: {path}");
-        return Assert.IsType<T>(value);
+        return Assert.IsAssignableFrom<T>(value);
     }
 
     [Fact]
@@ -237,6 +237,75 @@ public sealed class HomeModelPickerCuiProjectionTests
         var second = routeRow.Candidates[1];
         var moveSecond = Value<HomeModelPickerCandidateSelection>(second, "Selection");
         Assert.Equal("revision", moveSecond.ArtifactRevision);
+    }
+
+    [Fact]
+    public void Effective_candidate_projects_real_advertised_choices_and_selected_label_only()
+    {
+        var surface = Surface();
+        var route = Route("chat.active",
+            new("provider", "model", null, true, 0),   // effective
+            new("other", "model", null, true, 1));     // non-effective
+        surface.ApplyState(State([route], null));
+        surface.ApplyEffectiveReasoning(["low", "medium", "high"], "provider", "model", null, "medium");
+
+        var rows = surface.Projection.Routes.Single().Candidates;
+        var eff = rows[0];
+        Assert.True(Value<bool>(eff, "HasAdvertisedReasoningLevels"));
+        Assert.Equal("70%", Value<string>(eff, "SelectedReasoningLabel"));
+        var choices = Assert.IsAssignableFrom<IReadOnlyList<HomeModelPickerReasoningChoice>>(Value<object>(eff, "ReasoningLevelChoices"));
+        Assert.Equal(3, choices.Count);
+        Assert.Equal("35%", choices[0].Label);
+        Assert.Equal("70%", choices[1].Label);
+        Assert.Equal("100%", choices[2].Label);
+        Assert.False(choices[0].IsSelected);
+        Assert.True(choices[1].IsSelected); // selected live label corresponds to the effective medium default
+        Assert.False(choices[2].IsSelected);
+
+        var other = rows[1];
+        Assert.False(Value<bool>(other, "HasAdvertisedReasoningLevels"));
+        Assert.Empty(Assert.IsAssignableFrom<IReadOnlyList<HomeModelPickerReasoningChoice>>(Value<object>(other, "ReasoningLevelChoices")));
+    }
+
+    [Fact]
+    public void Unknown_advertised_scale_projects_no_invented_choices()
+    {
+        var surface = Surface();
+        var route = Route("chat.active", new HomeModelRouteCandidate("provider", "model", null, true, 0));
+        surface.ApplyState(State([route], null));
+        surface.ApplyEffectiveReasoning(null, "provider", "model", null, null); // truthful unknown
+
+        var row = surface.Projection.Routes.Single().Candidates.Single();
+        Assert.False(Value<bool>(row, "HasAdvertisedReasoningLevels"));
+        Assert.Empty(Assert.IsAssignableFrom<IReadOnlyList<HomeModelPickerReasoningChoice>>(Value<object>(row, "ReasoningLevelChoices")));
+        Assert.True(row.TryGetValue("SelectedReasoningLabel", out var label));
+        Assert.Null(label);
+    }
+
+    [Fact]
+    public void HasPendingApproval_is_strict_boolean_across_empty_loaded_and_pending_states()
+    {
+        // Canonical CUI <If> conditions require a strict bool. The authored panel binds
+        // HasPendingApproval (never the nullable request-id string, which would throw CUIR011).
+        var surface = Surface();
+        surface.ApplyState(HomeModelPickerEditorState.Initial);
+        Assert.False(Value<bool>(surface, "HasPendingApproval"));
+        surface.ApplyState(State([]));
+        Assert.False(Value<bool>(surface, "HasPendingApproval"));
+        surface.ApplyState(State([Route("chat.active")]));
+        Assert.False(Value<bool>(surface, "HasPendingApproval"));
+
+        // A retained review surfaces a strict boolean and keeps the exact request id for display.
+        var loaded = HomeModelPickerCuiSurface.LoadDefault();
+        loaded.ApplyState(State([Route("chat.active")]));
+        var pending = new HomeModelPickerCuiProjection(loaded.State, loaded.Scope, loaded.Category,
+            null, null, null, null, null, "req-1");
+        Assert.True(pending.HasPendingApproval);
+        Assert.True(Value<bool>(pending, "HasPendingApproval"));
+        Assert.Equal("req-1", Value<string>(pending, "PendingApprovalRequestId"));
+        // The authored picker document (including the <If condition="{Binding HasPendingApproval}">) walks
+        // cleanly with a strict bool condition; no CUIR011-style non-bool condition is published.
+        Walk(loaded.Document.Components, pending);
     }
 
     private static HomeModelPickerCuiSurface Surface() =>

@@ -1,18 +1,21 @@
 #if !ANDROID
 using System.ComponentModel;
 using System.Globalization;
+using System.Runtime.ExceptionServices;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using Dulche.Runtime;
 using Haven.Application;
 using Haven.Application.Haven;
 using Haven.Desktop.Accounts;
 using Haven.SharedHeader;
 using HavenOS.Home;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop;
@@ -34,6 +37,7 @@ public sealed partial class App
             public bool NotificationsSupported => _host._services.GetService<HavenNotificationService>() is not null;
             public bool ProfileSupported => _host._services.GetService<NativeCakeAccountUiOwner>() is not null;
             public IHavenSharedControlGateway? SharedControls => _host._sharedGateway;
+            public HavenTopBarModelInfo? ModelInfo => _host._modelInfo;
         }
 
         /// <summary>Typed, asynchronous gateway to the genuine Home-owned shared surfaces.
@@ -70,6 +74,12 @@ public sealed partial class App
 
         /// <summary>Retained original-session leases for composed model providers; disposed at close.</summary>
         private readonly List<HomeModelPickerOriginalSessionProvider> _modelSessions = [];
+
+        /// <summary>The single retained Home-owned resolved-selection source shared by the picker,
+        /// top-bar and request construction. Created once per host lifetime (never recreated per
+        /// refresh, which would lose committed selections), wired to the real personal routes and
+        /// Den advertised reasoning levels when resolvable.</summary>
+        private HomeModelSelectionSource? _homeModelSelectionSource;
 
         /// <summary>The authored shared-panel shell loader/bindings and its named host elements.
         /// Host elements are the real CUI containers (AddChild/RemoveChild contract), never a
@@ -157,6 +167,9 @@ public sealed partial class App
                 _shellBindings = shellBindings;
                 _sharedPanelHost = FindNamedContainer(loaded.Root, SharedPanelHostId);
                 Content = loaded.Root;
+                // Populate the genuine selected-model projection for the top-bar cluster under the
+                // host lifecycle; the real route read is retained so close joins its settlement.
+                Track(RefreshModelInfoAsync(ModelProjectionToken));
             }
             catch (CuiRuntimeLoadException)
             {
@@ -178,6 +191,14 @@ public sealed partial class App
             Content = _scene;
         }
 
+        /// <summary>Finds a named authored container by walking the RETAINED authored CUI graph,
+        /// including closed/hidden nested containers. The shared-panel shell authors its backdrop
+        /// and the nested panel host as children that are hidden while no panel is open: a hidden
+        /// cell is removed from the active native layout (Layout.Children), but the authored child
+        /// remains in the owning container's AuthoredChildren. Searching only live visual/logical
+        /// descendants therefore misses the closed nested panel host and the shell silently reports
+        /// an "available but never shown" panel. Traversing the retained authored children finds
+        /// and validates the exact named hosts even before any panel opens.</summary>
         private static CuiContainerControl? FindNamedContainer(Control root, string name) =>
             FindNamedContainerRecursive(root, name);
 
@@ -215,10 +236,15 @@ public sealed partial class App
             Track(loader.WhenActionsIdleAsync());
         }
 
-        private void ShowSharedPanel(CuiControlLoader loader, Control root)
+        /// <summary>Mounts a loaded panel's authored root into the validated panel host and flips
+        /// the authored HasOpenPanel state. Returns true only when the panel was genuinely mounted.
+        /// When the authored panel host is absent (or mounting/retirement failed), the incoming
+        /// loader is retired, the panel is NOT shown, and the caller must publish a truthful refusal
+        /// instead of reporting success.</summary>
+        private bool ShowSharedPanel(CuiControlLoader loader, Control root)
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (_sharedPanelHost is null) { RetireLoader(loader); return; }
+            if (_sharedPanelHost is null) { RetireLoader(loader); return false; }
             if (_sharedPanelLoader is { } present && !ReferenceEquals(present, loader))
             {
                 // Capture exactly A's ownership (loader + authored root) before any callback runs.
@@ -237,12 +263,13 @@ public sealed partial class App
                 RetireLoader(present);
                 // Recheck the same incoming owner after callbacks before installing B.
                 if (_sharedPanelLoader is { } replacement && !ReferenceEquals(replacement, loader))
-                { RetireLoader(loader); return; }
+                { RetireLoader(loader); return false; }
             }
             _sharedPanelLoader = loader;
             _sharedPanelRoot = root;
             _sharedPanelHost.AddChild(root);
             if (_shellBindings is not null) _shellBindings.HasOpenPanel = true;
+            return true;
         }
 
         private void HideSharedPanel()
@@ -270,6 +297,9 @@ public sealed partial class App
                 // No replacement: ensure stale completions from the retired A refuse.
                 Interlocked.Increment(ref _sharedPanelGeneration);
                 if (_shellBindings is not null) _shellBindings.HasOpenPanel = false;
+                // A panel journey ended: refresh the genuine model projection so owned updates (for
+                // example the universal-picker change) are published to the real Browse consumer.
+                RefreshAfterPanelJourney();
             }
             // If B mounted, B's own Show already set HasOpenPanel and reserved B's generation and
             // root; A's stale completions already refuse against B's newer generation.
@@ -282,6 +312,214 @@ public sealed partial class App
             IsCurrent &&
             generation == Volatile.Read(ref _sharedPanelGeneration) &&
             StringComparer.Ordinal.Equals(profile, _actor?.ProfileId);
+
+        /// <summary>Lifetime-owned snapshot of the genuine current selected model/provider/route for
+        /// the top-bar cluster. It is populated from the REAL Home provider/route repository and is
+        /// never fabricated; absent the genuine composition it stays null (truthful unavailable).</summary>
+        private HavenTopBarModelInfo? _modelInfo;
+
+        /// <summary>Host-lifetime-linked cancellation for model-projection reads/publishes. It is
+        /// derived from the app/window lifetime tokens AND is additionally cancelled/disposed at
+        /// ACCEPTED host retirement from the shared-owned settlement seam, because that seam is
+        /// joined before the App/window lifetimes retire; a declined (vetoed) close leaves this host
+        /// live and does not cancel it.</summary>
+        private CancellationTokenSource? _modelProjectionCts;
+        private CancellationToken ModelProjectionToken =>
+            (_modelProjectionCts ??= CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _windowLifetime)).Token;
+
+        /// <summary>Refresh generation for the model projection. Each refresh captures the current
+        /// generation and publishes only if it is still current, so an out-of-order completion never
+        /// overwrites a newer selection.</summary>
+        private long _modelProjectionGeneration;
+
+        /// <summary>Composes the genuine selected-model projection from the real Home/Dulche route
+        /// resolver and publishes it to the real Browse consumer. It reads the ACTUAL current user
+        /// chat route through the actor-authorised positive-revision reader, then resolves the
+        /// EFFECTIVE selection through the real ModelRouteRegistry/Resolver (availability,
+        /// capabilities, provider policy, overrides) — never the first enabled *configured* candidate.
+        /// Locality comes from the real provider registry (genuinely unknown when the provider is
+        /// absent). Advertised reasoning tiers are surfaced only through a real advertised-metadata
+        /// bridge; without one effort stays a truthful unknown (no fabricated scale). Unready/unknown
+        /// states are published truthfully. It runs under the host lifecycle, is currentness-fenced,
+        /// and supersedes any out-of-order refresh via the captured generation.</summary>
+        private async Task RefreshModelInfoAsync(CancellationToken token)
+        {
+            var generation = Interlocked.Increment(ref _modelProjectionGeneration);
+            try
+            {
+                var read = await ReadEffectiveModelProjectionAsync(token);
+                // Reobserve the CURRENT full actor AFTER all async reads and immediately before
+                // publication. This is the real publication fence, and it fails CLOSED: a null/failed
+                // observation or an absent snapshot actor must never publish; only a full identity match
+                // (fresh == snapshot.Actor) may proceed. It is compared to the projection's own actor
+                // (never the startup-cached _actor), so a same-profile but superseded-auth session
+                // cannot publish.
+                AuthenticatedResourceActor? fresh;
+                try { fresh = _home is null ? null : await ObserveActorAsync(token); }
+                catch (OperationCanceledException) when (token.IsCancellationRequested) { return; }
+                catch { fresh = null; }
+                if (fresh is null || read.Actor is null || fresh != read.Actor)
+                {
+                    _modelInfo = null;
+                    return;
+                }
+                PublishModelProjectionAsync(read.Info, generation);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { /* host retirement: no publish, no tracked fault */ }
+        }
+
+        /// <summary>The genuine model projection read plus the exact actor its snapshot was authored
+        /// for (full object identity including the auth revision).</summary>
+        private sealed record ModelProjectionRead(HavenTopBarModelInfo? Info, AuthenticatedResourceActor? Actor);
+
+        /// <summary>Reads the ACTUAL effective model projection from the real Home/Dulche producer:
+        /// the canonical profile-scoped user-chat route resolved through the real route registry/
+        /// resolver, resolved against the real provider registry for locality/availability. Every
+        /// field stays truthful; nothing is fabricated or inferred from model names or legacy
+        /// EffortLevel.</summary>
+        private async Task<ModelProjectionRead> ReadEffectiveModelProjectionAsync(CancellationToken token)
+        {
+            try
+            {
+                if (!IsCurrent || _home is null) return new(null, null);
+                var registry = _services.GetRequiredService<IModelProviderRegistry>();
+                var routes = new HomeVersionedModelRouteRepository(_home.StateStore);
+                // Actor-authorised, positive-revision personal route reader (never a fabricated/draft
+                // route). Returns null when no saved personal route exists.
+                var personal = new HomePersonalModelRoutes(_home.Profiles, routes, _home.Resources);
+                var generation = Volatile.Read(ref _modelProjectionGeneration);
+                // ONE retained Home-owned source shared by picker/top-bar/request construction, wired to
+                // the real Den advertised reasoning levels when the Den factory is resolvable. It is
+                // never recreated on refresh, so committed selections persist across refreshes. Its
+                // typed live-change events are subscribed exactly once so a committed selection/route
+                // immediately republishes the genuine projection.
+                if (_homeModelSelectionSource is null)
+                {
+                    // Prefer the genuine production singleton registered in the Home composition; only
+                    // fall back to a private ad-hoc source when that composition is not present (e.g.
+                    // minimal test rigs). Either way there is exactly ONE retained instance.
+                    var diSource = _services.GetService<HomeModelSelectionSource>();
+                    if (diSource is not null)
+                    {
+                        diSource.SelectionChanged += OnSharedSelectionCommitted;
+                        diSource.RouteChanged += OnSharedRouteCommitted;
+                        _homeModelSelectionSource = diSource;
+                    }
+                    else
+                    {
+                        var source = new HomeModelSelectionSource(
+                            registry, routes,
+                            (category, ct) => personal.GetAsync(category, ct),
+                            _ => Task.FromResult(_actor),
+                            advertisedLevels: _services.GetService<HomePersonalDenFactory>() is { } denFactory
+                                ? HomeDenAdvertisedLevels(denFactory)
+                                : null);
+                        source.SelectionChanged += OnSharedSelectionCommitted;
+                        source.RouteChanged += OnSharedRouteCommitted;
+                        _homeModelSelectionSource = source;
+                    }
+                }
+                var snapshot = await _homeModelSelectionSource.ResolveAsync(generation, token);
+                return new(snapshot?.ToPresentation(), snapshot?.Actor);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+            catch (Exception) { return new(null, null); }
+        }
+
+        /// <summary>Live-change handler for a canonical selected-reasoning commit on the retained shared
+        /// Home-owned selection source. It re-runs the genuine projection (generation- and
+        /// actor-revision-fenced before publish); it never publishes directly.</summary>
+        private void OnSharedSelectionCommitted(object? sender, HavenOS.Home.Core.SelectionChangedEventArgs e)
+        {
+            if (!IsCurrent) return;
+            Track(RefreshModelInfoAsync(ModelProjectionToken));
+        }
+
+        /// <summary>Live-change handler for a committed canonical route on the retained shared Home-owned
+        /// selection source. Identical republish behaviour to the selection handler.</summary>
+        private void OnSharedRouteCommitted(object? sender, EventArgs e)
+        {
+            if (!IsCurrent) return;
+            Track(RefreshModelInfoAsync(ModelProjectionToken));
+        }
+
+        /// <summary>Stops the retained shared Home-owned source from raising live-change updates. Called
+        /// only at accepted retirement (the settlement seam), never on a declined/vetoed close, so the
+        /// vetoed host stays live. Pending refreshes remain tracked and are joined by close.</summary>
+        private void UnsubscribeModelSource()
+        {
+            if (_homeModelSelectionSource is { } source)
+            {
+                source.SelectionChanged -= OnSharedSelectionCommitted;
+                source.RouteChanged -= OnSharedRouteCommitted;
+            }
+        }
+
+        /// <summary>Wires the source's advertised reasoning-level resolver to the existing authorised
+        /// single personal Den (never a second Den). It opens the Den for the current actor and reads
+        /// the genuine <see cref="ModelRecord.ReasoningLevels"/> for the resolved model id; null on
+        /// any transient open/read failure is a truthful unknown (no fabricated scale).</summary>
+        private static Func<string, string, CancellationToken, Task<IReadOnlyList<string>?>> HomeDenAdvertisedLevels(HomePersonalDenFactory denFactory) =>
+            async (providerId, modelId, ct) =>
+            {
+                try
+                {
+                    var session = await denFactory.OpenAsync(ct);
+                    var record = await session.Den.GetModelByID(modelId, cancellationToken: ct);
+                    // Guard against a provider-scoped store returning another provider's same-named
+                    // model: only accept metadata for the exact resolved provider identity.
+                    if (record is not null && !string.IsNullOrWhiteSpace(providerId)
+                        && record.Provider is { } recordProvider
+                        && !string.Equals(providerId, recordProvider, StringComparison.Ordinal))
+                        return null;
+                    return record?.ReasoningLevels;
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+                catch { return null; }
+            };
+
+        /// <summary>The single bridge point for advertised reasoning-effort metadata is
+        /// <see cref="HavenModelProjectionSnapshot.CreateValidated"/> plus the Home-owned source's
+        /// advertised-level resolver (wired to the authorised Den model record). The source is the
+        /// one retained Home-owned selection truth (DI singleton when present, else a private ad-hoc
+        /// instance); its advertised list and selected id come from the real Den/service and the
+        /// canonical selected-ID state, never an invented scale or legacy EffortLevel-derived tier.</summary>
+
+        /// <summary>Marshals the genuine model projection to the UI thread, publishes it to the real
+        /// Browse consumer, and retains the UI dispatcher operation under the host ledger so close
+        /// joins it. Currentness AND the captured refresh generation are validated BEFORE any state
+        /// is written or published, so an out-of-order refresh and a retired host never publish stale
+        /// or replacement-surface state. A full actor/auth-revision recheck is also required at
+        /// assignment+notification, so a same-profile but superseded-auth session cannot publish.</summary>
+        private void PublishModelProjectionAsync(HavenTopBarModelInfo? info, long generation)
+        {
+            if (generation != Volatile.Read(ref _modelProjectionGeneration)) return;
+            if (!IsCurrent) { _modelInfo = null; return; }
+            // Assign state AND notify on the UI thread together, so a consumer never observes a
+            // published change before the matching state is assigned (and vice-versa). The genuine
+            // actor/auth-revision publication fence runs in the refresh immediately before this call
+            // (a fresh full-actor re-observation compared to the snapshot's own actor); no comparison
+            // to a startup-cached actor is ever used here. Captured generation and currentness are
+            // revalidated inside the dispatch so an out-of-order completion or retired host never
+            // publishes stale/replacement-surface state.
+            var publish = Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (generation != Volatile.Read(ref _modelProjectionGeneration) || !IsCurrent) return;
+                _modelInfo = info;
+                _workspace?.PublishModelProjectionChanged();
+            }).GetTask();
+            Track(publish);
+        }
+
+        /// <summary>Re-runs the genuine model projection after a shared panel journey (the universal
+        /// picker change or a panel close) so owned updates are published to the real Browse consumer
+        /// when actual selection/route/effort changes. It uses the host-lifetime token (never
+        /// CancellationToken.None) and is tracked under the host ledger so close joins it.</summary>
+        private void RefreshAfterPanelJourney()
+        {
+            if (!IsCurrent) return;
+            Track(RefreshModelInfoAsync(ModelProjectionToken));
+        }
 
         /// <summary>Re-observe the ACTUAL current Home actor/auth revision and require it to
         /// still equal the full authenticated actor/session/auth revision a shared panel was
@@ -325,6 +563,10 @@ public sealed partial class App
         /// exact-base integration patch (App.UnifiedWorkspaceHost.cs is lane5-owned).</summary>
         internal async Task JoinSharedPanelSettlementAsync(List<Exception> failures)
         {
+            // ACCEPTED retirement: stop observing live shared-source changes before settling. The two
+            // typed handlers are unsubscribed so a retired host never re-runs a refresh; pending
+            // refreshes already admitted remain tracked and are joined below (failures preserved).
+            UnsubscribeModelSource();
             // Dispose FIRST so the post-Dispose cleanup task is reserved, then join the FULL
             // settlement (which includes that disposal task via WhenActionsIdleAsync). Awaits
             // before Dispose never captured the new disposal task.
@@ -347,6 +589,16 @@ public sealed partial class App
                 try { await JoinOriginalAppTaskAsync(_shellLoader.WhenActionsIdleAsync(), failures); }
                 catch (Exception error) { AddAppCause(failures, error); }
                 _shellLoader = null;
+            }
+            // ACCEPTED retirement: cancel/dispose the model-projection subscription/read CTS here,
+            // at the shared-owned settlement seam. This seam is joined by host close before the
+            // App/window lifetimes retire, so the host never waits forever on its own uncancelled
+            // projection; a declined (vetoed) close never reaches this seam and stays live.
+            if (_modelProjectionCts is { } projectionCts)
+            {
+                try { projectionCts.Cancel(); } catch (ObjectDisposedException) { }
+                try { projectionCts.Dispose(); } catch (ObjectDisposedException) { }
+                _modelProjectionCts = null;
             }
         }
 
@@ -371,16 +623,16 @@ public sealed partial class App
             });
         }
 
-        private Task<HavenSharedOpenResult> OpenNotificationsPanelAsync(CancellationToken cancellationToken)
+        private async Task<HavenSharedOpenResult> OpenNotificationsPanelAsync(CancellationToken cancellationToken)
         {
             Dispatcher.UIThread.VerifyAccess();
-            if (!IsCurrent) return Task.FromResult(HavenSharedOpenResult.Denied);
+            if (!IsCurrent) return HavenSharedOpenResult.Denied;
             var service = _services.GetService<HavenNotificationService>();
             var theme = _homeTheme?.Context;
             if (service is null || theme is null)
-                return Task.FromResult(HavenSharedOpenResult.Refused("NotificationsUnavailable", "The durable Home notification service is unavailable."));
+                return HavenSharedOpenResult.Refused("NotificationsUnavailable", "The durable Home notification service is unavailable.");
             var actor = _actor;
-            if (actor is null) return Task.FromResult(HavenSharedOpenResult.Denied);
+            if (actor is null) return HavenSharedOpenResult.Denied;
             var generation = checked(++_sharedPanelGeneration);
             var bindings = new HavenNotificationsCuiBindings(this, service, generation, actor);
             var loader = new CuiControlLoader();
@@ -394,23 +646,70 @@ public sealed partial class App
             catch (CuiRuntimeLoadException error)
             {
                 loader.Dispose();
-                return Task.FromResult(HavenSharedOpenResult.Refused("PanelLoadBlocked", error.Message));
+                return HavenSharedOpenResult.Refused("PanelLoadBlocked", error.Message);
             }
             var loaded = loader.TryLoad(document);
             if (loaded.Root is null || loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             {
                 loader.Dispose();
-                return Task.FromResult(HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored notifications panel failed to load."));
+                return HavenSharedOpenResult.Refused("PanelLoadFailed", "The authored notifications panel failed to load.");
             }
             loader.WireBindings(loaded.Root);
+            if (_sharedPanelHost is null)
+            {
+                RetireLoader(loader);
+                return HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                    "The authored shared-panel host is unavailable.");
+            }
             // Admission is reserved before invoking the durable provider read.
             var load = AdmitOriginal(async () =>
             {
                 await bindings.LoadCoreAsync(cancellationToken);
                 return HavenSharedOpenResult.Succeeded();
             });
-            ShowSharedPanel(loader, loaded.Root);
-            return ThenResult(load);
+            // Mount propagates the REAL outcome: a missing/retired/reentrant host is a structured
+            // refusal (or fault), never a silent success while the panel stays closed. Every already
+            // admitted read is always joined before this gateway settles a mount refusal or fault, so
+            // the real read settlement/fault is retained and observable (and close joins it), rather
+            // than abandoning the gateway invocation. A mount fault rethrows after joining (wrapping
+            // a concurrent read fault), preserving the exact primary/read causes.
+            bool mounted;
+            try
+            {
+                mounted = ShowSharedPanel(loader, loaded.Root);
+            }
+            catch (Exception error)
+            {
+                await JoinReadPreservingFaultAsync(load, error);
+                throw;
+            }
+            if (!mounted)
+            {
+                var settled = await JoinReadAsync(load);
+                return settled.Opened
+                    ? HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                        "The authored shared-panel host is unavailable.")
+                    : settled;
+            }
+            return await JoinReadAsync(load);
+        }
+
+        /// <summary>Joins an already-admitted shared-panel read so its real settlement/fault is
+        /// retained and observable (and close joins it) before the gateway settles a mount refusal.
+        /// Never abandons the admitted read when the mount refused.</summary>
+        private static async Task<HavenSharedOpenResult> JoinReadAsync(Task load) => await ThenResult(load);
+
+        /// <summary>Joins an already-admitted read when the mount faulted, then rethrows the mount
+        /// fault. If the read also faulted, both causes are preserved as an AggregateException so
+        /// neither the primary mount fault nor the read/cleanup fault is swallowed.</summary>
+        private static async Task JoinReadPreservingFaultAsync(Task load, Exception mountFault)
+        {
+            Exception? readFault = null;
+            try { await load.ConfigureAwait(false); }
+            catch (Exception error) { readFault = error; }
+            if (readFault is not null)
+                throw new AggregateException(mountFault, readFault);
+            ExceptionDispatchInfo.Capture(mountFault).Throw();
         }
 
         /// <summary>Opens the authentic Home Universal Model Picker for the current profile,
@@ -443,7 +742,11 @@ public sealed partial class App
                         _services.GetRequiredService<IModelProviderRegistry>(),
                         _services.GetRequiredService<IPrivacyPreferenceStore>(),
                         _home.Resources, _home.Broker);
-                    session = new HomeModelPickerOriginalSessionProvider(provider, _home.Profiles);
+                    // The single shared route-commit seam: a successful guarded CAS save notifies the
+                    // retained Home-owned selection source so the genuine projection republishes live.
+                    var notifying = new RouteNotifyingModelPickerProvider(provider,
+                        () => _homeModelSelectionSource?.NotifyRouteCommitted());
+                    session = new HomeModelPickerOriginalSessionProvider(notifying, _home.Profiles);
                     var begun = await session.BeginAsync(cancellationToken);
                     if (!begun) return HavenSharedOpenResult.Refused("OriginalModelSessionUnavailable",
                         "The originating model manager session could not be bound to the current Home actor.");
@@ -453,7 +756,8 @@ public sealed partial class App
                     return HavenSharedOpenResult.Refused("ModelCompositionUnavailable", error.Message);
                 }
 
-                var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(session));
+                var controller = new HomeModelPickerCuiController(new HomeModelPickerRouteEditor(session),
+                    source: _homeModelSelectionSource, actor: actor);
                 // Fence publication BEFORE the controller mutates its surface: a retired panel or
                 // actor switch must never publish. Preserves standalone callers (gate null).
                 controller.PublicationGate = () => IsPanelCurrent(generation, actor.ProfileId);
@@ -478,9 +782,50 @@ public sealed partial class App
                         : HavenSharedOpenResult.Refused(opened.Code ?? "ModelOpenFailed", opened.Message);
                 }
                 _modelSessions.Add(session);
-                ShowSharedPanel(loader, loaded.Root);
+                if (!ShowSharedPanel(loader, loaded.Root))
+                    return HavenSharedOpenResult.Refused("PanelHostUnavailable",
+                        "The authored shared-panel host is unavailable.");
                 return HavenSharedOpenResult.Succeeded();
             });
+        }
+
+        /// <summary>Delegates a picker feature provider and notifies the shared Home-owned selection
+        /// source ONLY after a real canonical route commit succeeds (the guarded CAS save). It forwards
+        /// every other operation unchanged and never invents a commit. It preserves the originating
+        /// actor port so the session provider's fenced route edits continue to work.</summary>
+        private sealed class RouteNotifyingModelPickerProvider(IHomeModelPickerFeatureProvider inner, Action onRouteCommitted)
+            : IHomeModelPickerOriginalActorFeatureProvider
+        {
+            private readonly IHomeModelPickerFeatureProvider _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            private readonly Action _onRouteCommitted = onRouteCommitted ?? throw new ArgumentNullException(nameof(onRouteCommitted));
+
+            public Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null, CancellationToken cancellationToken = default) =>
+                _inner.GetCatalogueAsync(query, cancellationToken);
+            public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> GetSnapshotAsync(string scope, string category, CancellationToken cancellationToken = default) =>
+                _inner.GetSnapshotAsync(scope, category, cancellationToken);
+            public Task<HomeCoreOperationResult<HomeModelRoutePreview>> PreviewResolutionAsync(HomeModelRoutePreviewRequest request, CancellationToken cancellationToken = default) =>
+                _inner.PreviewResolutionAsync(request, cancellationToken);
+            public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit, CancellationToken cancellationToken = default)
+            {
+                var result = await _inner.UpdateRouteAsync(edit, cancellationToken).ConfigureAwait(false);
+                if (result.Succeeded) _onRouteCommitted();
+                return result;
+            }
+            public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteForActorAsync(
+                AuthenticatedResourceActor expectedActor, HomeModelRouteEdit edit, CancellationToken cancellationToken = default)
+            {
+                var result = _inner is IHomeModelPickerOriginalActorFeatureProvider bound
+                    ? await bound.UpdateRouteForActorAsync(expectedActor, edit, cancellationToken).ConfigureAwait(false)
+                    : new HomeCoreOperationResult<HomeModelPickerSnapshot>(false, "Unsupported", "The underlying route owner is unavailable.");
+                if (result.Succeeded) _onRouteCommitted();
+                return result;
+            }
+            public Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken cancellationToken = default) =>
+                _inner.RetryAuditAsync(requestId, cancellationToken);
+            public Task<HomePermissionAuthorization?> GetApprovalAuthorizationAsync(string requestId, CancellationToken cancellationToken = default) =>
+                _inner is IHomeModelPickerOriginalActorFeatureProvider bound
+                    ? bound.GetApprovalAuthorizationAsync(requestId, cancellationToken)
+                    : Task.FromResult<HomePermissionAuthorization?>(null);
         }
 
         private static async Task<HavenSharedOpenResult> ThenResult(Task load)
@@ -596,6 +941,30 @@ public sealed partial class App
                             ProviderId: move.ProviderId, ModelId: move.ModelId, ArtifactRevision: move.ArtifactRevision), cancellationToken));
                         return;
                     case "MoveCandidateUp" or "MoveCandidateDown":
+                        RefuseMalformed(command);
+                        return;
+                    case "SetReasoningLevel" when parameter is HomeModelPickerReasoningLevelSelection level:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.SetReasoningLevel, ProviderId: level.ProviderId, ModelId: level.ModelId,
+                            ArtifactRevision: level.ArtifactRevision, ReasoningLevelId: level.ReasoningLevelId), cancellationToken));
+                        return;
+                    case "SetReasoningLevel":
+                        RefuseMalformed(command);
+                        return;
+                    case "ClearReasoningLevel" when parameter is HomeModelPickerReasoningLevelSelection clear:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.SetReasoningLevel, ProviderId: clear.ProviderId, ModelId: clear.ModelId,
+                            ArtifactRevision: clear.ArtifactRevision, ReasoningLevelId: null), cancellationToken));
+                        return;
+                    case "ClearReasoningLevel":
+                        RefuseMalformed(command);
+                        return;
+                    case "SelectReasoningLevel" when parameter is HomeModelPickerReasoningLevelSelection choice:
+                        await Dispatch(() => _controller.ExecuteAsync(new HomeModelPickerActionRequest(
+                            HomeModelPickerAction.CommitReasoningLevel, ProviderId: choice.ProviderId, ModelId: choice.ModelId,
+                            ArtifactRevision: choice.ArtifactRevision, ReasoningLevelId: choice.ReasoningLevelId), cancellationToken));
+                        return;
+                    case "SelectReasoningLevel":
                         RefuseMalformed(command);
                         return;
                     case "SaveRoute":

@@ -89,6 +89,13 @@ public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationSer
         return capability is not null && _executions.TryRemove(capability, out _);
     }
 
+    /// <summary>Reads the current authorization decision for an existing review request without creating a
+    /// new action, reusing trust, or beginning execution. This lets a retained route commit observe the
+    /// genuine typed PendingApproval vs denied/blocked/missing state BEFORE Begin, so a repeat click never
+    /// conflates a still-pending review with a true denial or mints a duplicate authorization.</summary>
+    public Task<HomePermissionAuthorization> GetAuthorizationAsync(string requestId, CancellationToken cancellationToken = default) =>
+        permissions.GetAuthorizationAsync(requestId, cancellationToken);
+
     /// <summary>Consumes Home approval once. The owner must separately claim this issuer-bound capability immediately
     /// before its expected-revision transaction; discovery, signatures and copied request fields cannot mint it.</summary>
     public async Task<HomeResourceExecutionCapability?> BeginExecutionCapabilityAsync(string requestId, JsonElement arguments,

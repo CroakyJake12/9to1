@@ -174,12 +174,33 @@ def verify_installed(
 
     unexpected: list[str] = []
     if strict_closure:
-        assets_dir = root / "assets"
-        if assets_dir.exists():
-            for candidate in sorted(assets_dir.rglob("*")):
-                if candidate.is_symlink() or not candidate.is_file():
-                    continue
+        # Genuinely cover the declared bounded runtime subtree(s): scan only the
+        # top-level owned directories that contain declared install paths (e.g.
+        # `llama.cpp/`), never the whole install root (which may hold unrelated
+        # system content such as /usr/lib/haven/inference). Any regular file in
+        # those owned subtrees that is not a declared installed asset is flagged.
+        owned_dirs: set[str] = set()
+        for install_path in declared_install_paths:
+            parts = pathlib.PurePosixPath(install_path).parts
+            if len(parts) > 1:
+                owned_dirs.add(parts[0])
+        for top in sorted(owned_dirs):
+            top_dir = root / top
+            if not top_dir.is_dir():
+                continue
+            for candidate in sorted(top_dir.rglob("*")):
                 rel = candidate.relative_to(root).as_posix()
+                # Undeclared symlinks (including directories/broken targets) are
+                # smuggled content: declared assets are always regular files and
+                # are already containment-checked above, so any symlink inside an
+                # owned subtree is unexpected by construction. A broken symlink is
+                # still reported (is_symlink() is True for the link itself).
+                if candidate.is_symlink():
+                    if rel not in declared_install_paths:
+                        unexpected.append(rel + " (symlink)")
+                    continue
+                if not candidate.is_file():
+                    continue
                 if rel not in declared_install_paths:
                     unexpected.append(rel)
 

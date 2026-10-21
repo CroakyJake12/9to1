@@ -35,6 +35,10 @@
     <Compile Include="ChatComposerEmojiPickerViewportTests.cs" />
     <Compile Include="NativeComposerFloatingPortalTests.cs" />
     <Compile Include="HavenPackagedSvgResolverStrictTests.cs" />
+    <Compile Include="NativeSharedPanelIntegrationTests.cs" />
+    <Compile Include="HomeModelSelectionSourceTests.cs" />
+    <Compile Include="NativeSharedPanelNormalInitializeTests.cs" />
+    <Compile Include="ChatSessionSelectedReasoningProducerTests.cs" />
     <Using Include="Xunit" />
     <!-- Use the same approved fork as the real desktop/runtime, including headless hosting. -->
     <ProjectReference Include="../../../framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.XUnit/Avalonia.Headless.XUnit.csproj" />

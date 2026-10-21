@@ -88,8 +88,10 @@ public sealed class ProviderRoutingModelClient(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var resolved = Resolve(request.Model);
+        ValidateExplicitBinding(resolved.Provider.Id, resolved.ModelName, request.ReasoningId,
+            request.ReasoningTargetProviderId, request.ReasoningTargetModelName);
         await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, resolved.Provider, cancellationToken).ConfigureAwait(false);
-        await foreach (var chunk in resolved.Provider.StreamChatAsync(request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false))
+        await foreach (var chunk in NamedReasoningDispatch.Stream(resolved.Provider, request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false))
             yield return chunk;
     }
 
@@ -100,7 +102,7 @@ public sealed class ProviderRoutingModelClient(
     {
         var resolved = Resolve(request.Model);
         await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, resolved.Provider, cancellationToken).ConfigureAwait(false);
-        return await resolved.Provider.CompleteAsync(request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false);
+        return await NamedReasoningDispatch.Complete(resolved.Provider, request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -109,8 +111,10 @@ public sealed class ProviderRoutingModelClient(
     public async Task<OllamaToolResponse> ChatWithToolsAsync(OllamaToolRequest request, CancellationToken cancellationToken)
     {
         var resolved = Resolve(request.Model);
+        ValidateExplicitBinding(resolved.Provider.Id, resolved.ModelName, request.ReasoningId,
+            request.ReasoningTargetProviderId, request.ReasoningTargetModelName);
         await OriginalPrivateContextDispatch.ValidateProviderAsync(request.Options, resolved.Provider, cancellationToken).ConfigureAwait(false);
-        return await resolved.Provider.ChatWithToolsAsync(request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false);
+        return await NamedReasoningDispatch.Tools(resolved.Provider, request with { Model = resolved.ModelName }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -144,6 +148,38 @@ public sealed class ProviderRoutingModelClient(
             Family = family,
             Capabilities = descriptor.Capabilities
         };
+    }
+
+    /// <summary>
+    /// Validates an explicit named-reasoning binding against the ACTUAL resolved primary identity
+    /// before either an ordinary or a named provider invocation. Rules:
+    ///  - absent/blank <paramref name="reasoningId"/> keeps ordinary behavior (no check);
+    ///  - present id with BOTH binding fields absent/blank preserves legacy named behavior;
+    ///  - exactly one binding field supplied is a typed refusal before invocation;
+    ///  - both supplied fields must exactly (Ordinal) match the resolved provider id and resolved model
+    ///    name, otherwise the selection is refused before any provider invocation. The resolved model
+    ///    name is the native name (e.g. Ollama "qwen:tag") and is never split or guessed.
+    /// </summary>
+    private static void ValidateExplicitBinding(
+        string resolvedProviderId,
+        string resolvedModelName,
+        string? reasoningId,
+        string? targetProviderId,
+        string? targetModelName)
+    {
+        if (string.IsNullOrWhiteSpace(reasoningId)) return; // ordinary generation
+        var providerSupplied = !string.IsNullOrWhiteSpace(targetProviderId);
+        var modelSupplied = !string.IsNullOrWhiteSpace(targetModelName);
+        if (providerSupplied != modelSupplied)
+            throw new UnsupportedCapabilityException(
+                "A named-reasoning selection must supply both the genuine provider and model identity.",
+                reasoningId);
+        if (!providerSupplied && !modelSupplied) return; // legacy named behavior
+        if (!string.Equals(resolvedProviderId, targetProviderId, StringComparison.Ordinal)
+            || !string.Equals(resolvedModelName, targetModelName, StringComparison.Ordinal))
+            throw new UnsupportedCapabilityException(
+                "The named-reasoning selection does not match the resolved primary provider/model.",
+                reasoningId);
     }
 
     /// <summary>

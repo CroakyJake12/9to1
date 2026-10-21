@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using Haven.Application;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,8 +13,9 @@ namespace Haven.Infrastructure;
 public sealed record LlamaCppLaunchPlan(
     string FileName,
     IReadOnlyList<string> Arguments,
-    Uri Endpoint,
-    bool AlwaysLoaded);
+    Uri? Endpoint,
+    bool AlwaysLoaded,
+    string? UnixSocketPath = null);
 
 /// <summary>
 /// Builds the smallest supported llama.cpp server invocation without touching global system state.
@@ -43,23 +45,85 @@ public static class LlamaCppLaunchPlanner
         if (options.ParallelRequests is < 1 or > MaximumParallelRequests)
             throw new ArgumentOutOfRangeException(nameof(options.ParallelRequests), $"The llama.cpp parallel-request count must be between 1 and {MaximumParallelRequests}.");
 
+        // The verified-peer local provider reaches the owned child over an AF_UNIX socket. When a
+        // socket path is configured (Linux only), llama-server is bound to that socket so the
+        // provider's kernel-identified peer path applies to the exact process Haven started. Without
+        // a socket path the server stays on the loopback host/port extension.
+        var unixSocketPath = NormalizeUnixSocketPath(options.SocketPath);
+
         var arguments = new List<string>();
         if (options.UseUnifiedCli) arguments.Add("serve");
-        arguments.AddRange([
-            "--model", modelPath,
-            "--host", "127.0.0.1",
-            "--port", options.Port.ToString(CultureInfo.InvariantCulture),
-            "--ctx-size", options.ContextSize.ToString(CultureInfo.InvariantCulture),
-            "--parallel", options.ParallelRequests.ToString(CultureInfo.InvariantCulture),
-            "--no-webui"
-        ]);
+        if (unixSocketPath is not null)
+        {
+            if (string.IsNullOrWhiteSpace(options.ModelAlias))
+                throw new ArgumentException("A model alias is required on the verified Unix socket path so the peer can be identified.", nameof(options.ModelAlias));
+            arguments.AddRange([
+                "--model", modelPath,
+                "--alias", options.ModelAlias!,
+                "--host", unixSocketPath,
+                "--no-ui",
+                "--no-slots",
+                "--log-disable",
+                "--offline",
+                "--parallel", options.ParallelRequests.ToString(CultureInfo.InvariantCulture),
+                "--ctx-size", options.ContextSize.ToString(CultureInfo.InvariantCulture),
+                "--cache-ram", "0"
+            ]);
+        }
+        else
+        {
+            arguments.AddRange([
+                "--model", modelPath,
+                "--host", "127.0.0.1",
+                "--port", options.Port.ToString(CultureInfo.InvariantCulture),
+                "--ctx-size", options.ContextSize.ToString(CultureInfo.InvariantCulture),
+                "--parallel", options.ParallelRequests.ToString(CultureInfo.InvariantCulture),
+                "--no-webui"
+            ]);
+        }
+
+        // Template/reasoning controls are TYPED and optional, so explicit/default callers that did
+        // not opt in are unchanged. --reasoning off is the supported switch that disables thinking
+        // (sets enable_reasoning 0 + default_template_kwargs enable_thinking false); --jinja selects
+        // the jinja template engine. Never emit shell/raw extraargs.
+        if (options.UseJinja is { } useJinja)
+            arguments.Add(useJinja ? "--jinja" : "--no-jinja");
+        if (options.Reasoning != LlamaCppReasoningMode.Unset)
+        {
+            var reasoningValue = options.Reasoning switch
+            {
+                LlamaCppReasoningMode.Auto => "auto",
+                LlamaCppReasoningMode.On => "on",
+                LlamaCppReasoningMode.Off => "off",
+                _ => throw new ArgumentOutOfRangeException(nameof(options.Reasoning), options.Reasoning,
+                    $"Unsupported {nameof(LlamaCppReasoningMode)} value.")
+            };
+            arguments.Add("--reasoning");
+            arguments.Add(reasoningValue);
+        }
 
         return new LlamaCppLaunchPlan(
             executablePath,
             arguments,
-            new Uri($"http://127.0.0.1:{options.Port}/v1/", UriKind.Absolute),
-            options.AlwaysLoaded);
+            unixSocketPath is null ? new Uri($"http://127.0.0.1:{options.Port}/v1/", UriKind.Absolute) : null,
+            options.AlwaysLoaded,
+            unixSocketPath);
     }
+
+    private static string? NormalizeUnixSocketPath(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        if (!OperatingSystem.IsLinux())
+            throw new PlatformNotSupportedException("The verified Unix socket path is only supported on Linux.");
+        var path = value.Trim();
+        if (path.Length < 2 || path[0] != '/' || path.Contains('\\'))
+            throw new ArgumentException("The verified Unix socket path must be an absolute POSIX path.", nameof(value));
+        if (Encoding.UTF8.GetByteCount(path) > UnixSocketPathMaxBytes)
+            throw new ArgumentException($"The verified Unix socket path must be at most {UnixSocketPathMaxBytes} bytes.", nameof(value));
+        return path;
+    }
+
+    private const int UnixSocketPathMaxBytes = 100;
 
     private static string RequireAbsolutePath(string? value, string parameterName)
     {
@@ -227,10 +291,19 @@ public sealed class LlamaCppRuntime(LlamaCppRuntimeOptions options) : ILlamaCppR
             catch (InvalidOperationException) { running = false; }
         }
 
-        Uri? endpoint = Options.Port is >= 1024 and <= 65535
+        // When the verified Unix socket path is used the peer is reached through that socket; the
+        // loopback URI is not representative and is intentionally left null so consumers never
+        // mistake the socket endpoint for an arbitrary localhost listener.
+        Uri? endpoint = string.IsNullOrWhiteSpace(Options.SocketPath)
+            && Options.Port is >= 1024 and <= 65535
             ? new Uri($"http://127.0.0.1:{Options.Port}/v1/", UriKind.Absolute)
             : null;
-        return new LlamaCppRuntimeStatus(Options.Enabled, running, Options.AlwaysLoaded, endpoint, processId, detail);
+        var finalDetail = !string.IsNullOrWhiteSpace(Options.SocketPath)
+            ? string.IsNullOrWhiteSpace(detail)
+                ? $"verified-unix-socket: {Options.SocketPath}"
+                : $"{detail}; verified-unix-socket: {Options.SocketPath}"
+            : detail;
+        return new LlamaCppRuntimeStatus(Options.Enabled, running, Options.AlwaysLoaded, endpoint, processId, finalDetail);
     }
 
     private static bool IsRunning(Process? process)

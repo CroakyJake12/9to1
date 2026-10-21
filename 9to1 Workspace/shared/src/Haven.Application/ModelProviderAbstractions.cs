@@ -38,6 +38,32 @@ public interface IModelProvider
     Task DeleteModelAsync(string model, CancellationToken cancellationToken) => Task.FromException(new NotSupportedException($"{DisplayName} does not support removing models."));
 }
 
+/// <summary>Optional capability port implemented by a provider whose wire protocol carries the exact
+/// advertised named-reasoning id verbatim (never guessed, mapped to an enum, or ignored). A provider
+/// that does not implement this is unsupported for explicit named reasoning: callers return a typed
+/// <see cref="DulcheErrorCode.UnsupportedCapability"/> BEFORE invoking it. Ordinary/no-explicit
+/// reasoning generation never requires this port.</summary>
+public interface INamedReasoningProvider : IModelProvider
+{
+    /// <summary>Streams a chat response carrying the exact named-reasoning id on the wire.</summary>
+    IAsyncEnumerable<string> StreamChatWithReasoningAsync(OllamaChatRequest request, string reasoningId, CancellationToken cancellationToken);
+
+    /// <summary>Executes a typed tool turn carrying the exact named-reasoning id on the wire.</summary>
+    Task<OllamaToolResponse> ChatWithToolsWithReasoningAsync(OllamaToolRequest request, string reasoningId, CancellationToken cancellationToken);
+}
+
+/// <summary>Raised when an explicit named-reasoning selection cannot reach a provider/transport that
+/// can carry the exact advertised id unchanged (non-advertised/non-member id, or a provider without a
+/// faithful adapter). It is raised BEFORE any provider invocation — never a guessed enum, an ignored
+/// request field, or a silent Medium substitute. Derives from <see cref="InvalidOperationException"/>
+/// so existing callers that surface stream/operation failures keep working.</summary>
+public sealed class UnsupportedCapabilityException(string message, string? target = null, Exception? innerException = null)
+    : InvalidOperationException(message, innerException)
+{
+    /// <summary>The selected reasoning id (or other affected target) that is unsupported, if known.</summary>
+    public string? Target { get; } = target;
+}
+
 /// <summary>
 /// Defines the model provider registry contract so callers depend on a capability rather than one implementation.
 /// </summary>

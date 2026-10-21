@@ -42,7 +42,7 @@ public sealed partial class ResilientProviderRoutingModelClient
             try { invocation.Configuration = configurationSource.TryObserveOriginalIssuedRouteConfiguration(admission); }
             catch (Exception cause) { invocation.ConfigurationAcquisitionFailure = cause; }
         }
-        try { return invocation.Task = provider.ChatWithToolsAsync(routed, token); }
+        try { return invocation.Task = NamedReasoningDispatch.Tools(provider, routed, token); }
         catch (Exception cause) { invocation.SynchronousProviderFailure = cause; throw; }
     }
 

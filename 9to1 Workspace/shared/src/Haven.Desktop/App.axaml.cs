@@ -249,6 +249,13 @@ public sealed partial class App : Avalonia.Application
             await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<ModeSeedService>().SeedBuiltInModesAsync(CancellationToken.None)));
             var migration = await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
                 () => services.GetRequiredService<ILegacyStateMigrator>().MigrateIfNeededAsync(CancellationToken.None)));
+            // The verified local preview child starts under the Home/App original lifetime BEFORE any
+            // shell/workspace model-catalogue consumer can resolve providers, so the routed provider
+            // observes the genuine verified/configured endpoint state (never the initial disabled
+            // default). Genuine capability probes run inside the routed provider on first Chat use,
+            // only after this load; a start failure/cancellation is retained and surfaces via recovery.
+            await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                () => services.GetRequiredService<LlamaCppPreviewLifecycle>().StartIfReadyAsync(original.Token)));
             if (shell is not null)
             {
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => shell.InitializeAsync(migration, CancellationToken.None)));

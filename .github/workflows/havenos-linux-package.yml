@@ -17,6 +17,7 @@ jobs:
     # Needed only for the explicit optional same-repo unpublished draft asset upload.
     permissions:
       contents: write
+      actions: read
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
@@ -51,6 +52,24 @@ jobs:
           dotnet --info > evidence/dotnet-info.txt
       - name: Export exact corresponding source (before generated outputs)
         run: python3 .github/scripts/native16-arm64/export-corresponding-source.py
+      - name: Validate exact same-repository Bookworm artifact identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/native16-arm64/inference_stage.py --validate-artifact-only evidence/bookworm-artifact-metadata.json --provider-zip "${{ runner.temp }}/9to1-pinned-bookworm-provider.zip"
+      - name: Download exact previously verified Bookworm build using standard Actions
+        uses: actions/download-artifact@v4
+        with:
+          repository: CroakyJake12/9to1
+          run-id: 39562111673
+          artifact-ids: '12328502225'
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/9to1-pinned-bookworm-artifact
+      - name: Verify pinned engine and model then prepare canonical data-only package stage
+        run: >-
+          python3 .github/scripts/native16-arm64/inference_stage.py
+          --artifact-root "${{ runner.temp }}/9to1-pinned-bookworm-artifact"
+          --artifact-metadata evidence/bookworm-artifact-metadata.json
+          --output-root "${{ runner.temp }}/9to1-preview-inference"
       - name: Build host tools and full normal ARM product graph then assemble NEW internal package
         run: python3 .github/scripts/native16-arm64/build-native-arm64.py
       - name: Install exact newly built package
@@ -102,6 +121,18 @@ jobs:
             ${{ env.PREVIEW_PACKAGE_DIR }}/package-receipt.json
           retention-days: 1
           if-no-files-found: error
+      - name: Upload unchanged corresponding upstream engine source (no inference executable or weights)
+        if: ${{ always() && env.PREVIEW_INFERENCE_SOURCE != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: 9to1-pinned-llamacpp-upstream-source
+          path: ${{ env.PREVIEW_INFERENCE_SOURCE }}
+          retention-days: 1
+          if-no-files-found: error
+      - name: Preserve inference acquisition and data-stage identity evidence
+        if: ${{ always() && env.PREVIEW_INFERENCE_RECEIPT != '' }}
+        shell: bash
+        run: cp "$PREVIEW_INFERENCE_RECEIPT" evidence/inference-stage-receipt.json
       - name: Upload bounded evidence and exact source archive
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,0 +1,786 @@
+From: bundle15 (Mercury lane 15) — managed typed structural gate for packaged model blobs (corrected)
+Subject: [PATCH] Home: managed in-process GGUF structural gate on packaged model evidence
+
+Replaces the previously-rejected Python3-subprocess structural gate with a managed typed
+verification seam. It performs a bounded, in-process GGUF scan (magic, version, alignment,
+metadata scalar widths, tensor-table bounds, known-extent truncation checks, per-tensor
+offset alignment, and supported quantized-block row divisibility) — no external process, no
+interpreter, no network, no unshipped Python prerequisite at native eligibility/startup.
+
+This is a SUPPLEMENTARY patch for root-owned files; the bundle lane does not apply it. Run
+`git apply --check` with this file. It targets current root source in /workspace/9to1-chat-cui.
+
+WHAT IT DOES
+- Adds IHomeDulcheModelStructuralGate + HomeDulchePackagedModelStructuralGate (new file
+  HomeDulcheModelStructuralGate.cs in Source/Home/Core, auto-included by the existing
+  Source\Home\Core\*.cs compile glob). It passes only on PROVABLE structural soundness and
+  fails CLOSED on defect/absence/cancellation. Tensor types outside the supported subset are
+  passed through (never bricked, never claimed complete), so the narrow checker does not
+  silently block all otherwise-supported bundled/local models.
+- Wires the gate into HomeDulchePackagedModelEvidenceSource.VerifyBlobAsync: a model is
+  eligible ONLY after real size+hash verification AND structural admission. Cancellation
+  propagates (OperationCanceledException) and always fails closed.
+- Adds focused owning test regressions: malformed blob, missing artifact, cancellation,
+  truncated GGUFv3 (dataStart) rejection vs valid 68-byte counterpart admission, alignment
+  type/power-of-two negatives, misaligned tensor offset, zero-dimension, skip-beyond-EOF
+  metadata, rollback/previous-known-good, and real source identity. The canonical caller test
+  is labelled EVIDENCE-ONLY (it exercises FindEligibleAsync, not
+  OverlayChatSessionFactory/provider/broker/model adapter); real caller/inference/asset
+  acceptance remains BLOCKED.
+
+CORRECTIONS over the prior reviewer-flagged patch
+- declaredExtents now uses consistent unsigned (ulong+ulong) extent math; no ulong+long mix.
+- ReadString's nullable result is retained (`string? key`) with explicit null rejection before use.
+- The Assert.ThrowsAnyAsync<OperationCanceledException> callback adapts the returned ValueTask
+  with .AsTask().
+- relative.Replace char literals are valid C# '\\'.
+- dataStart is aligned from the reader position AFTER all tensor-info records, not the pre-table
+  start; a blob ending exactly at tensor-info end (57 bytes) with no aligned payload is rejected,
+  while the padded 68-byte valid counterpart is admitted.
+- general.alignment must be a UINT32 scalar with a positive power-of-two bounded value; wrong
+  scalar/string type or value 3 is rejected.
+- Per-tensor offsets must be aligned; impossible zero dimensions reject; metadata values
+  running beyond EOF reject.
+- Cancellation token is polled during metadata/tensor scans and before admission; cancelled gates
+  propagate OperationCanceledException and never partially admit. No timeout is claimed (the
+  verifier is a bounded in-process scan that honours caller cancellation).
+
+Packaging/installer note: no Python artifact is installed or invoked at native runtime; the
+Python bundle structural_validate.py remains QA/pack tooling only. The managed gate ships as
+compiled assembly code, so there is no unshipped interpreter prerequisite.
+
+SDK/native status: NO SDK/.NET/restore/build/native execution was allocated for this lane.
+Compile correctness is delivered by construction (fixed defect lines, validated emitted source
+bytes) but remains NOT RUN until the coordinator allocates a Home compile/test slot.
+
+diff --git a/9to1 Workspace/Home/Source/Home/Core/HomeDulcheModelEvidenceSources.cs b/9to1 Workspace/Home/Source/Home/Core/HomeDulcheModelEvidenceSources.cs
+index d4be78b..1298094 100644
+--- a/9to1 Workspace/Home/Source/Home/Core/HomeDulcheModelEvidenceSources.cs	
++++ b/9to1 Workspace/Home/Source/Home/Core/HomeDulcheModelEvidenceSources.cs	
+@@ -13,11 +13,16 @@ public sealed class HomeDulchePackagedModelEvidenceSource : IHomeDulcheModelEvid
+     public const string DefaultModelRootRelative = "haven/models";
+     private readonly string _modelRoot;
+     private readonly string? _preferredModelId;
++    private readonly IHomeDulcheModelStructuralGate _structuralGate;
+ 
+-    public HomeDulchePackagedModelEvidenceSource(string? modelRoot = null, string? preferredModelId = null)
++    public HomeDulchePackagedModelEvidenceSource(
++        string? modelRoot = null,
++        string? preferredModelId = null,
++        IHomeDulcheModelStructuralGate? structuralGate = null)
+     {
+         _modelRoot = modelRoot ?? DefaultModelRoot();
+         _preferredModelId = preferredModelId;
++        _structuralGate = structuralGate ?? new HomeDulchePackagedModelStructuralGate();
+     }
+ 
+     public async ValueTask<HomeDulcheModelEvidence?> FindEligibleAsync(CancellationToken cancellationToken)
+@@ -82,6 +87,12 @@ public sealed class HomeDulchePackagedModelEvidenceSource : IHomeDulcheModelEvid
+         if (!info.Exists || info.Length != manifest.Size) return null;
+         var actual = await ComputeSha256Async(blobPath, cancellationToken).ConfigureAwait(false);
+         if (!string.Equals(actual, manifest.Sha256, StringComparison.Ordinal)) return null;
++        // Structural admission is a SEPARATE, fail-closed axis: a correctly-hashed blob can
++        // still be structurally malformed. Absence of the gate, cancellation, or a defect keeps
++        // the model BLOCKED. This never turns structural completeness into
++        // installed/verified/running/generation-ready.
++        if (!await _structuralGate.IsStructurallyAdmittedAsync(blobPath, manifest.Size, cancellationToken).ConfigureAwait(false))
++            return null;
+         return new HomeDulcheModelEvidence(manifest.ModelId, "llamacpp", manifest.Sha256, manifest.Size, DateTimeOffset.UtcNow);
+     }
+ 
+diff --git a/after/9to1 Workspace/Home/Source/Home/Core/HomeDulcheModelStructuralGate.cs b/9to1 Workspace/Home/Source/Home/Core/HomeDulcheModelStructuralGate.cs
+new file mode 100644
+index 0000000..441c6dc
+--- /dev/null
++++ b/9to1 Workspace/Home/Source/Home/Core/HomeDulcheModelStructuralGate.cs	
+@@ -0,0 +1,254 @@
++using System.Text;
++
++namespace HavenOS.Home.Core;
++
++/// <summary>Fail-closed structural admission gate for a verified model blob. This is a DISTINCT
++/// axis from artifact hashing: a correctly-hashed blob can still be structurally malformed (GGUF
++/// misalignment/truncation, a declared tensor extent beyond the file, or a supported quantized
++/// block whose row is not divisible by the block size). A model becomes eligible only when it
++/// passes BOTH real size+hash verification AND this structural gate. Any gate absence or
++/// anomalous/defective result keeps the model non-eligible (BLOCKED). Cancellation propagates as
++/// OperationCanceledException and never produces a partial admission. Structural admission never
++/// equals installed/verified/running/generation-ready.</summary>
++public interface IHomeDulcheModelStructuralGate
++{
++    ValueTask<bool> IsStructurallyAdmittedAsync(string blobPath, long sizeBytes, CancellationToken cancellationToken);
++}
++
++/// <summary>Default managed structural gate. It performs a bounded, in-process GGUF scan (no
++/// external process, no network, no interpreter): it validates magic, version, alignment
++/// (declared UINT32, positive power-of-two, bounded), scalar type widths, tensor-table bounds,
++/// per-tensor offset alignment, and the supported quantized-block row divisibility. It fails
++/// closed only on PROVABLE structural defects. Blobs containing tensor types outside the supported
++/// subset are passed through (never claimed complete, never bricked) so this narrow checker cannot
++/// silently block all otherwise-supported bundled/local models through a universal eligibility gate.
++/// This verifier exposes no timeout and claims no deadline: it is a bounded in-process scan that
++/// honours caller cancellation by polling the token during the scan.</summary>
++public sealed class HomeDulchePackagedModelStructuralGate : IHomeDulcheModelStructuralGate
++{
++    public async ValueTask<bool> IsStructurallyAdmittedAsync(string blobPath, long sizeBytes, CancellationToken cancellationToken)
++    {
++        if (!File.Exists(blobPath) || sizeBytes <= 0) return false;
++        try
++        {
++            return await Task.Run(
++                () => HomeDulcheGGUFStructuralVerifier.Check(blobPath, cancellationToken),
++                cancellationToken).ConfigureAwait(false);
++        }
++        catch (OperationCanceledException)
++        {
++            throw;
++        }
++        catch
++        {
++            return false;
++        }
++    }
++}
++
++/// <summary>Bounded managed GGUF structural verifier for the supported subset, mirroring the bundle
++/// lane's <c>bundle/formats.py</c> checks (magic, version, alignment, scalar type widths, Q6_K
++/// block row divisibility). It runs entirely in-process. Only provable defects are rejected;
++/// tensor types outside the supported subset are not treated as defects (pass-through), which
++/// distinguishes supported-subset completeness from general engine compatibility. The caller's
++/// cancellation token is polled during metadata/tensor scans and before admission; cancellation
++/// is honoured as cancellation and never produces a partial/positive admission.</summary>
++internal static class HomeDulcheGGUFStructuralVerifier
++{
++    private const uint Magic = 0x46554747u; // "GGUF"
++    private const int MaxRank = 64;
++    private const uint MaxAlignment = 1u << 20;   // 1 MiB ceiling for a declared alignment
++    private const uint MinAlignment = 4u;         // below 4 is not a reasonable GGUF alignment
++
++    private const uint TypeUint32 = 4;
++    private const uint TypeString = 8;
++    private const uint TypeArray = 9;
++
++    private const uint GgmlQ6K = 14;
++    private const ulong Q6KBlockElements = 256;
++    private const ulong Q6KBlockBytes = 210;
++
++    // GGUF metadata scalar value widths (type tag -> bytes). Verified against the official GGUF
++    // spec: UINT8=0, INT8=1, UINT16=2, INT16=3, UINT32=4, INT32=5, FLOAT32=6, BOOL=7,
++    // UINT64=10, INT64=11, FLOAT64=12.
++    private static readonly Dictionary<uint, int> ScalarSize = new()
++    {
++        [0] = 1,
++        [1] = 1,
++        [2] = 2,
++        [3] = 2,
++        [4] = 4,
++        [5] = 4,
++        [6] = 4,
++        [7] = 1,
++        [10] = 8,
++        [11] = 8,
++        [12] = 8,
++    };
++
++    // Plain ggml tensor types -> bytes per element (verified against upstream ggml.h).
++    private static readonly Dictionary<uint, int> PlainTypeBytes = new()
++    {
++        [0] = 4,   // F32
++        [1] = 2,   // F16
++        [24] = 1,  // I8
++        [25] = 2,  // I16
++        [26] = 4,  // I32
++        [27] = 8,  // I64
++        [28] = 8,  // F64
++        [30] = 2,  // BF16
++    };
++
++    public static bool Check(string path, CancellationToken cancellationToken)
++    {
++        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
++            8192, FileOptions.SequentialScan);
++        using var reader = new BinaryReader(fs);
++
++        cancellationToken.ThrowIfCancellationRequested();
++        if (fs.Length < 24) return false;
++        if (reader.ReadUInt32() != Magic) return false;
++        uint version = reader.ReadUInt32();
++        if (version != 2 && version != 3) return false;
++
++        ulong tensorCount = reader.ReadUInt64();
++        ulong kvCount = reader.ReadUInt64();
++        if (kvCount > 10_000_000ul || tensorCount > 1_000_000ul) return false;
++
++        long alignment = 32;
++        for (ulong i = 0; i < kvCount; i++)
++        {
++            cancellationToken.ThrowIfCancellationRequested();
++            string? key = ReadString(reader);
++            if (key is null) return false;
++            uint vtype = reader.ReadUInt32();
++
++            if (string.Equals(key, "general.alignment", StringComparison.Ordinal))
++            {
++                // Declared alignment must be a single UINT32 scalar with a positive, power-of-two
++                // value within reasonable bounds. A wrong scalar/string type or a non-power-of-two
++                // value (e.g. 3) is a provable defect, never silently ignored or accepted.
++                if (vtype != TypeUint32) return false;
++                uint candidate = reader.ReadUInt32();
++                if (!IsValidAlignment(candidate)) return false;
++                alignment = candidate;
++                continue;
++            }
++
++            if (vtype == TypeString)
++            {
++                if (ReadString(reader) is null) return false;
++            }
++            else if (vtype == TypeArray)
++            {
++                uint elemType = reader.ReadUInt32();
++                ulong count = reader.ReadUInt64();
++                if (count > 10_000_000ul) return false;
++                if (elemType == TypeString)
++                {
++                    for (ulong j = 0; j < count; j++)
++                    {
++                        cancellationToken.ThrowIfCancellationRequested();
++                        if (ReadString(reader) is null) return false;
++                    }
++                }
++                else
++                {
++                    if (!ScalarSize.TryGetValue(elemType, out int esz)) return false;
++                    if (count > (ulong)(fs.Length / esz)) return false;
++                    reader.BaseStream.Seek((long)(count * (ulong)esz), SeekOrigin.Current);
++                    if (reader.BaseStream.Position > fs.Length) return false;
++                }
++            }
++            else
++            {
++                if (!ScalarSize.TryGetValue(vtype, out int sz)) return false;
++                if (reader.BaseStream.Position + sz > fs.Length) return false;
++                reader.BaseStream.Seek(sz, SeekOrigin.Current);
++            }
++        }
++
++        int tensorsRead = 0;
++        var declaredExtents = new List<ulong>();
++        for (ulong t = 0; t < tensorCount; t++)
++        {
++            cancellationToken.ThrowIfCancellationRequested();
++            if (reader.BaseStream.Position >= fs.Length) return false;
++            string? name = ReadString(reader);
++            if (name is null) return false;
++            uint nDims = reader.ReadUInt32();
++            if (nDims == 0 || nDims > MaxRank) return false;
++            ulong elementCount = 1;
++            ulong firstDim = 0;
++            for (uint d = 0; d < nDims; d++)
++            {
++                ulong dim = reader.ReadUInt64();
++                if (dim == 0) return false;   // impossible zero dimension
++                if (elementCount > ulong.MaxValue / dim) return false; // overflow guard
++                if (d == 0) firstDim = dim;
++                elementCount *= dim;
++            }
++            uint ggmlType = reader.ReadUInt32();
++            ulong tensorOffset = reader.ReadUInt64();
++            tensorsRead++;
++            if (tensorOffset % (ulong)alignment != 0) return false; // per-tensor offset misalignment
++
++            ulong? dataSize = null;
++            if (PlainTypeBytes.TryGetValue(ggmlType, out int perElement))
++            {
++                if (elementCount > (ulong)(fs.Length / perElement)) return false;
++                dataSize = elementCount * (ulong)perElement;
++            }
++            else if (ggmlType == GgmlQ6K)
++            {
++                // ggml quantized blocks run along the innermost (row) dimension ne[0].
++                if (firstDim == 0 || firstDim % Q6KBlockElements != 0) return false;
++                if (elementCount % Q6KBlockElements != 0) return false;
++                dataSize = (elementCount / Q6KBlockElements) * Q6KBlockBytes;
++            }
++            // Unknown/unsupported tensor type: pass-through (never bricked, never claimed complete).
++            // For a KNOWN type, verify the declared tensor extent actually fits in the file
++            // (fail closed on truncation / beyond-EOF extent). Declared end is relative to the
++            // aligned data section start.
++            if (dataSize is ulong knownSize)
++            {
++                if (knownSize > (ulong)fs.Length) return false;
++                if (tensorOffset > (ulong)fs.Length - knownSize) return false;
++                declaredExtents.Add(tensorOffset + knownSize); // ulong + ulong (no signed/unsigned mix)
++            }
++            else
++            {
++                if (tensorOffset > (ulong)fs.Length) return false;
++            }
++        }
++
++        if (tensorsRead == 0) return false; // no tensors => not a meaningful model container
++        cancellationToken.ThrowIfCancellationRequested();
++
++        // The data section begins AFTER all tensor-info records, aligned UP to `alignment`. A blob
++        // that ends exactly at the last tensor-info byte (no aligned payload) must be rejected: the
++        // aligned data start lies beyond EOF and the declared tensor extents cannot be satisfied.
++        long dataSectionStart = reader.BaseStream.Position;
++        long dataStart = ((dataSectionStart + alignment - 1) / alignment) * alignment;
++        if (dataStart > fs.Length) return false;
++        // Every declared extent must reach no further than the end of the file.
++        foreach (var end in declaredExtents)
++        {
++            if ((ulong)dataStart + end > (ulong)fs.Length) return false;
++        }
++        return true;
++    }
++
++    private static bool IsValidAlignment(uint value) =>
++        value >= MinAlignment && value <= MaxAlignment && (value & (value - 1)) == 0;
++
++    private static string? ReadString(BinaryReader reader)
++    {
++        ulong len = reader.ReadUInt64();
++        if (len > 1_000_000ul) return null;
++        if (reader.BaseStream.Position + (long)len > reader.BaseStream.Length) return null;
++        byte[] raw = reader.ReadBytes((int)len);
++        if (raw.Length != (int)len) return null;
++        return Encoding.UTF8.GetString(raw);
++    }
++}
+diff --git a/9to1 Workspace/Home/Tests/HomeDulcheRuntimeServiceTests.cs b/9to1 Workspace/Home/Tests/HomeDulcheRuntimeServiceTests.cs
+index 8aeb993..5dbee4b 100644
+--- a/9to1 Workspace/Home/Tests/HomeDulcheRuntimeServiceTests.cs	
++++ b/9to1 Workspace/Home/Tests/HomeDulcheRuntimeServiceTests.cs	
+@@ -225,6 +225,204 @@ public sealed class HomeDulcheRuntimeServiceTests
+         Assert.Null(evidence);
+     }
+ 
++    // ------------------------------------------ pass 6 managed structural gate regressions
++
++    [Fact]
++    public async Task Structurally_malformed_blob_is_not_admitted_despite_valid_hash()
++    {
++        // Hash+size verification passes (manifest records the real artifact hash) yet the blob is
++        // structurally malformed (bad GGUF magic): the structural gate must reject it.
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteStructurallyMalformedModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
++    [Fact]
++    public async Task Missing_artifact_blob_is_not_admitted()
++    {
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteVerifiedModel();
++        store.DeleteBlob();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
++    [Fact]
++    public async Task Structural_gate_cancellation_fails_closed()
++    {
++        // Cancellation must propagate as OperationCanceledException (never a partial admit). A
++        // cancelled gate never turns structural completeness into eligibility.
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteVerifiedModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++        using var cts = new CancellationTokenSource();
++        cts.Cancel();
++
++        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => source.FindEligibleAsync(cts.Token).AsTask());
++    }
++
++    [Fact]
++    public async Task Packaged_evidence_is_discoverable_without_external_provider_evidence_only()
++    {
++        // EVIDENCE-ONLY seam test. It proves the packaged model-evidence source reaches an eligible
++        // record (real manifest re-hash + in-process structural gate) WITHOUT any external provider
++        // or credential. It does NOT invoke OverlayChatSessionFactory/provider/broker/model adapter
++        // and is not integration proof of the caller-to-broker-to-adapter path. Real caller/
++        // inference/asset acceptance remains BLOCKED until those genuine assets are present.
++        using var store = new ModelStore();
++        var (root, sha, _) = store.WriteVerifiedModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.NotNull(evidence);
++        Assert.Equal(sha, evidence!.ArtifactSha256);
++        Assert.True(evidence.IsVerifiedArtifact);
++    }
++
++    [Fact]
++    public async Task Rollback_previous_known_good_is_preserved_after_a_defect()
++    {
++        // A previously-known-good blob is still admitted (no regression), and a tampered blob is
++        // refused; the gate only changes admission for the actual current artifact.
++        using var store = new ModelStore();
++        var (root, sha, _) = store.WriteVerifiedModel();
++        var goodSource = new HomeDulchePackagedModelEvidenceSource(root);
++        var good = await goodSource.FindEligibleAsync(CancellationToken.None);
++        Assert.NotNull(good);
++        Assert.Equal(sha, good!.ArtifactSha256);
++
++        store.TamperBlob(); // size now mismatches => refused at the size/hash step
++        var bad = await goodSource.FindEligibleAsync(CancellationToken.None);
++        Assert.Null(bad);
++    }
++
++    [Fact]
++    public async Task Real_source_identity_is_from_the_actual_artifact_file()
++    {
++        // The admitted model id/provider/artifact must come from the REAL on-disk manifest and the
++        // real re-hashed blob — not from a fabricated row. The structural gate never fabricates a
++        // model or a provider.
++        using var store = new ModelStore();
++        var (root, sha, _) = store.WriteVerifiedModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root, "local-model-q4");
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.NotNull(evidence);
++        Assert.Equal("local-model-q4", evidence!.ModelId);
++        Assert.Equal("llamacpp", evidence.ProviderId);
++        Assert.Equal(sha, evidence.ArtifactSha256);
++    }
++
++    [Fact]
++    public async Task Valid_minimal_gguf_blob_is_admitted()
++    {
++        // The 68-byte counterpart (header + one F32[1] tensor info ending at byte 57, padded to
++        // 64, then a 4-byte payload) is structurally sound: it MUST be admitted by the gate.
++        using var store = new ModelStore();
++        var (root, sha, _) = store.WriteAlignedMinimalGgufModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.NotNull(evidence);
++        Assert.Equal(sha, evidence!.ArtifactSha256);
++        Assert.True(evidence.IsVerifiedArtifact);
++    }
++
++    [Fact]
++    public async Task Truncated_gguf_v3_without_aligned_payload_is_rejected()
++    {
++        // Exactly the causal dataStart case: header + one F32[1] tensor info ends at byte 57 with
++        // NO aligned payload. The aligned data section start (align(57,32)=64) lies beyond EOF, so
++        // the declared extent cannot be satisfied and the blob must be rejected despite a valid
++        // size+hash manifest record.
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteTruncatedGgufModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
++    [Fact]
++    public async Task Non_power_of_two_alignment_is_rejected()
++    {
++        // Declared general.alignment=3 is a positive UINT32 that is not a power of two: it is a
++        // provable defect and must fail closed, never silently accepted.
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteNonPowerOfTwoAlignmentModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
++    [Fact]
++    public async Task Alignment_declared_with_wrong_scalar_type_is_rejected()
++    {
++        // general.alignment must be a UINT32 scalar. An INT32 (or string) declaration is a wrong
++        // type and must fail closed rather than be silently ignored.
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteAlignmentWrongTypeModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
++    [Fact]
++    public async Task Misaligned_tensor_offset_is_rejected()
++    {
++        // Per-tensor offsets must be aligned to the declared alignment. Offset 1 (mod 32) is
++        // misaligned and must fail closed.
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteMisalignedTensorOffsetModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
++    [Fact]
++    public async Task Zero_dimension_tensor_is_rejected()
++    {
++        // A declared dimension of 0 is an impossible/improbable shape and must fail closed.
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteZeroDimensionModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
++    [Fact]
++    public async Task Metadata_value_running_beyond_eof_is_rejected()
++    {
++        // A metadata string value whose declared length extends beyond EOF must fail closed
++        // (skip-beyond-EOF metadata is a truncation defect).
++        using var store = new ModelStore();
++        var (root, _, _) = store.WriteSkipBeyondEofMetadataModel();
++        var source = new HomeDulchePackagedModelEvidenceSource(root);
++
++        var evidence = await source.FindEligibleAsync(CancellationToken.None);
++
++        Assert.Null(evidence);
++    }
++
+     // ---------------------------------------------------------------- service lifecycle
+ 
+     [Fact]
+@@ -770,20 +968,66 @@ public sealed class HomeDulcheRuntimeServiceTests
+ 
+         public ModelStore() => Directory.CreateDirectory(_root);
+ 
+-        public (string Root, string Sha256, string BlobRelative) WriteVerifiedModel()
++        public (string Root, string Sha256, string BlobRelative) WriteVerifiedModel() =>
++            WriteBlob(ValidMinimalGguf());
++
++        public void TamperBlob() => File.WriteAllText(_blobPath, "tampered-artifact-content");
++        public void RewriteManifestSha(string sha) => PatchManifest(sha: sha);
++        public void RewriteManifestBlob(string blob) => PatchManifest(blob: blob);
++
++        public void DeleteBlob()
++        {
++            if (File.Exists(_blobPath)) File.Delete(_blobPath);
++        }
++
++        /// <summary>Writes a model whose ARTIFACT is structurally malformed (bad GGUF magic) but
++        /// whose manifest records that artifact's real SHA-256, so size+hash verification passes and
++        /// only the structural gate can reject it. This is the causal malformed-blob regression.</summary>
++        public (string Root, string Sha256, string BlobRelative) WriteStructurallyMalformedModel() =>
++            WriteBlob(InvalidGgufBadMagic());
++
++        /// <summary>The valid 68-byte counterpart: header + one F32[1] tensor info ending at byte
++        /// 57, padded to 64, then a 4-byte payload. It is structurally sound and MUST be admitted.</summary>
++        public (string Root, string Sha256, string BlobRelative) WriteAlignedMinimalGgufModel() =>
++            WriteBlob(ValidMinimalGguf());
++
++        /// <summary>The causal truncated case: the same container cut to exactly byte 57 (tensor-info
++        /// end) leaves NO aligned data payload. The aligned data section start lies beyond EOF, so
++        /// the blob is structurally unsound and must be rejected despite a valid hash/size record.</summary>
++        public (string Root, string Sha256, string BlobRelative) WriteTruncatedGgufModel() =>
++            WriteBlob(TruncatedGguf());
++
++        public (string Root, string Sha256, string BlobRelative) WriteNonPowerOfTwoAlignmentModel() =>
++            WriteBlob(NonPowerOfTwoAlignmentGguf());
++
++        public (string Root, string Sha256, string BlobRelative) WriteAlignmentWrongTypeModel() =>
++            WriteBlob(AlignmentWrongTypeGguf());
++
++        public (string Root, string Sha256, string BlobRelative) WriteMisalignedTensorOffsetModel() =>
++            WriteBlob(MisalignedTensorOffsetGguf());
++
++        public (string Root, string Sha256, string BlobRelative) WriteZeroDimensionModel() =>
++            WriteBlob(ZeroDimensionGguf());
++
++        public (string Root, string Sha256, string BlobRelative) WriteSkipBeyondEofMetadataModel() =>
++            WriteBlob(SkipBeyondEofMetadataGguf());
++
++        /// <summary>Internal writer shared by all model fixtures: persists a blob under its real
++        /// SHA-256 content address and a manifest recording that true hash/size/relative path.</summary>
++        private (string Root, string Sha256, string BlobRelative) WriteBlob(
++            byte[] content, string manifestId = "local-model-q4")
+         {
+-            var content = System.Text.Encoding.UTF8.GetBytes("fake-model-artifact-" + Guid.NewGuid().ToString("N"));
+             var sha = Convert.ToHexString(SHA256.HashData(content)).ToLowerInvariant();
+             var relative = Path.Combine(sha[..2], sha + ".gguf");
+             _blobPath = Path.Combine(_root, "blobs", "sha256", relative);
+             Directory.CreateDirectory(Path.GetDirectoryName(_blobPath)!);
+             File.WriteAllBytes(_blobPath, content);
+ 
+-            _manifestPath = Path.Combine(_root, "manifests", "local-model-q4.json");
++            _manifestPath = Path.Combine(_root, "manifests", manifestId + ".json");
+             Directory.CreateDirectory(Path.GetDirectoryName(_manifestPath)!);
+             File.WriteAllText(_manifestPath, JsonSerializer.Serialize(new
+             {
+-                id = "local-model-q4",
++                id = manifestId,
+                 displayName = "Local Q4",
+                 sha256 = sha,
+                 blob = relative.Replace('\\', '/'),
+@@ -794,9 +1038,152 @@ public sealed class HomeDulcheRuntimeServiceTests
+             return (_root, sha, relative.Replace('\\', '/'));
+         }
+ 
+-        public void TamperBlob() => File.WriteAllText(_blobPath, "tampered-artifact-content");
+-        public void RewriteManifestSha(string sha) => PatchManifest(sha: sha);
+-        public void RewriteManifestBlob(string blob) => PatchManifest(blob: blob);
++        /// <summary>Builds a GGUF-shaped container with a bad magic (structurally malformed). It
++        /// still has the same overall framing so the manifest hash/size verify, but the structural
++        /// gate must reject it.</summary>
++        private static byte[] InvalidGgufBadMagic()
++        {
++            using var stream = new MemoryStream();
++            using var writer = new BinaryWriter(stream);
++            writer.Write("XGUF"u8);       // bad magic
++            writer.Write((uint)3);
++            writer.Write((ulong)1);
++            writer.Write((ulong)0);
++            WriteGgufString(writer, "w");
++            writer.Write((uint)1);
++            writer.Write((ulong)1);
++            writer.Write((uint)0);
++            writer.Write((ulong)0);
++            writer.Write(new byte[8]);
++            return stream.ToArray();
++        }
++
++        /// <summary>Builds a minimal structurally-valid GGUF: magic "GGUF", version 3, zero
++        /// metadata, one F32[1] tensor (type 0) at relative offset 0, aligned data section (68
++        /// bytes total: table ends at 57, padded to 64, +4-byte payload).</summary>
++        private static byte[] ValidMinimalGguf()
++        {
++            using var stream = new MemoryStream();
++            using var writer = new BinaryWriter(stream);
++            writer.Write("GGUF"u8);
++            writer.Write((uint)3);        // version
++            writer.Write((ulong)1);       // tensor_count
++            writer.Write((ulong)0);       // metadata_kv_count
++            WriteGgufString(writer, "w");
++            writer.Write((uint)1);        // n_dims
++            writer.Write((ulong)1);       // dims[0] = 1
++            writer.Write((uint)0);        // ggml_type F32
++            writer.Write((ulong)0);       // tensor offset (relative to data section)
++            AppendValidDataTail(stream, writer);
++            return stream.ToArray();
++        }
++
++        private static byte[] TruncatedGguf() => ValidMinimalGguf()[..57];
++
++        private static byte[] NonPowerOfTwoAlignmentGguf()
++        {
++            using var stream = new MemoryStream();
++            using var writer = new BinaryWriter(stream);
++            writer.Write("GGUF"u8);
++            writer.Write((uint)3);
++            writer.Write((ulong)1);   // tensor_count
++            writer.Write((ulong)1);   // kv_count
++            WriteGgufString(writer, "general.alignment");
++            writer.Write((uint)4);    // UINT32
++            writer.Write((uint)3);    // value 3 (not a power of two)
++            WriteGgufString(writer, "w");
++            writer.Write((uint)1);
++            writer.Write((ulong)1);
++            writer.Write((uint)0);
++            writer.Write((ulong)0);
++            AppendValidDataTail(stream, writer);
++            return stream.ToArray();
++        }
++
++        private static byte[] AlignmentWrongTypeGguf()
++        {
++            using var stream = new MemoryStream();
++            using var writer = new BinaryWriter(stream);
++            writer.Write("GGUF"u8);
++            writer.Write((uint)3);
++            writer.Write((ulong)1);
++            writer.Write((ulong)1);
++            WriteGgufString(writer, "general.alignment");
++            writer.Write((uint)5);    // INT32 (wrong scalar type)
++            writer.Write((int)32);
++            WriteGgufString(writer, "w");
++            writer.Write((uint)1);
++            writer.Write((ulong)1);
++            writer.Write((uint)0);
++            writer.Write((ulong)0);
++            AppendValidDataTail(stream, writer);
++            return stream.ToArray();
++        }
++
++        private static byte[] MisalignedTensorOffsetGguf()
++        {
++            using var stream = new MemoryStream();
++            using var writer = new BinaryWriter(stream);
++            writer.Write("GGUF"u8);
++            writer.Write((uint)3);
++            writer.Write((ulong)1);
++            writer.Write((ulong)0);
++            WriteGgufString(writer, "w");
++            writer.Write((uint)1);
++            writer.Write((ulong)1);
++            writer.Write((uint)0);
++            writer.Write((ulong)1);   // misaligned offset (1 mod 32)
++            AppendValidDataTail(stream, writer);
++            return stream.ToArray();
++        }
++
++        private static byte[] ZeroDimensionGguf()
++        {
++            using var stream = new MemoryStream();
++            using var writer = new BinaryWriter(stream);
++            writer.Write("GGUF"u8);
++            writer.Write((uint)3);
++            writer.Write((ulong)1);
++            writer.Write((ulong)0);
++            WriteGgufString(writer, "w");
++            writer.Write((uint)1);
++            writer.Write((ulong)0);   // impossible zero dimension
++            writer.Write((uint)0);
++            writer.Write((ulong)0);
++            AppendValidDataTail(stream, writer);
++            return stream.ToArray();
++        }
++
++        private static byte[] SkipBeyondEofMetadataGguf()
++        {
++            using var stream = new MemoryStream();
++            using var writer = new BinaryWriter(stream);
++            writer.Write("GGUF"u8);
++            writer.Write((uint)3);
++            writer.Write((ulong)1);   // tensor_count (unreachable: metadata truncation fails first)
++            writer.Write((ulong)1);   // kv_count
++            WriteGgufString(writer, "k");
++            writer.Write((uint)8);    // TypeString
++            writer.Write((ulong)100); // declared length runs beyond EOF
++            writer.Write(new byte[3]); // only 3 bytes present then EOF
++            return stream.ToArray();
++        }
++
++        private static void WriteGgufString(BinaryWriter writer, string s)
++        {
++            var bytes = System.Text.Encoding.UTF8.GetBytes(s);
++            writer.Write((ulong)bytes.Length);
++            writer.Write(bytes);
++        }
++
++        private static void AppendValidDataTail(MemoryStream stream, BinaryWriter writer)
++        {
++            var tableEnd = stream.Position;
++            var padded = (long)(((tableEnd + 31) / 32) * 32);
++            var padding = new byte[(int)(padded - tableEnd)];
++            writer.Write(padding);
++            writer.Write((byte)0); writer.Write((byte)0); writer.Write((byte)0); writer.Write((byte)0);
++        }
+ 
+         private void PatchManifest(string? sha = null, string? blob = null)
+         {
