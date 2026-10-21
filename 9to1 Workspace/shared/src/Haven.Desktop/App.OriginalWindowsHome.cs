@@ -89,6 +89,59 @@ public sealed partial class App
             // Factory registration is lazy: no Den or profile is opened by DI.
             // Its first real acquisition follows started Home and actual store setup.
             collection.AddSingleton<HomePersonalDenFactory>(_ => personalDen!.CreateOriginalFactory(actualHome.Ownership));
+            // ONE real Home-owned selection source, shared by the host top-bar, the universal picker
+            // and actual request construction. It is wired to the SAME actual store/profiles/resources
+            // and the SAME authorised single-Den factory as the rest of the composition, with the
+            // genuine current-profile actor source (never a startup-cached actor). There is exactly one
+            // singleton; the host consumes this exact instance when present.
+            collection.AddSingleton<HomeModelSelectionSource>(provider =>
+            {
+                var registry = provider.GetRequiredService<IModelProviderRegistry>();
+                var routes = new HomeVersionedModelRouteRepository(actualHome.StateStore);
+                var personal = new HomePersonalModelRoutes(actualHome.Profiles, routes, actualHome.Resources);
+                // Advertised reasoning IDs from the AUTHORISED single personal Den model record
+                // (never a second Den), keyed by the GENUINE provider+model pair so another provider's
+                // same-named model can never authorise this model's advertised scale. The single Den
+                // factory is resolved lazily on use, only after the app lease has actually acquired a
+                // personal Den; before any explicit open/create the truthful result is null (unknown),
+                // so ordinary Home/Chat start without an assistant and without creating a fake Den.
+                Func<string, string, CancellationToken, Task<IReadOnlyList<string>?>> advertisedLevels =
+                    async (providerId, modelId, ct) =>
+                    {
+                        if (personalDen?.HasAcquiredProvider != true)
+                            return null;
+                        try
+                        {
+                            var homePersonalDenFactory = provider.GetRequiredService<HomePersonalDenFactory>();
+                            var session = await homePersonalDenFactory.OpenAsync(ct);
+                            var record = await session.Den.GetModelByID(modelId, cancellationToken: ct);
+                            // Guard against a provider-scoped store returning another provider's same-named
+                            // model: only accept metadata for the exact resolved provider identity.
+                            if (record is not null && !string.IsNullOrWhiteSpace(providerId)
+                                && record.Provider is { } recordProvider
+                                && !string.Equals(providerId, recordProvider, StringComparison.Ordinal))
+                                return null;
+                            return record?.ReasoningLevels;
+                        }
+                        catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+                        catch { return null; }
+                    };
+                return new HomeModelSelectionSource(
+                    registry, routes,
+                    (category, ct) => personal.GetAsync(category, ct),
+                    ct => actualHome.Profiles.GetCurrentAsync(ct).AsTask(),
+                    advertisedLevels: advertisedLevels,
+                    routeProvider: new HomeModelPickerFeatureProvider(
+                        actualHome.Profiles, routes,
+                        provider.GetRequiredService<IModelProviderRegistry>(),
+                        provider.GetRequiredService<IPrivacyPreferenceStore>(),
+                        actualHome.Resources, actualHome.Broker));
+            });
+            // The SAME Home-owned selection source is the typed read owner for actual ChatSessionService
+            // request production (the producer seam). It validates current actor/revision, provider/model
+            // identity, route/revision and genuine scope before returning the exact advertised reasoning ID.
+            collection.AddSingleton<IChatReasoningSelectionReader>(provider =>
+                new HomeChatReasoningSelectionReader(provider.GetRequiredService<HomeModelSelectionSource>()));
             collection.AddSingleton<IAssistantOriginalModelSelectionOwner>(provider =>
             {
                 var routing = provider.GetRequiredService<ProviderRoutingModelClient>();

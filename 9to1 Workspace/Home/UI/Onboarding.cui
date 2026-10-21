@@ -1,0 +1,126 @@
+<Cui id="home-onboarding" product="9to1" version="2">
+  <!-- CUI-owned first-run page state. Every step is a document-root local variable; transitions
+       are <Set> mutations guarded by <When> conditions on the typed command result, and automatic
+       follow-ups are <Effect> rising-edge triggers. No C# code-behind decides which screen follows. -->
+  <Variable Type="boolean" ID="StepWelcome">true</Variable>
+  <Variable Type="boolean" ID="StepSignIn">false</Variable>
+  <Variable Type="boolean" ID="StepDownload">false</Variable>
+  <Variable Type="commandstate" ID="Result"></Variable>
+  <Variable Type="string" ID="StatusText"></Variable>
+
+  <Actions>
+    <Action name="start">
+      <Set Target="StepWelcome" Value="false" />
+      <Set Target="StepSignIn" Value="true" />
+    </Action>
+
+    <!-- Sign-in decision + automatic discovery (typed domain op). The result decides the next
+         step via the <Effects> block: an eligible local model auto-completes; otherwise the
+         Download Models? step appears directly (no extra Continue/Discover tap). -->
+    <Action name="signin" command="onboarding.signin" result="Result">
+      <Set Target="StepSignIn" Value="false" />
+      <Set Target="StatusText" Value="Sign-in opened in your browser." When="{Binding Result.Value.SignInOpened}" />
+      <Set Target="StatusText" Value="Sign-in is unavailable right now; local tools keep working." When="{Binding Result.Value.SignInUnavailable}" />
+    </Action>
+
+    <Action name="notnow" command="onboarding.notnow" result="Result">
+      <Set Target="StepSignIn" Value="false" />
+    </Action>
+
+    <!-- Eligible auto-complete: only reached via the eligible <Effect>. On a failed durable commit
+         the Download Models? step is revealed so the user can retry; the page is never hidden
+         before a genuine successful persist. -->
+    <Action name="finish-eligible" command="onboarding.complete" result="Result">
+      <Set Target="StepDownload" Value="true" When="!{Binding Result.Succeeded}" />
+      <Set Target="StatusText" Value="We could not save your setup yet; please retry." When="!{Binding Result.Succeeded}" />
+    </Action>
+
+    <!-- Download Models? -> continue without downloading (durable completion). The step is kept
+         visible on failure (the Continue button is the working retry); only a genuine successful
+         commit publishes Home (host waits on CompletionTask). -->
+    <Action name="continue-no-model" command="onboarding.complete" result="Result">
+      <Set Target="StatusText" Value="We could not save your setup yet; please retry." When="!{Binding Result.Succeeded}" />
+    </Action>
+
+    <Action name="show-download">
+      <Set Target="StepDownload" Value="true" />
+    </Action>
+
+    <Action name="retry-recovery" command="onboarding.retry" result="Result">
+      <Set Target="StatusText" Value="State recovered; starting fresh." When="{Binding Result.Succeeded}" />
+    </Action>
+
+    <Action name="quit-app" command="onboarding.quit" />
+  </Actions>
+
+  <Effects>
+    <!-- Eligible local model -> auto-complete directly into Home after the sign-in decision. -->
+    <Effect name="eligible-auto-complete" Condition="{Binding Result.Value.EligibleModelAvailable}" Action="finish-eligible" />
+    <!-- No eligible model -> surface the Download Models? step directly (honest unavailable). -->
+    <Effect name="download-auto" Condition="{Binding Result.Value.RequiresDownload}" Action="show-download" />
+  </Effects>
+
+  <Theme Name="user_preference">
+    <Page>
+      <Container id="onboarding-root" background="{Resource CuiBackgroundBrush}" Type="Overlay">
+        <Container id="onboarding-scroll" vertical-scrolling="true" Type="Grid">
+          <Container id="onboarding-card" padding="24" margin="16" max-width="560" horizontal-alignment="Center" vertical-alignment="Center" Type="Vertical Stack">
+
+            <!-- STRUCTURED RECOVERY: shown only when the startup read reported damaged state. -->
+            <If Condition="{Binding RecoveryRequired}">
+              <Container id="onboarding-recovery" Type="Vertical Stack">
+                <Text id="onboarding-recovery-title" text="Your setup needs attention" font-size="30" font-weight="Bold" foreground="{Resource CuiTextBrush}" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-recovery-code" text="{Binding RecoveryCode}" foreground="{Resource CuiAccentBrush}" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-recovery-message" text="{Binding RecoveryMessage}" foreground="{Resource CuiTextSoftBrush}" margin="0 8 0 24" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-recovery-note" text="The original data was preserved and nothing was overwritten." foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" text-alignment="Center" />
+                <Container Type="Wrap" horizontal-alignment="Center">
+                  <Button id="onboarding-retry" action="retry-recovery" content="Retry" min-height="44" />
+                  <Button id="onboarding-quit" action="quit-app" content="Close" min-height="44" margin="12 0 0 0" />
+                </Container>
+              </Container>
+            </If>
+
+            <!-- Normal first-run flow: shown only when no structured recovery is active. -->
+            <If Condition="!{Binding RecoveryRequired}">
+
+            <!-- WELCOME -->
+            <If Condition="{Binding StepWelcome}">
+              <Container id="onboarding-welcome" Type="Vertical Stack">
+                <Text id="onboarding-welcome-title" text="Welcome to" font-size="30" font-weight="Bold" foreground="{Resource CuiTextBrush}" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-logo" text="9to1" font-size="56" font-weight="Bold" foreground="{Resource CuiAccentBrush}" margin="0 4 0 24" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-welcome-copy" text="A short, skippable first-run before normal Home use. No account or download is required." foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 28" text-wrapping="Wrap" text-alignment="Center" />
+                <Button id="onboarding-start" action="start" content="Start" min-height="46" max-width="260" horizontal-alignment="Center" accessible-name="Start using 9to1" />
+              </Container>
+            </If>
+
+            <!-- SIGN IN -->
+            <If Condition="{Binding StepSignIn}">
+              <Container id="onboarding-signin" Type="Vertical Stack">
+                <Text id="onboarding-signin-title" text="Sign In?" font-size="30" font-weight="Bold" foreground="{Resource CuiTextBrush}" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-signin-copy" text="Signing in provides access to cloud and connection features. Your local tools keep working either way." foreground="{Resource CuiTextSoftBrush}" margin="0 8 0 24" text-wrapping="Wrap" text-alignment="Center" />
+                <Container Type="Wrap" horizontal-alignment="Center">
+                  <Button id="onboarding-signin-primary" action="signin" content="Sign In" min-height="44" accessible-name="Sign in to 9to1" />
+                  <Button id="onboarding-notnow" action="notnow" content="Not Now" min-height="44" margin="12 0 0 0" accessible-name="Continue in local-only mode" />
+                </Container>
+              </Container>
+            </If>
+
+            <!-- DOWNLOAD MODELS? -->
+            <If Condition="{Binding StepDownload}">
+              <Container id="onboarding-download" Type="Vertical Stack">
+                <Text id="onboarding-download-title" text="Download Models?" font-size="30" font-weight="Bold" foreground="{Resource CuiTextBrush}" text-wrapping="Wrap" text-alignment="Center" />
+                <Text id="onboarding-download-copy" text="Local models give you unlimited on-device AI. Downloads are not available in this build; continue without one and install from Settings later." foreground="{Resource CuiTextSoftBrush}" margin="0 8 0 20" text-wrapping="Wrap" text-alignment="Center" />
+                <Button id="onboarding-continue" action="continue-no-model" min-height="44" max-width="380" horizontal-alignment="Center" padding="16 12" accessible-name="Continue without downloading a model">
+                  <Text text="Continue without downloading" text-wrapping="Wrap" text-alignment="Center" />
+                </Button>
+              </Container>
+            </If>
+
+              <Text id="onboarding-status" text="{Binding StatusText}" foreground="{Resource CuiTextSoftBrush}" margin="0 20 0 0" text-wrapping="Wrap" text-alignment="Center" />
+            </If>
+          </Container>
+        </Container>
+      </Container>
+    </Page>
+  </Theme>
+</Cui>

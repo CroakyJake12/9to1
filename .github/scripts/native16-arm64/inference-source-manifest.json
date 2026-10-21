@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "successful_base": "8b629f0fbab657975009c9da851f075fe1326d66",
+  "bundle19_source_freeze": "077c1183b5c6c98204bc4bdf4b53da188e72fe88",
+  "root_strict_formats_preserved": true,
+  "files": [
+    {
+      "path": ".github/scripts/native16-arm64/PREVIEW-README.md",
+      "sha256": "dfb9f90fce5770a8ed5fa095b5fbb4b9513c1b9d841a888b59c926675f2230b8",
+      "size": 3180
+    },
+    {
+      "path": ".github/scripts/native16-arm64/build-native-arm64.py",
+      "sha256": "18675289d1368ac3402ed0f0c3a7060d6c72d32f29a03f10c542e00ea54d17a8",
+      "size": 8987
+    },
+    {
+      "path": ".github/scripts/native16-arm64/inference_stage.py",
+      "sha256": "3d08b56b586644a774444e766eb93d8adc5503c676b456a46ba51f8e9c47d386",
+      "size": 13047
+    },
+    {
+      "path": ".github/scripts/native16-arm64/package-arm64-deb.ROOT-ONLY.py",
+      "sha256": "582e394618a3b12337f10ed8d9c814bef7e647202450807e03ec83d83842b34b",
+      "size": 16057
+    },
+    {
+      "path": ".github/scripts/native16-arm64/qwen3-06b-q6k.json",
+      "sha256": "e3e7ca140494ae346c155c3c95642677fa47cc968bac72d4d7ae4dcbcd383732",
+      "size": 530
+    },
+    {
+      "path": ".github/workflows/havenos-linux-package.yml",
+      "sha256": "354c2831eaee619273f70251aca1ca54a8fb83c9565516835f1fd44e2c59b00a",
+      "size": 12780
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/HANDOFF.md",
+      "sha256": "a3b57d59b35747ba05a586807b34185fe162cfe278acfbdcb672bcaa39b5ae13",
+      "size": 47587
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/PREVIEW-NOTICE.md",
+      "sha256": "74442c06a5697ac4c793dcb9796ed6577408d8ec8e0b6e9748fae44f9dfdf45c",
+      "size": 2659
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/README.md",
+      "sha256": "1c4a3e57c947f7d3d4449f3cc670e092056ae1d6a057fe38ad5296a3fb054097",
+      "size": 9125
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/__init__.py",
+      "sha256": "2fa932c94772e75daeb3c129d896e12e512af1743d777d2c077fbe0003fc0709",
+      "size": 1335
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/arm64-runtime-bundle-spec.json",
+      "sha256": "34c54539260061a1e9de1f2298f5b97a24ec73d21489e80ccd2439235c62c756",
+      "size": 4721
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/arm64-runtime-bundle-spec.official-16elf.historical.json",
+      "sha256": "8168c400ce347019636ee268e11feb030fe9823dfd65e3daa4a5235a14eb957a",
+      "size": 10880
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/cli.py",
+      "sha256": "9ceea3420adc99d2a4c137baa0fe1ac17e638d17155f6b2200160e272127a804",
+      "size": 3304
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/data_stage.py",
+      "sha256": "008894d81e6b3233ac196a98a98abfbf543bb54ee4859b67c04762677d3e0f72",
+      "size": 15949
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/formats.py",
+      "sha256": "1d9c31a604e2640458becfb5505dcbeca7667ee6720b109ebae7d055a4291d4b",
+      "size": 22175
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/identity.py",
+      "sha256": "297d4aae14266a30da762bcd156cae4a274982aa310f8c8ad744176d41cfada4",
+      "size": 5746
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/integration-patch.diff",
+      "sha256": "b4d5d76726dc969227bd3f2defa5865a735c11626b476957fcf518c4f8568f9c",
+      "size": 38334
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/licence.py",
+      "sha256": "8af3e1561978ea09b49c6179c44a83afc2d8f32cd4f1bef95c935a0915309b6d",
+      "size": 2548
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/manifest.py",
+      "sha256": "e396148f28941b4ab15d20e9d8c9d35a572f413a262b3ce112ae8f806e246130",
+      "size": 6516
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/offline-staging-recipe.md",
+      "sha256": "d19f2cc84b2e646b5ff904b25af4fc443044088c3ecee1440e8f220e6d657359",
+      "size": 9489
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/packager.py",
+      "sha256": "5c2d8168f925d8858c1fe8b9a04d4961deb6985dcbd67da0802d5cc2e9d94567",
+      "size": 7045
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/pass6-managed-consumer/identity.json",
+      "sha256": "04ad66b47e9c0e26e40c7416dc6e6b44ffefd0ec6677ff41c2d366d0a2e43116",
+      "size": 897
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/preview-asset-profile.json",
+      "sha256": "c792b87b5414b15f4c1d84dec690d649651d40fbd12d01c4ce4e61d0931f2b11",
+      "size": 6845
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/preview-asset-profile.md",
+      "sha256": "7fe9b32b9664228dd249dd8486db2ed8dc1a66148bb88797e7f0a8768d2dfc8c",
+      "size": 4158
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/preview_profile.py",
+      "sha256": "2362fb69efba901ccf2efb70fcdd4cd9f5e3c58e5ef42e7cf7e369f58ab89a43",
+      "size": 12878
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/receipt.py",
+      "sha256": "e445127616fbc851f37a604a139e32c10785d17480cebdcdfb427c5cf1c4cad0",
+      "size": 1642
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/spec.py",
+      "sha256": "962243bb4c35a15043ad4e4cb91300e3cc1e3a01bbf1d972e7560f684918e81f",
+      "size": 7832
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/structural_validate.py",
+      "sha256": "1b57db3adc029aa71e752b4661bfc379c345965dfc997dded3e386038479d3d2",
+      "size": 2249
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/__init__.py",
+      "sha256": "9fe763e9fb9fb204d20bc25ae64d247c029926907cc2cdf0bf1010e5a1e40308",
+      "size": 74
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/helpers.py",
+      "sha256": "f5ee5e727c09c27651291afca326079732971e7d516f7349a0d9954fc1288c85",
+      "size": 9945
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/test_formats.py",
+      "sha256": "88b7a3777b97cce3848fa4528b6b41a26726f1eac5adbc5251d791a198d418b3",
+      "size": 21464
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/test_manifest.py",
+      "sha256": "c67915aa3885e5ff2f38fb28172ee65a2b1d53ded7695764176aab86f35a043d",
+      "size": 2155
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/test_packager.py",
+      "sha256": "1ec846e8b9b160fd313fd1d53a7e6f35da182824258ec9b178ec91af8f6f5627",
+      "size": 11054
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/test_path_containment.py",
+      "sha256": "e67cc498a801b816885eebdc77e53abb6c4128519a444833f1d1a34311f2d227",
+      "size": 1917
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/test_preview_profile.py",
+      "sha256": "6379a4f582a7aaf07c9f8c67a2eb874855c92ce39c17d0d1c36d7dc5233ee5a1",
+      "size": 13573
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/test_reproducibility.py",
+      "sha256": "dc7ac0169b7243ab083a7c5439dd2661092bf6af7f67fef10056d2fd8fc697eb",
+      "size": 2286
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/tests/test_verifier.py",
+      "sha256": "884446b5b7904641c9be36dd27255d14179afa3d1e461dd3b9abd2b2a38ec616",
+      "size": 21310
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/bundle/verifier.py",
+      "sha256": "417dfcadf379fa92c1cb2de0746b05ee4c8fbdc4d110085b7028163af3893bb2",
+      "size": 9141
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/gguf.py",
+      "sha256": "507ee0420dab687aa90137af31ec14b5a6ead5df4e1228b5870a6ee031e053c2",
+      "size": 769
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/manifest_validation.py",
+      "sha256": "4a145df04d6d61a99ab60573729b0b61eaf9fe1d41f4650e3d12c993cdf0ae24",
+      "size": 5012
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/model_lease.py",
+      "sha256": "7be30caf86b610323b3f0fdf3b62cde7310c57a52010d853e1e5da6ad32bf3b2",
+      "size": 3257
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/modelctl.py",
+      "sha256": "c538a4d0cb5cc90dd4240d6e80d18d73ca28724d00eaafce03c83b6bc0fcab5b",
+      "size": 21422
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/tests/test_manifest_validation.py",
+      "sha256": "889bf6a8fe9c174f3e0cf7a3db26c73bef0e19a7b8eed15a7d702fcde45f551a",
+      "size": 2155
+    }
+  ],
+  "final_preview_kind": "LESSON_PREVIEW_ARM64",
+  "engineering_parent_source": "5893fc7d63715898ad6024d8d84ac5edb125252a",
+  "metadata_note": "FORTESTING isolatedSource15 production close correction +frozenSource5 CI28. Exactly40nonwrapperpins preserved; only3approvedCIwrappers refreshed. No inference/runtime/modelcode changes."
+}

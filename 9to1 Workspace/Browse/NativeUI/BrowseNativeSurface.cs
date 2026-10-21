@@ -144,6 +144,13 @@ public sealed class BrowseNativeWindow : Window
             var address = this.GetLogicalDescendants().OfType<TextBox>().SingleOrDefault(control => control.Name == "BrowseAddressBox");
             address?.Focus(); address?.SelectAll(); args.Handled = true; return;
         }
+        if (args.Key == Key.Escape && _workspace.TryGetValue("ProfileMenuOpen", out var open) && open is true)
+        {
+            args.Handled = true;
+            try { await _workspace.DispatchAsync("9to1.Browse.CloseProfileMenu", null); }
+            catch (Exception failure) { System.Diagnostics.Trace.TraceError("Browse retained its profile-menu close task: {0}", failure); }
+            return;
+        }
         var command = args.Key switch
         {
             Key.T when args.KeyModifiers.HasFlag(KeyModifiers.Control) && !args.KeyModifiers.HasFlag(KeyModifiers.Alt) => args.KeyModifiers.HasFlag(KeyModifiers.Shift) ? "9to1.Browse.ReopenClosedTab" : "9to1.Browse.NewTab",

@@ -27,16 +27,18 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
     private readonly bool _aiAvailable;
     private readonly DesktopOriginalWorkLifetime _work;
-    private readonly CuiControlLoader _loader = new();
+    private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly CuiControlLoader _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly Border _viewport = new();
     private readonly TextBlock _heading = new(), _status = new();
     private readonly TextBox _search = new();
     private readonly ComboBox _searchMode = new() { ItemsSource = new[] { "Search", "AI" }, SelectedIndex = 0 };
     private readonly HomeAppsCuiBindings _appsBindings;
+    private readonly HomeRailCuiBindings _railBindings;
+    private readonly CuiKeyboardTooltipHost _keyboardTooltips;
     private HomeAppsViewState _appsState = HomeAppsViewState.Empty;
     private IReadOnlyList<HomeAppItem> _appsCatalogue = [];
-    private CuiContainerControl? _root, _sidebar, _main, _searchRow;
+    private CuiContainerControl? _searchRow;
     private NewDashboardPage? _dashboard;
     private HomeDiscoverPage? _discover;
     private Control? _appsView;
@@ -65,6 +67,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         };
         _work = new(StopAsync, CleanupAsync);
         _appsBindings = new(() => _appsState, DispatchAppsCommandAsync);
+        _railBindings = new(() => _section);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
             ?? throw new InvalidDataException("The shared Home document is missing.");
         using var reader = new StreamReader(stream);
@@ -73,9 +76,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (parser.Diagnostics.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The shared Home document is invalid.");
         _loader.SetActionDispatcher(this);
-        _loader.BindAuthoredControl("unified-home-root", _ => _root = new("Grid"));
-        _loader.BindAuthoredControl("home-sidebar", _ => _sidebar = new("Wrap"));
-        _loader.BindAuthoredControl("home-main", _ => _main = new("Grid"));
+        _loader.SetBindingContext(_railBindings);
         _loader.BindAuthoredControl("home-search-row", _ => _searchRow = new("Wrap"));
         _loader.BindAuthoredControl("home-content", _ => _viewport);
         _loader.BindAuthoredControl("home-heading", _ => _heading);
@@ -86,11 +87,13 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (loaded.Root is null || loaded.Diagnostics.Any(item => item.Severity == CuiDiagnosticSeverity.Error))
             throw new InvalidDataException("The shared Home document could not be rendered.");
         _loader.WireBindings(loaded.Root);
+        // Bounded canonical CUI keyboard-focus tooltip capability: authored rail tooltips gain real
+        // keyboard-focus visibility (same retained popup/transparency seam) for this Home surface.
+        _keyboardTooltips = CuiKeyboardTooltipHost.Attach(loaded.Root);
         if (!_aiAvailable)
             Set(_searchMode, "ItemsSource", new object[] { "Search", new ComboBoxItem { Content = "AI (unavailable)", IsEnabled = false } });
         Content = loaded.Root;
         _search.KeyDown += OnSearchKey;
-        SizeChanged += OnHomeSizeChanged;
     }
 
     internal Task? OriginalInitialization => _initialization;
@@ -164,6 +167,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             }
         }
         _dashboard?.Deactivate(); _discover?.Deactivate(); _section = section;
+        _railBindings.Refresh();
         Set(_searchRow!, "IsVisible", section == "newtab");
         Set(_heading, "Text", HeadingFor(section));
         Set(_status, "Text", section == "newtab" && !_aiAvailable ? "Search is available. AI requires an available Spaces destination." : string.Empty);
@@ -217,7 +221,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             await original.AwaitAsync(dashboard.ActivateAsync(token));
         }
         if (!IsAlive || generation != _selection) return;
-        original.DemandPublication(); UpdateLayoutMode();
+        original.DemandPublication();
     }
 
     private Control BuildAppsView()
@@ -264,7 +268,9 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (string.IsNullOrWhiteSpace(key)) return false;
         var app = _appsCatalogue.FirstOrDefault(entry => entry.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
         if (app is null) return false;
-        address = AppContentAddress.Parse("9to1://" + app.Key);
+        // Real Chat is owned by the canonical Spaces Chat space; canonicalize before strict native
+        // admission so the registered Spaces owner receives the resource. Other apps keep their plain route.
+        address = HomeLaunchRouteResolver.Resolve(app.Key);
         return true;
     }
     private void OnDashboardApp(object? sender, ModeDefinition mode)
@@ -361,6 +367,10 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         List<Exception> failures = [];
         void Attempt(Action action) { try { action(); } catch (Exception error) { failures.Add(error); } }
         void Acquire(Func<Task> action) => Attempt(() => _stopSources.Add(action()));
+        // Retire the keyboard-focus tooltip host FIRST, before any loader teardown, so no
+        // tooltip subscription or popup outlives the children it describes. Retired through the
+        // same retained-failure collection as the loaders.
+        Attempt(_keyboardTooltips.Dispose);
         Attempt(_loader.Dispose); Attempt(_appsLoader.Dispose);
         // Start child retirement before joining admitted page actions.
         if (_dashboard is not null) Acquire(_dashboard.CloseAndDrainAsync);
@@ -381,7 +391,6 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         Dispatcher.UIThread.VerifyAccess();
         if (!_stopped) throw new InvalidOperationException("The original Home children must finish closing before detachment.");
         _search.KeyDown -= OnSearchKey;
-        SizeChanged -= OnHomeSizeChanged;
         if (_dashboard is not null)
         {
             _dashboard.ModeRequested -= OnDashboardApp; _dashboard.ManageAppsRequested -= OnManageApps;
@@ -391,25 +400,6 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         _viewport.Child = null; Content = null;
         return Task.CompletedTask;
     }
-    private void UpdateLayoutMode()
-    {
-        if (!IsAlive || _root is null || _sidebar is null || _main is null) return;
-        var narrow = Bounds.Width > 0 && Bounds.Width < 720;
-        Layout(_root, "ColumnSizes", narrow ? "1fr" : "208 1fr");
-        Layout(_root, "RowSizes", narrow ? "Auto 1fr" : "1fr");
-        // A vertical scrolling viewport measures the desktop rail with unbounded
-        // height, so its Wrap never spills a second column over the content.
-        // Narrow layouts explicitly wrap horizontally within a bounded rail.
-        Layout(_sidebar, "Orientation", narrow ? "Horizontal" : "Vertical");
-        Set(_sidebar, "MaxHeight", narrow ? 160d : double.PositiveInfinity);
-        Layout(_main, "Column", narrow ? "0" : "1"); Layout(_main, "Row", narrow ? "1" : "0");
-    }
-    private void OnHomeSizeChanged(object? sender, SizeChangedEventArgs args)
-    {
-        if (IsAlive) _work.RunSynchronous(original => original.RunAcceptedPublicationCallback(UpdateLayoutMode));
-    }
     private static void Set(Control control, string property, object? value) =>
         CuiPropertyPresentation.Set(control, property, value, CuiPropertyLevel.Instance, "Shared Home state", order: 2);
-    private static void Layout(Control control, string property, string value) =>
-        CuiLayoutProperties.SetLiteral(control, property, value, CuiPropertyLevel.Instance, "Shared Home layout", order: 2);
 }

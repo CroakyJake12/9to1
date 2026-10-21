@@ -48,6 +48,10 @@
     <ProjectReference Include="../../../Files/NativeUI/HavenOS.Files.NativeUI.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
     <ProjectReference Include="../../../Browse/NativeUI/HavenOS.Apps.Browse.NativeUI.csproj" />
+    <!-- The genuine installed-Chromium engine is the Linux Browse backend. NativeLinux
+         is Linux-only, so it is never wired into the Windows graph. -->
+    <ProjectReference Include="../../../Browse/NativeLinux/HavenOS.Apps.Browse.NativeLinux.csproj"
+                      Condition="!$([MSBuild]::IsOSPlatform('Windows'))" />
     <ProjectReference Include="../../../Browse/NativeWindows/HavenOS.Apps.Browse.NativeWindows.csproj"
                       Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'" />
     <!-- During Phase 2 this desktop project is the Avalonia backend/host for platform-neutral Haven.UI. -->

@@ -40,11 +40,16 @@ public readonly record struct HavenAppRoute(HavenAppRouteKind Kind, HavenSurface
 public static class HavenAppRoutePolicy
 {
     // Keep the old catalogue identity resolvable for pins, usage and saved links.
-    // The owner folded these capabilities into their canonical owners on 16-18
-    // October 2026: assistants/dashboard/study/tasks/translate into Spaces or
-    // Haven, dev (and its sites/stacks scope) into Build. They are not standalone
-    // applications in the Apps catalogue, but their stored IDs and aliases remain
-    // resolvable for compatibility.
+    // These identities were folded into their canonical owners and are no longer
+    // standalone tiles in the Apps catalogue, but their stored IDs and aliases
+    // remain resolvable for compatibility:
+    //   - assistants/dashboard/study/tasks/translate -> Spaces/Haven (owner fold,
+    //     16-18 October 2026).
+    //   - browse (9to1 Haven super-app), chat (Spaces Chat), go, launcher, mesh
+    //     (feature) and training (inside AI Studio) -> latest direct owner roster
+    //     amendment, 2026-10-21.
+    // Dev is deliberately NOT excluded: it is the canonical Build owner
+    // (Dev/Sites/Stacks) and is projected once as "Build".
     public static bool IsDeprecatedStandalone(ModeDefinition app)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -55,7 +60,12 @@ public static class HavenAppRoutePolicy
             "study" => true,
             "tasks" => true,
             "translate" => true,
-            "dev" => true,
+            "browse" => true,
+            "chat" => true,
+            "go" => true,
+            "launcher" => true,
+            "mesh" => true,
+            "training" => true,
             _ => false
         };
     }

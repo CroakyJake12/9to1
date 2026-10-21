@@ -109,6 +109,89 @@ public sealed class UnifiedWorkspaceHostLifetimeTests
         Assert.Single(repository.Writes);
     }
 
+    [AvaloniaFact]
+    public async Task Stale_startup_lease_reprepares_to_current_and_reaches_accepted_retirement()
+    {
+        // One approved close during loading, whose startup lease goes stale BEFORE publication, must be
+        // retained: the production wiring aborts the old unaccepted lease and reacquires the CURRENT
+        // preparation (no waiting on the whole startup), reaching accepted host retirement. This drives
+        // the actual App→Unified close preparation/publication helper (PublishOriginalDocumentClosePreflightAsync).
+        var rig = new Rig(); RetainedFailedOwners.Add(rig);
+        var factory = new ContentFactory();
+        var creation = BrowseChrome.CreateAsync(rig.Paths, internalContentFactory: factory, homeProfileId: "fixture-profile");
+
+        // Loading phase: initialization pending, no chrome yet → PrepareCloseAsync yields a STARTUP lease.
+        var heldInit = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Set(rig.Host, "_initialization", heldInit.Task); Set(rig.Host, "_chromeCreation", heldInit.Task);
+        Set(rig.Host, "_chrome", (object?)null); Set(rig.Host, "_workspace", (object?)null);
+
+        var loadingPrep = Call<Task>(rig.Host, "PrepareCloseAsync", CancellationToken.None);
+        await loadingPrep;
+        var loadingLease = loadingPrep.GetType().GetProperty("Result")!.GetValue(loadingPrep)!;
+        Assert.NotNull(loadingLease);
+        Assert.True((bool)loadingLease.GetType().GetProperty("Startup", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(loadingLease)!);
+
+        // Transition completes: initialization/chrome/workspace now present → the captured startup lease goes stale.
+        var chrome = await creation;
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        Set(rig.Host, "_initialization", creation); Set(rig.Host, "_chromeCreation", creation);
+        Set(rig.Host, "_chrome", chrome); Set(rig.Host, "_workspace", workspace);
+
+        var desktop = new ClassicDesktopStyleApplicationLifetime();
+        Set(rig.App, "_actualDesktop", desktop); Set(rig.App, "_actualUnifiedWorkspace", rig.Host);
+        Set(rig.App, "_actualDesktopBorrowers", new object[] { rig.Host });
+        var attemptType = typeof(App).GetNestedType("OriginalDocumentCloseAttempt", BindingFlags.NonPublic)!;
+        var attempt = Activator.CreateInstance(attemptType, nonPublic: true)!;
+        Set(attempt, "Desktop", desktop); Set(attempt, "Windows", desktop.Windows.ToArray());
+        Set(attempt, "Unified", rig.Host); Set(attempt, "UnifiedPreparation", loadingPrep); Set(attempt, "UnifiedLease", loadingLease);
+        Set(attempt, "Prepared", true);
+
+        await Call<Task>(rig.App, "PublishOriginalDocumentClosePreflightAsync", loadingPrep, attempt);
+
+        // The single close is retained across the transition: the CURRENT post-startup preparation is
+        // reacquired and reaches accepted host retirement (host + chrome OriginalClose published).
+        Assert.NotNull(rig.Host.OriginalClose);
+        Assert.NotNull(chrome.OriginalClose);
+        await rig.FinishAsync(); RetainedFailedOwners.Remove(rig);
+    }
+
+    [AvaloniaFact]
+    public async Task Early_close_during_welcome_held_initiation_retires_startup_without_waiting_for_click()
+    {
+        // A single early close must complete actual current startup retirement/cancellation even when
+        // initialization is held on a Welcome pending action forever — it must NOT wait for any user
+        // click. The publication drives the current (startup) lease's BeginClose → host CloseAndDrainAsync,
+        // which cancels the startup token and retires the host.
+        var rig = new Rig(); RetainedFailedOwners.Add(rig);
+        var startupCtl = Field<CancellationTokenSource>(rig.Host, "_startupCancellation");
+        async Task Init() { try { await Task.Delay(Timeout.Infinite, startupCtl.Token); } catch (OperationCanceledException) { } }
+        var initTask = Init();
+        Set(rig.Host, "_initialization", initTask); Set(rig.Host, "_chromeCreation", initTask);
+        Set(rig.Host, "_chrome", (object?)null); Set(rig.Host, "_workspace", (object?)null);
+
+        var prep = Call<Task>(rig.Host, "PrepareCloseAsync", CancellationToken.None);
+        await prep;
+        var lease = prep.GetType().GetProperty("Result")!.GetValue(prep)!;
+        Assert.True((bool)lease.GetType().GetProperty("Startup", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(lease)!);
+
+        var desktop = new ClassicDesktopStyleApplicationLifetime();
+        Set(rig.App, "_actualDesktop", desktop); Set(rig.App, "_actualUnifiedWorkspace", rig.Host);
+        Set(rig.App, "_actualDesktopBorrowers", new object[] { rig.Host });
+        var attemptType = typeof(App).GetNestedType("OriginalDocumentCloseAttempt", BindingFlags.NonPublic)!;
+        var attempt = Activator.CreateInstance(attemptType, nonPublic: true)!;
+        Set(attempt, "Desktop", desktop); Set(attempt, "Windows", desktop.Windows.ToArray());
+        Set(attempt, "Unified", rig.Host); Set(attempt, "UnifiedPreparation", prep); Set(attempt, "UnifiedLease", lease);
+        Set(attempt, "Prepared", true);
+
+        await Call<Task>(rig.App, "PublishOriginalDocumentClosePreflightAsync", prep, attempt);
+
+        // Startup canceled + host retired WITHOUT any Welcome click (init completed only via cancellation).
+        Assert.True(startupCtl.IsCancellationRequested);
+        Assert.NotNull(rig.Host.OriginalClose);
+        Assert.True(initTask.IsCompleted);
+        await rig.FinishAsync(); RetainedFailedOwners.Remove(rig);
+    }
+
     private sealed class Rig
     {
         internal readonly App App = new();

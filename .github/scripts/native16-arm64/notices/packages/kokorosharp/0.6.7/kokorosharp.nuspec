@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>KokoroSharp</id>
+    <version>0.6.7</version>
+    <authors>Lyrcaxis</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>README.md</readme>
+    <description>**Requires an ONNX Runtime package to function. KokoroSharp is an inference engine for Kokoro TTS with ONNX runtime, enabling fast and flexible local text-to-speech (fp/quanted) purely via C#. It features segment streaming, voice mixing, linear job scheduling, and optional playback.</description>
+    <tags>Kokoro, TextToSpeech, TTS, ONNX, AI, SpeechSynthesis, Text, To, Speech, .NET, Windows, Linux, MacOS, CrossPlatform, Offline</tags>
+    <repository type="git" url="https://github.com/Lyrcaxis/KokoroSharp" commit="5e6c862e78d363e42e1778e22d003c94a3ac163b" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.ML.OnnxRuntime.Managed" version="1.22.0" exclude="Build,Analyzers" />
+        <dependency id="NAudio" version="2.2.1" exclude="Build,Analyzers" />
+        <dependency id="NumSharp" version="0.30.0" exclude="Build,Analyzers" />
+        <dependency id="OpenTK.Audio.OpenAL" version="5.0.0-pre.13" exclude="Build,Analyzers" />
+        <dependency id="System.Numerics.Tensors" version="9.0.5" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

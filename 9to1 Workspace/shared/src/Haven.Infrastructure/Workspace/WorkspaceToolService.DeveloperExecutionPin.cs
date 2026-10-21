@@ -15,7 +15,27 @@ public sealed partial class WorkspaceToolService
         Func<IDeveloperProjectOriginalSetupPermissionSource> permissions,
         Func<IDeveloperProjectOriginalWorkspaceMetadataStore> store,
         Func<IDeveloperWorkspaceOriginalExecutionDescriptorBindingSource> bindings)
-        => new DeveloperCaptureSource(reads, selections, permissions, store, bindings);
+    {
+        var source = new DeveloperCaptureSource(reads, selections, permissions, store, bindings);
+        source.BindOriginalService(this);
+        return source;
+    }
+
+    /// <summary>Adds the SAME Home WRITE admission issuer to the full setup/metadata/execution kernel,
+    /// so the kernel can authenticate a manual (no-AI) source-edit apply. Missing composition refuses
+    /// edits; it never enables any mutation.</summary>
+    public IDeveloperProjectOriginalPhysicalCaptureSource CreateOriginalDeveloperCaptureSource(
+        IDeveloperProjectOriginalReadAdmissionSource reads,
+        Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections,
+        Func<IDeveloperProjectOriginalSetupPermissionSource> permissions,
+        Func<IDeveloperProjectOriginalWorkspaceMetadataStore> store,
+        Func<IDeveloperWorkspaceOriginalExecutionDescriptorBindingSource> bindings,
+        IDeveloperProjectOriginalEditAdmissionSource edits)
+    {
+        var source = new DeveloperCaptureSource(reads, selections, permissions, store, bindings, edits);
+        source.BindOriginalService(this);
+        return source;
+    }
 
     private sealed partial class DeveloperCaptureSource : IDeveloperWorkspaceOriginalExecutionCommitBindingSource
     {
@@ -31,6 +51,14 @@ public sealed partial class WorkspaceToolService
             Func<IDeveloperWorkspaceOriginalExecutionDescriptorBindingSource> bindings)
             : this(reads, selections, permissions, store)
             => _originalExecutionBindings = bindings ?? throw new ArgumentNullException(nameof(bindings));
+        internal DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource reads,
+            Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections,
+            Func<IDeveloperProjectOriginalSetupPermissionSource> permissions,
+            Func<IDeveloperProjectOriginalWorkspaceMetadataStore> store,
+            Func<IDeveloperWorkspaceOriginalExecutionDescriptorBindingSource> bindings,
+            IDeveloperProjectOriginalEditAdmissionSource edits)
+            : this(reads, selections, permissions, store, bindings)
+            => _edits = edits;
 
         private sealed class SavedRootAcquisition(SavedRootAcquisition? parent)
         {

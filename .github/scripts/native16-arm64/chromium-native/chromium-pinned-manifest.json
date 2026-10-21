@@ -1,0 +1,91 @@
+{
+  "schema": "9to1.chromium-native.pinned-manifest/v1",
+  "at": "2026-10-21",
+  "worker_lane": 8,
+  "authorization": "Lane 8 (worker4 of owner6) Mercury ARM browser supply; 16-worker owner authorization supersedes six/single worker text",
+  "runtime_acceptance": "NOT RUN - owner GNOME/ARM native validation remains BLOCKED/NOTRUN; no READY claim from metadata presence",
+  "selected_version": {
+    "binary_package_version": "155.0.8059.79-1~deb13u1",
+    "cloud_validated_upstream": "151.0.7922.173-1~deb13u1",
+    "version_difference": "Official Debian trixie-security maintains 155.0.8059.79 (NEWER than cloud-validated 151); cloud-151 runtime proof does NOT validate 155. Exact maintained version is recorded; no invented pin is used.",
+    "source_version": "155.0.8059.79-1~deb13u1",
+    "suite": "trixie-security (Debian security updates; suite 'trixie-security')",
+    "architecture": "arm64"
+  },
+  "archive_trust": {
+    "archive": "Debian security archive (security.debian.org)",
+    "inrelease_url": "https://deb.debian.org/debian-security/dists/trixie-security/InRelease",
+    "inrelease_sha256": "1fc8caca113e668c5c4de0d9464ab004ef8ba1f17b5431cdf9e5e2b131ab3b6e",
+    "signature_verified_by": "Debian Security Archive Automatic Signing Key (13/trixie) subkey 89C87ACEA5DD6B8E6A7068808E9F831205B4BA95 (primary 5E04A1E3223A19A20706E20F9904613D4CCE68C6); independent reviewer VALIDSIG record confirmed",
+    "keyring_source": "debian-archive-keyring_2025.1_all.deb from official Debian pool, SHA256 9ea7778e443144ca490668737a8ab22dd3e748bb99e805e22ec055abeb3c7fac; trixie archive key fingerprint pinned B8E5F13176D2A7A75220028078DBA3BC47EF2265",
+    "keyring_package": {
+      "name": "debian-archive-keyring_2025.1_all.deb",
+      "sha256": "9ea7778e443144ca490668737a8ab22dd3e748bb99e805e22ec055abeb3c7fac",
+      "bytes": 179244,
+      "url": "https://deb.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2025.1_all.deb"
+    },
+    "main_index_packages_xz_sha256": "aaf83990835a2ff2126d2d5d6cd66042c672b561d07f0315170d130867b86f77",
+    "sources_index_packages_xz_sha256": "91e029199d2d107f01d21c7085494bd666329318fa9718166bcf7d521518c3ab"
+  },
+  "packages": [
+    {
+      "debian_package": "chromium",
+      "version": "155.0.8059.79-1~deb13u1",
+      "architecture": "arm64",
+      "suite": "trixie-security",
+      "url": "https://security.debian.org/debian-security/pool/updates/main/c/chromium/chromium_155.0.8059.79-1~deb13u1_arm64.deb",
+      "sha256": "bb4334a065801d7482df4783b535ab16654fb71e6eac8a89bd49eb2e7082be27",
+      "bytes": 79116104,
+      "installed_size_kb": 300329,
+      "verified_against_signed_index": true,
+      "provides_real_browser_binary": "/usr/lib/chromium/chromium"
+    },
+    {
+      "debian_package": "chromium-common",
+      "version": "155.0.8059.79-1~deb13u1",
+      "architecture": "arm64",
+      "suite": "trixie-security",
+      "url": "https://security.debian.org/debian-security/pool/updates/main/c/chromium/chromium-common_155.0.8059.79-1~deb13u1_arm64.deb",
+      "sha256": "2f8d97e652adc2afa8cc96f79141ffdff0ca4f11c3a35671e7b61f60d10eb2b5",
+      "bytes": 36302732,
+      "installed_size_kb": 85923,
+      "verified_against_signed_index": true,
+      "provides": "chrome_crashpad_handler, libEGL.so, libGLESv2.so, libvulkan.so.1, libvk_swiftshader.so, libVkLayer_khronos_validation.so, .pak resources, icudtl.dat, locales, snapshot_blob.bin, v8_context_snapshot.bin"
+    },
+    {
+      "debian_package": "chromium-sandbox",
+      "version": "155.0.8059.79-1~deb13u1",
+      "architecture": "arm64",
+      "suite": "trixie-security",
+      "url": "https://security.debian.org/debian-security/pool/updates/main/c/chromium/chromium-sandbox_155.0.8059.79-1~deb13u1_arm64.deb",
+      "sha256": "37670b391e0a5cb00cefbb62b92476d65f44887aca14fd8ef5348bdfa14cd128",
+      "bytes": 156684,
+      "installed_size_kb": 414,
+      "verified_against_signed_index": true,
+      "sandbox": {
+        "path": "/usr/lib/chromium/chrome-sandbox",
+        "mode": "0o4755",
+        "uid": 0,
+        "gid": 0,
+        "uname": "root",
+        "gname": "root",
+        "bytes": 17032,
+        "note": "Vendor-normal root-owned setuid mode preserved; never chmod arbitrary setuid, never use --no-sandbox or OS security workarounds"
+      }
+    },
+    {
+      "debian_package": "libjpeg62-turbo",
+      "version": "1:2.1.5-4",
+      "architecture": "arm64",
+      "suite": "trixie (stable main)",
+      "url": "https://deb.debian.org/debian/pool/main/libj/libjpeg-turbo/libjpeg62-turbo_2.1.5-4_arm64.deb",
+      "sha256": "e4989073bb0bac8a6ec043c7adb80e1dfe601d8552233da48bb24ab45d1a1d4a",
+      "bytes": 172784,
+      "verified_against_signed_index": true,
+      "role": "Private compatibility library for SONAME libjpeg.so.62. Ubuntu 26 (resolute) official ARM64 provides no adequate provider: libjpeg-turbo8 ships SONAME libjpeg.so.8, and libjpeg62 (universe) is ancient jpeg6b version 1:6b2-4build1 which fails the Debian floor >= 1:1.5.0. Debian libjpeg62-turbo (1:2.1.5-4) provides the matching SONAME libjpeg.so.62 on arm64 and is staged only under the private engine path; no Ubuntu libc/libstdc++/system library is replaced.",
+      "soname": "libjpeg.so.62",
+      "library_file": "usr/lib/aarch64-linux-gnu/libjpeg.so.62.3.0"
+    }
+  ],
+  "integrity_note": "Each package SHA256 verified against the signed Debian InRelease index (main + security). Nothing here asserts native runtime readiness (NOTRUN)."
+}

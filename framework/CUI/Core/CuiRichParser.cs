@@ -73,6 +73,9 @@ public sealed class CuiRichParser
             var components = hasCuiDocumentRoot
                 ? ParseComponents(root, sourceName, isRoot: true)
                 : ParseComponent(root, sourceName) is { } singleRoot ? [singleRoot] : Array.Empty<CuiComponent>();
+            var effects = hasCuiDocumentRoot
+                ? ParseEffects(root, sourceName)
+                : Array.Empty<CuiEffectDefinition>();
 
             ValidateAddressScopes(components);
 
@@ -90,6 +93,7 @@ public sealed class CuiRichParser
                     : new Dictionary<string, CuiValue>(StringComparer.Ordinal),
                 Imports = imports,
                 Variables = variables,
+                Effects = effects,
             };
         }
         catch (XmlException ex)
@@ -233,6 +237,7 @@ public sealed class CuiRichParser
             var command = ActionAttribute(child, "command", sourceName)?.Value;
             var paramAttr = ActionAttribute(child, "parameter", sourceName);
             var parameter = paramAttr is not null ? ParseMarkupValue(paramAttr.Value, span) : null;
+            var resultTarget = ActionAttribute(child, "result", sourceName)?.Value;
 
             // Pure-local Toggle form: <Action name="..." ><Toggle Target="Var"/></Action>.
             string? localTarget = null;
@@ -250,15 +255,91 @@ public sealed class CuiRichParser
                     _diagnostics.Error("CUI051", "A local <Toggle> action cannot also declare a command.", span);
             }
 
-            if (localTarget is null && command is null)
+            // Generic declarative local-variable mutation: <Set Target="Var" Value="literal" When="{Binding...}"/>.
+            var sets = new List<CuiSetDirective>();
+            foreach (var setEl in child.Elements())
             {
-                _diagnostics.Error("CUI052", "An Action requires a command or a local <Toggle> Target.", span);
+                if (!IsKeyword(setEl, "Set")) continue;
+                var targetAttr = ActionAttribute(setEl, "Target", sourceName) ?? ActionAttribute(setEl, "target", sourceName);
+                if (targetAttr is null || string.IsNullOrWhiteSpace(targetAttr.Value))
+                {
+                    _diagnostics.Error("CUI057", "A <Set> mutation requires a non-empty Target local-variable name.", SpanOf(setEl, sourceName));
+                    continue;
+                }
+                var valueAttr = ActionAttribute(setEl, "Value", sourceName) ?? ActionAttribute(setEl, "value", sourceName);
+                if (valueAttr is null)
+                {
+                    _diagnostics.Error("CUI058", $"A <Set> mutation on '{targetAttr.Value}' requires a Value literal.", SpanOf(setEl, sourceName));
+                    continue;
+                }
+                var setValue = ParseMarkupValue(valueAttr.Value, SpanOf(valueAttr, sourceName));
+                if (setValue is CuiBindingValue)
+                {
+                    _diagnostics.Error("CUI059", $"A <Set> mutation on '{targetAttr.Value}' requires a literal Value, not a binding.", SpanOf(valueAttr, sourceName));
+                    continue;
+                }
+                CuiCondition? when = null;
+                var whenAttr = ActionAttribute(setEl, "When", sourceName) ?? ActionAttribute(setEl, "when", sourceName);
+                if (whenAttr is not null)
+                    when = ParseCondition(whenAttr.Value, SpanOf(whenAttr, sourceName));
+                sets.Add(new CuiSetDirective(targetAttr.Value, setValue, SpanOf(setEl, sourceName), when));
+            }
+
+            if (localTarget is null && command is null && sets.Count == 0)
+            {
+                _diagnostics.Error("CUI052", "An Action requires a command, a local <Toggle> Target or at least one <Set> mutation.", span);
+                continue;
+            }
+            if (localTarget is not null && sets.Count > 0)
+            {
+                _diagnostics.Error("CUI060", "An Action cannot combine a <Toggle> with <Set> mutations.", span);
+                continue;
+            }
+            if (resultTarget is not null && command is null)
+            {
+                _diagnostics.Error("CUI061", $"An Action result target '{resultTarget}' requires a command.", span);
                 continue;
             }
 
-            result[name] = new CuiActionDefinition(name, command ?? string.Empty, parameter, span, localTarget);
+            result[name] = new CuiActionDefinition(name, command ?? string.Empty, parameter, span, localTarget, sets, resultTarget);
         }
 
+        return result;
+    }
+
+    /// <summary>Parses the document-root <c>&lt;Effects&gt;</c> block into declarative
+    /// auto-invocation effects. Each <c>&lt;Effect Condition="{Binding ...}" Action="..." /&gt;</c>
+    /// fires when its condition transitions to true; the referenced action is validated at load time
+    /// against the declared action table.</summary>
+    private IReadOnlyList<CuiEffectDefinition> ParseEffects(
+        XElement root, string sourceName)
+    {
+        var result = new List<CuiEffectDefinition>();
+        var effectsElement = root.Elements()
+            .FirstOrDefault(e => IsKeyword(e, "Effects"));
+        if (effectsElement is null) return result;
+
+        foreach (var child in effectsElement.Elements())
+        {
+            if (!IsKeyword(child, "Effect")) continue;
+            var span = SpanOf(child, sourceName);
+            var name = ActionAttribute(child, "name", sourceName)?.Value;
+            if (string.IsNullOrWhiteSpace(name)) name = "effect";
+            var conditionAttr = ActionAttribute(child, "Condition", sourceName) ?? ActionAttribute(child, "condition", sourceName);
+            if (conditionAttr is null)
+            {
+                _diagnostics.Error("CUI062", "An <Effect> requires a Condition binding expression.", span);
+                continue;
+            }
+            var condition = ParseCondition(conditionAttr.Value, SpanOf(conditionAttr, sourceName));
+            var actionAttr = ActionAttribute(child, "Action", sourceName) ?? ActionAttribute(child, "action", sourceName);
+            if (actionAttr is null || string.IsNullOrWhiteSpace(actionAttr.Value))
+            {
+                _diagnostics.Error("CUI063", "An <Effect> requires a referenced Action name.", span);
+                continue;
+            }
+            result.Add(new CuiEffectDefinition(name, condition, actionAttr.Value, span));
+        }
         return result;
     }
 
@@ -402,7 +483,7 @@ public sealed class CuiRichParser
                 var localName = child.Name.LocalName;
                 if (IsKeyword(child, "Resources") || IsKeyword(child, "Styles")
                     || IsKeyword(child, "Actions") || IsKeyword(child, "Templates") || IsKeyword(child, "Import")
-                    || IsKeyword(child, "Variable"))
+                    || IsKeyword(child, "Variable") || IsKeyword(child, "Effects"))
                     continue;
             }
             elements.Add(child);

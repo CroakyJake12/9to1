@@ -17,7 +17,11 @@ public sealed partial class WorkspaceToolService
         Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> originalSelections,
         Func<IDeveloperProjectOriginalSetupPermissionSource> originalPermissions,
         Func<IDeveloperProjectOriginalWorkspaceMetadataStore> originalWorkspaceStore)
-        => new DeveloperCaptureSource(originalReads, originalSelections, originalPermissions, originalWorkspaceStore);
+    {
+        var source = new DeveloperCaptureSource(originalReads, originalSelections, originalPermissions, originalWorkspaceStore);
+        source.BindOriginalService(this);
+        return source;
+    }
 
     private sealed partial class DeveloperCaptureSource : IDeveloperProjectOriginalWorkspaceMetadataSource
     {

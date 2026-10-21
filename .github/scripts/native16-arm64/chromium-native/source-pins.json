@@ -1,0 +1,67 @@
+{
+  "schema": "9to1.chromium-native.source-pins/v1",
+  "at": "2026-10-21",
+  "source_version": "155.0.8059.79-1~deb13u1",
+  "source_provider": "Debian trixie-security source package 'chromium'",
+  "source_archive": "https://security.debian.org/debian-security/dists/trixie-security/main/source/Sources.xz",
+  "source_archive_sha256": "91e029199d2d107f01d21c7085494bd666329318fa9718166bcf7d521518c3ab",
+  "inputs": [
+    {
+      "name": "chromium_155.0.8059.79-1~deb13u1.dsc",
+      "url": "https://security.debian.org/debian-security/pool/updates/main/c/chromium/chromium_155.0.8059.79-1~deb13u1.dsc",
+      "bytes": 4415,
+      "sha256": "f531310e27ae933ba02f76a1d2939ed564cdd011b6f1bdbfcfb703ffb5b4a4a4"
+    },
+    {
+      "name": "chromium_155.0.8059.79-1~deb13u1.debian.tar.xz",
+      "url": "https://security.debian.org/debian-security/pool/updates/main/c/chromium/chromium_155.0.8059.79-1~deb13u1.debian.tar.xz",
+      "bytes": 582504,
+      "sha256": "42c8a682377ed5422fc0cbe247427fe7eca211bc57ea7a7102023b3b83e47c39"
+    },
+    {
+      "name": "chromium_155.0.8059.79.orig-pre-gen.tar.xz",
+      "url": "https://security.debian.org/debian-security/pool/updates/main/c/chromium/chromium_155.0.8059.79.orig-pre-gen.tar.xz",
+      "bytes": 17201300,
+      "sha256": "75fc1329e91581b28fb4b24ad3661372d80b548d39badbd99c957d59c9d28650"
+    },
+    {
+      "name": "chromium_155.0.8059.79.orig.tar.xz",
+      "url": "https://security.debian.org/debian-security/pool/updates/main/c/chromium/chromium_155.0.8059.79.orig.tar.xz",
+      "bytes": 797389528,
+      "sha256": "976245b8d9c905795fc4bc3445c379b63f7e1f342186369beffaa1f6e073635e"
+    }
+  ],
+  "libjpeg62-turbo": {
+    "package": "libjpeg-turbo",
+    "version": "1:2.1.5-4",
+    "suite": "trixie (stable main)",
+    "source_archive": "https://deb.debian.org/debian/dists/trixie/main/source/Sources.xz",
+    "directory": "pool/main/libj/libjpeg-turbo",
+    "inputs": [
+      {
+        "name": "libjpeg-turbo_2.1.5-4.dsc",
+        "url": "https://deb.debian.org/debian/pool/main/libj/libjpeg-turbo/libjpeg-turbo_2.1.5-4.dsc",
+        "bytes": 2508,
+        "sha256": "26cbf22aa3b3e327df072513f14a5ddfb4a7b9a3d78c46a5dccfd711c13ac743"
+      },
+      {
+        "name": "libjpeg-turbo_2.1.5.orig.tar.gz",
+        "url": "https://deb.debian.org/debian/pool/main/libj/libjpeg-turbo/libjpeg-turbo_2.1.5.orig.tar.gz",
+        "bytes": 2264471,
+        "sha256": "254f3642b04e309fee775123133c6464181addc150499561020312ec61c1bf7c"
+      },
+      {
+        "name": "libjpeg-turbo_2.1.5-4.debian.tar.xz",
+        "url": "https://deb.debian.org/debian/pool/main/libj/libjpeg-turbo/libjpeg-turbo_2.1.5-4.debian.tar.xz",
+        "bytes": 108128,
+        "sha256": "739e7dc22904dccdc5ab105de57a6e4c1515c0e841e68226e6410ff4976e0e91"
+      }
+    ]
+  },
+  "copyright": {
+    "path_debian_pkg": "/usr/share/doc/chromium/copyright",
+    "sha256": "b5721756486fa9ee39a1eebc9b01bcaea9aefa8bd6795c2ff1b216c0ed08dc3a",
+    "differs_from_cloud151_installed": true
+  },
+  "bundle_gate": "Pipeline gates on corresponding source archives (orig, orig-pre-gen, debian.tar.xz, dsc) before a redistributable bundle is released; source ownership stays traceable in the app build graph."
+}

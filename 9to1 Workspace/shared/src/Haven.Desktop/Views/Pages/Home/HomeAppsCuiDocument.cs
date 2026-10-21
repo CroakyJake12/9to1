@@ -24,7 +24,10 @@ internal static class HomeAppsCuiDocument
     public static CuiControlRegistry CreateControlRegistry()
     {
         var registry = new CuiControlRegistry();
-        NineToOne.Web.BrowserCanonicalIcons.Register(registry);
+        // The Home surface composes the filled-rounded packaged Home rail SVG family ahead of the
+        // shared stroke catalog, exactly like the Spaces rail. The rail keys then render as genuine
+        // filled, rounded SVG; every other icon falls through to the shared canonical catalog.
+        HomeRailPackagedIcons.Register(registry);
         return registry;
     }
 

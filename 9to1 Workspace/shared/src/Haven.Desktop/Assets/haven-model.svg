@@ -1,3 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- haven-model.svg — filled rounded model/picker icon. Original self-authored vector; CC0. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM11 6h2v6.59l4.2 4.21-1.41 1.42L11 13.41V6z"/></svg>
+<!-- haven-model.svg — filled rounded CPU glyph with three pins per side and a distinct inner die. Original self-authored vector; CC0. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+  <rect x="7" y="2" width="2" height="4" rx="0.75" />
+  <rect x="11" y="2" width="2" height="4" rx="0.75" />
+  <rect x="15" y="2" width="2" height="4" rx="0.75" />
+  <rect x="7" y="18" width="2" height="4" rx="0.75" />
+  <rect x="11" y="18" width="2" height="4" rx="0.75" />
+  <rect x="15" y="18" width="2" height="4" rx="0.75" />
+  <rect x="2" y="7" width="4" height="2" rx="0.75" />
+  <rect x="2" y="11" width="4" height="2" rx="0.75" />
+  <rect x="2" y="15" width="4" height="2" rx="0.75" />
+  <rect x="18" y="7" width="4" height="2" rx="0.75" />
+  <rect x="18" y="11" width="4" height="2" rx="0.75" />
+  <rect x="18" y="15" width="4" height="2" rx="0.75" />
+  <rect x="6" y="6" width="12" height="2" rx="1" />
+  <rect x="6" y="16" width="12" height="2" rx="1" />
+  <rect x="6" y="7" width="2" height="10" rx="1" />
+  <rect x="16" y="7" width="2" height="10" rx="1" />
+  <rect x="10" y="10" width="4" height="4" rx="0.75" />
+</svg>

@@ -12,15 +12,15 @@ internal sealed class NativeCakeAccountWindow:Window
  private readonly INativeCakeAccountSession session;private readonly CuiSceneHost host=new();
  private readonly CancellationTokenSource stop=new();private readonly DispatcherTimer clock=new(){Interval=TimeSpan.FromSeconds(1)};
  private readonly AccountBrowserBindings binding;private readonly NativeAccountBindingsAdapter adapter;
- private readonly List<Exception> ownErrors=[];private Task? close;private bool closing,closed;
+ private readonly List<Exception> ownErrors=[];private Task? close;private bool closing,closed;private bool _hasNativelyClosed;
  internal Task Initialization {get;private set;}=Task.CompletedTask;
- internal bool IsRetired=>closed;internal Task? OriginalClose=>close;
+ internal bool IsRetired=>closed;internal Task? OriginalClose=>close;internal bool HasNativelyClosed=>_hasNativelyClosed;internal NativeCakeAccountUiOwner? UiOwner{get;set;}internal Avalonia.Controls.Window? UiParent{get;set;}
  internal NativeCakeAccountWindow(INativeCakeAccountSession originalSession)
  {
   session=originalSession;Title="CAKE ID account";Width=720;Height=820;
   binding=new(new NativeAccountTransport(session),PresentAsync,SignInAsync);
   adapter=new(binding,session,stop.Token);Content=host;
-  clock.Tick+=OnContextTick;Closing+=OnClosing;
+  clock.Tick+=OnContextTick;Closing+=OnClosing;Closed+=OnNativeClosed;
  }
  internal Task StartOriginalInitialization()
  {
@@ -57,6 +57,7 @@ internal sealed class NativeCakeAccountWindow:Window
  }
  private void OnClosing(object? sender,WindowClosingEventArgs e)
  {if(closed)return;e.Cancel=true;_ = CloseAndDrainAsync();} // Request only; coalesced task stays strongly held.
+ private void OnNativeClosed(object? sender,EventArgs e)=>_hasNativelyClosed=true;
  internal void DemandExternalOriginalRetirementJoin()=>adapter.DemandExternalOriginalJoin();
  internal Task CloseAndDrainAsync()
  {

@@ -26,7 +26,7 @@ public sealed class NativeCakeAccountUiOwner(INativeCakeAccountSession session, 
  {
   await start.ConfigureAwait(true);using var originalScope=CloudflareOriginalExecutionGuard.EnterOriginal(this);if(closing)throw new ObjectDisposedException(nameof(NativeCakeAccountUiOwner));
   if(active is {} current&&!current.IsRetired&&current.OriginalClose is null){current.Activate();await current.Initialization.ConfigureAwait(true);return;}
-  var acquired=new NativeCakeAccountWindow(session);windows.Add(acquired);active=acquired; // Custody before Show/native callbacks.
+  var acquired=new NativeCakeAccountWindow(session);acquired.UiOwner=this;acquired.UiParent=parent;windows.Add(acquired);active=acquired; // Custody before Show/native callbacks; UiParent is the real native Window (App/MainWindow) Show(parent) establishes.
   var initialization=acquired.StartOriginalInitialization();
   if(parent is null)acquired.Show();else acquired.Show(parent);
   await initialization.ConfigureAwait(true);

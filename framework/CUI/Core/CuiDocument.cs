@@ -13,22 +13,58 @@ public sealed record CuiStyleDefinition(
     IReadOnlyList<CuiStyleSetter> Setters,
     CuiSourceSpan Span);
 
+/// <summary>An authored CUI action. <see cref="Command"/> (when non-empty) is a genuine domain
+/// operation dispatched to the host; <see cref="Sets"/> are document-root local-variable
+/// mutations applied on dispatch (pure-local actions) or after the command settles (command
+/// actions, so sets can branch on the typed result). <see cref="ResultTarget"/> names the
+/// document-root local variable that receives the typed command outcome.</summary>
 public sealed record CuiActionDefinition(
     string Name,
     string Command,
     CuiValue? Parameter,
     CuiSourceSpan Span,
-    string? LocalTarget = null)
+    string? LocalTarget = null,
+    IReadOnlyList<CuiSetDirective>? Sets = null,
+    string? ResultTarget = null)
 {
-    // Preserve the CLR signature referenced by precompiled four-argument consumers.
+    // Preserve the CLR signatures referenced by precompiled consumers: the four-argument form and
+    // the original five-argument form (name, command, parameter, span, localTarget). Optional
+    // parameters alone do not emit these binary signatures, so both overloads are declared
+    // explicitly for ABI compatibility.
     public CuiActionDefinition(string name, string command, CuiValue? parameter, CuiSourceSpan span)
         : this(name, command, parameter, span, LocalTarget: null)
+    {
+    }
+
+    public CuiActionDefinition(string name, string command, CuiValue? parameter, CuiSourceSpan span, string? localTarget)
+        : this(name, command, parameter, span, LocalTarget: localTarget, Sets: null, ResultTarget: null)
     {
     }
 
     public void Deconstruct(out string name, out string command, out CuiValue? parameter, out CuiSourceSpan span) =>
         (name, command, parameter, span) = (Name, Command, Parameter, Span);
 }
+
+/// <summary>A declarative local-variable mutation authored in CUI. <see cref="Target"/> names a
+/// document-root <c>&lt;Variable&gt;</c>; <see cref="Value"/> is the literal value (converted to the
+/// variable's declared type). <see cref="When"/> is an optional live condition: the mutation is
+/// applied only when it evaluates true, so transitions can branch on domain/state results.</summary>
+public sealed record CuiSetDirective(
+    string Target,
+    CuiValue Value,
+    CuiSourceSpan Span,
+    CuiCondition? When = null);
+
+/// <summary>A declarative auto-invocation effect authored at the document root. When its live
+/// <see cref="Condition"/> becomes true (a rising edge), the named <see cref="ActionName"/> is
+/// dispatched once through the normal admitted action pipeline. Effects let CUI orchestrate
+/// asynchronous result follow-ups (for example completing a flow when a domain result makes a
+/// condition true) without a C# code-behind state machine.</summary>
+public sealed record CuiEffectDefinition(
+    string Name,
+    CuiCondition Condition,
+    string ActionName,
+    CuiSourceSpan Span);
 
 /// <summary>A document-root ordinary local CUI variable declaration (for example a typed bool
 /// used to drive a pure-local Toggle action, or a source-driven string selected once per mounted
@@ -279,4 +315,8 @@ public sealed record CuiDocument(
     /// </summary>
     public IReadOnlyDictionary<string, CuiVariableDeclaration> Variables { get; init; } =
         new Dictionary<string, CuiVariableDeclaration>(StringComparer.Ordinal);
+
+    /// <summary>Document-root declarative auto-invocation effects. Each effect fires at most once
+    /// per rising edge of its condition; see <see cref="CuiEffectDefinition"/>.</summary>
+    public IReadOnlyList<CuiEffectDefinition> Effects { get; init; } = Array.Empty<CuiEffectDefinition>();
 }

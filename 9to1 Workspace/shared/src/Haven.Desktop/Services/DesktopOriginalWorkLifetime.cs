@@ -329,6 +329,7 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
         private readonly HashSet<Task> _stages = [];
         private readonly List<Exception> _failures = [];
         private readonly List<(Task Source, Exception Cause)> _originalSpeechCancellations = [];
+        private readonly List<Task> _cooperativeCancelledObservations = [];
         private readonly HashSet<Task> _joinedStages = [];
         private Exception? _terminalGroup;
         private Func<bool>? _publicationGuard;
@@ -415,6 +416,18 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
         {
             lock (_gate)
             {
+                // A genuinely CANCELED raw source (not a faulted one) observed during a real owner
+                // retirement, whose entire cause is a pure owner-token cancellation, is a provably
+                // cooperative close observation. It is tracked separately so it can be normalized/cleared
+                // WITHOUT touching genuine retained faults (a faulted source reusing the same owner-token
+                // OCE, IO, foreign OCE, sibling/cleanup). Only real retirement governs this diversion, so
+                // an owner-token cancel outside retirement stays a genuine retained fault.
+                if (actual is not null && actual.IsCanceled && owner.IsRetiring
+                    && IsPureOwnerCancellation(caught))
+                {
+                    _cooperativeCancelledObservations.Add(actual);
+                    return;
+                }
                 _hasRetainedFailure = true;
                 // Only a source privately issued by the actual speech controller
                 // can associate this exact caught observation with expected stop.
@@ -433,6 +446,26 @@ internal class DesktopOriginalWorkLifetime : IAsyncDisposable
                     foreach (var error in group.InnerExceptions) RetainCause(_failures, error);
                 else RetainCause(_failures, caught);
             }
+        }
+        private bool IsPureOwnerCancellation(Exception failure)
+        {
+            if (failure is OperationCanceledException oce && oce.CancellationToken.Equals(Token)) return true;
+            if (failure is AggregateException aggregate && aggregate.InnerExceptions.Count > 0)
+            {
+                foreach (var inner in aggregate.InnerExceptions)
+                    if (!(inner is OperationCanceledException ioce && ioce.CancellationToken.Equals(Token))) return false;
+                return true;
+            }
+            return false;
+        }
+        /// <summary>Normalizes a qualified same-owner cooperative-close observation captured by the owning
+        /// <see cref="AwaitAsync"/> (and tracked for <see cref="Capture"/>), so the physical close does not
+        /// fail on its own benign cancellation. Only provably canceled owner-source observations are removed;
+        /// every genuine/sibling/foreign/faulted-owner cause stays fully retained. A faulted raw source
+        /// reusing the same owner-token OCE is never in the cooperative set and is never cleared.</summary>
+        internal void ClearCooperativeOwnerCancellation()
+        {
+            lock (_gate) _cooperativeCancelledObservations.Clear();
         }
         internal void QualifyOriginalSpeechSource(Task actual, NotesReadAloudController.OriginalSpeechSource issued)
         {

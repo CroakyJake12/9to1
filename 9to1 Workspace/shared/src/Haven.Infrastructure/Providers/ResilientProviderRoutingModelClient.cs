@@ -119,6 +119,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
             await PrepareAttemptAsync(state, selected, selectedRequirements, [], index > 0, cancellationToken).ConfigureAwait(false);
             await BindOriginalResponseActionAsync(request, state, cancellationToken).ConfigureAwait(false);
             if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
+            GuardReasoningTarget(selected, request);
             using var frameCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(1)
             {
@@ -269,6 +270,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 await PrepareAttemptAsync(state, selected, required, [], index > 0, cancellationToken).ConfigureAwait(false);
                 await BindOriginalResponseActionAsync(request, state, cancellationToken).ConfigureAwait(false);
                 if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
+                GuardReasoningTarget(selected, request);
                 Exception? synchronousProviderFailure = null;
                 Task<string>? originalProviderTask = null;
                 Task<string>? originalFrame = null;
@@ -334,6 +336,7 @@ public sealed partial class ResilientProviderRoutingModelClient(
                 await PrepareAttemptAsync(state, selected, required, restrictions, index > 0, cancellationToken).ConfigureAwait(false);
                 await BindOriginalResponseActionAsync(request, state, cancellationToken).ConfigureAwait(false);
                 if (index > 0) PublishFallback(request.Model, selected.Key, state.Context);
+                GuardReasoningTarget(selected, request);
                 Exception? synchronousProviderFailure = null;
                 Task<OllamaToolResponse>? originalProviderTask = null;
                 Task<OllamaToolResponse>? originalFrame = null;
@@ -804,17 +807,17 @@ public sealed partial class ResilientProviderRoutingModelClient(
 
     private IAsyncEnumerable<string> RawStream(SelectedProvider selected, OllamaChatRequest request, CancellationToken token) =>
         selected.Descriptor is { } actual
-            ? providers.GetRequired(actual.ProviderId).StreamChatAsync(request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
+            ? NamedReasoningDispatch.Stream(providers.GetRequired(actual.ProviderId), request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
             : primary.StreamChatAsync(request, token);
 
     private Task<string> RawCompleteAsync(SelectedProvider selected, OllamaChatRequest request, CancellationToken token) =>
         selected.Descriptor is { } actual
-            ? providers.GetRequired(actual.ProviderId).CompleteAsync(request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
+            ? NamedReasoningDispatch.Complete(providers.GetRequired(actual.ProviderId), request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
             : primary.CompleteAsync(request, token);
 
     private Task<OllamaToolResponse> RawToolsAsync(SelectedProvider selected, OllamaToolRequest request, CancellationToken token) =>
         selected.Descriptor is { } actual
-            ? providers.GetRequired(actual.ProviderId).ChatWithToolsAsync(request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
+            ? NamedReasoningDispatch.Tools(providers.GetRequired(actual.ProviderId), request.Model == actual.Name ? request : request with { Model = actual.Name }, token)
             : primary.ChatWithToolsAsync(request, token);
 
     /// <summary>Records actual admitted recovery in the same canonical Task/Run; standalone calls invent no run.</summary>
@@ -935,5 +938,79 @@ public sealed partial class ResilientProviderRoutingModelClient(
         return provider == "ollama" || !model.StartsWith(provider + ":", StringComparison.OrdinalIgnoreCase)
             ? model
             : model[(provider.Length + 1)..];
+    }
+
+    /// <summary>Refuses to dispatch an explicit named-reasoning selection to any target other than the
+    /// one it was resolved for. A request carries the genuine bound provider/model identity; when that
+    /// is absent (legacy requests), the genuine requested identity is derived from the registry (never
+    /// a bare colon guess) and must equal the actual routed target. A fallback A→B therefore never
+    /// silently carries A's reasoning id to B, infers a Medium equivalent, or strips an explicit choice
+    /// — it refuses with typed <see cref="UnsupportedCapabilityException"/> BEFORE any provider
+    /// invocation.</summary>
+    private void GuardReasoningTarget(SelectedProvider selected, OllamaChatRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ReasoningId)) return;
+        GuardReasoningTargetCore(selected, request.Model,
+            request.ReasoningTargetProviderId, request.ReasoningTargetModelName, request.ReasoningId);
+    }
+
+    private void GuardReasoningTarget(SelectedProvider selected, OllamaToolRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ReasoningId)) return;
+        GuardReasoningTargetCore(selected, request.Model,
+            request.ReasoningTargetProviderId, request.ReasoningTargetModelName, request.ReasoningId);
+    }
+
+    private void GuardReasoningTargetCore(SelectedProvider selected, string requestedModel,
+        string? bindingProvider, string? bindingModel, string reasoningId)
+    {
+        var actual = selected.Descriptor;
+        if (actual is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(bindingProvider))
+            {
+                // Authoritative producer binding must equal the genuine routed descriptor identity.
+                if (!string.Equals(actual.ProviderId, bindingProvider, StringComparison.Ordinal)
+                    || !string.Equals(actual.Name, bindingModel, StringComparison.Ordinal))
+                    throw new UnsupportedCapabilityException(
+                        "The selected reasoning level is bound to a different provider/model and cannot be forwarded.", reasoningId);
+                return;
+            }
+            // Legacy explicit reasoning without a producer binding: only a direct match of the genuine
+            // requested identity is accepted (never a same-named model from another provider).
+            var (reqProvider, reqModel) = ResolveRequestedIdentity(requestedModel);
+            if (!string.Equals(actual.ProviderId, reqProvider, StringComparison.Ordinal)
+                || !string.Equals(actual.Name, reqModel, StringComparison.Ordinal))
+                throw new UnsupportedCapabilityException(
+                    "The selected reasoning level is bound to a different provider/model and cannot be forwarded.", reasoningId);
+            return;
+        }
+        // Legacy/unknown raw primary path (no retained descriptor): validate any binding against the
+        // genuine requested identity; legacy requests without a binding are dispatched as-is on primary.
+        if (!string.IsNullOrWhiteSpace(bindingProvider))
+        {
+            var (reqProvider, reqModel) = ResolveRequestedIdentity(requestedModel);
+            if (!string.Equals(reqProvider, bindingProvider, StringComparison.Ordinal)
+                || !string.Equals(reqModel, bindingModel, StringComparison.Ordinal))
+                throw new UnsupportedCapabilityException(
+                    "The selected reasoning level is bound to a different provider/model and cannot be forwarded.", reasoningId);
+        }
+    }
+
+    /// <summary>Resolves the GENUINE requested provider/model identity from the registry (never a bare
+    /// colon guess). The provider prefix is resolved through the real provider registry; the model
+    /// name is the remainder after stripping exactly that resolved provider prefix. This keeps a native
+    /// Ollama tag name (e.g. "qwen:tag") intact when its provider is Ollama (which does use the
+    /// "ollama:" prefix convention) and strips only a known registry provider prefix — so a legacy
+    /// "reasoning:m1" request resolves to provider "reasoning", model "m1", never a leftover full
+    /// string.</summary>
+    private (string ProviderId, string ModelName) ResolveRequestedIdentity(string requestedModel)
+    {
+        var providerId = ResolveRequestedProviderId(requestedModel);
+        var prefix = providerId + ":";
+        if (requestedModel.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return (providerId, requestedModel[prefix.Length..]);
+        var separator = requestedModel.IndexOf(':');
+        return separator > 0 ? (providerId, requestedModel[(separator + 1)..]) : (providerId, requestedModel);
     }
 }

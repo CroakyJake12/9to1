@@ -65,6 +65,8 @@ public static class FilesDeveloperOriginalSetupComposition
             provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>(), originalReads(provider)));
         services.AddSingleton<IDeveloperProjectOriginalPhysicalReadSelectionSource>(provider =>
             provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>());
+        services.AddSingleton<IDeveloperProjectOriginalEditScopeSource>(provider =>
+            provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>());
         services.AddSingleton<IDeveloperProjectOriginalCaptureAuthority>(provider =>
             provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>());
         services.AddSingleton<FilesDeveloperOriginalSetupScopeSource>(provider => new(

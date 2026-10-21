@@ -125,6 +125,140 @@ class VerifierTests(unittest.TestCase):
         result = verify_installed(root, manifest, strict_closure=False)
         self.assertTrue(result.ok())
 
+    def test_strict_closure_scopes_to_owned_llama_cpp_subtree_only(self) -> None:
+        # Regression for the verifier gap: unexpected-file scanning must cover the
+        # declared bounded runtime subtree (llama.cpp/) without scanning the whole
+        # /usr. A smuggled file under the owned llama.cpp subtree is flagged, while
+        # an unrelated file under a different top-level directory is not.
+        binary = make_elf(183)  # aarch64 engine
+        notice = make_gguf()  # opaque notice bytes
+        admitted = [
+            AdmittedAsset(
+                logical="bookworm-llama-server",
+                kind="runtime.binary",
+                engine="llamacpp",
+                platform={"os": "linux", "arch": "aarch64"},
+                runtime_format="elf",
+                source="https://github.com/CroakyJake12/9to1/actions/runs/39562111673",
+                license_id="MIT",
+                redistribution="allowed",
+                install_path="llama.cpp/llama-server",
+                digest=sha256_of(binary),
+                size=len(binary),
+                capabilities=("runtime",),
+                format_meta={"format": "elf", "machine": 183},
+            ),
+            AdmittedAsset(
+                logical="llama.cpp-MIT-notice",
+                kind="runtime.bundle",
+                engine="llamacpp",
+                platform={"os": "linux", "arch": "aarch64"},
+                runtime_format="opaque",
+                source="https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24/LICENSE",
+                license_id="MIT",
+                redistribution="allowed",
+                install_path="llama.cpp/licenses/llama.cpp-MIT.txt",
+                digest=sha256_of(notice),
+                size=len(notice),
+                capabilities=("license-notice",),
+                format_meta={"format": "opaque"},
+            ),
+        ]
+        manifest = render_manifest(
+            bundle_id="dulche-bundle-test",
+            bundle_version="0.4.0-b10809-linux-arm64-bookworm-rebuild",
+            host={"os": "linux", "arch": "aarch64"},
+            admitted=admitted,
+            missing=[],
+        )
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = pathlib.Path(tmp.name)
+        write_fixture(root, "llama.cpp/llama-server", binary)
+        write_fixture(root, "llama.cpp/licenses/llama.cpp-MIT.txt", notice)
+        # A smuggled file inside the owned llama.cpp subtree must be flagged.
+        write_fixture(root, "llama.cpp/extra.bin", b"smuggled")
+        # An unrelated file in a different top-level directory must NOT be scanned.
+        write_fixture(root, "usr-share/not-owned.bin", b"unrelated")
+        result = verify_installed(root, manifest, strict_closure=True)
+        self.assertFalse(result.ok())
+        self.assertTrue(any("llama.cpp/extra.bin" in p for p in result.unexpected_paths))
+        self.assertFalse(any("usr-share" in p for p in result.unexpected_paths))
+        # Without strict closure, the in-subtree file is not a hard blocker.
+        result_non_strict = verify_installed(root, manifest, strict_closure=False)
+        self.assertTrue(result_non_strict.ok())
+
+    def test_strict_closure_flags_undeclared_symlinks(self) -> None:
+        # Regression for the verifier gap: undeclared symlinks inside the owned
+        # llama.cpp subtree (including directories and broken targets) must be
+        # flagged as unexpected instead of being silently skipped, while never
+        # weakening the canonical declared-regul-file containment checks.
+        binary = make_elf(183)
+        notice = make_gguf()
+        admitted = [
+            AdmittedAsset(
+                logical="bookworm-llama-server",
+                kind="runtime.binary",
+                engine="llamacpp",
+                platform={"os": "linux", "arch": "aarch64"},
+                runtime_format="elf",
+                source="https://github.com/CroakyJake12/9to1/actions/runs/39562111673",
+                license_id="MIT",
+                redistribution="allowed",
+                install_path="llama.cpp/llama-server",
+                digest=sha256_of(binary),
+                size=len(binary),
+                capabilities=("runtime",),
+                format_meta={"format": "elf", "machine": 183},
+            ),
+            AdmittedAsset(
+                logical="llama.cpp-MIT-notice",
+                kind="runtime.bundle",
+                engine="llamacpp",
+                platform={"os": "linux", "arch": "aarch64"},
+                runtime_format="opaque",
+                source="https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24/LICENSE",
+                license_id="MIT",
+                redistribution="allowed",
+                install_path="llama.cpp/licenses/llama.cpp-MIT.txt",
+                digest=sha256_of(notice),
+                size=len(notice),
+                capabilities=("license-notice",),
+                format_meta={"format": "opaque"},
+            ),
+        ]
+        manifest = render_manifest(
+            bundle_id="dulche-bundle-test",
+            bundle_version="0.4.0-b10809-linux-arm64-bookworm-rebuild",
+            host={"os": "linux", "arch": "aarch64"},
+            admitted=admitted,
+            missing=[],
+        )
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = pathlib.Path(tmp.name)
+        write_fixture(root, "llama.cpp/llama-server", binary)
+        write_fixture(root, "llama.cpp/licenses/llama.cpp-MIT.txt", notice)
+        # A symlink to a file outside the owned subtree.
+        outside = write_fixture(root, "outside-target.bin", b"outside")
+        (root / "llama.cpp" / "undeclared-link").symlink_to(outside)
+        # A directory symlink.
+        (root / "llama.cpp" / "undeclared-dir").symlink_to(root / "llama.cpp", target_is_directory=True)
+        # A broken symlink.
+        (root / "llama.cpp" / "broken-link").symlink_to(root / "does-not-exist")
+
+        result = verify_installed(root, manifest, strict_closure=True)
+        self.assertFalse(result.ok())
+        combined = "\n".join(result.unexpected_paths)
+        self.assertIn("llama.cpp/undeclared-link", combined)
+        self.assertIn("llama.cpp/undeclared-dir", combined)
+        self.assertIn("llama.cpp/broken-link", combined)
+        # The declared assets themselves still verify; only the symlinks block.
+        self.assertTrue(any("llama-server" in s.install_path and s.state == "present" for s in result.asset_statuses))
+        # Without strict closure, symlinks are not scanned.
+        result_non_strict = verify_installed(root, manifest, strict_closure=False)
+        self.assertTrue(result_non_strict.ok())
+
     def test_architecture_incompatible_installed_binary_fails(self) -> None:
         # An authentic aarch64 binary installed on an x86_64 host closure is an
         # architecture conflict even when the hash/size/format all match.

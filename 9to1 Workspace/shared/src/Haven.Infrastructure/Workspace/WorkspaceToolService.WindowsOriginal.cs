@@ -20,11 +20,13 @@ public sealed partial class WorkspaceToolService
         if (!OperatingSystem.IsWindows())
             throw new PlatformNotSupportedException("The original mutation requires the retained Windows file-handle rename/disposition owner.");
         var digest = WorkspaceToolOriginalDigest.Text(content);
+        var manualFence = invocation.Fence as IWorkspaceManualEditFinalFence;
         var temporary = path + ".haven.tmp." + Guid.NewGuid().ToString("N");
         var errors = new List<Exception>();
         Task<IAsyncDisposable?>? originalAcquire = null;
         Task? originalStage = null;
         IAsyncDisposable? originalPin = null;
+        IAsyncDisposable? originalHomeEntry = null;
         SafeFileHandle? originalHandle = null;
         FileStream? originalStream = null;
         var admitted = false;
@@ -36,21 +38,42 @@ public sealed partial class WorkspaceToolService
                 ?? throw new UnauthorizedAccessException("The actual original task staging pin is unavailable.");
             cancellationToken.ThrowIfCancellationRequested();
             invocation.DemandIssued();
-            invocation.Fence.DemandOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
+            // Private pre-commit staging (parent preparation, anonymous staged handle) is permitted by
+            // the cheap pin alone but never commits; the final rename requires the real held Home entry.
+            if (manualFence is not null) manualFence.DemandOriginalStage(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
+            else invocation.Fence.DemandOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
             invocation.EnsureOriginalWriteParent(path, directory =>
-                invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
+            {
+                if (manualFence is not null)
+                    manualFence.RunOriginalStage(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        admitted = true;
+                        Directory.CreateDirectory(directory);
+                        return true;
+                    });
+                else
+                    invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        admitted = true;
+                        Directory.CreateDirectory(directory);
+                        return true;
+                    });
+            });
+            originalHandle = manualFence is not null
+                ? manualFence.RunOriginalStage(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     admitted = true;
-                    Directory.CreateDirectory(directory);
-                    return true;
-                }));
-            originalHandle = invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                admitted = true;
-                return CreateOriginalStagedHandle(temporary);
-            });
+                    return CreateOriginalStagedHandle(temporary);
+                })
+                : invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    admitted = true;
+                    return CreateOriginalStagedHandle(temporary);
+                });
             originalStream = new FileStream(originalHandle, FileAccess.Write, 4096, isAsync: true);
             originalStage = originalStream.WriteAsync(Encoding.UTF8.GetBytes(content), cancellationToken).AsTask();
             await originalStage.ConfigureAwait(false);
@@ -60,6 +83,15 @@ public sealed partial class WorkspaceToolService
             // permission overrides revocation. No I/O/await/observer runs in the policy gate.
             await invocation.RevalidateWriteAsync(path, cancellationToken).ConfigureAwait(false);
             invocation.DemandIssued();
+            // The genuine Home edit entry is acquired freshly only immediately before the final native
+            // rename swap — never held across asynchronous staging. If the reviewed BEFORE/target/scope
+            // or the actual Home claim has diverted, this refuses with zero effects.
+            if (manualFence is not null)
+            {
+                originalHomeEntry = await manualFence.AcquireOriginalHomeCommitEntryAsync(cancellationToken).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("The original Home edit entry is unavailable immediately before the native swap.");
+            }
+            // The finite committed rename is guarded by the SAME held Home entry; cheap pins never grant commit.
             invocation.Fence.DemandOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest);
             invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
             {
@@ -104,6 +136,16 @@ public sealed partial class WorkspaceToolService
                 }
             }
             catch (Exception error) { AddOriginalErrors(errors, originalPinClose, error); }
+            Task? originalHomeClose = null;
+            try
+            {
+                if (originalHomeEntry is not null)
+                {
+                    originalHomeClose = originalHomeEntry.DisposeAsync().AsTask();
+                    await originalHomeClose.ConfigureAwait(false);
+                }
+            }
+            catch (Exception error) { AddOriginalErrors(errors, originalHomeClose, error); }
             invocation.FinishEffect(effect, admitted, renamed, renamed, eligible: renamed && errors.Count == 0);
         }
         ThrowOriginalErrors(errors, originalAcquire?.IsCanceled == true || originalStage?.IsCanceled == true);

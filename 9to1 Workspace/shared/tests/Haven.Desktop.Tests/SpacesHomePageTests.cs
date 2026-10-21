@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -237,6 +238,52 @@ public sealed class SpacesHomePageTests
             window.Close();
         }
     }
+
+    [AvaloniaFact]
+    public async Task Manager_open_return_preserves_mounted_workspace_and_registry()
+    {
+        var registry = new SpaceRegistry(new Settings());
+        var page = new SpacesHomePage(registry, new NoOpActionHost(), SpacesHomePage.ImmediateReadinessInstance);
+        var window = new Window { Width = 1280, Height = 900, Content = page };
+        try
+        {
+            window.Show();
+            await page.ActivateAsync(CancellationToken.None);
+            window.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+
+            var workspace = new Border { Name = "mounted-chat", Width = 200, Height = 100 };
+            Assert.True(TryMount(page, workspace));
+            Assert.Same(workspace, MountedContent(page));
+
+            // Opening the manager is presentation-only: it must not create a Space nor detach the
+            // mounted chat/draft, and it reveals the SAME canonical management surface.
+            await page.DispatchAsync("spaces.manage");
+            Assert.True(page.Controller.State.IsManaging);
+            Assert.Empty(page.Controller.State.CustomSpaces);
+            Assert.Same(workspace, MountedContent(page));
+
+            // Returning restores the SAME mounted workspace instance.
+            await page.DispatchAsync("spaces.manage");
+            Assert.False(page.Controller.State.IsManaging);
+            Assert.Same(workspace, MountedContent(page));
+        }
+        finally
+        {
+            _ = await Record.ExceptionAsync(page.CloseAndDrainAsync);
+            window.Close();
+        }
+    }
+
+    private static bool TryMount(SpacesHomePage page, Control workspace) =>
+        (bool)typeof(SpacesHomePage)
+            .GetMethod("TryMountSpaceWorkspace", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(page, [workspace])!;
+
+    private static Control? MountedContent(SpacesHomePage page) =>
+        (Control?)typeof(SpacesHomePage)
+            .GetProperty("SpaceWorkspaceContent", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(page);
 
     private static bool ContainsSameCause(Exception actual, Exception sought) =>
         ReferenceEquals(actual, sought) || actual is AggregateException group &&

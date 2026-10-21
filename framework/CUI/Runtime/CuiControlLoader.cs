@@ -7,8 +7,10 @@ using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
 using System.ComponentModel;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Frozen;
+using System.Reflection;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Themes;
 
@@ -18,7 +20,7 @@ namespace CakeOS.Cui.Runtime;
 /// Loads a CuiDocument and instantiates live Avalonia control trees.
 /// This is the bridge between the CUI language model and the Avalonia rendering pipeline.
 /// </summary>
-public sealed class CuiControlLoader : IDisposable
+public sealed partial class CuiControlLoader : IDisposable
 {
     private readonly CuiControlRegistry _controlRegistry;
     private readonly CancellationTokenSource _lifetime = new();
@@ -43,6 +45,12 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<RepeatItemScope, PropertyChangedEventHandler> _scopeChangedHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiComponent> _authoredControls = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
+    /// <summary>Per-control typed input presentation state: an authored read-only friendly
+    /// DisplayValue shown while the input is unfocused, the raw writable Value revealed on focus
+    /// (so native edit/copy operate on the canonical value), and genuine user edits tracked so a
+    /// later focus reveal never resurrects a stale value. Programmatic presentation switches are
+    /// fenced so they never write back to the writable binding.</summary>
+    private readonly Dictionary<Control, InputPresentationState> _inputPresentation = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, CuiActionInvocation> _actionInvocations = new(ReferenceEqualityComparer.Instance);
     private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, EventHandler<RoutedEventArgs>> _actionHandlers = new(ReferenceEqualityComparer.Instance);
@@ -51,9 +59,14 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<string, CuiComponent> _typeDefinitions = new(StringComparer.Ordinal);
     private const string LocalToggleCommand = "cui.local-toggle";
+    private const string LocalSetCommand = "cui.local-set";
     private readonly Dictionary<string, CuiVariableDeclaration> _declaredVariables = new(StringComparer.Ordinal);
     private readonly Dictionary<string, object?> _localState = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<CuiLiveBinding>> _localBindings = new(StringComparer.Ordinal);
+    private IReadOnlyList<CuiEffectDefinition> _effects = Array.Empty<CuiEffectDefinition>();
+    private bool[] _effectFired = Array.Empty<bool>();
+    private Control? _effectRoot;
+    private bool _effectsReady;
     /// <summary>Override for the generic random-choose chooser (deterministic tests/hosts set this
     /// to a fixed pick; null uses the shared random source). The pool is never empty when invoked.</summary>
     public Func<IReadOnlyList<string>, string>? RandomSelectionOverride { get; set; }
@@ -255,11 +268,17 @@ public sealed class CuiControlLoader : IDisposable
         }
     }
 
+    /// <summary>Internal diagnostic: current count of retained original action/close receipts.</summary>
+    internal int PendingActionCount
+    {
+        get { lock (_actionTasksGate) return _pendingActionTasks.Count; }
+    }
+
     private void ObserveActionDispatch(Control control, Control? contextMenuOwner)
     {
         if (_disposed || !control.IsEnabled || !_wiredActions.Contains(control) ||
             !TryGetActionInvocation(control, out var invocation)) return;
-        var isLocal = invocation.Command == LocalToggleCommand;
+        var isLocal = invocation.Command is LocalToggleCommand or LocalSetCommand;
         // Dispatch through the OWNED dispatcher captured at load/action-invocation time (the nearest
         // owning query scope, usually a QueryViewport). This owner is retained regardless of current
         // native visibility/attachment, so a same-frame hidden or detached authored pager control
@@ -285,7 +304,7 @@ public sealed class CuiControlLoader : IDisposable
                 _admissionFailureTask = RejectActionDispatchAsync(start.Task, control);
             else
                 _pendingActionTasks.Add(isLocal
-                    ? DispatchLocalToggleAsync(start.Task, control, invocation)
+                    ? DispatchLocalSetsAsync(start.Task, control, invocation)
                     : DispatchActionAsync(start.Task, control, dispatcher!, invocation));
         }
         start.SetResult();
@@ -299,10 +318,10 @@ public sealed class CuiControlLoader : IDisposable
         {
             if (_disposed) return;
             _disposed = true;
-            var actions = _admissionFailureTask is null ? _pendingActionTasks.ToArray()
-                : _pendingActionTasks.Append(_admissionFailureTask).ToArray();
-            // Retain the actual terminal task before cancellation or unsubscribe reentry.
-            _disposalTask = CompleteDisposalAsync(start.Task, actions, failures);
+            // Retain the actual terminal task before cancellation or unsubscribe reentry. It quiesces
+            // to ALL original receipts — including physical-close receipts published late during
+            // DetachPresentation/cleanup — never an early snapshot.
+            _disposalTask = CompleteDisposalAsync(start.Task, failures);
         }
         void Attempt(Action cleanup)
         {
@@ -326,11 +345,17 @@ public sealed class CuiControlLoader : IDisposable
             foreach (var scope in _scopeChangedHandlers.Keys.ToArray()) Attempt(() => UnsubscribeScope(scope));
             _repeats.Clear();
             foreach (var (control, handler) in _actionHandlers.ToArray()) Attempt(() => UnwireAction(control, handler));
-            foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
-            foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
             _actionHandlers.Clear();
+            // Close input/action admission FIRST (unwire actions, clear gestures). Owned physical close
+            // admission stays alive because each portal holds its own publisher lease; native close
+            // receipts published during CloseOwnedContextMenu/DetachPresentation are then joined by
+            // CompleteDisposalAsync's post-cleanup snapshot.
+            ClearFloatingCloseGestures();
             _wiredActions.Clear();
             _actionInvocations.Clear();
+            foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
+            foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
+            _inputPresentation.Clear();
             _currentRepeatIdentity = null;
         }
         catch (Exception error) { AddDistinctFailure(failures, error); }
@@ -339,10 +364,18 @@ public sealed class CuiControlLoader : IDisposable
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
-    private async Task CompleteDisposalAsync(Task start, Task[] actions, List<Exception> cleanupFailures)
+    private async Task CompleteDisposalAsync(Task start, List<Exception> cleanupFailures)
     {
         await start;
-        // Copy only after all synchronous cleanup attempts have settled and opened the gate.
+        // Snapshot AFTER all synchronous cleanup has settled and opened the gate, so every original
+        // receipt — including physical-close receipts published during DetachPresentation — joins the
+        // disposal quiescence. An early snapshot would omit those late receipts.
+        Task[] actions;
+        lock (_actionTasksGate)
+        {
+            actions = _admissionFailureTask is null ? _pendingActionTasks.ToArray()
+                : _pendingActionTasks.Append(_admissionFailureTask).ToArray();
+        }
         var failures = new List<Exception>(cleanupFailures);
         foreach (var action in actions.Concat(_contextMenuCloses.Values).Distinct<Task>(ReferenceEqualityComparer.Instance))
         {
@@ -462,6 +495,7 @@ public sealed class CuiControlLoader : IDisposable
         ArgumentNullException.ThrowIfNull(document);
         ObjectDisposedException.ThrowIf(_disposed, this);
         var generation = ++_loadGeneration;
+        _effectsReady = false; // effect firing is installed only after this load succeeds
         if (!CuiProjectItems.IsCuiSourceFamily(document.SourceName))
             throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR051", CuiDiagnosticSeverity.Error, "Production CUI loading rejects non-CUI/AXAML/HUI application input.", document.Span));
         document = CuiThemeCreatorComponents.Compose(CuiAppComponents.Compose(document));
@@ -496,22 +530,22 @@ public sealed class CuiControlLoader : IDisposable
                 randomOncePlans.Add(new RandomOncePlan(
                     declaration, SnapshotRandomOnceCandidates(declaration, generation), generation));
             }
-            else if (string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase)
-                && string.IsNullOrEmpty(declaration.Source)
-                && bool.TryParse(declaration.Value, out var parsed))
+            else if (TryInitializeLocalVariable(declaration, out var initialized))
             {
-                pendingLocal[declaration.Name] = parsed;
+                pendingLocal[declaration.Name] = initialized;
             }
             else
             {
-                // Malformed local initializer: a string Source without Selection, a non-bool type
-                // outside RandomOnce, or a bool without a literal true/false. Reject loudly before
-                // any prior lineage is retired or any chooser draws.
+                // Malformed local initializer: a string Source without Selection, a bool/string/
+                // numeric/command literal that cannot convert to its declared type, or an
+                // unsupported type. Reject loudly before any prior lineage is retired or any
+                // chooser draws.
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
                     "CUIR077", CuiDiagnosticSeverity.Error,
-                    $"Local variable '{declaration.Name}' has an invalid initializer shape; expected a bool literal or a string RandomOnce source selection.", declaration.Span));
+                    $"Local variable '{declaration.Name}' has an invalid initializer shape; expected a bool literal, a string/numeric/command-state literal or a string RandomOnce source selection.", declaration.Span));
             }
         }
+
         // PASS 2: only after every declaration/pool has validated, pick once per frame. Reject a
         // stale outer attempt BEFORE starting any selection and again immediately before retirement,
         // so a reentrant reload/dispose cannot be overwritten by the outer continuation.
@@ -535,6 +569,7 @@ public sealed class CuiControlLoader : IDisposable
         _controlThemeNames.Clear(); _controlThemeResources.Clear(); _appliedThemeKeys.Clear(); _themeNames.Clear(); _themeNames.Push("user_preference");
         _authoredControls.Clear();
         _observedBindings.Clear();
+        _inputPresentation.Clear();
         ClearActionHandlers();
         _rootOwnsBackdrop = false;
         _actionInvocations.Clear();
@@ -598,6 +633,12 @@ public sealed class CuiControlLoader : IDisposable
         // Set DataContext for live bindings if we have a binding context
         if (_bindingContext is not null)
             root.DataContext = _bindingContext;
+
+        // Install declarative auto-invocation effects for this loaded document.
+        _effects = document.Effects ?? Array.Empty<CuiEffectDefinition>();
+        _effectFired = new bool[_effects.Count];
+        _effectRoot = root;
+        _effectsReady = true;
 
         return root;
     }
@@ -675,42 +716,88 @@ public sealed class CuiControlLoader : IDisposable
     {
         await start;
         Task? actualDispatcher = null;
+        var outcome = new CuiCommandOutcome(false, false, "CUIA_FAILED", "The command did not produce an outcome.", null);
         try
         {
             // Resolve live bound parameters only after this actual pipeline has
             // been retained, using the SAME configured context captured at load.
             // App row owners still validate current selection and provenance.
             var parameter = invocation.ResolveCurrentParameter();
-            // Consume the returned ValueTask once and retain its actual Task before await.
-            actualDispatcher = dispatcher is ICuiLifetimeAwareActionDispatcher aware
-                ? aware.DispatchWithLifetimeAsync(invocation.Command, parameter,
-                    new CuiActionDispatchLifetime(_lifetime.Token, CancellationToken.None)).AsTask()
-                : dispatcher.DispatchAsync(invocation.Command, parameter, _lifetime.Token).AsTask();
-            await actualDispatcher;
+            // Prefer a result-reporting dispatcher so CUI can branch on a typed outcome; fall back
+            // to the lifetime-aware/generic contracts with an implicit success outcome.
+            if (dispatcher is ICuiResultReportingDispatcher reporting)
+            {
+                actualDispatcher = reporting.DispatchWithOutcomeAsync(invocation.Command, parameter,
+                    _lifetime.Token).AsTask();
+                outcome = await (Task<CuiCommandOutcome>)actualDispatcher;
+            }
+            else if (dispatcher is ICuiLifetimeAwareActionDispatcher aware)
+            {
+                actualDispatcher = aware.DispatchWithLifetimeAsync(invocation.Command, parameter,
+                    new CuiActionDispatchLifetime(_lifetime.Token, CancellationToken.None)).AsTask();
+                await actualDispatcher;
+                outcome = new CuiCommandOutcome(true, false, "Succeeded", null, null);
+            }
+            else
+            {
+                actualDispatcher = dispatcher.DispatchAsync(invocation.Command, parameter, _lifetime.Token).AsTask();
+                await actualDispatcher;
+                outcome = new CuiCommandOutcome(true, false, "Succeeded", null, null);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            outcome = new CuiCommandOutcome(false, true, "Cancelled", "The action was cancelled.", null);
+            var failures = new List<Exception>();
+            AddOriginalTaskFailure(failures, actualDispatcher, new OperationCanceledException());
+            RetainActionFailure(control, new OperationCanceledException(), failures);
+            ThrowRetainedFailures(failures);
         }
         catch (Exception error)
         {
+            outcome = new CuiCommandOutcome(false, false, "Failed", error.Message, null);
             var failures = new List<Exception>();
             AddOriginalTaskFailure(failures, actualDispatcher, error);
             RetainActionFailure(control, error, failures);
             ThrowRetainedFailures(failures);
         }
+        finally
+        {
+            // Report the typed outcome to CUI and apply authored transition guards regardless of
+            // success/failure, so CUI can branch into recovery/retry/local states by itself.
+            // After disposal the UI lineage is retired, so no result/mutation is written onto it.
+            if (!_disposed)
+            {
+                if (invocation.ResultTarget is not null)
+                    WriteResultTarget(invocation.ResultTarget, outcome);
+                ApplySetDirectives(invocation.Sets ?? Array.Empty<CuiSetDirective>());
+            }
+        }
     }
 
-    /// <summary>Executes a pure-local Toggle in the loader's per-instance local-state frame without
-    /// any external dispatcher, then refreshes bindings that observe the changed variable. It joins
-    /// the same action admission/lifetime/failure pipeline as external dispatches.</summary>
-    private async Task DispatchLocalToggleAsync(Task start, Control control, CuiActionInvocation invocation)
+    /// <summary>Executes a pure-local Toggle or declarative <Set> mutation in the loader's
+    /// per-instance local-state frame without any external dispatcher, then refreshes bindings that
+    /// observe the changed variables. It joins the same action admission/lifetime/failure pipeline
+    /// as external dispatches. <Set> guards are evaluated against current local/context state, so
+    /// authored transitions branch on typed results entirely within CUI.</summary>
+    private async Task DispatchLocalSetsAsync(Task start, Control control, CuiActionInvocation invocation)
     {
         await start;
-        var target = invocation.Parameter as string;
         try
         {
-            if (target is null || !_declaredVariables.ContainsKey(target))
-                throw new InvalidOperationException($"Local toggle target '{target}' is not a declared document-root variable.");
-            var current = _localState.TryGetValue(target, out var value) && value is true;
-            _localState[target] = !current;
-            RefreshLocalVariable(target);
+            if (invocation.Command == LocalToggleCommand)
+            {
+                var target = invocation.Parameter as string;
+                if (target is null || !_declaredVariables.ContainsKey(target))
+                    throw new InvalidOperationException($"Local toggle target '{target}' is not a declared document-root variable.");
+                var current = _localState.TryGetValue(target, out var value) && value is true;
+                _localState[target] = !current;
+                RefreshLocalVariable(target);
+            }
+            else
+            {
+                ApplySetDirectives(invocation.Sets ?? Array.Empty<CuiSetDirective>());
+            }
         }
         catch (Exception error)
         {
@@ -719,6 +806,204 @@ public sealed class CuiControlLoader : IDisposable
             RetainActionFailure(control, error, failures);
             ThrowRetainedFailures(failures);
         }
+    }
+
+    /// <summary>Applies declarative <Set> mutations. Each mutation is guarded by its optional
+    /// <see cref="CuiSetDirective.When"/> condition; only qualifying mutations are applied. Values
+    /// are converted to the declared variable type and every touched variable's live bindings and
+    /// conditional branches are refreshed exactly once.</summary>
+    private void ApplySetDirectives(IReadOnlyList<CuiSetDirective> sets)
+    {
+        if (sets.Count == 0) return;
+        var touched = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var set in sets)
+        {
+            if (set.When is not null && !EvaluateCondition(set.When))
+                continue;
+            if (!_declaredVariables.TryGetValue(set.Target, out var declaration))
+                throw new InvalidOperationException($"Set target '{set.Target}' is not a declared document-root variable.");
+            if (set.Value is not CuiLiteralValue literal)
+                throw new InvalidOperationException($"Set target '{set.Target}' requires a literal Value.");
+            if (!TryConvertToDeclaredType(declaration.Type, literal.Value, out var converted))
+                throw new InvalidOperationException(
+                    $"Set target '{set.Target}' value '{literal.Value}' cannot convert to declared type '{declaration.Type}'.");
+            _localState[set.Target] = converted;
+            touched.Add(set.Target);
+        }
+        foreach (var name in touched)
+            RefreshLocalVariable(name);
+    }
+
+    /// <summary>Converts a document-root <Variable> literal initializer to its declared type.
+    /// Supports bool, integer, decimal, number/double, string/text and command-state (outcome)
+    /// types. Command-state variables start null (no outcome yet); strings retain their literal
+    /// text (possibly empty). RandomOnce selection and binding Source are handled by their own paths.</summary>
+    private static bool TryInitializeLocalVariable(CuiVariableDeclaration declaration, out object? value)
+    {
+        value = null;
+        if (!string.IsNullOrEmpty(declaration.Source)) return false;
+        switch (declaration.Type.Trim().ToLowerInvariant())
+        {
+            case "boolean":
+            case "bool":
+                if (!bool.TryParse(declaration.Value, out var boolean)) return false;
+                value = boolean;
+                return true;
+            case "integer":
+            case "int":
+                if (!int.TryParse(declaration.Value, System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out var integer)) return false;
+                value = integer;
+                return true;
+            case "decimal":
+                if (!decimal.TryParse(declaration.Value, System.Globalization.NumberStyles.Number,
+                    System.Globalization.CultureInfo.InvariantCulture, out var dec)) return false;
+                value = dec;
+                return true;
+            case "number":
+            case "double":
+                if (!double.TryParse(declaration.Value, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var dbl)) return false;
+                value = dbl;
+                return true;
+            case "string":
+            case "text":
+                value = declaration.Value;
+                return true;
+            case "commandstate":
+            case "outcome":
+                // No command has reported yet; the outcome is unknown until one settles.
+                value = null;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool TryConvertToDeclaredType(string type, string raw, out object? converted)
+    {
+        converted = null;
+        switch (type.Trim().ToLowerInvariant())
+        {
+            case "boolean":
+            case "bool":
+                if (!bool.TryParse(raw, out var boolean)) return false;
+                converted = boolean;
+                return true;
+            case "integer":
+            case "int":
+                if (!int.TryParse(raw, System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out var integer)) return false;
+                converted = integer;
+                return true;
+            case "decimal":
+                if (!decimal.TryParse(raw, System.Globalization.NumberStyles.Number,
+                    System.Globalization.CultureInfo.InvariantCulture, out var dec)) return false;
+                converted = dec;
+                return true;
+            case "number":
+            case "double":
+                if (!double.TryParse(raw, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var dbl)) return false;
+                converted = dbl;
+                return true;
+            case "string":
+            case "text":
+                converted = raw;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>Stores a typed command outcome into a declared <c>result</c> local variable and
+    /// refreshes its observers so CUI can branch on the outcome fields.</summary>
+    private void WriteResultTarget(string target, CuiCommandOutcome outcome)
+    {
+        if (string.IsNullOrEmpty(target)) return;
+        if (!_declaredVariables.ContainsKey(target))
+            throw new InvalidOperationException($"Action result target '{target}' is not a declared document-root variable.");
+        _localState[target] = outcome;
+        RefreshLocalVariable(target);
+    }
+
+    /// <summary>Evaluates declarative auto-invocation effects. Each effect fires at most once per
+    /// rising edge of its condition; a false condition re-arms it. Dispatch joins the same retained
+    /// action pipeline so <see cref="WhenActionsIdleAsync"/> observes it.</summary>
+    private void EvaluateEffects()
+    {
+        if (_disposed || !_effectsReady || _effectRoot is null) return;
+        for (var i = 0; i < _effects.Count; i++)
+        {
+            var effect = _effects[i];
+            bool satisfied;
+            try { satisfied = EvaluateCondition(effect.Condition); }
+            catch { satisfied = false; }
+
+            if (satisfied && !_effectFired[i])
+            {
+                // Validate BEFORE this effect runs: a satisfied effect must reference a declared
+                // action (the compiled-artifact codec already enforces this at admission; this is
+                // the same invariant for markup-loaded documents). Never silently drop an effect.
+                var invocation = BuildEffectInvocation(effect.ActionName);
+                if (invocation is null)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                        "CUIR073", CuiDiagnosticSeverity.Error,
+                        $"Declarative effect '{effect.Name}' references undeclared action '{effect.ActionName}'.",
+                        effect.Span));
+                _effectFired[i] = true;
+                DispatchEffectAction(invocation);
+            }
+            else if (!satisfied)
+            {
+                _effectFired[i] = false;
+            }
+        }
+    }
+
+    /// <summary>Builds an action invocation for a named declared action, mirroring the routing used
+    /// for authored control actions (pure-local Set/Toggle vs. external command). Returns null when
+    /// the referenced action is not declared (validated here, exactly like a control action).</summary>
+    private CuiActionInvocation? BuildEffectInvocation(string reference)
+    {
+        if (!_documentActions.TryGetValue(reference, out var definition)) return null;
+        if (definition.LocalTarget is { } localTarget)
+            return new CuiActionInvocation(LocalToggleCommand, localTarget, null, null, false);
+        if ((definition.Sets?.Count ?? 0) > 0 && string.IsNullOrEmpty(definition.Command))
+            return new CuiActionInvocation(LocalSetCommand, null, null, null, false, null, definition.Sets, definition.ResultTarget);
+
+        object? parameter = null;
+        if (definition.Parameter is not null && definition.Parameter is not CuiBindingValue)
+            parameter = ResolveObject(definition.Parameter);
+        var liveParameter = definition.Parameter as CuiBindingValue;
+        return new CuiActionInvocation(definition.Command, parameter, _bindingContext, liveParameter, false,
+            _actionDispatcher as CuiQueryViewport, definition.Sets ?? Array.Empty<CuiSetDirective>(), definition.ResultTarget);
+    }
+
+    /// <summary>Dispatches an effect-invoked action through the same admitted/retained pipeline as a
+    /// user click, using the loaded root as the fault-reporting control. Never dispatched after
+    /// admission is closed.</summary>
+    private void DispatchEffectAction(CuiActionInvocation invocation)
+    {
+        var start = new TaskCompletionSource();
+        lock (_actionTasksGate)
+        {
+            if (_disposed || _admissionFailureTask is not null) return;
+            _pendingActionTasks.RemoveWhere(static task => task.IsCompletedSuccessfully);
+            if (_pendingActionTasks.Count >= MaximumRetainedActionTasks)
+            {
+                _admissionFailureTask = RejectActionDispatchAsync(start.Task, _effectRoot!);
+            }
+            else
+            {
+                var isLocal = invocation.Command is LocalToggleCommand or LocalSetCommand;
+                if (!isLocal && _actionDispatcher is null) return; // no host dispatcher to run a command effect
+                _pendingActionTasks.Add(isLocal
+                    ? DispatchLocalSetsAsync(start.Task, _effectRoot!, invocation)
+                    : DispatchActionAsync(start.Task, _effectRoot!, _actionDispatcher!, invocation));
+            }
+        }
+        start.SetResult();
     }
 
     private async Task RejectActionDispatchAsync(Task start, Control control)
@@ -762,19 +1047,27 @@ public sealed class CuiControlLoader : IDisposable
     private void WireBindingsRecursive(Control control, Control? contextMenuOwner = null)
     {
         // Native menu items use the same retained pipeline as native buttons. Pure-local toggles
-        // are wired even without an external dispatcher; external commands require a dispatcher,
-        // either the scene/app one, the recorded owning query scope (the generic runtime query/state
-        // owner captured at load/action-invocation time), or the nearest owning query scope resolved
-        // from the current visual tree (a fallback for dynamically rebuilt subtrees such as
-        // refreshed conditional branches). ObserveActionDispatch uses the same recorded owner first,
-        // so admission and dispatch stay aligned: a button authored inside a mounted QueryViewport is
-        // wired even when no global dispatcher is configured and even when it is hidden/detached at
-        // wire time (its owner is recorded, not lost), while a command with no resolvable dispatcher
-        // stays unwired (truthful, never broadly accepted).
-        if (control is Button or MenuItem && !_wiredActions.Contains(control)
+        // and pure-local Set transitions are wired even without an external dispatcher; external
+        // commands require a dispatcher, either the scene/app one, the recorded owning query scope
+        // (the generic runtime query/state owner captured at load/action-invocation time), or the
+        // nearest owning query scope resolved from the current visual tree (a fallback for
+        // dynamically rebuilt subtrees such as refreshed conditional branches). ObserveActionDispatch
+        // uses the same recorded owner first, so admission and dispatch stay aligned: a button
+        // authored inside a mounted QueryViewport is wired even when no global dispatcher is
+        // configured and even when it is hidden/detached at wire time (its owner is recorded, not
+        // lost), while a command with no resolvable dispatcher stays unwired (truthful, never
+        // broadly accepted).
+        if (IsFloatingHost(control))
+        {
+            // A Floating-authored host has no native activation; its referenced action IS its close
+            // gesture. The generic escape portal invokes it when the user closes the floating bar. It
+            // joins the SAME ObserveActionDispatch admission/ledger pipeline as any authored action.
+            WireFloatingCloseGesture((CuiContainerControl)control, contextMenuOwner);
+        }
+        else if (control is Button or MenuItem && !_wiredActions.Contains(control)
             && TryGetActionInvocation(control, out var actionInvocation)
             && (_actionDispatcher is not null
-                || actionInvocation.Command == LocalToggleCommand
+                || actionInvocation.Command is LocalToggleCommand or LocalSetCommand
                 || actionInvocation.Owner is not null
                 || ScopedDispatcherFor(control) is not null))
         {
@@ -824,6 +1117,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         foreach (var (control, handler) in _actionHandlers) UnwireAction(control, handler);
         _actionHandlers.Clear();
+        ClearFloatingCloseGestures();
         _wiredActions.Clear();
     }
 
@@ -1398,29 +1692,46 @@ public sealed class CuiControlLoader : IDisposable
     private void DetachControlTree(Control root)
     {
         var removed = EnumerateControls(root).ToHashSet<Control>(ReferenceEqualityComparer.Instance);
+
+        // Phase 1 — revoke the ENTIRE removed subtree's executable action admission, exact loader-owned
+        // action/floating gestures and owned callback entries BEFORE any presentation/native/focus/
+        // disposal callback can run (repeat.Dispose, UnsubscribeScope, DetachPresentation, context-menu
+        // close). A previously captured old gesture is therefore rejected by the _wiredActions guard,
+        // and a newer same-ID replacement is unaffected because it is freshly wired on its own control.
+        foreach (var control in removed)
+        {
+            RetireFloatingCloseGesture(control);
+            _wiredActions.Remove(control);
+            _actionInvocations.Remove(control);
+            if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
+            _observedBindings.Remove(control);
+            _controlThemeNames.Remove(control); _controlThemeResources.Remove(control); _appliedThemeKeys.Remove(control);
+            _authoredControls.Remove(control);
+        }
+
+        // Phase 2 — live binding/bookkeeping that does not invoke authored callbacks.
+        _liveBindings.RemoveAll(binding => removed.Contains(binding.Control));
+        _liveConditionals.RemoveAll(conditional => removed.Contains(conditional.Host));
+
+        // Phase 3 — callback-producing retirement (repeats, scopes, presentations, native context menus).
         foreach (var repeat in _repeats.Where(repeat => repeat.HostControl is not null && removed.Contains(repeat.HostControl)).ToArray())
         {
             foreach (var item in repeat.Items.Values) UnsubscribeScope(item.Scope);
             repeat.Dispose();
             _repeats.Remove(repeat);
         }
-        _liveBindings.RemoveAll(binding => removed.Contains(binding.Control));
-        _liveConditionals.RemoveAll(conditional => removed.Contains(conditional.Host));
         foreach (var control in removed)
         {
             DetachPresentation(control);
-            _controlThemeNames.Remove(control); _controlThemeResources.Remove(control); _appliedThemeKeys.Remove(control);
-            _authoredControls.Remove(control);
-            _observedBindings.Remove(control);
-            _actionInvocations.Remove(control);
-            _wiredActions.Remove(control);
-            if (_actionHandlers.Remove(control, out var handler)) UnwireAction(control, handler);
             CloseOwnedContextMenu(control);
         }
     }
 
-    private static void DetachPresentation(Control control)
+    private void DetachPresentation(Control control)
     {
+        // Retire owned input presentation state first (unsubscribe focus/lostfocus/textchanged
+        // handlers that close over this loader/control) so a retired control never fires.
+        RetireInputPresentation(control);
         // Retire an owned QueryViewport scope on the canonical teardown path (frame reload, close,
         // conditional/repeat retirement). Withdraw clears the typed source, inner context/dispatcher
         // and refresh callback without raising notifications, evaluating, or dispatching, so a
@@ -1430,6 +1741,20 @@ public sealed class CuiControlLoader : IDisposable
         CuiLifecycleProperties.Detach(control);
         CuiPropertyPresentation.Detach(control);
         if (control is CuiContainerControl container) container.Dispose();
+    }
+
+    /// <summary>Unsubscribes a retired input's handlers and drops its presentation state. This
+    /// runs on reload/dispose/teardown so anonymous closures from a retired control cannot fire on
+    /// a newer frame; it is idempotent.</summary>
+    private void RetireInputPresentation(Control control)
+    {
+        if (!_inputPresentation.Remove(control, out var state)) return;
+        if (state.Wired && control is TextBox box)
+        {
+            if (state.GotFocus is not null) box.GotFocus -= state.GotFocus;
+            if (state.LostFocus is not null) box.LostFocus -= state.LostFocus;
+            if (state.TextChanged is not null) box.TextChanged -= state.TextChanged;
+        }
     }
 
     private string CreateRepeatIdentityPrefix(CuiComponent component, string key)
@@ -1869,6 +2194,20 @@ public sealed class CuiControlLoader : IDisposable
     {
         // A condition whose binding source is absent degrades to its declared fallback, or to an unmet branch.
         // Only a source that resolves to a non-boolean value is a genuine type error.
+        if (condition.Test is CuiBindingValue localBinding && IsLocalPath(localBinding.Path))
+        {
+            // Local document-root variables (and dotted sub-paths of typed results) resolve within the
+            // loader frame and never fall back to an external/theme context. An absent dotted member
+            // (a result not yet written) is an unmet branch, not an error.
+            bool result;
+            if (TryResolveLocal(localBinding.Path, out var localValue))
+                result = AsBool(localValue, condition);
+            else if (_bindingContext is not null && _bindingContext.TryGetValue(localBinding.Path, out var ctxValue))
+                result = AsBool(ctxValue, condition);
+            else
+                result = false;
+            return condition.Negate ? !result : result;
+        }
         if (condition.Test is CuiBindingValue missingSource &&
             (_bindingContext is null || !_bindingContext.TryGetValue(missingSource.Path, out _)))
         {
@@ -1879,17 +2218,18 @@ public sealed class CuiControlLoader : IDisposable
         }
 
         var value = ResolveObject(condition.Test);
-        bool result;
-        if (value is bool boolean)
-            result = boolean;
-        else if (value is string text && bool.TryParse(text, out var parsed))
-            result = parsed;
-        else
-            throw new CuiRuntimeLoadException(new CuiDiagnostic(
-                "CUIR011", CuiDiagnosticSeverity.Error,
-                "A CUI condition must resolve to a boolean value.", condition.Span));
+        return condition.Negate ? !AsBool(value, condition) : AsBool(value, condition);
+    }
 
-        return condition.Negate ? !result : result;
+    private static bool AsBool(object? value, CuiCondition condition)
+    {
+        if (value is bool boolean)
+            return boolean;
+        if (value is string text && bool.TryParse(text, out var parsed))
+            return parsed;
+        throw new CuiRuntimeLoadException(new CuiDiagnostic(
+            "CUIR011", CuiDiagnosticSeverity.Error,
+            "A CUI condition must resolve to a boolean value.", condition.Span));
     }
 
     private void ApplyProperties(Control control, CuiComponent component)
@@ -2075,11 +2415,13 @@ public sealed class CuiControlLoader : IDisposable
     {
         // A binding whose path resolves to a declared document-root local variable is owned by this
         // loader's per-instance local-state frame. It never consults the external binding context
-        // and is refreshed by local Toggle mutations, not host notifications.
-        if (_declaredVariables.ContainsKey(binding.Path))
+        // and is refreshed by local mutations, not host notifications. Dotted sub-paths (typed
+        // command/domain results) are owned by the same root variable and refreshed together.
+        if (IsLocalPath(binding.Path))
         {
-            if (!_localBindings.TryGetValue(binding.Path, out var localBindings))
-                _localBindings[binding.Path] = localBindings = new List<CuiLiveBinding>();
+            var root = LocalVariableRoot(binding.Path)!;
+            if (!_localBindings.TryGetValue(root, out var localBindings))
+                _localBindings[root] = localBindings = new List<CuiLiveBinding>();
             localBindings.Add(new CuiLiveBinding(control, propName, binding, sourceSpan, null!));
             ApplyObservedBinding(control, propName, binding, null!, sourceSpan);
             return;
@@ -2319,16 +2661,24 @@ public sealed class CuiControlLoader : IDisposable
         candidates => candidates[Random.Shared.Next(candidates.Count)];
 
     /// <summary>Refreshes every live local binding that references the named document-root local
-    /// variable after a local Toggle mutation. Synchronous observer reentry is safe: the binding
+    /// variable after a local mutation. Synchronous observer reentry is safe: the binding
     /// list is snapshotted before notifications, and a reentrant toggle re-applies the new value.</summary>
     private void RefreshLocalVariable(string name)
     {
-        if (!_localBindings.TryGetValue(name, out var bindings)) return;
-        foreach (var record in bindings.ToArray())
+        if (_localBindings.TryGetValue(name, out var bindings))
         {
-            if (_disposed) return;
-            ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, null!, record.Span);
+            foreach (var record in bindings.ToArray())
+            {
+                if (_disposed) return;
+                ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, null!, record.Span);
+            }
         }
+        // Conditional branches rooted at this local variable must re-evaluate so CUI-authored
+        // transition guards recompute which page is active. This runs even when the variable has
+        // no live value binding but is referenced by authored conditional branches.
+        RefreshLiveConditionals(name);
+        // Declarative auto-invocation effects may react to the refreshed local state.
+        EvaluateEffects();
     }
 
     private void OnBindingPropertyChanged(string? propertyName)
@@ -2373,9 +2723,11 @@ public sealed class CuiControlLoader : IDisposable
         {
             if (!_liveConditionals.Contains(conditional)) continue;
             var leaf = conditional.Path[(conditional.Path.LastIndexOf('.') + 1)..];
+            var root = LocalVariableRoot(conditional.Path);
             if (!string.IsNullOrEmpty(propertyName)
                 && !conditional.Path.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
-                && !leaf.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                && !leaf.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                && (root is null || !root.Equals(propertyName, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
             if (context is not null && !ReferenceEquals(context, conditional.Context))
@@ -2416,12 +2768,74 @@ public sealed class CuiControlLoader : IDisposable
         return value switch
         {
             CuiLiteralValue literal => literal.Value,
-            CuiBindingValue binding when _bindingContext is not null
-                && _bindingContext.TryGetValue(binding.Path, out var resolved) => resolved,
-            CuiBindingValue binding => binding.Fallback,
+            CuiBindingValue binding => ResolveBinding(binding),
             CuiResourceValue resource => ResolveResourceObject(resource.Key),
             _ => null,
         };
+    }
+
+    /// <summary>Resolve a binding against the loader's per-instance local-state frame first, then
+    /// the external binding context, then the declared fallback. A dotted path (for example
+    /// <c>Discovery.Resultucceeded</c>) traverses nested local values so CUI can branch on typed
+    /// domain/command results.</summary>
+    private object? ResolveBinding(CuiBindingValue binding)
+    {
+        if (TryResolveLocal(binding.Path, out var local))
+            return local;
+        if (_bindingContext is not null && _bindingContext.TryGetValue(binding.Path, out var resolved))
+            return resolved;
+        return binding.Fallback;
+    }
+
+    /// <summary>The first segment of a local path (the declared document-root variable name), if any.</summary>
+    private static string? LocalVariableRoot(string path)
+    {
+        var segment = path;
+        var dot = path.IndexOf('.');
+        if (dot > 0) segment = path[..dot];
+        return string.IsNullOrEmpty(segment) ? null : segment;
+    }
+
+    /// <summary>True when a binding path targets a declared document-root local variable (exactly or
+    /// via a dotted sub-path). Such bindings are owned by this loader's local frame.</summary>
+    private bool IsLocalPath(string path)
+    {
+        var root = LocalVariableRoot(path);
+        return root is not null && _declaredVariables.ContainsKey(root);
+    }
+
+    /// <summary>Resolve a local variable value, traversing dotted sub-paths into nested records.
+    /// Returns false when the path does not resolve to a local variable or a member.</summary>
+    private bool TryResolveLocal(string path, out object? value)
+    {
+        value = null;
+        if (_localState.Count == 0) return false;
+        var segments = path.Split('.');
+        if (segments.Length == 0) return false;
+        if (!_declaredVariables.ContainsKey(segments[0]))
+            return _localState.TryGetValue(path, out value);
+        if (!_localState.TryGetValue(segments[0], out var current))
+            return false;
+        for (var i = 1; i < segments.Length && current is not null; i++)
+            current = ResolveMember(current, segments[i]);
+        if (segments.Length > 1 && current is null)
+            return false; // a dotted member is not present yet (e.g. before a command result lands)
+        value = current;
+        return true;
+    }
+
+    private static object? ResolveMember(object instance, string member)
+    {
+        if (instance is IDictionary dict)
+            return dict.Contains(member) ? dict[member] : null;
+        var type = instance.GetType();
+        var property = type.GetProperty(member, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        if (property is not null)
+        {
+            try { return property.GetValue(instance); }
+            catch { return null; }
+        }
+        return null;
     }
 
     private void WireInputWriteBack(Control control, string propertyName, CuiBindingValue binding, CuiSourceSpan sourceSpan, ICuiBindingContext context)
@@ -2458,6 +2872,9 @@ public sealed class CuiControlLoader : IDisposable
                 break;
             case CheckBox checkBox:
                 checkBox.IsCheckedChanged += (_, _) => Update(checkBox.IsChecked);
+                break;
+            case ToggleSwitch toggleSwitch:
+                toggleSwitch.IsCheckedChanged += (_, _) => Update(toggleSwitch.IsChecked);
                 break;
             case Slider slider:
                 slider.ValueChanged += (_, args) => Update(args.NewValue);
@@ -2772,6 +3189,8 @@ public sealed class CuiControlLoader : IDisposable
                 case "ischecked":
                     if (control is CheckBox checkBox && bool.TryParse(resolved, out var isChecked))
                         checkBox.IsChecked = isChecked;
+                    else if (control is ToggleSwitch toggleSwitch && bool.TryParse(resolved, out var switchChecked))
+                        toggleSwitch.IsChecked = switchChecked;
                     break;
                 case "content":
                     if (control is ContentControl cc)
@@ -2786,6 +3205,9 @@ public sealed class CuiControlLoader : IDisposable
                 case "placeholdertext":
                     if (control is TextBox ptb)
                         ptb.PlaceholderText = resolved;
+                    break;
+                case "displayvalue":
+                    ApplyInputPresentationBinding(control, resolved);
                     break;
                 // Actions / events: store in Tag for wiring
                 case "action":
@@ -2993,6 +3415,13 @@ public sealed class CuiControlLoader : IDisposable
                 _actionInvocations[control] = new CuiActionInvocation(LocalToggleCommand, localTarget, null, null, ownedEvent is not null);
                 return;
             }
+            // A pure-local transition action declares only <Set> mutations and no command.
+            if ((definition.Sets?.Count ?? 0) > 0 && string.IsNullOrEmpty(definition.Command))
+            {
+                _actionInvocations[control] = new CuiActionInvocation(LocalSetCommand, null, null, null, ownedEvent is not null,
+                    null, definition.Sets, definition.ResultTarget);
+                return;
+            }
             command = definition.Command;
             if (definition.Parameter is not null && definition.Parameter is not CuiBindingValue)
                 parameter = ResolveObject(definition.Parameter);
@@ -3003,7 +3432,9 @@ public sealed class CuiControlLoader : IDisposable
         // to use the current SetActionDispatcher value. Wiring and dispatch reuse a recorded query owner
         // so a hidden/detached same-frame control keeps its correct local query owner; a retired
         // frame's controls are cleaned up with their invocations and cannot adopt a new/global owner.
-        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null, _actionDispatcher as CuiQueryViewport);
+        var sets = boundDefinition?.Sets ?? Array.Empty<CuiSetDirective>();
+        _actionInvocations[control] = new CuiActionInvocation(command, parameter, _bindingContext, liveParameter, ownedEvent is not null,
+            _actionDispatcher as CuiQueryViewport, sets, boundDefinition?.ResultTarget);
     }
 
     /// <summary>Resolve the nearest authored QueryViewport scope ancestor of a control, if any. The
@@ -3043,7 +3474,9 @@ public sealed class CuiControlLoader : IDisposable
         // is captured when the control is authored so dispatch does not re-infer authority from
         // current native visual ancestry (which disappears for hidden/detached controls). Local
         // toggles carry no owner and are handled locally.
-        ICuiActionDispatcher? Owner = null)
+        ICuiActionDispatcher? Owner = null,
+        IReadOnlyList<CuiSetDirective>? Sets = null,
+        string? ResultTarget = null)
     {
         internal object? ResolveCurrentParameter() => LiveParameter is not null
             ? ParameterContext is not null && ParameterContext.TryGetValue(LiveParameter.Path, out var current)
@@ -3206,8 +3639,9 @@ public sealed class CuiControlLoader : IDisposable
     private string? ResolveBindingValue(CuiBindingValue binding)
     {
         // Local document-root variables resolve before any external/theme context; they are the
-        // sole owner of these names for this loaded document instance.
-        if (_localState.TryGetValue(binding.Path, out var local))
+        // sole owner of these names for this loaded document instance. Dotted sub-paths traverse
+        // nested typed results.
+        if (TryResolveLocal(binding.Path, out var local))
             return Convert.ToString(local, System.Globalization.CultureInfo.InvariantCulture);
 
         // Check special theme-related bindings first
@@ -3284,7 +3718,20 @@ public sealed class CuiControlLoader : IDisposable
                 return;
             }
             if (CuiInputValidationProperties.GetHasError(control) && resolved == previous && NormalizeProperty(property) is "value" or "text" or "checked" or "selectedindex") return;
+            // Bounded typed input presentation: DisplayValue is presentation metadata, not a native
+            // control property. It is kept in the per-control presentation state so the friendly
+            // display never corrupts the writable raw value.
+            if (NormalizeProperty(property) is "displayvalue")
+            {
+                ApplyInputPresentationBinding(control, resolved);
+                return;
+            }
+            if (NormalizeProperty(property) is "value" or "text") CaptureInputRaw(control, resolved);
             if (resolved is not null) ApplyLiteralProperty(control, property, resolved, span);
+            // A host-side writable update must not leave the friendly unfocused location looking like
+            // the raw text (which can carry a route GUID). Restore the display whenever the input is
+            // unfocused; the raw binding value stays intact and a focused edit is never overridden.
+            if (NormalizeProperty(property) is "value" or "text") RestoreFriendlyIfUnfocused(control);
         }
         catch
         {
@@ -3310,7 +3757,7 @@ public sealed class CuiControlLoader : IDisposable
         string? error = null;
         try
         {
-            if (_localState.TryGetValue(binding.Path, out var local))
+            if (TryResolveLocal(binding.Path, out var local))
             {
                 typedValue = local;
                 hasTypedValue = true;
@@ -3598,6 +4045,85 @@ public sealed class CuiControlLoader : IDisposable
                 foreach (var descendant in EnumerateControls(item)) yield return descendant;
                 break;
         }
+    }
+
+    /// <summary>Bounded typed presentation state for a text Input. The friendly DisplayValue is
+    /// shown while the input is unfocused; the raw writable Value is revealed on focus so native
+    /// edit/copy always operate on the canonical value; Raw tracks the last genuine user text so a
+    /// later focus reveal never resurrects a stale host-published value. Handlers are retained for
+    /// unsubscription on retirement.</summary>
+    private sealed class InputPresentationState
+    {
+        public string? Display;
+        public string? Raw;
+        public bool Focused;
+        public bool Wired;
+        public EventHandler<RoutedEventArgs>? GotFocus;
+        public EventHandler<RoutedEventArgs>? LostFocus;
+        public EventHandler<TextChangedEventArgs>? TextChanged;
+    }
+
+    private void ApplyInputPresentationBinding(Control control, string? value)
+    {
+        if (!_inputPresentation.TryGetValue(control, out var state))
+            _inputPresentation[control] = state = new InputPresentationState { Raw = (control as TextBox)?.Text };
+        state.Display = value;
+        EnsureInputPresentationWiring(control, state);
+        // Reflect the authored display immediately when the input is not focused; the raw editable
+        // value stays untouched so the writable port is never corrupted by friendly presentation.
+        if (!state.Focused && control is TextBox box) SetInputShownText(box, state.Display);
+    }
+
+    private void CaptureInputRaw(Control control, string? raw)
+    {
+        if (_inputPresentation.TryGetValue(control, out var state)) state.Raw = raw;
+    }
+
+    private void EnsureInputPresentationWiring(Control control, InputPresentationState state)
+    {
+        if (state.Wired || control is not TextBox box) return;
+        state.Wired = true;
+        state.GotFocus = (_, _) =>
+        {
+            state.Focused = true;
+            // Reveal the full canonical editable value on focus (never the friendly label) so
+            // native selection/caret/undo and copy operate on the genuine value.
+            SetInputShownText(box, state.Raw ?? box.Text);
+        };
+        state.TextChanged = (_, _) =>
+        {
+            // Track genuine user edits (outside the host-value fence) so a later focus reveal keeps
+            // the user's latest text rather than a stale host-published value.
+            if (state.Focused && !_applyingHostValues.Contains(box)) state.Raw = box.Text;
+        };
+        state.LostFocus = (_, _) =>
+        {
+            state.Focused = false;
+            // Resume the readable friendly location while leaving the raw binding value intact.
+            if (state.Display is not null) SetInputShownText(box, state.Display);
+        };
+        box.GotFocus += state.GotFocus;
+        box.TextChanged += state.TextChanged;
+        box.LostFocus += state.LostFocus;
+    }
+
+    /// <summary>Swaps a Text input's shown text inside the host-value fence so the generic writable
+    /// write-back never treats a programmatic presentation change as a user edit.</summary>
+    private void SetInputShownText(TextBox box, string? text)
+    {
+        try { _applyingHostValues.Add(box); box.Text = text; }
+        finally { _applyingHostValues.Remove(box); }
+    }
+
+    /// <summary>Restores the friendly Display while the input is unfocused after a host-side
+    /// writable value update. Never touches the raw binding value and never overrides a focused
+    /// edit.</summary>
+    private void RestoreFriendlyIfUnfocused(Control control)
+    {
+        if (control is not TextBox box) return;
+        if (!_inputPresentation.TryGetValue(control, out var state)) return;
+        if (!state.Focused && state.Display is not null)
+            SetInputShownText(box, state.Display);
     }
 
     private sealed record CuiLiveBinding(

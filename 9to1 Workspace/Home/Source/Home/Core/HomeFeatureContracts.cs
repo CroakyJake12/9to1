@@ -264,7 +264,7 @@ public interface IHomeNotificationFeatureProvider
 }
 
 public sealed record HomeModelRouteCandidate(string ProviderId, string ModelId, string? ArtifactRevision,
-    bool Enabled, int Order);
+    bool Enabled, int Order, string? ReasoningLevelId = null);
 
 public sealed record HomeModelRouteContract(string RouteId, long Version, string Scope, string Category,
     string? AppId, string? OverrideIdentity, IReadOnlyList<HomeModelRouteCandidate> Candidates,

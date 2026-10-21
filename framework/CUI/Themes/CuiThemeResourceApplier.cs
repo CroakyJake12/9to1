@@ -258,7 +258,9 @@ public static class CuiThemeResourceApplier
         resources["CuiControlBorderWidth"] = new Thickness((settings.HighContrast ? 2 : 1) * settings.DisplayScale);
         resources["CuiControlBorderBrush"] = professional && !settings.HighContrast ? Brushes.Transparent : resources["CuiLineBrush"];
         resources["CuiChoiceBorderBrush"] = new SolidColorBrush(CuiContrast.EnsureForegroundContrast(palette.LineStrong, palette.Panel, 3));
-        resources["CuiInputRadius"] = new CornerRadius((professional ? 12 : CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale) * settings.DisplayScale);
+        resources["CuiInputRadius"] = new CornerRadius(professional
+            ? (34d * settings.DisplayScale) / 2d // default single-line control → full capsule
+            : CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale * settings.DisplayScale);
         resources["CuiWorkspaceBrush"] = new SolidColorBrush(professional ? palette.TideColour : palette.TideBase);
         var material = professional && !settings.HighContrast;
         var dark = Luminance(palette.Text) > Luminance(palette.Panel);
@@ -321,6 +323,28 @@ public static class CuiThemeResourceApplier
         resources["CuiScrollThumbPressedBrush"] = new SolidColorBrush(palette.Text);
         resources["CuiScrollThumbRadius"] = new CornerRadius(6 * settings.DisplayScale);
         resources["CuiThumbRadius"] = new CornerRadius(10 * settings.DisplayScale);
+        // Switch primitive: a themed rail, hover feedback and thumb. The checked rail reuses the
+        // shared accent so per-app accent overrides apply to on-states without extra palette work.
+        var switchTrack = WithAlpha(palette.LineStrong, dark ? (byte)0x59 : (byte)0x47);
+        resources["CuiSwitchWidth"] = 40d * settings.DisplayScale;
+        resources["CuiSwitchHeight"] = 22d * settings.DisplayScale;
+        resources["CuiSwitchThumbSize"] = 18d * settings.DisplayScale;
+        resources["CuiSwitchPad"] = 3d * settings.DisplayScale;
+        resources["CuiSwitchVPad"] = 2d * settings.DisplayScale;
+        resources["CuiSwitchTrackRadius"] = new CornerRadius(11d * settings.DisplayScale);
+        resources["CuiSwitchThumbRadius"] = new CornerRadius(9d * settings.DisplayScale);
+        resources["CuiSwitchTrackBrush"] = new SolidColorBrush(switchTrack);
+        resources["CuiSwitchHoverBrush"] = new SolidColorBrush(WithAlpha(palette.LineStrong, dark ? (byte)0x73 : (byte)0x61));
+        resources["CuiSwitchThumbBrush"] = new SolidColorBrush(Color.Parse("#FFFFFFFF"));
+        // Slider rail: a fixed-height decorative rail, fully rounded at half its own height.
+        var railHeight = 6d * settings.DisplayScale;
+        resources["CuiRailHeight"] = railHeight;
+        resources["CuiRailRadius"] = new CornerRadius(railHeight / 2);
+        // Progress primitive: read-only determinate rail. The fill reuses CuiAccentBrush. Its track
+        // radius is set by the template from the actual bar height so the ends are always full-round,
+        // proportionate to each bar's real height (independent of the slider rail).
+        resources["CuiProgressTrackBrush"] = new SolidColorBrush(WithAlpha(palette.LineStrong, (byte)0x50));
+        resources["CuiProgressTrackRadius"] = new CornerRadius(6d * settings.DisplayScale);
         resources["CuiSpinnerButtonWidth"] = 24d * settings.DisplayScale;
         resources["CuiSpinnerButtonHeight"] = 17d * settings.DisplayScale;
         resources["CuiShellBrush"] = new SolidColorBrush(palette.TideBase);

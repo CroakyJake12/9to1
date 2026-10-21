@@ -24,7 +24,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard, IAsyncDisposable
 {
     private readonly DeveloperTaskWorkspaceService _development;
-    private readonly DeveloperSourceReviewSession _review;
+    private readonly DeveloperSourceReviewSession? _review;
     private readonly TaskExecutionCoordinator _canonical;
     private readonly Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> _resolveDocument;
     private readonly Action _demandOriginalDocumentSourceJoin;
@@ -35,6 +35,18 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     private readonly CuiSceneHost _host;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly object _gate = new();
+    // Manual (no-AI) open: admits a resolved saved project by its real stored identity without a
+    // Task/Run/context. Reads/search are performed by a confined file reader; edits and process
+    // execution require a separate current authorized Task/execution authority and fail closed.
+    private readonly bool _manual;
+    private readonly DeveloperManualSourceReadOwner? _manualReader;
+    private readonly DeveloperManualSourceEditOwner? _manualEditor;
+    private string _manualDraftText = "";
+    private string _manualDraftBaseline = "";
+    private string _manualBeforeText = "", _manualAfterText = "", _manualBeforeSha256 = "", _manualAfterSha256 = "";
+    private long _manualDraftRevision;
+    private long _manualReviewRevision = -1;
+    private bool _manualReviewed;
     [ThreadStatic] private static List<DeveloperProjectWorkbenchPage>? _sourceCallbacks;
     private DeveloperResolvedProject _project;
     private DeveloperEditorSnapshot? _editor;
@@ -88,8 +100,9 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         _demandOriginalDocumentSourceJoin = demandOriginalDocumentSourceExternalJoin ?? throw new ArgumentNullException(nameof(demandOriginalDocumentSourceExternalJoin));
         _businessToken = explicitBusinessCancellationToken;
         _review = new(development); Document = DeveloperWorkbenchCuiDocument.Load();
+        // Each host gets its own registry with the canonical built-in ReadOnlyText contract.
+        // The normal compiler admits the same typed properties without an app-specific factory.
         _controls = new();
-        _controls.RegisterObjectRenderer("DeveloperReadonlySource", _ => new TextBox { IsReadOnly = true, AcceptsReturn = true });
         _host = new(_controls);
         _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
         // Host custody precedes actual property/content publication callbacks. If a later
@@ -122,12 +135,75 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         });
     }
 
+    /// <summary>Manual (no-AI) workbench admission. It opens a resolved saved project by its real
+    /// stored identity with no Task/Run/context/model and no generation. Reads/search are confined
+    /// file observations over the actual project root; source edits and process execution are NOT
+    /// offered here (they require a separate current authorized Task/execution authority and fail
+    /// closed). The same compiled-CUI workbench document and host are used.</summary>
+    internal DeveloperProjectWorkbenchPage(DeveloperTaskWorkspaceService development, TaskExecutionCoordinator canonical,
+        DeveloperResolvedProject actualProject, ICuiSceneReadiness? readiness,
+        Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> resolveOriginalDocument,
+        Action demandOriginalDocumentSourceExternalJoin, CancellationToken explicitBusinessCancellationToken,
+        Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition,
+        Func<DeveloperProjectWorkbenchPage, ICuiSceneReadiness>? createOriginalReadinessChild,
+        DeveloperManualSourceReadOwner manualReader,
+        DeveloperManualSourceEditOwner? manualEditor = null)
+    {
+        _development = development ?? throw new ArgumentNullException(nameof(development));
+        _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
+        _project = actualProject ?? throw new ArgumentNullException(nameof(actualProject));
+        // Manual admission: no Task/Run/context. The real saved project identity IS the admission.
+        _taskId = Guid.Empty; _runId = Guid.Empty; _contextId = Guid.Empty;
+        if (readiness is null && createOriginalReadinessChild is null) throw new ArgumentNullException(nameof(readiness));
+        _readiness = readiness!;
+        _resolveDocument = resolveOriginalDocument ?? throw new ArgumentNullException(nameof(resolveOriginalDocument));
+        _demandOriginalDocumentSourceJoin = demandOriginalDocumentSourceExternalJoin ?? throw new ArgumentNullException(nameof(demandOriginalDocumentSourceExternalJoin));
+        _businessToken = explicitBusinessCancellationToken;
+        _manual = true;
+        _manualReader = manualReader ?? throw new ArgumentNullException(nameof(manualReader));
+        _manualEditor = manualEditor; // Optional: without it manual preview/apply fail closed (genuine owners unconfigured).
+        _review = null; // No AI Task-backed review session; manual edits route through the genuine edit admission + kernel.
+        Document = DeveloperWorkbenchCuiDocument.Load();
+        _controls = new();
+        _host = new(_controls);
+        _work = new(StopOriginalPresentationAsync, DetachOriginalPresentationAsync);
+        if (retainOriginalAcquisition is not null)
+            InvokeOriginalSource(() => { retainOriginalAcquisition(this); return true; });
+        if (createOriginalReadinessChild is not null)
+        {
+            var actual = InvokeOriginalSource(() => { _work.DemandAdmission(); return createOriginalReadinessChild(this); });
+            _unresolvedReadinessChild = actual;
+            _readiness = actual ?? throw new InvalidOperationException("The genuine readiness child was not returned.");
+            _readinessChild = actual as IDesktopOriginalRetirementParticipant;
+            _readinessChildGuard = actual as IDesktopOriginalRetirementJoinGuard;
+            if (_readinessChild is null || _readinessChildGuard is null)
+                throw new InvalidOperationException("The original readiness child must supply its genuine typed retirement and pure join guard.");
+            _unresolvedReadinessChild = null;
+        }
+        InvokeOriginalSource(() =>
+        {
+            _work.DemandAdmission();
+            AutomationProperties.SetAutomationId(this, "DeveloperProjectWorkbench");
+            _work.DemandAdmission();
+            AutomationProperties.SetName(this, "Development project source and commands");
+            _work.DemandAdmission();
+            Content = _host;
+            _work.DemandAdmission();
+            return true;
+        });
+    }
+
     public CuiDocument Document { get; }
     internal CuiSceneHost OriginalHost => _host;
     internal long OriginalReadinessGeneration { get { lock (_gate) return _generation; } }
     internal (Guid TaskId, Guid ExecutionId, Guid ContextId) OriginalReadinessContext => (_taskId, _runId, _contextId);
     internal bool IsOriginalReadinessPresentationCurrent(CuiSceneHost exactHost, long originalGeneration) =>
         ReferenceEquals(exactHost, _host) && IsCurrent(originalGeneration);
+    /// <summary>True while the workbench holds unsaved authored work or an in-flight Dev command,
+    /// so a tab owner can veto retirement instead of silently discarding it. A manual (no-AI)
+    /// draft is equally unsaved work: it must veto close until it is applied or reverted.</summary>
+    internal bool HasUnsavedWork { get { lock (_gate) return _editor is { IsDirty: true } || _pending ||
+        (_manual && _editor is null && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline)); } }
     public new event PropertyChangedEventHandler? PropertyChanged;
     public DeveloperActionObservation? OriginalDeveloperObservation { get; private set; }
     public DeveloperSourceChangePass? OriginalSourcePass { get; private set; }
@@ -183,12 +259,18 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
-                "ProjectSummary" => $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nTask {_taskId:D}; run {_runId:D}",
+                "ProjectSummary" => _manual
+                    ? $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nManual open — no AI task or model. Reads are enabled; edits and execution require a current authorized Build task."
+                    : $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nTask {_taskId:D}; run {_runId:D}",
                 "Files" => _files, "SourcePath" => _sourcePath, "SearchQuery" => _searchQuery, "SearchResults" => _searchResults,
-                "EditorTitle" => _editor is null ? "Choose an existing registered source document." : $"{_editor.Document.RelativePath}; draft revision {_editor.DraftRevision}" + (_editor.IsDirty ? " — unsaved draft" : ""),
-                "DraftText" => _editor?.DraftText ?? "",
+                "EditorTitle" => _manual
+                    ? string.IsNullOrWhiteSpace(_sourcePath) ? "Choose an existing registered source document to read it."
+                        : $"{_sourcePath}; opened for reading (manual). Edit apply requires a current authorized Build task."
+                    : _editor is null ? "Choose an existing registered source document." : $"{_editor.Document.RelativePath}; draft revision {_editor.DraftRevision}" + (_editor.IsDirty ? " — unsaved draft" : ""),
+                "DraftText" => _manual && _editor is null ? _manualDraftText : _editor?.DraftText ?? "",
                 "ReviewSummary" => _pass is null ? "Review before applying. Pass history is available for this open editor." : $"Pass {_pass.ChangeSetId:D}: {_pass.State}; before {_pass.BeforeSha256}; after {_pass.AfterSha256}" + (_pass.RevertsChangeSetId is { } inverse ? $"; reverts only pass {inverse:D}" : ""),
-                "BeforeText" => _pass?.BeforeText ?? "", "AfterText" => _pass?.AfterText ?? "",
+                "BeforeText" => _manual ? _manualBeforeText : (_pass?.BeforeText ?? ""),
+                "AfterText" => _manual ? _manualAfterText : (_pass?.AfterText ?? ""),
                 "Command" => _command, "TestCommand" => _testCommand, "StageTaskId" => _stageTaskId, "StageId" => _stageId,
                 "BranchName" => _branchName, "ProcessStatus" => _processStatus, "ProcessOutput" => _processOutput, "Status" => _status,
                 "CanOpenSource" => IsActionAvailable("dev.open-source"), "CanPreview" => IsActionAvailable("dev.preview-edit"),
@@ -212,11 +294,23 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 {
                     switch (path)
                     {
-                        case "SourcePath": _sourcePath = text; break;
+                        case "SourcePath":
+                            _sourcePath = text;
+                            // A different source document invalidates any reviewed before/after pair
+                            // that belonged to the previous file; never carry a stale reviewed edit
+                            // across documents or revisions.
+                            if (_manual)
+                            {
+                                _manualBeforeText = ""; _manualDraftBaseline = ""; _manualDraftText = "";
+                                _manualAfterText = ""; _manualAfterSha256 = ""; _manualBeforeSha256 = "";
+                                _manualReviewed = false; _manualDraftRevision++; _manualReviewRevision = -1;
+                            }
+                            break;
                         case "SearchQuery": _searchQuery = text; break;
                         case "DraftText":
+                            if (_manual && _editor is null) { _manualDraftText = text; _manualReviewed = false; _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewRevision = -1; break; }
                             if (_editor is null) throw new InvalidOperationException("Open a real complete source document first.");
-                            _editor = _review.UpdateDraft(_editor.EditorId, _editor.DraftRevision, text); break;
+                            _editor = _review!.UpdateDraft(_editor.EditorId, _editor.DraftRevision, text); break;
                         case "Command": _command = text; break; case "TestCommand": _testCommand = text; break;
                         case "StageTaskId": _stageTaskId = text; break; case "StageId": _stageId = text; break; case "BranchName": _branchName = text; break;
                     }
@@ -232,6 +326,23 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (_manual)
+            {
+                // Manual (no-AI) open offers only confined read/tree/search. Every mutation and
+                // process-execution action is unavailable here: it requires a separate current
+                // authorized Task/execution authority and fails closed with no effects.
+                return command switch
+                {
+                    "dev.refresh" => true,
+                    "dev.tree" => true,
+                    "dev.search" => !string.IsNullOrWhiteSpace(_searchQuery),
+                    "dev.open-source" => !string.IsNullOrWhiteSpace(_sourcePath),
+                    "dev.preview-edit" => _manualEditor is not null && !string.IsNullOrWhiteSpace(_sourcePath) &&
+                        !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline),
+                    "dev.apply-edit" => _manualEditor is not null && _manualReviewed,
+                    _ => false
+                };
+            }
             return command switch
             {
                 "dev.refresh" or "dev.tree" or "dev.git-status" or "dev.git-diff" or "dev.git-branches" => true,
@@ -250,14 +361,20 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         long generation; string path, query, terminal, test, stageTask, stage, branch; DeveloperEditorSnapshot? editor; DeveloperSourceChangePass? pass;
+        string manualBeforeText, manualDraftText, manualBeforeSha256, manualAfterSha256; bool manualReviewed; long manualReviewRevision;
         lock (_gate)
         {
             if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Dev operation is unavailable.");
             _pending = true; generation = _generation; path = _sourcePath; query = _searchQuery; terminal = _command; test = _testCommand;
             stageTask = _stageTaskId; stage = _stageId; branch = _branchName; editor = _editor; pass = _pass;
+            manualBeforeText = _manualBeforeText; manualDraftText = _manualDraftText; manualBeforeSha256 = _manualBeforeSha256;
+            manualAfterSha256 = _manualAfterSha256; manualReviewed = _manualReviewed; manualReviewRevision = _manualReviewRevision;
         }
         try
         {
+            if (_manual)
+                return DispatchManualAsync(command, path, query, manualBeforeText, manualDraftText, manualBeforeSha256,
+                    manualAfterSha256, manualReviewed, manualReviewRevision, generation, cancellationToken);
             return new(_work.RunAsync(async original =>
             {
                 original.BindPublicationGuard(() => IsCurrent(generation));
@@ -270,7 +387,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                     if (command == "dev.revert-pass")
                     {
                         original.DemandPublication();
-                        var inverse = InvokeOriginalSource(() => _review.PrepareRevert(editor!.EditorId, editor.LastAppliedChangeSetId!.Value, editor.DraftRevision));
+                        var inverse = InvokeOriginalSource(() => _review!.PrepareRevert(editor!.EditorId, editor.LastAppliedChangeSetId!.Value, editor.DraftRevision));
                         await PublishAsync(original, () => { _editor = inverse; _status = "Only the selected pass inverse was staged. Review it before applying."; }).ConfigureAwait(false); return;
                     }
                     var context = await CaptureContextAsync(original, cancellationToken).ConfigureAwait(false);
@@ -280,18 +397,18 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         var document = await original.AwaitAsync(InvokeOriginalSource(() => _resolveDocument(project, path, cancellationToken))).ConfigureAwait(false);
                         if (!document.Succeeded || document.Value is null) throw new InvalidOperationException(document.Error?.Message ?? "No current registered document identity was resolved.");
                         original.DemandPublication();
-                        var opened = await original.AwaitAsync(InvokeOriginalSource(() => _review.OpenAsync(project.Reference, context, document.Value, _businessToken))).ConfigureAwait(false);
+                        var opened = await original.AwaitAsync(InvokeOriginalSource(() => _review!.OpenAsync(project.Reference, context, document.Value, _businessToken))).ConfigureAwait(false);
                         var value = DemandValue(opened);
                         await PublishAsync(original, () => { _project = project; _editor = value; _pass = null; _status = "Complete original source opened; edit its draft, then review."; }).ConfigureAwait(false); return;
                     }
                     if (command is "dev.preview-edit" or "dev.apply-edit")
                     {
                         var actual = InvokeOriginalSource(() => command == "dev.preview-edit"
-                            ? _review.PreviewAsync(editor!.EditorId, editor.DraftRevision, context, _businessToken)
-                            : _review.ApplyAsync(editor!.EditorId, pass!.ChangeSetId, editor.DraftRevision, context, _businessToken));
+                            ? _review!.PreviewAsync(editor!.EditorId, editor.DraftRevision, context, _businessToken)
+                            : _review!.ApplyAsync(editor!.EditorId, pass!.ChangeSetId, editor.DraftRevision, context, _businessToken));
                         var reply = await original.AwaitAsync(actual).ConfigureAwait(false);
                         var value = DemandValue(reply); OriginalSourcePass = value; OriginalDeveloperObservation = value.OriginalObservation;
-                        await PublishAsync(original, () => { _pass = value; _editor = _review.GetSnapshot(editor!.EditorId); _status = value.State == DeveloperSourceChangeState.Applied ? "This exact pass was acknowledged. Later repository changes were preserved." : "Exact before/after reviewed. Apply requires this current draft revision."; }).ConfigureAwait(false); return;
+                        await PublishAsync(original, () => { _pass = value; _editor = _review!.GetSnapshot(editor!.EditorId); _status = value.State == DeveloperSourceChangeState.Applied ? "This exact pass was acknowledged. Later repository changes were preserved." : "Exact before/after reviewed. Apply requires this current draft revision."; }).ConfigureAwait(false); return;
                     }
                     Task<DeveloperOperationResult<DeveloperActionObservation>> operation = InvokeOriginalSource(() => command switch
                     {
@@ -336,6 +453,96 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         }
         catch { lock (_gate) _pending = false; throw; }
     }
+    /// <summary>Manual (no-AI) action dispatch: confined read/tree/search over the saved project root
+    /// plus refresh. Every other action is unavailable and fails closed with no effects — mutations
+    /// and process execution require a separate current authorized Task/execution authority.</summary>
+    private ValueTask DispatchManualAsync(string command, string path, string query,
+        string manualBeforeText, string manualDraftText, string manualBeforeSha256, string manualAfterSha256,
+        bool manualReviewed, long manualReviewRevision,
+        long generation, CancellationToken cancellationToken)
+    {
+        return new(_work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation));
+            try
+            {
+                original.DemandPublication(); cancellationToken.ThrowIfCancellationRequested();
+                var project = await ResolveProjectAsync(original, cancellationToken).ConfigureAwait(false);
+                if (command == "dev.refresh")
+                { await PublishAsync(original, () => { _project = project; _status = "Existing project descriptors refreshed."; }).ConfigureAwait(false); return; }
+                if (command == "dev.tree")
+                {
+                    var listing = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.ListAsync(project, cancellationToken))).ConfigureAwait(false);
+                    await PublishAsync(original, () => { _project = project; _files = listing; _status = "Manual project tree read from the genuine saved-root capture."; }).ConfigureAwait(false); return;
+                }
+                if (command == "dev.search")
+                {
+                    var results = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.SearchAsync(project, query, cancellationToken))).ConfigureAwait(false);
+                    await PublishAsync(original, () => { _project = project; _searchResults = results; _status = "Manual literal search over the genuine saved-project capture."; }).ConfigureAwait(false); return;
+                }
+                if (command == "dev.open-source")
+                {
+                    var text = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.ReadFileAsync(project, path, cancellationToken))).ConfigureAwait(false);
+                    var beforeSha = DeveloperManualSourceEditOwner.Sha256(text);
+                    await PublishAsync(original, () =>
+                    {
+                        _project = project; _sourcePath = path;
+                        _manualDraftBaseline = text; _manualBeforeText = text; _manualBeforeSha256 = beforeSha;
+                        _manualDraftText = text; _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewed = false; _manualDraftRevision++; _manualReviewRevision = -1;
+                        _pass = null;
+                        _status = "Manual source opened. Edit its draft, then review and apply through the genuine Home WRITE admission.";
+                    }).ConfigureAwait(false); return;
+                }
+                if (command == "dev.preview-edit")
+                {
+                    var afterSha = DeveloperManualSourceEditOwner.Sha256(manualDraftText);
+                    await PublishAsync(original, () =>
+                    {
+                        _manualAfterText = manualDraftText; _manualAfterSha256 = afterSha; _manualReviewed = true;
+                        // Bind the review to the exact draft revision it observed, so any later
+                        // source/file/project/draft/revision change invalidates it.
+                        _manualReviewRevision = _manualDraftRevision;
+                        _status = $"Exact before/after reviewed for {path}; expected current revision {manualBeforeSha256}, after revision {afterSha}.";
+                    }).ConfigureAwait(false); return;
+                }
+                if (command == "dev.apply-edit")
+                {
+                    // Dirty/review correctness: the review is bound to the exact before hash and the
+                    // draft revision it observed. Refuse if the file/draft/project changed after review.
+                    if (!manualReviewed || manualReviewRevision < 0 || manualReviewRevision != _manualDraftRevision ||
+                        !StringComparer.Ordinal.Equals(DeveloperManualSourceEditOwner.Sha256(manualDraftText), manualAfterSha256))
+                        throw new InvalidOperationException("The reviewed edit is stale; source or draft changed after review — preview again before applying.");
+                    var editor = _manualEditor ?? throw new InvalidOperationException("The genuine manual edit owners are not configured.");
+                    var after = await original.AwaitAsync(InvokeOriginalSource(() => editor.ApplyAsync(project, path, manualBeforeSha256, manualDraftText, cancellationToken))).ConfigureAwait(false);
+                    // Reopen verification: read the committed inode again through the genuine owner and
+                    // confirm the exact reviewed text persisted with the same canonical identities.
+                    var reopened = await original.AwaitAsync(InvokeOriginalSource(() => editor.ReadAsync(project, path, cancellationToken))).ConfigureAwait(false);
+                    if (!StringComparer.Ordinal.Equals(reopened.Text, manualDraftText))
+                        throw new InvalidOperationException("The applied edit did not persist exactly; reopen verification failed.");
+                    await PublishAsync(original, () =>
+                    {
+                        _manualDraftBaseline = reopened.Text; _manualBeforeText = reopened.Text; _manualBeforeSha256 = after;
+                        _manualDraftText = reopened.Text; _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewed = false; _manualDraftRevision++; _manualReviewRevision = -1;
+                        _status = $"Reviewed edit applied and verified (post-write revision {after}); unrelated content preserved.";
+                    }).ConfigureAwait(false); return;
+                }
+                throw new InvalidOperationException("This operation requires a current authorized Build Task/execution authority; not available in a manual no-AI open.");
+            }
+            catch (Exception error) { original.Retain(error); }
+            finally
+            {
+                lock (_gate) _pending = false;
+                if (IsCurrent(generation))
+                {
+                    Task? notification = null;
+                    try { notification = PublishAsync(original, () => { }); await notification.ConfigureAwait(false); }
+                    catch (Exception error) { original.Capture(notification, error); }
+                }
+                original.ThrowRetained();
+            }
+        }));
+    }
+
     private async Task<DeveloperResolvedProject> ResolveProjectAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {
         var value = DemandValue(await original.AwaitAsync(InvokeOriginalSource(() => _development.ResolveAsync(_project.Reference, token))).ConfigureAwait(false));
@@ -406,7 +613,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     {
         if (_sourceCallbacks?.Any(value => ReferenceEquals(value, this)) == true)
             throw new InvalidOperationException("An actual Dev page callback cannot join its encompassing close.");
-        _work.DemandExternalClose(); _review.DemandExternalOriginalRetirementJoin(); _development.DemandExternalOriginalRetirementJoin();
+        _work.DemandExternalClose(); _review?.DemandExternalOriginalRetirementJoin(); _development.DemandExternalOriginalRetirementJoin();
         _demandOriginalDocumentSourceJoin(); // Pure actual Files resolver guard; never global source retirement.
         _readinessChildGuard?.DemandExternalOriginalRetirementJoin();
     }
@@ -417,7 +624,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         lock (_gate) { _active = false; _generation++; }
         // These are presentation owners only; no global Dev/canonical retirement or token cancellation.
         var errors = new List<Exception>();
-        try { _review.RequestRetirement(); } catch (Exception error) { errors.Add(error); }
+        if (_review is not null) try { _review.RequestRetirement(); } catch (Exception error) { errors.Add(error); }
         try { InvokeOriginalSource(() => { _readinessChild?.RequestRetirement(); return true; }); } catch (Exception error) { errors.Add(error); }
         if (_unresolvedReadinessChild is not null)
             errors.Add(new InvalidOperationException("An acquired readiness child has no validated original retirement port; teardown remains unresolved."));
@@ -429,7 +636,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         var errors = new List<Exception>();
         // Acquired business originals settled before this cleanup callback. Join the SAME
         // readiness and review children independently BEFORE the host/dispatcher resources.
-        try { _reviewClose ??= _review.CloseAndDrainAsync(); } catch (Exception error) { errors.Add(error); }
+        try { if (_review is not null) _reviewClose ??= _review.CloseAndDrainAsync(); } catch (Exception error) { errors.Add(error); }
         try { if (_readinessChild is not null) _readinessChildClose ??= _readinessChild.CloseAndDrainAsync(); }
         catch (Exception error) { errors.Add(error); }
         foreach (var actual in new[] { _reviewClose, _readinessChildClose }.Where(value => value is not null))

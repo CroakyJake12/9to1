@@ -50,9 +50,35 @@ public static class OriginalNativeDevelopmentServiceCollectionExtensions
             provider.GetRequiredService<ResourceAuthorizationService>(), provider.GetRequiredService<ICompatibilityPackageContentSource>(),
             provider.GetRequiredService<FilesOriginalChildFolderReadSource>(), provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
             provider.GetService<HomeResourceOperationBroker>()));
+        // The genuine manual (no-AI) read owner composes the REAL configured Files selection, Home
+        // read admission and kernel capture owners. It is registered only when those actual owners
+        // are present; otherwise the manual read entry fails closed with a clear message.
+        if (services.Any(item => item.ServiceType == typeof(IDeveloperProjectOriginalReadAdmissionSource)) &&
+            services.Any(item => item.ServiceType == typeof(FilesDeveloperOriginalSourceSelection)) &&
+            services.Any(item => item.ServiceType == typeof(IDeveloperProjectOriginalPhysicalCaptureSource)))
+        {
+            services.AddSingleton<DeveloperManualSourceReadOwner>(provider => new(
+                provider.GetRequiredService<NativeFilesWorkspaceService>(),
+                provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>()));
+        }
+        // The genuine manual (no-AI) edit owner additionally requires the configured Home WRITE
+        // admission source; without it, manual preview/apply fail closed via the page.
+        if (services.Any(item => item.ServiceType == typeof(IDeveloperProjectOriginalEditAdmissionSource)) &&
+            services.Any(item => item.ServiceType == typeof(IDeveloperProjectOriginalEditScopeSource)) &&
+            services.Any(item => item.ServiceType == typeof(DeveloperManualSourceReadOwner)))
+        {
+            services.AddSingleton<DeveloperManualSourceEditOwner>(provider => new(
+                provider.GetRequiredService<NativeFilesWorkspaceService>(),
+                provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalEditAdmissionSource>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>()));
+        }
         services.AddSingleton<DeveloperProjectWorkbenchPageFactory>(provider => new(
             provider.GetRequiredService<DeveloperTaskWorkspaceService>(), provider.GetRequiredService<TaskExecutionCoordinator>(),
-            provider.GetRequiredService<FilesNativeBrowserService>()));
+            provider.GetRequiredService<FilesNativeBrowserService>(), provider));
         services.AddSingleton(new Registration());
         return services;
     }

@@ -12,9 +12,9 @@
       <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs">
         <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
-            <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8">
-              <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Selected="{Binding tab.Selected}" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
-              <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="15" Background="Transparent" Color="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="8">×</Button>
+            <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Selected="{Binding tab.Selected}" Background="{Resource CuiTransparentBrush}">
+              <Button id="BrowseTabButton" HorizontalContentAlignment="Left" action="SelectTab" Text="{Binding tab.Label}" AccessibleName="{Binding tab.Label}" AccessibleDescription="{Binding tab.Description}" Tooltip="{Binding tab.Description}" Chromeless="True" Interactive="{Binding Can.SelectTab}" Height="32" MinHeight="32" Padding="12 4" FontSize="13" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
+              <Button id="BrowseCloseTabRowButton" action="CloseTabRow" Column="1" IsVisible="{Binding tab.CanClose}" Interactive="{Binding Can.CloseTabRow}" AccessibleName="{Binding tab.CloseLabel}" Tooltip="Close tab" Height="32" MinHeight="32" Width="30" MinWidth="30" Padding="4 4 6 4" FontSize="16" Chromeless="True" Background="Transparent" Color="{Resource CuiTextSoftBrush}" BorderWidth="0" CornerRadius="8">×</Button>
             </Container>
           </Repeat>
         </Container>
@@ -28,24 +28,26 @@
           <Button id="BrowseStopButton" action="9to1.Browse.Stop" IsVisible="{Binding IsLoading}" AccessibleName="Stop loading" Tooltip="Stop loading" Interactive="{Binding Can.Stop}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">×</Button>
         </Container>
         <Container Type="Grid" Column="3" ColumnSizes="1fr Auto" Background="{Resource CuiInputSurfaceBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="16">
-          <Input Type="Text" id="BrowseAddressBox" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" Height="32" MinHeight="32" MinWidth="64" Padding="12 4" FontSize="13" Background="Transparent" BorderWidth="0" CornerRadius="16" />
+          <Input Type="Text" id="BrowseAddressBox" Interactive="{Binding CanEdit}" AccessibleName="Search or enter web address" Value="{Binding Address, mode=TwoWay}" DisplayValue="{Binding AddressDisplay}" Height="32" MinHeight="32" MinWidth="64" Padding="12 4" FontSize="13" VerticalContentAlignment="Center" Background="Transparent" BorderWidth="0" CornerRadius="16" />
           <Button id="BrowseNavigateButton" action="9to1.Browse.Navigate" Column="1" AccessibleName="Go to address" Tooltip="Go to address" Interactive="{Binding Can.Navigate}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="16" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="16">→</Button>
         </Container>
-        <Container id="HavenSharedCluster" Type="Horizontal Stack" Column="4" CellGap="4" VerticalAlignment="Center" IsVisible="{Binding Haven.Embedded}" AccessibleName="Haven model, notifications and profile">
-          <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="Choose AI model" Tooltip="Choose the active AI model" Interactive="{Binding Haven.ModelAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-            <Image Source="avares://Haven/Assets/haven-model.svg" Width="18" Height="18" />
+        <Container id="HavenSharedCluster" Type="Horizontal Stack" Column="4" CellGap="4" VerticalAlignment="Center" IsVisible="{Binding Haven.Embedded}" AccessibleName="Haven model and notifications">
+          <Button id="HavenModelButton" action="9to1.Haven.OpenModel" accessible-name="{Binding Haven.ModelAccessibleName}" Tooltip="{Binding Haven.ModelTooltip}" Interactive="{Binding Haven.ModelAvailable}" Height="32" MinHeight="32" MinWidth="32" Padding="4 8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+            <Container Type="Horizontal Stack" CellGap="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+              <Image Source="avares://Haven/Assets/haven-model.svg" Width="18" Height="18" />
+              <Text Text="{Binding Haven.EffortPercent}" FontSize="12" IsVisible="{Binding Haven.EffortKnown}" VerticalAlignment="Center" />
+            </Container>
           </Button>
           <Button id="HavenNotificationsButton" action="9to1.Haven.OpenNotifications" accessible-name="Notifications" Tooltip="Open notifications" Interactive="{Binding Haven.NotificationsAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
             <Image Source="avares://Haven/Assets/haven-notifications.svg" Width="18" Height="18" />
           </Button>
-          <Button id="HavenProfileButton" action="9to1.Haven.OpenProfile" accessible-name="Account and profile" Tooltip="Open account and profile" Interactive="{Binding Haven.ProfileAvailable}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
-            <Image Source="avares://Haven/Assets/haven-profile.svg" Width="18" Height="18" />
-          </Button>
         </Container>
         <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="5" AccessibleName="Bookmark page" Tooltip="Bookmark page" Interactive="{Binding Can.Bookmark}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">☆</Button>
-        <Button id="BrowseMoreButton" action="9to1.Browse.ToggleTools" Column="6" AccessibleName="Browser tools" Tooltip="Browser tools" Selected="{Binding ToolsOpen}" Interactive="{Binding Can.ToggleTools}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">⋯</Button>
+        <Button id="HavenProfileButton" action="9to1.Browse.ToggleProfileMenu" Column="6" AccessibleName="Account, profile and browser tools" Tooltip="Open the profile menu" Selected="{Binding ProfileMenuOpen}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+          <Image Source="avares://Haven/Assets/haven-profile.svg" Width="18" Height="18" />
+        </Button>
       </Container>
-      <Container id="BrowseContentViewport" Type="Grid" Row="2" Column="0" ColumnSizes="1fr Auto" RowSizes="1fr" MinHeight="180">
+      <Container id="BrowseContentViewport" Type="Grid" Row="2" Column="0" ColumnSizes="1fr" RowSizes="1fr" MinHeight="180">
         <Object Type="browse.engine" id="BrowseEngineView" MinHeight="180" AccessibleName="Original native browser engine surface" />
         <Container id="BrowseNativePagePanel" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding IsNativePage}">
           <Container Type="Vertical Stack" CellGap="8" Margin="12">
@@ -95,12 +97,57 @@
             </Container>
           </Container>
         </Container>
+      </Container>
+      <Text Row="3" Column="0" Text="{Binding Status}" FontSize="11" AccessibleName="Browse operation status" />
+    </Container>
 
-        <Container id="BrowseToolsPanel" Type="Vertical Stack" Column="1" IsVisible="{Binding ToolsOpen}" Width="320" VerticalScrolling="True" HorizontalScrolling="False" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" Padding="12" CellGap="8" AccessibleName="Browser tools">
-          <Container Type="Grid" ColumnSizes="1fr Auto">
-            <Text Text="Browser tools" FontWeight="Bold" VerticalAlignment="Center" />
-            <Button id="BrowseCloseToolsButton" action="9to1.Browse.CloseTools" Column="1" AccessibleName="Close browser tools" Interactive="{Binding Can.CloseTools}" Height="32" MinHeight="32" MinWidth="32" Padding="6 2" FontSize="14">×</Button>
+    <Container id="BrowseProfileOverlay" Type="Overlay" IsVisible="{Binding ProfileMenuOpen}" AccessibleName="Profile menu" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 84 8 0">
+      <Container id="BrowseProfileMenu" Type="Vertical Stack" Width="340" MaxHeight="560" CellGap="2" Padding="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12" VerticalScrolling="True" HorizontalScrolling="False" AccessibleName="Account and profile">
+        <Button id="BrowseProfileAccountButton" action="9to1.Haven.OpenProfile" Interactive="{Binding Haven.ProfileAvailable}" HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Padding="8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">
+          <Container Type="Horizontal Stack" CellGap="10">
+            <Image Source="avares://Haven/Assets/haven-profile.svg" Width="34" Height="34" />
+            <Container Type="Vertical Stack" CellGap="2">
+              <Text Text="{Binding ProfilePrincipalLabel}" FontWeight="Bold" FontSize="15" />
+              <Text Text="{Binding ProfileAccountHint}" FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            </Container>
           </Container>
+        </Button>
+        <Container Type="Grid" Height="1" Margin="8 2 8 2" Background="{Resource CuiLineBrush}" />
+
+        <Container Type="Grid" Padding="8 6 8 2">
+          <Text Text="Switch &amp; Manage Users" FontWeight="Bold" />
+        </Container>
+        <Button id="BrowseSwitchUsersButton" action="9to1.Browse.OpenManageUsers" Interactive="{Binding Can.OpenManageUsers}" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Switch &amp; Manage Users</Button>
+
+        <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowStorage}" Padding="8 2 8 10">
+          <Text Text="Storage" FontWeight="Bold" />
+          <Text Text="{Binding StorageUnitsLabel}" FontSize="12" TextWrapping="Wrap" />
+          <Input Type="Progress" AccessibleName="Storage usage" Minimum="0" Maximum="{Binding StorageQuotaBytes}" Value="{Binding StorageUsedBytes}" WriteBack="false" Height="12" MinWidth="240" />
+        </Container>
+
+        <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowUsage}" Padding="8 2 8 10">
+          <Text Text="Usage Limits" FontWeight="Bold" />
+          <Repeat Source="{Binding UsageWindowRows}" As="used" Key="{Binding used.Key}">
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="{Binding used.Label}" FontSize="12" TextWrapping="Wrap" />
+              <Input Type="Progress" AccessibleName="{Binding used.Label}" Minimum="0" Maximum="{Binding used.LimitUnits}" Value="{Binding used.UsedUnits}" WriteBack="false" Height="12" MinWidth="240" />
+            </Container>
+          </Repeat>
+        </Container>
+
+        <Button id="BrowseAutomationsButton" action="9to1.Browse.OpenWebAutomations" Interactive="{Binding Can.OpenWebAutomations}" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Web Automations</Button>
+        <Container Type="Vertical Stack" Padding="10 0 10 6" IsVisible="{Binding ShowAutomationNote}">
+          <Text Text="{Binding AutomationNote}" FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+        </Container>
+
+        <Container Type="Grid" Height="1" Margin="8 2 8 2" Background="{Resource CuiLineBrush}" />
+        <Button id="BrowseWebToolsHeader" action="9to1.Browse.ToggleTools" Selected="{Binding ToolsOpen}" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" FontWeight="Bold">
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Text Text="Web Tools" VerticalAlignment="Center" />
+            <Text Text="{Binding WebToolsChevron}" VerticalAlignment="Center" FontSize="12" Color="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Button>
+        <Container id="BrowseWebToolsGroup" Type="Vertical Stack" CellGap="6" IsVisible="{Binding ToolsOpen}" Padding="4 2 4 8">
           <Container Type="Wrap" CellGap="4">
             <Button id="BrowsePrivateTabButton" action="9to1.Browse.NewPrivateTab" Interactive="{Binding Can.NewPrivateTab}">Private tab</Button>
             <Button id="BrowseCloseTabButton" action="9to1.Browse.CloseTab" Interactive="{Binding Can.CloseTab}" AccessibleName="Close selected tab">Close selected tab</Button>
@@ -111,7 +158,6 @@
             <Button id="BrowseOpenHistoryButton" action="9to1.Browse.OpenHistoryPage" Interactive="{Binding Can.OpenHistoryPage}">History</Button>
             <Button id="BrowseOpenBookmarksButton" action="9to1.Browse.OpenBookmarksPage" Interactive="{Binding Can.OpenBookmarksPage}">Bookmarks</Button>
             <Button id="BrowseOpenDownloadsButton" action="9to1.Browse.OpenDownloadsPage" Interactive="{Binding Can.OpenDownloadsPage}">Downloads</Button>
-            <Button id="BrowseOpenSettingsButton" action="9to1.Browse.OpenSettingsPage" Interactive="{Binding Can.OpenSettingsPage}">Settings</Button>
           </Container>
           <Text Text="Find on page" FontWeight="Bold" />
           <Input Type="Text" id="BrowseFindBox" Interactive="{Binding CanEdit}" AccessibleName="Find on current page" Value="{Binding FindQuery, mode=TwoWay}" />
@@ -136,8 +182,10 @@
           <Container Type="Wrap" CellGap="4">
             <Button id="BrowseFirefoxSiteButton" action="9to1.Browse.FirefoxSite" Interactive="{Binding Can.FirefoxSite}" AccessibleName="Prefer Firefox for this site">Site: Firefox</Button>
             <Button id="BrowseChromiumSiteButton" action="9to1.Browse.ChromiumSite" Interactive="{Binding Can.ChromiumSite}" AccessibleName="Prefer Chromium for this site">Site: Chromium</Button>
-            <Button id="BrowseAllowPopupsButton" action="9to1.Browse.AllowPopups" Interactive="{Binding Can.AllowPopups}">Allow site popups</Button>
-            <Button id="BrowseDenyPopupsButton" action="9to1.Browse.DenyPopups" Interactive="{Binding Can.DenyPopups}">Block site popups</Button>
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Text Text="Allow site pop-ups" VerticalAlignment="Center" />
+              <Input Type="Switch" id="BrowseAllowPopupsSwitch" Checked="{Binding AllowPopups, Mode=TwoWay}" Interactive="{Binding Can.AllowPopups}" AccessibleName="Allow pop-ups for this site" />
+            </Container>
             <Button id="BrowseDevToolsButton" action="9to1.Browse.DevTools" Interactive="{Binding Can.DevTools}">Developer tools</Button>
             <Button id="BrowseResetSiteEngineButton" action="9to1.Browse.ResetSiteEngine" Interactive="{Binding Can.ResetSiteEngine}">Reset site engine preference</Button>
           </Container>
@@ -146,8 +194,27 @@
           <Text Text="{Binding EngineStatus}" TextWrapping="Wrap" />
           <Text Text="{Binding PopupStatus}" TextWrapping="Wrap" />
         </Container>
+
+        <Button id="BrowseSettingsButton" action="9to1.Browse.OpenSettingsPage" Interactive="{Binding Can.OpenSettingsPage}" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Browse Settings</Button>
+
+        <Button id="BrowseCloseProfileMenuButton" action="9to1.Browse.CloseProfileMenu" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Close menu</Button>
       </Container>
-      <Text Row="3" Column="0" Text="{Binding Status}" FontSize="11" AccessibleName="Browse operation status" />
+    </Container>
+
+    <Container id="BrowseManageUsersOverlay" Type="Overlay" IsVisible="{Binding ManageUsersOpen}" AccessibleName="Switch and manage users" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 48 12 0">
+      <Container Type="Vertical Stack" Width="300" CellGap="8" Padding="10" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="12" AccessibleName="Current user and account settings">
+        <Text Text="Switch &amp; Manage Users" FontWeight="Bold" FontSize="15" />
+        <Container Type="Horizontal Stack" CellGap="10">
+          <Image Source="avares://Haven/Assets/haven-profile.svg" Width="34" Height="34" />
+          <Container Type="Vertical Stack" CellGap="2">
+            <Text Text="{Binding ProfilePrincipalLabel}" FontWeight="Bold" />
+            <Text Text="Signed-in principal for this session." FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          </Container>
+        </Container>
+        <Text Text="{Binding ManageUsersOtherProfilesStatus}" FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" IsVisible="{Binding ShowManageUsersOtherProfilesStatus}" />
+        <Button id="BrowseManageUsersAccountButton" action="9to1.Haven.OpenProfile" Interactive="{Binding Haven.ProfileAvailable}" HorizontalContentAlignment="Stretch" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Open account settings</Button>
+        <Button id="BrowseCloseManageUsersButton" action="9to1.Browse.CloseManageUsers" HorizontalContentAlignment="Stretch" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Close</Button>
+      </Container>
     </Container>
   </Page>
 </Cui>

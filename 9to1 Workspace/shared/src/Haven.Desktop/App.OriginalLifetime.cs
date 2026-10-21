@@ -7,6 +7,7 @@ using Haven.Desktop.Views.Shell;
 using Haven.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 #if !ANDROID
+using Haven.Desktop.Accounts;
 using HavenOS.Apps.Browse;
 #endif
 
@@ -18,6 +19,7 @@ public sealed partial class App
     [ThreadStatic] private static List<App>? _synchronousAppSources;
     private IUpdateService? _actualSubscribedUpdates;
     private Task? _actualStartupOriginal;
+    private Task? _actualPreviewBootstrap;
     private DesktopOriginalShutdownSequence? _actualShutdownSequence;
     private Task? _actualShutdownDelivery;
     private Task? _actualDocumentClosePreflightAttempt;
@@ -211,8 +213,38 @@ public sealed partial class App
             catch (Exception error) { AddAppCause(failures, error); }
         }
 #endif
-        await JoinOriginalAppTaskAsync(_originalAppWork.CloseAndDrainAsync(), failures);
+        // A close may arrive while the App startup/bootstrap originals are STILL live (early close during
+        // Loading). Those originals are cooperative: retiring the App lifetime cancels their token (so no
+        // late startup/model-bootstrap work is admitted after close) and lets them settle. The external-close
+        // guard rejects draining while they execute, so start the cooperative retirement FIRST; the SAME
+        // published close is then drained idempotently. Genuine faults are retained and rethrown.
+        await JoinEarlyStartupCooperativelyAsync(_originalAppWork, OriginalStartup, failures);
         ThrowAppCauses(failures);
+    }
+
+    /// <summary>Starts the cooperative App retirement when an early close arrives while the startup
+    /// bootstrap original is still live, then drains the SAME published close idempotently. This is the
+    /// exact production early-close branch used by <see cref="JoinOriginalAppProducersAsync"/>; exposed
+    /// internally so the maintained App owner rig can drive the real path while a held startup source is
+    /// live. The raw startup/bootstrap source cancels under the owner lifetime token, so no late
+    /// startup/child work is admitted after close. Genuine faults are retained in
+    /// <paramref name="failures"/> and rethrown by the caller.</summary>
+    internal static async Task JoinEarlyStartupCooperativelyAsync(
+        DesktopOriginalWorkLifetime appWork,
+        Task? startup,
+        List<Exception> failures)
+    {
+        if (startup is not { IsCompleted: true } && appWork.OriginalClose is null)
+        {
+            appWork.RequestRetirement();
+            var startupClose = appWork.OriginalClose;
+            if (startupClose is not null)
+            {
+                try { await JoinOriginalAppTaskAsync(startupClose, failures); }
+                catch (Exception error) { AddAppCause(failures, error); }
+            }
+        }
+        await JoinOriginalAppTaskAsync(appWork.CloseAndDrainAsync(), failures);
     }
     private void ConfigureOriginalDesktopShutdown(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window, MainView? shell)
     {
@@ -273,9 +305,26 @@ public sealed partial class App
             _nativeHomeApprovalBorrowerTransferred = true;
         }
 #endif
+        ConfigurePrimaryNativeClosingPolicy(window);
         window.Closing += OnOriginalPrimaryWindowClosing;
         desktop.ShutdownRequested += OnOriginalDesktopShutdownRequested;
         window.Closed += OnOriginalUnexpectedPrimaryWindowClosed;
+    }
+
+    /// <summary>Applies the pinned a390 primary-native closing policy to the actual configured PRIMARY window:
+    /// <see cref="Avalonia.Controls.WindowClosingBehavior.OwnerWindowOnly"/>. With the default
+    /// OwnerAndChildWindows behavior, Avalonia <see cref="Avalonia.Controls.Window.ShouldCancelClose"/> first asks
+    /// every owned child; when an owned Account child cancels/defers its own closure (as
+    /// <see cref="NativeCakeAccountWindow.OnClosing"/> does), the parent's <c>OnClosing</c> is skipped entirely, so
+    /// the FIRST native main close would retire the child without ever reaching the App-owned canonical
+    /// document/cohort preflight. OwnerWindowOnly makes the primary's OWN close reach that entry while the child
+    /// stays alive/pending until the canonical owner settles. Genuine production wiring
+    /// (<see cref="ConfigureOriginalDesktopShutdown"/>) calls this; it is the ONLY caller. This is an
+    /// infrastructure/windowing policy, not new application authorship: global Window defaults, secondary-window
+    /// policy, the child's own cancel/defere guard, and all veto/cancel/fault semantics are untouched.</summary>
+    internal static void ConfigurePrimaryNativeClosingPolicy(Avalonia.Controls.Window primary)
+    {
+        primary.ClosingBehavior = Avalonia.Controls.WindowClosingBehavior.OwnerWindowOnly;
     }
     private void OnOriginalPrimaryWindowClosing(object? sender, Avalonia.Controls.WindowClosingEventArgs args)
     {
@@ -400,8 +449,45 @@ public sealed partial class App
             ThrowAppCauses(failures); // SAME actual origin/handoff terminal before encompassing retirement.
             if (!attempt.Prepared) return;
             Dispatcher.UIThread.VerifyAccess();
-            if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
+            if (!IsOriginalDocumentCloseAttemptCurrent(attempt))
+            {
 #if !ANDROID
+                // A startup lease (captured while initialization/loading was pending) becomes non-current
+                // when the actual owned startup transition completes and creates chrome/workspace. That
+                // is a benign invalidation, not a failure: retain the ONE approved user close by joining/
+                // aborting the old unaccepted lease and reacquiring the CURRENT preparation WITHOUT waiting
+                // for the whole startup or any user Welcome input. Genuine save-vetoes / declined closes,
+                // foreign OCE and IO/fault siblings are never re-driven or cleared.
+                if (attempt.UnifiedLease is { Startup: true } && attempt.Unified is not null)
+                {
+                    if (!await TryReplanStaleStartupLeaseAsync(attempt, failures)) return;
+                    // The startup replan settled (TRUE on a successful swap). A positively witnessed owned-
+                    // child retirement may ALSO have landed during the SAME close: route the fallback to the
+                    // SAME unified replan so the same fresh canonical preflight + exactly-once completion run
+                    // without losing the request or waiting on startup/Welcome.
+                    if (!IsOriginalDocumentCloseAttemptCurrent(attempt)
+                        && !await TryReplanRetiredOwnedChildWindowAsync(attempt, failures))
+                        return;
+                }
+                // Non-startup invalidation: ONLY the positively witnessed retirement of an ALREADY-owned
+                // native Account child (captured in the original window cohort) may re-preflight the REAL
+                // current cohort and complete the ONE close. Every other cohort change (new/unowned or
+                // document window, veto/decline, abort/preflight/callback fault) keeps its real authority
+                // and ends the request below.
+                else if (!await TryReplanRetiredOwnedChildWindowAsync(attempt, failures))
+                {
+                    return;
+                }
+#else
+                return;
+#endif
+            }
+#if !ANDROID
+            // Immediately before the destructive BeginClose, recheck FULL canonical currentness/cohort so an
+            // unrelated window addition/removal/reorder/doc edit that landed during the pending fresh preflight
+            // or lease reacquire ends the request here rather than being swept into retirement. Checking after
+            // accepted retirement is too late.
+            if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
             if (attempt.Unified is { } unified)
             {
                 var desktop = attempt.Desktop!;
@@ -431,26 +517,38 @@ public sealed partial class App
                 // joined again by the shutdown sequence, which withholds clean/save.
             }
 #endif
-            TaskCompletionSource? shutdownStart = null;
-            (_synchronousAppSources ??= []).Add(this);
-            try
+            // Post-BeginClose reconcile: the unified close has now begun and may already be accepted. If the
+            // ONLY window-cohort delta is the positively witnessed retirement of an already-owned Account child
+            // that landed DURING the awaited BeginClose, run the SAME production sequencer through fresh
+            // canonical preflight and exactly-once completion WITHOUT re-invoking or undoing the accepted
+            // unified close. Every other invalidation keeps its real authority and ends the request below.
+            if (!IsOriginalDocumentCloseAttemptCurrent(attempt))
             {
-                if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return;
-#if !ANDROID
-                if (attempt.Unified is { OriginalClose: null }) return;
-#endif
-                shutdownStart = AcquireOriginalDesktopShutdownDelivery();
+                if (!await TryRefreshCohortAfterWitnessedRetirementAsync(attempt, failures)) return;
+                // The post-accept sequencer's complete-once stage already delivered the ONE shutdown exactly
+                // once; do not deliver again below.
             }
-            finally { _synchronousAppSources.RemoveAt(_synchronousAppSources.Count - 1); }
-            // No borrowed page/provider work follows this physical callback release.
-            shutdownStart?.TrySetResult();
+            else
+            {
+                // No reconcile was needed (already current): deliver the ONE approved shutdown exactly once.
+                DeliverPostAcceptShutdownOnce(attempt);
+            }
         }
     }
     private bool IsOriginalDocumentCloseAttemptCurrent(OriginalDocumentCloseAttempt attempt)
     {
         var desktop = attempt.Desktop ?? throw new InvalidOperationException("The actual document desktop is unavailable.");
+        return IsOriginalDocumentCloseAttemptCoreCurrent(attempt)
+            && attempt.Windows.SequenceEqual(desktop.Windows, ReferenceEqualityComparer.Instance);
+    }
+
+    /// <summary>Every currentness invariant of <see cref="IsOriginalDocumentCloseAttemptCurrent"/> EXCEPT
+    /// the window-cohort equality. A positively witnessed owned-child retirement only changes the window
+    /// cohort, so a replan must first prove everything else is still current.</summary>
+    private bool IsOriginalDocumentCloseAttemptCoreCurrent(OriginalDocumentCloseAttempt attempt)
+    {
+        var desktop = attempt.Desktop ?? throw new InvalidOperationException("The actual document desktop is unavailable.");
         if (_originalAppWork.IsRetiring || !ReferenceEquals(desktop, _actualDesktop) ||
-            !attempt.Windows.SequenceEqual(desktop.Windows, ReferenceEqualityComparer.Instance) ||
             !attempt.Shells.SequenceEqual(CaptureOriginalDocumentCloseShells(desktop), ReferenceEqualityComparer.Instance) ||
             attempt.Candidates.Any(candidate => !candidate.IsCurrentAndPrepared)) return false;
 #if !ANDROID
@@ -466,6 +564,490 @@ public sealed partial class App
         (_actualDocumentClosePrimaryShell is { } primary ? new[] { primary } : Array.Empty<MainView>())
             .Concat(desktop.Windows.OfType<MainWindow>().Select(window => window.DataContext).OfType<MainView>())
             .Distinct<MainView>(ReferenceEqualityComparer.Instance).ToArray();
+
+    /// <summary>Re-captures the current primary-shell/document obligations with genuine production authority
+    /// after a positively witnessed owned-child retirement and re-prepares them. Raw faults are retained in
+    /// <paramref name="failures"/>; a real save-veto / declined preparation returns false so the caller ends
+    /// the request without retrying.</summary>
+    private async Task<bool> ReprepareCurrentDocumentsAndShellsAsync(OriginalDocumentCloseAttempt attempt,
+        IClassicDesktopStyleApplicationLifetime desktop, List<Exception> failures)
+    {
+        MainView[] shells = CaptureOriginalDocumentCloseShells(desktop);
+        var candidates = new List<OriginalDocumentClosePreflight>();
+        foreach (var shell in shells)
+        {
+            OriginalDocumentClosePreflight? candidate;
+            try { candidate = shell.CaptureOriginalDocumentClosePreflight(); }
+            catch (Exception failure) { AddAppCause(failures, failure); continue; }
+            candidates.Add(candidate);
+            // Capture the RAW prepare Task before awaiting so its complete terminal state stays inspectable
+            // and EVERY aggregate sibling (foreign OCE/cancel) is retained by the SAME production custody
+            // rule as the main wiring. A declined / save-vetoed preparation ends the request without
+            // retrying; a faulted/canceled preparation retains all causes and also ends it.
+            Task<bool> prepare;
+            try { prepare = candidate.PrepareAsync(CancellationToken.None); }
+            catch (Exception sync) { AddAppCause(failures, sync); continue; }
+            await JoinOriginalAppTaskAsync(prepare, failures);
+            if (failures.Count == 0 && prepare.Status == TaskStatus.RanToCompletion && !prepare.Result)
+                return false; // save veto / not prepared: end the request
+        }
+        if (failures.Count > 0) return false;
+        attempt.Shells = shells;
+        attempt.Candidates = candidates.ToArray();
+        return true;
+    }
+
+    /// <summary>Retains ONE approved user close across ONLY the benign loading→Apps startup-transition
+    /// invalidation. A startup lease captured while initialization/loading was pending becomes non-current
+    /// once the actual owned startup completes and creates chrome/workspace. Instead of dropping the close
+    /// (the pre-fix loss), this joins/aborts the old unaccepted lease and reacquires the CURRENT
+    /// preparation immediately — it does NOT wait for the whole startup or any user Welcome action. A
+    /// genuine save-veto / declined close ends the request without auto-retry; foreign OCE and IO/fault
+    /// siblings stay retained as exact causes and are never cleared or repeated.</summary>
+    private async Task<bool> TryReplanStaleStartupLeaseAsync(OriginalDocumentCloseAttempt attempt, List<Exception> failures)
+    {
+#if !ANDROID
+        var stale = attempt.UnifiedLease;
+        var unified = attempt.Unified;
+        if (stale is not { Startup: true } || unified is null) return false;
+        if (_originalAppWork.IsRetiring || _actualShutdownDelivery is not null) return false;
+        Task<UnifiedWorkspaceHost.ClosePreparation?> reprepared = Task.FromResult<UnifiedWorkspaceHost.ClosePreparation?>(null);
+        var replanned = await StartupTransitionCloseReplanner.ReplanAsync<UnifiedWorkspaceHost.ClosePreparation>(
+            stale,
+            () => attempt.UnifiedAbort ??= stale.AbortAsync(),
+            () => { var t = unified.PrepareCloseAsync(CancellationToken.None); reprepared = t; return t; },
+            failures);
+        if (replanned is null) return false; // declined / genuine fault retained; request ends
+        // The old lease's actual abort was joined by the sequencer above. Release the alias so a NEW
+        // (replaced) lease that later fails/refuses gets its OWN exact abort original rather than reusing
+        // the old completed one. Raw custody of the old lease/task remains with the already-tracked source.
+        attempt.UnifiedAbort = null;
+        // Point the attempt at the reacquired CURRENT lease so the existing begin-close path uses it.
+        attempt.UnifiedPreparation = reprepared;
+        attempt.UnifiedLease = replanned;
+        // The startup swap succeeded: return TRUE so the caller continues to the unified replan fallback
+        // (a positively witnessed owned-child retirement may also have landed) instead of returning early
+        // and making the combined startup+child-retirement branch unreachable.
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    /// <summary>Retains ONE approved user close across ONLY the benign, positively witnessed retirement of an
+    /// ALREADY-owned native Account child that was part of the original captured window cohort. That
+    /// retirement is a real ownership event, not a fault: the child settled cleanly and left the cohort.
+    /// Unlike a new/unowned/document window, a veto, a decline or any fault (which keep their real authority
+    /// and end the request), this loses no owner fidelity, so the SAME close re-preflights the REAL current
+    /// cohort and completes once. This runs BEFORE the unified close is begun (so the old unaccepted lease
+    /// can still be joined/aborted) through the production stage sequencer; a retirement that lands DURING
+    /// the awaited accepted BeginClose is reconciled separately by
+    /// <see cref="TryRefreshCohortAfterWitnessedRetirementAsync"/>, which runs the SAME sequencer through
+    /// fresh canonical preflight and exactly-once completion without re-invoking an accepted unified close.</summary>
+    private async Task<bool> TryReplanRetiredOwnedChildWindowAsync(OriginalDocumentCloseAttempt attempt, List<Exception> failures)
+    {
+#if !ANDROID
+        var desktop = attempt.Desktop ?? throw new InvalidOperationException("The actual document desktop is unavailable.");
+        if (_originalAppWork.IsRetiring || _actualShutdownDelivery is not null) return false;
+        if (!IsOriginalDocumentCloseAttemptCoreCurrent(attempt)) return false;
+        var originalCohort = attempt.Windows;
+
+        var sequencer = new FirstMainCloseStageSequencer<Avalonia.Controls.Window>(
+            cohortAuthorize: () => OwnedChildRetirementCloseReplanner.TryRefreshCohortForWitnessedRetirement(
+                originalCohort,
+                desktop.Windows,
+                window => IsWitnessedRetiredOwnedAccountChild(_actualNativeCakeAccountOwner, window, originalCohort)),
+            applyCohort: refreshed => attempt.Windows = refreshed,
+            canonicalCurrent: () => IsOriginalDocumentCloseAttemptCoreCurrent(attempt),
+            isChildCloseSettled: () => WitnessedChildCloseSettled(originalCohort, desktop.Windows),
+            freshCanonicalPreflight: () => ReprepareCurrentDocumentsAndShellsAsync(attempt, desktop, failures),
+            resolveUnifiedLease: () => ResolveReplanUnifiedLeaseAsync(attempt, failures),
+            isFullCurrent: () => IsOriginalDocumentCloseAttemptCurrent(attempt),
+            completeShutdown: () => IsOriginalDocumentCloseAttemptCurrent(attempt)); // pre-BeginClose gate: App fires BeginClose next; completion (delivery) is not here.
+
+        return await sequencer.RunAsync();
+#else
+        return false;
+#endif
+    }
+
+    /// <summary>Recovers the ONE approved close after the unified BeginClose has begun (and may already be
+    /// accepted) by running the SAME production stage sequencer when the sole window-cohort delta is a
+    /// positively witnessed owned-child retirement. It performs a FRESH canonical document/shell re-preflight
+    /// (not just a snapshot refresh) but NEVER re-invokes, aborts, or undoes an accepted unified close, then
+    /// delivers the one shutdown exactly once. Any other invalidation keeps its real authority and ends the
+    /// request.</summary>
+    private async Task<bool> TryRefreshCohortAfterWitnessedRetirementAsync(OriginalDocumentCloseAttempt attempt, List<Exception> failures)
+    {
+#if !ANDROID
+        var desktop = attempt.Desktop ?? throw new InvalidOperationException("The actual document desktop is unavailable.");
+        if (_originalAppWork.IsRetiring || _actualShutdownDelivery is not null) return false;
+        var originalCohort = attempt.Windows;
+
+        var sequencer = new FirstMainCloseStageSequencer<Avalonia.Controls.Window>(
+            cohortAuthorize: () => OwnedChildRetirementCloseReplanner.TryRefreshCohortForWitnessedRetirement(
+                originalCohort,
+                desktop.Windows,
+                window => IsWitnessedRetiredOwnedAccountChild(_actualNativeCakeAccountOwner, window, originalCohort)),
+            applyCohort: refreshed => attempt.Windows = refreshed,
+            canonicalCurrent: () => IsOriginalDocumentCloseAttemptCoreCurrent(attempt),
+            isChildCloseSettled: () => WitnessedChildCloseSettled(originalCohort, desktop.Windows),
+            freshCanonicalPreflight: () => ReprepareCurrentDocumentsAndShellsAsync(attempt, desktop, failures),
+            resolveUnifiedLease: () =>
+            {
+                // An ALREADY-accepted unified close is never re-invoked, aborted, or undone here: retain/
+                // join it as-is so exactly-once completion holds.
+                return Task.FromResult(true);
+            },
+            isFullCurrent: () => IsOriginalDocumentCloseAttemptCurrent(attempt),
+            completeShutdown: () => DeliverPostAcceptShutdownOnce(attempt));
+
+        return await sequencer.RunAsync();
+#else
+        return false;
+#endif
+    }
+
+    /// <summary>Unified-lease leg shared by the pre- and post-BeginClose sequencer gates. For an OLD
+    /// UNACCEPTED lease it joins/aborts it and reacquires the CURRENT preparation exactly once, retaining
+    /// every raw fault sibling. An ALREADY-accepted unified close is never re-invoked, aborted, or undone:
+    /// it is retained (and joined by the shutdown sequence) exactly once, so completion remains exactly-once.</summary>
+    private async Task<bool> ResolveReplanUnifiedLeaseAsync(OriginalDocumentCloseAttempt attempt, List<Exception> failures)
+    {
+#if !ANDROID
+        if (attempt.UnifiedLease is { IsAcceptedOriginal: false } stale && attempt.Unified is { } unified)
+        {
+            Task<UnifiedWorkspaceHost.ClosePreparation?> reprepared =
+                Task.FromResult<UnifiedWorkspaceHost.ClosePreparation?>(null);
+            var replanned = await OwnedChildRetirementCloseReplanner.ReplanAsync(
+                stale,
+                () => attempt.UnifiedAbort ??= stale.AbortAsync(),
+                () => { var t = unified.PrepareCloseAsync(CancellationToken.None); reprepared = t; return t; },
+                failures);
+            if (replanned is null) return false; // declined / genuine fault retained; request ends
+            attempt.UnifiedAbort = null;
+            attempt.UnifiedPreparation = reprepared;
+            attempt.UnifiedLease = replanned;
+        }
+        return true;
+#else
+        // Android has no desktop unified-lease/preparation members; the replan path is unused there.
+        await Task.CompletedTask;
+        return true;
+#endif
+    }
+
+    /// <summary>Verifies that every originally-owned member now absent from the live cohort had its native
+    /// child close settle cleanly (task completed successfully + native Closed fired). If any removal did
+    /// not settle this way the child gate refuses, ending the request.</summary>
+    private static bool WitnessedChildCloseSettled(IReadOnlyList<Avalonia.Controls.Window> originalCohort,
+        IReadOnlyList<Avalonia.Controls.Window> currentCohort)
+    {
+#if !ANDROID
+        foreach (var window in originalCohort)
+            if (!ReferencesAny(currentCohort, window))
+            {
+                if (window is not NativeCakeAccountWindow
+                    {
+                        OriginalClose.IsCompletedSuccessfully: true,
+                        HasNativelyClosed: true,
+                    })
+                    return false;
+            }
+        return true;
+#else
+        return true;
+#endif
+    }
+
+    /// <summary>Delivers the ONE approved shutdown exactly once. Returns true ONLY when the real original
+    /// shutdown delivery was actually issued for this SAME request; a late currentness refusal or a missing
+    /// real <c>OriginalClose</c> returns false so completion is never claimed without admission. Actual
+    /// shutdown Task failures/pending remain authoritative and are retained by the caller.</summary>
+    private bool DeliverPostAcceptShutdownOnce(OriginalDocumentCloseAttempt attempt)
+    {
+        TaskCompletionSource? shutdownStart = null;
+        (_synchronousAppSources ??= []).Add(this);
+        try
+        {
+            if (!IsOriginalDocumentCloseAttemptCurrent(attempt)) return false;
+#if !ANDROID
+            if (attempt.Unified is { OriginalClose: null }) return false;
+#endif
+            shutdownStart = AcquireOriginalDesktopShutdownDelivery();
+        }
+        finally { _synchronousAppSources.RemoveAt(_synchronousAppSources.Count - 1); }
+        if (shutdownStart is null) return false;
+        shutdownStart.TrySetResult();
+        return true;
+    }
+
+    /// <summary>The exact production witness used by the App close wiring: a native Account child counts as
+    /// positively witnessed retired only when it is owned by the actual parent owner captured for this App,
+    /// its own close request drained cleanly (completed-successfully), its native window actually fired the
+    /// <see cref="Avalonia.Controls.Window.Closed"/> callback, AND its real native parent belonged to the
+    /// SAME initial close cohort / current request. A parentless, wrong-parent, detached, other-owner, or
+    /// canceled/failed window never authorizes a replan. <see cref="NativeCakeAccountWindow.IsRetired"/>
+    /// alone is insufficient: it flips before the native close returns and its close task completes.</summary>
+#if !ANDROID
+    internal static bool IsWitnessedRetiredOwnedAccountChild(NativeCakeAccountUiOwner? owner,
+        Avalonia.Controls.Window window, IReadOnlyList<Avalonia.Controls.Window> originalCohort) =>
+        window is NativeCakeAccountWindow
+        {
+            IsRetired: true,
+            OriginalClose.IsCompletedSuccessfully: true,
+            HasNativelyClosed: true,
+        } account && ReferenceEquals(account.UiOwner, owner)
+        && account.UiParent is { } parent && ReferencesAny(originalCohort, parent);
+#else
+    internal static bool IsWitnessedRetiredOwnedAccountChild(object? owner,
+        Avalonia.Controls.Window window, IReadOnlyList<Avalonia.Controls.Window> originalCohort) => false;
+#endif
+
+    private static bool ReferencesAny(IReadOnlyList<Avalonia.Controls.Window> cohort, Avalonia.Controls.Window target)
+    {
+        foreach (var member in cohort) if (ReferenceEquals(member, target)) return true;
+        return false;
+    }
+
+    /// <summary>Production stage sequencer shared by the App's real first/final close gates and the portable
+    /// tests. It owns the ordered close-lifecycle stages for a positively witnessed owned-child retirement:
+    /// (1) cohort authorization — prove the ONLY delta is the witnessed retirement of originally-owned children;
+    /// (2) apply the refreshed cohort; (3) verify every non-window canonical currentness invariant still holds;
+    /// (4) child-close gate — each witnessed child's close task settled cleanly and its native Closed fired;
+    /// (5) fresh canonical preflight — re-prepare the REAL current documents/shells with actual authority;
+    /// (6) unified-lease leg — resolve the current lease (for an unaccepted lease: join/abort the old and
+    /// reacquire the current one; for an already-accepted lease: retain/join it and NEVER abort/rebegin);
+    /// (7) complete-once — terminate the ONE approved close exactly once. Stage inputs are injected via
+    /// callbacks so focused portable tests drive the SAME production sequencing with controlled gate values
+    /// while production passes the real Avalonia Windows, ClosePreparation leases, and shutdown delivery.
+    /// no BeginClose here: the App fires it once in the unified block, and accepted-retention is proven by
+    /// <see cref="FirstMainCloseStageSequencer{T}"/> never aborting or re-beginning an accepted lease.</summary>
+    internal sealed class FirstMainCloseStageSequencer<T> where T : class
+    {
+        private readonly Func<T[]?> _cohortAuthorize;
+        private readonly Action<T[]> _applyCohort;
+        private readonly Func<bool> _canonicalCurrent;
+        private readonly Func<bool> _isChildCloseSettled;
+        private readonly Func<Task<bool>> _freshCanonicalPreflight;
+        private readonly Func<Task<bool>> _resolveUnifiedLease;
+        private readonly Func<bool> _isFullCurrent;
+        private readonly Func<bool> _completeShutdown;
+
+        internal FirstMainCloseStageSequencer(
+            Func<T[]?> cohortAuthorize,
+            Action<T[]> applyCohort,
+            Func<bool> canonicalCurrent,
+            Func<bool> isChildCloseSettled,
+            Func<Task<bool>> freshCanonicalPreflight,
+            Func<Task<bool>> resolveUnifiedLease,
+            Func<bool> isFullCurrent,
+            Func<bool> completeShutdown)
+        {
+            _cohortAuthorize = cohortAuthorize;
+            _applyCohort = applyCohort;
+            _canonicalCurrent = canonicalCurrent;
+            _isChildCloseSettled = isChildCloseSettled;
+            _freshCanonicalPreflight = freshCanonicalPreflight;
+            _resolveUnifiedLease = resolveUnifiedLease;
+            _isFullCurrent = isFullCurrent;
+            _completeShutdown = completeShutdown;
+        }
+
+        /// <summary>Number of times the terminal complete-once stage positively resolved (real production admission /
+        /// delivery issued for this SAME request). A refused/late currentness or missing-OriginalClose completion
+        /// never increments this — it increments <see cref="EndCount"/> instead.</summary>
+        public int CompleteCount { get; private set; }
+        /// <summary>Number of times a stage refused and the run ended before completion.</summary>
+        public int EndCount { get; private set; }
+        /// <summary>Number of times the child-close gate was evaluated.</summary>
+        public int ChildGateCount { get; private set; }
+        /// <summary>Number of times the fresh canonical preflight stage was invoked.</summary>
+        public int FreshPreflightCount { get; private set; }
+        /// <summary>Number of times the unified-lease leg was resolved.</summary>
+        public int LeaseLegCount { get; private set; }
+
+        /// <summary>Runs the production stage sequence in order. Returns true only when every stage passed and the
+        /// terminal complete-once stage positively resolved; otherwise false (each refusal ends counts toward
+        /// <see cref="EndCount"/>). FULL canonical currentness/cohort is re-checked after EACH awaited stage
+        /// (fresh preflight and unified-lease leg) and immediately before the terminal completion, so an unrelated
+        /// window addition/removal/reorder/doc edit that lands while a pending operation runs ends the request
+        /// before any destructive BeginClose/retirement or delivered shutdown.</summary>
+        public async Task<bool> RunAsync()
+        {
+            var refreshed = _cohortAuthorize();
+            if (refreshed is null) { EndCount++; return false; }
+            _applyCohort(refreshed);
+            if (!_canonicalCurrent()) { EndCount++; return false; }
+            ChildGateCount++;
+            if (!_isChildCloseSettled()) { EndCount++; return false; }
+            FreshPreflightCount++;
+            if (!await _freshCanonicalPreflight()) { EndCount++; return false; }
+            // Re-check FULL canonical currentness/cohort after the awaited preflight: an unrelated window
+            // addition/removal/reorder/doc edit during it must END the request before any lease reacquire.
+            if (!_isFullCurrent()) { EndCount++; return false; }
+            LeaseLegCount++;
+            if (!await _resolveUnifiedLease()) { EndCount++; return false; }
+            // Re-check FULL currentness after the awaited lease leg too, immediately before completion.
+            if (!_isFullCurrent()) { EndCount++; return false; }
+            // Terminal complete-once: true/CompleteCount only when the REAL production admission/delivery was
+            // issued for this SAME request. A late currentness refusal or missing real OriginalClose returns
+            // false and counts as an end, never as a completion.
+            if (!_completeShutdown()) { EndCount++; return false; }
+            CompleteCount++;
+            return true;
+        }
+    }
+
+    /// <summary>Production sequencer actually called by the App close wiring for a positively witnessed
+    /// owned-native-Account-child retirement. It owns (a) the pure cohort authorization that decides whether
+    /// the ONLY delta authorizes a refresh, and (b) the ordered join/abort-old-then-reacquire flow with raw
+    /// fault-sibling retention. Generic over the cohort/lease element types so focused portable tests drive
+    /// the real operations with controlled gate values while production passes the real Avalonia Windows and
+    /// ClosePreparation leases.</summary>
+    internal static class OwnedChildRetirementCloseReplanner
+    {
+        /// <summary>Authorizes refreshing to the real current cohort when the ONLY window-cohort delta is the
+        /// positively witnessed retirement of owned children that were already in the original cohort. Returns
+        /// the refreshed cohort when authorized; otherwise null. A new/unowned/document window or any other
+        /// change keeps its real authority and is never dropped.</summary>
+        internal static T[]? TryRefreshCohortForWitnessedRetirement<T>(
+            IReadOnlyList<T> originalCohort,
+            IReadOnlyList<T> currentCohort,
+            Func<T, bool> isWitnessedRetiredOwnedChild)
+            where T : class
+        {
+            // The SOLE authorized delta is the removal of specifically witnessed originally-owned children.
+            // Every survivor must remain EXACTLY the same reference in the SAME relative order it had in
+            // the original cohort (current must be a strict subsequence of original). Any addition, an
+            // unrelated removal, a survivor reorder, or a detached/unowned/document window keeps its real
+            // authority and refuses the refresh.
+            int removed = 0;
+            int originalIndex = 0;
+            foreach (var window in currentCohort)
+            {
+                bool found = false;
+                while (originalIndex < originalCohort.Count)
+                {
+                    var originalMember = originalCohort[originalIndex++];
+                    if (ReferenceEquals(originalMember, window)) { found = true; break; }
+                    // This original member is now absent from current: it must be a witnessed-retired owned child.
+                    if (!isWitnessedRetiredOwnedChild(originalMember)) return null;
+                    removed++;
+                }
+                if (!found) return null; // a live member was not an original member (addition) -> refuse
+            }
+            // Any original members remaining after the live cohort are the removed set; each must be
+            // witnessed-retired. A detached/unowned/unrelated removal refuses the refresh.
+            while (originalIndex < originalCohort.Count)
+            {
+                if (!isWitnessedRetiredOwnedChild(originalCohort[originalIndex++])) return null;
+                removed++;
+            }
+            if (removed == 0) return null; // no cohort delta: nothing changed to refresh
+            return currentCohort.ToArray();
+        }
+
+        /// <summary>Joins/aborts the OLD unaccepted lease and then reacquires the CURRENT preparation, each
+        /// exactly once, with every raw fault/cancellation sibling retained in <paramref name="failures"/>
+        /// by the SAME production custody policy as the main App wiring. Returns the reacquired lease on
+        /// clean success; on any abort/acquire fault or a declined/no-prep it returns null (the caller ends
+        /// the request without retrying).</summary>
+        internal static async Task<T?> ReplanAsync<T>(T staleLease, Func<Task> startAbort,
+            Func<Task<T?>> startAcquire, List<Exception> failures)
+            where T : class
+        {
+            // Abort leg: capture the RAW actual task OUTSIDE the await/try so its complete terminal state
+            // stays inspectable; synchronous acquisition exceptions are genuine too. No normalization here
+            // and never a fake completed task.
+            Task abortTask;
+            try { abortTask = startAbort(); }
+            catch (Exception sync) { AddAppCause(failures, sync); return null; }
+            await JoinOwnedChildObservationAsync(abortTask, failures);
+            if (failures.Count > 0) return null; // genuine abort fault(s) retained; never reacquire/retry.
+
+            // Reacquire leg: same raw-task capture/join; extract the result only on clean success.
+            Task<T?> acquireTask;
+            try { acquireTask = startAcquire(); }
+            catch (Exception sync) { AddAppCause(failures, sync); return null; }
+            await JoinOwnedChildObservationAsync(acquireTask!, failures);
+            if (failures.Count > 0) return null; // genuine prep fault(s) retained; no commit.
+            return acquireTask!.GetAwaiter().GetResult();
+        }
+
+        /// <summary>Localized recursive-leaf observation for THIS replanner's abort/reacquire legs only. It
+        /// captures/joins the SAME raw tasks the main App wiring joins, but recursively projects every original
+        /// leaf reference of a faulted AggregateException (including nested/sibling OCE / cancellation) with no
+        /// type/token normalization. The shared <see cref="App.JoinOriginalAppTaskAsync"/> intentionally retains
+        /// its non-flattening owner envelope policy; this localized projection is what preserves the nested/sibling
+        /// leaf assertions without disturbing that shared contract.</summary>
+        private static async Task JoinOwnedChildObservationAsync(Task actual, List<Exception> failures)
+        {
+            try { await actual; }
+            catch (Exception observed)
+            {
+                if (actual.Exception is { InnerExceptions.Count: > 0 } group)
+                    foreach (var original in group.InnerExceptions) AddRecursiveLeafAppCause(failures, original);
+                else AddRecursiveLeafAppCause(failures, observed);
+            }
+        }
+
+        private static void AddRecursiveLeafAppCause(List<Exception> failures, Exception error)
+        {
+            if (error is AggregateException aggregate && aggregate.InnerExceptions.Count > 0)
+            {
+                foreach (var inner in aggregate.InnerExceptions) AddRecursiveLeafAppCause(failures, inner);
+            }
+            else if (!failures.Any(original => ReferenceEquals(original, error))) failures.Add(error);
+        }
+    }
+
+    /// <summary>Extracted production-path sequencer used by both the App wiring and the portable tests. It
+    /// owns the ordering (join/abort the old unaccepted lease BEFORE reacquiring a current one) and the
+    /// raw-fault retention rule (the SAME actual task is captured outside the await/try and fully joined, so
+    /// EVERY AggregateException.InnerExceptions reference is preserved; synchronous acquisition faults are
+    /// genuine too). A genuine abort/reprepare fault is retained and never auto-repeated; a declined/no-prep
+    /// ends the request. It performs NO waiting on startup/Welcome and no detached fire-and-forget — the
+    /// caller owns and awaits its dispatch. Generic over the lease type so tests drive it with controlled
+    /// gate values while production passes the real ClosePreparation leases.</summary>
+    internal static class StartupTransitionCloseReplanner
+    {
+        internal static async Task<T?> ReplanAsync<T>(T staleLease, Func<Task> startAbort,
+            Func<Task<T?>> startAcquire, List<Exception> failures)
+            where T : class
+        {
+            // Abort leg: capture the RAW actual task OUTSIDE the await/try so its complete terminal state
+            // stays inspectable; synchronous acquisition exceptions are genuine too. No normalization here
+            // and never a fake completed task.
+            Task abortTask;
+            try { abortTask = startAbort(); }
+            catch (Exception sync) { Add(failures, sync); return null; }
+            await JoinRawFaultsAsync(abortTask, failures);
+            if (failures.Count > 0) return null; // genuine abort fault(s) retained; never reacquire/retry.
+
+            // Reacquire leg: same raw-task capture/join; extract the result only on clean success.
+            Task<T?> acquireTask;
+            try { acquireTask = startAcquire(); }
+            catch (Exception sync) { Add(failures, sync); return null; }
+            await JoinRawFaultsAsync(acquireTask!, failures);
+            if (failures.Count > 0) return null; // genuine prep fault(s) retained; no commit.
+            return acquireTask!.GetAwaiter().GetResult();
+        }
+
+        private static async Task JoinRawFaultsAsync(Task actual, List<Exception> failures)
+        {
+            try { await actual; }
+            catch (Exception error)
+            {
+                if (actual.Exception is { InnerExceptions.Count: > 0 } group)
+                    foreach (var inner in group.InnerExceptions) Add(failures, inner);
+                else Add(failures, error);
+            }
+        }
+
+        internal static void Add(List<Exception> failures, Exception error)
+        { if (!failures.Any(item => ReferenceEquals(item, error))) failures.Add(error); }
+    }
 
     private TaskCompletionSource? AcquireOriginalDesktopShutdownDelivery()
     {

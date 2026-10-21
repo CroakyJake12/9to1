@@ -157,6 +157,7 @@ public sealed class CuiCompiler
         foreach (var diagnostic in CuiActionEventContract.Validate(document))
             diagnostics.Error(diagnostic.Code, diagnostic.Message, diagnostic.Span);
         ValidateLocalState(document, diagnostics);
+        ValidateOrchestration(document, diagnostics);
 
         if (diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
@@ -173,7 +174,8 @@ public sealed class CuiCompiler
             return new CuiCompilation(null, Array.AsReadOnly(diagnostics.Diagnostics.ToArray()));
 
         var stateful = document.Variables.Count > 0
-            || document.Actions.Values.Any(action => action.LocalTarget is not null);
+            || document.Actions.Values.Any(action => action.LocalTarget is not null)
+            || document.Effects.Count > 0;
         var requiresQueryViewport = DocumentUsesQueryViewport(document);
         var effectiveMetadata = options.Metadata;
         if (stateful || requiresQueryViewport)
@@ -192,6 +194,8 @@ public sealed class CuiCompiler
                 if (document.Variables.Values.Any(declaration => !string.IsNullOrEmpty(declaration.Selection)))
                     capabilities.Add(CuiRuntimeCompatibility.LocalStateRandomSelectCapability);
             }
+            if (document.Effects.Count > 0)
+                capabilities.Add(CuiRuntimeCompatibility.DeclarativeEffectsCapability);
             if (requiresQueryViewport)
                 capabilities.Add(CuiRuntimeCompatibility.QueryViewportCapability);
             effectiveMetadata = new CuiCompilationMetadata(
@@ -291,20 +295,30 @@ public sealed class CuiCompiler
                 }
                 continue;
             }
-            if (!string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase))
+            var isBool = string.Equals(declaration.Type, "bool", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(declaration.Type, "boolean", StringComparison.OrdinalIgnoreCase);
+            var isCommandState = string.Equals(declaration.Type, "commandstate", StringComparison.OrdinalIgnoreCase);
+            var isString = string.Equals(declaration.Type, "string", StringComparison.OrdinalIgnoreCase);
+            if (!isBool && !isCommandState && !isString)
             {
                 diagnostics.Error("CUIC030",
-                    $"Local variable '{declaration.Name}' has unsupported Type '{declaration.Type}'; only bool (or a string RandomOnce source select) is supported in this bounded slice.",
+                    $"Local variable '{declaration.Name}' has unsupported Type '{declaration.Type}'; supported types are bool, string and commandstate in this bounded slice.",
                     declaration.Span);
                 continue;
             }
             if (!string.IsNullOrEmpty(declaration.Source))
             {
                 diagnostics.Error("CUIC039",
-                    $"Local bool variable '{declaration.Name}' declares a Source without Selection; a bool literal cannot carry a candidate pool.",
+                    $"Local variable '{declaration.Name}' declares a Source without Selection; only a string RandomOnce variable can carry a candidate pool.",
                     declaration.Span);
             }
-            if (!bool.TryParse(declaration.Value, out _))
+            if (isCommandState && declaration.Value.Length > 0)
+            {
+                diagnostics.Error("CUIC040",
+                    $"Command-state local variable '{declaration.Name}' cannot carry a literal initializer.",
+                    declaration.Span);
+            }
+            if (isBool && !bool.TryParse(declaration.Value, out _))
             {
                 diagnostics.Error("CUIC031",
                     $"Local bool variable '{declaration.Name}' requires a literal true/false value.",
@@ -338,6 +352,73 @@ public sealed class CuiCompiler
                 diagnostics.Error("CUIC034",
                     $"Local Toggle action '{action.Name}' targets non-bool variable '{target}'.",
                     action.Span);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Validates declarative orchestration wiring in the bounded slice: action result targets must
+    /// reference a declared commandstate variable, Set targets must reference declared settable
+    /// bool/string variables, and each effect must reference a declared action whose condition (when
+    /// bound) reads a declared commandstate result variable. These are the same invariants enforced
+    /// by V2 compiled-artifact admission, so authored documents fail early at compile time.
+    /// </summary>
+    private static void ValidateOrchestration(CuiDocument document, CuiDiagnosticBag diagnostics)
+    {
+        var variableTypes = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var declaration in document.Variables.Values)
+            if (declaration is not null && !string.IsNullOrWhiteSpace(declaration.Name))
+                variableTypes[declaration.Name] = declaration.Type ?? string.Empty;
+
+        foreach (var action in document.Actions.Values)
+        {
+            if (action is null) continue;
+            if (action.ResultTarget is { } resultTarget)
+            {
+                if (!variableTypes.TryGetValue(resultTarget, out var resultType)
+                    || !string.Equals(resultType, "commandstate", StringComparison.OrdinalIgnoreCase))
+                    diagnostics.Error("CUIC042",
+                        $"Action '{action.Name}' references result target '{resultTarget}', which is not a declared commandstate variable.",
+                        action.Span);
+            }
+            if (action.Sets is not null)
+            {
+                foreach (var set in action.Sets)
+                {
+                    if (set is null || string.IsNullOrWhiteSpace(set.Target)) continue;
+                    if (!variableTypes.TryGetValue(set.Target, out var setType)
+                        || (!string.Equals(setType, "bool", StringComparison.OrdinalIgnoreCase)
+                            && !string.Equals(setType, "boolean", StringComparison.OrdinalIgnoreCase)
+                            && !string.Equals(setType, "string", StringComparison.OrdinalIgnoreCase)))
+                        diagnostics.Error("CUIC043",
+                            $"Action '{action.Name}' Set target '{set.Target}' is not a declared settable bool/string variable.",
+                            set.Span);
+                }
+            }
+        }
+
+        foreach (var effect in document.Effects)
+        {
+            if (effect is null) continue;
+            if (string.IsNullOrWhiteSpace(effect.ActionName))
+            {
+                diagnostics.Error("CUIC044", $"Effect '{effect.Name}' references no action.", effect.Span);
+                continue;
+            }
+            if (!document.Actions.ContainsKey(effect.ActionName))
+            {
+                diagnostics.Error("CUIC045",
+                    $"Effect '{effect.Name}' references undeclared action '{effect.ActionName}'.",
+                    effect.Span);
+            }
+            if (effect.Condition?.Test is CuiBindingValue binding && binding.Path is { Length: > 0 } path)
+            {
+                var root = path.Split('.')[0];
+                if (!variableTypes.TryGetValue(root, out var conditionRootType)
+                    || !string.Equals(conditionRootType, "commandstate", StringComparison.OrdinalIgnoreCase))
+                    diagnostics.Error("CUIC046",
+                        $"Effect '{effect.Name}' condition path '{path}' does not reference a declared commandstate result variable.",
+                        binding.Span);
             }
         }
     }

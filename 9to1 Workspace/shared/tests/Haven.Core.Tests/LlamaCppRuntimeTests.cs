@@ -31,6 +31,7 @@ public sealed class LlamaCppRuntimeTests
         var plan = LlamaCppLaunchPlanner.Create(options);
 
         Assert.Equal(executable, plan.FileName);
+        Assert.NotNull(plan.Endpoint);
         Assert.Equal("127.0.0.1", plan.Endpoint.Host);
         Assert.Equal(18081, plan.Endpoint.Port);
         Assert.Equal("/v1/", plan.Endpoint.AbsolutePath);
@@ -116,5 +117,139 @@ public sealed class LlamaCppRuntimeTests
         Assert.False(status.Enabled);
         Assert.False(status.Running);
         Assert.Null(status.ProcessId);
+    }
+
+    [Fact]
+    public void Launch_plan_binds_the_verified_unix_socket_without_loopback_when_a_socket_path_is_configured()
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        var executable = Path.GetFullPath(Path.Combine("llama cpp", "llama-server"));
+        var model = Path.GetFullPath(Path.Combine("models", "Qwen Test.gguf"));
+        const string socket = "/run/user/1000/haven/inference.sock";
+        var options = new LlamaCppRuntimeOptions(
+            Enabled: true,
+            ExecutablePath: executable,
+            ModelPath: model,
+            ModelAlias: "preview-model",
+            SocketPath: socket,
+            ContextSize: 32768,
+            ParallelRequests: 1,
+            AlwaysLoaded: true);
+
+        var plan = LlamaCppLaunchPlanner.Create(options);
+
+        Assert.Equal(executable, plan.FileName);
+        Assert.Null(plan.Endpoint); // no loopback URI is claimed for the verified Unix socket
+        Assert.Equal(socket, plan.UnixSocketPath);
+        Assert.Contains("--alias", plan.Arguments);
+        var aliasIndex = ArgumentIndex(plan.Arguments, "--alias");
+        Assert.True(aliasIndex >= 0);
+        Assert.Equal("preview-model", plan.Arguments[aliasIndex + 1]);
+        Assert.Contains("--host", plan.Arguments);
+        var hostIndex = ArgumentIndex(plan.Arguments, "--host");
+        Assert.True(hostIndex >= 0);
+        Assert.Equal(socket, plan.Arguments[hostIndex + 1]);
+        Assert.DoesNotContain("--port", plan.Arguments);
+        Assert.DoesNotContain("--no-webui", plan.Arguments);
+    }
+
+    [Fact]
+    public void Bundled_preview_qwen_profile_emits_exact_jinja_reasoning_off()
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        const string socket = "/run/user/1000/haven/llamacpp-worker.sock";
+        var options = new LlamaCppRuntimeOptions(
+            Enabled: true,
+            ExecutablePath: Path.GetFullPath("llama-server"),
+            ModelPath: Path.GetFullPath("Qwen3-0.6B-Q6_K.gguf"),
+            ModelAlias: "qwen3-06b-q6k",
+            SocketPath: socket,
+            ContextSize: 32768,
+            ParallelRequests: 1,
+            AlwaysLoaded: true,
+            UseJinja: true,
+            Reasoning: LlamaCppReasoningMode.Off);
+
+        var plan = LlamaCppLaunchPlanner.Create(options);
+
+        // The pinned supported engine switch: --jinja --reasoning off (disables thinking so a short
+        // 32-token capability probe yields actual text rather than reasoning-only content).
+        Assert.Contains("--jinja", plan.Arguments);
+        var reasoningIndex = ArgumentIndex(plan.Arguments, "--reasoning");
+        Assert.True(reasoningIndex >= 0);
+        Assert.Equal("off", plan.Arguments[reasoningIndex + 1]);
+    }
+
+    [Fact]
+    public void Default_and_explicit_callers_do_not_gain_template_or_reasoning_args()
+    {
+        var options = new LlamaCppRuntimeOptions(
+            Enabled: true,
+            ExecutablePath: Path.GetFullPath("llama-server"),
+            ModelPath: Path.GetFullPath("model.gguf"));
+
+        var plan = LlamaCppLaunchPlanner.Create(options);
+
+        // Explicit/default callers that did not opt into the typed controls are unchanged.
+        Assert.DoesNotContain("--jinja", plan.Arguments);
+        Assert.DoesNotContain("--no-jinja", plan.Arguments);
+        Assert.DoesNotContain("--reasoning", plan.Arguments);
+    }
+
+    [Theory]
+    [InlineData(LlamaCppReasoningMode.On, "on")]
+    [InlineData(LlamaCppReasoningMode.Auto, "auto")]
+    [InlineData(LlamaCppReasoningMode.Unset, null)]
+    public void Explicit_reasoning_preferences_are_mapped_and_validated(LlamaCppReasoningMode mode, string? expected)
+    {
+        var options = new LlamaCppRuntimeOptions(
+            Enabled: true,
+            ExecutablePath: Path.GetFullPath("llama-server"),
+            ModelPath: Path.GetFullPath("model.gguf"),
+            Reasoning: mode);
+
+        var plan = LlamaCppLaunchPlanner.Create(options);
+
+        if (expected is null)
+        {
+            Assert.DoesNotContain("--reasoning", plan.Arguments);
+            return;
+        }
+        var reasoningIndex = ArgumentIndex(plan.Arguments, "--reasoning");
+        Assert.True(reasoningIndex >= 0);
+        Assert.Equal(expected, plan.Arguments[reasoningIndex + 1]);
+    }
+
+    [Fact]
+    public void Explicit_jinja_off_emits_no_jinja()
+    {
+        var options = new LlamaCppRuntimeOptions(
+            Enabled: true,
+            ExecutablePath: Path.GetFullPath("llama-server"),
+            ModelPath: Path.GetFullPath("model.gguf"),
+            UseJinja: false);
+
+        var plan = LlamaCppLaunchPlanner.Create(options);
+
+        Assert.Contains("--no-jinja", plan.Arguments);
+    }
+
+    [Fact]
+    public void Unsupported_reasoning_mode_throws_argument_out_of_range()
+    {
+        var options = new LlamaCppRuntimeOptions(
+            Enabled: true,
+            ExecutablePath: Path.GetFullPath("llama-server"),
+            ModelPath: Path.GetFullPath("model.gguf"),
+            Reasoning: (LlamaCppReasoningMode)999);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => LlamaCppLaunchPlanner.Create(options));
+    }
+
+    private static int ArgumentIndex(IReadOnlyList<string> arguments, string value)
+    {
+        for (var i = 0; i < arguments.Count; i++)
+            if (string.Equals(arguments[i], value, StringComparison.Ordinal)) return i;
+        return -1;
     }
 }

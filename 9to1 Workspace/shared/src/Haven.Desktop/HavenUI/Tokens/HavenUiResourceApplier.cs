@@ -32,6 +32,11 @@ internal static class HavenUiResourceApplier
         var input = palette.Button;
         var success = Color.Parse(isDark ? "#FF76D7A0" : "#FF147A48");
         var information = palette.AccentSecondary;
+        // Warning/Danger are shared structural status brushes, registered here beside
+        // success/information so every canonical theme and appearance resolves them in
+        // ordinary shipping startup. They adapt to the active brightness for contrast.
+        var warning = Color.Parse(isDark ? "#FFFFD54F" : "#FFF9A825");
+        var danger = Color.Parse(isDark ? "#FFE57373" : "#FFD32F2F");
         var expression = HavenThemeCatalog.Resolve(palette.Theme);
         var shadowBase = Color.Parse(isDark ? "#B8000000" : "#52000000");
         var shadow = WithAlpha(shadowBase, (byte)Math.Clamp(Math.Round(shadowBase.A * expression.ShadowOpacityScale), 0, 255));
@@ -81,6 +86,8 @@ internal static class HavenUiResourceApplier
         SetBrush("HavenSuccessBrush", success);
         SetBrush("HavenInformationBrush", information);
         SetBrush("HavenLinkBrush", palette.Accent);
+        SetBrush("HavenWarningBrush", warning);
+        SetBrush("HavenDangerBrush", danger);
         SetBrush("HavenShadowBrush", shadow);
         SetBrush("HavenAccentForegroundBrush", palette.AccentInk);
 

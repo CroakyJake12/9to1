@@ -1,0 +1,65 @@
+[
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/Carlito/LICENSE",
+    "copy": "fonts-source/1/LICENSE",
+    "sha256": "bbcf8ce9c8acc91355ab5d263ec9e37d498de2222336e7d42e589f791afe56c4",
+    "evidence": "Carlito font OFL; full text byte-matched within Haven.dll"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/OFL-Montserrat.txt",
+    "copy": "fonts-source/2/OFL-Montserrat.txt",
+    "sha256": "8b7141c03fa4f8d44e6345d5d4931709290f0f67875e452e95ac1fd3a027802e",
+    "evidence": "Montserrat OFL; full text byte-matched within Haven.dll and CakeOS.Cui.Runtime.dll"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "framework/CUI/Runtime/Assets/Fonts/DejaVuSans/LICENSE.txt",
+    "copy": "fonts-source/3/LICENSE.txt",
+    "sha256": "32e68a20bbb06fb7b97c55146b75208fbbc5abd91a60030be2707c142f3a9d9e",
+    "evidence": "DejaVu font licence; full text byte-matched within CakeOS.Cui.Runtime.dll"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "framework/CUI/Runtime/Assets/Fonts/NotoEmoji/OFL.txt",
+    "copy": "fonts-source/4/OFL.txt",
+    "sha256": "500bb1ccf43df7bbb522112f9133a52b16e1c35e809632f5d8609b179152de5b",
+    "evidence": "Noto Emoji OFL; full text byte-matched within CakeOS.Cui.Runtime.dll"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Assets/OFL.txt",
+    "copy": "fonts-source/5/OFL.txt",
+    "sha256": "293ddbfec5aa83c95c7b25bf84f7978ba4ad3d1ac537c218af79ca1f9380fb89",
+    "evidence": "Inter OFL; full text byte-matched within CakeOS.Cui.Runtime.dll and Avalonia.Fonts.Inter.dll"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "framework/CUI/vendor/Avalonia/licence.md",
+    "copy": "fonts-source/6/licence.md",
+    "sha256": "213814d306090074d234d760239ff0f67eb9b8d20eefb4d5631bb39dbe0b769b",
+    "evidence": "Avalonia MIT source licence; no exact full-text byte match in any published file"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "framework/CUI/vendor/Avalonia/NOTICE.md",
+    "copy": "fonts-source/7/NOTICE.md",
+    "sha256": "dd6f80852d16320c865a2e403ffd1a8b07a0e34c5b37122c0bc2343639ff68e6",
+    "evidence": "Avalonia upstream third-party notices; no exact full-text byte match in any published file"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "9to1 Workspace/Files/Source/Files/LICENSE-MIT",
+    "copy": "fonts-source/8/LICENSE-MIT",
+    "sha256": "d3c8ca67f861bf3ba8e0c295392e364f9fda78ddb9f0817842e5e0af4a8630c5",
+    "evidence": "Files donor MIT source input; published Files assemblies exist, but compiled donor-file closure not established"
+  },
+  {
+    "source_git_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "source_path": "9to1 Workspace/Files/Source/Files/LICENSE-MPL",
+    "copy": "fonts-source/9/LICENSE-MPL",
+    "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
+    "evidence": "Files donor MPL source input; published Files assemblies exist, but compiled donor-file closure not established"
+  }
+]

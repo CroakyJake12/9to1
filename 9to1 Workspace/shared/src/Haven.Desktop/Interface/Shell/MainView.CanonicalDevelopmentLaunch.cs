@@ -79,8 +79,9 @@ public sealed partial class MainView
                 page = AcquireOriginalShellSynchronous(original, () => new DeveloperSavedProjectsPage(binding.Catalog, SpacesRegistry,
                     binding.HomeReadiness, binding.Files.DemandExternalOriginalRetirementJoin,
                     view => OpenOriginalDevelopmentCatalogTaskAsync(binding, view),
-                    spaceId => OpenOriginalCanonicalTaskSpaceAsync(spaceId),
-                    binding.ConnectionLifetime, binding.WindowLifetime, CapturePartial));
+                    (spaceId, _) => OpenOriginalCanonicalTaskSpaceAsync(spaceId),
+                    _manualWorkspaces, _openExistingManualEntry, // Same real manual (no-AI) providers as the 9to1://dev session.
+                    binding.ConnectionLifetime, binding.WindowLifetime, CapturePartial, _createManualEntry));
                 DemandOriginalDevelopmentCatalog(binding);
             }
             if (!ReferenceEquals(retained, page))

@@ -65,6 +65,13 @@ public static class CuiCompiledArtifactCodec
     /// never evade the admission gate by omitting the capability string.</summary>
     public const string QueryViewportCapability = "query-viewport";
 
+    /// <summary>Semantic feature capability for declarative auto-invocation effects. It is derived
+    /// from the actual typed semantics (a non-empty document-root Effects block), so a stripped
+    /// capability string cannot downgrade a document whose orchestration depends on effects. A host
+    /// that predates effects must reject such a document at admission rather than silently dropping
+    /// the authored auto-flow.</summary>
+    public const string DeclarativeEffectsCapability = "declarative-effects";
+
     public static JsonSerializerOptions Options { get; } = CreateOptions();
 
     public static byte[] WriteArtifact(CuiCompiledArtifact artifact) =>
@@ -206,12 +213,14 @@ public static class CuiCompiledArtifactCodec
     }
 
     /// <summary>Statefulness is determined by inspecting typed semantics (document-root local
-    /// variables or pure-local actions), independent of any capability string.</summary>
+    /// variables, pure-local actions, or declarative auto-invocation effects), independent of any
+    /// capability string.</summary>
     public static bool RequiresAbi2(CuiV2Semantics semantics)
     {
         ArgumentNullException.ThrowIfNull(semantics);
         return (semantics.Variables is { Count: > 0 })
-            || (semantics.Actions is not null && semantics.Actions.Values.Any(action => action.LocalTarget is not null));
+            || (semantics.Actions is not null && semantics.Actions.Values.Any(action => action.LocalTarget is not null))
+            || (semantics.Effects is { Count: > 0 });
     }
 
     /// <summary>Derives the mandatory feature capabilities required by the actual typed semantics
@@ -232,6 +241,8 @@ public static class CuiCompiledArtifactCodec
                     required.Add(LocalStateRandomSelectCapability);
         if (ContainsQueryViewport(semantics))
             required.Add(QueryViewportCapability);
+        if (semantics.Effects is { Count: > 0 })
+            required.Add(DeclarativeEffectsCapability);
         return required;
     }
 
@@ -361,6 +372,11 @@ public static class CuiCompiledArtifactCodec
 
         foreach (var style in semantics.Styles) ValidateStyle(style, source);
 
+        var variableTypes = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (name, variable) in semantics.Variables)
+            if (variable is not null && !string.IsNullOrWhiteSpace(name))
+                variableTypes[name] = variable.Type ?? string.Empty;
+
         var actionNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (name, action) in semantics.Actions)
         {
@@ -373,6 +389,30 @@ public static class CuiCompiledArtifactCodec
             if (action.Span is null)
                 throw new CuiV2AdmissionException("CUIR072", $"Action '{name}' in '{source}' is missing its source span.");
             if (action.Parameter is { } parameter) ValidateValue(parameter, source);
+            if (action.ResultTarget is { } resultTarget)
+            {
+                if (!variableTypes.TryGetValue(resultTarget, out var resultType)
+                    || !string.Equals(resultType, "commandstate", StringComparison.OrdinalIgnoreCase))
+                    throw new CuiV2AdmissionException("CUIR073",
+                        $"Action '{name}' in '{source}' references result target '{resultTarget}', which is not a declared commandstate variable.");
+            }
+            if (action.Sets is not null)
+            {
+                foreach (var set in action.Sets)
+                {
+                    if (set is null || string.IsNullOrWhiteSpace(set.Target))
+                        throw new CuiV2AdmissionException("CUIR072",
+                            $"Action '{name}' in '{source}' has a null/unnamed Set target.");
+                    if (!variableTypes.TryGetValue(set.Target, out var setType)
+                        || (!string.Equals(setType, "bool", StringComparison.OrdinalIgnoreCase)
+                            && !string.Equals(setType, "boolean", StringComparison.OrdinalIgnoreCase)
+                            && !string.Equals(setType, "string", StringComparison.OrdinalIgnoreCase)))
+                        throw new CuiV2AdmissionException("CUIR073",
+                            $"Action '{name}' in '{source}' Set target '{set.Target}' is not a declared settable bool/string variable.");
+                    if (set.Value is not null) ValidateValue(set.Value, source);
+                    if (set.When is { } when) ValidateValue(when.Test, source);
+                }
+            }
         }
 
         var variableNames = new HashSet<string>(StringComparer.Ordinal);
@@ -386,6 +426,7 @@ public static class CuiCompiledArtifactCodec
                 throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' variable key '{name}' disagrees with its identity '{variable.Name}'.");
             if (variable.Span is null)
                 throw new CuiV2AdmissionException("CUIR072", $"Variable '{name}' in '{source}' is missing its source span.");
+            variableTypes[name] = variable.Type ?? string.Empty;
         }
 
         var resourceKeys = new HashSet<string>(StringComparer.Ordinal);
@@ -417,6 +458,39 @@ public static class CuiCompiledArtifactCodec
             if (template.Span is null)
                 throw new CuiV2AdmissionException("CUIR072", $"Template '{name}' in '{source}' is missing its source span.");
             foreach (var component in template.Content) ValidateComponent(component, source);
+        }
+
+        if (semantics.Effects is not null)
+        {
+            foreach (var effect in semantics.Effects)
+            {
+                if (effect is null || string.IsNullOrWhiteSpace(effect.Name))
+                    throw new CuiV2AdmissionException("CUIR072", $"Document '{source}' has a null/unnamed effect.");
+                if (string.IsNullOrWhiteSpace(effect.ActionName))
+                    throw new CuiV2AdmissionException("CUIR072", $"Effect '{effect.Name}' in '{source}' references no action.");
+                if (!actionNames.Contains(effect.ActionName))
+                    throw new CuiV2AdmissionException("CUIR073", $"Document '{source}' effect '{effect.Name}' references undeclared action '{effect.ActionName}'.");
+                if (effect.Span is null)
+                    throw new CuiV2AdmissionException("CUIR072", $"Effect '{effect.Name}' in '{source}' is missing its source span.");
+                if (effect.Condition is null)
+                    throw new CuiV2AdmissionException("CUIR072", $"Effect '{effect.Name}' in '{source}' is missing its condition.");
+                else
+                {
+                    ValidateValue(effect.Condition.Test, source);
+                    if (effect.Condition.Span is null)
+                        throw new CuiV2AdmissionException("CUIR072",
+                            $"Condition on effect '{effect.Name}' in '{source}' is missing its source span.");
+                    if (effect.Condition.Test.Kind == CuiV2ValueKind.Binding
+                        && effect.Condition.Test.BindingPath is { } conditionPath)
+                    {
+                        var root = conditionPath.Split('.')[0];
+                        if (!variableTypes.TryGetValue(root, out var conditionRootType)
+                            || !string.Equals(conditionRootType, "commandstate", StringComparison.OrdinalIgnoreCase))
+                            throw new CuiV2AdmissionException("CUIR073",
+                                $"Effect '{effect.Name}' in '{source}' condition path '{conditionPath}' does not reference a declared commandstate result variable.");
+                    }
+                }
+            }
         }
 
         foreach (var component in semantics.Components) ValidateComponent(component, source);

@@ -40,6 +40,7 @@ public static class SpacesRailPackagedIcons
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["plus"] = "spaces-rail-plus",
+            ["manage-spaces"] = "spaces-rail-manage-spaces",
             ["settings"] = "spaces-rail-settings",
             ["chevron-right"] = "spaces-rail-chevron-right",
             ["home"] = "spaces-rail-home",

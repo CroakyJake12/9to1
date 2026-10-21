@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>KokoroSharp.CPU</id>
+    <version>0.6.7</version>
+    <authors>Lyrcaxis</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>README.md</readme>
+    <description>The plug-and-play CPU runtime for KokoroSharp: an inference engine for Kokoro TTS with ONNX runtime, enabling fast and flexible local text-to-speech (fp/quanted) purely via C#. It features segment streaming, voice mixing, linear job scheduling, and optional playback.</description>
+    <tags>Kokoro, TextToSpeech, TTS, ONNX, AI, SpeechSynthesis, Text, To, Speech, .NET, Windows, Linux, MacOS, CrossPlatform, Offline</tags>
+    <repository type="git" url="https://github.com/Lyrcaxis/KokoroSharp" commit="5e6c862e78d363e42e1778e22d003c94a3ac163b" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="KokoroSharp" version="0.6.7" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.ML.OnnxRuntime" version="1.22.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

@@ -47,6 +47,7 @@ public sealed class CuiLexicalValidator
         "Button", "Input", "Layer", "Anchor", "Theme", "Style", "Property", "Variable",
         "Prefab", "If", "Else", "Repeat", "Import", "Keyframe", "ActionEvent",
         "Resources", "Styles", "Actions", "Templates", "DefaultTheme",
+        "Effects", "Effect", "Action", "Set", "When",
     ];
 
     public CuiLexicalValidationResult Validate(string source)

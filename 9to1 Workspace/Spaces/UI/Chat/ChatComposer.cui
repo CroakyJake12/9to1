@@ -27,7 +27,7 @@
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
     <Container id="composer-body" Type="Vertical Stack" CellGap="8">
-    <Container id="chips-row" Type="Wrap" CellGap="6" IsVisible="{Binding Composer.HasChips}">
+    <Container id="chips-row" Type="Wrap" CellGap="6" MaxHeight="84" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
         <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
           <Button action="composer.invoke-chip.Id" content="{Binding chip.Label}" font-size="11" Interactive="{Binding chip.Invokable}" accessible-name="{Binding chip.Label}" />
@@ -49,7 +49,7 @@
         <Button id="add-button" action="composer.add" Width="44" Height="44" Padding="6" CornerRadius="22"
                 background="Transparent" Chromeless="true"
                 accessible-name="Add files or actions" tooltip="Add files or actions">
-          <Image Source="avares://Haven/Assets/plus.svg" Width="28" Height="28" />
+          <Image Source="avares://Haven/Assets/plus.svg" Width="22" Height="22" />
         </Button>
         <Button id="format-button" action="composer.toggle-formatting" content="Aa" Width="44" Height="44" Padding="6"
                 CornerRadius="22" font-size="22" background="Transparent" Chromeless="true"
@@ -125,7 +125,7 @@
     </Container>
     </Container>
 
-    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above">
+    <Container id="composer-floating-layer" Type="Floating" Target="composer-body" Placement="Above" action="composer.toggle-formatting">
     <Container id="format-toolbar" Type="Wrap" CellGap="6" padding="8"
           background="{Resource CuiPanelBrush}" CornerRadius="16" IsVisible="{Binding FormattingOpen}"
           accessible-name="Formatting toolbar">

@@ -1,0 +1,777 @@
+{
+  "created_utc": "2026-10-21T07:53:20.586475+00:00",
+  "scope": "Public licence texts and provenance only; no package, app, SDK or source modifications",
+  "artifacts": [
+    {
+      "url": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/LICENSE.md",
+      "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-LICENSE.md",
+      "size": 1233,
+      "sha256": "153d157c35f9f8229a206036450040952268da4d8d6c28a833c6d0463f56263d"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/724bf98e9f5cb98a1d3d5044f45a2e286b817401/apache/roboto/LICENSE.txt",
+      "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/Roboto-LICENSE.txt",
+      "size": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/google/fonts/724bf98e9f5cb98a1d3d5044f45a2e286b817401/apache/roboto/METADATA.pb",
+      "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/Roboto-METADATA.pb",
+      "size": 2954,
+      "sha256": "647f76a18633ad6f4c44c995526c0790fa1adc5e1a8e4c4f8d130571b4238076"
+    },
+    {
+      "url": "https://api.github.com/repos/opentk/opentk/git/ref/tags/5.0-pre.13",
+      "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-tag-reference.json",
+      "size": 347,
+      "sha256": "1732aeeb00412ccc8bc8936ca1ec593cbf8fbcf65b4ca4b9b4152449454ed78b"
+    }
+  ],
+  "opentk": {
+    "tag": "5.0-pre.13",
+    "official_repository": "https://github.com/opentk/opentk",
+    "commit": "f6652e6c493587fe174d379e9b553176b114b163",
+    "root_license_git_blob": "dac5891990a734f1de85614675b6b130fab22940",
+    "packages": [
+      {
+        "id": "opentk.core",
+        "version": "5.0.0-pre.13",
+        "nuspec_version": "5.0-pre.13",
+        "official_package_url": "https://api.nuget.org/v3-flatcontainer/opentk.core/5.0.0-pre.13/opentk.core.5.0.0-pre.13.nupkg",
+        "cache_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.core/5.0.0-pre.13/opentk.core.5.0.0-pre.13.nupkg",
+        "cache_sha256": "4d90eab6ecfc6ba1b15319456f2c479cc012ca6d160e2c0ca9210e7f8d0e66ae",
+        "public_package_sha256_from_independent_fetch": "4d90eab6ecfc6ba1b15319456f2c479cc012ca6d160e2c0ca9210e7f8d0e66ae",
+        "dll_name": "OpenTK.Core.dll",
+        "dll_sha256": "a38a423e386ba371f4f89af3677bcbf02f8f488fc2640beed503946fc9fecffa",
+        "dll_matches_published": true,
+        "pdb_sourcelink_urls": [
+          "https://raw.githubusercontent.com/NogginBops/opentk/f6652e6c493587fe174d379e9b553176b114b163/*"
+        ],
+        "package_has_licence_file": false,
+        "nuspec_has_licence_or_repository_field": false,
+        "nuspec_artifact": {
+          "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/nuspec/OpenTK.Core.nuspec",
+          "size": 2832,
+          "sha256": "405326638c8bd33b3f2fe00f3e482c1e81f74c711a87cc9db37efb074bfaa166"
+        }
+      },
+      {
+        "id": "opentk.mathematics",
+        "version": "5.0.0-pre.13",
+        "nuspec_version": "5.0-pre.13",
+        "official_package_url": "https://api.nuget.org/v3-flatcontainer/opentk.mathematics/5.0.0-pre.13/opentk.mathematics.5.0.0-pre.13.nupkg",
+        "cache_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.mathematics/5.0.0-pre.13/opentk.mathematics.5.0.0-pre.13.nupkg",
+        "cache_sha256": "aca5ba746481bfa9ee00ec11dba4109ee6b5e3204ea96c7944171938c4438604",
+        "public_package_sha256_from_independent_fetch": "aca5ba746481bfa9ee00ec11dba4109ee6b5e3204ea96c7944171938c4438604",
+        "dll_name": "OpenTK.Mathematics.dll",
+        "dll_sha256": "32273bf6f77b1fb5a698a30a81bad037e8bfb6f40265181c6802727af68252fc",
+        "dll_matches_published": true,
+        "pdb_sourcelink_urls": [
+          "https://raw.githubusercontent.com/NogginBops/opentk/f6652e6c493587fe174d379e9b553176b114b163/*"
+        ],
+        "package_has_licence_file": false,
+        "nuspec_has_licence_or_repository_field": false,
+        "nuspec_artifact": {
+          "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/nuspec/OpenTK.Mathematics.nuspec",
+          "size": 2957,
+          "sha256": "1808544d63d716d3237f7ce5d1e9fa11435de207598f6684f61766c2799cd19c"
+        }
+      },
+      {
+        "id": "opentk.audio.openal",
+        "version": "5.0.0-pre.13",
+        "nuspec_version": "5.0-pre.13",
+        "official_package_url": "https://api.nuget.org/v3-flatcontainer/opentk.audio.openal/5.0.0-pre.13/opentk.audio.openal.5.0.0-pre.13.nupkg",
+        "cache_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/opentk.audio.openal/5.0.0-pre.13/opentk.audio.openal.5.0.0-pre.13.nupkg",
+        "cache_sha256": "a4be85dc509ba09e72f5261e8e88341d75bebe3c08c9eef58e2249bf4ba4010c",
+        "public_package_sha256_from_independent_fetch": "a4be85dc509ba09e72f5261e8e88341d75bebe3c08c9eef58e2249bf4ba4010c",
+        "dll_name": "OpenTK.Audio.OpenAL.dll",
+        "dll_sha256": "b4182c3b8ab368f54a18fa67269639f1955214663fddde2fa096ac954bb8138f",
+        "dll_matches_published": true,
+        "pdb_sourcelink_urls": [
+          "https://raw.githubusercontent.com/NogginBops/opentk/f6652e6c493587fe174d379e9b553176b114b163/*"
+        ],
+        "package_has_licence_file": false,
+        "nuspec_has_licence_or_repository_field": false,
+        "nuspec_artifact": {
+          "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/nuspec/OpenTK.Audio.OpenAL.nuspec",
+          "size": 3019,
+          "sha256": "066c80cd654bad25d2cf7b53b29c97d46d3bd33da012c64b0a126737e0cd31ab"
+        }
+      }
+    ],
+    "unresolved": [
+      "Pinned root LICENSE.md links THIRD_PARTIES.md; that path returns HTTP404 and recursive pinned tree contains no path with third. Upstream supplemental terms reference remains unresolved; do not claim exhaustive third-party clearance."
+    ],
+    "exact_source_notice_headers": [
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Presets/ReverbProperties.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-01.txt",
+        "size": 186,
+        "sha256": "0a9a9b1aa2977bfad24840c101bbb23af8beb6d3f99fd3da6157021ed4412268"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EFXSourceInteger3.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-02.txt",
+        "size": 187,
+        "sha256": "0c267766dfb7a287b1d6d859f194c180b5d60a9fe475862a72e0c8f02b38a0ae"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/MathHelper.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-03.txt",
+        "size": 278,
+        "sha256": "0ce1d76a7066fd1b422bd189a898a1c4f43c5716eb3873edf2131d925ec2d498"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Geometry/Box2d.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-04.txt",
+        "size": 175,
+        "sha256": "0e7f4ea5788bb86512e81180662d1be335e3dcd170e22c60e9293de5e2c17eb0"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EnumerateAll/EnumerateAll.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-05.txt",
+        "size": 182,
+        "sha256": "10bb2698a0a11c3ca5ce869174b5f85ecb0420e97b9791e8fbdd372907e363cb"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Geometry/Box2i.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-06.txt",
+        "size": 175,
+        "sha256": "129d98a730a13696d5b7fdb08a87a4147c0b32bc78f82bacdc74183d6c2806c4"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Data/Quaternion.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix2.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix2d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix2x3.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix2x3d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix2x4.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix2x4d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix3.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix3d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix3x2.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix3x2d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix3x4.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix3x4d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix4.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix4d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix4x2.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix4x2d.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix4x3.cs",
+          "src/OpenTK.Mathematics/Matrix/Matrix4x3d.cs",
+          "src/OpenTK.Mathematics/Vector/Vector2.cs",
+          "src/OpenTK.Mathematics/Vector/Vector2h.cs",
+          "src/OpenTK.Mathematics/Vector/Vector3.cs",
+          "src/OpenTK.Mathematics/Vector/Vector3h.cs",
+          "src/OpenTK.Mathematics/Vector/Vector4.cs",
+          "src/OpenTK.Mathematics/Vector/Vector4d.cs",
+          "src/OpenTK.Mathematics/Vector/Vector4h.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-07.txt",
+        "size": 1082,
+        "sha256": "1a77eeb464b0da3cea0337ca34e7d7de184b81a2eac23924627cc9d9968e9952"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/EXT.Float32/Enums/FloatBufferFormat.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-08.txt",
+        "size": 187,
+        "sha256": "24d8c6f9522367df2db82bb03512a5a7e7c6a9674b7dce532667ee9211119ef8"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Core/Exceptions/BindingsNotRewrittenException.cs",
+          "src/OpenTK.Core/Exceptions/ExtensionNotSupportedException.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-09.txt",
+        "size": 1178,
+        "sha256": "305eb20e1ff01b4034175ada546e98fedef22c8d892d3fb3fad6219c148f7455"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EffectType.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-10.txt",
+        "size": 180,
+        "sha256": "33806494bd8cf41a223595369384c575c7014a56a8429b979ff37e600156a0df"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/ALC/ALC.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-11.txt",
+        "size": 173,
+        "sha256": "3614e1ab5d34db10b176daa48fb86f2e00a2b6a6d5a754a5f73ef4190af6f242"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Core/Native/AutoGeneratedAttribute.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-12.txt",
+        "size": 1198,
+        "sha256": "3a0a88183779d6226cc5cd19133e519f065fb50c2b03f4661237b12207e6fd1c"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Vector/Vector2i.cs",
+          "src/OpenTK.Mathematics/Vector/Vector3i.cs",
+          "src/OpenTK.Mathematics/Vector/Vector4i.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-13.txt",
+        "size": 177,
+        "sha256": "3de49cc306f117da253fd1a6e767fe4f4e2c90e883ac2fbd3a394f605ea84487"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/AL/ALEnums.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-14.txt",
+        "size": 177,
+        "sha256": "3f2f27159074021ddaab93df4199e1d3c201e37b88e5057b5f8bf1d9b012fe9e"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/ALContext.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-15.txt",
+        "size": 179,
+        "sha256": "442277db645c3e2034aa701812d421d3abf677fab9fa53ee17fb8212f195a015"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EFXSourceInteger.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-16.txt",
+        "size": 186,
+        "sha256": "558658f810158caa9882096c2e2a3b8afacb5e06b62e652628b4212c4e83bde4"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Geometry/Box3i.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-17.txt",
+        "size": 175,
+        "sha256": "5d62f31159376d5b59ecae6676909fdc4795da38020a0cdef33df6c51e1f72f9"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Data/Quaterniond.cs",
+          "src/OpenTK.Mathematics/Vector/Vector2d.cs",
+          "src/OpenTK.Mathematics/Vector/Vector3d.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-18.txt",
+        "size": 1081,
+        "sha256": "62a2e16b8e078fdc767874c1945d116b4491b8b47570f546753af6fd3953d123"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Core/Native/SlotAttribute.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-19.txt",
+        "size": 1205,
+        "sha256": "66b2392fac01902df0d3dd98b33efda966fe96bedb366d05eff903f1a2c6ebbc"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EFXContextInteger.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-20.txt",
+        "size": 187,
+        "sha256": "6ac5a6c4e91689a1f86dd3de926dcf180010f7eab6c2588c3ac3a22d94167e21"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/AL/AL.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-21.txt",
+        "size": 172,
+        "sha256": "6dadea4bb35b3da1a4000af4e073f950bd3d3f301537a84218ae9261aa4828c4"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EffectSlotFloat.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-22.txt",
+        "size": 185,
+        "sha256": "6e88b2b745f03ce4b3c1bd970a20578d41373255ab9eec299dd714e9152a8fb5"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/FormantFilterSettings.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-23.txt",
+        "size": 191,
+        "sha256": "7e205c6b172e665bbbfc4c8f345e93e499c449866288b9df0f22e55c70847fac"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EffectVector3.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-24.txt",
+        "size": 183,
+        "sha256": "7e758cc73b8fc1ac3c9b6dafa133d71421d6b2a38004f935d0c431e35300fd23"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EffectInteger.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-25.txt",
+        "size": 183,
+        "sha256": "7fad2eefbbf4a9ffbcce0da1f2277ffd28b62a2433dbb289508f856fd3df99f0"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Geometry/Box2.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-26.txt",
+        "size": 174,
+        "sha256": "808d1998a35f60d3377d937a6c9ecc28bb5068ce5ac735f3fd5d6367670edcf1"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EffectFloat.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-27.txt",
+        "size": 181,
+        "sha256": "88bd68ed66666dc7b4f602a9316cb1aff31017ea1a0670de3909825f5d2ae148"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EFXListenerFloat.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-28.txt",
+        "size": 186,
+        "sha256": "89096761afc10fff1704f52e9d515e2aa5a525e8907d797df4e6ea9c9766e657"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Native/ConstCharPtrMarshaler.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-29.txt",
+        "size": 191,
+        "sha256": "89308ff7a47cd2b0ad937166989ea54c13278356842c803bba981f4e67195b88"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Native/ALLoader.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-30.txt",
+        "size": 177,
+        "sha256": "903660b241e57fd2a87ac03c38cd5f690e4fee7362c91df691cdecd4d68adf18"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EnumerateAll/Enums/GetEnumerateAllContextString.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-31.txt",
+        "size": 198,
+        "sha256": "943f511ed058f502e49e7fb7c9273da4c5084632f344ef3164f175c5cc0187c7"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EffectSlotInteger.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-32.txt",
+        "size": 187,
+        "sha256": "9714db367a19518080106b6d8b56b67f1ebc31ce586d709fa32cfb689b65a94b"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Geometry/Box3d.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-33.txt",
+        "size": 175,
+        "sha256": "99a9133cddc344657bd7598741f9d7029e5972319f43ca581a2ab89a40fc4c6f"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Geometry/Box3.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-34.txt",
+        "size": 174,
+        "sha256": "99b937e0b648c67c6e7a15ea504fbb5320ca99b73945487fd3c07c1d31528f95"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EFXSourceBoolean.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-35.txt",
+        "size": 186,
+        "sha256": "9ca76da69e096dc2f80c587150e07cb72735c310de2fd8f8934eb3d6f3783cb6"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/EXT.Float32/EXTFloat32.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-36.txt",
+        "size": 180,
+        "sha256": "9f1aea2ce27c1c3115a864a57b8bba9bf229da8b0bd9308c3595e164d8d3ecd2"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/ALC/ALCEnums.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-37.txt",
+        "size": 178,
+        "sha256": "9f8697861333ddd46b039e2b1cf0374bff2b0c92405491b8ae439ab8946fdda0"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/FilterInteger.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-38.txt",
+        "size": 183,
+        "sha256": "b35a97c42b8f62b6b2f658e0cd0215d1d592e6b7920d1a741af64c8f9ee9955f"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EFXContextAttributes.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-39.txt",
+        "size": 190,
+        "sha256": "b428f5ea45750a25c0d795d3532dee19c385d2115a30e32442584a1b1e71ed04"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/EFXSourceFloat.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-40.txt",
+        "size": 184,
+        "sha256": "bb9a77aaf97af5438c170510a2821723a4ef47afad9a7ac600dc407e48de6341"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/EFX.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-41.txt",
+        "size": 185,
+        "sha256": "bc6417181074f02878a10ebf518d7ef4976f810da0ffd7979cd2af089a0bb3a1"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/ALCaptureDevice.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-42.txt",
+        "size": 185,
+        "sha256": "c21001698c84e9347c30d6b429c991ad13479b4b47bbcc06822b531f0be6bbf0"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/ALC/ALContextAttributes.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-43.txt",
+        "size": 189,
+        "sha256": "c325d6beb70e27e22fae229f7a978a544868b163ee000ef465edbb1ee0b3b490"
+      },
+      {
+        "source_paths": [
+          "src/OpenTK.Mathematics/Geometry/BezierCurve.cs",
+          "src/OpenTK.Mathematics/Geometry/BezierCurveCubic.cs",
+          "src/OpenTK.Mathematics/Geometry/BezierCurveQuadric.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-44.txt",
+        "size": 251,
+        "sha256": "c5420f16a93f490dbdb70e15034ee847ff29e7608f541c38af62c761063a6576"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/AlcVersion.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-45.txt",
+        "size": 180,
+        "sha256": "c5cc6ca5a855980e8e20c53d38770ef5c1a5f2de8f8c2034d691be514581ffa3"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EnumerateAll/Enums/GetEnumerateAllContextStringList.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-46.txt",
+        "size": 202,
+        "sha256": "c94ba629d1ef9435d8bad61e0dfdddaab2512361ad2f8e3b2e3901f031b9d339"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/FilterType.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-47.txt",
+        "size": 180,
+        "sha256": "cbd9563ac0081782233a4dc32ce4b533e0aa5a32e8f918ca3e37d79a968c9e19"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/OpenALLibraryNameContainer.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-48.txt",
+        "size": 196,
+        "sha256": "d3ad4c2152b4e191638d4c2c2a405855c6f8e399027fbf7225ba56039300c4db"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Native/ALBase.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-49.txt",
+        "size": 182,
+        "sha256": "e446908e7068ba6220ced98b3381f7a12552268e9c14f42b503bff4c55fe8e04"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Presets/ReverbPresets.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-50.txt",
+        "size": 183,
+        "sha256": "ea548ca393ffd353e9ea1e43f30b5de20c9c8a425883e69dd5a59857c5edc40c"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/EXT.Double/EXTDouble.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-51.txt",
+        "size": 179,
+        "sha256": "ebb53b2503f8af00ce9145c3e1a76af27e7c7c76b50e678f78d4d7c2337b6be5"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/ALDevice.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-52.txt",
+        "size": 178,
+        "sha256": "f30a2a92c30fd0d0e8a7e3f0d29d9e752cf5510ccba78be9e461e0fb7d962ac5"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/FilterFloat.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-53.txt",
+        "size": 181,
+        "sha256": "fe10573c584827a06b3a1d14e2df1d3961d176e061b7476216b7f4de38a6c709"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/EXT.Double/Enums/DoubleBufferFormat.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-54.txt",
+        "size": 188,
+        "sha256": "ff6c7f8bdf8ac569c4a69da8c0f8ead8a8a5d8d9a0853e5ce38f83e6ac452280"
+      },
+      {
+        "source_paths": [
+          "src/OpenAL/OpenTK.Audio.OpenAL/Extensions/Creative.EFX/Enums/MaxAuxiliarySends.cs"
+        ],
+        "url_prefix": "https://raw.githubusercontent.com/opentk/opentk/f6652e6c493587fe174d379e9b553176b114b163/",
+        "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/OpenTK-source-notices/notice-55.txt",
+        "size": 187,
+        "sha256": "ff9cd375201fa11a804e733ba14156c9ca4ac982f1173a755c84047b3a5e92b6"
+      }
+    ]
+  },
+  "roboto": {
+    "local_source_revision": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+    "local_source_path": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Assets/Roboto-Light.ttf",
+    "local_font_sha256": "db02096a91c20ab62d459001a1059bc8d78caa35d637dc91494c4440815a6ac1",
+    "font_metadata": {
+      "0": [
+        "Copyright 2011 Google Inc. All Rights Reserved."
+      ],
+      "1": [
+        "Roboto Light"
+      ],
+      "5": [
+        "Version 2.137; 2017"
+      ],
+      "9": [
+        "Google"
+      ],
+      "12": [
+        "Christian Robertson"
+      ],
+      "13": [
+        "Licensed under the Apache License, Version 2.0"
+      ],
+      "14": [
+        "http://www.apache.org/licenses/LICENSE-2.0"
+      ]
+    },
+    "exact_official_avalonia_asset": {
+      "url": "https://raw.githubusercontent.com/AvaloniaUI/Avalonia/bce1eb1325502d5cdabf961bcd61548115179c81/src/Avalonia.Dialogs/Assets/Roboto-Light.ttf",
+      "commit": "bce1eb1325502d5cdabf961bcd61548115179c81",
+      "sha256": "db02096a91c20ab62d459001a1059bc8d78caa35d637dc91494c4440815a6ac1",
+      "matches_local_bytes": true
+    },
+    "official_google_fonts_version_source": {
+      "url": "https://raw.githubusercontent.com/google/fonts/724bf98e9f5cb98a1d3d5044f45a2e286b817401/apache/roboto/Roboto-Light.ttf",
+      "commit": "724bf98e9f5cb98a1d3d5044f45a2e286b817401",
+      "sha256": "a6d343d425bc38db90152fa06058b1c7391eca9264f334ef65c1ce175085c6f6",
+      "matches_local_bytes": false,
+      "difference": "Only head and name tables differ; all other tables byte-identical. Both font name metadata identifies Version2.137;2017, Copyright2011Google Inc, Christian Robertson, Apache2.",
+      "table_comparison": {
+        "head": {
+          "same": false,
+          "local_sha256": "aa7b0c9495436640b8a700e48b76b4932bb68bc940210329e1ff54876aaca35c",
+          "google_sha256": "e09db90ef0c21b6a51ce2631dbf8d46533baa40348f6c60b6956dc50e60fbd46"
+        },
+        "hhea": {
+          "same": true,
+          "local_sha256": "6986917e784ff8f0be1f38da2529e1be29662c3a2e1cbea6f84bfda8ebffa9ee",
+          "google_sha256": "6986917e784ff8f0be1f38da2529e1be29662c3a2e1cbea6f84bfda8ebffa9ee"
+        },
+        "maxp": {
+          "same": true,
+          "local_sha256": "bb553563a196dd6f050cf0290a0b44129c30aa7314bc2d48ce3c33f785af5ab7",
+          "google_sha256": "bb553563a196dd6f050cf0290a0b44129c30aa7314bc2d48ce3c33f785af5ab7"
+        },
+        "OS/2": {
+          "same": true,
+          "local_sha256": "78f2fe85f1bcf32b2c80428ecac424cd5f6a8a0d73d336b221e561fd9983bbd4",
+          "google_sha256": "78f2fe85f1bcf32b2c80428ecac424cd5f6a8a0d73d336b221e561fd9983bbd4"
+        },
+        "hmtx": {
+          "same": true,
+          "local_sha256": "ccc1bbabc2d883106a44f64afe8475fd500c9fe8a2789fb49fe7238e20507cd9",
+          "google_sha256": "ccc1bbabc2d883106a44f64afe8475fd500c9fe8a2789fb49fe7238e20507cd9"
+        },
+        "hdmx": {
+          "same": true,
+          "local_sha256": "2aeba91869444489c6e66b52d7b403d6e37e47ab57dbe71c6ac8a36df69602ba",
+          "google_sha256": "2aeba91869444489c6e66b52d7b403d6e37e47ab57dbe71c6ac8a36df69602ba"
+        },
+        "cmap": {
+          "same": true,
+          "local_sha256": "749c735d301f9f26a9cbbdd9440c196811021ba79e1a69d7cd4651943eb1dc27",
+          "google_sha256": "749c735d301f9f26a9cbbdd9440c196811021ba79e1a69d7cd4651943eb1dc27"
+        },
+        "fpgm": {
+          "same": true,
+          "local_sha256": "292d16d2cac92ef59adae039b7a40053b2826919c754a9bcbcb68dfd378c21b5",
+          "google_sha256": "292d16d2cac92ef59adae039b7a40053b2826919c754a9bcbcb68dfd378c21b5"
+        },
+        "prep": {
+          "same": true,
+          "local_sha256": "8d5f4ccd7179642ab86741aa9761f029c857f9c353337eb4da7da12ee028cc98",
+          "google_sha256": "8d5f4ccd7179642ab86741aa9761f029c857f9c353337eb4da7da12ee028cc98"
+        },
+        "cvt ": {
+          "same": true,
+          "local_sha256": "d750f3dda6b1653a8bd30f0ebe5c6323cb4e119fc6fdc10c153b83d762e7e891",
+          "google_sha256": "d750f3dda6b1653a8bd30f0ebe5c6323cb4e119fc6fdc10c153b83d762e7e891"
+        },
+        "loca": {
+          "same": true,
+          "local_sha256": "ebecf88d0ed347c40a386a0e398dda3268ad8a8d5c391ef4ecb6438ef65b148b",
+          "google_sha256": "ebecf88d0ed347c40a386a0e398dda3268ad8a8d5c391ef4ecb6438ef65b148b"
+        },
+        "glyf": {
+          "same": true,
+          "local_sha256": "d82dab0aa4283637be499b856c4bdba44a435c251a1fc1fee2437a34535ca49a",
+          "google_sha256": "d82dab0aa4283637be499b856c4bdba44a435c251a1fc1fee2437a34535ca49a"
+        },
+        "name": {
+          "same": false,
+          "local_sha256": "20c5b7e1d6f65fad278273d31111dc4790d9ec642a9d902863ed184375cfd4ab",
+          "google_sha256": "3265ad15c6f401523cc22ca812970e84f644d242604efc5d5f7a46da3d887196"
+        },
+        "post": {
+          "same": true,
+          "local_sha256": "0215ee02e6b7c4de5c8d18804643d9fb8b63810ed4a843d6551dfa4a4ca927de",
+          "google_sha256": "0215ee02e6b7c4de5c8d18804643d9fb8b63810ed4a843d6551dfa4a4ca927de"
+        },
+        "gasp": {
+          "same": true,
+          "local_sha256": "13dd2c70c90f4503fca1f41b6a192f6b0c39e0b26fd507ab5c6d97f7dea9c277",
+          "google_sha256": "13dd2c70c90f4503fca1f41b6a192f6b0c39e0b26fd507ab5c6d97f7dea9c277"
+        },
+        "GDEF": {
+          "same": true,
+          "local_sha256": "2e4d2a65957ea687aa1569075e0f939d421cb1ea4c885aded5356cd1ef4db8d0",
+          "google_sha256": "2e4d2a65957ea687aa1569075e0f939d421cb1ea4c885aded5356cd1ef4db8d0"
+        },
+        "GPOS": {
+          "same": true,
+          "local_sha256": "607357ebd0696c331cdd43eda3ab76399cdc8cf411bd2699393d4226af91bea1",
+          "google_sha256": "607357ebd0696c331cdd43eda3ab76399cdc8cf411bd2699393d4226af91bea1"
+        },
+        "GSUB": {
+          "same": true,
+          "local_sha256": "ec1bb6280027d5c63722e80e2d633275093b630237fc3aabe75402d3ee44c460",
+          "google_sha256": "ec1bb6280027d5c63722e80e2d633275093b630237fc3aabe75402d3ee44c460"
+        }
+      }
+    },
+    "extracted_attribution": {
+      "file": "/tmp/9to1-arm64-baseline-notices-gap-closure-20261021/opentk-roboto/Roboto-Light-exact-font-attribution.txt",
+      "size": 158,
+      "sha256": "79d0722ec47f10640593c4a41021e3b8029de2ac2c6e85cb8f14dbd967f243f1"
+    },
+    "unresolved": [
+      "No exact-byte match claimed against Google/fonts; exact-byte origin is official Avalonia commit. Apache2 terms and attribution corroborated by matching font metadata and all non-head/non-name table bytes at Google/fonts version2.137 commit."
+    ]
+  }
+}

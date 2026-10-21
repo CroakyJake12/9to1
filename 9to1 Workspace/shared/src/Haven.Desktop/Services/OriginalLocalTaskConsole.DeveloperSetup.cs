@@ -17,11 +17,14 @@ public static partial class OriginalLocalTaskConsole
         private FilesDeveloperOriginalSetupDestinationResolver? _setupDestinationResolver;
         private HomeDeveloperProjectReadActionPolicySource? _setupReadPolicy;
         private HomeDeveloperProjectSetupActionPolicySource? _setupPolicy;
+        private HomeDeveloperProjectEditResourceResolver? _setupEditResolver;
+        private HomeDeveloperProjectEditActionPolicySource? _setupEditPolicy;
         private FilesDeveloperOriginalSourceSelection? _setupSelections;
         private IDeveloperProjectOriginalPhysicalCaptureSource? _setupPhysical;
         private FilesDeveloperOriginalSetupScopeSource? _setupScopes;
         private FilesDeveloperOriginalFolderSetupProducer? _setupSteps;
         private HomeDeveloperProjectReadAdmissionSource? _setupReads;
+        private HomeDeveloperProjectEditAdmissionSource? _setupEdits;
         private HomeDeveloperProjectSetupPermissionSource? _setupPermissions;
         private HomeDeveloperProjectSetupJournal? _setupJournal;
         private FileDeveloperWorkspaceStore? _setupWorkspaceStore;
@@ -34,6 +37,9 @@ public static partial class OriginalLocalTaskConsole
             _setupDestinationResolver = new(() => _setupScopes
                 ?? throw new InvalidOperationException("The SAME captured Files destination owner is unavailable."));
             _setupReadPolicy = new(); _setupPolicy = new();
+            _setupEditResolver = new(() => _setupEdits
+                ?? throw new InvalidOperationException("The SAME captured Home source EDIT owner is unavailable."));
+            _setupEditPolicy = new();
         }
 
         private void ConfigureOriginalDeveloperSetupOwners(IServiceCollection services)
@@ -41,6 +47,9 @@ public static partial class OriginalLocalTaskConsole
             var domain = _registration!.OriginalHome;
             services.AddHavenOwnedDeveloperSourceReads(domain,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(), _setupReadResolver!, _setupReadPolicy!);
+            services.AddHavenOwnedDeveloperSourceEdits(domain,
+                provider => provider.GetRequiredService<IDeveloperProjectOriginalEditScopeSource>(),
+                _setupEditResolver!, _setupEditPolicy!);
             services.AddHavenOwnedDeveloperSetups(domain,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
@@ -60,7 +69,8 @@ public static partial class OriginalLocalTaskConsole
                     () => _setupWorkspaceStore
                         ?? throw new InvalidOperationException("The SAME captured Dev workspace store is unavailable."),
                     () => _setupSteps
-                        ?? throw new InvalidOperationException("The SAME captured Files step outcome owner is unavailable.")),
+                        ?? throw new InvalidOperationException("The SAME captured Files step outcome owner is unavailable."),
+                    provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>()),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
@@ -71,6 +81,7 @@ public static partial class OriginalLocalTaskConsole
         {
             Resolve<FileDeveloperWorkspaceStore>(original, value => _setupWorkspaceStore = value);
             Resolve<HomeDeveloperProjectReadAdmissionSource>(original, value => _setupReads = value);
+            Resolve<HomeDeveloperProjectEditAdmissionSource>(original, value => _setupEdits = value);
             Resolve<HomeDeveloperProjectSetupJournal>(original, value => _setupJournal = value);
             Resolve<HomeDeveloperProjectSetupPermissionSource>(original, value => _setupPermissions = value);
             Resolve<FilesDeveloperOriginalSourceSelection>(original, value => _setupSelections = value);
@@ -88,6 +99,7 @@ public static partial class OriginalLocalTaskConsole
             _setupPhysical?.DemandExternalOriginalJoin();
             _setupJournal?.DemandExternalOriginalRetirementJoin();
             _setupReads?.DemandExternalOriginalReadAdmissionJoin();
+            _setupEdits?.DemandExternalOriginalEditAdmissionJoin();
             _setupPermissions?.DemandExternalOriginalSetupJoin();
         }
         private void RequestOriginalDeveloperSetupRetirement(List<Exception> failures)
@@ -123,6 +135,7 @@ public static partial class OriginalLocalTaskConsole
             if (_setupPhysical is not null) AcquireClose(_setupPhysical.CloseAndDrainOriginalCapturesAsync, closes, failures);
             if (_setupJournal is not null) AcquireClose(_setupJournal.CloseAndDrainAsync, closes, failures);
             if (_setupReads is not null) AcquireClose(_setupReads.CloseAndDrainOriginalReadsAsync, closes, failures);
+            if (_setupEdits is not null) AcquireClose(_setupEdits.CloseAndDrainOriginalEditsAsync, closes, failures);
             await JoinAll(closes, failures).ConfigureAwait(false);
             Throw(failures);
         }

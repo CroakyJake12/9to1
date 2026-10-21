@@ -12,6 +12,9 @@
     <Action name="MoveCandidateDown" command="MoveCandidateDown" parameter="{Binding candidate.Selection}" />
     <Action name="EnableCandidate" command="SetCandidateEnabled" parameter="{Binding candidate.EnableSelection}" />
     <Action name="DisableCandidate" command="SetCandidateEnabled" parameter="{Binding candidate.DisableSelection}" />
+    <Action name="SetReasoningLevel" command="SetReasoningLevel" parameter="{Binding candidate.SetReasoningLevelSelection}" />
+    <Action name="SelectReasoningLevel" command="SelectReasoningLevel" parameter="{Binding choice.Selection}" />
+    <Action name="ClearReasoningLevel" command="ClearReasoningLevel" parameter="{Binding candidate.ClearReasoningLevelSelection}" />
     <Action name="SaveRoute" command="SaveRoute" />
     <Action name="PreviewText" command="PreviewResolution" parameter="text" />
     <Action name="PreviewImage" command="PreviewResolution" parameter="image-generation" />
@@ -42,6 +45,9 @@
           <Button id="category-video" action="VideoCategory" content="Advanced video" margin="8 0 0 0" accessible-name="Show advanced video routes" />
         </Container>
         <Text id="model-picker-status" text="{Binding StatusMessage, fallback=Model routes have not been loaded}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 14" />
+        <If condition="{Binding HasPendingApproval}">
+          <Text id="model-picker-pending-approval" text="Change pending review in Home" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 8" />
+        </If>
         <Container id="model-route-list" Type="Vertical Stack">
           <If condition="{Binding HasSnapshot}">
             <If condition="{Binding HasRoutes}">
@@ -72,6 +78,26 @@
                             </If>
                             <Else>
                               <Button action="EnableCandidate" content="Enable" margin="6 0 0 0" accessible-name="Enable this route candidate" />
+                            </Else>
+                            <If condition="{Binding candidate.HasAdvertisedReasoningLevels}">
+                              <Container id="candidate-reasoning-choices" Type="Horizontal Stack" margin="12 0 0 0">
+                                <Text id="candidate-reasoning-selected" text="{Binding candidate.SelectedReasoningLabel, fallback=No level selected}" foreground="{Resource CuiTextBrush}" margin="0 4 0 0" />
+                                <Repeat Source="{Binding candidate.ReasoningLevelChoices}" As="choice" Key="{Binding choice.Identity}">
+                                  <Button action="SelectReasoningLevel" content="{Binding choice.Label}" margin="4 0 0 0" accessible-name="Select reasoning level" />
+                                </Repeat>
+                                <If condition="{Binding candidate.HasReasoningLevel}">
+                                  <Button action="ClearReasoningLevel" content="Clear" margin="4 0 0 0" accessible-name="Clear the saved reasoning level default" />
+                                </If>
+                              </Container>
+                            </If>
+                            <Else>
+                              <Text id="candidate-reasoning-level" text="{Binding candidate.ReasoningLevelId, fallback=No reasoning level}" foreground="{Resource CuiTextSoftBrush}" margin="12 0 0 0" />
+                              <If condition="{Binding candidate.HasReasoningLevel}">
+                                <Button action="ClearReasoningLevel" content="Clear level" margin="6 0 0 0" accessible-name="Clear the saved reasoning level default" />
+                              </If>
+                              <Else>
+                                <Button action="SetReasoningLevel" content="Set level" margin="6 0 0 0" accessible-name="Set a reasoning level default" />
+                              </Else>
                             </Else>
                           </Container>
                         </Repeat>

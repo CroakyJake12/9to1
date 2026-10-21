@@ -5,6 +5,7 @@ using Haven.Desktop.Views.Shell;
 using Haven.Infrastructure;
 using HavenOS.Apps.Dev;
 using HavenOS.Files.NativeHost;
+using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop;
@@ -73,6 +74,33 @@ public sealed partial class App
                     creator, capture, businessToken));
             original.DemandPublication();
             actualShell.ConfigureOriginalDevelopmentCatalog(route, taskAuthority, taskActors, appLifetime, windowLifetime);
+            original.DemandPublication();
+            // Wire the SAME canonical manual (no-AI) entry into the real shell landing. It shares the
+            // genuine Files/development owners and the register-existing adapter with the 9to1://dev
+            // session so both surfaces render the SAME picker and operate via the same owners. One
+            // adapter is retained per shell so a partially effected attempt keeps its once-created
+            // setup/workspace identity across a user retry (no remint, no duplicate).
+            var manualWorkspaces = provider.GetRequiredService<IDeveloperWorkspaceStore>();
+            var manualFiles = provider.GetRequiredService<NativeFilesWorkspaceService>();
+            var manualAdapter = new DeveloperManualProjectEntryAdapter(
+                provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalReadAdmissionSource>(),
+                provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
+                provider.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalSetupPermissionSource>(),
+                provider.GetRequiredService<FilesDeveloperOriginalFolderSetupProducer>(),
+                provider.GetRequiredService<IDeveloperWorkspaceStore>());
+            actualShell.ConfigureOriginalManualDevelopmentEntry(
+                manualWorkspaces, development, factory, route.BorrowOriginalHomeReadinessForMetadata(),
+                async (root, ct) =>
+                {
+                    var configuration = await manualFiles.GetConfigurationAsync(ct)
+                        ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
+                    if (!configuration.AppFolders.TryGetValue("write", out var writeFolder) || writeFolder.Value == Guid.Empty)
+                        throw new InvalidOperationException("The configured Files root has no canonical write destination folder for a new manual project.");
+                    return await manualAdapter.RegisterExistingFolderAsync(configuration.StoreId, writeFolder.Value, root, ct);
+                },
+                reference => actualShell.OpenOriginalManualDevelopmentAsync(reference));
             original.DemandPublication();
             actualShell.ConfigureOriginalInstalledHomeAppsFactory(() => _actualInstalledHomeAppsPort,
                 () => _actualNativeHomeStartupObservation, appLifetime, windowLifetime);

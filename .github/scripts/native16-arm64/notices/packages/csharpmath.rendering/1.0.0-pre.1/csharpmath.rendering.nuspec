@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>CSharpMath.Rendering</id>
+    <version>1.0.0-pre.1</version>
+    <title>CSharpMath.Rendering</title>
+    <authors>CSharpMath Contributors (verybadcat, Happypig375, charlesroddie, FoggyFinder)</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>Icon.png</icon>
+    <projectUrl>https://github.com/verybadcat/CSharpMath</projectUrl>
+    <description>Rendering interface for CSharpMath using the Typography library.</description>
+    <releaseNotes># 1.0.0-pre.1 Update Uno for .NET 10
+
+# 🌈 New Platforms!
+
+## Uno Platform Support (#121) @MartinZikmund
+
+CSharpMath.Uno works with both Uno's native renderer (for iOS, Android and WinUI) and Skia renderer. Browser native renderer is unsupported as there is no way to use cross-targeting to support it.
+
+CSharpMath.Uno.Example is now published at https://verybadcat.github.io/CSharpMath
+
+## New frontend CSharpMath.VectSharp. (#215) @arklumpus
+
+&lt;details&gt;&lt;summary&gt;PR description&lt;/summary&gt;&lt;table&gt;&lt;td&gt;
+
+Hi! Thank you for this project, I really like it!
+
+I needed a way to render LaTeX equations for another project ([VectSharp.Markdown](https://github.com/arklumpus/VectSharp/tree/master/VectSharp.Markdown)), and this seemed like a good place to start.
+
+To be able to make it work with my project, I have created a new front end for CSharpMath, which uses [VectSharp](https://github.com/arklumpus/VectSharp) to render the equations. As a side effect, this makes it possible to output the rendered LaTeX to SVG and PDF documents, as well as to raster images.
+
+For example, to render an equation to an SVG file (requires the VectSharp.SVG NuGet package):
+
+```CSharp
+using VectSharp;
+using VectSharp.SVG;
+using CSharpMath.VectSharp;
+
+var painter = new MathPainter();
+painter.LaTeX = @\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right);
+
+Page pag = painter.DrawToPage();
+pag.SaveAsSVG(test.svg);
+```
+
+Or to a PDF file (requires the VectSharp.PDF NuGet package):
+
+```CSharp
+using VectSharp;
+using VectSharp.PDF;
+using CSharpMath.VectSharp;
+
+var painter = new MathPainter();
+painter.LaTeX = @\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right);
+
+Page pag = painter.DrawToPage();
+Document doc = new Document();
+doc.Pages.Add(pag);
+
+doc.SaveAsPDF(test.pdf);
+```
+
+To a raster image (using [ImageSharp](https://github.com/SixLabors/ImageSharp), requires the VectSharp.Raster.ImageSharp NuGet package):
+
+```CSharp
+using VectSharp;
+using VectSharp.Raster.ImageSharp;
+using CSharpMath.VectSharp;
+
+var painter = new MathPainter();
+painter.LaTeX = @\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right);
+
+Page pag = painter.DrawToPage();
+pag.SaveAsImage(test.png);
+```
+
+Currently, this implementation is very similar to the CSharpMath.SkiaSharp implementation, except that it uses VectSharp rather than SkiaSharp for rendering. Ideally, at some point in the future I would like to fork from CSharpMath.Rendering in order to directly draw the glyphs, which would have the added benefit of making text selectable in PDF files. It will take some time though, because at the very least I need to implement a parser for the `MATH` OpenType table.
+
+I hope this can be useful! Let me know if there are any issues or you have any questions!
+&lt;/td&gt;&lt;/table&gt;&lt;/details&gt;
+
+# Updates for .NET 10!
+
+All packages now target net10.0 (potentially with a target OS) or netstandard2.0. The entire repo now builds cross-platform with the dotnet toolchain but only Windows can build for all target OSes. Everything should be usable out of the box for modern .NET applications now.
+
+`CSharpMath.Evaluation` now supports a lot more math operations with AngouriMath 1.4! Check out what it can do [here](https://github.com/verybadcat/CSharpMath/blob/d6feac52d2cf4b186f1f275ca4c84fd7564cc470/CSharpMath.Evaluation.Tests/EvaluationTests.cs).
+
+# Namespace refactor
+
+`CSharpMath.Structures` have been merged into either `CSharpMath.Atom` or `CSharpMath.Display`. Update namespace usages accordingly.
+
+## Contributors
+@Copilot, @Happypig375, @MartinZikmund, @arklumpus, @charlesroddie, @copilot-swe-agent and @hflexgrig</releaseNotes>
+    <copyright>© CSharpMath Contributors 2026</copyright>
+    <tags>math mathematics mathematical formula equation equations
+      expression tex latex render rendering display beautiful CSharpMath</tags>
+    <repository type="git" url="https://github.com/verybadcat/CSharpMath.git" branch="master" commit="d6feac52d2cf4b186f1f275ca4c84fd7564cc470" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="CSharpMath" version="1.0.0-pre.1" exclude="Build,Analyzers" />
+        <dependency id="System.Numerics.Vectors" version="4.6.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

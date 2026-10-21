@@ -44,7 +44,7 @@ public static class CuiControlTemplates
     {
         var resources=new ResourceDictionary();
         Add<Button>(resources, Button); Add<RepeatButton>(resources, Button); Add<ToggleButton>(resources, Button);
-        Add<CheckBox>(resources, Choice); Add<RadioButton>(resources, Choice); Add<ToggleSwitch>(resources, Choice);
+        Add<CheckBox>(resources, Choice); Add<RadioButton>(resources, Choice); Add<ToggleSwitch>(resources, Switch);
         Add<TextBox>(resources, TextInput); Add<ScrollViewer>(resources, Scroll); Add<ScrollBar>(resources, ScrollBar);
         Add<Thumb>(resources, (owner, _) => Frame(owner)); Add<Slider>(resources, Slider);
         Add<CuiResizeInput>(resources, (owner, _) =>
@@ -139,6 +139,10 @@ public static class CuiControlTemplates
         // background).
         if (owner is PopupRoot popupRoot)
         {
+            // The donor PopupRoot default Background is white; leave the root backing transparent so only
+            // the themed chrome (rounded surface + shadow margin) paints. The alpha-aware fallback border
+            // paints the guaranteed-Opaque semantic brush only on a positively opaque destination.
+            owner.Background = Brushes.Transparent;
             owner.Bind(TopLevel.TransparencyBackgroundFallbackProperty, owner.GetResourceObservable("CuiPopupOpaqueFallbackBrush"));
             CuiTransparencyFallback.Attach(popupRoot, fallback);
             return new Panel { Children = { fallback, new CuiMaterialBorder { Child = layers } } };
@@ -159,6 +163,101 @@ public static class CuiControlTemplates
         var presenter = Presenter(owner, scope); Grid.SetColumn(presenter, 1);
         row.Children.Add(box); row.Children.Add(presenter);
         return row;
+    }
+
+    /// <summary>
+    /// CUI-owned real toggle switch (track + sliding thumb). This is a distinct primitive from the
+    /// checkbox Choice template: it paints a themed rail whose fill flips to the accent when the
+    /// switch is on, and positions a round thumb on the checked side.
+    ///
+    /// The pinned ToggleSwitch backend owns the toggle/pointer/keyboard behavior, so this template
+    /// must provide the backend's named geometry contract rather than a parallel hand-rolled mover:
+    ///   * PART_SwitchKnob (Panel) — the coordinate space/range the moving knob travels inside. The
+    ///     backend reads its Bounds.Width to decide the on-position and drag midpoint.
+    ///   * PART_MovingKnobs (Panel) — the panel the backend moves via Canvas.Left (0 off, switchKnob
+    ///     width on); it carries the actual round thumb visual, so the visible thumb really moves.
+    /// Pointer press/release/move handlers, drag, keyboard Space/Enter activation and the
+    /// IToggleProvider automation peer are all native backend behavior. The typed projection still
+    /// supplies disabled/hover/focus/validation state paint via the shared CUI state model.
+    /// </summary>
+    private static Control Switch(ToggleSwitch owner, INameScope scope)
+    {
+        var offTrack = new Border();
+        Resource(offTrack, Border.BackgroundProperty, "CuiSwitchTrackBrush");
+        Resource(offTrack, Border.CornerRadiusProperty, "CuiSwitchTrackRadius");
+        var hoverTrack = new Border();
+        Resource(hoverTrack, Border.BackgroundProperty, "CuiSwitchHoverBrush");
+        Resource(hoverTrack, Border.CornerRadiusProperty, "CuiSwitchTrackRadius");
+        var onTrack = new Border();
+        Resource(onTrack, Border.BackgroundProperty, "CuiAccentBrush");
+        Resource(onTrack, Border.CornerRadiusProperty, "CuiSwitchTrackRadius");
+
+        var surface = new Panel { Children = { offTrack, hoverTrack, onTrack } };
+        var track = Name(new Border
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            ClipToBounds = true,
+            Child = surface
+        }, "PART_Track", scope);
+        Resource(track, Control.WidthProperty, "CuiSwitchWidth");
+        Resource(track, Control.HeightProperty, "CuiSwitchHeight");
+
+        double Resolve(string key, double fallback) =>
+            owner.TryFindResource(key, out var value) && value is double resolved ? resolved : fallback;
+
+        var width = Resolve("CuiSwitchWidth", 40);
+        var thumbSize = Resolve("CuiSwitchThumbSize", 18);
+        var hPad = Resolve("CuiSwitchPad", 3);
+        var vPad = Resolve("CuiSwitchVPad", 2);
+        // Travel range of the moving knob = rail width minus the two horizontal pads and the thumb,
+        // so the thumb never overflows the rail (off at hPad, on at width - hPad - thumbSize).
+        var travel = Math.Max(0, width - (2 * hPad) - thumbSize);
+
+        var switchKnob = Name(new Canvas
+        {
+            Width = travel,
+            Height = thumbSize,
+            Margin = new Thickness(hPad, vPad, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        }, "PART_SwitchKnob", scope);
+
+        var thumb = Name(new Border
+        {
+            Width = thumbSize,
+            Height = thumbSize,
+            IsHitTestVisible = false
+        }, "PART_Thumb", scope);
+        Resource(thumb, Border.BackgroundProperty, "CuiSwitchThumbBrush");
+        Resource(thumb, Border.CornerRadiusProperty, "CuiSwitchThumbRadius");
+
+        var movingKnobs = Name(new Panel
+        {
+            Width = thumbSize,
+            Height = thumbSize,
+            Children = { thumb }
+        }, "PART_MovingKnobs", scope);
+        switchKnob.Children.Add(movingKnobs);
+        surface.Children.Add(switchKnob);
+
+        void Update()
+        {
+            var on = owner.IsChecked == true;
+            onTrack.IsVisible = on;
+            hoverTrack.IsVisible = !on && owner.IsPointerOver && owner.IsEffectivelyEnabled;
+        }
+        owner.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == ToggleButton.IsCheckedProperty
+                || change.Property.Name is "IsPointerOver" or "IsEnabled" or "IsEffectivelyEnabled")
+                Update();
+        };
+        track.SizeChanged += (_, _) => Update();
+        if (string.IsNullOrEmpty(AutomationProperties.GetName(owner)))
+            AutomationProperties.SetName(owner, "Toggle switch");
+        Update();
+        return track;
     }
 
     private static Control TextInput(TextBox owner, INameScope scope)
@@ -195,7 +294,14 @@ public static class CuiControlTemplates
         owner.PropertyChanged += (_, change) => { if (change.Property == TextBox.TextProperty) Placeholder(); };
         text.PropertyChanged += (_, change) => { if (change.Property.Name == "PreeditText") Placeholder(); };
         Placeholder();
-        var surface = new Panel { Children = { placeholder, text }, Cursor = new Cursor(StandardCursorType.Ibeam) };
+        // The presenter and placeholder share one overlay cell. A Grid (not a bare Panel) honours
+        // the native TextBox.VerticalContentAlignment through the presenter/placeholder vertical
+        // alignment, so a centred single-line field centres its actual text (not just the whole
+        // input box). Default Stretch preserves the existing fill/top behaviour for ordinary and
+        // multiline inputs; only an authored VerticalContentAlignment changes the placement.
+        var surface = new Grid { Children = { placeholder, text }, Cursor = new Cursor(StandardCursorType.Ibeam) };
+        Bind(text, Layoutable.VerticalAlignmentProperty, owner, "VerticalContentAlignment");
+        Bind(placeholder, Layoutable.VerticalAlignmentProperty, owner, "VerticalContentAlignment");
         var scroll = Name(new ScrollViewer { Content = surface, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled }, "PART_ScrollViewer", scope);
         scroll.Bind(ScrollViewer.HorizontalScrollBarVisibilityProperty, owner.GetObservable(ScrollViewer.HorizontalScrollBarVisibilityProperty));
         scroll.Bind(ScrollViewer.VerticalScrollBarVisibilityProperty, owner.GetObservable(ScrollViewer.VerticalScrollBarVisibilityProperty));
@@ -269,9 +375,15 @@ public static class CuiControlTemplates
         track.IncreaseButton = Name(new RepeatButton { Focusable = false }, "PART_IncreaseButton", scope);
         CuiPropertyPresentation.ConfigurePart(track.DecreaseButton,CuiPropertyPresentation.TemplatePart.RailButton);
         CuiPropertyPresentation.ConfigurePart(track.IncreaseButton,CuiPropertyPresentation.TemplatePart.RailButton);
-        var line = new Border { Height = 4, VerticalAlignment = VerticalAlignment.Center, CornerRadius = new(2) };
-        Resource(line, Border.BackgroundProperty, "CuiLineStrongBrush");
-        return new Panel { Children = { line, track } };
+        // The rail is a theme-owned rounded control rail: a fixed-height track (CuiRailHeight,
+        // CuiRailRadius) using the same muted track brush as determinate progress. It reads as part
+        // of the same control family while rounding at its own fixed height. The Track above still
+        // owns all position/value/thumb logic; the rail is purely visual.
+        var rail = new Border { VerticalAlignment = VerticalAlignment.Center };
+        Resource(rail, Border.HeightProperty, "CuiRailHeight");
+        Resource(rail, Border.CornerRadiusProperty, "CuiRailRadius");
+        Resource(rail, Border.BackgroundProperty, "CuiProgressTrackBrush");
+        return new Panel { Children = { rail, track } };
     }
 
     private static ItemsPresenter ItemPresenter(ItemsControl owner, INameScope scope)
@@ -437,13 +549,56 @@ public static class CuiControlTemplates
         CuiPropertyPresentation.ConfigurePart(decrease,CuiPropertyPresentation.TemplatePart.SpinnerButton);
         buttons.Children.Add(increase);buttons.Children.Add(decrease);root.Children.Add(buttons);return Frame(owner,root);
     }
+    /// <summary>
+    /// CUI-owned read-only determinate progress bar. The rail fill is theme-owned and the native
+    /// ProgressBar automation peer exposes the determinate RangeValue (minimum/maximum/value,
+    /// read-only). The backend RangeBase coercion is the source of truth for invalid numbers: a
+    /// non-finite value is refused and the prior/default value is retained, and Maximum is forced
+    /// >= Minimum. The template therefore paints a fill only for a finite, non-degenerate span and
+    /// paints no fill (unknown) otherwise — it never fabricates a bar from a coerced unknown.
+    /// </summary>
     private static Control Progress(ProgressBar owner,INameScope scope)
     {
-        var progress=Name(new Border { HorizontalAlignment=HorizontalAlignment.Left },"PART_Indicator",scope);
+        var progress=Name(new Border { HorizontalAlignment=HorizontalAlignment.Left, IsHitTestVisible=false },"PART_Indicator",scope);
         Resource(progress,Border.BackgroundProperty,"CuiAccentBrush");
-        var track=Frame(owner,progress);
-        void Update() => progress.Width=track.Bounds.Width*Math.Clamp((owner.Value-owner.Minimum)/Math.Max(1,owner.Maximum-owner.Minimum),0,1);
-        owner.PropertyChanged+=(_,_)=>Update(); track.SizeChanged+=(_,_)=>Update(); return track;
+        var track=new Border { ClipToBounds=true };
+        Resource(track,Border.BackgroundProperty,"CuiProgressTrackBrush");
+        track.Child=progress;
+        // Round the ends fully and proportionately to the actual bar height, so a tall bar and a
+        // short bar both get true full-round ends (a fixed radius tied to another control's size
+        // would mis-round taller bars). Before layout the theme token is used as a fallback; once a
+        // real size is known the live half-height radius wins, so the author-visible default and the
+        // rendered geometry stay coherent.
+        void RoundEnds()
+        {
+            var height = track.Bounds.Height;
+            track.CornerRadius = height > 0
+                ? new CornerRadius(height / 2)
+                : owner.TryFindResource("CuiProgressTrackRadius", out var token) && token is CornerRadius fallback
+                    ? fallback : new CornerRadius(0);
+        }
+        // The native ProgressBar peer reports the determinate range; keep that semantics truthful and
+        // read-only (no write-back is offered for Progress). Only add a generic fallback description
+        // when the author did not supply one, so an authored AccessibleDescription is never overwritten.
+        if (string.IsNullOrEmpty(AutomationProperties.GetHelpText(owner)))
+            AutomationProperties.SetHelpText(owner, "Usage progress (read-only)");
+        void Update()
+        {
+            var span=owner.Maximum-owner.Minimum;
+            var valid=double.IsFinite(owner.Value)&&double.IsFinite(owner.Minimum)&&double.IsFinite(owner.Maximum)&&span>0;
+            var ratio=valid?Math.Clamp((owner.Value-owner.Minimum)/span,0d,1d):0d;
+            var desired=track.Bounds.Width*ratio;
+            if(!double.IsFinite(desired)) desired=0;
+            progress.Width=desired;
+            progress.IsVisible=valid&&desired>0;
+        }
+        owner.PropertyChanged+=(_,change)=>
+        {
+            if(change.Property==ProgressBar.ValueProperty||change.Property==ProgressBar.MinimumProperty||change.Property==ProgressBar.MaximumProperty) Update();
+        };
+        track.SizeChanged+=(_,_)=>{ RoundEnds(); Update(); };
+        Update();
+        return track;
     }
     private static Control Separator(Separator owner,INameScope scope)
     { var line=new Border { Height=1,Margin=new(4) }; Resource(line,Border.BackgroundProperty,"CuiLineBrush"); return line; }

@@ -17,7 +17,8 @@ namespace HavenOS.Apps.Browse;
 public sealed partial class BrowseNativeWorkspace
 {
     private bool IsHavenSharedCommand(string command) => command is
-        "9to1.Haven.OpenModel" or "9to1.Haven.OpenNotifications" or "9to1.Haven.OpenProfile";
+        "9to1.Haven.OpenModel" or "9to1.Haven.OpenNotifications" or "9to1.Haven.OpenProfile"
+        or "9to1.Browse.OpenWebAutomations";
 
     /// <summary>Runs one shared rail open as a retained original operation inside the same
     /// logical-driver invocation guard as ordinary commands, so a reentrant provider calling
@@ -32,15 +33,19 @@ public sealed partial class BrowseNativeWorkspace
         {
             await start; token.ThrowIfCancellationRequested();
             var context = _hostContext;
-            if (context?.SharedControls is not { } shared) return;
             HavenSharedOpenResult result;
             try
             {
                 result = command switch
                 {
-                    "9to1.Haven.OpenModel" => await shared.OpenModelPickerAsync(token),
-                    "9to1.Haven.OpenNotifications" => await shared.OpenNotificationsAsync(token),
-                    "9to1.Haven.OpenProfile" => await shared.OpenProfileAsync(token),
+                    "9to1.Haven.OpenModel" => context?.SharedControls is { } model
+                        ? await model.OpenModelPickerAsync(token) : HavenSharedOpenResult.Denied,
+                    "9to1.Haven.OpenNotifications" => context?.SharedControls is { } notifications
+                        ? await notifications.OpenNotificationsAsync(token) : HavenSharedOpenResult.Denied,
+                    "9to1.Haven.OpenProfile" => context?.SharedControls is { } profile
+                        ? await profile.OpenProfileAsync(token) : HavenSharedOpenResult.Denied,
+                    "9to1.Browse.OpenWebAutomations" => (context as IHavenProfileDataContext)?.Automations is { } automations
+                        ? await automations.OpenAsync(token) : HavenSharedOpenResult.Denied,
                     _ => HavenSharedOpenResult.Refused("UnknownCommand", "Unknown shared control command.")
                 };
             }
@@ -78,6 +83,12 @@ public sealed partial class BrowseNativeWorkspace
     /// silently swallowed as if the command succeeded.</summary>
     public void PublishSharedRefusal(string code, string message)
         => PublishSharedStatus(code, message);
+
+    /// <summary>Publishes a model projection refresh to the real Browse consumer after the host
+    /// recomputed the genuine selected model/provider/route/effort (initial compose, universal-picker
+    /// change or panel close). The bindings read the snapshot live from <see cref="IHavenHostContext.ModelInfo"/>,
+    /// so this only raises the bound-surface change notification; it never invents state.</summary>
+    public void PublishModelProjectionChanged() => Changed();
 
     private bool? HavenSharedActionAvailable(string command) => command switch
     {

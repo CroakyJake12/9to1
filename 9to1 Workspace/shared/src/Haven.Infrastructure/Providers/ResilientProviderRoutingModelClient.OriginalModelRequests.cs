@@ -56,18 +56,39 @@ public sealed partial class ResilientProviderRoutingModelClient
     && state.Admission is { Lease.Candidate.UsesCloud: false };
   private TaskRunOriginalResponseActionAcknowledgment RequireOriginalResponse(RoutingState state) =>
     state.ResponseAcknowledgment ?? throw new UnauthorizedAccessException("A genuine current response action source is required for typed local inference.");
+  private static void GuardNamedReasoningOnOriginalEngine(string? reasoningId)
+  {
+    // The original selected local engine (llama-cpp) has no faithful named-reasoning port; an
+    // explicit reasoning id must be refused BEFORE any invocation, never silently dropped.
+    if (!string.IsNullOrWhiteSpace(reasoningId))
+      throw new UnsupportedCapabilityException(
+        "The selected local engine cannot carry a named reasoning level faithfully.", reasoningId);
+  }
   private Task<string> RawOriginalSelectedComplete(RoutingState state, OllamaChatRequest original,
-    SelectedProvider selected, OllamaChatRequest routed, CancellationToken token) => UseOriginalSelectedModel(state, selected)
-    ? originalModelRequests!.CompleteOriginalSelectedModelAsync(original, routed, state.Admission!, RequireOriginalResponse(state), token)
-    : RawCompleteAsync(selected, routed, token);
+    SelectedProvider selected, OllamaChatRequest routed, CancellationToken token)
+  {
+    if (UseOriginalSelectedModel(state, selected))
+    {
+      GuardNamedReasoningOnOriginalEngine(routed.ReasoningId);
+      return originalModelRequests!.CompleteOriginalSelectedModelAsync(original, routed, state.Admission!, RequireOriginalResponse(state), token);
+    }
+    return RawCompleteAsync(selected, routed, token);
+  }
   private IAsyncEnumerable<string> RawOriginalSelectedStream(RoutingState state, OllamaChatRequest original,
-    SelectedProvider selected, OllamaChatRequest routed, CancellationToken token) => UseOriginalSelectedModel(state, selected)
-    ? originalModelRequests!.StreamOriginalSelectedModelAsync(original, routed, state.Admission!, RequireOriginalResponse(state), token)
-    : RawStream(selected, routed, token);
+    SelectedProvider selected, OllamaChatRequest routed, CancellationToken token)
+  {
+    if (UseOriginalSelectedModel(state, selected))
+    {
+      GuardNamedReasoningOnOriginalEngine(routed.ReasoningId);
+      return originalModelRequests!.StreamOriginalSelectedModelAsync(original, routed, state.Admission!, RequireOriginalResponse(state), token);
+    }
+    return RawStream(selected, routed, token);
+  }
   private Task<OllamaToolResponse> RawOriginalSelectedTools(RoutingState state, OllamaToolRequest original,
     SelectedProvider selected, OllamaToolRequest routed, CancellationToken token)
   {
     if (!UseOriginalSelectedModel(state, selected)) return RawToolsWithOriginalDispatchAsync(state, selected, routed, token);
+    GuardNamedReasoningOnOriginalEngine(routed.ReasoningId);
     // Old concrete-provider inspection does not certify this nested selected-engine call.
     // Preserve unknown for checkpoint effect evidence until its actual raw lineage is supplied.
     if (state.OriginalRequestFailure is { } body) lock (_originalRequestFailureSync) body.ToolDispatchCohortUnknown = true;

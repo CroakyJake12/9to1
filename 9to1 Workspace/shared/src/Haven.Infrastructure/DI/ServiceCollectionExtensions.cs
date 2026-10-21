@@ -359,7 +359,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IModelProvider, CustomOpenAiCompatibleModelProvider>();
         services.AddSingleton<IModelProvider, AnthropicModelProvider>();
         services.AddSingleton<IModelProvider, GeminiModelProvider>();
-        services.AddHavenObservedLocalLlamaCpp(LocalLlamaCppRegistration.ReadExplicitEnvironment());
+        services.AddHavenPreviewLocalLlamaCpp();
         services.AddSingleton<IModelProviderRegistry, ModelProviderRegistry>();
         services.AddSingleton<IModelRouter, ModelRouter>();
         services.AddSingleton<ProviderRoutingModelClient>(provider => new ProviderRoutingModelClient(

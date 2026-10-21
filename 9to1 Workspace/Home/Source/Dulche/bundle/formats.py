@@ -55,7 +55,7 @@ GGUF_PLAIN_TYPE_BYTES = {
 GGUF_QUANTIZED_TYPES = {
     14: {"name": "Q6_K", "block_elements": 256, "block_bytes": 210},
 }
-GGUF_MAX_RANK = 64
+GGUF_MAX_RANK = 4  # Official GGML_MAX_DIMS; reject unsupported tensor ranks.
 # GGUF tensor data begins aligned to the file's `general.alignment` metadata
 # value (uint32), which defaults to 32 bytes when absent.
 GGUF_DEFAULT_ALIGNMENT = 32
@@ -272,8 +272,8 @@ def sniff_gguf(path: pathlib.Path) -> dict:
                     "GGUF general.alignment must be a uint32 scalar "
                     f"(got type tag {declared_vtype})"
                 )
-            if declared_alignment <= 0:
-                raise IdentityError("GGUF general.alignment must be a positive uint32")
+            if declared_alignment <= 0 or declared_alignment & (declared_alignment - 1):
+                raise IdentityError("GGUF general.alignment must be a positive power-of-two uint32")
             alignment = declared_alignment
 
         tensor_offsets: list[tuple[int, int]] = []  # (relative offset, byte extent)

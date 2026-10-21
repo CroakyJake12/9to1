@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Whisper.net</id>
+    <version>1.9.1</version>
+    <authors>Sandro Hanea</authors>
+    <license type="file">LICENSE</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <readme>readme.md</readme>
+    <projectUrl>https://github.com/sandrohanea/whisper.net</projectUrl>
+    <description>Cross-platform dotnet bindings for Whisper.</description>
+    <repository type="GIT" url="https://github.com/sandrohanea/whisper.net" commit="98278acc38ae23590cdfa9859f78f089abae52a7" />
+    <dependencies>
+      <group targetFramework="net10.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net10.0-android36.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net10.0-ios26.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net10.0-maccatalyst26.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net10.0-tvos26.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0-android35.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0-ios18.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0-maccatalyst18.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0-tvos18.0">
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Microsoft.Bcl.AsyncInterfaces" version="10.0.7" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.AI.Abstractions" version="10.2.0" exclude="Build,Analyzers" />
+        <dependency id="System.Memory" version="4.6.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

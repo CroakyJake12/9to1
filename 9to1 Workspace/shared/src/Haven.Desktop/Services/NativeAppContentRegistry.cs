@@ -573,4 +573,37 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             return await actual.ConfigureAwait(false);
         }
     }
+
+    /// <summary>
+    /// Builds the real native-app registration set shared by the production host
+    /// (<see cref="App.ConfigureOriginalWindowsHomeRegistrations"/>) and the routing regression.
+    /// Chat is NOT registered directly: the Home launch route helper
+    /// (<see cref="HomeLaunchRouteResolver"/>) canonicalizes the real Chat catalogue identity to the
+    /// canonical Spaces Chat resource (<see cref="SpaceRegistry.ChatSpaceId"/>) BEFORE strict native
+    /// admission, so it flows through the real Spaces registration. Every registration here keeps its
+    /// genuine catalogue identity (id/key from <see cref="BuiltInModeSeed"/>); no unrelated app is made
+    /// available, so unregistered modes stay refused.
+    /// </summary>
+    internal static class NativeAppContentRegistrations
+    {
+        private static readonly ModeDefinition Files = BuiltInModeSeed.Modes.Single(mode => mode.Key == "files");
+        private static readonly ModeDefinition Spaces = BuiltInModeSeed.Modes.Single(mode => mode.Key == "spaces");
+        private static readonly ModeDefinition Dev = BuiltInModeSeed.Modes.Single(mode => mode.Key == "dev");
+
+        public static IEnumerable<NativeAppContentRegistration> Build(
+            IBrowseAppContentFactory files,
+            IBrowseAppContentFactory spaces,
+            IBrowseAppContentFactory build)
+        {
+            ArgumentNullException.ThrowIfNull(files);
+            ArgumentNullException.ThrowIfNull(spaces);
+            ArgumentNullException.ThrowIfNull(build);
+            return
+            [
+                new(Files.Id, Files.Key, HavenAppRouteKind.Files, files),
+                new(Spaces.Id, Spaces.Key, HavenAppRouteKind.Spaces, spaces),
+                new(Dev.Id, Dev.Key, HavenAppRouteKind.Dev, build),
+            ];
+        }
+    }
 }

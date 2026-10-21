@@ -14,6 +14,7 @@ using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.Core;
+using Haven.Application;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Spaces;
 using HavenOS.Apps.Spaces;
@@ -34,7 +35,7 @@ public sealed class SpacesRailSvgIconsTests
 {
     private static readonly string[] RailAssets =
     [
-        "spaces-rail-plus", "spaces-rail-settings", "spaces-rail-chevron-right",
+        "spaces-rail-plus", "spaces-rail-manage-spaces", "spaces-rail-settings", "spaces-rail-chevron-right",
         "spaces-rail-home", "spaces-rail-chat", "spaces-rail-book", "spaces-rail-tasks",
         "spaces-rail-agents", "spaces-rail-cart", "spaces-rail-search", "spaces-rail-translate",
         "spaces-rail-experiences", "spaces-rail-unknown",
@@ -59,7 +60,7 @@ public sealed class SpacesRailSvgIconsTests
     {
         using var mounted = NewTarget();
         var target = mounted.Target;
-        string[] keys = ["plus", "settings", "chevron-right", "home", "chat", "book", "tasks",
+        string[] keys = ["plus", "manage-spaces", "settings", "chevron-right", "home", "chat", "book", "tasks",
             "agents", "cart", "search", "translate", "experiences", "unknown"];
         foreach (var key in keys)
         {
@@ -69,11 +70,13 @@ public sealed class SpacesRailSvgIconsTests
             Assert.Equal(new Rect(0, 0, 24, 24), ((DrawingImage)image!).Viewbox);
         }
 
-        // Distinct authorship: plus is two rounded bars, home is three painted pieces.
+        // Distinct authorship: plus is two rounded bars, home is three painted pieces, and the
+        // grid/toolbox manager is four rounded tiles.
         Assert.Equal(2, GroupOf(SpacesRailPackagedIcons.Resolve("icon:plus", target)!).Children.Count);
+        Assert.Equal(4, GroupOf(SpacesRailPackagedIcons.Resolve("icon:manage-spaces", target)!).Children.Count);
         Assert.Equal(3, GroupOf(SpacesRailPackagedIcons.Resolve("icon:home", target)!).Children.Count);
-        var chat = GroupOf(SpacesRailPackagedIcons.Resolve("icon:chat", target)!).Bounds;
-        var book = GroupOf(SpacesRailPackagedIcons.Resolve("icon:book", target)!).Bounds;
+        var chat = GroupOf(SpacesRailPackagedIcons.Resolve("icon:chat", target)!).GetBounds();
+        var book = GroupOf(SpacesRailPackagedIcons.Resolve("icon:book", target)!).GetBounds();
         Assert.NotEqual(chat, book);
     }
 
@@ -141,8 +144,8 @@ public sealed class SpacesRailSvgIconsTests
             var rail = Assert.Single(root.GetVisualDescendants().OfType<Control>(), c => c.Name == "spaces-sidebar");
             Assert.Equal(70, rail.Bounds.Width);
 
-            var createIcon = RailImage(rail, "create-space-icon");
-            Assert.NotNull(GroupOf(createIcon.Source!));
+            var manageIcon = RailImage(rail, "manage-spaces-icon");
+            Assert.NotNull(GroupOf(manageIcon.Source!));
 
             // Built-in Space icons resolve to distinct packaged SVG drawings placed inside their buttons.
             var firstParty = rail.GetVisualDescendants().OfType<Button>()
@@ -150,7 +153,7 @@ public sealed class SpacesRailSvgIconsTests
             Assert.Equal(2, firstParty.Length);
             var chatImage = Assert.Single(firstParty[0].GetVisualDescendants().OfType<Image>());
             var bookImage = Assert.Single(firstParty[1].GetVisualDescendants().OfType<Image>());
-            Assert.NotEqual(GroupOf(chatImage.Source!).Bounds, GroupOf(bookImage.Source!).Bounds);
+            Assert.NotEqual(GroupOf(chatImage.Source!).GetBounds(), GroupOf(bookImage.Source!).GetBounds());
             Assert.True(ImageViewportInsideButton(chatImage, firstParty[0]));
 
             // Genuine custom icon keeps its own catalog identity; malformed custom uses the SVG fallback.
@@ -159,18 +162,28 @@ public sealed class SpacesRailSvgIconsTests
             Assert.Equal(2, custom.Length);
             var folderImage = Assert.Single(custom[0].GetVisualDescendants().OfType<Image>());
             var brokenImage = Assert.Single(custom[1].GetVisualDescendants().OfType<Image>());
-            Assert.NotNull(GroupOf(folderImage.Source!));
+            // Non-rail custom icons genuinely come from the shared line-geometry catalog;
+            // that catalog returns GeometryDrawing, while the packaged rail uses DrawingGroup.
+            var customDrawing = Assert.IsType<DrawingImage>(folderImage.Source);
+            Assert.Equal(new Rect(0, 0, 24, 24), customDrawing.Viewbox);
+            var customGeometry = Assert.IsType<GeometryDrawing>(customDrawing.Drawing);
+            Assert.NotNull(customGeometry.Geometry);
+            Assert.NotNull(customGeometry.Pen);
+            Assert.True(customGeometry.GetBounds().Width > 0 && customGeometry.GetBounds().Height > 0);
             Assert.NotNull(GroupOf(brokenImage.Source!));
             Assert.True(ImageViewportInsideButton(brokenImage, custom[1]));
 
             // Bound selected state and preserved navigation dispatch.
             Assert.True(CuiPropertyPresentation.For(firstParty[0]).Resolve("Selected").Value as bool? == true);
             Assert.False(CuiPropertyPresentation.For(firstParty[1]).Resolve("Selected").Value as bool? == true);
+            // The top rail control is a viewing/managing action, never an immediate creation. It
+            // opens the SAME canonical management presentation; explicit creation lives inside it.
             actions.Clear();
-            var createButton = Assert.Single(rail.GetVisualDescendants().OfType<Button>(), b => b.Name == "create-space");
-            createButton.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+            var manageButton = Assert.Single(rail.GetVisualDescendants().OfType<Button>(), b => b.Name == "manage-spaces");
+            Assert.Equal("Manage Spaces", AutomationProperties.GetName(manageButton));
+            manageButton.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
             await loader.WhenActionsIdleAsync();
-            Assert.Equal(("spaces.create", (object?)null), Assert.Single(actions));
+            Assert.Equal(("spaces.manage", (object?)null), Assert.Single(actions));
 
             // Accessible names are unchanged by the icon swap.
             Assert.Equal(new[] { "Open Chat", "Open Study", "Open Recipes", "Open Broken" },

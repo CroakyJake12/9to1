@@ -1,0 +1,485 @@
+[
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "createdump",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/createdump",
+    "sha256": "fd68d58b8411c552ee8925f1d7799d3b54f9e06c034875bd1985aeac7fb0db79",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libSystem.Globalization.Native.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libSystem.Globalization.Native.so",
+    "sha256": "e52811f4b16fb0c473a07ce233085474695fd2378d3fdc705fc855af838fa6d5",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libSystem.IO.Compression.Native.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libSystem.IO.Compression.Native.so",
+    "sha256": "ccbef1b68379ac50d10a930821975c68f26398e4514071d8d3387dfcf4ef7355",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libSystem.Native.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libSystem.Native.so",
+    "sha256": "7e19dd116861b981aa0d04fb831adcfd60e83298069611dbe758db854562677e",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libSystem.Net.Security.Native.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libSystem.Net.Security.Native.so",
+    "sha256": "1d9eaa4ac4431d5d536f6dfc5797c346be6138467cca9e9473926c12341e7906",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libSystem.Security.Cryptography.Native.OpenSsl.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libSystem.Security.Cryptography.Native.OpenSsl.so",
+    "sha256": "9842d1d2462bab03c197da48d96b5474c3b63d6602816596ebbc8006c9feec15",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libclrgc.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libclrgc.so",
+    "sha256": "644f7ac07f71bef5a280518c52d83126332c7df891ccdd9f53098cf0ac865fbb",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libclrgcexp.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libclrgcexp.so",
+    "sha256": "5a95c79bd91ee5f25a91e91e0613427eb7ba0b611bc1ffa78dac6c3bb4e16300",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libclrjit.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libclrjit.so",
+    "sha256": "65ca078bfdc309bbeb305a5775091ed3a94e4eb93ec574ddaa0794968747e65f",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libcoreclr.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libcoreclr.so",
+    "sha256": "faa2a6dbb63dfe3adcb075a7c1b1151d70960f5ea07bd6ead4c2bcb7ef30c8ed",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libcoreclrtraceptprovider.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libcoreclrtraceptprovider.so",
+    "sha256": "b53bd9a9687c6c2459cf2ca44f5def3ad0cf8a1a53b6403917dae6a4d71b672b",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libhostfxr.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libhostfxr.so",
+    "sha256": "9429c346e80d1a2801cb052377f6ec5c9bbf5176c4b8b688df54da00a038895d",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libhostpolicy.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libhostpolicy.so",
+    "sha256": "9b96feea3d638bf3280a8c00d4e8cbad157914caf552693eec11f0a13fbb1c3f",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libmscordaccore.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libmscordaccore.so",
+    "sha256": "15b076dddc8748036ad8a02da6afb7de716b151da01d8273bac2e043c5a7322e",
+    "cache_match": true
+  },
+  {
+    "package": "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64/10.0.12",
+    "publish_path": "libmscordbi.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.netcore.app.runtime.linux-arm64/10.0.12/runtimes/linux-arm64/native/libmscordbi.so",
+    "sha256": "2b7ac909d2b50dec4441dbe9bcd65e17f9a00a04f594ddf61b16975161237f0c",
+    "cache_match": true
+  },
+  {
+    "package": "HarfBuzzSharp.NativeAssets.Linux/8.3.1.3",
+    "publish_path": "libHarfBuzzSharp.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/runtimes/linux-arm64/native/libHarfBuzzSharp.so",
+    "sha256": "68fc5ef842ac0dbd57e8063a11de5bb2f3c2b5af530a2d4fa07a7cf5d6ea4259",
+    "cache_match": true
+  },
+  {
+    "package": "Microsoft.ML.OnnxRuntime/1.22.0",
+    "publish_path": "libonnxruntime.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime/1.22.0/runtimes/linux-arm64/native/libonnxruntime.so",
+    "sha256": "0afd69a0ae38c5099fd0e8604dda398ac43dee67cd9c6394b5142b19e82528de",
+    "cache_match": true
+  },
+  {
+    "package": "Microsoft.ML.OnnxRuntime/1.22.0",
+    "publish_path": "libonnxruntime_providers_shared.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/microsoft.ml.onnxruntime/1.22.0/runtimes/linux-arm64/native/libonnxruntime_providers_shared.so",
+    "sha256": "3b53a2c1f3ecb87dedaee20e2a6d4d9aaec133e3ec280e2b9cc34efbed7de423",
+    "cache_match": true
+  },
+  {
+    "package": "SkiaSharp.NativeAssets.Linux/3.119.3-preview.1.1",
+    "publish_path": "libSkiaSharp.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/runtimes/linux-arm64/native/libSkiaSharp.so",
+    "sha256": "708de5716fb037d9b04578d47771d77469b5faa691a18f689c0462dd17e7c51b",
+    "cache_match": true
+  },
+  {
+    "package": "SourceGear.sqlite3/3.50.4.5",
+    "publish_path": "libe_sqlite3.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/sourcegear.sqlite3/3.50.4.5/runtimes/linux-arm64/native/libe_sqlite3.so",
+    "sha256": "1e3d72f01195cd8fc1e9f17a7d1e9a8fa589b390c08f81b4d3a7af721effe0eb",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-arm64/whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-arm64/whisper.dll",
+    "sha256": "60f8e64694b3884345406c1b279e6630883ab9aa92fb7d2d93966e2a19a37596",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-arm64/ggml-cpu-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-arm64/ggml-cpu-whisper.dll",
+    "sha256": "0528451210fa854a11e0bfe46b3d71f81225060eb367cbbfae036e79bd20d70c",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-arm64/ggml-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-arm64/ggml-whisper.dll",
+    "sha256": "c4d8c00955d55ad049606c7a8cf4710123cfa3206eb28a428a88e5484ae6c862",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-arm64/ggml-base-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-arm64/ggml-base-whisper.dll",
+    "sha256": "a2bee7a7d9df5bc6009937f1b536112ccecc8c1a6b1ffc2e7229732afa118d1c",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x64/whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x64/whisper.dll",
+    "sha256": "07ec2fac4946005ba7380f2c2e9ccfa3ad23007592d074aa698ed5df6bfb4938",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x64/ggml-cpu-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x64/ggml-cpu-whisper.dll",
+    "sha256": "480a23afc6deea301c5cda66cf462fa2f2eb7ff9bca63b8f4f933a0e8dc5d4dd",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x64/ggml-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x64/ggml-whisper.dll",
+    "sha256": "2e0ac238c2bc178a5c1f09b3bde2421904b191bce1cc1c13dc64309ca3b9cb36",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x64/ggml-base-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x64/ggml-base-whisper.dll",
+    "sha256": "e6c362421b6d5a5c1b52341f88d3d72764de29f05141748cc3faad2f6348063f",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x86/whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x86/whisper.dll",
+    "sha256": "bd279ec95c9bcefdd81deed4a9f850002a217fc56be090b7de88f34a5528dfe9",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x86/ggml-cpu-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x86/ggml-cpu-whisper.dll",
+    "sha256": "e09d06e39ec0ac78e2b3ca1fcca5c1456ad8900db80ca0045a90a74dfc70c42f",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x86/ggml-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x86/ggml-whisper.dll",
+    "sha256": "6ba4431b928c32be94f4f9d607c671ba94493362ec42c451c7fdb469b6e1b9a5",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/win-x86/ggml-base-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/win-x86/ggml-base-whisper.dll",
+    "sha256": "e9cca4b4897694c09eb6a073634a607c4a991cfd6668bcd82f3fde3b1b0f0f36",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm/libggml-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm/libggml-whisper.so",
+    "sha256": "b7bc898c8e73a98fce71b07b39e3887cfc643527cb270d513a94cd3df28fa775",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm/libggml-cpu-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm/libggml-cpu-whisper.so",
+    "sha256": "5f665b32736d258a93d0d926f7baf9685ed09b52f65f39b074b2d24270eb7b07",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm/libggml-base-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm/libggml-base-whisper.so",
+    "sha256": "73ab4be214121c75ab49c70b67202fce14f8458292944bd667aeda03264c302f",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm/libwhisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm/libwhisper.so",
+    "sha256": "8aa64fcfe25002bde21e665b5dca67cc1311d10268f877f3a38dbe858f4f73b2",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-x64/libwhisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-x64/libwhisper.dylib",
+    "sha256": "f3f455b64612c4ee861c65d5c99c48b5e6635744b7ca9f33fa13445171c65768",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-x64/libggml-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-x64/libggml-whisper.dylib",
+    "sha256": "f70bab5d25a97207541efac822aca38f3ae7456d78ee9208b495b04d57ddf586",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-x64/libggml-blas-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-x64/libggml-blas-whisper.dylib",
+    "sha256": "9317c0a00de9f781e17d1e0d3bd2e1a9747f7de9b49dd6adfc5824b48bb6749d",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-x64/libggml-cpu-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-x64/libggml-cpu-whisper.dylib",
+    "sha256": "5c39f34fa6e6f86a79b0f3d3c3f3732b6c19a9813fa0bbffffb52c4077059ef8",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-x64/libggml-base-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-x64/libggml-base-whisper.dylib",
+    "sha256": "1bd4e29a57b5206192f18fbc5f90cbd067a861d2680aa526e2a6fd8f48149c10",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm64/libggml-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm64/libggml-whisper.so",
+    "sha256": "2d358e0da8d09e14cee0d1e91e6b9f5fe01d08560b3b8410bb6820ef6e429e6d",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm64/libggml-cpu-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm64/libggml-cpu-whisper.so",
+    "sha256": "86d5fd1125c36a556d2dc56141198a4c1b45e9ed2e762c854f3c8c169d7cae5e",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm64/libggml-base-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm64/libggml-base-whisper.so",
+    "sha256": "3aa8ee10290e2ebb7a0b09fa3b6e38e13e22ee5cc64851b1d17bfcf8fade8dde",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-arm64/libwhisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-arm64/libwhisper.so",
+    "sha256": "c70cd35dd80933ceb81d4b4e10d4bfe0fc89a044aca6e6783c26e38edfbd9b42",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-x64/libggml-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-x64/libggml-whisper.so",
+    "sha256": "910d894a084f353e84e01776dd71838d59ec4476723fb41622fe8eacd1eb38b0",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-x64/libggml-cpu-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-x64/libggml-cpu-whisper.so",
+    "sha256": "cd88376ab1c32c41893058f89c41d36b0ff54d7432cab8d52dd6e3f7f815abac",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-x64/libggml-base-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-x64/libggml-base-whisper.so",
+    "sha256": "def814632d7d30a85bb8a98a6d298c59e208d9f7e12892b62fab6ed50d70bf61",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/noavx/linux-x64/libggml-base-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-x64/libggml-base-whisper.so",
+    "sha256": "def814632d7d30a85bb8a98a6d298c59e208d9f7e12892b62fab6ed50d70bf61",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/linux-x64/libwhisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/linux-x64/libwhisper.so",
+    "sha256": "97af757f8400f8b344c4d74045402abec0a9540694e09107179e44636c79d3e6",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-arm64/libwhisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-arm64/libwhisper.dylib",
+    "sha256": "c6feb414c192cecd0ff66652f94bcff5c74509117f4340584ea0815417363af9",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-arm64/libggml-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-arm64/libggml-whisper.dylib",
+    "sha256": "fe22695c8e29e5e1228134ddc0a407516ef4856db20671aaed8beb9da26ee478",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-arm64/libggml-blas-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-arm64/libggml-blas-whisper.dylib",
+    "sha256": "ec76c52bbe9cdea7acee2c538328a9f8f7aa08448bd1f15a9a65fce42e5de681",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-arm64/libggml-metal-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-arm64/libggml-metal-whisper.dylib",
+    "sha256": "8460d54b65ea8163793ad53cf089a1265db0c0f9bdbc7295b0fc9cba5b7b18b1",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-arm64/libggml-cpu-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-arm64/libggml-cpu-whisper.dylib",
+    "sha256": "dffa6be752b39da39880878dd0955e7c876ab3f9d932f0651efb0735d754da6b",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime/1.9.1",
+    "publish_path": "runtimes/macos-arm64/libggml-base-whisper.dylib",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime/1.9.1/build/macos-arm64/libggml-base-whisper.dylib",
+    "sha256": "15bc494140e33001da90ab4f9b1bbe19ed5981871afc003a6db55fe8ff86df0d",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/win-x64/whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/win-x64/whisper.dll",
+    "sha256": "5286afefea0bd4a3070017e604e3b7b1c5f47da2636b60bf7407d3aae903f3e8",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/win-x64/ggml-cpu-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/win-x64/ggml-cpu-whisper.dll",
+    "sha256": "6aa9ee3aba3369036dc1be7ba51e08d89990d592ce2588f7979e9539b9f2b5fb",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/win-x64/ggml-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/win-x64/ggml-whisper.dll",
+    "sha256": "33157fbf8f120ee7275b78b18b58bbd7fbd7e37a21bc8bf58edfaf7951b475ce",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/win-x64/ggml-base-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/win-x64/ggml-base-whisper.dll",
+    "sha256": "edd7d52c639c8be36b789dda316f8aaa7a38123f0018487fa4aa3619e6caa965",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/win-x86/ggml-cpu-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/win-x86/ggml-cpu-whisper.dll",
+    "sha256": "4b9239a5ad539f267041bc4bdaa5c393dc754abd1f00bb735035deafda6fa7f9",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/win-x86/ggml-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/win-x86/ggml-whisper.dll",
+    "sha256": "5134468f8b53a475726857ab2327edd96cd15689774e4ed55cda6461d3b8bc93",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/win-x86/ggml-base-whisper.dll",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/win-x86/ggml-base-whisper.dll",
+    "sha256": "e664c319d8f1d6647e585eca3ccd55e3f6c077e9e3850f96616ecc18fe050eaa",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/linux-x64/libggml-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/linux-x64/libggml-whisper.so",
+    "sha256": "f640d80d71182651de5fbba66ca156071917622cddcdd3936814fd8f0dbfe44b",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/linux-x64/libggml-cpu-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/linux-x64/libggml-cpu-whisper.so",
+    "sha256": "77400891ecf6946065ad738c16b104761117c987db0c9eabc254a47871f86d9b",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/linux-x64/libggml-base-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/linux-x64/libggml-base-whisper.so",
+    "sha256": "def814632d7d30a85bb8a98a6d298c59e208d9f7e12892b62fab6ed50d70bf61",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/linux-x64/libggml-base-whisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/linux-x64/libggml-base-whisper.so",
+    "sha256": "def814632d7d30a85bb8a98a6d298c59e208d9f7e12892b62fab6ed50d70bf61",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.noavx/1.9.1",
+    "publish_path": "runtimes/noavx/linux-x64/libwhisper.so",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.noavx/1.9.1/build/linux-x64/libwhisper.so",
+    "sha256": "60e864c8c40f287853783fd6823cb437c1a8327cf765d16f4f0b0b2dfe3391eb",
+    "cache_match": true
+  },
+  {
+    "package": "whisper.net.runtime.metal/1.9.1",
+    "publish_path": "ggml-metal.metal",
+    "package_path": "/tmp/9to1-preview-arm64-20261021-01/nuget-packages/whisper.net.runtime.metal/1.9.1/build/ggml-metal.metal",
+    "sha256": "1345fbb9c42d3db8813fbaee5c0714407d2fc8cac867e380f6b5c1261db7dc4c",
+    "cache_match": true
+  }
+]

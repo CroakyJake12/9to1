@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -40,6 +41,23 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     /// overlay-float panel can invalidate its cached anchor and rebind observers.</summary>
     internal event EventHandler? RelationshipChanged;
 
+    /// <summary>
+    /// Optional generic typed close-gesture handler for authored floating content. When set, a
+    /// user-initiated close (e.g. Escape on a portaled floating bar) invokes it BEFORE retirement so the
+    /// authored open/close state is reconciled through the canonical typed action/state path rather than
+    /// leaving selected/open state behind and immediately reopening. This is authored/wired by the
+    /// surface (through the canonical action dispatch), never synthesized by the generic framework.
+    /// </summary>
+    public Action? FloatingCloseRequested { get; set; }
+
+    /// <summary>
+    /// Optional publisher installed by the loader so a portaled host's native popup close can join the
+    /// SAME original owner ledger that other authored actions use (once-only receipt, surfaced by
+    /// WhenActionsIdleAsync/disposal including failure). Wired only while this host is owned and wired
+    /// by the loader; retired together with <see cref="FloatingCloseRequested"/> on detach/reload/dispose.
+    /// </summary>
+    public Action<Task>? FloatingCloseLedgerPublisher { get; set; }
+
     /// <summary>Authored floating-relationship target (authored element id) for overlay-float placement.
     /// This is authored CUI, never inferred by framework heuristics.</summary>
     public string? AuthoredTargetId => _authoredTargetId;
@@ -78,12 +96,30 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         _authoredPlacement = normalized;
         RelationshipChanged?.Invoke(this, EventArgs.Empty);
     }
-    public IReadOnlyList<Control> AuthoredChildren => _cells.Select(cell => cell.Child!).ToArray();
+    public IReadOnlyList<Control> AuthoredChildren => _cells.Select(AuthoredChildOf).Where(c => c is not null).Select(c => c!).ToArray();
+
+    /// <summary>The authored child held by a cell, independently of physical attachment: a portaled host
+    /// (physically held by an escape portal) is still this cell's authored child and must remain visible
+    /// to framework consumers (traversal, order, removal/replacement, and teardown snapshot) even though
+    /// its cell.Child is temporarily detached while the portal is live.</summary>
+    private Control? AuthoredChildOf(Border cell)
+    {
+        if (cell.Child is not null) return cell.Child;
+        if (Layout is CuiOverlayPanel overlay && overlay.TryGetPortaledHostForCell(cell, out var host)) return host;
+        return null;
+    }
 
     public bool RemoveChild(Control child)
     {
         ArgumentNullException.ThrowIfNull(child);
         var cell = _cells.FirstOrDefault(value => ReferenceEquals(value.Child, child));
+        if (cell is null && child is CuiContainerControl host && Layout is CuiOverlayPanel overlay && overlay.PortaledHosts.Contains(host))
+        {
+            // A portaled host is physically held by an escape portal (its cell's Child is detached).
+            // Retire the portal first so the SAME authored host is restored to its cell, then remove it.
+            overlay.ForceRetirePortaledHost(host);
+            cell = _cells.FirstOrDefault(value => ReferenceEquals(value.Child, child));
+        }
         if (cell is null) return false;
         foreach (var item in _placementHandlers.Where(item => ReferenceEquals(item.Control, child)).ToArray())
         { child.PropertyChanged -= item.Handler; _placementHandlers.Remove(item); }
@@ -95,12 +131,14 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
     {
         ArgumentNullException.ThrowIfNull(children);
         if (children.Count != _cells.Count || children.Distinct(ReferenceEqualityComparer.Instance).Count() != children.Count
-            || children.Any(child => !_cells.Any(cell => ReferenceEquals(cell.Child, child))))
+            || children.Any(child => !_cells.Any(cell => ReferenceEquals(AuthoredChildOf(cell), child))))
             throw new ArgumentException("Reordering must name every existing authored child exactly once.", nameof(children));
-        var ordered = children.Select(child => _cells.Single(cell => ReferenceEquals(cell.Child, child))).ToArray();
+        var ordered = children.Select(child => _cells.Single(cell => ReferenceEquals(AuthoredChildOf(cell), child))).ToArray();
         _cells.Clear(); _cells.AddRange(ordered);
         // Move existing cells, preserving child identity, event subscriptions and native value stores.
-        var active = ordered.Where(cell => cell.Child?.IsVisible == true).ToArray();
+        // A portaled host's cell is detached/hidden; it is handled by the portal lane, not the in-tree
+        // physical ordering, but its authored identity/order is still preserved.
+        var active = ordered.Where(cell => AuthoredChildOf(cell)?.IsVisible == true).ToArray();
         for (var index = 0; index < active.Length; index++)
         {
             var current = Layout.Children.IndexOf(active[index]);
@@ -252,6 +290,9 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
         var cell = new Border { Child = child, Padding = _cellMargin };
         void Placement()
         {
+            // Record whether the retained cell is present in this container's layout before applying the
+            // authored placement, so the measure gate below fires only on a genuine membership transition.
+            var wasPresent = Layout.Children.Contains(cell);
             Grid.SetRow(cell, Grid.GetRow(child)); Grid.SetColumn(cell, Grid.GetColumn(child));
             Grid.SetRowSpan(cell, Grid.GetRowSpan(child)); Grid.SetColumnSpan(cell, Grid.GetColumnSpan(child));
             Canvas.SetLeft(cell, Canvas.GetLeft(child)); Canvas.SetTop(cell, Canvas.GetTop(child));
@@ -263,6 +304,16 @@ public class CuiContainerControl : CuiMaterialBorder, IDisposable
                 var position = _cells.TakeWhile(value => !ReferenceEquals(value, cell)).Count(value => Layout.Children.Contains(value));
                 Layout.Children.Insert(Math.Min(position, Layout.Children.Count), cell);
             }
+            // A child crossing the visible threshold enters/leaves the retained layout, mutating this
+            // container's live content size. Invalidate THIS container's own measure exactly on that
+            // genuine transition so a re-measure reflects the new content. This is required even when the
+            // container sits inside a suppressed/hidden outer wrapper (e.g. an unplaced or portaled
+            // floating cell): the normal layout-manager descendant remeasurement is blocked by the hidden
+            // ancestor, so without an explicit invalidation here the container's cached DesiredSize stays
+            // stale (e.g. 0,0 from when the child was hidden) and the owner mis-reads the floating content
+            // size. The gate is bounded to the membership transition (not grid/span/canvas/ZIndex
+            // coordinate cascades), so generic placement property changes never trigger re-measure cycles.
+            if (Layout.Children.Contains(cell) != wasPresent) InvalidateMeasure();
         }
         EventHandler<AvaloniaPropertyChangedEventArgs> handler = (_, change) =>
         {

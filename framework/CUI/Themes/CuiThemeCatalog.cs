@@ -36,7 +36,7 @@ public static class CuiThemeCatalog
         new(
             CuiTheme.Professional, "Professional",
             "Quiet layered surfaces, rounded floating menus and precise editorial controls.",
-            1.0, 0.75, 1.2, 0.8, 0.55, 0.65, 1.0, 1.0, 0.9, 0.8),
+            1.2, 0.95, 1.2, 0.8, 0.55, 0.65, 1.0, 1.0, 0.9, 0.8),
         new(CuiTheme.FrostedGlass, "Frosted Glass", "Translucent frosted surfaces and soft light.",
             1.2, 1.15, 1.25, 1, .65, .6),
         new(CuiTheme.Metallic, "Metallic", "Brushed tonal surfaces and precise metallic highlights.",

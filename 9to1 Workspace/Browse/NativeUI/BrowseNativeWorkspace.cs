@@ -47,7 +47,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private long _savedEpoch;
     private long _rowEpoch;
     private string _address, _find = string.Empty, _status;
-    private bool _addressDraft, _busy, _ready, _disposed, _toolsOpen;
+    private bool _addressDraft, _busy, _ready, _disposed, _toolsOpen, _profileMenuOpen, _manageUsersOpen;
     private volatile bool _retiring;
     private Task? _originalCommand, _originalClose, _originalChromeClose, _pendingCloseAttempt;
     private readonly List<Task> _closeAttempts = [];
@@ -94,7 +94,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (path.StartsWith("Can.", StringComparison.Ordinal))
         { value = IsActionAvailable("9to1.Browse." + path[4..]) == true; return true; }
         if (TryGetDownloadFilesBinding(path, out value)) return true;
+        var profileData = _hostContext as IHavenProfileDataContext;
         var selected = _snapshot.SelectedTab;
+        // Capture the host's current typed model snapshot once per query; the bindings read it
+        // live (never caching invented parallel state), so the host's own projection refresh is
+        // what repaints this seam.
+        var model = _hostContext?.ModelInfo;
         value = path switch
         {
             "Tabs" => _tabRows,
@@ -111,7 +116,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "EmptyBookmarks" => _bookmarkRows.Length == 0,
             "EmptyHistory" => _historyRows.Length == 0,
             "EmptyDownloads" => _downloadRows.Length == 0,
-            "Address" => _address, "FindQuery" => _find, "Status" => _status,
+            "Address" => _address, "AddressDisplay" => ResolveAddressDisplay(selected), "FindQuery" => _find, "Status" => _status,
             "Security" => _snapshot.Security.Label + " · " + _snapshot.Security.Explanation,
             "Profile" => selected.Privacy == BrowserTabPrivacy.Private ? "Private tab · isolated temporary profile" : "Standard profile",
             "Engine" => selected.Engine == BrowseEngineKind.Gecko ? "Firefox" : "Chromium",
@@ -130,6 +135,45 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "Haven.ModelAvailable" => _hostContext?.ModelSupported == true,
             "Haven.NotificationsAvailable" => _hostContext?.NotificationsSupported == true,
             "Haven.ProfileAvailable" => _hostContext?.ProfileSupported == true,
+            "Haven.ModelName" => model?.Name ?? string.Empty,
+            "Haven.EffortLabel" => ModelDisplayPercent(model),
+            "Haven.EffortPercent" => ModelDisplayPercent(model),
+            "Haven.EffortKnown" => !string.IsNullOrEmpty(ModelDisplayPercent(model)),
+            "Haven.EffortConfigurable" => model?.EffortConfigurable == true,
+            "Haven.UsageVisible" => model?.UsageVisible == true,
+            "Haven.ContextVisible" => model?.ContextVisible == true,
+            "Haven.MeterMarker" => model?.MeterMarker == true,
+            "Haven.ModelAccessibleName" => ModelAccessibleName(model),
+            "Haven.ModelTooltip" => ModelTooltip(model),
+            "ProfileMenuOpen" => _profileMenuOpen,
+            "ProfilePrincipalLabel" => profileData?.Profile is { } principal && !string.IsNullOrWhiteSpace(principal.DisplayName)
+                ? principal.DisplayName
+                : (_hostContext?.ProfileSupported == true ? "Account/User" : "Sign-in unavailable"),
+            "ProfileAccountHint" => _hostContext?.ProfileSupported == true
+                ? "Click to open account and user settings."
+                : "The native account owner is unavailable in this session.",
+            "ManageUsersOpen" => _manageUsersOpen,
+            "ManageUsersOtherProfilesStatus" => "Other profiles are not manageable: the user-management service is unavailable for this session.",
+            "ShowManageUsersOtherProfilesStatus" => true,
+            "ShowStorage" => profileData?.Storage is { } storage && storage.IsRenderable,
+            "StorageLabel" => profileData?.Storage is { } storage && storage.IsRenderable
+                ? $"{storage.Label}: {FormatBytes(storage.UsedBytes)} of {FormatBytes(storage.QuotaBytes)}"
+                : string.Empty,
+            "StorageUnitsLabel" => profileData?.Storage is { } storage && storage.IsRenderable
+                ? $"{storage.Label}: {FormatBytes(storage.UsedBytes)} of {FormatBytes(storage.QuotaBytes)}"
+                : string.Empty,
+            "StorageUsedBytes" => profileData?.Storage is { } storage && storage.IsRenderable ? (double)storage.UsedBytes : 0d,
+            "StorageQuotaBytes" => profileData?.Storage is { } storage && storage.IsRenderable ? (double)storage.QuotaBytes : 100d,
+            "ShowUsage" => profileData?.UsageWindows.FirstOrDefault(window => window.IsRenderable) is not null,
+            "UsageLabel" => ProfileUsageLabel(profileData),
+            "UsageWindowRows" => profileData?.UsageWindows.Where(window => window.IsRenderable)
+                .Select(window => new UsageWindowRow(window.Name,
+                    $"{window.Name}: {window.UsedUnits.ToString("N0", CultureInfo.CurrentCulture)} of {window.LimitUnits.ToString("N0", CultureInfo.CurrentCulture)} {window.Unit}",
+                    window.UsedUnits, window.LimitUnits)).ToArray() ?? [],
+            "AutomationNote" => "Web automations are unavailable in this session.",
+            "ShowAutomationNote" => profileData?.Automations is null,
+            "AllowPopups" => SelectedWebPopupsAllowed(_snapshot),
+            "WebToolsChevron" => _toolsOpen ? "▾" : "▸",
             "DownloadOpenStatus" => _downloadFilesStatus,
             "DownloadStatus" => _snapshot.Downloads.Status,
             "CanBack" => IsActionAvailable("9to1.Browse.Back") == true,
@@ -142,10 +186,31 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     public bool TrySetValue(string path, object? value)
     {
-        if (_busy || _retiring || _disposed || !_ready || value is not string text || text.Length > 8192) return false;
-        if (path == "Address") { _address = text; _addressDraft = !string.Equals(text, _snapshot.SelectedTab.Address.ToString(), StringComparison.Ordinal); }
-        else if (path == "FindQuery") _find = text;
-        else return false;
+        if (_busy || _retiring || _disposed || !_ready) return false;
+        switch (path)
+        {
+            case "Address":
+                if (value is not string addressText || addressText.Length > 8192) return false;
+                _address = addressText;
+                _addressDraft = !string.Equals(addressText, _snapshot.SelectedTab.Address.ToString(), StringComparison.Ordinal);
+                break;
+            case "FindQuery":
+                if (value is not string findText || findText.Length > 8192) return false;
+                _find = findText;
+                break;
+            case "AllowPopups":
+                // The site-popups control is a genuine boolean bound to the real effective
+                // WindowManagement permission. Toggling dispatches the real Allow/Deny command
+                // (a retained operation); the snapshot drives the visible state, so a failed or
+                // refused permission change reverts the switch to the actual effective decision.
+                if (value is not bool allowed) return false;
+                var command = allowed ? "9to1.Browse.AllowPopups" : "9to1.Browse.DenyPopups";
+                if (IsActionAvailable(command) != true) return false;
+                _ = DispatchAsync(command, null);
+                return true;
+            default:
+                return false;
+        }
         Changed(); return true;
     }
     public bool? IsActionAvailable(string command)
@@ -180,6 +245,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.DiscardAddress" => _addressDraft,
             "9to1.Browse.ToggleTools" => true,
             "9to1.Browse.CloseTools" => _toolsOpen,
+            "9to1.Browse.ToggleProfileMenu" => true,
+            "9to1.Browse.CloseProfileMenu" => _profileMenuOpen,
+            "9to1.Browse.OpenManageUsers" => true,
+            "9to1.Browse.CloseManageUsers" => _manageUsersOpen,
+            "9to1.Browse.OpenWebAutomations" => (_hostContext as IHavenProfileDataContext)?.Automations is not null,
+            "9to1.Browse.SignOut" => false,
             _ => false
         };
     }
@@ -307,6 +378,13 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.DiscardAddress": _addressDraft = false; break;
                 case "9to1.Browse.ToggleTools": _toolsOpen = !_toolsOpen; break;
                 case "9to1.Browse.CloseTools": _toolsOpen = false; break;
+                case "9to1.Browse.ToggleProfileMenu": _profileMenuOpen = !_profileMenuOpen; if (!_profileMenuOpen) _manageUsersOpen = false; break;
+                case "9to1.Browse.CloseProfileMenu": _profileMenuOpen = false; _manageUsersOpen = false; break;
+                case "9to1.Browse.OpenManageUsers": _manageUsersOpen = true; break;
+                case "9to1.Browse.CloseManageUsers": _manageUsersOpen = false; break;
+                case "9to1.Browse.SignOut":
+                    _status = "Sign out is managed from Account & user settings.";
+                    break;
                 default: throw new ArgumentOutOfRangeException(nameof(command));
             }
             if (IsOriginalPublicationCurrent) { ApplySnapshot(_chrome.State); _status = _snapshot.Status; }
@@ -376,6 +454,33 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (!_addressDraft) _address = snapshot.SelectedTab.Address.ToString();
         _status = snapshot.Status; Changed();
     }
+    /// <summary>Resolves the unfocused, readable location for the selected tab. Web addresses keep
+    /// their exact canonical text. First-party app/Space/conversation locations show the genuinely
+    /// admitted content-session title when one is published; otherwise the canonical address is
+    /// retained rather than an invented friendly name or a GUID route leak. The raw writable
+    /// Address port is never replaced by this presentation value.</summary>
+    private string ResolveAddressDisplay(BrowseTabSnapshot tab)
+    {
+        // Web locations keep their exact canonical address text.
+        if (tab.Address.IsWeb) return tab.Address.ToString();
+        // First-party surface: show the genuinely admitted content-session title when one is
+        // published (including a real Spaces session titled "Spaces"). Only when no genuine title
+        // exists surface the top-level surface address (scheme://authority) — never the raw route,
+        // which can carry opaque GUID segments.
+        var title = tab.Title;
+        if (!string.IsNullOrWhiteSpace(title)) return title;
+        return SurfaceAddress(tab.Address);
+    }
+
+    private static string SurfaceAddress(AppContentAddress address) =>
+        (address.Namespace switch
+        {
+            AppContentNamespace.Browse => "browse",
+            AppContentNamespace.Cui => "cui",
+            AppContentNamespace.NativeApp => "9to1",
+            _ => string.Empty
+        }) + "://" + address.Authority;
+
     private void Changed() => PropertyChanged?.Invoke(this, new(string.Empty));
     private void CheckAdmission(List<Task> sources)
     {
@@ -549,10 +654,77 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         };
     }
     public sealed record SavedEntryRow(object Target, string Key, string Label, string Detail);
+
+    public sealed record UsageWindowRow(string Key, string Label, double UsedUnits, double LimitUnits);
     public bool TrySetItemValue(object item, string path, object? value) => false;
     public sealed record TabRow(object Target, string Key, string Label, bool Selected)
     {
         public string Description { get; init; } = Label;
         public bool CanClose { get; init; }
+    }
+
+    /// <summary>Formats a genuine byte count for the real storage quota label.</summary>
+    private static string FormatBytes(long bytes) => bytes switch
+    {
+        < 1024 => bytes.ToString(CultureInfo.CurrentCulture) + " B",
+        < 1024L * 1024 => (bytes / 1024.0).ToString("0.#", CultureInfo.CurrentCulture) + " KB",
+        < 1024L * 1024 * 1024 => (bytes / (1024.0 * 1024)).ToString("0.#", CultureInfo.CurrentCulture) + " MB",
+        _ => (bytes / (1024.0 * 1024 * 1024)).ToString("0.##", CultureInfo.CurrentCulture) + " GB"
+    };
+
+    /// <summary>Builds the genuine usage-window label only from renderable (real) windows;
+    /// unknown/absent windows are never invented.</summary>
+    private static string ProfileUsageLabel(IHavenProfileDataContext? profileData)
+    {
+        if (profileData is null) return string.Empty;
+        var windows = profileData.UsageWindows.Where(window => window.IsRenderable).ToArray();
+        if (windows.Length == 0) return string.Empty;
+        return string.Join(" · ", windows.Select(window =>
+            $"{window.Name}: {window.UsedUnits.ToString("N0", CultureInfo.CurrentCulture)} of {window.LimitUnits.ToString("N0", CultureInfo.CurrentCulture)} {window.Unit}"));
+    }
+
+    /// <summary>Resolves the real effective WindowManagement site-permission decision for the
+    /// selected tab's canonical origin. Non-web surfaces have no site permission and report
+    /// false; absent permissions mean the default Ask decision (not allowed).</summary>
+    private static bool SelectedWebPopupsAllowed(BrowseChromeSnapshot snapshot)
+    {
+        var address = snapshot.SelectedTab.Address;
+        if (!address.IsWeb || address.WebUri is not { } uri) return false;
+        var canonical = BrowserSitePermissionStore.CanonicalOrigin(uri);
+        return snapshot.Permissions.Any(permission =>
+            permission.Kind == BrowserSitePermissionKind.WindowManagement &&
+            string.Equals(permission.Origin, canonical, StringComparison.OrdinalIgnoreCase) &&
+            permission.Decision == BrowserSitePermissionDecision.Allow);
+    }
+
+    /// <summary>The only percentage shown on the top-bar model control is the real selected
+    /// reasoning-effort tier (<see cref="HavenTopBarModelInfo.EffortPercent"/>), never usage,
+    /// quota, context fill or hardware load. It is shown only when the model actually advertises
+    /// a configurable effort scale AND the canonical tier percentage is non-empty. A stale known
+    /// scale with <see cref="HavenTopBarModelInfo.EffortConfigurable"/> false, or a missing tier,
+    /// stays empty (truthfully hidden) — never an invented 100%.</summary>
+    private static string ModelDisplayPercent(HavenTopBarModelInfo? model) =>
+        model is { EffortConfigurable: true } && !string.IsNullOrEmpty(model.EffortPercent)
+            ? model.EffortPercent
+            : string.Empty;
+
+    /// <summary>Accessible name for the model control exposes the actual canonical model name
+    /// (and the genuine reasoning tier when one is known), never a pretend configured model.</summary>
+    private static string ModelAccessibleName(HavenTopBarModelInfo? model)
+    {
+        if (model is null || string.IsNullOrWhiteSpace(model.Name)) return "Choose AI model";
+        var percent = ModelDisplayPercent(model);
+        return string.IsNullOrEmpty(percent) ? $"Choose {model.Name}" : $"Choose {model.Name}, reasoning effort {percent}";
+    }
+
+    /// <summary>Tooltip for the model control mirrors the accessible name so the actual model
+    /// identity and any real reasoning tier are exposed on hover/focus without inventing state.</summary>
+    private static string ModelTooltip(HavenTopBarModelInfo? model)
+    {
+        if (model is null || string.IsNullOrWhiteSpace(model.Name)) return "Choose the active AI model";
+        var percent = ModelDisplayPercent(model);
+        return string.IsNullOrEmpty(percent)
+            ? $"Choose the active AI model: {model.Name}"
+            : $"Choose the active AI model: {model.Name}, reasoning effort {percent}";
     }
 }

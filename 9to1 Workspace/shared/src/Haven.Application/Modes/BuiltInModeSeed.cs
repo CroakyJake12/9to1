@@ -58,15 +58,15 @@ public sealed class BuiltInModeSeed
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
         new ModeDefinition(
             Guid.Parse("a0000000-0000-0000-0000-000000000004"),
-            "studio", "Studio", "Inspect, edit, test and repair local projects", "code",
+            "studio", "AI Studio", "Inspect, edit, test and repair local projects", "code",
             HavenMode.Studio, "[\"Studio\"]", "[\"write_file\",\"replace_in_file\",\"run_tests\",\"run_command\"]", "[]", "[\"Automate\",\"Test\"]", "",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
         new ModeDefinition(
             Guid.Parse("a0000000-0000-0000-0000-000000000028"),
-            "dev", "Dev", "Reopen saved development projects and their existing tasks", "code",
-            HavenMode.Studio, "[\"Dev\"]", "[]", "[]", "[]", "Open saved development project references and the same existing canonical task and run. Opening a saved project starts no task, grants no permission, and does not authorize replay of accepted work.",
+            "dev", "Build", "Reopen saved development projects and their existing tasks", "code",
+            HavenMode.Studio, "[\"Build\"]", "[]", "[]", "[]", "Open saved development project references and the same existing canonical task and run. Opening a saved project starts no task, grants no permission, and does not authorize replay of accepted work.",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"developer\",\"productivity\"]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
@@ -93,7 +93,7 @@ public sealed class BuiltInModeSeed
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
         new ModeDefinition(
             Guid.Parse("a0000000-0000-0000-0000-000000000008"),
-            "imagine", "Imagine", "Create and refine image concepts with local models and approved providers", "palette",
+            "imagine", "Picture", "Create and refine image concepts with local models and approved providers", "palette",
             HavenMode.Chat, "[\"Imagine\"]", "[]", "[]", "[]", "Help the user turn an idea into a production-ready visual brief. Ask only for missing essentials, preserve a clear prompt history, and be explicit when an image provider is not installed instead of claiming an image was generated.",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"media\",\"creative\"]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
@@ -121,7 +121,7 @@ public sealed class BuiltInModeSeed
         { InvocationOperability = new(AppOperabilityClassification.OrdinaryApplication, AppOperabilityPath.TypedApi) },
         new ModeDefinition(
             Guid.Parse("a0000000-0000-0000-0000-000000000011"),
-            "vision", "Vision", "Inspect images with a compatible local vision model", "vision",
+            "vision", "Voice & Vision", "Inspect images with a compatible local vision model", "vision",
             HavenMode.Chat, "[\"Vision\"]", "[]", "[]", "[]", "Act as 9to1 Vision. Analyse only images actually attached to the current turn, describe uncertainty, and clearly report when the selected local model has no vision capability.",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"media\"]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)

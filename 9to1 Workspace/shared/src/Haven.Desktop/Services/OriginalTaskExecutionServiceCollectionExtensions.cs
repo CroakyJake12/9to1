@@ -79,7 +79,8 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
             taskCoordinator: provider.GetRequiredService<TaskExecutionCoordinator>(),
             taskToolOwner: provider.GetRequiredService<ITaskRunToolActionOwner>(),
             taskProviderContextCapture: provider.GetRequiredService<ITaskRunProviderContextCapture>(),
-            taskCloudPermissionRemediation: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>()));
+            taskCloudPermissionRemediation: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>(),
+            reasoningSelection: provider.GetService<IChatReasoningSelectionReader>()));
         services.AddSingleton<AgentTaskRuntimeService>();
         services.AddSingleton(new Registration());
         return services;

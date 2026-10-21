@@ -18,6 +18,7 @@ public sealed partial class BrowseNativeUiTests
         var chrome = await BrowseChrome.CreateAsync(new Paths());
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
@@ -75,6 +76,7 @@ public sealed partial class BrowseNativeUiTests
         var chrome = await BrowseChrome.CreateAsync(new Paths());
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         window.Width = width;
         try
         {

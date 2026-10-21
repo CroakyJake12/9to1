@@ -1,0 +1,32 @@
+<Cui id="dev.saved-projects" version="1">
+  <Actions>
+    <Action name="dev.references.open-task" command="dev.references.open-task" parameter="{Binding item.SelectionKey}" />
+  </Actions>
+  <Page id="dev-saved-projects-page" role="main" accessible-name="Saved development projects">
+    <Container id="dev-saved-projects-root" margin="16" Type="Vertical Stack" CellGap="12">
+      <Text id="dev-title" text="Build" font-size="24" />
+      <Text text="Open a saved project and its existing task. Opening keeps the same task and run." text-wrapping="Wrap" />
+      <Container id="dev-saved-project-controls" Type="Horizontal Stack" CellGap="8">
+        <Button id="dev-refresh-saved-projects" action="dev.references.refresh" content="Refresh" Interactive="{Binding CanRefresh}" accessible-name="Refresh saved development projects" />
+        <Button id="dev-open-selected-space" action="dev.references.open-space" content="Open Space" Interactive="{Binding CanOpenSpace}" accessible-name="Open the selected Space" />
+      </Container>
+      <Repeat id="dev-saved-projects" Source="{Binding Projects}" As="item" Key="{Binding item.SelectionKey}">
+        <Container id="dev-saved-project-item" Type="Vertical Stack">
+          <Text id="dev-project-title" text="{Binding item.Title}" />
+          <Text text="{Binding item.Summary}" text-wrapping="Wrap" />
+          <Text text="{Binding item.TaskLabel}" foreground="{Resource CuiTextSoftBrush}" />
+          <Text text="{Binding item.CheckpointLabel}" foreground="{Resource CuiTextSoftBrush}" />
+          <Button id="dev-open-task" action="dev.references.open-task" content="Open task and project" Interactive="{Binding item.CanOpen}" accessible-name="Open the existing task for the selected project" />
+        </Container>
+      </Repeat>
+      <Text id="dev-reference-coverage" text="{Binding Coverage}" foreground="{Resource CuiTextSoftBrush}" accessible-name="Saved project observation coverage" />
+      <Text id="dev-reference-status" text="{Binding Status}" accessible-name="Development project status" />
+
+      <Text text="Open an existing project folder as a manual project (no AI task or model). Reads use your real configured Files store and Home profile." text-wrapping="Wrap" accessible-name="Manual project help" />
+      <Input id="dev-manual-folder" placeholdertext="Absolute path to an existing project folder" accessible-name="Existing project folder" Type="Text" Value="{Binding ManualFolderPath}" />
+      <Button id="dev-create-manual" action="dev.references.create-manual-project" content="Open as manual project" Interactive="{Binding CanCreateManual}" />
+      <Text text="{Binding ManualStatus}" text-wrapping="Wrap" accessible-name="Manual project operation status" />
+      <Text text="{Binding RetainedAttempt}" text-wrapping="Wrap" accessible-name="Retained manual setup recovery state" />
+    </Container>
+  </Page>
+</Cui>

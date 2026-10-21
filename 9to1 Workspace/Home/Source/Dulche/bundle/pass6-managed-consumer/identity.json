@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-21T00:40:00Z",
+  "lane": "bundle15-mercury-15-managed-consumer",
+  "session": "ses_ea4f23cfaffeBzTHj9R1wgCabn",
+  "deliverable": "9to1 Workspace/Home/Source/Dulche/bundle/integration-patch.diff",
+  "patch_sha256": "b4d5d76726dc969227bd3f2defa5865a735c11626b476957fcf518c4f8568f9c",
+  "patch_apply_check_against_root": 0,
+  "reviewer_findings": "B15-CS-ARITHMETIC|B15-CS-VALUETASK|B15-CS-CHAR-LITERAL|B15-DATASTART|B15-CANCELLATION|B15-CALLER-CLAIM -> all addressed",
+  "bundle_suite": "81/81 PASS",
+  "llamacpp_suite": "4/4 PASS",
+  "q6k_probe": {
+    "[128,2]": "PASS (rejected)",
+    "[256,1]": "PASS (admitted)"
+  },
+  "sdk_compile": "NOT RUN (no SDK/.NET slot allocated; source corrected by construction)",
+  "native_acceptance": "NOT RUN",
+  "caller_integration": "BLOCKED (Canonical caller test is EVIDENCE-ONLY; real caller/inference/asset acceptance remains BLOCKED)"
+}

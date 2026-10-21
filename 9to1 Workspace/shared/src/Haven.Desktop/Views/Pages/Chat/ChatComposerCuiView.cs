@@ -231,9 +231,7 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
                 return ValueTask.CompletedTask;
             case "composer.emoji-insert" when parameter is string emoji:
-                _emojiOpen = false;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-                return _source.InsertEmoji(emoji);
+                return InsertEmojiProjectedAsync(emoji);
             case "composer.cancel-edit":
                 return _source.CancelEdit();
             default:
@@ -251,6 +249,32 @@ public sealed class ChatComposerBindings : ICuiWritableBindingContext, ICuiActio
     {
         await _source.SetResponseMode(mode).ConfigureAwait(false);
         await _source.CloseSettings().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Owns the full emoji-insert action: the genuine admitted source insertion followed by the
+    /// retained editor projection refresh. The original action stays pending until BOTH the source
+    /// operation and the UI-owned projection have settled, so the picker-closing refresh can never
+    /// publish a stale draft before the insertion changes it. The projection step is marshaled to
+    /// the UI thread through the supported awaited dispatcher operation (never a fire-and-forget
+    /// Post), so an insertion that resumes off-thread still projects through the real editor from
+    /// the UI thread. The source insertion's own fault/lifetime is preserved and settles the action
+    /// without the projection being skipped or swallowed.
+    /// </summary>
+    private async ValueTask InsertEmojiProjectedAsync(string emoji)
+    {
+        // 1. Genuine source insertion first. Keep its exact admitted fault/lifetime; the original
+        //    action remains pending here until the source operation admits/retires.
+        await _source.InsertEmoji(emoji).ConfigureAwait(false);
+
+        // 2. Only after the source drafted, publish the picker-closing editor projection so the
+        //    retained input reflects the inserted sequence. If the insertion faulted, this is not
+        //    reached and the exact fault settles the original action instead.
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _emojiOpen = false;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        }).GetTask().ConfigureAwait(false);
     }
 
     public bool TryGetItemValue(object item, string path, out object? value)

@@ -320,7 +320,12 @@ public static class CuiSurfacePaletteCatalog
         var white = appearance == CuiAppearance.SuperBright;
         var accent = palette.Accent;
         var background = Color.Parse(dark ? deep ? "#FF171819" : "#FF202122" : white ? "#FFFCFCFD" : "#FFF0F1F3");
-        var panel = background;
+        // Deliberate charcoal surface depth. The contextual working surface sits one neutral step
+        // above the shell/background, and the content/card/floating surface sits one step higher
+        // again, so shell/rail, contextual and content/card roles read as distinct layers without
+        // breaking Professional's quiet hierarchy or per-app accent neutrality.
+        var panel = Color.Parse(dark ? deep ? "#FF1C1C1E" : "#FF262627" : white ? "#FFFFFFFF" : "#FFF5F5F7");
+        var panel2 = Color.Parse(dark ? deep ? "#FF232324" : "#FF2D2D30" : white ? "#FFFFFFFF" : "#FFFFFFFF");
         return palette with
         {
             TideBase = background,
@@ -331,8 +336,9 @@ public static class CuiSurfacePaletteCatalog
             Text = Color.Parse(dark ? "#FFE5E5E7" : "#FF252628"),
             TextSoft = Color.Parse(dark ? "#FFC3C4C7" : "#FF55575D"),
             Muted = Color.Parse(dark ? "#FFA0A1A6" : "#FF696B72"), Muted2 = Color.Parse(dark ? "#FF929399" : "#FF75777E"),
-            Panel = panel, Panel2 = panel,
-            Panel3 = Color.Parse(dark ? "#FF292A2D" : "#FFE9EAED"), PanelHover = Color.Parse(dark ? "#FF303134" : "#FFE3E4E8"),
+            Panel = panel, Panel2 = panel2,
+            Panel3 = Color.Parse(dark ? deep ? "#FF2B2B2E" : "#FF353537" : white ? "#FFF2F2F4" : "#FFEBEBED"),
+            PanelHover = Color.Parse(dark ? deep ? "#FF313133" : "#FF3B3B3E" : white ? "#FFEAEAEC" : "#FFE2E2E5"),
             Line = Color.Parse(dark ? "#FF2D2E31" : "#FFE0E1E5"), LineStrong = Color.Parse(dark ? "#FF55565C" : "#FFA6A7AD"),
             Button = Color.Parse(dark ? "#FF292A2D" : "#FFE8E9ED"), ButtonHover = Color.Parse(dark ? "#FF343538" : "#FFDDDEE3"),
             ButtonPressed = Color.Parse(dark ? "#FF242527" : "#FFD1D2D8"),

@@ -17,11 +17,14 @@ public sealed partial class App
     private FilesDeveloperOriginalSetupDestinationResolver? _windowsDeveloperDestinationResolver;
     private HomeDeveloperProjectReadActionPolicySource? _windowsDeveloperReadPolicy;
     private HomeDeveloperProjectSetupActionPolicySource? _windowsDeveloperSetupPolicy;
+    private HomeDeveloperProjectEditResourceResolver? _windowsDeveloperEditResolver;
+    private HomeDeveloperProjectEditActionPolicySource? _windowsDeveloperEditPolicy;
     private HomeColdProjectReadResourceResolver? _windowsColdProjectResolver;
     private HomeColdProjectReadActionPolicySource? _windowsColdProjectPolicy;
     private FilesDeveloperOriginalCurrentProjectExecutionResolver? _windowsExecutionResolver;
     private HomeDeveloperWorkspaceExecutionActionPolicySource? _windowsExecutionPolicy;
     private HomeDeveloperProjectReadAdmissionSource? _windowsDeveloperReads;
+    private HomeDeveloperProjectEditAdmissionSource? _windowsDeveloperEdits;
     private HomeDeveloperProjectSetupJournal? _windowsDeveloperJournal;
     private HomeDeveloperProjectSetupPermissionSource? _windowsDeveloperPermissions;
     private FilesDeveloperOriginalSourceSelection? _windowsDeveloperSelections;
@@ -49,6 +52,9 @@ public sealed partial class App
         _windowsDeveloperDestinationResolver = new(() => _windowsDeveloperScopes
             ?? throw new InvalidOperationException("The SAME Windows Files destination owner is not captured."));
         _windowsDeveloperReadPolicy = new(); _windowsDeveloperSetupPolicy = new();
+        _windowsDeveloperEditResolver = new(() => _windowsDeveloperEdits
+            ?? throw new InvalidOperationException("The SAME Windows Home EDIT owner is not captured."));
+        _windowsDeveloperEditPolicy = new();
         if (!WindowsColdProjectRequested) return;
         _windowsColdProjectResolver = new(() => _windowsColdProjects
             ?? throw new InvalidOperationException("The SAME Windows cold project source is not captured."));
@@ -58,11 +64,11 @@ public sealed partial class App
         _windowsExecutionPolicy = new();
     }
     private ICanonicalResourceAccessResolver[] OriginalWindowsDeveloperResolvers() => WindowsColdProjectRequested
-        ? [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!, _windowsColdProjectResolver!, _windowsExecutionResolver!]
-        : [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!];
+        ? [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!, _windowsDeveloperEditResolver!, _windowsColdProjectResolver!, _windowsExecutionResolver!]
+        : [_windowsDeveloperReadResolver!, _windowsDeveloperDestinationResolver!, _windowsDeveloperEditResolver!];
     private IHomeActionPolicySource[] OriginalWindowsDeveloperPolicies() => WindowsColdProjectRequested
-        ? [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!, _windowsColdProjectPolicy!, _windowsExecutionPolicy!]
-        : [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!];
+        ? [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!, _windowsDeveloperEditPolicy!, _windowsColdProjectPolicy!, _windowsExecutionPolicy!]
+        : [_windowsDeveloperReadPolicy!, _windowsDeveloperSetupPolicy!, _windowsDeveloperEditPolicy!];
 
     private void ConfigureOriginalWindowsDeveloperRegistrations(IServiceCollection services)
     {
@@ -76,6 +82,9 @@ public sealed partial class App
             services.AddHavenOwnedDeveloperSourceReads(home,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
                 _windowsDeveloperReadResolver!, _windowsDeveloperReadPolicy!);
+            services.AddHavenOwnedDeveloperSourceEdits(home,
+                provider => provider.GetRequiredService<IDeveloperProjectOriginalEditScopeSource>(),
+                _windowsDeveloperEditResolver!, _windowsDeveloperEditPolicy!);
             services.AddHavenOwnedDeveloperSetups(home,
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSetupScopeSource>(),
                 provider => provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
@@ -89,11 +98,28 @@ public sealed partial class App
                     () => _windowsDeveloperSelections ?? throw new InvalidOperationException("The SAME configured Files selection owner is not captured."),
                     () => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
                     () => provider.GetRequiredService<FileDeveloperWorkspaceStore>(),
-                    () => _windowsDeveloperSteps ?? throw new InvalidOperationException("The SAME configured Files execution-binding owner is not captured.")),
+                    () => _windowsDeveloperSteps ?? throw new InvalidOperationException("The SAME configured Files execution-binding owner is not captured."),
+                    provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>()),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupJournal>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
                 provider => provider.GetRequiredService<HomeDeveloperProjectSetupPermissionSource>(),
                 provider => provider.GetRequiredService<FileDeveloperWorkspaceStore>());
+            // The genuine manual (no-AI) read owner composes the REAL configured Files selection, Home
+            // read admission and kernel capture owners registered above; it fails closed when absent.
+            services.AddSingleton<DeveloperManualSourceReadOwner>(provider => new(
+                provider.GetRequiredService<NativeFilesWorkspaceService>(),
+                provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>()));
+            // The genuine manual (no-AI) edit owner composes the REAL configured Files selection, Home
+            // READ + WRITE admissions and kernel capture owners; it requires the configured edit scope
+            // and WRITE admission owners and fails closed when absent.
+            services.AddSingleton<DeveloperManualSourceEditOwner>(provider => new(
+                provider.GetRequiredService<NativeFilesWorkspaceService>(),
+                provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>(),
+                provider.GetRequiredService<HomeDeveloperProjectReadAdmissionSource>(),
+                provider.GetRequiredService<HomeDeveloperProjectEditAdmissionSource>(),
+                provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>()));
             if (WindowsColdProjectRequested)
             {
                 services.AddHavenOwnedNativeColdProjectResources(home);
@@ -119,6 +145,7 @@ public sealed partial class App
                 });
             }
             Capture<HomeDeveloperProjectReadAdmissionSource>(actual => _windowsDeveloperReads = actual);
+            Capture<HomeDeveloperProjectEditAdmissionSource>(actual => _windowsDeveloperEdits = actual);
             Capture<HomeDeveloperProjectSetupJournal>(actual => _windowsDeveloperJournal = actual);
             Capture<HomeDeveloperProjectSetupPermissionSource>(actual => _windowsDeveloperPermissions = actual);
             Capture<FilesDeveloperOriginalSourceSelection>(actual => _windowsDeveloperSelections = actual);
@@ -156,6 +183,7 @@ public sealed partial class App
         _windowsDeveloperPhysical?.DemandExternalOriginalJoin();
         _windowsDeveloperJournal?.DemandExternalOriginalRetirementJoin();
         _windowsDeveloperReads?.DemandExternalOriginalReadAdmissionJoin();
+        _windowsDeveloperEdits?.DemandExternalOriginalEditAdmissionJoin();
         _windowsCurrentExecution?.DemandExternalOriginalExecutionTrustJoin();
         _windowsExecutionConsent?.DemandExternalOriginalProcessStartConsentJoin();
         _windowsColdProjects?.DemandExternalOriginalJoin();
@@ -228,6 +256,7 @@ public sealed partial class App
         if (_windowsDeveloperPhysical is { } p) Close(p.CloseAndDrainOriginalCapturesAsync, dependencies);
         if (_windowsDeveloperJournal is { } j) Close(j.CloseAndDrainAsync, dependencies);
         if (_windowsDeveloperReads is { } r) Close(r.CloseAndDrainOriginalReadsAsync, dependencies);
+        if (_windowsDeveloperEdits is { } e) Close(e.CloseAndDrainOriginalEditsAsync, dependencies);
         if (_windowsColdProjects is { } c) Close(c.CloseAndDrainOriginalAsync, dependencies);
         if (_windowsCurrentProjects is { } f) Close(f.CloseAndDrainOriginalCurrentProjectsAsync, dependencies);
         if (_windowsCurrentProjectNative is { } n) Close(n.CloseAndDrainOriginalAsync, dependencies);

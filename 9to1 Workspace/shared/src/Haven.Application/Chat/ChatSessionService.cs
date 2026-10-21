@@ -44,9 +44,11 @@ public sealed partial class ChatSessionService(
     ITaskRunToolActionOwner? taskToolOwner = null,
     ITaskRunProviderContextCapture? taskProviderContextCapture = null,
     TaskRunCloudPermissionRemediationOwner? taskCloudPermissionRemediation = null,
-    IChatOriginalPersistentMemorySource? originalPersistentMemorySource = null)
+    IChatOriginalPersistentMemorySource? originalPersistentMemorySource = null,
+    IChatReasoningSelectionReader? reasoningSelection = null)
 {
     private IChatOriginalPersistentMemorySource? _originalPersistentMemorySource = originalPersistentMemorySource;
+    private readonly IChatReasoningSelectionReader? _reasoningSelection = reasoningSelection;
 
     // Preserve the exact existing 26-argument CLR constructor while opting into
     // the SAME configured scoped memory source in the new constructor.
@@ -79,7 +81,6 @@ public sealed partial class ChatSessionService(
     TaskRunCloudPermissionRemediationOwner? taskCloudPermissionRemediation)
         : this(conversations, ollama, preflight, safety, workspaceTools, computerTools, browserTools, automationTools, toolAvailability, modelInventory, mcpTools, calendarTools, pluginTools, executionEvents, recovery, remediations, personalities, modelPermissions, defaultProviders, checkpoints, projectInstructionFiles, memorySource, taskCoordinator, taskToolOwner, taskProviderContextCapture, taskCloudPermissionRemediation, originalPersistentMemorySource: null)
     { }
-
 
     // Preserve the selected 25-argument CLR constructor; adding the Ask owner is opt-in.
     public ChatSessionService(
@@ -1535,9 +1536,15 @@ public sealed partial class ChatSessionService(
                     : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.model-tool-turn", cancellationToken), cancellationToken)).ConfigureAwait(false);
                     var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
                     originalResponse = canonicalIntent ? ReserveOriginalChatResponse(originalCustody!, parentActionId) : null;
+                    var reasoning = await ResolveSelectedReasoningAsync(turnModel, conversation, cancellationToken).ConfigureAwait(false);
                     var originalRequest = new OllamaToolRequest(
                         turnModel.Name, turns, toolDefinitions, effort, system, generationOptions)
-                    { ExecutionContext = await ProviderContextAsync(originalResponse?.ActionId ?? parentActionId).ConfigureAwait(false) };
+                    {
+                        ExecutionContext = await ProviderContextAsync(originalResponse?.ActionId ?? parentActionId).ConfigureAwait(false),
+                        ReasoningId = reasoning?.ReasonId,
+                        ReasoningTargetProviderId = reasoning?.ProviderId,
+                        ReasoningTargetModelName = reasoning?.ModelName
+                    };
                     if (canonicalIntent)
                     {
                         originalCheckpoint = CaptureOriginalToolCheckpoint(originalCustody!, originalRequest,
@@ -1703,8 +1710,14 @@ public sealed partial class ChatSessionService(
                     : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.model-stream", cancellationToken), cancellationToken)).ConfigureAwait(false);
             var actualInventory = canonicalIntent ? await CaptureInventoryAsync(cancellationToken).ConfigureAwait(false) : null;
             var originalResponse = canonicalIntent ? ReserveOriginalChatResponse(originalCustody!, parentActionId) : null;
+            var reasoning = await ResolveSelectedReasoningAsync(turnModel, conversation, cancellationToken).ConfigureAwait(false);
             var originalRequest = new OllamaChatRequest(turnModel.Name, requestMessages, effort, system, Options: generationOptions)
-            { ExecutionContext = await ProviderContextAsync(originalResponse?.ActionId ?? parentActionId).ConfigureAwait(false) };
+            {
+                ExecutionContext = await ProviderContextAsync(originalResponse?.ActionId ?? parentActionId).ConfigureAwait(false),
+                ReasoningId = reasoning?.ReasonId,
+                ReasoningTargetProviderId = reasoning?.ProviderId,
+                ReasoningTargetModelName = reasoning?.ModelName
+            };
             if (!canonicalIntent)
             {
                 await CaptureOriginalChatAsync(originalRequest, actualInventory, cancellationToken).ConfigureAwait(false);
@@ -2379,6 +2392,34 @@ public sealed partial class ChatSessionService(
             return new ProviderModelDescriptor(model.Name[..separator], false, model);
         return new ProviderModelDescriptor("ollama", true, model);
     }
+
+    /// <summary>Resolves the exact selected reasoning binding for the ACTUAL dispatch target through the
+    /// Home-scoped typed read owner (when one is wired). Missing/unverified canonical selection returns
+    /// null so ordinary generation proceeds unchanged; a stale/mismatched/unadvertised selection raises
+    /// typed <see cref="UnsupportedCapabilityException"/> BEFORE any provider invocation. This is the
+    /// producer seam: the resolved id AND its genuine bound provider/model identity are carried on the
+    /// request (never set mechanically by a test, never guessed from a colon-split name).
+    /// Returns (ReasoningId, ReasoningTargetProviderId, ReasoningTargetModelName) or null for ordinary
+    /// generation.</summary>
+    private async Task<(string ReasonId, string ProviderId, string ModelName)?> ResolveSelectedReasoningAsync(
+        ModelDescriptor target, Conversation conversation, CancellationToken token)
+    {
+        if (_reasoningSelection is null) return null;
+        var binding = await _reasoningSelection.ResolveAsync(new ChatReasoningSelectionQuery(
+            conversation.Id.ToString(), target.Name, RequestedProviderId: null, IsLocal: false,
+            SurfaceScopeHint(conversation)), token).ConfigureAwait(false);
+        if (binding is null) return null;
+        // The target model name is the exact full registered name (e.g. native "qwen:tag") — never a
+        // split provider/model; the provider identity comes from the genuine Home projection.
+        return (binding.SelectedReasoningId, binding.ProviderId, binding.ModelName);
+    }
+
+    /// <summary>Real route-derived scope hint for the conversation surface. Production personal Home
+    /// routes are User-scoped; the advisory conversation mode text is never promoted to a canonical
+    /// scope (a Tasks conversation in a user space is still User-scoped). The Home adapter treats its
+    /// genuine route-derived scope as authoritative and compares this hint against it; an incoherent
+    /// surface omits the selection rather than applying it.</summary>
+    private static string SurfaceScopeHint(Conversation conversation) => "User";
 
     /// <summary>
     /// Builds system prompt from the currently available inputs.

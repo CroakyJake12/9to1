@@ -8,12 +8,13 @@
 namespace HavenOS.Apps.Dev;
 
 /// <summary>
-/// Stable metadata for the independent HavenOS Dev app surface.
+/// Stable metadata for the independent HavenOS Build (Dev) app surface. The public discovery name is
+/// Build; the app id and route key remain "dev" so existing dev identity/links/aliases stay compatible.
 /// </summary>
 public static class DeveloperAppDescriptor
 {
     public const string AppId = "dev";
-    public const string DisplayName = "Dev";
+    public const string DisplayName = "Build";
     public const string StudioModeId = "studio";
     public const string TerminalModeId = "terminal";
 

@@ -335,6 +335,24 @@ public sealed record OllamaChatRequest(
 {
     /// <summary>Original canonical Task/Run observation; this does not issue authority.</summary>
     public ProviderExecutionContext? ExecutionContext { get; init; }
+    /// <summary>Exact advertised named-reasoning id selected by a shared Home-owned selection source,
+    /// carried verbatim to a provider that faithfully supports it. Unset/empty means ordinary
+    /// generation and never requires the reasoning port.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ReasoningId { get; init; }
+
+    /// <summary>The genuine provider identity the <see cref="ReasoningId"/> was resolved for. The
+    /// dispatch layer refuses to forward an explicit reasoning id to a different provider/model, so a
+    /// named selection for model A is never silently carried to a fallback B. Unset with an explicit
+    /// reasoning id indicates a legacy request; routing then validates against the genuine requested
+    /// identity.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ReasoningTargetProviderId { get; init; }
+
+    /// <summary>The genuine registered model name (exact, e.g. a native Ollama "qwen:tag") the
+    /// <see cref="ReasoningId"/> was resolved for. Never a split provider/model guess.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ReasoningTargetModelName { get; init; }
 }
 
 /// <summary>
@@ -383,6 +401,24 @@ public sealed record OllamaToolRequest(
 {
     /// <summary>Original canonical Task/Run observation; this does not issue authority.</summary>
     public ProviderExecutionContext? ExecutionContext { get; init; }
+    /// <summary>Exact advertised named-reasoning id selected by a shared Home-owned selection source,
+    /// carried verbatim to a provider that faithfully supports it. Unset/empty means ordinary
+    /// generation and never requires the reasoning port.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ReasoningId { get; init; }
+
+    /// <summary>The genuine provider identity the <see cref="ReasoningId"/> was resolved for. The
+    /// dispatch layer refuses to forward an explicit reasoning id to a different provider/model, so a
+    /// named selection for model A is never silently carried to a fallback B. Unset with an explicit
+    /// reasoning id indicates a legacy request; routing then validates against the genuine requested
+    /// identity.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ReasoningTargetProviderId { get; init; }
+
+    /// <summary>The genuine registered model name (exact, e.g. a native Ollama "qwen:tag") the
+    /// <see cref="ReasoningId"/> was resolved for. Never a split provider/model guess.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? ReasoningTargetModelName { get; init; }
 }
 
 /// <summary>
