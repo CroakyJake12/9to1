@@ -110,6 +110,36 @@ public static class CuiPopupPresentation
         // Apply the alpha request to the fresh destination before its first show. The handler stays
         // subscribed for the lifetime of the popup, so every open (including reopens) negotiates.
         args.Destination.TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
+        EstablishBacking(args.Destination);
+    }
+
+    /// <summary>
+    /// Establish the CUI-owned backing (transparent root background) on a genuine native popup
+    /// destination before its first Show. The donor <see cref="PopupRoot"/> default Background is
+    /// white, and the CUI popup template clears it with a raw native LocalValue — but a raw local
+    /// value is not guaranteed to survive (a theme/ancestry or a CUI projection write can out-rank
+    /// it), which produced the observed white rectangle behind the rounded chrome. This path sets
+    /// the backing through the typed CUI property presentation at <see cref="CuiPropertyLevel.Overlay"/>
+    /// precedence (applied at Animation native priority), so it wins over the donor white default,
+    /// over any raw LocalValue, and over every lower CUI layer. It runs per-fresh-destination, so
+    /// reopening a popup (which creates a fresh destination) receives a fresh backing. The alpha-aware
+    /// fallback border (<c>PART_TransparencyFallback</c>) remains the sole painter of a positively
+    /// opaque destination and stays unpainted while alpha is unknown or negotiated.
+    /// </summary>
+    private static void EstablishBacking(PopupRoot destination)
+    {
+        if (destination is null) return;
+        // Attach the FULL CUI projection (ownsTemplate) FIRST so the genuine CUI popup template is
+        // installed on the destination. The full projection explicitly installs the CUI-owned
+        // PopupRoot template, which builds the PART_TransparencyFallback border inside TopLevelContent.
+        // Attaching a lightweight (ownsTemplate:false) projection here would be cached by the
+        // ConditionalWeakTable and shadow the full projection, leaving the template/border absent while
+        // only the property write survives. A full projection is the correct custody: it keeps the
+        // typed template ownership (and thus the fallback border) and the backing write below. If a
+        // full projection already exists, the lookup returns it unchanged.
+        CuiPropertyPresentation.Attach(destination);
+        CuiPropertyPresentation.Set(destination, "Background", Brushes.Transparent,
+            CuiPropertyLevel.Overlay, "CUI popup backing", -100);
     }
 
     /// <summary>

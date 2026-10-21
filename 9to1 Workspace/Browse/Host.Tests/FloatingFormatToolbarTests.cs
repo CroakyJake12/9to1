@@ -1,11 +1,13 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -41,6 +43,8 @@ public sealed class FloatingFormatToolbarTests
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
         public int FormatCount;
         public string? LastFormatCommand;
+        public int RemoveCount;
+        public string? LastRemovedId;
 
         public ValueTask Send() => ValueTask.CompletedTask;
         public ValueTask Stop() => ValueTask.CompletedTask;
@@ -50,7 +54,7 @@ public sealed class FloatingFormatToolbarTests
         public ValueTask SetActionMode(string mode) => ValueTask.CompletedTask;
         public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
         public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
-        public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
+        public ValueTask RemoveChip(string id) { LastRemovedId = id; RemoveCount++; return ValueTask.CompletedTask; }
         public ValueTask FormatSelection(string command) { LastFormatCommand = command; FormatCount++; return ValueTask.CompletedTask; }
         public ValueTask InsertEmoji(string emoji) => ValueTask.CompletedTask;
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
@@ -412,6 +416,166 @@ public sealed class FloatingFormatToolbarTests
     }
 
     [AvaloniaFact]
+    public async Task Bounded_chips_scroll_to_last_chip_and_remove_hit_reachable_with_all_six_commands_fitting()
+    {
+        // Float13 introduced a bounded (scrolling) chips row so a ten-chip wrap does not inflate the
+        // protected body and push the floating toolbar out of the 300x620 viewport. Pass14 raises the
+        // cap to accommodate a complete themed row (>=42px). This test proves the bounded row is both
+        // functional and honest: the row genuinely overflows and scrolls to the LAST chip, that last
+        // chip's remove hit target is reachable (real pointer dispatch reaches its remove action), and
+        // all six formatting commands still fit and dispatch at 300x620.
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = Enumerable.Range(0, 10)
+                .Select(i => new ChatComposerChip($"c{i}", $"Chip {i} label", false)).ToArray()
+        };
+        var view = new ChatComposerCuiView(source);
+        var window = CreateFooterWindow(view, 300, 620);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            var toolbarWin = WindowBounds(toolbar!, window);
+            Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the 300x620 viewport");
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover input");
+
+            // The bounded chips row is a genuine scroll viewport: content overflows it.
+            var chipsRow = FindContainer(view, "chips-row")!;
+            var scroller = chipsRow.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            Assert.NotNull(scroller);
+            Assert.True(scroller!.Extent.Height > scroller.Viewport.Height,
+                "wrapped chips must overflow the bounded row so scrolling reaches the last chip");
+            Assert.True(scroller.Viewport.Height >= 42,
+                "the bounded chips row must accommodate a complete themed row (>=42px)");
+
+            // Scroll to the LAST chip and prove it becomes reachable.
+            scroller.Offset = new Vector(0, scroller.Extent.Height - scroller.Viewport.Height);
+            PumpLayout(window);
+            Assert.True(scroller.Offset.Y > 0, "the chips row must scroll to reveal later rows");
+
+            var lastLabel = view.GetVisualDescendants().OfType<Button>()
+                .Single(b => b.Content is string s && s == "Chip 9 label");
+            // Parent is the renderer-private cell Border; use the actual retained authored chip owner
+            // to find the sibling remove button without relying on a private wrapper's descendants.
+            var chipContainer = lastLabel.GetVisualAncestors().OfType<CuiContainerControl>()
+                .FirstOrDefault(c => c.AuthoredChildren.Any(child => ReferenceEquals(child, lastLabel)));
+            Assert.NotNull(chipContainer);
+            Assert.Contains(lastLabel, chipContainer!.AuthoredChildren);
+            var removeButton = chipContainer.AuthoredChildren.OfType<Button>()
+                .Single(b => (string?)b.Content == "✕");
+            Assert.True(removeButton.IsEffectivelyVisible, "last-chip remove hit target must be effectively visible");
+
+            var clip = Assert.Single(scroller.GetVisualDescendants().OfType<ScrollContentPresenter>());
+            var clipBounds = new Rect(clip.Bounds.Size);
+            var removeOrigin = removeButton.TranslatePoint(default, clip);
+            Assert.NotNull(removeOrigin);
+            Assert.True(clipBounds.Contains(new Rect(removeOrigin.Value, removeButton.Bounds.Size)),
+                "last-chip remove hit target must lie inside the visible scroll clip");
+
+            // Real pointer dispatch on the scrolled-to-last chip's remove target reaches its action.
+            var removeCountBefore = source.RemoveCount;
+            Click(window, removeButton);
+            await view.CaptureOriginalActionSettlement();
+            Assert.Equal("c9", source.LastRemovedId);
+            Assert.Equal(removeCountBefore + 1, source.RemoveCount);
+
+            // All six formatting commands still fit and dispatch at 300x620.
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                var b = WindowBounds(commandButtons[i], window);
+                Assert.True(b.Width > 0 && b.Height > 0, $"format command {i} must remain visible");
+                Assert.True(windowClient.Contains(b), $"format command {i} must stay inside the viewport");
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+            }
+
+            // Retained selection/identity through the chips scroll/remove and format dispatches.
+            Assert.Same(box, FindInput(view));
+            Assert.True(box.IsKeyboardFocusWithin);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Floating_toolbar_command_clicks_return_focus_to_composer_input_with_competing_emoji_search()
+    {
+        // Floating-toolbar command clicks must return keyboard focus to the composer's embedded input
+        // even when an auxiliary text input (the emoji search box) is simultaneously visible in the same
+        // surface. This guards against resolving the wrong input (first-visible scanning) and proves the
+        // typed embedded-input focus-return contract across all six real command dispatches.
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = [new ChatComposerChip("c0", "Chip 0 label", false)]
+        };
+        var view = new ChatComposerCuiView(source);
+        var window = CreateFooterWindow(view, 900, 700);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            // Open the emoji panel too, so its search input is a visible competing text box.
+            Click(window, FindButton(view, "emoji-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var emojiSearch = FindContainer(view, "emoji-search");
+            Assert.NotNull(emojiSearch);
+            Assert.True(emojiSearch!.IsEffectivelyVisible, "emoji search must be visible as a competing input");
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+                // Focus must have returned to the composer input, not the competing emoji search.
+                Assert.True(box.IsKeyboardFocusWithin, $"focus must return to composer input after command {i}");
+            }
+
+            Assert.Same(box, FindInput(view));
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Live_target_retarget_reanchors_swaps_observers_and_matches_ids_case_sensitively()
     {
         var source = new Source
@@ -510,29 +674,41 @@ public sealed class FloatingFormatToolbarTests
             AssertPlaced(toolbar!);
             var tb = toolbar!;
             var layer = FindContainer(view, "composer-floating-layer")!;
-            var cell = Assert.IsType<Border>(layer.GetVisualParent());
+
+            // Placed: the CURRENT real physical owner of the retained host (the portal wrapper while the
+            // bar has escaped, or the panel-private cell otherwise) is visible, and the toolbar actually
+            // participates in rendering/input. We never cache the owner across phases: retirement/restore
+            // moves the retained host between the portal wrapper and the panel-private cell.
             Assert.True(tb.IsVisible, "with enough space the toolbar must be visible");
-            Assert.True(cell.IsVisible, "the floating cell must be present when placed");
+            Assert.True(tb.IsEffectivelyVisible, "placed toolbar must be effectively visible");
+            var ownerPlaced = Assert.IsType<Border>(layer.GetVisualParent());
+            Assert.True(ownerPlaced.IsVisible, "the floating cell must be present when placed");
 
             // Shrink the usable height until no side offers genuinely safe space. The toolbar must be
-            // ACTUALLY removed from paint/hit/focus (the panel-private cell wrapper hidden), NOT merely
-            // arranged at a zero rect that still lets positive-sized buttons paint near the origin.
+            // ACTUALLY removed from paint/hit/focus (the current panel-private cell wrapper hidden), NOT
+            // merely arranged at a zero rect that still lets positive-sized buttons paint near the origin.
             window.Height = 100;
             PumpLayout(window);
 
-            // Genuine suppression: the panel-private wrapper is hidden, so the whole subtree loses
+            // Genuine suppression: the CURRENT real owner is hidden, so the whole subtree loses
             // paint/hit/focus/tab participation. The authored FormattingOpen state is preserved (the
             // authored toolbar is still "open") — this is NOT a hidden-as-success conversion.
-            Assert.False(cell.IsVisible, "no-safe-space must actually remove the floating cell's subtree");
-            Assert.True(FindContainer(view, "format-toolbar")!.IsVisible);
+            Assert.False(tb.IsEffectivelyVisible,
+                "no-safe-space must actually remove the floating cell's subtree from paint/hit/focus");
+            Assert.True(tb.IsVisible, "authored toolbar open state must be preserved under suppression");
+            var ownerSuppressed = Assert.IsType<Border>(layer.GetVisualParent());
+            Assert.False(ownerSuppressed.IsVisible, "the floating cell's subtree must be hidden when suppressed");
             var suppressedButton = ToolbarButton(tb, 0);
             Assert.NotNull(suppressedButton);
             Assert.False(suppressedButton!.IsEffectivelyVisible, "suppressed toolbar buttons must not be effectively visible (no paint/hit/tab/focus)");
 
-            // Recovery: when safe space returns, the SAME retained authored toolbar is placed again.
+            // Recovery: when safe space returns, the SAME retained authored toolbar is placed again under
+            // its current real owner.
             window.Height = 700;
             PumpLayout(window);
-            Assert.True(cell.IsVisible, "toolbar must recover once safe space returns");
+            Assert.True(tb.IsEffectivelyVisible, "recovered toolbar must be effectively visible");
+            var ownerRecovered = Assert.IsType<Border>(layer.GetVisualParent());
+            Assert.True(ownerRecovered.IsVisible, "toolbar must recover once safe space returns");
             Assert.True(tb.Bounds.Width > 0 && tb.Bounds.Height > 0);
             Assert.Same(tb, FindContainer(view, "format-toolbar"));
             var windowClient = new Rect(0, 0, window.Width, window.Height);
@@ -612,25 +788,84 @@ public sealed class FloatingFormatToolbarTests
 
     private static void AssertPlaced(Control toolbar)
     {
-        Assert.True(toolbar.IsVisible, "authored toolbar must be open");
-        Assert.True(toolbar.IsEffectivelyVisible, "placed toolbar must participate in actual rendering/input");
+        // Read-only fixture observation: do not remeasure, arrange, toggle, or dispatch while diagnosing.
+        var diagnostic = toolbar.IsVisible && toolbar.IsEffectivelyVisible
+            && toolbar.Bounds.Width > 0 && toolbar.Bounds.Height > 0
+                ? string.Empty : PlacementDiagnostic(toolbar);
+        Assert.True(toolbar.IsVisible, "authored toolbar must be open\n" + diagnostic);
+        Assert.True(toolbar.IsEffectivelyVisible,
+            "placed toolbar must participate in actual rendering/input\n" + diagnostic);
         Assert.True(toolbar.Bounds.Width > 0 && toolbar.Bounds.Height > 0,
-            "placed toolbar must have a positive physical rectangle");
+            "placed toolbar must have a positive physical rectangle\n" + diagnostic);
+    }
+
+    private static string PlacementDiagnostic(Control toolbar)
+    {
+        var chain = new[] { toolbar }.Concat(toolbar.GetVisualAncestors().OfType<Control>()).ToArray();
+        var top = TopLevel.GetTopLevel(toolbar);
+        var owner = chain.OfType<CuiContainerControl>().FirstOrDefault(c => c.LayoutType == "Overlay Float");
+        var host = chain.OfType<CuiContainerControl>().FirstOrDefault(c => c.AuthoredTargetId is not null);
+        var panel = owner?.Layout;
+        var targetId = host?.AuthoredTargetId;
+        var targets = owner is null || targetId is null
+            ? Array.Empty<Control>()
+            : new Control[] { owner }.Concat(owner.GetVisualDescendants().OfType<Control>())
+                .Where(c => AutomationProperties.GetAutomationId(c) == targetId).ToArray();
+        var text = new System.Text.StringBuilder();
+        text.AppendLine("PLACEMENT DIAGNOSTIC (current state; no layout mutation)");
+        foreach (var control in chain) text.AppendLine("parent-chain " + Describe(control));
+        text.AppendLine("authored-host " + (host is null ? "<none>" : Describe(host)));
+        text.AppendLine($"relationship Target={targetId ?? "<none>"} Placement={host?.AuthoredPlacement ?? "<none>"}");
+        text.AppendLine("owner-panel " + (panel is null ? "<none>" : Describe(panel)));
+        text.AppendLine("actual-top " + (top is null ? "<none>" : Describe(top)));
+        if (top is not null)
+        {
+            text.AppendLine($"top-client-viewport={new Rect(top.Bounds.Size)}");
+            var viewportOrigin = panel is null ? null : top.TranslatePoint(default, panel);
+            text.AppendLine($"top-origin-in-owner-panel={viewportOrigin?.ToString() ?? "<untranslatable>"}");
+            if (viewportOrigin is not null)
+                text.AppendLine($"owner-viewport={new Rect(viewportOrigin.Value, top.Bounds.Size)}");
+        }
+        text.AppendLine($"actual-target-matches={targets.Length}");
+        foreach (var target in targets)
+        {
+            text.AppendLine("target " + Describe(target));
+            var anchorOrigin = panel is null ? null : target.TranslatePoint(default, panel);
+            text.AppendLine($"target-origin-in-owner-panel={anchorOrigin?.ToString() ?? "<untranslatable>"}");
+            if (anchorOrigin is not null)
+                text.AppendLine($"target-anchor={new Rect(anchorOrigin.Value, target.Bounds.Size)}");
+        }
+        return text.ToString();
+
+        static string Describe(Control control) =>
+            $"{control.GetType().Name}#{AutomationProperties.GetAutomationId(control) ?? ""} " +
+            $"IsVisible={control.IsVisible} effective={control.IsEffectivelyVisible} " +
+            $"attached={control.IsAttachedToVisualTree()} bounds={control.Bounds} desired={control.DesiredSize}";
     }
 
     private static void Click(TopLevel top, Control target)
     {
-        var center = Center(target, top);
-        top.MouseMove(center);
-        top.MouseDown(center, MouseButton.Left);
-        top.MouseUp(center, MouseButton.Left);
+        // Dispatch genuine pointer input on the target's actual top level, including an owned portal.
+        var actualTop = TopLevel.GetTopLevel(target);
+        Assert.NotNull(actualTop);
+        var center = Center(target, actualTop!);
+        actualTop!.MouseMove(center);
+        actualTop.MouseDown(center, MouseButton.Left);
+        actualTop.MouseUp(center, MouseButton.Left);
         Pump();
     }
 
     private static Rect WindowBounds(Control control, TopLevel top)
     {
-        var origin = control.TranslatePoint(default, top) ?? default;
-        return new Rect(origin.X, origin.Y, control.Bounds.Width, control.Bounds.Height);
+        // A retained toolbar may physically live in its owned popup top level. Cross the real
+        // client/screen transforms rather than silently substituting origin when translation fails.
+        var actualTop = TopLevel.GetTopLevel(control);
+        Assert.NotNull(actualTop);
+        var origin = control.TranslatePoint(default, actualTop!)
+            ?? throw new InvalidOperationException("WindowBounds: control translation to its top level failed");
+        var screen = actualTop!.PointToScreen(origin);
+        Assert.True(double.IsFinite(screen.X) && double.IsFinite(screen.Y), "WindowBounds: non-finite screen origin");
+        return new Rect(top.PointToClient(screen), control.Bounds.Size);
     }
 
     private static Point Center(Control control, TopLevel top)
@@ -639,9 +874,33 @@ public sealed class FloatingFormatToolbarTests
         return new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
     }
 
-    private static Control? FindContainer(ContentControl root, string automationId) =>
-        root.GetVisualDescendants().OfType<Control>().SingleOrDefault(control =>
-            AutomationProperties.GetAutomationId(control) == automationId);
+    private static Control? FindContainer(ContentControl root, string automationId)
+    {
+        // Follow ONLY this composer's physical tree and its own logical popup custody. Never find an
+        // arbitrary matching toolbar elsewhere in the window. Hidden detached authored children are
+        // not searched, so the existing closed-state Assert.Null remains meaningful.
+        var matches = new HashSet<Control>(ReferenceEqualityComparer.Instance);
+        foreach (var control in root.GetVisualDescendants().OfType<Control>()
+            .Concat(root.GetLogicalDescendants().OfType<Control>()))
+            if (AutomationProperties.GetAutomationId(control) == automationId) matches.Add(control);
+        var found = matches.SingleOrDefault();
+        if (found is null || root.IsVisualAncestorOf(found)) return found;
+
+        // Prove that the discovered popup content is the SAME retained authored Floating host owned
+        // by this composer's actual overlay. AuthoredChildren keeps this identity while cell.Child
+        // is physically detached into the portal; the owning logical Popup must hold that same host.
+        var host = (found as CuiContainerControl)?.AuthoredTargetId is not null
+            ? (CuiContainerControl)found
+            : found.GetVisualAncestors().OfType<CuiContainerControl>().FirstOrDefault(c => c.AuthoredTargetId is not null);
+        Assert.NotNull(host);
+        var owner = root.GetVisualDescendants().OfType<CuiContainerControl>().SingleOrDefault(c =>
+            c.LayoutType == "Overlay Float" && c.AuthoredChildren.Any(child => ReferenceEquals(child, host)));
+        Assert.NotNull(owner);
+        Assert.Contains(host!, owner!.AuthoredChildren);
+        Assert.Contains(root.GetLogicalDescendants().OfType<Avalonia.Controls.Primitives.Popup>(), popup =>
+            popup.Child is Control child && (ReferenceEquals(child, host) || child.IsVisualAncestorOf(host!)));
+        return found;
+    }
 
     private static Button? FindButton(ContentControl root, string automationId) =>
         root.GetVisualDescendants().OfType<Button>().SingleOrDefault(b =>

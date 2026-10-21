@@ -58,6 +58,7 @@ public sealed class SpacesHomeNativeRenderingTests
                     case "spaces.confirm-rename": await controller.ConfirmRenameAsync(cancellationToken); break;
                     case "spaces.cancel-rename": controller.CancelRename(); break;
                     case "spaces.select-move-parent": controller.SelectMoveParentIndex((int)parameter!); break;
+                    case "spaces.manage": controller.ToggleManage(); break;
                     default: throw new InvalidOperationException($"Unknown command {command}");
                 }
             });
@@ -147,9 +148,9 @@ public sealed class SpacesHomeNativeRenderingTests
                 Assert.DoesNotContain(rail.GetVisualDescendants().OfType<TextBlock>(), item => item.IsEffectivelyVisible && !string.IsNullOrEmpty(item.Text));
                 Assert.Contains(rail.GetVisualDescendants().OfType<Button>(), item => AutomationProperties.GetName(item) == "Open Study");
 
-                var createButton = FindButton(root, "create-space");
-                Assert.True(createButton.Bounds.Width >= 44 && createButton.Bounds.Height >= 24,
-                    "Create Space button must remain a usable touch target.");
+                var manageButton = FindButton(root, "manage-spaces");
+                Assert.True(manageButton.Bounds.Width >= 44 && manageButton.Bounds.Height >= 24,
+                    "Manage Spaces rail button must remain a usable touch target.");
             }
             finally
             {
@@ -161,7 +162,7 @@ public sealed class SpacesHomeNativeRenderingTests
     }
 
     [Fact]
-    public async Task Clicking_create_space_button_creates_a_custom_space()
+    public async Task Manager_open_does_not_create_and_inside_manager_create_creates_once()
     {
         using var lifetime = new CancellationTokenSource();
         await using var session = HeadlessUnitTestSession.StartNew(typeof(SpacesTestApp));
@@ -178,11 +179,20 @@ public sealed class SpacesHomeNativeRenderingTests
                 window.UpdateLayout();
                 Dispatcher.UIThread.RunJobs();
 
-                var createButton = FindButton(root, "create-space");
-                await ClickAsync(window, loader, createButton);
+                // Opening the top rail manager is a viewing action only: it must NOT create or select
+                // a new Space, and it reveals the SAME canonical management surface.
+                var manageButton = FindButton(root, "manage-spaces");
+                await ClickAsync(window, loader, manageButton);
+                Assert.Empty(controller.State.CustomSpaces);
+                Assert.True(controller.State.IsManaging);
 
-                Assert.Single(controller.State.CustomSpaces);
-                Assert.Equal("New Space", controller.State.CustomSpaces[0].Name);
+                // Explicit creation lives INSIDE the manager and uses the real spaces.create action,
+                // so it creates exactly once with the canonical "New Space" name.
+                var createInside = FindButton(root, "create-space-in-manager");
+                await ClickAsync(window, loader, createInside);
+
+                var created = Assert.Single(controller.State.CustomSpaces);
+                Assert.Equal("New Space", created.Name);
                 Assert.False(controller.State.Selection?.IsRenaming ?? false);
             }
             finally
@@ -331,8 +341,8 @@ public sealed class SpacesHomeNativeRenderingTests
         {
             var registry = new SpaceRegistry(new MemorySettingsStore());
             var spaces = new List<SpaceDefinition>();
-            for (var index = 1; index <= 12; index++)
-                spaces.Add(await registry.CreateAsync($"Viewport Space {index}"));
+            for (var index = 1; index <= 20; index++)
+                spaces.Add(await registry.CreateAsync($"Viewport Space {index:D2}"));
             await registry.SetCurrentSpaceIdAsync(spaces[0].Id);
             var target = spaces[^1];
             var (controller, _, loader, root) = LoadInWindow(registry);
@@ -356,7 +366,7 @@ public sealed class SpacesHomeNativeRenderingTests
                 Assert.True(detailsScroll.Extent.Width <= detailsScroll.Viewport.Width + .5);
                 var row = root.GetVisualDescendants().OfType<Button>().Single(item =>
                     item.Name == "open-custom-space" && AutomationProperties.GetName(item) == $"Open {target.Name}");
-                Assert.True(BoundsInWindow(row).Top >= sideBounds.Bottom, "Fixture must start with the target row offscreen.");
+                Assert.True(BoundsInWindow(row).Top >= sideBounds.Bottom, $"Fixture must start with the target row offscreen. Pane={sideBounds}; target={BoundsInWindow(row)}; extent={sidebarScroll.Extent}; offset={sidebarScroll.Offset}.");
                 var detailOffset = detailsScroll.Offset;
                 var sideWheelPoint = sideBounds.Center;
                 var wheelTrace = new List<string>();

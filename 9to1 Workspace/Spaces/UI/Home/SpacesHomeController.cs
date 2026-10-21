@@ -148,7 +148,11 @@ public sealed record SpacesHomeViewState(
     // they never change which Space is selected or what a conversation contains.
     bool SidebarCollapsed = false,
     bool SpaceSwitcherOpen = false,
-    bool SpaceOverflowOpen = false)
+    bool SpaceOverflowOpen = false,
+    // Presentation-only manager visibility: when true the authored space-details management
+    // surface is shown even while a Space workspace is mounted. It never detaches or changes
+    // the mounted workspace/chat, draft or ownership.
+    bool IsManaging = false)
 {
     public static SpacesHomeViewState Empty { get; } = new(
         string.Empty,
@@ -278,7 +282,11 @@ public sealed class SpacesHomeController
                 publishBase + 1,
                 pendingRenameSpaceId,
                 renameDraft,
-                moveIndex), publishBase);
+                moveIndex,
+                SidebarCollapsed: State.SidebarCollapsed,
+                SpaceSwitcherOpen: State.SpaceSwitcherOpen,
+                SpaceOverflowOpen: State.SpaceOverflowOpen,
+                IsManaging: State.IsManaging), publishBase);
 
             if (published)
             {
@@ -459,6 +467,41 @@ public sealed class SpacesHomeController
             SpaceOverflowOpen = open,
             SpaceSwitcherOpen = false,
             StatusMessage = open ? "Quick actions for this Space." : "Quick actions closed."
+        }, baseRevision);
+    }
+
+    /// <summary>Toggles the presentation-only manager visibility. Opening it reveals the SAME
+    /// canonical management surface (the authored space-details region) over a mounted Space
+    /// workspace without detaching or changing that workspace/chat; returning restores the same
+    /// mounted instance. This never mutates the registry, selects a Space or changes any draft.</summary>
+    public void ToggleManage()
+    {
+        if (State.IsManaging)
+        {
+            CloseManage();
+            return;
+        }
+        var baseRevision = State.Revision;
+        TryPublish(State with
+        {
+            IsManaging = true,
+            StatusMessage = "Manage Spaces."
+        }, baseRevision);
+    }
+
+    /// <summary>Idempotently closes the presentation-only manager when it is open. Unlike
+    /// <see cref="ToggleManage"/> it never opens the manager and never toggles blindly: it only
+    /// clears the flag when it is currently set. This is the guarded close used after a REAL
+    /// navigation publication so the newly published workspace is revealed; it never mutates the
+    /// registry, selects a Space or changes any draft.</summary>
+    public void CloseManage()
+    {
+        if (!State.IsManaging) return;
+        var baseRevision = State.Revision;
+        TryPublish(State with
+        {
+            IsManaging = false,
+            StatusMessage = "Returned to Space."
         }, baseRevision);
     }
 
