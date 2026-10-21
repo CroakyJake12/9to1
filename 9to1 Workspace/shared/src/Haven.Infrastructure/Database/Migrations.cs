@@ -827,6 +827,8 @@ internal static class Migrations
         """),
         new(27, PlannerRichEntitiesMigration.Sql),
         new(TaskExecutionRevisionMigration.Version, TaskExecutionRevisionMigration.Sql),
-        new(AutomationRunCanonicalStateMigration.Version, AutomationRunCanonicalStateMigration.Sql)
+        new(AutomationRunCanonicalStateMigration.Version, AutomationRunCanonicalStateMigration.Sql),
+        new(AutomationRunClaimStoreMigration.Version, AutomationRunClaimStoreMigration.Sql),
+        new(AutomationRunClaimSettlementMigration.Version, AutomationRunClaimSettlementMigration.Sql)
     ];
 }
