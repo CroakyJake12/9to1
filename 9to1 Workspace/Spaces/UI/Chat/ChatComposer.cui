@@ -27,7 +27,7 @@
         background="{Resource CuiPanelBrush}" CornerRadius="28" accessible-name="Message composer"
         compound-focus="true" owns-backdrop="true">
     <Container id="composer-body" Type="Vertical Stack" CellGap="8">
-    <Container id="chips-row" Type="Wrap" CellGap="6" MaxHeight="40" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
+    <Container id="chips-row" Type="Wrap" CellGap="6" MaxHeight="84" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding Composer.HasChips}">
       <Repeat Source="{Binding Composer.Chips}" As="chip" Key="{Binding chip.Id}">
         <Container Type="Horizontal Stack" CellGap="4" padding="4" background="{Resource CuiPanelBrush}" CornerRadius="12">
           <Button action="composer.invoke-chip.Id" content="{Binding chip.Label}" font-size="11" Interactive="{Binding chip.Invokable}" accessible-name="{Binding chip.Label}" />

@@ -139,6 +139,10 @@ public static class CuiControlTemplates
         // background).
         if (owner is PopupRoot popupRoot)
         {
+            // The donor PopupRoot default Background is white; leave the root backing transparent so only
+            // the themed chrome (rounded surface + shadow margin) paints. The alpha-aware fallback border
+            // paints the guaranteed-Opaque semantic brush only on a positively opaque destination.
+            owner.Background = Brushes.Transparent;
             owner.Bind(TopLevel.TransparencyBackgroundFallbackProperty, owner.GetResourceObservable("CuiPopupOpaqueFallbackBrush"));
             CuiTransparencyFallback.Attach(popupRoot, fallback);
             return new Panel { Children = { fallback, new CuiMaterialBorder { Child = layers } } };

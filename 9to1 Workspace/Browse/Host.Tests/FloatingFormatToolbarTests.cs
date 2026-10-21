@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -42,6 +43,8 @@ public sealed class FloatingFormatToolbarTests
         public IReadOnlyList<ChatComposerChip> Chips { get; set; } = [];
         public int FormatCount;
         public string? LastFormatCommand;
+        public int RemoveCount;
+        public string? LastRemovedId;
 
         public ValueTask Send() => ValueTask.CompletedTask;
         public ValueTask Stop() => ValueTask.CompletedTask;
@@ -51,7 +54,7 @@ public sealed class FloatingFormatToolbarTests
         public ValueTask SetActionMode(string mode) => ValueTask.CompletedTask;
         public ValueTask SetResponseMode(string mode) => ValueTask.CompletedTask;
         public ValueTask InvokeChip(string id) => ValueTask.CompletedTask;
-        public ValueTask RemoveChip(string id) => ValueTask.CompletedTask;
+        public ValueTask RemoveChip(string id) { LastRemovedId = id; RemoveCount++; return ValueTask.CompletedTask; }
         public ValueTask FormatSelection(string command) { LastFormatCommand = command; FormatCount++; return ValueTask.CompletedTask; }
         public ValueTask InsertEmoji(string emoji) => ValueTask.CompletedTask;
         public ValueTask CancelEdit() => ValueTask.CompletedTask;
@@ -404,6 +407,104 @@ public sealed class FloatingFormatToolbarTests
             Assert.Same(box, FindInput(view));
             Assert.True(box.IsKeyboardFocusWithin);
             Assert.Equal(0, view.Input.SelectionLength);
+        }
+        catch (Exception error) { testFailure = error; throw; }
+        finally
+        {
+            await FinishComposerTestAsync(window, view, testFailure);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Bounded_chips_scroll_to_last_chip_and_remove_hit_reachable_with_all_six_commands_fitting()
+    {
+        // Float13 introduced a bounded (scrolling) chips row so a ten-chip wrap does not inflate the
+        // protected body and push the floating toolbar out of the 300x620 viewport. Pass14 raises the
+        // cap to accommodate a complete themed row (>=42px). This test proves the bounded row is both
+        // functional and honest: the row genuinely overflows and scrolls to the LAST chip, that last
+        // chip's remove hit target is reachable (real pointer dispatch reaches its remove action), and
+        // all six formatting commands still fit and dispatch at 300x620.
+        var source = new Source
+        {
+            CanSend = true,
+            Chips = Enumerable.Range(0, 10)
+                .Select(i => new ChatComposerChip($"c{i}", $"Chip {i} label", false)).ToArray()
+        };
+        var view = new ChatComposerCuiView(source);
+        var window = CreateFooterWindow(view, 300, 620);
+        window.Show();
+        Exception? testFailure = null;
+        try
+        {
+            await view.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            PumpLayout(window);
+            var box = FindInput(view);
+            Assert.NotNull(box);
+            box!.Focus(); Pump();
+            Click(window, FindButton(view, "format-button")!);
+            await view.CaptureOriginalActionSettlement(); PumpLayout(window);
+
+            var toolbar = FindContainer(view, "format-toolbar");
+            Assert.NotNull(toolbar);
+            AssertPlaced(toolbar!);
+            var windowClient = new Rect(0, 0, window.Width, window.Height);
+            var toolbarWin = WindowBounds(toolbar!, window);
+            Assert.True(windowClient.Contains(toolbarWin), "toolbar must fit inside the 300x620 viewport");
+            Assert.False(toolbarWin.Intersects(WindowBounds(box, window)), "toolbar must not cover input");
+
+            // The bounded chips row is a genuine scroll viewport: content overflows it.
+            var chipsRow = FindContainer(view, "chips-row")!;
+            var scroller = chipsRow.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            Assert.NotNull(scroller);
+            Assert.True(scroller!.Extent.Height > scroller.Viewport.Height,
+                "wrapped chips must overflow the bounded row so scrolling reaches the last chip");
+            Assert.True(scroller.Viewport.Height >= 42,
+                "the bounded chips row must accommodate a complete themed row (>=42px)");
+
+            // Scroll to the LAST chip and prove it becomes reachable.
+            scroller.Offset = new Vector(0, scroller.Extent.Height - scroller.Viewport.Height);
+            PumpLayout(window);
+            Assert.True(scroller.Offset.Y > 0, "the chips row must scroll to reveal later rows");
+
+            var lastLabel = view.GetVisualDescendants().OfType<Button>()
+                .Single(b => b.Content is string s && s == "Chip 9 label");
+            var chipContainer = lastLabel.Parent as Control;
+            Assert.NotNull(chipContainer);
+            var removeButton = chipContainer!.GetVisualDescendants().OfType<Button>()
+                .Single(b => (string?)b.Content == "✕");
+            Assert.True(removeButton.IsEffectivelyVisible, "last-chip remove hit target must be effectively visible");
+
+            var clip = Assert.Single(scroller.GetVisualDescendants().OfType<ScrollContentPresenter>());
+            var clipBounds = new Rect(clip.Bounds.Size);
+            var removeOrigin = removeButton.TranslatePoint(default, clip);
+            Assert.NotNull(removeOrigin);
+            Assert.True(clipBounds.Contains(new Rect(removeOrigin.Value, removeButton.Bounds.Size)),
+                "last-chip remove hit target must lie inside the visible scroll clip");
+
+            // Real pointer dispatch on the scrolled-to-last chip's remove target reaches its action.
+            var removeCountBefore = source.RemoveCount;
+            Click(window, removeButton);
+            await view.CaptureOriginalActionSettlement();
+            Assert.Equal("c9", source.LastRemovedId);
+            Assert.Equal(removeCountBefore + 1, source.RemoveCount);
+
+            // All six formatting commands still fit and dispatch at 300x620.
+            var commandButtons = toolbar!.GetVisualDescendants().OfType<Button>().ToArray();
+            Assert.Equal(6, commandButtons.Length);
+            var expected = new[] { "Bold", "Italic", "Code", "Link", "Quote", "Bullet" };
+            for (var i = 0; i < commandButtons.Length; i++)
+            {
+                var b = WindowBounds(commandButtons[i], window);
+                Assert.True(b.Width > 0 && b.Height > 0, $"format command {i} must remain visible");
+                Assert.True(windowClient.Contains(b), $"format command {i} must stay inside the viewport");
+                Click(window, commandButtons[i]);
+                await view.CaptureOriginalActionSettlement();
+                Assert.Equal(expected[i], source.LastFormatCommand);
+            }
+
+            // Retained selection/identity through the chips scroll/remove and format dispatches.
+            Assert.Same(box, FindInput(view));
+            Assert.True(box.IsKeyboardFocusWithin);
         }
         catch (Exception error) { testFailure = error; throw; }
         finally
