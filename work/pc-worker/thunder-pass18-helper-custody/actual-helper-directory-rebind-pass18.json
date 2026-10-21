@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-21T17:06:01.279071+00:00",
+  "source_sha256": "6181ac1e76a9a0373c7dd7da3edcc282290322574116ba88129994550bb877e2",
+  "scope": "Actual helper import under held directory descriptor while original path is rebound before donor import; test-only donor types, no model/engine/GPU/Ready",
+  "rebind_injected": true,
+  "donor_available": true,
+  "actual_donor_tag": "ORIGINAL_HELD_DONOR",
+  "donor_cause": null,
+  "passed": true
+}

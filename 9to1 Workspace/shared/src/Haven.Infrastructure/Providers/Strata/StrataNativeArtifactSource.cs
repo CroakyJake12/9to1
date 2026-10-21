@@ -88,7 +88,7 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         if (_authority is not ITaskRunOriginalInferenceAdmissionSource permissions)
             throw Setup(requested, "STRATA_ORIGINAL_PERMISSION_SOURCE_SCOPE_REQUIRED");
         StrataVerifiedInstallationLease? installation = null; IAsyncDisposable? pin = null; ProtectedRoot? root = null;
-        HeldLease? held = null;
+        ProtectedRoot? engineRoot = null; HeldLease? held = null;
         try
         {
             var current = await work.ReadAsync(() => attempts.GetIssuedAttemptWithinOriginalSourceAsync(admission,
@@ -113,12 +113,33 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
             await work.AcquireAsync(() => AcquireSharedPinAsync(work, admission, token), value => pin = value).ConfigureAwait(false);
             if (pin is null) throw new UnauthorizedAccessException("Original model-use lifetime pin was refused.");
             work.Invoke(() => { permissions.DemandOriginalInferenceAdmission(admission); return 0; });
+            var workerImmutable = worker && metadata.Profile is not null; // candidate V2 binds its native dir kernel-immutable
             _ = work.Invoke(() => { root = new ProtectedRoot(worker ? metadata.WorkerRoot : metadata.CheckpointRoot,
-                immutableDirectory: !worker); return root; });
+                immutableDirectory: !worker || workerImmutable); return root; });
             if (worker)
+            {
                 await root!.ReadFileAsync(metadata.WorkerFile, work, token, worker: true).ConfigureAwait(false);
+                // Candidate V2 binds its complete engine/helper runtime closure BEFORE use: the engine
+                // sibling directory is held as a second protected root and the four helper text-path
+                // members are pinned next to the worker. Missing/mismatched/unknown closure fails
+                // closed here — never a silent V1 fallback and never a probe-before-create launch.
+                if (metadata.Profile is { })
+                {
+                    if (metadata.EngineRoot is not { } engineRootPath || metadata.EngineFile is not { } engine ||
+                        metadata.HelperFiles is not { Count: 4 } helpers ||
+                        engine.RelativeName != "strata" ||
+                        !helpers.All(helper => helper.RelativeName is not (null or "" or "." or "..") &&
+                            helper.RelativeName.IndexOfAny(['/', '\\', '\0']) < 0) ||
+                        helpers.Select(helper => helper.RelativeName).Distinct(StringComparer.Ordinal).Count() != helpers.Count)
+                        throw new InvalidDataException("The candidate worker is missing its complete signed engine/helper runtime closure.");
+                    engineRoot = new ProtectedRoot(engineRootPath, immutableDirectory: true);
+                    await engineRoot.ReadFileAsync(engine, work, token, worker: true).ConfigureAwait(false);
+                    foreach (var helper in helpers)
+                        await root.ReadFileAsync(helper, work, token, worker: false).ConfigureAwait(false);
+                }
+            }
             else
-                await root!.ReadCheckpointAsync(metadata.Files, metadata.Requirements, model, work, token).ConfigureAwait(false);
+                await root!.ReadCheckpointAsync(metadata.Files, metadata.Requirements, model, metadata.Profile, work, token).ConfigureAwait(false);
             StrataOriginalHardwareObservation? hardware = null;
             if (!worker)
             {
@@ -134,9 +155,9 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
             current = await work.ReadAsync(() => attempts.GetIssuedAttemptWithinOriginalSourceAsync(admission, work.Run, work.Retain, token)).ConfigureAwait(false);
             if (!ReferenceEquals(current, admission)) throw new UnauthorizedAccessException("The original model admission changed during artifact reads.");
             work.Invoke(() => { installation!.DemandCurrentOriginalInstallation(); root!.DemandCurrent(); permissions.DemandOriginalInferenceAdmission(admission); return 0; });
-            held = new HeldLease(this, work, model, admission, installation!, pin, root!, hardware, metadata);
+            held = new HeldLease(this, work, model, admission, installation!, pin, root!, engineRoot, hardware, metadata);
             lock (_gate) { if (_sealed) throw new ObjectDisposedException(nameof(StrataNativeArtifactSource)); _leases.Add(held); }
-            installation = null; pin = null; root = null;
+            installation = null; pin = null; root = null; engineRoot = null;
             work.Published = true; // Future live lease callbacks use own physical source phase, never revive completed initialization ancestry.
             return worker ? new WorkerLease(held) : new ModelLease(held);
         }
@@ -151,6 +172,7 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
                 catch (Exception cleanup) { work.Add(null, cleanup); }
             }
             if (root is not null) work.Cleanup(() => root.Dispose());
+            if (engineRoot is not null) work.Cleanup(() => engineRoot.Dispose());
             if (pin is not null) await work.CloseAsync(pin).ConfigureAwait(false);
             if (installation is not null) await work.CloseAsync(installation).ConfigureAwait(false);
         }
@@ -160,7 +182,8 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         new(new(DulcheErrorCode.ProviderUnavailable, missing, model.StableKey, false));
     private sealed record InstallationCapture(ModelIdentity Model, string WorkerRoot, StrataInstalledFile WorkerFile,
         string CheckpointRoot, IReadOnlyList<StrataInstalledFile> Files, InferenceModelRequirements Requirements, int[] Devices,
-        InferenceEngineSupport? BuildSupport);
+        InferenceEngineSupport? BuildSupport, StrataNativeProfile? Profile, string? PythonInterpreterPath,
+        string? EngineRoot, StrataInstalledFile? EngineFile, IReadOnlyList<StrataInstalledFile>? HelperFiles);
     private static InstallationCapture Capture(StrataVerifiedInstallationLease installation)
     {
         var requirements = installation.OriginalRequirements;
@@ -173,7 +196,10 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
                 WeightFormats = support.WeightFormats.ToFrozenSet(StringComparer.Ordinal), Quantizations = support.Quantizations.ToFrozenSet(StringComparer.Ordinal),
                 Features = support.Features.ToFrozenSet(StringComparer.Ordinal), OperatingSystems = support.OperatingSystems.ToFrozenSet(StringComparer.Ordinal),
                 CpuArchitectures = support.CpuArchitectures.ToFrozenSet(StringComparer.Ordinal), RequiredCpuFeatures = support.RequiredCpuFeatures.ToFrozenSet(StringComparer.Ordinal),
-                NativeRegistrations = support.NativeRegistrations?.ToFrozenSet(StringComparer.Ordinal) });
+                NativeRegistrations = support.NativeRegistrations?.ToFrozenSet(StringComparer.Ordinal) },
+            installation.InstalledProfile, installation.OriginalPythonInterpreterPath,
+            installation.OriginalEngineRoot, installation.OriginalEngineFile,
+            installation.OriginalHelperFiles is null ? null : Array.AsReadOnly(installation.OriginalHelperFiles.ToArray()));
     }
     // Worker + model + no-model probe share ONE original attempt pin. Acquiring the same
     // non-reentrant lease semaphore twice would otherwise block model initialization behind
@@ -298,20 +324,22 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         private readonly StrataVerifiedInstallationLease installation;
         private readonly IAsyncDisposable pin;
         private readonly ProtectedRoot root;
+        private readonly ProtectedRoot? engineRoot;
         public HeldLease(StrataNativeArtifactSource issuer, Work work, ModelIdentity model,
             TaskRunAttemptAdmission admission, StrataVerifiedInstallationLease installation, IAsyncDisposable pin, ProtectedRoot root,
-            StrataOriginalHardwareObservation? hardware, InstallationCapture metadata)
+            ProtectedRoot? engineRoot, StrataOriginalHardwareObservation? hardware, InstallationCapture metadata)
         {
             this.issuer = issuer; this.work = work; this.admission = admission;
-            this.installation = installation; this.pin = pin; this.root = root;
+            this.installation = installation; this.pin = pin; this.root = root; this.engineRoot = engineRoot;
             Issuer = issuer; Model = model; Admission = admission; Installation = installation;
-            Root = root; Hardware = hardware; Metadata = metadata;
+            Root = root; EngineRoot = engineRoot; Hardware = hardware; Metadata = metadata;
         }
         public StrataNativeArtifactSource Issuer { get; }
         public ModelIdentity Model { get; }
         public TaskRunAttemptAdmission Admission { get; }
         public StrataVerifiedInstallationLease Installation { get; }
         public ProtectedRoot Root { get; }
+        public ProtectedRoot? EngineRoot { get; }
         public StrataOriginalHardwareObservation? Hardware { get; }
         public InstallationCapture Metadata { get; }
         public bool Closing; private Task? _close;
@@ -319,7 +347,7 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         {
             lock (issuer._gate) if (Closing || issuer._sealed) throw new ObjectDisposedException("Original Strata artifact lease");
             work.Invoke(() => { ((ITaskRunOriginalInferenceAdmissionSource)issuer._authority).DemandOriginalInferenceAdmission(admission);
-                installation.DemandCurrentOriginalInstallation(); root.DemandCurrent(); return 0; });
+                installation.DemandCurrentOriginalInstallation(); root.DemandCurrent(); engineRoot?.DemandCurrent(); return 0; });
         }
         public Task CloseOriginalAsync(bool sourceOwned = false)
         {
@@ -335,6 +363,7 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
             {
                 await work.JoinRawAsync().ConfigureAwait(false);
                 work.Cleanup(root.Dispose);
+                if (engineRoot is not null) work.Cleanup(engineRoot.Dispose);
                 await work.CloseAsync(pin).ConfigureAwait(false);
                 await work.CloseAsync(installation).ConfigureAwait(false);
                 work.Throw();
@@ -346,8 +375,30 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         private readonly HeldLease held;
         public WorkerLease(HeldLease held) { this.held = held; Held = held; }
         public HeldLease Held { get; }
-        // Source-created descriptor path, never a model/config controlled executable path.
-        public override StrataBundledWorker OriginalWorker => new(held.Root.SingleFilePath, held.Metadata.WorkerFile.Sha256);
+        // Source-created descriptor path, never a model/config controlled executable path. The
+        // approved interpreter path (candidate V2) flows from the SAME trusted installation binding.
+        // Candidate V2 binds the consumed engine and helper closure to their SAME held descriptors:
+        // EnginePath/HelperPaths are the fd-derived /proc handles, not ordinary mutable install
+        // paths, so what the native worker reopens equals what was verified and retained. Legacy V1
+        // keeps its single-executable semantics unchanged.
+        public override StrataBundledWorker OriginalWorker =>
+            held.Metadata.EngineFile is { } engine && held.EngineRoot is not null && held.Metadata.HelperFiles is { Count: 4 } helpers
+                ? new(
+                    held.Root.FilePath(held.Metadata.WorkerFile.RelativeName),
+                    held.Metadata.WorkerFile.Sha256,
+                    held.Metadata.PythonInterpreterPath,
+                    EnginePath: held.EngineRoot.SingleFilePath,
+                    EngineSha256: engine.Sha256,
+                    EngineFdPath: held.EngineRoot.SingleFilePath,
+                    HelperPaths: Array.AsReadOnly(helpers.Select(helper => held.Root.FilePath(helper.RelativeName)).ToArray()),
+                    HelperSha256: Array.AsReadOnly(helpers.Select(helper => helper.Sha256).ToArray()),
+                    HelperFdPaths: Array.AsReadOnly(helpers.Select(helper => held.Root.FilePath(helper.RelativeName)).ToArray()),
+                    HelperDirectoryFdPath: held.Root.DescriptorPath)
+                : new(held.Root.SingleFilePath, held.Metadata.WorkerFile.Sha256, held.Metadata.PythonInterpreterPath);
+        // The trusted installed profile (legacy V1 default vs verified candidate V2) and the approved
+        // interpreter path surface from the SAME verified installation capture — never a caller string.
+        public override StrataNativeProfile? InstalledProfile => held.Metadata.Profile;
+        public override string? OriginalPythonInterpreterPath => held.Metadata.PythonInterpreterPath;
         public override void DemandCurrentOriginalBinding() => held.Demand();
         public override ValueTask DisposeAsync() => new(held.CloseOriginalAsync());
     }
@@ -372,6 +423,16 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         }
         public override InferenceModelRequirements Requirements => held.Metadata.Requirements;
         public override string OriginalCheckpointDirectory => held.Root.DescriptorPath;
+        public override string? OriginalCheckpointFileFdPath
+        {
+            get
+            {
+                held.Demand();
+                var gguf = held.Metadata.Files.SingleOrDefault(file => file.RelativeName.EndsWith(".gguf", StringComparison.Ordinal));
+                held.Demand();
+                return gguf is null ? null : held.Root.FilePath(gguf.RelativeName);
+            }
+        }
         public override IReadOnlyList<int> ActualCudaDeviceIndices => Array.AsReadOnly(held.Metadata.Devices);
         public override void DemandCurrentOriginalBinding() => held.Demand();
         public override ValueTask DisposeAsync() => new(held.CloseOriginalAsync());
@@ -472,6 +533,14 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
         private bool _closed;
         public string DescriptorPath => $"/proc/{Environment.ProcessId}/fd/{Fd(_root)}";
         public string SingleFilePath => _files.Count == 1 ? $"/proc/{Environment.ProcessId}/fd/{Fd(_files[0].Handle)}" : throw new InvalidOperationException("No SAME single executable is held.");
+        /// <summary>fd-derived held handle for a named closure member. This is the only way the
+        /// host reaches a held bundle file without re-resolving a mutable filesystem path.</summary>
+        public string FilePath(string name)
+        {
+            var file = _files.SingleOrDefault(entry => entry.Name == name)
+                ?? throw new InvalidOperationException("No SAME protected closure member is held: " + name);
+            return $"/proc/{Environment.ProcessId}/fd/{Fd(file.Handle)}";
+        }
         public ProtectedRoot(string path, bool immutableDirectory)
         {
             if (!OperatingSystem.IsLinux() || RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
@@ -533,15 +602,34 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
             if (Observe(handle!, false) != before) throw new IOException("Actual protected artifact changed while read.");
         }
         public async Task ReadCheckpointAsync(IReadOnlyList<StrataInstalledFile> files, InferenceModelRequirements requirements,
-            ModelIdentity model, Work work, CancellationToken token)
+            ModelIdentity model, StrataNativeProfile? profile, Work work, CancellationToken token)
         {
             var inventory = files.ToArray();
             if (inventory.Length is 0 or > 128 || inventory.Select(file => file.RelativeName).Distinct(StringComparer.Ordinal).Count() != inventory.Length ||
-                !inventory.Any(file => file.RelativeName == "config.json") || !inventory.Any(file => file.RelativeName.EndsWith(".safetensors", StringComparison.Ordinal)) ||
-                requirements.Model != model || requirements.WeightFormat != "Safetensors" || requirements.Topology != "centralized" ||
+                requirements.Model != model || requirements.Topology != "centralized" ||
                 requirements.ContextTokens <= 0 || string.IsNullOrWhiteSpace(requirements.NativeRegistration) ||
                 requirements.MinimumRamBytes < 0 || requirements.MinimumVramBytes < 0)
+                throw new InvalidDataException("The genuine complete original Strata inventory/requirements are unsupported.");
+            // Candidate V2 (verified source identity) admits engine-native GGUF (qwen35moe) only,
+            // with NO config.json topology assumption; legacy V1 keeps the Safetensors guard
+            // byte-for-byte. Unknown/foreign profile, ABI, source identity or weight format fail
+            // closed here as well.
+            var candidate = profile is { Profile: "candidate", AbiVersion: 2 }
+                && profile.SourceIdentity == StrataCandidateWorker.VerifiedCandidateSourceCommit;
+            if (candidate)
+            {
+                // Candidate V2 is engine-native single-file GGUF. A split/multi-GGUF closure is not
+                // proven by this relay and is precisely refused here as well.
+                if (requirements.WeightFormat != "GGUF" || requirements.Family != "qwen35moe" ||
+                    inventory.Count(file => file.RelativeName.EndsWith(".gguf", StringComparison.Ordinal)) != 1)
+                    throw new InvalidDataException("The genuine complete original single-file GGUF (qwen35moe) inventory/requirements are unsupported.");
+            }
+            else if (requirements.WeightFormat != "Safetensors" ||
+                     !inventory.Any(file => file.RelativeName == "config.json") ||
+                     !inventory.Any(file => file.RelativeName.EndsWith(".safetensors", StringComparison.Ordinal)))
+            {
                 throw new InvalidDataException("The genuine complete original Safetensors inventory/requirements are unsupported.");
+            }
             foreach (var file in inventory) ValidateFile(file);
             if (inventory.Aggregate(0L, (sum, file) => checked(sum + file.Length)) > 64L * 1024 * 1024 * 1024)
                 throw new InvalidDataException("The actual checkpoint exceeds bounded source custody.");
@@ -549,14 +637,17 @@ public sealed class StrataNativeArtifactSource : IOriginalStrataModelSource, IOr
             if (!names.SequenceEqual(inventory.Select(file => file.RelativeName).Order(StringComparer.Ordinal)))
                 throw new InvalidDataException("The actual immutable checkpoint inventory is incomplete or contains undeclared entries.");
             foreach (var file in inventory) await ReadFileAsync(file, work, token, worker: false).ConfigureAwait(false);
-            var config = _files.Single(file => file.Name == "config.json");
-            if (config.Version.Size > 1024 * 1024) throw new InvalidDataException("The actual model configuration is oversized.");
-            var bytes = new byte[checked((int)config.Version.Size)]; await ReadExactlyAsync(config.Handle, bytes, 0, work, token).ConfigureAwait(false);
-            using var document = JsonDocument.Parse(bytes); var root = document.RootElement;
-            if (root.GetProperty("model_type").GetString() != requirements.Family ||
-                !root.GetProperty("architectures").EnumerateArray().Any(value => value.GetString() == requirements.Architecture) ||
-                !root.GetProperty("max_position_embeddings").TryGetInt32(out var context) || context < requirements.ContextTokens)
-                throw new InvalidDataException("Actual model configuration differs from the privately issued original model requirements.");
+            if (!candidate)
+            {
+                var config = _files.Single(file => file.Name == "config.json");
+                if (config.Version.Size > 1024 * 1024) throw new InvalidDataException("The actual model configuration is oversized.");
+                var bytes = new byte[checked((int)config.Version.Size)]; await ReadExactlyAsync(config.Handle, bytes, 0, work, token).ConfigureAwait(false);
+                using var document = JsonDocument.Parse(bytes); var root = document.RootElement;
+                if (root.GetProperty("model_type").GetString() != requirements.Family ||
+                    !root.GetProperty("architectures").EnumerateArray().Any(value => value.GetString() == requirements.Architecture) ||
+                    !root.GetProperty("max_position_embeddings").TryGetInt32(out var context) || context < requirements.ContextTokens)
+                    throw new InvalidDataException("Actual model configuration differs from the privately issued original model requirements.");
+            }
             DemandCurrent();
         }
         private static void ValidateFile(StrataInstalledFile file)

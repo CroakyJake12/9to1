@@ -1,0 +1,63 @@
+{
+  "at": "2026-10-21T15:45:00+00:00",
+  "authority": "Root resource allocation required; source-only checkpoint. No build was run.",
+  "candidate_worker": {
+    "source": [
+      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/dulche_strata_candidate_worker.cpp",
+      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/dulche_child_process.h"
+    ],
+    "minimal_compile": {
+      "compiler": "g++ 14.2.0 (present: /usr/bin/g++)",
+      "std": "C++20",
+      "flags": "-O2 -DSTRATA_HAS_CUDA=0 -DSTRATA_NATIVE_EXT=\"\" -I <NativeStrata>",
+      "result": "dulche-strata-candidate-worker (no CUDA/engine symbols needed)",
+      "note": "STRATA_HAS_CUDA and STRATA_NATIVE_EXT must be defined (used as expressions at worker.cpp:346/859/869). With STRATA_HAS_CUDA=0 the worker compiles without a CUDA toolkit and fail-closes in hardware_probe()/hello."
+    },
+    "child_ownership_fixture": {
+      "source": "9to1 Models/Dulche Alpha/Tests/NativeStrataChildOwnershipFixture.cpp",
+      "compile": "g++ -std=c++20 -O1 -pthread -I <NativeStrata> -o child-ownership-fixture NativeStrataChildOwnershipFixture.cpp",
+      "run_expect": "checks=... failures=0, exit 0"
+    },
+    "descendant_after_reap_fixture": {
+      "source": "9to1 Models/Dulche Alpha/Tests/NativeStrataDescendantAfterReapFixture.cpp",
+      "compile": "g++ -std=c++20 -O1 -pthread -I <NativeStrata> -o descendant-after-reap-fixture NativeStrataDescendantAfterReapFixture.cpp",
+      "run_expect": "checks=... failures=0, exit 0 (fixes the pass-10 owned process-group leak after direct reap)",
+      "note": "Requires POSIX (/proc scan) and PR_SET_CHILD_SUBREAPER; not a Windows test."
+    }
+  },
+  "native_fixture": {
+    "source": "9to1 Models/Dulche Alpha/Tests/NativeStrataNativeFixtureTests.py",
+    "built_binary_target": "work/pc-worker/thunder-benchmark/native-child-test/build/dulche-strata-candidate-worker",
+    "note": "Drives the REAL compiled worker (wire + child ownership). 5 binary cases currently NOT RUN; they run once root builds and pins the binary (DULCHE_NATIVE_CANDIDATE_SHA256)."
+  },
+  "full_engine_build_blocked": {
+    "requires": [
+      "Upstream source tarball (v0.2.1 cached: /tmp/opencode/strata-v0201.tar.gz = 27,912,843 B; v0.2.2 NOT yet fetched, est. ~28 MB)",
+      "CUDA toolkit 12.8+ (RTX 50/sm_120) or 13 + cmake (none present in this cloud)",
+      "cmake (not present; needed only for the full engine build, not the candidate worker)"
+    ],
+    "status": "BLOCKED until Root coordinates acquisition/build; no heavy CUDA pip/new binaries/source acquisition performed."
+  },
+  "acquisition_sizes_estimate": {
+    "v0.2.2_source_tarball": "~28 MB (27.9 MB at v0.2.1; not fetched)",
+    "regex": "2026.9.29 wheel ~0.5 MB",
+    "jinja2": "3.1.6 wheel ~0.3 MB",
+    "note": "All downloads require Root resource coord; existing pinned prep under work/pc-worker/thunder-benchmark/prep is reused by hash."
+  },
+  "root_build_commands": [
+    "cd '/workspace/9to1-mercury-thunder/9to1 Models/Dulche Alpha/Tests'",
+    "mkdir -p /tmp/opencode",
+    "# 1) minimal candidate worker (no CUDA):",
+    "g++ -std=c++20 -O2 -DSTRATA_HAS_CUDA=0 -DSTRATA_NATIVE_EXT=\"\" -I '../InferenceEngines/NativeStrata' '../InferenceEngines/NativeStrata/dulche_strata_candidate_worker.cpp' -o /tmp/opencode/dulche-strata-candidate-worker",
+    "# 2) child-ownership fixture:",
+    "g++ -std=c++20 -O1 -pthread -I '../InferenceEngines/NativeStrata' -o /tmp/opencode/child-ownership-fixture NativeStrataChildOwnershipFixture.cpp",
+    "/tmp/opencode/child-ownership-fixture   # expect failures=0",
+    "# 2b) descendant-after-reap regression fixture (pass-10):",
+    "g++ -std=c++20 -O1 -pthread -I '../InferenceEngines/NativeStrata' -o /tmp/opencode/descendant-after-reap-fixture NativeStrataDescendantAfterReapFixture.cpp",
+    "/tmp/opencode/descendant-after-reap-fixture   # expect failures=0",
+    "# 3) native fixture against the built worker:",
+    "mkdir -p work/pc-worker/thunder-benchmark/native-child-test/build",
+    "cp /tmp/opencode/dulche-strata-candidate-worker work/pc-worker/thunder-benchmark/native-child-test/build/dulche-strata-candidate-worker",
+    "DULCHE_NATIVE_CANDIDATE_SHA256=$(sha256sum /tmp/opencode/dulche-strata-candidate-worker | cut -d' ' -f1) python3 NativeStrataNativeFixtureTests.py -v"
+  ]
+}

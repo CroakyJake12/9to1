@@ -1,0 +1,18 @@
+{
+  "officialRepository": "https://github.com/Niko1221/Strata",
+  "tagRef": "refs/tags/v0.2.1",
+  "tagObject": "49ac15cbb32a8662602aaa7b8fc61bf6acef4cf0",
+  "tagObjectType": "annotated tag",
+  "commit": "90767252f420e25223c739d604145ad15911d48b",
+  "commitType": "commit",
+  "tree": "f7adcc9073dc4bc12d5b001f1c85b58f2c2e9ead",
+  "commitMessage": "Release notes 0.2.1: final two-card batch A/B result, drop TODOs",
+  "tagger": {
+    "name": "Niko1221",
+    "date": "2026-10-20T07:47:51Z"
+  },
+  "engineVersion": "0.1.46",
+  "releaseTag": "v0.2.1",
+  "resolvedAt": "2026-10-20T18:50:00Z",
+  "chain": "refs/tags/v0.2.1 -> annotated tag 49ac15cb -> commit 90767252f420e25223c739d604145ad15911d48b -> tree f7adcc9073dc4bc12d5b001f1c85b58f2c2e9ead"
+}

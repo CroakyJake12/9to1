@@ -118,3 +118,21 @@ capability boolean or arbitrary search for JSON is used. Whole raw reasoning plu
 final content stays under the original finite byte limit. The existing ordinary
 text terminal is unchanged. These source controls do not prove an actual CUDA
 model, independent signed support inventory or end-to-end tool acceptance.
+
+## Candidate Niko1221/Strata v0.2.2 (engine 0.1.47)
+
+The owner-designated candidate profile (`DULCHE_STRATA_PROFILE=candidate`) targets
+Niko1221/Strata `v0.2.2`, commit `011c9e600a93bbc9fd451c563501b5831c32bbca`, tree
+`539755e6d6b799bd75a47225befc786c436f6d8b`, engine 0.1.47, MIT. The tag->commit->tree
+chain was authenticated independently via the GitHub API. The candidate source lock is
+`prep/strata-v0.2.2-lock.candidate.json`: archive 28,901,367 bytes, sha256
+`ccfffeaabfb410b734b95d202576b98b3d2f2d28080a69ea8a3c49268d95c93a`, 4625 blobs matching
+the authenticated tree (16 CRLF->LF EOL export normalizations explained, 0 unexplained).
+The archive is not persisted on disk here (in-memory stream) so the >=256MiB /tmp reserve
+is held; the lock rows are independently re-verifiable with `prepare-upstream-update.py`
+once the real archive is present in the CUDA build slot.
+
+The v0.2.1 candidate pin (commit `90767252...`, engine 0.1.46) and its verified blob lock
+remain preserved for rollback at `work/pc-worker/thunder-benchmark/prep/strata-v0.2.1-lock.candidate.json`.
+The legacy ro99/strata donor lock (`strata-source-lock.json`, Apache 2.0, 303 blobs) is unchanged
+and remains the known-good default `legacy` profile.

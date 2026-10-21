@@ -7,12 +7,29 @@ name: Haven Chat and Model Pass
 
 on:
   workflow_dispatch:
+    inputs:
+      # Keep the original default Windows .NET job unchanged; Thunder runs ONLY when an explicit
+      # owner/Root dispatches the `thunder-cuda-compile` pipeline. The choice value is never
+      # interpolated into any shell code (used only in a strict `if` comparison).
+      pipeline:
+        description: Pipeline to run
+        required: true
+        type: choice
+        options:
+          - validate
+          - thunder-cuda-compile
+        default: validate
+
+concurrency:
+  group: haven-chat-model-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
   validate:
+    if: github.event.inputs.pipeline == 'validate'
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
@@ -47,4 +64,88 @@ jobs:
             !**/obj/**
             !.git/**
           include-hidden-files: true
+          retention-days: 3
+
+  # Compile-only CUDA build of the candidate relay engine. Explicitly gated to the owner/Root-chosen
+  # pipeline; it never runs for the default `validate`. No physical GPU is required (nvcc compiles
+  # SM120 + portable CPU targets). The build runs in the PINNED CUDA 13.0.2 devel ubuntu24.04 image
+  # (immutable registry digest). GPU/driver/model are NOT run; evidence is bounded with short retention.
+  thunder-cuda-compile:
+    if: github.event.inputs.pipeline == 'thunder-cuda-compile'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      PIPELINE: thunder-cuda-compile
+      # Pinned immutable registry digest (public manifest independently verified).
+      CUDA_IMAGE: nvidia/cuda:13.0.2-devel-ubuntu24.04@sha256:5dc1bca23d05bd37b011be68ec470c03b403a5da07ec3a86e41af9470e9d0cc6
+      CANDIDATE_LOCK: 9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/strata-v0.2.2-lock.candidate.json
+      # Immutable COMMIT archive (tag archives differ in gzip/root names and are not our exact pin).
+      ARCHIVE_URL: https://codeload.github.com/Niko1221/Strata/tar.gz/011c9e600a93bbc9fd451c563501b5831c32bbca
+      ARCHIVE_SHA256: ccfffeaabfb410b734b95d202576b98b3d2f2d28080a69ea8a3c49268d95c93a
+      GGML_REPO: https://github.com/ggml-org/llama.cpp
+      GGML_COMMIT: 3cf03257f219afbe7334045ff7c6a06ac68c627d
+      GGML_TREE: d255198f04f9b8349f1dff24501d513f83cbfeda
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Read ACTUAL runner capacity (memory/CPU/disk) and derive conservative container bounds. Do not
+      # assume public/private runners share the same resources; fail clearly before compiling if
+      # inadequate. Writes preflight-runner.json (metadata, not raw env) and publishes docker bounds.
+      - name: Resource preflight (runner) and bounds
+        id: preflight
+        run: bash .github/scripts/thunder-runner-preflight.sh
+
+      - name: Build in pinned CUDA image (compile-only)
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --pull always \
+            --workdir "${{ github.workspace }}" \
+            --memory=${{ steps.preflight.outputs.memory_mb }}m \
+            --cpus=${{ steps.preflight.outputs.cpus }} \
+            --pids-limit=${{ steps.preflight.outputs.pids_limit }} \
+            -v "${{ github.workspace }}:${{ github.workspace }}" \
+            -e REPO="${{ github.workspace }}" \
+            -e CANDIDATE_LOCK="$CANDIDATE_LOCK" \
+            -e ARCHIVE_URL="$ARCHIVE_URL" \
+            -e ARCHIVE_SHA256="$ARCHIVE_SHA256" \
+            -e GGML_REPO="$GGML_REPO" \
+            -e GGML_COMMIT="$GGML_COMMIT" \
+            -e GGML_TREE="$GGML_TREE" \
+            -e CUDA_IMAGE="$CUDA_IMAGE" \
+            "$CUDA_IMAGE" \
+            bash "${{ github.workspace }}/.github/scripts/thunder-cuda-compile.sh"
+
+      - name: Upload bounded structured compile evidence (success or failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thunder-cuda-compile-evidence
+          path: work/pc-worker/thunder-cuda-compile-evidence/
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Validate install closure size (< 512 MiB)
+        if: success()
+        run: |
+          set -euo pipefail
+          size=$(du -sk work/pc-worker/thunder-cuda-compile/install | awk '{print $1}')
+          cap=$((512 * 1024))   # 512 MiB in KiB
+          if [ "$size" -gt "$cap" ]; then
+            echo "FAIL: install closure size ${size}KiB exceeds 512MiB cap"
+            exit 1
+          fi
+          echo "install closure size ok: ${size}KiB"
+
+      # Complete isolated candidate install closure (engine, worker, 4 helper/lock files, notices,
+      # receipt) only after a real successful build. GPU/driver/model remain NOT RUN; no models/
+      # whole-repo/.git/auth upload. Size capped above; inventory written by the driver.
+      - name: Upload isolated install closure
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thunder-cuda-compile-install-closure
+          path: work/pc-worker/thunder-cuda-compile/install/
+          if-no-files-found: error
           retention-days: 3
