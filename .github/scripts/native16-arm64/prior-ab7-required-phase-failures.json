@@ -1,0 +1,1270 @@
+{
+  "source_head": "ab7bc6b8b2d72a0c97d3b56423d93e0f4f5a466a",
+  "source_run": 39593676167,
+  "provider_evidence_zip_sha256": "a584de7baa627fe4f656b9d4603422be48b055653bf40d5a6bdb117503573d5b",
+  "prior_raw_receipts": {
+    "native-startup-receipt.json": {
+      "started_at": "2026-10-21T11:50:41.252535+00:00",
+      "build_kind": "LESSON_PREVIEW_ARM64",
+      "early_close": "FAIL_RETAINED_NORMAL_CLOSE_FAILURE",
+      "early_loading_visible": "OBSERVED",
+      "actual_Home_readiness": "ACTUAL_HOME_CONTENT_OBSERVED_REQUIRES_SCREENSHOT_REVIEW",
+      "normal_Home_close": "FAIL_RETAINED_NORMAL_CLOSE_FAILURE",
+      "window_alone_is_ready": false,
+      "independent_screenshot_review": "REQUIRED",
+      "owner_laptop": "NOT RUN",
+      "events": [
+        {
+          "at": "2026-10-21T11:50:41.308222+00:00",
+          "kind": "WM_WAIT",
+          "wmctrl_exit": 1,
+          "stderr": "Cannot get client list properties. \n(_NET_CLIENT_LIST or _WIN_CLIENT_LIST)\n"
+        },
+        {
+          "at": "2026-10-21T11:50:41.562535+00:00",
+          "kind": "WM_WAIT",
+          "wmctrl_exit": 1,
+          "stderr": "Cannot get client list properties. \n(_NET_CLIENT_LIST or _WIN_CLIENT_LIST)\n"
+        },
+        {
+          "at": "2026-10-21T11:50:41.816984+00:00",
+          "kind": "WM_WAIT",
+          "wmctrl_exit": 1,
+          "stderr": "Cannot get client list properties. \n(_NET_CLIENT_LIST or _WIN_CLIENT_LIST)\n"
+        },
+        {
+          "at": "2026-10-21T11:50:42.071419+00:00",
+          "kind": "EWMH_READY",
+          "actual": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x20011f"
+        },
+        {
+          "at": "2026-10-21T11:50:44.709389+00:00",
+          "kind": "ACTUAL_WINDOW",
+          "label": "early-close",
+          "pid": 7156,
+          "window": "0x00400018"
+        },
+        {
+          "at": "2026-10-21T11:50:44.847853+00:00",
+          "kind": "SCREENSHOT",
+          "path": "evidence/early-window-before-immediate-close.png",
+          "exit_code": 0
+        },
+        {
+          "at": "2026-10-21T11:50:44.850707+00:00",
+          "kind": "NORMAL_CLOSE_REQUEST",
+          "label": "early-window",
+          "wmctrl_exit": 0
+        },
+        {
+          "at": "2026-10-21T11:51:19.854750+00:00",
+          "kind": "REQUIRED_PHASE_FAILURE",
+          "phase": "early-window-normal-close",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)"
+        },
+        {
+          "at": "2026-10-21T11:51:19.891289+00:00",
+          "kind": "SCREENSHOT",
+          "path": "evidence/early-window-normal-close-failure.png",
+          "exit_code": 0
+        },
+        {
+          "at": "2026-10-21T11:51:19.976374+00:00",
+          "kind": "OWNED_FAILURE_CLEANUP",
+          "phase": "early-window",
+          "method": "SIGTERM_OR_SIGKILL; not normal-close acceptance"
+        },
+        {
+          "at": "2026-10-21T11:51:21.771896+00:00",
+          "kind": "ACTUAL_WINDOW",
+          "label": "home-ready",
+          "pid": 7236,
+          "window": "0x00400018"
+        },
+        {
+          "at": "2026-10-21T11:51:23.836005+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "welcome",
+          "evidence": "evidence/fresh-home-onboarding-1-welcome",
+          "owned_pid": 7236,
+          "home_kind": null,
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:51:24.000473+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "store_sha256": "7747672fe6a4352a1f00f78c1ad9232368814fc18246734a97df38334f3d89b8",
+          "completion_present": false,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:51:24.414185+00:00",
+          "kind": "ACTUAL_ONBOARDING_CLICK",
+          "stage": "Start",
+          "owned_pid": 7236,
+          "name": "Start using 9to1",
+          "accessible_id": "onboarding-start",
+          "rectangle": [
+            550,
+            279,
+            180,
+            46
+          ]
+        },
+        {
+          "at": "2026-10-21T11:51:24.936477+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "sign-in-decision",
+          "evidence": "evidence/fresh-home-onboarding-2-sign-in-decision",
+          "owned_pid": 7236,
+          "home_kind": null,
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:51:25.041802+00:00",
+          "kind": "ACTUAL_ONBOARDING_CLICK",
+          "stage": "Not Now",
+          "owned_pid": 7236,
+          "name": "Continue in local-only mode",
+          "accessible_id": "onboarding-notnow",
+          "rectangle": [
+            252,
+            186,
+            140,
+            44
+          ]
+        },
+        {
+          "at": "2026-10-21T11:51:35.675410+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "model-decision",
+          "evidence": "evidence/fresh-home-onboarding-3-model-decision",
+          "owned_pid": 7236,
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:51:35.676445+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "store_sha256": "42a0e011982565a33951a82e02d621676a4d40d3c79b91eaf661bc4a241934c7",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:51:37.193958+00:00",
+          "kind": "ACTUAL_FRESH_ONBOARDING_COMPLETE",
+          "branch": "eligible-auto-home",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED",
+          "observed_actions": [
+            "Start",
+            "Not Now"
+          ]
+        },
+        {
+          "at": "2026-10-21T11:51:38.721150+00:00",
+          "kind": "ACTUAL_HOME_UI_OBSERVED",
+          "method": "AT-SPI",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED",
+          "attempt": 1
+        },
+        {
+          "at": "2026-10-21T11:51:38.800685+00:00",
+          "kind": "SCREENSHOT",
+          "path": "evidence/actual-home-ready.png",
+          "exit_code": 0
+        },
+        {
+          "at": "2026-10-21T11:51:38.803520+00:00",
+          "kind": "NORMAL_CLOSE_REQUEST",
+          "label": "actual-home",
+          "wmctrl_exit": 0
+        },
+        {
+          "at": "2026-10-21T11:52:13.804721+00:00",
+          "kind": "REQUIRED_PHASE_FAILURE",
+          "phase": "actual-home-normal-close",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)"
+        },
+        {
+          "at": "2026-10-21T11:52:13.842087+00:00",
+          "kind": "SCREENSHOT",
+          "path": "evidence/actual-home-normal-close-failure.png",
+          "exit_code": 0
+        },
+        {
+          "at": "2026-10-21T11:52:13.917331+00:00",
+          "kind": "OWNED_FAILURE_CLEANUP",
+          "phase": "actual-home",
+          "method": "SIGTERM_OR_SIGKILL; not normal-close acceptance"
+        },
+        {
+          "at": "2026-10-21T11:52:13.918381+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "store_sha256": "42a0e011982565a33951a82e02d621676a4d40d3c79b91eaf661bc4a241934c7",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:52:15.341247+00:00",
+          "kind": "ACTUAL_WINDOW",
+          "label": "same-profile-onboarding-bypass",
+          "pid": 7348,
+          "window": "0x00400018"
+        },
+        {
+          "at": "2026-10-21T11:52:15.342184+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "store_sha256": "42a0e011982565a33951a82e02d621676a4d40d3c79b91eaf661bc4a241934c7",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:52:19.276841+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "same-profile-direct-home",
+          "evidence": "evidence/returning-home-onboarding-1-same-profile-direct-home",
+          "owned_pid": 7348,
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:52:19.277919+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "store_sha256": "42a0e011982565a33951a82e02d621676a4d40d3c79b91eaf661bc4a241934c7",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:52:20.977981+00:00",
+          "kind": "ACTUAL_SAME_PROFILE_ONBOARDING_BYPASS",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:52:22.543508+00:00",
+          "kind": "ACTUAL_HOME_UI_OBSERVED",
+          "method": "AT-SPI",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED",
+          "attempt": 1
+        },
+        {
+          "at": "2026-10-21T11:52:22.620704+00:00",
+          "kind": "SCREENSHOT",
+          "path": "evidence/actual-home-ready.png",
+          "exit_code": 0
+        },
+        {
+          "at": "2026-10-21T11:52:22.623802+00:00",
+          "kind": "NORMAL_CLOSE_REQUEST",
+          "label": "returning-home",
+          "wmctrl_exit": 0
+        },
+        {
+          "at": "2026-10-21T11:52:57.624904+00:00",
+          "kind": "REQUIRED_PHASE_FAILURE",
+          "phase": "returning-home-normal-close",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)"
+        },
+        {
+          "at": "2026-10-21T11:52:57.662474+00:00",
+          "kind": "SCREENSHOT",
+          "path": "evidence/returning-home-normal-close-failure.png",
+          "exit_code": 0
+        },
+        {
+          "at": "2026-10-21T11:52:57.753413+00:00",
+          "kind": "OWNED_FAILURE_CLEANUP",
+          "phase": "returning-home",
+          "method": "SIGTERM_OR_SIGKILL; not normal-close acceptance"
+        },
+        {
+          "at": "2026-10-21T11:52:57.754608+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "3e2e0da9-86d5-4f92-906a-bfb6c49b311d",
+          "store_sha256": "42a0e011982565a33951a82e02d621676a4d40d3c79b91eaf661bc4a241934c7",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        }
+      ],
+      "installed_build_provenance": {
+        "started_at": "2026-10-21T11:41:19.917317+00:00",
+        "source_head": "ab7bc6b8b2d72a0c97d3b56423d93e0f4f5a466a",
+        "original_source_head": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+        "source_patch_sha256": "b95d25560d8ecd5459c4e2a3bab715c287bc34ef6f9c7cf9105c4ce22f1b3f24",
+        "native_host": "aarch64",
+        "stages": [
+          {
+            "name": "donor-task-restore",
+            "command": [
+              "dotnet",
+              "restore",
+              "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true"
+            ],
+            "started_at": "2026-10-21T11:41:19.917402+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:41:26.436457+00:00",
+            "log_sha256": "bf485e7e021242763119981cc2eb900e2d971cdfc7da81b58d1e089cd9c3b97c"
+          },
+          {
+            "name": "donor-task-build",
+            "command": [
+              "dotnet",
+              "build",
+              "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+              "-c",
+              "Release",
+              "--no-restore",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true"
+            ],
+            "started_at": "2026-10-21T11:41:26.436806+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:41:35.087645+00:00",
+            "log_sha256": "004a60c9610963b544cfb0c18e9f28118514f0ffb5ab91858a5192380bcd12ff"
+          },
+          {
+            "name": "host-tool-restore",
+            "command": [
+              "dotnet",
+              "restore",
+              "framework/CUI/Build.Tasks/CakeOS.Cui.Build.Compiler.csproj",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:41:35.556264+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:41:47.116680+00:00",
+            "log_sha256": "fa75144840b210734590647106b1c98eb775387747efb1b5cabca825f9b912df"
+          },
+          {
+            "name": "host-tool-build",
+            "command": [
+              "dotnet",
+              "build",
+              "framework/CUI/Build.Tasks/CakeOS.Cui.Build.Compiler.csproj",
+              "-c",
+              "Release",
+              "--no-restore",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:41:47.424282+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:44:01.884474+00:00",
+            "log_sha256": "8260db30066f4463e6d15e2cf222df44eabad4edad2b99d4291014b9604d9a0b"
+          },
+          {
+            "name": "app-restore",
+            "command": [
+              "dotnet",
+              "restore",
+              "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+              "-r",
+              "linux-arm64",
+              "-p:SelfContained=true",
+              "-p:UseAppHost=true",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:CuiUsePrebuiltCompiler=true",
+              "-p:CuiCompilerTaskAssembly=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/CakeOS.Cui.Build.Compiler/release/CakeOS.Cui.Build.Compiler.dll",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:44:02.202428+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:44:14.858910+00:00",
+            "log_sha256": "48c8de473900f2aaf6566a2b19601f33e7d6d5ffe61c725aea41bbc16c185871"
+          },
+          {
+            "name": "app-publish",
+            "command": [
+              "dotnet",
+              "publish",
+              "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+              "-c",
+              "Release",
+              "-f",
+              "net10.0",
+              "-r",
+              "linux-arm64",
+              "--self-contained",
+              "true",
+              "--no-restore",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:UseAppHost=true",
+              "-p:PublishSingleFile=false",
+              "-p:PublishTrimmed=false",
+              "-p:PublishReadyToRun=false",
+              "-p:DebugType=None",
+              "-p:DebugSymbols=false",
+              "-p:ProductDisplayName=9to1 Lesson Preview (Incomplete)",
+              "-o",
+              "/home/runner/work/_temp/9to1-native16-arm64-source/publish",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:CuiUsePrebuiltCompiler=true",
+              "-p:CuiCompilerTaskAssembly=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/CakeOS.Cui.Build.Compiler/release/CakeOS.Cui.Build.Compiler.dll",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:44:14.859549+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:49:17.622432+00:00",
+            "log_sha256": "46dd5f00f417db257289063af1c8c96b6ecada0a24a9ceb9f80f03a940b05028"
+          }
+        ],
+        "status": "RUNNING",
+        "build_kind": "LESSON_PREVIEW_ARM64",
+        "original_cloud_package_sha256": "a43bf4b7d28a049b9cadac18ccc303b08b2c3122ba99e5150ba85ce7dd623782",
+        "binary_identity_note": "New native build; not identical to locally cross-published package",
+        "normal_refs": true,
+        "application_acceptance": "NOT RUN",
+        "laptop_acceptance": "NOT RUN",
+        "donor_host_compiler": {
+          "path": "/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+          "sha256": "6d52f7fce6059cff3a98e48d670d9d52134c8b25a5ade08c832bad6508c52046",
+          "project": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+          "target_path_query": [
+            "dotnet",
+            "msbuild",
+            "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+            "-nologo",
+            "-getProperty:TargetPath",
+            "-p:Configuration=Release",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:BuildInParallel=false",
+            "-p:UseSharedCompilation=false",
+            "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+            "-p:UseArtifactsOutput=true",
+            "-p:UseArtifactsIntermediateOutput=true",
+            "-p:IncludeProjectNameInArtifactsPaths=true"
+          ]
+        },
+        "host_compiler": {
+          "path": "/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/CakeOS.Cui.Build.Compiler/release/CakeOS.Cui.Build.Compiler.dll",
+          "sha256": "a106e35df8a17882cb39218079a8b3a526d81ee311aab9e8e4c495d1337bd602",
+          "native_host": "arm64"
+        },
+        "rid": "linux-arm64",
+        "self_contained": true,
+        "publish_exit_code": 0,
+        "publish_directory": "/home/runner/work/_temp/9to1-native16-arm64-source/publish",
+        "published_tree_manifest_sha256": "1a55ec577010b7bf186d49a795aa41c5885f5f47f66e57efdd3bdc32e48a7836",
+        "published_file_count": 405,
+        "published_bytes": 245732405,
+        "native_dependency_floor": {
+          "glibc": "2.34",
+          "glibcxx": "3.4.29"
+        },
+        "original_cloud_source_tree": "Native16WIP72",
+        "lesson_preview_components": {
+          "Home20": {
+            "patch_sha256": "c268375c331668b36d41d5b2742050233caeed34863cd9c53cc7f9f012d7e083",
+            "source_checkpoint": "b0947160f4ff872d36e6ee671993a8bacaa93e8d",
+            "actual_normal_tests": {
+              "executed": 111,
+              "passed": 111,
+              "failed": 0
+            },
+            "native_UI": "NOT RUN"
+          },
+          "Dulche18": {
+            "patch_sha256": "43e7d5d4ee15936e139236d95c4efbfa5042a0f45f3c31d66b10c40e36449aba",
+            "source_checkpoint": "f27e1c23be1245ee09157e0a7e80846e2acc9402",
+            "actual_normal_tests": {
+              "executed": 94,
+              "passed": 94,
+              "failed": 0
+            },
+            "native_UI_real_inference": "NOT RUN"
+          },
+          "Bundle19_CI": {
+            "patch_sha256": "8c069c6a2420d894bb23205185af496fb5321e41982839f1b5c2cefa93021144",
+            "source_checkpoint": "8018d436652b5b96542e0a9c3400a557dfe946ee",
+            "bundle_source_freeze": "077c1183b5c6c98204bc4bdf4b53da188e72fe88",
+            "private_checks": "16 PASS per independently reviewed hook receipt; native package NOT RUN"
+          },
+          "Home24_startup_fix": {
+            "production_patch_sha256": "62ee43cf98877c5e579bd7b04b538919f6dec4d042a3f285e7f873e934ed9ae9",
+            "genuine_production_tree": "e9e0c2126e5c13e2d8b13ae41965603b2011cda1",
+            "source_path": "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalWindowsHome.cs",
+            "raw_postimage_sha256": "4c112d547f666c3d189c0da1263a9d6677f0c910b90661375ac6ccc0fbf7cfee",
+            "compiler_QA_postimage_sha256": "a940ee126885d39b35a4899a8c41286ab51d5a193c50475e57c47ce1a58c3157",
+            "compiler_QA": "Root explicitly approved one null-safe expression: personalDen?.HasAcquiredProvider != true; missing means truthful unknown. No Den creation/permission relaxation.",
+            "actual_regression_tests": "NOT RUN; copied-lambda tests rejected and excluded",
+            "native_startup_and_chat": "NOT RUN; previous exact057 fresh app exited1 in run39581203077; current candidate must run normal native full build+actual UI."
+          },
+          "Dulche21_owned_background_startup": {
+            "source_checkpoint": "5b6071ff14b5dc8104be118356372d50b97a38e4",
+            "actual_end": "2026-10-21T10:48:01.620186+00:00",
+            "actual_exit_code": 0,
+            "reviewed_shipping405_patch_sha256": "4318c1a7419d43325bdffb10e8d93dcd675c1edb69b19336c27daed8a805600c",
+            "minimal_transplant": "Actual18-to21 clean source delta on shipping405; exact4 merged posthashes retained, including current App instead of stale full worker overwrite",
+            "normal_focused_tests": "NOT RUN by this source-only reviewer; Root queued",
+            "native_startup_and_chat": "NOT RUN",
+            "supersedes": "Dulche20 raw-cancellation qualification and test-close ordering defects retained in prior failed evidence; corrected genuine21 source used."
+          },
+          "current_engineering_closure": {
+            "parent_source": "5893fc7d63715898ad6024d8d84ac5edb125252a",
+            "components": [
+              {
+                "component": "Onboarding7QA1",
+                "patch": "/tmp/9to1-onboarding7-qa1-independent-20261021/shipping589/onboarding7-product-only-on589.patch",
+                "sha256": "f6758094c9235ccc716f03dc855f11ca8f1ad144ec102c5739ac3533bd8c76e0",
+                "pre_tree": "50fc93e14aab582e92a866df72ccc1379fcf18da",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "1aa5c62faf14e5de563505c5a6cf11a8508103b3"
+              },
+              {
+                "component": "Dulche25",
+                "patch": "/tmp/9to1-dulche25-close-custody-return-review-20261021/shipping589-delta.UNACCEPTED.patch",
+                "sha256": "b73e15b1c323f5f95317d19d78a30882fba59da343e122f129553d22542367ce",
+                "pre_tree": "1aa5c62faf14e5de563505c5a6cf11a8508103b3",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "40f9fe35f7d6653430579ebc70a92175950ba752"
+              },
+              {
+                "component": "Browser13NativeLinux14",
+                "patch": "/tmp/9to1-browser13-acceptance-ready-20261021/NativeLinux14.UNACCEPTED.patch",
+                "sha256": "2ed0ff9dbfba21165a2bbbbd4795ac4613924beac3c5fae60146b0b1012b7a19",
+                "pre_tree": "40f9fe35f7d6653430579ebc70a92175950ba752",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "ce22ae5f19a7dd96ec13932d2a43257de3de5e36"
+              },
+              {
+                "component": "Browser13RootComposition2",
+                "patch": "/tmp/9to1-browser13-acceptance-ready-20261021/Root-composition2.UNACCEPTED.patch",
+                "sha256": "ca4fd62085ccfae6b9e9c883c5f2bd0ddb5676e5c37618644f05b3fba4cfcfb7",
+                "pre_tree": "ce22ae5f19a7dd96ec13932d2a43257de3de5e36",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "dc6de4a8b85c83cd90498daaa7b3d42690d38433"
+              },
+              {
+                "component": "Home26Rail",
+                "patch": "/tmp/9to1-home26-rail-actual-failures-review-20261021/home26.production-only.UNACCEPTED.patch",
+                "sha256": "ad5a1cf646dc1f2e9c5558db6d58cbb614992222fcdc236df3d34384b6a2c40c",
+                "pre_tree": "dc6de4a8b85c83cd90498daaa7b3d42690d38433",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "a8fb2403430122dcb03ceed8f4e1791754080968"
+              },
+              {
+                "component": "Ubuntu26ICU78LiteralQA",
+                "patch": "/tmp/9to1-ubuntu26-arm64-literal-libicu78-qa-20261021/literal-libicu78-only.patch",
+                "sha256": "b7056167403b7bc54089f7bf4cc321379387224e1ffadd64f142d4af64160c8e",
+                "pre_tree": "a8fb2403430122dcb03ceed8f4e1791754080968",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "0ec1f9ad12d87592e71d2d7262313901f3bb1b58"
+              }
+            ],
+            "genuine8_localset_product_patch_sha256": "0cdd2eeef79bf0a5b76bc58c9211c65e65e8ef45a2c8cd152958071a8f64a23c",
+            "onboarding_actor_compiler_QA_sha256": "ef603565306496f926fd0430dd979a464973f3f22fd2cef5b53662c88fee4482",
+            "external_welcome_driver_sha256": "f3ec4cb692c2e4c0efe4aadf6c97453eb56314abe7d9774273fb8ffd5505ef33",
+            "normal_and_native": "UNACCEPTED: engineering integration before final component/combined native checks; exact test receipts tracked separately.",
+            "Browser13": "TENTATIVE_UNACCEPTED production16; installed browser supply/Ubuntu26snap/nativeHTTP NOT VERIFIED",
+            "Home26": "TENTATIVE_UNACCEPTED rail14; previous selected normalreceipts historical pending finalcombinedimage",
+            "Dulche25": "Genuine corrected causal helper; native early-close AND fullyinitializedHome-close pending, previous589bothFAILED",
+            "Welcome7_plus_genuine8": "Required authored7 setup with genuine8 pureLocalSet wiring fix included; normal tests pending, actual fresh Start/NotNow/modelskip/persistrestart REQUIRED"
+          }
+        },
+        "original_native16_patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
+        "source_patch_scope": "SHA256 of git diff --binary --full-index --no-renames 2596258c3282e6c0d058cc7a4fb5f410b7fed06d FINAL_PRODUCT_TREE -- . :(exclude).github; excludes all CI metadata and this identity to avoid circular hashes. Exact product patch retained in reviewer packet.",
+        "corresponding_source": "Exact source commit plus pinned submodule contents included as separate source artifact",
+        "AI_browser_features": "Bundled pinned llama.cpp/Qwen seed; app generation acceptance NOT RUN"
+      },
+      "active_profile": "/home/runner/work/_temp/9to1-home-ready-fresh",
+      "required_phase_failures": [
+        {
+          "phase": "early-window-normal-close",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/9to1/9to1/.github/scripts/native16-arm64/native-window-smoke.py\", line 68, in close\n    code=app.wait(timeout=35);event('NORMAL_CLOSE_RESULT',label=label,exit_code=code)\n         ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 1264, in wait\n    return self._wait(timeout=timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 2045, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['/usr/bin/9to1-preview']' timed out after 35 seconds\n"
+        },
+        {
+          "phase": "actual-home-normal-close",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/9to1/9to1/.github/scripts/native16-arm64/native-window-smoke.py\", line 68, in close\n    code=app.wait(timeout=35);event('NORMAL_CLOSE_RESULT',label=label,exit_code=code)\n         ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 1264, in wait\n    return self._wait(timeout=timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 2045, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['/usr/bin/9to1-preview']' timed out after 35 seconds\n"
+        },
+        {
+          "phase": "returning-home-normal-close",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/9to1/9to1/.github/scripts/native16-arm64/native-window-smoke.py\", line 68, in close\n    code=app.wait(timeout=35);event('NORMAL_CLOSE_RESULT',label=label,exit_code=code)\n         ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 1264, in wait\n    return self._wait(timeout=timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 2045, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['/usr/bin/9to1-preview']' timed out after 35 seconds\n"
+        }
+      ],
+      "fresh_onboarding": "ACTUAL_START_NOT_NOW_MODEL_DECISION_AND_DURABLE_COMPLETION",
+      "same_profile_onboarding_bypass": "ACTUAL_DIRECT_HOME_AND_SAME_COMPLETION_RECORD",
+      "status": "FAIL_RETAINED_REQUIRED_PHASE_FAILURES",
+      "ended_at": "2026-10-21T11:52:57.786583+00:00"
+    },
+    "package-ui-journey-receipt.json": {
+      "started_at": "2026-10-21T11:52:57.901713+00:00",
+      "source_head": "ab7bc6b8b2d72a0c97d3b56423d93e0f4f5a466a",
+      "prompt": "What is 2 + 2? Answer briefly and explain your calculation.",
+      "normal_user_uid": 1001,
+      "fresh_profile_initially_absent": true,
+      "desktop": "Xvfb1280x900+openbox",
+      "installed_package": "SOURCE_PROVENANCE_MATCH",
+      "startup_window_and_close": "FAIL_RETAINED_NORMAL_CLOSE_FAILURE",
+      "actual_UI_chat": "NOT RUN",
+      "streaming": "NOT OBSERVED",
+      "persistence_database": "NOT RUN",
+      "visual_reopen": "NOT RUN",
+      "owner_laptop": "NOT RUN",
+      "independent_screenshot_review": "REQUIRED",
+      "stages": [
+        {
+          "at": "2026-10-21T11:52:57.922870+00:00",
+          "kind": "WM_READINESS_WAIT",
+          "xprop_exit": 0,
+          "wmctrl_exit": 1,
+          "wmctrl_stderr": "Cannot get client list properties. \n(_NET_CLIENT_LIST or _WIN_CLIENT_LIST)\n"
+        },
+        {
+          "at": "2026-10-21T11:52:58.227041+00:00",
+          "kind": "EWMH_READY",
+          "supporting_wm_check": "_NET_SUPPORTING_WM_CHECK(WINDOW): window id # 0x40011f"
+        },
+        {
+          "at": "2026-10-21T11:52:59.759489+00:00",
+          "kind": "APP_WINDOW",
+          "label": "first-fresh-launch",
+          "pid": 7454,
+          "window": "0x00200018"
+        },
+        {
+          "at": "2026-10-21T11:53:01.012410+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "welcome",
+          "evidence": "/home/runner/work/9to1/9to1/evidence/chat-fresh-onboarding-1-welcome",
+          "owned_pid": 7454,
+          "home_kind": null,
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:53:01.013194+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "22052b77-65df-4448-8edb-a82963071201",
+          "store_sha256": "49ba06155bac8b39e61ba158dcaa4c91d81dc1bc40dbba29ae4c493ca8c03548",
+          "completion_present": false,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:53:01.117679+00:00",
+          "kind": "ACTUAL_ONBOARDING_CLICK",
+          "stage": "Start",
+          "owned_pid": 7454,
+          "name": "Start using 9to1",
+          "accessible_id": "onboarding-start",
+          "rectangle": [
+            550,
+            279,
+            180,
+            46
+          ]
+        },
+        {
+          "at": "2026-10-21T11:53:01.531053+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "sign-in-decision",
+          "evidence": "/home/runner/work/9to1/9to1/evidence/chat-fresh-onboarding-2-sign-in-decision",
+          "owned_pid": 7454,
+          "home_kind": null,
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:53:01.636173+00:00",
+          "kind": "ACTUAL_ONBOARDING_CLICK",
+          "stage": "Not Now",
+          "owned_pid": 7454,
+          "name": "Continue in local-only mode",
+          "accessible_id": "onboarding-notnow",
+          "rectangle": [
+            252,
+            186,
+            140,
+            44
+          ]
+        },
+        {
+          "at": "2026-10-21T11:53:05.123200+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "model-decision",
+          "evidence": "/home/runner/work/9to1/9to1/evidence/chat-fresh-onboarding-3-model-decision",
+          "owned_pid": 7454,
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:53:05.124161+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "22052b77-65df-4448-8edb-a82963071201",
+          "store_sha256": "d19bfd7d4edeeef62e6d5a69b45ff5826b753f60845167e31a232f6145cec6e0",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:53:06.785935+00:00",
+          "kind": "ACTUAL_FRESH_ONBOARDING_COMPLETE",
+          "branch": "eligible-auto-home",
+          "profile_id": "22052b77-65df-4448-8edb-a82963071201",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED",
+          "observed_actions": [
+            "Start",
+            "Not Now"
+          ]
+        },
+        {
+          "at": "2026-10-21T11:53:08.388545+00:00",
+          "kind": "ACTUAL_HOME_READY",
+          "method": "AT-SPI",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED",
+          "label": "01-fresh-home"
+        },
+        {
+          "at": "2026-10-21T11:53:43.556272+00:00",
+          "kind": "REQUIRED_NORMAL_CLOSE_FAILURE",
+          "label": "fresh-first-launch",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)"
+        },
+        {
+          "at": "2026-10-21T11:53:43.681667+00:00",
+          "kind": "OWNED_FAILURE_CLEANUP",
+          "label": "fresh-first-launch",
+          "method": "SIGTERM_OR_SIGKILL; not normal-close acceptance"
+        },
+        {
+          "at": "2026-10-21T11:53:43.682762+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "22052b77-65df-4448-8edb-a82963071201",
+          "store_sha256": "d19bfd7d4edeeef62e6d5a69b45ff5826b753f60845167e31a232f6145cec6e0",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:53:45.209034+00:00",
+          "kind": "APP_WINDOW",
+          "label": "actual-chat-launch",
+          "pid": 7563,
+          "window": "0x00200018"
+        },
+        {
+          "at": "2026-10-21T11:53:45.210108+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "22052b77-65df-4448-8edb-a82963071201",
+          "store_sha256": "d19bfd7d4edeeef62e6d5a69b45ff5826b753f60845167e31a232f6145cec6e0",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:53:49.008894+00:00",
+          "kind": "ONBOARDING_CHECKPOINT",
+          "stage": "same-profile-direct-home",
+          "evidence": "/home/runner/work/9to1/9to1/evidence/chat-returning-onboarding-1-same-profile-direct-home",
+          "owned_pid": 7563,
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:53:49.009875+00:00",
+          "kind": "ACTUAL_ONBOARDING_STATE_READ",
+          "profile_id": "22052b77-65df-4448-8edb-a82963071201",
+          "store_sha256": "d19bfd7d4edeeef62e6d5a69b45ff5826b753f60845167e31a232f6145cec6e0",
+          "completion_present": true,
+          "mode": "READ_ONLY"
+        },
+        {
+          "at": "2026-10-21T11:53:50.737204+00:00",
+          "kind": "ACTUAL_SAME_PROFILE_ONBOARDING_BYPASS",
+          "profile_id": "22052b77-65df-4448-8edb-a82963071201",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED"
+        },
+        {
+          "at": "2026-10-21T11:53:52.249086+00:00",
+          "kind": "ACTUAL_HOME_READY",
+          "method": "AT-SPI",
+          "home_kind": "APPS_HOME",
+          "dashboard_acceptance": "NOT CLAIMED",
+          "label": "02-home"
+        },
+        {
+          "at": "2026-10-21T11:53:54.013457+00:00",
+          "kind": "ACTUAL_UI_CLICK",
+          "control": "Search or enter web address",
+          "rectangle": [
+            95,
+            62,
+            986,
+            32
+          ]
+        },
+        {
+          "at": "2026-10-21T11:53:55.886576+00:00",
+          "kind": "ACTUAL_UI_CLICK",
+          "control": "Go to address",
+          "rectangle": [
+            1081,
+            62,
+            28,
+            32
+          ]
+        },
+        {
+          "at": "2026-10-21T11:54:02.977873+00:00",
+          "kind": "ACTUAL_UI_CLICK",
+          "control": "Open Chat",
+          "rectangle": [
+            10,
+            165,
+            48,
+            48
+          ]
+        },
+        {
+          "at": "2026-10-21T11:54:06.371375+00:00",
+          "kind": "ACTUAL_UI_CLICK",
+          "control": "Start a new chat in this Space",
+          "rectangle": [
+            82,
+            171,
+            256,
+            46
+          ]
+        },
+        {
+          "at": "2026-10-21T11:54:09.771222+00:00",
+          "kind": "ACTUAL_UI_CLICK",
+          "control": "Message",
+          "rectangle": [
+            376,
+            744,
+            872,
+            44
+          ]
+        }
+      ],
+      "installed_build_provenance": {
+        "started_at": "2026-10-21T11:41:19.917317+00:00",
+        "source_head": "ab7bc6b8b2d72a0c97d3b56423d93e0f4f5a466a",
+        "original_source_head": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
+        "source_patch_sha256": "b95d25560d8ecd5459c4e2a3bab715c287bc34ef6f9c7cf9105c4ce22f1b3f24",
+        "native_host": "aarch64",
+        "stages": [
+          {
+            "name": "donor-task-restore",
+            "command": [
+              "dotnet",
+              "restore",
+              "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true"
+            ],
+            "started_at": "2026-10-21T11:41:19.917402+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:41:26.436457+00:00",
+            "log_sha256": "bf485e7e021242763119981cc2eb900e2d971cdfc7da81b58d1e089cd9c3b97c"
+          },
+          {
+            "name": "donor-task-build",
+            "command": [
+              "dotnet",
+              "build",
+              "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+              "-c",
+              "Release",
+              "--no-restore",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true"
+            ],
+            "started_at": "2026-10-21T11:41:26.436806+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:41:35.087645+00:00",
+            "log_sha256": "004a60c9610963b544cfb0c18e9f28118514f0ffb5ab91858a5192380bcd12ff"
+          },
+          {
+            "name": "host-tool-restore",
+            "command": [
+              "dotnet",
+              "restore",
+              "framework/CUI/Build.Tasks/CakeOS.Cui.Build.Compiler.csproj",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:41:35.556264+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:41:47.116680+00:00",
+            "log_sha256": "fa75144840b210734590647106b1c98eb775387747efb1b5cabca825f9b912df"
+          },
+          {
+            "name": "host-tool-build",
+            "command": [
+              "dotnet",
+              "build",
+              "framework/CUI/Build.Tasks/CakeOS.Cui.Build.Compiler.csproj",
+              "-c",
+              "Release",
+              "--no-restore",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:41:47.424282+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:44:01.884474+00:00",
+            "log_sha256": "8260db30066f4463e6d15e2cf222df44eabad4edad2b99d4291014b9604d9a0b"
+          },
+          {
+            "name": "app-restore",
+            "command": [
+              "dotnet",
+              "restore",
+              "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+              "-r",
+              "linux-arm64",
+              "-p:SelfContained=true",
+              "-p:UseAppHost=true",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:CuiUsePrebuiltCompiler=true",
+              "-p:CuiCompilerTaskAssembly=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/CakeOS.Cui.Build.Compiler/release/CakeOS.Cui.Build.Compiler.dll",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:44:02.202428+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:44:14.858910+00:00",
+            "log_sha256": "48c8de473900f2aaf6566a2b19601f33e7d6d5ffe61c725aea41bbc16c185871"
+          },
+          {
+            "name": "app-publish",
+            "command": [
+              "dotnet",
+              "publish",
+              "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+              "-c",
+              "Release",
+              "-f",
+              "net10.0",
+              "-r",
+              "linux-arm64",
+              "--self-contained",
+              "true",
+              "--no-restore",
+              "-m:1",
+              "-nodeReuse:false",
+              "-p:BuildInParallel=false",
+              "-p:UseSharedCompilation=false",
+              "-p:UseAppHost=true",
+              "-p:PublishSingleFile=false",
+              "-p:PublishTrimmed=false",
+              "-p:PublishReadyToRun=false",
+              "-p:DebugType=None",
+              "-p:DebugSymbols=false",
+              "-p:ProductDisplayName=9to1 Lesson Preview (Incomplete)",
+              "-o",
+              "/home/runner/work/_temp/9to1-native16-arm64-source/publish",
+              "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/artifacts",
+              "-p:UseArtifactsOutput=true",
+              "-p:UseArtifactsIntermediateOutput=true",
+              "-p:IncludeProjectNameInArtifactsPaths=true",
+              "-p:CuiUsePrebuiltCompiler=true",
+              "-p:CuiCompilerTaskAssembly=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/CakeOS.Cui.Build.Compiler/release/CakeOS.Cui.Build.Compiler.dll",
+              "-p:AvaloniaBuildTasksLocation=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll"
+            ],
+            "started_at": "2026-10-21T11:44:14.859549+00:00",
+            "exit_code": 0,
+            "ended_at": "2026-10-21T11:49:17.622432+00:00",
+            "log_sha256": "46dd5f00f417db257289063af1c8c96b6ecada0a24a9ceb9f80f03a940b05028"
+          }
+        ],
+        "status": "RUNNING",
+        "build_kind": "LESSON_PREVIEW_ARM64",
+        "original_cloud_package_sha256": "a43bf4b7d28a049b9cadac18ccc303b08b2c3122ba99e5150ba85ce7dd623782",
+        "binary_identity_note": "New native build; not identical to locally cross-published package",
+        "normal_refs": true,
+        "application_acceptance": "NOT RUN",
+        "laptop_acceptance": "NOT RUN",
+        "donor_host_compiler": {
+          "path": "/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+          "sha256": "6d52f7fce6059cff3a98e48d670d9d52134c8b25a5ade08c832bad6508c52046",
+          "project": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+          "target_path_query": [
+            "dotnet",
+            "msbuild",
+            "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+            "-nologo",
+            "-getProperty:TargetPath",
+            "-p:Configuration=Release",
+            "-m:1",
+            "-nodeReuse:false",
+            "-p:BuildInParallel=false",
+            "-p:UseSharedCompilation=false",
+            "-p:ArtifactsPath=/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts",
+            "-p:UseArtifactsOutput=true",
+            "-p:UseArtifactsIntermediateOutput=true",
+            "-p:IncludeProjectNameInArtifactsPaths=true"
+          ]
+        },
+        "host_compiler": {
+          "path": "/home/runner/work/_temp/9to1-native16-arm64-source/host-tool-artifacts/bin/CakeOS.Cui.Build.Compiler/release/CakeOS.Cui.Build.Compiler.dll",
+          "sha256": "a106e35df8a17882cb39218079a8b3a526d81ee311aab9e8e4c495d1337bd602",
+          "native_host": "arm64"
+        },
+        "rid": "linux-arm64",
+        "self_contained": true,
+        "publish_exit_code": 0,
+        "publish_directory": "/home/runner/work/_temp/9to1-native16-arm64-source/publish",
+        "published_tree_manifest_sha256": "1a55ec577010b7bf186d49a795aa41c5885f5f47f66e57efdd3bdc32e48a7836",
+        "published_file_count": 405,
+        "published_bytes": 245732405,
+        "native_dependency_floor": {
+          "glibc": "2.34",
+          "glibcxx": "3.4.29"
+        },
+        "original_cloud_source_tree": "Native16WIP72",
+        "lesson_preview_components": {
+          "Home20": {
+            "patch_sha256": "c268375c331668b36d41d5b2742050233caeed34863cd9c53cc7f9f012d7e083",
+            "source_checkpoint": "b0947160f4ff872d36e6ee671993a8bacaa93e8d",
+            "actual_normal_tests": {
+              "executed": 111,
+              "passed": 111,
+              "failed": 0
+            },
+            "native_UI": "NOT RUN"
+          },
+          "Dulche18": {
+            "patch_sha256": "43e7d5d4ee15936e139236d95c4efbfa5042a0f45f3c31d66b10c40e36449aba",
+            "source_checkpoint": "f27e1c23be1245ee09157e0a7e80846e2acc9402",
+            "actual_normal_tests": {
+              "executed": 94,
+              "passed": 94,
+              "failed": 0
+            },
+            "native_UI_real_inference": "NOT RUN"
+          },
+          "Bundle19_CI": {
+            "patch_sha256": "8c069c6a2420d894bb23205185af496fb5321e41982839f1b5c2cefa93021144",
+            "source_checkpoint": "8018d436652b5b96542e0a9c3400a557dfe946ee",
+            "bundle_source_freeze": "077c1183b5c6c98204bc4bdf4b53da188e72fe88",
+            "private_checks": "16 PASS per independently reviewed hook receipt; native package NOT RUN"
+          },
+          "Home24_startup_fix": {
+            "production_patch_sha256": "62ee43cf98877c5e579bd7b04b538919f6dec4d042a3f285e7f873e934ed9ae9",
+            "genuine_production_tree": "e9e0c2126e5c13e2d8b13ae41965603b2011cda1",
+            "source_path": "9to1 Workspace/shared/src/Haven.Desktop/App.OriginalWindowsHome.cs",
+            "raw_postimage_sha256": "4c112d547f666c3d189c0da1263a9d6677f0c910b90661375ac6ccc0fbf7cfee",
+            "compiler_QA_postimage_sha256": "a940ee126885d39b35a4899a8c41286ab51d5a193c50475e57c47ce1a58c3157",
+            "compiler_QA": "Root explicitly approved one null-safe expression: personalDen?.HasAcquiredProvider != true; missing means truthful unknown. No Den creation/permission relaxation.",
+            "actual_regression_tests": "NOT RUN; copied-lambda tests rejected and excluded",
+            "native_startup_and_chat": "NOT RUN; previous exact057 fresh app exited1 in run39581203077; current candidate must run normal native full build+actual UI."
+          },
+          "Dulche21_owned_background_startup": {
+            "source_checkpoint": "5b6071ff14b5dc8104be118356372d50b97a38e4",
+            "actual_end": "2026-10-21T10:48:01.620186+00:00",
+            "actual_exit_code": 0,
+            "reviewed_shipping405_patch_sha256": "4318c1a7419d43325bdffb10e8d93dcd675c1edb69b19336c27daed8a805600c",
+            "minimal_transplant": "Actual18-to21 clean source delta on shipping405; exact4 merged posthashes retained, including current App instead of stale full worker overwrite",
+            "normal_focused_tests": "NOT RUN by this source-only reviewer; Root queued",
+            "native_startup_and_chat": "NOT RUN",
+            "supersedes": "Dulche20 raw-cancellation qualification and test-close ordering defects retained in prior failed evidence; corrected genuine21 source used."
+          },
+          "current_engineering_closure": {
+            "parent_source": "5893fc7d63715898ad6024d8d84ac5edb125252a",
+            "components": [
+              {
+                "component": "Onboarding7QA1",
+                "patch": "/tmp/9to1-onboarding7-qa1-independent-20261021/shipping589/onboarding7-product-only-on589.patch",
+                "sha256": "f6758094c9235ccc716f03dc855f11ca8f1ad144ec102c5739ac3533bd8c76e0",
+                "pre_tree": "50fc93e14aab582e92a866df72ccc1379fcf18da",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "1aa5c62faf14e5de563505c5a6cf11a8508103b3"
+              },
+              {
+                "component": "Dulche25",
+                "patch": "/tmp/9to1-dulche25-close-custody-return-review-20261021/shipping589-delta.UNACCEPTED.patch",
+                "sha256": "b73e15b1c323f5f95317d19d78a30882fba59da343e122f129553d22542367ce",
+                "pre_tree": "1aa5c62faf14e5de563505c5a6cf11a8508103b3",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "40f9fe35f7d6653430579ebc70a92175950ba752"
+              },
+              {
+                "component": "Browser13NativeLinux14",
+                "patch": "/tmp/9to1-browser13-acceptance-ready-20261021/NativeLinux14.UNACCEPTED.patch",
+                "sha256": "2ed0ff9dbfba21165a2bbbbd4795ac4613924beac3c5fae60146b0b1012b7a19",
+                "pre_tree": "40f9fe35f7d6653430579ebc70a92175950ba752",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "ce22ae5f19a7dd96ec13932d2a43257de3de5e36"
+              },
+              {
+                "component": "Browser13RootComposition2",
+                "patch": "/tmp/9to1-browser13-acceptance-ready-20261021/Root-composition2.UNACCEPTED.patch",
+                "sha256": "ca4fd62085ccfae6b9e9c883c5f2bd0ddb5676e5c37618644f05b3fba4cfcfb7",
+                "pre_tree": "ce22ae5f19a7dd96ec13932d2a43257de3de5e36",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "dc6de4a8b85c83cd90498daaa7b3d42690d38433"
+              },
+              {
+                "component": "Home26Rail",
+                "patch": "/tmp/9to1-home26-rail-actual-failures-review-20261021/home26.production-only.UNACCEPTED.patch",
+                "sha256": "ad5a1cf646dc1f2e9c5558db6d58cbb614992222fcdc236df3d34384b6a2c40c",
+                "pre_tree": "dc6de4a8b85c83cd90498daaa7b3d42690d38433",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "a8fb2403430122dcb03ceed8f4e1791754080968"
+              },
+              {
+                "component": "Ubuntu26ICU78LiteralQA",
+                "patch": "/tmp/9to1-ubuntu26-arm64-literal-libicu78-qa-20261021/literal-libicu78-only.patch",
+                "sha256": "b7056167403b7bc54089f7bf4cc321379387224e1ffadd64f142d4af64160c8e",
+                "pre_tree": "a8fb2403430122dcb03ceed8f4e1791754080968",
+                "exit": 0,
+                "conflicts": "",
+                "acceptance": "TENTATIVE_UNACCEPTED engineeringCI only",
+                "post_tree": "0ec1f9ad12d87592e71d2d7262313901f3bb1b58"
+              }
+            ],
+            "genuine8_localset_product_patch_sha256": "0cdd2eeef79bf0a5b76bc58c9211c65e65e8ef45a2c8cd152958071a8f64a23c",
+            "onboarding_actor_compiler_QA_sha256": "ef603565306496f926fd0430dd979a464973f3f22fd2cef5b53662c88fee4482",
+            "external_welcome_driver_sha256": "f3ec4cb692c2e4c0efe4aadf6c97453eb56314abe7d9774273fb8ffd5505ef33",
+            "normal_and_native": "UNACCEPTED: engineering integration before final component/combined native checks; exact test receipts tracked separately.",
+            "Browser13": "TENTATIVE_UNACCEPTED production16; installed browser supply/Ubuntu26snap/nativeHTTP NOT VERIFIED",
+            "Home26": "TENTATIVE_UNACCEPTED rail14; previous selected normalreceipts historical pending finalcombinedimage",
+            "Dulche25": "Genuine corrected causal helper; native early-close AND fullyinitializedHome-close pending, previous589bothFAILED",
+            "Welcome7_plus_genuine8": "Required authored7 setup with genuine8 pureLocalSet wiring fix included; normal tests pending, actual fresh Start/NotNow/modelskip/persistrestart REQUIRED"
+          }
+        },
+        "original_native16_patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
+        "source_patch_scope": "SHA256 of git diff --binary --full-index --no-renames 2596258c3282e6c0d058cc7a4fb5f410b7fed06d FINAL_PRODUCT_TREE -- . :(exclude).github; excludes all CI metadata and this identity to avoid circular hashes. Exact product patch retained in reviewer packet.",
+        "corresponding_source": "Exact source commit plus pinned submodule contents included as separate source artifact",
+        "AI_browser_features": "Bundled pinned llama.cpp/Qwen seed; app generation acceptance NOT RUN"
+      },
+      "fresh_onboarding": "ACTUAL_START_NOT_NOW_MODEL_DECISION_AND_DURABLE_COMPLETION",
+      "required_phase_failures": [
+        {
+          "phase": "fresh-first-launch-normal-close",
+          "error": "TimeoutExpired(['/usr/bin/9to1-preview'], 35)",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/9to1/9to1/.github/scripts/native16-arm64/package-ui-journey.py\", line 43, in normal_close\n    command(['wmctrl','-ic',win]);code=app.wait(timeout=35);event('NORMAL_CLOSE',label=label,exit_code=code)\n                                       ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 1264, in wait\n    return self._wait(timeout=timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 2045, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['/usr/bin/9to1-preview']' timed out after 35 seconds\n"
+        }
+      ],
+      "same_profile_onboarding_bypass": "ACTUAL_DIRECT_HOME_AND_SAME_COMPLETION_RECORD",
+      "status": "BLOCKED_ACTUAL_UI_CONTROL_UNAVAILABLE",
+      "error": "LookupError(\"Actual enabled accessible control unavailable: ['Send message']\")",
+      "owned_app_failure_cleanup": "SIGTERM_OR_SIGKILL; not normal-close acceptance",
+      "ended_at": "2026-10-21T11:57:29.015858+00:00",
+      "raw_profile_database_uploaded": false
+    },
+    "combined-package-journey-receipt.json": {
+      "at": "2026-10-21T11:57:29.064034+00:00",
+      "source_head": "ab7bc6b8b2d72a0c97d3b56423d93e0f4f5a466a",
+      "startup_step_outcome": "failure",
+      "chat_step_outcome": "failure",
+      "startup_raw_status": "FAIL_RETAINED_REQUIRED_PHASE_FAILURES",
+      "chat_raw_status": "BLOCKED_ACTUAL_UI_CONTROL_UNAVAILABLE",
+      "status": "FAIL_OR_BLOCKED",
+      "owner_laptop": "NOT RUN",
+      "automatic_full_application_acceptance": false
+    }
+  },
+  "prior_failures_retained": true,
+  "owner_laptop": "NOT RUN"
+}

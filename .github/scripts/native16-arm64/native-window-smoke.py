@@ -2,6 +2,7 @@
 from pathlib import Path
 import subprocess,os,time,json,datetime,sys,re,traceback,runpy
 OUT=Path('evidence');OUT.mkdir(exist_ok=True);assert os.geteuid()!=0;assert os.uname().machine=='aarch64';HERE=Path(__file__).resolve().parent
+Owned=runpy.run_path(str(HERE/'fresh-xdg-owned-process.py'))
 result={'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'build_kind':'LESSON_PREVIEW_ARM64','early_close':'NOT RUN','early_loading_visible':'NOT OBSERVED','actual_Home_readiness':'NOT OBSERVED','normal_Home_close':'NOT RUN','window_alone_is_ready':False,'independent_screenshot_review':'REQUIRED','owner_laptop':'NOT RUN','events':[]};app=None;wm=None;logs=[]
 def now():return datetime.datetime.now(datetime.timezone.utc).isoformat()
 def save():(OUT/'native-startup-receipt.json').write_text(json.dumps(result,indent=2)+'\n')
@@ -36,8 +37,8 @@ def launch(label,profile=None):
   profile=Path(os.environ['RUNNER_TEMP'])/('9to1-'+label+'-fresh');assert not profile.exists()
  result['active_profile']=str(profile)
  log=(OUT/(label+'.stdout.log')).open('w');logs.append(log)
- env=dict(os.environ,HAVEN_DATA_DIR=str(profile),NO_AT_BRIDGE='0');env.pop('GH_TOKEN',None);env.pop('GITHUB_TOKEN',None)
- app=subprocess.Popen(['/usr/bin/9to1-preview'],env=env,stdout=log,stderr=subprocess.STDOUT);end=time.monotonic()+60
+ env=Owned['context'](profile);event('ISOLATED_XDG_CONTEXT',profile=str(profile),xdg={k:v for k,v in env.items() if k.startswith('XDG_') and k in ['XDG_DATA_HOME','XDG_CONFIG_HOME','XDG_CACHE_HOME','XDG_RUNTIME_DIR']})
+ app=Owned['start'](profile,log);event('OWNED_APP_STARTED',snapshot=Owned['snapshot'](app));end=time.monotonic()+60
  while time.monotonic()<end:
   if app.poll() is not None:raise RuntimeError(label+' app exited before actual window: '+str(app.returncode))
   r=cmd(['wmctrl','-lp'])
@@ -55,18 +56,17 @@ def failure(label,error):
  except Exception:pass
 
 def cleanup_owned(label):
- if app is not None and app.poll() is None:
-  app.terminate()
-  try:app.wait(timeout=10)
-  except subprocess.TimeoutExpired:app.kill();app.wait()
-  event('OWNED_FAILURE_CLEANUP',phase=label,method='SIGTERM_OR_SIGKILL; not normal-close acceptance')
+ if app is not None:
+  event('OWNED_FAILURE_CLEANUP',phase=label,details=Owned['cleanup'](app))
 
 def close(win,label):
  try:
+  event('OWNED_BEFORE_NORMAL_CLOSE',label=label,snapshot=Owned['snapshot'](app))
   r=cmd(['wmctrl','-ic',win]);event('NORMAL_CLOSE_REQUEST',label=label,wmctrl_exit=r.returncode)
   if r.returncode:raise RuntimeError(label+' window-manager close request failed')
   code=app.wait(timeout=35);event('NORMAL_CLOSE_RESULT',label=label,exit_code=code)
   if code!=0:raise RuntimeError(label+' normal close exited '+str(code))
+  Owned['normal_exit'](app)
   return True
  except Exception as error:
   failure(label+'-normal-close',error);cleanup_owned(label);return False
@@ -82,7 +82,7 @@ def home_ready():
   event('HOME_NOT_READY',attempt=attempt,address_observed=has_address,home_observed=has_home,loading_text='checking required home services' in text);time.sleep(2)
  raise RuntimeError('Actual Home controls/content NOT OBSERVED within180seconds; Loading window is not readiness')
 try:
- provenance=json.loads(Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text());assert provenance['source_head']==os.environ['GITHUB_SHA'];result['installed_build_provenance']=provenance
+ provenance=json.loads(Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text());assert provenance['source_head']==os.environ['EXPECTED_SOURCE_HEAD'];result['installed_build_provenance']=provenance;result['acceptance_tools_head']=os.environ['GITHUB_SHA']
  f=(OUT/'openbox.stdout.log').open('w');logs.append(f);wm=subprocess.Popen(['openbox'],stdout=f,stderr=subprocess.STDOUT);wait_wm()
  try:
   w=launch('early-close');image=screenshot('early-window-before-immediate-close');early_ok=close(w,'early-window')
@@ -107,11 +107,9 @@ except BaseException as e:
  try:screenshot('native-startup-failure');observe('native-startup-failure')
  except Exception:pass
 finally:
- if app is not None and app.poll() is None:
-  app.terminate()
-  try:app.wait(timeout=10)
-  except subprocess.TimeoutExpired:app.kill();app.wait()
-  result['failure_cleanup']='OWNED_APP_TERMINATED; not normal-close acceptance'
+ if app is not None:
+  try:cleanup_owned('final-cleanup')
+  except Exception as error:failure('strict-owned-cleanup',error);result['status']='FAIL'
  if wm is not None and wm.poll() is None:wm.terminate();wm.wait(timeout=10)
  for f in logs:f.close()
  result['ended_at']=now();save()

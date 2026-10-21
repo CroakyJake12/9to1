@@ -2,7 +2,8 @@
 from pathlib import Path
 import os,subprocess,time,json,datetime,hashlib,sqlite3,sys,traceback
 import re,runpy
-HEAD=os.environ['GITHUB_SHA'];assert re.fullmatch(r'[0-9a-f]{40}',HEAD);PROMPT='What is 2 + 2? Answer briefly and explain your calculation.'
+Owned=runpy.run_path(str(Path(__file__).resolve().with_name('fresh-xdg-owned-process.py')))
+HEAD=os.environ['EXPECTED_SOURCE_HEAD'];assert re.fullmatch(r'[0-9a-f]{40}',HEAD);PROMPT='What is 2 + 2? Answer briefly and explain your calculation.'
 OUT=Path(os.environ['GITHUB_WORKSPACE'])/'evidence';PROFILE=Path(os.environ['RUNNER_TEMP'])/'9to1-chat-package-fresh';assert os.geteuid()!=0;assert not PROFILE.exists();assert os.uname().machine=='aarch64';OUT.mkdir(exist_ok=True)
 receipt={'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source_head':HEAD,'prompt':PROMPT,'normal_user_uid':os.geteuid(),'fresh_profile_initially_absent':True,'desktop':'Xvfb1280x900+openbox','installed_package':'NOT VERIFIED','startup_window_and_close':'NOT RUN','actual_UI_chat':'NOT RUN','streaming':'NOT OBSERVED','persistence_database':'NOT RUN','visual_reopen':'NOT RUN','owner_laptop':'NOT RUN','independent_screenshot_review':'REQUIRED','stages':[]};app=None;wm=None;logs=[]
 def now():return datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -35,24 +36,21 @@ def wait_window():
  raise RuntimeError('No actual app window in60seconds')
 def launch(label):
  global app
- f=(OUT/(label+'.stdout.log')).open('w');logs.append(f);env=dict(os.environ,HAVEN_DATA_DIR=str(PROFILE),NO_AT_BRIDGE='0');env.pop('GH_TOKEN',None);env.pop('GITHUB_TOKEN',None)
- app=subprocess.Popen(['/usr/bin/9to1-preview'],env=env,stdout=f,stderr=subprocess.STDOUT);win=wait_window();command(['wmctrl','-ir',win,'-b','add,maximized_vert,maximized_horz']);command(['wmctrl','-ia',win]);event('APP_WINDOW',label=label,pid=app.pid,window=win);return win
+ f=(OUT/(label+'.stdout.log')).open('w');logs.append(f);env=Owned['context'](PROFILE);event('ISOLATED_XDG_CONTEXT',profile=str(PROFILE),xdg={k:v for k,v in env.items() if k in ['XDG_DATA_HOME','XDG_CONFIG_HOME','XDG_CACHE_HOME','XDG_RUNTIME_DIR']})
+ app=Owned['start'](PROFILE,f);event('OWNED_APP_STARTED',snapshot=Owned['snapshot'](app));win=wait_window();command(['wmctrl','-ir',win,'-b','add,maximized_vert,maximized_horz']);command(['wmctrl','-ia',win]);event('APP_WINDOW',label=label,pid=app.pid,window=win);return win
 
 def normal_close(win,label):
  try:
-  command(['wmctrl','-ic',win]);code=app.wait(timeout=35);event('NORMAL_CLOSE',label=label,exit_code=code)
+  event('OWNED_BEFORE_NORMAL_CLOSE',label=label,snapshot=Owned['snapshot'](app));command(['wmctrl','-ic',win]);code=app.wait(timeout=35);event('NORMAL_CLOSE',label=label,exit_code=code)
   if code!=0:raise RuntimeError('Actual normal close returned '+str(code))
+  Owned['normal_exit'](app)
   return True
  except Exception as error:
   receipt.setdefault('required_phase_failures',[]).append({'phase':label+'-normal-close','error':repr(error),'traceback':traceback.format_exc()})
   event('REQUIRED_NORMAL_CLOSE_FAILURE',label=label,error=repr(error))
   try:shot(label+'-close-failure');dump(label+'-close-failure')
   except Exception:pass
-  if app.poll() is None:
-   app.terminate()
-   try:app.wait(timeout=10)
-   except subprocess.TimeoutExpired:app.kill();app.wait()
-   event('OWNED_FAILURE_CLEANUP',label=label,method='SIGTERM_OR_SIGKILL; not normal-close acceptance')
+  event('OWNED_FAILURE_CLEANUP',label=label,details=Owned['cleanup'](app))
   # Continue the independent chat/reopen checks; the final receipt and exit remain failures.
   return False
 
@@ -110,7 +108,7 @@ def db_messages():
    return [dict(r) for r in c.execute('SELECT id,conversation_id,role,content,model_name,created_at FROM messages WHERE conversation_id=(SELECT conversation_id FROM messages WHERE role=1 AND content=? ORDER BY rowid DESC LIMIT 1) ORDER BY rowid',(PROMPT,))]
  except sqlite3.Error as e:event('READ_ONLY_PERSISTENCE_OBSERVATION_UNAVAILABLE',error=str(e));return []
 try:
- installed=json.loads(Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text());assert installed['source_head']==HEAD and installed['build_kind']=='LESSON_PREVIEW_ARM64';receipt['installed_package']='SOURCE_PROVENANCE_MATCH';receipt['installed_build_provenance']=installed
+ installed=json.loads(Path('/usr/share/doc/9to1-preview/source-and-build.json').read_text());assert installed['source_head']==HEAD and installed['build_kind']=='LESSON_PREVIEW_ARM64';receipt['acceptance_tools_head']=os.environ['GITHUB_SHA'];receipt['installed_package']='SOURCE_PROVENANCE_MATCH';receipt['installed_build_provenance']=installed
  wm_log=(OUT/'openbox.stderr.log').open('w');logs.append(wm_log);wm=subprocess.Popen(['openbox'],stdout=wm_log,stderr=subprocess.STDOUT);wait_wm()
  Driver=runpy.run_path(str(Path(__file__).resolve().with_name('onboarding-driver.py')))['OnboardingDriver']
  w=launch('first-fresh-launch')
@@ -122,7 +120,7 @@ try:
  driver=Driver(app.pid,w,PROFILE,OUT,'chat-returning',event,lambda:app.poll() is None)
  driver.returning(completed);receipt['same_profile_onboarding_bypass']='ACTUAL_DIRECT_HOME_AND_SAME_COMPLETION_RECORD'
  wait_home('02-home');shot('02-home-before-navigation');click(['Search or enter web address']);xkey('ctrl+a');type_text('9to1://spaces');click(['Go to address']);time.sleep(4);shot('03-spaces');dump('03-spaces')
- click(['Open Chat']);time.sleep(2);shot('03-chat-selected');click(['Start a new chat in this Space']);time.sleep(2);click(['Message']);type_text(PROMPT);shot('04-real-prompt-before-send');dump('04-real-prompt-before-send');click(['Send message'],timeout=180)
+ click(['Open Chat']);time.sleep(2);shot('03-chat-selected');click(['Start a new chat in this Space']);time.sleep(2);click(['Message']);type_text(PROMPT);shot('04-real-prompt-before-send');dump('04-real-prompt-before-send');event('OWNED_BEFORE_SEND_WAIT',snapshot=Owned['snapshot'](app));click(['Send message'],timeout=180)
  end=time.monotonic()+180;assistant=None;observations=[];ui_growth=[]
  while time.monotonic()<end:
   if app.poll() is not None:raise RuntimeError('App exited during actual response')
@@ -158,10 +156,10 @@ finally:
     if len(fields)>2 and fields[2]==str(app.pid):command(['wmctrl','-ic',fields[0]],False)
    app.wait(timeout=15)
   except Exception:
-   app.terminate()
-   try:app.wait(timeout=10)
-   except subprocess.TimeoutExpired:app.kill();app.wait()
-   receipt['owned_app_failure_cleanup']='SIGTERM_OR_SIGKILL; not normal-close acceptance'
+   receipt['owned_app_failure_cleanup']='Strict owned session cleanup required; not normal-close acceptance'
+ if app is not None:
+  try:event('OWNED_FINAL_CLEANUP',details=Owned['cleanup'](app))
+  except Exception as error:receipt['status']='FAIL';receipt['owned_cleanup_error']=repr(error)
  if wm is not None and wm.poll() is None:wm.terminate();wm.wait(timeout=10)
  for f in logs:f.close()
  receipt['ended_at']=now();receipt['raw_profile_database_uploaded']=False;save()
