@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using PopupPositioning = Avalonia.Controls.Primitives.PopupPositioning;
 
@@ -52,6 +53,7 @@ internal sealed class CuiFloatingPortal : IDisposable
     private IInputElement? _restoreFocus;
     private readonly EventHandler<AvaloniaPropertyChangedEventArgs> _hostPropertyChanged;
     private readonly EventHandler _layoutUpdated;
+    private readonly EventHandler<PointerReleasedEventArgs> _wrapperPointerReleased;
     // The ORIGINAL physical-close publisher lease captured at construction (the loader wires it into
     // the host before any escape portal exists). The portal keeps its own lease so a retired host can
     // never drop the only publisher before this portal's real close receipt settles; release of the
@@ -75,6 +77,7 @@ internal sealed class CuiFloatingPortal : IDisposable
         _cell = cell ?? throw new ArgumentNullException(nameof(cell));
         _hostPropertyChanged = OnHostPropertyChanged;
         _layoutUpdated = (_, _) => OnWrapperLayoutUpdated();
+        _wrapperPointerReleased = OnWrapperPointerReleased;
         _popup = new Popup
         {
             PlacementTarget = owner,
@@ -122,6 +125,7 @@ internal sealed class CuiFloatingPortal : IDisposable
             _cell.Child = null;
             _cell.IsVisible = false;
             _wrapper = new Border { Child = _host };
+            _wrapper.PointerReleased += _wrapperPointerReleased;
             _popup.Child = _wrapper;
             _owner.AdoptPortalLogically(_popup);
             _adopted = true;
@@ -303,11 +307,61 @@ internal sealed class CuiFloatingPortal : IDisposable
         finally { _invalidating = false; }
     }
 
+    /// <summary>
+    /// Return keyboard focus to the owning surface's primary embedded input after a pointer action on
+    /// the portaled floating content (e.g. a toolbar command button). The global pointer-focus
+    /// mechanism gives the clicked control keyboard focus, so without this the composer would lose its
+    /// editable input after each toolbar interaction. We restore only when the pointer gesture landed
+    /// focus on a NON-input control inside this portal, and only to a real visible/focusable input of
+    /// the owning compound-focus surface — never when the user is interacting with a genuine input
+    /// hosted here. The restore is deferred until the click/action routing settles.
+    /// </summary>
+    private void OnWrapperPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_disposed || !_popup.IsOpen || e.InitialPressMouseButton != MouseButton.Left) return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_disposed || !_popup.IsOpen) return;
+            var manager = TopLevel.GetTopLevel(_owner)?.FocusManager;
+            var focused = manager?.GetFocusedElement();
+            if (focused is null || focused is TextBox || focused is not Visual focusedVisual) return;
+            // Only restore when focus currently lives inside this portal's hosted content and is not
+            // the primary input itself (the click landed on a transient control such as a command).
+            if (!ReferenceEquals(focusedVisual, _host) && !_host.IsVisualAncestorOf(focusedVisual)) return;
+            var input = FindOwnerInput();
+            if (input is null || !input.IsEffectivelyVisible || !input.Focusable || !input.IsAttachedToVisualTree()) return;
+            if (!ReferenceEquals(manager?.GetFocusedElement(), input))
+                input.Focus(NavigationMethod.Pointer);
+        });
+    }
+
+    /// <summary>Locate the owning compound-focus surface's primary visible embedded text input. The
+    /// walking is the same visual-ancestor search the overlay panel uses to resolve the surface scope:
+    /// nearest compound-focus-enabled authored container, then its first visible/focusable text input
+    /// (the composer's editable line; hidden auxiliary inputs such as a closed emoji search are skipped).</summary>
+    private TextBox? FindOwnerInput()
+    {
+        Visual? current = _owner;
+        while (current is not null)
+        {
+            if (current is CuiContainerControl { CompoundFocusEnabled: true } container)
+            {
+                foreach (var descendant in container.GetVisualDescendants())
+                    if (descendant is TextBox box && box.IsEffectivelyVisible && box.Focusable && box.IsAttachedToVisualTree())
+                        return box;
+                return null;
+            }
+            current = current.GetVisualParent();
+        }
+        return null;
+    }
+
     private void TeardownPortal()
     {
         if (_wrapper is not null)
         {
             _wrapper.LayoutUpdated -= _layoutUpdated;
+            _wrapper.PointerReleased -= _wrapperPointerReleased;
             _wrapper = null;
         }
         _host.KeyDown -= OnPortalKeyDown;

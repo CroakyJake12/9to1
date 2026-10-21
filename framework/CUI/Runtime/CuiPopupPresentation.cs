@@ -110,6 +110,31 @@ public static class CuiPopupPresentation
         // Apply the alpha request to the fresh destination before its first show. The handler stays
         // subscribed for the lifetime of the popup, so every open (including reopens) negotiates.
         args.Destination.TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
+        EstablishBacking(args.Destination);
+    }
+
+    /// <summary>
+    /// Establish the CUI-owned backing (transparent root background) on a genuine native popup
+    /// destination before its first Show. The donor <see cref="PopupRoot"/> default Background is
+    /// white, and the CUI popup template clears it with a raw native LocalValue — but a raw local
+    /// value is not guaranteed to survive (a theme/ancestry or a CUI projection write can out-rank
+    /// it), which produced the observed white rectangle behind the rounded chrome. This path sets
+    /// the backing through the typed CUI property presentation at <see cref="CuiPropertyLevel.Overlay"/>
+    /// precedence (applied at Animation native priority), so it wins over the donor white default,
+    /// over any raw LocalValue, and over every lower CUI layer. It runs per-fresh-destination, so
+    /// reopening a popup (which creates a fresh destination) receives a fresh backing. The alpha-aware
+    /// fallback border (<c>PART_TransparencyFallback</c>) remains the sole painter of a positively
+    /// opaque destination and stays unpainted while alpha is unknown or negotiated.
+    /// </summary>
+    private static void EstablishBacking(PopupRoot destination)
+    {
+        if (destination is null) return;
+        // Lightweight projection: no templated-control setup is required to carry one overridden
+        // property. If a full projection already exists (installed by the CUI popup template), the
+        // lookup returns it and preserves its existing state.
+        CuiPropertyPresentation.Attach(destination, ownsTemplate: false);
+        CuiPropertyPresentation.Set(destination, "Background", Brushes.Transparent,
+            CuiPropertyLevel.Overlay, "CUI popup backing", -100);
     }
 
     /// <summary>
