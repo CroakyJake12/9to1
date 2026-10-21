@@ -600,7 +600,7 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
         }
         // No distinct sibling scene host in any ancestor: this composition is the only one, so scope to
         // the whole top level (preserving same-top-level protected-sibling avoidance).
-        return TopLevel.GetTopLevel(this) ?? myHost;
+        return (Control?)TopLevel.GetTopLevel(this) ?? myHost;
     }
 
     /// <summary>The target must be inside THIS owner subtree (a descendant of this overlay panel) and
