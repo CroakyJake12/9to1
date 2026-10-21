@@ -1,112 +1,64 @@
-# Root-reviewed isolated source-only preview branch; never merges to main.
-name: 9to1 Native16 ARM64 source build and startup
+# Proposal only: Root reviews, pushes and dispatches. No engine rebuild or HTTP fallback.
+name: Dulche exact Bookworm ARM64 AF_UNIX engine check
 on:
   workflow_dispatch:
-    inputs:
-      upload_draft_asset:
-        description: Also upload NEW native package to existing INTERNAL unpublished draft
-        type: boolean
-        required: true
-        default: false
 permissions:
   contents: read
+  actions: read
 jobs:
-  native-arm64:
+  native-afunix:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 40
-    # Needed only for the explicit optional same-repo unpublished draft asset upload.
-    permissions:
-      contents: write
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 16
+          fetch-depth: 1
           submodules: false
           persist-credentials: false
-      - name: Initialize only exact approved source dependencies
+      - name: Require native ARM and identify exact source
         shell: bash
         run: |
           set -euo pipefail
           test "$(uname -m)" = aarch64
           test "$(dpkg --print-architecture)" = arm64
-          mkdir evidence
-          echo "NUGET_PACKAGES=$RUNNER_TEMP/9to1-native16-nuget" >> "$GITHUB_ENV"
-          uname -a > evidence/native-platform.txt
-          cat /etc/os-release >> evidence/native-platform.txt
-          getconf GNU_LIBC_VERSION >> evidence/native-platform.txt
-          git submodule update --init --recursive --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus
-          git submodule status --recursive -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus > evidence/source-submodule-pins.txt
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.301
-      - name: Install native runtime and display dependencies on disposable runner
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends binutils libfontconfig1 libfreetype6 libx11-6 libxext6 libxrandr2 libxi6 libxcursor1 libice6 libsm6 libgl1 libegl1 libdbus-1-3 libgomp1 libicu74 libssl3t64 zlib1g xvfb openbox wmctrl x11-utils imagemagick dbus-x11 fonts-dejavu-core
-          dotnet --info > evidence/dotnet-info.txt
-      - name: Export exact corresponding source (before generated outputs)
-        run: python3 .github/scripts/native16-arm64/export-corresponding-source.py
-      - name: Build host tools and full normal ARM product graph then assemble NEW internal package
-        run: python3 .github/scripts/native16-arm64/build-native-arm64.py
-      - name: Install exact newly built package
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(dpkg-deb --field "$PREVIEW_DEB" Architecture)" = arm64
-          sha256sum "$PREVIEW_DEB" > evidence/native-package.sha256
-          sudo apt-get install -y --no-install-recommends "$PREVIEW_DEB"
-          file /opt/9to1-preview/Haven > evidence/apphost-file.txt
-          ldd /opt/9to1-preview/Haven > evidence/apphost-ldd.txt
-          ! grep -F 'not found' evidence/apphost-ldd.txt
-      - name: Fresh-profile native window and normal close (bounded startup only)
-        shell: bash
-        run: |
-          set -euo pipefail
-          dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' python3 .github/scripts/native16-arm64/native-window-smoke.py
-      - name: Optional same-repository INTERNAL draft asset upload (never publishes release)
-        if: ${{ success() && inputs.upload_draft_asset }}
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/workflow-source-commit.txt
+          uname -a > evidence/platform.txt
+          getconf GNU_LIBC_VERSION >> evidence/platform.txt
+      - name: Identify verified artifact (no substitution or rebuild)
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          gh api repos/CroakyJake12/9to1/releases/419289496 > evidence/internal-draft-before.json
+          gh api repos/CroakyJake12/9to1/actions/artifacts/12328502225 > evidence/source-artifact.json
           python3 - <<'PY'
           import json
-          x=json.load(open('evidence/internal-draft-before.json'))
-          assert x['id']==419289496 and x['draft'] is True and x['published_at'] is None
-          assert x['tag_name']=='internal-native16-arm64-20261021'
+          x=json.load(open('evidence/source-artifact.json'))
+          assert x['id']==12328502225 and x['name']=='9to1-llamacpp-b10809-arm64-bookworm'
+          assert not x['expired'] and x['workflow_run']['id']==39562111673
+          assert x['digest']=='sha256:b596f767158d3a53de226bed35cf498d07f485e00da0cd4649331db988affa18'
           PY
-          # Ephemeral workflow token, standard GitHub upload. No owner credential extraction,
-          # clobber, public promotion or retry bypass. A failure remains a failure.
-          gh release upload internal-native16-arm64-20261021 "$PREVIEW_DEB" --repo CroakyJake12/9to1
-          gh api repos/CroakyJake12/9to1/releases/419289496 > evidence/internal-draft-after.json
-          python3 - <<'PY'
-          import json
-          x=json.load(open('evidence/internal-draft-after.json'))
-          assert x['draft'] is True and x['published_at'] is None
-          PY
-      - name: Upload actual package plus SHA/provenance (no profile/database)
-        if: ${{ always() && env.PREVIEW_PACKAGE_DIR != '' }}
-        uses: actions/upload-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: 9to1-native16-arm64-internal-package
-          path: |
-            ${{ env.PREVIEW_PACKAGE_DIR }}/*.deb
-            ${{ env.PREVIEW_PACKAGE_DIR }}/SHA256SUMS
-            ${{ env.PREVIEW_PACKAGE_DIR }}/package-receipt.json
-          retention-days: 1
-          if-no-files-found: error
-      - name: Upload bounded evidence and exact source archive
+          name: 9to1-llamacpp-b10809-arm64-bookworm
+          path: verified-bookworm-artifact
+          github-token: ${{ github.token }}
+          repository: CroakyJake12/9to1
+          run-id: 39562111673
+      - name: Actual AF_UNIX peer/model/readiness and product-equivalent probes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/dulche-afunix/smoke-afunix.py --artifact verified-bookworm-artifact --output evidence/afunix
+      - name: Retain bounded actual evidence (no model weights or second binary copy)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 9to1-native16-arm64-source-and-startup-evidence
-          path: evidence/
-          retention-days: 1
+          name: dulche-bookworm-arm64-afunix-evidence
+          path: |
+            evidence/
+            !evidence/afunix/*.gguf
+            !evidence/afunix/engine/
           if-no-files-found: error
+          retention-days: 1
