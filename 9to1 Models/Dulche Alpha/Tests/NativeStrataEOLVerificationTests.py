@@ -11,6 +11,7 @@ import io
 import json
 import pathlib
 import tarfile
+import tempfile
 import unittest
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -175,6 +176,83 @@ class NativeStrataEOLVerificationTests(unittest.TestCase):
                 self.assertIn("treeBlobSha", row)
                 self.assertEqual(row["treeBlobSha"], self.canon[path])
                 self.assertIs(self.owner.verify_archive_member(path, self.bodies[path], row, eol), self.bodies[path])
+
+
+class ForkTqRelinkControls(unittest.TestCase):
+    """Path-custody regression for the embedded-build source-root fix.
+
+    The upstream trellis-MMQ overlay resolves `third_party/ggml-tq` relative to the top-level CMake
+    source dir (the thin dulche-fork wrapper). `verify_and_relink_fork_tq` must expose the verified
+    vendor closure at the fork root as a symlink to the upstream root, and refuse to do so when a
+    pinned vendor member is missing/tampered or the fork path already exists. Uses the REAL extracted
+    upstream tq vendor members; no CMake/compiler is invoked.
+    """
+
+    TQ = ("third_party/ggml-tq/tq.cuh", "third_party/ggml-tq/tq-mmq-tiles.cuh")
+
+    @classmethod
+    def setUpClass(cls):
+        cls.owner = load_owner()
+        cls.tq = {p: base64.b64decode(b) for p, b in json.loads((FIX / "tq-vendor-bodies.json").read_text()).items()}
+        cls.rows = [
+            {"path": p, "bytes": len(b),
+             "sha256": hashlib.sha256(b).hexdigest(),
+             "gitBlobSha": hashlib.sha1(b"blob " + str(len(b)).encode() + b"\0" + b).hexdigest()}
+            for p, b in sorted(cls.tq.items())
+        ]
+        cls.rowmap = {r["path"]: r for r in cls.rows}
+
+    def _layout(self):
+        td = tempfile.TemporaryDirectory(prefix="thunder-tq-")
+        self.addCleanup(td.cleanup)
+        root = pathlib.Path(td.name)
+        upstream = root / "upstream"
+        fork = root / "dulche-fork"
+        for rel, body in self.tq.items():
+            (upstream / rel).parent.mkdir(parents=True, exist_ok=True)
+            (upstream / rel).write_bytes(body)
+        return root, upstream, fork
+
+    def test_relinks_fork_to_verified_upstream(self):
+        root, upstream, fork = self._layout()
+        self.owner.verify_and_relink_fork_tq(fork, upstream, self.rows)
+        link = fork / "third_party" / "ggml-tq"
+        self.assertTrue(link.is_symlink())
+        self.assertEqual(link.readlink(), upstream / "third_party" / "ggml-tq")
+        for rel in self.TQ:
+            member = rel.split("/")[-1]
+            with self.subTest(member=member):
+                resolved = link / member
+                self.assertTrue(resolved.is_file())
+                self.assertEqual(hashlib.sha256(resolved.read_bytes()).hexdigest(), self.rowmap[rel]["sha256"])
+
+    def test_relink_refuses_missing_vendor_member(self):
+        root, upstream, fork = self._layout()
+        (upstream / self.TQ[0]).unlink()
+        with self.assertRaises(ValueError):
+            self.owner.verify_and_relink_fork_tq(fork, upstream, self.rows)
+
+    def test_relink_refuses_tampered_vendor_member(self):
+        root, upstream, fork = self._layout()
+        path0 = upstream / self.TQ[0]
+        body = bytearray(path0.read_bytes())
+        body[0] = 0x46 if body[0] != 0x46 else 0x47
+        path0.write_bytes(bytes(body))
+        with self.assertRaises(ValueError):
+            self.owner.verify_and_relink_fork_tq(fork, upstream, self.rows)
+
+    def test_relink_refuses_preexisting_fork_path(self):
+        root, upstream, fork = self._layout()
+        fork_tq = fork / "third_party" / "ggml-tq"
+        fork_tq.mkdir(parents=True)
+        with self.assertRaises(ValueError):
+            self.owner.verify_and_relink_fork_tq(fork, upstream, self.rows)
+
+    def test_relink_refuses_lock_missing_vendor_row(self):
+        root, upstream, fork = self._layout()
+        rows = [r for r in self.rows if r["path"] != self.TQ[0]]
+        with self.assertRaises(ValueError):
+            self.owner.verify_and_relink_fork_tq(fork, upstream, rows)
 
 
 if __name__ == "__main__":

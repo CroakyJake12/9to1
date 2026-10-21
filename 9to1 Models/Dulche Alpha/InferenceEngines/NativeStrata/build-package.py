@@ -146,6 +146,37 @@ def verify_archive_member(relative: str, body: bytes, row: dict, eol_normalized)
     return body
 
 
+def verify_and_relink_fork_tq(fork, upstream, rows):
+    """Embedded-build source-root compatibility glue (candidate profile).
+
+    The upstream trellis-MMQ overlay (cmake/strata_ggml_tq_overlay.cmake) resolves
+    `third_party/ggml-tq` relative to the TOP-LEVEL CMake source dir — which in the embedded build is
+    the thin dulche-fork wrapper, not the verified upstream root. We therefore expose the PINNED
+    vendor closure at the fork root as a symlink to the verified upstream `third_party/ggml-tq`.
+
+    Fail-closed custody: both required vendored members must be present in the verified upstream and
+    match their pinned lock rows (size + SHA-256) exactly; the fork path must be fresh.
+    """
+    tq_members = ("third_party/ggml-tq/tq.cuh", "third_party/ggml-tq/tq-mmq-tiles.cuh")
+    expected = {r["path"]: r for r in rows}
+    for rel in tq_members:
+        row = expected.get(rel)
+        if row is None:
+            raise ValueError("Lock is missing the pinned trellis vendor member: " + rel)
+        src = upstream / rel
+        if not src.is_file():
+            raise ValueError("Verified upstream is missing the pinned trellis vendor member: " + rel)
+        body = src.read_bytes()
+        if len(body) != row["bytes"] or hashlib.sha256(body).hexdigest() != row["sha256"]:
+            raise ValueError("Pinned trellis vendor member mismatch: " + rel)
+    fork_tq = fork / "third_party" / "ggml-tq"
+    upstream_tq = upstream / "third_party" / "ggml-tq"
+    if fork_tq.exists() or fork_tq.is_symlink():
+        raise ValueError("Fork trellis vendor path already exists: " + str(fork_tq))
+    fork_tq.parent.mkdir(parents=True, exist_ok=True)
+    os.symlink(str(upstream_tq), str(fork_tq))
+
+
 def verify_ggml_checkout(ggml_dir: pathlib.Path, dep: dict) -> dict:
     """Require a real llama.cpp checkout pinned to the dependency lock's commit AND tree, and clean.
 
@@ -287,6 +318,11 @@ def main():
                  "dulche_child_process.h"]
     for filename in files:
         shutil.copyfile(overlay / filename, fork / filename)
+    if args.profile == "candidate":
+        # Embedded-build source-root compatibility: the upstream trellis-MMQ overlay resolves
+        # `third_party/ggml-tq` relative to the TOP-LEVEL CMake source dir (the thin dulche-fork
+        # wrapper), so expose the verified vendor closure there as a symlink to the upstream root.
+        verify_and_relink_fork_tq(fork, upstream, lock["rows"])
     record = {"profile": args.profile, "target": args.target,
               "lock": str(lock_path), "lockSha256": selected_lock_sha,
               "origin": lock["origin"], "commit": lock["commit"], "tree": lock.get("gitCommitTree"),

@@ -1,4 +1,5 @@
 """Actual packaging predicate controls; no binary build or CUDA proof."""
+import base64
 import hashlib
 import importlib.util
 import io
@@ -10,6 +11,45 @@ import sys
 import tarfile
 import tempfile
 import unittest
+
+TQ_FIX = pathlib.Path(__file__).resolve().parent / "NativeStrataEOLFixtures" / "tq-vendor-bodies.json"
+
+
+def _tq_bodies():
+    return {p: base64.b64decode(b) for p, b in json.loads(TQ_FIX.read_text()).items()}
+
+
+def _tq_rows():
+    return [
+        {"path": p, "bytes": len(b), "gitBlobSha": _git_blob_sha(b),
+         "sha256": hashlib.sha256(b).hexdigest()}
+        for p, b in sorted(_tq_bodies().items())
+    ]
+
+
+def _build_donor_tar_with_tq(archive_bytes):
+    """Rebuild a tiny donor tar with the two REAL pinned trellis vendor members added.
+
+    The candidate build preparation requires `third_party/ggml-tq/{tq,tq-mmq-tiles}.cuh`
+    (the embedded source-root relink custody), so the synthetic candidate fixtures carry them.
+    """
+    members = {}
+    with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:gz") as tf:
+        for m in tf.getmembers():
+            if m.isfile():
+                members[m.name] = tf.extractfile(m).read()
+    for rel, body in _tq_bodies().items():
+        members["strata-v0.2.2/" + rel] = body
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+        rootinfo = tarfile.TarInfo("strata-v0.2.2/")
+        rootinfo.type = tarfile.DIRTYPE
+        tf.addfile(rootinfo)
+        for name, body in members.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(body)
+            tf.addfile(info, io.BytesIO(body))
+    return buf.getvalue()
 
 class NativeTargetControls(unittest.TestCase):
     def test_actual_target_refuses_other_architectures(self):
@@ -125,6 +165,13 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
     """
 
     def _invoke_prepare(self, lock, archive_bytes):
+        archive_bytes = _build_donor_tar_with_tq(archive_bytes)
+        rows = list(lock["rows"]) + _tq_rows()
+        lock = dict(lock)
+        lock["rows"] = rows
+        lock["blobCount"] = len(rows)
+        lock["archive"] = {"path": None, "bytes": len(archive_bytes),
+                           "sha256": hashlib.sha256(archive_bytes).hexdigest()}
         with tempfile.TemporaryDirectory(prefix="thunder-verif-") as td:
             lpath = pathlib.Path(td) / "lock.json"
             lpath.write_text(json.dumps(lock))
@@ -140,6 +187,13 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
             finally:
                 sys.argv = old
             rec = json.loads((work / "source-verification.json").read_text())
+            # Path-custody regression: the candidate embedded build must expose the pinned
+            # trellis vendor closure at the fork root (top-level CMake source dir) so the
+            # upstream overlay's `third_party/ggml-tq` resolves; verify the symlink + real bodies.
+            fork_link = work / "dulche-fork" / "third_party" / "ggml-tq"
+            self.assertTrue(fork_link.is_symlink(), "candidate prepare must expose fork third_party/ggml-tq")
+            self.assertTrue((fork_link / "tq.cuh").is_file())
+            self.assertTrue((fork_link / "tq-mmq-tiles.cuh").is_file())
             extracted = {}
             for rel in ("README.md", "BENCH.bat"):
                 f = work / "upstream" / rel
@@ -184,7 +238,7 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
              "sha256": hashlib.sha256(files["BENCH.bat"]).hexdigest()},
         ]
         rec, extracted = self._invoke_prepare(self._lock(archive, rows, ["BENCH.bat"]), archive)
-        self.assertEqual(rec["verifiedFiles"], 2)
+        self.assertEqual(rec["verifiedFiles"], 4)  # README + BENCH + 2 trellis vendor members
         self.assertEqual(extracted["BENCH.bat"], files["BENCH.bat"])  # exact raw body retained
 
     def test_undeclared_crlf_rejected(self):
