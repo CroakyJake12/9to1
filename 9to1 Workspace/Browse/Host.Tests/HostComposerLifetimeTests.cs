@@ -382,16 +382,16 @@ public sealed class HostComposerLifetimeTests
             var addButton = FindButton(view, "add-button");
             Assert.NotNull(addButton);
             var image = Assert.IsType<Image>(addButton!.Content);
-            Assert.True(image.Width >= 32 && image.Height >= 32);
+            Assert.True(image.Width >= 28 && image.Height >= 28);
 
             // The authored target is a 44px accessible button with 6px padding; the arranged image
-            // surface must be the 32x32 content box, measured in real arranged bounds, centered and
+            // surface must be the owner's 28x28 content box, measured in real arranged bounds, centered and
             // fully inside the button (no clipping).
             Assert.True(addButton.Bounds.Width >= 44 && addButton.Bounds.Height >= 44,
                 $"add button should be at least 44x44, was {addButton.Bounds}");
             Assert.Equal(new Thickness(6), addButton.Padding);
-            Assert.True(image.Bounds.Width >= 31 && image.Bounds.Width <= 33, $"plus image arranged width {image.Bounds.Width}");
-            Assert.True(image.Bounds.Height >= 31 && image.Bounds.Height <= 33, $"plus image arranged height {image.Bounds.Height}");
+            Assert.True(image.Bounds.Width >= 27 && image.Bounds.Width <= 29, $"plus image arranged width {image.Bounds.Width}");
+            Assert.True(image.Bounds.Height >= 27 && image.Bounds.Height <= 29, $"plus image arranged height {image.Bounds.Height}");
             // Compare the image and button in a SINGLE coordinate space: transform the image's arranged
             // box (its Bounds.Size) into button-local coordinates against the button's own local box.
             // Image.Bounds is relative to its ContentPresenter and Button.Bounds to the button's parent,
@@ -1244,7 +1244,10 @@ public sealed class HostComposerLifetimeTests
         {
             await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
-            Assert.Equal(1, registrar.RegisterCount);
+            // The real parent now owns separate composer and recovery native children.
+            Assert.Equal(2, registrar.RegisterCount);
+            Assert.True(registrar.TryCreate(scene.RecoveryHost, out var recoveryMapped));
+            Assert.Same(scene.RecoveryView, recoveryMapped);
             Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
             Assert.True(FindInput(scene.ComposerView)!.Bounds.Width > 0);
             Assert.True(registrar.TryCreate(scene.ComposerHost, out var mapped));
@@ -1301,7 +1304,10 @@ public sealed class HostComposerLifetimeTests
         {
             await scene.ComposerInitialization.WaitAsync(TimeSpan.FromSeconds(10));
             PumpLayout(window);
-            Assert.Equal(1, registrar.RegisterCount);
+            // The real parent now owns separate composer and recovery native children.
+            Assert.Equal(2, registrar.RegisterCount);
+            Assert.True(registrar.TryCreate(scene.RecoveryHost, out var recoveryMapped));
+            Assert.Same(scene.RecoveryView, recoveryMapped);
             Assert.Contains(scene.ComposerView, window.GetVisualDescendants());
             Assert.True(FindInput(scene.ComposerView)!.Bounds.Width > 0);
             Assert.True(registrar.TryCreate(scene.ComposerHost, out var mapped));

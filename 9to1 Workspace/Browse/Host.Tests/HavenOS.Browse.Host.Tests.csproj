@@ -33,9 +33,14 @@
     <Compile Include="HostComposerLifetimeTests.cs" />
     <Compile Include="FloatingFormatToolbarTests.cs" />
     <Compile Include="ChatComposerEmojiPickerViewportTests.cs" />
+    <Compile Include="NativeComposerFloatingPortalTests.cs" />
     <Compile Include="HavenPackagedSvgResolverStrictTests.cs" />
     <Using Include="Xunit" />
-    <PackageReference Include="Avalonia.Headless.XUnit" />
+    <!-- Use the same approved fork as the real desktop/runtime, including headless hosting. -->
+    <ProjectReference Include="../../../framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.XUnit/Avalonia.Headless.XUnit.csproj" />
+    <ProjectReference Include="../../../framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
+    <ProjectReference Include="../../../framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj" />
+    <PackageReference Include="Avalonia" ExcludeAssets="all" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>

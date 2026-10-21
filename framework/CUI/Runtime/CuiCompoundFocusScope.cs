@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Controls;
@@ -36,6 +37,14 @@ public sealed class CuiCompoundFocusScope : IDisposable
     private readonly Dictionary<MenuItem, EventHandler<AvaloniaPropertyChangedEventArgs>> _menuItemObservation = [];
     private readonly Dictionary<TextBox, EventHandler<AvaloniaPropertyChangedEventArgs>> _inputObservation = [];
     private readonly List<(CuiContainerControl Container, NotifyCollectionChangedEventHandler Handler)> _layoutHandlers = [];
+
+    // Explicitly registered external members: authored floating content (e.g. an escape portal's host)
+    // that belongs to this scope but is physically hosted in a separate top-level popup, so it is NOT a
+    // visual descendant of the owner and cannot be discovered by subtree scanning. Registration is
+    // deliberately explicit and lifetime-owner-managed (never global/lookup), and each is torn down on
+    // scope dispose. The stored top level (if any) is the separate top-level that was observed for focus.
+    private readonly Dictionary<Control, TopLevel?> _externalMembers = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<TopLevel> _externalTopLevels = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>Construct the scope for its owning compound-focus container.</summary>
     public CuiCompoundFocusScope(CuiContainerControl owner)
@@ -236,13 +245,63 @@ public sealed class CuiCompoundFocusScope : IDisposable
         {
             if (node is MenuItem item && _menuItemObservation.ContainsKey(item)) return true;
         }
+        // Explicitly registered external members (physically portaled authored content such as an escape
+        // portal host). A focused element inside any such member's subtree is genuinely in scope even
+        // though it is not a visual descendant of the owner.
+        if (_externalMembers.Count > 0)
+        {
+            foreach (var member in _externalMembers.Keys)
+                if (ReferenceEquals(member, visual) || member.IsVisualAncestorOf(visual)) return true;
+        }
         return false;
+    }
+
+    /// <summary>
+    /// Register authored floating content (e.g. an escape portal's host) as a member of this scope so
+    /// genuine focus on its physically-removed descendants keeps the composite focused. Explicit and
+    /// owner-managed: never a global menu/lookup shortcut. Idempotent; recomputes membership.
+    /// </summary>
+    internal void RegisterExternalMember(Control member)
+    {
+        if (_disposed || member is null) return;
+        if (_externalMembers.ContainsKey(member)) return;
+        var top = TopLevel.GetTopLevel(member);
+        _externalMembers[member] = top;
+        if (top is not null && !ReferenceEquals(top, _topLevel) && _externalTopLevels.Add(top))
+        {
+            top.AddHandler(InputElement.GotFocusEvent, OnRootFocusChanged, RoutingStrategies.Bubble, handledEventsToo: true);
+            top.AddHandler(InputElement.LostFocusEvent, OnRootFocusChanged, RoutingStrategies.Bubble, handledEventsToo: true);
+        }
+        Recompute();
+    }
+
+    /// <summary>Unregister a previously registered external member (portal retirement/detach/dispose).
+    /// Idempotent; recomputes membership so the scope does not stay stuck focused.</summary>
+    internal void UnregisterExternalMember(Control member)
+    {
+        if (member is null) return;
+        if (_externalMembers.Remove(member, out var top) && top is not null && _externalTopLevels.Remove(top))
+        {
+            top.RemoveHandler(InputElement.GotFocusEvent, OnRootFocusChanged);
+            top.RemoveHandler(InputElement.LostFocusEvent, OnRootFocusChanged);
+        }
+        Recompute();
     }
 
     private void Recompute()
     {
         if (_disposed) return;
+        // Focus may live on the owning top level OR on any registered external member's top level (the
+        // portal's popup root). Evaluate across all observed top levels so membership stays truthful
+        // across the separate top-level boundary.
         var focused = IsInScope(_topLevel?.FocusManager?.GetFocusedElement());
+        if (!focused)
+        {
+            foreach (var top in _externalTopLevels)
+            {
+                if (IsInScope(top.FocusManager?.GetFocusedElement())) { focused = true; break; }
+            }
+        }
         if (focused == _focused) return;
         _focused = focused;
         FocusChanged?.Invoke(this, focused);
@@ -286,6 +345,13 @@ public sealed class CuiCompoundFocusScope : IDisposable
             container.Layout.Children.CollectionChanged -= handler;
             _layoutHandlers.Remove((container, handler));
         }
+        foreach (var top in _externalTopLevels.ToArray())
+        {
+            top.RemoveHandler(InputElement.GotFocusEvent, OnRootFocusChanged);
+            top.RemoveHandler(InputElement.LostFocusEvent, OnRootFocusChanged);
+        }
+        _externalTopLevels.Clear();
+        _externalMembers.Clear();
         _focused = false;
         _hasValidationError = false;
     }

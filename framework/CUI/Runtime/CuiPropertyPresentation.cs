@@ -183,6 +183,12 @@ public static class CuiPropertyPresentation
                 Watch("CuiPopupHorizontalOffset", "HorizontalOffset");
                 Watch("CuiPopupVerticalOffset", "VerticalOffset");
             }
+            // The generic Selected state (a single authored surface such as a tab pill) applies themed
+            // selection fill/border to any CUI control, including non-interactive composition
+            // containers. The selection brushes are therefore observed for every control; hover and
+            // pressed brushes remain interactive-control-only so a quiet container never paints an
+            // unwanted hover island.
+            Watch("CuiSelectionBrush", null); Watch("CuiMenuSelectionBrush", null); Watch("CuiSelectionIndicatorBrush", null);
             if (!interactive) return;
             Set("FocusAdorner", new FuncTemplate<Control>(() =>
             {
@@ -210,7 +216,7 @@ public static class CuiPropertyPresentation
                 Watch("CuiMenuItemRadius", "CornerRadius", "CUI menu row", 1);
             }
             foreach (var key in new[] { "CuiButtonHoverBrush", "CuiButtonPressedBrush", "CuiButtonHoverForegroundBrush", "CuiButtonPressedForegroundBrush",
-                "CuiSelectionBrush", "CuiMenuSelectionBrush", "CuiSelectionIndicatorBrush", "CuiFocusBrush", "CuiValidationBrush", "CuiDisabledOpacity", "CuiFocusIndicatorThickness" }) Watch(key, null);
+                "CuiFocusBrush", "CuiValidationBrush", "CuiDisabledOpacity", "CuiFocusIndicatorThickness" }) Watch(key, null);
             if (control is TextBox)
             {
                 Watch("CuiTextBrush", "CaretBrush"); Watch("CuiTextSoftBrush", "PlaceholderForeground");

@@ -195,7 +195,14 @@ public static class CuiControlTemplates
         owner.PropertyChanged += (_, change) => { if (change.Property == TextBox.TextProperty) Placeholder(); };
         text.PropertyChanged += (_, change) => { if (change.Property.Name == "PreeditText") Placeholder(); };
         Placeholder();
-        var surface = new Panel { Children = { placeholder, text }, Cursor = new Cursor(StandardCursorType.Ibeam) };
+        // The presenter and placeholder share one overlay cell. A Grid (not a bare Panel) honours
+        // the native TextBox.VerticalContentAlignment through the presenter/placeholder vertical
+        // alignment, so a centred single-line field centres its actual text (not just the whole
+        // input box). Default Stretch preserves the existing fill/top behaviour for ordinary and
+        // multiline inputs; only an authored VerticalContentAlignment changes the placement.
+        var surface = new Grid { Children = { placeholder, text }, Cursor = new Cursor(StandardCursorType.Ibeam) };
+        Bind(text, Layoutable.VerticalAlignmentProperty, owner, "VerticalContentAlignment");
+        Bind(placeholder, Layoutable.VerticalAlignmentProperty, owner, "VerticalContentAlignment");
         var scroll = Name(new ScrollViewer { Content = surface, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled }, "PART_ScrollViewer", scope);
         scroll.Bind(ScrollViewer.HorizontalScrollBarVisibilityProperty, owner.GetObservable(ScrollViewer.HorizontalScrollBarVisibilityProperty));
         scroll.Bind(ScrollViewer.VerticalScrollBarVisibilityProperty, owner.GetObservable(ScrollViewer.VerticalScrollBarVisibilityProperty));
