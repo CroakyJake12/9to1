@@ -511,29 +511,41 @@ public sealed class FloatingFormatToolbarTests
             AssertPlaced(toolbar!);
             var tb = toolbar!;
             var layer = FindContainer(view, "composer-floating-layer")!;
-            var cell = Assert.IsType<Border>(layer.GetVisualParent());
+
+            // Placed: the CURRENT real physical owner of the retained host (the portal wrapper while the
+            // bar has escaped, or the panel-private cell otherwise) is visible, and the toolbar actually
+            // participates in rendering/input. We never cache the owner across phases: retirement/restore
+            // moves the retained host between the portal wrapper and the panel-private cell.
             Assert.True(tb.IsVisible, "with enough space the toolbar must be visible");
-            Assert.True(cell.IsVisible, "the floating cell must be present when placed");
+            Assert.True(tb.IsEffectivelyVisible, "placed toolbar must be effectively visible");
+            var ownerPlaced = Assert.IsType<Border>(layer.GetVisualParent());
+            Assert.True(ownerPlaced.IsVisible, "the floating cell must be present when placed");
 
             // Shrink the usable height until no side offers genuinely safe space. The toolbar must be
-            // ACTUALLY removed from paint/hit/focus (the panel-private cell wrapper hidden), NOT merely
-            // arranged at a zero rect that still lets positive-sized buttons paint near the origin.
+            // ACTUALLY removed from paint/hit/focus (the current panel-private cell wrapper hidden), NOT
+            // merely arranged at a zero rect that still lets positive-sized buttons paint near the origin.
             window.Height = 100;
             PumpLayout(window);
 
-            // Genuine suppression: the panel-private wrapper is hidden, so the whole subtree loses
+            // Genuine suppression: the CURRENT real owner is hidden, so the whole subtree loses
             // paint/hit/focus/tab participation. The authored FormattingOpen state is preserved (the
             // authored toolbar is still "open") — this is NOT a hidden-as-success conversion.
-            Assert.False(cell.IsVisible, "no-safe-space must actually remove the floating cell's subtree");
-            Assert.True(FindContainer(view, "format-toolbar")!.IsVisible);
+            Assert.False(tb.IsEffectivelyVisible,
+                "no-safe-space must actually remove the floating cell's subtree from paint/hit/focus");
+            Assert.True(tb.IsVisible, "authored toolbar open state must be preserved under suppression");
+            var ownerSuppressed = Assert.IsType<Border>(layer.GetVisualParent());
+            Assert.False(ownerSuppressed.IsVisible, "the floating cell's subtree must be hidden when suppressed");
             var suppressedButton = ToolbarButton(tb, 0);
             Assert.NotNull(suppressedButton);
             Assert.False(suppressedButton!.IsEffectivelyVisible, "suppressed toolbar buttons must not be effectively visible (no paint/hit/tab/focus)");
 
-            // Recovery: when safe space returns, the SAME retained authored toolbar is placed again.
+            // Recovery: when safe space returns, the SAME retained authored toolbar is placed again under
+            // its current real owner.
             window.Height = 700;
             PumpLayout(window);
-            Assert.True(cell.IsVisible, "toolbar must recover once safe space returns");
+            Assert.True(tb.IsEffectivelyVisible, "recovered toolbar must be effectively visible");
+            var ownerRecovered = Assert.IsType<Border>(layer.GetVisualParent());
+            Assert.True(ownerRecovered.IsVisible, "toolbar must recover once safe space returns");
             Assert.True(tb.Bounds.Width > 0 && tb.Bounds.Height > 0);
             Assert.Same(tb, FindContainer(view, "format-toolbar"));
             var windowClient = new Rect(0, 0, window.Width, window.Height);

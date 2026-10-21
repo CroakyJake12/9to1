@@ -181,17 +181,49 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     }
 
     /// <summary>Choose the first candidate side that fits entirely inside the owner viewport and does not
-    /// intersect the protected authored target. Returns null when no side offers genuinely safe space.</summary>
+    /// intersect the protected authored target. A candidate that is only slightly too wide/tall for the
+    /// free axis (e.g. a centered bar overflowing one viewport edge by a few pixels) is first nudged into
+    /// the viewport along that free axis, so available space is used rather than failing merely because
+    /// centering pushed an edge out. Returns null when no side offers genuinely safe space.</summary>
     private static Rect? FitPlacement(CuiContainerControl host, Rect anchor, Size size, Rect viewport)
     {
         var side = SideOf(host);
         if (side is null) return null;
         foreach (var candidateSide in OrderedSides(side))
         {
-            var rect = Preferred(candidateSide, anchor, size);
+            var rect = ClampFreeAxis(Preferred(candidateSide, anchor, size), viewport, candidateSide);
             if (Fits(rect, viewport, anchor)) return rect;
         }
         return null;
+    }
+
+    /// <summary>Nudge a candidate rect into the viewport along its free axis. For Above/Under the free
+    /// axis is horizontal (the bar spans the viewport width); for LeftOf/RightOf it is vertical. Only
+    /// the free axis is adjusted, so a protected-body avoidance that already holds (the bar sits wholly
+    /// on one side of the target) is never violated. Returns the rect unchanged when it already fits or
+    /// when it is too large to fit on the free axis at all.</summary>
+    private static Rect ClampFreeAxis(Rect rect, Rect viewport, string side)
+    {
+        switch (side)
+        {
+            case "Above":
+            case "Under":
+                if (rect.Width <= viewport.Width)
+                {
+                    if (rect.Left < viewport.Left) return rect.WithX(viewport.Left);
+                    if (rect.Right > viewport.Right) return rect.WithX(viewport.Right - rect.Width);
+                }
+                break;
+            case "LeftOf":
+            case "RightOf":
+                if (rect.Height <= viewport.Height)
+                {
+                    if (rect.Top < viewport.Top) return rect.WithY(viewport.Top);
+                    if (rect.Bottom > viewport.Bottom) return rect.WithY(viewport.Bottom - rect.Height);
+                }
+                break;
+        }
+        return rect;
     }
 
     /// <summary>
