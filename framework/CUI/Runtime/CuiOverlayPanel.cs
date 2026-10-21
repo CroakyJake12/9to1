@@ -149,16 +149,12 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     }
 
     /// <summary>Measure the retained authored floating host (not the suppressible wrapper cell) at the
-    /// usable viewport width and report its bounded content size.</summary>
+    /// usable viewport width and report its bounded content size. The host's own measure is trusted as
+    /// the layout manager computes it; scheduling the owner on retained-child changes (see <see cref="Observe"/>)
+    /// is what guarantees this runs again after inner authored content transitions, so no forced
+    /// re-measure is performed here.</summary>
     private static Size MeasureHost(CuiContainerControl host, double usableWidth)
     {
-        // Always discard a stale cached measure so the retained authored host reports its LIVE content
-        // size. Avalonia's Measure only recomputes when the measure is invalid or the constraint changed;
-        // a hidden/suppressed wrapper (unplaced/portaled) blocks the normal layout-manager descendant
-        // remeasurement, leaving a stale valid 0,0 DesiredSize that would keep a freshly opened bar
-        // unplaced/invisible forever. Forcing the host to re-measure from its actual visible content
-        // fixes that generic opening path here, for both the in-tree floating and escape-portaled callers.
-        host.InvalidateMeasure();
         host.Measure(new Size(usableWidth, double.PositiveInfinity));
         return new Size(
             Math.Max(0, Math.Min(host.DesiredSize.Width, usableWidth)),
@@ -513,9 +509,14 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
     };
 
     /// <summary>Observe the panel, its coordinate ancestors up to the owning top-level, each authored
-    /// target and the target's intermediate coordinate ancestors. Movement of any intermediate regular-flow
-    /// ancestor can shift the translated anchor even when the target's local Bounds are unchanged, so those
-    /// ancestors are observed too. Subscriptions are bounded and lifetime-owned (disposed on detach/close).</summary>
+    /// target and the target's intermediate coordinate ancestors, plus the retained authored floating
+    /// content (the floating hosts' authored children). Movement of any intermediate regular-flow ancestor
+    /// can shift the translated anchor even when the target's local Bounds are unchanged, so those
+    /// ancestors are observed too. Opening/closing the bound inner authored toolbar changes neither the
+    /// always-visible outer host nor the target, yet it must still schedule this owner so placement
+    /// re-runs against live content — so the hosts' authored children (including hidden children absent
+    /// from the visual tree while their wrapper is suppressed) are observed. Subscriptions are bounded
+    /// and lifetime-owned (disposed on detach/close).</summary>
     private void Observe()
     {
         var targets = new List<Control> { this };
@@ -545,6 +546,18 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
                 if (!targets.Contains(ancestor)) targets.Add(ancestor);
         }
 
+        // Retained authored floating content: observe the floating hosts' authored children, including
+        // hidden children that may be absent from the visual tree while their wrapper is suppressed.
+        // Membership is re-derived here every arrange; removed/retired children drop out of the observed
+        // set and are unsubscribed by DisposeObservers, so no lingering subscriptions survive
+        // removal/detach/dispose. A child's IsVisible/Bounds change invalidates this owner so
+        // Place/MeasureHost re-run against the live retained content.
+        foreach (var host in AllFloatingHosts())
+        {
+            foreach (var child in host.AuthoredChildren)
+                if (!targets.Contains(child)) targets.Add(child);
+        }
+
         if (_observed.Count == targets.Count
             && _observed.Zip(targets, (stored, expected) => ReferenceEquals(stored.Observed, expected)).All(match => match))
             return;
@@ -559,6 +572,20 @@ internal sealed class CuiOverlayPanel : Panel, IDisposable
             target.PropertyChanged += handler;
             _observed.Add((target, handler));
         }
+    }
+
+    /// <summary>Enumerate every authored floating host this panel owns: hosts still present as floating
+    /// cells in Children AND hosts currently physically held in an escape portal. Authored identity
+    /// (and their authored children) are tracked independently of physical cell.Child attachment.</summary>
+    private IEnumerable<CuiContainerControl> AllFloatingHosts()
+    {
+        foreach (var cell in Children)
+        {
+            if (IsFloatingCell(cell) && FloatingHost(cell) is { } host)
+                yield return host;
+        }
+        foreach (var host in _portals.Keys)
+            yield return host;
     }
 
     /// <summary>Observe each floating host's authored Target/Placement relationship so a live authored

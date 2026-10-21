@@ -384,6 +384,55 @@ public sealed class CuiFloatingPortalTests
     }
 
     [Fact]
+    public async Task Bound_inner_child_transition_schedules_owner_and_places_open_toolbar()
+    {
+        // Gate-1 regression: opening the authored inner toolbar changes neither the always-visible outer
+        // floating host nor the target, so the owning overlay must observe the retained authored child
+        // graph and schedule itself — otherwise Place/MeasureHost never re-run and the opened bar stays
+        // 0,0 / hidden forever. Drive only the real layout manager/dispatcher (no forced
+        // InvalidateMeasure, no manual Measure/Arrange) and assert the opened toolbar is genuinely placed.
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
+        await session.Dispatch(async () =>
+        {
+            using var loader = new CuiControlLoader();
+            Window window = null!;
+            try
+            {
+                var panel = MountReal(loader, ClosedInnerMarkup, out var surface, out var authoredHost, out window);
+
+                // Closed bound inner content: no portal, host measures zero.
+                Assert.Empty(panel.ActivePortals);
+                Assert.True(authoredHost.DesiredSize.Width <= 0 && authoredHost.DesiredSize.Height <= 0,
+                    $"closed floating host must measure zero (DesiredSize={authoredHost.DesiredSize})");
+
+                // Open through the canonical authored toggle action and its real ledger.
+                Assert.NotNull(authoredHost.FloatingCloseRequested);
+                authoredHost.FloatingCloseRequested!.Invoke();
+                await loader.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(10));
+
+                // Normal dispatcher/render progression (real layout manager; never manual Measure/Arrange).
+                for (var i = 0; i < 20; i++)
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    window.UpdateLayout();
+                }
+
+                // The opened toolbar must now be genuinely placed: host re-measures live content, the
+                // portal engages with the SAME retained host, and the bound command is effectively visible.
+                Assert.True(authoredHost.DesiredSize.Width > 0 && authoredHost.DesiredSize.Height > 0,
+                    $"floating host must re-measure opened content (DesiredSize={authoredHost.DesiredSize})");
+                var portal = Assert.Single(panel.ActivePortals);
+                Assert.True(portal.IsOpen);
+                Assert.Same(authoredHost, portal.Host);
+                var f0 = FindButton(authoredHost, "f0");
+                Assert.NotNull(f0);
+                Assert.True(f0!.IsEffectivelyVisible, "the reopened command must be effectively visible through the portal");
+            }
+            finally { window?.Close(); }
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task Escape_on_hosted_root_closes_via_authored_action_ledger()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
