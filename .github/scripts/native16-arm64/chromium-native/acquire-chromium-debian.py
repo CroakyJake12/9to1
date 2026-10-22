@@ -213,7 +213,8 @@ def main(argv=None) -> int:
     pkgs_by_provider = {"security": sec_pkgs, "debian": main_pkgs}
 
     # 4. Source build graph ------------------------------------------------
-    source_graph = {"chromium": None, "libjpeg62-turbo": None}
+    source_graph = {"chromium": None, "libjpeg62-turbo": None,
+                    "libflac14": None, "libopenh264-8": None}
     # 4a. Chromium source (trixie-security) — select the stanza for the exact
     # pinned source version (the security archive may carry multiple versions).
     source_version = source_pins.get("source_version")
@@ -278,6 +279,43 @@ def main(argv=None) -> int:
         "directory": jpeg_src.get("Directory"), "inputs": jpeg_inputs,
     }
 
+    # 4c. Private Debian provider sources (trixie main) — flac / openh264.
+    # The same authenticated source pattern as the private JPEG provider: select the
+    # exact pinned source stanza from the signed trixie Sources, cross-check every
+    # pinned input against the signed record (name/bytes/SHA256), and retain the
+    # verified local path. No source/binary archive is fetched when --offline.
+    for key, package, version_sub in (
+            ("libflac14", "flac", "1.5.0+ds-2"),
+            ("libopenh264-8", "openh264", "2.6.0+dfsg-2")):
+        stanzas = [s for s in parse_all_package_stanzas(main_src)
+                   if s.get("Package") == package]
+        src = next((s for s in stanzas if s.get("Version") == version_sub), None)
+        if src is None:
+            raise RuntimeError(
+                f"{package} source stanza {version_sub!r} not found in "
+                "signed trixie Sources")
+        entries = parse_sources_sha256(src)
+        directory = src.get("Directory") or f"pool/main/{package[0]}/{package}"
+        inputs = []
+        pins_block = source_pins.get(key) or {}
+        for inp in pins_block.get("inputs", []):
+            entry = find_sha256_by_name(entries, inp["name"])
+            if entry is None:
+                raise RuntimeError(f"source file {inp['name']} not listed in signed Sources")
+            if entry["sha256"] != inp["sha256"] or entry["size"] != inp["bytes"]:
+                raise RuntimeError(f"source pin mismatch for {inp['name']}: "
+                                   f"sources {entry['sha256']}/{entry['size']} vs "
+                                   f"pinned {inp['sha256']}/{inp['bytes']}")
+            local = evidence / "source" / inp["name"]
+            url = f"{DEBIAN_POOL}/{directory}/{inp['name']}"
+            if not ensure_input(args.offline, local, inp["sha256"], inp["bytes"], url):
+                raise RuntimeError(f"source download failed: {inp['name']}")
+            inputs.append({"name": inp["name"], "url": url, "bytes": inp["bytes"],
+                           "sha256": inp["sha256"], "verified": True,
+                           "local_path": str(local)})
+        source_graph[key] = {"package": package, "version": src.get("Version"),
+                             "directory": directory, "inputs": inputs}
+
     # 5. Binary packages ----------------------------------------------------
     pinned_pkgs = {p["debian_package"]: p for p in pinned["packages"]}
     packages = []
@@ -285,7 +323,9 @@ def main(argv=None) -> int:
             ("trixie-security", "main", "chromium", "155.0.8059.79-1~deb13u1", "security"),
             ("trixie-security", "main", "chromium-common", "155.0.8059.79-1~deb13u1", "security"),
             ("trixie-security", "main", "chromium-sandbox", "155.0.8059.79-1~deb13u1", "security"),
-            ("trixie", "main", "libjpeg62-turbo", "1:2.1.5-4", "debian")):
+            ("trixie", "main", "libjpeg62-turbo", "1:2.1.5-4", "debian"),
+            ("trixie", "main", "libflac14", "1.5.0+ds-2", "debian"),
+            ("trixie", "main", "libopenh264-8", "2.6.0+dfsg-2", "debian")):
         pin = pinned_pkgs.get(pkg)
         if pin is None:
             raise RuntimeError(f"package {pkg} missing from pinned manifest")

@@ -58,6 +58,60 @@
       }
     ]
   },
+  "libflac14": {
+    "package": "flac",
+    "version": "1.5.0+ds-2",
+    "suite": "trixie (stable main)",
+    "source_archive": "https://deb.debian.org/debian/dists/trixie/main/source/Sources.xz",
+    "directory": "pool/main/f/flac",
+    "inputs": [
+      {
+        "name": "flac_1.5.0+ds-2.dsc",
+        "url": "https://deb.debian.org/debian/pool/main/f/flac/flac_1.5.0+ds-2.dsc",
+        "bytes": 2366,
+        "sha256": "6104c7d69c96e7c8410248d9533bf70df71efd8365966b114c12e9e5cead041a"
+      },
+      {
+        "name": "flac_1.5.0+ds.orig.tar.xz",
+        "url": "https://deb.debian.org/debian/pool/main/f/flac/flac_1.5.0+ds.orig.tar.xz",
+        "bytes": 811148,
+        "sha256": "51d6a5bf5a37b67f9af847daa07c07091f6bf1583d5abb7fbb064bc68428b0f1"
+      },
+      {
+        "name": "flac_1.5.0+ds-2.debian.tar.xz",
+        "url": "https://deb.debian.org/debian/pool/main/f/flac/flac_1.5.0+ds-2.debian.tar.xz",
+        "bytes": 17620,
+        "sha256": "80abb6595955cb3b590cc64d8037c0a7eba777726a23b5664d06bb1fd870fd51"
+      }
+    ]
+  },
+  "libopenh264-8": {
+    "package": "openh264",
+    "version": "2.6.0+dfsg-2",
+    "suite": "trixie (stable main)",
+    "source_archive": "https://deb.debian.org/debian/dists/trixie/main/source/Sources.xz",
+    "directory": "pool/main/o/openh264",
+    "inputs": [
+      {
+        "name": "openh264_2.6.0+dfsg-2.dsc",
+        "url": "https://deb.debian.org/debian/pool/main/o/openh264/openh264_2.6.0+dfsg-2.dsc",
+        "bytes": 1971,
+        "sha256": "65320b4c8cd6c56626effe323037dad1b2fc68985f4761a5eefb5441f19750b3"
+      },
+      {
+        "name": "openh264_2.6.0+dfsg.orig.tar.xz",
+        "url": "https://deb.debian.org/debian/pool/main/o/openh264/openh264_2.6.0+dfsg.orig.tar.xz",
+        "bytes": 905728,
+        "sha256": "52fc65775e03abe70f3f453c3c57fa7b31c71fe240de84da53d75f2ddc7dd519"
+      },
+      {
+        "name": "openh264_2.6.0+dfsg-2.debian.tar.xz",
+        "url": "https://deb.debian.org/debian/pool/main/o/openh264/openh264_2.6.0+dfsg-2.debian.tar.xz",
+        "bytes": 8132,
+        "sha256": "9d57036c560394682df042748f419a43452447ae5bb2059003b7a9faef24af04"
+      }
+    ]
+  },
   "copyright": {
     "path_debian_pkg": "/usr/share/doc/chromium/copyright",
     "sha256": "b5721756486fa9ee39a1eebc9b01bcaea9aefa8bd6795c2ff1b216c0ed08dc3a",

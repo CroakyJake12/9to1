@@ -48,6 +48,7 @@ from chromium_native_common import (  # noqa: E402
     SANDBOX_MODE,
     SANDBOX_REL,
     dump_json,
+    find_soname_elf,
     iter_stage_entries,
     load_json,
     sha256_file,
@@ -59,6 +60,8 @@ JPEG_SONAME = "libjpeg.so.62"
 JPEG_FULL = "libjpeg.so.62.3.0"
 JPEG_ARCH_LIBDIR = "usr/lib/aarch64-linux-gnu"
 CHROMIUM_VERSION = "155.0.8059.79-1~deb13u1"
+FLAC_SONAME = "libFLAC.so.14"
+OPENH264_SONAME = "libopenh264.so.8"
 
 LAUNCHER_SCRIPT = """#!/bin/sh
 # 9to1 Chromium-native bundled launcher (private engine path).
@@ -132,17 +135,34 @@ def _copy_binary(src_root: Path, dst_chromium: Path) -> None:
     shutil.copy2(src, dst_chromium / "chromium")
 
 
-def _install_private_jpeg(src_root: Path, stage_browser: Path) -> None:
+def _install_private_lib(src_root: Path, stage_browser: Path, soname: str,
+                         label: str) -> None:
+    """Stage one private provider library under the private engine path.
+
+    The real library file is located by its ELF SONAME inside the extracted package
+    (no invented filename), copied as a real file, and a relative SONAME symlink is
+    created alongside it. This is the same private pattern used for libjpeg.so.62.
+    """
     lib_dir = stage_browser / PRIVATE_LIB_REL
     lib_dir.mkdir(parents=True, exist_ok=True)
-    src = src_root / JPEG_ARCH_LIBDIR / JPEG_FULL
-    if not src.is_file():
-        raise RuntimeError("libjpeg62-turbo: missing libjpeg.so.62.3.0")
-    shutil.copy2(src, lib_dir / JPEG_FULL)
-    link = lib_dir / JPEG_SONAME
+    src = find_soname_elf(src_root, soname)
+    if src is None:
+        raise RuntimeError(f"{label}: missing {soname} ELF in extracted package")
+    real_name = src.name
+    shutil.copy2(src, lib_dir / real_name)
+    if real_name == soname:
+        # The real library file already carries the SONAME as its basename. Keep it
+        # as the regular file; creating a symlink here would be self-referential
+        # and would destroy the copied file.
+        return
+    link = lib_dir / soname
     if link.exists() or link.is_symlink():
         link.unlink()
-    link.symlink_to(JPEG_FULL)
+    link.symlink_to(real_name)
+
+
+def _install_private_jpeg(src_root: Path, stage_browser: Path) -> None:
+    _install_private_lib(src_root, stage_browser, JPEG_SONAME, "libjpeg62-turbo")
 
 
 def _set_sandbox_mode(stage_browser: Path) -> dict:
@@ -168,7 +188,8 @@ def _set_sandbox_mode(stage_browser: Path) -> dict:
     }
 
 
-def _copy_notices(stage_browser: Path, notices_dir: Path, jpeg_copyright_src: Path) -> None:
+def _copy_notices(stage_browser: Path, notices_dir: Path,
+                  copyright_sources: dict[str, Path]) -> None:
     dest = stage_browser / "NOTICES"
     dest.mkdir(parents=True, exist_ok=True)
     # Exact 155 Chromium copyright (already checked-in as notices/COPYRIGHT).
@@ -182,10 +203,11 @@ def _copy_notices(stage_browser: Path, notices_dir: Path, jpeg_copyright_src: Pa
         for f in lic_dir.iterdir():
             if f.is_file():
                 shutil.copy2(f, dest / "common-licenses" / f.name)
-    # Private JPEG copyright + IJG acknowledgement.
-    if not jpeg_copyright_src.is_file():
-        raise RuntimeError("missing libjpeg62-turbo copyright")
-    shutil.copy2(jpeg_copyright_src, dest / "libjpeg62-turbo-copyright")
+    # Private provider copyrights (JPEG / FLAC / OpenH264) + IJG acknowledgement.
+    for dest_name, src in copyright_sources.items():
+        if not src.is_file():
+            raise RuntimeError(f"missing {dest_name} copyright")
+        shutil.copy2(src, dest / dest_name)
     (dest / "IJG-acknowledgement.txt").write_text(IJG_ACKNOWLEDGEMENT)
 
 
@@ -226,6 +248,8 @@ def main(argv=None) -> int:
         "chromium-common": f"chromium-common_{CHROMIUM_VERSION}_arm64.deb",
         "chromium-sandbox": f"chromium-sandbox_{CHROMIUM_VERSION}_arm64.deb",
         "libjpeg62-turbo": "libjpeg62-turbo_2.1.5-4_arm64.deb",
+        "libflac14": "libflac14_1.5.0+ds-2_arm64.deb",
+        "libopenh264-8": "libopenh264-8_2.6.0+dfsg-2_arm64.deb",
     }
 
     tmp = Path(tempfile.mkdtemp(prefix="chromium-stage-"))
@@ -253,6 +277,10 @@ def main(argv=None) -> int:
         shutil.copy2(roots["chromium-sandbox"] / CHROMIUM_LIBDIR / "chrome-sandbox",
                      stage_chromium / "chrome-sandbox")
         _install_private_jpeg(roots["libjpeg62-turbo"], stage_browser)
+        _install_private_lib(roots["libflac14"], stage_browser, FLAC_SONAME,
+                             "libflac14")
+        _install_private_lib(roots["libopenh264-8"], stage_browser, OPENH264_SONAME,
+                             "libopenh264-8")
 
         launcher = stage_browser / LAUNCHER_REL
         launcher.write_text(LAUNCHER_SCRIPT)
@@ -260,9 +288,15 @@ def main(argv=None) -> int:
         os.chmod(stage_browser / BINARY_REL, 0o755)
 
         sandbox_info = _set_sandbox_mode(stage_browser)
-        jpeg_copyright_src = (roots["libjpeg62-turbo"]
-                              / "usr/share/doc/libjpeg62-turbo/copyright")
-        _copy_notices(stage_browser, args.notices.resolve(), jpeg_copyright_src)
+        copyright_sources = {
+            "libjpeg62-turbo-copyright": (roots["libjpeg62-turbo"]
+                                          / "usr/share/doc/libjpeg62-turbo/copyright"),
+            "libflac14-copyright": (roots["libflac14"]
+                                    / "usr/share/doc/libflac14/copyright"),
+            "libopenh264-8-copyright": (roots["libopenh264-8"]
+                                        / "usr/share/doc/libopenh264-8/copyright"),
+        }
+        _copy_notices(stage_browser, args.notices.resolve(), copyright_sources)
 
         files = [entry for _, entry in iter_stage_entries(stage_browser)]
         manifest = {

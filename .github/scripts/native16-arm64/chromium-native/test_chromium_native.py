@@ -73,6 +73,8 @@ BROWSER_PROOF_SCHEMA = _guard_mod.BROWSER_PROOF_SCHEMA
 _acquire_mod = _load_hyphenated("acquire-chromium-debian")
 ensure_input = _acquire_mod.ensure_input
 
+_stage_mod = _load_hyphenated("stage-chromium-bundle")
+
 PINNED_MAIN_FPR = "B8E5F13176D2A7A75220028078DBA3BC47EF2265"
 PINNED_SECURITY_FPR = "5E04A1E3223A19A20706E20F9904613D4CCE68C6"
 
@@ -308,14 +310,24 @@ class TestStageManifestEntries(unittest.TestCase):
 
 class TestBrowserStageGuard(unittest.TestCase):
     def _build_source_fixture(self):
-        """A minimal but schema-real source_dir + source_pins + matching build graph."""
+        """A minimal but schema-real source_dir + source_pins + matching build graph.
+
+        Mirrors the real production gate, which now also requires the two private
+        Debian provider sources (FLAC / OpenH264) in addition to Chromium + JPEG.
+        """
         sd = Path(tempfile.mkdtemp(prefix="9to1-src-"))
         cr = b"chromium source data"
         jp = b"libjpeg-turbo source data"
+        fp = b"flac source data"
+        op = b"openh264 source data"
         (sd / "chromium.dsc").write_bytes(cr)
         (sd / "libjpeg.dsc").write_bytes(jp)
+        (sd / "flac.dsc").write_bytes(fp)
+        (sd / "openh264.dsc").write_bytes(op)
         cr_sha = sha256_bytes(cr)
         jp_sha = sha256_bytes(jp)
+        fp_sha = sha256_bytes(fp)
+        op_sha = sha256_bytes(op)
         pins = {
             "source_version": "155.0.8059.79-1~deb13u1",
             "inputs": [
@@ -327,6 +339,20 @@ class TestBrowserStageGuard(unittest.TestCase):
                     {"name": "libjpeg.dsc", "bytes": len(jp), "sha256": jp_sha},
                 ],
             },
+            "libflac14": {
+                "package": "flac",
+                "version": "1.5.0+ds-2",
+                "inputs": [
+                    {"name": "flac.dsc", "bytes": len(fp), "sha256": fp_sha},
+                ],
+            },
+            "libopenh264-8": {
+                "package": "openh264",
+                "version": "2.6.0+dfsg-2",
+                "inputs": [
+                    {"name": "openh264.dsc", "bytes": len(op), "sha256": op_sha},
+                ],
+            },
         }
         pins_path = sd / "source-pins.json"
         pins_path.write_text(json.dumps(pins))
@@ -336,6 +362,12 @@ class TestBrowserStageGuard(unittest.TestCase):
                  "verified": True}]},
             "libjpeg62-turbo": {"version": pins["libjpeg62-turbo"]["version"], "inputs": [
                 {"name": "libjpeg.dsc", "bytes": len(jp), "sha256": jp_sha,
+                 "verified": True}]},
+            "libflac14": {"package": "flac", "version": "1.5.0+ds-2", "inputs": [
+                {"name": "flac.dsc", "bytes": len(fp), "sha256": fp_sha,
+                 "verified": True}]},
+            "libopenh264-8": {"package": "openh264", "version": "2.6.0+dfsg-2", "inputs": [
+                {"name": "openh264.dsc", "bytes": len(op), "sha256": op_sha,
                  "verified": True}]},
         }
         return sd, pins_path, graph
@@ -522,27 +554,49 @@ class TestJpegSourceLinkage(unittest.TestCase):
             self.assertGreater(i["bytes"], 0)
             self.assertEqual(len(i["sha256"]), 64)
 
-    def test_pure_source_gate_real_fixture(self):
-        # End-to-end gate on a real physical fixture: passes only when every file
-        # exists with matching bytes+SHA and versions match.
+    def _mk_full_gate(self):
+        """A valid full production gate: Chromium + JPEG + FLAC + OpenH264."""
         sd = Path(tempfile.mkdtemp(prefix="9to1-gate-"))
         cr = b"chromium payload"; jp = b"jpeg payload"
+        fp = b"flac payload"; op = b"openh264 payload"
         (sd / "a.dsc").write_bytes(cr); (sd / "b.tar.xz").write_bytes(jp)
+        (sd / "flac.dsc").write_bytes(fp); (sd / "openh264.dsc").write_bytes(op)
+        cr_sha, jp_sha = sha256_bytes(cr), sha256_bytes(jp)
+        fp_sha, op_sha = sha256_bytes(fp), sha256_bytes(op)
         pins = {
             "source_version": "155.0.8059.79-1~deb13u1",
-            "inputs": [{"name": "a.dsc", "bytes": len(cr), "sha256": sha256_bytes(cr)}],
+            "inputs": [{"name": "a.dsc", "bytes": len(cr), "sha256": cr_sha}],
             "libjpeg62-turbo": {"version": "1:2.1.5-4",
                                  "inputs": [{"name": "b.tar.xz", "bytes": len(jp),
-                                             "sha256": sha256_bytes(jp)}]},
+                                             "sha256": jp_sha}]},
+            "libflac14": {"package": "flac", "version": "1.5.0+ds-2",
+                           "inputs": [{"name": "flac.dsc", "bytes": len(fp),
+                                       "sha256": fp_sha}]},
+            "libopenh264-8": {"package": "openh264", "version": "2.6.0+dfsg-2",
+                               "inputs": [{"name": "openh264.dsc", "bytes": len(op),
+                                           "sha256": op_sha}]},
         }
         receipt = {"source_graph": {
             "chromium": {"version": pins["source_version"], "inputs": [
-                {"name": "a.dsc", "bytes": len(cr), "sha256": sha256_bytes(cr),
+                {"name": "a.dsc", "bytes": len(cr), "sha256": cr_sha,
                  "verified": True}]},
             "libjpeg62-turbo": {"version": "1:2.1.5-4", "inputs": [
-                {"name": "b.tar.xz", "bytes": len(jp), "sha256": sha256_bytes(jp),
+                {"name": "b.tar.xz", "bytes": len(jp), "sha256": jp_sha,
+                 "verified": True}]},
+            "libflac14": {"package": "flac", "version": "1.5.0+ds-2", "inputs": [
+                {"name": "flac.dsc", "bytes": len(fp), "sha256": fp_sha,
+                 "verified": True}]},
+            "libopenh264-8": {"package": "openh264", "version": "2.6.0+dfsg-2", "inputs": [
+                {"name": "openh264.dsc", "bytes": len(op), "sha256": op_sha,
                  "verified": True}]},
         }}
+        return sd, pins, receipt
+
+    def test_pure_source_gate_real_fixture(self):
+        # End-to-end gate on a real physical fixture: passes only when every file
+        # exists with matching bytes+SHA and versions match (including FLAC and
+        # OpenH264 private providers).
+        sd, pins, receipt = self._mk_full_gate()
         res = validate_source_build_graph(sd, pins, receipt)
         self.assertTrue(res["ok"])
 
@@ -551,6 +605,44 @@ class TestJpegSourceLinkage(unittest.TestCase):
         res2 = validate_source_build_graph(sd, pins, receipt)
         self.assertFalse(res2["ok"])
         self.assertTrue(any("missing" in p for p in res2["problems"]))
+
+    def test_flac_valid_physical_graph_passes(self):
+        sd, pins, receipt = self._mk_full_gate()
+        self.assertTrue(validate_source_build_graph(sd, pins, receipt)["ok"])
+
+    def test_openh264_valid_physical_graph_passes(self):
+        sd, pins, receipt = self._mk_full_gate()
+        self.assertTrue(validate_source_build_graph(sd, pins, receipt)["ok"])
+
+    def test_flac_missing_input_rejects(self):
+        sd, pins, receipt = self._mk_full_gate()
+        (sd / "flac.dsc").unlink()
+        res = validate_source_build_graph(sd, pins, receipt)
+        self.assertFalse(res["ok"])
+        self.assertTrue(any("flac" in p and "missing" in p for p in res["problems"]))
+
+    def test_openh264_corrupt_input_rejects(self):
+        sd, pins, receipt = self._mk_full_gate()
+        (sd / "openh264.dsc").write_bytes(b"corrupt payload")
+        res = validate_source_build_graph(sd, pins, receipt)
+        self.assertFalse(res["ok"])
+        self.assertTrue(any("openh264" in p for p in res["problems"]))
+
+    def test_flac_not_verified_in_receipt_rejects(self):
+        sd, pins, receipt = self._mk_full_gate()
+        receipt["source_graph"]["libflac14"]["inputs"][0]["verified"] = False
+        res = validate_source_build_graph(sd, pins, receipt)
+        self.assertFalse(res["ok"])
+        self.assertTrue(any("flac" in p and "not verified" in p
+                            for p in res["problems"]))
+
+    def test_openh264_wrong_source_version_rejects(self):
+        sd, pins, receipt = self._mk_full_gate()
+        receipt["source_graph"]["libopenh264-8"]["version"] = "9.9.9+dfsg-9"
+        res = validate_source_build_graph(sd, pins, receipt)
+        self.assertFalse(res["ok"])
+        self.assertTrue(any("openh264" in p and "version mismatch" in p
+                            for p in res["problems"]))
 
 
 # --------------------------------------------------------------------------- #
@@ -772,6 +864,58 @@ class TestVersionEdgeProof(unittest.TestCase):
         self.assertTrue(rec["proved"])
         self.assertEqual(rec["role"], "private_staged")
         self.assertIn("LIBJPEG_6.2", rec["defined_versions"])
+
+
+class TestPrivateLibInstall(unittest.TestCase):
+    """CI7 regression: ``_install_private_lib`` real-file vs SONAME-basename logic.
+
+    When the real library ELF's basename already equals the requested SONAME, the
+    copied regular file must be preserved (a symlink would be self-referential and
+    destroy the file). For a different versioned basename, the real copy is kept
+    and a correct relative SONAME symlink is created.
+    """
+
+    def _mk_pkg_tree(self, real_name):
+        root = Path(tempfile.mkdtemp(prefix="9to1-pkg-"))
+        d = root / "usr/lib/aarch64-linux-gnu"
+        d.mkdir(parents=True)
+        elf = d / real_name
+        elf.write_bytes(b"\x7fELF" + b"\x00" * 32)
+        return root, elf
+
+    def test_versioned_basename_keeps_real_copy_and_soname_symlink(self):
+        root, elf = self._mk_pkg_tree("libFLAC.so.14.0.0")
+        stage = Path(tempfile.mkdtemp(prefix="9to1-priv-"))
+        with mock.patch.object(_stage_mod, "find_soname_elf", return_value=elf):
+            _stage_mod._install_private_lib(root, stage, "libFLAC.so.14", "libflac14")
+        libdir = stage / _stage_mod.PRIVATE_LIB_REL
+        real = libdir / "libFLAC.so.14.0.0"
+        self.assertTrue(real.is_file())
+        self.assertFalse(real.is_symlink())
+        link = libdir / "libFLAC.so.14"
+        self.assertTrue(link.is_symlink())
+        self.assertEqual(os.readlink(link), "libFLAC.so.14.0.0")
+
+    def test_same_basename_preserves_regular_file_without_self_symlink(self):
+        root, elf = self._mk_pkg_tree("libopenh264.so.8")
+        stage = Path(tempfile.mkdtemp(prefix="9to1-priv-"))
+        with mock.patch.object(_stage_mod, "find_soname_elf", return_value=elf):
+            _stage_mod._install_private_lib(root, stage, "libopenh264.so.8",
+                                            "libopenh264-8")
+        libdir = stage / _stage_mod.PRIVATE_LIB_REL
+        target = libdir / "libopenh264.so.8"
+        # Real file preserved as a regular file — never a self-referential symlink.
+        self.assertTrue(target.is_file())
+        self.assertFalse(target.is_symlink())
+        self.assertEqual(target.read_bytes(), b"\x7fELF" + b"\x00" * 32)
+
+    def test_missing_soname_elf_raises(self):
+        root, _ = self._mk_pkg_tree("libother.so.1")
+        stage = Path(tempfile.mkdtemp(prefix="9to1-priv-"))
+        with mock.patch.object(_stage_mod, "find_soname_elf", return_value=None):
+            with self.assertRaises(RuntimeError):
+                _stage_mod._install_private_lib(root, stage, "libFLAC.so.14",
+                                                "libflac14")
 
 
 class TestBrowserProofGate(unittest.TestCase):

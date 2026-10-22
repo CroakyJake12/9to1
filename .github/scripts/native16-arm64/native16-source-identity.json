@@ -566,6 +566,13 @@
       "scope": "Exactly28CI paths only; threeBrowser5productfallbacks excluded",
       "inference": "40nonwrapperpins exact;3approvedwrapperpins refreshed",
       "ARM_build_install_browser_journey": "NOTRUN; dispatchreviewcandidateonly"
+    },
+    "Browser_Source7_authenticated_supplier_repair": {
+      "genuine_source7_zip_sha256": "8302d4a6b3f65ed0d4d78e003d69ecbffec0432aafc012dfd5554bb746fa5bf7",
+      "changed_scope": "7existingCIpaths only (source6six plus Source7 owningtestfixture); workflows, all43inferencepins and all product/CUI byte-exact from prior candidate54bc9a",
+      "local_owning_python": "73PASS/0FAIL/0ERROR/0SKIP independent unpiped frozen suite cca39f657ef208cdf03427e77cc9a01bae5528b61cf88d543d22e3f2357c6718",
+      "actual_ARM": "NOTRUN next isolated CI required; previous supplierFAIL remains raw",
+      "provider_scope": "Exact signedDebian13FLAC14/OpenH2648 binaries+matching sources/licences and realrecursiveauthenticatedNobleELF resolution; actual supply proof deferred to CI, no ABI/signature/sandbox waiver"
     }
   },
   "changed_files_sha256": {
@@ -835,11 +842,11 @@
     ".github/scripts/native16-arm64/browser-supply-ci.py": "04d83010197b79ecd9f79483b3b5b36288ac34317a645c577c7a0a98f3ea0a59",
     ".github/scripts/native16-arm64/browser_preflight_test.py": "5020479adea89c70803165d5339e49647c68e4a5bd7412866cbd13b6ed47ede2",
     ".github/scripts/native16-arm64/chromium-native/README.md": "56a4cd43cdb20d0ab5d09654b4836942c3d36034ac203c80c4c2c1cbf2b7b111",
-    ".github/scripts/native16-arm64/chromium-native/acquire-chromium-debian.py": "384860fcebee2a9fd43716388ba8ebd16e3b6ee2459d548703426c8ee6d62532",
+    ".github/scripts/native16-arm64/chromium-native/acquire-chromium-debian.py": "d9133870bfc38a446139449ea49621158b966acec2b18022f5ca86e5e0ca6ed1",
     ".github/scripts/native16-arm64/chromium-native/browser_stage_guard.py": "b4500f1d7a8e8411c99babfa589e7ba2a955d99f9b6072c60371c32d83e892a7",
-    ".github/scripts/native16-arm64/chromium-native/chromium-pinned-manifest.json": "5a5cea34a5b4c39e4e5e58cd3d4be4e25ad243fb4ad7ad564287452d37732a9d",
-    ".github/scripts/native16-arm64/chromium-native/chromium-soname-resolution.json": "3acf536075203122fe04c783259a4a62edd6e6e92e04adf1b82c8625264204fc",
-    ".github/scripts/native16-arm64/chromium-native/chromium_native_common.py": "873cf20302c0a5a796d3016631467f2cf88d64d7ff0b9e7ff6d960a0acd78845",
+    ".github/scripts/native16-arm64/chromium-native/chromium-pinned-manifest.json": "a32d3ad37263161021f7b7fd3ecc50f71c4b4c6db31fc730a4858f2f89d8878b",
+    ".github/scripts/native16-arm64/chromium-native/chromium-soname-resolution.json": "0ac61cc3d506d04741702f5fb343670b6a8a13e7c5b28f37a2ebf17ba25bab5f",
+    ".github/scripts/native16-arm64/chromium-native/chromium_native_common.py": "b45900d751313a20f2b749d825e35d4e23609164a1378569c80807a8ef0005d0",
     ".github/scripts/native16-arm64/chromium-native/notices/COPYRIGHT": "b5721756486fa9ee39a1eebc9b01bcaea9aefa8bd6795c2ff1b216c0ed08dc3a",
     ".github/scripts/native16-arm64/chromium-native/notices/common-licenses/Apache-2.0": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
     ".github/scripts/native16-arm64/chromium-native/notices/common-licenses/BSD": "5d588eb3b157d52112afea935c88a7ff9efddc1e2d95a42c25d3b96ad9055008",
@@ -849,15 +856,15 @@
     ".github/scripts/native16-arm64/chromium-native/notices/common-licenses/LGPL-2.1": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
     ".github/scripts/native16-arm64/chromium-native/notices/common-licenses/MPL-1.1": "f849fc26a7a99981611a3a370e83078deb617d12a45776d6c4cada4d338be469",
     ".github/scripts/native16-arm64/chromium-native/notices/common-licenses/MPL-2.0": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
-    ".github/scripts/native16-arm64/chromium-native/source-pins.json": "39e63cb140811c700bc58a5a20ae4fc3d42c9f0c8f77331cc2cf4de12f82b9ba",
-    ".github/scripts/native16-arm64/chromium-native/stage-chromium-bundle.py": "9e1e176be59de6e3f28282992b426c7bf23a278f1897404c91e950b28f5c7402",
-    ".github/scripts/native16-arm64/chromium-native/test_chromium_native.py": "8b887a030d345783c02ceae0051305f093001310107c1cde8f37f61daaddf2af",
+    ".github/scripts/native16-arm64/chromium-native/source-pins.json": "74ad28e4a229b32acff9ff476accaa096413f7153ae3fd23995a728d7c652755",
+    ".github/scripts/native16-arm64/chromium-native/stage-chromium-bundle.py": "fe37d4df5eb723d86bb273d0e7419530482b26944188523de6cc680fde1c72b8",
+    ".github/scripts/native16-arm64/chromium-native/test_chromium_native.py": "325f72daff55281159d43a35edaa34c9ea7e327e55a9066032f96d4d8203ef5e",
     ".github/scripts/native16-arm64/chromium-native/verify-chromium-bundle.py": "c52f4227c7850fab66dcfdb7314529b3fcba2b2c770542fdc3c1d98667ed16ee",
     ".github/scripts/native16-arm64/package-browser-journey.py": "c40f1025ae066e483aa7d1aac65c5762a58f33ba024a72d71bab8249612b5f56",
     ".github/scripts/native16-arm64/retain-browser-supply-evidence.py": "ff89d3a308d950aabd0188a742572cb9ce351cb030f4596061925fee9c11088d",
     ".github/scripts/native16-arm64/test_ci_browser_recipe.py": "e6ea55778ae51da3a34416b8afcbf4a1141fc30513030ad0d25ca082b7d241ce"
   },
-  "source_identity_scope": "Isolated PRIVATE FORTESTING ARMCI candidate: immutablea390/source260 +exact acceptedSource15/16 threeproductionclosepaths +frozenSource5CI28 +mechanicalcurrentidentity/inferencewrapperpinrefresh. Excludesnew3Browserinlinefallback, allnewProfiletestfixture/QA, Create/Seed/Icon/Sites. No activeassemblyindex/ref/mainpromotion.",
+  "source_identity_scope": "Isolated PRIVATE FORTESTING Source7 authenticated Chromium supplier repair. Prior54bc9a exacta390+acceptedProfile15/16production3+CI28 preserved; only7supplierCIpaths+mechanical sourceidentity changed. Source7 independent73PythonPASS; actualARM supplier/build/install/browser runtime NOTRUN. PriorARMrun39693310249 failedsupplierproof retained; no main or activeassembly promotion.",
   "original_native16_provenance": {
     "source_commit": "2596258c3282e6c0d058cc7a4fb5f410b7fed06d",
     "patch_sha256": "3e3aae7d989c15cf3d66a0fbddac3754b90e0da7abfb0ca54019566ee5cd359d",
@@ -963,7 +970,7 @@
     "scope": "Full current main HEAD plus every tracked WIP diff/deletion and untracked nonignored file; v16 build identity, NOT acceptance",
     "untracked_archive_sha256": "3e442bdee9f325da0d49edbc90b8ae230cc39f9f75c8a80c0253d7cdf1219bc0"
   },
-  "prepared_at": "2026-10-21T23:21:06.626069+00:00",
+  "prepared_at": "2026-10-22T00:15:27.587381+00:00",
   "acceptance": {
     "component_normal_tests": "Historical changed-source receipts do not establish new combined acceptance; exact new checks pending",
     "combined_native_build": "NOTRUN for this exactARMcandidate",
@@ -977,7 +984,7 @@
     "Home_Chat_tile": "NOT RUN: prospectiveHome28canonicalroute correction; realSpaceflow/native firstresponse and normalclose stillpending",
     "Build20": "PASS normal49 checkpoint only; actual native manual edit/save/reopen, fullBuild GUI/one-app/seven gates NOT RUN/OPEN",
     "Browser14": "PASS normal57 + strict Desktop artifact freeze; native browser rendering pending on separate artifact, NOT RUN on this child",
-    "current_private_child": "ISOLATED FORTESTING CI candidate only; no mainmerge/release/delivery. Current65normal+Linuxx64firstAccountMAINclosePASS; actualARMCI pending.",
+    "current_private_child": "ISOLATED FORTESTING Source7 supplier repair only. 73localPythonPASS; priorARM39693310249 supplierproofFAIL retained, next exactARMbuild/install/browser pending. ExistingLinuxx64Source16scopedfirst-main-closePASS unchanged; no release/main/delivery.",
     "Composer22": "UNACCEPTED native visual; one-line genuine source review only",
     "Dulche33": "PASS58 component normal; combined normal close/native chat NOT RUN/UNACCEPTED"
   },

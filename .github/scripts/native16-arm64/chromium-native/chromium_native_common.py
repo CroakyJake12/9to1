@@ -349,6 +349,45 @@ def staged_elfs(stage: Path) -> list[Path]:
     return out
 
 
+def _readelf_d_soname(dyn_text: str) -> str | None:
+    """Parse the DT_SONAME token out of ``readelf -d`` text (fail-closed)."""
+    for line in dyn_text.splitlines():
+        if "(SONAME)" in line and "Library soname:" in line:
+            m = re.search(r"\[([^\]]+)\]", line)
+            if m:
+                return m.group(1)
+    return None
+
+
+def find_soname_elf(root: Path, soname: str, timeout: int = 30) -> Path | None:
+    """Locate the real (non-symlink) AArch64 ELF under ``root`` whose SONAME matches.
+
+    This is used by the stage to place private Debian provider libraries (flac /
+    openh264) without inventing their real on-disk filenames: the file is found by
+    its actual ELF SONAME. Returns None when no matching ELF is found.
+    """
+    libdir = root / "usr/lib/aarch64-linux-gnu"
+    if not libdir.is_dir():
+        return None
+    for f in sorted(libdir.rglob("*")):
+        if not f.is_file() or f.is_symlink():
+            continue
+        try:
+            with open(f, "rb") as fh:
+                if fh.read(4) != b"\x7fELF":
+                    continue
+        except OSError:
+            continue
+        try:
+            r = subprocess.run(["readelf", "-d", str(f)],
+                               capture_output=True, text=True, timeout=timeout)
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if r.returncode == 0 and _readelf_d_soname(r.stdout) == soname:
+            return f
+    return None
+
+
 def verify_stage_manifest_entries(stage_root: Path, manifest: dict) -> list[str]:
     """Cross-check a stage manifest's file/symlink entries against disk.
 
@@ -564,11 +603,12 @@ def assert_source_file(source_dir: Path, name: str,
 
 def validate_source_build_graph(source_dir: Path, source_pins: dict,
                                 receipt: dict) -> dict:
-    """Executable gate over the complete expected Chromium + JPEG input set.
+    """Executable gate over the complete expected Chromium + JPEG + provider input set.
 
     ``source_pins`` is the pinned, authenticated source manifest (independent of the
     receipt). It must list the complete expected input set (names + bytes + SHA256)
-    for both chromium and libjpeg62-turbo. Every input must exist as a physical file
+    for chromium, libjpeg62-turbo, and the two private Debian provider sources
+    (libflac14 / libopenh264-8). Every input must exist as a physical file
     under ``source_dir`` whose bytes and stream-SHA256 match exactly, and the
     receipt's source graph must carry the exact same complete set and source
     versions. Any extra, missing, replaced, corrupt or wrong-version source input
@@ -630,11 +670,52 @@ def validate_source_build_graph(source_dir: Path, source_pins: dict,
         if e:
             problems.append("jpeg " + e)
 
+    # --- Private Debian providers (flac / openh264) -----------------------
+    # The two new private staged providers (libFLAC.so.14, libopenh264.so.8) are
+    # sourced from exact Debian trixie providers and must carry verified matching
+    # source inputs, exactly like the private JPEG provider.
+    for key, label, pkg in (("libflac14", "flac", "flac"),
+                             ("libopenh264-8", "openh264", "openh264")):
+        pins = source_pins.get(key) or {}
+        exp_inputs = pins.get("inputs")
+        if not isinstance(exp_inputs, list) or not exp_inputs:
+            problems.append(f"source_pins {key} inputs missing/empty")
+        exp_ver = pins.get("version")
+        act = sg.get(key) or {}
+        if exp_ver and act.get("version") != exp_ver:
+            problems.append(f"{label} source version mismatch: "
+                            f"{act.get('version')!r} != {exp_ver!r}")
+        act_inputs = act.get("inputs") or []
+        exp_names = {i["name"] for i in exp_inputs} if isinstance(exp_inputs, list) else set()
+        act_names = {i["name"] for i in act_inputs}
+        if exp_names != act_names:
+            problems.append(f"{label} input set mismatch: missing="
+                            + ",".join(sorted(exp_names - act_names))
+                            + " extra=" + ",".join(sorted(act_names - exp_names)))
+        for exp in exp_inputs if isinstance(exp_inputs, list) else []:
+            name = exp["name"]
+            act_i = next((i for i in act_inputs if i.get("name") == name), {})
+            if act_i.get("bytes") != exp["bytes"] or act_i.get("sha256") != exp["sha256"]:
+                problems.append(f"{label} receipt hash mismatch {name}")
+            e = assert_source_file(source_dir, name, exp["bytes"], exp["sha256"])
+            if e:
+                problems.append(f"{label} " + e)
+        # The provider source package identity must match the pinned source package.
+        if pins.get("package") and act.get("package") != pins.get("package"):
+            problems.append(f"{label} source package mismatch: "
+                            f"{act.get('package')!r} != {pins.get('package')!r}")
+
     # Every expected source input must be marked verified in the receipt: this
     # binds the physical-file gate to the authenticated acquire result (the signed
     # index identity), not merely to a name/hash list.
     for exp, act, label in ((exp_cr_inputs, act_cr_inputs, "chromium"),
-                             (exp_jp_inputs, act_jp_inputs, "jpeg")):
+                             (exp_jp_inputs, act_jp_inputs, "jpeg"),
+                             ((source_pins.get("libflac14") or {}).get("inputs"),
+                              (sg.get("libflac14") or {}).get("inputs"),
+                              "flac"),
+                             ((source_pins.get("libopenh264-8") or {}).get("inputs"),
+                              (sg.get("libopenh264-8") or {}).get("inputs"),
+                              "openh264")):
         for wanted in (exp if isinstance(exp, list) else []):
             name = wanted.get("name")
             r = next((i for i in act if i.get("name") == name), {})
