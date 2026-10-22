@@ -729,6 +729,7 @@ public sealed partial class CuiControlLoader : IDisposable
         await start;
         Task? actualDispatcher = null;
         var outcome = new CuiCommandOutcome(false, false, "CUIA_FAILED", "The command did not produce an outcome.", null);
+        var failures = new List<Exception>();
         try
         {
             // Resolve live bound parameters only after this actual pipeline has
@@ -757,23 +758,19 @@ public sealed partial class CuiControlLoader : IDisposable
                 outcome = new CuiCommandOutcome(true, false, "Succeeded", null, null);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException error)
         {
             outcome = new CuiCommandOutcome(false, true, "Cancelled", "The action was cancelled.", null);
-            var failures = new List<Exception>();
-            AddOriginalTaskFailure(failures, actualDispatcher, new OperationCanceledException());
-            RetainActionFailure(control, new OperationCanceledException(), failures, frame, invocation.FrameOwned);
-            ThrowRetainedFailures(failures);
+            AddOriginalTaskFailure(failures, actualDispatcher, error);
+            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
         }
         catch (Exception error)
         {
             outcome = new CuiCommandOutcome(false, false, "Failed", error.Message, null);
-            var failures = new List<Exception>();
             AddOriginalTaskFailure(failures, actualDispatcher, error);
             RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
-            ThrowRetainedFailures(failures);
         }
-        finally
+        try
         {
             // Report the typed outcome to CUI and apply authored transition guards regardless of
             // success/failure, so CUI can branch into recovery/retry/local states by itself.
@@ -788,6 +785,11 @@ public sealed partial class CuiControlLoader : IDisposable
                     ApplySetDirectives(invocation.Sets ?? Array.Empty<CuiSetDirective>(), frame, control, invocation.FrameOwned);
             }
         }
+        catch (Exception error) { AddDistinctFailure(failures, error); }
+        // Publication is independent of the original dispatcher outcome. A result observer
+        // or a declarative Set failure must not replace an already retained domain/cancellation
+        // cause. Keep every exact original cause, while retired frames receive no new UI.
+        ThrowRetainedFailures(failures);
     }
 
     /// <summary>Executes a pure-local Toggle or declarative <Set> mutation in the loader's
@@ -2438,7 +2440,7 @@ public sealed partial class CuiControlLoader : IDisposable
             if (CuiPropertyPresentation.Set(control, property, value, level, "CUI authored " + level)) return;
         }
         catch (Exception error) when (error is ArgumentException or InvalidOperationException)
-        { throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {property}: {error.Message}", span)); }
+        { throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {property}: {error.Message}", span), error); }
         throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
             $"CUI property '{property}' has no typed projection for this resource.", span));
     }
@@ -3054,7 +3056,7 @@ public sealed partial class CuiControlLoader : IDisposable
             if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, "CUI authored " + level, sourceSpan: sourceSpan)) return;
         }
         catch (Exception error) when (error is FormatException or ArgumentException or InvalidOperationException)
-        { throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {propName}: {error.Message}", sourceSpan)); }
+        { throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {propName}: {error.Message}", sourceSpan), error); }
         var normalizedPropertyName = propName.Replace("-", string.Empty, StringComparison.Ordinal);
             switch (normalizedPropertyName.ToLowerInvariant())
             {

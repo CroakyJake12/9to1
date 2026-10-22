@@ -11,5 +11,14 @@ public sealed class CuiRuntimeLoadException : Exception
         Diagnostic = diagnostic;
     }
 
+    /// <summary>Preserves the exact native/property observer failure alongside its existing
+    /// structured CUI diagnostic. The original diagnostic-only constructor remains unchanged.</summary>
+    public CuiRuntimeLoadException(CuiDiagnostic diagnostic, Exception innerException)
+        : base(diagnostic?.Message ?? throw new ArgumentNullException(nameof(diagnostic)),
+            innerException ?? throw new ArgumentNullException(nameof(innerException)))
+    {
+        Diagnostic = diagnostic;
+    }
+
     public CuiDiagnostic Diagnostic { get; }
 }
