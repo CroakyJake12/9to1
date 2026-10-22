@@ -16,6 +16,31 @@ public sealed class CanvasOriginalWorkOwner : IAsyncDisposable
     public CancellationToken Token => _lifetime.Token;
     public Task? OriginalCloseTask { get { lock (_gate) return _close; } }
 
+    /// <summary>Immutable observation of this owner's exact issued callback tasks. A task's
+    /// presence or settlement never grants permission or changes its original failure receipt.</summary>
+    public IReadOnlyList<Task> RetainedOriginalTasks
+    { get { lock (_gate) return Array.AsReadOnly(_originals.ToArray()); } }
+
+    public bool OwnsOriginalTask(Task original)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        lock (_gate) return _originals.Any(candidate => ReferenceEquals(candidate, original));
+    }
+
+    /// <summary>Only unwrap the exact framework wrapper captured by this owner observing an
+    /// actual task, or the exact compound wrapper this owner produced. Observation is not task
+    /// issuance; callers must separately validate original-task custody and each source cause.</summary>
+    public bool TryGetOwnedFailureCauses(Exception wrapper, out IReadOnlyList<Exception> causes)
+    {
+        ArgumentNullException.ThrowIfNull(wrapper);
+        lock (_gate)
+        {
+            if (_ownedGroups.TryGetValue(wrapper, out var direct))
+            { causes = Array.AsReadOnly(direct.ToArray()); return true; }
+        }
+        causes = Array.Empty<Exception>(); return false;
+    }
+
     public Task RunOriginalAsync(Func<CancellationToken, Task> callback, CancellationToken caller = default)
         => RunOriginalAsync(async token => { await ObserveOriginalAsync(callback(token)).ConfigureAwait(true); return true; }, caller);
 

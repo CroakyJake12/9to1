@@ -107,6 +107,91 @@ public sealed class CanvasOriginalWorkOwnerTests
         Assert.True(close.IsFaulted);
         Assert.Same(close, owner.OriginalCloseTask);
     }
+    [Fact]
+    public async Task Issued_task_snapshot_is_read_only_and_rejects_a_foreign_task_with_the_same_cause()
+    {
+        var cause = new IOException("Exact source failure.");
+        var owner = new CanvasOriginalWorkOwner();
+        var original = owner.RunOriginalAsync(_ => Task.FromException(cause));
+        await Record.ExceptionAsync(() => original);
+        var foreign = Task.FromException(cause);
+        var snapshot = owner.RetainedOriginalTasks;
+        Assert.Same(original, Assert.Single(snapshot));
+        Assert.True(owner.OwnsOriginalTask(original)); Assert.False(owner.OwnsOriginalTask(foreign));
+        Assert.Throws<NotSupportedException>(() => ((IList<Task>)snapshot).Add(foreign));
+        await owner.RunOriginalAsync(_ => Task.CompletedTask);
+        Assert.Single(snapshot); // a retained immutable snapshot, not a mutable owner list
+        var close = owner.CloseAndDrainAsync();
+        Assert.Same(cause, await Record.ExceptionAsync(() => close));
+        Assert.True(close.IsFaulted); Assert.True(original.IsFaulted); Assert.Same(close, owner.OriginalCloseTask);
+    }
+
+    [Fact]
+    public async Task Failure_query_recognises_only_the_captured_wrapper_and_returns_immutable_direct_causes()
+    {
+        var owner = new CanvasOriginalWorkOwner(); var cause = new IOException("Observed source.");
+        var foreignTask = Task.FromException(cause);
+        var observed = await Record.ExceptionAsync(() => owner.ObserveOriginalAsync(foreignTask));
+        Assert.NotNull(observed); Assert.False(owner.OwnsOriginalTask(foreignTask));
+        Assert.True(owner.TryGetOwnedFailureCauses(observed!, out var children));
+        Assert.Same(cause, Assert.Single(children));
+        Assert.Throws<NotSupportedException>(() => ((IList<Exception>)children)[0] = new IOException("Clone."));
+        Assert.False(owner.TryGetOwnedFailureCauses(new AggregateException(cause), out var clone)); Assert.Empty(clone);
+        Assert.False(owner.TryGetOwnedFailureCauses(new AggregateException(), out _));
+        Assert.False(owner.TryGetOwnedFailureCauses(cause, out _));
+        var close = owner.CloseAndDrainAsync();
+        Assert.Same(cause, await Record.ExceptionAsync(() => close)); Assert.True(close.IsFaulted);
+    }
+
+    [Fact]
+    public async Task Owned_group_preserves_foreign_empty_and_nested_payloads_without_blessing_their_children()
+    {
+        var owner = new CanvasOriginalWorkOwner();
+        var opaque = new AggregateException("Foreign opaque payload.", new AggregateException("Empty foreign cause."));
+        var sibling = new IOException("Independent source.");
+        var raw = Task.WhenAll(Task.FromException(opaque), Task.FromException(sibling));
+        var observed = await Record.ExceptionAsync(() => owner.ObserveOriginalAsync(raw));
+        Assert.True(owner.TryGetOwnedFailureCauses(observed!, out var children)); Assert.Equal(2, children.Count);
+        Assert.Contains(children, error => ReferenceEquals(error, opaque));
+        Assert.Contains(children, error => ReferenceEquals(error, sibling));
+        Assert.False(owner.TryGetOwnedFailureCauses(opaque, out _));
+        Assert.False(owner.TryGetOwnedFailureCauses(opaque.InnerException!, out _));
+        var close = owner.CloseAndDrainAsync(); var failure = await Record.ExceptionAsync(() => close);
+        Assert.True(owner.TryGetOwnedFailureCauses(failure!, out var closed));
+        Assert.Contains(closed, error => ReferenceEquals(error, opaque));
+        Assert.Contains(closed, error => ReferenceEquals(error, sibling));
+        Assert.True(close.IsFaulted);
+    }
+
+    [Fact]
+    public async Task Two_issued_tasks_rethrowing_one_cause_remain_distinct_after_strict_close_deduplicates_the_cause()
+    {
+        var owner = new CanvasOriginalWorkOwner(); var cause = new IOException("One reused cause.");
+        var first = owner.RunOriginalAsync(_ => Task.FromException(cause));
+        var second = owner.RunOriginalAsync(_ => Task.FromException(cause));
+        await Record.ExceptionAsync(() => first); await Record.ExceptionAsync(() => second);
+        var snapshot = owner.RetainedOriginalTasks;
+        Assert.Equal(2, snapshot.Count); Assert.NotSame(first, second);
+        Assert.Contains(snapshot, task => ReferenceEquals(task, first)); Assert.Contains(snapshot, task => ReferenceEquals(task, second));
+        var close = owner.CloseAndDrainAsync();
+        Assert.Same(cause, await Record.ExceptionAsync(() => close)); Assert.True(close.IsFaulted);
+        Assert.True(first.IsFaulted); Assert.True(second.IsFaulted);
+        // A caller must validate EACH exact task; a deduplicated cause is not enough.
+    }
+
+    [Fact]
+    public async Task Independent_cleanup_rethrowing_the_source_cause_remains_a_faulted_cleanup_and_close()
+    {
+        var owner = new CanvasOriginalWorkOwner(); var cause = new IOException("Reused cleanup cause.");
+        var original = owner.RunOriginalAsync(_ => Task.FromException(cause));
+        await Record.ExceptionAsync(() => original);
+        var actualCleanup = Task.FromException(cause);
+        var close = owner.CloseAndDrainAsync(() => actualCleanup);
+        Assert.Same(cause, await Record.ExceptionAsync(() => close));
+        Assert.True(actualCleanup.IsFaulted); Assert.True(close.IsFaulted); Assert.Same(close, owner.OriginalCloseTask);
+        Assert.False(owner.OwnsOriginalTask(actualCleanup));
+    }
+
     private static bool ContainsSameCause(Exception actual, Exception sought)
         => ReferenceEquals(actual, sought) || actual is AggregateException group && group.InnerExceptions.Any(child => ContainsSameCause(child, sought));
     private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
