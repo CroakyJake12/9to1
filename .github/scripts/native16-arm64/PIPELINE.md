@@ -12,16 +12,19 @@ The original repository, other worktrees and reviewer evidence remain untouched.
 2. Restore dependencies by exact version/content pins. Recheck SHA-256 and sizes
    on every inference-cache hit. Browser acquisition and ABI verification still
    authenticate the signed Debian/Ubuntu graphs; a cache never bypasses them.
-3. Reuse a package only for the **same immutable Git revision, SDK and recorded
-   runner environment fingerprint**, with original package receipt, byte count
-   and SHA-256 intact. Unknown image identities use a per-run cache nonce.
-   Record reuse explicitly; never call it a fresh build.
-4. Otherwise run the normal product graph and package it. Installation verifies
-   the exact package identity again. Save verified build/package inputs before
-   native acceptance, so a later UI failure does not discard reusable work.
+3. Run a normal restore and full product build for every candidate. NuGet
+   download caching and cross-run package reuse are **disabled**: the current
+   repository has no reviewed resolved NuGet locks/content hashes. Git revision
+   and runner identity alone cannot establish an unchanged resolved graph.
+   Do not re-enable reuse until that evidence includes all central/nested
+   `Directory.Packages.props`, `Directory.Build.*` and actual resolved packages.
+4. Install the exact package after independently checking its source revision,
+   architecture, byte count and SHA-256. Retain the candidate and original inputs
+   before native acceptance; retention is not permission to reuse an unproved build.
 5. Always run real installed-package onboarding/returning profile, normal close,
    local chat/persistence, Chromium rendering/input/HTTP nonce and removal/data
-   preservation. A package-cache hit skips none of these checks.
+   preservation. Partial uninstall stdout/stderr are streamed to retained logs
+   even if the removal command times out.
 6. Aggregate original step **outcome**, exact raw statuses, source and harness
    identities, and retained phase failures. `continue-on-error` changes Actions'
    displayed conclusion; it cannot change the checkpoint decision. Missing or
@@ -74,6 +77,7 @@ the actual native driver.
 | Blocker | Owner | Evidence / next action |
 |---|---|---|
 | ARM immediate-window normal close timed out | Profile/native lifecycle worker | Failed run39698883180; original startup-final-clean exception. Fix product and rerun real native checks. |
+| NuGet/package cache lacks reviewed resolved lock inputs | ARM packaging | Reuse disabled; normal restore/build continues. Introduce reviewed content-hash locks before enabling reuse. |
 | Pinned Bookworm provider expired before initial cache seed | ARM packaging | Artifact12328502225; preserve immutable inputs and verify a refreshed supplier before dispatching another full candidate. |
 | Owner Ubuntu26/GNOME laptop acceptance and delivery | Release coordinator | NOT RUN; first require mandatory native gates, then supported authenticated delivery receipt. |
 

@@ -1,5 +1,7 @@
 import importlib.util
 import json
+import subprocess
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -57,6 +59,13 @@ class PersistentDataRemovalContractTests(unittest.TestCase):
         wal.unlink()
         with self.assertRaises(ValueError):
             removal.unchanged(snapshot)
+
+    def test_actual_child_timeout_preserves_stdout_and_stderr(self):
+        code = "import sys,time;sys.stdout.buffer.write(b'started stdout\\n');sys.stdout.flush();sys.stderr.buffer.write(b'started stderr\\n');sys.stderr.flush();time.sleep(10)"
+        with self.assertRaises(subprocess.TimeoutExpired):
+            removal.run_removal(self.root, [sys.executable, "-c", code], timeout=.3)
+        self.assertEqual((self.root / "package-removal.stdout.log").read_bytes(), b"started stdout\n")
+        self.assertEqual((self.root / "package-removal.stderr.log").read_bytes(), b"started stderr\n")
 
 
 if __name__ == "__main__":

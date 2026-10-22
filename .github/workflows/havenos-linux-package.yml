@@ -65,24 +65,6 @@ jobs:
           /usr/bin/python3 -m unittest discover -s .github/scripts/native16-arm64 -p 'test*.py' -v > evidence/pipeline-unit-tests.log 2>&1
           /usr/bin/python3 -m unittest discover -s .github/scripts/native16-arm64 -p '*_test.py' -v > evidence/browser-preflight-unit-tests.log 2>&1
           /usr/bin/python3 -m unittest discover -s .github/scripts/native16-arm64/chromium-native -p 'test*.py' -v > evidence/chromium-supplier-unit-tests.log 2>&1
-      - name: Restore immutable package for this exact source, SDK and native environment
-        id: package-cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
-        with:
-          path: ${{ runner.temp }}/9to1-native16-arm64-source/package
-          key: arm64-package-v1-${{ github.sha }}-${{ env.NATIVE_DOTNET_VERSION }}-${{ env.PIPELINE_ENVIRONMENT_SHA }}
-      - name: Independently recheck cached package byte identity and original input provenance
-        if: ${{ steps.package-cache.outputs.cache-hit == 'true' }}
-        run: >-
-          python3 .github/scripts/native16-arm64/immutable-package-cache.py
-          --mode restore --directory "${{ runner.temp }}/9to1-native16-arm64-source/package"
-      - name: Restore NuGet inputs for this SDK and dependency graph
-        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
-        id: nuget-cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
-        with:
-          path: ${{ env.NUGET_PACKAGES }}
-          key: arm64-nuget-10.0.301-${{ hashFiles('global.json', 'Directory.Build.*', '**/*.csproj', '**/packages.lock.json', '**/NuGet.Config', '**/NuGet.config') }}
       - name: Restore byte-pinned engine, model and license inputs
         id: inference-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
@@ -159,14 +141,7 @@ jobs:
             ${{ runner.temp }}/9to1-browser-evidence/providers
           key: ${{ steps.browser-cache.outputs.cache-primary-key }}
       - name: Build host tools and full normal ARM product graph then assemble NEW internal package
-        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
         run: python3 .github/scripts/native16-arm64/build-native-arm64.py
-      - name: Save NuGet downloads after normal graph build and before native acceptance
-        if: ${{ steps.package-cache.outputs.cache-hit != 'true' && steps.nuget-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
-        with:
-          path: ${{ env.NUGET_PACKAGES }}
-          key: ${{ steps.nuget-cache.outputs.cache-primary-key }}
       - name: Install exact newly built package
         shell: bash
         run: |
@@ -187,17 +162,6 @@ jobs:
           file /opt/9to1-preview/Haven > evidence/apphost-file.txt
           ldd /opt/9to1-preview/Haven > evidence/apphost-ldd.txt
           ! grep -F 'not found' evidence/apphost-ldd.txt
-      - name: Record original package inputs after actual installation, before native acceptance
-        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
-        run: >-
-          python3 .github/scripts/native16-arm64/immutable-package-cache.py
-          --mode record --directory "${{ runner.temp }}/9to1-native16-arm64-source/package"
-      - name: Save verified build and installation artifact without implying native acceptance
-        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
-        with:
-          path: ${{ runner.temp }}/9to1-native16-arm64-source/package
-          key: ${{ steps.package-cache.outputs.cache-primary-key }}
       - name: Fresh-profile native welcome setup, Home and normal close
         id: startup
         continue-on-error: true

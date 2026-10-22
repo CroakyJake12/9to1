@@ -177,10 +177,15 @@ def prepare(root,artifact_root,output_root,metadata,model_file=None,notice_file=
  else:download(NOTICE_URL,notice,NOTICE_SHA,NOTICE_SIZE)
  from bundle.data_stage import stage_package
  stage=output_root/'debian';stager=stage_package(spec_path=root/DULCHE/'bundle/arm64-runtime-bundle-spec.json',payload_root=supplied,seed_model=model,seed_json_path=root/'.github/scripts/native16-arm64/qwen3-06b-q6k.json',seed_notice=notice,python_source_root=root/DULCHE/'llamacpp',stage_root=stage);verified=validate_stage(stage,root)
- receipt={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'producer_run':RUN,'producer_head':RUN_HEAD,'artifact_id':ARTIFACT,'artifact_name':ARTIFACT_NAME,'provider_zip_digest_metadata':PROVIDER_ZIP_SHA,'provider_zip_bytes_sha256':artifact_meta.get('independent_provider_zip_sha256'),'transport':'standard actions/download-artifact; provider ZIP is separately byte-pinned in acquisition step; inner bytes independently pinned','inner_archive_sha256':INNER_SHA,'upstream_source_archive_sha256':SOURCE_SHA,'source_archive':str(source_copy),'stage':str(stage),'validated':verified,'stager':stager,'engine_model_execution':'NOT RUN','package':'NOT RUN'};out=output_root/'inference-stage-receipt.json';out.write_text(json.dumps(receipt,indent=2)+'\n')
+ receipt={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'producer_run':RUN,'producer_head':RUN_HEAD,'artifact_id':ARTIFACT,'artifact_name':ARTIFACT_NAME,'provider_zip_digest_metadata':PROVIDER_ZIP_SHA,'provider_zip_bytes_sha256':artifact_meta.get('independent_provider_zip_sha256'),'transport':describe_transport(artifact_meta),'inner_archive_sha256':INNER_SHA,'upstream_source_archive_sha256':SOURCE_SHA,'source_archive':str(source_copy),'stage':str(stage),'validated':verified,'stager':stager,'engine_model_execution':'NOT RUN','package':'NOT RUN'};out=output_root/'inference-stage-receipt.json';out.write_text(json.dumps(receipt,indent=2)+'\n')
  if os.environ.get('GITHUB_ENV'):
   with open(os.environ['GITHUB_ENV'],'a') as f:f.write('PREVIEW_INFERENCE_STAGE='+str(stage)+'\nPREVIEW_INFERENCE_RECEIPT='+str(out)+'\nPREVIEW_INFERENCE_SOURCE='+str(source_copy)+'\n')
  return receipt
+def describe_transport(metadata):
+ source=metadata.get('acquisition_source')
+ if source=='EXACT_BYTE_PINNED_CACHE':return 'Previously authenticated byte-pinned cache; fresh ZIP extraction after full SHA256/size validation; original artifact current availability NOT CHECKED'
+ if source=='AUTHENTICATED_ACTIONS_ARTIFACT':return 'Authenticated GitHub Actions artifact HTTPS acquisition via urllib; fresh ZIP extraction after full SHA256/size validation'
+ return 'Provider ZIP independently byte-pinned; acquisition transport UNKNOWN in supplied metadata'
 def main():
  p=argparse.ArgumentParser();p.add_argument('--validate-artifact-only',type=Path);p.add_argument('--provider-zip',type=Path);p.add_argument('--provider-cache',type=Path);p.add_argument('--extract-provider-zip',type=Path);p.add_argument('--artifact-root',type=Path);p.add_argument('--artifact-metadata',type=Path);p.add_argument('--output-root',type=Path);p.add_argument('--model-file',type=Path);p.add_argument('--notice-file',type=Path);a=p.parse_args();root=Path(__file__).resolve().parents[3]
  if a.validate_artifact_only:

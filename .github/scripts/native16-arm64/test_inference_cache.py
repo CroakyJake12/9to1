@@ -88,6 +88,15 @@ class VerifiedInputCacheTests(unittest.TestCase):
                     stage.extract_provider_zip(archive, output)
             self.assertFalse(output.exists())
 
+    def test_receipt_transport_distinguishes_actual_cache_network_and_unknown(self):
+        cached = stage.describe_transport({"acquisition_source": "EXACT_BYTE_PINNED_CACHE"})
+        network = stage.describe_transport({"acquisition_source": "AUTHENTICATED_ACTIONS_ARTIFACT"})
+        self.assertIn("cache", cached)
+        self.assertIn("NOT CHECKED", cached)
+        self.assertIn("urllib", network)
+        self.assertIn("UNKNOWN", stage.describe_transport({}))
+        self.assertNotIn("actions/download-artifact", cached + network)
+
 
 if __name__ == "__main__":
     unittest.main()

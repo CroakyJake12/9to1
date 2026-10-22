@@ -187,17 +187,17 @@ class TestWorkflowContract(unittest.TestCase):
         self.assertEqual(len(uploads), 4)
         self.assertTrue(all(step["with"]["retention-days"] >= 14 for step in uploads))
 
-    def test_exact_package_cache_does_not_skip_installation_or_native_gates(self):
-        restore = next(step for step in self.steps if step.get("id") == "package-cache")
-        key = restore["with"]["key"]
-        self.assertIn("github.sha", key)
-        self.assertIn("NATIVE_DOTNET_VERSION", key)
-        self.assertIn("PIPELINE_ENVIRONMENT_SHA", key)
+    def test_unlocked_nuget_or_package_inputs_cannot_bypass_normal_build(self):
+        # An immutable Git SHA does not pin a mutable resolved NuGet graph.
+        # Until independently reviewed locks/content hashes exist, there is
+        # deliberately no restore/save of either NuGet downloads or packages.
+        self.assertFalse(any(step.get("id") in {"package-cache", "nuget-cache"} for step in self.steps))
+        self.assertFalse(any("immutable-package-cache.py" in step.get("run", "") for step in self.steps))
+        build = next(step for step in self.steps if "build-native-arm64.py" in step.get("run", ""))
+        self.assertNotIn("if", build)
         for identifier in ["startup", "chat", "browser", "removal"]:
             step = next(step for step in self.steps if step.get("id") == identifier)
             self.assertNotIn("package-cache", step.get("if", ""))
-        verify = next(step for step in self.steps if step.get("name", "").startswith("Independently recheck cached package"))
-        self.assertIn("immutable-package-cache.py", verify["run"])
 
 
 class TestBuildNativeArm64Contract(unittest.TestCase):

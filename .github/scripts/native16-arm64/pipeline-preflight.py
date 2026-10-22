@@ -79,16 +79,14 @@ def main():
                           "runner_image_os": os.environ.get("ImageOS"),
                           "runner_image_version": os.environ.get("ImageVersion"),
                           "package_versions_sha256": hashlib.sha256(packages.read_bytes()).hexdigest()}
-    receipt["package_cache_inputs"] = fingerprint_inputs
-    receipt["package_cache_cross_run_reuse"] = all(fingerprint_inputs.values())
-    if not receipt["package_cache_cross_run_reuse"]:
-        # Unknown image identity does not block product work, but must never
-        # permit cross-run artifact reuse on an unverified environment.
-        fingerprint_inputs["unknown_image_run_nonce"] = os.environ["GITHUB_RUN_ID"] + "." + os.environ["GITHUB_RUN_ATTEMPT"]
+    receipt["environment_inputs"] = fingerprint_inputs
+    receipt["package_cache_cross_run_reuse"] = False
+    receipt["nuget_and_package_cache"] = {
+        "status": "BLOCKED",
+        "reason": "No reviewed resolved NuGet lock/content hashes; normal restores and builds still run.",
+        "enabling_requirement": "Review exact resolved dependency graph including nested Directory.Packages.props and Directory.Build.* before adding cache reuse."}
     fingerprint = hashlib.sha256(json.dumps(fingerprint_inputs, sort_keys=True).encode()).hexdigest()
-    receipt["package_cache_environment_sha256"] = fingerprint
-    with Path(os.environ["GITHUB_ENV"]).open("a") as stream:
-        stream.write("PIPELINE_ENVIRONMENT_SHA=" + fingerprint + "\n")
+    receipt["environment_sha256"] = fingerprint
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(receipt, indent=2) + "\n")
     for failure in receipt["failures"]:

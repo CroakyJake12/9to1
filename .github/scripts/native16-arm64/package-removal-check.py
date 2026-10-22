@@ -74,6 +74,16 @@ def active_candidate_processes():
     return found
 
 
+def run_removal(evidence, command=None, timeout=60):
+    # Redirect before starting the command, so partial output survives timeout,
+    # decode errors, interruption and ordinary nonzero exits byte-for-byte.
+    evidence.mkdir(parents=True, exist_ok=True)
+    command = command or ["sudo", "dpkg", "--remove", "9to1-preview"]
+    with (evidence / "package-removal.stdout.log").open("wb") as output, \
+            (evidence / "package-removal.stderr.log").open("wb") as errors:
+        return subprocess.run(command, stdout=output, stderr=errors, timeout=timeout)
+
+
 def main():
     output = Path("evidence/package-removal-receipt.json")
     receipt = {"schema": "9to1.arm-package-removal/v1", "status": "FAIL",
@@ -92,9 +102,7 @@ def main():
             raise RuntimeError("Candidate processes are still active; no removal or process interruption attempted")
         snapshot = profile_snapshot(Path(os.environ["RUNNER_TEMP"]))
         receipt["persisted_profiles_before"] = snapshot
-        result = subprocess.run(["sudo", "dpkg", "--remove", "9to1-preview"], capture_output=True, text=True, timeout=60)
-        Path("evidence/package-removal.stdout.log").write_text(result.stdout)
-        Path("evidence/package-removal.stderr.log").write_text(result.stderr)
+        result = run_removal(Path("evidence"))
         receipt["removal_exit_code"] = result.returncode
         if result.returncode:
             raise RuntimeError("Package removal failed")
