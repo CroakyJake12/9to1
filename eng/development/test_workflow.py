@@ -319,6 +319,22 @@ class WorkflowTests(unittest.TestCase):
         state["execution_custody"].update(patch["execution_custody"])
         self.assert_named_cli_refused_without_mutation(state)
 
+    def test_execution_export_manifest_access_time_change_is_not_content_tampering(self):
+        active, _, _, record, patch = self.execution_fixture()
+        origin = record["source"]["git"]
+        files = [{"path": name, **{k: v for k, v in identity.items() if k != "kind"}}
+                 for name, identity in record["source"]["files"].items()]
+        path = self.root / "old-access-time-manifest.json"
+        path.write_bytes(w.encoded({"schema": "9to1.exact-source-export/v1", "root": str(active),
+                                   "origin_git": origin["path"], "source_revision": record["revision"], "files": files}))
+        st = path.stat(); os.utime(path, ns=(0, st.st_mtime_ns))
+        asset = {"path": str(path), **w.file_identity(path)}
+        self.assertEqual(0, path.stat().st_atime_ns)
+        record["source"] = {"kind": "source-export", "path": str(active), "git": origin, "manifest": asset}
+        w.apply_checkpoint(self.state, patch)
+        self.assertTrue(w.execution_checks(self.state, "active")["declared_inputs_available"])
+        self.assertEqual(asset, {"path": str(path), **w.file_identity(path)})
+
     def test_stale_writer_does_not_overwrite_checkpoint(self):
         with w.transaction(self.state_path, 0) as state:
             state["next_actions"] = ["new progress"]

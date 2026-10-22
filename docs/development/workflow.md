@@ -198,7 +198,8 @@ repository instead of the original remains a discrepancy. Unknown/unrelated name
 contexts refuse. Malformed named source/Git/path shapes and non-object export
 JSON also return structured INFRASTRUCTURE/BLOCKED responses, with no checkpoint
 mutation or generation advance. Export manifest size must match its receipt before
-the bounded read. Default recovery checks all declared candidates; named recovery
+the bounded read. Content stability checks device/inode/size/mtime/ctime, excluding
+access time changed by the read itself. Default recovery checks all declared candidates; named recovery
 checks the selected one and retains the full owners/tasks/gates/next actions.
 `execution_next_actions` adds restore/rebuild actions without changing state.
 

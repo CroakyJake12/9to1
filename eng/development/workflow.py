@@ -604,7 +604,9 @@ def export_files(source, revision):
         raw = stream.read(asset["bytes"] + 1)
         after = os.fstat(stream.fileno())
         identity = {"kind": "file", "bytes": len(raw), "sha256": digest(raw), "mode": before.st_mode & 0o777}
-        if identity != {k: v for k, v in asset.items() if k != "path"} or before != after:
+        stable = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+        if (identity != {k: v for k, v in asset.items() if k != "path"}
+                or any(getattr(before, field) != getattr(after, field) for field in stable)):
             raise Refusal("Export manifest changed/unavailable")
     manifest = json.loads(raw)
     if not isinstance(manifest, dict): raise Refusal("Export manifest must be a JSON object")
