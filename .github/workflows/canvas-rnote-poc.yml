@@ -1,93 +1,294 @@
-name: Canvas Rnote PoC
+name: Canvas Rnote engine boundary
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - "9to1 Workspace/Canvas/rnote-poc/**"
+      - '9to1 Workspace/Canvas/rnote-poc/**'
+      - '9to1 Workspace/Canvas/RnoteCanvasEngine.cs'
+      - '9to1 Workspace/Canvas/tools/*validate_rnote_native_artifact.py'
+      - 'eng/donor-sources.json'
       - '.github/workflows/canvas-rnote-poc.yml'
   pull_request:
     paths:
-      - "9to1 Workspace/Canvas/rnote-poc/**"
+      - '9to1 Workspace/Canvas/rnote-poc/**'
+      - '9to1 Workspace/Canvas/RnoteCanvasEngine.cs'
+      - '9to1 Workspace/Canvas/tools/*validate_rnote_native_artifact.py'
+      - 'eng/donor-sources.json'
       - '.github/workflows/canvas-rnote-poc.yml'
 
+permissions:
+  contents: read
+concurrency:
+  group: canvas-rnote-engine-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+# Engine-only evidence, never the old HUI app or installer. Hosted images and apt
+# candidates are NOT immutable inputs; release promotion remains explicitly BLOCKED.
 jobs:
-  headless-rnote:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
+  inspector-controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Rust 1.92
-        uses: dtolnay/rust-toolchain@1.92.0
-
-      - name: Install native core dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            cmake \
-            pkg-config \
-            libglib2.0-dev \
-            libcairo2-dev \
-            libpango1.0-dev \
-            librsvg2-dev
-
-      - name: Generate lockfile
-        run: cargo generate-lockfile --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml"
-
-      - name: Reject GTK and Libadwaita in core dependency graph
-        shell: bash
-        run: |
-          cargo tree --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" | tee /tmp/canvas-rnote-tree.txt
-          if grep -E '(^|[[:space:]])(gtk4|libadwaita)[[:space:]]' /tmp/canvas-rnote-tree.txt; then
-            echo 'Headless Canvas core unexpectedly depends on GTK4 or Libadwaita.' >&2
-            exit 1
-          fi
-
-      - name: Build native C ABI library
-        shell: bash
-        run: |
-          cargo build --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --lib --verbose
-          test -f "9to1 Workspace/Canvas/rnote-poc/target/debug/libcakeos_canvas_rnote_poc.so"
-
-      - name: Test headless pressure/save/reload/export round trip
-        shell: bash
-        run: |
-          set +e
-          cargo test --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --all-targets --verbose -- --nocapture 2>&1 | tee /tmp/canvas-rnote-test.log
-          status=${PIPESTATUS[0]}
-          {
-            echo '## Rnote boundary test diagnostics'
-            echo '```text'
-            tail -n 120 /tmp/canvas-rnote-test.log
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          if [ "$status" -ne 0 ]; then
-            failure_line="$(grep -E 'panicked at|assertion .* failed|assertion.*failed|error:' /tmp/canvas-rnote-test.log | tail -n 1 || true)"
-            echo "::error title=Rnote boundary round-trip failed::${failure_line:-See job summary for cargo test output}"
-          fi
-          exit "$status"
-
-      - name: Upload native bridge artifact
-        if: success()
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          name: canvas-rnote-native-bridge
-          path: |
-            "9to1 Workspace/Canvas/rnote-poc/target/debug/libcakeos_canvas_rnote_poc.so"
-            "9to1 Workspace/Canvas/rnote-poc/include/cakeos_canvas.h"
+          persist-credentials: false
+      - name: Pure Python positive and negative ELF/source controls
+        working-directory: 9to1 Workspace/Canvas/tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest -v test_validate_rnote_native_artifact.py 2>&1 | tee "$RUNNER_TEMP/canvas-rnote-validator.log"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: canvas-rnote-validator-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/canvas-rnote-validator.log
+          retention-days: 14
           if-no-files-found: error
 
-      - name: Upload boundary test diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
+  headless-rnote:
+    needs: inspector-controls
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            target: x86_64-unknown-linux-gnu
+            triplet: x86_64-linux-gnu
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            target: aarch64-unknown-linux-gnu
+            triplet: aarch64-linux-gnu
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      RUST_TOOLCHAIN: 1.92.0
+      CARGO_TARGET_DIR: ${{ runner.temp }}/canvas-rnote-target
+      CARGO_BUILD_JOBS: 2
+      DIAGNOSTICS: ${{ runner.temp }}/canvas-rnote-evidence
+      TARGET: ${{ matrix.target }}
+      EXPECTED_ARCH: ${{ matrix.arch }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          name: canvas-rnote-test-log
+          persist-credentials: false
+      - name: Verify native host and retain exact candidate inputs
+        run: |
+          set -euo pipefail
+          mkdir -p "$DIAGNOSTICS"
+          exec > >(tee "$DIAGNOSTICS/preflight.log") 2>&1
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git status --porcelain > "$DIAGNOSTICS/checkout-status.txt"
+          test ! -s "$DIAGNOSTICS/checkout-status.txt"
+          git show -s --format=fuller HEAD > "$DIAGNOSTICS/source-revision.txt"
+          cp '9to1 Workspace/Canvas/rnote-poc/Cargo.lock' "$DIAGNOSTICS/Cargo.lock.before"
+          sha256sum '9to1 Workspace/Canvas/rnote-poc/Cargo.toml' \
+            '9to1 Workspace/Canvas/rnote-poc/Cargo.lock' \
+            '9to1 Workspace/Canvas/RnoteCanvasEngine.cs' 'eng/donor-sources.json' \
+            '.github/workflows/canvas-rnote-poc.yml' > "$DIAGNOSTICS/source-inputs.sha256"
+          uname -a > "$DIAGNOSTICS/kernel.txt"
+          cp /etc/os-release "$DIAGNOSTICS/os-release"
+          printf '%s\n' "Hosted image version: ${ImageVersion:-UNEXPOSED}" \
+            'REPRODUCIBILITY BLOCKED: no reviewed immutable runner image/apt snapshot.' \
+            'Recording resolved versions does not pin future builds.' > "$DIAGNOSTICS/environment-limit.txt"
+
+      - name: Acquire native dependencies and record exact resolved packages
+        id: dependencies
+        run: |
+          set -euo pipefail
+          exec > >(tee "$DIAGNOSTICS/native-dependencies.log") 2>&1
+          sudo apt-get -o Acquire::Retries=3 update
+          # Rolling candidates, deliberately NOT described as reproducible pins.
+          sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential cmake \
+            pkg-config libglib2.0-dev libcairo2-dev libpango1.0-dev librsvg2-dev
+          dpkg-query -W -f='${binary:Package}\t${Version}\t${Architecture}\n' > "$DIAGNOSTICS/native-packages.tsv"
+          cp /var/lib/dpkg/status "$DIAGNOSTICS/dpkg-status"
+          package_hash=$(sha256sum "$DIAGNOSTICS/native-packages.tsv" | cut -d' ' -f1)
+          echo "package_hash=$package_hash" >> "$GITHUB_OUTPUT"
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --target "$TARGET"
+          rustc +"$RUST_TOOLCHAIN" -Vv > "$DIAGNOSTICS/rustc.txt"
+          cargo +"$RUST_TOOLCHAIN" -Vv > "$DIAGNOSTICS/cargo.txt"
+          cc --version > "$DIAGNOSTICS/cc.txt"
+          ld --version > "$DIAGNOSTICS/ld.txt"
+
+      - name: Reuse identical locked Rust/native build inputs
+        id: rust_cache
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4 verified upstream 2026-10-22
+        with:
           path: |
-            /tmp/canvas-rnote-test.log
-            "9to1 Workspace/Canvas/rnote-poc/Cargo.lock"
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/src
+            ~/.cargo/git/db
+            ~/.cargo/git/checkouts
+            ${{ env.CARGO_TARGET_DIR }}
+          key: canvas-rnote-${{ matrix.target }}-rust1.92.0-${{ steps.dependencies.outputs.package_hash }}-${{ hashFiles('9to1 Workspace/Canvas/rnote-poc/Cargo.lock', '9to1 Workspace/Canvas/rnote-poc/Cargo.toml', '9to1 Workspace/Canvas/rnote-poc/src/**', '.github/workflows/canvas-rnote-poc.yml') }}
+
+      - name: Fetch locked graph and retain actual source/licence inventory
+        run: |
+          set -euo pipefail
+          exec > >(tee "$DIAGNOSTICS/source-acquisition.log") 2>&1
+          cargo +"$RUST_TOOLCHAIN" fetch --locked --target "$TARGET" --manifest-path '9to1 Workspace/Canvas/rnote-poc/Cargo.toml'
+          cargo +"$RUST_TOOLCHAIN" metadata --locked --format-version 1 --manifest-path '9to1 Workspace/Canvas/rnote-poc/Cargo.toml' > "$DIAGNOSTICS/cargo-metadata.json"
+          cargo +"$RUST_TOOLCHAIN" tree --locked --target "$TARGET" --manifest-path '9to1 Workspace/Canvas/rnote-poc/Cargo.toml' > "$DIAGNOSTICS/cargo-tree.txt"
+          if grep -E '(^|[[:space:]])(gtk4|libadwaita)[[:space:]]' "$DIAGNOSTICS/cargo-tree.txt"; then
+            echo 'Headless engine graph unexpectedly includes a donor application UI.' >&2
+            exit 1
+          fi
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess, tarfile
+          root = pathlib.Path(os.environ['DIAGNOSTICS'])
+          metadata = json.loads((root / 'cargo-metadata.json').read_text())
+          inventory = []
+          retained_roots = set()
+          with tarfile.open(root / 'rust-licences.tgz', 'w:gz') as licences, tarfile.open(root / 'locked-rnote-source.tgz', 'w:gz') as donor:
+              for package in metadata['packages']:
+                  source = pathlib.Path(package['manifest_path']).parent
+                  key = package['name'] + '-' + package['version']
+                  files = {p for pattern in ('LICENSE*', 'LICENCE*', 'COPYING*', 'NOTICE*') for p in source.glob(pattern) if p.is_file()}
+                  if package.get('license_file'):
+                      files.add(source / package['license_file'])
+                  donor_root = None
+                  if package['name'] in ('rnote-engine', 'rnote-compose'):
+                      donor_root = pathlib.Path(subprocess.check_output(['git', '-C', str(source), 'rev-parse', '--show-toplevel'], text=True).strip())
+                      files.update(p for pattern in ('LICENSE*', 'COPYING*', 'NOTICE*') for p in donor_root.glob(pattern) if p.is_file())
+                  records = []
+                  for file in sorted(files):
+                      data = file.read_bytes()
+                      digest = hashlib.sha256(data).hexdigest()
+                      records.append({'name': str(file), 'sha256': digest})
+                      licences.add(file, arcname=key + '/' + digest + '/' + file.name)
+                  inventory.append({'id': package['id'], 'source': package['source'], 'license': package['license'], 'files': records, 'notice_files_missing': not records})
+                  if donor_root is not None and donor_root not in retained_roots:
+                      retained_roots.add(donor_root)
+                      actual = subprocess.check_output(['git', '-C', str(donor_root), 'rev-parse', 'HEAD'], text=True).strip()
+                      donor.add(donor_root, arcname='rnote-' + actual, filter=lambda entry: None if '.git' in entry.name.split('/') else entry)
+          (root / 'rust-licences.json').write_text(json.dumps(inventory, indent=2) + '\n')
+          PY
+          tar -czf "$DIAGNOSTICS/bridge-source.tgz" --exclude=target \
+            '9to1 Workspace/Canvas/rnote-poc' '9to1 Workspace/Canvas/RnoteCanvasEngine.cs' \
+            '9to1 Workspace/Canvas/Source/DONOR-PROVENANCE.md' 'eng/donor-sources.json'
+          cmp "$DIAGNOSTICS/Cargo.lock.before" '9to1 Workspace/Canvas/rnote-poc/Cargo.lock'
+
+      - name: Build only the native C ABI engine
+        id: build
+        run: |
+          set -euo pipefail
+          exec > >(tee "$DIAGNOSTICS/build.log") 2>&1
+          cargo +"$RUST_TOOLCHAIN" build --locked --release --target "$TARGET" --lib --verbose --manifest-path '9to1 Workspace/Canvas/rnote-poc/Cargo.toml'
+          cmp "$DIAGNOSTICS/Cargo.lock.before" '9to1 Workspace/Canvas/rnote-poc/Cargo.lock'
+          test -f "$CARGO_TARGET_DIR/$TARGET/release/libcakeos_canvas_rnote_poc.so"
+
+      - name: Actual headless pressure/save/reload/export tests
+        id: native_tests
+        run: |
+          set -euo pipefail
+          exec > >(tee "$DIAGNOSTICS/native-tests.log") 2>&1
+          cargo +"$RUST_TOOLCHAIN" test --locked --release --target "$TARGET" --all-targets --verbose --manifest-path '9to1 Workspace/Canvas/rnote-poc/Cargo.toml' -- --nocapture
+          cmp "$DIAGNOSTICS/Cargo.lock.before" '9to1 Workspace/Canvas/rnote-poc/Cargo.lock'
+
+      - name: Load this exact native bridge and exercise ABI/create/free
+        id: native_load
+        run: |
+          set -euo pipefail
+          exec > >(tee "$DIAGNOSTICS/native-load.log") 2>&1
+          python3 - <<'PY'
+          import ctypes, hashlib, json, os, pathlib
+          path = pathlib.Path(os.environ['CARGO_TARGET_DIR'], os.environ['TARGET'], 'release/libcakeos_canvas_rnote_poc.so').resolve(strict=True)
+          library = ctypes.CDLL(str(path))
+          library.cake_canvas_abi_version.argtypes = []
+          library.cake_canvas_abi_version.restype = ctypes.c_uint32
+          actual = library.cake_canvas_abi_version()
+          if actual != 3:
+              raise RuntimeError('Managed ABI3 required; actual native ABI=' + str(actual))
+          library.cake_canvas_engine_new.argtypes = []
+          library.cake_canvas_engine_new.restype = ctypes.c_void_p
+          library.cake_canvas_engine_free.argtypes = [ctypes.c_void_p]
+          library.cake_canvas_engine_free.restype = None
+          engine = library.cake_canvas_engine_new()
+          if not engine:
+              raise RuntimeError('Native engine creation returned null')
+          library.cake_canvas_engine_free(engine)
+          mappings = []
+          paths = {line.split(maxsplit=5)[5].strip() for line in pathlib.Path('/proc/self/maps').read_text().splitlines() if len(line.split(maxsplit=5)) == 6 and line.split(maxsplit=5)[5].startswith('/')}
+          for name in sorted(paths):
+              data = pathlib.Path(name).read_bytes()
+              if data.startswith(b'\x7fELF'):
+                  mappings.append({'path': name, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
+          pathlib.Path(os.environ['DIAGNOSTICS'], 'native-load-maps.json').write_text(json.dumps({
+              'library': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              'abi': actual, 'create_free': 'PASSED', 'observed_elf_mappings': mappings,
+              'scope': 'This native ABI/create/free probe only; no managed app or optional-feature acceptance.'}, indent=2) + '\n')
+          PY
+
+      # Separate save is intentional: the release gate below remains BLOCKED,
+      # while a successful compilation is still reusable for the SAME inputs.
+      # A cached build never waives tests or release/native application gates.
+      - name: Save successful compilation inputs before blocked qualification
+        if: always() && steps.build.outcome == 'success' && steps.rust_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/src
+            ~/.cargo/git/db
+            ~/.cargo/git/checkouts
+            ${{ env.CARGO_TARGET_DIR }}
+          key: ${{ steps.rust_cache.outputs.cache-primary-key }}
+
+      - name: Retain actual outcomes and block unqualified release promotion
+        if: always()
+        env:
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          TEST_OUTCOME: ${{ steps.native_tests.outcome }}
+          LOAD_OUTCOME: ${{ steps.native_load.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$DIAGNOSTICS"
+          exec > >(tee "$DIAGNOSTICS/inspection.log") 2>&1
+          python3 - <<'PY'
+          import json, os, pathlib
+          pathlib.Path(os.environ['DIAGNOSTICS'], 'stage-outcomes.json').write_text(json.dumps({
+              'source_revision': os.environ['GITHUB_SHA'], 'target': os.environ['TARGET'],
+              'build': os.environ['BUILD_OUTCOME'], 'native_tests': os.environ['TEST_OUTCOME'],
+              'exact_library_load_probe': os.environ['LOAD_OUTCOME'],
+              'full_application_acceptance': 'NOT RUN', 'release_ready': False}, indent=2) + '\n')
+          PY
+          artifact="$CARGO_TARGET_DIR/$TARGET/release/libcakeos_canvas_rnote_poc.so"
+          # Never inspect a cached output as this run's successful build after failure.
+          if [ "$BUILD_OUTCOME" != success ]; then artifact="$DIAGNOSTICS/NO_SUCCESSFUL_BUILD.so"; fi
+          python3 -B '9to1 Workspace/Canvas/tools/validate_rnote_native_artifact.py' \
+            --repo "$GITHUB_WORKSPACE" --revision "$GITHUB_SHA" --target "$TARGET" \
+            --library "$artifact" --search-dir '/lib/${{ matrix.triplet }}' \
+            --search-dir '/usr/lib/${{ matrix.triplet }}' --search-dir /lib --search-dir /usr/lib \
+            --copy-closure "$DIAGNOSTICS/elf-closure" --output "$DIAGNOSTICS/native-artifact.json" \
+            --require-release-ready
+
+      - name: Retain system licence notices and all failure evidence
+        if: always()
+        run: |
+          mkdir -p "$DIAGNOSTICS"
+          { find /usr/share/doc -mindepth 2 -maxdepth 2 -name copyright -type f -print0; printf '/usr/share/common-licenses\0'; } \
+            | tar --null -T - -czf "$DIAGNOSTICS/system-copyright.tgz" \
+              2> "$DIAGNOSTICS/copyright-retention.log"
+          find "$DIAGNOSTICS" -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > "$DIAGNOSTICS/SHA256SUMS"
+          printf '%s\n' '## Engine-only evidence' \
+            'Actual outcomes and ELF/source receipts are in the retained artifact.' \
+            'Release BLOCKED: immutable native environment, selected/locked donor and full API qualification remain unresolved.' \
+            'No Canvas app, ARM installer, native UI acceptance or delivery is claimed.' >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: canvas-rnote-engine-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.DIAGNOSTICS }}/
+          retention-days: 14
           if-no-files-found: error
