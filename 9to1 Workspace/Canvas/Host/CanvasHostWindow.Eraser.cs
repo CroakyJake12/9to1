@@ -18,7 +18,7 @@ public sealed partial class CanvasHostWindow
         var quick=new CanvasHomeQuickEraserOperation(files,broker,actors);
         var keyed=new CanvasHomeStrokeEditOperation(files,broker,actors);
         var history=new CanvasHomeHistoryOperation(files,broker,actors);
-        bool Available()=>WriteAvailable()&&!_closed&&!_busy&&_pendingRequest is null&&_pendingOwnership is null&&_pendingAudit is null&&_pendingBeginAudit is null&&!_requestUncertain &&
+        bool Available()=>EditorViewActive()&&WriteAvailable()&&!_closed&&!_busy&&_pendingRequest is null&&_pendingOwnership is null&&_pendingAudit is null&&_pendingBeginAudit is null&&!_requestUncertain &&
             _workspace?.Actor==actor&&_workspace.Configuration.StoreId==storeId&&ReferenceEquals(_workspace.Provider,provider);
         async Task<OwnerCommit> Reopen(HostedItemId id,Guid artifactId,Guid revision,CancellationToken token)
         {
@@ -33,6 +33,7 @@ public sealed partial class CanvasHostWindow
         {
             if(!Available())throw new UnauthorizedAccessException("Finish the current Home request before erasing.");
             await RequireOriginalOwnerAsync(original,storeId,token);
+            if(!Available())throw new UnauthorizedAccessException("This native Canvas view is no longer active.");
             _busy=true;RefreshBindings();
             try{SetStatus(await RequestAsync(CanvasStrokeWriteIntent.ActionId,scopes,args,preview,execute,null,token));}
             finally{_busy=false;RefreshBindings();}

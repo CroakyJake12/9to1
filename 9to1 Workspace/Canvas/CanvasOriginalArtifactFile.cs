@@ -6,10 +6,10 @@ using Microsoft.Win32.SafeHandles;
 
 namespace HavenOS.Apps.Canvas;
 
-/// <summary>Local Windows byte custody only. Home and Files still supply all business
+/// <summary>Local retained byte custody. Home and Files still supply all business
 /// authority. Ancestors and the exact regular, single-link leaf stay held through the
 /// caller's final actor/configuration checks and canonical Files publication.</summary>
-internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
+internal sealed partial class CanvasOriginalArtifactFile : IAsyncDisposable
 {
     private readonly List<SafeFileHandle> _parents = [];
     private string _path = string.Empty;
@@ -20,6 +20,7 @@ internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
     private CanvasOriginalArtifactFile() { }
     private void AcquireInto(string root, string relative, bool create)
     {
+        if (OperatingSystem.IsLinux()) { AcquireLinux(root, relative, create); return; }
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("The genuine Canvas artifact owner requires Windows retained handles.");
         var fullRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
         var volume = Path.GetPathRoot(fullRoot) ?? throw new InvalidDataException("Canvas volume is unavailable.");
@@ -52,13 +53,25 @@ internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
     public static async Task<CanvasOriginalArtifactFile> WriteAsync(string root, string relative,
         ReadOnlyMemory<byte> bytes, CancellationToken token)
     {
+        // The Linux backend is new; do not allocate files for an already cancelled
+        // request. Existing Windows acquisition/exception behaviour is unchanged.
+        if (OperatingSystem.IsLinux())
+        {
+            token.ThrowIfCancellationRequested();
+            if (bytes.Length is <= 0 or > LinuxMaximumBytes)
+                throw new InvalidDataException("Canvas artifact size is outside its bounded original write.");
+            bytes = bytes.ToArray(); // One owned snapshot; caller mutation cannot retarget the awaited write/hash.
+            token.ThrowIfCancellationRequested();
+        }
         CanvasOriginalArtifactFile? original = null; Task? source = null;
         try
         {
             token.ThrowIfCancellationRequested(); original = Acquire(root, relative, true);
+            original.PrepareLinuxWrite(bytes);
             source = original._stream!.WriteAsync(bytes, token).AsTask(); await Observe(source).ConfigureAwait(false);
             source = original._stream!.FlushAsync(token); await Observe(source).ConfigureAwait(false);
-            original._stream!.Flush(flushToDisk: true); original.DemandUnchanged(bytes.Length);
+            original._stream!.Flush(flushToDisk: true);
+            original.SealLinuxWrite(bytes.Length, token); original.DemandUnchanged(bytes.Length);
             return original;
         }
         catch (Exception error)
@@ -76,6 +89,7 @@ internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
         catch (Exception error)
         {
             var errors = new List<Exception> { error };
+            try { owner._stream?.Dispose(); } catch (Exception close) { Add(errors, close); }
             foreach (var parent in owner._parents.AsEnumerable().Reverse())
                 try { parent.Dispose(); } catch (Exception close) { Add(errors, close); }
             try { owner._leaf?.Dispose(); } catch (Exception close) { Add(errors, close); }
@@ -84,6 +98,7 @@ internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
     }
     public async Task<byte[]> ReadAsync(long size, CancellationToken token)
     {
+        if (OperatingSystem.IsLinux()) token.ThrowIfCancellationRequested();
         if (size <= 0 || size > 512L * 1024 * 1024 || _stream is null)
             throw new InvalidDataException("Canvas artifact size is outside its bounded original read.");
         DemandUnchanged(size);
@@ -94,6 +109,7 @@ internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
     public void DemandUnchanged(long size)
     {
         var handle = _leaf ?? throw new ObjectDisposedException(nameof(CanvasOriginalArtifactFile));
+        if (_linuxIdentity is not null) { DemandLinuxUnchanged(size); return; }
         DemandPath(handle, _path, false);
         var actual = ReadIdentity(handle);
         if (actual.Volume != _identity.Volume || actual.Index != _identity.Index || actual.Size != size)
@@ -139,7 +155,7 @@ internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
         catch (Exception error) { Add(errors, (Exception?)source?.Exception ?? error); }
         try { _leaf?.Dispose(); } catch (Exception error) { Add(errors, error); }
         foreach (var parent in _parents.AsEnumerable().Reverse()) try { parent.Dispose(); } catch (Exception error) { Add(errors, error); }
-        _stream = null; _leaf = null; _parents.Clear(); Throw(errors);
+        _stream = null; _leaf = null; _parents.Clear(); _linuxDirectories.Clear(); Throw(errors);
     }
     private static async Task ThrowAfterCloseAsync(CanvasOriginalArtifactFile? owner, Task? source, Exception error)
     {
@@ -147,7 +163,8 @@ internal sealed class CanvasOriginalArtifactFile : IAsyncDisposable
         Task? close = null;
         try { if (owner is not null) { close = owner.DisposeAsync().AsTask(); await close.ConfigureAwait(false); } }
         catch (Exception cleanup) { Add(errors, (Exception?)close?.Exception ?? cleanup); }
-        if (errors.Count == 1 && errors[0] is OperationCanceledException && source?.IsCanceled == true)
+        if (errors.Count == 1 && errors[0] is OperationCanceledException canceled &&
+            (source?.IsCanceled == true || OperatingSystem.IsLinux() && canceled.CancellationToken.IsCancellationRequested))
             ExceptionDispatchInfo.Capture(errors[0]).Throw();
         Throw(errors);
     }
