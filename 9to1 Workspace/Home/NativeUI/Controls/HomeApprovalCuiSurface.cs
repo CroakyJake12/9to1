@@ -925,6 +925,7 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
     /// outside accepted action/load bodies that depend on this close. Dispose only requests retirement.</summary>
     public Task CloseAndDrainAsync()
     {
+        DemandExternalOriginalRetirementJoin(); // Refuse self-join BEFORE sealing or changing lifetime state.
         TaskCompletionSource completion;
         OriginalOperation[] originals;
         lock (_originalSync)

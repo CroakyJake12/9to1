@@ -207,8 +207,10 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
             {
                 ++callbacks;
                 Assert.Throws<InvalidOperationException>(surface.DemandExternalOriginalRetirementJoin);
+                Assert.Throws<InvalidOperationException>(() => { _ = surface.CloseAndDrainAsync(); });
                 Assert.Throws<InvalidOperationException>(rig.Owner.DemandExternalOriginalRetirementJoin);
                 Assert.Throws<InvalidOperationException>(rig.Owner.RequestRetirement);
+                Assert.Throws<InvalidOperationException>(() => { _ = rig.Owner.CloseAndDrainAsync(); });
                 Assert.Null(rig.Owner.OriginalClose);
             }, null);
         };
