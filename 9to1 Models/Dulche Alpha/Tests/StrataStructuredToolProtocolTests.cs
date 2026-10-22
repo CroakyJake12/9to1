@@ -117,54 +117,7 @@ public sealed class StrataStructuredToolProtocolTests
         if (!OperatingSystem.IsLinux() || !File.Exists("/usr/bin/python3")) return;
         var folder = Path.Combine(Path.GetTempPath(), "strata-tools-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(folder);
         var executable = Path.Combine(folder, "wire.py");
-        var script = """
-#!/usr/bin/python3
-import sys,struct,json,re
-w=sys.stdout.buffer;r=sys.stdin.buffer
-mismatch=MISMATCH_LITERAL;tool_generations=0
-text=lambda s:struct.pack('<I',len(s.encode()))+s.encode()
-def frame(t,b):w.write(struct.pack('<II',t,len(b))+b);w.flush()
-def command():
- h=r.read(4)
- if len(h)!=4:return None
- n=struct.unpack('<I',h)[0];b=r.read(n)
- if len(b)!=n:raise RuntimeError('truncated command')
- return b
-def generation(body,tool):
- global tool_generations
- if tool:tool_generations+=1
- offset=8 if tool else 4
- def number():
-  nonlocal offset
-  value=struct.unpack_from('<I',body,offset)[0];offset+=4;return value
- def string():
-  nonlocal offset
-  n=number();value=body[offset:offset+n].decode();offset+=n;return value
- count=number();messages=[]
- for i in range(count):
-  role=number();content=string();name=string();assert number()==0;messages.append(content)
-  if role==3:assert name=='fixture.echo' and json.loads(content)['tool_call_id']=='history'
- if tool:
-  assert struct.unpack_from('<I',body,4)[0]==1
-  prompt='\n'.join(messages)
-  if 'dulche_transport_probe' in prompt:
-   nonce=re.search(r'with nonce ([0-9a-f]{32})',prompt).group(1)
-   output=json.dumps({'content':'','tool_calls':[{'id':'probe-'+nonce,'name':'dulche_transport_probe','arguments':{'nonce':nonce}}]})
-  else:output=json.dumps({'content':'proposed','tool_calls':[{'id':'actual-wire-id','name':'fixture.echo','arguments':{'value':'actual'}}]})
- else:output='ordinary stream'
- frame(1,struct.pack('<I',7)+text(output))
- terminal=struct.pack('<II',0,0)+text(output)+struct.pack('<QQQddIII',1,1,1,1.0,1.0,0,0,0)
- frame(2 if tool and mismatch and tool_generations>1 else 7 if tool else 2,(struct.pack('<I',1)+text('')+text('')+struct.pack('<I',0) if tool else b'')+terminal)
-frame(0,struct.pack('<I',1)+text('015b075079c51a7aec670ee24924f920f5e7bb2b')+struct.pack('<II',1,0)+text('fixture-native'))
-assert struct.unpack_from('<I',command())[0]==1
-frame(4,struct.pack('<II',0,0))
-while True:
- body=command()
- if body is None:break
- op=struct.unpack_from('<I',body)[0]
- if op==3:frame(3,b'');break
- assert op in (2,4);generation(body,op==4)
-""".Replace("MISMATCH_LITERAL", mismatchedTerminal ? "True" : "False");
+        var script = ActualToolWorkerScript(mismatchedTerminal);
         StrataNativeWorker? worker = null; Task<StrataNativeWorker>? acquisition = null;
         var errors = new List<Exception>(); Binding? binding = null;
         var expected = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
@@ -220,6 +173,107 @@ while True:
         if (errors.Count > 1) throw new AggregateException(errors);
     }
 
+    /// <summary>Actual framed pipe worker for managed-source controls. The invented build/model
+    /// metadata is fixture data, never installed/GPU/permission evidence.</summary>
+    internal static async Task WithActualToolWorkerAsync(ModelIdentity model, Func<StrataNativeWorker, Task> body)
+    {
+        if (!OperatingSystem.IsLinux() || System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture != System.Runtime.InteropServices.Architecture.X64)
+            throw new NotSupportedException("The actual legacy pipe worker requires Linux x64.");
+        if (!File.Exists("/usr/bin/python3")) throw new FileNotFoundException("The actual pipe fixture requires /usr/bin/python3.");
+        var folder = Path.Combine(Path.GetTempPath(), "strata-managed-tools-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        StrataNativeWorker? worker = null; Task<StrataNativeWorker>? acquisition = null;
+        Binding? binding = null; var errors = new List<Exception>();
+        try
+        {
+            var executable = Path.Combine(folder, "wire.py");
+            await File.WriteAllTextAsync(executable, ActualToolWorkerScript(false), new UTF8Encoding(false));
+            File.SetUnixFileMode(executable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            var sha = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(executable))).ToLowerInvariant();
+            binding = new(sha, model);
+            acquisition = StrataNativeWorker.CreateAfterPublicationAsync(Task.CompletedTask, new(executable, sha), binding, CancellationToken.None);
+            worker = await acquisition;
+            await body(worker);
+        }
+        catch (Exception error) { errors.Add(error); }
+        finally
+        {
+            if (worker is not null)
+                try { await worker.DisposeAsync(); }
+                catch (Exception error) { errors.Add(error); }
+            if (acquisition is not null)
+                try { await acquisition; }
+                catch (Exception error) { errors.Add(error); }
+            if (worker is not null)
+            {
+                try
+                {
+                    Assert.Equal(1, binding!.Closed);
+                    foreach (var field in new[] { "_processExit", "_stderr" })
+                    {
+                        var actual = Assert.IsAssignableFrom<Task>(typeof(StrataNativeWorker)
+                            .GetField(field, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(worker));
+                        Assert.True(actual.IsCompletedSuccessfully);
+                    }
+                }
+                catch (Exception error) { errors.Add(error); }
+            }
+            try { Directory.Delete(folder, true); }
+            catch (Exception error) { errors.Add(error); }
+        }
+        if (errors.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        if (errors.Count > 1) throw new AggregateException("Actual managed native-tool fixture and independent cleanup failed.", errors);
+    }
+
+    private static string ActualToolWorkerScript(bool mismatchedTerminal) => """
+#!/usr/bin/python3
+import sys,struct,json,re
+w=sys.stdout.buffer;r=sys.stdin.buffer
+mismatch=MISMATCH_LITERAL;tool_generations=0
+text=lambda s:struct.pack('<I',len(s.encode()))+s.encode()
+def frame(t,b):w.write(struct.pack('<II',t,len(b))+b);w.flush()
+def command():
+ h=r.read(4)
+ if len(h)!=4:return None
+ n=struct.unpack('<I',h)[0];b=r.read(n)
+ if len(b)!=n:raise RuntimeError('truncated command')
+ return b
+def generation(body,tool):
+ global tool_generations
+ if tool:tool_generations+=1
+ offset=8 if tool else 4
+ def number():
+  nonlocal offset
+  value=struct.unpack_from('<I',body,offset)[0];offset+=4;return value
+ def string():
+  nonlocal offset
+  n=number();value=body[offset:offset+n].decode();offset+=n;return value
+ count=number();messages=[]
+ for i in range(count):
+  role=number();content=string();name=string();assert number()==0;messages.append(content)
+  if role==3:assert name=='fixture.echo' and json.loads(content)['tool_call_id']=='history'
+ if tool:
+  assert struct.unpack_from('<I',body,4)[0]==1
+  prompt='\n'.join(messages)
+  if 'dulche_transport_probe' in prompt:
+   nonce=re.search(r'with nonce ([0-9a-f]{32})',prompt).group(1)
+   output=json.dumps({'content':'','tool_calls':[{'id':'probe-'+nonce,'name':'dulche_transport_probe','arguments':{'nonce':nonce}}]})
+  else:output=json.dumps({'content':'proposed','tool_calls':[{'id':'actual-wire-id','name':'fixture.echo','arguments':{'value':'actual'}}]})
+ else:output='ordinary stream'
+ frame(1,struct.pack('<I',7)+text(output))
+ terminal=struct.pack('<II',0,0)+text(output)+struct.pack('<QQQddIII',1,1,1,1.0,1.0,0,0,0)
+ frame(2 if tool and mismatch and tool_generations>1 else 7 if tool else 2,(struct.pack('<I',1)+text('')+text('')+struct.pack('<I',0) if tool else b'')+terminal)
+frame(0,struct.pack('<I',1)+text('015b075079c51a7aec670ee24924f920f5e7bb2b')+struct.pack('<II',1,0)+text('fixture-native'))
+assert struct.unpack_from('<I',command())[0]==1
+frame(4,struct.pack('<II',0,0))
+while True:
+ body=command()
+ if body is None:break
+ op=struct.unpack_from('<I',body)[0]
+ if op==3:frame(3,b'');break
+ assert op in (2,4);generation(body,op==4)
+""".Replace("MISMATCH_LITERAL", mismatchedTerminal ? "True" : "False");
+
     private static IEnumerable<Exception> Causes(Exception original)
     {
         yield return original;
@@ -232,10 +286,10 @@ while True:
         EffortLevel.Medium, Options: new(0.7, 128, 24));
     private static OllamaToolCall Call(string id) => new("fixture.echo",
         new ReadOnlyDictionary<string, JsonElement>(new Dictionary<string, JsonElement> { ["value"] = JsonSerializer.SerializeToElement("v") }), id);
-    private sealed class Binding(string sha) : StrataOriginalModelLease
+    private sealed class Binding(string sha, ModelIdentity? sameModel = null) : StrataOriginalModelLease
     {
         public int Closed;
-        public override InferenceModelRequirements Requirements { get; } = new(new("wire", "fixture-model", "fixture-artifact"),
+        public override InferenceModelRequirements Requirements { get; } = new(sameModel ?? new("wire", "fixture-model", "fixture-artifact"),
             "fixture-artifact", "fixture-architecture", "fixture-family", "Safetensors", "Q4", new HashSet<string> { "Text", "Tools" }, 0, 0, 128, NativeRegistration: "fixture-native");
         public override string OriginalCheckpointDirectory => "/synthetic-wire-model";
         public override IReadOnlyList<int> ActualCudaDeviceIndices => [0];

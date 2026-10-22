@@ -31,6 +31,9 @@ public sealed class StrataRawModelProvider : IModelProvider, IAsyncDisposable, I
     public ModelProviderKind Kind=>ModelProviderKind.OpenAICompatible;
     public bool IsLocal=>true; // The transport is the actual child process, with no remote URL or proxy.
     public bool CanManageModels=>false;
+    // Observation only: neither the descriptor nor a requested native setting can grant Tools.
+    // The worker also checks its original probe, loaded state and current protected binding.
+    internal bool OriginalStructuredToolsAvailable=>_model.Supports(ToolCapability.Tools)&&_worker.OriginalStructuredToolsAvailable;
     public Task<OperationResult<Unit>> ObserveOriginalInitializedModelAsync(ModelIdentity sameModel,CancellationToken cancellationToken)
         =>_worker.ObserveOriginalInitializedModelAsync(sameModel,cancellationToken);
     public Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)=>_worker.CheckOriginalHealthAsync(Id,cancellationToken);
