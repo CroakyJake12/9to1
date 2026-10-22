@@ -984,12 +984,25 @@ public sealed class NotesOriginalStoreTests
         Assert.NotNull(actualRead);
         Assert.Equal(HomePermissionRequestState.PendingApproval,
             (await rig.Admission.GetLibrarySnapshotAuthorizationAsync(actualRead!, rig.Token)).State);
+        var sameRead = actualRead;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.ListAsync(false, rig.Token));
+        Assert.Same(sameRead, actualRead);
+        Assert.True((await rig.Permissions.DecideAsync(actualRead!.Authorization.RequestId,
+            HomeApprovalChoice.Accept, cancellationToken: rig.Token)).Succeeded);
+        Assert.Empty(await adapter.ListAsync(false, rig.Token)); // Actual reviewed empty original store.
+        Assert.Same(sameRead, actualRead);
+        Assert.Equal(1, await rig.CompletionCountAsync(actualRead.Authorization.RequestId));
         var document = NotesDocument.Create("Review must be real");
         document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.SaveAsync(document, "Actual pending save", rig.Token));
         Assert.NotNull(actualSave);
         Assert.Equal(HomePermissionRequestState.PendingApproval,
             (await rig.Admission.GetSaveAuthorizationAsync(actualSave!, rig.Token)).State);
+        var sameSave = actualSave;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.SaveAsync(document, "Actual pending save", rig.Token));
+        Assert.Same(sameSave, actualSave);
+        var pending = await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token);
+        Assert.Single(pending.PendingRequests, value => value.RequestId == actualSave!.Authorization.RequestId);
         Assert.Equal(0, document.Version);
         Assert.False(Directory.Exists(rig.Documents));
         Assert.False(adapter.IsUnknownCommitOutcome(new IOException("An ordinary IO error is not proof of publication.")));
@@ -1026,6 +1039,9 @@ public sealed class NotesOriginalStoreTests
         Assert.Equal(document.Id, summary.Id); Assert.Equal(2, summary.Version);
         var loaded = await sameService.OpenNotebookAsync(document.Id, rig.Token);
         Assert.NotNull(loaded); Assert.Equal(document.Id, loaded!.Id); Assert.Equal(2, loaded.Version);
+        Assert.Equal(document.Recovery.LastValidSha256, loaded.Recovery.LastValidSha256);
+        Assert.Equal(document.Recovery.LastAutosaveAt, loaded.Recovery.LastAutosaveAt);
+        Assert.Equal(document.Recovery.HasUnsavedRecovery, loaded.Recovery.HasUnsavedRecovery);
         Assert.Contains(loaded.Sections[0].Pages[0].Blocks, value => value.PlainText == "A queue is first in, first out.");
         Assert.Equal(2, reads); Assert.Equal(2, saves);
         // Fresh actual canonical owner, not a new process or native restart claim.
@@ -1079,6 +1095,93 @@ public sealed class NotesOriginalStoreTests
         await Assert.ThrowsAsync<NotSupportedException>(() => adapter.RecoverLatestAsync(document.Id, rig.Token));
         await Assert.ThrowsAsync<NotSupportedException>(() => adapter.SearchAsync("revision", rig.Token));
         await rig.AssertNotesFilesUnchangedAsync(before);
+    }
+
+    [LinuxNotesFact]
+    public async Task Faulted_presenter_retains_same_original_review_and_retry_never_requests_duplicate_approval()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        HomeNotesLibraryReadReview? originalRead = null; HomeNotesSaveReview? originalSave = null;
+        var readCalls = 0; var saveCalls = 0;
+        var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId, async (review, token) =>
+            {
+                if (++readCalls == 1) { originalRead = review; throw new IOException("Actual presenter task failed before decision."); }
+                Assert.Same(originalRead, review);
+                Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                    HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            }, async (review, token) =>
+            {
+                if (++saveCalls == 1) { originalSave = review; throw new IOException("Actual save presenter task failed before decision."); }
+                Assert.Same(originalSave, review);
+                Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                    HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            }, rig.Token);
+        await Assert.ThrowsAsync<IOException>(() => adapter.ListAsync(false, rig.Token));
+        Assert.Empty(await adapter.ListAsync(false, rig.Token));
+        Assert.Equal(1, await rig.CompletionCountAsync(originalRead!.Authorization.RequestId));
+        var document = NotesDocument.Create("Actual retained candidate");
+        document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        await Assert.ThrowsAsync<IOException>(() => adapter.SaveAsync(document, "Same original review", rig.Token));
+        Assert.False(Directory.Exists(rig.Documents));
+        var receipt = await adapter.SaveAsync(document, "Same original review", rig.Token);
+        Assert.Equal(1, receipt.Version); Assert.Equal(1, document.Version);
+        Assert.Equal(1, await rig.CompletionCountAsync(originalSave!.Authorization.RequestId));
+        Assert.Equal(2, readCalls); Assert.Equal(2, saveCalls);
+    }
+
+    [LinuxNotesFact]
+    public async Task Failed_original_Begin_keeps_its_opaque_dispatch_audit_and_prevents_new_review_overwrite()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        HomeNotesSaveReview? original = null; var presented = 0;
+        var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId, (_, _) => Task.CompletedTask, async (review, token) =>
+            {
+                ++presented; original = review;
+                Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                    HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+                var actor = await rig.Profiles.GetCurrentAsync(token);
+                Assert.True((await rig.Permissions.BlockCallerAsync(actor!.ActorId, token)).Succeeded);
+            }, rig.Token);
+        var document = NotesDocument.Create("An actual rejected dispatch");
+        document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.SaveAsync(document, "Actual failed dispatch", rig.Token));
+        Assert.NotNull(original); Assert.True(original!.WasDispatchAttempted);
+        var audits = await adapter.RetryObservedAuditsAsync(rig.Token);
+        // Existing broker can refuse before it owns a negative completion; preserve that honest
+        // non-success rather than inventing settled audit or authorising another dispatch.
+        Assert.False(Assert.Single(audits).Succeeded);
+        await Assert.ThrowsAsync<IOException>(() => adapter.SaveAsync(document, "Actual failed dispatch", rig.Token));
+        Assert.Equal(1, presented); Assert.Equal(0, document.Version);
+        Assert.False(Directory.Exists(rig.Documents));
+        Assert.Equal(0, await rig.CompletionCountAsync(original.Authorization.RequestId));
+    }
+
+    [LinuxNotesFact]
+    public async Task Workspace_preserves_actual_presenter_faulted_OCE_synchronous_fault_and_canceled_task_provenance()
+    {
+        foreach (var mode in new[] { "faulted-task", "synchronous-fault", "canceled-task" })
+        {
+            await using var rig = await HomeRig.CreateAsync();
+            var cause = new OperationCanceledException("Actual presenter source cancellation exception.");
+            using var canceled = new CancellationTokenSource(); canceled.Cancel();
+            Task Present(HomeNotesSaveReview _, CancellationToken token)
+            {
+                if (mode == "synchronous-fault") throw cause;
+                return mode == "faulted-task" ? Task.FromException(cause) : Task.FromCanceled(canceled.Token);
+            }
+            var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+                rig.SessionId, (_, _) => Task.CompletedTask, Present, rig.Token);
+            var document = NotesDocument.Create("Preserve actual callback state");
+            document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+            var actual = adapter.SaveAsync(document, "Presenter task provenance", rig.Token);
+            var error = await Record.ExceptionAsync(() => actual);
+            Assert.NotNull(error);
+            if (mode == "canceled-task") Assert.True(actual.IsCanceled);
+            else { Assert.True(actual.IsFaulted); Assert.Contains(Leaves(error!), value => ReferenceEquals(value, cause)); }
+            Assert.Equal(0, document.Version); Assert.False(Directory.Exists(rig.Documents));
+        }
     }
 
     private sealed record CopiedSaveOutcome(INotesOriginalSaveIntent Intent, NotesOriginalSaveDisposition Disposition,

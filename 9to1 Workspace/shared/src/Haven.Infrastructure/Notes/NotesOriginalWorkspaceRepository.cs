@@ -22,6 +22,8 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
     private readonly SemaphoreSlim _operations = new(1, 1);
     private (INotesOriginalSaveIntent Intent, HomeNotesSaveAdmission Home)? _retainedSave;
     private (INotesOriginalLibraryReadRequest Request, HomeNotesLibraryReadAdmission Home)? _retainedRead;
+    private (INotesOriginalSaveIntent Intent, HomeNotesSaveReview Review, byte[] Input, string Reason)? _pendingSaveReview;
+    private (INotesOriginalLibraryReadRequest Request, HomeNotesLibraryReadReview Review)? _pendingReadReview;
     public string? LastReadAuditWarning { get; private set; }
 
     private NotesOriginalWorkspaceRepository(NotesRepository notes, VerifiedNotesRepository verified,
@@ -74,13 +76,25 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
             ?? throw new InvalidDataException("The original Boards candidate could not be detached.");
         return RunAsync(async token =>
         {
-            var intent = await _notes.PrepareOriginalSaveAsync(captured, reason, token).ConfigureAwait(false);
-            var review = await _home.RequestSaveAsync(intent, _sessionId, token).ConfigureAwait(false);
-            await _presentSave(review, token).ConfigureAwait(false);
+            if (_pendingReadReview is not null)
+                throw new UnauthorizedAccessException("Resolve the retained original read review before starting a save.");
+            if (_pendingSaveReview is { } pending &&
+                (!pending.Input.AsSpan().SequenceEqual(originalBytes) || pending.Reason != reason))
+                throw new UnauthorizedAccessException("The retained original review belongs to an earlier draft; resolve it before reviewing a changed candidate.");
+            INotesOriginalSaveIntent intent; HomeNotesSaveReview review;
+            if (_pendingSaveReview is { } retained) { intent = retained.Intent; review = retained.Review; }
+            else
+            {
+                intent = await _notes.PrepareOriginalSaveAsync(captured, reason, token).ConfigureAwait(false);
+                review = await _home.RequestSaveAsync(intent, _sessionId, token).ConfigureAwait(false);
+                _pendingSaveReview = (intent, review, originalBytes, reason);
+            }
+            // Retain before ANY borrowed presenter/Begin callback, including task faults.
+            await PresentOriginalAsync(() => _presentSave(review, token)).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
             var home = await _home.BeginSaveAsync(review, token).ConfigureAwait(false)
                 ?? throw new UnauthorizedAccessException("The original save still needs its genuine Home decision.");
-            _retainedSave = (intent, home);
+            _pendingSaveReview = null; _retainedSave = (intent, home);
             NotesSaveResult receipt;
             try { receipt = await _notes.SaveOriginalWithHomeAsync(intent, home, _verified, token).ConfigureAwait(false); }
             catch (Exception error) when (_notes.GetObservedOriginalSaveOutcome(intent) is
@@ -90,10 +104,8 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
             // Content is never overwritten with the reviewed draft if newer edits exist.
             if (originalBytes.AsSpan().SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(document, Json)))
             {
-                document.Version = receipt.Version; document.UpdatedAt = receipt.SavedAt;
-                document.Recovery.LastAutosaveAt = receipt.SavedAt;
-                document.Recovery.LastValidSha256 = receipt.Sha256;
-                document.Recovery.HasUnsavedRecovery = false; document.Recovery.RecoveryReason = string.Empty;
+                if (!_notes.TryApplyOriginalSaveAcknowledgement(intent, receipt, document))
+                    throw new InvalidDataException("The actual original receipt did not match its retained candidate acknowledgement.");
             }
             return receipt;
         }, cancellationToken);
@@ -122,6 +134,27 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         CancellationToken token)
     {
         var results = new List<HavenOS.Home.PermissionsTrustNotifications.HomePermissionOperationResult>();
+        if (_pendingSaveReview is { } saveReview)
+        {
+            if (saveReview.Review.WasDispatchAttempted)
+            {
+                var audit = await _home.RetrySaveDispatchAuditAsync(saveReview.Review, token).ConfigureAwait(false);
+                results.Add(audit); if (audit.Succeeded) _pendingSaveReview = null;
+            }
+            else if (IsRefused((await _home.GetSaveAuthorizationAsync(saveReview.Review, token).ConfigureAwait(false)).State))
+                _pendingSaveReview = null;
+        }
+        if (_pendingReadReview is { } readReview)
+        {
+            if (readReview.Review.WasDispatchAttempted)
+            {
+                var audit = await _home.RetryLibrarySnapshotDispatchAuditAsync(readReview.Review, token).ConfigureAwait(false);
+                results.Add(audit); if (audit.Succeeded) _pendingReadReview = null;
+            }
+            else if (IsRefused((await _home.GetLibrarySnapshotAuthorizationAsync(readReview.Review, token).ConfigureAwait(false)).State))
+                _pendingReadReview = null;
+        }
+
         if (_retainedSave is { } save)
         {
             if (_notes.GetObservedOriginalSaveOutcome(save.Intent) is null)
@@ -137,16 +170,31 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         return results.AsReadOnly();
     }
 
+    private static bool IsRefused(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState state)
+        => state is HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Denied or
+            HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Blocked or
+            HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Cancelled;
+
     private async Task<(INotesOriginalLibraryReadRequest Request, NotesOriginalLibrarySnapshot Snapshot,
         HomeNotesLibraryReadAdmission Home)> ReadAsync(Guid? id, CancellationToken token)
     {
-        var request = await _notes.PrepareOriginalLibraryReadAsync(id, token).ConfigureAwait(false);
-        var review = await _home.RequestLibrarySnapshotAsync(request, _sessionId, token).ConfigureAwait(false);
-        await _presentRead(review, token).ConfigureAwait(false);
+        if (_pendingSaveReview is not null)
+            throw new UnauthorizedAccessException("Resolve the retained original save review before reading another snapshot.");
+        if (_pendingReadReview is { } previous && previous.Request.DocumentId != id)
+            throw new UnauthorizedAccessException("Resolve the retained original document review before selecting another document.");
+        INotesOriginalLibraryReadRequest request; HomeNotesLibraryReadReview review;
+        if (_pendingReadReview is { } retained) { request = retained.Request; review = retained.Review; }
+        else
+        {
+            request = await _notes.PrepareOriginalLibraryReadAsync(id, token).ConfigureAwait(false);
+            review = await _home.RequestLibrarySnapshotAsync(request, _sessionId, token).ConfigureAwait(false);
+            _pendingReadReview = (request, review);
+        }
+        await PresentOriginalAsync(() => _presentRead(review, token)).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
         var home = await _home.BeginLibrarySnapshotAsync(review, token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original read still needs its genuine Home decision.");
-        _retainedRead = (request, home);
+        _pendingReadReview = null; _retainedRead = (request, home);
         var snapshot = await _notes.ReadOriginalLibraryWithHomeAsync(request, home, _verified, token).ConfigureAwait(false);
         LastReadAuditWarning = snapshot.AuditWarning;
         if (snapshot.AuditWarning is not null)
@@ -167,6 +215,23 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
             return await operation(linked.Token).ConfigureAwait(false);
         }
         finally { _operations.Release(); }
+    }
+
+    private static async Task PresentOriginalAsync(Func<Task> present)
+    {
+        Task? actual = null;
+        try
+        {
+            actual = present() ?? throw new InvalidOperationException("The original Home presenter returned no task.");
+            await actual.ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            // Faulted/synchronous OCE is not a canceled callback task. Retain the actual
+            // original failure objects through the same Notes task-observation mechanism.
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(
+                NotesRepository.OriginalBoundaryFailure(actual, error)).Throw();
+        }
     }
 
     // These operations need their own genuine original recovery/history/delete admissions.

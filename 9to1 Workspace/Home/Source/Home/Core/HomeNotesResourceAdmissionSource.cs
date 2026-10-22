@@ -259,6 +259,8 @@ public sealed class HomeNotesSaveReview
     internal HomeResourceExecutionCapability? Capability { get; set; }
     internal HomeNotesSaveAdmission? Admission { get; set; }
     public HomePermissionAuthorization Authorization { get; }
+    /// <summary>Actual original dispatch observation only; not permission or a retry grant.</summary>
+    public bool WasDispatchAttempted => BeginAttempted;
 }
 
 /// <summary>One exact claimed Home save, usable only by the original repository and intent.
@@ -382,6 +384,8 @@ public sealed class HomeNotesLibraryReadReview
     internal HomeResourceExecutionCapability? Capability { get; set; }
     internal HomeNotesLibraryReadAdmission? Admission { get; set; }
     public HomePermissionAuthorization Authorization { get; }
+    /// <summary>Actual original dispatch observation only; not permission or a retry grant.</summary>
+    public bool WasDispatchAttempted => BeginAttempted;
 }
 
 /// <summary>Exact original Home read claim. The repository must acquire its canonical

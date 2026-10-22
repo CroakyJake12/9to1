@@ -26,6 +26,24 @@ public sealed partial class NotesRepository
     public INotesOriginalSaveOutcome? GetObservedOriginalSaveOutcome(INotesOriginalSaveIntent intent)
         => intent is OriginalSaveIntent original && ReferenceEquals(original.Issuer, this) ? original.Outcome : null;
 
+    // Same in-process adapter only. Copy the ACTUAL committed candidate's acknowledgement
+    // fields; do not reconstruct integrity/recovery state from a receipt's final file hash.
+    internal bool TryApplyOriginalSaveAcknowledgement(INotesOriginalSaveIntent intent,
+        NotesSaveResult receipt, NotesDocument target)
+    {
+        if (intent is not OriginalSaveIntent original || !ReferenceEquals(original.Issuer, this) ||
+            original.Outcome is not { Disposition: NotesOriginalSaveDisposition.Committed } outcome ||
+            !ReferenceEquals(outcome.Intent, intent) || outcome.CommittedVersion != receipt.Version ||
+            outcome.CommittedSha256 != receipt.Sha256 || target.Id != original.DocumentId ||
+            target.Version != original.ExpectedVersion || receipt.DocumentId != original.DocumentId ||
+            original.Candidate.Version != receipt.Version) return false;
+        target.Version = original.Candidate.Version; target.UpdatedAt = original.Candidate.UpdatedAt;
+        target.Recovery = JsonSerializer.Deserialize<NotesRecoveryState>(
+            JsonSerializer.SerializeToUtf8Bytes(original.Candidate.Recovery, JsonOptions), JsonOptions)
+            ?? throw new InvalidDataException("The actual original recovery acknowledgement could not be detached.");
+        return true;
+    }
+
     /// <summary>Executes exactly one private detached candidate through the original verified Notes
     /// save transaction. Home consent and ownership never replace Notes CAS/integrity/custody.
     /// This primitive exposes no raw repository or broad native Ready capability.</summary>
@@ -354,7 +372,7 @@ public sealed partial class NotesRepository
         { throw new NotesOriginalReadRecoveryRequiredException(id, "The original Notes recovery state could not be verified; it was preserved.", error); }
     }
 
-    private static Exception OriginalBoundaryFailure(Task? original, Exception observed)
+    internal static Exception OriginalBoundaryFailure(Task? original, Exception observed)
     {
         var errors = new List<Exception>();
         AddOriginalTaskFailures(errors, original, observed);
