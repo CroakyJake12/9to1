@@ -93,26 +93,68 @@ public sealed class VerifiedNotesRepository(
         inner.ValidateSaveCandidate(document);
         var id = document.Id;
         var revision = document.Version;
-        return inner.WithTransactionAsync(async transaction =>
+        return inner.WithTransactionAsync(transaction => SaveWithinOriginalTransactionAsync(transaction,
+            document, reason, id, revision, cancellationToken), cancellationToken);
+    }
+
+    internal bool IsBoundToOriginal(NotesRepository original) => ReferenceEquals(inner, original);
+
+    // Called only by this SAME inner owner with its genuine transaction already held.
+    // Reuse the original integrity tail; never recursively acquire the public save transaction.
+    internal async Task<NotesSaveResult> SaveWithinOriginalTransactionAsync(NotesRepository.Transaction transaction,
+        NotesDocument document, string reason, Guid id, long revision, CancellationToken cancellationToken)
+    {
+        if (!transaction.IsOwnedActiveBy(inner))
+            throw new UnauthorizedAccessException("The original verified Notes owner transaction is required.");
+        var result = await transaction.SaveAsync(document, reason, id, revision, cancellationToken, integrityRequired: true).ConfigureAwait(false);
+        try
         {
-            var result = await transaction.SaveAsync(document, reason, id, revision, cancellationToken, integrityRequired: true).ConfigureAwait(false);
-            try
+            var observed = await transaction.InspectCurrentAsync(id, cancellationToken).ConfigureAwait(false);
+            if (observed.Document?.Id != result.DocumentId || observed.Version != result.Version || observed.Sha256 != result.Sha256)
+                throw new IOException("The committed Notes receipt does not match the transaction-observed current.");
+            await ReconcileIntegrityAsync(id, observed, cancellationToken).ConfigureAwait(false);
+            document.Recovery.LastValidSha256 = observed.Sha256;
+        }
+        catch (Exception error)
+        {
+            // The raw Save returned a durable receipt. A sidecar, cancellation
+            // or tail failure retains that receipt and its pending intent.
+            result = result with { PostCommitWarning = NotesRepository.JoinWarning(result.PostCommitWarning,
+                "The document was committed, but integrity publication did not complete (" + error.GetType().Name + ").") };
+        }
+        return result;
+    }
+
+    // Actual read-only counterpart. Pending journals, recovery and missing/invalid integrity
+    // require a separate owner-authorised repair; no quarantine/promotion/canonical write here.
+    internal async Task<NotesDocument?> ReadWithinOriginalTransactionAsync(NotesRepository.Transaction transaction,
+        Guid id, CancellationToken cancellationToken)
+    {
+        if (!transaction.IsOwnedActiveBy(inner) || transaction.OriginalRead is null)
+            throw new UnauthorizedAccessException("The original read-only verified Notes transaction is required.");
+        try
+        {
+            await inner.DemandReadRecoveryClearAsync(id, cancellationToken).ConfigureAwait(false);
+            var observed = await transaction.InspectCurrentAsync(id, cancellationToken).ConfigureAwait(false);
+            if (observed.Absent)
             {
-                var observed = await transaction.InspectCurrentAsync(id, cancellationToken).ConfigureAwait(false);
-                if (observed.Document?.Id != result.DocumentId || observed.Version != result.Version || observed.Sha256 != result.Sha256)
-                    throw new IOException("The committed Notes receipt does not match the transaction-observed current.");
-                await ReconcileIntegrityAsync(id, observed, cancellationToken).ConfigureAwait(false);
-                document.Recovery.LastValidSha256 = observed.Sha256;
+                var backup = Path.Combine(DirectoryPath(id), "backup.haven-notes.json");
+                if (File.Exists(backup) || Directory.Exists(backup) || File.Exists(ManifestPath(id)) ||
+                    Directory.Exists(ManifestPath(id)) || transaction.OriginalRead.HasVersionArtifacts)
+                    throw new NotesOriginalReadRecoveryRequiredException(id,
+                        "The original Notes current is absent but recovery artifacts exist; a read cannot hide or restore them.");
+                return null;
             }
-            catch (Exception error)
-            {
-                // The raw Save returned a durable receipt. A sidecar, cancellation
-                // or tail failure retains that receipt and its pending intent.
-                result = result with { PostCommitWarning = NotesRepository.JoinWarning(result.PostCommitWarning,
-                    "The document was committed, but integrity publication did not complete (" + error.GetType().Name + ").") };
-            }
-            return result;
-        }, cancellationToken);
+            var manifest = await ReadJsonAsync<NotesRepository.NotesIntegrityReceipt>(ManifestPath(id), cancellationToken).ConfigureAwait(false);
+            if (!Matches(manifest, observed))
+                throw new NotesOriginalReadRecoveryRequiredException(id, "The original Notes integrity receipt does not match current bytes.");
+            await inner.DemandReadRecoveryClearAsync(id, cancellationToken).ConfigureAwait(false);
+            observed.Document!.Recovery.LastValidSha256 = observed.Sha256;
+            return observed.Document;
+        }
+        catch (Exception error) when (error is not NotesOriginalReadRecoveryRequiredException &&
+            error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+        { throw new NotesOriginalReadRecoveryRequiredException(id, "The original Notes bytes or integrity state need verified recovery; they were preserved.", error); }
     }
 
     public Task DeleteAsync(Guid documentId, CancellationToken cancellationToken) => inner.DeleteAsync(documentId, cancellationToken);
@@ -122,7 +164,7 @@ public sealed class VerifiedNotesRepository(
         inner.WithTransactionAsync(transaction => transaction.RecoverAsync(documentId, cancellationToken), cancellationToken);
     public Task<IReadOnlyList<NotesSearchHit>> SearchAsync(string query, CancellationToken cancellationToken) => inner.SearchAsync(query, cancellationToken);
 
-    private string DirectoryPath(Guid id) => Path.Combine(_root, id.ToString("D"));
+    private string DirectoryPath(Guid id) => inner.DocumentDirectoryWithinOriginalTransaction(id, _root);
     private string ManifestPath(Guid id) => Path.Combine(DirectoryPath(id), "current.integrity.json");
     private string PublicationPath(Guid id) => Path.Combine(DirectoryPath(id), "current.publication.json");
     private string PendingManifestPath(Guid id) => Path.Combine(DirectoryPath(id), "current.integrity.pending.json");
@@ -173,21 +215,23 @@ public sealed class VerifiedNotesRepository(
         File.Delete(PublicationPath(id));
     }
 
-    private static async Task<T?> ReadJsonAsync<T>(string path, CancellationToken token)
+    private async Task<T?> ReadJsonAsync<T>(string path, CancellationToken token)
     {
-        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 16 * 1024,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, token).ConfigureAwait(false);
+        await using var stream = inner.OpenOriginalTransactionFile(path, FileMode.Open, FileAccess.Read, bufferSize: 16 * 1024);
+        var before = inner.CaptureOriginalReadVersion(stream);
+        var value = await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, token).ConfigureAwait(false);
+        inner.DemandOriginalReadCurrent(path, stream, before);
+        return value;
     }
 
-    private static async Task WriteManifestAtomicAsync(string path, NotesRepository.NotesIntegrityReceipt manifest, CancellationToken token)
+    private async Task WriteManifestAtomicAsync(string path, NotesRepository.NotesIntegrityReceipt manifest, CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var temporary = path + ".tmp-" + Guid.NewGuid().ToString("N");
         try
         {
-            await using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
-                16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough))
+            await using (var stream = inner.OpenOriginalTransactionFile(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                bufferSize: 16 * 1024, options: FileOptions.Asynchronous | FileOptions.WriteThrough))
             {
                 await JsonSerializer.SerializeAsync(stream, manifest, JsonOptions, token).ConfigureAwait(false);
                 await stream.FlushAsync(token).ConfigureAwait(false);
