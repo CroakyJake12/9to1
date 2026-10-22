@@ -4,6 +4,106 @@ namespace HavenOS.Apps.Canvas;
 
 public sealed partial class CanvasHostWindow
 {
+    private sealed class NoEffectReadProof
+    {
+        internal Task? Original;
+        internal Exception? Cause;
+    }
+    private sealed record NoEffectCloseSnapshot(Task[] Originals, Exception[] Causes);
+    private readonly object _noEffectGate = new();
+    private readonly List<NoEffectReadProof> _noEffectReads = [];
+    private NoEffectCloseSnapshot? _noEffectCloseSnapshot;
+    private Task? _latestOriginalCommand, _originalChildrenClose;
+    private bool _nativeOwnerAcquired;
+    internal Task? LatestOriginalCommand => _latestOriginalCommand;
+    internal Exception? RecoveredNoEffectCloseFailure { get; private set; }
+
+    // UI/native-owner observation only. Never read these controls from the CUI validator,
+    // which can run on a worker thread during its original retirement join.
+    private bool EmptyReadOnlySessionForClose() => !_nativeOwnerAcquired && !_busy &&
+        _view is null && _content.Content is null && _opened is null && _openedFile is null &&
+        _pendingRequest is null && _pendingOwnership is null && _pendingAudit is null &&
+        _pendingBeginAudit is null && !_requestUncertain && _pendingExecute is null &&
+        _pendingDisposable is null && _retainedOriginalCommit is null;
+
+    private NoEffectReadProof? CaptureReadAdmission(string action)
+    {
+        if (action is not ("canvas.host.search" or "canvas.host.refresh" or "canvas.host.page" or
+            "canvas.host.open" or "canvas.host.openItem") || !EmptyReadOnlySessionForClose()) return null;
+        return new();
+    }
+    private Exception RejectBeforeEffect(NoEffectReadProof? proof, Exception cause)
+    {
+        // This private method is called at the two explicit pre-effect validation sites,
+        // never from a catch, a caller-supplied marker, a native failure or a save failure.
+        if (proof is not null && !_nativeOwnerAcquired && _view is null && _opened is null &&
+            _openedFile is null && _pendingRequest is null && _pendingOwnership is null &&
+            _pendingAudit is null && _pendingBeginAudit is null && !_requestUncertain &&
+            _pendingExecute is null && _pendingDisposable is null && _retainedOriginalCommit is null)
+            lock (_noEffectGate) proof.Cause = cause;
+        return cause;
+    }
+    private bool ContainsOnlyKnownCauses(Exception error, IReadOnlyList<Exception> allowed)
+    {
+        var pending = new Stack<Exception>(); pending.Push(error);
+        var visited = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+        while (pending.Count != 0)
+        {
+            var current = pending.Pop();
+            if (!visited.Add(current)) continue;
+            if (visited.Count > 4096) return false;
+            if (allowed.Any(cause => ReferenceEquals(cause, current))) continue;
+            if (!_originalWork.TryGetOwnedFailureCauses(current, out var direct) || direct.Count == 0) return false;
+            foreach (var cause in direct) pending.Push(cause);
+        }
+        return true;
+    }
+    private NoEffectCloseSnapshot? CaptureNoEffectCloseSnapshot()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!EmptyReadOnlySessionForClose()) return null;
+        var failed = _originalWork.RetainedOriginalTasks.Where(task => !task.IsCompletedSuccessfully).ToArray();
+        if (failed.Length == 0 || failed.Any(task => !task.IsFaulted)) return null;
+        NoEffectReadProof[] proofs; lock (_noEffectGate) proofs = _noEffectReads.ToArray();
+        var causes = new List<Exception>();
+        foreach (var task in failed)
+        {
+            var proof = proofs.SingleOrDefault(candidate => ReferenceEquals(candidate.Original, task));
+            if (proof?.Cause is not { } cause || !_originalWork.OwnsOriginalTask(task)) return null;
+            // Inspect the framework wrapper of this exact owner-issued task once. Foreign
+            // inner aggregates remain opaque unless this owner actually captured them.
+            var fault = task.Exception;
+            if (fault is null || fault.InnerExceptions.Count == 0 ||
+                !fault.InnerExceptions.All(error => ContainsOnlyKnownCauses(error, new[] { cause }))) return null;
+            if (!causes.Any(previous => ReferenceEquals(previous, cause))) causes.Add(cause);
+        }
+        return new(failed, causes.ToArray());
+    }
+    private bool IsSettledNoEffectActionFailure(Exception error)
+    {
+        // Pure, nonthrowing, thread-safe callback for the existing CUI retirement hook.
+        // This is not task-origin proof; final host close separately checks EVERY issued
+        // original task and the real independent children-close success receipt.
+        try
+        {
+            NoEffectCloseSnapshot? snapshot; lock (_noEffectGate) snapshot = _noEffectCloseSnapshot;
+            return snapshot is not null && ContainsOnlyKnownCauses(error, snapshot.Causes);
+        }
+        catch { return false; }
+    }
+    internal bool CanCompleteKnownNoEffectClose(Task actual, Exception observed)
+    {
+        if (!Dispatcher.UIThread.CheckAccess() || !_closed || !ReferenceEquals(actual, OriginalCloseTask) ||
+            !actual.IsFaulted || _originalChildrenClose?.IsCompletedSuccessfully != true) return false;
+        var fault = actual.Exception;
+        if (fault is null || !fault.InnerExceptions.Any(cause => ReferenceEquals(cause, observed))) return false;
+        var fresh = CaptureNoEffectCloseSnapshot();
+        NoEffectCloseSnapshot? retained; lock (_noEffectGate) retained = _noEffectCloseSnapshot;
+        if (fresh is null || retained is null || fresh.Originals.Length != retained.Originals.Length ||
+            fresh.Originals.Any(task => !retained.Originals.Any(previous => ReferenceEquals(task, previous)))) return false;
+        return ContainsOnlyKnownCauses(observed, fresh.Causes);
+    }
+
     /// <summary>A failed acquired surface must finish its original child drain before the host
     /// releases it. Dispose alone schedules that drain and cannot acknowledge completion.</summary>
     internal static async Task InitializeOwnedSurfaceAsync(CanvasNativeCuiSurface surface, CancellationToken token)
@@ -42,10 +142,14 @@ public sealed partial class CanvasHostWindow
     {
         if (!Dispatcher.UIThread.CheckAccess()) return Dispatcher.UIThread.InvokeAsync(CloseAndDrainAsync);
         _closed = true;
-        return _originalWork.CloseAndDrainAsync(CloseOriginalChildrenAsync);
+        return _originalWork.CloseAndDrainAsync(() => _originalChildrenClose = CloseOriginalChildrenAsync());
     }
     private async Task CloseOriginalChildrenAsync()
     {
+        // WorkOwner invokes this only after all exact issued callbacks have settled.
+        // Freeze UI eligibility before child retirement enters worker-thread joins.
+        var snapshot = CaptureNoEffectCloseSnapshot();
+        lock (_noEffectGate) _noEffectCloseSnapshot = snapshot;
         var errors = new List<Exception>();
         try { _lifetime.Cancel(); } catch (Exception error) { errors.Add(error); }
         Task? view = null;
@@ -80,7 +184,14 @@ public sealed partial class CanvasHostWindow
     {
         var actual = CloseAndDrainAsync();
         try { await actual; }
-        catch (Exception error) { SetStatus("Canvas close needs recovery: " + ((Exception?)actual.Exception ?? error).Message); return; }
+        catch (Exception error)
+        {
+            if (!CanCompleteKnownNoEffectClose(actual, error))
+            { SetStatus("Canvas close needs recovery: " + ((Exception?)actual.Exception ?? error).Message); return; }
+            // Keep the SAME failed original close and exact source cause inspectable.
+            // Only the user's native window close may complete after actual drainage.
+            RecoveredNoEffectCloseFailure = error;
+        }
         await Dispatcher.UIThread.InvokeAsync(() => { _closeAccepted = true; Close(); });
     }
 }

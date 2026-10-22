@@ -72,7 +72,7 @@ public sealed partial class CanvasHostWindow : Window
         var controls = new CuiControlRegistry();
         controls.BindAuthoredControl("canvas-native-content", _ => _content);
         controls.BindAuthoredControl("canvas-home-approvals", _ => _approvals);
-        _shell = new(controls);
+        _shell = new(controls, IsSettledNoEffectActionFailure);
         _model.Set("NewName", "Untitled canvas");
         _model.Set("SearchQuery", "");
         Content = _shell;
@@ -152,10 +152,10 @@ public sealed partial class CanvasHostWindow : Window
         return new(_ready ? CuiSceneAvailabilityState.Ready : CuiSceneAvailabilityState.Unavailable,
             _ready ? "CanvasHomeReady" : "CanvasHomeUnavailable", _ready ? "Canvas is ready." : "Open Home to recover this profile and its services.");
     }
-    private async Task RefreshAsync(string? page, CancellationToken ct)
+    private async Task RefreshAsync(string? page, CancellationToken ct, NoEffectReadProof? proof = null)
     {
         var query = _model.TryGetValue("SearchQuery", out var search) ? search?.ToString()?.Trim() ?? "" : "";
-        if (query.Length > 256) throw new ArgumentException("Canvas search must be at most 256 characters.");
+        if (query.Length > 256) throw RejectBeforeEffect(proof, new ArgumentException("Canvas search must be at most 256 characters."));
         if (page is not null && query != _listedQuery)
             throw new InvalidOperationException("Choose Search before loading another page of changed search results.");
         await CheckHostAsync(ct);
@@ -231,11 +231,17 @@ public sealed partial class CanvasHostWindow : Window
         _content.Content = control;
         _view = owner;
     }
-    private async Task OpenAsync(HostedItemId fileId, CanvasFilesOpenResult opened, CancellationToken ct)
+    private async Task OpenAsync(HostedItemId fileId, CanvasFilesOpenResult opened, CancellationToken ct, NoEffectReadProof? proof = null)
     {
         var files = _files!; var captured = opened with { Artifact=CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(opened.Artifact)) };
         var original=_workspace ?? throw new UnauthorizedAccessException("The original Files workspace is unavailable.");
         if(captured.StoreId!=original.Configuration.StoreId)throw new UnauthorizedAccessException("Canvas store identity differs from its original workspace.");
+        // Reject this unsupported payload before constructing/acquiring any native owner.
+        // Only an explicitly admitted read command can supply the private proof; Finish
+        // and all post-commit callers leave it null and can never acquire this stamp.
+        if (!captured.Artifact.DocumentSettings.Properties.ContainsKey("9to1.Canvas.RnoteState"))
+            throw RejectBeforeEffect(proof, new NotSupportedException(
+                "The artifact has no Rnote engine state; open it using the registered native Canvas renderer."));
         var readiness = new CanvasOriginalResourceReadiness(Get<HomeCoreRuntime>(), Get<IAuthenticatedResourceActorSource>(), Get<ResourceAuthorizationService>(),
             "canvas.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", fileId.ToString(), captured.CasRevisionId.ToString(), ResourceAccess.Read)]));
         var originalReadiness=new OriginalCanvasReadiness(readiness,async token=>
@@ -246,6 +252,7 @@ public sealed partial class CanvasHostWindow : Window
                 throw new InvalidOperationException("This Canvas revision changed; reopen it.");
         });
         var strokeOwner = _stroke!;
+        _nativeOwnerAcquired = true; // Monotonic native custody, never a document-discard witness.
         var surface = new CanvasNativeCuiSurface(async token =>
         {
             await RequireOriginalOwnerAsync(original,captured.StoreId,token);
@@ -420,8 +427,17 @@ public sealed partial class CanvasHostWindow : Window
     }
 
     private ValueTask DispatchAsync(string action, object? parameter, CancellationToken ct)
-        => new(_originalWork.RunOriginalAsync(token => DispatchOriginalAsync(action, parameter, token), ct));
-    private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct)
+    {
+        var proof = CaptureReadAdmission(action);
+        var actual = _originalWork.RunOriginalAsync(token => DispatchOriginalAsync(action, parameter, token, proof), ct);
+        _latestOriginalCommand = actual;
+        // The callback may already have begun. It only records its private exact cause;
+        // this proof becomes observable to close policy AFTER binding the actual issued Task.
+        if (proof is not null)
+            lock (_noEffectGate) { proof.Original = actual; _noEffectReads.Add(proof); }
+        return new(actual);
+    }
+    private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct, NoEffectReadProof? proof)
     {
         if (_busy || _closed || parameter is not null && action != "canvas.host.openItem")
             throw new InvalidOperationException("This Canvas action is unavailable.");
@@ -518,14 +534,14 @@ public sealed partial class CanvasHostWindow : Window
                 }
                 _content.Content = retained;
             }
-            else if (action == "canvas.host.search") await RefreshAsync(null, ct);
-            else if (action == "canvas.host.refresh") await RefreshAsync(null, ct);
-            else if (action == "canvas.host.page") await RefreshAsync(_nextPage, ct);
+            else if (action == "canvas.host.search") await RefreshAsync(null, ct, proof);
+            else if (action == "canvas.host.refresh") await RefreshAsync(null, ct, proof);
+            else if (action == "canvas.host.page") await RefreshAsync(_nextPage, ct, proof);
             else if (action == "canvas.host.previous" && _selected > 0) _selected--;
             else if (action == "canvas.host.next" && _selected + 1 < _documents.Length) _selected++;
-            else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await _files!.OpenAsync(_documents[_selected].Id, ct), ct);
+            else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await _files!.OpenAsync(_documents[_selected].Id, ct), ct, proof);
             else if (action == "canvas.host.openItem" && selectedRow is not null)
-                await OpenAsync(selectedRow.Item.Id, await _files!.OpenAsync(selectedRow.Item.Id, ct), ct);
+                await OpenAsync(selectedRow.Item.Id, await _files!.OpenAsync(selectedRow.Item.Id, ct), ct, proof);
             else if (action == "canvas.host.create" && WriteAvailable())
             {
                 if (!_model.TryGetValue("NewName", out var value) || string.IsNullOrWhiteSpace(value?.ToString()))
