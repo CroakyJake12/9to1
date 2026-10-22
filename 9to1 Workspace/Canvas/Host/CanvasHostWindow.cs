@@ -433,8 +433,11 @@ public sealed partial class CanvasHostWindow : Window
         _latestOriginalCommand = actual;
         // The callback may already have begun. It only records its private exact cause;
         // this proof becomes observable to close policy AFTER binding the actual issued Task.
-        if (proof is not null)
-            lock (_noEffectGate) { proof.Original = actual; _noEffectReads.Add(proof); }
+        lock (_noEffectGate)
+        {
+            _noEffectReads.RemoveAll(previous => previous.Original?.IsCompletedSuccessfully == true);
+            if (proof is not null) { proof.Original = actual; _noEffectReads.Add(proof); }
+        }
         return new(actual);
     }
     private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct, NoEffectReadProof? proof)
@@ -554,6 +557,7 @@ public sealed partial class CanvasHostWindow : Window
                 await workspace.Provider.GetStoreEvidenceAsync(originalStoreId, ct);
                 var folder = await workspace.Provider.GetAsync(folderId, ct);
                 if (!folder.IsSuccess) throw new InvalidOperationException(folder.Error!.Message);
+                _nativeOwnerAcquired = true; // Even an uncommitted blank owns a real native document.
                 using var blank = CanvasRnoteDocument.Create(name);
                 var intent = CanvasCreateIntent.Capture(blank.Snapshot, new(folderId, folder.Value!.CurrentRevisionId) { ExpectedStoreId = originalStoreId });
                 var create = _create!; var files = _files!;

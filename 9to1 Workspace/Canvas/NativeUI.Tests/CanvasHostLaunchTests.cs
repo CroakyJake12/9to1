@@ -65,6 +65,8 @@ public sealed class CanvasHostLaunchTests
             Click(Assert.Single(Cards(window)));
             await UntilAsync(() => window.GetVisualDescendants().OfType<TextBlock>().Any(text =>
                 text.Text?.Contains("no Rnote engine state", StringComparison.Ordinal) == true));
+            var failure = await fixture.ExpectSingleCommandFailureAsync();
+            Assert.Contains("no Rnote engine state", failure.Message, StringComparison.Ordinal);
             Assert.True(Find(window, "canvas-launch").IsEffectivelyVisible);
             Assert.False(Find(window, "canvas-active-workspace").IsEffectivelyVisible);
             Assert.DoesNotContain(window.GetVisualDescendants().OfType<CanvasNativeViewport>(), control => control.IsEffectivelyVisible);
@@ -91,6 +93,8 @@ public sealed class CanvasHostLaunchTests
             Click(Assert.IsType<Button>(Find(window, "canvas-search")));
             await UntilAsync(() => window.GetVisualDescendants().OfType<TextBlock>().Any(text =>
                 text.Text?.Contains("at most 256 characters", StringComparison.Ordinal) == true));
+            var failure = await fixture.ExpectSingleCommandFailureAsync();
+            Assert.IsType<ArgumentException>(failure);
             Assert.Single(Cards(window));
             Assert.True(Find(window, "canvas-launch").IsEffectivelyVisible);
             Assert.Equal(before.CasRevisionId, (await fixture.Bridge.OpenAsync(id)).CasRevisionId);
@@ -181,7 +185,7 @@ public sealed class CanvasHostLaunchTests
         { _ = await DispatchWithOutcomeAsync(command, parameter, cancellationToken); }
     }
 
-    private static Control Find(Control root, string authoredId) => Assert.Single(AuthoredTree(root),
+    internal static Control Find(Control root, string authoredId) => Assert.Single(AuthoredTree(root),
         control => CuiRuntimeIdentity.GetStableId(control) == "id:" + authoredId);
     private static IEnumerable<Control> AuthoredTree(Control root)
     {
@@ -190,10 +194,10 @@ public sealed class CanvasHostLaunchTests
         foreach (var child in children)
             foreach (var descendant in AuthoredTree(child)) yield return descendant;
     }
-    private static Button[] Cards(Control root) => Find(root, "canvas-launch-cards")
+    internal static Button[] Cards(Control root) => Find(root, "canvas-launch-cards")
         .GetVisualDescendants().OfType<Button>().ToArray();
-    private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    private static async Task UntilAsync(Func<bool> predicate)
+    internal static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    internal static async Task UntilAsync(Func<bool> predicate)
     {
         for (var attempt = 0; attempt < 300; attempt++)
         {
@@ -203,11 +207,16 @@ public sealed class CanvasHostLaunchTests
         Assert.True(predicate());
     }
 
-    private sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "canvas-launch-" + Guid.NewGuid().ToString("N"));
         private ServiceProvider _services = null!;
         private CanvasHostWindow? _window;
+        private readonly List<Exception> _expectedFailures = [];
+        private bool _expectedCloseRefusal;
+        internal string HomeStatePath => Path.Combine(_root, "home.json");
+        internal void ExpectNormalCloseRefusal() => _expectedCloseRefusal = true;
+        internal void ExpectExactFailure(Exception cause) => _expectedFailures.Add(cause);
         internal NativeFilesWorkspace Workspace = null!;
         internal CanvasFilesArtifactBridge Bridge = null!;
         internal HostedItemId Folder => Workspace.Configuration.AppFolders["canvas"];
@@ -254,15 +263,62 @@ public sealed class CanvasHostLaunchTests
             _window.UpdateLayout();
             return _window;
         }
+        internal async Task<Exception> ExpectSingleCommandFailureAsync()
+        {
+            var actual = _window?.LatestOriginalCommand ?? throw new InvalidOperationException("No actual command task was issued.");
+            Assert.NotNull(await Record.ExceptionAsync(() => actual)); Assert.True(actual.IsFaulted);
+            var cause = Assert.Single(ActualLeaves(actual.Exception!));
+            _expectedFailures.Add(cause); return cause;
+        }
+        private static IReadOnlyList<Exception> ActualLeaves(AggregateException actualTaskWrapper)
+        {
+            var pending = new Stack<Exception>(actualTaskWrapper.InnerExceptions);
+            var seen = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+            var leaves = new List<Exception>();
+            while (pending.Count != 0)
+            {
+                var current = pending.Pop(); if (!seen.Add(current)) continue;
+                if (seen.Count > 4096) throw new InvalidOperationException("Canvas test receipt exceeded bounded inspection.");
+                if (current is AggregateException { InnerExceptions.Count: > 0 } group)
+                    foreach (var child in group.InnerExceptions) pending.Push(child);
+                else leaves.Add(current); // foreign empty/opaque failure remains a real leaf
+            }
+            return leaves;
+        }
         public async ValueTask DisposeAsync()
         {
+            var failures = new List<Exception>();
             if (_window is not null)
             {
-                await _window.CloseAndDrainAsync(); _window.Close();
-                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+                var actual = _window.CloseAndDrainAsync();
+                try { await actual; }
+                catch (Exception error)
+                {
+                    if (actual.Exception is not { } wrapper || ActualLeaves(wrapper).Count == 0 ||
+                        !ActualLeaves(wrapper).All(cause => _expectedFailures.Any(expected => ReferenceEquals(expected, cause))))
+                        failures.Add(error);
+                }
+                try
+                {
+                    if (_window.IsVisible) _window.Close();
+                    await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+                }
+                catch (Exception error) { failures.Add(error); }
+                if (_window.IsVisible)
+                {
+                    if (!_expectedCloseRefusal) failures.Add(new InvalidOperationException("Canvas normal close was unexpectedly refused."));
+                    // Negative-test/resource teardown ONLY, after the actual original drain is
+                    // terminal and the test has asserted refusal. Never a normal-close witness.
+                    try { _window.PlatformImpl?.Dispose(); }
+                    catch (Exception error) { failures.Add(error); }
+                }
             }
-            if (_services is not null) await _services.DisposeAsync();
-            if (Directory.Exists(_root)) Directory.Delete(_root, true);
+            try { if (_services is not null) await _services.DisposeAsync(); }
+            catch (Exception error) { failures.Add(error); }
+            try { if (Directory.Exists(_root)) Directory.Delete(_root, true); }
+            catch (Exception error) { failures.Add(error); }
+            if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+            if (failures.Count > 1) throw new AggregateException("Canvas test and independent teardown failures.", failures);
         }
     }
 }
