@@ -6,6 +6,13 @@ namespace Haven.Application;
 public enum BoardsPageEditMode { Edit, View }
 public enum BoardsPageLayoutMode { Locked, Unlocked }
 
+/// <summary>Already-authorised notebook summaries from the same canonical Notes owner.
+/// This is data selection only; it grants no IO, Home approval or document mutation.</summary>
+public interface IBoardsNotebookSummarySource
+{
+    Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(bool deleted, CancellationToken cancellationToken);
+}
+
 public interface IBoardsWorkspaceService
 {
     Task<IReadOnlyList<NotesDocumentSummary>> ListNotebooksAsync(CancellationToken cancellationToken);
@@ -48,7 +55,8 @@ public interface IBoardsWorkspaceService
     IReadOnlyList<BoardsLiveComponent> GetComponents(NotesDocument notebook);
 }
 
-public sealed partial class BoardsWorkspaceService(INotesRepository repository, INotesAttachmentStore? attachments = null) : IBoardsWorkspaceService
+public sealed partial class BoardsWorkspaceService(INotesRepository repository, INotesAttachmentStore? attachments = null,
+    IBoardsNotebookSummarySource? summarySource = null) : IBoardsWorkspaceService
 {
     public const string ProductKey = "haven.product";
     public const string ComponentsKey = "boards.live-components";
@@ -63,6 +71,8 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
 
     public async Task<IReadOnlyList<NotesDocumentSummary>> ListNotebooksAsync(CancellationToken cancellationToken)
     {
+        if (summarySource is not null)
+            return await summarySource.ListAsync(false, cancellationToken).ConfigureAwait(false);
         var result = new List<NotesDocumentSummary>();
         foreach (var summary in await repository.ListAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -76,6 +86,8 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
 
     public async Task<IReadOnlyList<NotesDocumentSummary>> ListDeletedNotebooksAsync(CancellationToken cancellationToken)
     {
+        if (summarySource is not null)
+            return await summarySource.ListAsync(true, cancellationToken).ConfigureAwait(false);
         var result = new List<NotesDocumentSummary>();
         foreach (var summary in await repository.ListAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -85,6 +97,28 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
         }
         return result;
     }
+
+    /// <summary>Shared Boards product/trash selection over actual observed canonical metadata.
+    /// No document stubs, content reload, alternative native filter or permission is created.</summary>
+    public static IReadOnlyList<NotesDocumentSummary> SelectNotebookSummaries(
+        IReadOnlyList<NotesOriginalDocumentMetadata> metadata, bool deleted)
+    {
+        ArgumentNullException.ThrowIfNull(metadata);
+        var result = new List<NotesDocumentSummary>();
+        foreach (var document in metadata)
+        {
+            ArgumentNullException.ThrowIfNull(document);
+            if (IsBoardsNotebook(document.Product) && document.IsDeleted == deleted)
+            {
+                ArgumentNullException.ThrowIfNull(document.Summary);
+                result.Add(document.Summary);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>Canonical trash predicate for original Notes snapshot metadata producers.</summary>
+    public static bool IsDeletedNotebook(NotesDocument document) => IsDeleted(document);
 
     public async Task<NotesDocument> CreateNotebookAsync(string title, CancellationToken cancellationToken)
     {
@@ -264,7 +298,10 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
 
     public static bool IsBoardsNotebook(NotesDocument document) =>
         document.Metadata.TryGetValue(ProductKey, out var value) &&
-        value.Equals("boards", StringComparison.OrdinalIgnoreCase);
+        IsBoardsNotebook(value);
+
+    private static bool IsBoardsNotebook(string? product) =>
+        string.Equals(product, "boards", StringComparison.OrdinalIgnoreCase);
 
     private static void EnsureBoards(NotesDocument document)
     {
