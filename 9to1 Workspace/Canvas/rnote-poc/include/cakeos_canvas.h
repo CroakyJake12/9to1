@@ -80,7 +80,11 @@ CakeCanvasStatus cake_canvas_engine_from_rnote(
 
 /* Real donor Xournal++ import. Input is gzip-compressed .xopp; dpi is 1..2400.
  * Compressed and expanded input are bounded to 256 MiB. Failure clears
- * out_handle; success transfers one owned engine, released by engine_free. */
+ * out_handle; success transfers one owned engine, released by engine_free.
+ * Current admission is one page/unnamed layer, plain solid background, pen/image/
+ * text. Unsupported properties/entities/schema or failed conversions refuse the
+ * ENTIRE import. Plain background colour is preserved in the donor snapshot.
+ * Broader Xournal++ parity/compatibility reporting remains an acceptance gate. */
 CakeCanvasStatus cake_canvas_engine_from_xopp(
     const uint8_t* data, size_t len, double dpi, void** out_handle
 );

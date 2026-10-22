@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub const CAKE_CANVAS_ABI_VERSION: u32 = 3;
-const MAXIMUM_NATIVE_PAYLOAD_BYTES: usize = 256 * 1024 * 1024;
+const MAXIMUM_NATIVE_PAYLOAD_BYTES: usize = HeadlessCanvasEngine::MAXIMUM_IMPORT_PAYLOAD_BYTES;
 pub const CAKE_CANVAS_TOOL_PEN: u32 = 0;
 pub const CAKE_CANVAS_TOOL_HIGHLIGHTER: u32 = 1;
 pub const CAKE_CANVAS_TOOL_ERASER: u32 = 2;
@@ -945,6 +945,94 @@ mod tests {
         concatenated.extend_from_slice(&gzip(b"b"));
         assert!(!bounded_gzip(&concatenated, 64));
         assert!(!bounded_gzip(&invalid[..], 64));
+    }
+
+    fn mixed_xopp_xml(image_base64: &str) -> String {
+        format!(r##"<?xml version="1.0" standalone="no"?><xournal creator="Xournal++" fileversion="4"><title>Mixed revision fixture</title><page width="595" height="842"><background type="solid" color="#ffffffff" style="plain"/><layer><stroke tool="pen" color="#000000ff" width="2.0">10 10 30 30 60 20</stroke><image left="20" top="20" right="80" bottom="80">{image_base64}</image></layer></page></xournal>"##)
+    }
+
+    fn mixed_xopp(image_base64: &str) -> Vec<u8> {
+        gzip(mixed_xopp_xml(image_base64).as_bytes())
+    }
+
+    #[test]
+    fn xopp_mixed_valid_ink_and_corrupt_image_refuses_the_entire_import() {
+        for corrupt in ["!!!not-base64!!!", "bm90IGEgcG5n"] {
+            let bytes = mixed_xopp(corrupt);
+            // Genuine upstream counterexample: its successful snapshot silently
+            // omits the bad image while retaining the valid brush. This is why a
+            // plain Ok(snapshot) is insufficient for atomic bridge admission.
+            let raw = block_on(rnote_engine::engine::EngineSnapshot::load_from_xopp_bytes(
+                bytes.clone(), rnote_engine::engine::import::XoppImportPrefs { dpi: 96.0 }
+            )).unwrap();
+            assert_eq!(raw.stroke_components.len(), 1);
+            assert!(raw.stroke_components.values().all(|stroke| matches!(stroke.as_ref(), rnote_engine::strokes::Stroke::BrushStroke(_))));
+            let mut handle = ptr::null_mut();
+            assert_eq!(cake_canvas_engine_from_xopp(bytes.as_ptr(), bytes.len(), 96.0, &mut handle), CakeCanvasStatus::EngineError);
+            assert!(handle.is_null(), "A partial image-dropping engine must never be published");
+        }
+    }
+
+    #[test]
+    fn xopp_mixed_real_png_and_ink_preserves_both_entities_through_native_reopen() {
+        // Independent deterministic fixture: 2x2 RGBA PNG, all chunk CRCs and
+        // inflated scanlines verified; raw SHA256 9ccfc2ab...df10, 75 bytes.
+        let xml = mixed_xopp_xml("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC")
+            .replace("color=\"#ffffffff\"", "color=\"#ffeeaaff\"");
+        let bytes = gzip(xml.as_bytes());
+        let mut handle = ptr::null_mut();
+        assert_eq!(cake_canvas_engine_from_xopp(bytes.as_ptr(), bytes.len(), 96.0, &mut handle), CakeCanvasStatus::Ok);
+        let keys = decoded_keys(handle, false);
+        assert_eq!(keys.len(), 2);
+        let kinds = with_engine(handle, |engine| {
+            let snapshot = engine.engine.take_snapshot();
+            (snapshot.stroke_components.values().filter(|stroke| matches!(stroke.as_ref(), rnote_engine::strokes::Stroke::BrushStroke(_))).count(),
+             snapshot.stroke_components.values().filter(|stroke| matches!(stroke.as_ref(), rnote_engine::strokes::Stroke::BitmapImage(_))).count())
+        }).unwrap();
+        assert_eq!(kinds, (1, 1));
+        let background = with_engine(handle, |engine| engine.engine.take_snapshot().document.config.background.color).unwrap();
+        assert_eq!(background.r, 1.0);
+        assert!((background.g - 238.0 / 255.0).abs() < 1e-12);
+        assert!((background.b - 170.0 / 255.0).abs() < 1e-12);
+        let mut frame = CakeCanvasRenderFrame::default();
+        assert_eq!(cake_canvas_render_frame(handle, &mut frame), CakeCanvasStatus::Ok);
+        assert!(frame.len > 200);
+        cake_canvas_render_frame_release(&mut frame);
+        let mut saved = CakeCanvasBuffer::default();
+        assert_eq!(cake_canvas_save_rnote(handle, &mut saved), CakeCanvasStatus::Ok);
+        let mut reopened = ptr::null_mut();
+        assert_eq!(cake_canvas_engine_from_rnote(saved.data, saved.len, &mut reopened), CakeCanvasStatus::Ok);
+        assert_eq!(decoded_keys(reopened, false), keys);
+        assert_eq!(decoded_keys(reopened, true), decoded_keys(handle, true));
+        assert_eq!(with_engine(reopened, |engine| engine.engine.take_snapshot().document.config.background.color).unwrap(), background);
+        assert_eq!(with_engine(handle, |engine| serde_json::to_value(engine.engine.take_snapshot().stroke_components).unwrap()).unwrap(),
+                   with_engine(reopened, |engine| serde_json::to_value(engine.engine.take_snapshot().stroke_components).unwrap()).unwrap());
+        cake_canvas_buffer_release(&mut saved);
+        cake_canvas_engine_free(reopened);
+        cake_canvas_engine_free(handle);
+    }
+
+    #[test]
+    fn xopp_unsupported_background_layer_page_and_schema_properties_refuse_atomically() {
+        let valid = mixed_xopp_xml("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC");
+        let unsupported = [
+            valid.replace("style=\"plain\"", "style=\"ruled\""),
+            valid.replace("<layer>", "<layer name=\"Revision notes\">"),
+            valid.replace("<stroke tool", "<stroke rotation=\"45\" tool"),
+            valid.replace("</layer>", "<unknown-content>do not drop me</unknown-content></layer>"),
+            valid.replace("</page>", "<layer/></page>"),
+            valid.replace("</xournal>", "<page width=\"595\" height=\"842\"><background type=\"solid\" color=\"#ffffffff\" style=\"plain\"/><layer/></page></xournal>"),
+            valid.replace("fileversion=\"4\"", "fileversion=\"999\""),
+            valid.replace("30 30 60 20", "30 invalid 60 20"),
+            valid.replace("width=\"2.0\"", "width=\"2.0 0.3\""),
+            valid.replace("width=\"595\"", "width=\"NaN\""),
+        ];
+        for xml in unsupported {
+            let bytes = gzip(xml.as_bytes());
+            let mut handle = ptr::null_mut();
+            assert_eq!(cake_canvas_engine_from_xopp(bytes.as_ptr(), bytes.len(), 96.0, &mut handle), CakeCanvasStatus::EngineError);
+            assert!(handle.is_null(), "An unsupported source must not become a successful partial engine");
+        }
     }
 
     #[test]

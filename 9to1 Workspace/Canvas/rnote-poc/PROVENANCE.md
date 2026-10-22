@@ -28,7 +28,17 @@ The added native operations reuse public Rnote APIs:
 * Read-only Quick Eraser targeting uses genuine donor hitboxes and layer/chronology
   ordering. A miss is distinct from a failure; this operation does not delete ink.
 * Xournal++ import uses `EngineSnapshot::load_from_xopp_bytes`, with bounded gzip
-  expansion and validated DPI at the C boundary.
+  expansion and validated DPI at the C boundary. The pinned snapshot importer
+  logs and skips failed entity conversions; this bridge first runs the same
+  public donor parser/converters for every entity and refuses the whole import
+  on conversion failure. This interim preflight repeats import conversion work.
+  A bounded schema admission check uses the same locked `roxmltree` library as
+  the donor and refuses unknown entities/properties, unsupported styles, multiple
+  pages/layers and sample-count truncation. It currently admits one page and one
+  unnamed layer with pen/image/text and plain solid background. Its source colour
+  is retained through public donor snapshot configuration before materialisation.
+  This is a partial implementation; broader Xournal++ parity and surfaced typed
+  compatibility reporting remain required, without a permanent feature waiver.
 
 Selection API v1 and Quick targeting API v1 cover those operation families only.
 Keyed delete/translate and detached split-erase materialisation are still absent.
