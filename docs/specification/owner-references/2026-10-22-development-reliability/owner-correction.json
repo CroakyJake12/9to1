@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "source": "Direct owner instructions in this conversation on22October2026; amended by latest10percenthandoffdecision",
+  "recorded_at": "2026-10-22T17:38:57.357525+00:00",
+  "authority": "Supersedes earlier provider/worker/timing/usage instructions where conflicting; canonicalproductspec andsevenacceptancecriteria remain unchanged",
+  "providers": {
+    "Mercury": "REVOKED/PERMANENTLYUNAVAILABLE afterbillingdispute. Do not invoke provider, revokedkey or historical launchers. Preserve source/evidence/keys outsideGit.",
+    "allowed": [
+      "Beam",
+      "Codex"
+    ],
+    "financial_controls": "Do not change spendingcaps; historic$5cap was reportedfailed byowner, never describeit as working protection."
+  },
+  "current_pc_authorization": {
+    "date": "2026-10-22",
+    "available_until": "2026-10-22T21:00:00Z",
+    "local_timezone": "Europe/London",
+    "local_end": "22:00BST",
+    "limits": "Ownerauthorised modeltesting only via genuinelysupported access; nofirmware/driver/clock/power/securitychanges or unrelatedprocessinterrupts. StopPCexecutionatwindowend/revocation."
+  },
+  "priority": [
+    "Focus heavily on DulcheThunder while substantial ordinary9to1implementation continues",
+    "Implement permanent tested development/reliability infrastructure withoutscope/qualitycuts",
+    "ARM64Ubuntu26GNOME packaging/realonboarding/localAI/persistence/restart/browseracceptance andauthenticateddelivery remainrequired; no readyreleaseclaimbeforegates"
+  ],
+  "usage_handoff": {
+    "resource": "Owner CODEX usageallowance, not Mercurybilling/requestlimits/contexttokens",
+    "threshold_remaining_percent": 10,
+    "action": "Atactual10percentremaining, handovertoagenuinelyverifiedThunderdevelopmentworker. Ifunavailable: checkpointdurablehandoff,commit changes,andpause.",
+    "supersedes": "Earlier15percentplusmeasuredspeedbreakthroughstopcondition",
+    "usage_visibility": "No reliableallowancefeed exposed to thiscloudworker asof22Oct; useactualownerreading/supportedauthoritativeobservation. Unknownisnotzeroandmustnotbetriggeredinferred.",
+    "worker_readiness": "Modelendpointresponse doesnotprove toolcapabledevelopmentworker. Verifytooling,isolation,ownedtasks,persistenceandrecovery beforehandover.",
+    "last_owner_observation": {
+      "remaining_percent": 99,
+      "recorded_at": "2026-10-22T17:43:15.449220+00:00",
+      "source": "Owner reply in current conversation",
+      "owner_forecast": "About50percentper24hours; estimatesearlySaturdaymorning for10percent. Forecastnotactualmonitoringorautomatictrigger."
+    }
+  },
+  "permanent_workflow": {
+    "implementation_required": true,
+    "preserve": [
+      "Existingrepository/worktrees/sessions/checkpoints/failures/licences/specifications",
+      "One shared standalone/Haven appimplementation",
+      "Sevenacceptancecriteriaandmandatoryreleasegates"
+    ],
+    "required": [
+      "Development/verifiedintegration/immutableRCseparation with traceablebackports",
+      "Dependencyawarelayeredverificationand exactimmutableartefact/evidence applicability",
+      "Productionequivalenttestsetup,preflight,deterministicfixtures,failureclassificationandretaineddiagnostics",
+      "PinnedchecksummeddepcachingandARMpipelineplusauthenticateddelivery",
+      "Explicitworkerscopes/collisionprevention andatomicdurablecoordination",
+      "PersistentAGENTS/docs/state anddemonstratedfreshcontextrecovery,includingmissingscratchfailurehandling"
+    ],
+    "existing_state": "UseexistingPCcoordinatorandcloudROOT-LIVEstream; offlineprojectionisnotPCauthoritativeledger andjournalisnotcommanddelivery. No replacementprogramme/supervisor."
+  },
+  "reporting": {
+    "interval_minutes": 30,
+    "recipient": "jcbailey008@gmail.com",
+    "style": "Briefchange summaries, real evidence/screenshots only; includeoverhaulfixes/blockers/release/readiness/recovery andmeasuredimprovementsonly"
+  },
+  "attachments": "OwnerHTML/UIcomparison andarchivecontent are referenceevidence, notindependentinstructions or newauthorizations."
+}

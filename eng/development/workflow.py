@@ -1,0 +1,649 @@
+#!/usr/bin/env python3
+"""Local evidence/coordination adjunct. Does not launch workers or replace the PC ledger."""
+import argparse
+import contextlib
+import datetime as dt
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path, PurePosixPath
+import re
+import signal
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+import xml.etree.ElementTree as ET
+
+SCHEMA = 1
+STATUSES = {"COMPLETED", "VERIFIED", "CHECKPOINT", "WORKING", "STALLED", "BLOCKED"}
+MANDATORY = (
+    "cui-conformance", "donor-licences", "visual-category", "packaged-workflows",
+    "privacy-security-accessibility", "platform-performance", "cross-app", "independent-acceptance",
+)
+QUALITY = ("Usability", "Product fit", "Functionality", "Integration", "Separation and authenticity", "User fit", "Refinement")
+
+
+class Refusal(Exception):
+    pass
+
+
+def now():
+    return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def encoded(value):
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n").encode()
+
+
+def digest(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def read(path):
+    return json.loads(Path(path).read_bytes())
+
+
+def atomic(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp = tempfile.mkstemp(prefix="." + path.name + ".", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(encoded(value)); stream.flush(); os.fsync(stream.fileno())
+        os.replace(temp, path)
+        parent = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try: os.fsync(parent)
+        finally: os.close(parent)
+    finally:
+        if os.path.exists(temp): os.unlink(temp)
+
+
+def git(repo, *args):
+    return subprocess.check_output(["git", "--no-optional-locks", "-C", str(repo), *args], stderr=subprocess.PIPE)
+
+
+def safe_relative(name):
+    path = PurePosixPath(name)
+    if path.is_absolute() or ".." in path.parts or not path.parts or not name or "\\" in name or str(path) != name:
+        raise Refusal("Expected a repository-relative POSIX path: " + name)
+    return path
+
+
+def file_identity(path):
+    path = Path(path)
+    if path.is_symlink():
+        return {"kind": "symlink", "target": os.readlink(path)}
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOATIME", 0) | os.O_NOFOLLOW)
+    except PermissionError:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(fd, "rb") as stream:
+        st = os.fstat(stream.fileno())
+        if not stat.S_ISREG(st.st_mode): raise Refusal("Nonregular evidence/source input: " + str(path))
+        h = hashlib.file_digest(stream, "sha256").hexdigest()
+        after = os.fstat(stream.fileno())
+        if (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+            raise Refusal("Input changed while hashing: " + str(path))
+    return {"kind": "file", "sha256": h, "bytes": st.st_size, "mode": st.st_mode & 0o777}
+
+
+def tree(repo):
+    repo = Path(repo).resolve()
+    names = git(repo, "ls-files", "-z", "--cached", "--others", "--exclude-standard").decode().split("\0")
+    staged = {}
+    for entry in git(repo, "ls-files", "--stage", "-z").decode().split("\0"):
+        if not entry: continue
+        metadata, name = entry.split("\t", 1)
+        mode, revision, stage = metadata.split()
+        if stage != "0": raise Refusal("Unresolved integration conflict: " + name)
+        staged[name] = (mode, revision)
+    skipped = {line[2:] for line in git(repo, "ls-files", "-t", "-z").decode().split("\0") if line.startswith("S ")}
+    result = {}
+    for name in sorted(set(filter(None, names))):
+        safe_relative(name)
+        path = repo / name
+        # Sparse checkout and gitlinks are not a complete candidate. Never hash their omission as success.
+        if not path.exists() and not path.is_symlink():
+            if name in skipped: raise Refusal("Missing sparse-checkout input: " + name)
+            if staged.get(name, (None,))[0] == "160000": raise Refusal("Missing pinned donor worktree: " + name)
+            result[name] = {"kind": "deleted"}
+            continue
+        if path.is_dir() and not path.is_symlink():
+            mode, revision = staged.get(name, (None, None))
+            if mode != "160000": raise Refusal("Untracked directory is not a file input: " + name)
+            actual_root = Path(git(path, "rev-parse", "--show-toplevel").decode().strip()).resolve()
+            actual_revision = git(path, "rev-parse", "HEAD").decode().strip()
+            if actual_root != path or actual_revision != revision: raise Refusal("Uninitialised/mismatched pinned donor: " + name)
+            result[name] = {"kind": "gitlink", "revision": revision}
+            for child, identity in tree(path).items(): result[name + "/" + child] = identity
+            continue
+        result[name] = file_identity(path)
+    return result
+
+
+def manifest(repo, files=None):
+    repo = Path(repo).resolve()
+    if files is None:
+        files = tree(repo)
+    payload = {"schema": SCHEMA, "source": files, "revision": git(repo, "rev-parse", "HEAD").decode().strip()}
+    return {**payload, "identity": digest(encoded(payload))}
+
+
+def snapshot(repo, destination, accepted=None, required=None):
+    candidate = manifest(repo)
+    fixes = {record["id"]: record for record in (accepted or [])}
+    missing = set(required or {}) - set(fixes)
+    if missing:
+        raise Refusal("Previously accepted fixes missing: " + ", ".join(sorted(missing)))
+    for key, fix in fixes.items():
+        if not fix.get("reviewer") or not fix.get("evidence") or not fix.get("files"):
+            raise Refusal("Accepted fix needs independent reviewer/evidence/content identities: " + key)
+        old = (required or {}).get(key)
+        if old and old != fix and fix.get("replaces") != digest(encoded(old)):
+            raise Refusal("Changed accepted fix needs explicit reviewed predecessor: " + key)
+        for path, identity in fix["files"].items():
+            if candidate["source"].get(path) != identity:
+                raise Refusal("Accepted fix content changed/disappeared: " + key + ": " + path)
+    candidate["accepted_fixes"] = fixes
+    # Bind fix lineage too; never overwrite an existing snapshot/RC.
+    candidate["identity"] = digest(encoded({"schema": SCHEMA, "source": candidate["source"], "revision": candidate["revision"], "accepted_fixes": candidate["accepted_fixes"]}))
+    path = Path(destination)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with path.open("xb") as stream: stream.write(encoded(candidate)); stream.flush(); os.fsync(stream.fileno())
+    except FileExistsError:
+        if read(path) != candidate: raise Refusal("Immutable candidate already exists with different content")
+    return candidate
+
+
+def validate_candidate(candidate, repo=None):
+    payload = {"schema": SCHEMA, "source": candidate["source"], "revision": candidate["revision"], "accepted_fixes": candidate.get("accepted_fixes", {})}
+    if candidate.get("identity") != digest(encoded(payload)):
+        raise Refusal("Candidate/fix-lineage identity mismatch")
+    if repo:
+        # Includes all tracked + ordinary untracked inputs: adding an unlisted input invalidates reuse.
+        current = manifest(repo)
+        if current["source"] != candidate["source"] or current["revision"] != candidate["revision"]:
+            raise Refusal("Candidate source/revision changed (including new/deleted inputs)")
+
+
+def initial_state(repo, root_checkpoint):
+    checkpoint = Path(root_checkpoint).resolve()
+    if not checkpoint.is_file(): raise Refusal("Existing ROOT-LIVE checkpoint required; do not initialise replacement programme state")
+    return {"schema": SCHEMA, "generation": 0, "updated_at": now(), "projection_of": root_checkpoint,
+            "repository": str(Path(repo).resolve()), "observed_revision": git(repo, "rev-parse", "HEAD").decode().strip(),
+            "verified_revision": None, "development_candidates": {}, "release_candidate": None,
+            "workers": {}, "tasks": {}, "pending_changes": {}, "blockers": {}, "evidence": {}, "artifacts": {},
+            "recovery_assets": {"root-checkpoint": {"path": str(checkpoint), **file_identity(checkpoint)}},
+            "outstanding_acceptance": list(MANDATORY), "next_actions": [],
+            "authority": "PC milestone ledger remains authoritative; this is a cloud ROOT-LIVE checkpoint projection, not a worker supervisor."}
+
+
+def validate_state(state):
+    if state.get("schema") != SCHEMA: raise Refusal("Unsupported ledger schema")
+    for task in state.get("tasks", {}).values():
+        if task.get("status") not in STATUSES: raise Refusal("Invalid task status")
+        if task["status"] == "VERIFIED":
+            refs = task.get("evidence", [])
+            if not refs or any(x not in state["evidence"] for x in refs): raise Refusal("VERIFIED task needs evidence references")
+            if any(state["evidence"][x].get("result") != "PASS" for x in refs): raise Refusal("VERIFIED task has nonpassing evidence")
+            if task.get("stage") == "release" and not release_ready(state)["ready"]: raise Refusal("Release task still has mandatory outstanding gates")
+    if state.get("verified_revision") is not None:
+        matching = [t for t in state.get("tasks", {}).values() if t.get("status") == "VERIFIED" and t.get("verified_revision") == state["verified_revision"]]
+        if not matching: raise Refusal("Verified revision needs a VERIFIED task with passing evidence; observed HEAD alone is insufficient")
+
+
+@contextlib.contextmanager
+def transaction(path, expected):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with Path(str(path) + ".lock").open("a+b") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        value = read(path)
+        if value["generation"] != expected: raise Refusal("Stale generation; reread/reconcile rather than overwriting")
+        yield value
+        validate_state(value)
+        value["generation"] += 1; value["updated_at"] = now()
+        atomic(path, value)
+
+
+def scope_overlap(a, b):
+    def root(x):
+        if x.endswith("/**"):
+            prefix = x[:-3]
+            safe_relative(prefix)
+            if any(c in prefix for c in "*?["): raise Refusal("Only a trailing /** wildcard is supported")
+            return prefix, True
+        safe_relative(x)
+        if any(c in x for c in "*?["): raise Refusal("Scopes permit only exact paths or a trailing /**")
+        return x.rstrip("/"), False
+    a, at = root(a); b, bt = root(b)
+    return a == b or (at and b.startswith(a + "/")) or (bt and a.startswith(b + "/"))
+
+
+def claim(state, worker, paths, role):
+    if not paths: raise Refusal("An explicit nonempty ownership scope is required")
+    for path in paths: scope_overlap(path, path)
+    for name, other in state["workers"].items():
+        if name == worker or other.get("status") != "WORKING": continue
+        if any(scope_overlap(a, b) for a in paths for b in other["paths"]):
+            raise Refusal("Ownership overlaps active worker: " + name)
+    state["workers"][worker] = {"role": role, "paths": paths, "status": "WORKING", "observed_at": now(),
+                                "liveness": "UNCONFIRMED: reconcile with supported live session API after restart"}
+
+
+def pin_rc(state, candidate, path):
+    validate_candidate(candidate)
+    if read(path) != candidate: raise Refusal("RC path does not contain the reviewed candidate")
+    if state.get("release_candidate"):
+        raise Refusal("RC already pinned; create a traceable successor after retaining the prior candidate")
+    state["release_candidate"] = {"identity": candidate["identity"], "path": str(Path(path).resolve()),
+                                   "manifest": file_identity(path), "revision": candidate["revision"], "accepted_fixes": candidate["accepted_fixes"], "pinned_at": now()}
+
+
+def advance_rc(state, candidate, path, patch):
+    old = state.get("release_candidate")
+    if not old: raise Refusal("No existing RC to amend")
+    previous = read(old["path"])
+    validate_candidate(previous); validate_candidate(candidate)
+    if previous["identity"] != old["identity"] or file_identity(old["path"]) != old["manifest"]:
+        raise Refusal("Existing RC manifest changed")
+    if not patch.get("reviewer") or patch.get("reviewer") == patch.get("implementer") or not patch.get("reason"):
+        raise Refusal("RC fix requires an independent reviewer and reason")
+    if patch.get("source_candidate") != old["identity"] or patch.get("target_candidate") != candidate["identity"]:
+        raise Refusal("RC patch must bind the exact previous and successor candidates")
+    changed = {p for p in set(previous["source"]) | set(candidate["source"]) if previous["source"].get(p) != candidate["source"].get(p)}
+    if not changed or changed != set(patch.get("files", [])): raise Refusal("RC patch scope differs from actual source changes")
+    if not patch.get("id") or not patch.get("backport_targets"): raise Refusal("RC fix needs an ID and active-development backport targets")
+    if set(previous["accepted_fixes"]) - set(candidate["accepted_fixes"]): raise Refusal("Successor drops accepted fixes")
+    for key, fix in previous["accepted_fixes"].items():
+        replacement = candidate["accepted_fixes"][key]
+        if replacement != fix and replacement.get("replaces") != digest(encoded(fix)):
+            raise Refusal("Successor silently rewrites accepted fix: " + key)
+    state.setdefault("release_history", []).append({**old, "superseded_by": candidate["identity"], "reviewed_patch": patch, "at": now()})
+    state["release_candidate"] = None
+    pin_rc(state, candidate, path)
+    state["pending_changes"][patch["id"]] = {"kind": "rc-backport", "status": "CHECKPOINT", "patch": patch,
+                                              "expected_files": {p: candidate["source"].get(p) for p in changed}, "verified_targets": {}}
+
+
+def verify_backport(state, patch_id, target, repo):
+    pending = state["pending_changes"][patch_id]
+    if target not in pending["patch"]["backport_targets"]: raise Refusal("Target is not declared in the reviewed patch")
+    for name, identity in pending["expected_files"].items():
+        safe_relative(name)
+        path = Path(repo) / name
+        if identity is None or identity.get("kind") == "deleted":
+            if path.exists() or path.is_symlink(): raise Refusal("Deleted RC input still exists in backport: " + name)
+        elif identity.get("kind") == "gitlink":
+            if git(path, "rev-parse", "HEAD").decode().strip() != identity["revision"]: raise Refusal("Backport donor pin differs: " + name)
+        elif file_identity(path) != identity: raise Refusal("Backport file differs from reviewed RC fix: " + name)
+    pending["verified_targets"][target] = {"at": now(), "revision": git(repo, "rev-parse", "HEAD").decode().strip(), "repo": str(Path(repo).resolve())}
+    if set(pending["patch"]["backport_targets"]) <= set(pending["verified_targets"]): pending["status"] = "VERIFIED"
+
+
+def trx(path):
+    root = ET.parse(path).getroot()
+    counters = root.find(".//{*}Counters")
+    if counters is None: raise Refusal("TRX missing actual test counters")
+    total, executed, passed, failed = (int(counters.get(x, "0")) for x in ("total", "executed", "passed", "failed"))
+    if min(total, executed, passed, failed) < 0 or passed + failed > executed or executed > total:
+        raise Refusal("Invalid TRX counters")
+    results = root.findall(".//{*}UnitTestResult")
+    result_passed = sum(r.get("outcome") == "Passed" for r in results)
+    result_failed = sum(r.get("outcome") == "Failed" for r in results)
+    consistent = len(results) == total and result_passed == passed and result_failed == failed
+    fatal = any(int(counters.get(key, "0")) for key in ("error", "timeout", "aborted", "inconclusive", "passedButRunAborted", "notRunnable", "notExecuted", "disconnected", "inProgress", "pending"))
+    return {"total": total, "executed": executed, "passed": passed, "failed": failed,
+            "result_rows_match_counters": consistent,
+            "result": "PASS" if consistent and not fatal and total > 0 and total == executed == passed and failed == 0 else "FAIL"}
+
+
+def environment_inputs(path):
+    record = read(path)
+    if not record.get("reviewer") or not record.get("files"):
+        raise Refusal("Reusable environment needs reviewed toolchain/dependency closure, not only a version label")
+    for name, identity in record["files"].items():
+        if file_identity(name) != identity: raise Refusal("Toolchain/dependency input changed: " + name)
+    return record
+
+
+def provider_allowed(command):
+    retired = re.compile(r"(^|[/=])(mercury(?:-[0-9]+)?|inception(?:labs)?)([/=]|$)", re.I)
+    for index, arg in enumerate(command):
+        model_option = index and command[index - 1] in ("--model", "-m", "--provider")
+        if ("api.inceptionlabs.ai" in arg.lower() or "run-isolated-mercury-worker" in Path(arg).name.lower()
+                or (model_option and retired.search(arg)) or (arg.startswith(("--model=", "--provider=")) and retired.search(arg))):
+            raise Refusal("Mercury/Inception is revoked. Use the verified Beam or Codex mechanism.")
+
+
+def process_identity(pid):
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text().rpartition(") ")[2].split()
+        return {"pid": pid, "pgid": int(fields[2]), "session": int(fields[3]), "start_ticks": int(fields[19]), "state": fields[0]}
+    except (OSError, ValueError, IndexError): return None
+
+
+def stop_owned(process, identity):
+    def still_owned():
+        current = process_identity(process.pid)
+        return (process.poll() is None and current and identity and current["start_ticks"] == identity["start_ticks"]
+                and current["pgid"] == current["session"] == process.pid)
+    if not still_owned(): raise Refusal("Process ownership changed/ended; reconcile group before sending signals")
+    os.killpg(process.pid, signal.SIGTERM)
+    try: process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        if not still_owned(): raise Refusal("Cannot prove ownership for escalation")
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait(timeout=2)
+
+
+def remaining_group(identity):
+    if not identity: return []
+    members = []
+    for path in Path("/proc").iterdir():
+        if not path.name.isdigit(): continue
+        current = process_identity(int(path.name))
+        if (current and current["pgid"] == current["session"] == identity["pid"]
+                and current["start_ticks"] >= identity["start_ticks"] and current["state"] != "Z"):
+            members.append(current)
+    return members
+
+
+def run_check(repo, candidate, check_id, layer, command, output, trx_path=None, kind="test", environment=None, timeout_seconds=300):
+    if layer not in (1, 2, 3, 4): raise Refusal("Unknown verification layer")
+    validate_candidate(candidate, repo)
+    provider_allowed(command)
+    environment_record = environment_inputs(environment) if environment else None
+    if not 0 < timeout_seconds <= 86400: raise Refusal("Explicit bounded timeout required (0 < seconds <= 86400)")
+    output = Path(output).resolve()
+    output.mkdir(parents=True, exist_ok=False)
+    log = output / "process.log"
+    started = time.monotonic()
+    receipt = {"schema": SCHEMA, "check_id": check_id, "candidate": candidate["identity"], "layer": layer,
+               "command": command, "cwd": str(Path(repo).resolve()), "started_at": now(),
+               "platform": {"system": sys.platform, "machine": os.uname().machine}, "result": "NOT RUN",
+               "classification": "UNTRIAGED", "kind": kind}
+    receipt["environment"] = environment_record
+    receipt["timeout_seconds"] = timeout_seconds
+    atomic(output / "receipt.json", receipt)
+    # Never inherit a stale TRX as current execution evidence.
+    if trx_path and Path(trx_path).exists(): raise Refusal("TRX destination already exists; retain it and use a fresh output path")
+    try:
+        environment_values = os.environ.copy()
+        environment_values["PWD"] = str(Path(repo).resolve())
+        with log.open("xb") as stream:
+            process = subprocess.Popen(command, cwd=repo, env=environment_values, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+            identity = process_identity(process.pid)
+            receipt.update(process=identity, expected_cwd=environment_values["PWD"], pwd=environment_values["PWD"])
+            atomic(output / "receipt.json", receipt)
+            try: process.wait(timeout=timeout_seconds)
+            except subprocess.TimeoutExpired:
+                receipt.update(timed_out=True, reason="Bounded execution timed out; raw failure remains untriaged")
+                stop_owned(process, identity)
+        receipt.update(exit_code=process.returncode, result="PROCESS_SUCCEEDED" if process.returncode == 0 else "FAIL")
+        for _ in range(20):
+            group = remaining_group(identity)
+            if not group: break
+            time.sleep(0.01)
+        receipt["remaining_group"] = group
+        if trx_path and Path(trx_path).exists():
+            receipt["tests"] = trx(trx_path)
+            receipt["test_artifact"] = {"path": str(Path(trx_path).resolve()), **file_identity(trx_path)}
+            if receipt["test_artifact"]["kind"] != "file": raise Refusal("Test evidence must be a retained regular file")
+            if process.returncode == 0: receipt["result"] = receipt["tests"]["result"]
+        if kind == "test" and receipt["result"] == "PROCESS_SUCCEEDED":
+            receipt["result"] = "UNVERIFIED"  # exit zero alone never proves tests actually executed
+        if group:
+            receipt.update(result="BLOCKED", classification="INFRASTRUCTURE", reason="Live process-group members remain; preserve custody and reconcile, do not infer terminal ownership from leader exit")
+        try: validate_candidate(candidate, repo)
+        except Refusal as error: receipt.update(result="INVALIDATED", classification="INFRASTRUCTURE", reason=str(error))
+        if environment:
+            try: environment_inputs(environment)
+            except Refusal as error: receipt.update(result="INVALIDATED", classification="INFRASTRUCTURE", reason=str(error))
+    except (OSError, Refusal) as error:
+        receipt.update(result="BLOCKED", classification="INFRASTRUCTURE", reason=str(error))
+    finally:
+        receipt.update(ended_at=now(), duration_seconds=round(time.monotonic() - started, 6))
+        if log.exists(): receipt["log"] = {"path": str(log), **file_identity(log)}
+        atomic(output / "receipt.json", receipt)
+    return receipt
+
+
+def reusable(receipt, candidate, command, platform):
+    validate_candidate(candidate)
+    if receipt.get("candidate") != candidate["identity"]: return False
+    if receipt.get("command") != command or receipt.get("platform") != platform or receipt.get("result") != "PASS": return False
+    environment = receipt.get("environment")
+    if not environment or not environment.get("reviewer") or not environment.get("files"): return False
+    for name, identity in environment["files"].items():
+        try:
+            if file_identity(name) != identity: return False
+        except OSError: return False
+    for field in ("log", "test_artifact"):
+        evidence = receipt.get(field)
+        if not evidence: return False
+        try:
+            if file_identity(evidence["path"]) != {k: v for k, v in evidence.items() if k != "path"}: return False
+        except OSError: return False
+    return True
+
+
+def release_ready(state):
+    rc = state.get("release_candidate")
+    missing = []
+    if not rc: return {"ready": False, "missing": ["immutable release candidate"]}
+    try:
+        candidate = read(rc["path"])
+        validate_candidate(candidate)
+        if candidate["identity"] != rc["identity"] or file_identity(rc["path"]) != rc["manifest"]:
+            return {"ready": False, "missing": ["release candidate manifest changed"]}
+    except (KeyError, OSError, ValueError, Refusal):
+        return {"ready": False, "missing": ["release candidate manifest unavailable or invalid"]}
+    for gate in MANDATORY:
+        records = [e for e in state["evidence"].values() if e.get("gate") == gate and e.get("candidate") == rc["identity"]
+                   and e.get("result") == "PASS" and e.get("layer") == 4]
+        valid = []
+        for e in records:
+            if not e.get("reviewer") or e.get("reviewer") == e.get("implementer"): continue
+            if not e.get("artifact") or not e.get("platform") or not e.get("steps"): continue
+            try:
+                p = e["artifact"]["path"]
+                if e["artifact"].get("kind") != "file": continue
+                if file_identity(p) != {k: v for k, v in e["artifact"].items() if k != "path"}: continue
+            except (KeyError, OSError): continue
+            if gate == "independent-acceptance" and set(e.get("quality", [])) != set(QUALITY): continue
+            valid.append(e)
+        if not valid: missing.append(gate)
+    for key, change in state.get("pending_changes", {}).items():
+        if change.get("kind") == "rc-backport" and change.get("status") != "VERIFIED": missing.append("backport:" + key)
+    # Readiness is an evidence gate, never inferred from green build steps or a stored label.
+    return {"ready": not missing, "candidate": rc["identity"], "missing": missing}
+
+
+def git_closure(repo):
+    problems = []
+    alternate_file = Path(git(repo, "rev-parse", "--git-path", "objects/info/alternates").decode().strip())
+    if not alternate_file.is_absolute(): alternate_file = Path(repo) / alternate_file
+    if alternate_file.exists():
+        for line in alternate_file.read_text().splitlines():
+            alternate = Path(line)
+            if not alternate.is_absolute(): alternate = alternate_file.parent.parent / alternate
+            if not alternate.is_dir(): problems.append("Missing Git object alternate: " + str(alternate))
+    try:
+        listing = git(repo, "rev-list", "--objects", "--missing=print", "HEAD").decode().splitlines()
+        missing = [line for line in listing if line.startswith("?")]
+        problems.extend("Missing reachable Git object: " + x[1:] for x in missing[:20])
+    except subprocess.CalledProcessError as error:
+        problems.append("Cannot enumerate HEAD object closure: " + error.stderr.decode(errors="replace")[:1000])
+    return {"check": "git-object-closure", "result": "BLOCKED" if problems else "PASS", "classification": "INFRASTRUCTURE", "problems": problems,
+            "limitation": "HEAD reachability only; separately retain uncommitted source/candidate manifests and external dependencies in durable custody."}
+
+
+def donor_checks(repo, registry):
+    checks = []
+    for name, donor in registry.get("donors", {}).items():
+        if not any((Path(repo) / p).exists() for p in donor.get("when_any", [])): continue
+        problems = []
+        try:
+            entry = git(repo, "ls-files", "--stage", "--", donor["path"]).decode().strip().split()
+            if len(entry) < 2 or entry[:2] != ["160000", donor["revision"]]: problems.append("Pinned donor Gitlink differs or is absent")
+        except subprocess.CalledProcessError as error: problems.append("Cannot read donor pin: " + str(error))
+        for path, expected in donor["files"].items():
+            safe_relative(path)
+            try:
+                if file_identity(Path(repo) / path) != expected: problems.append("Changed pinned donor input: " + path)
+            except OSError: problems.append("Missing pinned donor input: " + path)
+        checks.append({"check": "donor-source-closure:" + name, "result": "BLOCKED" if problems else "PASS", "classification": "INFRASTRUCTURE",
+                       "revision": donor["revision"], "checked_files": len(donor["files"]), "problems": problems})
+    return checks
+
+
+def preflight(repo, candidate=None, donors=None):
+    checks = []
+    for relative in ("AGENTS.md", "global.json", "NuGet.Config", "docs/specification/9to1-development-specification-v2.md"):
+        checks.append({"check": relative, "result": "PASS" if (Path(repo) / relative).is_file() else "BLOCKED", "classification": "INFRASTRUCTURE"})
+    checks.append(git_closure(repo))
+    donor_registry = Path(__file__).with_name("donor-inputs.json")
+    if donors is None and donor_registry.exists(): donors = read(donor_registry)
+    checks.extend(donor_checks(repo, donors or {}))
+    if candidate:
+        try: validate_candidate(candidate, repo); result, reason = "PASS", None
+        except Refusal as error: result, reason = "BLOCKED", str(error)
+        checks.append({"check": "candidate inputs", "result": result, "reason": reason, "classification": "INFRASTRUCTURE"})
+    vfs = os.statvfs(repo)
+    checks.append({"check": "free-space", "available_bytes": vfs.f_bavail * vfs.f_frsize,
+                   "result": "OBSERVED", "note": "Use the owning build/package peak-space requirement; no invented universal fit claim."})
+    return {"at": now(), "checks": checks, "ready": all(c["result"] != "BLOCKED" for c in checks),
+            "scope": "Generic source/configuration/Git/donor preflight only; build and native readiness are not inferred.",
+            "native_environment": "NOT RUN", "toolchain": "NOT RUN: use platform-specific existing preflight"}
+
+
+def plan(changed, registry, release=False):
+    selected, unknown = set(), []
+    for path in changed:
+        safe_relative(path)
+        matches = [key for key, entry in registry["checks"].items() if any(scope_overlap(path, scope) for scope in entry["paths"])]
+        selected.update(matches)
+        if not matches: unknown.append(path)
+    if unknown: selected.update(registry["checks"])  # uncovered dependency fails conservatively to the complete registered set
+    todo = list(selected)
+    while todo:
+        name = todo.pop()
+        for dep in registry["checks"][name].get("depends_on", []):
+            if dep not in registry["checks"]: raise Refusal("Unknown check dependency: " + dep)
+            if dep not in selected: selected.add(dep); todo.append(dep)
+    if release: selected.update(registry["checks"])
+    return {"checks": {k: registry["checks"][k] for k in sorted(selected)}, "unknown_paths": unknown,
+            "mandatory_release_gates": list(MANDATORY) if release else [],
+            "selection_limit": "Registered checks are dependency selectors, not an exhaustive product acceptance manifest. L4 is never waived."}
+
+
+def recovery(state, repo):
+    revision = git(repo, "rev-parse", "HEAD").decode().strip()
+    rc = state.get("release_candidate")
+    discrepancies = []
+    if revision != state.get("observed_revision"): discrepancies.append("Repository HEAD differs from checkpoint")
+    if rc:
+        try:
+            candidate = read(rc["path"])
+            validate_candidate(candidate)
+            if candidate["identity"] != rc["identity"] or file_identity(rc["path"]) != rc["manifest"]:
+                raise Refusal("Pinned RC content identity changed")
+        except (OSError, KeyError, ValueError, Refusal) as error: discrepancies.append("RC manifest unavailable/changed: " + str(error))
+    object_closure = git_closure(repo)
+    if object_closure["result"] != "PASS": discrepancies.extend(object_closure["problems"])
+    for key, asset in state.get("recovery_assets", {}).items():
+        try:
+            if file_identity(asset["path"]) != {k: v for k, v in asset.items() if k != "path"}: raise Refusal("content identity changed")
+        except (OSError, Refusal) as error: discrepancies.append("Recovery asset unavailable/changed: " + key + ": " + str(error))
+    return {"schema": SCHEMA, "recovered_at": now(), "generation": state["generation"], "actual_revision": revision,
+            "read_first": ["AGENTS.md", "docs/development/workflow.md", "docs/specification/9to1-development-specification-v2.md", state["projection_of"]],
+            "workers": state["workers"], "tasks": state["tasks"], "blockers": state["blockers"],
+            "outstanding_acceptance": state["outstanding_acceptance"], "release_readiness": release_ready(state),
+            "next_actions": state["next_actions"], "discrepancies": discrepancies, "recovery_status": "BLOCKED" if discrepancies else "CHECKPOINT",
+            "git_object_closure": object_closure,
+            "liveness": "NOT CHECKED: inspect supported live agent/worker APIs; historical PIDs are not live custody",
+            "native_testing": "NOT RUN by recovery", "provider_policy": "Mercury revoked: Beam and Codex only; no paid fallback"}
+
+
+def dashboard(state):
+    lines = ["# Development checkpoint projection", "", f"Generation {state['generation']} · updated {state['updated_at']}", "",
+             "PC coordinator remains authoritative. Engineering, integration and release acceptance are separate.", "",
+             "| Task | Owner | Stage | Status | Last verified revision | Blockers | Next action |", "|---|---|---|---|---|---|---|"]
+    for key, task in sorted(state["tasks"].items()):
+        values = [key, task.get("owner", "UNASSIGNED"), task.get("stage", "development"), task["status"], task.get("verified_revision", "NOT VERIFIED"), ", ".join(task.get("dependencies", [])), task.get("next_action", "UNRECORDED")]
+        lines.append("| " + " | ".join(str(x).replace("|", "\\|").replace("\n", " ") for x in values) + " |")
+    lines += ["", "Release: " + ("evidence gates met" if release_ready(state)["ready"] else "BLOCKED — " + ", ".join(release_ready(state)["missing"])), ""]
+    return "\n".join(lines)
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--state", type=Path)
+    sub = p.add_subparsers(dest="action", required=True)
+    q = sub.add_parser("init"); q.add_argument("--repo", required=True); q.add_argument("--root-checkpoint", required=True)
+    q = sub.add_parser("checkpoint"); q.add_argument("--expect", type=int, required=True); q.add_argument("--patch", required=True)
+    q = sub.add_parser("claim"); q.add_argument("--expect", type=int, required=True); q.add_argument("--worker", required=True); q.add_argument("--role", required=True); q.add_argument("paths", nargs="+")
+    q = sub.add_parser("release"); q.add_argument("--expect", type=int, required=True); q.add_argument("--worker", required=True)
+    q = sub.add_parser("snapshot"); q.add_argument("--repo", required=True); q.add_argument("--out", required=True); q.add_argument("--accepted-fix", action="append", default=[]); q.add_argument("--previous-candidate")
+    q = sub.add_parser("pin-rc"); q.add_argument("--expect", type=int, required=True); q.add_argument("--candidate", required=True)
+    q = sub.add_parser("advance-rc"); q.add_argument("--expect", type=int, required=True); q.add_argument("--candidate", required=True); q.add_argument("--patch", required=True)
+    q = sub.add_parser("verify-backport"); q.add_argument("--expect", type=int, required=True); q.add_argument("--patch-id", required=True); q.add_argument("--target", required=True); q.add_argument("--repo", required=True)
+    q = sub.add_parser("preflight"); q.add_argument("--repo", required=True); q.add_argument("--candidate")
+    q = sub.add_parser("plan"); q.add_argument("--changed", required=True); q.add_argument("--registry", default=str(Path(__file__).with_name("checks.json"))); q.add_argument("--release", action="store_true")
+    q = sub.add_parser("run"); q.add_argument("--repo", required=True); q.add_argument("--candidate", required=True); q.add_argument("--check", required=True); q.add_argument("--layer", type=int, required=True); q.add_argument("--out", required=True); q.add_argument("--trx"); q.add_argument("--environment-manifest"); q.add_argument("--timeout-seconds", type=float, default=300); q.add_argument("--kind", choices=["test", "build"], default="test"); q.add_argument("command", nargs=argparse.REMAINDER)
+    q = sub.add_parser("recover"); q.add_argument("--repo", required=True)
+    sub.add_parser("dashboard"); sub.add_parser("release-status")
+    a = p.parse_args(argv)
+    try:
+        if a.action == "init":
+            if not a.state: raise Refusal("--state required")
+            value = initial_state(a.repo, a.root_checkpoint)
+            a.state.parent.mkdir(parents=True, exist_ok=True)
+            with a.state.open("xb") as stream: stream.write(encoded(value)); stream.flush(); os.fsync(stream.fileno())
+        elif a.action == "snapshot":
+            old = read(a.previous_candidate)["accepted_fixes"] if a.previous_candidate else []
+            value = snapshot(a.repo, a.out, [read(f) for f in a.accepted_fix], old)
+        elif a.action == "preflight": value = preflight(a.repo, read(a.candidate) if a.candidate else None)
+        elif a.action == "plan": value = plan(read(a.changed), read(a.registry), a.release)
+        elif a.action == "run":
+            cmd = a.command[1:] if a.command[:1] == ["--"] else a.command
+            if not cmd: raise Refusal("Explicit command required")
+            value = run_check(a.repo, read(a.candidate), a.check, a.layer, cmd, a.out, a.trx, a.kind, a.environment_manifest, a.timeout_seconds)
+        elif a.action in ("checkpoint", "claim", "release", "pin-rc", "advance-rc", "verify-backport"):
+            if not a.state: raise Refusal("--state required")
+            with transaction(a.state, a.expect) as state:
+                if a.action == "checkpoint":
+                    patch = read(a.patch)
+                    forbidden = set(patch) & {"schema", "generation", "release_candidate", "release_history", "workers", "authority", "projection_of"}
+                    if forbidden: raise Refusal("Protected checkpoint fields: " + ", ".join(sorted(forbidden)))
+                    for key, val in patch.items():
+                        if isinstance(val, dict) and isinstance(state.get(key), dict): state[key].update(val)
+                        else: state[key] = val
+                elif a.action == "claim": claim(state, a.worker, a.paths, a.role)
+                elif a.action == "release": state["workers"][a.worker].update(status="CHECKPOINT", released_at=now())
+                elif a.action == "advance-rc": advance_rc(state, read(a.candidate), a.candidate, read(a.patch))
+                elif a.action == "verify-backport": verify_backport(state, a.patch_id, a.target, a.repo)
+                else: pin_rc(state, read(a.candidate), a.candidate)
+            value = read(a.state)
+        else:
+            if not a.state: raise Refusal("--state required")
+            state = read(a.state)
+            if a.action == "dashboard": print(dashboard(state)); return 0
+            value = recovery(state, a.repo) if a.action == "recover" else release_ready(state)
+        print(json.dumps(value, indent=2, ensure_ascii=False))
+        if a.action == "run" and value["result"] not in ("PASS", "PROCESS_SUCCEEDED"): return 1
+        if a.action == "preflight" and not value["ready"]: return 2
+        if a.action == "recover" and value["recovery_status"] == "BLOCKED": return 2
+        if a.action == "release-status" and not value["ready"]: return 1
+        return 0
+    except (Refusal, OSError, KeyError, ValueError, ET.ParseError, subprocess.CalledProcessError) as error:
+        print(json.dumps({"result": "BLOCKED", "classification": "INFRASTRUCTURE", "reason": str(error)})); return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -32,3 +32,12 @@ The strict final markup gate is intentionally expected to fail during migration:
 It must not pass until active applications are CUI-native and any retained donor
 or historical markup has been excluded by an reviewed source-classification
 policy. A normal verification reports legacy counts as an unfinished condition.
+
+Development/release evidence, ownership and interruption recovery use the
+[durable workflow](../docs/development/workflow.md) and the stdlib helper at
+`eng/development/workflow.py`. It extends the existing checkpoint system rather
+than replacing the PC coordinator. Run its focused infrastructure invariants with:
+
+```sh
+python3 -B -m unittest discover -s eng/development -p test_workflow.py -v
+```
