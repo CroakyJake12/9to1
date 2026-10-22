@@ -8,6 +8,7 @@ labelled NOT RUN until a root allocation builds and runs it with one compiler pr
 """
 import os
 import pathlib
+import shutil
 import unittest
 
 NATIVE = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata"
@@ -108,11 +109,17 @@ class ChildOwnershipFixtureRunTests(unittest.TestCase):
     """Runs the synchronized C++ fixture against the real header. Only executed when a root
     allocation explicitly enables it (one compiler process, short timeout)."""
 
+    def setUp(self):
+        if shutil.which("g++") is None:
+            self.skipTest("BLOCKED: existing g++ compiler unavailable; native fixture NOT RUN")
+
     def test_fixture_runs_clean(self):
         import subprocess
         import sys
         import tempfile
-        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+        with tempfile.TemporaryDirectory(prefix="dulche-child-fixture-",
+                                         dir=os.environ.get("DULCHE_CHILD_FIXTURE_BUILD_ROOT")) as tmp:
+            print("fixture output directory:", tmp)
             out = pathlib.Path(tmp) / "child-ownership-fixture"
             build = subprocess.run(
                 ["g++", "-std=c++20", "-O1", "-pthread", "-I", str(NATIVE),
@@ -122,11 +129,14 @@ class ChildOwnershipFixtureRunTests(unittest.TestCase):
             run = subprocess.run([str(out)], capture_output=True, text=True, timeout=60)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             self.assertIn("failures=0", run.stdout)
+            print(run.stdout, end="")
 
     def test_descendant_after_reap_fixture_runs_clean(self):
         import subprocess
         import tempfile
-        with tempfile.TemporaryDirectory(dir="/tmp/opencode") as tmp:
+        with tempfile.TemporaryDirectory(prefix="dulche-child-fixture-",
+                                         dir=os.environ.get("DULCHE_CHILD_FIXTURE_BUILD_ROOT")) as tmp:
+            print("fixture output directory:", tmp)
             out = pathlib.Path(tmp) / "descendant-after-reap-fixture"
             build = subprocess.run(
                 ["g++", "-std=c++20", "-O1", "-pthread", "-I", str(NATIVE),
@@ -136,6 +146,7 @@ class ChildOwnershipFixtureRunTests(unittest.TestCase):
             run = subprocess.run([str(out)], capture_output=True, text=True, timeout=60)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             self.assertIn("failures=0", run.stdout)
+            print(run.stdout, end="")
 
 
 if __name__ == "__main__":

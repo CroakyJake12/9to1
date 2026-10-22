@@ -3,8 +3,8 @@
 These tests drive the REAL compiled candidate relay worker
 (`dulche_strata_candidate_worker.cpp` + `dulche_child_process.h` + `strata_tokenizer_helper.py`)
 over its wire protocol. They do NOT use a mirror or a stub of the parser/child-owner code. They are
-authored in this source-only checkpoint for execution at a later root build slot, and they skip
-cleanly (with a clear label) until the built worker is present.
+run only with an explicitly supplied, digest-pinned worker. Optional source-only execution reports
+the five wire cases as NOT RUN; required execution fails closed on missing or invalid inputs.
 
 Coverage (non-GPU, no engine/model/GPU required for the cases that run):
   * hello frame (type 0) is emitted with ABI version 2
@@ -22,18 +22,20 @@ NOT RUN without the full build slot (require a real engine + donor tokenizer):
   * child/drain settlement under a long-lived engine
 
 The worker is compiled by the coordinator at root allocation with:
-  g++ -std=c++20 -O2 -DSTRATA_HAS_CUDA=1 -DSTRATA_NATIVE_EXT="" \
-      -I '<native>' dulche_strata_candidate_worker.cpp -o build/dulche-strata-candidate-worker \
-      -lcudart
+  g++ -std=c++20 -O1 -pthread -DSTRATA_HAS_CUDA=0 -DSTRATA_NATIVE_EXT='""' \
+      -I '<native>' dulche_strata_candidate_worker.cpp -o build/dulche-strata-candidate-worker
 (no compiler installs, downloads, model execution, or Windows/GPU/PC acceptance are performed here).
 """
 import hashlib
 import os
 import pathlib
+import re
 import select
+import stat
 import struct
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 from contextlib import contextmanager
@@ -41,21 +43,33 @@ from contextlib import contextmanager
 NATIVE = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata"
 CANDIDATE_CPP = NATIVE / "dulche_strata_candidate_worker.cpp"
 CHILD_PROCESS_H = NATIVE / "dulche_child_process.h"
-# Where a root allocation would place the built worker (worktree-local). If absent, tests skip.
-BUILT_CANDIDATE = pathlib.Path("/workspace/9to1-mercury-thunder/work/pc-worker/thunder-benchmark/native-child-test/build/dulche-strata-candidate-worker")
-
-# Independent execution must run against a PINNED genuine binary. The root records the exact SHA256
-# of the built artifact; without it the tests refuse to consume a mutable/unpinned build.
-_EXPECTED_CANDIDATE_SHA256 = os.environ.get("DULCHE_NATIVE_CANDIDATE_SHA256")
+# Only ordinary process/locale values reach the worker. In particular, no ambient STRATA_ model,
+# engine, helper or interpreter override (or dynamic-loader override) can select the shared engine.
+_SYSTEM_ENVIRONMENT = {"PATH", "HOME", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "TMPDIR",
+                       "SYSTEMROOT", "WINDIR", "COMSPEC"}
 
 
-def _built_candidate_acceptable():
-    if not BUILT_CANDIDATE.is_file():
-        return False
-    if not _EXPECTED_CANDIDATE_SHA256:
-        return False
-    actual = hashlib.sha256(BUILT_CANDIDATE.read_bytes()).hexdigest()
-    return actual.lower() == _EXPECTED_CANDIDATE_SHA256.lower()
+def _admit_candidate():
+    supplied = os.environ.get("DULCHE_NATIVE_CANDIDATE_BINARY")
+    expected = os.environ.get("DULCHE_NATIVE_CANDIDATE_SHA256")
+    required = os.environ.get("DULCHE_NATIVE_FIXTURE_REQUIRED") == "1"
+    if not supplied and not expected and not required:
+        raise unittest.SkipTest("NOT RUN: native wire fixture binary/SHA not configured (optional source-only mode)")
+    if not supplied:
+        raise ValueError("BLOCKED: DULCHE_NATIVE_CANDIDATE_BINARY is required")
+    binary = pathlib.Path(supplied)
+    try:
+        mode = binary.stat().st_mode
+    except OSError as error:
+        raise ValueError("BLOCKED: configured native fixture binary is unavailable") from error
+    if not stat.S_ISREG(mode) or not mode & 0o111 or not os.access(binary, os.X_OK):
+        raise ValueError("BLOCKED: native fixture binary must be a regular executable file")
+    if not expected or re.fullmatch(r"[0-9a-fA-F]{64}", expected) is None:
+        raise ValueError("BLOCKED: DULCHE_NATIVE_CANDIDATE_SHA256 must contain exactly 64 hexadecimal digits")
+    content = binary.read_bytes()
+    if hashlib.sha256(content).hexdigest() != expected.lower():
+        raise ValueError("BLOCKED: configured native fixture binary SHA256 mismatch; refusing execution")
+    return content, expected.lower()
 
 
 class _FrameDeadlineExceeded(Exception):
@@ -77,14 +91,36 @@ def _text(s) -> bytes:
     return struct.pack("<I", len(b)) + b
 
 
-@unittest.skipUnless(_built_candidate_acceptable(),
-                     "root-allocation native fixture: built candidate worker not present or not pinned "
-                     "by DULCHE_NATIVE_CANDIDATE_SHA256")
 class NativeFixtureTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._optional_not_run = None
+        try:
+            content, cls._expected_sha256 = _admit_candidate()
+        except unittest.SkipTest as reason:
+            cls._optional_not_run = str(reason)
+            return
+        # A measured copy lives in an owned layout with NO sibling engine directory. Never execute
+        # the caller's mutable path or let self-relative discovery reach an installed engine.
+        layout = tempfile.TemporaryDirectory(prefix="dulche-native-fixture-")
+        cls.addClassCleanup(layout.cleanup)
+        native = pathlib.Path(layout.name) / "native"
+        native.mkdir(mode=0o700)
+        cls._fixture_binary = native / "dulche-strata-candidate-worker"
+        cls._fixture_binary.write_bytes(content)
+        cls._fixture_binary.chmod(0o700)
+
+    def setUp(self):
+        if self._optional_not_run is not None:
+            self.skipTest(self._optional_not_run)
+
     @contextmanager
     def _spawn(self):
-        proc = subprocess.Popen([str(BUILT_CANDIDATE)], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if hashlib.sha256(self._fixture_binary.read_bytes()).hexdigest() != self._expected_sha256:
+            raise ValueError("BLOCKED: private native fixture binary SHA256 changed before spawn")
+        environment = {key: value for key, value in os.environ.items() if key in _SYSTEM_ENVIRONMENT}
+        proc = subprocess.Popen([str(self._fixture_binary)], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment)
         try:
             yield proc
         finally:

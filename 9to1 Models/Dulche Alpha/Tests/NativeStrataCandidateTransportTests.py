@@ -1,4 +1,4 @@
-"""Bounded build-free transport/protocol tests for the candidate (v0.2.1) relay.
+"""Bounded build-free transport/protocol tests for the candidate (v0.2.2) relay.
 
 The candidate worker is C++ and cannot be compiled in this source-only checkpoint, so this suite pins
 the WIRE CONTRACT the relay and the donor engine actually speak, then validates it three ways:
@@ -15,13 +15,43 @@ the WIRE CONTRACT the relay and the donor engine actually speak, then validates 
 
 These tests never compile, link, run inference, download models or install packages.
 """
+import hashlib
+import json
+import os
 import pathlib
 import re
 import unittest
 
 NATIVE = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata"
 CANDIDATE = NATIVE / "dulche_strata_candidate_worker.cpp"
-DONOR = pathlib.Path("/tmp/opencode/strata-v0201-src/src/program/generate.cpp")
+DONOR_LOCK = NATIVE / "prep" / "strata-v0.2.2-lock.candidate.json"
+
+
+def _read_pinned_donor():
+    supplied = os.environ.get("DULCHE_NATIVE_DONOR_SOURCE")
+    if not supplied:
+        if os.environ.get("DULCHE_NATIVE_DONOR_REQUIRED") == "1":
+            raise ValueError("BLOCKED: required donor source is not configured")
+        raise unittest.SkipTest("NOT RUN: donor source not configured; companion parser is contract evidence only")
+    donor = pathlib.Path(supplied)
+    if donor.is_dir():
+        donor = donor / "src" / "program" / "generate.cpp"
+    if not donor.is_file():
+        raise ValueError("BLOCKED: explicitly configured donor source is missing")
+    lock = json.loads(DONOR_LOCK.read_text(encoding="utf-8"))
+    if (lock.get("commit") != VERIFIED_UPSTREAM["candidate_commit"]
+            or lock.get("origin") != VERIFIED_UPSTREAM["repo"]):
+        raise ValueError("BLOCKED: donor lock revision does not match the current candidate")
+    rows = [row for row in lock["rows"] if row.get("path") == "src/program/generate.cpp"]
+    if len(rows) != 1 or re.fullmatch(r"[0-9a-fA-F]{64}", rows[0].get("sha256", "")) is None:
+        raise ValueError("BLOCKED: current candidate lock lacks one exact donor source pin")
+    pin = rows[0]
+    if donor.stat().st_size != pin["bytes"]:
+        raise ValueError("BLOCKED: donor source bytes do not match the current candidate lock")
+    content = donor.read_bytes()
+    if len(content) != pin["bytes"] or hashlib.sha256(content).hexdigest() != pin["sha256"].lower():
+        raise ValueError("BLOCKED: donor source bytes do not match the current candidate lock")
+    return content.decode("utf-8")
 
 FINISH_VOCAB = {"stop", "length", "cancel", "nonfinite"}
 
@@ -69,15 +99,11 @@ class WireContractSourceTests(unittest.TestCase):
 
     def test_donor_ready_shape(self):
         # donor emits `READY <max_context> stop` (see generate.cpp:10920).
-        if not DONOR.exists():
-            self.skipTest("donor source not present in this checkpoint")
-        src = DONOR.read_text()
+        src = _read_pinned_donor()
         self.assertIn('std::printf("READY %lld stop\\n", (long long) o.max_context)', src)
 
     def test_donor_done_finish_vocab(self):
-        if not DONOR.exists():
-            self.skipTest("donor source not present in this checkpoint")
-        src = DONOR.read_text()
+        src = _read_pinned_donor()
         # The donor's finish field is one of stop|length|cancel|nonfinite (DONE comment)
         self.assertIn("stop|length|cancel|nonfinite", src)
 
