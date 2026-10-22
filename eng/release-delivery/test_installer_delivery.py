@@ -75,7 +75,7 @@ class Delivery(unittest.TestCase):
         self.name = "9to1-delivery-fixture_0.1.0~fixture_arm64.deb"
         payload = self.payload["arm64"]
         package = {"file_name": self.name, "member": self.name, "bytes": len(payload), "sha256": hashlib.sha256(payload).hexdigest(), "name": "9to1-delivery-fixture", "version": "0.1.0~fixture", "architecture": "arm64"}
-        proof = {"status": "READY", "coordinator": "fixture-coordinator", "reviewer": "fixture-reviewer", "implementer": "fixture-implementer", "source_revision": "f" * 40, "package_sha256": package["sha256"], "mandatory_gates": dict.fromkeys(d.GATES, "PASS"), "quality": dict.fromkeys(d.QUALITY, "PASS")}
+        proof = {"status": "READY", "coordinator": "fixture-coordinator", "reviewer": "fixture-reviewer", "implementer": "fixture-implementer", "source_revision": "f" * 40, "source_patch_sha256": "0" * 64, "package_sha256": package["sha256"], "mandatory_gates": dict.fromkeys(d.GATES, "PASS"), "quality": dict.fromkeys(d.QUALITY, "PASS")}
         raw = json.dumps(proof).encode()
         acceptance = {**proof, "evidence_member": "evidence/independent-ready.json", "evidence": {"bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}}
         self.m = {"schema": "9to1.installer-delivery/v1", "repository": d.REPOSITORY, "source_revision": "f" * 40, "source_patch_sha256": "0" * 64, "package": package, "acceptance": acceptance, "artifacts": [], "target": {"distribution": "ubuntu", "version": "26.04", "architecture": "arm64", "gnome_acceptance": "NOT RUN"}}
@@ -275,6 +275,43 @@ class Delivery(unittest.TestCase):
         self.m["acceptance"].pop("evidence_member")
         path = self.root / "manifest.json"; path.write_text(json.dumps(self.m))
         with self.assertRaises(OSError): d.load_manifest(path)
+
+    def test_source_patch_must_match_both_approval_layers(self):
+        self.m["source_patch_sha256"] = "1" * 64
+        with self.assertRaises(d.Blocked): d.validate_manifest(self.m)
+        self.m["acceptance"]["source_patch_sha256"] = "1" * 64
+        self.build["source_patch_sha256"] = "1" * 64
+        self.entries["package-receipt.json"] = json.dumps(self.build).encode()
+        self.repack(1, self.entries)
+        with self.assertRaises(d.Blocked): self.receive()
+        proof = json.loads(self.proof_bytes()); proof["source_patch_sha256"] = "1" * 64
+        raw = json.dumps(proof).encode()
+        self.m["acceptance"]["evidence"] = {"bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+        self.repack(2, {"evidence/independent-ready.json": raw})
+        self.assertEqual(self.receive()["status"], "DELIVERED_BYTES_VERIFIED")
+
+    def test_malformed_gate_maps_retain_blocked_cli_receipts(self):
+        for category in ("mandatory_gates", "quality"):
+            for value in ([], None, "PASS"):
+                m = copy.deepcopy(self.m); m["acceptance"][category] = value
+                path = self.root / "malformed.json"; path.write_text(json.dumps(m))
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out): code = d.main(["preflight", "--manifest", str(path), "--destination", str(self.dest), "--baseline", str(self.baseline)])
+                with self.subTest(category=category, value=value):
+                    self.assertEqual(code, 2)
+                    receipt = json.loads(out.getvalue())
+                    self.assertEqual(receipt["status"], "BLOCKED")
+                    self.assertTrue(Path(receipt["failure_receipt_path"]).is_file())
+
+    def test_fifo_identity_and_manifest_rejected_with_bounded_negative_probes(self):
+        fifo = self.root / "input.fifo"; os.mkfifo(fifo)
+        script = "import runpy,sys; m=runpy.run_path(sys.argv[1]);\ntry: m['identity'](sys.argv[2])\nexcept m['Blocked']: print('BLOCKED')\n"
+        result = subprocess.run([sys.executable, "-B", "-c", script, str(Path(d.__file__)), str(fifo)], capture_output=True, text=True, timeout=3)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.strip(), "BLOCKED")
+        result = subprocess.run([sys.executable, "-B", str(Path(d.__file__)), "preflight", "--manifest", str(fifo), "--destination", str(self.dest), "--baseline", str(self.baseline)], capture_output=True, text=True, timeout=3)
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(json.loads(result.stdout)["status"], "BLOCKED")
 
     def test_no_debug_token_logging_or_interactive_login(self):
         with patch.dict(d.os.environ, {"GH_DEBUG": "api"}):

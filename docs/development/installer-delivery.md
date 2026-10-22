@@ -43,7 +43,7 @@ values must PASS: Usability, Product fit, Functionality, Integration, Separation
 and authenticity, User fit, Refinement. Reviewer and implementer must differ.
 
 `acceptance.evidence` pins a retained verdict's exact bytes/SHA. That verdict repeats
-status, source_revision, package_sha256, reviewer, implementer, mandatory_gates and
+status, source_revision, source_patch_sha256, package_sha256, reviewer, implementer, mandatory_gates and
 quality. Use either safe relative `acceptance.evidence_file` beside the manifest,
 or `acceptance.evidence_member` in the corresponding source/evidence artifact,
 never both. Adjacent post-build approval avoids rebuilding/repacking immutable

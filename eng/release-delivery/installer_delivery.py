@@ -42,7 +42,7 @@ def now():
 
 def identity(path):
     path = Path(path)
-    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, "rb") as stream:
         before = os.fstat(stream.fileno())
         require(stat.S_ISREG(before.st_mode), "Required payload is not a regular file")
@@ -52,6 +52,18 @@ def identity(path):
         after = os.fstat(stream.fileno())
     require((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) == (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns), "Payload changed during verification")
     return {"bytes": after.st_size, "sha256": h.hexdigest()}
+
+
+def read_regular(path, maximum):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as stream:
+        before = os.fstat(stream.fileno())
+        require(stat.S_ISREG(before.st_mode) and before.st_size <= maximum, "Required metadata must be a bounded regular file")
+        raw = stream.read(maximum + 1)
+        after = os.fstat(stream.fileno())
+    fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+    require(len(raw) == before.st_size and all(getattr(before, key) == getattr(after, key) for key in fields), "Metadata changed while reading")
+    return raw
 
 
 def check_identity(actual, expected, label):
@@ -84,10 +96,11 @@ def validate_manifest(manifest):
     acceptance = manifest.get("acceptance", {})
     require(isinstance(acceptance, dict), "Independent acceptance must be an object")
     require(acceptance.get("status") == "READY", "Root has not declared this exact package READY")
-    require(acceptance.get("source_revision") == manifest["source_revision"] and acceptance.get("package_sha256") == package["sha256"], "Acceptance belongs to another source/package")
+    require(acceptance.get("source_revision") == manifest["source_revision"] and acceptance.get("source_patch_sha256") == manifest["source_patch_sha256"] and acceptance.get("package_sha256") == package["sha256"], "Acceptance belongs to another source/package")
     require(acceptance.get("coordinator") and acceptance.get("reviewer") and acceptance.get("implementer") and acceptance["reviewer"] != acceptance["implementer"], "Independent acceptance identities required")
     for key, required in (("mandatory_gates", GATES), ("quality", QUALITY)):
         proof = acceptance.get(key, {})
+        require(isinstance(proof, dict), "Mandatory acceptance must use named gate maps: " + key)
         require(required <= proof.keys() and all(proof[k] == "PASS" for k in required), "Mandatory acceptance incomplete: " + key)
     evidence_paths = [acceptance.get(k) for k in ("evidence_member", "evidence_file") if acceptance.get(k)]
     require(len(evidence_paths) == 1, "One retained independent acceptance member or adjacent file required")
@@ -113,13 +126,13 @@ def validate_manifest(manifest):
 
 def load_manifest(path):
     require(not Path(path).is_symlink(), "Manifest must be a retained regular file")
-    raw = Path(path).read_bytes()
+    raw = read_regular(path, 1024 * 1024)
     manifest = validate_manifest(json.loads(raw))
     proof = None
     if manifest["acceptance"].get("evidence_file"):
         evidence = Path(path).parent / manifest["acceptance"]["evidence_file"]
-        check_identity(identity(evidence), manifest["acceptance"]["evidence"], "Retained independent acceptance file")
-        proof = evidence.read_bytes()
+        proof = read_regular(evidence, 1024 * 1024)
+        check_identity({"bytes": len(proof), "sha256": hashlib.sha256(proof).hexdigest()}, manifest["acceptance"]["evidence"], "Retained independent acceptance file")
         validate_acceptance_bytes(manifest, proof)
     return manifest, hashlib.sha256(raw).hexdigest(), proof
 
@@ -272,7 +285,7 @@ def validate_acceptance_bytes(manifest, proof):
     check_identity({"bytes": len(proof), "sha256": hashlib.sha256(proof).hexdigest()}, expected["evidence"], "Independent acceptance evidence")
     verdict = json.loads(proof)
     require(isinstance(verdict, dict), "Independent verdict must be an object")
-    require(verdict.get("status") == "READY" and verdict.get("source_revision") == manifest["source_revision"] and verdict.get("package_sha256") == manifest["package"]["sha256"] and verdict.get("reviewer") == expected["reviewer"] and verdict.get("implementer") == expected["implementer"], "Retained independent verdict is not this READY candidate")
+    require(verdict.get("status") == "READY" and verdict.get("source_revision") == manifest["source_revision"] and verdict.get("source_patch_sha256") == manifest["source_patch_sha256"] and verdict.get("package_sha256") == manifest["package"]["sha256"] and verdict.get("reviewer") == expected["reviewer"] and verdict.get("implementer") == expected["implementer"], "Retained independent verdict is not this READY candidate")
     require(verdict.get("mandatory_gates") == expected["mandatory_gates"] and verdict.get("quality") == expected["quality"], "Retained acceptance gate proof differs")
 
 
