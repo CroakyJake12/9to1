@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pinned CI acquisition/data-only stage and bounded package merge. Never executes inference."""
 from pathlib import Path
-import argparse,datetime,hashlib,json,os,shutil,stat,sys,tarfile,urllib.request,urllib.parse
+import argparse,datetime,hashlib,json,os,shutil,stat,sys,tarfile,urllib.request,urllib.parse,zipfile
 REPO='CroakyJake12/9to1';RUN=39562111673;ARTIFACT=12328502225
 ARTIFACT_NAME='9to1-llamacpp-b10809-arm64-bookworm'
 PROVIDER_ZIP_SHA='b596f767158d3a53de226bed35cf498d07f485e00da0cd4649331db988affa18'
@@ -44,7 +44,23 @@ class ArtifactRedirect(urllib.request.HTTPRedirectHandler):
   if urllib.parse.urlsplit(req.full_url).netloc!=urllib.parse.urlsplit(newurl).netloc:
    redirected.remove_header('Authorization')
   return redirected
-def fetch_metadata(destination,provider_zip):
+def fetch_metadata(destination,provider_zip,cache_dir=None):
+ # An exact cache hit reuses previously authenticated immutable input bytes;
+ # it does not claim that the original short-lived Actions artifact still exists.
+ if cache_dir is not None:
+  no_symlink_ancestors(cache_dir);cache_dir.mkdir(parents=True,exist_ok=True)
+  cached_zip=cache_dir/'provider.zip';cached_meta=cache_dir/'origin-metadata.json'
+  if cached_zip.exists() or cached_meta.exists():
+   no_symlink_ancestors(cached_meta)
+   origin=validate_artifact_metadata(json.loads(cached_meta.read_text()))
+   verify_file(cached_zip,PROVIDER_ZIP_SHA,47849044)
+   no_symlink_ancestors(provider_zip)
+   if provider_zip.exists():raise ValueError('Fresh provider ZIP output required')
+   shutil.copyfile(cached_zip,provider_zip)
+   meta={**origin,'independent_provider_zip_sha256':digest(provider_zip),
+         'acquisition_source':'EXACT_BYTE_PINNED_CACHE',
+         'original_artifact_current_availability':'NOT CHECKED; historical origin metadata only'}
+   Path(destination).write_text(json.dumps(meta,indent=2)+'\n');return meta
  token=os.environ.get('GH_TOKEN','')
  if not token:raise ValueError('Ephemeral workflow token required for standard same-repository metadata read')
  req=urllib.request.Request('https://api.github.com/repos/'+REPO+'/actions/artifacts/'+str(ARTIFACT),headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'9to1-pinned-inference-stage'})
@@ -57,7 +73,29 @@ def fetch_metadata(destination,provider_zip):
  with urllib.request.build_opener(ArtifactRedirect()).open(archive_request,timeout=60) as response,provider_zip.open('xb') as dst:shutil.copyfileobj(response,dst)
  verify_file(provider_zip,PROVIDER_ZIP_SHA,47849044)
  meta['independent_provider_zip_sha256']=digest(provider_zip)
+ meta['origin_metadata_observed_at']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+ meta['acquisition_source']='AUTHENTICATED_ACTIONS_ARTIFACT'
+ if cache_dir is not None:
+  shutil.copyfile(provider_zip,cache_dir/'provider.zip')
+  (cache_dir/'origin-metadata.json').write_text(json.dumps(meta,indent=2)+'\n')
  Path(destination).write_text(json.dumps(meta,indent=2)+'\n');return meta
+def extract_provider_zip(provider_zip,artifact_root):
+ verify_file(provider_zip,PROVIDER_ZIP_SHA,47849044);no_symlink_ancestors(artifact_root)
+ if artifact_root.exists():raise ValueError('Fresh provider extraction directory required')
+ with zipfile.ZipFile(provider_zip) as archive:
+  names=set();members=archive.infolist()
+  if sum(m.file_size for m in members)>256*1024*1024:raise ValueError('Oversized provider archive')
+  for member in members:
+   rel=Path(member.filename)
+   kind=stat.S_IFMT(member.external_attr>>16)
+   if rel.is_absolute() or '..' in rel.parts or '\\' in member.filename or member.filename in names or kind not in (0,stat.S_IFREG,stat.S_IFDIR):raise ValueError('Unsafe provider archive member')
+   names.add(member.filename)
+  artifact_root.mkdir(parents=True)
+  for member in members:
+   target=artifact_root/member.filename
+   if member.is_dir():target.mkdir(parents=True,exist_ok=True);continue
+   target.parent.mkdir(parents=True,exist_ok=True)
+   with archive.open(member) as source,target.open('xb') as destination:shutil.copyfileobj(source,destination)
 def unique(root,name):
  hits=[p for p in root.rglob(name) if p.is_file() and not p.is_symlink()]
  if len(hits)!=1:raise ValueError('Expected one '+name+' in standard downloaded artifact')
@@ -74,9 +112,13 @@ def extract_payload(archive,destination):
    with tar.extractfile(member) as src,target.open('xb') as dst:shutil.copyfileobj(src,dst)
    target.chmod(0o755 if member.mode&0o111 else 0o644)
 def download(url,destination,sha,size):
+ if destination.exists():return verify_file(destination,sha,size)
  partial=destination.with_name(destination.name+'.partial')
  with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'9to1-pinned-inference-stage'}),timeout=60) as response,partial.open('xb') as dst:shutil.copyfileobj(response,dst)
  verify_file(partial,sha,size);partial.rename(destination);return destination
+def cached_input(cache_dir,name,url,sha,size):
+ no_symlink_ancestors(cache_dir);cache_dir.mkdir(parents=True,exist_ok=True)
+ return download(url,cache_dir/name,sha,size)
 def stage_expected_files(root):
  spec=json.loads((root/DULCHE/'bundle/arm64-runtime-bundle-spec.json').read_text())
  return spec,{'usr/lib/haven/'+a['installPath'] for a in spec['assets']}|{'usr/lib/haven/inference/'+n for n in ['bundle/bundle-manifest.json','bundle/bundle-receipt.json','modelctl.py','gguf.py','model_lease.py']}|{'usr/share/haven/default-models/'+n for n in [MODEL_SHA+'.gguf','qwen3-06b-q6k.json','notices/Qwen3-Apache-2.0-LICENSE.txt']}
@@ -125,6 +167,10 @@ def prepare(root,artifact_root,output_root,metadata,model_file=None,notice_file=
  for a in spec['assets']:
   src=unique(artifact_root,'engine-closure.json') if a['path']=='evidence/engine-closure.json' else payload/a['path'];verify_file(src,a['expectedSha256'],a['expectedSize']);dst=supplied/a['path'];dst.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dst)
  model=output_root/'Qwen3-0.6B-Q6_K.gguf';notice=output_root/'Qwen3-Apache-2.0-LICENSE.txt'
+ cache=os.environ.get('PREVIEW_INPUT_CACHE')
+ if cache:
+  if model_file is None:model_file=cached_input(Path(cache),'Qwen3-0.6B-Q6_K.gguf',MODEL_URL,MODEL_SHA,MODEL_SIZE)
+  if notice_file is None:notice_file=cached_input(Path(cache),'Qwen3-Apache-2.0-LICENSE.txt',NOTICE_URL,NOTICE_SHA,NOTICE_SIZE)
  if model_file:verify_file(model_file,MODEL_SHA,MODEL_SIZE);os.link(model_file,model)
  else:download(MODEL_URL,model,MODEL_SHA,MODEL_SIZE)
  if notice_file:verify_file(notice_file,NOTICE_SHA,NOTICE_SIZE);shutil.copyfile(notice_file,notice)
@@ -136,10 +182,13 @@ def prepare(root,artifact_root,output_root,metadata,model_file=None,notice_file=
   with open(os.environ['GITHUB_ENV'],'a') as f:f.write('PREVIEW_INFERENCE_STAGE='+str(stage)+'\nPREVIEW_INFERENCE_RECEIPT='+str(out)+'\nPREVIEW_INFERENCE_SOURCE='+str(source_copy)+'\n')
  return receipt
 def main():
- p=argparse.ArgumentParser();p.add_argument('--validate-artifact-only',type=Path);p.add_argument('--provider-zip',type=Path);p.add_argument('--artifact-root',type=Path);p.add_argument('--artifact-metadata',type=Path);p.add_argument('--output-root',type=Path);p.add_argument('--model-file',type=Path);p.add_argument('--notice-file',type=Path);a=p.parse_args();root=Path(__file__).resolve().parents[3]
+ p=argparse.ArgumentParser();p.add_argument('--validate-artifact-only',type=Path);p.add_argument('--provider-zip',type=Path);p.add_argument('--provider-cache',type=Path);p.add_argument('--extract-provider-zip',type=Path);p.add_argument('--artifact-root',type=Path);p.add_argument('--artifact-metadata',type=Path);p.add_argument('--output-root',type=Path);p.add_argument('--model-file',type=Path);p.add_argument('--notice-file',type=Path);a=p.parse_args();root=Path(__file__).resolve().parents[3]
  if a.validate_artifact_only:
   if not a.provider_zip:p.error('--validate-artifact-only requires --provider-zip under RUNNER_TEMP')
-  fetch_metadata(a.validate_artifact_only,a.provider_zip);print('Exact pinned provider artifact metadata and ZIP bytes verified');return
+  fetch_metadata(a.validate_artifact_only,a.provider_zip,a.provider_cache);print('Exact pinned provider origin metadata and ZIP bytes verified');return
+ if a.extract_provider_zip:
+  if not a.artifact_root:p.error('--extract-provider-zip requires --artifact-root')
+  extract_provider_zip(a.extract_provider_zip,a.artifact_root);return
  if not all([a.artifact_root,a.artifact_metadata,a.output_root]):p.error('prepare needs --artifact-root --artifact-metadata --output-root')
  print(json.dumps(prepare(root,a.artifact_root,a.output_root,a.artifact_metadata,a.model_file,a.notice_file),indent=2))
 if __name__=='__main__':main()

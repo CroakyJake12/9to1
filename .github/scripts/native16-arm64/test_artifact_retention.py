@@ -1,5 +1,6 @@
 import copy
 import importlib.util
+import io
 from pathlib import Path
 import unittest
 import urllib.request
@@ -45,6 +46,21 @@ class RetentionIdentityTests(unittest.TestCase):
         for target in ["http://artifact.example/a", "https://user:secret@artifact.example/a"]:
             with self.subTest(target=target), self.assertRaises(ValueError):
                 retention.SafeRedirect().redirect_request(request, None, 302, "Found", {}, target)
+
+    def test_actual_http302_entry_resolves_relative_location_before_safe_hook(self):
+        observed = []
+        class Opener:
+            def open(self, request, timeout):
+                observed.append(request)
+                return "response boundary only; no network"
+        handler = retention.SafeRedirect()
+        handler.parent = Opener()
+        request = urllib.request.Request("https://api.github.com/repos/example/metadata", headers={"Authorization": "Bearer test-only"})
+        request.timeout = 10
+        result = handler.http_error_302(request, io.BytesIO(), 302, "Found", {"location": "/repos/example/archive.zip"})
+        self.assertEqual(result, "response boundary only; no network")
+        self.assertEqual(observed[0].full_url, "https://api.github.com/repos/example/archive.zip")
+        self.assertEqual(observed[0].get_header("Authorization"), "Bearer test-only")
 
 
 if __name__ == "__main__":

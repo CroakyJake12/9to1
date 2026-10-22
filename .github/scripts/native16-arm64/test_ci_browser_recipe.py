@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import tempfile
 import types
 import unittest
@@ -39,7 +40,15 @@ def _parse_yaml(text):
         import yaml
     except Exception as exc:  # pragma: no cover
         raise unittest.SkipTest("pyyaml unavailable") from exc
-    return yaml.safe_load(text)
+    # Actions uses YAML1.2: the trigger key "on" is not a boolean. PyYAML's
+    # default YAML1.1 resolver hid trigger/input checks behind an empty mapping.
+    class ActionsLoader(yaml.SafeLoader):
+        pass
+    ActionsLoader.yaml_implicit_resolvers = {
+        key: [(tag, pattern) for tag, pattern in rows if tag != "tag:yaml.org,2002:bool"]
+        for key, rows in yaml.SafeLoader.yaml_implicit_resolvers.items()}
+    ActionsLoader.add_implicit_resolver("tag:yaml.org,2002:bool", re.compile(r"^(?:true|false)$", re.I), list("tTfF"))
+    return yaml.load(text, Loader=ActionsLoader)
 
 
 def _load_helpers():
@@ -102,15 +111,20 @@ class TestWorkflowContract(unittest.TestCase):
         step = next(s for s in self.steps
                     if s.get("name", "").startswith("Aggregate"))
         run = step["run"]
-        self.assertIn("package-browser-journey-receipt.json", run)
-        self.assertIn(PASS_STATUS, run)
-        self.assertIn("browser_step_outcome", run)
+        self.assertIn("aggregate-package-journeys.py", run)
+        aggregator = _read("aggregate-package-journeys.py")
+        self.assertIn("package-browser-journey-receipt.json", aggregator)
+        self.assertIn(PASS_STATUS, aggregator)
+        self.assertIn("step_outcome", aggregator)
+        self.assertIn("steps.browser.outcome", step["env"]["BROWSER_OUTCOME"])
+        self.assertNotIn("steps.browser.conclusion", step["env"]["BROWSER_OUTCOME"])
         self.assertIn("BROWSER_OUTCOME", step["env"])
 
     def test_sidecar_upload_step(self):
         step = next(s for s in self.steps
                     if s.get("name") == "Upload bundled Chromium source/provenance sidecar")
-        self.assertEqual(step["uses"], "actions/upload-artifact@v4")
+        self.assertEqual(step["uses"], "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02")
+        self.assertEqual(step["with"]["retention-days"], 14)
         self.assertIn("BROWSER_SIDECAR", step.get("if", ""))
 
     def test_browser_supply_diagnostics_retained_before_evidence_upload(self):
@@ -131,6 +145,59 @@ class TestWorkflowContract(unittest.TestCase):
 
     def test_job_timeout_increased_for_heavy_browser_pipeline(self):
         self.assertGreaterEqual(self.job["timeout-minutes"], 90)
+
+    def test_actions_yaml_trigger_and_false_are_not_misparsed(self):
+        sample = _parse_yaml("on:\n  workflow_dispatch:\nvalue: false\n")
+        self.assertIn("workflow_dispatch", sample["on"])
+        self.assertIs(sample["value"], False)
+        self.assertIn("workflow_dispatch", self.wf["on"])
+
+    def test_all_actions_use_immutable_revisions(self):
+        for step in self.steps:
+            if "uses" in step:
+                self.assertRegex(step["uses"], r"@[\da-f]{40}$")
+
+    def test_preflight_and_fast_regressions_precede_expensive_build(self):
+        commands = [step.get("run", "") for step in self.steps]
+        preflight = next(i for i, command in enumerate(commands) if "pipeline-preflight.py" in command)
+        tests = next(i for i, command in enumerate(commands) if "unittest discover" in command)
+        build = next(i for i, command in enumerate(commands) if "build-native-arm64.py" in command)
+        self.assertLess(preflight, tests)
+        self.assertLess(tests, build)
+
+    def test_verified_dependencies_saved_before_native_failures_and_always_reverified(self):
+        names = [step.get("name", "") for step in self.steps]
+        build = next(i for i, name in enumerate(names) if name.startswith("Build host tools"))
+        for prefix in ["Save only successfully verified immutable inference", "Save browser inputs"]:
+            self.assertLess(next(i for i, name in enumerate(names) if name.startswith(prefix)), build)
+        self.assertTrue(any("--extract-provider-zip" in step.get("run", "") for step in self.steps))
+        self.assertFalse(any(step.get("uses", "").startswith("actions/download-artifact@") for step in self.steps))
+        supply = next(step for step in self.steps if step.get("name", "").startswith("Acquire, stage"))
+        self.assertIn("browser-supply-ci.py", supply["run"])
+
+    def test_uninstall_is_bounded_to_candidate_and_mandatory_in_aggregate(self):
+        removal = next(step for step in self.steps if step.get("id") == "removal")
+        aggregate_step = next(step for step in self.steps if step.get("name", "").startswith("Aggregate"))
+        self.assertIn("package-removal-check.py", removal["run"])
+        self.assertIn("steps.removal.outcome", aggregate_step["env"]["REMOVAL_OUTCOME"])
+        self.assertLess(self.steps.index(removal), self.steps.index(aggregate_step))
+
+    def test_original_diagnostics_and_packages_have_fourteen_day_retention(self):
+        uploads = [step for step in self.steps if step.get("uses", "").startswith("actions/upload-artifact@")]
+        self.assertEqual(len(uploads), 4)
+        self.assertTrue(all(step["with"]["retention-days"] >= 14 for step in uploads))
+
+    def test_exact_package_cache_does_not_skip_installation_or_native_gates(self):
+        restore = next(step for step in self.steps if step.get("id") == "package-cache")
+        key = restore["with"]["key"]
+        self.assertIn("github.sha", key)
+        self.assertIn("NATIVE_DOTNET_VERSION", key)
+        self.assertIn("PIPELINE_ENVIRONMENT_SHA", key)
+        for identifier in ["startup", "chat", "browser", "removal"]:
+            step = next(step for step in self.steps if step.get("id") == identifier)
+            self.assertNotIn("package-cache", step.get("if", ""))
+        verify = next(step for step in self.steps if step.get("name", "").startswith("Independently recheck cached package"))
+        self.assertIn("immutable-package-cache.py", verify["run"])
 
 
 class TestBuildNativeArm64Contract(unittest.TestCase):

@@ -16,8 +16,8 @@
     },
     {
       "path": ".github/scripts/native16-arm64/inference_stage.py",
-      "sha256": "3d08b56b586644a774444e766eb93d8adc5503c676b456a46ba51f8e9c47d386",
-      "size": 13047
+      "sha256": "76d711072b1981a32f1c8b06eeba866395b00189c435817c80749d363dab6d37",
+      "size": 16333
     },
     {
       "path": ".github/scripts/native16-arm64/package-arm64-deb.ROOT-ONLY.py",
@@ -31,8 +31,8 @@
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
-      "sha256": "354c2831eaee619273f70251aca1ca54a8fb83c9565516835f1fd44e2c59b00a",
-      "size": 12780
+      "sha256": "63a0a305a80eca9743f8417716724c4c4a2477492b58b616312dac7401ecadbd",
+      "size": 17822
     },
     {
       "path": "9to1 Workspace/Home/Source/Dulche/bundle/HANDOFF.md",

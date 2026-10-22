@@ -10,6 +10,9 @@ on:
         default: false
 permissions:
   contents: read
+concurrency:
+  group: arm64-candidate-${{ github.sha }}
+  cancel-in-progress: false
 jobs:
   native-arm64:
     runs-on: ubuntu-24.04-arm
@@ -21,8 +24,10 @@ jobs:
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+      NATIVE_DOTNET_VERSION: '10.0.301'
+      PREVIEW_INPUT_CACHE: ${{ runner.temp }}/9to1-pinned-inputs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified 2026-10-22
         with:
           fetch-depth: 16
           submodules: false
@@ -40,36 +45,86 @@ jobs:
           getconf GNU_LIBC_VERSION >> evidence/native-platform.txt
           git submodule update --init --recursive --depth 1 -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus
           git submodule status --recursive -- framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus > evidence/source-submodule-pins.txt
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4, verified 2026-10-22
         with:
-          dotnet-version: 10.0.301
+          dotnet-version: ${{ env.NATIVE_DOTNET_VERSION }}
       - name: Install native runtime and display dependencies on disposable runner
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends binutils file gnupg ubuntu-keyring libfontconfig1 libfreetype6 libx11-6 libxext6 libxrandr2 libxi6 libxcursor1 libice6 libsm6 libgl1 libegl1 libdbus-1-3 libgomp1 libicu74 libssl3t64 zlib1g xvfb openbox wmctrl xdotool x11-utils imagemagick dbus-x11 at-spi2-core python3-pyatspi tesseract-ocr fonts-dejavu-core
+          sudo apt-get install -y --no-install-recommends binutils file gnupg ubuntu-keyring libfontconfig1 libfreetype6 libx11-6 libxext6 libxrandr2 libxi6 libxcursor1 libice6 libsm6 libgl1 libegl1 libdbus-1-3 libgomp1 libicu74 libssl3t64 zlib1g xvfb openbox wmctrl xdotool x11-utils imagemagick dbus-x11 at-spi2-core python3-pyatspi python3-yaml tesseract-ocr fonts-dejavu-core
           dotnet --info > evidence/dotnet-info.txt
+          dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' > evidence/runner-package-versions.txt
+      - name: Fail early on incomplete native runner or stale source inputs
+        run: python3 .github/scripts/native16-arm64/pipeline-preflight.py
+      - name: Fast pipeline regressions before acquisition or normal product build
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 -m unittest discover -s .github/scripts/native16-arm64 -p 'test*.py' -v > evidence/pipeline-unit-tests.log 2>&1
+          /usr/bin/python3 -m unittest discover -s .github/scripts/native16-arm64 -p '*_test.py' -v > evidence/browser-preflight-unit-tests.log 2>&1
+          /usr/bin/python3 -m unittest discover -s .github/scripts/native16-arm64/chromium-native -p 'test*.py' -v > evidence/chromium-supplier-unit-tests.log 2>&1
+      - name: Restore immutable package for this exact source, SDK and native environment
+        id: package-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: ${{ runner.temp }}/9to1-native16-arm64-source/package
+          key: arm64-package-v1-${{ github.sha }}-${{ env.NATIVE_DOTNET_VERSION }}-${{ env.PIPELINE_ENVIRONMENT_SHA }}
+      - name: Independently recheck cached package byte identity and original input provenance
+        if: ${{ steps.package-cache.outputs.cache-hit == 'true' }}
+        run: >-
+          python3 .github/scripts/native16-arm64/immutable-package-cache.py
+          --mode restore --directory "${{ runner.temp }}/9to1-native16-arm64-source/package"
+      - name: Restore NuGet inputs for this SDK and dependency graph
+        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
+        id: nuget-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: arm64-nuget-10.0.301-${{ hashFiles('global.json', 'Directory.Build.*', '**/*.csproj', '**/packages.lock.json', '**/NuGet.Config', '**/NuGet.config') }}
+      - name: Restore byte-pinned engine, model and license inputs
+        id: inference-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: ${{ env.PREVIEW_INPUT_CACHE }}
+          key: arm64-inputs-v1-b596f767158d3a53de226bed35cf498d07f485e00da0cd4649331db988affa18-1c15a88244c9e852516e5ba0e394fc97f2182f1f2757413fb99fe6a9214c033b-832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e
       - name: Export exact corresponding source (before generated outputs)
         run: python3 .github/scripts/native16-arm64/export-corresponding-source.py
       - name: Validate exact same-repository Bookworm artifact identity
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 .github/scripts/native16-arm64/inference_stage.py --validate-artifact-only evidence/bookworm-artifact-metadata.json --provider-zip "${{ runner.temp }}/9to1-pinned-bookworm-provider.zip"
-      - name: Download exact previously verified Bookworm build using standard Actions
-        uses: actions/download-artifact@v4
-        with:
-          repository: CroakyJake12/9to1
-          run-id: 39562111673
-          artifact-ids: '12328502225'
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/9to1-pinned-bookworm-artifact
+        run: >-
+          python3 .github/scripts/native16-arm64/inference_stage.py
+          --validate-artifact-only evidence/bookworm-artifact-metadata.json
+          --provider-zip "${{ runner.temp }}/9to1-pinned-bookworm-provider.zip"
+          --provider-cache "${{ env.PREVIEW_INPUT_CACHE }}/bookworm"
+      - name: Extract the exact verified provider ZIP without downloading it a second time
+        run: >-
+          python3 .github/scripts/native16-arm64/inference_stage.py
+          --extract-provider-zip "${{ runner.temp }}/9to1-pinned-bookworm-provider.zip"
+          --artifact-root "${{ runner.temp }}/9to1-pinned-bookworm-artifact"
       - name: Verify pinned engine and model then prepare canonical data-only package stage
         run: >-
           python3 .github/scripts/native16-arm64/inference_stage.py
           --artifact-root "${{ runner.temp }}/9to1-pinned-bookworm-artifact"
           --artifact-metadata evidence/bookworm-artifact-metadata.json
           --output-root "${{ runner.temp }}/9to1-preview-inference"
+      - name: Save only successfully verified immutable inference inputs before product tests
+        if: ${{ steps.inference-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: ${{ env.PREVIEW_INPUT_CACHE }}
+          key: ${{ steps.inference-cache.outputs.cache-primary-key }}
+      - name: Restore browser source and package inputs for the exact reviewed pins
+        id: browser-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: |
+            ${{ runner.temp }}/9to1-browser-evidence/source
+            ${{ runner.temp }}/9to1-browser-evidence/chromium-debs
+            ${{ runner.temp }}/9to1-browser-evidence/providers
+          key: arm64-noble-browser-inputs-${{ hashFiles('.github/scripts/native16-arm64/chromium-native/chromium-pinned-manifest.json', '.github/scripts/native16-arm64/chromium-native/source-pins.json', '.github/scripts/native16-arm64/chromium-native/chromium-soname-resolution.json') }}
       - name: Provision authenticated Ubuntu trust anchor for browser provider proof
         shell: bash
         run: |
@@ -94,8 +149,24 @@ jobs:
             --keyring "$BROWSER_KEYRING" \
             --sidecar "${{ runner.temp }}/9to1-browser-sidecar" \
             --env-file "$GITHUB_ENV"
+      - name: Save browser inputs only after signed acquisition and full ABI verification
+        if: ${{ steps.browser-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: |
+            ${{ runner.temp }}/9to1-browser-evidence/source
+            ${{ runner.temp }}/9to1-browser-evidence/chromium-debs
+            ${{ runner.temp }}/9to1-browser-evidence/providers
+          key: ${{ steps.browser-cache.outputs.cache-primary-key }}
       - name: Build host tools and full normal ARM product graph then assemble NEW internal package
+        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
         run: python3 .github/scripts/native16-arm64/build-native-arm64.py
+      - name: Save NuGet downloads after normal graph build and before native acceptance
+        if: ${{ steps.package-cache.outputs.cache-hit != 'true' && steps.nuget-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: ${{ steps.nuget-cache.outputs.cache-primary-key }}
       - name: Install exact newly built package
         shell: bash
         run: |
@@ -116,6 +187,17 @@ jobs:
           file /opt/9to1-preview/Haven > evidence/apphost-file.txt
           ldd /opt/9to1-preview/Haven > evidence/apphost-ldd.txt
           ! grep -F 'not found' evidence/apphost-ldd.txt
+      - name: Record original package inputs after actual installation, before native acceptance
+        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
+        run: >-
+          python3 .github/scripts/native16-arm64/immutable-package-cache.py
+          --mode record --directory "${{ runner.temp }}/9to1-native16-arm64-source/package"
+      - name: Save verified build and installation artifact without implying native acceptance
+        if: ${{ steps.package-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4, verified 2026-10-22
+        with:
+          path: ${{ runner.temp }}/9to1-native16-arm64-source/package
+          key: ${{ steps.package-cache.outputs.cache-primary-key }}
       - name: Fresh-profile native welcome setup, Home and normal close
         id: startup
         continue-on-error: true
@@ -142,26 +224,20 @@ jobs:
         run: |
           set -euo pipefail
           dbus-run-session -- xvfb-run -a -s '-screen 0 1280x900x24' /usr/bin/python3 .github/scripts/native16-arm64/package-browser-journey.py
-      - name: Aggregate actual raw setup/Home/chat/browser receipts without hiding any failed close
+      - name: Remove only this CI candidate and verify profile data preservation
+        id: removal
+        if: ${{ always() && env.PREVIEW_DEB != '' }}
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python3 .github/scripts/native16-arm64/package-removal-check.py
+      - name: Aggregate actual raw setup/Home/chat/browser/removal receipts without hiding any failed close
         if: always()
         env:
           STARTUP_OUTCOME: ${{ steps.startup.outcome }}
           CHAT_OUTCOME: ${{ steps.chat.outcome }}
           BROWSER_OUTCOME: ${{ steps.browser.outcome }}
-        shell: python
-        run: |
-          from pathlib import Path
-          import os,json,sys,datetime
-          out=Path('evidence');out.mkdir(exist_ok=True)
-          def load(name):
-              p=out/name
-              return json.loads(p.read_text()) if p.is_file() else {'status':'NOT RUN: raw receipt missing'}
-          startup=load('native-startup-receipt.json');chat=load('package-ui-journey-receipt.json');browser=load('package-browser-journey-receipt.json')
-          browser_ok=os.environ['BROWSER_OUTCOME']=='success' and browser.get('status')=='PASS_FOCUSED_NATIVE_FIRST_ASCII_ENTER_SUBMIT_RENDER_AND_NORMAL_CLOSE_ONLY'
-          ok=os.environ['STARTUP_OUTCOME']=='success' and os.environ['CHAT_OUTCOME']=='success' and startup.get('status','').startswith('PASS_BOUNDED_') and chat.get('status')=='CHECKPOINT_ACTUAL_UI_JOURNEY_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW' and browser_ok
-          receipt={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source_head':os.environ['GITHUB_SHA'],'startup_step_outcome':os.environ['STARTUP_OUTCOME'],'chat_step_outcome':os.environ['CHAT_OUTCOME'],'browser_step_outcome':os.environ['BROWSER_OUTCOME'],'startup_raw_status':startup.get('status'),'chat_raw_status':chat.get('status'),'browser_raw_status':browser.get('status'),'status':'PASS_CHECKPOINT_REQUIRES_INDEPENDENT_SCREENSHOT_REVIEW' if ok else 'FAIL_OR_BLOCKED','owner_laptop':'NOT RUN','automatic_full_application_acceptance':False}
-          (out/'combined-package-journey-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
-          sys.exit(0 if ok else 1)
+          REMOVAL_OUTCOME: ${{ steps.removal.outcome }}
+        run: python3 .github/scripts/native16-arm64/aggregate-package-journeys.py
       - name: Optional same-repository INTERNAL draft asset upload (never publishes release)
         if: ${{ success() && inputs.upload_draft_asset }}
         env:
@@ -187,30 +263,30 @@ jobs:
           PY
       - name: Upload actual package plus SHA/provenance (no profile/database)
         if: ${{ always() && env.PREVIEW_PACKAGE_DIR != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-native16-arm64-internal-package
           path: |
             ${{ env.PREVIEW_PACKAGE_DIR }}/*.deb
             ${{ env.PREVIEW_PACKAGE_DIR }}/SHA256SUMS
             ${{ env.PREVIEW_PACKAGE_DIR }}/package-receipt.json
-          retention-days: 1
+          retention-days: 14
           if-no-files-found: error
       - name: Upload bundled Chromium source/provenance sidecar
         if: ${{ always() && env.BROWSER_SIDECAR != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-browser-source-sidecar
           path: ${{ env.BROWSER_SIDECAR }}
-          retention-days: 1
+          retention-days: 14
           if-no-files-found: error
       - name: Upload unchanged corresponding upstream engine source (no inference executable or weights)
         if: ${{ always() && env.PREVIEW_INFERENCE_SOURCE != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-pinned-llamacpp-upstream-source
           path: ${{ env.PREVIEW_INFERENCE_SOURCE }}
-          retention-days: 1
+          retention-days: 14
           if-no-files-found: error
       - name: Preserve inference acquisition and data-stage identity evidence
         if: ${{ always() && env.PREVIEW_INFERENCE_RECEIPT != '' }}
@@ -226,9 +302,9 @@ jobs:
             --dest "${GITHUB_WORKSPACE}/evidence/browser-supply"
       - name: Upload bounded evidence and exact source archive
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-native16-arm64-source-and-startup-evidence
           path: evidence/
-          retention-days: 1
+          retention-days: 14
           if-no-files-found: error

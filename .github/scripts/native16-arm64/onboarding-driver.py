@@ -66,7 +66,10 @@ class OnboardingDriver:
         buttons = {row.get('name', '').casefold() for row in visible if 'button' in row.get('role', '').casefold()}
         if 'search or enter web address' not in entries:
             return None
-        if 'search apps' in entries and {'open chat', 'open spaces', 'open files', 'open write'}.issubset(buttons):
+        # The canonical catalogue owns Build and Spaces. Chat is a Space, not a
+        # separately navigable app; requiring its retired tile caused all three
+        # installed-package journeys to reject a genuinely rendered Home.
+        if 'search apps' in entries and {'open build', 'open spaces', 'open files', 'open write'}.issubset(buttons):
             return 'APPS_HOME'
         if {'edit dashboard page', 'open home discover model catalogue'}.issubset(buttons):
             return 'DASHBOARD_HOME'
