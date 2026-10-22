@@ -77,9 +77,13 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private async Task InitializeDriverAsync(Task start, CancellationToken caller)
     {
         await start.ConfigureAwait(false);
-        _initializationDispatch = Dispatcher.UIThread.InvokeAsync<Task>(() => InitializeOnUiAsync(caller)).GetTask();
-        _initializationWork = await _initializationDispatch.ConfigureAwait(false);
-        await _initializationWork.ConfigureAwait(false);
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        await originals.RunToOriginalSettlementAsync(async () =>
+        {
+            _initializationDispatch = originals.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task>(() => InitializeOnUiAsync(caller)).GetTask());
+            _initializationWork = await originals.AwaitAsync(_initializationDispatch).ConfigureAwait(false);
+            await originals.AwaitAsync(_initializationWork).ConfigureAwait(false);
+        }).ConfigureAwait(false);
     }
     private async Task InitializeOnUiAsync(CancellationToken caller)
     {
@@ -88,18 +92,18 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         using var scope = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
         var token = scope.Token;
         DemandAlive(); token.ThrowIfCancellationRequested();
-        await _route.RevalidateAsync(token);
+        await RevalidateOriginalAsync(token);
         DemandAlive(); token.ThrowIfCancellationRequested();
         _core = _route.AcquireOriginalCore(); // Retain BEFORE any later IO, presentation or CUI acquisition.
         _core.PrepareUnadmittedPresentation();
         await _core.ListAsync(token); // Actual Home review/ownership and verified snapshot; no raw fallback.
-        await _route.RevalidateAsync(token);
+        await RevalidateOriginalAsync(token);
         DemandAlive(); token.ThrowIfCancellationRequested();
         if (_address.DocumentId is { } id)
         {
             var opened = await _core.OpenAsync(id, token: token);
             if (!opened.Succeeded) throw new InvalidOperationException(opened.Message);
-            await _route.RevalidateAsync(token);
+            await RevalidateOriginalAsync(token);
         }
         DemandAlive(); token.ThrowIfCancellationRequested();
         using var stream = typeof(BoardsBrowseAppContentSession).Assembly.GetManifestResourceStream(CuiResourceName)
@@ -114,13 +118,21 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         var availability = await _show;
         if (availability.State != CuiSceneAvailabilityState.Ready)
             throw new InvalidOperationException(availability.Message);
-        await _route.RevalidateAsync(token);
+        await RevalidateOriginalAsync(token);
         DemandAlive(); token.ThrowIfCancellationRequested(); _route.DemandPublicationCurrent();
         _core.AdmitPresentation();
         _published = true;
         _core.NotifySelectionChanged();
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
         DemandAlive(); _route.DemandPublicationCurrent();
+    }
+
+    private Task RevalidateOriginalAsync(CancellationToken token)
+    {
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        // Preserve synchronous/faulted OCE as an actual source fault and an actual canceled
+        // Task as cancellation; an async await adapter must not relabel the former.
+        return originals.RunToOriginalSettlementAsync(() => _route.RevalidateAsync(token));
     }
 
     public bool? IsActionAvailable(string command) => IsPublicationCurrent && !_preparing && _prepared is null && _core?.IsActionAvailable(command) == true;
@@ -143,10 +155,10 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         await start;
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         using var scope = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
-        await _route.RevalidateAsync(scope.Token);
+        await RevalidateOriginalAsync(scope.Token);
         DemandAlive(); _route.DemandPublicationCurrent();
         await _core!.DispatchAsync(command, parameter, scope.Token);
-        await _route.RevalidateAsync(scope.Token);
+        await RevalidateOriginalAsync(scope.Token);
         DemandAlive(); _route.DemandPublicationCurrent();
     }
 
@@ -170,9 +182,13 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private async Task<IBrowseAppContentClosePreparation?> PrepareDriverAsync(Task start, CancellationToken caller)
     {
         await start.ConfigureAwait(false);
-        var dispatch = Dispatcher.UIThread.InvokeAsync<Task<IBrowseAppContentClosePreparation?>>(() => PrepareOnUiAsync(caller)).GetTask();
-        var work = await dispatch.ConfigureAwait(false);
-        return await work.ConfigureAwait(false);
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        return await originals.RunToOriginalSettlementAsync(async () =>
+        {
+            var dispatch = originals.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task<IBrowseAppContentClosePreparation?>>(() => PrepareOnUiAsync(caller)).GetTask());
+            var work = await originals.AwaitAsync(dispatch).ConfigureAwait(false);
+            return await originals.AwaitAsync(work).ConfigureAwait(false);
+        }).ConfigureAwait(false);
     }
     private async Task<IBrowseAppContentClosePreparation?> PrepareOnUiAsync(CancellationToken caller)
     {
@@ -187,7 +203,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             DemandAlive(); scope.Token.ThrowIfCancellationRequested();
             // External preparation: exact loader actions, never an action joining itself.
             if (_host is { } host && _show is { } show) await host.CaptureOriginalActionSettlement(show);
-            await _route.RevalidateAsync(scope.Token);
+            await RevalidateOriginalAsync(scope.Token);
             var result = await _core!.PrepareToCloseAsync(scope.Token);
             if (!result.Succeeded) return null; // Genuine refused save/unknown outcome keeps same draft/view alive.
             DemandAlive(); _route.DemandPublicationCurrent();
@@ -263,9 +279,13 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private async Task CloseDriverAsync(Task start)
     {
         await start.ConfigureAwait(false);
-        _closeDispatch = Dispatcher.UIThread.InvokeAsync<Task>(CloseOnUiAsync).GetTask();
-        _closeWork = await _closeDispatch.ConfigureAwait(false);
-        await _closeWork.ConfigureAwait(false);
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        await originals.RunToOriginalSettlementAsync(async () =>
+        {
+            _closeDispatch = originals.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task>(CloseOnUiAsync).GetTask());
+            _closeWork = await originals.AwaitAsync(_closeDispatch).ConfigureAwait(false);
+            await originals.AwaitAsync(_closeWork).ConfigureAwait(false);
+        }).ConfigureAwait(false);
     }
     private async Task CloseOnUiAsync()
     {
@@ -276,6 +296,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         { if (actual is null) return; try { await originals.AwaitAsync(actual); } catch (Exception error) { originals.Capture(actual, error); } }
         try { _lifetime.Cancel(); } catch (Exception error) { originals.Retain(error); }
         await Join(OriginalInitialization);
+        await Join(_initializationDispatch); await Join(_initializationWork);
         Task[] preparations; Task[] actions;
         lock (_gate) { preparations = _preparations.ToArray(); actions = _actions.ToArray(); }
         foreach (var preparation in preparations) await Join(preparation);

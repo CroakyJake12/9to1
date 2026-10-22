@@ -104,6 +104,27 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.NotNull(await Record.ExceptionAsync(() => current.AbortAsync()));
     }
 
+    [AvaloniaFact]
+    public async Task Faulted_original_cancellation_exception_keeps_exact_cause_and_cannot_be_clean_retirement()
+    {
+        using var rig = new Rig(); var cause = new OperationCanceledException("Controlled faulted original observation, not a canceled task.");
+        var raw = Task.FromException(cause); rig.Route.RawObservation = raw;
+        var session = rig.Create(); var initialization = session.InitializeAsync();
+        var failure = await Record.ExceptionAsync(() => initialization);
+        Assert.NotNull(failure); Assert.True(raw.IsFaulted); Assert.True(initialization.IsFaulted);
+        Assert.Contains(Causes(failure!), error => ReferenceEquals(error, cause));
+        var close = session.CloseAndDrainAsync(); var closeFailure = await Record.ExceptionAsync(() => close);
+        Assert.NotNull(closeFailure); Assert.Contains(Causes(closeFailure!), error => ReferenceEquals(error, cause));
+        Assert.False(session.CanRetireOriginalView); Assert.True(rig.Route.Closed);
+    }
+    private static IEnumerable<Exception> Causes(Exception error)
+    {
+        yield return error;
+        if (error is AggregateException aggregate)
+            foreach (var child in aggregate.InnerExceptions) foreach (var cause in Causes(child)) yield return cause;
+        else if (error.InnerException is { } inner) foreach (var cause in Causes(inner)) yield return cause;
+    }
+
     private sealed class Rig : IDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "9to1-boards-native-" + Guid.NewGuid().ToString("N"));
@@ -137,14 +158,19 @@ public sealed class BoardsBrowseAppContentSessionTests
         internal BoardsBrowserCore? Core;
         internal bool Closed;
         internal Task Observation = Task.CompletedTask;
+        internal Task? RawObservation;
         internal TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal int FailObservationNumber;
         private int _observations;
         public bool IsAlive => !Closed;
         public BoardsBrowserCore AcquireOriginalCore() => Core = new(notes);
-        public async Task RevalidateAsync(CancellationToken token)
+        public Task RevalidateAsync(CancellationToken token)
         {
-            Entered.TrySetResult(); await Observation; token.ThrowIfCancellationRequested();
+            Entered.TrySetResult(); return RawObservation ?? ObserveAsync(token);
+        }
+        private async Task ObserveAsync(CancellationToken token)
+        {
+            await Observation; token.ThrowIfCancellationRequested();
             if (++_observations == FailObservationNumber) throw new UnauthorizedAccessException("Controlled actor replacement after source await.");
         }
         public void DemandPublicationCurrent() { if (Closed) throw new ObjectDisposedException(nameof(Route)); }
