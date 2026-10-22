@@ -214,6 +214,33 @@ private:
 class LineReader {
 public:
     explicit LineReader(int fd) : _fd(fd) {}
+
+    enum class ReadResult { Line, Pending, End };
+
+    // Kernel fd readiness does not include complete lines already consumed into our buffer.
+    bool has_buffered_line() const { return _buf.find('\n') != std::string::npos; }
+
+    // The caller polls the owned fd (or observes has_buffered_line()) before entry. Consume at
+    // most ONE raw read: an incomplete line returns Pending so host cancellation/deadlines remain
+    // serviceable. Only next() below has the legacy blocking-until-line contract.
+    ReadResult read_ready(std::string& out) {
+        out.clear();
+        if (has_buffered_line()) { next(out); return ReadResult::Line; }
+        if (_buf.size() > kLineLimit) throw std::invalid_argument("Child output line exceeds limit.");
+        char chunk[4096];
+        const int n = read_raw(_fd, chunk, sizeof chunk);
+        if (n < 0) throw std::runtime_error("Child stdout read failed.");
+        if (n == 0) {
+            if (_buf.empty()) return ReadResult::End;
+            out.swap(_buf);
+            if (!out.empty() && out.back() == '\r') out.pop_back();
+            return ReadResult::Line; // preserve next()'s final partial-line-at-EOF semantics
+        }
+        _buf.append(chunk, static_cast<size_t>(n));
+        if (has_buffered_line()) { next(out); return ReadResult::Line; }
+        if (_buf.size() > kLineLimit) throw std::invalid_argument("Child output line exceeds limit.");
+        return ReadResult::Pending;
+    }
     // Returns true with a full line (without '\n'/'r'), false on EOF when no partial data is
     // buffered. Throws std::invalid_argument on an unbounded line. Never blocks after the owning
     // ChildProcess closes the fd or the child's write end closes (read -> EOF -> false).

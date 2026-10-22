@@ -55,11 +55,14 @@ ENGINE_FIXTURE = r'''
 import json, os, sys
 modes = os.environ["WIRE_ENGINE_MODES"].split(",")
 request, active_prompt = 0, None
+active_partial = False
 def record(text):
     with open(os.environ["WIRE_ENGINE_AUDIT"], "a", encoding="utf-8") as audit:
         audit.write(json.dumps(text) + "\n")
 def done(prompt, finish="stop", generated=2):
     print("DONE %d %d 1 2 %s 0 0 0" % (generated, prompt, finish), flush=True)
+if os.environ.get("WIRE_READY_BURST") == "1":
+    sys.stdout.write("INFO fixture booted\n")
 print("READY 4096 stop", flush=True)
 for line in sys.stdin:
     line = line.rstrip("\n")
@@ -70,12 +73,20 @@ for line in sys.stdin:
         request += 1
         if mode == "cancel":
             active_prompt = len(ids)
+        elif mode == "partial":
+            active_prompt, active_partial = len(ids), True
+            sys.stdout.write("INFO partial")
+            sys.stdout.flush()  # actual partial line; do not finish it until the real STOP arrives
+            record("PARTIAL_WRITTEN")
         elif mode == "error":
             print("ERR fixture generation refused", flush=True)
         else:
             print("T 79\nT 75", flush=True)
             done(len(ids))
     elif line == "STOP" and active_prompt is not None:
+        if active_partial:
+            sys.stdout.write("\n")
+            active_partial = False
         done(active_prompt, "cancel", 0)
         active_prompt = None
     elif line == "QUIT":
@@ -125,7 +136,7 @@ class NativeTokenizerWireTests(unittest.TestCase):
             json.dump(identity, receipt, indent=2)
 
     @contextlib.contextmanager
-    def session(self, *, modes="normal", template=TEMPLATE):
+    def session(self, *, modes="normal", template=TEMPLATE, ready_burst=False):
         # Deliberately never remove these test-owned files, including on assertion/process errors.
         self.folder = pathlib.Path(tempfile.mkdtemp(prefix=self._testMethodName + "-", dir=self.evidence))
         engine = self.folder / "engine"
@@ -139,7 +150,8 @@ class NativeTokenizerWireTests(unittest.TestCase):
         environment = dict(os.environ, STRATA_ENGINE_PATH=str(engine), STRATA_HELPER_PATH=str(helper),
                            STRATA_MODEL_PATH=str(model), STRATA_PYTHON=sys.executable,
                            WIRE_HELPER_SOURCE=str(HELPER), WIRE_CHAT_TEMPLATE=template,
-                           WIRE_ENGINE_MODES=modes, WIRE_HELPER_AUDIT=str(self.helper_audit),
+                           WIRE_ENGINE_MODES=modes, WIRE_READY_BURST="1" if ready_burst else "0",
+                           WIRE_HELPER_AUDIT=str(self.helper_audit),
                            WIRE_ENGINE_AUDIT=str(self.engine_audit), PYTHONDONTWRITEBYTECODE="1")
         environment.pop("STRATA_HELPER_DIR", None)
         with (self.folder / "worker.stderr").open("wb") as errors:
@@ -307,6 +319,43 @@ class NativeTokenizerWireTests(unittest.TestCase):
             self.failure("Tokenizer helper request exceeds frame limit")
             self.assertEqual(self.audit(self.helper_audit), [])
             self.assertEqual(self.audit(self.engine_audit), [])
+            expected = "[user]after\n[assistant]"
+            self.send(generation([(1, "after", "")]))
+            self.success(expected_prompt=len(expected))
+
+
+    def test_ready_after_info_in_same_burst_is_not_stranded_in_reader(self):
+        with self.session(ready_burst=True):
+            expected = "[user]ready\n[assistant]"
+            self.send(generation([(1, "ready", "")]))
+            self.success(expected_prompt=len(expected))
+
+    def test_partial_line_does_not_block_host_cancel_or_next_generation(self):
+        with self.session(modes="partial,normal"):
+            expected = "[user]partial\n[assistant]"
+            self.send(generation([(1, "partial", "")]))
+            deadline = time.monotonic() + 5
+            while "PARTIAL_WRITTEN" not in self.audit(self.engine_audit):
+                self.assertLess(time.monotonic(), deadline, "engine did not publish actual partial bytes")
+                time.sleep(0.005)
+            # Observe the actual owned worker's read boundary, rather than slowing engine output.
+            # A blocking-reader predecessor enters pipe_read here; the one-read reader returns to
+            # poll. This bounded observation is diagnostic only; actual STOP/terminal/next GEN prove
+            # liveness. The fixture never adds sleeps or completes its partial line before STOP.
+            channels = []
+            boundary = time.monotonic() + 0.25
+            while time.monotonic() < boundary:
+                channel = pathlib.Path("/proc") / str(self.proc.pid) / "wchan"
+                if channel.exists():
+                    value = channel.read_text().strip()
+                    channels.append(value)
+                    if "pipe_read" in value:
+                        break
+                time.sleep(0.005)
+            (self.folder / "partial-read-boundary.json").write_text(json.dumps(channels))
+            self.send(struct.pack("<I", 5))
+            self.success(expected_prompt=len(expected), stopped=True)
+            self.assertIn("STOP", self.audit(self.engine_audit))
             expected = "[user]after\n[assistant]"
             self.send(generation([(1, "after", "")]))
             self.success(expected_prompt=len(expected))

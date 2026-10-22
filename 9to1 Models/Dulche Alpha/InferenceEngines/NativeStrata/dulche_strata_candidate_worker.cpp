@@ -789,13 +789,17 @@ void wait_ready(dulche::ChildProcess& engine, dulche::LineReader& reader, uint32
         if (!engine.alive()) throw std::runtime_error("Engine exited before READY (model load failed).");
         struct pollfd pfd;
         pfd.fd = engine.out_fd(); pfd.events = POLLIN; pfd.revents = 0;
-        const int pr = os_poll(&pfd, 1, 200);
+        const bool buffered = reader.has_buffered_line();
+        const int pr = os_poll(&pfd, 1, buffered ? 0 : 200);
         if (pr < 0) {
             if (errno == EINTR) continue;
             break;  // poll error (incl. unsupported Windows) -> bounded fail-closed
         }
-        if (pr == 0) continue;  // not readable yet: re-check alive() + deadline
-        if (!reader.next(line)) throw std::runtime_error("Engine stdout ended before READY.");
+        if (pr == 0 && !buffered) continue; // re-check alive() + deadline
+        const auto result = reader.read_ready(line);
+        if (result == dulche::LineReader::ReadResult::End)
+            throw std::runtime_error("Engine stdout ended before READY.");
+        if (result == dulche::LineReader::ReadResult::Pending) continue;
         if (line.rfind("READY ", 0) == 0) {
             const auto tok = split_space(line);
             if (tok.size() >= 2) {
@@ -899,13 +903,15 @@ void run_generation(Session& session, const GenerateRequest& req, int argc, char
 
     for (;;) {
         std::string line_out;
-        bool engine_readable = false;
+        bool engine_readable = session.engine_reader->has_buffered_line();
         bool stdin_readable = false;
         {
             struct pollfd pfd[2];
             pfd[0].fd = 0; pfd[0].events = POLLIN; pfd[0].revents = 0;
             pfd[1].fd = session.engine.out_fd(); pfd[1].events = POLLIN; pfd[1].revents = 0;
-            const int pr = os_poll(pfd, 2, 200);
+            // Always sample host input first, even when engine lines are already buffered.
+            // A burst must not strand its later T/DONE or starve a queued cancellation.
+            const int pr = os_poll(pfd, 2, engine_readable ? 0 : 200);
             if (pr < 0) { if (errno == EINTR) continue; throw std::runtime_error("poll failed during generation."); }
             if (pfd[0].revents & (POLLIN | POLLHUP)) stdin_readable = true;
             if (pfd[1].revents & (POLLIN | POLLHUP | POLLERR)) engine_readable = true;
@@ -927,9 +933,14 @@ void run_generation(Session& session, const GenerateRequest& req, int argc, char
         }
 
         if (engine_readable) {
-            if (!session.engine_reader->next(line_out)) {
+            const auto result = session.engine_reader->read_ready(line_out);
+            if (result == dulche::LineReader::ReadResult::End)
                 throw std::runtime_error("Engine stdout ended during generation.");
-            }
+            engine_readable = result == dulche::LineReader::ReadResult::Line;
+            // Pending partial output falls through to the unchanged stall deadline and the next
+            // host-input poll, rather than blocking inside a newline read.
+        }
+        if (engine_readable) {
             stall_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(120);
             if (line_out.rfind("T ", 0) == 0) {
                 const int64_t id = parse_i64(line_out.substr(2), "T id");
