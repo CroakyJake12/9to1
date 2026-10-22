@@ -4,7 +4,6 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Infrastructure;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace Dulche.Runtime.Tests;
@@ -148,8 +147,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
 
   public sealed class LinuxNativeToolTransportFactAttribute : FactAttribute
   {
-    public LinuxNativeToolTransportFactAttribute([CallerFilePath] string? sourceFilePath = null,
-      [CallerLineNumber] int sourceLineNumber = 0) : base(sourceFilePath, sourceLineNumber)
+    public LinuxNativeToolTransportFactAttribute()
     {
       if (!OperatingSystem.IsLinux() || System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture != System.Runtime.InteropServices.Architecture.X64)
         Skip = "The actual legacy Strata pipe worker currently supports Linux x64; other platforms are NOT RUN.";
