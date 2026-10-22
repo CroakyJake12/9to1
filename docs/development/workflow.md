@@ -128,6 +128,86 @@ cannot be promoted by this helper. Regenerate them from complete actual source
 with `snapshot`, review the new identity and rerun applicable acceptance; never
 add the field to an old signed-off manifest or reuse its acceptance implicitly.
 
+## Execution custody after restart
+
+Retained evidence and an intact original repository do not establish that the
+active candidate or its build graph still exists. `recover` now also probes every
+legacy `development_candidates` record that declares a `worktree`: the actual
+root, exact HEAD and reachable objects must still be available. A missing `/tmp`
+candidate blocks recovery even if the projection's original HEAD is unchanged.
+Revision/status-only historical records remain supported but report UNRECORDED
+execution custody. CHECKPOINT means recovered engineering state, never execution
+or native readiness. Historical PASS/READY labels do not change these checks.
+
+The coordinator can publish `execution_custody.NAME` with its same-named
+`development_candidates.NAME` in one CAS checkpoint. A custody record contains:
+
+- `revision`: the candidate's full 40-character Git commit ID; `owner`: actual
+  responsible owner; `source`: one of the records below.
+- `build_dependencies`: named prerequisites, each with absolute `path`, `identity`
+  (`kind=file`, `bytes`, `mode`, `sha256`), `recovery` (`rebuild` or `restore`) and
+  concrete `next_action`. Use `identity: null` only for an actually missing,
+  unmaterialised prerequisite. This records a blocker; it cannot become ready
+  merely because a file later appears. Capture the actual regenerated identity
+  in a new CAS update. No durable build cache is required.
+
+A `source` always has `kind`, absolute `path`, and `git` custody containing
+absolute `path` (the actual Git worktree or object repository), absolute
+`common_directory`, `revision` (source/base commit), and `required_revisions`
+(list of additional full commit IDs). Candidate, source/base, declared prerequisite
+commits and any candidate `base_revision` must have actual reachable object
+closures. A worktree source (`kind: git-worktree`) additionally has a nonempty
+`files` map of repository-relative paths to exact regular-file identities. Its
+Git path is its own root, and its actual HEAD must equal the candidate revision.
+This supports sparse, declared source scopes without pretending that they are
+complete application graphs. Explicitly declare every input needed for the next
+owning command; undeclared inputs are outside this check.
+
+An export source (`kind: source-export`) instead has `manifest`: an exact retained
+regular-file reference (`path`, `kind`, `bytes`, `mode`, `sha256`). No Git HEAD is
+invented inside the export. Supported manifest schema is
+`9to1.exact-source-export/v1`, with absolute `root`, `origin_git`,
+`source_revision`, and nonempty `files` list (`path` relative to root, `bytes`,
+`mode`, `sha256`). Duplicate/escaping paths refuse admission. Root/origin/base
+must match custody; every listed regular file is rehashed. The manifest itself
+is parsed from the same bounded no-follow read whose bytes are hashed. A
+composed variant may explicitly supply `candidate_revision` distinct from its
+source/base revision; both Git commits still need their object closures.
+Retain the original manifest and review/capture a new complete variant manifest;
+there are no implicit source overrides or inherited acceptance claims.
+
+New active path/custody publications validate actual source and all captured
+prerequisite identities **before mutation**. Malformed/stale claims refuse the
+checkpoint without advancing generation. Updating a candidate with existing
+custody revalidates the resulting pair. Task-only checkpoints do not rehash old
+execution inputs, so losses can still be recorded without rewriting history;
+`recover` and state-aware `preflight` expose those losses.
+
+Use the projection's original repository for ordinary recovery. For a scoped
+candidate or an export, select its explicit name:
+
+```sh
+python3 -B eng/development/workflow.py --state "$NINETOONE_DEVELOPMENT_STATE" recover --repo /actual/candidate-or-export --execution NAME
+python3 -B eng/development/workflow.py --state "$NINETOONE_DEVELOPMENT_STATE" preflight --repo /actual/candidate-or-export --execution NAME
+```
+
+Named recovery still reconciles `repository`/`observed_revision` against the
+original projection; it separately reports requested context and selected source.
+It never rewrites either identity. Without an explicit name, using a component
+repository instead of the original remains a discrepancy. Unknown/unrelated named
+contexts refuse. Default recovery checks all declared candidates; named recovery
+checks the selected one and retains the full owners/tasks/gates/next actions.
+`execution_next_actions` adds restore/rebuild actions without changing state.
+
+`DECLARED_INPUTS_AVAILABLE` is limited to checked source and nonempty captured
+build prerequisites. Omitted build prerequisites remain UNRECORDED. Missing build
+inputs are INFRASTRUCTURE prerequisites with rebuild/restore actions, separately
+from source loss. This does not run compilation, establish a live worker, verify
+a toolchain/platform or satisfy native/release acceptance. Preflight without state
+retains its original generic source-only scope; with state it also requires
+recorded execution inputs. No helper restores files, dispatches work, schedules
+hardware or creates another coordinator.
+
 ## Verification and reuse
 
 | Layer | Scope | Promotion limit |

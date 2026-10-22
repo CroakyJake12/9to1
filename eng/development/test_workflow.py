@@ -54,6 +54,204 @@ class WorkflowTests(unittest.TestCase):
         self.candidate_path = self.root / "candidate.json"
         self.candidate = w.snapshot(self.repo, self.candidate_path)
 
+    def execution_fixture(self):
+        store = self.root / "candidate-store"
+        subprocess.run(["git", "clone", "-q", "--no-hardlinks", str(self.repo), str(store)], check=True)
+        active = self.root / "active-worktree"
+        subprocess.run(["git", "-C", str(store), "worktree", "add", "-q", "--detach", str(active), "HEAD"], check=True)
+        revision = w.git(active, "rev-parse", "HEAD").decode().strip()
+        build = self.root / "build" / "project.assets.json"
+        build.parent.mkdir(); build.write_text('{"restored":"owning graph"}\n')
+        record = {"revision": revision, "owner": "actual-source-owner",
+                  "source": {"kind": "git-worktree", "path": str(active),
+                             "git": {"path": str(active), "common_directory": str(store / ".git"),
+                                     "revision": revision, "required_revisions": [revision]},
+                             "files": {name: w.file_identity(active / name) for name in ("AGENTS.md", "src/logic.txt")}},
+                  "build_dependencies": {"owning-assets": {"path": str(build), "identity": w.file_identity(build),
+                                                           "recovery": "rebuild", "next_action": "Restore the owning graph without changing source"}}}
+        patch = {"development_candidates": {"active": {"revision": revision, "worktree": str(active), "status": "OLD_READY_LABEL"}},
+                 "execution_custody": {"active": record}}
+        return active, store, build, record, patch
+
+    def cli(self, *args):
+        result = subprocess.run([sys.executable, "-B", str(Path(w.__file__).resolve()), "--state", str(self.state_path), *map(str, args)],
+                                capture_output=True, text=True, timeout=15)
+        self.assertEqual("", result.stderr)
+        return result.returncode, json.loads(result.stdout)
+
+    def publish_execution(self):
+        active, store, build, record, patch = self.execution_fixture()
+        w.claim(self.state, "retained-owner", ["src/**"], "implementation")
+        w.atomic(self.state_path, self.state)
+        path = self.root / "execution-patch.json"; path.write_bytes(w.encoded(patch))
+        code, state = self.cli("checkpoint", "--expect", "0", "--patch", path)
+        self.assertEqual(0, code, state)
+        self.assertEqual(1, state["generation"])
+        self.state = state
+        return active, store, build, record
+
+    def test_execution_lost_tmp_worktree_blocks_then_exact_restore_recovers_owner_scope(self):
+        active, _, _, _ = self.publish_execution()
+        before = self.state_path.read_bytes()
+        held = active.with_name("retained-source"); active.rename(held)
+        code, missing = self.cli("recover", "--repo", self.repo, "--execution", "active")
+        self.assertEqual(2, code)
+        self.assertEqual("PASS", missing["git_object_closure"]["result"])
+        self.assertEqual("BLOCKED", missing["execution_custody"]["candidates"]["active"]["source_status"])
+        held.rename(active)
+        code, restored = self.cli("recover", "--repo", active, "--execution", "active")
+        self.assertEqual(0, code, restored)
+        self.assertTrue(restored["execution_custody"]["declared_inputs_available"])
+        self.assertEqual(str(self.repo), restored["canonical_repository"])
+        self.assertEqual(self.state["observed_revision"], restored["actual_revision"])
+        self.assertEqual(["src/**"], restored["workers"]["retained-owner"]["paths"])
+        self.assertEqual("NOT RUN", restored["execution_custody"]["native_acceptance"])
+        self.assertEqual(before, self.state_path.read_bytes())
+
+    def test_execution_lost_git_blob_blocks_even_with_original_and_worktree_bytes_retained(self):
+        active, store, _, _ = self.publish_execution()
+        blob = w.git(active, "rev-parse", "HEAD:src/logic.txt").decode().strip()
+        object_path = store / ".git/objects" / blob[:2] / blob[2:]
+        payload = object_path.read_bytes(); object_path.unlink()
+        code, missing = self.cli("recover", "--repo", self.repo)
+        self.assertEqual(2, code)
+        self.assertEqual("PASS", missing["git_object_closure"]["result"])
+        self.assertTrue(any("Git object" in p for p in missing["discrepancies"]), missing)
+        self.assertEqual("initial\n", (active / "src/logic.txt").read_text())
+        object_path.write_bytes(payload)
+        code, restored = self.cli("recover", "--repo", self.repo, "--execution", "active")
+        self.assertEqual(0, code, restored)
+        self.assertEqual("DECLARED_INPUTS_AVAILABLE", restored["execution_custody"]["result"])
+
+    def test_execution_missing_build_graph_is_rebuild_prerequisite_not_source_deletion(self):
+        active, _, build, _ = self.publish_execution()
+        payload = build.read_bytes(); build.unlink()
+        code, missing = self.cli("preflight", "--repo", active, "--execution", "active")
+        self.assertEqual(2, code)
+        check = missing["execution_custody"]["candidates"]["active"]
+        self.assertEqual("PASS", check["source_status"])
+        self.assertEqual("BLOCKED", check["build_status"])
+        self.assertIn("Restore the owning graph", check["next_actions"][0])
+        build.write_bytes(payload)
+        code, restored = self.cli("preflight", "--repo", active, "--execution", "active")
+        self.assertEqual(0, code, restored)
+        self.assertTrue(restored["ready"])
+
+    def test_execution_stale_incoming_custody_refuses_before_any_mutation(self):
+        active, _, build, _, patch = self.execution_fixture()
+        for change in ("missing-worktree", "changed-source", "changed-build", "foreign-revision", "foreign-path", "foreign-common", "path-override"):
+            incoming = copy.deepcopy(patch)
+            record = incoming["execution_custody"]["active"]
+            if change == "missing-worktree": record["source"]["path"] = str(self.root / "gone")
+            elif change == "changed-source": record["source"]["files"]["src/logic.txt"]["sha256"] = "0" * 64
+            elif change == "changed-build": record["build_dependencies"]["owning-assets"]["identity"]["sha256"] = "0" * 64
+            elif change == "foreign-revision": record["revision"] = "0" * 40
+            elif change == "foreign-path": record["source"]["git"]["path"] = str(self.repo)
+            elif change == "foreign-common": record["source"]["git"]["common_directory"] = str(self.repo / ".git")
+            else: record["source"]["files"]["src/logic.txt"]["path"] = str(build)
+            incoming["next_actions"] = ["must not leak"]
+            with self.subTest(change=change): self.assert_checkpoint_refused_unchanged(incoming)
+
+    def test_execution_active_path_update_requires_structured_actual_custody(self):
+        _, _, _, _, patch = self.execution_fixture()
+        del patch["execution_custody"]
+        self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_execution_task_only_checkpoint_does_not_rehash_historical_execution(self):
+        active, _, _, _ = self.publish_execution()
+        (active / "src/logic.txt").write_text("changed source\n")
+        path = self.root / "task-patch.json"; path.write_bytes(w.encoded({"next_actions": ["reconcile source"]}))
+        code, state = self.cli("checkpoint", "--expect", "1", "--patch", path)
+        self.assertEqual(0, code, state)
+        self.assertEqual(2, state["generation"])
+        code, result = self.cli("recover", "--repo", self.repo)
+        self.assertEqual(2, code)
+        self.assertIn("source", " ".join(result["discrepancies"]))
+
+    def test_execution_record_can_declare_missing_rebuildable_cache_without_claiming_ready(self):
+        _, _, build, record, patch = self.execution_fixture()
+        build.unlink(); record["build_dependencies"]["owning-assets"]["identity"] = None
+        w.apply_checkpoint(self.state, patch)
+        check = w.execution_checks(self.state, "active")
+        self.assertEqual("BLOCKED", check["result"])
+        self.assertEqual("PASS", check["candidates"]["active"]["source_status"])
+        build.write_text("new cache\n")
+        # A path alone never becomes ready; coordinator must capture the actual new identity.
+        self.assertEqual("BLOCKED", w.execution_checks(self.state, "active")["result"])
+
+    def test_execution_absent_cache_declaration_cannot_hide_existing_uncaptured_input(self):
+        _, _, _, record, patch = self.execution_fixture()
+        record["build_dependencies"]["owning-assets"]["identity"] = None
+        self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_execution_missing_legacy_candidate_blocks_despite_old_ready_label(self):
+        self.state["development_candidates"]["combined"] = {"revision": self.state["observed_revision"],
+                                                              "worktree": str(self.root / "lost-tmp-source"), "status": "READY"}
+        result = w.recovery(self.state, self.repo)
+        self.assertEqual("BLOCKED", result["recovery_status"])
+        self.assertEqual("BLOCKED", result["execution_custody"]["result"])
+        self.assertEqual("PASS", result["git_object_closure"]["result"])
+
+    def test_execution_legacy_labels_never_mean_execution_ready(self):
+        self.state["development_candidates"]["old"] = {"revision": "historical", "status": "READY"}
+        result = w.recovery(self.state, self.repo)
+        self.assertEqual("CHECKPOINT", result["recovery_status"])
+        self.assertEqual("UNRECORDED", result["execution_custody"]["result"])
+        self.assertFalse(result["execution_custody"]["declared_inputs_available"])
+        self.assertFalse(w.preflight(self.repo, donors={}, state=self.state)["ready"])
+
+    def test_execution_unknown_or_unrelated_named_context_refused(self):
+        self.publish_execution()
+        code, _ = self.cli("recover", "--repo", self.repo, "--execution", "unknown")
+        self.assertEqual(2, code)
+        unrelated = self.root / "unrelated"; unrelated.mkdir()
+        code, _ = self.cli("recover", "--repo", unrelated, "--execution", "active")
+        self.assertEqual(2, code)
+
+    def test_execution_updating_candidate_cannot_keep_stale_custody(self):
+        _, _, _, _, patch = self.execution_fixture()
+        w.apply_checkpoint(self.state, patch)
+        incoming = {"development_candidates": {"active": {"revision": "0" * 40, "worktree": patch["development_candidates"]["active"]["worktree"]}}}
+        self.assert_checkpoint_refused_unchanged(incoming)
+
+    def test_execution_missing_build_declarations_remain_unrecorded(self):
+        _, _, _, record, patch = self.execution_fixture()
+        record["build_dependencies"] = {}
+        w.apply_checkpoint(self.state, patch)
+        result = w.execution_checks(self.state, "active")
+        self.assertEqual("UNRECORDED", result["result"])
+        self.assertFalse(result["declared_inputs_available"])
+        self.assertEqual("UNRECORDED", result["candidates"]["active"]["build_status"])
+
+    def test_execution_worktree_head_change_is_detected_without_rewriting_projection(self):
+        active, _, _, _ = self.publish_execution()
+        subprocess.run(["git", "-C", str(active), "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-qm", "changed HEAD"], check=True)
+        code, result = self.cli("recover", "--repo", active, "--execution", "active")
+        self.assertEqual(2, code)
+        self.assertEqual(self.state["observed_revision"], result["actual_revision"])
+        self.assertTrue(any("HEAD changed" in p for p in result["discrepancies"]))
+
+    def test_execution_export_has_no_invented_git_head_and_detects_changed_files(self):
+        active, _, _, record, patch = self.execution_fixture()
+        exported = self.root / "source-export"; (exported / "src").mkdir(parents=True)
+        for name in record["source"]["files"]:
+            (exported / name).write_bytes((active / name).read_bytes())
+        origin = record["source"]["git"]
+        manifest = {"schema": "9to1.exact-source-export/v1", "root": str(exported), "origin_git": origin["path"],
+                    "source_revision": record["revision"], "files": [{"path": name, **{k: v for k, v in identity.items() if k != "kind"}}
+                        for name, identity in record["source"]["files"].items()]}
+        path = self.root / "export-manifest.json"; path.write_bytes(w.encoded(manifest))
+        record["source"] = {"kind": "source-export", "path": str(exported), "git": origin, "manifest": {"path": str(path), **w.file_identity(path)}}
+        patch["development_candidates"]["active"]["worktree"] = str(exported)
+        w.apply_checkpoint(self.state, patch)
+        self.assertFalse((exported / ".git").exists())
+        result = w.recovery(self.state, exported, "active")
+        self.assertEqual("CHECKPOINT", result["recovery_status"])
+        self.assertTrue(result["execution_custody"]["declared_inputs_available"])
+        (exported / "src/logic.txt").write_text("explicit variant not yet captured\n")
+        self.assertEqual("BLOCKED", w.recovery(self.state, exported, "active")["recovery_status"])
+        self.assert_checkpoint_refused_unchanged(patch)
+
     def test_stale_writer_does_not_overwrite_checkpoint(self):
         with w.transaction(self.state_path, 0) as state:
             state["next_actions"] = ["new progress"]

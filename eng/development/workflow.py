@@ -185,7 +185,7 @@ def initial_state(repo, root_checkpoint):
     if not checkpoint.is_file(): raise Refusal("Existing ROOT-LIVE checkpoint required; do not initialise replacement programme state")
     return {"schema": SCHEMA, "generation": 0, "updated_at": now(), "projection_of": root_checkpoint,
             "repository": str(Path(repo).resolve()), "observed_revision": git(repo, "rev-parse", "HEAD").decode().strip(),
-            "verified_revision": None, "development_candidates": {}, "release_candidate": None,
+            "verified_revision": None, "development_candidates": {}, "execution_custody": {}, "release_candidate": None,
             "workers": {}, "tasks": {}, "pending_changes": {}, "blockers": {}, "evidence": {}, "artifacts": {},
             "recovery_assets": {"root-checkpoint": {"path": str(checkpoint), **file_identity(checkpoint)}},
             "outstanding_acceptance": list(MANDATORY), "next_actions": [],
@@ -196,6 +196,7 @@ def validate_state(state):
     if state.get("schema") != SCHEMA: raise Refusal("Unsupported ledger schema")
     for field in ("workers", "tasks", "pending_changes", "blockers", "evidence", "artifacts", "recovery_assets", "development_candidates"):
         if not isinstance(state.get(field), dict): raise Refusal("Ledger field must be a named object: " + field)
+    if not isinstance(state.get("execution_custody", {}), dict): raise Refusal("Execution custody must be a named object")
     for task in state.get("tasks", {}).values():
         if task.get("status") not in STATUSES: raise Refusal("Invalid task status")
         if task["status"] == "VERIFIED":
@@ -384,6 +385,7 @@ def apply_checkpoint(state, patch):
             if state["pending_changes"].get(key, {}).get("kind") == "rc-backport" or value.get("kind") == "rc-backport":
                 raise Refusal("RC backport records require advance-rc/verify-backport, never a generic checkpoint")
     checkpoint_recovery_preflight(state, patch)
+    checkpoint_execution_preflight(state, patch)
     for key, value in patch.items():
         if isinstance(value, dict) and isinstance(state.get(key), dict): state[key].update(value)
         else: state[key] = value
@@ -569,7 +571,182 @@ def release_ready(state):
     return {"ready": not missing, "candidate": rc["identity"], "missing": missing}
 
 
-def git_closure(repo):
+def absolute_path(value, label):
+    if not isinstance(value, str) or not value or "\0" in value or not Path(value).is_absolute():
+        raise Refusal(label + " requires an absolute path")
+    return Path(value)
+
+
+def revision_id(value):
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{40}", value):
+        raise Refusal("Execution revision must be a full Git object ID")
+    return value
+
+
+def execution_files(root, files):
+    if not isinstance(files, dict) or not files: raise Refusal("Execution source needs named file identities")
+    for name, identity in files.items():
+        if not isinstance(name, str): raise Refusal("Execution source path must be a string")
+        safe_relative(name)
+        if not isinstance(identity, dict) or "path" in identity: raise Refusal("Invalid execution file identity")
+        recovery_reference({"path": str(root / name), **identity}, content=True)
+
+
+def export_files(source, revision):
+    asset = source["manifest"]
+    recovery_reference(asset)
+    # One bounded no-follow read supplies both the parsed bytes and their receipt.
+    fd = os.open(asset["path"], os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+    with os.fdopen(fd, "rb") as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode): raise Refusal("Export manifest must be a regular file")
+        raw = stream.read(asset["bytes"] + 1)
+        after = os.fstat(stream.fileno())
+        identity = {"kind": "file", "bytes": len(raw), "sha256": digest(raw), "mode": before.st_mode & 0o777}
+        if identity != {k: v for k, v in asset.items() if k != "path"} or before != after:
+            raise Refusal("Export manifest changed/unavailable")
+    manifest = json.loads(raw)
+    if (manifest.get("schema") != "9to1.exact-source-export/v1" or manifest.get("root") != source["path"]
+            or manifest.get("origin_git") != source["git"]["path"]
+            or manifest.get("source_revision") != source["git"]["revision"]
+            or manifest.get("candidate_revision", manifest.get("source_revision")) != revision):
+        raise Refusal("Export manifest root/origin/base/candidate binding differs")
+    entries = manifest.get("files")
+    if not isinstance(entries, list) or not entries: raise Refusal("Export manifest needs actual file entries")
+    files = {}
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"path", "bytes", "mode", "sha256"}: raise Refusal("Invalid export file entry")
+        name = entry["path"]
+        if not isinstance(name, str) or name in files: raise Refusal("Duplicate/invalid export file path")
+        files[name] = {"kind": "file", **{k: v for k, v in entry.items() if k != "path"}}
+    return files
+
+
+def execution_record(record, candidate, *, publication=False):
+    """Check observed execution inputs; never infer acceptance from their availability."""
+    if not isinstance(record, dict) or set(record) != {"revision", "owner", "source", "build_dependencies"}:
+        raise Refusal("Execution custody requires revision/owner/source/build_dependencies")
+    revision = revision_id(record["revision"])
+    if not isinstance(candidate, dict) or candidate.get("revision") != revision:
+        raise Refusal("Execution custody must match its named development candidate revision")
+    if not isinstance(record["owner"], str) or not record["owner"].strip(): raise Refusal("Execution custody needs an actual owner")
+    source = record["source"]
+    if not isinstance(source, dict) or source.get("kind") not in ("git-worktree", "source-export"):
+        raise Refusal("Execution source kind must be git-worktree or source-export")
+    expected = {"kind", "path", "git", "files" if source["kind"] == "git-worktree" else "manifest"}
+    if set(source) != expected: raise Refusal("Execution source fields differ from its kind")
+    root = absolute_path(source["path"], "Execution source")
+    if candidate.get("worktree") is not None and candidate["worktree"] != str(root):
+        raise Refusal("Execution source path differs from named candidate worktree")
+    origin = source["git"]
+    if not isinstance(origin, dict) or set(origin) != {"path", "common_directory", "revision", "required_revisions"}:
+        raise Refusal("Execution Git custody requires path/common_directory/revision/required_revisions")
+    repository = absolute_path(origin["path"], "Execution Git repository")
+    common = absolute_path(origin["common_directory"], "Execution common Git directory")
+    base = revision_id(origin["revision"])
+    if not isinstance(origin["required_revisions"], list): raise Refusal("Required Git revisions must be a list")
+    required = {revision, base, *(revision_id(x) for x in origin["required_revisions"])}
+    if candidate.get("base_revision") is not None: required.add(revision_id(candidate["base_revision"]))
+    source_problems, build_problems, publication_problems, actions = [], [], [], []
+    try:
+        if not root.is_dir(): raise Refusal("Execution source directory unavailable: " + str(root))
+        actual_common = Path(git(repository, "rev-parse", "--path-format=absolute", "--git-common-dir").decode().strip()).resolve()
+        if actual_common != common.resolve(): raise Refusal("Execution common Git directory changed")
+        if source["kind"] == "git-worktree":
+            if repository != root or base != revision: raise Refusal("Git worktree custody must bind its own repository and HEAD")
+            actual_root = Path(git(root, "rev-parse", "--show-toplevel").decode().strip()).resolve()
+            if actual_root != root.resolve() or git(root, "rev-parse", "HEAD").decode().strip() != revision:
+                raise Refusal("Execution worktree root/HEAD changed")
+        for required_revision in sorted(required):
+            if git(repository, "cat-file", "-t", required_revision).decode().strip() != "commit": raise Refusal("Execution revision is not a commit")
+            closure = git_closure(repository, required_revision)
+            if closure["result"] != "PASS": raise Refusal("; ".join(closure["problems"]))
+        files = source["files"] if source["kind"] == "git-worktree" else export_files(source, revision)
+        execution_files(root, files)
+    except (OSError, subprocess.CalledProcessError, Refusal, ValueError, TypeError, KeyError) as error:
+        source_problems.append("Execution source unavailable/changed: " + str(error))
+        actions.append("Restore exact declared source/object closure, or publish an explicitly reviewed successor custody record")
+    dependencies = record["build_dependencies"]
+    if not isinstance(dependencies, dict): raise Refusal("Build dependencies must be named prerequisite records")
+    for name, dependency in dependencies.items():
+        if not isinstance(name, str) or not isinstance(dependency, dict) or set(dependency) != {"path", "identity", "recovery", "next_action"}:
+            raise Refusal("Build prerequisite requires path/identity/recovery/next_action")
+        path = absolute_path(dependency["path"], "Build prerequisite")
+        if dependency["recovery"] not in ("rebuild", "restore") or not isinstance(dependency["next_action"], str) or not dependency["next_action"].strip():
+            raise Refusal("Build prerequisite needs rebuild/restore and an executable next action")
+        if dependency["identity"] is None:
+            if publication and os.path.lexists(path): raise Refusal("Existing build prerequisite needs its actual identity")
+            build_problems.append("Build prerequisite identity unrecorded: " + name)
+            actions.append(dependency["next_action"])
+            continue
+        try:
+            if not isinstance(dependency["identity"], dict) or "path" in dependency["identity"]: raise Refusal("Invalid build identity")
+            recovery_reference({"path": str(path), **dependency["identity"]}, content=True)
+        except (OSError, Refusal) as error:
+            build_problems.append("Build prerequisite unavailable/changed: " + name + ": " + str(error))
+            publication_problems.append(build_problems[-1])
+            actions.append(dependency["next_action"])
+    if publication and (source_problems or publication_problems):
+        raise Refusal("; ".join(source_problems + publication_problems))
+    problems = source_problems + build_problems
+    return {"result": "BLOCKED" if problems else "PASS", "classification": "INFRASTRUCTURE", "owner": record["owner"],
+            "revision": revision, "source_path": str(root), "source_status": "BLOCKED" if source_problems else "PASS",
+            "build_status": "BLOCKED" if build_problems else ("PASS" if dependencies else "UNRECORDED"),
+            "problems": problems, "next_actions": actions,
+            "scope": "Declared inputs only; omitted build prerequisites, live workers, compilation and native acceptance are not verified"}
+
+
+def checkpoint_execution_preflight(state, patch):
+    if not ({"execution_custody", "development_candidates"} & patch.keys()): return
+    incoming = patch.get("execution_custody", {})
+    candidates = patch.get("development_candidates", {})
+    if not isinstance(incoming, dict) or not isinstance(candidates, dict): raise Refusal("Execution custody/candidates must be named objects")
+    merged_candidates = {**state["development_candidates"], **candidates}
+    merged_custody = {**state.get("execution_custody", {}), **incoming}
+    for name in incoming.keys() | candidates.keys():
+        if name in merged_custody:
+            execution_record(merged_custody[name], merged_candidates.get(name), publication=True)
+        elif isinstance(merged_candidates.get(name), dict) and "worktree" in merged_candidates[name]:
+            # New active path declarations need actual structured custody; historical
+            # revision/status-only records stay compatible, without becoming ready.
+            raise Refusal("Active candidate worktree requires execution custody in the same checkpoint: " + name)
+
+
+def execution_checks(state, selected=None):
+    candidates, custody = state["development_candidates"], state.get("execution_custody", {})
+    names = {selected} if selected else set(candidates) | set(custody)
+    checks = {}
+    for name in sorted(names):
+        try:
+            if name not in candidates: raise Refusal("Unknown named development candidate: " + name)
+            if name in custody:
+                checks[name] = execution_record(custody[name], candidates[name])
+                continue
+            candidate = candidates[name]
+            problems = []
+            if not isinstance(candidate, dict): raise Refusal("Invalid legacy candidate record")
+            if "worktree" in candidate:
+                root = absolute_path(candidate["worktree"], "Legacy candidate worktree")
+                revision = revision_id(candidate.get("revision"))
+                if not root.is_dir() or Path(git(root, "rev-parse", "--show-toplevel").decode().strip()).resolve() != root.resolve():
+                    raise Refusal("Legacy candidate worktree unavailable: " + str(root))
+                if git(root, "rev-parse", "HEAD").decode().strip() != revision: raise Refusal("Legacy candidate HEAD changed")
+                closure = git_closure(root, revision)
+                problems.extend(closure["problems"])
+            checks[name] = {"result": "BLOCKED" if problems else "UNRECORDED", "problems": problems,
+                            "next_actions": ["Coordinator must publish actual structured source and build prerequisite custody"],
+                            "scope": "Legacy metadata is not execution custody or readiness"}
+        except (Refusal, OSError, subprocess.CalledProcessError, ValueError, TypeError, KeyError) as error:
+            checks[name] = {"result": "BLOCKED", "classification": "INFRASTRUCTURE", "problems": [str(error)],
+                            "next_actions": ["Restore/reconcile named candidate source; retain historical evidence separately"]}
+    blocked = any(c["result"] == "BLOCKED" for c in checks.values())
+    complete = bool(checks) and all(c["result"] == "PASS" and c.get("build_status") == "PASS" for c in checks.values())
+    return {"result": "BLOCKED" if blocked else ("DECLARED_INPUTS_AVAILABLE" if complete else "UNRECORDED"),
+            "declared_inputs_available": complete, "candidates": checks,
+            "native_acceptance": "NOT RUN", "liveness": "NOT CHECKED"}
+
+
+def git_closure(repo, revision="HEAD"):
     problems = []
     alternate_file = Path(git(repo, "rev-parse", "--git-path", "objects/info/alternates").decode().strip())
     if not alternate_file.is_absolute(): alternate_file = Path(repo) / alternate_file
@@ -579,13 +756,13 @@ def git_closure(repo):
             if not alternate.is_absolute(): alternate = alternate_file.parent.parent / alternate
             if not alternate.is_dir(): problems.append("Missing Git object alternate: " + str(alternate))
     try:
-        listing = git(repo, "rev-list", "--objects", "--missing=print", "HEAD").decode().splitlines()
+        listing = git(repo, "rev-list", "--objects", "--missing=print", revision).decode().splitlines()
         missing = [line for line in listing if line.startswith("?")]
         problems.extend("Missing reachable Git object: " + x[1:] for x in missing[:20])
     except subprocess.CalledProcessError as error:
-        problems.append("Cannot enumerate HEAD object closure: " + error.stderr.decode(errors="replace")[:1000])
+        problems.append("Cannot enumerate " + revision + " object closure: " + error.stderr.decode(errors="replace")[:1000])
     return {"check": "git-object-closure", "result": "BLOCKED" if problems else "PASS", "classification": "INFRASTRUCTURE", "problems": problems,
-            "limitation": "HEAD reachability only; separately retain uncommitted source/candidate manifests and external dependencies in durable custody."}
+            "limitation": "Selected revision reachability only; separately retain working source manifests and external prerequisites."}
 
 
 def donor_checks(repo, registry):
@@ -607,7 +784,14 @@ def donor_checks(repo, registry):
     return checks
 
 
-def preflight(repo, candidate=None, donors=None):
+def preflight(repo, candidate=None, donors=None, state=None, execution=None):
+    if execution:
+        if candidate is not None: raise Refusal("Use a named execution custody record or --candidate, not both")
+        if state is None: raise Refusal("Named execution preflight requires --state")
+        declared = execution_checks(state, execution)
+        check_execution_context(state, repo, execution)
+        return {"at": now(), "ready": declared["declared_inputs_available"], "execution_custody": declared,
+                "scope": "Named declared source/build inputs only; toolchain execution and native acceptance NOT RUN"}
     checks = []
     for relative in ("AGENTS.md", "global.json", "NuGet.Config", "docs/specification/9to1-development-specification-v2.md"):
         checks.append({"check": relative, "result": "PASS" if (Path(repo) / relative).is_file() else "BLOCKED", "classification": "INFRASTRUCTURE"})
@@ -622,7 +806,10 @@ def preflight(repo, candidate=None, donors=None):
     vfs = os.statvfs(repo)
     checks.append({"check": "free-space", "available_bytes": vfs.f_bavail * vfs.f_frsize,
                    "result": "OBSERVED", "note": "Use the owning build/package peak-space requirement; no invented universal fit claim."})
-    return {"at": now(), "checks": checks, "ready": all(c["result"] != "BLOCKED" for c in checks),
+    execution_result = execution_checks(state) if state is not None else None
+    return {"at": now(), "checks": checks,
+            "execution_custody": execution_result,
+            "ready": all(c["result"] != "BLOCKED" for c in checks) and (execution_result is None or execution_result["declared_inputs_available"]),
             "scope": "Generic source/configuration/Git/donor preflight only; build and native readiness are not inferred.",
             "native_environment": "NOT RUN", "toolchain": "NOT RUN: use platform-specific existing preflight"}
 
@@ -670,13 +857,34 @@ def recovery_checkpoint(state):
             "recorded_in_generation": state["generation"], "ledger_updated_at": state["updated_at"]}
 
 
-def recovery(state, repo):
-    revision = git(repo, "rev-parse", "HEAD").decode().strip()
+def check_execution_context(state, repo, execution):
+    record = state.get("execution_custody", {}).get(execution)
+    if not isinstance(record, dict): raise Refusal("Named execution requires structured custody")
+    permitted = {state["repository"], record["source"]["path"], record["source"]["git"]["path"]}
+    if Path(repo).resolve() not in {Path(p).resolve() for p in permitted}:
+        raise Refusal("Requested repository is unrelated to named execution custody")
+
+
+def recovery(state, repo, execution=None):
+    # The projection's original repository and a named execution source are separate.
+    canonical_repo = state["repository"] if execution else repo
+    revision = None
     rc = state.get("release_candidate")
     discrepancies = []
     try: validate_state(state)
     except (Refusal, KeyError, TypeError) as error: discrepancies.append("Ledger evidence/schema validation failed: " + str(error))
-    if revision != state.get("observed_revision"): discrepancies.append("Repository HEAD differs from checkpoint")
+    try:
+        if execution: check_execution_context(state, repo, execution)
+        elif Path(repo).resolve() != Path(state["repository"]).resolve():
+            discrepancies.append("Repository path differs from original projection; select explicit named execution custody")
+        revision = git(canonical_repo, "rev-parse", "HEAD").decode().strip()
+        if revision != state.get("observed_revision"): discrepancies.append("Repository HEAD differs from checkpoint")
+        object_closure = git_closure(canonical_repo)
+    except (OSError, Refusal, KeyError, subprocess.CalledProcessError) as error:
+        object_closure = {"result": "BLOCKED", "classification": "INFRASTRUCTURE", "problems": ["Original repository unavailable: " + str(error)]}
+    declared = execution_checks(state, execution)
+    for name, check in declared["candidates"].items():
+        if check["result"] == "BLOCKED": discrepancies.extend(name + ": " + p for p in check["problems"])
     if rc:
         try:
             candidate = read(rc["path"])
@@ -684,7 +892,6 @@ def recovery(state, repo):
             if candidate["identity"] != rc["identity"] or file_identity(rc["path"]) != rc["manifest"]:
                 raise Refusal("Pinned RC content identity changed")
         except (OSError, KeyError, ValueError, Refusal) as error: discrepancies.append("RC manifest unavailable/changed: " + str(error))
-    object_closure = git_closure(repo)
     if object_closure["result"] != "PASS": discrepancies.extend(object_closure["problems"])
     for key, asset in state.get("recovery_assets", {}).items():
         try:
@@ -702,7 +909,9 @@ def recovery(state, repo):
             "workers": state["workers"], "tasks": state["tasks"], "blockers": state["blockers"],
             "outstanding_acceptance": state["outstanding_acceptance"], "release_readiness": release_ready(state),
             "next_actions": state["next_actions"], "discrepancies": discrepancies, "recovery_status": "BLOCKED" if discrepancies else "CHECKPOINT",
-            "git_object_closure": object_closure,
+            "git_object_closure": object_closure, "canonical_repository": state["repository"],
+            "requested_repository": str(repo), "selected_execution": execution, "execution_custody": declared,
+            "execution_next_actions": {name: c["next_actions"] for name, c in declared["candidates"].items()},
             "liveness": "NOT CHECKED: inspect supported live agent/worker APIs; historical PIDs are not live custody",
             "native_testing": "NOT RUN by recovery", "provider_policy": "Mercury revoked: Beam and Codex only; no paid fallback"}
 
@@ -730,10 +939,10 @@ def main(argv=None):
     q = sub.add_parser("pin-rc"); q.add_argument("--expect", type=int, required=True); q.add_argument("--candidate", required=True)
     q = sub.add_parser("advance-rc"); q.add_argument("--expect", type=int, required=True); q.add_argument("--candidate", required=True); q.add_argument("--patch", required=True)
     q = sub.add_parser("verify-backport"); q.add_argument("--expect", type=int, required=True); q.add_argument("--patch-id", required=True); q.add_argument("--target", required=True); q.add_argument("--repo", required=True)
-    q = sub.add_parser("preflight"); q.add_argument("--repo", required=True); q.add_argument("--candidate")
+    q = sub.add_parser("preflight"); q.add_argument("--repo", required=True); q.add_argument("--candidate"); q.add_argument("--execution")
     q = sub.add_parser("plan"); q.add_argument("--changed", required=True); q.add_argument("--registry", default=str(Path(__file__).with_name("checks.json"))); q.add_argument("--release", action="store_true")
     q = sub.add_parser("run"); q.add_argument("--repo", required=True); q.add_argument("--candidate", required=True); q.add_argument("--check", required=True); q.add_argument("--layer", type=int, required=True); q.add_argument("--out", required=True); q.add_argument("--trx"); q.add_argument("--environment-manifest"); q.add_argument("--timeout-seconds", type=float, default=300); q.add_argument("--kind", choices=["test", "build"], default="test"); q.add_argument("command", nargs=argparse.REMAINDER)
-    q = sub.add_parser("recover"); q.add_argument("--repo", required=True)
+    q = sub.add_parser("recover"); q.add_argument("--repo", required=True); q.add_argument("--execution")
     sub.add_parser("dashboard"); sub.add_parser("release-status")
     a = p.parse_args(argv)
     try:
@@ -744,7 +953,7 @@ def main(argv=None):
         elif a.action == "snapshot":
             old = read(a.previous_candidate)["accepted_fixes"] if a.previous_candidate else []
             value = snapshot(a.repo, a.out, [read(f) for f in a.accepted_fix], old)
-        elif a.action == "preflight": value = preflight(a.repo, read(a.candidate) if a.candidate else None)
+        elif a.action == "preflight": value = preflight(a.repo, read(a.candidate) if a.candidate else None, state=read(a.state) if a.state else None, execution=a.execution)
         elif a.action == "plan": value = plan(read(a.changed), read(a.registry), a.release)
         elif a.action == "run":
             cmd = a.command[1:] if a.command[:1] == ["--"] else a.command
@@ -766,7 +975,7 @@ def main(argv=None):
             state = read(a.state)
             if a.action == "dashboard": validate_state(state); print(dashboard(state)); return 0
             if a.action == "release-status": validate_state(state)
-            value = recovery(state, a.repo) if a.action == "recover" else release_ready(state)
+            value = recovery(state, a.repo, a.execution) if a.action == "recover" else release_ready(state)
         print(json.dumps(value, indent=2, ensure_ascii=False))
         if a.action == "run" and value["result"] not in ("PASS", "PROCESS_SUCCEEDED"): return 1
         if a.action == "preflight" and not value["ready"]: return 2
