@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Avalonia;
+using Avalonia.VisualTree;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CakeOS.Cui;
@@ -33,6 +35,11 @@ public sealed partial class CanvasHostWindow : Window
     private HostedItemMetadata[] _documents = [];
     private int _selected;
     private string? _nextPage;
+    private string _listedQuery = "";
+    // Observe the authored CUI surfaces for native capture/currentness only. Navigation state
+    // and every transition remain the CUI document's local variables and guarded Set actions.
+    private Control? _launchSurface, _workspaceSurface;
+    private CanvasLaunchRow[] _launchRows = [];
     private CanvasFilesArtifactBridge? _files;
     private CanvasHomeCreateOperation? _create;
     private CanvasHomeStrokeOperation? _stroke;
@@ -65,8 +72,9 @@ public sealed partial class CanvasHostWindow : Window
         var controls = new CuiControlRegistry();
         controls.BindAuthoredControl("canvas-native-content", _ => _content);
         controls.BindAuthoredControl("canvas-home-approvals", _ => _approvals);
-        _shell = new(controls);
+        _shell = new(controls, IsSettledNoEffectActionFailure);
         _model.Set("NewName", "Untitled canvas");
+        _model.Set("SearchQuery", "");
         Content = _shell;
         Opened += (_, _) =>
         {
@@ -75,10 +83,16 @@ public sealed partial class CanvasHostWindow : Window
         };
         Activated += (_, _) =>
         {
-            if (_view is not CanvasNativeCuiSurface surface || _closed) return;
+            if (_view is not CanvasNativeCuiSurface surface || !EditorViewActive()) return;
             var actual = _originalWork.RunOriginalAsync(async token =>
             {
-                if (!await surface.RefreshAsync(token)) { _opened = null; _openedFile = null; }
+                if (!await surface.RefreshAsync(token))
+                {
+                    await _originalWork.ObserveOriginalAsync(surface.CloseAndDrainAsync());
+                    _view = null; _content.Content = null;
+                    _opened = null; _openedFile = null;
+                    RefreshBindings();
+                }
             }, _lifetime.Token);
             _ = ObserveStatusAsync(actual);
         };
@@ -93,6 +107,17 @@ public sealed partial class CanvasHostWindow : Window
     // A compiled native host may supply its platform picker; app actions never supply paths or picker results.
     private IStorageProvider NativePicker => _services.GetService<IStorageProvider>() ?? StorageProvider;
     private bool WriteAvailable() => !_closed && _ready && _workspace is not null;
+    private bool HasRetainedCanvas() => _view is CanvasNativeCuiSurface { OriginalCloseTask: null } && _opened is not null && _openedFile is not null;
+    private bool EditorViewActive() => !_closed && _workspaceSurface?.IsEffectivelyVisible == true &&
+        HasRetainedCanvas() && ReferenceEquals(_content.Content, _view);
+    private Control FindAuthoredSurface(string id) => AuthoredTree(_shell).Single(control => CuiRuntimeIdentity.GetStableId(control) == "id:" + id);
+    private static IEnumerable<Control> AuthoredTree(Control root)
+    {
+        yield return root;
+        var children = root is CuiContainerControl container ? container.AuthoredChildren : root.GetVisualChildren().OfType<Control>();
+        foreach (var child in children)
+            foreach (var descendant in AuthoredTree(child)) yield return descendant;
+    }
     private async Task InitializeAsync(CancellationToken ct)
     {
         using var stream = typeof(CanvasHostWindow).Assembly.GetManifestResourceStream("HavenOS.Apps.Canvas.UI.CanvasHost.cui")
@@ -102,6 +127,15 @@ public sealed partial class CanvasHostWindow : Window
         if (parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error)) throw new InvalidDataException("Canvas host CUI is invalid.");
         await _originalWork.ObserveOriginalAsync(_shell.ShowAsync(new("canvas", "Canvas", "Canvas", document, _model, new Actions(this), new HostReadiness(this))
         { IsPublicationCurrent = () => !_closed && !_lifetime.IsCancellationRequested }, ct));
+        _launchSurface = FindAuthoredSurface("canvas-launch");
+        _workspaceSurface = FindAuthoredSurface("canvas-active-workspace");
+        _workspaceSurface.PropertyChanged += (_, args) =>
+        {
+            // Active=False is authored navigation. Detach native input to cancel unsubmitted
+            // captures while retaining the exact document/session for a later genuine resume.
+            if (args.Property == IsVisibleProperty && args.NewValue is false && ReferenceEquals(_content.Content, _view))
+                _content.Content = null;
+        };
         await _originalWork.ObserveOriginalAsync(_approvals.InitializeAsync(ct));
         await RefreshAsync(null, ct);
     }
@@ -118,8 +152,12 @@ public sealed partial class CanvasHostWindow : Window
         return new(_ready ? CuiSceneAvailabilityState.Ready : CuiSceneAvailabilityState.Unavailable,
             _ready ? "CanvasHomeReady" : "CanvasHomeUnavailable", _ready ? "Canvas is ready." : "Open Home to recover this profile and its services.");
     }
-    private async Task RefreshAsync(string? page, CancellationToken ct)
+    private async Task RefreshAsync(string? page, CancellationToken ct, NoEffectReadProof? proof = null)
     {
+        var query = _model.TryGetValue("SearchQuery", out var search) ? search?.ToString()?.Trim() ?? "" : "";
+        if (query.Length > 256) throw RejectBeforeEffect(proof, new ArgumentException("Canvas search must be at most 256 characters."));
+        if (page is not null && query != _listedQuery)
+            throw new InvalidOperationException("Choose Search before loading another page of changed search results.");
         await CheckHostAsync(ct);
         var authority = Get<NativeFilesWorkspaceAuthority>();
         _workspace = await authority.GetCurrentAsync(ct);
@@ -140,7 +178,9 @@ public sealed partial class CanvasHostWindow : Window
         _create = new(_files, Get<HomeResourceOperationBroker>(), actors);
         _stroke = new(_files, Get<HomeResourceOperationBroker>(), actors);
         if (!workspace.Configuration.AppFolders.TryGetValue("canvas", out var folder)) throw new InvalidDataException("The Files workspace has no Canvases folder.");
-        var listed = await workspace.Provider.ListAsync(folder, new("", Limit: 100), page, ct);
+        var listed = query.Length == 0
+            ? await workspace.Provider.ListAsync(folder, new("", Limit: 100), page, ct)
+            : await workspace.Provider.SearchAsync(new(query, ParentId: folder, Limit: 100), page, ct);
         var documents = new List<HostedItemMetadata>();
         foreach (var item in listed.Items.Where(item => item.Kind == HostedItemKind.Artifact))
         {
@@ -149,7 +189,8 @@ public sealed partial class CanvasHostWindow : Window
         }
         if (await authority.GetCurrentAsync(ct) is not { } current || current.Actor != workspace.Actor || !ReferenceEquals(current.Provider, workspace.Provider))
             throw new UnauthorizedAccessException("The Files workspace changed while listing Canvases.");
-        _documents = documents.ToArray(); _nextPage = listed.NextPageToken;
+        _documents = documents.OrderByDescending(item => item.ModifiedAt).ThenBy(item => item.Id.Value).ToArray();
+        _listedQuery = query; _nextPage = listed.NextPageToken;
         SetStatus(_documents.Length == 0 ? "No Canvas documents on this page. Create a canvas to begin." : "Choose a Canvas document to open.");
         RefreshBindings();
     }
@@ -157,6 +198,18 @@ public sealed partial class CanvasHostWindow : Window
     {
         var idle = !_busy && !_closed && !_requestUncertain;
         var noPending = _pendingRequest is null && _pendingOwnership is null && _pendingAudit is null && _pendingBeginAudit is null;
+        var retained = HasRetainedCanvas();
+        _model.Set("HasRetainedCanvas", retained);
+        _model.Set("HasNoRetainedCanvas", !retained);
+        _model.Set("CanReturnStart", idle && noPending);
+        _model.Set("CanResume", idle && noPending && retained);
+        _model.Set("OpenedName", _opened?.Artifact.DisplayName ?? "Canvas");
+        _model.Set("HasPendingRequest", !noPending || _requestUncertain);
+        _model.Set("CanSearch", idle && noPending);
+        _model.Set("HasNoDocuments", _documents.Length == 0);
+        _model.Set("HasMoreDocuments", _nextPage is not null);
+        _launchRows = _documents.Select(item => new CanvasLaunchRow(item)).ToArray();
+        _model.Set("Canvases", _launchRows);
         _model.Set("CanNavigate", idle && noPending);
         _model.Set("CanSetup", idle && _ready && _configuration is null && noPending);
         _model.Set("CanWrite", idle && WriteAvailable() && noPending);
@@ -168,18 +221,27 @@ public sealed partial class CanvasHostWindow : Window
         _model.Set("SelectedName", _documents.Length == 0 ? "No document selected" : _documents[_selected].Name);
     }
     private void SetStatus(string message) => _model.Set("Status", message);
-    private async Task ShowViewAsync(Control control, IDisposable? owner)
+    private async Task ShowViewAsync(Control control, IDisposable owner, Func<Task> validatePublication)
     {
         var previous = _view;
         if (previous is CanvasNativeCuiSurface native) await _originalWork.ObserveOriginalAsync(native.CloseAndDrainAsync());
         else previous?.Dispose();
-        _view = owner; _content.Content = control;
+        await validatePublication();
+        if (_closed) throw new OperationCanceledException("Canvas closed before native publication.");
+        _content.Content = control;
+        _view = owner;
     }
-    private async Task OpenAsync(HostedItemId fileId, CanvasFilesOpenResult opened, CancellationToken ct)
+    private async Task OpenAsync(HostedItemId fileId, CanvasFilesOpenResult opened, CancellationToken ct, NoEffectReadProof? proof = null)
     {
         var files = _files!; var captured = opened with { Artifact=CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(opened.Artifact)) };
         var original=_workspace ?? throw new UnauthorizedAccessException("The original Files workspace is unavailable.");
         if(captured.StoreId!=original.Configuration.StoreId)throw new UnauthorizedAccessException("Canvas store identity differs from its original workspace.");
+        // Reject this unsupported payload before constructing/acquiring any native owner.
+        // Only an explicitly admitted read command can supply the private proof; Finish
+        // and all post-commit callers leave it null and can never acquire this stamp.
+        if (!captured.Artifact.DocumentSettings.Properties.ContainsKey("9to1.Canvas.RnoteState"))
+            throw RejectBeforeEffect(proof, new NotSupportedException(
+                "The artifact has no Rnote engine state; open it using the registered native Canvas renderer."));
         var readiness = new CanvasOriginalResourceReadiness(Get<HomeCoreRuntime>(), Get<IAuthenticatedResourceActorSource>(), Get<ResourceAuthorizationService>(),
             "canvas.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", fileId.ToString(), captured.CasRevisionId.ToString(), ResourceAccess.Read)]));
         var originalReadiness=new OriginalCanvasReadiness(readiness,async token=>
@@ -190,6 +252,7 @@ public sealed partial class CanvasHostWindow : Window
                 throw new InvalidOperationException("This Canvas revision changed; reopen it.");
         });
         var strokeOwner = _stroke!;
+        _nativeOwnerAcquired = true; // Monotonic native custody, never a document-discard witness.
         var surface = new CanvasNativeCuiSurface(async token =>
         {
             await RequireOriginalOwnerAsync(original,captured.StoreId,token);
@@ -201,7 +264,7 @@ public sealed partial class CanvasHostWindow : Window
             () => WriteAvailable() && _pendingRequest is null && _pendingAudit is null && _pendingBeginAudit is null && !_requestUncertain,
             async (intent, token) =>
             {
-                if (_busy || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain)
+                if (!EditorViewActive() || _busy || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain)
                     throw new UnauthorizedAccessException("Finish the current Home request before drawing.");
                 _busy = true; RefreshBindings();
                 try
@@ -220,7 +283,34 @@ public sealed partial class CanvasHostWindow : Window
                 finally { _busy = false; RefreshBindings(); }
             },captured.StoreId),CreateEraserContext(fileId,captured,files,original));
         await InitializeOwnedSurfaceAsync(surface, ct);
-        _opened = opened; _openedFile = fileId; await ShowViewAsync(surface, surface);
+        Task? publication = null;
+        try
+        {
+            publication = ShowViewAsync(surface, surface, async () =>
+            {
+                await RequireOriginalOwnerAsync(original, captured.StoreId, ct);
+                if (!await _originalWork.ObserveOriginalAsync(surface.RefreshAsync(ct)))
+                    throw new UnauthorizedAccessException("Canvas source changed before native publication.");
+                ct.ThrowIfCancellationRequested();
+            });
+            await publication;
+            _opened = captured; _openedFile = fileId;
+        }
+        catch (Exception error)
+        {
+            var failures = new List<Exception>();
+            CaptureOriginalFailure(failures, publication, error);
+            if (ReferenceEquals(_content.Content, surface))
+                try { _content.Content = null; } catch (Exception detachError) { AddOriginalFailure(failures, detachError); }
+            if (ReferenceEquals(_view, surface))
+            { _view = null; _opened = null; _openedFile = null; }
+            Task? close = null;
+            try { close = surface.CloseAndDrainAsync(); await close; }
+            catch (Exception closeError) { CaptureOriginalFailure(failures, close, closeError); }
+            if (failures.Count == 1 && failures[0] is not OperationCanceledException)
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+            throw new AggregateException("Canvas publication and acquired surface cleanup failed.", failures);
+        }
     }
     private async Task<string> RequestAsync(string action, IReadOnlyList<ResourceScope> scopes, JsonElement arguments, string preview,
         Func<HomeResourceExecutionCapability, CancellationToken, Task<OwnerCommit>> execute, IDisposable? owned, CancellationToken ct)
@@ -337,10 +427,36 @@ public sealed partial class CanvasHostWindow : Window
     }
 
     private ValueTask DispatchAsync(string action, object? parameter, CancellationToken ct)
-        => new(_originalWork.RunOriginalAsync(token => DispatchOriginalAsync(action, parameter, token), ct));
-    private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct)
     {
-        if (parameter is not null || _busy || _closed) throw new InvalidOperationException("This Canvas action is unavailable.");
+        var proof = CaptureReadAdmission(action);
+        var actual = _originalWork.RunOriginalAsync(token => DispatchOriginalAsync(action, parameter, token, proof), ct);
+        _latestOriginalCommand = actual;
+        // The callback may already have begun. It only records its private exact cause;
+        // this proof becomes observable to close policy AFTER binding the actual issued Task.
+        lock (_noEffectGate)
+        {
+            _noEffectReads.RemoveAll(previous => previous.Original?.IsCompletedSuccessfully == true);
+            if (proof is not null) { proof.Original = actual; _noEffectReads.Add(proof); }
+        }
+        return new(actual);
+    }
+    private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct, NoEffectReadProof? proof)
+    {
+        if (_busy || _closed || parameter is not null && action != "canvas.host.openItem")
+            throw new InvalidOperationException("This Canvas action is unavailable.");
+        var startOnly = action is "canvas.host.openItem" or "canvas.host.open" or "canvas.host.create" or
+            "canvas.host.search" or "canvas.host.page" or "canvas.host.previous" or "canvas.host.next" or
+            "canvas.host.setup" or "canvas.host.reviewOwnership";
+        if (startOnly && _launchSurface?.IsEffectivelyVisible != true ||
+            action == "canvas.host.resume" && _launchSurface?.IsEffectivelyVisible != true ||
+            action == "canvas.host.start" && _workspaceSurface?.IsEffectivelyVisible != true)
+            throw new InvalidOperationException("This Canvas command does not belong to the active view.");
+        // CUI passes the actual row from this current Files listing. A caller
+        // cannot turn an arbitrary path, ID or stale row into an open command.
+        var selectedRow = parameter as CanvasLaunchRow;
+        if (action == "canvas.host.openItem" && (selectedRow is null ||
+            !_launchRows.Any(row => ReferenceEquals(row, selectedRow))))
+            throw new InvalidOperationException("Choose a Canvas from the current Files listing.");
         _busy = true; RefreshBindings();
         try
         {
@@ -404,11 +520,31 @@ public sealed partial class CanvasHostWindow : Window
                 await OpenAsync(committed.FileId, committed.Opened, ct);
             }
             else if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
-            else if (action == "canvas.host.refresh") await RefreshAsync(null, ct);
-            else if (action == "canvas.host.page") await RefreshAsync(_nextPage, ct);
+            else if (action == "canvas.host.start")
+            {
+                // Navigation retains the same canonical document and its native
+                // lifetime. It is neither a close nor permission to discard work.
+                await RefreshAsync(null, ct);
+            }
+            else if (action == "canvas.host.resume" && _view is CanvasNativeCuiSurface retained && _opened is not null)
+            {
+                if (!await _originalWork.ObserveOriginalAsync(retained.RefreshAsync(ct)))
+                {
+                    await _originalWork.ObserveOriginalAsync(retained.CloseAndDrainAsync());
+                    _view = null; _content.Content = null;
+                    _opened = null; _openedFile = null;
+                    throw new UnauthorizedAccessException("This Canvas source changed. Open its current version from Files.");
+                }
+                _content.Content = retained;
+            }
+            else if (action == "canvas.host.search") await RefreshAsync(null, ct, proof);
+            else if (action == "canvas.host.refresh") await RefreshAsync(null, ct, proof);
+            else if (action == "canvas.host.page") await RefreshAsync(_nextPage, ct, proof);
             else if (action == "canvas.host.previous" && _selected > 0) _selected--;
             else if (action == "canvas.host.next" && _selected + 1 < _documents.Length) _selected++;
-            else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await _files!.OpenAsync(_documents[_selected].Id, ct), ct);
+            else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await _files!.OpenAsync(_documents[_selected].Id, ct), ct, proof);
+            else if (action == "canvas.host.openItem" && selectedRow is not null)
+                await OpenAsync(selectedRow.Item.Id, await _files!.OpenAsync(selectedRow.Item.Id, ct), ct, proof);
             else if (action == "canvas.host.create" && WriteAvailable())
             {
                 if (!_model.TryGetValue("NewName", out var value) || string.IsNullOrWhiteSpace(value?.ToString()))
@@ -421,6 +557,7 @@ public sealed partial class CanvasHostWindow : Window
                 await workspace.Provider.GetStoreEvidenceAsync(originalStoreId, ct);
                 var folder = await workspace.Provider.GetAsync(folderId, ct);
                 if (!folder.IsSuccess) throw new InvalidOperationException(folder.Error!.Message);
+                _nativeOwnerAcquired = true; // Even an uncommitted blank owns a real native document.
                 using var blank = CanvasRnoteDocument.Create(name);
                 var intent = CanvasCreateIntent.Capture(blank.Snapshot, new(folderId, folder.Value!.CurrentRevisionId) { ExpectedStoreId = originalStoreId });
                 var create = _create!; var files = _files!;
@@ -457,8 +594,41 @@ public sealed partial class CanvasHostWindow : Window
         catch (Exception error) { SetStatus(error.Message); throw; }
         finally { _busy = false; RefreshBindings(); }
     }
-    private sealed class Actions(CanvasHostWindow owner) : ICuiActionDispatcher
-    { public ValueTask DispatchAsync(string action, object? parameter, CancellationToken cancellationToken = default) => owner.DispatchAsync(action, parameter, cancellationToken); }
+    private sealed class Actions(CanvasHostWindow owner) : ICuiResultReportingDispatcher
+    {
+        public ValueTask DispatchAsync(string action, object? parameter, CancellationToken cancellationToken = default) => owner.DispatchAsync(action, parameter, cancellationToken);
+        public async ValueTask<CuiCommandOutcome> DispatchWithOutcomeAsync(string action, object? parameter, CancellationToken cancellationToken = default)
+        {
+            var priorSurface = owner._view;
+            await owner.DispatchAsync(action, parameter, cancellationToken);
+            var pending = owner._pendingRequest is not null || owner._pendingOwnership is not null ||
+                owner._pendingAudit is not null || owner._pendingBeginAudit is not null || owner._requestUncertain;
+            if (pending) return new(false, false, "PendingHomeApproval", "Review the exact request in Home.", null);
+            if (action is "canvas.host.open" or "canvas.host.openItem" or "canvas.host.finish" or "canvas.host.resume")
+            {
+                var published = owner.HasRetainedCanvas() && ReferenceEquals(owner._content.Content, owner._view) &&
+                    (action == "canvas.host.resume" || !ReferenceEquals(priorSurface, owner._view));
+                return new(published, false, published ? "CanvasSessionPublished" : "NoCanvasSessionPublished", null, null);
+            }
+            return new(true, false, "Completed", null, null);
+        }
+    }
     private sealed class HostReadiness(CanvasHostWindow owner) : ICuiSceneReadiness
     { public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken) => owner.CheckHostAsync(cancellationToken); }
+
+    private sealed class CanvasLaunchRow(HostedItemMetadata item) : ICuiBindingContext
+    {
+        internal HostedItemMetadata Item { get; } = item;
+        public bool TryGetValue(string path, out object? value)
+        {
+            value = path switch
+            {
+                "Id" => Item.Id.ToString(),
+                "Name" => Item.Name,
+                "Modified" => "Modified " + Item.ModifiedAt.ToLocalTime().ToString("g"),
+                _ => null
+            };
+            return path is "Id" or "Name" or "Modified";
+        }
+    }
 }
