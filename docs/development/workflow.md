@@ -5,8 +5,20 @@ This is the operational companion to `AGENTS.md`. Product authority remains the
 (SHA256 `3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96`),
 APP-AC-001–009, GOV-001–002 and later explicit owner decisions. Read the
 [22 October owner amendment](../specification/owner-references/2026-10-22-development-reliability/owner-correction.json).
-Mercury is revoked. Only actual supported Beam/Codex execution is authorised;
-historical directories containing “mercury” remain useful source/evidence.
+Mercury is revoked. Normal development uses actual supported Beam/Codex execution;
+historical directories containing “mercury” remain useful source/evidence. At an
+actually observed **10% remaining Codex allowance**, the owner's conditional
+exception permits handoff to a genuinely verified Thunder development worker.
+If that worker is unavailable, preserve the handoff, commit and pause. The last
+owner reading was 99%; forecasts, context tokens and other provider limits do
+not trigger this rule. This current amendment governs older receipt summaries.
+
+The registered coordinator is the owner's **laptop**, not the RTX desktop.
+Inference access does not provide deployment or administration access. Preserve
+existing laptop workers and reconcile shared model custody before requesting
+another Thunder worker. The owner authorised exploring a supported persistent
+desktop channel; discovery, dispatch, reconnect and revocation remain unverified.
+Read the exact current owner amendment before that separate setup work.
 
 ## Resume and ownership
 
@@ -85,6 +97,14 @@ Keep source packs, manifests and logs in durable custody or authenticated retain
 CI artifacts; `/tmp` is scratch. `recovery_assets` contains exact path/bytes/SHA256/
 mode records; recovery rehashes them and refuses missing or changed assets.
 Keep credentials outside Git and outside recovery packs.
+
+The committed Git bundles are incremental and require their recorded base
+revision; a source ZIP is not a whole-repository backup. Recovery targets the
+existing durable repository and must reject missing base objects or payloads.
+Early schema-1 snapshots made before the `worktree_clean` field was introduced
+cannot be promoted by this helper. Regenerate them from complete actual source
+with `snapshot`, review the new identity and rerun applicable acceptance; never
+add the field to an old signed-off manifest or reuse its acceptance implicitly.
 
 ## Verification and reuse
 
@@ -206,4 +226,10 @@ writers. Its evidence-validation fixtures are **not** product/native acceptance.
 The infrastructure CI workflow retains exact inputs and the actual job result.
 A separate fresh-context recovery review must restore durable source, read the
 instructions/state, recover owners/gates/next actions and reject missing artifacts.
-Until that real review runs, recovery demonstration remains NOT RUN.
+The independent 22 October review of `90d5803b` passed all 56 owning invariants,
+the four reported rejection/positive-control pairs, actual existing-repository
+recovery and missing/corrupt required-artifact rejection. Its retained receipt is
+located by the current ROOT-LIVE checkpoint under
+`development-workflow-overhaul-20261022/independent-recovery/successor-90d5803b/VERDICT-90d5803b.json`.
+That result covers the reviewed helper revision and that recovery scope; product,
+native, ARM release and later candidate acceptance remain separate requirements.

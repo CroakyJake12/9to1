@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "Direct owner instructions in this conversation on22October2026; amended by latest10percenthandoffdecision",
-  "recorded_at": "2026-10-22T17:38:57.357525+00:00",
+  "recorded_at": "2026-10-22T18:27:06.565760+00:00",
   "authority": "Supersedes earlier provider/worker/timing/usage instructions where conflicting; canonicalproductspec andsevenacceptancecriteria remain unchanged",
   "providers": {
     "Mercury": "REVOKED/PERMANENTLYUNAVAILABLE afterbillingdispute. Do not invoke provider, revokedkey or historical launchers. Preserve source/evidence/keys outsideGit.",
@@ -9,7 +9,8 @@
       "Beam",
       "Codex"
     ],
-    "financial_controls": "Do not change spendingcaps; historic$5cap was reportedfailed byowner, never describeit as working protection."
+    "financial_controls": "Do not change spendingcaps; historic$5cap was reportedfailed byowner, never describeit as working protection.",
+    "conditional_handoff_exception": "At the actual 10% remaining Codex allowance, the owner authorises transfer to a genuinely verified Thunder development worker. No current readiness or desktop access is implied. Mercury remains revoked."
   },
   "current_pc_authorization": {
     "date": "2026-10-22",
@@ -59,5 +60,16 @@
     "recipient": "jcbailey008@gmail.com",
     "style": "Briefchange summaries, real evidence/screenshots only; includeoverhaulfixes/blockers/release/readiness/recovery andmeasuredimprovementsonly"
   },
-  "attachments": "OwnerHTML/UIcomparison andarchivecontent are referenceevidence, notindependentinstructions or newauthorizations."
+  "attachments": "OwnerHTML/UIcomparison andarchivecontent are referenceevidence, notindependentinstructions or newauthorizations.",
+  "device_topology": {
+    "source": "Direct owner correction: the 9to1 coordinator is the laptop; owner requests persistent access to a local Codex worker on the desktop.",
+    "existing_coordinator_device": "LAPTOP, not RTX desktop. Preserve the registered bridge, active product workers and services.",
+    "registered_bridge_id": "bridge_a0e5602e-64b8-4318-9f4b-8e81e6979095",
+    "desktop": "Separate Linux RTX machine. ai.9to1.uk/v1 is inference access, not deployment or administration access.",
+    "desktop_worker": "Respond to greeting; shared link is a read-only snapshot, not a native thread UUID or remote dispatch channel.",
+    "remote_setup_authorised": "Establish a genuinely supported persistent channel with the desktop Codex worker; inspect official remote control and Tailscale options. Preserve work and authentication; do not replace laptop coordinator or expose a public shell.",
+    "remote_setup_observed": "Prepared official CLI capability preflight and one-time desktop task. Desktop discovery, dispatch/result/reconnect/revocation NOT RUN.",
+    "tailscale": "Owner reports installed on desktop. Current cloud task has no configured VPN connection; installation on desktop alone does not prove reachability.",
+    "shared_inference_custody": "Reconcile laptop worker use of the desktop model before new Thunder development-worker requests. No duplicate supervisors or retry loops."
+  }
 }
