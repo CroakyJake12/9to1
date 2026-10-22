@@ -120,7 +120,7 @@ public sealed class CanvasOriginalWorkOwnerTests
         Assert.True(owner.OwnsOriginalTask(original)); Assert.False(owner.OwnsOriginalTask(foreign));
         Assert.Throws<NotSupportedException>(() => ((IList<Task>)snapshot).Add(foreign));
         await owner.RunOriginalAsync(_ => Task.CompletedTask);
-        Assert.Single(snapshot); // a retained immutable snapshot, not a mutable owner list
+        Assert.Same(original, Assert.Single(snapshot)); // the same retained immutable task snapshot
         var close = owner.CloseAndDrainAsync();
         Assert.Same(cause, await Record.ExceptionAsync(() => close));
         Assert.True(close.IsFaulted); Assert.True(original.IsFaulted); Assert.Same(close, owner.OriginalCloseTask);
