@@ -69,6 +69,17 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
             throw new InvalidOperationException("A changed core cannot be rolled back as an untransferred view.");
         _presentationPending = true;
     }
+    /// <summary>Freeze the exact clean owner snapshot after actual close preparation. No
+    /// save, ownership or discard is implied. The native preparation keeps this same core
+    /// and restores it with AdmitPresentation if external retirement is aborted.</summary>
+    internal bool TrySuspendPreparedPresentation(Guid? id, long revision, long generation)
+    {
+        if (_disposed || _presentationPending || IsBusy || IsDirty || _pending is not null ||
+            _operations.CurrentCount != 1 || DocumentId != id || DurableRevision != revision || _generation != generation) return false;
+        _presentationPending = true;
+        try { Notify(); } catch { _presentationPending = false; throw; }
+        return true;
+    }
     internal void AbandonUnadmittedPresentation()
     {
         if (!_presentationPending || IsBusy || _operations.CurrentCount != 1) throw new InvalidOperationException("An active core cannot be abandoned.");
