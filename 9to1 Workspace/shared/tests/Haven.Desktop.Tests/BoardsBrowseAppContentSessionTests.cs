@@ -28,7 +28,7 @@ public sealed class BoardsBrowseAppContentSessionTests
     [AvaloniaFact]
     public async Task Real_shared_CUI_has_original_tasks_and_reversible_clean_close()
     {
-        using var rig = new Rig(); var session = rig.Create();
+        await using var rig = new Rig(); var session = rig.Create();
         Assert.False(session.IsPublicationCurrent); Assert.Null(session.OriginalInitialization);
         Assert.Throws<InvalidOperationException>(() => session.OriginalNativeView);
         var original = session.InitializeAsync(); Assert.Same(original, session.InitializeAsync());
@@ -48,7 +48,7 @@ public sealed class BoardsBrowseAppContentSessionTests
     [AvaloniaFact]
     public async Task Refused_actual_save_preserves_draft_view_and_version_then_real_close_commits_once()
     {
-        using var rig = new Rig(); var session = rig.Create(); await session.InitializeAsync();
+        await using var rig = new Rig(); var session = rig.Create(); await session.InitializeAsync();
         await session.DispatchAsync("Create", null); var core = rig.Route.Core!;
         var id = core.DocumentId!.Value; var view = session.OriginalNativeView;
         Assert.Equal(1, core.DurableRevision); await core.AddSectionAsync("Revision material"); rig.Saves.Refuse = true;
@@ -70,7 +70,7 @@ public sealed class BoardsBrowseAppContentSessionTests
     [AvaloniaFact]
     public async Task Held_original_observation_cannot_publish_or_finish_close_before_source_settles()
     {
-        using var rig = new Rig(); var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var rig = new Rig(); var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         rig.Route.Observation = held.Task; var session = rig.Create(); var initialization = session.InitializeAsync();
         await rig.Route.Entered.Task; Assert.False(session.IsPublicationCurrent);
         Assert.Throws<InvalidOperationException>(() => session.OriginalNativeView);
@@ -85,7 +85,7 @@ public sealed class BoardsBrowseAppContentSessionTests
     [AvaloniaFact]
     public async Task Actor_replacement_after_library_load_refuses_before_editor_publication()
     {
-        using var rig = new Rig(); rig.Route.FailObservationNumber = 2; var session = rig.Create();
+        await using var rig = new Rig(); rig.Route.FailObservationNumber = 2; var session = rig.Create();
         Assert.NotNull(await Record.ExceptionAsync(() => session.InitializeAsync()));
         Assert.False(session.IsPublicationCurrent); Assert.Throws<InvalidOperationException>(() => session.OriginalNativeView);
         var close = session.CloseAndDrainAsync(); Assert.NotNull(await Record.ExceptionAsync(() => close));
@@ -96,9 +96,9 @@ public sealed class BoardsBrowseAppContentSessionTests
     [AvaloniaFact]
     public async Task Stale_aborted_and_accepted_preparations_cannot_restore_or_retire_another_snapshot()
     {
-        using var rig = new Rig(); var session = rig.Create(); await session.InitializeAsync();
+        await using var rig = new Rig(); var session = rig.Create(); await session.InitializeAsync();
         var stale = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
-        await stale.AbortAsync(); Assert.Throws<InvalidOperationException>(() => stale.BeginClose());
+        await stale.AbortAsync(); Assert.Throws<InvalidOperationException>(() => { _ = stale.BeginClose(); });
         var current = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
         Assert.NotSame(stale, current); var close = current.BeginClose(); Assert.Same(close, current.BeginClose()); await close;
         Assert.NotNull(await Record.ExceptionAsync(() => current.AbortAsync()));
@@ -107,7 +107,7 @@ public sealed class BoardsBrowseAppContentSessionTests
     [AvaloniaFact]
     public async Task Faulted_original_cancellation_exception_keeps_exact_cause_and_cannot_be_clean_retirement()
     {
-        using var rig = new Rig(); var cause = new OperationCanceledException("Controlled faulted original observation, not a canceled task.");
+        await using var rig = new Rig(); var cause = new OperationCanceledException("Controlled faulted original observation, not a canceled task.");
         var raw = Task.FromException(cause); rig.Route.RawObservation = raw;
         var session = rig.Create(); var initialization = session.InitializeAsync();
         var failure = await Record.ExceptionAsync(() => initialization);
@@ -117,6 +117,17 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.NotNull(closeFailure); Assert.Contains(Causes(closeFailure!), error => ReferenceEquals(error, cause));
         Assert.False(session.CanRetireOriginalView); Assert.True(rig.Route.Closed);
     }
+    [AvaloniaFact]
+    public async Task Boolean_close_preflight_does_not_leave_a_strong_lease_or_freeze_the_live_editor()
+    {
+        await using var rig = new Rig(); var session = rig.Create(); await session.InitializeAsync();
+        var view = session.OriginalNativeView;
+        Assert.True(await session.TryPrepareToCloseAsync());
+        Assert.True(rig.Route.Core!.IsPresentationAdmitted); Assert.True(session.IsActionAvailable("Create"));
+        Assert.Null(session.OriginalClose); Assert.Same(view, session.OriginalNativeView);
+        var retained = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
+        await retained.BeginClose();
+    }
     private static IEnumerable<Exception> Causes(Exception error)
     {
         yield return error;
@@ -125,16 +136,18 @@ public sealed class BoardsBrowseAppContentSessionTests
         else if (error.InnerException is { } inner) foreach (var cause in Causes(inner)) yield return cause;
     }
 
-    private sealed class Rig : IDisposable
+    private sealed class Rig : IAsyncDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "9to1-boards-native-" + Guid.NewGuid().ToString("N"));
+        private readonly ProductionDiagnostics _diagnostics;
         internal NotesRepository Notes { get; }
         internal Saves Saves { get; }
         internal Route Route { get; }
         internal Rig()
         {
             Directory.CreateDirectory(_root); var paths = new Paths(_root);
-            Notes = new(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
+            _diagnostics = new(paths);
+            Notes = new(paths, new NotesDocumentValidator(), _diagnostics);
             Saves = new(Notes); Route = new(Saves);
         }
         internal BoardsBrowseAppContentSession Create()
@@ -142,7 +155,7 @@ public sealed class BoardsBrowseAppContentSessionTests
             var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://boards"), "fixture-local-profile", BrowserTabPrivacy.Standard);
             return new(request, BoardsBrowseAppContentAddress.Parse(request.Address), Route, new CancellationTokenSource(), () => true);
         }
-        public void Dispose() => Directory.Delete(_root, recursive: true);
+        public async ValueTask DisposeAsync() { await _diagnostics.DisposeAsync(); Directory.Delete(_root, recursive: true); }
     }
     private sealed class Paths(string root) : IAppPaths
     {

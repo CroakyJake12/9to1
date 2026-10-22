@@ -163,8 +163,15 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     }
 
     public bool SupportsReversibleClosePreparation => true;
-    public async Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default) =>
-        await PrepareCloseAsync(cancellationToken).ConfigureAwait(false) is not null;
+    public async Task<bool> TryPrepareToCloseAsync(CancellationToken cancellationToken = default)
+    {
+        var preparation = await PrepareCloseAsync(cancellationToken).ConfigureAwait(false);
+        if (preparation is null) return false;
+        // A legacy boolean caller cannot retain a reversible lease. Keep the live editor
+        // usable when it chooses to continue; genuine strong callers retain PrepareCloseAsync.
+        await preparation.AbortAsync().ConfigureAwait(false);
+        return true;
+    }
     public Task<IBrowseAppContentClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
