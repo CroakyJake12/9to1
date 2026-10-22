@@ -30,7 +30,7 @@ Root prepares `delivery-manifest.json` with schema `9to1.installer-delivery/v1`:
 | repository | CroakyJake12/9to1, existing private repo ID1378313608 |
 | source_revision / source_patch_sha256 | Exact tested40-character revision and64-character patch digest |
 | package | file_name, safe ZIP member, exact inner bytes/SHA256, dpkg name/version and architecture=arm64 |
-| acceptance | status=READY, coordinator, independent reviewer, implementer, matching source_revision/package_sha256, mandatory_gates, quality, evidence identity |
+| acceptance | status=READY, coordinator, independent reviewer, implementer, matching source_revision/source_patch_sha256/package_sha256, mandatory_gates, quality, evidence identity |
 | artifacts | Pinned IDs, run_id, workflow_head_sha, name, compressed ZIP bytes/SHA256 and roles |
 | target | distribution=ubuntu, version=26.04, architecture=arm64, gnome_acceptance=NOT RUN |
 
