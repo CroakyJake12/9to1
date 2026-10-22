@@ -21,6 +21,11 @@ use rnote_compose::Color;
 use rnote_engine::engine::export::{DocExportFormat, DocExportPrefs};
 use rnote_engine::engine::{EngineConfig, EngineConfigShared};
 use rnote_engine::engine::EngineSnapshot;
+use rnote_engine::engine::import::XoppImportPrefs;
+use rnote_engine::store::StrokeKey;
+use rnote_compose::shapes::Shapeable;
+use slotmap::Key;
+use std::sync::Arc;
 use rnote_engine::pens::pensconfig::brushconfig::BrushStyle;
 use rnote_engine::pens::pensconfig::eraserconfig::{EraserConfig, EraserStyle};
 use rnote_engine::pens::{PenMode, PenStyle};
@@ -251,6 +256,9 @@ impl Default for HeadlessCanvasEngine {
 }
 
 impl HeadlessCanvasEngine {
+    /// Bound immutable bridge enumeration independently of caller-supplied counts.
+    pub const MAXIMUM_STROKE_KEYS: usize = 1_000_000;
+
     pub fn new() -> Self {
         let mut engine = Engine::default();
         let config = EngineConfigShared::from(EngineConfig::default());
@@ -616,6 +624,114 @@ impl HeadlessCanvasEngine {
             .context("Rnote save failed")
     }
 
+    /// Native slotmap identities from Rnote's public, non-trashed snapshot.
+    /// Reading must never mutate the store or its undo history.
+    pub fn stroke_keys(&self) -> Result<Vec<u64>> {
+        if self.stroke_active { anyhow::bail!("Cannot enumerate an unfinished stroke"); }
+        let snapshot = self.engine.take_snapshot();
+        if snapshot.stroke_components.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Rnote snapshot exceeds the native stroke-key budget");
+        }
+        let mut keys: Vec<_> = snapshot.stroke_components.keys()
+            .map(|key| key.data().as_ffi()).collect();
+        keys.sort_unstable();
+        Ok(keys)
+    }
+
+    fn rendered_keys(snapshot: &EngineSnapshot) -> Result<Vec<StrokeKey>> {
+        if snapshot.stroke_components.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Rnote snapshot exceeds the native stroke-key budget");
+        }
+        let mut keys: Vec<_> = snapshot.stroke_components.keys().collect();
+        // The donor orders first by StrokeLayer, then its monotonic chronology.
+        // ChronoComponent::Ord exposes the latter without accessing private t.
+        // Refuse incomplete/tied chronology rather than inventing a render order.
+        for key in &keys {
+            if !snapshot.chrono_components.contains_key(*key) {
+                anyhow::bail!("Rnote snapshot has no chronology for a live stroke");
+            }
+        }
+        keys.sort_unstable_by(|left, right| {
+            let left = &snapshot.chrono_components[*left];
+            let right = &snapshot.chrono_components[*right];
+            left.layer.cmp(&right.layer).then_with(|| left.cmp(right))
+        });
+        for pair in keys.windows(2) {
+            if snapshot.chrono_components[pair[0]] == snapshot.chrono_components[pair[1]] {
+                anyhow::bail!("Rnote snapshot has ambiguous live-stroke chronology");
+            }
+        }
+        Ok(keys)
+    }
+
+    /// Retain the donor's layer/chronological rendering order, not slotmap order.
+    pub fn rendered_stroke_keys(&self) -> Result<Vec<u64>> {
+        if self.stroke_active { anyhow::bail!("Cannot order an unfinished stroke"); }
+        Ok(Self::rendered_keys(&self.engine.take_snapshot())?.into_iter()
+            .map(|key| key.data().as_ffi()).collect())
+    }
+
+    /// Resolve the topmost genuine donor hitbox. A miss is None, not an error.
+    pub fn quick_erase_target(&self, x: f64, y: f64) -> Result<Option<u64>> {
+        if self.stroke_active { anyhow::bail!("Cannot target an unfinished stroke"); }
+        if !x.is_finite() || !y.is_finite() {
+            anyhow::bail!("Quick erase coordinates must be finite");
+        }
+        let snapshot = self.engine.take_snapshot();
+        for key in Self::rendered_keys(&snapshot)?.into_iter().rev() {
+            if snapshot.stroke_components[key].hitboxes().iter().any(|bounds| {
+                // The donor's AABB contains_local_point uses these inclusive bounds.
+                bounds.mins[0] <= x && x <= bounds.maxs[0]
+                    && bounds.mins[1] <= y && y <= bounds.maxs[1]
+            }) {
+                return Ok(Some(key.data().as_ffi()));
+            }
+        }
+        Ok(None)
+    }
+
+    /// Export selected native entities without changing the original engine.
+    /// A detached snapshot retains actual slotmap keys, styles, paths and camera.
+    /// Loading that detached EXPORT engine does not replace live store/history.
+    pub async fn export_selected_strokes(&self, keys: &[u64]) -> Result<Vec<u8>> {
+        if self.stroke_active { anyhow::bail!("Cannot export an unfinished stroke"); }
+        if keys.is_empty() || keys.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Native selection must contain a bounded nonempty key set");
+        }
+        let requested: HashSet<_> = keys.iter().copied().collect();
+        if requested.len() != keys.len() || requested.contains(&0) {
+            anyhow::bail!("Native selection requires unique nonzero keys");
+        }
+        let mut snapshot = self.engine.take_snapshot();
+        if snapshot.stroke_components.len() > Self::MAXIMUM_STROKE_KEYS {
+            anyhow::bail!("Rnote snapshot exceeds the native stroke-key budget");
+        }
+        let present: HashSet<_> = snapshot.stroke_components.keys()
+            .map(|key| key.data().as_ffi()).collect();
+        if !requested.is_subset(&present) {
+            anyhow::bail!("Native selection contains a foreign, trashed or stale key");
+        }
+        Arc::make_mut(&mut snapshot.stroke_components)
+            .retain(|key, _| requested.contains(&key.data().as_ffi()));
+        Arc::make_mut(&mut snapshot.chrono_components)
+            .retain(|key, _| requested.contains(&key.data().as_ffi()));
+        Self::from_snapshot(snapshot).save_rnote().await
+    }
+
+    /// Preserve Rnote's real Xournal++ importer rather than interpreting its XML here.
+    pub async fn from_xopp(bytes: Vec<u8>, dpi: f64) -> Result<Self> {
+        if !dpi.is_finite() || !(1.0..=2400.0).contains(&dpi) {
+            anyhow::bail!("Xournal++ import DPI must be finite and within 1..=2400");
+        }
+        let snapshot = EngineSnapshot::load_from_xopp_bytes(bytes, XoppImportPrefs { dpi })
+            .await.context("Rnote Xournal++ snapshot load failed")?;
+        if !snapshot.document.width.is_finite() || !snapshot.document.height.is_finite()
+            || snapshot.document.width <= 0.0 || snapshot.document.height <= 0.0 {
+            anyhow::bail!("Xournal++ import requires a nonempty finite page extent");
+        }
+        Ok(Self::from_snapshot(snapshot))
+    }
+
     /// Commit a complete Rnote document by replacing a same-directory temporary
     /// file. A failed write leaves the previous document available for reopen.
     pub async fn save_rnote_atomically(&self, path: impl AsRef<Path>) -> Result<()> {
@@ -651,6 +767,10 @@ impl HeadlessCanvasEngine {
         let snapshot = EngineSnapshot::load_from_rnote_bytes(bytes)
             .await
             .context("Rnote snapshot load failed")?;
+        Ok(Self::from_snapshot(snapshot))
+    }
+
+    fn from_snapshot(snapshot: EngineSnapshot) -> Self {
         let mut engine = Engine::default();
         let config = EngineConfigShared::from(EngineConfig::default());
         let _ = engine.install_config(&config, None);
@@ -669,7 +789,7 @@ impl HeadlessCanvasEngine {
             config,
         };
         canvas.configure_tool();
-        Ok(canvas)
+        canvas
     }
 
     pub async fn from_rnote_file(path: impl AsRef<Path>) -> Result<Self> {

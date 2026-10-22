@@ -13,9 +13,10 @@ crate-type = ["rlib", "cdylib"]
 anyhow = "1.0"
 futures = { version = "0.3", features = ["executor"] }
 nalgebra = "0.34.0"
+slotmap = "=1.1.1"
+flate2 = "1.1"
 rnote-compose = { git = "https://github.com/flxzt/rnote", rev = "8cac558fa73ee63d958cec05124ea2fdbd7d608d", package = "rnote-compose", default-features = false }
 rnote-engine = { git = "https://github.com/flxzt/rnote", rev = "8cac558fa73ee63d958cec05124ea2fdbd7d608d", package = "rnote-engine", default-features = false }
 
 [dev-dependencies]
-flate2 = "1.1"
 serde_json = "1.0"
