@@ -952,6 +952,135 @@ public sealed class NotesOriginalStoreTests
         await rig.AssertNotesFilesUnchangedAsync(before);
     }
 
+    [LinuxNotesFact]
+    public async Task Workspace_adapter_requires_same_original_composition_and_a_real_cancellable_lifetime()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        await using var foreign = await HomeRig.CreateAsync();
+        Task Read(HomeNotesLibraryReadReview review, CancellationToken token) => Task.CompletedTask;
+        Task Save(HomeNotesSaveReview review, CancellationToken token) => Task.CompletedTask;
+        Assert.Throws<UnauthorizedAccessException>(() => NotesOriginalWorkspaceRepository.BindOriginal(
+            rig.Notes.Owner, foreign.Verified, rig.Admission, rig.SessionId, Read, Save, rig.Token));
+        Assert.Throws<UnauthorizedAccessException>(() => NotesOriginalWorkspaceRepository.BindOriginal(
+            rig.Notes.Owner, rig.Verified, foreign.Admission, rig.SessionId, Read, Save, rig.Token));
+        Assert.Throws<UnauthorizedAccessException>(() => NotesOriginalWorkspaceRepository.BindOriginal(
+            rig.Notes.Owner, rig.Verified, rig.Admission, rig.SessionId, Read, Save, CancellationToken.None));
+        var before = await rig.CaptureNotesFilesAsync();
+        _ = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId, Read, Save, rig.Token);
+        await rig.AssertNotesFilesUnchangedAsync(before);
+    }
+
+    [LinuxNotesFact]
+    public async Task A_presenter_returning_without_actual_Home_decision_cannot_read_or_save_through_workspace()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        HomeNotesLibraryReadReview? actualRead = null; HomeNotesSaveReview? actualSave = null;
+        var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId, (review, _) => { actualRead = review; return Task.CompletedTask; },
+            (review, _) => { actualSave = review; return Task.CompletedTask; }, rig.Token);
+        var before = await rig.CaptureNotesFilesAsync();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.ListAsync(false, rig.Token));
+        Assert.NotNull(actualRead);
+        Assert.Equal(HomePermissionRequestState.PendingApproval,
+            (await rig.Admission.GetLibrarySnapshotAuthorizationAsync(actualRead!, rig.Token)).State);
+        var document = NotesDocument.Create("Review must be real");
+        document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.SaveAsync(document, "Actual pending save", rig.Token));
+        Assert.NotNull(actualSave);
+        Assert.Equal(HomePermissionRequestState.PendingApproval,
+            (await rig.Admission.GetSaveAuthorizationAsync(actualSave!, rig.Token)).State);
+        Assert.Equal(0, document.Version);
+        Assert.False(Directory.Exists(rig.Documents));
+        Assert.False(adapter.IsUnknownCommitOutcome(new IOException("An ordinary IO error is not proof of publication.")));
+        await rig.AssertNotesFilesUnchangedAsync(before);
+    }
+
+    [LinuxNotesFact]
+    public async Task Same_Boards_service_creates_edits_lists_and_reopens_through_actual_Home_workspace_adapter()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        var reads = 0; var saves = 0;
+        var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId, async (review, token) =>
+            {
+                ++reads;
+                Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                    HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            }, async (review, token) =>
+            {
+                ++saves;
+                Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                    HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            }, rig.Token);
+        var sameService = new BoardsWorkspaceService(adapter, summarySource: adapter);
+        var document = await sameService.CreateNotebookAsync("Computer science revision", rig.Token);
+        Assert.Equal(1, document.Version);
+        var page = document.Sections[0].Pages[0];
+        sameService.AddBlock(document, page.Id, NotesBlockKind.Paragraph, "A queue is first in, first out.");
+        await sameService.SaveAsync(document, "Saved actual revision material", rig.Token);
+        Assert.Equal(2, document.Version);
+        Assert.False(string.IsNullOrWhiteSpace(document.Recovery.LastValidSha256));
+        Assert.True(Assert.Single(await adapter.RetryObservedAuditsAsync(rig.Token)).Succeeded);
+        var summary = Assert.Single(await sameService.ListNotebooksAsync(rig.Token));
+        Assert.Equal(document.Id, summary.Id); Assert.Equal(2, summary.Version);
+        var loaded = await sameService.OpenNotebookAsync(document.Id, rig.Token);
+        Assert.NotNull(loaded); Assert.Equal(document.Id, loaded!.Id); Assert.Equal(2, loaded.Version);
+        Assert.Contains(loaded.Sections[0].Pages[0].Blocks, value => value.PlainText == "A queue is first in, first out.");
+        Assert.Equal(2, reads); Assert.Equal(2, saves);
+        // Fresh actual canonical owner, not a new process or native restart claim.
+        var freshOwner = rig.Notes.NewOwner();
+        var freshVerified = new VerifiedNotesRepository(freshOwner, rig.Notes, rig.Notes.Diagnostics);
+        var reopened = await freshVerified.LoadAsync(document.Id, rig.Token);
+        Assert.NotNull(reopened); Assert.Equal(2, reopened!.Version);
+        Assert.Contains(reopened.Sections[0].Pages[0].Blocks, value => value.PlainText == "A queue is first in, first out.");
+    }
+
+    [LinuxNotesFact]
+    public async Task Workspace_save_reviews_detached_candidate_and_preserves_newer_unsaved_editor_fields()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        var editor = NotesDocument.Create("Reviewed original title");
+        editor.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId, (_, _) => Task.CompletedTask, async (review, token) =>
+            {
+                editor.Title = "Newer unsaved editor title";
+                editor.Sections[0].Pages[0].Blocks[0].PlainText = "Newer unsaved editor body";
+                Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                    HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            }, rig.Token);
+        var receipt = await adapter.SaveAsync(editor, "Actual detached candidate", rig.Token);
+        Assert.Equal(1, receipt.Version); Assert.Equal(editor.Id, receipt.DocumentId);
+        Assert.Equal("Newer unsaved editor title", editor.Title); Assert.Equal(0, editor.Version);
+        Assert.Equal("Newer unsaved editor body", editor.Sections[0].Pages[0].Blocks[0].PlainText);
+        var saved = await rig.Verified.LoadAsync(editor.Id, rig.Token);
+        Assert.NotNull(saved); Assert.Equal("Reviewed original title", saved!.Title);
+        Assert.Equal(1, saved.Version);
+        Assert.DoesNotContain(saved.Sections[0].Pages[0].Blocks, value => value.PlainText == "Newer unsaved editor body");
+    }
+
+    [LinuxNotesFact]
+    public async Task Workspace_route_cancellation_and_unimplemented_mutations_never_fabricate_saved_or_empty_results()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        using var route = CancellationTokenSource.CreateLinkedTokenSource(rig.Token);
+        var document = NotesDocument.Create("A cancelled revision save");
+        document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId, (_, _) => Task.CompletedTask, (_, _) => { route.Cancel(); return Task.CompletedTask; }, route.Token);
+        var before = await rig.CaptureNotesFilesAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => adapter.SaveAsync(document, "Cancel before decision", rig.Token));
+        Assert.Equal(0, document.Version); Assert.False(Directory.Exists(rig.Documents));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => adapter.LoadAsync(document.Id, rig.Token));
+        await Assert.ThrowsAsync<NotSupportedException>(() => adapter.DeleteAsync(document.Id, rig.Token));
+        await Assert.ThrowsAsync<NotSupportedException>(() => adapter.GetVersionsAsync(document.Id, rig.Token));
+        await Assert.ThrowsAsync<NotSupportedException>(() => adapter.LoadVersionAsync(document.Id, "unknown", rig.Token));
+        await Assert.ThrowsAsync<NotSupportedException>(() => adapter.RecoverLatestAsync(document.Id, rig.Token));
+        await Assert.ThrowsAsync<NotSupportedException>(() => adapter.SearchAsync("revision", rig.Token));
+        await rig.AssertNotesFilesUnchangedAsync(before);
+    }
+
     private sealed record CopiedSaveOutcome(INotesOriginalSaveIntent Intent, NotesOriginalSaveDisposition Disposition,
         long? CommittedVersion, string? CommittedSha256, string DiagnosticCode) : INotesOriginalSaveOutcome;
 

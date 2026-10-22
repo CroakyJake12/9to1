@@ -36,6 +36,9 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
 
     public string ResourceKind => ScopeKind;
 
+    /// <summary>Composition identity only. It grants no ownership, approval or Notes IO.</summary>
+    public bool IsBoundToOriginalNotes(INotesOriginalStoreSource source) => ReferenceEquals(_notes, source);
+
     public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor,
         string actionId, ResourceScope scope, CancellationToken cancellationToken)
     {

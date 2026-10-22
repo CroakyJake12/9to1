@@ -21,6 +21,11 @@ public sealed partial class NotesRepository
             ReferenceEquals(actual.Intent, intent) && intent is OriginalSaveIntent original &&
             ReferenceEquals(original.Issuer, this) && ReferenceEquals(original.Outcome, actual);
 
+    /// <summary>Actual retained outcome only, not inferred from an exception or token flag.
+    /// Observation grants no mutation, read, retry or Home approval.</summary>
+    public INotesOriginalSaveOutcome? GetObservedOriginalSaveOutcome(INotesOriginalSaveIntent intent)
+        => intent is OriginalSaveIntent original && ReferenceEquals(original.Issuer, this) ? original.Outcome : null;
+
     /// <summary>Executes exactly one private detached candidate through the original verified Notes
     /// save transaction. Home consent and ownership never replace Notes CAS/integrity/custody.
     /// This primitive exposes no raw repository or broad native Ready capability.</summary>
