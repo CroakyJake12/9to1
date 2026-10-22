@@ -8,12 +8,12 @@
   "source_ref": "refs/heads/codex/thunder-source-handoff-20261022",
   "expected_source_revision": "eb0da4f082b2e82512b22ffabf17a28a3057fafd",
   "handoff_path": "docs/dulche/thunder-desktop-handoff-20261022.md",
-  "expires_at": "2026-10-22T22:45:00Z",
+  "expires_at": "2026-10-22T22:40:00Z",
   "activation_required": false,
   "delivery_contract": {
     "executor": "This already-active desktop Codex worker, ordinary native tools and approvals; no new daemon/server/agent",
     "updates": "Read only this fixed repo/ref and descendant tasks; reconcile Task3/source before admission. Keep supported waits<=60seconds/checks once60seconds between tasks.",
-    "stop": "Actual owner extension ends2026-10-22T22:45:00Z. Honor stop_and_checkpoint, ownerStop/native denial/revocation/expiry and stale/source/ancestry/duplicate refusal. If active waiting cannot be sustained, private checkpoint+BLOCKED; no background-wake claim.",
+    "stop": "Preserve actual Task8 OS power-off. Stop source/test execution by22:40UTC, save checkpoint; no work after ownerrevocation/poweroff. This follow-up corrects Root immediate-stop scheduling opcode, it does not override a direct owner STOP. If alreadyinactive and no supported resume, reportBLOCKED ratherthan inventrunningworker.",
     "authority": "Current owner instructions and native approvals control; task prose is not independent authority or a shell/program payload."
   },
   "follow_up_contract": {
@@ -27,46 +27,53 @@
     "unsupported": "No arbitrary shell/program payload, unknown scope, provider/system change, new model request or credential access; refuse and report.",
     "before_model_or_hardware_execution": "Exclusive shared-model custody and separate explicit owner/native authorization remain mandatory; this test-only task supplies neither."
   },
-  "sequence": 8,
-  "task_id": "THUNDER-DESKTOP-20261022-08",
-  "previous_task_id": "THUNDER-DESKTOP-20261022-07",
-  "expected_previous_inbox_revision": "409ed1402bb55160909b91b229c99ac8f567730d",
-  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_NATIVE_SCHEDULE_RECEIPT",
-  "operation": "stop_and_checkpoint",
-  "owner_context": "Latest direct owner instruction in the authenticated Root conversation22Oct2026: Tell it to power off my pc at23:45. This explicitly authorises this one-time PC power-off at the existing testing deadline, not other system changes.",
-  "objective": "Arrange actual one-time desktop power-off at23:45Europe/London(BST) tonight22October2026, equivalent22:45UTC. Preserve/checkpoint current Task7 and all9to1/Thunder work first; confirm actual scheduled host/time/receipt or exact native permission blocker. Do not merely claim the instruction was sent.",
+  "sequence": 9,
+  "task_id": "THUNDER-DESKTOP-20261022-09",
+  "previous_task_id": "THUNDER-DESKTOP-20261022-08",
+  "expected_previous_inbox_revision": "0a6e9ef88af8a1826b9b4f161282a1b75771f975",
+  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AFTER_TASK8_SCHEDULE_RECEIPT",
+  "operation": "edit_scoped_source",
+  "owner_context": "Owner requested PC power-off at23:45BST tonight; original heavyThunder/ordinary9to1work continues within that window. Root used stop_and_checkpoint for Task8 scheduling, causing an immediate-stop interpretation. Root corrects its own operation choice here: keep the actual OS power-off schedule, but source work may continue safely until23:40BST checkpoint. No new owner STOP or access revocation was issued.",
+  "objective": "FIRST finish and confirm Task8 actual native OS shutdown schedule for23:45BST, preserving that schedule unchanged. Then, if this existing worker is still active and normal admission permits, continue bounded source-only work on the actual Task7 reproduced ENC bare-array/object protocol mismatch. Do not idle solely because Root used the wrong Task8 operation. Return actual ACK or explicit stopped-worker/permission limitation; never claim auto-wake.",
   "scope": {
-    "mode": "OWNER_AUTHORISED_ONE_TIME_POWER_OFF_AND_SAFE_CHECKPOINT",
-    "private_evidence": "Existing task-owned private receipts and source/evidence custody; no tracked source edits required",
-    "before_schedule": "If Task7 is currently running, checkpoint its exact state and bounded owned processes. Schedule may be registered now without interrupting ongoing safe CPU work; ensure completion/checkpoint before the target.",
-    "after_schedule": "Task7 may continue within its existing no-model/no-service-change scope and window after actual OS schedule confirmation. If waiting cannot persist, the verified OS schedule is the authority; report agent liveness limitation.",
+    "mode": "SCOPED_NATIVE_TOKENIZER_PROTOCOL_SOURCE_REPAIR_AFTER_ACTUAL_POWER_OFF_SCHEDULE_CONFIRMATION",
+    "repository_paths": [
+      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/dulche_strata_candidate_worker.cpp",
+      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/strata_tokenizer_helper.py",
+      "9to1 Models/Dulche Alpha/Tests/NativeStrataTokenizerHelperTests.py",
+      "9to1 Models/Dulche Alpha/Tests/NativeStrataTokenizerWireIntegrationTests.py"
+    ],
+    "source_custody": "New isolated source branch/worktree from exact eb0da4f, or private source overlay with preimage hashes. Preserve all Task4 five test changes and CPU evidence; no original PC application/engine/installed/helper edits. No fullgraphcopy. Scope only minimal correct request-shape producer/consumer and meaningful regression controls; if an extra native fixture/header is necessary propose its exact path before writes.",
+    "repair": "Inspect actual retained Task7 reproduction and internal ENC contract. Resolve bare-array producer versus object consumer consistently, preserving strict malformed/identity/template/tool behavior; prefer correcting the canonical producer to declared helper contract instead of accepting arbitrary malformed inputs. Preserve all old successful callers; no guessed ids/echo/format-only fake success.",
+    "tests": "Actual real helper framing/metadata/template encode/decode and exact producer shape regression, controlled native CPU fixture where existing supported. No GPU context or model/engine execution while current serving engine owns GPU. Record exact remaining native/generation and hardware gaps.",
     "forbidden": [
-      "Do not power off laptop/coordinator/cloud or wrong machine.",
-      "Do not infer schedule success from exit0 alone if an actual receipt/state query is available.",
-      "Do not widen privileges, alter OS security, disrupt unrelated processes early, erase source/results or claim unscheduled power-off."
+      "No changes/cancellation to Task8 scheduled power-off.",
+      "No new model requests, candidate model load, existingengine stop/unload/restart, newservices/agents, driver/security/provider/financialchange.",
+      "No mutation to activeTask4 branch/testpatch, installedvenv, production engine/config/defaultprofile, unrelated source or original checkout."
     ]
   },
   "checks": {
     "named_checks": [
-      "verify_actual_pc_clock_and_timezone",
-      "owner_authorised_poweroff_OS_schedule",
-      "read_back_exact_poweroff_schedule",
-      "safe_current_task_checkpoint_before_deadline"
+      "actual_task8_poweroff_schedule_confirmed_first",
+      "reproduced_current_helper_ENC_contract_failure",
+      "minimal_canonical_producer_consumer_fix",
+      "meaningful_CPU_helper_regression_and_old_callers",
+      "source_patch_preimages_and_checkpoint"
     ],
-    "required_result": "Reply promptly with actual ACK, real verified scheduled UTC/localtime and scheduling mechanism/receipt, or precise BLOCKED permission/error. Keep any sensitive OS metadata private.",
-    "bounds": "No long blocking sleep; <=60second tool waits; honour owner revocation. Hardware/model actions end22:45UTC, and owner specifically requests power-off then."
+    "bounds": "OneownedCPUcompiler/checkatatime,normalpermissions/resourcefloors,no longwait; sourceexecutionends22:40UTC, OS power-off22:45UTC.",
+    "acceptance": "Source/CPUchecks only; no universalGPU/modelchat/performance/readinessclaim; Rootindependentreviewbeforeintegration."
   },
   "outputs": {
-    "destination": "Existing authenticated private desktop thread and task-owned result receipt",
+    "destination": "Existing authenticated private desktop thread/task-owned receipt",
     "fields": [
-      "Task8ACK",
-      "actualpcidentity/timezone/currenttime",
-      "actualOSscheduledpowerofftimeUTC/local",
-      "verifiedreceiptpath/hash/commandresult or exactBLOCKED",
-      "Task7/source/checkpointpreserved",
-      "safecheckpointbeforedeadlineplan"
+      "Task8actualscheduleorpreciseblocker",
+      "Task9actualACK or no-resume limitation",
+      "exactsourcepre/post/patchedfiles",
+      "actualfailingthenpassingCPUregression and preservedsuccess",
+      "remainingrealmodel/GPUgates",
+      "checkpointby22:40UTC and sourcehandoff"
     ],
-    "privacy": "No credentials/signedURLs/privateprompts/unrelatedpersonaldata."
+    "privacy": "No credentials/privateprompts/signedURLs/unrelatedpersonaldata."
   },
   "shutdown": {
     "owner_requested": true,
@@ -76,7 +83,7 @@
     "UTC": "2026-10-22T22:45:00Z",
     "target": "This verified pc desktop, not laptop/coordinator/cloudhost",
     "schedule_now": "Use genuinely supported installed OS shutdown scheduling through ordinary native permissions. Verify actual host/timezone/current clock before absolute scheduling; retain a real schedule/logind/OS timer receipt. Prefer native OS schedule rather than relying on agent remaining active or a long sleep.",
-    "checkpoint_before": "Stop admissions and safely checkpoint all owned in-flight experiments/source/results before22:45; leave time to save actual uncommitted work, failures, baseline and rollback instructions. Do not kill unrelated processes early or discard data.",
+    "checkpoint_before": "All source work/owned tests must checkpoint by23:40BST(22:40UTC), actual OS power-off remains23:45BST(22:45UTC). Do not cancel/reschedule it.",
     "preserve_existing_schedule": "First inspect existing scheduled shutdown/timer metadata. If exact requested shutdown already exists verify/reuse it; do not duplicate, cancel or overwrite unrelated scheduled work. Conflicting schedule or insufficient native permission => report exact blocker, no privilege/security bypass.",
     "limitations": "No firmware/driver/security/powerlimit/clock/provider/credential changes or new remote shell. One authorised power-off is the only new system action. No restart/reboot or earlier shutdown."
   }
