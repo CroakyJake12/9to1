@@ -81,9 +81,12 @@ public interface INotesOriginalLibraryReadOutcome
 
 /// <summary>Authorised data, not an owner admission. Only summaries and the explicitly requested
 /// document are retained, never every library document body.</summary>
+public sealed record NotesOriginalDocumentMetadata(NotesDocumentSummary Summary, string? Product, bool IsDeleted);
+
 public sealed record NotesOriginalLibrarySnapshot(ResourceStoreIdentity StoreIdentity,
     IReadOnlyList<NotesDocumentSummary> Documents, NotesDocument? SelectedDocument)
 {
+    public IReadOnlyList<NotesOriginalDocumentMetadata> Metadata { get; init; } = [];
     public string? AuditWarning { get; init; }
 }
 

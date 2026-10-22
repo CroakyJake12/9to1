@@ -767,6 +767,190 @@ public sealed class NotesOriginalStoreTests
     private static IEnumerable<Exception> Leaves(Exception error) => error is AggregateException aggregate
         ? aggregate.InnerExceptions.SelectMany(Leaves) : [error];
 
+    [LinuxNotesFact]
+    public async Task Actual_Boards_metadata_uses_same_product_and_trash_filter_without_loading_all_bodies()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        var active = NotesDocument.Create("Binary search revision");
+        active.Metadata[BoardsWorkspaceService.ProductKey] = "BoArDs";
+        active.Metadata[BoardsWorkspaceService.DeletedNotebookKey] = "not-a-boolean";
+        active.Sections[0].Pages[0].Blocks[0].PlainText = "Selected actual revision content";
+        var trash = NotesDocument.Create("Recoverable board");
+        trash.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        trash.Metadata[BoardsWorkspaceService.DeletedNotebookKey] = "TrUe";
+        var write = NotesDocument.Create("A Write document");
+        write.Metadata[BoardsWorkspaceService.ProductKey] = "write";
+        var unspecified = NotesDocument.Create("An untagged note");
+        foreach (var document in new[] { active, trash, write, unspecified })
+            await rig.Verified.SaveAsync(document, "Existing actual document", rig.Token);
+        var before = await rig.CaptureNotesFilesAsync();
+        var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(active.Id, rig.Token);
+        var (review, admission) = await rig.AcceptReadAsync(request);
+        var snapshot = await rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission, rig.Verified, rig.Token);
+        Assert.Equal(4, snapshot.Metadata.Count);
+        Assert.Equal(4, snapshot.Documents.Count);
+        Assert.Equal(active.Id, snapshot.SelectedDocument!.Id);
+        var observed = Assert.Single(snapshot.Metadata, value => value.Summary.Id == active.Id);
+        Assert.Equal(active.Version, observed.Summary.Version);
+        Assert.Equal("BoArDs", observed.Product);
+        Assert.False(observed.IsDeleted);
+        Assert.True(Assert.Single(snapshot.Metadata, value => value.Summary.Id == trash.Id).IsDeleted);
+        var source = rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot, admission);
+        var sameService = new BoardsWorkspaceService(rig.Verified, summarySource: source);
+        var browserDefault = new BoardsWorkspaceService(rig.Verified);
+        Assert.Equal((await browserDefault.ListNotebooksAsync(rig.Token)).Select(value => value.Id).Order(),
+            (await sameService.ListNotebooksAsync(rig.Token)).Select(value => value.Id).Order());
+        Assert.Equal(active.Id, Assert.Single(await sameService.ListNotebooksAsync(rig.Token)).Id);
+        Assert.Equal((await browserDefault.ListDeletedNotebooksAsync(rig.Token)).Select(value => value.Id).Order(),
+            (await sameService.ListDeletedNotebooksAsync(rig.Token)).Select(value => value.Id).Order());
+        Assert.Equal(trash.Id, Assert.Single(await sameService.ListDeletedNotebooksAsync(rig.Token)).Id);
+        Assert.Equal(1, await rig.CompletionCountAsync(review.Authorization.RequestId));
+        await rig.AssertNotesFilesUnchangedAsync(before);
+    }
+
+    [LinuxNotesFact]
+    public async Task Boards_summary_source_refuses_copied_snapshot_and_foreign_request_or_Home_owner()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        var document = NotesDocument.Create("Original revision board");
+        document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        await rig.Verified.SaveAsync(document, "Existing actual board", rig.Token);
+        var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(document.Id, rig.Token);
+        var (_, admission) = await rig.AcceptReadAsync(request);
+        var invented = new NotesOriginalLibrarySnapshot(request.StoreObservation.StoreIdentity, [], null);
+        Assert.Throws<UnauthorizedAccessException>(() => rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, invented, admission));
+        var snapshot = await rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission, rig.Verified, rig.Token);
+        Assert.Throws<UnauthorizedAccessException>(() => rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot with { }, admission));
+        var copied = new CopiedLibraryReadRequest(request.OperationId, request.DocumentId, request.StoreObservation, request.Arguments.Clone());
+        Assert.Throws<UnauthorizedAccessException>(() => rig.Notes.Owner.CreateOriginalBoardsSummarySource(copied, snapshot, admission));
+        await using var foreign = await HomeRig.CreateAsync();
+        var otherRequest = await foreign.Notes.Owner.PrepareOriginalLibraryReadAsync(null, foreign.Token);
+        var (_, otherHome) = await foreign.AcceptReadAsync(otherRequest);
+        Assert.Throws<UnauthorizedAccessException>(() => rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot, otherHome));
+        Assert.Throws<UnauthorizedAccessException>(() => foreign.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot, admission));
+        Assert.Equal(document.Id, Assert.Single(await rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot, admission)
+            .ListAsync(false, rig.Token)).Id);
+    }
+
+    [LinuxNotesFact]
+    public async Task Completed_snapshot_summaries_refuse_actual_Home_profile_ownership_or_caller_revocation()
+    {
+        foreach (var change in new[] { "profile", "ownership", "caller" })
+        {
+            await using var rig = await HomeRig.CreateAsync();
+            var document = NotesDocument.Create("Home-protected board");
+            document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+            await rig.Verified.SaveAsync(document, "Existing actual board", rig.Token);
+            var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(null, rig.Token);
+            var (_, admission) = await rig.AcceptReadAsync(request);
+            var snapshot = await rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission, rig.Verified, rig.Token);
+            var source = rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot, admission);
+            Assert.Equal(document.Id, Assert.Single(await source.ListAsync(false, rig.Token)).Id);
+            var before = await rig.CaptureNotesFilesAsync();
+            if (change == "caller")
+            {
+                var actor = await rig.Profiles.GetCurrentAsync(rig.Token);
+                Assert.True((await rig.Permissions.BlockCallerAsync(actor!.ActorId, rig.Token)).Succeeded);
+            }
+            else
+            {
+                var state = await rig.Store.ReadAsync(rig.Token);
+                Assert.True(state.IsSuccess);
+                var record = Assert.Single(state.State!.Records, value => change == "profile"
+                    ? value.RecordId == "home.local-profile" : value.RecordType == "home.local-store-ownership");
+                var payload = change == "profile"
+                    ? JsonSerializer.SerializeToElement(record.Payload.Deserialize<HomeLocalProfile>()! with { ProfileId = Guid.NewGuid() })
+                    : JsonSerializer.SerializeToElement(record.Payload.Deserialize<HomeLocalStoreBinding>()! with { ProfileId = Guid.NewGuid().ToString("D") });
+                Assert.True((await rig.Store.WriteAsync(record with { Revision = checked(record.Revision + 1), Payload = payload },
+                    record.Revision, rig.Token)).IsSuccess);
+            }
+            var error = await Record.ExceptionAsync(() => source.ListAsync(false, rig.Token));
+            Assert.NotNull(error);
+            Assert.Contains(Leaves(error!), cause => cause is UnauthorizedAccessException);
+            await rig.AssertNotesFilesUnchangedAsync(before);
+        }
+    }
+
+    [LinuxNotesFact]
+    public async Task Boards_summary_snapshot_refuses_actual_version_inventory_and_pending_state_changes_without_refreshing()
+    {
+        foreach (var change in new[] { "same-owner-version", "other-owner-version", "new-document", "dangling-pending" })
+        {
+            await using var rig = await HomeRig.CreateAsync();
+            var document = NotesDocument.Create("A cached original board");
+            document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+            var saved = await rig.Verified.SaveAsync(document, "Existing actual board", rig.Token);
+            var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(null, rig.Token);
+            var (_, admission) = await rig.AcceptReadAsync(request);
+            var snapshot = await rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission, rig.Verified, rig.Token);
+            var source = rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot, admission);
+            Assert.Equal(document.Id, Assert.Single(await source.ListAsync(false, rig.Token)).Id);
+            var originalCurrent = await File.ReadAllBytesAsync(saved.CurrentPath, rig.Token);
+            var manifestPath = Path.Combine(Path.GetDirectoryName(saved.CurrentPath)!, "current.integrity.json");
+            var originalManifest = await File.ReadAllBytesAsync(manifestPath, rig.Token);
+            if (change == "dangling-pending")
+                File.CreateSymbolicLink(Path.Combine(Path.GetDirectoryName(saved.CurrentPath)!, "current.integrity.pending.json"),
+                    Path.Combine(rig.Notes.DataDirectory, "never-created-summary-target.json"));
+            else if (change == "new-document")
+            {
+                var other = NotesDocument.Create("New board absent from the authorised snapshot");
+                other.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+                await rig.Verified.SaveAsync(other, "Actual later library change", rig.Token);
+            }
+            else
+            {
+                document.Title = "Changed after the authorised snapshot";
+                document.Metadata[BoardsWorkspaceService.DeletedNotebookKey] = "true";
+                if (change == "same-owner-version")
+                    await rig.Verified.SaveAsync(document, "Actual later version", rig.Token);
+                else
+                {
+                    var owner = rig.Notes.NewOwner();
+                    var verified = new VerifiedNotesRepository(owner, rig.Notes, rig.Notes.Diagnostics);
+                    await verified.SaveAsync(document, "Actual competing owner version", rig.Token);
+                }
+            }
+            var before = change == "dangling-pending" ? null : await rig.CaptureNotesFilesAsync();
+            var error = await Record.ExceptionAsync(() => source.ListAsync(false, rig.Token));
+            Assert.NotNull(error);
+            Assert.Contains(Leaves(error!), cause => cause is IOException);
+            Assert.Equal("A cached original board", Assert.Single(snapshot.Metadata).Summary.Title);
+            // The dangling link itself is asserted without following its absent target.
+            if (change == "dangling-pending")
+            {
+                var target = Path.Combine(rig.Notes.DataDirectory, "never-created-summary-target.json");
+                Assert.False(File.Exists(target));
+                Assert.Equal(target, new FileInfo(Path.Combine(Path.GetDirectoryName(saved.CurrentPath)!, "current.integrity.pending.json")).LinkTarget);
+                Assert.Equal(originalCurrent, await File.ReadAllBytesAsync(saved.CurrentPath, rig.Token));
+                Assert.Equal(originalManifest, await File.ReadAllBytesAsync(manifestPath, rig.Token));
+            }
+            else await rig.AssertNotesFilesUnchangedAsync(before!);
+        }
+    }
+
+    [LinuxNotesFact]
+    public async Task Already_read_Boards_metadata_is_immutable_and_cancellation_never_refreshes_or_consumes_it()
+    {
+        await using var rig = await HomeRig.CreateAsync();
+        var document = NotesDocument.Create("Actual saved title");
+        document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        await rig.Verified.SaveAsync(document, "Existing actual board", rig.Token);
+        var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(document.Id, rig.Token);
+        var (_, admission) = await rig.AcceptReadAsync(request);
+        var snapshot = await rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission, rig.Verified, rig.Token);
+        var source = rig.Notes.Owner.CreateOriginalBoardsSummarySource(request, snapshot, admission);
+        var before = await rig.CaptureNotesFilesAsync();
+        snapshot.SelectedDocument!.Title = "Unsaved editor title";
+        snapshot.SelectedDocument.Metadata[BoardsWorkspaceService.ProductKey] = "write";
+        var editable = Assert.IsAssignableFrom<IList<NotesOriginalDocumentMetadata>>(snapshot.Metadata);
+        Assert.Throws<NotSupportedException>(() => editable[0] = editable[0] with { Product = "write", IsDeleted = true });
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => source.ListAsync(false, cancelled.Token));
+        Assert.Equal("Actual saved title", Assert.Single(await source.ListAsync(false, rig.Token)).Title);
+        Assert.Empty(await source.ListAsync(true, rig.Token));
+        await rig.AssertNotesFilesUnchangedAsync(before);
+    }
+
     private sealed record CopiedSaveOutcome(INotesOriginalSaveIntent Intent, NotesOriginalSaveDisposition Disposition,
         long? CommittedVersion, string? CommittedSha256, string DiagnosticCode) : INotesOriginalSaveOutcome;
 

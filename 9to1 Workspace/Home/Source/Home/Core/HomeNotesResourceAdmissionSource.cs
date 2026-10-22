@@ -395,6 +395,9 @@ public sealed class HomeNotesLibraryReadAdmission
     private readonly SemaphoreSlim _completionGate = new(1, 1);
     private INotesOriginalLibraryReadOutcome? _retainedOutcome;
     private int _captureAttempted;
+    private VerifiedResourceStoreOwnership? _observedOwnership;
+    private HomeClaimedResourceAttestation? _observedAdmission;
+    private int _completionAudited;
 
     internal HomeNotesLibraryReadAdmission(INotesOriginalStoreSource source, INotesOriginalLibraryReadRequest request,
         FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
@@ -406,13 +409,46 @@ public sealed class HomeNotesLibraryReadAdmission
         ReferenceEquals(_source, source) && ReferenceEquals(_request, request) &&
         source.IsIssuedOriginalLibraryReadRequest(request) && _broker.CaptureClaimedAttestation(_capability) is not null;
 
-    public ValueTask<HomeClaimedResourceCommitFence?> CaptureCommitFenceAsync(INotesOriginalStoreSource source,
+    public async ValueTask<HomeClaimedResourceCommitFence?> CaptureCommitFenceAsync(INotesOriginalStoreSource source,
         INotesOriginalLibraryReadRequest request, CancellationToken cancellationToken = default)
     {
         if (!IsBoundToOriginalNotes(source, request) || Interlocked.CompareExchange(ref _captureAttempted, 1, 0) != 0)
-            return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
-        return HomeClaimedResourceCommitFence.CaptureNotesLibraryReadAsync(_broker, _store, _profiles,
-            _ownership, source, request, _capability, _actor, cancellationToken);
+            return null;
+        _observedAdmission = _broker.CaptureClaimedAttestation(_capability);
+        _observedOwnership = await _ownership.GetVerifiedAsync(HomeNotesResourceAdmissionSource.StoreKind,
+            request.StoreObservation.StoreIdentity.StoreId.ToString("D"), cancellationToken).ConfigureAwait(false);
+        if (_observedAdmission is null || _observedOwnership?.Receipt is null ||
+            !await _ownership.IsCurrentAsync(_observedOwnership, _actor, cancellationToken).ConfigureAwait(false)) return null;
+        return await HomeClaimedResourceCommitFence.CaptureNotesLibraryReadAsync(_broker, _store, _profiles,
+            _ownership, source, request, _capability, _actor, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Narrows presentation of this completed read's already-returned metadata. This
+    /// is not a read execution capability and cannot refresh content or authorise mutation.
+    /// The canonical Notes owner acquires its own lock first and disposes this actual Home
+    /// lease before diagnostics. Original actor, ownership receipt and completed review remain required.</summary>
+    public ValueTask<IHomeLocalOperationLease?> CaptureObservedSnapshotLeaseAsync(INotesOriginalStoreSource source,
+        INotesOriginalLibraryReadRequest request, INotesOriginalLibraryReadOutcome outcome,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ReferenceEquals(source, _source) || !ReferenceEquals(request, _request) ||
+            !ReferenceEquals(outcome, _retainedOutcome) || !outcome.Succeeded ||
+            !source.IsIssuedOriginalLibraryReadOutcome(outcome, request) || Volatile.Read(ref _completionAudited) != 1 ||
+            _observedAdmission is null || _observedOwnership?.Receipt is null)
+            return ValueTask.FromResult<IHomeLocalOperationLease?>(null);
+        return _store.AcquireLocalOperationLeaseCoreAsync(_profiles, _actor, new ObservedSnapshotGuard(this), cancellationToken);
+    }
+
+    private sealed class ObservedSnapshotGuard(HomeNotesLibraryReadAdmission original) : IHomeStateCommitActorGuard
+    {
+        public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor actor,
+            HomeStateCommitPhase phase, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(actor == original._actor && original._observedOwnership is { } ownership &&
+                HomeLocalStoreOwnership.IsReceiptCurrentInState(state, ownership) && original._observedAdmission is { } admission &&
+                original._broker.IsObservedNotesReadCurrentInState(admission, actor, state));
+        }
     }
 
     public async Task<HomePermissionOperationResult> CompleteObservedAsync(INotesOriginalStoreSource source,
@@ -439,7 +475,9 @@ public sealed class HomeNotesLibraryReadAdmission
                     "The original Notes owner observed its reviewed library snapshot without recovery writes.", affected)
                 : new HomeExecutionOutcome(HomePermissionRequestState.Failed, "NOTES_READ_REFUSED",
                     "The original Notes owner did not return a library snapshot; any recovery needs separate authority.", []);
-            return await _broker.CompleteExecutionAsync(_capability, terminal, cancellationToken).ConfigureAwait(false);
+            var completed = await _broker.CompleteExecutionAsync(_capability, terminal, cancellationToken).ConfigureAwait(false);
+            if (completed.Succeeded) Volatile.Write(ref _completionAudited, 1);
+            return completed;
         }
         finally { _completionGate.Release(); }
     }
@@ -452,13 +490,53 @@ public sealed class HomeNotesLibraryReadAdmission
         await _completionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            return _retainedOutcome is null
-                ? new(false, "NOTES_READ_OUTCOME_NOT_RETAINED", "No original observed library read outcome is retained for audit retry.")
-                : await _broker.RetryCompletionAuditAsync(_capability, cancellationToken).ConfigureAwait(false);
+            if (_retainedOutcome is null)
+                return new(false, "NOTES_READ_OUTCOME_NOT_RETAINED", "No original observed library read outcome is retained for audit retry.");
+            var completed = await _broker.RetryCompletionAuditAsync(_capability, cancellationToken).ConfigureAwait(false);
+            if (completed.Succeeded) Volatile.Write(ref _completionAudited, 1);
+            return completed;
         }
         finally { _completionGate.Release(); }
     }
 
     private static bool IsSha256(string? value) => value is { Length: 64 } &&
         value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F');
+}
+
+// SAME actual broker, original attestation and raw Home state. A completed read is never
+// reclassified as an uncompleted execution capability or used to admit new content IO.
+public sealed partial class HomeResourceOperationBroker
+{
+    internal bool IsObservedNotesReadCurrentInState(HomeClaimedResourceAttestation original,
+        AuthenticatedResourceActor actor, HomeCoreStoredState actualState)
+    {
+        if (!ReferenceEquals(original.Issuer, this) || original.Actor != actor ||
+            original.Submission.Scope.TargetAppId != HomeNotesResourceAdmissionSource.TargetAppId ||
+            original.Submission.Scope.ActionName != HomeNotesResourceAdmissionSource.ReadAction) return false;
+        var records = actualState.Records.Where(value => value.RecordId == "home.permissions-trust").ToArray();
+        if (records.Length != 1 || records[0].RecordType != "home.permissions-trust" || records[0].SchemaVersion != 1 ||
+            records[0].Scope != HomeDataScope.DeviceLocal || records[0].Authority != HomeRecordAuthority.LocalCanonical) return false;
+        try
+        {
+            foreach (var id in records[0].Payload.GetProperty("BlockedCallerIds").EnumerateArray())
+                if (id.GetString() == original.Submission.Caller.CallerId) return false;
+            HomePermissionRequest? observed = null;
+            foreach (var item in records[0].Payload.GetProperty("Requests").EnumerateArray())
+            {
+                if (!item.TryGetProperty(nameof(HomePermissionRequest.RequestId), out var id) ||
+                    id.GetString() != original.Capability.RequestId) continue;
+                if (observed is not null) return false;
+                observed = item.Deserialize<HomePermissionRequest>();
+                if (observed is null) return false;
+            }
+            return observed is not null && observed.State == HomePermissionRequestState.Succeeded &&
+                observed.ResultCode == "NOTES_READ_COMPLETED" && observed.Policy == original.Policy &&
+                observed.Policy.RequiresPerActionApproval && observed.AppliedGrantId is null &&
+                observed.AppliedTrustLevel == HomeTrustLevel.Session && MatchesPrepared(original.Submission, observed) &&
+                original.Submission.Impact.ResourceBinding is { SchemaVersion: 1 } resource &&
+                resource.OriginalActor == actor && resource.Scopes.SequenceEqual(original.Capability.Scopes);
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or KeyNotFoundException or FormatException)
+        { return false; }
+    }
 }

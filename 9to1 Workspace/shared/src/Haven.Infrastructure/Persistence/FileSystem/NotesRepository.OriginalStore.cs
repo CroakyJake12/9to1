@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
+using HavenOS.Home.Core;
 using Microsoft.Win32.SafeHandles;
 
 namespace Haven.Infrastructure;
@@ -79,6 +80,10 @@ public sealed partial class NotesRepository : INotesOriginalStoreSource
             storeId = observation.StoreIdentity.StoreId, storeRevision = observation.Revision, documentId = DocumentId });
         internal int ExecutionStarted;
         internal OriginalLibraryReadOutcome? Outcome;
+        internal NotesOriginalLibrarySnapshot? ReturnedSnapshot;
+        internal IReadOnlyList<NotesOriginalDocumentMetadata>? ObservedMetadata;
+        internal OriginalLibraryReadWitness? ReadWitness;
+        internal HomeNotesLibraryReadAdmission? ReadAdmission;
     }
 
     public async ValueTask<INotesOriginalLibraryReadRequest> PrepareOriginalLibraryReadAsync(Guid? documentId,

@@ -179,7 +179,10 @@ public sealed partial class NotesRepository
                 try
                 {
                     using var library = root.OpenLibraryCustody();
+                    var libraryVersion = library.SnapshotVersion;
                     var summaries = new List<NotesDocumentSummary>();
+                    var metadata = new List<NotesOriginalDocumentMetadata>();
+                    var witnesses = new List<OriginalDocumentReadWitness>();
                     NotesDocument? selected = null;
                     foreach (var id in library.EnumerateDocumentIds())
                     {
@@ -194,21 +197,34 @@ public sealed partial class NotesRepository
                         transaction.OriginalRead = document;
                         try
                         {
+                            var before = document.CaptureReadWitness(id);
                             var current = await originalVerified.ReadWithinOriginalTransactionAsync(transaction, id,
                                 cancellationToken).ConfigureAwait(false);
+                            if (document.CaptureReadWitness(id) != before)
+                                throw new IOException("The original Notes document changed during its authorised snapshot.");
+                            witnesses.Add(before);
                             if (current is not null)
                             {
-                                summaries.Add(Summarize(current));
+                                var summary = Summarize(current);
+                                summaries.Add(summary);
+                                current.Metadata.TryGetValue(BoardsWorkspaceService.ProductKey, out var product);
+                                metadata.Add(new(summary, product, BoardsWorkspaceService.IsDeletedNotebook(current)));
                                 if (id == request.DocumentId) selected = current;
                             }
                         }
                         finally { transaction.OriginalRead = null; }
                     }
                     library.DemandCurrent();
+                    if (library.SnapshotVersion != libraryVersion)
+                        throw new IOException("The original Notes library changed during its authorised snapshot.");
                     if (!await fence.ValidateAsync(cancellationToken).ConfigureAwait(false))
                         throw new UnauthorizedAccessException("The held original Home read fence changed.");
+                    request.ObservedMetadata = Array.AsReadOnly(metadata.OrderByDescending(value => value.Summary.UpdatedAt).ToArray());
+                    request.ReadWitness = new(libraryVersion, Array.AsReadOnly(witnesses.ToArray()));
+                    request.ReadAdmission = originalHome;
                     return new NotesOriginalLibrarySnapshot(request.StoreObservation.StoreIdentity,
-                        summaries.OrderByDescending(value => value.UpdatedAt).ToArray(), selected);
+                        Array.AsReadOnly(summaries.OrderByDescending(value => value.UpdatedAt).ToArray()), selected)
+                        { Metadata = request.ObservedMetadata };
                 }
                 finally { await fence.DisposeAsync().ConfigureAwait(false); }
             }, cancellationToken, (OriginalObservation)request.StoreObservation);
@@ -234,13 +250,78 @@ public sealed partial class NotesRepository
         }
         catch (Exception error) { auditError = error; }
         if (snapshot is not null)
-            return primary is not null || auditError is not null
+        {
+            request.ReturnedSnapshot = primary is not null || auditError is not null
                 ? snapshot with { AuditWarning = "The original read completed; its retained Home audit needs recovery." } : snapshot;
+            return request.ReturnedSnapshot;
+        }
         if (primary is not null && auditError is not null)
             throw new AggregateException("Original Notes read and its audit did not complete.", primary, auditError);
         if (primary is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
         throw auditError ?? new IOException("The original Notes read produced no authorised snapshot.");
     }
+
+    /// <summary>Already-read data selection for the SAME Boards engine. Exact owner-issued
+    /// snapshot identity is required; public snapshot metadata never grants IO or approval.
+    /// Changed data needs a fresh genuine read review rather than an implicit cache refresh.</summary>
+    public IBoardsNotebookSummarySource CreateOriginalBoardsSummarySource(INotesOriginalLibraryReadRequest originalRequest,
+        NotesOriginalLibrarySnapshot originalSnapshot, HomeNotesLibraryReadAdmission originalHome)
+    {
+        ArgumentNullException.ThrowIfNull(originalHome); ArgumentNullException.ThrowIfNull(originalSnapshot);
+        if (originalRequest is not OriginalLibraryReadRequest request || !ReferenceEquals(request.Issuer, this) ||
+            !ReferenceEquals(request.ReturnedSnapshot, originalSnapshot) || !ReferenceEquals(request.ReadAdmission, originalHome) ||
+            request.Outcome is not { Succeeded: true } || request.ReadWitness is null || request.ObservedMetadata is null ||
+            originalSnapshot.AuditWarning is not null)
+            throw new UnauthorizedAccessException("Retain the exact successful original Notes snapshot and Home read owner.");
+        return new OriginalBoardsSummarySource(this, request, originalHome);
+    }
+
+    private sealed class OriginalBoardsSummarySource(NotesRepository owner, OriginalLibraryReadRequest request,
+        HomeNotesLibraryReadAdmission home) : IBoardsNotebookSummarySource
+    {
+        public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(bool deleted, CancellationToken cancellationToken)
+            => owner.WithTransactionCoreAsync(async transaction =>
+            {
+                var witness = request.ReadWitness ?? throw new UnauthorizedAccessException("The original read witness is absent.");
+                var root = transaction.OriginalRoot ?? throw new UnauthorizedAccessException("Original Notes custody is absent.");
+                using var library = root.OpenLibraryCustody();
+                if (library.SnapshotVersion != witness.Library ||
+                    !library.EnumerateDocumentIds().SequenceEqual(witness.Documents.Select(value => value.Id)))
+                    throw new IOException("The original Notes library changed; request a new reviewed snapshot.");
+                foreach (var expected in witness.Documents)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    using var current = library.OpenDocument(expected.Id);
+                    if (current.CaptureReadWitness(expected.Id) != expected ||
+                        current.HasNamedEntry("current.publication.json") ||
+                        current.HasNamedEntry("current.integrity.pending.json") || current.HasNamedEntry("current.recovery.json"))
+                        throw new IOException("The original Notes document changed; request a new reviewed snapshot.");
+                }
+                // Notes lock first, then the actual Home actor/ownership/completed-review guard.
+                // No content IO or nested Home/Notes evidence call occurs while this lease is held.
+                await using var presentation = await home.CaptureObservedSnapshotLeaseAsync(owner, request,
+                    request.Outcome!, cancellationToken).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("The original Home snapshot context is no longer current.");
+                library.DemandCurrent();
+                if (library.SnapshotVersion != witness.Library || !await presentation.IsCurrentAsync(cancellationToken).ConfigureAwait(false))
+                    throw new UnauthorizedAccessException("The original snapshot changed before presentation.");
+                foreach (var expected in witness.Documents)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    using var current = library.OpenDocument(expected.Id);
+                    if (current.CaptureReadWitness(expected.Id) != expected ||
+                        current.HasNamedEntry("current.publication.json") || current.HasNamedEntry("current.integrity.pending.json") ||
+                        current.HasNamedEntry("current.recovery.json"))
+                        throw new IOException("The original snapshot became stale before presentation.");
+                }
+                return BoardsWorkspaceService.SelectNotebookSummaries(request.ObservedMetadata!, deleted);
+            }, cancellationToken, (OriginalObservation)request.StoreObservation);
+    }
+
+    internal sealed record OriginalDocumentReadWitness(Guid Id, PhysicalVersion Directory,
+        PhysicalVersion? Current, PhysicalVersion? Integrity, PhysicalVersion? Versions);
+    private sealed record OriginalLibraryReadWitness(PhysicalVersion? Library,
+        IReadOnlyList<OriginalDocumentReadWitness> Documents);
 
     public Task<HomePermissionOperationResult> RetryOriginalLibraryReadAuditAsync(INotesOriginalLibraryReadRequest originalRequest,
         HomeNotesLibraryReadAdmission originalHome, CancellationToken cancellationToken = default)
@@ -314,6 +395,7 @@ public sealed partial class NotesRepository
         private readonly SafeFileHandle? _documents;
         private readonly PhysicalVersion? _identity;
         private readonly int _directoryFlag, _noFollow;
+        internal PhysicalVersion? SnapshotVersion { get { DemandCurrent(); return _documents is null ? null : OriginalNotesRoot.Stat(_documents); } }
         internal OriginalLibraryDirectory(OriginalNotesRoot root, SafeFileHandle notes, int directoryFlag, int noFollow)
         {
             _root = root; _notes = notes; _directoryFlag = directoryFlag; _noFollow = noFollow;
@@ -360,6 +442,20 @@ public sealed partial class NotesRepository
         private readonly string _id;
         private readonly int _directoryFlag, _noFollow;
         internal string DocumentPath => OriginalNotesRoot.Alias(_document);
+        internal OriginalDocumentReadWitness CaptureReadWitness(Guid id)
+        {
+            if (id.ToString("D") != _id) throw new UnauthorizedAccessException("Foreign Notes read witness.");
+            DemandCurrent();
+            return new(id, OriginalNotesRoot.Stat(_document), ReadVersion("current.haven-notes.json"),
+                ReadVersion("current.integrity.json"), _versions is null ? null : OriginalNotesRoot.Stat(_versions));
+
+            PhysicalVersion? ReadVersion(string leaf)
+            {
+                try { using var file = OpenFile(Path.Combine(DocumentPath, leaf), FileMode.Open, FileAccess.Read, 4096);
+                    return OriginalNotesRoot.Stat(file.SafeFileHandle); }
+                catch (FileNotFoundException) { return null; }
+            }
+        }
         // Metadata presence is a no-follow native observation of the retained parent, not
         // File.Exists (which follows links and silently hides dangling pending artifacts).
         internal bool HasNamedEntry(string leaf)
