@@ -30,13 +30,20 @@ def profile_snapshot(temporary, evidence=Path("evidence")):
                     raise ValueError("Recorded test profile is outside the disposable runner context")
                 roots.add(root)
     for root in sorted(roots):
-        for relative in ("Home/state.json", "haven.db"):
-            path = root / relative
-            if path.exists():
-                if path.is_symlink() or any(parent.is_symlink() for parent in path.parents):
-                    raise ValueError("Profile evidence path must not follow symlinks")
-                files.append({"path": str(path), "bytes": path.stat().st_size,
-                              "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+        if root.is_symlink() or any(parent.is_symlink() for parent in root.parents):
+            raise ValueError("Profile evidence path must not follow symlinks")
+        # Include journals/WALs and other persisted records, not just the main
+        # database. Uninstall must not silently discard the only recent writes.
+        for path in sorted(root.rglob("*")):
+            if path.is_symlink():
+                raise ValueError("Profile evidence path must not follow symlinks")
+            if path.is_dir():
+                continue
+            if not path.is_file():
+                raise ValueError("Unsupported special file in persisted test profile")
+            with path.open("rb") as stream:
+                sha = hashlib.file_digest(stream, "sha256").hexdigest()
+            files.append({"path": str(path), "bytes": path.stat().st_size, "sha256": sha})
     if not files:
         raise ValueError("No real persisted test-profile data available for removal check")
     return files
@@ -45,9 +52,11 @@ def profile_snapshot(temporary, evidence=Path("evidence")):
 def unchanged(snapshot):
     for record in snapshot:
         path = Path(record["path"])
-        if path.is_symlink() or not path.is_file() or path.stat().st_size != record["bytes"] \
-                or hashlib.sha256(path.read_bytes()).hexdigest() != record["sha256"]:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size != record["bytes"]:
             raise ValueError("Removal altered or deleted persisted profile data")
+        with path.open("rb") as stream:
+            if hashlib.file_digest(stream, "sha256").hexdigest() != record["sha256"]:
+                raise ValueError("Removal altered or deleted persisted profile data")
 
 
 def active_candidate_processes():

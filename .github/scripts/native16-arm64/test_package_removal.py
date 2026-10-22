@@ -49,6 +49,15 @@ class PersistentDataRemovalContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             removal.profile_snapshot(self.root, self.root)
 
+    def test_wal_and_other_persisted_records_cannot_silently_disappear(self):
+        wal = self.data.parent.parent / "haven.db-wal"
+        wal.write_bytes(b"most recent persisted writes")
+        snapshot = removal.profile_snapshot(self.root, self.root)
+        self.assertEqual(len(snapshot), 2)
+        wal.unlink()
+        with self.assertRaises(ValueError):
+            removal.unchanged(snapshot)
+
 
 if __name__ == "__main__":
     unittest.main()
