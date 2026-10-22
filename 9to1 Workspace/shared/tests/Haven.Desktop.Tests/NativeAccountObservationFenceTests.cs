@@ -1,4 +1,8 @@
+using System.Reflection;
 using System.Text.Json;
+using Haven.Desktop.Accounts;
+using NineToOne.Accounts.Native;
+using NineToOne.Accounts.Remote;
 using NineToOne.Web.Accounts;
 using NineToOne.Web.Services;
 
@@ -78,5 +82,251 @@ public sealed class NativeAccountObservationFenceTests
     private sealed class Transport(Func<string, Task<JsonElement>> original) : IAccountBrowserTransport
     {
         public Task<JsonElement> InvokeAsync(string action, JsonElement? arguments, CancellationToken cancellationToken) => original(action);
+    }
+
+    // Native-adapter presentation counterexamples. The internal NativeAccountBindingsAdapter is
+    // reached through reflection (no InternalsVisibleTo exists). A scripted INativeCakeAccountSession
+    // proves presentation boundaries only; it never performs or implies a live CAKE authentication.
+    private static readonly Guid AccountGuid = Guid.Parse("12345678-1234-4234-8234-123456789abc");
+    private static readonly Guid SessionGuid = Guid.Parse("87654321-4321-4321-8321-cba987654321");
+    private static Type AdapterType => typeof(NativeAccountTransport).Assembly
+        .GetType("Haven.Desktop.Accounts.NativeAccountBindingsAdapter", throwOnError: true)!;
+    private static object CreateAdapter(AccountBrowserBindings view, INativeCakeAccountSession session)
+    {
+        var ctor = AdapterType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null,
+            new[] { typeof(AccountBrowserBindings), typeof(INativeCakeAccountSession), typeof(CancellationToken) }, null)!;
+        return ctor.Invoke(new object?[] { view, session, CancellationToken.None })!;
+    }
+    private static bool TryGet(object adapter, string path, out object? value)
+    {
+        var m = AdapterType.GetMethod("TryGetValue", BindingFlags.Public | BindingFlags.Instance)!;
+        var args = new object?[] { path, null };
+        var ok = (bool)m.Invoke(adapter, args)!;
+        value = args[1];
+        return ok;
+    }
+    private static bool? IsActionAvailable(object adapter, string command)
+    {
+        var m = AdapterType.GetMethod("IsActionAvailable", BindingFlags.Public | BindingFlags.Instance)!;
+        return (bool?)m.Invoke(adapter, new object?[] { command });
+    }
+    private static Task Dispatch(object adapter, string command) =>
+        ((ValueTask)AdapterType.GetMethod("DispatchAsync", BindingFlags.Public | BindingFlags.Instance)!
+            .Invoke(adapter, new object?[] { command, null, TestContext.Current.CancellationToken })!).AsTask();
+    private static void Seal(object adapter) =>
+        AdapterType.GetMethod("Seal", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(adapter, null);
+    private static void RefreshPresentationFence(object adapter) =>
+        AdapterType.GetMethod("RefreshPresentationFence", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(adapter, null);
+    private static NativeCakeAccountSnapshot Snapshot(Guid? sessionId = null) =>
+        new(AccountGuid, sessionId ?? SessionGuid, "Synthetic", DateTimeOffset.UtcNow.AddHours(8));
+    private static JsonElement AccountRecord(string action) => action switch
+    {
+        "GetCurrent" => Current(),
+        "GetProfile" => Ok(new { profile = new { accountId = AccountId, name = "Synthetic", username = "synthetic", icon = "", pronouns = "", job = "", revision = 1 } }),
+        "ListSessions" => Ok(new { sessions = new[] { new { accountId = AccountId, sessionId = SessionId, deviceName = "Synthetic" } } }),
+        _ => throw new InvalidOperationException("An observation control must not perform an auth mutation.")
+    };
+    private static AccountBrowserBindings CreateView(ScriptedSession session, IAccountBrowserTransport transport,
+        bool configureSignIn = true) => new(transport, write => { write(); return Task.CompletedTask; },
+            configureSignIn ? async ct => { await session.SignInAsync(ct); } : null);
+    private static string Text(object adapter, string path)
+    {
+        Assert.True(TryGet(adapter, path, out var value));
+        return Assert.IsType<string>(value);
+    }
+    private static void AssertReadOnly(object adapter)
+    {
+        Assert.Contains("read-only", Text(adapter, "ConnectionRecovery"));
+        Assert.DoesNotContain("are saved", Text(adapter, "ConnectionRecovery"));
+        foreach (var path in new[] { "CanEdit", "CanSave", "HasChanges", "Conflict" })
+        { Assert.True(TryGet(adapter, path, out var value)); Assert.Equal(false, value); }
+    }
+    private sealed class ScriptedSession : INativeCakeAccountSession
+    {
+        public bool IsAvailable { get; set; }
+        public NativeCakeAccountSnapshot? Current { get; set; }
+        public int SignInCalls;
+        public bool TryGetCurrentSnapshot(out NativeCakeAccountSnapshot? snapshot) { snapshot = Current; return Current is not null; }
+        public Task<NativeCakeAccountSnapshot> SignInAsync(CancellationToken ct)
+        { ct.ThrowIfCancellationRequested(); SignInCalls++; return Task.FromResult(Current ?? throw new InvalidOperationException("no scripted current")); }
+        public Task<ApiResult<RemoteCurrent>> CurrentAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteProfile>> ProfileAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteSession[]>> SessionsAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteMutationAcknowledgement>> SignOutAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteMutationAcknowledgement>> RevokeSessionAsync(Guid selectedSessionId, CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteMutationAcknowledgement>> RevokeOtherSessionsAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task CloseAndDrainAsync() => Task.CompletedTask;
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    [Fact]
+    public async Task Unavailable_native_session_presents_primary_unavailable_guidance_and_refuses_sign_in()
+    {
+        var calls = 0;
+        var session = new ScriptedSession { IsAvailable = false, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(_ =>
+        { calls++; throw new InvalidOperationException("No transport while the session is unavailable."); }));
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        Assert.Equal("Native CAKE sign-in is unavailable.", Text(adapter, "ConnectionSummary"));
+        Assert.Contains("Access transport is not configured", Text(adapter, "ConnectionRecovery"));
+        Assert.True(TryGet(adapter, "CanSignIn", out var can)); Assert.Equal(false, can);
+        Assert.False(IsActionAvailable(adapter, "RequestSignIn") == true);
+        await Dispatch(adapter, "RequestSignIn"); // A callback exists; the native availability fence must refuse it.
+        Assert.Equal(0, session.SignInCalls);
+        Assert.Equal(0, calls);
+    }
+
+    [Fact]
+    public async Task Available_without_sign_in_callback_does_not_recommend_a_nonexistent_action()
+    {
+        var session = new ScriptedSession { IsAvailable = true, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(_ =>
+            throw new InvalidOperationException("No transport before a genuine sign-in action.")), configureSignIn: false);
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        Assert.Equal("This native client is not connected to your 9to1 account.", Text(adapter, "ConnectionSummary"));
+        Assert.Contains("Sign-in is not available", Text(adapter, "ConnectionRecovery"));
+        Assert.DoesNotContain("Use Sign in", Text(adapter, "ConnectionRecovery"));
+        Assert.True(TryGet(adapter, "CanSignIn", out var can)); Assert.Equal(false, can);
+        await Dispatch(adapter, "RequestSignIn");
+        Assert.Equal(0, session.SignInCalls);
+    }
+
+    [Fact]
+    public async Task Configured_sign_in_is_offered_and_dispatches_the_same_session_then_observes_the_account()
+    {
+        var calls = new List<string>();
+        var session = new ScriptedSession { IsAvailable = true, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(action =>
+        { calls.Add(action); return Task.FromResult(AccountRecord(action)); }));
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        Assert.Equal("Sign in to manage your profile and sessions.", Text(adapter, "ConnectionSummary"));
+        Assert.Contains("Use Sign in", Text(adapter, "ConnectionRecovery"));
+        Assert.True(TryGet(adapter, "CanSignIn", out var can)); Assert.Equal(true, can);
+        Assert.True(IsActionAvailable(adapter, "RequestSignIn") == true);
+        await Dispatch(adapter, "RequestSignIn");
+        Assert.Equal(1, session.SignInCalls);
+        Assert.Equal(new[] { "GetCurrent", "GetProfile", "ListSessions" }, calls);
+        Assert.Equal("Your 9to1 account is connected (read-only).", Text(adapter, "ConnectionSummary"));
+        AssertReadOnly(adapter);
+    }
+
+    [Fact]
+    public async Task Connected_read_only_presenter_declares_read_only_and_never_promises_saved_profile()
+    {
+        var session = new ScriptedSession { IsAvailable = true, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(action => Task.FromResult(AccountRecord(action))));
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        await Dispatch(adapter, "Refresh"); // Establish both real observation fences through the production command.
+        Assert.True(TryGet(adapter, "HasAccount", out var has)); Assert.Equal(true, has);
+        Assert.Equal("Your 9to1 account is connected (read-only).", Text(adapter, "ConnectionSummary"));
+        AssertReadOnly(adapter);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Matching_native_snapshot_without_a_current_account_observation_never_claims_connected(bool failedRead)
+    {
+        var session = new ScriptedSession { IsAvailable = true, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(action => Task.FromResult(failedRead
+            ? JsonSerializer.SerializeToElement(new { ok = false, status = 401, error = new { code = "AuthenticationRequired" } })
+            : AccountRecord(action))));
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        await Dispatch(adapter, "Refresh");
+        if (!failedRead)
+        {
+            Assert.True(TryGet(adapter, "HasAccount", out var before)); Assert.Equal(true, before);
+            view.ClearAccountObservations("The current observation was explicitly cleared.");
+        }
+        Assert.True(session.TryGetCurrentSnapshot(out _)); // Same actual native snapshot survives the failed/cleared read.
+        Assert.True(TryGet(adapter, "HasAccount", out var has)); Assert.Equal(false, has);
+        Assert.DoesNotContain("connected (read-only)", Text(adapter, "ConnectionSummary"));
+        Assert.Equal("Sign in to manage your profile and sessions.", Text(adapter, "ConnectionSummary"));
+    }
+
+    [Theory]
+    [InlineData("connected")]
+    [InlineData("unavailable")]
+    [InlineData("retired")]
+    [InlineData("changed")]
+    public async Task Original_pending_refresh_keeps_native_read_only_and_retirement_availability_fences(string state)
+    {
+        var reached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var raw = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reads = 0;
+        var session = new ScriptedSession { IsAvailable = true, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(action =>
+        {
+            if (action == "GetCurrent" && ++reads == 2) { reached.TrySetResult(); return raw.Task; }
+            return Task.FromResult(AccountRecord(action));
+        }));
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        await Dispatch(adapter, "Refresh");
+        Assert.Equal("Your 9to1 account is connected (read-only).", Text(adapter, "ConnectionSummary"));
+        var original = Dispatch(adapter, "Refresh");
+        try
+        {
+            await reached.Task.WaitAsync(TestContext.Current.CancellationToken);
+            Assert.False(original.IsCompleted);
+            if (state == "unavailable") session.IsAvailable = false;
+            else if (state == "retired") Seal(adapter);
+            else if (state == "changed") { session.Current = Snapshot(Guid.NewGuid()); RefreshPresentationFence(adapter); }
+            if (state == "unavailable")
+            {
+                Assert.Equal("Native CAKE sign-in is unavailable.", Text(adapter, "ConnectionSummary"));
+                Assert.Contains("Access transport is not configured", Text(adapter, "ConnectionRecovery"));
+            }
+            else if (state == "retired")
+            {
+                Assert.Contains("retired", Text(adapter, "ConnectionSummary"));
+                Assert.Contains("retired", Text(adapter, "ConnectionRecovery"));
+            }
+            else
+            {
+                Assert.Equal("Checking your account…", Text(adapter, "ConnectionSummary"));
+                AssertReadOnly(adapter);
+            }
+            Assert.DoesNotContain("are saved", Text(adapter, "ConnectionRecovery"));
+            if (state != "connected")
+            { Assert.True(TryGet(adapter, "HasAccount", out var has)); Assert.Equal(false, has); }
+        }
+        finally
+        {
+            raw.TrySetResult(Current());
+            await original; // Settle the SAME issued command; never leave the blocked backend or a replacement task behind.
+        }
+        if (state == "changed")
+        {
+            Assert.True(TryGet(adapter, "HasAccount", out var has)); Assert.Equal(false, has);
+            Assert.DoesNotContain("connected (read-only)", Text(adapter, "ConnectionSummary"));
+        }
+    }
+
+    [Fact]
+    public async Task Sealed_retired_owner_never_reports_a_stale_connected_summary()
+    {
+        var session = new ScriptedSession { IsAvailable = true, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(action => Task.FromResult(AccountRecord(action))));
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        await Dispatch(adapter, "Refresh");
+        Assert.Equal("Your 9to1 account is connected (read-only).", Text(adapter, "ConnectionSummary"));
+        Seal(adapter);
+        Assert.Contains("retired", Text(adapter, "ConnectionSummary"));
+        Assert.True(TryGet(adapter, "HasAccount", out var has)); Assert.Equal(false, has);
+        Assert.False(IsActionAvailable(adapter, "RequestSignIn") == true);
+    }
+
+    [Fact]
+    public async Task Cleared_observation_fence_hides_connected_presentation_after_session_replace()
+    {
+        var session = new ScriptedSession { IsAvailable = true, Current = Snapshot() };
+        await using var view = CreateView(session, new Transport(action => Task.FromResult(AccountRecord(action))));
+        using var adapter = (IDisposable)CreateAdapter(view, session);
+        await Dispatch(adapter, "Refresh");
+        Assert.Equal("Your 9to1 account is connected (read-only).", Text(adapter, "ConnectionSummary"));
+        session.Current = Snapshot(Guid.NewGuid());
+        RefreshPresentationFence(adapter);
+        Assert.Equal("Sign in to manage your profile and sessions.", Text(adapter, "ConnectionSummary"));
+        Assert.True(TryGet(adapter, "HasAccount", out var has)); Assert.Equal(false, has);
     }
 }

@@ -16,8 +16,8 @@
     },
     {
       "path": ".github/scripts/native16-arm64/inference_stage.py",
-      "sha256": "3d08b56b586644a774444e766eb93d8adc5503c676b456a46ba51f8e9c47d386",
-      "size": 13047
+      "sha256": "5100d80861ffa257aaadf3b27c0b8b5c762494f7096f180d21f4074983002540",
+      "size": 16883
     },
     {
       "path": ".github/scripts/native16-arm64/package-arm64-deb.ROOT-ONLY.py",
@@ -31,8 +31,8 @@
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
-      "sha256": "354c2831eaee619273f70251aca1ca54a8fb83c9565516835f1fd44e2c59b00a",
-      "size": 12780
+      "sha256": "4a7e043628ecf78cec6df30cd950fe718596c88ad78f7332e7ea00308dcef9c8",
+      "size": 15311
     },
     {
       "path": "9to1 Workspace/Home/Source/Dulche/bundle/HANDOFF.md",
@@ -218,6 +218,11 @@
       "path": "9to1 Workspace/Home/Source/Dulche/llamacpp/tests/test_manifest_validation.py",
       "sha256": "889bf6a8fe9c174f3e0cf7a3db26c73bef0e19a7b8eed15a7d702fcde45f551a",
       "size": 2155
+    },
+    {
+      "path": ".github/scripts/native16-arm64/recovered-provider-20261022.json",
+      "sha256": "93ea7e4c9cebea1e55485b51ab463bfb9acbcb7f6b614af01be94ab5359dd987",
+      "size": 2706
     }
   ],
   "final_preview_kind": "LESSON_PREVIEW_ARM64",

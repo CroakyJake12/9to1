@@ -115,6 +115,14 @@ public sealed partial class BrowseChrome
     private string EngineUnavailableReason(BrowseEngineKind engine) =>
         _engineFactory is IBrowseEngineAvailability availability ? availability.UnsupportedReasonFor(engine) : EngineUnsupportedReason;
 
+    /// <summary>Read-only per-engine capability probe: true only when the
+    /// installed factory exposes typed <see cref="IBrowseEngineAvailability"/> and
+    /// reports that EXACT engine supported. Fail-closed — a factory without a
+    /// per-engine capability signal is treated as unknown, never as a basis for a
+    /// fallback offer. Legacy private admission semantics are untouched.</summary>
+    public bool QueryEngineCapability(BrowseEngineKind engine) =>
+        _engineFactory is IBrowseEngineAvailability availability && availability.IsEngineSupported(engine);
+
     public BrowserSitePermissionDecision ObserveOriginPermission(Guid tabId, IBrowseEngineTab originalEngine,
         Uri origin, BrowserSitePermissionKind kind)
     {

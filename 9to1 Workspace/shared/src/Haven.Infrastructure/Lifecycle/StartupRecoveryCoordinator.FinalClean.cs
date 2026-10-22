@@ -8,7 +8,8 @@ namespace Haven.Infrastructure;
 /// Keeps the original startup-write witness alive after borrowed diagnostics retire.
 /// This is a recovery-store writer, never permission, actor or presentation authority.
 /// </summary>
-public sealed partial class StartupRecoveryCoordinator : IStartupRecoveryFinalCleanWriterSource
+public sealed partial class StartupRecoveryCoordinator : IStartupRecoveryFinalCleanWriterSource,
+    IStartupRecoveryRetiredStartupFinalCleanWriterSource
 {
     private Task? _originalStartupWrite;
     private StartupState? _originalStartupState;
@@ -24,7 +25,31 @@ public sealed partial class StartupRecoveryCoordinator : IStartupRecoveryFinalCl
     /// Audits while diagnostics are alive and issues a writer for this exact acknowledged run.
     /// The host must prepare only after its actual startup originals finish, before teardown.
     /// </summary>
-    public async Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAsync(CancellationToken cancellationToken)
+    public Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAsync(CancellationToken cancellationToken)
+        => PrepareFinalCleanWriterCoreAsync(cancellationToken);
+
+    public async Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAfterStartupRetirementAsync(
+        Task actualStartupRetirement, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(actualStartupRetirement);
+        Task startupWrite;
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!_lastStoreMutationAcknowledged || !_startupBegan || _originalStartupWrite is not { IsCompletedSuccessfully: true })
+                throw new InvalidOperationException("Interrupted startup clean requires this owner's acknowledged startup write.");
+            startupWrite = _originalStartupWrite;
+        }
+        finally { _gate.Release(); }
+
+        // Do not abandon this issued retirement on caller cancellation. Failed or
+        // canceled producers must never issue a writer for a supposedly clean exit.
+        await AwaitRecoveryOriginalAsync(actualStartupRetirement).ConfigureAwait(false);
+        return await PrepareFinalCleanWriterCoreAsync(cancellationToken, startupWrite).ConfigureAwait(false);
+    }
+
+    private async Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterCoreAsync(
+        CancellationToken cancellationToken, Task? retiredOriginalStartupWrite = null)
     {
         StartupState expected;
         Task startupWrite;
@@ -34,10 +59,13 @@ public sealed partial class StartupRecoveryCoordinator : IStartupRecoveryFinalCl
         {
             if (_finalWriterPreparationAttempted)
                 throw new InvalidOperationException("A final-clean writer was already attempted for this startup original.");
-            if (!_lastStoreMutationAcknowledged || !_startupBegan || !_startupCompleted || _originalStartupWrite is not { IsCompletedSuccessfully: true }
+            if (!_lastStoreMutationAcknowledged || !_startupBegan || _originalStartupWrite is not { IsCompletedSuccessfully: true }
                 || _acknowledgedStateWrite is not { IsCompletedSuccessfully: true }
                 || !ReferenceEquals(_latestStateWrite, _acknowledgedStateWrite)
-                || _acknowledgedState?.CurrentRun is not { StartupCompleted: true, CleanShutdown: false }
+                || _acknowledgedState?.CurrentRun is not { CleanShutdown: false }
+                || _startupCompleted != _acknowledgedState.CurrentRun.StartupCompleted
+                || (retiredOriginalStartupWrite is null && !_startupCompleted)
+                || (retiredOriginalStartupWrite is not null && !ReferenceEquals(_originalStartupWrite, retiredOriginalStartupWrite))
                 || !BelongsToOriginalStartup(_acknowledgedState))
                 throw new InvalidOperationException("Final clean requires the original acknowledged startup and completion writes.");
             _finalWriterPreparationAttempted = true;
@@ -117,7 +145,8 @@ public sealed partial class StartupRecoveryCoordinator : IStartupRecoveryFinalCl
                 cancellationToken.ThrowIfCancellationRequested();
                 var clean = expected with
                 {
-                    CurrentRun = expected.CurrentRun! with { StartupCompleted = true, CleanShutdown = true },
+                    // Deliberate interruption is a clean close, never completed startup.
+                    CurrentRun = expected.CurrentRun! with { CleanShutdown = true },
                     RecentUncleanStarts = Array.Empty<DateTimeOffset>()
                 };
                 await WriteRecoveryStateOwnedAsync(clean, requireExisting: true, cancellationToken).ConfigureAwait(false);

@@ -169,6 +169,17 @@ public interface IStartupRecoveryFinalCleanWriterSource
 }
 
 /// <summary>
+/// Optional native-host capability for a deliberate close before startup finishes.
+/// The host supplies its SAME original successful startup retirement, not a readiness
+/// surrogate. A clean interrupted run must retain StartupCompleted=false.
+/// </summary>
+public interface IStartupRecoveryRetiredStartupFinalCleanWriterSource
+{
+    Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAfterStartupRetirementAsync(
+        Task actualStartupRetirement, CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// Records clean only after the supplied genuine host-owned drain settles successfully.
 /// This port is not an actor, permission, presentation or generic completed-task authority.
 /// </summary>

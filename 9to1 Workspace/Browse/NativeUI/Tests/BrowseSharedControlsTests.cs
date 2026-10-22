@@ -1,7 +1,11 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
 using Haven.Application.Haven;
 using Haven.Browser;
@@ -296,7 +300,12 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(1, gateway.ModelOpens);
             await ClickSharedOpen(window, workspace, notifications);
             Assert.Equal(1, gateway.NotificationOpens);
-            await ClickSharedOpen(window, workspace, profile);
+            // The real HavenProfileButton opens the profile menu; the mounted BrowseProfileAccountButton
+            // routes the genuine profile open through the typed gateway once the menu is open.
+            await Click(window, workspace, profile);
+            Assert.True(IsTrue(workspace, "ProfileMenuOpen"));
+            var profileAccount = FindMounted(window, "BrowseProfileAccountButton");
+            await ClickSharedOpen(window, workspace, profileAccount);
             Assert.Equal(1, gateway.ProfileOpens);
             await Retire(window);
         }
@@ -331,5 +340,141 @@ public sealed partial class BrowseNativeUiTests
         Assert.Contains(original, workspace.OriginalOperations);
         Assert.Same(ordinaryBefore, workspace.OriginalCommand);
         await Task.WhenAll(workspace.OriginalNotifications.ToArray());
+    }
+
+    /// <summary>The profile menu keeps exactly ONE actionable Switch &amp; Manage Users row (no
+    /// duplicate heading) and the real popup opens/closes with neutral truthful current-profile
+    /// copy — never the false unconditional 'Signed-in principal for this session.' claim.</summary>
+    [AvaloniaFact]
+    public async Task Profile_menu_has_one_mounted_switch_manage_users_row_and_popup_open_close_with_neutral_copy()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var gateway = new SharedControlsFakeGateway();
+        var context = new SharedControlsFakeContext(gateway);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: context);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            await Click(window, workspace, Find(window, "HavenProfileButton"));
+            Assert.True(IsTrue(workspace, "ProfileMenuOpen"));
+            var menu = Authored(window, "BrowseProfileMenu");
+            Assert.Single(menu.GetVisualDescendants().OfType<TextBlock>(), t => t.Text == "Switch & Manage Users");
+            var switchRows = menu.GetVisualDescendants().OfType<Button>().Where(b => b.Name == "BrowseSwitchUsersButton").ToArray();
+            Assert.Single(switchRows);
+            Assert.True(switchRows[0].IsEffectivelyVisible);
+            await Click(window, workspace, switchRows[0]);
+            Assert.True(IsTrue(workspace, "ManageUsersOpen"));
+            var overlay = Authored(window, "BrowseManageUsersOverlay");
+            Assert.Contains(overlay.GetVisualDescendants().OfType<TextBlock>(), t => t.Text == "Switch & Manage Users");
+            Assert.Contains(overlay.GetVisualDescendants().OfType<Button>(), b => b.Name == "BrowseManageUsersAccountButton");
+            Assert.Contains(overlay.GetVisualDescendants().OfType<Button>(), b => b.Name == "BrowseCloseManageUsersButton");
+            var hints = overlay.GetVisualDescendants().OfType<TextBlock>()
+                .Where(t => t.Text == "Click to open account and user settings." || t.Text == "The native account owner is unavailable in this session.").ToArray();
+            Assert.NotEmpty(hints);
+            Assert.DoesNotContain(overlay.GetVisualDescendants().OfType<TextBlock>(), t => t.Text == "Signed-in principal for this session.");
+            var account = Assert.Single(overlay.GetVisualDescendants().OfType<Button>(), b => b.Name == "BrowseManageUsersAccountButton");
+            await ClickSharedOpen(window, workspace, account);
+            Assert.Equal(1, gateway.ProfileOpens);
+            var closeUsers = Assert.Single(overlay.GetVisualDescendants().OfType<Button>(), b => b.Name == "BrowseCloseManageUsersButton");
+            await ClickCore(window, workspace, closeUsers);
+            Assert.False(IsTrue(workspace, "ManageUsersOpen"));
+            var closeMenu = FindMounted(window, "BrowseCloseProfileMenuButton");
+            await ClickCore(window, workspace, closeMenu);
+            Assert.False(IsTrue(workspace, "ProfileMenuOpen"));
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    /// <summary>The canonical site-popups switch derives its visible state from the real typed
+    /// WindowManagement permission (never an optimistic bool). Both directions route through the
+    /// mounted ToggleSwitch pointer→TwoWay→Allow/Deny path, and a native page refuses it.</summary>
+    [AvaloniaFact]
+    public async Task BrowseAllowPopupsSwitch_toggles_both_directions_through_typed_permission_state_including_disabled_path()
+    {
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            Assert.True(chrome.State.SelectedTab.Address.IsWeb);
+            await Click(window, workspace, Find(window, "HavenProfileButton"));
+            await Click(window, workspace, Find(window, "BrowseWebToolsHeader"));
+            var toggle = Assert.IsType<ToggleSwitch>(Authored(window, "BrowseAllowPopupsSwitch"));
+            Assert.Same(window, TopLevel.GetTopLevel(toggle));
+            Assert.True(toggle.IsEffectivelyVisible);
+            Assert.True(toggle.IsEnabled);
+            Assert.Equal(false, toggle.IsChecked);
+            Assert.True(workspace.IsActionAvailable("9to1.Browse.AllowPopups") == true);
+            await ClickPopupsSwitch(window, workspace, toggle);
+            Assert.Equal(true, toggle.IsChecked);
+            Assert.True(IsTrue(workspace, "AllowPopups"));
+            var origin = BrowserSitePermissionStore.CanonicalOrigin(chrome.State.SelectedTab.Address.WebUri!);
+            var allowed = Assert.Single(chrome.State.Permissions, permission =>
+                permission.Kind == BrowserSitePermissionKind.WindowManagement && permission.Origin == origin);
+            Assert.Equal(BrowserSitePermissionDecision.Allow, allowed.Decision);
+            Assert.True(workspace.IsActionAvailable("9to1.Browse.DenyPopups") == true);
+            await ClickPopupsSwitch(window, workspace, toggle);
+            Assert.Equal(false, toggle.IsChecked);
+            Assert.False(IsTrue(workspace, "AllowPopups"));
+            var denied = Assert.Single(chrome.State.Permissions, permission =>
+                permission.Kind == BrowserSitePermissionKind.WindowManagement && permission.Origin == origin);
+            Assert.Equal(BrowserSitePermissionDecision.Deny, denied.Decision);
+            await Click(window, workspace, Find(window, "BrowseOpenBookmarksButton"));
+            Assert.Equal(BrowserNativePage.Bookmarks, chrome.State.SelectedTab.NativePage);
+            Assert.False(workspace.IsActionAvailable("9to1.Browse.AllowPopups") == true);
+            if (!IsTrue(workspace, "ProfileMenuOpen"))
+                await Click(window, workspace, Find(window, "HavenProfileButton"));
+            if (!IsTrue(workspace, "ToolsOpen"))
+                await Click(window, workspace, Find(window, "BrowseWebToolsHeader"));
+            Settle(window);
+            Assert.False(toggle.IsEnabled);
+            Assert.Equal(false, toggle.IsChecked);
+            var before = workspace.OriginalCommand;
+            var permissions = chrome.State.Permissions.ToArray();
+            PointerClickPopupsSwitch(window, toggle);
+            await Observe(Loader(window).WhenActionsIdleAsync(), window);
+            Settle(window);
+            Assert.Same(before, workspace.OriginalCommand);
+            Assert.Equal(permissions, chrome.State.Permissions);
+            Assert.Equal(false, toggle.IsChecked);
+            Assert.False(workspace.TrySetValue("AllowPopups", true));
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    private static void PointerClickPopupsSwitch(BrowseNativeWindow window, ToggleSwitch toggle)
+    {
+        Settle(window); toggle.BringIntoView(); Settle(window);
+        Assert.Same(window, TopLevel.GetTopLevel(toggle));
+        Assert.True(toggle.IsEffectivelyVisible);
+        Assert.True(toggle.Bounds.Width > 0 && toggle.Bounds.Height > 0);
+        var point = toggle.TranslatePoint(new Point(toggle.Bounds.Width / 2, toggle.Bounds.Height / 2), window);
+        Assert.NotNull(point);
+        window.MouseMove(point.Value);
+        window.MouseDown(point.Value, MouseButton.Left);
+        window.MouseUp(point.Value, MouseButton.Left);
+    }
+
+    private static async Task ClickPopupsSwitch(BrowseNativeWindow window, BrowseNativeWorkspace workspace, ToggleSwitch toggle)
+    {
+        Assert.True(toggle.IsEnabled);
+        var before = workspace.OriginalCommand;
+        PointerClickPopupsSwitch(window, toggle); // Native OnClick toggles Checked before the TwoWay setter dispatches.
+        await Observe(Loader(window).WhenActionsIdleAsync(), window);
+        Assert.NotNull(workspace.OriginalCommand);
+        Assert.NotSame(before, workspace.OriginalCommand);
+        var original = workspace.OriginalCommand!;
+        await Observe(original, window);
+        Assert.Same(original, workspace.OriginalCommand);
+        await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
+        Settle(window);
     }
 }

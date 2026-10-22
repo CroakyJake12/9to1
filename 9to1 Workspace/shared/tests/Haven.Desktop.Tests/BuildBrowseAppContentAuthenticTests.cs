@@ -82,7 +82,7 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
     {
         public static readonly ReadyReadiness Instance = new();
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken) =>
-            new(new(CuiSceneAvailabilityState.Ready, "FixtureHomeReady", "The authentic fixture Home boundary is ready."));
+            new(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "FixtureHomeReady", "The authentic fixture Home boundary is ready."));
     }
 
     private sealed record BuildLandingState(SpaceRegistry Spaces, SpaceDevelopmentReferenceCatalog Catalog, BuildTestBorrowedResources Borrowed);

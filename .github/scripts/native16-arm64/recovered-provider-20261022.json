@@ -1,0 +1,59 @@
+{
+  "schema": "9to1.reviewed-provider-acquisition/v1",
+  "scope": "DATA_IDENTITY_ONLY; unchanged engine/model assets; no native acceptance",
+  "run_id": 39831198175,
+  "run_head": "4ef62134eac6d4089d122e3804c25da56e93f493",
+  "artifact_id": 12449176804,
+  "artifact_name": "9to1-recovered-b10809-arm64-bookworm-provider",
+  "artifact_zip_bytes": 42159216,
+  "artifact_zip_sha256": "d794536d9b881eea80d163e30a3981ae329c4521d7670b4bd7330d49dc7f0826",
+  "inner_archive_bytes": 5415437,
+  "inner_archive_sha256": "bc1c9578f77b884c136e892e37258f480a9153a6dd38d3d5233f0f6f6f613db8",
+  "upstream_source_archive_sha256": "8d9637a726a8de93e9037b8ea938f463ae6e0bd825177173f3a2be4c52cc6f00",
+  "bundle_spec_sha256": "34c54539260061a1e9de1f2298f5b97a24ec73d21489e80ccd2439235c62c756",
+  "original_failed_application_run": 39698883180,
+  "original_failed_source": "37ba63a92a509013435d61af73cbe17e246167bf",
+  "original_package_sha256": "1dd9ebb78634cc5a7a7e64cb626f6180036900ca6f09d96e3b9c64e5d623c4a5",
+  "assets": [
+    {
+      "path": "licenses/gcc-12-base-copyright.txt",
+      "bytes": 68194,
+      "sha256": "da8191658b3452ce9caf31638ba61dab31a38c619fa39df119812e050f592fd3",
+      "original_install_path": "usr/lib/haven/llama.cpp/licenses/gcc-12-base-copyright.txt"
+    },
+    {
+      "path": "licenses/llama.cpp-MIT.txt",
+      "bytes": 1078,
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "original_install_path": "usr/lib/haven/llama.cpp/licenses/llama.cpp-MIT.txt"
+    },
+    {
+      "path": "bin/llama-server",
+      "bytes": 14234480,
+      "sha256": "edcd91e1a50804fbf2f82245534a5bc60161c7d9a5356c498b07f6157d5ecdf5",
+      "original_install_path": "usr/lib/haven/llama.cpp/llama-server"
+    },
+    {
+      "path": "BUILD-INFO.json",
+      "bytes": 802,
+      "sha256": "04256fbb814b06d46b5de1b5e9eaafd1085e525496c9934b1ff09457e55f46e1",
+      "original_install_path": "usr/lib/haven/llama.cpp/provenance/BUILD-INFO.json"
+    },
+    {
+      "path": "SOURCE-COMMIT",
+      "bytes": 41,
+      "sha256": "48ebfb0a6975e45ea936638d3b2a71e165338b43cde4264b8c7545d1f9bfad2b",
+      "original_install_path": "usr/lib/haven/llama.cpp/provenance/SOURCE-COMMIT"
+    },
+    {
+      "path": "evidence/engine-closure.json",
+      "bytes": 938,
+      "sha256": "2bc79f4804e03f5c71273850ee3af7dc69c611886cef0c5ec1975e13ef791d95",
+      "original_install_path": "usr/lib/haven/llama.cpp/provenance/engine-closure.json"
+    }
+  ],
+  "retention_expires_at": "2026-11-05T18:25:32Z",
+  "review_scope": "Independent actual ZIP, source commit/licences, six original asset pins/modes and SHA256SUMS; runtime NOT RUN",
+  "engine_model_execution": "NOT RUN",
+  "release_ready": false
+}

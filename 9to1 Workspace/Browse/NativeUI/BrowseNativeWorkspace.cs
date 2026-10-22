@@ -128,6 +128,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 BrowseEngineState.Unsupported => selected.Status,
                 _ => selected.IsLoading ? "Loading…" : selected.Status
             },
+            "ShowChromiumFallback" => selected.Address.IsWeb && selected.Engine == BrowseEngineKind.Gecko &&
+                selected.EngineState == BrowseEngineState.Unsupported &&
+                _chrome.QueryEngineCapability(BrowseEngineKind.Chromium),
+            "ChromiumFallbackStatus" => selected.Status,
             "Bookmarks" => _bookmarkRows,
             "History" => _historyRows,
             "Downloads" => _downloadRows,

@@ -1,0 +1,3642 @@
+{
+  "schema": 1,
+  "donors": {
+    "xamlx": {
+      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+      "revision": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52",
+      "licence": "framework/CUI/vendor/Avalonia/external/XamlX/LICENSE",
+      "purpose": "Existing pinned internal compiler donor used through Avalonia.Markup.Xaml.Loader IncludeXamlIlSre.props, not application authoring. Cold builds require its source even when prior donor outputs hid missing inputs.",
+      "files": {
+        "framework/CUI/vendor/Avalonia/external/XamlX/.editorconfig": {
+          "kind": "file",
+          "sha256": "aa2ffb8a1e7a3e3617c6d6b76c31bbf3ee8b7c153ad64794ef671da360e99310",
+          "bytes": 2007,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/.gitignore": {
+          "kind": "file",
+          "sha256": "12e3b86504338f3ae0fbf4b2fe2331367d1d517b7a030b4fe017d9bf353e2afe",
+          "bytes": 342,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/Directory.Build.props": {
+          "kind": "file",
+          "sha256": "edd918d2f890e61aa680922c05be8677c86ea62f0092430dd595f52f9da35087",
+          "bytes": 364,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/Directory.Build.targets": {
+          "kind": "file",
+          "sha256": "02788c100a35fe56ab674abe830e66b77db1888f08eac70bf9bb3b5306dce820",
+          "bytes": 205,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/LICENSE": {
+          "kind": "file",
+          "sha256": "b94c10b1fc90fc0b49328c56605ef1f4af45201f80953e2ceb508def09d00743",
+          "bytes": 1072,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/README.md": {
+          "kind": "file",
+          "sha256": "f7f5f08c9b2a18a31466a0165c2e83dab771f5bd0f0c0dec7d7ce9b3db302285",
+          "bytes": 5137,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/XamlX.sln": {
+          "kind": "file",
+          "sha256": "ab3fc8e25b3b6980b72fd63d86b586ce1359204fbd1dcdec9d7a0ba23f13eb99",
+          "bytes": 7708,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/azure-pipelines.yml": {
+          "kind": "file",
+          "sha256": "dfaa31e854b789b0ae9a9c73bc63905476c7325e21c4e6d49d99c2cee6ff8a9f",
+          "bytes": 2260,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/props/TrimmingEnable.props": {
+          "kind": "file",
+          "sha256": "dec6fe1f213a18268769487cb5e8db42b611c5b7dca9f1e7299ab4d3e23352b5",
+          "bytes": 1872,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/BenchCompiler.cs": {
+          "kind": "file",
+          "sha256": "571e29f5d0a3706d7e7dc09b1e06382dbe6dc6ebedcca2242e5f31e4fa951671",
+          "bytes": 3245,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/Benchmarks.csproj": {
+          "kind": "file",
+          "sha256": "e45fb113afa65fc2f38799207c73da47cb356f1d91dd5b3914997300a03fe647",
+          "bytes": 1240,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/BenchmarksXamlXConfiguration.cs": {
+          "kind": "file",
+          "sha256": "4408588850121abf38829a75352b548de5a7b3f8724b3b29713b86425e8edaa4",
+          "bytes": 976,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/LoadBenchmark.cs": {
+          "kind": "file",
+          "sha256": "276b9811435903f28dc7190ae36ed3fab2da48596c0e8929bfa6fd61397a0760",
+          "bytes": 1674,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/LoadComplexBenchmark.cs": {
+          "kind": "file",
+          "sha256": "387ec57ff50366b2b18027376f957d5ca31ab2e75cec9c4bca27ed1b3314a932",
+          "bytes": 148,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/LoadComplexBenchmark.xml": {
+          "kind": "file",
+          "sha256": "b3a75838999e6453d20169d1c614e5d0257da696e6d7ef30ac95dff036c4ec73",
+          "bytes": 5198,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/LoadSimpleBenchmark.cs": {
+          "kind": "file",
+          "sha256": "16c9f328bae20a8703b5cecd4d3bc805483caecda698f941b63786c700db9ff9",
+          "bytes": 147,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/LoadSimpleBenchmark.xml": {
+          "kind": "file",
+          "sha256": "e08afec874841e9c0f2c6eea1b68ba835b2a2b94ab73a1721197bbd05fc7fe43",
+          "bytes": 149,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/Program.cs": {
+          "kind": "file",
+          "sha256": "45e00c6427833a47c43b504524ea88121511047efe894c1078c32872fa7351eb",
+          "bytes": 1674,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/Benchmarks/TestObject.cs": {
+          "kind": "file",
+          "sha256": "0aad0a3a71b8a677942e1a8c5c3ee7fd7a8b1107be3a8921dc36b03b16e7cec5",
+          "bytes": 794,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/BenchmarksCompiler/BenchmarksCompiler.csproj": {
+          "kind": "file",
+          "sha256": "d2246625f846ef8a23acf8b41bd14bbf83320777820c70fd6329b407f872d4b3",
+          "bytes": 363,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/BenchmarksCompiler/Program.cs": {
+          "kind": "file",
+          "sha256": "3f8e84bcda405bcfcd1471bf2316c31ee54c78eb659b8ba3dbad909e98dcbe87",
+          "bytes": 3526,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilAssembly.cs": {
+          "kind": "file",
+          "sha256": "82eb10cf65c621d95c0ea0b8c7ce0db611ebb020a63d614a5fe459b2ee7bff35",
+          "bytes": 2550,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilCustomAttribute.cs": {
+          "kind": "file",
+          "sha256": "804b70b15c34a4de498c6e3b5f3b3db589c0017dbb5bc35270c49b9bd41af81b",
+          "bytes": 2361,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilEmitter.cs": {
+          "kind": "file",
+          "sha256": "85df2511a37bcf67e04a40a1c850c9ab7924abf908a090715851eab28ba8d4da",
+          "bytes": 13807,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilEvent.cs": {
+          "kind": "file",
+          "sha256": "6e1d0bbb225baf89971ea75ee0fd2ebf93746d890b2bb24d6396db8be3be93b3",
+          "bytes": 1569,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilField.cs": {
+          "kind": "file",
+          "sha256": "aebb6a8bf23d7631c54fd40cbc18ec88242046be33be8429be19bdb06e21cabe",
+          "bytes": 2444,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilFunctionPointer.cs": {
+          "kind": "file",
+          "sha256": "42a9230dfb39a5933a70eabc25f12b7fb281c32042b46cfe5181a42aa2263771",
+          "bytes": 2840,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilMetadataImporterProvider.cs": {
+          "kind": "file",
+          "sha256": "c54a33c2f3a85352e0ec76f1f21f2d4048fd5c9709819fd0979908730afbe37b",
+          "bytes": 1034,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilMethod.cs": {
+          "kind": "file",
+          "sha256": "cf59aa0e53f964bb736064c3e959c29dfff027a44587dd7c087c87b4a83a1636",
+          "bytes": 6953,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilProperty.cs": {
+          "kind": "file",
+          "sha256": "503c92600f7208dbf396834dbd501a4c1711ad3b791eaa9cec9736543ef68476",
+          "bytes": 2649,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilReflectionImporterProvider.cs": {
+          "kind": "file",
+          "sha256": "7b81aa832146cc1426d407069c8678c1f1d0f043de40321b50fbb170b7162c89",
+          "bytes": 1534,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilType.cs": {
+          "kind": "file",
+          "sha256": "518957c7e1d117d1ea25013ec598809e37a1217d058eb10d75e924cc2bf801a9",
+          "bytes": 8660,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilTypeBuilder.cs": {
+          "kind": "file",
+          "sha256": "1fd26f468d01f8c26f70865d701b8626d6416c34b5b9a8402da1e22b8503bf7a",
+          "bytes": 9547,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilTypeCache.cs": {
+          "kind": "file",
+          "sha256": "f1fac53fb40e95c5b72c4cf5ce73efb14b54fe617df8a634b514bcc9b7deae5a",
+          "bytes": 3114,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CecilTypeSystem.cs": {
+          "kind": "file",
+          "sha256": "5f7af7afd1c3bcb7f3fc11b3c0105b0599a6a61ae6107d74dea29d089d60dee8",
+          "bytes": 7516,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Comparers/CecilTypeComparisonMode.cs": {
+          "kind": "file",
+          "sha256": "13819061bd5c9493c7f22393d4e9b10712a83fd736f6a622f917095f250646de",
+          "bytes": 292,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Comparers/MethodReferenceEqualityComparer.cs": {
+          "kind": "file",
+          "sha256": "26fc75fd16085123c570d72435b890ef7a1ffb81b52366a7ffc042458e256e57",
+          "bytes": 5285,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Comparers/TypeReferenceEqualityComparer.cs": {
+          "kind": "file",
+          "sha256": "373b5776e581534609f3b419ac53b79ffe8c42f8ad33b19a4c09d9d7ea1fae9b",
+          "bytes": 10270,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/CustomMetadataResolver.cs": {
+          "kind": "file",
+          "sha256": "30b0fcaad64d60e86485030934b7f82949cea0a551c557baadfbedca08ea0692",
+          "bytes": 637,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Resolvers/CecilTypeResolveContext.cs": {
+          "kind": "file",
+          "sha256": "3c5a19fe1059dd8e6e8a7b045528268ec5988e1935cbf0caaa9da7c42a0a90c6",
+          "bytes": 3354,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Resolvers/GenericParameterResolver.cs": {
+          "kind": "file",
+          "sha256": "e1ec6a7a34573e610a09788bc3ce43a226fa76f22412c99583272e60db251cc6",
+          "bytes": 7867,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/Resolvers/GenericTypeResolver.cs": {
+          "kind": "file",
+          "sha256": "36cf362be904719c6e4209ef724dca4312036145acbdb6deaf187fb9e41647a5",
+          "bytes": 7449,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/UnresolvedCecilType.cs": {
+          "kind": "file",
+          "sha256": "cf09d3f96c00071e34387f3a24c99bf9517662123753eae3b941c7be66ba00ae",
+          "bytes": 403,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.IL.Cecil/XamlX.IL.Cecil.csproj": {
+          "kind": "file",
+          "sha256": "8bb879645ff3cb910d4f5ed7e011ef68b73f5248b07e13d2267d67fa92159df0",
+          "bytes": 504,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.Parser.GuiLabs/GuiLabsXamlParser.cs": {
+          "kind": "file",
+          "sha256": "d7cfab7414b2608a1662b9d28a322a8cd8584f0918308a3f4c717791e94b22e7",
+          "bytes": 21415,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.Parser.GuiLabs/TextPosition.cs": {
+          "kind": "file",
+          "sha256": "d5ea8e1d3b8e788fee9eb9846603310162598d1622d251439bc400763424c957",
+          "bytes": 1439,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.Parser.GuiLabs/XamlX.Parser.GuiLabs.csproj": {
+          "kind": "file",
+          "sha256": "f993d574be5380923f64def466a504ee6f00a393fd7df55fbb78c3b1a79d70d6",
+          "bytes": 443,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.Parser.GuiLabs/XmlNamespaces.cs": {
+          "kind": "file",
+          "sha256": "fa0981f3f9ff5388242bf85c2ea70c577c07dde1743ec63d67833c447b6f30c7",
+          "bytes": 2226,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.Runtime/Interfaces.cs": {
+          "kind": "file",
+          "sha256": "4a6720c3ad65e6998435e31a338f520b159060973ac29f9314ecb485b466e065",
+          "bytes": 510,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX.Runtime/XamlX.Runtime.csproj": {
+          "kind": "file",
+          "sha256": "7739d14d1f83c01ce984f742acbde3d259a6dd13776e1a345265be87394a5dfb",
+          "bytes": 320,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Clr.cs": {
+          "kind": "file",
+          "sha256": "7adfae6ddffa271ddb59ff412b39609cb8a9532df66e747d4371175ea5a5d526",
+          "bytes": 34054,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Common.cs": {
+          "kind": "file",
+          "sha256": "fe33647c952a7568485e6a83d999957195c6149014728e5fabc050f465024918",
+          "bytes": 4659,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/CompilerHelpers.cs": {
+          "kind": "file",
+          "sha256": "3482a1d44c062cf580bd003d3551e172463534b6668ef3f370628953bdfbccde",
+          "bytes": 7904,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Intrinsics.cs": {
+          "kind": "file",
+          "sha256": "1c0415f9fc90f345d23e2e7dce9b642858da894a4ea578a6c3f17e013d6f64d9",
+          "bytes": 10369,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Xaml.cs": {
+          "kind": "file",
+          "sha256": "63ce98f1f212fe44cc55ea42f4aef54eb31d357085ad5c8128b940819f32d981",
+          "bytes": 5294,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/XamlDocument.cs": {
+          "kind": "file",
+          "sha256": "eb52ba1a66cf69cf9857a8030a8ca90cfd1f12e0c71a4ee3af52b08a53c8403a",
+          "bytes": 527,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Ast/Xml.cs": {
+          "kind": "file",
+          "sha256": "5f936a5b0a94711861b02b5bdaa111c84b6b1934948caf5edb00bf1fa8ae910c",
+          "bytes": 1276,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compatibility/IsExternalInit.cs": {
+          "kind": "file",
+          "sha256": "7c9af5d5daed29f9e19b8bcbf729fca09e36a4665e6b01bd26380903c78acd2c",
+          "bytes": 447,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compatibility/NullableAttributes.cs": {
+          "kind": "file",
+          "sha256": "d0988f63105d87a87473657d0a9d7fcd206faae079226f7f407b7b72f2b6b18d",
+          "bytes": 8211,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compatibility/StringCompatibilityExtensions.cs": {
+          "kind": "file",
+          "sha256": "b1fdbcdbdb2a61c768b18d5b6034a2e219027248e6fe70b447032149b484a27e",
+          "bytes": 306,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compatibility/TrimmingAttributes.cs": {
+          "kind": "file",
+          "sha256": "9b455a8b59a7d6332d90b715668a41f83d86d61b61281abdd91ef40257487ab9",
+          "bytes": 4301,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compiler/XamlCompiler.cs": {
+          "kind": "file",
+          "sha256": "df207a0a9829c698dc6d855a9b6bdf965d1e900a79840ab72d9b97bcf05bad30",
+          "bytes": 3540,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Compiler/XamlImperativeCompiler.cs": {
+          "kind": "file",
+          "sha256": "9796557a3f4340d00073541a441ec0bf72c3dee88dff7393e1f9b6633b516509",
+          "bytes": 5341,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/ContextDiagnosticExtensions.cs": {
+          "kind": "file",
+          "sha256": "a84b453092d9a3776b71755ed7e4665db359a68dbcafde9931c37ea9856dd79a",
+          "bytes": 3217,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/TrimmingMessages.cs": {
+          "kind": "file",
+          "sha256": "f9a8a70615deb2ad559493064ed2bc079036a94b58aad630cd169edad3955596",
+          "bytes": 955,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/XamlDiagnostic.cs": {
+          "kind": "file",
+          "sha256": "9e557a28a49d5d0247bcbd1fe3cb4ebc976c96b57e4fcfddc6764d0b75b788ec",
+          "bytes": 760,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/XamlDiagnosticSeverity.cs": {
+          "kind": "file",
+          "sha256": "b6e1c03d4473f719a277bf9d6d7a912e20234fa21b715f4ae6be470ce4d885ae",
+          "bytes": 139,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Diagnostics/XamlXWellKnownDiagnosticCodes.cs": {
+          "kind": "file",
+          "sha256": "360eef4e6a048bd313f23eb9a4592f2b6d770fc5bea1cdb54569a53aa102c8cf",
+          "bytes": 110,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlEmitContext.cs": {
+          "kind": "file",
+          "sha256": "7c644c4658066bf18c759a478db59a5c01c73471dd2625ef5083f329801f7f9e",
+          "bytes": 10179,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlEmitContextWithLocals.cs": {
+          "kind": "file",
+          "sha256": "d97629bc72a479e2983d84b3ae8e8b6b20b9312f77fc0497b4d9727107921779",
+          "bytes": 5625,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlLanguageEmitMappings.cs": {
+          "kind": "file",
+          "sha256": "c6d6d856a166ecca17f168041dac1a4b296c695fc9e8ef901be074d53ab175ea",
+          "bytes": 1018,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Emit/XamlRuntimeContext.cs": {
+          "kind": "file",
+          "sha256": "bae06aa50eccf83d7ab04820818aa70d1d2a306a0f1a51abda5d1e57c08daa03",
+          "bytes": 3040,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Exceptions.cs": {
+          "kind": "file",
+          "sha256": "1597b1316672c3b9d05be360a3af3164643c1faa8c49248ad34b2bb16bcc35d4",
+          "bytes": 1447,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Extensions/TypeExtensions.cs": {
+          "kind": "file",
+          "sha256": "057a3c86b21c53f9cfa625d303431737ca55b82bcb9d26eb3b961777a3917151",
+          "bytes": 669,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/CheckingIlEmitter.cs": {
+          "kind": "file",
+          "sha256": "f176657773f1acfedf2db029b823b94c7fd2c5294781381be761eb463ad8f3ad",
+          "bytes": 14557,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/ManipulationGroupEmitter.cs": {
+          "kind": "file",
+          "sha256": "366fc5f797b6d50cba90d668f1184dd263fe1b5afcc532b03660924922a9dded",
+          "bytes": 942,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/MarkupExtensionEmitter.cs": {
+          "kind": "file",
+          "sha256": "5bd405a2f285cb3b21cd23b0891d9c68a09c8b73f21a087d3c04653c48c08449",
+          "bytes": 2046,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/MethodCallEmitter.cs": {
+          "kind": "file",
+          "sha256": "e8c90b29a44dc2fe911cc6256e9e6c05416a02b07f69cdc1aa95148bdd465613",
+          "bytes": 1486,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/NewObjectEmitter.cs": {
+          "kind": "file",
+          "sha256": "6edfa37f578168e037d2ef19e4e29dadd60a5f2743f70341a620ecdf79471599",
+          "bytes": 874,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/ObjectInitializationNodeEmitter.cs": {
+          "kind": "file",
+          "sha256": "fa847851453a544caf2a09a017ac78f5b98bf2c10c1599628b9423e9a962e7b1",
+          "bytes": 4048,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/PropertyAssignmentEmitter.cs": {
+          "kind": "file",
+          "sha256": "347a3c5b34b147c8242379a459d442f449fa230d97dc1a57b7a09207173c0042",
+          "bytes": 13121,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/PropertyValueManipulationEmitter.cs": {
+          "kind": "file",
+          "sha256": "295d1bd1516cc826d186c56d99df0dc9672d4f68d732eacf6aa6706cef219598",
+          "bytes": 810,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/TextNodeEmitter.cs": {
+          "kind": "file",
+          "sha256": "c3e8bb172972271a29f8a77902d9504b1c878a4cbd35cb88942520c0ecf069ce",
+          "bytes": 858,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/ValueWithManipulationsEmitter.cs": {
+          "kind": "file",
+          "sha256": "4396874f7ce1be4a41458285c36e6e1e876fb7b0f7a39f5be04a82631c8b00eb",
+          "bytes": 935,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/Emitters/XamlDynamicSetterContainerProvider.cs": {
+          "kind": "file",
+          "sha256": "dc3824f9fb8c93a75c4f23296ac7a705bb41260993be1f813df3c143f90f0846",
+          "bytes": 3153,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/ILEmitContext.cs": {
+          "kind": "file",
+          "sha256": "d1bd2ff4d1e3552f5ed6ac7a668017c1d8db6ee73b55a9a8e482850205ac404e",
+          "bytes": 4397,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/ILEmitHelpers.cs": {
+          "kind": "file",
+          "sha256": "6e65cd39edb830f7bb1168119a77b429160fe9b2c7d2b68ee4479b0267f124b6",
+          "bytes": 5420,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/IXamlILEmitter.cs": {
+          "kind": "file",
+          "sha256": "809e78c76d7870dbb5f87ed97beab252cd5639d57de484a20d62f4b9bc0c8350",
+          "bytes": 1267,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/IXamlILLocal.cs": {
+          "kind": "file",
+          "sha256": "535a5c3bf20cd1974f6bf5511fe897f9a05ebf0a33791a85f37823153a817a7c",
+          "bytes": 168,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/NamespaceInfoProvider.cs": {
+          "kind": "file",
+          "sha256": "d0d17717d7038da8a22739983349c6ed4c275673229a9640c07c69ec57f05b5e",
+          "bytes": 7619,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/RecordingIlEmitter.cs": {
+          "kind": "file",
+          "sha256": "4042c60998d58327078429bfb7b46d24ef9963bae33fc201f6ee27e6ccf02862",
+          "bytes": 5878,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/RuntimeContext.cs": {
+          "kind": "file",
+          "sha256": "9d653ebe05136ccc3ad2eb74a652c46f80ad2faf08a48af32e44fa12c5e5f3fb",
+          "bytes": 34551,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/SreTypeSystem.cs": {
+          "kind": "file",
+          "sha256": "9a16c7c401986452b3ce856c5c630de5d7b927d6dc26406bc8b4f6366a1c7cde",
+          "bytes": 38932,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/XamlILEmitterExtensions.cs": {
+          "kind": "file",
+          "sha256": "9446a39340fefb29d64bbef847bd70afb2b26c564803fcaad721e66bcac979ad",
+          "bytes": 11849,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/IL/XamlIlCompiler.cs": {
+          "kind": "file",
+          "sha256": "8a0840b85e99afc0a9ed91f3f8aad666ffadab6ddee556864c30dfc9a1a3b444",
+          "bytes": 7939,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/CommaSeparatedParenthesesTreeParser.cs": {
+          "kind": "file",
+          "sha256": "f78b0818c2af357eff0d512e943f916fc4067251f7fef3f13392c0d5849bd41d",
+          "bytes": 2050,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/CompatibleXmlReader.cs": {
+          "kind": "file",
+          "sha256": "b542a32c1899490b579e37644389a6a6b0d59911d9f7af0408ee4ec150f15706",
+          "bytes": 7542,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/KnownStrings.cs": {
+          "kind": "file",
+          "sha256": "623fe214f8660bd650af8f3bbe835ac8ab54f3a84de814cf6587326efb1f1d1d",
+          "bytes": 3147,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/MeScanner.Shims.cs": {
+          "kind": "file",
+          "sha256": "97e69048beb6d8962e046b78a31d5dbba9c47d5281d6881612782cd30e1a5ad2",
+          "bytes": 3874,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/MeScanner.cs": {
+          "kind": "file",
+          "sha256": "a7f09c0fc7a160de6c269603e006a7579eb19c300d9630e56d2aef18eb8503eb",
+          "bytes": 22917,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/SystemXamlMarkupExtensionParser/SystemXamlMarkupExtensionParser.cs": {
+          "kind": "file",
+          "sha256": "8068915c294795c0b34d4d0335f99d835fc112b8805e838e015af0e8352d00fd",
+          "bytes": 3626,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Parsers/XDocumentXamlParser.cs": {
+          "kind": "file",
+          "sha256": "65dbf9d81d53f92c0c53f0bc8711a900783234e9ce07679709b7db2647698121",
+          "bytes": 14705,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/AstTransformationContext.cs": {
+          "kind": "file",
+          "sha256": "f695ba49c4532bc7253ecdb5014bb8c91b220e0f763c406760b0e1525c00052b",
+          "bytes": 4945,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/IXamlAstTransformer.cs": {
+          "kind": "file",
+          "sha256": "d13cc183fd00b2d376888f6ffee68690adeb74bf82a554b95590de4cf8fa6660",
+          "bytes": 243,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/IXamlIdentifierGenerator.cs": {
+          "kind": "file",
+          "sha256": "c77b6a8f2344dcdc802577541757e0c124f2689f5403440ea0f81e7a97717e3a",
+          "bytes": 397,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/NamespaceInfoHelper.cs": {
+          "kind": "file",
+          "sha256": "6299b3feead9c4e38632963fc2222ca8aa446b889c3fb2dd4b986553f22bd621",
+          "bytes": 2339,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/TransformerConfiguration.cs": {
+          "kind": "file",
+          "sha256": "1cc6c157587f3bc11b53d2e1eed0b42d1e197036a3aed4772e3f30f31f27cb83",
+          "bytes": 10929,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ApplyWhitespaceNormalization.cs": {
+          "kind": "file",
+          "sha256": "8f2b2c7c79304ee56ec01a2c3d48c6da22234f049b6e084e1c27ad72d1e77331",
+          "bytes": 2657,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ConstructableObjectTransformer.cs": {
+          "kind": "file",
+          "sha256": "34d300037a5ebb576e6fb4093680ecc3d5800afbec791d1ffee70e6962edfe4d",
+          "bytes": 3331,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ContentConvertTransformer.cs": {
+          "kind": "file",
+          "sha256": "cac2f47fc8651e182915ed561da070551dca4f768c2e5d3bfe4d690c75ee6cec",
+          "bytes": 1538,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ConvertPropertyValuesToAssignmentsTransformer.cs": {
+          "kind": "file",
+          "sha256": "ea37a10d517e033fe7e1c8ea82bdb58788114d8b78fc3a32083277c41a73efba",
+          "bytes": 10549,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/DeferredContentTransformer.cs": {
+          "kind": "file",
+          "sha256": "a9a09a3cafb85b740451864f9ac4f42c6ae05af45708ac180898770434d48fce",
+          "bytes": 2725,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/FlattenAstTransformer.cs": {
+          "kind": "file",
+          "sha256": "b08a42c5e0af472a98f45ab2de6800df002cbb45553a306577d4d2ec4ea90c16",
+          "bytes": 429,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/KnownDirectivesTransformer.cs": {
+          "kind": "file",
+          "sha256": "b983620763f62de0c6ea6eafea715a217e40a040524fb68ef5c178e0c345aabc",
+          "bytes": 1215,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/MarkupExtensionTransformer.cs": {
+          "kind": "file",
+          "sha256": "30e1359f1e687843d8394560e8558a55b0adfa26b6b41367fafc1e7dcdb56fb2",
+          "bytes": 661,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/NewObjectTransformer.cs": {
+          "kind": "file",
+          "sha256": "ae39526dffdbd7274146a445ff7b67229656f02c2cbd3224d816c83cf8e0b82d",
+          "bytes": 960,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ObsoleteWarningsTransformer.cs": {
+          "kind": "file",
+          "sha256": "110abd11c166c31891af857af1c41e74fab2846a4515eda3086bfb68555c4032",
+          "bytes": 4553,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/PropertyReferenceResolver.cs": {
+          "kind": "file",
+          "sha256": "419220cd262f863c4ec270be4ecd0415797c47c7719f39c1d316feaeb2d7063b",
+          "bytes": 3965,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/RemoveWhitespaceBetweenPropertyValuesTransformer.cs": {
+          "kind": "file",
+          "sha256": "d97f660a474878717526ea0dc64fbe42d00eea152f4ca536b69947d56aba6c1a",
+          "bytes": 1326,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ResolveContentPropertyTransformer.cs": {
+          "kind": "file",
+          "sha256": "bade7fc4023db89b3aa84974c1cbf7145432fea850735d11c77aba36c9bbec58",
+          "bytes": 3643,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/ResolvePropertyValueAddersTransformer.cs": {
+          "kind": "file",
+          "sha256": "bd596fef78f44c7752de26e06e887235af0f8f01956a668c8cad76842f86b606",
+          "bytes": 3647,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/StaticIntrinsicsPostProcessTransformer.cs": {
+          "kind": "file",
+          "sha256": "3ea820900d5240c78cdc0bc2ed6b6b5e309fd7828560f794ffa38140839ac079",
+          "bytes": 551,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/TextNodeMerger.cs": {
+          "kind": "file",
+          "sha256": "0eb5178e203e28b30014be3e0894f752aa928af1cf8d6e39eeb08ea669eb5e62",
+          "bytes": 1727,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/TopDownInitializationTransformer.cs": {
+          "kind": "file",
+          "sha256": "ce218d327dcd2b6983fbd8bfa2c8e5c057e91184070bde8990dbcc2a99208711",
+          "bytes": 3691,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/TypeReferenceResolver.cs": {
+          "kind": "file",
+          "sha256": "fa3dec7480e5596512e3006eddf7d2a1ebd098d72a811e54795f1e4d1ef61927",
+          "bytes": 6047,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/XArgumentsTransformer.cs": {
+          "kind": "file",
+          "sha256": "0d74f5b57e24e5941a592b0b3e4b3c901ac65e313728811df0fd06738f42ae45",
+          "bytes": 1333,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/Transformers/XamlIntrinsicsTransformer.cs": {
+          "kind": "file",
+          "sha256": "c8d7bfde8c3138891f74d2d702c52913755c7bd3cdc1f90dc5d0b5bbdb1434db",
+          "bytes": 4480,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/WhitespaceNormalization.cs": {
+          "kind": "file",
+          "sha256": "77b45c5c6cd5fcc7ba0b25e8aab2b22344700009d23ec27243e8870940cb7343",
+          "bytes": 5336,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlContextBase.cs": {
+          "kind": "file",
+          "sha256": "c8090f18429f201e9fe33d8df5e10dc8d575fe207e4a151b60d9b379979c6075",
+          "bytes": 1431,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlDiagnosticsHandler.cs": {
+          "kind": "file",
+          "sha256": "62140bd4eadf45df00e3c48a2f0105908e809816c37fccc6f75538cf7209055d",
+          "bytes": 662,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlLanguageTypeMappings.cs": {
+          "kind": "file",
+          "sha256": "8e530084e42b74419153bd0581952534b29a5dd85d6e8815e325848dc70dda7e",
+          "bytes": 3788,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlTransformHelpers.cs": {
+          "kind": "file",
+          "sha256": "a798c6eaab46c6dc889f085fefe7a58f63d99d23c6f8ff9623ffbc407e7479f2",
+          "bytes": 16014,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/Transform/XamlXmlnsMappings.cs": {
+          "kind": "file",
+          "sha256": "e1137b0ffb6ab1ba1452fd86dbe735ad3630be04252b3057e3068e8899badde1",
+          "bytes": 1577,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/TypeSystem/TypeSystem.cs": {
+          "kind": "file",
+          "sha256": "2f2799381d66cd3f514199d7bfca5387a7289056887b60b28a487f8f6b340a3f",
+          "bytes": 21229,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/TypeSystem/TypeSystemHelpers.cs": {
+          "kind": "file",
+          "sha256": "2989f1237f0bc162b7e31f7837cb17f9e38261e257eb38098e56cc251869ac04",
+          "bytes": 6229,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/TypeSystem/XamlLocalsPool.cs": {
+          "kind": "file",
+          "sha256": "9114add77d8898f5912a9166311b72f8548fb01f682624f81c30c68fe0bc718a",
+          "bytes": 1743,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/XamlNamespaces.cs": {
+          "kind": "file",
+          "sha256": "6c68d498e3fa16211aa3da300a96a289afe8fafa02c5d9a57cd6449f7f1d24ea",
+          "bytes": 276,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/XamlX.csproj": {
+          "kind": "file",
+          "sha256": "792c06a061da0908f4eded118739eda9cfe08f684e9c9e2ad111430232f65dc3",
+          "bytes": 1047,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/CecilNetstandardTests/CecilNetstandardTests.csproj": {
+          "kind": "file",
+          "sha256": "7073119fbe4ef27f0b0d400af36c830a2b441995d497cee716fb64d65c270561",
+          "bytes": 726,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/CecilTests/CecilHelpersTest.cs": {
+          "kind": "file",
+          "sha256": "ce89bedbbd67c17bb0e4207262422c4cbeda767113853870504381eae0ea17f9",
+          "bytes": 4302,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/CecilTests/CecilTests.cs": {
+          "kind": "file",
+          "sha256": "46f594b9c15ed46e6755568435de133f10e72f2d3670d959137899340d4f3fb3",
+          "bytes": 2892,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/CecilTests/CecilTests.csproj": {
+          "kind": "file",
+          "sha256": "31f237dfc9f961ca9c5d7c08ccf58e032fd0eb07f46323fd38cbc1467258669a",
+          "bytes": 651,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/CecilTests/CompilerTestBase.Cecil.cs": {
+          "kind": "file",
+          "sha256": "f7878b5293f7a449bf52d6b7d9dad2d20acdf1ecf5d4e388e4550506ce4dc4ac",
+          "bytes": 2964,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/GuilabsParserTests/GuilabsParserTests.csproj": {
+          "kind": "file",
+          "sha256": "dc3b8f383cf4ce7b41270cb48eca71d397546b30e2e66eb98433d8be8bb3a71f",
+          "bytes": 516,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TestClasses/Class1.cs": {
+          "kind": "file",
+          "sha256": "dedf1308068fe0b101baccade9c79ed31c8f86cf8d57d6c980df1d1f47d5b9ef",
+          "bytes": 365,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TestClasses/TestClasses.csproj": {
+          "kind": "file",
+          "sha256": "f7adc63684573be2653ded6a2396225561d3cf5c716834044db716d7aaedbfd6",
+          "bytes": 150,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/Tests.Common.props": {
+          "kind": "file",
+          "sha256": "7ab89bcff6044ac96bc3c7a265702fc5cdc2954d629de8f90d3d4793c513e635",
+          "bytes": 1222,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/BaseTest.Generics.cs": {
+          "kind": "file",
+          "sha256": "7968870a0fe00b465f0e72193ecba6888163d3a2c578afe6be45b463f8941325",
+          "bytes": 6556,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/BaseTest.Nested_Types.cs": {
+          "kind": "file",
+          "sha256": "e2a6350f65a0c1525a25b27d23ecc4bae7f7bc3a7e41f8067b7b284668af91a2",
+          "bytes": 1850,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/BaseTest.cs": {
+          "kind": "file",
+          "sha256": "940c018e3b430ff34011485a36ca2a16f4e4e19ddc8564948c2a8c55cd5cdbad",
+          "bytes": 3318,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/CecilTest.cs": {
+          "kind": "file",
+          "sha256": "f1f3d82fd6a1251348b9d2baf43f7d6066b2761e57b91e9e13924c5b1f39bc12",
+          "bytes": 721,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/Generics/ComplexGenericType.cs": {
+          "kind": "file",
+          "sha256": "137fcedc32ac82ac7e96f953df441c001e69fb2fd5487550e6433cdfb0a658b7",
+          "bytes": 161,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/Generics/GenericBaseType{T}.cs": {
+          "kind": "file",
+          "sha256": "91bc0b9261687f39238e0e0b76ac91bcd163e6be9f3b422a5d2bac186041440c",
+          "bytes": 82,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/Generics/GenericType.cs": {
+          "kind": "file",
+          "sha256": "44776d30c5318bfa5f185b9c2e10116950fe588e26f2eba87a5fae51fe0ff221",
+          "bytes": 213,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/Generics/IGenericInterface{T}.cs": {
+          "kind": "file",
+          "sha256": "fe7d688aca73c59558c741bd3fb9163d0ec645ff4a5fe0ac960f8df2238a3f1d",
+          "bytes": 81,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/Generics/TestType.cs": {
+          "kind": "file",
+          "sha256": "08463e65aeb0144f47a2dd44315aa51708e3b6e3740b481f582ef4cbd85d7adb",
+          "bytes": 323,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/NestedTyeps/InternaNestedTypeContainer.cs": {
+          "kind": "file",
+          "sha256": "52d29aef9278cb51df70a48c15dac466910acc72d67218d7fea3992275f02836",
+          "bytes": 403,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/NestedTyeps/PrivateNestedTypeContainer.cs": {
+          "kind": "file",
+          "sha256": "3069a8e11fad9ec055ce6ad447d1dcd759e922ee34c935af4b534fb3a06807a2",
+          "bytes": 160,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/Models/NestedTyeps/PublicNestedTypeContainer.cs": {
+          "kind": "file",
+          "sha256": "523a799e0b7940119f78770b1e57ba599dd68ef9d8b9f091154f06a83f3146c3",
+          "bytes": 407,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/SreTest.cs": {
+          "kind": "file",
+          "sha256": "851d1be7f580eb4ff8c7285c97eafef659cc673c4f657a0cbdc95d7a10918958",
+          "bytes": 334,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/TypeSystemTest/TypeSystemTest.csproj": {
+          "kind": "file",
+          "sha256": "bd726595108e60471ba3c1559135c73d14746ab905f77eaa44b1d8ef28dcd3d3",
+          "bytes": 349,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/BasicCompilerTests.cs": {
+          "kind": "file",
+          "sha256": "5f85dd5d5a718fd87c7913e53e563eff429cf2a639b24f9f3aac50d684e1c5a2",
+          "bytes": 4599,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/CompilerTestBase.Sre.cs": {
+          "kind": "file",
+          "sha256": "e28f1dc28f6832f32d6bd9780f702f6d4035d7b2ae25543dd82ef3539072ae3d",
+          "bytes": 2108,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/CompilerTestBase.cs": {
+          "kind": "file",
+          "sha256": "27e07f00614369381b321e27135ab04daab1a9bb2d21fe4f1442356806911868",
+          "bytes": 8681,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/ContentAttributeTests.cs": {
+          "kind": "file",
+          "sha256": "74c7a183422db652645685cc007c5ecbe226d7252d612f802cb16a22891ae7f9",
+          "bytes": 1851,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/ConvertersTests.cs": {
+          "kind": "file",
+          "sha256": "917a794f15112153be66f584f80dda6ec4501fd29ac9724367f318fb004e22cb",
+          "bytes": 7588,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/DebugHatch.cs": {
+          "kind": "file",
+          "sha256": "65d2de999d07f4bdc98002d98a8e109c409b50c4aa4d34390ad5609c7133be7c",
+          "bytes": 143,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/DeferredContentTests.cs": {
+          "kind": "file",
+          "sha256": "d47d68c7f012e9a8e82bd12c06236257524dda1696ecfbaee197e4a6a4d024fc",
+          "bytes": 5831,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/DictionaryTests.cs": {
+          "kind": "file",
+          "sha256": "ac29f913b18333baa34f9946569ff014bcf1c107f584749003ecec6411b42190",
+          "bytes": 1663,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/DynamicSettersTests.cs": {
+          "kind": "file",
+          "sha256": "a49605b740c9f6939b92e9d52e84e04a66c2e50d63a10acae4f68e7c1961e479",
+          "bytes": 21909,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/GenericTypeWithPropertyElement.cs": {
+          "kind": "file",
+          "sha256": "a2cb4d67f21cbd4b84c3c5a1fa3485b7ad4a5c39e88bd0c793f21ab963169205",
+          "bytes": 1396,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/Helpers.cs": {
+          "kind": "file",
+          "sha256": "6d52c108457445e810c822a761d4aaae3e0d96397614f32c944efebff4da5e2e",
+          "bytes": 3118,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/InitializationTests.cs": {
+          "kind": "file",
+          "sha256": "14135814374f263ceeba5f4fb60ba04e17a7ed37433bf3e2fe0b5889ffb9bf8f",
+          "bytes": 4614,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/IntrinsicsTests.cs": {
+          "kind": "file",
+          "sha256": "c6f7e494913c048f940c70bf79b3e54ea615f562b670feacfbc86279d1fa9179",
+          "bytes": 7892,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/ListTests.cs": {
+          "kind": "file",
+          "sha256": "0def6b2d74f3921bea6a0a384d9a91590e94eea848658cc2b480d9ff17d43a9f",
+          "bytes": 787,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/MarkupExtensionTests.cs": {
+          "kind": "file",
+          "sha256": "1692a5c0a3d45b37a680f17fd613a163e96807e49ca9287c9aedab4feced5468",
+          "bytes": 12007,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/ParserTests.cs": {
+          "kind": "file",
+          "sha256": "a9492a3057ae3467aa841ecc759e58132e2a4266685f176efda6b74c0eae7707",
+          "bytes": 13959,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/ServiceProviderTests.cs": {
+          "kind": "file",
+          "sha256": "7ca0292e9ac68531b455fba34a6c0eb66d774b4545f7bcadf54a6d30288fd765",
+          "bytes": 13703,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/SpecialPropertiesTests.cs": {
+          "kind": "file",
+          "sha256": "b81436ad3b30fdd2f54041483b25207b50655f2f655349dff6081f1330540801",
+          "bytes": 738,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/StandardWarningsTests.cs": {
+          "kind": "file",
+          "sha256": "72c88b7c2990b4de48cd4896377b211fb9cf194b82dc11721af93fdafc6c1767",
+          "bytes": 4945,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/TestXamlLanguage.cs": {
+          "kind": "file",
+          "sha256": "d5a1dba521a0c436a886bd40063f5f14da2d7bc9c068ef1c59307718e24694d0",
+          "bytes": 1318,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/UtilityTests.cs": {
+          "kind": "file",
+          "sha256": "8cafd8d36e26e72712b72301018daf621d7ee5ea5912452ec82cac42bc6f6c38",
+          "bytes": 949,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/WhitespaceTests.cs": {
+          "kind": "file",
+          "sha256": "f7fe58908456c66248251f5e61e8e02e157717af28ea2f1dc2f229a99f2466e6",
+          "bytes": 19760,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/XamlParser.cs": {
+          "kind": "file",
+          "sha256": "3b943d4af270f52bd227e6a469b35b224d7060644a69240bc3198a6ad1048d4b",
+          "bytes": 439,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/XamlParserTests/XamlParserTests.csproj": {
+          "kind": "file",
+          "sha256": "b4caa0b8d0113eee54a69763a580944b68be54efe805120fd4e5e8b27d7a5471",
+          "bytes": 230,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/XamlX/tests/xunit.runner.json": {
+          "kind": "file",
+          "sha256": "5b541ae9f711c949242a45b3778f9f3812cd5a60f523d8693de1cbf068cd6cb1",
+          "bytes": 171,
+          "mode": 384
+        }
+      },
+      "when_any": [
+        "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/IncludeXamlIlSre.props"
+      ]
+    },
+    "avalonia-dbus": {
+      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "revision": "864a05282841bf04006890f04d11d60d1a046aa9",
+      "licences": [
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/LICENSE.md"
+      ],
+      "purpose": "Existing pinned internal D-Bus bindings/source generators for Avalonia desktop accessibility. Nonempty copied Compile-glob sources are required for a cold native build.",
+      "when_any": [
+        "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
+        "framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj"
+      ],
+      "files": {
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/.github/workflows/ci.yml": {
+          "kind": "file",
+          "sha256": "202baf2483ed98e376a26f51a73df009392b2d415a0ea0e5feebc39240f8b929",
+          "bytes": 1191,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/.gitignore": {
+          "kind": "file",
+          "sha256": "ff4e7038819e4b2d6e0fa8f7c592615dc614a0edc7f26bc1330b2efe138f764e",
+          "bytes": 8025,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/Avalonia.DBus.slnx": {
+          "kind": "file",
+          "sha256": "74b2995b603824b75fac1db224d864591b2b81ffdb140f734eb26fb58ab8bc51",
+          "bytes": 1007,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/Directory.Packages.props": {
+          "kind": "file",
+          "sha256": "af799a176bf7be0de5e660924f4bde3444170788e9633399a1f65f0b72c9602f",
+          "bytes": 133,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/LICENSE.md": {
+          "kind": "file",
+          "sha256": "3d71da21042a6eee308a9d399902d3362b6893b7edea592a05e61219fc636f73",
+          "bytes": 1102,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/README.md": {
+          "kind": "file",
+          "sha256": "2a7623f0ee05838cec3225f159fd904303fd161cea3370a619ed5046e7fbdbf4",
+          "bytes": 1788,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/avalonia.snk": {
+          "kind": "file",
+          "sha256": "e11e9cc0585a0e0013a666be2c277b161179429f0ceb20bb4141768795ea8e91",
+          "bytes": 596,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/docs/avalonia-dbus-typemetadata.xsd": {
+          "kind": "file",
+          "sha256": "4670f0cdb420c0f72ac0a4999256f78abc442b72044ec728a19217c1d55aa7a4",
+          "bytes": 4424,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/AccessibleHandler.cs": {
+          "kind": "file",
+          "sha256": "0679eb2eb576d1a301beba71bf2990311119bb2b2ac55a8dde85b99740f01ebf",
+          "bytes": 2648,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/AccessibleNode.cs": {
+          "kind": "file",
+          "sha256": "4f2bd4a66abfd6450843cb812851be1d82934dcc2f983d955fce20be86720d9f",
+          "bytes": 923,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/ActionHandler.cs": {
+          "kind": "file",
+          "sha256": "b0ad83b5069ed98aedc3d31d615e6e8fdd918a15ad4f0c347a49bcd49b7ddf77",
+          "bytes": 1555,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/ApplicationHandler.cs": {
+          "kind": "file",
+          "sha256": "7a6d44b2642d3e9a68ff0661bda01e33be82893b06229eee4ae958569f5c45c1",
+          "bytes": 1120,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/Atspi2TestApp.csproj": {
+          "kind": "file",
+          "sha256": "79951027969c3224f38471729e11eeb0873e5e9117c230ee00c49cfb40dcded4",
+          "bytes": 1736,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/AtspiServer.cs": {
+          "kind": "file",
+          "sha256": "19883571efc63723495546e630ad83e1e0feb782ac709aa822894aeb3d94964f",
+          "bytes": 27999,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/AtspiTree.cs": {
+          "kind": "file",
+          "sha256": "d7c547e9979379cb0b36c3b6c5cbee4795a91302584135043183ffe4cf17a027",
+          "bytes": 6924,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/CacheHandler.cs": {
+          "kind": "file",
+          "sha256": "bd552c346b146a57731b35c32a76e0ea997ecc8a8ae146d678988ef7374a1d65",
+          "bytes": 1280,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/ComponentHandler.cs": {
+          "kind": "file",
+          "sha256": "9b23e7dfac6dc09ca8f651591af24bd41eae54ab96da7b8ce5ecc5847acca78a",
+          "bytes": 2537,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusConsoleDiagnostics.cs": {
+          "kind": "file",
+          "sha256": "c4849d35d09e6b4e31e87a829f3e7bb562c4891249a104172a36bcedf898d873",
+          "bytes": 540,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Accessible.xml": {
+          "kind": "file",
+          "sha256": "34b17ce62b06392b62104064a457df50294fe8e486d185c49317ca25601836b7",
+          "bytes": 52354,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Action.xml": {
+          "kind": "file",
+          "sha256": "ef5d82631a52692a0b5126b9f57a0010f29fd8cf496b771b59939d6961432cc4",
+          "bytes": 5504,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Application.xml": {
+          "kind": "file",
+          "sha256": "71dd6a4e5b39adcab97d9c130d30561e91e6457642a5a25b05b666c56f8a1d0b",
+          "bytes": 3124,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Cache.xml": {
+          "kind": "file",
+          "sha256": "1a92b4f421a7059dcc9924b1259499808e2af80a2129aae72eda84d3539f0654",
+          "bytes": 5719,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Collection.xml": {
+          "kind": "file",
+          "sha256": "82900b48411b883fed8c16c3027d97b778baa2412029232bb050680b23b34c25",
+          "bytes": 8559,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Component.xml": {
+          "kind": "file",
+          "sha256": "180288e0d778cfcbe121e66e8b932e7a12ed4e7f3de5d6ef21b9b1387a37f609",
+          "bytes": 12933,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/DeviceEventController.xml": {
+          "kind": "file",
+          "sha256": "7441abc2a93999e827d7a2f2da2883e4aace011b83cc6c02202ebe6a0f551d42",
+          "bytes": 5650,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/DeviceEventListener.xml": {
+          "kind": "file",
+          "sha256": "26a56ce424dedace22c76fa930110b9e161bf91054a3a35bac24305d3a7ea80f",
+          "bytes": 3102,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Document.xml": {
+          "kind": "file",
+          "sha256": "d74bd457f3faf457d0af4cf60db3682da844dd292bd2cebc156604977c1dcfe9",
+          "bytes": 4136,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/EditableText.xml": {
+          "kind": "file",
+          "sha256": "22208ea7fcbb983484f4f02019ad7ae915952a70d83b1d44e41b8527e9864789",
+          "bytes": 4390,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Event.xml": {
+          "kind": "file",
+          "sha256": "22874be8b1e3d33cc23547e3db97a8285b36f6aa97f8be55a9b979a59366cf70",
+          "bytes": 24716,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Hyperlink.xml": {
+          "kind": "file",
+          "sha256": "ba9063db8d5775ab53807fb5f1ee503b939c25b29633313b165759f102726f44",
+          "bytes": 3238,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Hypertext.xml": {
+          "kind": "file",
+          "sha256": "ea42d87bbe0fb5ab7063aef2659b98d05e0cd1735d7d4c2fcdf711f0e2d31b59",
+          "bytes": 2316,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Image.xml": {
+          "kind": "file",
+          "sha256": "e46f6a23e604983aca175e4173096803e13b461b6ccfb2f6605741c1645f81c2",
+          "bytes": 3069,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Registry.xml": {
+          "kind": "file",
+          "sha256": "ebefee71d10e2bf91d9ddb6a59bed819c6fe21ada289795624ecb841106de7d7",
+          "bytes": 5095,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Selection.xml": {
+          "kind": "file",
+          "sha256": "847a87992299bfec3b783854afa6d3081fc9d7bf8869a18fe32399834afbc1c3",
+          "bytes": 4999,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Socket.xml": {
+          "kind": "file",
+          "sha256": "e9d39c5a76b41ed8712710b7d7d3a470ce82ffdae98e31186d4b8b09e0c94843",
+          "bytes": 3667,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Table.xml": {
+          "kind": "file",
+          "sha256": "6719d0652055bd3c52521dc9fa0dc8fada71d335cc8a7102f1c2fc7a9ed4bd58",
+          "bytes": 15611,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/TableCell.xml": {
+          "kind": "file",
+          "sha256": "37d44c0155aee2390fb0d8fc8659d9294680c8f43e5c957033473c9f17b75375",
+          "bytes": 3674,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Text.xml": {
+          "kind": "file",
+          "sha256": "ba164c436bdbd816dccb1dad2a7f4334fac5a8925f52928b64f87a2806ffb961",
+          "bytes": 25910,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Types.xml": {
+          "kind": "file",
+          "sha256": "4c2fab53fad4b4069c1c9abb715a91d524b216654528341c4747305ecf20a519",
+          "bytes": 4212,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/Value.xml": {
+          "kind": "file",
+          "sha256": "b99439a94a94d63bf9accafe3ae5ef1a65ef9fbc6d44a055d04a7c2e24e9687a",
+          "bytes": 1380,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/DBusXml/org.a11y.Bus.xml": {
+          "kind": "file",
+          "sha256": "9a1a2f31c50384d7b68f363289ee6d88e761574446a9b156a45ff3b51616a6c4",
+          "bytes": 273,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/EventObjectHandler.cs": {
+          "kind": "file",
+          "sha256": "8098fbe83c6b399cc72e9d31509c2886da2727c90624c9fb7c1508630dc0570f",
+          "bytes": 1081,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/ImageHandler.cs": {
+          "kind": "file",
+          "sha256": "9b2125aed2c5283cb34267dee9c15fc20104d709cb80a63d6224e66c26a5d9be",
+          "bytes": 929,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/NodeHandlers.cs": {
+          "kind": "file",
+          "sha256": "fc73bc09c48f65310a47e1308066d890e4b7e2ca40489f3506bb49c709d0604a",
+          "bytes": 1759,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/Program.cs": {
+          "kind": "file",
+          "sha256": "8b29dd81b554160fcc21b380253f974ebce652b32a462522faa00cf950059a44",
+          "bytes": 3698,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/Rect.cs": {
+          "kind": "file",
+          "sha256": "27c8d8461cb555f324e75c30ad14de833b2342ec28de27d22c8158b38a7eede2",
+          "bytes": 91,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/ValueHandler.cs": {
+          "kind": "file",
+          "sha256": "c5a2700090b276277b80fd518ac51c216663eb8bdc5c44db6b79fc50ab3cba65",
+          "bytes": 952,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/Atspi2TestApp/ValueInfo.cs": {
+          "kind": "file",
+          "sha256": "074bb9db6f9465803acc3f0e6d70cadded69056fddd4139c91629bddd0a2f227",
+          "bytes": 139,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/FreedesktopNameWatchMultiSubscriber/FreedesktopNameWatchMultiSubscriber.csproj": {
+          "kind": "file",
+          "sha256": "e60e5fd5ff137638debfecadb41c35f48cb66360b7befbf97c2c52f0b2ff09c7",
+          "bytes": 347,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/FreedesktopNameWatchMultiSubscriber/Program.cs": {
+          "kind": "file",
+          "sha256": "80c5d9f1b024b3d7b09c4737769afe641c6492da4af71b49eb301cb705dbe595",
+          "bytes": 2564,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/NDesk.DBus.Smoke/NDesk.DBus.Smoke.csproj": {
+          "kind": "file",
+          "sha256": "7ac190e8f862a8abaf806e2bd16fef91e626382a49965e5f6f862dad83d849a8",
+          "bytes": 363,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/NDesk.DBus.Smoke/Program.cs": {
+          "kind": "file",
+          "sha256": "2dae1ff1bd9e91993f1af26a9f22635fd354c16f207e8472e6881de37584b933",
+          "bytes": 2183,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/SourceGenHelloWorld/ConsoleDiagnostics.cs": {
+          "kind": "file",
+          "sha256": "c5a11f6ba095b117c50699b6d21e4bd93c1a0ddcb8ef23db4bc48682c52f0a60",
+          "bytes": 368,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/SourceGenHelloWorld/DBusXml/org.freedesktop.DBus.xml": {
+          "kind": "file",
+          "sha256": "57b0f6dde6ff17a0bf67ce0f6f93df57dbff3962818449770c683b32dfaa45b2",
+          "bytes": 2781,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/SourceGenHelloWorld/Program.cs": {
+          "kind": "file",
+          "sha256": "104384dd8389a3d7b6af91f7712812dd0803a7db157313067a2dcd7c07cc3c49",
+          "bytes": 1214,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/samples/SourceGenHelloWorld/SourceGenHelloWorld.csproj": {
+          "kind": "file",
+          "sha256": "5ab875aa8bf6c0d2257808ab37b802c5bea8d0882ee6510399af85ed0d3cf88d",
+          "bytes": 676,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AnalyzerReleases.Shipped.md": {
+          "kind": "file",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AnalyzerReleases.Unshipped.md": {
+          "kind": "file",
+          "sha256": "7d53774c05a95001c828d0d1ef23b4e3c9cd70a72a0065fed41017c0e0d52476",
+          "bytes": 224,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvBitFlagDefinition.cs": {
+          "kind": "file",
+          "sha256": "3ca5490684d49d5becd47f2c0c2a6982fe65b8886cb2057ff9ee5bbc5a915efa",
+          "bytes": 194,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvBitFlagsDefinition.cs": {
+          "kind": "file",
+          "sha256": "b868dc339519e5342ab0ba795fc391650288242b5ba5ec9cfc96275001b50dcb",
+          "bytes": 268,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvBitFlagsType.cs": {
+          "kind": "file",
+          "sha256": "b9cf571fee7bb2e3e3401c621a63c5741c94a3fa3e2cc8c36f8765baf43aee1f",
+          "bytes": 106,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvDbusXml.cs": {
+          "kind": "file",
+          "sha256": "68feac238aed2c3b0b096127cdd0ccd5a4f6390daa2717a36638312c2c7faf1b",
+          "bytes": 141,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvDictionaryDefinition.cs": {
+          "kind": "file",
+          "sha256": "fbe8b3ed33fba9d93f81a9a22f6c059c432add9623cc946023bbedf50355bee1",
+          "bytes": 255,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvDictionaryKey.cs": {
+          "kind": "file",
+          "sha256": "83ce6790f9136c127300462cafd261255b50ccb941c7a3feb5803dc49bb06f24",
+          "bytes": 168,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvDictionaryType.cs": {
+          "kind": "file",
+          "sha256": "1c40a05d2c3bb92e67349b30b80ba52ed0378df0f14d6dfc5eca3d7799ffb0b2",
+          "bytes": 206,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvDictionaryValue.cs": {
+          "kind": "file",
+          "sha256": "20d34c6871453a65f00c2f161904ae83c748f47ae8e89caade162a6cf94392bf",
+          "bytes": 170,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvListType.cs": {
+          "kind": "file",
+          "sha256": "80456db4dd026b2aabdf0ca0efef944fb1f394e8361d9be3091562afa6d8c5a8",
+          "bytes": 82,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvPropertyDefinition.cs": {
+          "kind": "file",
+          "sha256": "52e851bf8b4a1a8269963a9b1f2f3cbee88278bbd8d6b9d80eed06824984441a",
+          "bytes": 212,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvStructDefinition.cs": {
+          "kind": "file",
+          "sha256": "2ee1ba06da4d67691c7394d123810a5ca69dc5ce3e53d17012af8c074d2bfc40",
+          "bytes": 214,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvStructType.cs": {
+          "kind": "file",
+          "sha256": "14f83ca5508026e30efe1111e42db1cb7c5c36ef75a2a9cbf1b1257e1ebf3c07",
+          "bytes": 104,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvTypeContainer.cs": {
+          "kind": "file",
+          "sha256": "4487c63fe78057fbe42e1f47a26a54e3a5fae35bc21e96986612777c26ed957a",
+          "bytes": 264,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvTypeDefinition.cs": {
+          "kind": "file",
+          "sha256": "5a7b03ca158c02b7da3d4ea17ac9149270ba47affb037e6143f79fed70329cbb",
+          "bytes": 88,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/AvTypesDocument.cs": {
+          "kind": "file",
+          "sha256": "4d191a6f7fbbbb0b448628c7d285251d058bf7c098e5f8096c8cc1578ab1d38b",
+          "bytes": 248,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/Avalonia.DBus.SourceGen.csproj": {
+          "kind": "file",
+          "sha256": "3e782a2ec65073c9cc46c14f9ad054511355df722b2a04cfc8bd2d5a9325ea65",
+          "bytes": 2474,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/Avalonia.DBus.SourceGen.props": {
+          "kind": "file",
+          "sha256": "96a9486291fade60ab3bdfacc9e49e2e39d3b173d706e400d568f66924ac5258",
+          "bytes": 153,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusArgument.cs": {
+          "kind": "file",
+          "sha256": "84b7f60622a1ad3fa9368ba8dda07f63c8bcab055749dd47ba4a18229d1cbecf",
+          "bytes": 121,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusInterface.cs": {
+          "kind": "file",
+          "sha256": "62de3c8134bfa9591dcfbf57bfee0589a834cf32a5c9b6683bd0440876571fe2",
+          "bytes": 297,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusMethod.cs": {
+          "kind": "file",
+          "sha256": "3e416941023630264c8eee1989e0bbcde302b89345fbf245ea1124cf4a947aa6",
+          "bytes": 197,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusNode.cs": {
+          "kind": "file",
+          "sha256": "3ef130344f9025234e6c90d45238789f57122cdf4b220ab877d1a5bbdf70d04d",
+          "bytes": 163,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusProperty.cs": {
+          "kind": "file",
+          "sha256": "5fc54730e98ef08be0a9610f83a90ee4967caa117bd872f1252114da8039a948",
+          "bytes": 118,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSignal.cs": {
+          "kind": "file",
+          "sha256": "b7fc28d30d9eea1804101c7575c41b9cf4bb1445ab488aa0a6839f3170e947d0",
+          "bytes": 197,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSourceGenerator.Handler.cs": {
+          "kind": "file",
+          "sha256": "8e742ba720cba6cd0ab8730bd3bb94ab217137917400c1d026d74f16d899c85a",
+          "bytes": 18284,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSourceGenerator.Parsing.cs": {
+          "kind": "file",
+          "sha256": "555a99087add5af9dc29b1d4131ae6ed6a194f83bec57ba052a42e29e6a8cca2",
+          "bytes": 16976,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSourceGenerator.Proxy.cs": {
+          "kind": "file",
+          "sha256": "4d04ac91ac2ca5390c2be0a8b4819486e5bbceeeb929788bc80c99117b962dc4",
+          "bytes": 36793,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSourceGenerator.Structs.cs": {
+          "kind": "file",
+          "sha256": "cd1c593ed62925769d7f789b5e85a76689d122d27fa3b0ad874ef86e4495d6c3",
+          "bytes": 15720,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSourceGenerator.TypeAliases.cs": {
+          "kind": "file",
+          "sha256": "8ef70fc6e9732a0ad0ecdff9d2980364981de2f455bec209eab07ee7107b4d10",
+          "bytes": 15878,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSourceGenerator.Utils.cs": {
+          "kind": "file",
+          "sha256": "e348660de171ba35adbed6178fa08f4b530c292788104103cad3e643bf1946fe",
+          "bytes": 8756,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusSourceGenerator.cs": {
+          "kind": "file",
+          "sha256": "96a37833c7c0e82228bc3041bb591f5f0e1b64b166d2c10dee0b61d60d13dc77",
+          "bytes": 12983,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusType.cs": {
+          "kind": "file",
+          "sha256": "3efa005e7ddd5a707084eecdaf9b7f7f0cd875685246fca046037c6fff840af6",
+          "bytes": 495,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/DBusValue.cs": {
+          "kind": "file",
+          "sha256": "f43c6c33e3625f0a83909f7dd30596e33145705dcffa090e58a28aee4f581f24",
+          "bytes": 782,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/GlobalUsings.cs": {
+          "kind": "file",
+          "sha256": "c2a25b70ad79ad500aeab781c20bc37a59debbb98742e13eccec8c6b3123b425",
+          "bytes": 572,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/IsExternalInit.cs": {
+          "kind": "file",
+          "sha256": "a97a7e9ccc4cf34447f17cd8825eae791e842c7203ec28bdf72586f4d4de3952",
+          "bytes": 338,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/NotNullIfNotNullAttribute.cs": {
+          "kind": "file",
+          "sha256": "bb2b431a3a5a6098f164204cd3a34589d3f94ab8925c6aac80c69027ba2706ce",
+          "bytes": 553,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/SignatureReader.cs": {
+          "kind": "file",
+          "sha256": "9d4f1be90dd72343f96c7542c0b1e18b65e07fc6a4d5e70c11278ecd1db5cfeb",
+          "bytes": 4343,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus.SourceGen/XDocumentParser.cs": {
+          "kind": "file",
+          "sha256": "008ea5c54305ccd540b715c41e8e7e80430eacdefb52ce24bc854a95478f8017",
+          "bytes": 9708,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Avalonia.DBus.csproj": {
+          "kind": "file",
+          "sha256": "56d6d0315ddf5f5fbfa0b83d184a08b43fec7bd43f576e7d3296f969c79d788e",
+          "bytes": 1287,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/BoundProperties.cs": {
+          "kind": "file",
+          "sha256": "8e82dcae7a02bcc527ff2761c537e9a75fb770223dea3b80b9aec93e0dfa58e3",
+          "bytes": 254,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/BuiltInIntrospectionHandler.cs": {
+          "kind": "file",
+          "sha256": "517133278237381e6a8577d5974c820a7935e0021288d816cdcf459c726d5e1c",
+          "bytes": 4780,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/BuiltInPropertiesHandler.cs": {
+          "kind": "file",
+          "sha256": "343266548abc88c08189d3f1121d8978e80cd95dfa175446a1021818e7c8afc9",
+          "bytes": 3698,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/ChannelExtensions.cs": {
+          "kind": "file",
+          "sha256": "3d9b04eb803e4dc348403913f0bc655e5d4980b07f64c41ab3b39b494dde121f",
+          "bytes": 1925,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/ChannelsDBusWireConnection.cs": {
+          "kind": "file",
+          "sha256": "a985d1dde297d7e0a8214e292c3e025d68ec6a3e409f6ea54ea2f2d9abc01a4a",
+          "bytes": 10409,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/CreateHandlerFactory.cs": {
+          "kind": "file",
+          "sha256": "ee7d0eea8982dc854c65ce438a24c6d5bf17b373f8b7c1e33ca81e26d6430941",
+          "bytes": 123,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/CreateProxyFactory.cs": {
+          "kind": "file",
+          "sha256": "afa7bc0db6ae74425a33a05e152db2b9656363ede653ce5130967ddaa760ace7",
+          "bytes": 197,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusCollectionHelpers.cs": {
+          "kind": "file",
+          "sha256": "4dd6ed083cade7f92c83030cef6096e600dddb9cea6ddfb479a1b48fa480c0cd",
+          "bytes": 3149,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusConnection.Messages.cs": {
+          "kind": "file",
+          "sha256": "cf4b9d584320208e88806dd7f73b3afb019da24bdf9bd01f0a89d053ff6536c7",
+          "bytes": 1486,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusConnection.Worker.cs": {
+          "kind": "file",
+          "sha256": "7934e0005f20c34be623c4725f15a43e853659ecaa69f4904a28e1234326a468",
+          "bytes": 29635,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusConnection.cs": {
+          "kind": "file",
+          "sha256": "d202f2289d4040f8ccc9b27a09d462967fe29f0f9ba46845c9abcb72a672718f",
+          "bytes": 11321,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusConnectionProxyExtensions.cs": {
+          "kind": "file",
+          "sha256": "9e39a4f39f67448c9cf964a30ca6d84d0adf4a5c3063f7ee35306814a6067f93",
+          "bytes": 387,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusException.cs": {
+          "kind": "file",
+          "sha256": "3f112d9c4a60868105f1226c457b0ff19bda9a0f79777d33da7ea33e6d0efa23",
+          "bytes": 1336,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusInteropMetadata.cs": {
+          "kind": "file",
+          "sha256": "4dd5450aca7b4d371c218506027809faf2091fb298094f3f0eb7320d7c8dbefa",
+          "bytes": 559,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusInteropMetadataRegistry.cs": {
+          "kind": "file",
+          "sha256": "f645d728a630a3901b7c208a18f29ed7ffd1375457fcb1dc1fd1553cfd1f7bd8",
+          "bytes": 5068,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusLogLevel.cs": {
+          "kind": "file",
+          "sha256": "5be469c3f671bf30861b3d5ae8bcac6ec3083d1a52f7f9a683c4ee787c8f9a2a",
+          "bytes": 113,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusMessage.cs": {
+          "kind": "file",
+          "sha256": "cba10ed5fc5c070c12831c4a10ab2030bd2815bb282f17d919f4259a81da2412",
+          "bytes": 7686,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusMessageFlags.cs": {
+          "kind": "file",
+          "sha256": "d68576b5be80de4b85e120b98e17d4096a3dc0a4fd070f0016a77a7f304d5b4e",
+          "bytes": 214,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusMessageType.cs": {
+          "kind": "file",
+          "sha256": "6af91ebc07ac1b517955c8f94f1f86eb3044954535fd3f970a2050effab58efb",
+          "bytes": 175,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusObjectPath.cs": {
+          "kind": "file",
+          "sha256": "ce0139d73c37ce4710d05f288c3c5dc6d972fbf6d05ea60f59207516da80c5ff",
+          "bytes": 966,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusRequestNameFlags.cs": {
+          "kind": "file",
+          "sha256": "db0f34abbc32b4ec1e99f7cf122d972cd7a905d9ef142752d698c7b7e1e6b6bc",
+          "bytes": 488,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusRequestNameReply.cs": {
+          "kind": "file",
+          "sha256": "049f4b96ddf59e5fe068bf903495bcd3775f2778b1e78d2e38ba86042604e4ff",
+          "bytes": 537,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusSerializedMessage.cs": {
+          "kind": "file",
+          "sha256": "584ba450bfeb4fb2757ac9e72def062efb9b0141d1c6951e1b479e0484dedec0",
+          "bytes": 496,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusSignature.cs": {
+          "kind": "file",
+          "sha256": "7aaf271db1a1e7be280370dcdcfb67807b9b061a7daefccf1cce32603549aad9",
+          "bytes": 985,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusSignatureInference.cs": {
+          "kind": "file",
+          "sha256": "319d13b40d0083481e895333e8c41b1304d08fc11ac4dba24dbd5b6e1f6f0869",
+          "bytes": 29971,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusSignatureParser.cs": {
+          "kind": "file",
+          "sha256": "4a38f16e160f7a0f6176c0870832394e709e149d4f2fcf0a5c2562c856d64cdd",
+          "bytes": 3280,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusSignatureToken.cs": {
+          "kind": "file",
+          "sha256": "e0737a10fab8125aa56d08bf07e3a01d7b70535a05078d31c9be541baf6fce5f",
+          "bytes": 2588,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusStruct.cs": {
+          "kind": "file",
+          "sha256": "ac6c818886846d59b32c550cf1a6a110fec942060369e2601752d91c1ffb8d3f",
+          "bytes": 720,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusStructSignatureRegistry.cs": {
+          "kind": "file",
+          "sha256": "602cb8ccbf10881bcac3f7f609b6b773f014e59485afe574de3c757669160c3c",
+          "bytes": 923,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusTransportLog.cs": {
+          "kind": "file",
+          "sha256": "4bb757bc94f5b8f4e548297e18064cae700086e4a1e66a8eb747b78353d8e6b4",
+          "bytes": 1218,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusUnixFd.cs": {
+          "kind": "file",
+          "sha256": "3bfdf83c6cc27edbece1fb78688c916268171a409482df429a63d9cc0e4f7834",
+          "bytes": 174,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DBusVariant.cs": {
+          "kind": "file",
+          "sha256": "a69c1644a766853974bb45139c1dbf4c08c851c58ad8eaba13fbd2d2cdfd6012",
+          "bytes": 1233,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/DbusHelpers.cs": {
+          "kind": "file",
+          "sha256": "b695e61156ebd1327dc9e48eb3350c3d16e416cabbb4650e269456f10b940107",
+          "bytes": 1740,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/FreedesktopDBusExtensions.cs": {
+          "kind": "file",
+          "sha256": "d2c4a178e34e860a76077be2c8f0a55033eed093048b46e394244a1d140edb2d",
+          "bytes": 4104,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/FreedesktopDBusGeneratedPrivateImplementationDoNotTouch.cs": {
+          "kind": "file",
+          "sha256": "088e021f963c27f0d41fd5afaf593fddf56b77dac63ea4135c27ec543e9424cf",
+          "bytes": 671,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/GetAllPropertiesFactory.cs": {
+          "kind": "file",
+          "sha256": "0e161dde5125614bc19faaa3aaa915031a174cdb9b0c5267c8f8dfa821e8c417",
+          "bytes": 186,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/IDBusConnection.cs": {
+          "kind": "file",
+          "sha256": "962ffe8cdb2188bbe962b215509903332036938ae2c953e3f5d12c36dfe1cd6f",
+          "bytes": 1043,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/IDBusDiagnostics.cs": {
+          "kind": "file",
+          "sha256": "1e92635ccee9763410540c90e4a3007eea23c024200cad5a53cb2994451ca47d",
+          "bytes": 210,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/IDBusInterfaceCallDispatcher.cs": {
+          "kind": "file",
+          "sha256": "9beb925cf23f53c7fa460a8f89fe9f1ad1f7064c098a5cd1d4a7b0a4e2ffa355",
+          "bytes": 232,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/IDBusMessageSerializer.cs": {
+          "kind": "file",
+          "sha256": "1c48ec9e468ebe28acefb462e048d7b756a3333e520297c54902e59d26a3ee2d",
+          "bytes": 884,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/IDBusStructConvertible.cs": {
+          "kind": "file",
+          "sha256": "31377a60e8416c54fc0e5e7bad02d25478725172159d793c6c1f16a46800bcf3",
+          "bytes": 230,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/IDBusWireConnection.cs": {
+          "kind": "file",
+          "sha256": "7de2960defb922b8d30f485d76d021d4b525f15020e39cf8212c1ef127c5d5bb",
+          "bytes": 1346,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/LibDBusMessageMarshaler.cs": {
+          "kind": "file",
+          "sha256": "847018761a1fb053de0bdcb80c1f10eb1eb96c126442c16960aa0489f474bbe8",
+          "bytes": 34161,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/LibDBusWireConnection.cs": {
+          "kind": "file",
+          "sha256": "fe3956ce8f76e10a7334f16f875d1b9f4c6f66c555a2e33bc053eaca6be4133d",
+          "bytes": 5319,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/LibDBusWireWorker.Records.cs": {
+          "kind": "file",
+          "sha256": "ddbecded8400e6378d65093b67c29f8fac88ba3a55f06a04d265bd9ae3fed8ec",
+          "bytes": 2680,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/LibDBusWireWorker.cs": {
+          "kind": "file",
+          "sha256": "6aab9e89f4e30376e959f895eb62c05aed816cfca675eda6de168c0aa5c515cf",
+          "bytes": 26471,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Managed/DBusWireReader.cs": {
+          "kind": "file",
+          "sha256": "7d13540a969d9fef5bd8ad03aff5b3e08bb892d4dfae68235cd8e7f467777c08",
+          "bytes": 7956,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Managed/DBusWireWriter.cs": {
+          "kind": "file",
+          "sha256": "cb0dc32ea6f4070f6062a2b859f945a10e6589c675fbd33e76fef04d4952d8fe",
+          "bytes": 5858,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Managed/ManagedDBusMessageSerializer.cs": {
+          "kind": "file",
+          "sha256": "87b58ddbe5fe8ba1a8c47966f67aa350d3b68ac953b9d7922f38715da7051899",
+          "bytes": 34050,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBus8ByteStruct.cs": {
+          "kind": "file",
+          "sha256": "6655f2d726c3715bcb5570b6db17400e8b2d5337d24ad61e615868af6c2fde65",
+          "bytes": 260,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusAddTimeoutFunction.cs": {
+          "kind": "file",
+          "sha256": "07da4cd29a9aca241c88a2039ce87feb53ae0c00b66ed1bf2cb27ebbb4a505f6",
+          "bytes": 251,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusAddWatchFunction.cs": {
+          "kind": "file",
+          "sha256": "489e1364acb124e2b9c798bfa7153c7aa8f272f8cf89aa42e24520f1319c0816",
+          "bytes": 245,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusAddressEntry.cs": {
+          "kind": "file",
+          "sha256": "0b8cb3246e76f6f54a910a0711e912bdf449021d3acfe5d64d693765d5fb2154",
+          "bytes": 69,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusAllowUnixUserFunction.cs": {
+          "kind": "file",
+          "sha256": "9a207cf164c82ed0b23b696ab0bddb1bab8bdf114f47305afc8495298323e4c6",
+          "bytes": 321,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusAllowWindowsUserFunction.cs": {
+          "kind": "file",
+          "sha256": "fc9084b373b311cf20c4ab617ba53d11a3dcd3863c5a393a28d955081645c5aa",
+          "bytes": 312,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusBasicValue.cs": {
+          "kind": "file",
+          "sha256": "84d7bb6d3a5a1a21f65ebd492e5dba29c5ddd95e54f3b75ce931cb6946ccf83b",
+          "bytes": 1129,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusBusType.cs": {
+          "kind": "file",
+          "sha256": "b6efde65282d13d3f57d910e3eb402fd0b71fcc45815a1edd84fc077273ec964",
+          "bytes": 167,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusCondVar.cs": {
+          "kind": "file",
+          "sha256": "d2b00feed04f6a3da5f2822d38123b8efa542ed93a96c476df5aaded1b0f63e5",
+          "bytes": 64,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusCondVarFreeFunction.cs": {
+          "kind": "file",
+          "sha256": "a46ebd7d867876cd4f78287036e2efff34581db5a6a05e58e8a2e1d8c46b0ce5",
+          "bytes": 197,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusCondVarNewFunction.cs": {
+          "kind": "file",
+          "sha256": "17f5f58d40f92972fa8186f47ad2c016d49489de28a2c8a94ab95b011904781f",
+          "bytes": 187,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusCondVarWaitFunction.cs": {
+          "kind": "file",
+          "sha256": "30a30f9a4f08c3ed0ac27dcc3ed9178b5d69ed5d0c7771210c098e7240dfb014",
+          "bytes": 215,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusCondVarWaitTimeoutFunction.cs": {
+          "kind": "file",
+          "sha256": "cbbdde81197ef1ccc96bbae220269ee68e21509aec83636eef9a7e724101705b",
+          "bytes": 288,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusCondVarWakeAllFunction.cs": {
+          "kind": "file",
+          "sha256": "1ba455f6dc8458787cd2b7a0f8c391d8a47e03db736566ae4422f087029e0a31",
+          "bytes": 200,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusCondVarWakeOneFunction.cs": {
+          "kind": "file",
+          "sha256": "ce49f4463231c279c3b93627a6cb63f1a22863ee378b845918e2618a60a5853c",
+          "bytes": 200,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusConnection.cs": {
+          "kind": "file",
+          "sha256": "4e28d79cef6d2e207aeac91d51c11a76b05eec422590295991ece9c1354e4f93",
+          "bytes": 67,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusDispatchStatus.cs": {
+          "kind": "file",
+          "sha256": "b17c54b3741ad443d139c236f9b19548473d5e9cb0155909cb69a414e6d82406",
+          "bytes": 200,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusDispatchStatusFunction.cs": {
+          "kind": "file",
+          "sha256": "2fed34a7e65d9c2a9e6d36a7ac35adc5b71a37a13d392403a24e0d68cd824908",
+          "bytes": 252,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusError.cs": {
+          "kind": "file",
+          "sha256": "52a93d7f5ad54b295492886fd7ce4d12cb0427c424c60d1b1ff7c963595cb1cb",
+          "bytes": 1538,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusFreeFunction.cs": {
+          "kind": "file",
+          "sha256": "33a73012ceb472c6867f2e39adc071225d4f6c18e8ee6a5d80f79c15b5305fa0",
+          "bytes": 183,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusHandleMessageFunction.cs": {
+          "kind": "file",
+          "sha256": "406169d23e29154e7d0a91db4cba94d399585f770111f5b3eeccc0af2aa7989e",
+          "bytes": 260,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusHandlerResult.cs": {
+          "kind": "file",
+          "sha256": "cc836f63d35b4e377aa2ccf2e5fe5f93fd00e1217408ba694b34aff966df45a0",
+          "bytes": 219,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusMessage.cs": {
+          "kind": "file",
+          "sha256": "72f6f390da8feed19e81223d349da712a4de1932004ec2980c6760d5decd50b8",
+          "bytes": 64,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusMessageIter.cs": {
+          "kind": "file",
+          "sha256": "bc4c9f8128d49ca9d59e67f7aac6769aea521c1877084261a57d92c9fc534a2f",
+          "bytes": 453,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusMutex.cs": {
+          "kind": "file",
+          "sha256": "4116ab2e0d867fe817a2bc1408f9cb96bf7122097f85bcb2bae64f70ccd7bb7f",
+          "bytes": 62,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusMutexFreeFunction.cs": {
+          "kind": "file",
+          "sha256": "f41e2aa1868da6bfc8e0e385e71d541ad9e7bfab7029dc30bfae868d1851f015",
+          "bytes": 194,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusMutexLockFunction.cs": {
+          "kind": "file",
+          "sha256": "4b0134c6bbc8840a858a1f63d0d93846366ea4f858583b484a034b723cec1960",
+          "bytes": 234,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusMutexNewFunction.cs": {
+          "kind": "file",
+          "sha256": "544578d33be02f9c44357532ea50100d3e7d7009ee91ee90451734afb57220c5",
+          "bytes": 183,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusMutexUnlockFunction.cs": {
+          "kind": "file",
+          "sha256": "f4fa7b923d86fb51c8680cf3b95200a65221c76775b6332dcc11c96ec6353d88",
+          "bytes": 236,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusNewConnectionFunction.cs": {
+          "kind": "file",
+          "sha256": "bd597a47701a2af93695a765aae62cd27fd32a5a65dfb4313d5bed0ec885ebdc",
+          "bytes": 244,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusObjectPathMessageFunction.cs": {
+          "kind": "file",
+          "sha256": "288cf1fc6ceac95352b38fad4da26b8e239c9a3249ec6008a2514aea0259d78b",
+          "bytes": 264,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusObjectPathUnregisterFunction.cs": {
+          "kind": "file",
+          "sha256": "d955f427ebe2cafab4d3423154a58d669685c2b93a304652a1d0565e4c54ca4b",
+          "bytes": 232,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusObjectPathVTable.cs": {
+          "kind": "file",
+          "sha256": "a339a0f47fbb8a7b5c45f98bc7774908b8b557391ae7f834d4ab689e751c07e5",
+          "bytes": 659,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusPendingCall.cs": {
+          "kind": "file",
+          "sha256": "df54c4c3a151afd6097b2c438c554a09461a2c25d539c8ad107248d0841ba4f2",
+          "bytes": 68,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusPendingCallNotifyFunction.cs": {
+          "kind": "file",
+          "sha256": "e1fbedbc90bb0d77002e585044509b0573a7b5b7ba90babf41405c9ad28983f1",
+          "bytes": 227,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusPreallocatedSend.cs": {
+          "kind": "file",
+          "sha256": "b030851ab47baa77d9ade4342134d64bf6a7329fb0887e5a34756cb08c391d61",
+          "bytes": 73,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusRecursiveMutexFreeFunction.cs": {
+          "kind": "file",
+          "sha256": "101c0fe05a0079f1a31062166b085a144b99ec2d97dd1a0a7b4c4274ddc01471",
+          "bytes": 203,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusRecursiveMutexLockFunction.cs": {
+          "kind": "file",
+          "sha256": "fd593601c47a2ce54faa9a9ffd510666a556f71cf2681125191e1170668b37df",
+          "bytes": 203,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusRecursiveMutexNewFunction.cs": {
+          "kind": "file",
+          "sha256": "070e96cb1b1bdfec42698f4d5f16bb0fc99e28f37129a91a623bf7c9c1766e4e",
+          "bytes": 192,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusRecursiveMutexUnlockFunction.cs": {
+          "kind": "file",
+          "sha256": "882b5365e2695332806e2510145b83b7b0b3ed8fcdf66a19b06d900241ad28a4",
+          "bytes": 205,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusRemoveTimeoutFunction.cs": {
+          "kind": "file",
+          "sha256": "797563da92c3498bf528a130d7e5651d0f83b9dbcca830fb9ff8c4fb925d9d7d",
+          "bytes": 214,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusRemoveWatchFunction.cs": {
+          "kind": "file",
+          "sha256": "be50d195c751e16b5931f59ef5b0188a3c0444c2210641fdb544054437d26365",
+          "bytes": 208,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusServer.cs": {
+          "kind": "file",
+          "sha256": "67d603b0d0c5d01fa65522726043b88dad8a452ffa00d7c47547242b880f1003",
+          "bytes": 63,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusSignatureIter.cs": {
+          "kind": "file",
+          "sha256": "d756970f5041de5a6213df060b9b8c6133bc0a12a11fb1e43f51bfe8a1059d52",
+          "bytes": 305,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusThreadFunctions.cs": {
+          "kind": "file",
+          "sha256": "0064cfe5af5f480092dfa7ac19322b4796970b56bb138630232c9f383f4a85bc",
+          "bytes": 1691,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusThreadFunctionsMask.cs": {
+          "kind": "file",
+          "sha256": "963e00385b406b3a4e263ad9806a51e89b69774d522167e99dc8eda3f013e7eb",
+          "bytes": 967,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusTimeout.cs": {
+          "kind": "file",
+          "sha256": "9bd6dfb02bade2cd1f80cbdbfff5bf61c6670973b782be8cf187d64faa7ff8bd",
+          "bytes": 64,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusTimeoutToggledFunction.cs": {
+          "kind": "file",
+          "sha256": "b33264880df826fdbd877364c7c307731dced5177e3f42cc4089f6282f0ad381",
+          "bytes": 215,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusWakeupMainFunction.cs": {
+          "kind": "file",
+          "sha256": "5ad63365ed5bda96e3b52af10a667608d36cf8368acf7d45594dfd1838e4778a",
+          "bytes": 189,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusWatch.cs": {
+          "kind": "file",
+          "sha256": "6c2cdb2bd7ea7d8371fee9c4993758bc3619c77863d3cbdf150bde2a13302c33",
+          "bytes": 64,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusWatchFlags.cs": {
+          "kind": "file",
+          "sha256": "799362c0cef54a99a21c38081519c8e4a5a7cf96ad9be09c85121ea1a493e497",
+          "bytes": 259,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/DBusWatchToggledFunction.cs": {
+          "kind": "file",
+          "sha256": "fbe359523a30c4fccb480341473d86ab77896fd072d169d443c9d35e236f1e42",
+          "bytes": 209,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/LibDbus.cs": {
+          "kind": "file",
+          "sha256": "763223049cad577472b8e1e50c79cea2674cb728307df351865da4723761d9df",
+          "bytes": 89744,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/NativeAnnotationAttribute.cs": {
+          "kind": "file",
+          "sha256": "5e9b29fd434bbd363a8a83cf12ffe8314e98afb09f634c491b11fb2b9ad8aa36",
+          "bytes": 505,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/NativeTypeNameAttribute.cs": {
+          "kind": "file",
+          "sha256": "9d03772baaf94b88f1e07416a29d05bd1c9a967b0e0127c2f057b131127236d6",
+          "bytes": 455,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/__va_list.cs": {
+          "kind": "file",
+          "sha256": "393d2e3d8745638f10beeff565adeec777d9a553cb859c883dafb92fa5df743d",
+          "bytes": 163,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Native/__va_list_tag.cs": {
+          "kind": "file",
+          "sha256": "6fac0014f03c6c625a6ab31debc63857a66340272adae302fdb65e1d2ed6a7df",
+          "bytes": 167,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/ObjectHandlerKey.cs": {
+          "kind": "file",
+          "sha256": "cf986413f9f03062ad748d690ab495511593b741b8eeffbeb5be44b3ae0c31a3",
+          "bytes": 87,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/OrgFreedesktopDBusProxy.cs": {
+          "kind": "file",
+          "sha256": "4bee4cb59a02b18fc816cc49f84a01e1f1056fd0819efcb17faf1d626ce4b5be",
+          "bytes": 13102,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Platform/IPosixPoll.cs": {
+          "kind": "file",
+          "sha256": "12b86e2c888a84453b1cdf6abeb47f38c5a82e30ec7b70191570c88d42ff755f",
+          "bytes": 386,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Platform/LinuxPosixPoll.cs": {
+          "kind": "file",
+          "sha256": "2b6bf987b0bdd9882ecdd07e9be8cd25d501d504e4e524775dd334e796fa7952",
+          "bytes": 1580,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Platform/MacOSPosixPoll.cs": {
+          "kind": "file",
+          "sha256": "78f13f7a9c645729e2c3b6db0bca1f8633601461863cdc35ae5add67a2e1731b",
+          "bytes": 1992,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Platform/PosixPollFactory.cs": {
+          "kind": "file",
+          "sha256": "6f208d268a0164557d783ac2e0c2fb7a02191adaeacff2964b560136e84fb40a",
+          "bytes": 364,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/PollEvents.cs": {
+          "kind": "file",
+          "sha256": "fe9ed843745f5e75a804c05501d1c70224595b1afb2a8e550b2dc22f1da1951c",
+          "bytes": 254,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/PollFd.cs": {
+          "kind": "file",
+          "sha256": "93af2e507c0021ea9ed1d3cc52a61f2915720f4fd39fb8c0ef916dd97c7c87c7",
+          "bytes": 209,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Transport/DBusTransport.cs": {
+          "kind": "file",
+          "sha256": "f780d4c100e536747a22a97914a8c586b8f4d54cb55c527368b04127711c6adf",
+          "bytes": 6617,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Transport/UnixSocketDBusTransport.cs": {
+          "kind": "file",
+          "sha256": "86eb2e1ab87972f96b16f032c403796f46b4bd4efd1f84e552bde5189c95628e",
+          "bytes": 8192,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/TrySetPropertyFactory.cs": {
+          "kind": "file",
+          "sha256": "5a757861d1764a421710d89e98b828376862a82bcafb618f0456ffa17bef8faf",
+          "bytes": 156,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Utf8String.cs": {
+          "kind": "file",
+          "sha256": "0d2621807c8f5b65f6d53dc68600ebc622b3906bda7176d9295b9cc340f8e603",
+          "bytes": 724,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/WakeupFd.cs": {
+          "kind": "file",
+          "sha256": "e50f729139fd12afa147134f162387179df16ff9dd52e78f95c2f8e9e354a87d",
+          "bytes": 2733,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/WriteIntrospectionXmlFactory.cs": {
+          "kind": "file",
+          "sha256": "bb49def02202fa6ad76f62e3ce92ecf1523765d30b77a2a99082589c44211e3b",
+          "bytes": 158,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/README.md": {
+          "kind": "file",
+          "sha256": "49f7dda7aab2feea3573943392a081e7fbf4539de733c491c14171be899142fb",
+          "bytes": 16,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Avalonia.DBus.Interop.Tests.csproj": {
+          "kind": "file",
+          "sha256": "e9f5821beb070c7db7ba60505acde30d45abf30ff256ecfce1f280c14cf7beb1",
+          "bytes": 1177,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/BusMediatedTests/AvaloniaClaimsNdeskObservesTests.cs": {
+          "kind": "file",
+          "sha256": "d198ed3599ae93a7b4e6abca1965fc77fc99d23d864a6d69e5ec666863a274d7",
+          "bytes": 3047,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/BusMediatedTests/CrossSignalTests.cs": {
+          "kind": "file",
+          "sha256": "df0b665851784ceab87154a09446b52ea2864a514a66f557ddc58309dd6c4f0c",
+          "bytes": 3458,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/BusMediatedTests/NdeskClaimsAvaloniaObservesTests.cs": {
+          "kind": "file",
+          "sha256": "d98db1ff86e731b8b4dfcc318e3e8ba43956cab67f5af5518e9179289b0f9677",
+          "bytes": 2441,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Contracts/CounterService.cs": {
+          "kind": "file",
+          "sha256": "a9dfba529daa4a73196c21d92c35739cdf03a3b8bcc23fe901dd25a0cd9cfa3f",
+          "bytes": 599,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Contracts/EchoService.cs": {
+          "kind": "file",
+          "sha256": "5fa870313326ac8b163d2c842052d8b39ade8c0625bccc82e07c08c6689577e0",
+          "bytes": 292,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Contracts/ICounterService.cs": {
+          "kind": "file",
+          "sha256": "9daec575b5940a2bafa027f91c8a84bd9eb0d64d3f613b52b332fef464084f4b",
+          "bytes": 356,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Contracts/IEchoService.cs": {
+          "kind": "file",
+          "sha256": "8c1904b13b7486af53639baf486eb9b30a436fe1ef616a8c47178af93e9d2029",
+          "bytes": 277,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Contracts/ITypeTestService.cs": {
+          "kind": "file",
+          "sha256": "b863bb41b8ae35aaa1771fc35acabf27be1fde7d247f87667e32dacfdf33a447",
+          "bytes": 787,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Contracts/TypeTestService.cs": {
+          "kind": "file",
+          "sha256": "3565001c12317abc8721b7fe7d22f3a8657cbbaf0b0af6554e773b7970cb8bb0",
+          "bytes": 1161,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/GlobalUsings.cs": {
+          "kind": "file",
+          "sha256": "03d87cbc30b565f9bb27460701b8c2171995d1d24b809cf2dd67364311bb6cb8",
+          "bytes": 36,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Helpers/InteropFactAttribute.cs": {
+          "kind": "file",
+          "sha256": "5bce3156bfb6a74f662679b722d6026f934ccf7ff62dd98728faaacc3e4ffc62",
+          "bytes": 395,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Helpers/InteropFixture.cs": {
+          "kind": "file",
+          "sha256": "04aed71a9bd8e5a7f6d36892669c519c1c0d4861273d3e62fb5f50f0a655a7bd",
+          "bytes": 3424,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Helpers/InteropTestCollection.cs": {
+          "kind": "file",
+          "sha256": "19ecd0b017ac98d9a1f67138924578a612962c1a96f79af39a0b7f2b1194e2c6",
+          "bytes": 209,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Helpers/NdeskServerRunner.cs": {
+          "kind": "file",
+          "sha256": "da3f0e4dfb664655f700d8252ee991c50403d42bd33d33029977685709255a7d",
+          "bytes": 1877,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Helpers/TestOutputDiagnostics.cs": {
+          "kind": "file",
+          "sha256": "05f8f1154562f35cee110890887cefb483e0d5dde482c4128cd7c3ea2c40229c",
+          "bytes": 430,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/Helpers/test-session.conf": {
+          "kind": "file",
+          "sha256": "ed33e14e3f02d161a70a69968d1a103072c5c96f380877359d5307d69fc6e4fe",
+          "bytes": 397,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/NdeskServerTests/ComplexTypeTests.cs": {
+          "kind": "file",
+          "sha256": "fba58d5938f2a7c6d05043c7a2331fe94f1565cb583d78ea63282f6145257859",
+          "bytes": 9647,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/NdeskServerTests/CounterConversationTests.cs": {
+          "kind": "file",
+          "sha256": "f87f70f921ada9d3e10de6675c6d3e1c4b888ce418fa1988ddb0adfc74fc4481",
+          "bytes": 8610,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/NdeskServerTests/EchoMethodCallTests.cs": {
+          "kind": "file",
+          "sha256": "e06cd5dbcdedd9954bde64c7b6900eb36a8ecb5f9af6e44f4b9b50075cfd40a7",
+          "bytes": 4791,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Interop.Tests/NdeskServerTests/IntrospectionInteropTests.cs": {
+          "kind": "file",
+          "sha256": "30a3c0e26fc90cc066cc08abae0135715123707f4cb863177ad2768e0d9f4189",
+          "bytes": 6618,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/Avalonia.DBus.SourceGen.Tests.csproj": {
+          "kind": "file",
+          "sha256": "2cd878d3a4b918c6c2fded31406f7ebdfd1cb0ab8e39a616794a273a3a6a7321",
+          "bytes": 1269,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/DiagnosticEmissionTests.cs": {
+          "kind": "file",
+          "sha256": "2fe1e857000f99d3e367f23c0353d98e656c5164efe2f4c0039acf874f87a88a",
+          "bytes": 7600,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/ErrorReportingTests.cs": {
+          "kind": "file",
+          "sha256": "f8d3f18d14c3493be0fad0e358cd3dcd1d6be10fe345064f16799db7290d77a6",
+          "bytes": 2001,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/GeneratorTestHelper.cs": {
+          "kind": "file",
+          "sha256": "4338c4eadbd39f8a88c5cb408bac488595ac821bab7546d5b69b331bacabfe5e",
+          "bytes": 4340,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/GlobalUsings.cs": {
+          "kind": "file",
+          "sha256": "a1408bdacb338c43ab522dc337a2f3bb6b6639c1cd6b255aaa9f6a2146862449",
+          "bytes": 228,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/HandlerGenerationTests.cs": {
+          "kind": "file",
+          "sha256": "9dfbbeed9ea54e7b8610f7545dcd29a05ce4029e1c99894223f2739d5787dea1",
+          "bytes": 2485,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/Helpers/DbusTestCollection.cs": {
+          "kind": "file",
+          "sha256": "d1b064b197febce981ecdcc8a834684a6776c17e8ce15efd0b6b8d5c3f7630ec",
+          "bytes": 194,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/Helpers/test-session.conf": {
+          "kind": "file",
+          "sha256": "ed33e14e3f02d161a70a69968d1a103072c5c96f380877359d5307d69fc6e4fe",
+          "bytes": 397,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/InMemoryAdditionalText.cs": {
+          "kind": "file",
+          "sha256": "4e84b23ac0d27c840acd6948b688890f149c02661e1d280bbb9b24fd6face491",
+          "bytes": 296,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/IntrospectionGenerationTests.cs": {
+          "kind": "file",
+          "sha256": "8c293f41718b09a804a18481c5920a6c60a6eff497a9b80f056d17c719060fb1",
+          "bytes": 5710,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/ProxyGenerationTests.cs": {
+          "kind": "file",
+          "sha256": "deee3c8f581e8875f8161be6b442dcb3755bec4034597bc272a5687f6ffc865a",
+          "bytes": 5532,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/SanitizationTests.cs": {
+          "kind": "file",
+          "sha256": "1957aaf5a055df41224767eae4123e7773cd215eec3a9f686d8292da89707378",
+          "bytes": 10218,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/TestAnalyzerConfigOptions.cs": {
+          "kind": "file",
+          "sha256": "055eaa16dbccf57931abedc5c442846fb7fae584533caaa6138be3fe6efbf8f3",
+          "bytes": 310,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/TestAnalyzerConfigOptionsProvider.cs": {
+          "kind": "file",
+          "sha256": "58ac63060c4d51701411cc70ffc8afe4c44d1843dfc63d7078bae21de71c58b3",
+          "bytes": 1473,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/TestFileOptions.cs": {
+          "kind": "file",
+          "sha256": "d5a39ecf8b15b553c9fdd5a8694c46092ddd17ea388bfcbf05316d462f178e41",
+          "bytes": 404,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/TestGlobalOptions.cs": {
+          "kind": "file",
+          "sha256": "b834a398aadfeb45befbb05eef37f31e586a59785d82b969658803e6965a21c5",
+          "bytes": 580,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.SourceGen.Tests/XDocumentParserTests.cs": {
+          "kind": "file",
+          "sha256": "9023285765f5e28652900c0db773f342eba2163231a5a99aefc2b2317c49c38c",
+          "bytes": 12655,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Testing/Avalonia.DBus.Testing.csproj": {
+          "kind": "file",
+          "sha256": "a85dea1421eeea2c3518534d5d26fa31831b1ede3ea78ad41dfb79f350193cab",
+          "bytes": 585,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Testing/DbusDaemonFixture.cs": {
+          "kind": "file",
+          "sha256": "b0bf2bdf7d766a32f54236fa710cb7ab47e01fde145210848a1e64ed40d8316b",
+          "bytes": 2074,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Testing/IntegrationFactAttribute.cs": {
+          "kind": "file",
+          "sha256": "237ae384365bc26d25011e5466c2a37bfc943f3ae830d167d02c558d0c40ff5c",
+          "bytes": 279,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Avalonia.DBus.Tests.csproj": {
+          "kind": "file",
+          "sha256": "a402eff6b33c87b4b53069b060da9de0cbe9f26152515750214c09a8d94f81ef",
+          "bytes": 1207,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/GlobalUsings.cs": {
+          "kind": "file",
+          "sha256": "03d87cbc30b565f9bb27460701b8c2171995d1d24b809cf2dd67364311bb6cb8",
+          "bytes": 36,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/BusFixture.cs": {
+          "kind": "file",
+          "sha256": "6c6b088fe8cd664167b157f6f2b837d3d44140b28ad0665e74e07195ceb598f9",
+          "bytes": 1749,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/DbusTestCollection.cs": {
+          "kind": "file",
+          "sha256": "87804bef5e3dd28cf5d1a1bdf4553d207536a8fbfd092625fc38901ec9e9b096",
+          "bytes": 191,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/IDBusMessageSerializer.cs": {
+          "kind": "file",
+          "sha256": "c16f6e454bc389f0175875c2303a31de74aec76e7e0402fc3658fbc79816a45b",
+          "bytes": 322,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/InMemoryWireConnection.cs": {
+          "kind": "file",
+          "sha256": "8d663d7926f45443989ce14364585dca7ab5a4c772ec27187831f533a08913e7",
+          "bytes": 5363,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/JsonDBusMessageSerializer.cs": {
+          "kind": "file",
+          "sha256": "bcbeb20a160200fe6b36454866a8b82729c96200bc1ae12fa3187567a90217cd",
+          "bytes": 26032,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/SkipUnlessLinuxAttribute.cs": {
+          "kind": "file",
+          "sha256": "c63799c8aef7a7a74781d81d7fe9b2f3f0f8426a329aa42d3afe857cece37ffb",
+          "bytes": 318,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/SkipUnlessMacOSAttribute.cs": {
+          "kind": "file",
+          "sha256": "ce659218cba8827c58b08fcdaa3de4dcba66bf4d967635d1c6b49fa0ca52c48f",
+          "bytes": 316,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/TestServer.cs": {
+          "kind": "file",
+          "sha256": "dedbae5d8e376bd00dbd6f366a83a6a1d4880168010df25a385c888f01d14d7b",
+          "bytes": 3715,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Helpers/test-session.conf": {
+          "kind": "file",
+          "sha256": "ed33e14e3f02d161a70a69968d1a103072c5c96f380877359d5307d69fc6e4fe",
+          "bytes": 397,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Integration/ConnectionTests.cs": {
+          "kind": "file",
+          "sha256": "af29376d7ba830801e8ae7ff0af9359ed6e85faa79f6c637cf9bc1cd8bfc4772",
+          "bytes": 1517,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Integration/IntrospectionTests.cs": {
+          "kind": "file",
+          "sha256": "2b6bfeb7032c5d30eb8ef4f85aa66adedcb49c8f89a7899714317eaa419bab26",
+          "bytes": 6961,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Integration/MethodCallTests.cs": {
+          "kind": "file",
+          "sha256": "d3883a839c68615ade8ddf62fc5abb97200ebd9502dc39c443ae7657c3826cb5",
+          "bytes": 3449,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Integration/NameOwnershipTests.cs": {
+          "kind": "file",
+          "sha256": "41e581fe5525cff14dff4af5a705330f7652d04dc6dd8b6d45035d8d6f21f7ea",
+          "bytes": 3059,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Integration/ObjectRegistrationTests.cs": {
+          "kind": "file",
+          "sha256": "61da94d57d83631155b53fa77d2ea96236b73690be85474153e9d2ea1eddc693",
+          "bytes": 4038,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Integration/P2PWireConnectionTests.cs": {
+          "kind": "file",
+          "sha256": "791edee1d56137d337736dd61b716df2b710d8aa601739803e729203182db705",
+          "bytes": 9623,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Integration/SignalTests.cs": {
+          "kind": "file",
+          "sha256": "719a54ffbb9d5cb2187c8552f6f6acc336d25add6df753f7b94c7856628d4c0d",
+          "bytes": 2936,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Interop/ConcurrencyTests.cs": {
+          "kind": "file",
+          "sha256": "14fb29e8979227851630fc04e2b2b6e7a76bf011009cd157ccf96e3a035bf631",
+          "bytes": 1082,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Interop/ErrorHandlingTests.cs": {
+          "kind": "file",
+          "sha256": "71b3aec4612b30ad77f0dd752b4cf8d56e8307b67c67b5c9401b75fb01bcd010",
+          "bytes": 1859,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Interop/IdentityEchoTests.cs": {
+          "kind": "file",
+          "sha256": "bea45ce3d71dd941e1f2178b11f3376a041e3225d78e3dcb9405d4f12e18a88c",
+          "bytes": 666,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Interop/ResourceCleanupTests.cs": {
+          "kind": "file",
+          "sha256": "7f63835f6f3c05aa1d15acfa8fb9242a0fd131e4ba7091bd519ffcea81ad787d",
+          "bytes": 1953,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Managed/DBusWireReaderTests.cs": {
+          "kind": "file",
+          "sha256": "db93321203a1388c1fdda3685f87163c27bbd12c071590a456414350f81110c2",
+          "bytes": 24560,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Managed/DBusWireWriterTests.cs": {
+          "kind": "file",
+          "sha256": "d2b9d2c3f6ffe4f35ec2c9e880065236cff745ca6144f3d7793113c336c6a4ca",
+          "bytes": 17805,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Managed/ManagedDBusMessageSerializerTests.cs": {
+          "kind": "file",
+          "sha256": "25d6d350a24c1a3ff51156e49f7df69a5783d93a54f83b94a2385bc289dc394d",
+          "bytes": 34031,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Transport/UnixSocketDBusTransportTests.cs": {
+          "kind": "file",
+          "sha256": "213784093db2fec661968eabd198c5691dd7968b696d591ec80f1408e9c90939",
+          "bytes": 7173,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/ChannelsDBusWireConnectionTests.cs": {
+          "kind": "file",
+          "sha256": "04c1e549234c4ae53d66cff54af1a6e9051df30a621e86a4c194a748f55df5da",
+          "bytes": 15928,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/CollectionHelpersTests.cs": {
+          "kind": "file",
+          "sha256": "7ab10e03622f69c7e153ce73f9272f2a9b565f1b22d7f1c072651450e9843255",
+          "bytes": 3127,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/InMemoryWireConnectionTests.cs": {
+          "kind": "file",
+          "sha256": "39ddd30f9fbf0d9fdbd897262b359059e2dd9924ff163bf65b4e5c1e710a231c",
+          "bytes": 16396,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/MessageTests.cs": {
+          "kind": "file",
+          "sha256": "8177913db7d91dae24bb69be9bcab20c2139f3321f99cc994ebddb89e2b28e41",
+          "bytes": 5718,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/PlatformAbstractionTests.cs": {
+          "kind": "file",
+          "sha256": "8f2a02f0648a3f9eeea7b9ea4597d60e26dcadc97c6cf8267f9aa2787a1dc47b",
+          "bytes": 1655,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/SignatureInferenceTests.cs": {
+          "kind": "file",
+          "sha256": "3b9fa2ad8e13e8a53a31604832b7e1410818af4d261a660b68c089a9f90bd74a",
+          "bytes": 6521,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/SignatureParserTests.cs": {
+          "kind": "file",
+          "sha256": "2f67c06e7dc990849768c9e3a0dc2d2fa8a4002e5330fead205dc7ef6733cbc6",
+          "bytes": 4753,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/SignatureTests.cs": {
+          "kind": "file",
+          "sha256": "dca6bfa25e0b5adf10e201f9361b819efdc07f5bb550fe296d2f22fbbf578c84",
+          "bytes": 249,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/StructTests.cs": {
+          "kind": "file",
+          "sha256": "950098988e2ba8e4d98a01bf369dac19ebad2e32a6105ee740043aaa5624db2e",
+          "bytes": 494,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/Utf8StringTests.cs": {
+          "kind": "file",
+          "sha256": "4237a53cba1ed4751c546c8de5b88dc66b08bd322a31c93765d5581cbddc10aa",
+          "bytes": 1758,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.Tests/Unit/VariantTests.cs": {
+          "kind": "file",
+          "sha256": "942d7312eba465baa0059760a4985ff3aa1156fd09189cf5f2c3e0550d0225e7",
+          "bytes": 814,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/ByteOrder.cs": {
+          "kind": "file",
+          "sha256": "a10d67c22db4045725c9d4c185f569cac52e215caec3b53e8dfe2b294f47820a",
+          "bytes": 119,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/DBusMessageType.cs": {
+          "kind": "file",
+          "sha256": "81241cd2a3b079e38fc76d3bc0563f12237d657c639b8e6f8e45d116e45f1fbc",
+          "bytes": 190,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/IMessageBuilder.cs": {
+          "kind": "file",
+          "sha256": "c4a007aae982cda9c44027b465e2ecbf74fbc4b711fe9abb59ee4323e1b7ebbd",
+          "bytes": 851,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/IMessageMarshaller.cs": {
+          "kind": "file",
+          "sha256": "49b006e90cd12272ebd57e2546a8d045fd8181956aa8bc750b95c2c276fd7389",
+          "bytes": 239,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/ISignatureBuilder.cs": {
+          "kind": "file",
+          "sha256": "b948768ef5ea5368533f0f56ccdad9dd8ca8b7bbe56b682ae2ee0c947e19dea3",
+          "bytes": 307,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/IWireMarshallerFactory.cs": {
+          "kind": "file",
+          "sha256": "bd482787f84768e0860ef9eab431d76c12075e7b2629193301721b1b879664f8",
+          "bytes": 347,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/IWireReader.cs": {
+          "kind": "file",
+          "sha256": "f60a5a53be550139b76ba1232534235c9d971c5fbe5980d77726d87a86cabf39",
+          "bytes": 539,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Abstractions/IWireWriter.cs": {
+          "kind": "file",
+          "sha256": "a525e566fa214f920382d86bea3178e73570769029f94b04964ebc557d7a8329",
+          "bytes": 778,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Avalonia.DBus.WireMarshalling.Tests.csproj": {
+          "kind": "file",
+          "sha256": "51642d5cc084a39295cb4ab17b1bd6a1e882121f8e5a813dd68ba2304e08c299",
+          "bytes": 1141,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/NDesk/NDeskMarshallerFactory.cs": {
+          "kind": "file",
+          "sha256": "169521b312d170feca8cd7c46db23bb145e4310fbad1285fb18b845d1dc58f5b",
+          "bytes": 858,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/NDesk/NDeskMessageBuilder.cs": {
+          "kind": "file",
+          "sha256": "d3e2e5fb79907b5b3e4f384730c2e99fcec5adfcdbc97ac2cbaedd395202ef6e",
+          "bytes": 4542,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/NDesk/NDeskMessageMarshaller.cs": {
+          "kind": "file",
+          "sha256": "0c1aa6ed60c3abe238c653e1109b3aa95f3d8571bc3e9fb0ad5b5b000ff77218",
+          "bytes": 639,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/NDesk/NDeskSignatureBuilder.cs": {
+          "kind": "file",
+          "sha256": "3a7c622e2219537598eecf849ad8bedb13cf75f249ece0758af983989251b466",
+          "bytes": 657,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/NDesk/NDeskWireReader.cs": {
+          "kind": "file",
+          "sha256": "bb6a8f279d8519d07ca43719986bf80e26bd51eed8feef717feb2cc65d9cca1c",
+          "bytes": 2052,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/NDesk/NDeskWireWriter.cs": {
+          "kind": "file",
+          "sha256": "04a72b394468afe3bfad67a2bcec32a55f20f2c1f78c9c98f4c4e5ff488e422e",
+          "bytes": 1781,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Tests/BodyValidationTests.cs": {
+          "kind": "file",
+          "sha256": "89a7bd2cac94ee6c96a97709761b58280d323c23274e759fa5f79d2ad5c83eb2",
+          "bytes": 4214,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Tests/ByteOrderConversionTests.cs": {
+          "kind": "file",
+          "sha256": "297a39b3736ec0dd578bcb061e210c5fc6ab3ef36ca01f08452c0e339b7b8b93",
+          "bytes": 15073,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Tests/DeserializationTests.cs": {
+          "kind": "file",
+          "sha256": "a1e33f21a12cc4e588492ca305db1ddc324c306bb3465536cb25093791516a98",
+          "bytes": 9512,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Tests/ManagedSerializerCrossValidationTests.cs": {
+          "kind": "file",
+          "sha256": "4d0f8909184e8bb998d809978eb3b372b6ebf3c17febea6173e5ec9347438394",
+          "bytes": 31896,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Tests/MarshalRoundTripTests.cs": {
+          "kind": "file",
+          "sha256": "880250e091e8b9870217e9c64d1c3143717a8f05f121885d2c90dd1baa4a0a24",
+          "bytes": 9123,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Tests/MessageTests.cs": {
+          "kind": "file",
+          "sha256": "c39b413117a36a6d1584f186060e95a16629f41060bb5164e1c33991da38c140",
+          "bytes": 14908,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/Avalonia.DBus.WireMarshalling.Tests/Tests/ScenarioMatrixTests.cs": {
+          "kind": "file",
+          "sha256": "32eff09d32a9433369f14d8897e5d9160ba13ac15182e14751a8e3bdf5f8ca77",
+          "bytes": 14906,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/GlobalUsings.cs": {
+          "kind": "file",
+          "sha256": "03d87cbc30b565f9bb27460701b8c2171995d1d24b809cf2dd67364311bb6cb8",
+          "bytes": 36,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Helpers/NdeskBusFixture.cs": {
+          "kind": "file",
+          "sha256": "a8adb892dd1011a3a4a8443aafc9b3297d2c84ed53fedc1eb4014d00df426187",
+          "bytes": 1150,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Helpers/NdeskTestCollection.cs": {
+          "kind": "file",
+          "sha256": "e113cd4ce08e120cbe9889362469e33c4f3eae5a9585a34f97bea2f0608f5099",
+          "bytes": 200,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Helpers/test-session.conf": {
+          "kind": "file",
+          "sha256": "ed33e14e3f02d161a70a69968d1a103072c5c96f380877359d5307d69fc6e4fe",
+          "bytes": 397,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Integration/ConnectionTests.cs": {
+          "kind": "file",
+          "sha256": "914ece276749df013156f8d4b5acef679ed9dfb659b46d69fe62007bb3786de3",
+          "bytes": 798,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Integration/MethodCallTests.cs": {
+          "kind": "file",
+          "sha256": "e2733b3b2b154762268c0d8db4ce1ce5318f884c7e2ae2212429f4529471db40",
+          "bytes": 1013,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Integration/NameOwnershipTests.cs": {
+          "kind": "file",
+          "sha256": "63c8c2f02406f941a0ce9af87896af89631e80f56012b5ab0f5b603a78114bc1",
+          "bytes": 1769,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Integration/SignalTests.cs": {
+          "kind": "file",
+          "sha256": "2f0ff55337bd38fa07a477a5742fff4261fb98d9ee3f5c2a6f8a641b09b70c66",
+          "bytes": 1503,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/NDesk.DBus.Tests.csproj": {
+          "kind": "file",
+          "sha256": "bbc4715481b8eb5b94a1936782e528397df929568f50f84c634f847057d27fb2",
+          "bytes": 1098,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/AddressParsingTests.cs": {
+          "kind": "file",
+          "sha256": "f19f5e6df4d014bd139eb1641d9b53a39767cb42af0593ed62821be2cff0c1d0",
+          "bytes": 2997,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/MatchRuleTests.cs": {
+          "kind": "file",
+          "sha256": "117419354e14ad8ae3ddf08872bfb3027f36e701902c14e0f835ba074375bab7",
+          "bytes": 3991,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/MessageReaderWriterTests.cs": {
+          "kind": "file",
+          "sha256": "eec0a0a017dbabc3cb92175668045c7b31afbf30c50647bf318f41918ac3dc12",
+          "bytes": 4414,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/MessageTests.cs": {
+          "kind": "file",
+          "sha256": "748ad5e8d26ec9784c4a2ebc85da6ff52f0e02d1f9bef467eebd3ba5237b65f6",
+          "bytes": 3522,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/ObjectPathTests.cs": {
+          "kind": "file",
+          "sha256": "b057271525058499d1229ddaf43cabe23f5e054ff7ef399e3246470fbe501bf3",
+          "bytes": 1185,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/ProtocolTests.cs": {
+          "kind": "file",
+          "sha256": "b3e58cc9a7a4a1cc3b4dfbfff69a19490feb56edb34406a5535eb38550949393",
+          "bytes": 1856,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/SignatureCompositionTests.cs": {
+          "kind": "file",
+          "sha256": "d940fdc837883b7dac1207a5e5a366fe528e1ee061b16fb4da52ace50fd19780",
+          "bytes": 1972,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/SignatureInferenceTests.cs": {
+          "kind": "file",
+          "sha256": "cbdbfbd34b4fe0464640d55ef61910325ec8d75a6a65889c85491a09615e5a7f",
+          "bytes": 1722,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/SignatureParsingTests.cs": {
+          "kind": "file",
+          "sha256": "1fe22daa5b92e4c323d56dfc93bae66305177e5d30ee0fb3269a689f34cbb20e",
+          "bytes": 2262,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/NDesk.DBus.Tests/Unit/SignatureTests.cs": {
+          "kind": "file",
+          "sha256": "c548610fc60dc038d31303eac7a1cd303b385d21c5f79950c8e4549de70c7f10",
+          "bytes": 783,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/AUTHORS": {
+          "kind": "file",
+          "sha256": "4a5390009c4836af85598ebbc1da5a95bfe8ac3ea1a0041715b45fb56bfa0c03",
+          "bytes": 27,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/COPYING": {
+          "kind": "file",
+          "sha256": "2282d9f55956f72ad0435ab9c76400222cd7ca7e490d4fe5490406e2f008fc67",
+          "bytes": 1066,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/ChangeLog": {
+          "kind": "file",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/INSTALL": {
+          "kind": "file",
+          "sha256": "3415cabd49c622dbd70adfe372500283482b1502a9075e6d7720864d43271665",
+          "bytes": 9498,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/Makefile.am": {
+          "kind": "file",
+          "sha256": "42b6cbc435d3443330f3899b5665567074307af3e37f14aac212ac511d7fa172",
+          "bytes": 323,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/NEWS": {
+          "kind": "file",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/README": {
+          "kind": "file",
+          "sha256": "0d73f49b4efaea9b3fb1de439c0295571924d78991a32eb1e267d42019e3fdc2",
+          "bytes": 1412,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/config.guess": {
+          "kind": "file",
+          "sha256": "3f7335e769a1e6231fa359d9ec935dc407f22277f75681ba7908b3fd78a7160b",
+          "bytes": 44573,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/config.sub": {
+          "kind": "file",
+          "sha256": "ebebd4949297fe6eccfe19b0864aa4a285ad4f193137409ac400efcbdef52d4b",
+          "bytes": 32665,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/configure": {
+          "kind": "file",
+          "sha256": "8d892915700b2b860221d7133fa51621e24e259c8b884037215807f87b7dd392",
+          "bytes": 110600,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/configure.ac": {
+          "kind": "file",
+          "sha256": "406d3a1ff17f5f8d5501c2c82dad06449fc798622b501ad76613c570004ba5d0",
+          "bytes": 1123,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/examples/Makefile.am": {
+          "kind": "file",
+          "sha256": "33dc9dc00bc546ec2c689ced51e0b2cb5d15b2c712a2af69ef441b592bde0bd4",
+          "bytes": 111,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/examples/Notifications.cs": {
+          "kind": "file",
+          "sha256": "2a9959bd715c5a16f2373d8f8d2864e0452966cd394b7c83e1a336ded9ab6d69",
+          "bytes": 817,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/examples/Test.cs": {
+          "kind": "file",
+          "sha256": "7fdb988a13fbfa5392ba14f90620afb015d002bdc1c2e2a88bd5fb5c4e9a1673",
+          "bytes": 1150,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/examples/TestExportInterface.cs": {
+          "kind": "file",
+          "sha256": "5fd280bc177b677bb4c978a04bfe8fc4cf0fd4f892fcba560cd686e914ca736b",
+          "bytes": 4479,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/examples/TestNotifications.cs": {
+          "kind": "file",
+          "sha256": "18339e90cde3ed7d920c86e16cb8fe50f5f4734b572125affc14f936ce41ac19",
+          "bytes": 1306,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/examples/TestSample.cs": {
+          "kind": "file",
+          "sha256": "6d0e1524bb67767b1ceba1b570edd5c0666d4dbbb6edfeab6130c7bf17932be7",
+          "bytes": 1426,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/missing": {
+          "kind": "file",
+          "sha256": "c71fc062966f41250b0972198fb300a7194f9a32b29f871f842533ad2f6d9fe8",
+          "bytes": 11014,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/ndesk-dbus-1.0.pc.in": {
+          "kind": "file",
+          "sha256": "df2a0c415b09b1eb271513c2dfc630917f9e58765bf3d188f34fec83738cfa6b",
+          "bytes": 340,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/ndesk.snk": {
+          "kind": "file",
+          "sha256": "bcef0e2bdfd595d7840782dd0bc92e0a47ff7baec022e4a10eef4ed58bfb6658",
+          "bytes": 236,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Address.cs": {
+          "kind": "file",
+          "sha256": "9c7855c078529eef4a64a493cd777e99b8c3b0f59d5fe66d17253e1d516a604f",
+          "bytes": 3515,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/AssemblyInfo.cs": {
+          "kind": "file",
+          "sha256": "98c8ee0685a4915d7ecddbb7d01ffebe0ab7cca1cf67e9f0152699c835e54dbe",
+          "bytes": 633,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/AssemblyInfo.cs.in": {
+          "kind": "file",
+          "sha256": "3af8722fb20344d795adf1fb972c2ab6ff1f2743ea3f6f05d72d66097a84ed1c",
+          "bytes": 1407,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Authentication.cs": {
+          "kind": "file",
+          "sha256": "0eb8aed2e5c8120bb892bff60832d30b6266c37c5a92d0409b72918351a833a0",
+          "bytes": 3352,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Bus.cs": {
+          "kind": "file",
+          "sha256": "09fe0c43595e2a0fa9314c59b31349580143875a03b3d3d46ce9801f008519e9",
+          "bytes": 3827,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/BusObject.cs": {
+          "kind": "file",
+          "sha256": "d1d12d0e862e50adaddcb287512ae91a0b3db9f0d69ff7895809a6586b234581",
+          "bytes": 8568,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Connection.cs": {
+          "kind": "file",
+          "sha256": "dd8e4c498c3e04e87cc223523a0cec904234871924676b315fac99be0e1b193f",
+          "bytes": 14544,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/DBus.cs": {
+          "kind": "file",
+          "sha256": "5864e8432bd9d4dcee8a6c9c3956801894caec02ab136c64633418da549ac5c7",
+          "bytes": 2405,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/DProxy.cs": {
+          "kind": "file",
+          "sha256": "87f78bdfe5b9be5e8e4f265977f6c3b77d0155afe69dc1e77bcbc26da9e7de06",
+          "bytes": 2501,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/ExportObject.cs": {
+          "kind": "file",
+          "sha256": "4d2430cf8978f134d6a575ebd09116bd2d0e8ae3d8f41cf90c37090b82fd2b64",
+          "bytes": 2729,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Introspection.cs": {
+          "kind": "file",
+          "sha256": "c246f2b018cd1fd05ea5f497421ba67ca3012183ec3d50fa5a47f404aabe8723",
+          "bytes": 9035,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Makefile.am": {
+          "kind": "file",
+          "sha256": "f080678d5d5c943c9995bf0cb2820b7e7a52778f49fcec69f448b40aff8eedb0",
+          "bytes": 1681,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Mapper.cs": {
+          "kind": "file",
+          "sha256": "a07e1e87cb007759ad8935cc1d984b31bd33c1ac77832ade0e0a5d1e15bfbda3",
+          "bytes": 10990,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/MatchRule.cs": {
+          "kind": "file",
+          "sha256": "1496ace7ac7cfdf0f7d47a31156b5151871fad1edb80c8a71bde78ef7ca2d812",
+          "bytes": 5182,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Message.cs": {
+          "kind": "file",
+          "sha256": "32a7bbcc0527c1cb063405103adc6cbf04172b5c140a807ab500fc74f13d4bdb",
+          "bytes": 1979,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/MessageFilter.cs": {
+          "kind": "file",
+          "sha256": "cd57d9b504845dac6c4f26a101e9c58526e3d74f198f0b6eba157eebebfd5e71",
+          "bytes": 1390,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/MessageReader.cs": {
+          "kind": "file",
+          "sha256": "2cb33e01aa80b5a8db1d1f279072208af20954916119261fbd5de64e2074bd23",
+          "bytes": 9453,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/MessageWire.cs": {
+          "kind": "file",
+          "sha256": "04d8d4db8eceecb11562d2d62713c63db497cf81aa680ca15155f7d46ba05d06",
+          "bytes": 3167,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/MessageWriter.cs": {
+          "kind": "file",
+          "sha256": "bfc286b082c7f11ee7ccc7e6f65ed7490b5875797426e2b14732627dad4111f4",
+          "bytes": 10175,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/NDesk.DBus.csproj": {
+          "kind": "file",
+          "sha256": "3b152d13f5888c87679a60d3c19b36e9ae825fc4ca226c24654392740a581079",
+          "bytes": 528,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/PendingCall.cs": {
+          "kind": "file",
+          "sha256": "2366283b8ad3970487838c9fbf90da8324a33c6809d55f2c72432ef2757d13ac",
+          "bytes": 1081,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Protocol.cs": {
+          "kind": "file",
+          "sha256": "542f84363b000b0e29ef2f70713aba7035c275821d683e71032c16996f45989e",
+          "bytes": 6850,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Signature.cs": {
+          "kind": "file",
+          "sha256": "f1a36ab330cfa8d2ecfd923a8afe0f3c28da3e001c578888e8fa935afa739538",
+          "bytes": 12705,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/SocketTransport.cs": {
+          "kind": "file",
+          "sha256": "bf5f26a1e24263babf2bbbac6e15aa10c2c39d3d4dc5b586e49375ce7dd3b679",
+          "bytes": 1282,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Transport.cs": {
+          "kind": "file",
+          "sha256": "9759267e90084e9ec5df3529aa735dbefe9bb2d466c7adfbb6d0d8920729a7b8",
+          "bytes": 1176,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/TypeImplementer.cs": {
+          "kind": "file",
+          "sha256": "255ad3ede6307722f5b6d814257559c23ee188e4867932fd513903f48f240e1f",
+          "bytes": 11443,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/UnixNativeTransport.cs": {
+          "kind": "file",
+          "sha256": "9567fdadd7704744661d7cc0358967100e32a3386cda4f0f985c6e6536453b27",
+          "bytes": 7577,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/UnixTransport.cs": {
+          "kind": "file",
+          "sha256": "1b6c943120e160ef4c38a280c44408360de4e439548d1032448efba388f84d54",
+          "bytes": 789,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/src/Wrapper.cs": {
+          "kind": "file",
+          "sha256": "0516acdde9773977e4b56239ed47ca22bc140d0bb399e12d334c9459afd8da43",
+          "bytes": 5000,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/tools/Introspect.cs": {
+          "kind": "file",
+          "sha256": "6bde69015d54c73fb3e568f869d674450ded160827d1df297acef8c67bb37696",
+          "bytes": 870,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/tools/Makefile.am": {
+          "kind": "file",
+          "sha256": "c9d9b8990521999a5a65e0458c5c22445ac16eb8314dff35d963bbde318b3818",
+          "bytes": 44,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-0.6.0/tools/Monitor.cs": {
+          "kind": "file",
+          "sha256": "abb94fbb7ea6c4281de77bd4afecd9fe03420b5240ef62d964e77f7c68d6741c",
+          "bytes": 2652,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/AUTHORS": {
+          "kind": "file",
+          "sha256": "4a5390009c4836af85598ebbc1da5a95bfe8ac3ea1a0041715b45fb56bfa0c03",
+          "bytes": 27,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/COPYING": {
+          "kind": "file",
+          "sha256": "2282d9f55956f72ad0435ab9c76400222cd7ca7e490d4fe5490406e2f008fc67",
+          "bytes": 1066,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/ChangeLog": {
+          "kind": "file",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/INSTALL": {
+          "kind": "file",
+          "sha256": "3415cabd49c622dbd70adfe372500283482b1502a9075e6d7720864d43271665",
+          "bytes": 9498,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/Makefile.am": {
+          "kind": "file",
+          "sha256": "39193ca4570d411a12b6a7326e2785581c46758ebde2a37556b314fd4b04d714",
+          "bytes": 332,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/NEWS": {
+          "kind": "file",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/README": {
+          "kind": "file",
+          "sha256": "4119998e6ddd59401c231a9fadf0474caa33127dc1059f230712cd8bd7f6f004",
+          "bytes": 214,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/config.guess": {
+          "kind": "file",
+          "sha256": "3f7335e769a1e6231fa359d9ec935dc407f22277f75681ba7908b3fd78a7160b",
+          "bytes": 44573,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/config.sub": {
+          "kind": "file",
+          "sha256": "ebebd4949297fe6eccfe19b0864aa4a285ad4f193137409ac400efcbdef52d4b",
+          "bytes": 32665,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/configure": {
+          "kind": "file",
+          "sha256": "2ddbfe425f91ea4a81672326b296694ad8a2b50281f4454aeb42d88c366299b8",
+          "bytes": 114550,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/configure.ac": {
+          "kind": "file",
+          "sha256": "9477cb5cf6e2be54ee1ab0c218b2c9c7f09e411f36ded4f3598f64d072fd7353",
+          "bytes": 1092,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/examples/Makefile.am": {
+          "kind": "file",
+          "sha256": "16f3cb8656ec444212a44f75379476457c57c8aa93f662ccc67139daf4bd42f3",
+          "bytes": 61,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/examples/Test.cs": {
+          "kind": "file",
+          "sha256": "bf8ac7e30ae45b503bb80454cc77bb70d0a86c571b616bb91e860e9c61cbb28e",
+          "bytes": 1292,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/examples/TestExport.cs": {
+          "kind": "file",
+          "sha256": "8997476fd37ed733a283bbe8ac9e10b159d0e99303ee1fa476227718b1ccb768",
+          "bytes": 1349,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/examples/TestSystemBus.cs": {
+          "kind": "file",
+          "sha256": "af0f338fe0cd4f730790a607a94b7ac8cb1cfe80a97984ba747edecfc6aacc21",
+          "bytes": 1743,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/missing": {
+          "kind": "file",
+          "sha256": "c71fc062966f41250b0972198fb300a7194f9a32b29f871f842533ad2f6d9fe8",
+          "bytes": 11014,
+          "mode": 448
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/ndesk-dbus-glib-1.0.pc.in": {
+          "kind": "file",
+          "sha256": "e8c882ab4423d74202a4cf8f29fa7ae1283541e24e25847acd7955bcf2eaa3d9",
+          "bytes": 303,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/ndesk.snk": {
+          "kind": "file",
+          "sha256": "bcef0e2bdfd595d7840782dd0bc92e0a47ff7baec022e4a10eef4ed58bfb6658",
+          "bytes": 236,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/src/AssemblyInfo.cs": {
+          "kind": "file",
+          "sha256": "cf79a2c51da0393e1b2c16471f040a253e4bd59273590a3418c50c3f73c0d3f6",
+          "bytes": 387,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/src/AssemblyInfo.cs.in": {
+          "kind": "file",
+          "sha256": "b44e853f3eca61a77612c1e22c98af440d39542c27e176cf2ed91bb8c6c8c530",
+          "bytes": 572,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/src/GLib.IO.cs": {
+          "kind": "file",
+          "sha256": "e1667f44150a46adf0dcf31070959a6bf6b1f64bb00eafe8b060fd29d9cd1b1f",
+          "bytes": 6115,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/src/GLib.cs": {
+          "kind": "file",
+          "sha256": "8cf183b1b10ec874e9e733161ba1749838769265d6185ca800af94b194d22551",
+          "bytes": 1365,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/src/Makefile.am": {
+          "kind": "file",
+          "sha256": "8498b59cfa720cdbbfede0f0b3cd29ac6181467755765e429ef695cb882e1559",
+          "bytes": 1092,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/src/NDesk.DBus.GLib.csproj": {
+          "kind": "file",
+          "sha256": "451394663eb3e421e2b0037230e245395ca2a4e005c5732f5e884f265e20e0d5",
+          "bytes": 431,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tests/external/ndesk-dbus-glib-0.4.1/src/NDesk.DBus.GLib.dll.config": {
+          "kind": "file",
+          "sha256": "7967c5298fb18ec2e513e3d849ef218e27e66f6b768235a9abcff002f0dbfbde",
+          "bytes": 95,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tools/Avalonia.DBus.PublicApiExtractor/Avalonia.DBus.PublicApiExtractor.csproj": {
+          "kind": "file",
+          "sha256": "2f1d3812f5eb4994c19666be14ff83e18f6e5fdbfb3872e193c2bc453bdcc48e",
+          "bytes": 747,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tools/Avalonia.DBus.PublicApiExtractor/Program.cs": {
+          "kind": "file",
+          "sha256": "a503d6808f902e8dc08136c3c510b36930126aaadf1860b167454dcf195f3d4a",
+          "bytes": 47789,
+          "mode": 384
+        },
+        "framework/CUI/vendor/Avalonia/external/Avalonia.DBus/tools/check-aot-compat.sh": {
+          "kind": "file",
+          "sha256": "c55d1e9cd9e3ec76523f948ab415e760e3a1e4925b8fab4e555ac1e74d01e0c9",
+          "bytes": 1011,
+          "mode": 448
+        }
+      }
+    }
+  }
+}

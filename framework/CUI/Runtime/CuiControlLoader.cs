@@ -2449,6 +2449,9 @@ public sealed partial class CuiControlLoader : IDisposable
     /// </summary>
     public void RefreshBindings()
     {
+        // Retire branches whose guard changed before touching their repeated sources or bindings.
+        RefreshLiveConditionals(null);
+        RefreshRepeats(null);
         // Enumerate a snapshot: applying a binding (for example re-entering the QueryViewport
         // source, which publishes and refreshes authored bindings) can add new live binding records
         // while this pass is in flight. A snapshot keeps the enumeration stable while every record
@@ -2458,9 +2461,6 @@ public sealed partial class CuiControlLoader : IDisposable
         {
             ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
         }
-        RefreshLiveConditionals(null);
-        foreach (var repeat in _repeats.ToArray())
-            RequestRepeatRefresh(repeat);
     }
 
     /// <summary>A validated, snapshotted RandomOnce plan awaiting once-per-frame selection in the
@@ -2685,6 +2685,13 @@ public sealed partial class CuiControlLoader : IDisposable
     {
         void RefreshAffectedBindings()
         {
+            // Preserve conditional retirement before Repeat reconciliation: a hidden branch must not
+            // read a newly supplied source or construct controls while its old owner is being retired.
+            RefreshLiveConditionals(propertyName);
+            // Replace keyed item contexts and retire removed rows before resolving their bindings.
+            // Otherwise a host refresh replays old item values once (including obsolete image/resource
+            // requests) before the Repeat publishes the replacement or removes the old control.
+            RefreshRepeats(propertyName);
             // Snapshot the live-binding list: re-entrant publication (e.g. a QueryViewport source
             // assignment that refreshes authored bindings and reconciles Repeats) can append records
             // while this pass is in flight. A snapshot keeps enumeration stable without dropping any
@@ -2699,22 +2706,25 @@ public sealed partial class CuiControlLoader : IDisposable
 
                 ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
             }
-            RefreshLiveConditionals(propertyName);
-            foreach (var repeat in _repeats.ToArray())
-            {
-                var sourcePath = (repeat.Component.Repeat?.Source as CuiBindingValue)?.Path;
-                var leaf = sourcePath is null ? null : sourcePath[(sourcePath.LastIndexOf('.') + 1)..];
-                if (string.IsNullOrEmpty(propertyName) || sourcePath is null
-                    || sourcePath.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
-                    || leaf!.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
-                    RequestRepeatRefresh(repeat);
-            }
         }
 
         if (Dispatcher.UIThread.CheckAccess())
             RefreshAffectedBindings();
         else
             Dispatcher.UIThread.Post(RefreshAffectedBindings);
+    }
+
+    private void RefreshRepeats(string? propertyName)
+    {
+        foreach (var repeat in _repeats.ToArray())
+        {
+            var sourcePath = (repeat.Component.Repeat?.Source as CuiBindingValue)?.Path;
+            var leaf = sourcePath is null ? null : sourcePath[(sourcePath.LastIndexOf('.') + 1)..];
+            if (string.IsNullOrEmpty(propertyName) || sourcePath is null
+                || sourcePath.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                || leaf!.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                RequestRepeatRefresh(repeat);
+        }
     }
 
     private void RefreshLiveConditionals(string? propertyName, ICuiBindingContext? context = null)

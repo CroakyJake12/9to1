@@ -38,9 +38,12 @@ public sealed partial class BrowseNativeUiTests
     [AvaloniaFact]
     public async Task Actual_tab_rows_resolve_labels_and_select_current_source_issued_identity()
     {
+        using var trace = new FixtureTraceScope(nameof(Actual_tab_rows_resolve_labels_and_select_current_source_issued_identity));
         var chrome = await BrowseChrome.CreateAsync(new Paths());
+        Trace("chrome:created");
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
@@ -65,15 +68,18 @@ public sealed partial class BrowseNativeUiTests
             Assert.IsType<string>(actualLabel);
             await Retire(window);
         }
-        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
     }
 
     [AvaloniaFact]
     public async Task Same_key_row_refresh_uses_current_target_after_native_title_changes()
     {
+        using var trace = new FixtureTraceScope(nameof(Same_key_row_refresh_uses_current_target_after_native_title_changes));
         var factory = new FixtureFactory(); var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        Trace("chrome:created");
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
@@ -83,7 +89,7 @@ public sealed partial class BrowseNativeUiTests
             await Click(window, workspace, Find(window, "BrowseNewTabButton"));
             var oldRow = Rows(workspace).Single(row => row.Key == originalId.ToString("D"));
             originalHost.PublishFixtureTitle("Current native title");
-            await Task.WhenAll(workspace.OriginalNotifications.ToArray());
+            await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
             var current = Rows(workspace).Single(row => row.Key == oldRow.Key);
             Assert.NotSame(oldRow.Target, current.Target);
             Assert.Contains("Current native title", current.Label);
@@ -95,25 +101,28 @@ public sealed partial class BrowseNativeUiTests
             Assert.NotNull(originalHost.OriginalNativeView.Parent);
             await Retire(window);
         }
-        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
     }
     [AvaloniaFact]
     public async Task Actual_saved_rows_open_canonical_bookmark_and_history_and_decline_removed_row()
     {
+        using var trace = new FixtureTraceScope(nameof(Actual_saved_rows_open_canonical_bookmark_and_history_and_decline_removed_row));
         var factory = new FixtureFactory(); var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        Trace("chrome:created");
         await chrome.SetDefaultEngineAsync(BrowseEngineKind.Chromium);
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
             await Click(window, workspace, Find(window, "BrowseChromiumTabButton"));
             var originalHost = Assert.Single(factory.Hosts);
             originalHost.CommitFixturePage(new Uri("https://saved.example/bookmark"), "Saved bookmark");
-            await Task.WhenAll(chrome.OriginalNativeSources.ToArray()); await Task.WhenAll(workspace.OriginalNotifications.ToArray());
+            await Observe(Task.WhenAll(chrome.OriginalNativeSources.ToArray()), window); await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
             await Click(window, workspace, Find(window, "BrowseBookmarkButton"));
             originalHost.CommitFixturePage(new Uri("https://other.example/page"), "Other visit");
-            await Task.WhenAll(chrome.OriginalNativeSources.ToArray()); await Task.WhenAll(workspace.OriginalNotifications.ToArray());
+            await Observe(Task.WhenAll(chrome.OriginalNativeSources.ToArray()), window); await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
             await Click(window, workspace, Find(window, "BrowseOpenBookmarksButton"));
             var bookmarkTab = chrome.State.SelectedTabId;
             Assert.Equal(BrowserNativePage.Bookmarks, chrome.State.SelectedTab.NativePage);
@@ -142,17 +151,20 @@ public sealed partial class BrowseNativeUiTests
             Assert.False(workspace.TryGetItemValue(visit, "Target", out _));
             await Retire(window);
         }
-        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
     }
     [AvaloniaFact]
     public async Task Address_and_reset_actions_recover_an_unavailable_tab_through_persisted_site_policy()
     {
+        using var trace = new FixtureTraceScope(nameof(Address_and_reset_actions_recover_an_unavailable_tab_through_persisted_site_policy));
         var paths = new Paths(); var factory = new FixtureFactory();
         await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Gecko,
             new Dictionary<string, BrowseEngineKind> { ["chromium.example"] = BrowseEngineKind.Chromium }));
         var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        Trace("chrome:created");
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
@@ -171,15 +183,18 @@ public sealed partial class BrowseNativeUiTests
             Assert.Equal(BrowseEngineState.Ready, chrome.State.SelectedTab.EngineState);
             await Retire(window);
         }
-        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
     }
 
     [AvaloniaFact]
     public async Task Authored_find_and_zoom_controls_restore_the_selected_tabs_actual_state()
     {
+        using var trace = new FixtureTraceScope(nameof(Authored_find_and_zoom_controls_restore_the_selected_tabs_actual_state));
         var factory = new FixtureFactory(); var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        Trace("chrome:created");
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
@@ -200,15 +215,18 @@ public sealed partial class BrowseNativeUiTests
             Assert.True(workspace.TryGetValue("Zoom", out var zoom)); Assert.Equal("110%", zoom);
             await Retire(window);
         }
-        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
     }
 
     [AvaloniaFact]
     public async Task Reopen_button_and_standard_keyboard_shortcuts_restore_tabs_without_reopening_private_state()
     {
+        using var trace = new FixtureTraceScope(nameof(Reopen_button_and_standard_keyboard_shortcuts_restore_tabs_without_reopening_private_state));
         var chrome = await BrowseChrome.CreateAsync(new Paths());
+        Trace("chrome:created");
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
         try
         {
             window.Show(); await Observe(window.InitializeAsync(), window);
@@ -228,7 +246,7 @@ public sealed partial class BrowseNativeUiTests
             Assert.DoesNotContain(chrome.State.Tabs, tab => tab.Id == privateId);
             await Retire(window);
         }
-        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
         async Task Shortcut(Key key)
         {
             var before = workspace.OriginalCommand;
@@ -236,7 +254,7 @@ public sealed partial class BrowseNativeUiTests
             window.KeyRelease(key, RawInputModifiers.Control | RawInputModifiers.Shift, PhysicalKey.None, null);
             Assert.NotNull(workspace.OriginalCommand); Assert.NotSame(before, workspace.OriginalCommand);
             await Observe(workspace.OriginalCommand!, window);
-            await Task.WhenAll(workspace.OriginalNotifications.ToArray());
+            await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
         }
     }
 
@@ -252,9 +270,13 @@ public sealed partial class BrowseNativeUiTests
     public async Task Authored_shell_renders_and_pointer_tab_creation_works_at_desktop_and_narrow_sizes(
         int width, int height, CuiAppearance appearance)
     {
+        using var trace = new FixtureTraceScope(nameof(Authored_shell_renders_and_pointer_tab_creation_works_at_desktop_and_narrow_sizes));
+        Trace($"theory:{width}x{height}:{appearance}");
         var chrome = await BrowseChrome.CreateAsync(new Paths());
+        Trace("chrome:created");
         var workspace = new BrowseNativeWorkspace(chrome, _ => true);
         var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness(), appearance);
+        RegisterProductionImageResolver(window);
         window.Width = width; window.Height = height;
         try
         {
@@ -272,21 +294,28 @@ public sealed partial class BrowseNativeUiTests
             await Observe(loader.WhenActionsIdleAsync(), window);
             Assert.NotNull(workspace.OriginalCommand); await Observe(workspace.OriginalCommand!, window);
             Assert.Equal(2, chrome.State.Tabs.Count);
-            await Click(window, workspace, Find(window, "BrowseMoreButton"));
+            Settle(window);
+            // Open the real profile overlay and Web Tools group so the bundled
+            // tool/engine controls are actually visible for caption-fit checks.
+            await Click(window, workspace, Find(window, "HavenProfileButton"));
+            await Click(window, workspace, Find(window, "BrowseWebToolsHeader"));
             // Rendered toolbar labels must fit at the narrow width too; a
             // clickable clipped label is not satisfactory visual acceptance.
             window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
             foreach (var id in new[] { "BrowseChromiumTabButton", "BrowseDiscardAddressButton", "BrowseResetTabEngineButton",
-                "BrowseOpenHistoryButton", "BrowseOpenBookmarksButton", "BrowseOpenDownloadsButton", "BrowseOpenSettingsButton" })
+                "BrowseOpenHistoryButton", "BrowseOpenBookmarksButton", "BrowseOpenDownloadsButton", "BrowseSettingsButton" })
             {
-                var action = Find(window, id);
-                action.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+                var action = FindMounted(window, id);
+                action.BringIntoView(); Settle(window);
+                action = FindMounted(window, id);
                 var caption = Assert.Single(action.GetVisualDescendants().OfType<TextBlock>());
                 Assert.True(caption.TextLayout.Width <= caption.Bounds.Width + 0.5,
                     $"{id} caption requires {caption.TextLayout.Width} but has {caption.Bounds.Width} at width {width}.");
-                Assert.InRange(action.TranslatePoint(new Point(action.Bounds.Width / 2, action.Bounds.Height / 2), window)!.Value.Y, 0, height);
+                var center = action.TranslatePoint(new Point(action.Bounds.Width / 2, action.Bounds.Height / 2), window);
+                Assert.NotNull(center);
+                Assert.InRange(center.Value.Y, 0, height);
             }
-            await Click(window, workspace, Find(window, "BrowseCloseToolsButton"));
+            await Click(window, workspace, Find(window, "BrowseCloseProfileMenuButton"));
             var address = window.GetLogicalDescendants().OfType<TextBox>().Single(control => control.Name == "BrowseAddressBox");
             Assert.True(address.Bounds.Width >= 80, $"The address entry is clipped to {address.Bounds.Width} at width {width}.");
             address.Focus(); address.SelectAll(); window.KeyTextInput("https://typed.example/path");
@@ -299,7 +328,220 @@ public sealed partial class BrowseNativeUiTests
             { Directory.CreateDirectory(evidence); frame.Save(Path.Combine(evidence, $"browse-{width}-{appearance}.png")); }
             await Retire(window);
         }
-        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Fresh_gecko_unsupported_web_tab_fallback_selects_chromium_and_persists_across_restart_with_same_profile()
+    {
+        using var trace = new FixtureTraceScope(nameof(Fresh_gecko_unsupported_web_tab_fallback_selects_chromium_and_persists_across_restart_with_same_profile));
+        var paths = new Paths(); var factory = new FixtureFactory();
+        var session = new MemoryTabSessionPersistence();
+
+        Guid originalId; Uri originalAddress;
+
+        var chrome = await BrowseChrome.CreateAsync(paths, factory, tabSessionPersistence: session);
+        Trace("chrome:created");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            // No internal-content factory is installed in this fixture: the real
+            // default homepage is web, so unsupported Gecko offers available Chromium.
+            Assert.Equal(BrowseEngineKind.Gecko, chrome.State.SelectedTab.Engine);
+            Assert.True(chrome.State.SelectedTab.Address.IsWeb);
+            Assert.Equal(BrowseEngineState.Unsupported, chrome.State.SelectedTab.EngineState);
+            Assert.True(workspace.TryGetValue("ShowChromiumFallback", out var initialFallback));
+            Assert.Equal(true, initialFallback);
+            var fallback = FindMounted(window, "BrowseInlineChromiumTabButton");
+            // Navigating to a web URL yields a Gecko-unsupported web tab because the
+            // fixture hosts only Chromium, which is exactly the fallback trigger.
+            Assert.True(workspace.TrySetValue("Address", "https://fallback.example/page"));
+            await Click(window, workspace, Find(window, "BrowseNavigateButton"));
+            originalId = chrome.State.SelectedTabId;
+            originalAddress = chrome.State.SelectedTab.Address.WebUri!;
+            Assert.True(chrome.State.SelectedTab.Address.IsWeb);
+            Assert.Equal(BrowseEngineKind.Gecko, chrome.State.SelectedTab.Engine);
+            Assert.Equal(BrowseEngineState.Unsupported, chrome.State.SelectedTab.EngineState);
+            Assert.True(workspace.TryGetValue("ShowChromiumFallback", out var show));
+            Assert.Equal(true, show);
+            AssertMounted(window, fallback);
+            // The ordinary canonical Chromium action switches this SAME tab.
+            await Click(window, workspace, fallback);
+            Assert.Equal(originalId, chrome.State.SelectedTabId);
+            Assert.Equal(originalAddress, chrome.State.SelectedTab.Address.WebUri);
+            Assert.Equal(BrowseEngineKind.Chromium, chrome.State.SelectedTab.Engine);
+            Assert.Equal(BrowseEngineState.Ready, chrome.State.SelectedTab.EngineState);
+            AssertFallbackHidden(workspace);
+            await Retire(window);
+        }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
+
+        Trace("chrome:dispose:begin");
+        await chrome.DisposeAsync();
+        Trace("chrome:dispose:end");
+
+        // Restart on the SAME profile / paths: restore the real stored tabs and the
+        // persisted engine preferences through the actual persistence APIs.
+        var chrome2 = await BrowseChrome.CreateAsync(paths, factory, tabSessionPersistence: session);
+        Trace("chrome:created");
+        var workspace2 = new BrowseNativeWorkspace(chrome2, _ => true);
+        var window2 = BrowseNativeSurface.CreateWindow(workspace2, new FixtureReadiness());
+        RegisterProductionImageResolver(window2);
+        try
+        {
+            window2.Show(); await Observe(window2.InitializeAsync(), window2);
+            var restored = chrome2.State.Tabs.Single(tab => tab.Id == originalId);
+            Assert.Equal(originalAddress, restored.Address.WebUri);
+            Assert.Equal(BrowseEngineKind.Chromium, restored.Engine);
+            Assert.Equal(BrowseEngineState.Ready, restored.EngineState);
+            Assert.Equal(originalId, chrome2.State.SelectedTabId);
+            AssertFallbackHidden(workspace2);
+            var prefs = await new BrowseEnginePreferencesStore(paths).LoadAsync();
+            Assert.Equal(BrowseEngineKind.Gecko, prefs.DefaultEngine);
+            Assert.Equal(BrowseEngineKind.Chromium, prefs.TabOverrides![originalId]);
+            await Retire(window2);
+        }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window2, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Fallback_hidden_when_chromium_unavailable()
+    {
+        using var trace = new FixtureTraceScope(nameof(Fallback_hidden_when_chromium_unavailable));
+        var factory = new FixtureFactory(chromiumSupported: false);
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        Trace("chrome:created");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            Assert.True(workspace.TrySetValue("Address", "https://fallback.example/page"));
+            await Click(window, workspace, Find(window, "BrowseNavigateButton"));
+            Assert.True(chrome.State.SelectedTab.Address.IsWeb);
+            Assert.Equal(BrowseEngineState.Unsupported, chrome.State.SelectedTab.EngineState);
+            // Chromium is not actually available here, so no fallback is offered.
+            AssertFallbackHidden(workspace);
+            AssertAbsentFromWindow(window, Find(window, "BrowseInlineChromiumTabButton"));
+            await Retire(window);
+        }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Fallback_hidden_when_factory_lacks_per_engine_capability()
+    {
+        using var trace = new FixtureTraceScope(nameof(Fallback_hidden_when_factory_lacks_per_engine_capability));
+        // A host factory with NO typed per-engine capability signal must not be
+        // treated as proof that Chromium is available (fail-closed).
+        var factory = new NonAvailabilityFactory();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        Trace("chrome:created");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            Assert.True(workspace.TrySetValue("Address", "https://fallback.example/page"));
+            await Click(window, workspace, Find(window, "BrowseNavigateButton"));
+            Assert.True(chrome.State.SelectedTab.Address.IsWeb);
+            Assert.Equal(BrowseEngineState.Unsupported, chrome.State.SelectedTab.EngineState);
+            AssertFallbackHidden(workspace);
+            AssertAbsentFromWindow(window, Find(window, "BrowseInlineChromiumTabButton"));
+            await Retire(window);
+        }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Fallback_hidden_on_native_internal_page()
+    {
+        using var trace = new FixtureTraceScope(nameof(Fallback_hidden_on_native_internal_page));
+        var factory = new FixtureFactory(); var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        Trace("chrome:created");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            await Click(window, workspace, Find(window, "BrowseOpenBookmarksButton"));
+            Assert.Equal(BrowserNativePage.Bookmarks, chrome.State.SelectedTab.NativePage);
+            Assert.False(chrome.State.SelectedTab.Address.IsWeb);
+            // Native Browse pages never use a web renderer; no Chromium fallback.
+            AssertFallbackHidden(workspace);
+            AssertAbsentFromWindow(window, Find(window, "BrowseInlineChromiumTabButton"));
+            await Retire(window);
+        }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Fallback_hidden_when_gecko_actually_works()
+    {
+        using var trace = new FixtureTraceScope(nameof(Fallback_hidden_when_gecko_actually_works));
+        var factory = new FixtureFactory(geckoSupported: true);
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), factory);
+        Trace("chrome:created");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            Assert.True(workspace.TrySetValue("Address", "https://fallback.example/page"));
+            await Click(window, workspace, Find(window, "BrowseNavigateButton"));
+            Assert.Equal(BrowseEngineKind.Gecko, chrome.State.SelectedTab.Engine);
+            Assert.Equal(BrowseEngineState.Ready, chrome.State.SelectedTab.EngineState);
+            AssertFallbackHidden(workspace);
+            AssertAbsentFromWindow(window, Find(window, "BrowseInlineChromiumTabButton"));
+            await Retire(window);
+        }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Fallback_hidden_when_persisted_site_choice_already_selects_chromium()
+    {
+        using var trace = new FixtureTraceScope(nameof(Fallback_hidden_when_persisted_site_choice_already_selects_chromium));
+        var paths = new Paths();
+        await new BrowseEnginePreferencesStore(paths).SaveAsync(new(BrowseEngineKind.Gecko,
+            new Dictionary<string, BrowseEngineKind> { ["forced.example"] = BrowseEngineKind.Chromium }));
+        var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        Trace("chrome:created");
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            Assert.True(workspace.TrySetValue("Address", "https://forced.example/page"));
+            await Click(window, workspace, Find(window, "BrowseNavigateButton"));
+            Assert.Equal(BrowseEngineKind.Chromium, chrome.State.SelectedTab.Engine);
+            Assert.Equal(BrowseEngineState.Ready, chrome.State.SelectedTab.EngineState);
+            AssertFallbackHidden(workspace);
+            AssertAbsentFromWindow(window, Find(window, "BrowseInlineChromiumTabButton"));
+            // The persisted explicit site choice is preserved, not rewritten.
+            var prefs = await new BrowseEnginePreferencesStore(paths).LoadAsync();
+            Assert.Equal(BrowseEngineKind.Chromium, prefs.SiteOverrides["forced.example"]);
+            Assert.Equal(BrowseEngineKind.Gecko, prefs.DefaultEngine);
+            await Retire(window);
+        }
+        catch (Exception failure) { Trace("test:failed:" + failure.GetType().Name + ":" + failure.Message); RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    private static void AssertFallbackHidden(BrowseNativeWorkspace workspace)
+    {
+        // TryGetValue reports whether the binding exists; a recognized Boolean FALSE
+        // still returns true. Assert the binding exists then check the OUT value.
+        Assert.True(workspace.TryGetValue("ShowChromiumFallback", out var show));
+        Assert.Equal(false, show);
     }
 
     private static Button TabButton(BrowseNativeWindow window, BrowseNativeWorkspace workspace, string key)
@@ -315,22 +557,60 @@ public sealed partial class BrowseNativeUiTests
     { Assert.True(workspace.TryGetValue("Tabs", out var value)); return Assert.IsType<BrowseNativeWorkspace.TabRow[]>(value); }
     private static CuiControlLoader Loader(BrowseNativeWindow window) => Assert.IsType<CuiControlLoader>(
         typeof(CuiSceneHost).GetField("_contentLoader", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window.SceneHost));
-    private static Button Find(BrowseNativeWindow window, string name)
+    private static Control Authored(BrowseNativeWindow window, string name)
     {
-        // Closed tool panels retain their authored controls outside the active logical tree.
-        // Actions still have to open the real panel before interacting with those controls.
+        // Hidden CUI subtrees retain authored identities outside the actual window.
         var authored = Assert.IsAssignableFrom<IDictionary>(typeof(CuiControlLoader)
             .GetField("_authoredControls", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Loader(window)));
-        return authored.Keys.Cast<Control>().OfType<Button>().Single(button => button.Name == name);
+        return authored.Keys.Cast<Control>().Single(control => control.Name == name);
     }
+    private static Button Find(BrowseNativeWindow window, string name) => Assert.IsType<Button>(Authored(window, name));
+    private static void Settle(BrowseNativeWindow window)
+    { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout(); }
+    private static Button FindMounted(BrowseNativeWindow window, string name)
+    { var button = Find(window, name); AssertMounted(window, button); return button; }
+    private static void AssertMounted(BrowseNativeWindow window, Button button)
+    {
+        Settle(window);
+        Assert.Same(window, TopLevel.GetTopLevel(button));
+        Assert.Contains(window.GetVisualDescendants().OfType<Button>(), item => ReferenceEquals(item, button));
+        Assert.True(button.IsEffectivelyVisible);
+    }
+    private static void AssertAbsentFromWindow(BrowseNativeWindow window, Button button)
+    {
+        Settle(window);
+        Assert.Null(TopLevel.GetTopLevel(button));
+        Assert.DoesNotContain(window.GetVisualDescendants().OfType<Button>(), item => ReferenceEquals(item, button));
+    }
+    private static bool AuthoredContains(Control root, Control target) => ReferenceEquals(root, target) ||
+        root is CuiContainerControl container && container.AuthoredChildren.Any(child => AuthoredContains(child, target));
+    private static bool IsTrue(BrowseNativeWorkspace workspace, string key) =>
+        workspace.TryGetValue(key, out var value) && Equals(value, true);
     private static async Task Click(BrowseNativeWindow window, BrowseNativeWorkspace workspace, Button button)
     {
-        if ((TopLevel.GetTopLevel(button) is null || !button.IsEffectivelyVisible) && button.Name != "BrowseMoreButton")
-            await Click(window, workspace, Find(window, "BrowseMoreButton"));
-        window.UpdateLayout(); button.BringIntoView(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
-        Assert.Same(window, TopLevel.GetTopLevel(button));
-        Assert.True(button.IsEffectivelyVisible);
-        Assert.True(button.IsEnabled);
+        Settle(window); Trace("click:prepare:" + button.Name);
+        if (TopLevel.GetTopLevel(button) is null || !button.IsEffectivelyVisible)
+        {
+            // Prepare only the target's genuine authored menu, never an unrelated
+            // menu for a detached page control or an unavailable inline fallback.
+            Assert.True(AuthoredContains(Authored(window, "BrowseProfileMenu"), button));
+            if (!IsTrue(workspace, "ProfileMenuOpen"))
+                await ClickCore(window, workspace, FindMounted(window, "HavenProfileButton"));
+            Settle(window);
+            // A requested header is the one final click below. It is never also
+            // clicked here as an opener, which would toggle it twice and close it.
+            if (button.Name != "BrowseWebToolsHeader" &&
+                AuthoredContains(Authored(window, "BrowseWebToolsGroup"), button) && !IsTrue(workspace, "ToolsOpen"))
+                await ClickCore(window, workspace, FindMounted(window, "BrowseWebToolsHeader"));
+            Settle(window);
+        }
+        await ClickCore(window, workspace, button);
+    }
+    private static async Task ClickCore(BrowseNativeWindow window, BrowseNativeWorkspace workspace, Button button)
+    {
+        Trace("click:begin:" + button.Name);
+        Settle(window); button.BringIntoView(); Settle(window);
+        AssertMounted(window, button); Assert.True(button.IsEnabled);
         var loader = Assert.IsType<CuiControlLoader>(typeof(CuiSceneHost).GetField("_contentLoader", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window.SceneHost));
         var diagnostics = Assert.IsType<CuiControlDiagnostics>(loader.Inspect(button));
         Assert.True(diagnostics.DispatcherConnected); Assert.True(diagnostics.ActionsWired);
@@ -340,25 +620,72 @@ public sealed partial class BrowseNativeUiTests
         Assert.NotNull(workspace.OriginalCommand); Assert.NotSame(before, workspace.OriginalCommand);
         var original = workspace.OriginalCommand!; await Observe(original, window);
         Assert.Same(original, workspace.OriginalCommand);
-        await Task.WhenAll(workspace.OriginalNotifications.ToArray());
+        await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
+        Settle(window); Trace("click:end:" + button.Name);
     }
-    private static async Task<T> Observe<T>(Task<T> original, BrowseNativeWindow window)
-    { await Observe((Task)original, window); return await original; }
-    private static async Task Observe(Task original, BrowseNativeWindow window)
+    private static async Task<T> Observe<T>(Task<T> original, BrowseNativeWindow window,
+        [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(original))] string expression = "")
+    { await Observe((Task)original, window, expression); return await original; }
+    private static async Task Observe(Task original, BrowseNativeWindow window,
+        [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(original))] string expression = "")
     {
+        Trace("await:begin:" + expression, original);
         var completed = await Task.WhenAny(original, Task.Delay(TimeSpan.FromSeconds(20)));
-        if (!ReferenceEquals(completed, original)) throw new TimeoutException("The SAME Browse source is pending; its window and raw source remain retained.");
+        if (!ReferenceEquals(completed, original))
+        {
+            Trace("await:timeout:" + expression, original);
+            throw new TimeoutException("The SAME Browse source is pending; its window and raw source remain retained.");
+        }
         await original;
+        Trace("await:end:" + expression, original);
     }
     private static async Task Retire(BrowseNativeWindow window)
-    { window.Close(); Assert.NotNull(window.OriginalClose); await Observe(window.OriginalClose!, window); }
+    {
+        Trace("retire:begin");
+        window.Close(); Assert.NotNull(window.OriginalClose); await Observe(window.OriginalClose!, window);
+        Trace("retire:end");
+    }
+    private static readonly AsyncLocal<string?> CurrentTraceTest = new();
+    private static readonly object TraceGate = new();
+    private sealed class FixtureTraceScope : IDisposable
+    {
+        private readonly string? _previous;
+        public FixtureTraceScope(string name)
+        { _previous = CurrentTraceTest.Value; CurrentTraceTest.Value = name; Trace("test:begin"); }
+        public void Dispose() { Trace("test:end"); CurrentTraceTest.Value = _previous; }
+    }
+    private static void Trace(string phase, Task? original = null,
+        [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
+    {
+        // Optional external diagnostic evidence. Flush every bounded record so a
+        // process timeout retains the last real stage without buffered console.
+        var path = Environment.GetEnvironmentVariable("BROWSE_FIXTURE_STAGE_LOG");
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if (!Path.IsPathFullyQualified(path) || Path.GetFullPath(path).StartsWith(
+            Path.GetFullPath(Environment.CurrentDirectory) + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            throw new InvalidOperationException("Fixture trace must be outside the owning Root source tree.");
+        var line = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            at = DateTimeOffset.UtcNow, test = CurrentTraceTest.Value, phase = phase.Length <= 1024 ? phase : phase[..1024],
+            caller, taskId = original?.Id, taskStatus = original?.Status.ToString()
+        }) + "\n";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(line);
+        lock (TraceGate)
+        {
+            using var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+            if (stream.Length + bytes.Length > 1024 * 1024) return;
+            stream.Write(bytes); stream.Flush(flushToDisk: true);
+        }
+    }
     private sealed class FixtureReadiness : ICuiSceneReadiness
     { public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) => ValueTask.FromResult(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "browse-ui-fixture", "Explicit local Browse controls fixture")); }
-    private sealed class FixtureFactory(IBrowserOriginalDownloadContent? originalContent = null) : IBrowseEngineHostFactory, IBrowseEngineAvailability
+    private sealed class FixtureFactory(IBrowserOriginalDownloadContent? originalContent = null, bool geckoSupported = false, bool chromiumSupported = true) : IBrowseEngineHostFactory, IBrowseEngineAvailability
     {
         public bool IsSupported => true; public string UnsupportedReason => "Fixture only";
         public List<FixtureTab> Hosts { get; } = [];
-        public bool IsEngineSupported(BrowseEngineKind engine) => engine == BrowseEngineKind.Chromium;
+        public bool IsEngineSupported(BrowseEngineKind engine) =>
+            engine == BrowseEngineKind.Gecko ? geckoSupported
+            : engine == BrowseEngineKind.Chromium && chromiumSupported;
         public string UnsupportedReasonFor(BrowseEngineKind engine) => "Fixture has no " + engine;
         public Task<IBrowseEngineTab> CreateAsync(BrowseEngineTabRequest request, CancellationToken token)
         {
@@ -367,6 +694,27 @@ public sealed partial class BrowseNativeUiTests
             return Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             { token.ThrowIfCancellationRequested(); var host = new FixtureTab(request, originalContent); Hosts.Add(host); return (IBrowseEngineTab)host; }).GetTask();
         }
+    }
+    private sealed class NonAvailabilityFactory : IBrowseEngineHostFactory
+    {
+        // A host factory with NO typed per-engine capability signal (does not
+        // implement IBrowseEngineAvailability). The capability query must fail
+        // closed — unknown, never an offer.
+        public bool IsSupported => false; public string UnsupportedReason => "Fixture has no supported engines; per-engine capability is unknown.";
+        public List<FixtureTab> Hosts { get; } = [];
+        public Task<IBrowseEngineTab> CreateAsync(BrowseEngineTabRequest request, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            return Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            { token.ThrowIfCancellationRequested(); var host = new FixtureTab(request); Hosts.Add(host); return (IBrowseEngineTab)host; }).GetTask();
+        }
+    }
+    private sealed class MemoryTabSessionPersistence : IBrowseTabSessionPersistence
+    {
+        private BrowseTabSessionProjection? _stored;
+        public Task<BrowseTabSessionProjection?> LoadAsync(CancellationToken token) => Task.FromResult(_stored);
+        public Task SaveAsync(BrowseTabSessionProjection projection, CancellationToken token)
+        { _stored = projection; return Task.CompletedTask; }
     }
     private sealed class FixtureTab(BrowseEngineTabRequest request, IBrowserOriginalDownloadContent? originalContent = null) : IBrowseNativeEngineTab, IBrowseOriginalPageCommitSource, IBrowseOriginalDownloadContentSource
     {

@@ -1,6 +1,7 @@
 using Avalonia.Headless.XUnit;
 using CakeOS.Cui.Runtime;
 using Dulche.Runtime;
+using Haven.Application;
 using Haven.Application.Haven;
 using Haven.Browser;
 using Haven.Core;
@@ -63,7 +64,7 @@ public sealed class HavenModelInfoTruthfulnessTests
     [Fact]
     public async Task Null_ModelInfo_publishes_unavailable_bindings_never_a_guessed_percentage()
     {
-        var chrome = await BrowseChrome.CreateAsync(new Paths());
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), cancellationToken: TestContext.Current.CancellationToken);
         var workspace = new BrowseNativeWorkspace(chrome, _ => true, sharedContext: new NullModelInfoContext());
         workspace.ObserveReadiness(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "model-truth", "Ready"));
         try
@@ -121,9 +122,14 @@ public sealed class HavenModelInfoTruthfulnessTests
         Assert.Equal("83%", snapshot.ToPresentation().EffortPercent);
     }
 
+    public static TheoryData<string[]> InvalidAdvertisedReasoningIds => new()
+    {
+        new[] { "low", "low" }, // duplicate ids -> not a stable bijection
+        new[] { "", "high" }    // blank id -> invalid metadata
+    };
+
     [Theory]
-    [InlineData(new[] { "low", "low" })]         // duplicate ids -> not a stable bijection
-    [InlineData(new[] { "", "high" })]           // blank id -> invalid metadata
+    [MemberData(nameof(InvalidAdvertisedReasoningIds))]
     public void Snapshot_invalid_advertised_ids_stay_truthfully_unknown(string[] ids)
     {
         var snapshot = HavenModelProjectionSnapshot.CreateValidated(

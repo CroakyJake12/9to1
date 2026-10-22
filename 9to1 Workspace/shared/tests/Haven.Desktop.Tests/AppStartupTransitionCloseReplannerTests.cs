@@ -41,7 +41,7 @@ public sealed class AppStartupTransitionCloseReplannerTests
             new object(),
             () => Task.CompletedTask,
             () => Task.FromResult<object?>((fresh)),
-            failures).WaitAsync(TimeSpan.FromSeconds(5));
+            failures).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Same(fresh, result); // commit completes without any user click
         Assert.False(never.Task.IsCompleted);
     }
@@ -112,11 +112,11 @@ public sealed class AppStartupTransitionCloseReplannerTests
         var run = App.StartupTransitionCloseReplanner.ReplanAsync(
             new object(), Abort,
             () => { acquired = true; return Task.FromResult<object?>((new object())); }, failures);
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.False(run.IsCompleted); // abort not yet terminal → not reacquiring yet
         Assert.False(acquired);
         gate.SetResult(); // abort becomes terminal → reacquire may proceed
-        var result = await run.WaitAsync(TimeSpan.FromSeconds(5));
+        var result = await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(acquired);
     }

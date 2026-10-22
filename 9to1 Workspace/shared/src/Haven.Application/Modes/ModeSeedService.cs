@@ -40,6 +40,16 @@ public sealed class ModeSeedService
         await _registry.DeleteModeByKeyAsync("do", cancellationToken).ConfigureAwait(false);
 
         foreach (var mode in BuiltInModeSeed.Modes)
-            await _registry.UpsertModeAsync(mode, cancellationToken).ConfigureAwait(false);
+        {
+            // Canonical built-in reseed refreshes metadata on every successful startup but must
+            // PRESERVE the user's stored is_enabled state (a built-in the user disabled stays
+            // disabled). Read the existing record by stable ID; if present, keep its enabled state
+            // instead of re-enabling from the seed default. The generic upsert itself remains a
+            // faithful state-update contract for explicit callers.
+            var existing = await _registry.GetModeByIdAsync(mode.Id, cancellationToken).ConfigureAwait(false);
+            await _registry.UpsertModeAsync(
+                existing is null ? mode : mode with { IsEnabled = existing.IsEnabled },
+                cancellationToken).ConfigureAwait(false);
+        }
     }
 }

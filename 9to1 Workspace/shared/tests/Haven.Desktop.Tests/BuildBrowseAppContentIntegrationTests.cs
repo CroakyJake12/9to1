@@ -167,7 +167,7 @@ public sealed class BuildBrowseAppContentIntegrationTests
             () => true);
 
         var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://files"), "original-profile", BrowserTabPrivacy.Standard);
-        Assert.Throws<NativeAppContentAdmissionRefusal>(() => registry.CreateSession(request));
+        Assert.Throws<NativeAppContentRegistry.NativeAppContentAdmissionRefusal>(() => registry.CreateSession(request));
         Assert.Equal(0, factory.Calls);
     }
 

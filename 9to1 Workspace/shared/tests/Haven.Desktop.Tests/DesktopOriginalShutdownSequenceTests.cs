@@ -1,6 +1,15 @@
 using System.Runtime.ExceptionServices;
+using System.Text.Json.Nodes;
+using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
 using Haven.Application;
+using Haven.Desktop.Accounts;
 using Haven.Desktop.Services;
+using Haven.Infrastructure;
+using HavenOS.Home.Core;
+using Microsoft.Extensions.DependencyInjection;
+using NineToOne.Accounts.Native;
+using NineToOne.Accounts.Remote;
 
 namespace Haven.Desktop.Tests;
 
@@ -177,6 +186,252 @@ public sealed class DesktopOriginalShutdownSequenceTests
         await scope.Close().WaitAsync(Bound);
         Assert.NotNull(refusal); Assert.Equal(1, scope.Writer.Calls);
     });
+
+    [Fact]
+    public async Task Actual_early_startup_retirement_closes_cleanly_without_completing_startup_or_first_run()
+    {
+        using var paths = new RetirementPaths();
+        var diagnostics = new ProductionDiagnostics(paths);
+        var recovery = new StartupRecoveryCoordinator(paths, diagnostics);
+        var recording = new RetiredStartupRecordingSource(recovery);
+        var started = NewHold();
+        var stopObserved = NewHold();
+        var borrowersEntered = NewHold();
+        var borrowers = NewHold();
+        var appWork = new DesktopOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        var startup = appWork.RunAsync(async original =>
+        {
+            await recovery.BeginStartupAsync(CancellationToken.None);
+            started.SetResult();
+            using var stop = original.Token.Register(() => stopObserved.TrySetResult());
+            await stopObserved.Task;
+            // Real early-return producer: close stops admission before the startup-complete write.
+        });
+        var failures = new List<Exception>();
+        Task? close = null;
+        try
+        {
+            await started.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
+            Assert.False(startup.IsCompleted);
+            var sequence = new DesktopOriginalShutdownSequence(async () =>
+            {
+                var originalFailures = new List<Exception>();
+                await App.JoinEarlyStartupCooperativelyAsync(appWork, startup, originalFailures);
+                Assert.Empty(originalFailures);
+            }, () => Task.CompletedTask,
+                () => App.PrepareFinalWriterAfterOriginalAppRetirementAsync(appWork, recording),
+                () => { borrowersEntered.TrySetResult(); return borrowers.Task; },
+                () => diagnostics.DisposeAsync().AsTask());
+            close = sequence.CloseAndDrainAsync();
+            await borrowersEntered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
+            Assert.True(startup.IsCompletedSuccessfully);
+            Assert.NotNull(appWork.OriginalClose);
+            Assert.True(appWork.OriginalClose.IsCompletedSuccessfully);
+            Assert.Same(appWork.OriginalClose, recording.Retirement);
+            Assert.Equal(0, recording.StrictCalls);
+            Assert.False(close.IsCompleted);
+            var statePath = Path.Combine(paths.DataDirectory, "startup-recovery.json");
+            var pending = JsonNode.Parse(await File.ReadAllTextAsync(statePath, TestContext.Current.CancellationToken))!;
+            Assert.False(pending["currentRun"]!["cleanShutdown"]!.GetValue<bool>());
+            Assert.False(pending["currentRun"]!["startupCompleted"]!.GetValue<bool>());
+            borrowers.SetResult();
+            await close.WaitAsync(Bound, TestContext.Current.CancellationToken);
+            var clean = JsonNode.Parse(await File.ReadAllTextAsync(statePath, TestContext.Current.CancellationToken))!;
+            Assert.True(clean["currentRun"]!["cleanShutdown"]!.GetValue<bool>());
+            Assert.False(clean["currentRun"]!["startupCompleted"]!.GetValue<bool>());
+
+            // The next real recovery starts normally; the separate durable first-run
+            // service still requires Welcome and has no invented completion record.
+            await using var returningDiagnostics = new ProductionDiagnostics(paths);
+            var returning = await new StartupRecoveryCoordinator(paths, returningDiagnostics).BeginStartupAsync(CancellationToken.None);
+            Assert.Equal(0, returning.RecentUncleanStarts);
+            Assert.False(returning.IsSafeMode);
+            var onboarding = new HomeOnboardingService(new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "home-core-state.json")));
+            var firstRun = await onboarding.ReadCompletionAsync("early-close-test-profile", CancellationToken.None);
+            Assert.Equal(HomeOnboardingReadState.NotCompleted, firstRun.State);
+            Assert.False(firstRun.IsCompleted);
+            var welcome = onboarding.Open();
+            Assert.Equal(HomeOnboardingStep.Welcome, welcome.Step);
+            Assert.False(welcome.Completed);
+        }
+        catch (Exception primary) { failures.Add(primary); }
+        finally
+        {
+            stopObserved.TrySetResult(); borrowers.TrySetResult();
+            foreach (var original in new[] { startup, close, appWork.CloseAndDrainAsync() }.OfType<Task>())
+                try { await original.WaitAsync(Bound, CancellationToken.None); }
+                catch (Exception cleanup) { failures.Add(cleanup); }
+            try { await diagnostics.DisposeAsync(); } catch (Exception cleanup) { failures.Add(cleanup); }
+            RuntimeSafetyState.DisableSafeMode();
+        }
+        if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 0) throw new AggregateException("Actual early-close body and originals retained.", failures);
+    }
+
+    [Fact]
+    public async Task Final_writer_preparation_refuses_an_unfinished_actual_App_retirement()
+    {
+        using var paths = new RetirementPaths();
+        await using var diagnostics = new ProductionDiagnostics(paths);
+        var recovery = new RetiredStartupRecordingSource(new StartupRecoveryCoordinator(paths, diagnostics));
+        var held = NewHold();
+        var appWork = new DesktopOriginalWorkLifetime(() => Task.CompletedTask, () => held.Task);
+        appWork.RequestRetirement();
+        try
+        {
+            Assert.NotNull(appWork.OriginalClose);
+            Assert.False(appWork.OriginalClose.IsCompleted);
+            Assert.Throws<InvalidOperationException>(() =>
+            { _ = App.PrepareFinalWriterAfterOriginalAppRetirementAsync(appWork, recovery); });
+            Assert.Null(recovery.Retirement);
+            Assert.Equal(0, recovery.StrictCalls);
+        }
+        finally { held.TrySetResult(); await appWork.CloseAndDrainAsync().WaitAsync(Bound, CancellationToken.None); }
+    }
+
+    [Fact]
+    public async Task Older_recovery_source_keeps_its_strict_completed_startup_contract()
+    {
+        var scope = new Scope();
+        var strict = new StrictOnlyRecoverySource(scope.Writer);
+        var appWork = new DesktopOriginalWorkLifetime(() => Task.CompletedTask, () => Task.CompletedTask);
+        await appWork.CloseAndDrainAsync();
+        var writer = await App.PrepareFinalWriterAfterOriginalAppRetirementAsync(appWork, strict);
+        Assert.Same(scope.Writer, writer);
+        Assert.Equal(1, strict.Calls);
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_DI_disposal_after_an_async_hop_reuses_the_terminal_native_account_close()
+    {
+        var session = new AccountRetirementSession(Task.CompletedTask);
+        var gate = new AsyncDisposalGate();
+        await using var provider = new ServiceCollection()
+            .AddSingleton(_ => new NativeCakeAccountUiOwner(session))
+            .AddSingleton(_ => gate).BuildServiceProvider();
+        var owner = provider.GetRequiredService<NativeCakeAccountUiOwner>();
+        _ = provider.GetRequiredService<AsyncDisposalGate>(); // Reverse disposal awaits this one FIRST.
+        var original = owner.CloseAndDrainAsync();
+        await original;
+        var disposal = provider.DisposeAsync().AsTask();
+        try
+        {
+            await gate.Entered.Task.WaitAsync(Bound, TestContext.Current.CancellationToken);
+            Assert.False(disposal.IsCompleted);
+            // Microsoft's actual DI loop resumes off-context after this held async disposable.
+            await Task.Run(() => gate.Release.TrySetResult());
+            await disposal.WaitAsync(Bound, TestContext.Current.CancellationToken);
+            await Task.Run(async () =>
+            {
+                Assert.False(Dispatcher.UIThread.CheckAccess());
+                var repeated = owner.DisposeAsync().AsTask();
+                Assert.Same(original, repeated);
+                await repeated;
+            });
+            Assert.Equal(1, session.CloseCalls);
+        }
+        finally { gate.Release.TrySetResult(); await disposal.WaitAsync(Bound, CancellationToken.None); }
+    }
+
+    [AvaloniaFact]
+    public async Task Terminal_native_account_disposal_preserves_the_same_failed_original_off_thread()
+    {
+        var cause = new IOException("The original native account retirement failed.");
+        var session = new AccountRetirementSession(Task.FromException(cause));
+        var owner = new NativeCakeAccountUiOwner(session);
+        var original = owner.CloseAndDrainAsync();
+        Assert.Same(cause, await Assert.ThrowsAsync<IOException>(() => original));
+        await Task.Run(async () =>
+        {
+            Assert.False(Dispatcher.UIThread.CheckAccess());
+            var repeated = owner.DisposeAsync().AsTask();
+            Assert.Same(original, repeated);
+            Assert.Same(cause, await Assert.ThrowsAsync<IOException>(() => repeated));
+        });
+        Assert.Equal(1, session.CloseCalls);
+    }
+
+    [AvaloniaFact]
+    public async Task First_and_pending_native_account_disposal_keep_the_actual_UI_thread_guard()
+    {
+        var held = NewHold();
+        var session = new AccountRetirementSession(held.Task);
+        var owner = new NativeCakeAccountUiOwner(session);
+        await Task.Run(() =>
+        {
+            Assert.False(Dispatcher.UIThread.CheckAccess());
+            Assert.Throws<InvalidOperationException>(() => { _ = owner.DisposeAsync(); });
+        });
+        Assert.Equal(0, session.CloseCalls);
+        var original = owner.CloseAndDrainAsync();
+        try
+        {
+            Assert.False(original.IsCompleted);
+            await Task.Run(() =>
+            {
+                Assert.False(Dispatcher.UIThread.CheckAccess());
+                Assert.Throws<InvalidOperationException>(() => { _ = owner.DisposeAsync(); });
+            });
+            Assert.Equal(1, session.CloseCalls);
+        }
+        finally { held.TrySetResult(); await original.WaitAsync(Bound, CancellationToken.None); }
+    }
+
+    private sealed class AsyncDisposalGate : IAsyncDisposable
+    {
+        internal readonly TaskCompletionSource Entered = NewHold();
+        internal readonly TaskCompletionSource Release = NewHold();
+        public ValueTask DisposeAsync() { Entered.TrySetResult(); return new(Release.Task); }
+    }
+
+    private sealed class AccountRetirementSession(Task originalClose) : INativeCakeAccountSession
+    {
+        internal int CloseCalls;
+        public bool IsAvailable => false;
+        public bool TryGetCurrentSnapshot(out NativeCakeAccountSnapshot? snapshot) { snapshot = null; return false; }
+        public Task<NativeCakeAccountSnapshot> SignInAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteCurrent>> CurrentAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteProfile>> ProfileAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteSession[]>> SessionsAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteMutationAcknowledgement>> SignOutAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteMutationAcknowledgement>> RevokeSessionAsync(Guid sessionId, CancellationToken ct) => throw new NotImplementedException();
+        public Task<ApiResult<RemoteMutationAcknowledgement>> RevokeOtherSessionsAsync(CancellationToken ct) => throw new NotImplementedException();
+        public Task CloseAndDrainAsync() { CloseCalls++; return originalClose; }
+        public ValueTask DisposeAsync() => new(originalClose);
+    }
+
+    private sealed class StrictOnlyRecoverySource(IStartupRecoveryFinalCleanWriter writer) : IStartupRecoveryFinalCleanWriterSource
+    {
+        internal int Calls;
+        public Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAsync(CancellationToken cancellationToken)
+        { Calls++; return Task.FromResult(writer); }
+    }
+
+    private sealed class RetiredStartupRecordingSource(StartupRecoveryCoordinator original) :
+        IStartupRecoveryFinalCleanWriterSource, IStartupRecoveryRetiredStartupFinalCleanWriterSource
+    {
+        internal Task? Retirement;
+        internal int StrictCalls;
+        public Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAsync(CancellationToken cancellationToken)
+        { StrictCalls++; return original.PrepareFinalCleanWriterAsync(cancellationToken); }
+        public Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAfterStartupRetirementAsync(
+            Task actualStartupRetirement, CancellationToken cancellationToken)
+        {
+            Retirement = actualStartupRetirement;
+            return original.PrepareFinalCleanWriterAfterStartupRetirementAsync(actualStartupRetirement, cancellationToken);
+        }
+    }
+
+    private sealed class RetirementPaths : IAppPaths, IDisposable
+    {
+        public string DataDirectory { get; } = Path.Combine(Path.GetTempPath(), "9to1-actual-early-close-" + Guid.NewGuid().ToString("N"));
+        public string DatabasePath => Path.Combine(DataDirectory, "haven.db");
+        public string BrowserProfileDirectory => Path.Combine(DataDirectory, "browser");
+        public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+        public string LogsDirectory => Path.Combine(DataDirectory, "logs");
+        public string LegacyStatePath => Path.Combine(DataDirectory, "legacy.json");
+        public void Dispose() { if (Directory.Exists(DataDirectory)) Directory.Delete(DataDirectory, recursive: true); }
+    }
 
     private sealed class Writer(Scope scope) : IStartupRecoveryFinalCleanWriter
     {

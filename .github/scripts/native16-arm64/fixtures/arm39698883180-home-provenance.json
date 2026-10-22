@@ -1,0 +1,10 @@
+{
+  "repository": "CroakyJake12/9to1",
+  "source_head": "37ba63a92a509013435d61af73cbe17e246167bf",
+  "run_id": 39698883180,
+  "artifact_id": 12393400325,
+  "archive_sha256": "b39a41c167e395205364c6c808337447ff9fd72c8b11754e81c14e43de856e32",
+  "original_member": "browser-fresh-onboarding-3-model-decision-NOT-OBSERVED.accessibility.json",
+  "member_sha256": "758996ae676924df9052d79b8b5b60b4838dbf3a764a8e739e30a19b062271b7",
+  "description": "Unmodified actual CI AT-SPI observation after Start and NotNow; proves canonical Home signature only, never native success or persisted completion."
+}

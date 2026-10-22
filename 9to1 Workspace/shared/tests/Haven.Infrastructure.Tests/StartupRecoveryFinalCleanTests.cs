@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using Haven.Application;
 using Haven.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Infrastructure.Tests;
 
@@ -347,6 +348,180 @@ public sealed class StartupRecoveryFinalCleanTests : IDisposable
         await Assert.ThrowsAsync<InvalidOperationException>(() => owner.PrepareFinalCleanWriterAsync(CancellationToken.None));
         Assert.Equal(before, await File.ReadAllTextAsync(StatePath));
         Assert.False(ReadClean());
+    }
+
+    [Fact]
+    public async Task Interrupted_startup_requires_the_same_successful_retirement_and_final_drain_without_marking_startup_completed()
+    {
+        await using var diagnostics = new ProductionDiagnostics(_paths);
+        var owner = new StartupRecoveryCoordinator(_paths, diagnostics);
+        await owner.BeginStartupAsync(CancellationToken.None);
+        var retirement = NewCompletion();
+        var requiredDrain = NewCompletion();
+        var preparation = owner.PrepareFinalCleanWriterAfterStartupRetirementAsync(retirement.Task, CancellationToken.None);
+        Task? final = null;
+        try
+        {
+            Assert.False(preparation.IsCompleted);
+            Assert.False(ReadClean());
+            Assert.False(ReadState()["currentRun"]!["startupCompleted"]!.GetValue<bool>());
+            retirement.SetResult();
+            var writer = await preparation;
+            Assert.False(ReadClean());
+            final = writer.CompleteAfterOriginalDrainAsync(requiredDrain.Task, CancellationToken.None);
+            Assert.Same(final, writer.CompleteAfterOriginalDrainAsync(requiredDrain.Task, CancellationToken.None));
+            Assert.False(final.IsCompleted);
+            requiredDrain.SetResult();
+            await final;
+            Assert.True(ReadClean());
+            Assert.False(ReadState()["currentRun"]!["startupCompleted"]!.GetValue<bool>());
+            // Deliberate user close is not a crash and does not fabricate successful startup.
+            var next = await new StartupRecoveryCoordinator(_paths, diagnostics).BeginStartupAsync(CancellationToken.None);
+            Assert.Equal(0, next.RecentUncleanStarts);
+            Assert.False(next.IsSafeMode);
+        }
+        finally
+        {
+            retirement.TrySetResult(); requiredDrain.TrySetResult();
+            await ObserveAsync(preparation); await ObserveAsync(final);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Failed_or_canceled_startup_retirement_cannot_issue_interrupted_clean_writer(bool canceled)
+    {
+        await using var diagnostics = new ProductionDiagnostics(_paths);
+        var owner = new StartupRecoveryCoordinator(_paths, diagnostics);
+        await owner.BeginStartupAsync(CancellationToken.None);
+        var before = await File.ReadAllTextAsync(StatePath);
+        var failure = new IOException("The actual startup producer did not drain.");
+        using var stop = new CancellationTokenSource(); stop.Cancel();
+        var retirement = canceled ? Task.FromCanceled(stop.Token) : Task.FromException(failure);
+        var preparation = owner.PrepareFinalCleanWriterAfterStartupRetirementAsync(retirement, CancellationToken.None);
+        if (canceled) await Assert.ThrowsAnyAsync<OperationCanceledException>(() => preparation);
+        else Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => preparation));
+        Assert.Equal(before, await File.ReadAllTextAsync(StatePath));
+        Assert.False(ReadClean());
+    }
+
+    [Fact]
+    public async Task Interrupted_prepare_never_adopts_a_new_startup_while_original_retirement_is_pending()
+    {
+        await using var diagnostics = new ProductionDiagnostics(_paths);
+        var owner = new StartupRecoveryCoordinator(_paths, diagnostics);
+        await owner.BeginStartupAsync(CancellationToken.None);
+        var retirement = NewCompletion();
+        var preparation = owner.PrepareFinalCleanWriterAfterStartupRetirementAsync(retirement.Task, CancellationToken.None);
+        try
+        {
+            Assert.False(preparation.IsCompleted);
+            await owner.BeginStartupAsync(CancellationToken.None); // The same service, a different original startup write.
+            var before = await File.ReadAllTextAsync(StatePath);
+            retirement.SetResult();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => preparation);
+            Assert.Equal(before, await File.ReadAllTextAsync(StatePath));
+            Assert.False(ReadClean());
+        }
+        finally { retirement.TrySetResult(); await ObserveAsync(preparation); }
+    }
+
+    [Fact]
+    public async Task Interrupted_prepare_still_requires_an_original_begin_acknowledgement()
+    {
+        await using var diagnostics = new ProductionDiagnostics(_paths);
+        var owner = new StartupRecoveryCoordinator(_paths, diagnostics);
+        await owner.BeginStartupAsync(CancellationToken.None);
+        var copied = new StartupRecoveryCoordinator(_paths, diagnostics);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => copied.PrepareFinalCleanWriterAfterStartupRetirementAsync(
+            Task.CompletedTask, CancellationToken.None));
+        Assert.False(ReadClean());
+    }
+
+    [Fact]
+    public async Task Interrupted_prepare_refuses_a_begin_whose_actual_diagnostic_write_failed()
+    {
+        var cause = new IOException("The original startup acknowledgement failed.");
+        await using var diagnostics = new ControlledDiagnostics("begin", Task.FromException(cause));
+        var owner = new StartupRecoveryCoordinator(_paths, diagnostics);
+        Assert.Same(cause, await Assert.ThrowsAsync<IOException>(() => owner.BeginStartupAsync(CancellationToken.None)));
+        var before = await File.ReadAllTextAsync(StatePath);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => owner.PrepareFinalCleanWriterAfterStartupRetirementAsync(
+            Task.CompletedTask, CancellationToken.None));
+        Assert.Equal(before, await File.ReadAllTextAsync(StatePath));
+        Assert.False(ReadClean());
+    }
+
+    [Fact]
+    public async Task Caller_stop_cannot_abandon_the_original_pending_startup_retirement()
+    {
+        await using var diagnostics = new ProductionDiagnostics(_paths);
+        var owner = new StartupRecoveryCoordinator(_paths, diagnostics);
+        await owner.BeginStartupAsync(CancellationToken.None);
+        using var stop = new CancellationTokenSource();
+        var retirement = NewCompletion();
+        var preparation = owner.PrepareFinalCleanWriterAfterStartupRetirementAsync(retirement.Task, stop.Token);
+        try
+        {
+            stop.Cancel();
+            Assert.False(preparation.IsCompleted);
+            retirement.SetResult();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => preparation);
+            Assert.False(ReadClean());
+        }
+        finally { retirement.TrySetResult(); await ObserveAsync(preparation); }
+    }
+
+    [Fact]
+    public async Task Retired_completed_startup_keeps_its_actual_completion_flag()
+    {
+        await using var diagnostics = new ProductionDiagnostics(_paths);
+        var owner = await StartedAsync(diagnostics);
+        var writer = await owner.PrepareFinalCleanWriterAfterStartupRetirementAsync(Task.CompletedTask, CancellationToken.None);
+        await writer.CompleteAfterOriginalDrainAsync(Task.CompletedTask, CancellationToken.None);
+        Assert.True(ReadClean());
+        Assert.True(ReadState()["currentRun"]!["startupCompleted"]!.GetValue<bool>());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Production_DI_recovery_decorator_preserves_original_retirement_capability_and_actual_completion(bool startupCompleted)
+    {
+        var services = new ServiceCollection().AddHavenInfrastructure();
+        services.AddSingleton<IAppPaths>(_paths);
+        var provider = services.BuildServiceProvider();
+        Task? providerClose = null;
+        Task<IStartupRecoveryFinalCleanWriter>? preparation = null;
+        var retirement = NewCompletion();
+        try
+        {
+            var recovery = provider.GetRequiredService<IStartupRecoveryCoordinator>();
+            Assert.Same(provider.GetRequiredService<CleanResetStartupRecoveryCoordinator>(), recovery);
+            await recovery.BeginStartupAsync(CancellationToken.None);
+            if (startupCompleted) await recovery.MarkStartupCompletedAsync(CancellationToken.None);
+            else await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                ((IStartupRecoveryFinalCleanWriterSource)recovery).PrepareFinalCleanWriterAsync(CancellationToken.None));
+            var source = Assert.IsAssignableFrom<IStartupRecoveryRetiredStartupFinalCleanWriterSource>(recovery);
+            preparation = source.PrepareFinalCleanWriterAfterStartupRetirementAsync(retirement.Task, CancellationToken.None);
+            Assert.False(preparation.IsCompleted);
+            Assert.False(ReadClean());
+            retirement.SetResult();
+            var writer = await preparation;
+            providerClose = provider.DisposeAsync().AsTask();
+            await providerClose;
+            await writer.CompleteAfterOriginalDrainAsync(providerClose, CancellationToken.None);
+            Assert.True(ReadClean());
+            Assert.Equal(startupCompleted, ReadState()["currentRun"]!["startupCompleted"]!.GetValue<bool>());
+        }
+        finally
+        {
+            retirement.TrySetResult();
+            await ObserveAsync(preparation);
+            providerClose ??= provider.DisposeAsync().AsTask();
+            await providerClose;
+        }
     }
 
     private async Task<StartupRecoveryCoordinator> StartedAsync(IProductionDiagnostics diagnostics)

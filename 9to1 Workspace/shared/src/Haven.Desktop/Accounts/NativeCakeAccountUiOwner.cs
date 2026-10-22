@@ -50,7 +50,18 @@ public sealed class NativeCakeAccountUiOwner(INativeCakeAccountSession session, 
   if(refused)NativeAccountUiCauses.Add(errors,capacity);
   NativeAccountUiCauses.Throw(errors);active=null;
  }
- public ValueTask DisposeAsync()=>new(CloseAndDrainAsync());
+ public ValueTask DisposeAsync()
+ {
+  // DI may resume its disposal loop off the UI thread after awaiting a different
+  // service. The App already joins this owner's exact close before provider
+  // disposal. Returning that terminal original needs no native-control access;
+  // preserve its faults/cancellation as well as success, without issuing a retry.
+  var original=Volatile.Read(ref close);
+  if(original is {IsCompleted:true})
+  {CloudflareOriginalExecutionGuard.DemandExternalJoin(this);return new(original);}
+  // First/pending native retirement still requires the genuine UI-thread owner.
+  return new(CloseAndDrainAsync());
+ }
 }
 
 #endif

@@ -128,6 +128,8 @@
     <Compile Include="NativeAssistantGeneratedUiInteractionCallbackTests.cs" />
     <Compile Include="NativeAssistantGeneratedUiInteractionFirstUseTests.HomeCallbackCustody.cs" />
     <Compile Include="CanonicalCompatibleTaskContextCompositionTests.AssistantDevOwners.cs" />
+    <!-- Real native account-adapter presentation fences over the scripted INativeCakeAccountSession boundary. -->
+    <Compile Include="NativeAccountObservationFenceTests.cs" />
     <!-- Current Chat model-availability/discovery-refusal boundaries: the ACTUAL typed
          classification, the lifetime terminal-payload contract, and the Spaces failed-retirement
          decision/presentation. These own no alternate rig or state graph. -->

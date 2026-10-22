@@ -288,7 +288,7 @@ public sealed partial class App
         _actualDocumentClosePrimaryShell = shell;
         _actualShutdownSequence = new(JoinOriginalAppProducersAsync,
             () => sessions.SaveFinalSnapshotAndSealAsync(CancellationToken.None),
-            () => actualRecovery.PrepareFinalCleanWriterAsync(CancellationToken.None),
+            () => PrepareFinalWriterAfterOriginalAppRetirementAsync(_originalAppWork, actualRecovery),
             () => JoinOriginalDesktopBorrowersAsync(actualBorrowers, desktop),
             () => services.DisposeAsync().AsTask(),
             signal => Dispatcher.UIThread.InvokeAsync(signal, DispatcherPriority.Background).GetTask());
@@ -309,6 +309,21 @@ public sealed partial class App
         window.Closing += OnOriginalPrimaryWindowClosing;
         desktop.ShutdownRequested += OnOriginalDesktopShutdownRequested;
         window.Closed += OnOriginalUnexpectedPrimaryWindowClosed;
+    }
+
+    internal static Task<IStartupRecoveryFinalCleanWriter> PrepareFinalWriterAfterOriginalAppRetirementAsync(
+        DesktopOriginalWorkLifetime appWork, IStartupRecoveryFinalCleanWriterSource recovery)
+    {
+        ArgumentNullException.ThrowIfNull(appWork);
+        ArgumentNullException.ThrowIfNull(recovery);
+        var actualRetirement = appWork.OriginalClose;
+        if (actualRetirement is not { IsCompletedSuccessfully: true })
+            throw new InvalidOperationException("The actual App startup retirement must finish before final writer preparation.");
+        // Older implementations keep their strict completed-startup contract. The
+        // real recovery owner additionally preserves a deliberately interrupted run.
+        return recovery is IStartupRecoveryRetiredStartupFinalCleanWriterSource interrupted
+            ? interrupted.PrepareFinalCleanWriterAfterStartupRetirementAsync(actualRetirement, CancellationToken.None)
+            : recovery.PrepareFinalCleanWriterAsync(CancellationToken.None);
     }
 
     /// <summary>Applies the pinned a390 primary-native closing policy to the actual configured PRIMARY window:

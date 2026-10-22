@@ -28,7 +28,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private readonly bool _aiAvailable;
     private readonly DesktopOriginalWorkLifetime _work;
     private readonly CuiControlLoader _loader = new(HomeAppsCuiDocument.CreateControlRegistry());
-    private readonly CuiControlLoader _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry());
+    private CuiControlLoader _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry());
     private readonly Border _viewport = new();
     private readonly TextBlock _heading = new(), _status = new();
     private readonly TextBox _search = new();
@@ -67,6 +67,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         };
         _work = new(StopAsync, CleanupAsync);
         _appsBindings = new(() => _appsState, DispatchAppsCommandAsync);
+        // The apps surface uses a per-page captured registry: its image resolver reconciles each actual
+        // rendered brand target against THIS page's bindings, so multiple Home/New Tab pages never
+        // register each other's targets. The loader is ( after the bindings exist so the coordinator
+        // can be captured. All brand observations are retired before loader teardown (see StopAsync).
+        _appsLoader = new(HomeAppsCuiDocument.CreateControlRegistry(_appsBindings));
         _railBindings = new(() => _section);
         using var stream = typeof(UnifiedHomePage).Assembly.GetManifestResourceStream("Haven.Desktop.Home.Unified.cui")
             ?? throw new InvalidDataException("The shared Home document is missing.");
@@ -183,7 +188,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             // are never deleted here.
             _appsCatalogue = modes.Where(mode => mode.IsEnabled && !HavenAppRoutePolicy.IsDeprecatedStandalone(mode))
                 .OrderBy(mode => mode.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(mode => new HomeAppItem(mode.Key, mode.Name, mode.Description, mode.IconKey))
+                .Select(mode => new HomeAppItem(mode.Key, mode.Name, mode.Description, mode.IconKey,
+                    CanonicalId: mode.Id, Source: mode.Source))
                 .ToArray();
             UpdateAppsState();
         }
@@ -248,17 +254,35 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private void UpdateAppsState(string? status = null)
     {
         var query = _appsState.Query;
-        _appsState = new HomeAppsViewState(_appsCatalogue, HomeAppsViewState.Filter(_appsCatalogue, query), query,
+        var launcher = HomeCreateGroup.BuildLauncher(_appsCatalogue);
+        var group = HomeCreateGroup.Build(_appsCatalogue);
+        var groupVisible = HomeCreateGroup.ResolveGroupVisible(group, query);
+        _appsState = new HomeAppsViewState(
+            _appsCatalogue,
+            HomeCreateGroup.FilterLauncher(launcher, group, query),
+            query,
             status ?? (_appsCatalogue.Count == 0
                 ? "No apps are available in this profile."
-                : "Select an app to open it in this tab."));
+                : "Select an app to open it in this tab."),
+            launcher,
+            group,
+            groupVisible);
         _appsBindings.Refresh();
     }
 
     private void SetAppsQuery(string? query)
     {
         var text = (query ?? string.Empty).Trim();
-        _appsState = _appsState with { Query = text, Visible = HomeAppsViewState.Filter(_appsCatalogue, text) };
+        var launcher = HomeCreateGroup.BuildLauncher(_appsCatalogue);
+        var group = HomeCreateGroup.Build(_appsCatalogue);
+        _appsState = _appsState with
+        {
+            Query = text,
+            Visible = HomeCreateGroup.FilterLauncher(launcher, group, text),
+            Launcher = launcher,
+            Group = group,
+            GroupVisible = HomeCreateGroup.ResolveGroupVisible(group, text)
+        };
         _appsBindings.Refresh();
     }
 
@@ -367,10 +391,12 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         List<Exception> failures = [];
         void Attempt(Action action) { try { action(); } catch (Exception error) { failures.Add(error); } }
         void Acquire(Func<Task> action) => Attempt(() => _stopSources.Add(action()));
-        // Retire the keyboard-focus tooltip host FIRST, before any loader teardown, so no
-        // tooltip subscription or popup outlives the children it describes. Retired through the
-        // same retained-failure collection as the loaders.
+        // Retire the keyboard-focus tooltip host and the scoped-appearance observation FIRST, before
+        // any loader teardown, so no tooltip subscription, popup or appearance callback outlives the
+        // children they describe. Both are retired through the same retained-failure collection as the
+        // loaders, so a later close failure cannot resurrect them.
         Attempt(_keyboardTooltips.Dispose);
+        Attempt(_appsBindings.RetireAppearanceObservation);
         Attempt(_loader.Dispose); Attempt(_appsLoader.Dispose);
         // Start child retirement before joining admitted page actions.
         if (_dashboard is not null) Acquire(_dashboard.CloseAndDrainAsync);
@@ -390,6 +416,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     {
         Dispatcher.UIThread.VerifyAccess();
         if (!_stopped) throw new InvalidOperationException("The original Home children must finish closing before detachment.");
+        // The scoped-appearance observation was retired in StopAsync before the loaders tore down.
         _search.KeyDown -= OnSearchKey;
         if (_dashboard is not null)
         {

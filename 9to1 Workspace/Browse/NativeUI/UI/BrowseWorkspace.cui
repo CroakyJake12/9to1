@@ -97,6 +97,13 @@
             </Container>
           </Container>
         </Container>
+        <Container id="BrowseInlineChromiumFallbackPanel" Type="Overlay" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="12 24 12 8" IsVisible="{Binding ShowChromiumFallback}">
+          <Container id="BrowseInlineChromiumFallbackCard" Type="Vertical Stack" CellGap="6" Padding="12" Width="420" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1" CornerRadius="10" AccessibleName="Gecko unavailable, Chromium available">
+            <Text Text="{Binding ChromiumFallbackStatus}" FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Text FontSize="13" Color="{Resource CuiTextBrush}">The Firefox/Gecko engine is not available for this tab on this device. You can open this same tab with the Chromium engine.</Text>
+            <Button id="BrowseInlineChromiumTabButton" action="9to1.Browse.ChromiumTab" HorizontalContentAlignment="Center" Interactive="{Binding Can.ChromiumTab}">Use Chromium for this tab</Button>
+          </Container>
+        </Container>
       </Container>
       <Text Row="3" Column="0" Text="{Binding Status}" FontSize="11" AccessibleName="Browse operation status" />
     </Container>
@@ -114,9 +121,6 @@
         </Button>
         <Container Type="Grid" Height="1" Margin="8 2 8 2" Background="{Resource CuiLineBrush}" />
 
-        <Container Type="Grid" Padding="8 6 8 2">
-          <Text Text="Switch &amp; Manage Users" FontWeight="Bold" />
-        </Container>
         <Button id="BrowseSwitchUsersButton" action="9to1.Browse.OpenManageUsers" Interactive="{Binding Can.OpenManageUsers}" HorizontalContentAlignment="Left" Padding="10 8" CornerRadius="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0">Switch &amp; Manage Users</Button>
 
         <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowStorage}" Padding="8 2 8 10">
@@ -208,7 +212,7 @@
           <Image Source="avares://Haven/Assets/haven-profile.svg" Width="34" Height="34" />
           <Container Type="Vertical Stack" CellGap="2">
             <Text Text="{Binding ProfilePrincipalLabel}" FontWeight="Bold" />
-            <Text Text="Signed-in principal for this session." FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+            <Text Text="{Binding ProfileAccountHint}" FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
           </Container>
         </Container>
         <Text Text="{Binding ManageUsersOtherProfilesStatus}" FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" IsVisible="{Binding ShowManageUsersOtherProfilesStatus}" />

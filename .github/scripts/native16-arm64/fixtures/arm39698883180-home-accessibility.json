@@ -1,0 +1,7778 @@
+[
+  {
+    "name": "9to1",
+    "role": "frame",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0"
+  },
+  {
+    "name": "PopupRoot",
+    "role": "frame",
+    "text": "",
+    "rectangle": [
+      683,
+      531,
+      447,
+      92
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/1"
+  },
+  {
+    "name": "WindowChrome",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "AvaloniaWindowChrome",
+    "tree_path": "0/0/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      683,
+      531,
+      447,
+      92
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/1/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_TransparencyFallback",
+    "tree_path": "0/0/0/1/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      683,
+      531,
+      447,
+      92
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_TransparencyFallback",
+    "tree_path": "0/0/1/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      683,
+      531,
+      447,
+      92
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/1/0/1"
+  },
+  {
+    "name": "VisualLayerManager",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_VisualLayerManager",
+    "tree_path": "0/0/0/1/1/0"
+  },
+  {
+    "name": "VisualLayerManager",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      683,
+      531,
+      447,
+      92
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_VisualLayerManager",
+    "tree_path": "0/0/1/0/1/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      683,
+      531,
+      447,
+      92
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/1/0/1/0/0"
+  },
+  {
+    "name": "ContentControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "MainContent",
+    "tree_path": "0/0/0/1/1/0/0/0"
+  },
+  {
+    "name": "ToolTip",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      683,
+      531,
+      447,
+      92
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/1/0/1/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      707,
+      547,
+      399,
+      44
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/1/0/1/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0"
+  },
+  {
+    "name": "MaterialLayer",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      708,
+      548,
+      397,
+      42
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/1/0/1/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      720,
+      560,
+      373,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/1/0/1/0/0/0/0/1"
+  },
+  {
+    "name": "UnifiedWorkspaceHost",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0"
+  },
+  {
+    "name": "Inspect images with a compatible local vision model",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      720,
+      560,
+      373,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/1/0/1/0/0/0/0/1/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "shared-frame-root",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "shared-scene-host",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiSceneHost",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "9to1 Haven browser",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseRoot",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseLayout",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      881
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      38
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      57,
+      1280,
+      44
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      886,
+      1280,
+      14
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/3"
+  },
+  {
+    "name": "Open tabs",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      19,
+      1280,
+      38
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseTabStrip",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      57,
+      1280,
+      44
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseNavigationBar",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseContentViewport",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0"
+  },
+  {
+    "name": "Home",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      0,
+      886,
+      1280,
+      14
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/3/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1264,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      4,
+      61,
+      1272,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1240,
+      23,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      4,
+      61,
+      28,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      34,
+      61,
+      28,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      64,
+      61,
+      28,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      94,
+      61,
+      1048,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1144,
+      61,
+      68,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1214,
+      61,
+      28,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/5"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1244,
+      61,
+      32,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/6"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "New tab",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1240,
+      23,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseNewTabButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Go back",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      4,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "BrowseBackButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "Go forward",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      34,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "BrowseForwardButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      64,
+      61,
+      28,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      94,
+      61,
+      1048,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0"
+  },
+  {
+    "name": "Haven model and notifications",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1144,
+      62,
+      68,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "HavenSharedCluster",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0"
+  },
+  {
+    "name": "Bookmark page",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1214,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "BrowseBookmarkButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/5/0"
+  },
+  {
+    "name": "Account, profile and browser tools",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1244,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "HavenProfileButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/6/0"
+  },
+  {
+    "name": "Original native browser engine surface",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseEngineView",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0"
+  },
+  {
+    "name": "ScrollViewer",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1240,
+      23,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      4,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      34,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      64,
+      61,
+      28,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      95,
+      62,
+      1046,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1144,
+      62,
+      68,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1214,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/5/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1244,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/6/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1240,
+      23,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      4,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      34,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      64,
+      61,
+      28,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      95,
+      62,
+      1018,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1113,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1144,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1180,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/1"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1214,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/5/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1244,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/6/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0"
+  },
+  {
+    "name": "ScrollContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "+",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      1250,
+      28,
+      11,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "\u2190",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      12,
+      68,
+      11,
+      21
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "\u2192",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      42,
+      68,
+      11,
+      21
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "Reload page",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      64,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "BrowseReloadButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0/0/0/0"
+  },
+  {
+    "name": "Search or enter web address",
+    "role": "entry",
+    "text": "Home",
+    "rectangle": [
+      95,
+      62,
+      1018,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseAddressBox",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0"
+  },
+  {
+    "name": "Go to address",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1113,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseNavigateButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/1/0"
+  },
+  {
+    "name": "Choose AI model",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1144,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "HavenModelButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0/0"
+  },
+  {
+    "name": "Notifications",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1180,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "HavenNotificationsButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/1/0"
+  },
+  {
+    "name": "\u2606",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      1220,
+      67,
+      17,
+      22
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/5/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      1251,
+      69,
+      18,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/6/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      64,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      95,
+      62,
+      1018,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1113,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/1/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1144,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1180,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/1/0/0"
+  },
+  {
+    "name": "UnifiedHomePage",
+    "role": "unknown",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      64,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      107,
+      66,
+      994,
+      24
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1113,
+      62,
+      28,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/1/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1144,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1180,
+      62,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/1/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      1232,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "\u21bb",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      70,
+      68,
+      15,
+      21
+    ],
+    "showing": true,
+    "enabled": false,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ScrollViewer",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      107,
+      66,
+      994,
+      24
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ScrollViewer",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      107,
+      66,
+      0,
+      24
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1101,
+      66,
+      0,
+      24
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0/2"
+  },
+  {
+    "name": "\u2192",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      1122,
+      68,
+      10,
+      20
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1151,
+      70,
+      18,
+      16
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      1187,
+      69,
+      18,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "9to1 Home",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      204,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      107,
+      66,
+      994,
+      24
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1151,
+      70,
+      18,
+      16
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "unified-home-root",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      200,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ScrollContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      107,
+      66,
+      994,
+      24
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1151,
+      70,
+      18,
+      16
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      1280,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      200,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      107,
+      66,
+      994,
+      24
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      1151,
+      69,
+      18,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/4/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      56,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      56,
+      101,
+      1224,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      200,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "TextPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      107,
+      70,
+      994,
+      16
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_TextPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/3/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Home navigation",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      0,
+      101,
+      56,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-sidebar",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      56,
+      101,
+      1224,
+      785
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-main",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Home",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      200,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "BrowseTabButton",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      769
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      72,
+      117,
+      1192,
+      753
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      200,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      721
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      838,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      72,
+      117,
+      1192,
+      30
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      72,
+      163,
+      1192,
+      681
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      72,
+      852,
+      1192,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      23,
+      200,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      721
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-rail-nav",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      838,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-rail-footer",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Apps",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      72,
+      117,
+      1192,
+      30
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-heading",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      72,
+      163,
+      1192,
+      681
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-content",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0"
+  },
+  {
+    "name": "TextBlock",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      72,
+      852,
+      1192,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-status",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/2/0"
+  },
+  {
+    "name": "Home",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      20,
+      31,
+      41,
+      16
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ScrollViewer",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      721
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      12,
+      838,
+      35,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "Apps",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      72,
+      163,
+      1192,
+      681
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps-page",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      721
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      12,
+      838,
+      35,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      72,
+      163,
+      1192,
+      681
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0"
+  },
+  {
+    "name": "ScrollContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      721
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Settings",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      10,
+      838,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-settings",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      179,
+      1160,
+      649
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      721
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      10,
+      838,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      179,
+      1160,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      573
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      810,
+      1160,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/2"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      157,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      205,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      253,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/3"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      301,
+      39,
+      1
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/4"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      310,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/5"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      358,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/6"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      406,
+      39,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/7"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      10,
+      838,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      179,
+      1160,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps-search-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      573
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps-results",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0"
+  },
+  {
+    "name": "Select an app to open it in this tab.",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      88,
+      810,
+      1160,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps-status",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/2/0"
+  },
+  {
+    "name": "Apps",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Dashboard",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      157,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-dashboard",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Models / Discover",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      205,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-models",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0"
+  },
+  {
+    "name": "New Tab",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      253,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-newtab",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/3/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      301,
+      39,
+      1
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-rail-primary-divider",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/4/0"
+  },
+  {
+    "name": "Library",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      310,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-library",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/5/0"
+  },
+  {
+    "name": "Events",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      358,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-events",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/6/0"
+  },
+  {
+    "name": "Mesh",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      8,
+      406,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-mesh",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/7/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      19,
+      847,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-settings-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      179,
+      1160,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ScrollViewer",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      573
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      157,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      205,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      253,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/3/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      301,
+      39,
+      1
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/4/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      310,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/5/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      358,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/6/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      406,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/7/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      179,
+      320,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      416,
+      179,
+      53,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      573
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      109,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      157,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      205,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      253,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/3/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      310,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/5/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      358,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/6/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      8,
+      406,
+      40,
+      40
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/7/0/0/0"
+  },
+  {
+    "name": "Search apps",
+    "role": "entry",
+    "text": "",
+    "rectangle": [
+      88,
+      179,
+      320,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-search",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "19 apps",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      416,
+      179,
+      53,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps-count",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "ScrollContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      573
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      17,
+      118,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-apps-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      17,
+      166,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-dashboard-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      17,
+      214,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-models-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      17,
+      262,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-newtab-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/3/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      17,
+      319,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-library-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/5/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      17,
+      367,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-events-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/6/0/0/0/0"
+  },
+  {
+    "name": "Image",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      17,
+      415,
+      22,
+      22
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-mesh-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/7/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      179,
+      320,
+      34
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      573
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      294,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      372
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      609,
+      1160,
+      0
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/1"
+  },
+  {
+    "name": "ScrollViewer",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      294,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ScrollViewer",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      0,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      395,
+      187,
+      0,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/2"
+  },
+  {
+    "name": "WrapPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      1160,
+      372
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tiles",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      609,
+      1160,
+      0
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      294,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      609,
+      1160,
+      0
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "ScrollContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      294,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-row",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      609,
+      1160,
+      0
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "Grid",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      294,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0"
+  },
+  {
+    "name": "Panel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      609,
+      1160,
+      0
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "TextBlock",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      294,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "TextPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      101,
+      187,
+      294,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_TextPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      225,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      349,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      473,
+      160,
+      124
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0"
+  },
+  {
+    "name": "Open AI Studio",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Open Automations",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      248,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0"
+  },
+  {
+    "name": "Open Boards",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      408,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0"
+  },
+  {
+    "name": "Open Build",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      568,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0"
+  },
+  {
+    "name": "Open Canvas",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      728,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0"
+  },
+  {
+    "name": "Open Data",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      888,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0"
+  },
+  {
+    "name": "Open Files",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1048,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0"
+  },
+  {
+    "name": "Open Forms",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      88,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0"
+  },
+  {
+    "name": "Open Maps",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      248,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0"
+  },
+  {
+    "name": "Open Motion",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      408,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0"
+  },
+  {
+    "name": "Open Picture",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      568,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0"
+  },
+  {
+    "name": "Open Plan",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      728,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0"
+  },
+  {
+    "name": "Open Play",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      888,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0"
+  },
+  {
+    "name": "Open Present",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      1048,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0"
+  },
+  {
+    "name": "Open Shelf",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      88,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0"
+  },
+  {
+    "name": "Open Spaces",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      248,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0"
+  },
+  {
+    "name": "Open Terminal",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      408,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0"
+  },
+  {
+    "name": "Open Voice & Vision",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      568,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0"
+  },
+  {
+    "name": "Open Write",
+    "role": "push button",
+    "text": "",
+    "rectangle": [
+      728,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      225,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      888,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1048,
+      349,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      88,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      248,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      408,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      568,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0"
+  },
+  {
+    "name": "CuiMaterialBorder",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      728,
+      473,
+      148,
+      112
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      89,
+      226,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      249,
+      226,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      409,
+      226,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      569,
+      226,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      729,
+      226,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      889,
+      226,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1049,
+      226,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      89,
+      350,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      249,
+      350,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      409,
+      350,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      569,
+      350,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      729,
+      350,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      889,
+      350,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1049,
+      350,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      89,
+      474,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      249,
+      474,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      409,
+      474,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      569,
+      474,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0/0"
+  },
+  {
+    "name": "ContentPresenter",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      729,
+      474,
+      146,
+      110
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "PART_ContentPresenter",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      129,
+      253,
+      65,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      275,
+      253,
+      93,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      253,
+      50,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      623,
+      253,
+      38,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      777,
+      253,
+      51,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      945,
+      253,
+      34,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1105,
+      253,
+      33,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      139,
+      377,
+      45,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      303,
+      377,
+      39,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      377,
+      51,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      616,
+      377,
+      52,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      786,
+      377,
+      32,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      946,
+      377,
+      32,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1095,
+      377,
+      55,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      144,
+      501,
+      36,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      297,
+      501,
+      51,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      451,
+      501,
+      63,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      593,
+      501,
+      99,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "CuiContainerControl",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      783,
+      501,
+      39,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-body",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      129,
+      253,
+      65,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      275,
+      253,
+      93,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      253,
+      50,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      623,
+      253,
+      38,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      777,
+      253,
+      51,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      945,
+      253,
+      34,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1105,
+      253,
+      33,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      139,
+      377,
+      45,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      303,
+      377,
+      39,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      377,
+      51,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      616,
+      377,
+      52,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      786,
+      377,
+      32,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      946,
+      377,
+      32,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1095,
+      377,
+      55,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      144,
+      501,
+      36,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      297,
+      501,
+      51,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      451,
+      501,
+      63,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      593,
+      501,
+      99,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "StackPanel",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      783,
+      501,
+      39,
+      56
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      129,
+      253,
+      65,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      129,
+      291,
+      65,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      275,
+      253,
+      93,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      275,
+      291,
+      93,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      253,
+      50,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      291,
+      50,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      623,
+      253,
+      38,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      623,
+      291,
+      38,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      777,
+      253,
+      51,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      777,
+      291,
+      51,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      945,
+      253,
+      34,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      945,
+      291,
+      34,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1105,
+      253,
+      33,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1105,
+      291,
+      33,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      139,
+      377,
+      45,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      139,
+      415,
+      45,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      303,
+      377,
+      39,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      303,
+      415,
+      39,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      377,
+      51,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      457,
+      415,
+      51,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      616,
+      377,
+      52,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      616,
+      415,
+      52,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      786,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      786,
+      415,
+      32,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      946,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      946,
+      415,
+      32,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1095,
+      377,
+      55,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      1095,
+      415,
+      55,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      144,
+      501,
+      36,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      144,
+      539,
+      36,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      297,
+      501,
+      51,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      297,
+      539,
+      51,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      451,
+      501,
+      63,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      451,
+      539,
+      63,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      593,
+      501,
+      99,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      593,
+      539,
+      99,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      783,
+      501,
+      39,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Border",
+    "role": "panel",
+    "text": "",
+    "rectangle": [
+      783,
+      539,
+      39,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": null,
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0/0/0/0/1"
+  },
+  {
+    "name": "AI Studio",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      145,
+      253,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "AI Studio",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      129,
+      291,
+      65,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Automations",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      305,
+      253,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Automations",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      275,
+      291,
+      93,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Boards",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      466,
+      253,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Boards",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      457,
+      291,
+      50,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Build",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      626,
+      253,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Build",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      623,
+      291,
+      38,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Canvas",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      787,
+      253,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Canvas",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      777,
+      291,
+      51,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/4/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Data",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      946,
+      253,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Data",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      945,
+      291,
+      34,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/5/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Files",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      1105,
+      253,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Files",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      1105,
+      291,
+      33,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/6/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Forms",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      145,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Forms",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      139,
+      415,
+      45,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/7/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Maps",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      307,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Maps",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      303,
+      415,
+      39,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/8/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Motion",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      467,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Motion",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      457,
+      415,
+      51,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/9/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Picture",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      626,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Picture",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      616,
+      415,
+      52,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/10/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Plan",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      786,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Plan",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      786,
+      415,
+      32,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/11/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Play",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      946,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Play",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      946,
+      415,
+      32,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/12/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Present",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      1107,
+      377,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Present",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      1095,
+      415,
+      55,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/13/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Shelf",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      146,
+      501,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Shelf",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      144,
+      539,
+      36,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/14/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Spaces",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      307,
+      501,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Spaces",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      297,
+      539,
+      51,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/15/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Terminal",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      467,
+      501,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Terminal",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      451,
+      539,
+      63,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/16/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Voice & Vision",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      627,
+      501,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Voice & Vision",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      593,
+      539,
+      99,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/17/0/0/0/0/0/0/0/0/1/0"
+  },
+  {
+    "name": "Write",
+    "role": "image",
+    "text": "",
+    "rectangle": [
+      787,
+      501,
+      32,
+      32
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-icon",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0/0/0/0/0/0"
+  },
+  {
+    "name": "Write",
+    "role": "label",
+    "text": "",
+    "rectangle": [
+      783,
+      539,
+      39,
+      18
+    ],
+    "showing": true,
+    "enabled": true,
+    "process_id": 18256,
+    "accessible_id": "home-app-tile-name",
+    "tree_path": "0/0/0/1/1/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0/0/1/0/0/1/0/0/0/0/1/0/0/0/0/0/0/0/18/0/0/0/0/0/0/0/0/1/0"
+  }
+]

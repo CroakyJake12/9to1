@@ -18,7 +18,8 @@ namespace Haven.Infrastructure;
 /// </summary>
 public sealed class CleanResetStartupRecoveryCoordinator(
     StartupRecoveryCoordinator inner,
-    IAppPaths paths) : IStartupRecoveryCoordinator, IStartupRecoveryFinalCleanWriterSource
+    IAppPaths paths) : IStartupRecoveryCoordinator, IStartupRecoveryFinalCleanWriterSource,
+    IStartupRecoveryRetiredStartupFinalCleanWriterSource
 {
     /// <summary>
     /// Gets or updates current, the bindable or domain state represented by this property.
@@ -43,6 +44,14 @@ public sealed class CleanResetStartupRecoveryCoordinator(
     /// </summary>
     public Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAsync(CancellationToken cancellationToken) =>
         inner.PrepareFinalCleanWriterAsync(cancellationToken);
+
+    /// <summary>
+    /// Preserves the production owner's interrupted-startup capability without
+    /// substituting its original retirement task or relaxing its acknowledgement guards.
+    /// </summary>
+    public Task<IStartupRecoveryFinalCleanWriter> PrepareFinalCleanWriterAfterStartupRetirementAsync(
+        Task actualStartupRetirement, CancellationToken cancellationToken) =>
+        inner.PrepareFinalCleanWriterAfterStartupRetirementAsync(actualStartupRetirement, cancellationToken);
 
     /// <summary>
     /// Performs mark clean shutdown asynchronously so I/O does not block the caller's thread.
