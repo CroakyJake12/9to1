@@ -563,6 +563,8 @@ void engine_send(dulche::ChildProcess& engine, const std::string& line) {
 //   DEC <ids>         -> "BYT <raw bytes>"  | "ERR <msg>"
 //   QUIT
 bool helper_send(dulche::ChildProcess& h, const std::string& body) {
+    if (body.size() > kLimit)
+        throw std::invalid_argument("Tokenizer helper request exceeds frame limit.");
     const uint32_t len = static_cast<uint32_t>(body.size());
     unsigned char hdr[4];
     hdr[0] = len & 0xffU; hdr[1] = (len >> 8) & 0xffU;
@@ -862,7 +864,9 @@ void run_generation(Session& session, const GenerateRequest& req, int argc, char
     dulche::ChildProcess& helper = *session.helper;
 
     // ENC messages -> token ids.
-    const std::string json = build_messages_json(req.messages);
+    // ENC accepts a tagged object, not a bare messages array. Keep the existing JSON escaping and
+    // message ordering, then supply the discriminator required by the bundled helper.
+    const std::string json = "{\"messages\":" + build_messages_json(req.messages) + "}";
     if (!helper_send(helper, "ENC " + json)) throw std::runtime_error("Helper input pipe failed.");
     std::string resp;
     if (!helper_recv(helper, resp)) throw std::runtime_error(

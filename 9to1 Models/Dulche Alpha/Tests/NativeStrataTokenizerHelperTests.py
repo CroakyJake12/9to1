@@ -201,6 +201,128 @@ class ServeProtocolTests(unittest.TestCase):
         self.assertEqual(code, 0)
 
 
+class EncodeEnvelopeTests(unittest.TestCase):
+    """Production ENC boundary controls; the separate native suite covers real Jinja/producer.
+
+    Rendering is observed here independently of installed Jinja. No malformed envelope may reach
+    the tokenizer or renderer; errors must preserve later valid requests on the same helper.
+    """
+
+    def _exchange(self, commands, renderer=None, tokenizer=None, identity=None):
+        from unittest.mock import patch
+        mod = load_helper()
+        incoming = io.BytesIO()
+        for command in commands:
+            mod.write_frame(incoming, command)
+        incoming.seek(0)
+        outgoing = io.BytesIO()
+        with patch.object(mod, "render_messages", renderer or (lambda t, m: [0, 1])):
+            code = mod.serve(tokenizer or ServeProtocolTests.FakeTok(), None, identity,
+                             incoming, outgoing)
+        outgoing.seek(0)
+        responses = []
+        while True:
+            body, length = mod.read_frame(outgoing)
+            if length < 0:
+                break
+            responses.append(body)
+        return code, responses
+
+    def test_tagged_messages_reach_renderer_unchanged(self):
+        messages = [
+            {"role": "system", "content": "line\nquote\" and slash\\"},
+            {"role": "user", "content": "héllo 🙂"},
+            {"role": "assistant", "content": ""},
+            {"role": "tool", "content": "result", "name": "lookup"},
+        ]
+        seen = []
+        code, responses = self._exchange(
+            [b"ENC " + json.dumps({"messages": messages}, ensure_ascii=False).encode("utf-8")],
+            renderer=lambda tok, value: seen.append(value) or [2, 1, 0])
+        self.assertEqual((code, responses), (0, [b"TON 2,1,0"]))
+        self.assertEqual(seen, [messages])
+
+    def test_bare_array_is_rejected_before_rendering(self):
+        seen = []
+        code, responses = self._exchange(
+            [b'ENC [{"role":"user","content":"hello"}]'],
+            renderer=lambda *args: seen.append(args) or [0])
+        self.assertEqual(code, 0)
+        self.assertTrue(responses[0].startswith(b"ERR ENC payload must be an object"), responses)
+        self.assertEqual(seen, [])
+
+    def test_invalid_envelopes_fail_before_tokenizer_or_renderer(self):
+        tokenizations, seen = [], []
+        class ObservedTokenizer(ServeProtocolTests.FakeTok):
+            def encode(self, *args, **kwargs):
+                tokenizations.append((args, kwargs))
+                return [0]
+        invalid = [None, True, 42, "messages", [], {}, {"unknown": "abc"},
+                   {"text": "abc", "messages": []}, {"text": "abc", "extra": 1},
+                   {"text": 42}, {"messages": None}, {"messages": "abc"},
+                   {"messages": [{"role": "user"}]},
+                   {"messages": [{"role": "user", "content": 1}]},
+                   {"messages": [{"role": "foreign", "content": "a"}]},
+                   {"messages": [{"role": "user", "content": "a", "name": 1}]},
+                   {"messages": [{"role": "user", "content": "a", "images": []}]},
+                   {"messages": ["abc"]}]
+        for value in invalid:
+            with self.subTest(value=value):
+                code, responses = self._exchange(
+                    [b"ENC " + json.dumps(value).encode()],
+                    renderer=lambda *args: seen.append(args) or [0],
+                    tokenizer=ObservedTokenizer())
+                self.assertEqual(code, 0)
+                self.assertEqual(len(responses), 1)
+                self.assertTrue(responses[0].startswith(b"ERR "), responses)
+        self.assertEqual((tokenizations, seen), ([], []))
+
+    def test_malformed_json_and_invalid_utf8_are_request_scoped(self):
+        for bad in (b'ENC {"messages":', b"ENC \xff"):
+            with self.subTest(bad=bad):
+                code, responses = self._exchange([bad, b'ENC {"text":"abc"}'])
+                self.assertEqual(code, 0)
+                self.assertTrue(responses[0].startswith(b"ERR "), responses)
+                self.assertEqual(responses[1], b"TON 0,1,2")
+
+    def test_renderer_error_preserves_following_requests(self):
+        def refused(*args):
+            raise ValueError("fixture template refused")
+        code, responses = self._exchange(
+            [b'ENC {"messages":[]}', b'ENC {"text":"abc"}', b"DEC 0,1,2", b"QUIT"],
+            renderer=refused)
+        self.assertEqual((code, responses),
+                         (0, [b"ERR fixture template refused", b"TON 0,1,2", b"BYT abc"]))
+
+    def test_token_count_bound_is_preserved(self):
+        from unittest.mock import patch
+        mod = load_helper()
+        incoming = io.BytesIO()
+        for command in (b'ENC {"messages":[]}', b'ENC {"text":"a"}'):
+            mod.write_frame(incoming, command)
+        incoming.seek(0)
+        outgoing = io.BytesIO()
+        with patch.object(mod, "MAX_ID_COUNT", 2), patch.object(
+                mod, "render_messages", return_value=[0, 1, 2]):
+            self.assertEqual(mod.serve(ServeProtocolTests.FakeTok(), None, None,
+                                      incoming, outgoing), 0)
+        outgoing.seek(0)
+        self.assertEqual(mod.read_frame(outgoing)[0], b"ERR token count exceeds bound")
+        self.assertEqual(mod.read_frame(outgoing)[0], b"TON 0")
+
+    def test_identity_mismatch_prevents_encode(self):
+        seen = []
+        code, responses = self._exchange(
+            [b'ENC {"messages":[]}'], renderer=lambda *args: seen.append(args) or [0],
+            identity="0" * 64)
+        self.assertEqual((code, responses, seen), (4, [], []))
+
+    def test_decode_out_of_range_remains_request_scoped(self):
+        code, responses = self._exchange([b"DEC -1", b"DEC 10", b"DEC 0"])
+        self.assertEqual((code, responses),
+                         (0, [b"ERR token id out of vocabulary", b"ERR token id out of vocabulary", b"BYT a"]))
+
+
 class DependencyFailClosedTests(unittest.TestCase):
     def test_missing_donor_regex_fails_closed(self):
         # Deterministic: when the donor module (and its `regex` runtime dep) is unavailable, the

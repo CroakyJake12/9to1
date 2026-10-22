@@ -7,10 +7,13 @@ REQUIRED, explicitly-pinned runtime dependency of the candidate text path. It ru
 subprocess owned by the C++ relay worker and answers a tiny line protocol on stdin/stdout:
 
   IDENTITY              -> "IDENT <sha256 of tokenizer identity>"
-  ENC <len> <json>      -> "TON <len> <comma-separated ids>"
-  DEC <len> <ids>       -> "BYT <len> <raw bytes>"
+  ENC <json object>     -> "TON <comma-separated ids>"
+  DEC <ids>             -> "BYT <raw bytes>"
   QUIT
 
+Each command/response has one outer 4-byte little-endian byte-length prefix (the length is not
+repeated inside ENC/DEC/TON/BYT). ENC carries exactly one of {"text": string} or
+{"messages": [{"role": string, "content": string, "name"?: string}, ...]}; a bare array is invalid.
 Every input is length-prefixed and bounded; every output is length-prefixed and bounded. On any
 missing dependency or identity mismatch the helper exits non-zero with a precise cause on stderr, so
 the relay fails ONLY the affected text request (never load/probe/shutdown).
@@ -185,10 +188,27 @@ def serve(tok, encoder, expected_identity, in_stream=None, out_stream=None):
             if text.startswith("ENC "):
                 payload = body[4:]
                 data = json.loads(payload.decode("utf-8"))
+                # The native relay supplies a tagged object. Reject ambiguous/malformed payloads
+                # before invoking a tokenizer or chat template; never reinterpret a bare array.
+                if not isinstance(data, dict) or len(data) != 1:
+                    raise ValueError("ENC payload must be an object carrying exactly one of 'text' or 'messages'")
                 if "text" in data:
+                    if not isinstance(data["text"], str):
+                        raise ValueError("ENC 'text' must be a string")
                     ids = tok.encode(data["text"], parse_special=True)
                 elif "messages" in data:
-                    ids = render_messages(tok, data["messages"])
+                    messages = data["messages"]
+                    if not isinstance(messages, list):
+                        raise ValueError("ENC 'messages' must be an array")
+                    for message in messages:
+                        if (not isinstance(message, dict)
+                                or not {"role", "content"}.issubset(message)
+                                or set(message) - {"role", "content", "name"}
+                                or message["role"] not in ("system", "user", "assistant", "tool")
+                                or not isinstance(message["content"], str)
+                                or ("name" in message and not isinstance(message["name"], str))):
+                            raise ValueError("ENC message must carry a valid role, string content and optional string name")
+                    ids = render_messages(tok, messages)
                 else:
                     raise ValueError("ENC payload must carry 'text' or 'messages'")
                 if len(ids) > MAX_ID_COUNT:
