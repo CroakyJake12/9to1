@@ -87,6 +87,152 @@ class WorkflowTests(unittest.TestCase):
                 raise RuntimeError("interrupted")
         self.assertEqual(before, self.state_path.read_bytes())
 
+    def recovery_update(self):
+        path = self.root / "current-checkpoint.json"
+        path.write_text('{"next_action":"resume existing programme"}\n')
+        asset = {"path": str(path), **w.file_identity(path)}
+        return {"last_root_checkpoint_observed": {"path": str(path), "sha256": asset["sha256"]},
+                "recovery_assets": {"latest-root-checkpoint": asset}}
+
+    def assert_checkpoint_refused_unchanged(self, patch):
+        before = self.state_path.read_bytes()
+        memory = copy.deepcopy(self.state)
+        with self.assertRaises(w.Refusal): w.apply_checkpoint(memory, patch)
+        self.assertEqual(self.state, memory)
+        with self.assertRaises(w.Refusal):
+            with w.transaction(self.state_path, 0) as state: w.apply_checkpoint(state, patch)
+        self.assertEqual(before, self.state_path.read_bytes())
+        self.assertEqual(0, w.read(self.state_path)["generation"])
+
+    def test_checkpoint_rejects_writer24_string_locator_and_pathless_assets(self):
+        patch = self.recovery_update()
+        patch["last_root_checkpoint_observed"] = patch["last_root_checkpoint_observed"]["path"]
+        del patch["recovery_assets"]["latest-root-checkpoint"]["path"]
+        patch["next_actions"] = ["must not leak from refused checkpoint"]
+        self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_checkpoint_rejects_writer25_repaired_asset_but_string_locator(self):
+        patch = self.recovery_update()
+        patch["last_root_checkpoint_observed"] = patch["last_root_checkpoint_observed"]["path"]
+        self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_checkpoint_rejects_missing_asset_identity_fields_before_mutation(self):
+        original = self.recovery_update()
+        for field in ("path", "kind", "bytes", "mode", "sha256"):
+            with self.subTest(field=field):
+                patch = copy.deepcopy(original)
+                del patch["recovery_assets"]["latest-root-checkpoint"][field]
+                self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_checkpoint_rejects_malformed_asset_identity_fields(self):
+        original = self.recovery_update()
+        mutations = [("path", "relative.json"), ("path", None), ("path", "/invalid\0path"), ("kind", "symlink"),
+                     ("bytes", True), ("bytes", -1), ("mode", True), ("mode", 0o1000),
+                     ("sha256", "invalid"), ("sha256", None)]
+        for field, value in mutations:
+            with self.subTest(field=field, value=value):
+                patch = copy.deepcopy(original)
+                patch["recovery_assets"]["latest-root-checkpoint"][field] = value
+                self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_checkpoint_rejects_null_or_nonmapping_recovery_records(self):
+        for patch in ({"recovery_assets": None}, {"recovery_assets": []},
+                      {"recovery_assets": {"new": None}}, {"last_root_checkpoint_observed": None},
+                      {"last_root_checkpoint_observed": []}):
+            with self.subTest(patch=patch): self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_checkpoint_rejects_missing_or_changed_new_asset_bytes(self):
+        patch = self.recovery_update()
+        path = Path(patch["last_root_checkpoint_observed"]["path"])
+        original = path.read_bytes()
+        for mutation in ("missing", "tampered", "mode", "declared-size"):
+            with self.subTest(mutation=mutation):
+                path.write_bytes(original); path.chmod(0o600)
+                update = self.recovery_update()
+                if mutation == "missing": path.unlink()
+                elif mutation == "tampered": path.write_bytes(b"tampered")
+                elif mutation == "mode": path.chmod(0o644)
+                else: update["recovery_assets"]["latest-root-checkpoint"]["bytes"] += 1
+                self.assert_checkpoint_refused_unchanged(update)
+
+    def test_checkpoint_rejects_nonregular_new_asset_without_fifo_hang(self):
+        for kind in ("symlink", "directory", "fifo"):
+            with self.subTest(kind=kind):
+                patch = self.recovery_update(); path = Path(patch["last_root_checkpoint_observed"]["path"])
+                path.unlink()
+                if kind == "symlink": path.symlink_to(self.root_checkpoint)
+                elif kind == "directory": path.mkdir()
+                else: os.mkfifo(path)
+                self.assert_checkpoint_refused_unchanged(patch)
+                if kind == "directory": path.rmdir()
+                else: path.unlink()
+
+    def test_checkpoint_newest_pair_must_be_complete_and_match(self):
+        original = self.recovery_update()
+        variants = [copy.deepcopy(original) for _ in range(5)]
+        del variants[0]["recovery_assets"]
+        del variants[1]["last_root_checkpoint_observed"]
+        del variants[2]["last_root_checkpoint_observed"]["path"]
+        variants[3]["last_root_checkpoint_observed"]["path"] = str(self.root_checkpoint)
+        variants[4]["last_root_checkpoint_observed"]["sha256"] = "0" * 64
+        for patch in variants:
+            with self.subTest(patch=patch): self.assert_checkpoint_refused_unchanged(patch)
+
+    def test_checkpoint_current_pair_changes_need_one_atomic_update(self):
+        old = self.recovery_update()
+        with w.transaction(self.state_path, 0) as state: w.apply_checkpoint(state, old)
+        current = w.read(self.state_path)
+        newer = self.root / "next-checkpoint.json"; newer.write_text('{"newer":true}\n')
+        new_asset = {"path": str(newer), **w.file_identity(newer)}
+        for patch in ({"last_root_checkpoint_observed": {"path": str(newer), "sha256": new_asset["sha256"]}},
+                      {"recovery_assets": {"latest-root-checkpoint": new_asset}}):
+            with self.subTest(patch=patch):
+                before = self.state_path.read_bytes()
+                with self.assertRaises(w.Refusal):
+                    with w.transaction(self.state_path, 1) as state: w.apply_checkpoint(state, patch)
+                self.assertEqual(before, self.state_path.read_bytes())
+        with w.transaction(self.state_path, 1) as state:
+            w.apply_checkpoint(state, {"last_root_checkpoint_observed": {"path": str(newer), "sha256": new_asset["sha256"]},
+                                       "recovery_assets": {"latest-root-checkpoint": new_asset}})
+        result = w.recovery(w.read(self.state_path), self.repo)
+        self.assertEqual("CHECKPOINT", result["recovery_status"])
+        self.assertEqual(str(newer), result["read_first"][-1])
+        self.assertEqual(2, w.read(self.state_path)["generation"])
+        self.assertEqual(current["tasks"], w.read(self.state_path)["tasks"])
+
+    def test_checkpoint_can_repair_previously_persisted_malformed_recovery_pair(self):
+        patch = self.recovery_update()
+        self.state["last_root_checkpoint_observed"] = patch["last_root_checkpoint_observed"]["path"]
+        self.state["recovery_assets"]["latest-root-checkpoint"] = {k: v for k, v in patch["recovery_assets"]["latest-root-checkpoint"].items() if k != "path"}
+        w.atomic(self.state_path, self.state)
+        with w.transaction(self.state_path, 0) as state: w.apply_checkpoint(state, patch)
+        result = w.recovery(w.read(self.state_path), self.repo)
+        self.assertEqual("CHECKPOINT", result["recovery_status"])
+        self.assertEqual(patch["last_root_checkpoint_observed"]["path"], result["read_first"][-1])
+
+    def test_checkpoint_task_only_update_does_not_rehash_missing_historical_assets(self):
+        self.root_checkpoint.unlink()
+        with w.transaction(self.state_path, 0) as state:
+            w.apply_checkpoint(state, {"tasks": {"repair": {"status": "WORKING"}}, "next_actions": ["restore retained checkpoint"]})
+        current = w.read(self.state_path)
+        self.assertEqual(1, current["generation"])
+        self.assertEqual("WORKING", current["tasks"]["repair"]["status"])
+        self.assertEqual("BLOCKED", w.recovery(current, self.repo)["recovery_status"])
+
+    def test_checkpoint_unrelated_new_asset_does_not_rehash_historical_assets(self):
+        self.root_checkpoint.unlink()
+        path = self.root / "new-source.zip"; path.write_bytes(b"retained actual source fixture")
+        with w.transaction(self.state_path, 0) as state:
+            w.apply_checkpoint(state, {"recovery_assets": {"source": {"path": str(path), **w.file_identity(path)}}})
+        self.assertEqual(1, w.read(self.state_path)["generation"])
+
+    def test_checkpoint_observation_of_existing_asset_checks_its_current_bytes(self):
+        self.observe_new_root_checkpoint()
+        w.atomic(self.state_path, self.state)
+        locator = self.state["last_root_checkpoint_observed"]
+        Path(locator["path"]).write_bytes(b"changed after prior acceptance")
+        self.assert_checkpoint_refused_unchanged({"last_root_checkpoint_observed": locator})
+
     def test_scope_claim_rejects_parent_child_collision(self):
         w.claim(self.state, "framework", ["framework/CUI/**"], "implementation")
         with self.assertRaisesRegex(w.Refusal, "framework"):
@@ -406,6 +552,120 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("NOT CHECKED", result["liveness"])
         self.assertFalse(result["release_readiness"]["ready"])
         self.assertEqual(self.state["next_actions"], result["next_actions"])
+
+    def observe_new_root_checkpoint(self):
+        # Deliberately not named/timed "latest": only the recorded coordinator selection counts.
+        latest = self.root / "ROOT-LIVE-earlier-label.json"
+        latest.write_text('{"next_action":"resume existing task, not the old checkpoint"}\n')
+        asset = {"path": str(latest), **w.file_identity(latest)}
+        self.state["last_root_checkpoint_observed"] = {"path": str(latest), "sha256": asset["sha256"]}
+        self.state["recovery_assets"]["latest-root-checkpoint"] = asset
+        return latest
+
+    def recover_in_fresh_process(self):
+        w.atomic(self.state_path, self.state)
+        before = self.state_path.read_bytes()
+        result = subprocess.run([sys.executable, "-B", str(Path(w.__file__).resolve()),
+                                 "--state", str(self.state_path), "recover", "--repo", str(self.repo)],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(before, self.state_path.read_bytes())
+        self.assertEqual("", result.stderr)
+        return result, json.loads(result.stdout)
+
+    def test_recovery_legacy_state_uses_retained_initial_checkpoint(self):
+        result = w.recovery(self.state, self.repo)
+        self.assertEqual("CHECKPOINT", result["recovery_status"])
+        self.assertEqual(str(self.root_checkpoint), result["read_first"][-1])
+        self.assertEqual(str(self.root_checkpoint), result["projection_origin"])
+        self.assertIn("legacy", result["root_checkpoint"]["selection"])
+
+    def test_fresh_recovery_prioritises_recorded_new_root_not_origin_or_filename(self):
+        latest = self.observe_new_root_checkpoint()
+        result, recovered = self.recover_in_fresh_process()
+        self.assertEqual(0, result.returncode)
+        self.assertEqual(str(latest), recovered["read_first"][-1])
+        self.assertNotIn(str(self.root_checkpoint), recovered["read_first"])
+        self.assertEqual(str(self.root_checkpoint), recovered["projection_origin"])
+        self.assertEqual("last_root_checkpoint_observed", recovered["root_checkpoint"]["selection"])
+        self.assertEqual(self.state["generation"], recovered["root_checkpoint"]["recorded_in_generation"])
+
+    def test_recovery_requires_newest_locator_and_asset_together(self):
+        self.observe_new_root_checkpoint()
+        saved = copy.deepcopy(self.state)
+        for missing in ("locator", "asset"):
+            with self.subTest(missing=missing):
+                self.state = copy.deepcopy(saved)
+                if missing == "locator": del self.state["last_root_checkpoint_observed"]
+                else: del self.state["recovery_assets"]["latest-root-checkpoint"]
+                result = w.recovery(self.state, self.repo)
+                self.assertEqual("BLOCKED", result["recovery_status"])
+                self.assertIsNone(result["root_checkpoint"])
+                self.assertNotIn(str(self.root_checkpoint), result["read_first"])
+
+    def test_recovery_rejects_newest_locator_path_or_hash_disagreement(self):
+        self.observe_new_root_checkpoint()
+        saved = copy.deepcopy(self.state)
+        for field, value in (("path", str(self.root_checkpoint)), ("sha256", "0" * 64)):
+            with self.subTest(field=field):
+                self.state = copy.deepcopy(saved)
+                self.state["last_root_checkpoint_observed"][field] = value
+                result = w.recovery(self.state, self.repo)
+                self.assertEqual("BLOCKED", result["recovery_status"])
+                self.assertIsNone(result["root_checkpoint"])
+                self.assertNotIn(str(self.root_checkpoint), result["read_first"])
+
+    def test_fresh_recovery_missing_or_tampered_newest_never_falls_back(self):
+        latest = self.observe_new_root_checkpoint()
+        original = latest.read_bytes()
+        for mutation in ("tamper", "missing"):
+            with self.subTest(mutation=mutation):
+                latest.write_bytes(original)
+                if mutation == "tamper": latest.write_bytes(b"changed current instructions")
+                else: latest.unlink()
+                result, recovered = self.recover_in_fresh_process()
+                self.assertEqual(2, result.returncode)
+                self.assertEqual("BLOCKED", recovered["recovery_status"])
+                self.assertIsNone(recovered["root_checkpoint"])
+                self.assertNotIn(str(self.root_checkpoint), recovered["read_first"])
+
+    def test_fresh_recovery_fifo_replacement_is_bounded_blocked(self):
+        latest = self.observe_new_root_checkpoint()
+        latest.unlink()
+        os.mkfifo(latest)
+        result, recovered = self.recover_in_fresh_process()
+        self.assertEqual(2, result.returncode)
+        self.assertEqual("BLOCKED", recovered["recovery_status"])
+        self.assertIsNone(recovered["root_checkpoint"])
+        self.assertNotIn(str(self.root_checkpoint), recovered["read_first"])
+
+    def test_recovery_malformed_newest_identity_blocks_without_stale_read_order(self):
+        self.observe_new_root_checkpoint()
+        self.state["recovery_assets"]["latest-root-checkpoint"] = []
+        result, recovered = self.recover_in_fresh_process()
+        self.assertEqual(2, result.returncode)
+        self.assertEqual("BLOCKED", recovered["recovery_status"])
+        self.assertIsNone(recovered["root_checkpoint"])
+        self.assertNotIn(str(self.root_checkpoint), recovered["read_first"])
+
+    def test_recovery_explicit_empty_newest_record_cannot_select_legacy(self):
+        for field in ("locator", "asset"):
+            with self.subTest(field=field):
+                state = copy.deepcopy(self.state)
+                if field == "locator": state["last_root_checkpoint_observed"] = None
+                else: state["recovery_assets"]["latest-root-checkpoint"] = None
+                result = w.recovery(state, self.repo)
+                self.assertEqual("BLOCKED", result["recovery_status"])
+                self.assertIsNone(result["root_checkpoint"])
+                self.assertNotIn(str(self.root_checkpoint), result["read_first"])
+
+    def test_recovery_newest_symlink_cannot_redirect_current_instructions(self):
+        latest = self.observe_new_root_checkpoint()
+        latest.unlink()
+        latest.symlink_to(self.root_checkpoint)
+        result = w.recovery(self.state, self.repo)
+        self.assertEqual("BLOCKED", result["recovery_status"])
+        self.assertIsNone(result["root_checkpoint"])
+        self.assertNotIn(str(self.root_checkpoint), result["read_first"])
 
     def test_recovery_reports_revision_disagreement(self):
         self.state["observed_revision"] = "stale"

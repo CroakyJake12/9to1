@@ -86,9 +86,9 @@ def file_identity(path):
     if path.is_symlink():
         return {"kind": "symlink", "target": os.readlink(path)}
     try:
-        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOATIME", 0) | os.O_NOFOLLOW)
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOATIME", 0) | os.O_NOFOLLOW)
     except PermissionError:
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
     with os.fdopen(fd, "rb") as stream:
         st = os.fstat(stream.fileno())
         if not stat.S_ISREG(st.st_mode): raise Refusal("Nonregular evidence/source input: " + str(path))
@@ -329,6 +329,50 @@ def backports_current(change):
     return True
 
 
+def recovery_reference(record, content=False):
+    required = {"path", "kind", "bytes", "mode", "sha256"}
+    if not isinstance(record, dict) or set(record) != required:
+        raise Refusal("Recovery asset requires exactly path/kind/bytes/mode/sha256")
+    if not isinstance(record["path"], str) or not record["path"] or "\0" in record["path"] or not Path(record["path"]).is_absolute():
+        raise Refusal("Recovery asset path must be an absolute retained file path")
+    if (record["kind"] != "file" or type(record["bytes"]) is not int or record["bytes"] < 0
+            or type(record["mode"]) is not int or not 0 <= record["mode"] <= 0o777
+            or not isinstance(record["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])):
+        raise Refusal("Recovery asset has invalid regular-file identity fields")
+    if content:
+        try:
+            if file_identity(record["path"]) != {k: v for k, v in record.items() if k != "path"}:
+                raise Refusal("Recovery asset content identity changed")
+        except OSError as error: raise Refusal("Recovery asset unavailable: " + str(error)) from error
+
+
+def recovery_locator(record):
+    if (not isinstance(record, dict) or not isinstance(record.get("path"), str)
+            or not record["path"] or "\0" in record["path"] or not Path(record["path"]).is_absolute()
+            or not isinstance(record.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])):
+        raise Refusal("Newest ROOT-LIVE observation requires an absolute path and SHA256 record")
+
+
+def checkpoint_recovery_preflight(state, patch):
+    if not ({"recovery_assets", "last_root_checkpoint_observed"} & patch.keys()): return
+    incoming = patch.get("recovery_assets", {})
+    if not isinstance(incoming, dict): raise Refusal("Recovery assets must be named file identity records")
+    for asset in incoming.values(): recovery_reference(asset, content=True)
+    assets = {**state["recovery_assets"], **incoming}
+    observed = state.get("last_root_checkpoint_observed")
+    if "last_root_checkpoint_observed" in patch:
+        recovery_locator(patch["last_root_checkpoint_observed"])
+        observed = {**(observed if isinstance(observed, dict) else {}), **patch["last_root_checkpoint_observed"]}
+    # Both may be absent in a legacy projection. An unrelated retained asset update
+    # does not rehash historical files, while a new current pair must agree atomically.
+    if "last_root_checkpoint_observed" in state or "last_root_checkpoint_observed" in patch or "latest-root-checkpoint" in assets:
+        recovery_locator(observed)
+        latest = assets.get("latest-root-checkpoint")
+        recovery_reference(latest, content="last_root_checkpoint_observed" in patch and "latest-root-checkpoint" not in incoming)
+        if observed["path"] != latest["path"] or observed["sha256"] != latest["sha256"]:
+            raise Refusal("Newest ROOT-LIVE observation and retained asset must match in the same checkpoint")
+
+
 def apply_checkpoint(state, patch):
     forbidden = set(patch) & {"schema", "generation", "release_candidate", "release_history", "workers", "authority", "projection_of"}
     if forbidden: raise Refusal("Protected checkpoint fields: " + ", ".join(sorted(forbidden)))
@@ -339,6 +383,7 @@ def apply_checkpoint(state, patch):
             if not isinstance(value, dict): raise Refusal("Pending change must be a named record: " + key)
             if state["pending_changes"].get(key, {}).get("kind") == "rc-backport" or value.get("kind") == "rc-backport":
                 raise Refusal("RC backport records require advance-rc/verify-backport, never a generic checkpoint")
+    checkpoint_recovery_preflight(state, patch)
     for key, value in patch.items():
         if isinstance(value, dict) and isinstance(state.get(key), dict): state[key].update(value)
         else: state[key] = value
@@ -602,6 +647,29 @@ def plan(changed, registry, release=False):
             "selection_limit": "Registered checks are dependency selectors, not an exhaustive product acceptance manifest. L4 is never waived."}
 
 
+def recovery_checkpoint(state):
+    """Use the coordinator's pinned observation, never a filename/time heuristic."""
+    assets = state["recovery_assets"]
+    observed = state.get("last_root_checkpoint_observed")
+    latest = assets.get("latest-root-checkpoint")
+    if "last_root_checkpoint_observed" not in state and "latest-root-checkpoint" not in assets:
+        asset = assets.get("root-checkpoint")
+        source = "initial projection checkpoint (legacy state without a newer observation)"
+    else:
+        if not isinstance(observed, dict) or not isinstance(latest, dict):
+            raise Refusal("Newest ROOT-LIVE observation and retained latest-root-checkpoint asset are both required")
+        if (observed.get("path") != latest.get("path") or observed.get("sha256") != latest.get("sha256")):
+            raise Refusal("Newest ROOT-LIVE observation does not match its retained asset identity")
+        asset = latest
+        source = "last_root_checkpoint_observed"
+    if not isinstance(asset, dict) or asset.get("kind") != "file":
+        raise Refusal("Selected ROOT-LIVE checkpoint must be a retained regular file")
+    if file_identity(asset["path"]) != {k: v for k, v in asset.items() if k != "path"}:
+        raise Refusal("Selected ROOT-LIVE checkpoint content identity changed")
+    return {"path": asset["path"], "sha256": asset["sha256"], "selection": source,
+            "recorded_in_generation": state["generation"], "ledger_updated_at": state["updated_at"]}
+
+
 def recovery(state, repo):
     revision = git(repo, "rev-parse", "HEAD").decode().strip()
     rc = state.get("release_candidate")
@@ -620,11 +688,17 @@ def recovery(state, repo):
     if object_closure["result"] != "PASS": discrepancies.extend(object_closure["problems"])
     for key, asset in state.get("recovery_assets", {}).items():
         try:
+            if not isinstance(asset, dict): raise Refusal("required recovery asset must be an identity record")
             if asset.get("kind") != "file": raise Refusal("required recovery assets must be retained regular files, not symlink targets")
             if file_identity(asset["path"]) != {k: v for k, v in asset.items() if k != "path"}: raise Refusal("content identity changed")
-        except (OSError, Refusal) as error: discrepancies.append("Recovery asset unavailable/changed: " + key + ": " + str(error))
+        except (OSError, KeyError, TypeError, Refusal) as error: discrepancies.append("Recovery asset unavailable/changed: " + key + ": " + str(error))
+    checkpoint = None
+    try: checkpoint = recovery_checkpoint(state)
+    except (OSError, KeyError, TypeError, Refusal) as error:
+        discrepancies.append("ROOT-LIVE selection unavailable/changed: " + str(error))
     return {"schema": SCHEMA, "recovered_at": now(), "generation": state["generation"], "actual_revision": revision,
-            "read_first": ["AGENTS.md", "docs/development/workflow.md", "docs/specification/9to1-development-specification-v2.md", state["projection_of"]],
+            "read_first": ["AGENTS.md", "docs/development/workflow.md", "docs/specification/9to1-development-specification-v2.md"] + ([checkpoint["path"]] if checkpoint else []),
+            "root_checkpoint": checkpoint, "projection_origin": state["projection_of"],
             "workers": state["workers"], "tasks": state["tasks"], "blockers": state["blockers"],
             "outstanding_acceptance": state["outstanding_acceptance"], "release_readiness": release_ready(state),
             "next_actions": state["next_actions"], "discrepancies": discrepancies, "recovery_status": "BLOCKED" if discrepancies else "CHECKPOINT",

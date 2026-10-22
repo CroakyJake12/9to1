@@ -15,10 +15,11 @@ not trigger this rule. This current amendment governs older receipt summaries.
 
 The registered coordinator is the owner's **laptop**, not the RTX desktop.
 Inference access does not provide deployment or administration access. Preserve
-existing laptop workers and reconcile shared model custody before requesting
-another Thunder worker. The owner authorised exploring a supported persistent
-desktop channel; discovery, dispatch, reconnect and revocation remain unverified.
-Read the exact current owner amendment before that separate setup work.
+existing work and reconcile actual shared model custody before requesting
+another Thunder worker. A bridge's saved monitor/session-active flag alone does
+not establish a current model consumer. The current owner amendment records the
+desktop task channel's verified scope and its remaining unverified capabilities;
+read it before setup or inference, rather than restoring older endpoint assumptions.
 
 ## Resume and ownership
 
@@ -42,6 +43,14 @@ Read the exact current owner amendment before that separate setup work.
    BLOCKED, not a reason to overwrite a stale ledger. Recovery does not prove
    native tests or worker liveness. There is no configured runtime compaction
    callback; this mandatory startup/handoff procedure is the supported fallback.
+   `projection_of` remains the original projection's provenance. When the
+   coordinator records `last_root_checkpoint_observed`, also retain its exact
+   path and file identity as `recovery_assets.latest-root-checkpoint` in the same
+   CAS checkpoint. Recovery selects that pinned observation for `read_first`,
+   never a filename/timestamp guess; it reports the original separately as
+   `projection_origin`. Missing, changed, mismatched or unpaired newest inputs
+   block recovery without falling back to older instructions. Legacy states
+   without either newer field use their retained original checkpoint.
 4. Reuse current owners where possible. Claim exact paths or a trailing `/**`
    subtree before work. Keep product, framework/native, Thunder, CI/packaging,
    independent QA and release integration/delivery ownership distinct. New
@@ -79,6 +88,19 @@ unrelated fields and publish with fsync + atomic rename. `checkpoint --expect N
 --patch patch.json` merges named records; stale writers must reread and reconcile.
 Protected RC/worker fields require their dedicated commands. Never copy a stale
 local projection over the authoritative coordinator ledger.
+
+Checkpoint patches that touch recovery records are validated before publication.
+Each incoming `recovery_assets` entry requires exactly `path`, `kind=file`,
+`bytes`, `mode` and lowercase `sha256`; the absolute path must identify actual
+matching regular-file bytes. A new `last_root_checkpoint_observed` is a record
+with absolute `path` and `sha256`, never a path string. It must match the resulting
+`latest-root-checkpoint` asset in the same candidate, so changing the current
+pair requires one complete CAS update. Invalid, missing, changed or nonregular
+inputs refuse the update without changing state or advancing its generation.
+Legacy projections without a current pair remain supported. Task-only updates
+do not rehash recovery files, and adding an unrelated valid asset does not
+revalidate historical files; `recover` still reports any missing retained inputs
+until their coordinator-owned repair is recorded.
 
 Tasks record ID (map key), owner, components, stage, status, dependencies, last
 verified revision, evidence, integration status, release readiness, last meaningful

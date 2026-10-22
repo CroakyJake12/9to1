@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "Direct owner instructions in this conversation on22October2026; amended by latest10percenthandoffdecision",
-  "recorded_at": "2026-10-22T18:27:06.565760+00:00",
+  "recorded_at": "2026-10-22T19:49:56.475696+00:00",
   "authority": "Supersedes earlier provider/worker/timing/usage instructions where conflicting; canonicalproductspec andsevenacceptancecriteria remain unchanged",
   "providers": {
     "Mercury": "REVOKED/PERMANENTLYUNAVAILABLE afterbillingdispute. Do not invoke provider, revokedkey or historical launchers. Preserve source/evidence/keys outsideGit.",
@@ -14,10 +14,33 @@
   },
   "current_pc_authorization": {
     "date": "2026-10-22",
-    "available_until": "2026-10-22T21:00:00Z",
+    "available_until": "2026-10-22T22:45:00Z",
     "local_timezone": "Europe/London",
-    "local_end": "22:00BST",
-    "limits": "Ownerauthorised modeltesting only via genuinelysupported access; nofirmware/driver/clock/power/securitychanges or unrelatedprocessinterrupts. StopPCexecutionatwindowend/revocation."
+    "local_end": "23:45BST",
+    "limits": "Ownerauthorised modeltesting only via genuinelysupported access; nofirmware/driver/clock/power/securitychanges or unrelatedprocessinterrupts. StopPCexecutionatwindowend/revocation.",
+    "previous_available_until": "2026-10-22T21:00:00Z",
+    "latest_owner_quote": "pushed back to 23:45 due to connection issues taking 2 hours from the original time",
+    "authority": "Later direct owner message in the authenticated desktop thread; private exact readback retained in the latest ROOT-LIVE evidence. Existing limits preserved.",
+    "owner_requested_poweroff": {
+      "source": "Latest direct owner message in Root conversation22October2026",
+      "quote": "Tell it to power off my pc at 23:45",
+      "date": "2026-10-22",
+      "local_time": "23:45:00",
+      "timezone": "Europe/London",
+      "UTC": "2026-10-22T22:45:00Z",
+      "target": "Verified desktop pc; not laptop/coordinator or cloud",
+      "action": "Use supported installed OS scheduling and normal native permissions; verify actual scheduling receipt. Safely checkpoint ownedsource/results/experiments beforehand. Do not discard work or interrupt unrelated processes early.",
+      "limits": "This one-time power-off is explicitly authorised; other firmware/driver/security/provider/systemchanges remain prohibited. No successful schedule or completedpoweroff is implied by this instruction record."
+    },
+    "connection_pause": {
+      "recorded_at": "2026-10-22T21:32:13.854390+00:00",
+      "source": "Latest direct owner message in Root conversation22October2026",
+      "quote": "Desktop connection is paused until tomorrow",
+      "status": "PAUSED_BY_OWNER",
+      "scope": "All desktop connection checks/retries, desktop task dispatch, model/hardware/SSH/PC actions are paused. Ordinary local/cloud 9to1 and Thunder source/testing work continues.",
+      "resume": "Tomorrow; no exact time or new availability supplied. Reconcile owner-confirmed access before desktop actions; no unattended midnight retry or extension of the expired testing window.",
+      "existing_poweroff": "Prior23:45BST power-off request preserved. Worker acknowledged Task8, actual OS schedule UNCONFIRMED. No new scheduling or cancellation attempted during pause; do not infer either scheduled or cancelled."
+    }
   },
   "priority": [
     "Focus heavily on DulcheThunder while substantial ordinary9to1implementation continues",
@@ -66,10 +89,37 @@
     "existing_coordinator_device": "LAPTOP, not RTX desktop. Preserve the registered bridge, active product workers and services.",
     "registered_bridge_id": "bridge_a0e5602e-64b8-4318-9f4b-8e81e6979095",
     "desktop": "Separate Linux RTX machine. ai.9to1.uk/v1 is inference access, not deployment or administration access.",
-    "desktop_worker": "Respond to greeting; shared link is a read-only snapshot, not a native thread UUID or remote dispatch channel.",
+    "desktop_worker": "Existing desktop Codex thread Respond to greeting, now discovered and readable through official remote control.",
     "remote_setup_authorised": "Establish a genuinely supported persistent channel with the desktop Codex worker; inspect official remote control and Tailscale options. Preserve work and authentication; do not replace laptop coordinator or expose a public shell.",
-    "remote_setup_observed": "Prepared official CLI capability preflight and one-time desktop task. Desktop discovery, dispatch/result/reconnect/revocation NOT RUN.",
+    "remote_setup_observed": "Actual existing-worker authenticated Git inbox task and private result readback verified. Task2 accepted expected source, created exactly one96-byte plaintext file in a fresh isolated worktree, matched the expected SHA256 and preserved original checkout. No direct SSH, reboot persistence or autonomous inactive wake is established.",
     "tailscale": "Owner reports installed on desktop. Current cloud task has no configured VPN connection; installation on desktop alone does not prove reachability.",
-    "shared_inference_custody": "Reconcile laptop worker use of the desktop model before new Thunder development-worker requests. No duplicate supervisors or retry loops."
+    "shared_inference_custody": "Latest direct owner correction: there is no existing laptop worker right now. The earlier bridge monitor/worker-active health observation was unreconciled and did not prove an actual inference consumer. Do not treat that flag as a current consumer or hold requirement. Before new model requests or benchmarks, verify actual current desktop request/queue telemetry and the applicable quiet gate; absence of a laptop worker alone does not establish idle or exclusive model access. Scoped file-write dispatch does not establish inference custody.",
+    "latest_owner_worker_correction": {
+      "recorded_at": "2026-10-22T19:49:56.475696+00:00",
+      "source": "Direct owner reply in the current conversation to the question whether an existing laptop worker needed a hold; supersedes the earlier inferred-consumer interpretation.",
+      "owner_quote": "there isn't one rn",
+      "meaning": "The owner reports no existing laptop worker at this time. Preserve the laptop coordinator and services; do not stop or create a worker based on the former active flag.",
+      "prior_health_limit": "Bridge/monitor worker-active status was not independently reconciled to an actual current consumer; no current laptop inference consumer is established by that observation.",
+      "admission": "Use genuine current desktop active-request/queue observations and a quiet gate before an admitted model request. Retain native approvals, current owner time/Stop limits, model identity, service preservation and all other authorizations. No engine/service change is authorized by this correction."
+    }
+  },
+  "revision_delivery_priority": {
+    "recorded_at": "2026-10-22T20:34:21.613707+00:00",
+    "source": "Direct owner messages in Root conversation22October2026",
+    "owner_quotes": [
+      "can we get a working/accepted canvas/boards build as a priority by tomorrow night. without deprioritising anything elese",
+      "I need them for revision"
+    ],
+    "target_date": "2026-10-23",
+    "target_time": "Tomorrow night; no exact hour supplied",
+    "timezone": "Europe/London",
+    "apps": [
+      "Canvas",
+      "Boards"
+    ],
+    "purpose": "Revision",
+    "priority": "Additional parallel product workstream; do not deprioritise Thunder, ARM or any existing ordinary9to1 implementation",
+    "acceptance": "Real packaged apps and revision workflows with independent acceptance against full applicable canonical specification and all seven criteria. Creating/saving/reopening/editing real revision material is representative evidence, not a reduced feature manifest. No ready-build or delivery promise before gates.",
+    "coordination": "Supported isolated Codex/Beam ownership and dependency-aware SDK/native allocation; preserve active workers, worktrees, failures and accepted fixes."
   }
 }
