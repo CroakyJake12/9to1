@@ -1,4 +1,5 @@
 using HavenOS.Home.PermissionsTrustNotifications;
+using PermissionRisk = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk;
 
 namespace HavenOS.Home.Core;
 
@@ -9,5 +10,5 @@ public sealed class HomeNotesActionPolicies : IHomeActionPolicySource
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
         appId == HomeNotesResourceAdmissionSource.TargetAppId &&
         actionId is HomeNotesResourceAdmissionSource.ReadAction or HomeNotesResourceAdmissionSource.SaveAction
-            ? new(HomePermissionRisk.Routine, true, false, true) : null;
+            ? new(PermissionRisk.Routine, true, false, true) : null;
 }
