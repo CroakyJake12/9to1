@@ -787,8 +787,9 @@ public sealed class NotesOriginalStoreTests
         var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(active.Id, rig.Token);
         var (review, admission) = await rig.AcceptReadAsync(request);
         var snapshot = await rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request, admission, rig.Verified, rig.Token);
-        Assert.Equal(4, snapshot.Metadata.Count);
-        Assert.Equal(4, snapshot.Documents.Count);
+        var expectedIds = new[] { active.Id, trash.Id, write.Id, unspecified.Id }.Order();
+        Assert.Equal(expectedIds, snapshot.Metadata.Select(value => value.Summary.Id).Order());
+        Assert.Equal(expectedIds, snapshot.Documents.Select(value => value.Id).Order());
         Assert.Equal(active.Id, snapshot.SelectedDocument!.Id);
         var observed = Assert.Single(snapshot.Metadata, value => value.Summary.Id == active.Id);
         Assert.Equal(active.Version, observed.Summary.Version);

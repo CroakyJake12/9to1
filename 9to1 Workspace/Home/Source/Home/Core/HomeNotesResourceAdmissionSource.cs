@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Haven.Application;
 using HavenOS.Home.PermissionsTrustNotifications;
+using PermissionRequest = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest;
+using PermissionTrustLevel = HavenOS.Home.PermissionsTrustNotifications.HomeTrustLevel;
 
 namespace HavenOS.Home.Core;
 
@@ -520,19 +522,19 @@ public sealed partial class HomeResourceOperationBroker
         {
             foreach (var id in records[0].Payload.GetProperty("BlockedCallerIds").EnumerateArray())
                 if (id.GetString() == original.Submission.Caller.CallerId) return false;
-            HomePermissionRequest? observed = null;
+            PermissionRequest? observed = null;
             foreach (var item in records[0].Payload.GetProperty("Requests").EnumerateArray())
             {
-                if (!item.TryGetProperty(nameof(HomePermissionRequest.RequestId), out var id) ||
+                if (!item.TryGetProperty(nameof(PermissionRequest.RequestId), out var id) ||
                     id.GetString() != original.Capability.RequestId) continue;
                 if (observed is not null) return false;
-                observed = item.Deserialize<HomePermissionRequest>();
+                observed = item.Deserialize<PermissionRequest>();
                 if (observed is null) return false;
             }
             return observed is not null && observed.State == HomePermissionRequestState.Succeeded &&
                 observed.ResultCode == "NOTES_READ_COMPLETED" && observed.Policy == original.Policy &&
                 observed.Policy.RequiresPerActionApproval && observed.AppliedGrantId is null &&
-                observed.AppliedTrustLevel == HomeTrustLevel.Session && MatchesPrepared(original.Submission, observed) &&
+                observed.AppliedTrustLevel == PermissionTrustLevel.Session && MatchesPrepared(original.Submission, observed) &&
                 original.Submission.Impact.ResourceBinding is { SchemaVersion: 1 } resource &&
                 resource.OriginalActor == actor && resource.Scopes.SequenceEqual(original.Capability.Scopes);
         }
