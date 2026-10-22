@@ -4,6 +4,7 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Infrastructure;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace Dulche.Runtime.Tests;
@@ -58,7 +59,10 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
   [Fact]
   public async Task Actual_native_transport_refuses_tools_before_any_model_or_raw_callback()
   {
-    await Control(h => WithRawTransportScope(h, async (source, scope) =>
+    await Control(h =>
+    {
+      var initialized = new InitializedModelProvider(h.Provider);
+      return WithRawTransportScope(h, async (source, scope) =>
     {
       var (action, context) = await RawTransportResponseControl(h);
       var wire = new OllamaToolRequest("model", [new("user", "tools are not text")], [], EffortLevel.Medium)
@@ -70,10 +74,86 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
       if (cause is not null) h.Expect(cause);
       var refusal = Assert.IsType<InferenceEngineException>(cause);
       Assert.Equal(DulcheErrorCode.UnsupportedCapability, refusal.Error.Code);
+      Assert.Equal(0, initialized.Observations);
       Assert.Equal(0, h.Provider.CatalogueCalls);
       Assert.Equal(0, h.Provider.ToolCalls);
       Assert.Equal(0, h.Tools.BindCalls);
-    }, nativeContextLimit: 128), required: [ToolCapability.Text, ToolCapability.Tools]);
+      }, nativeContextLimit: 128, initialized: initialized);
+    }, required: [ToolCapability.Text, ToolCapability.Tools]);
+  }
+
+  [LinuxNativeToolTransportFact]
+  public async Task Actual_managed_native_tool_source_requires_same_live_probe_and_preserves_proven_legacy_tools()
+  {
+    await Control(h => StrataStructuredToolProtocolTests.WithActualToolWorkerAsync(new(h.Provider.Id, "model"), async worker =>
+    {
+      ProviderModelDescriptor Descriptor(bool tools) => new(h.Provider.Id, true, new("model", 1, "fixture", "", "",
+        tools ? new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Streaming, ToolCapability.Tools }
+          : new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Streaming }, DateTimeOffset.UtcNow), 128, "model");
+      int Drivers() => ((ICollection)typeof(StrataNativeWorker).GetField("_drivers", BindingFlags.Instance | BindingFlags.NonPublic)!
+        .GetValue(worker)!).Count;
+
+      async Task RefusesWithoutNativeCallbacks(StrataRawModelProvider raw)
+      {
+        var before = Drivers();
+        await WithRawTransportScope(h, async (source, scope) =>
+        {
+          var (action, context) = await RawTransportResponseControl(h);
+          var wire = new OllamaToolRequest("model", [new("user", "tools require the same live proof")], [], EffortLevel.Medium)
+            { ExecutionContext = context };
+          var frame = h.Frames.StartOriginalFrameAsync(h.Admission,
+            token => source.ToolsOriginalAsync(wire, h.Admission, action, scope, token), CancellationToken.None);
+          scope.Tasks.Add(frame);
+          var cause = await Record.ExceptionAsync(() => frame);
+          if (cause is not null) h.Expect(cause);
+          var refusal = Assert.IsType<InferenceEngineException>(cause);
+          Assert.Equal(DulcheErrorCode.UnsupportedCapability, refusal.Error.Code);
+          Assert.Equal(before, Drivers()); // no model observation, health/catalogue or tool driver was acquired
+        }, nativeContextLimit: 128, initialized: raw);
+      }
+
+      Assert.False(worker.OriginalStructuredToolsAvailable);
+      var unproven = new StrataRawModelProvider(h.Provider.Id, worker, Descriptor(false));
+      await RefusesWithoutNativeCallbacks(unproven);
+      Assert.True(await worker.ProbeOriginalStructuredToolsAsync(CancellationToken.None));
+      Assert.True(worker.OriginalStructuredToolsAvailable);
+      // A later probe cannot upgrade an earlier text-only descriptor captured by another source.
+      await RefusesWithoutNativeCallbacks(unproven);
+
+      var proven = new StrataRawModelProvider(h.Provider.Id, worker, Descriptor(true));
+      await WithRawTransportScope(h, async (source, scope) =>
+      {
+        var (action, context) = await RawTransportResponseControl(h);
+        var wire = new OllamaToolRequest("model", [new("user", "echo through the actual typed native source")],
+          [new("fixture.echo", "echo a value", new Dictionary<string, object> { ["value"] = new { type = "string" } }, ["value"])],
+          EffortLevel.Medium, Options: new(0.7, 128, 24)) { ExecutionContext = context };
+        var before = Drivers();
+        var frame = h.Frames.StartOriginalFrameAsync(h.Admission,
+          token => source.ToolsOriginalAsync(wire, h.Admission, action, scope, token), CancellationToken.None);
+        scope.Tasks.Add(frame);
+        var response = await frame;
+        var call = Assert.Single(response.ToolCalls);
+        Assert.Equal("actual-wire-id", call.Id); Assert.Equal("fixture.echo", call.Name);
+        Assert.Equal("actual", call.Arguments["value"].GetString());
+        Assert.True(Drivers() > before);
+        Assert.Equal(0, h.Provider.CatalogueCalls); Assert.Equal(0, h.Provider.ToolCalls);
+        Assert.Equal(0, h.Tools.BindCalls); // returned proposals do not run an internal tool loop
+      }, nativeContextLimit: 128, initialized: proven);
+
+      await worker.DisposeAsync();
+      Assert.False(worker.OriginalStructuredToolsAvailable);
+      await RefusesWithoutNativeCallbacks(proven); // stale descriptor/probe never revives a retired worker
+    }), required: [ToolCapability.Text, ToolCapability.Tools]);
+  }
+
+  public sealed class LinuxNativeToolTransportFactAttribute : FactAttribute
+  {
+    public LinuxNativeToolTransportFactAttribute([CallerFilePath] string? sourceFilePath = null,
+      [CallerLineNumber] int sourceLineNumber = 0) : base(sourceFilePath, sourceLineNumber)
+    {
+      if (!OperatingSystem.IsLinux() || System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture != System.Runtime.InteropServices.Architecture.X64)
+        Skip = "The actual legacy Strata pipe worker currently supports Linux x64; other platforms are NOT RUN.";
+    }
   }
 
   [Fact]
@@ -318,7 +398,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
       acknowledged.PersistenceRevision, action) { RequestedCandidate = h.Admission.Lease.Candidate, SelectedCandidate = h.Admission.Lease.Candidate });
   }
   private static async Task WithRawTransportScope(Harness h,
-    Func<IOriginalInferenceEngineRequestSource, RawTransportScope, Task> body, int? nativeContextLimit = null, InitializedModelProvider? initialized = null)
+    Func<IOriginalInferenceEngineRequestSource, RawTransportScope, Task> body, int? nativeContextLimit = null, IModelProvider? initialized = null)
   {
     var scope = new RawTransportScope(); var errors = new List<Exception>();
     var type = typeof(ManagedProviderDulcheAdapter).Assembly.GetType("Dulche.Runtime.ManagedInferenceEngineRequestSource", throwOnError: true)!;
