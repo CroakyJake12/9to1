@@ -874,7 +874,8 @@ def check_execution_context(state, repo, execution):
     permitted = [absolute_path(state.get("repository"), "Original repository"),
                  absolute_path(source.get("path"), "Named execution source"),
                  absolute_path(origin.get("path"), "Named execution Git repository")]
-    if absolute_path(repo, "Requested repository").resolve() not in {p.resolve() for p in permitted}:
+    requested = os.fspath(repo) if isinstance(repo, (str, os.PathLike)) else None
+    if absolute_path(requested, "Requested repository").resolve() not in {p.resolve() for p in permitted}:
         raise Refusal("Requested repository is unrelated to named execution custody")
 
 

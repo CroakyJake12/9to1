@@ -335,6 +335,13 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(w.execution_checks(self.state, "active")["declared_inputs_available"])
         self.assertEqual(asset, {"path": str(path), **w.file_identity(path)})
 
+    def test_execution_named_python_api_preserves_pathlike_repository_support(self):
+        active, _, _, _ = self.publish_execution()
+        self.assertTrue(w.preflight(active, state=self.state, execution="active")["ready"])
+        recovered = w.recovery(self.state, active, "active")
+        self.assertEqual("CHECKPOINT", recovered["recovery_status"])
+        self.assertTrue(recovered["execution_custody"]["declared_inputs_available"])
+
     def test_stale_writer_does_not_overwrite_checkpoint(self):
         with w.transaction(self.state_path, 0) as state:
             state["next_actions"] = ["new progress"]
