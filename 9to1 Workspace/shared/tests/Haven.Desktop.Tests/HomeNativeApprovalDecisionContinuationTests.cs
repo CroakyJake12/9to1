@@ -1,4 +1,7 @@
 using System.Runtime.ExceptionServices;
+using System.ComponentModel;
+using System.Reflection;
+using CakeOS.Cui.Runtime;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
@@ -183,6 +186,44 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
     }
 
     [AvaloniaFact]
+    public async Task Final_original_actor_observation_cannot_join_its_surface_or_parent_even_under_restored_context()
+    {
+        var beforeOriginal = ExecutionContext.Capture() ?? throw new InvalidOperationException("Capture genuine pre-owner context.");
+        await using var rig = await Rig.CreateAsync();
+        var request = await rig.RequestAsync();
+        var observation = rig.Owner.OpenAndObserveDecisionOriginalAsync(request.RequestId, rig.Token);
+        await rig.Owner.OpenOriginalAsync(request.RequestId, rig.Token);
+        var surface = Assert.IsType<HomeApprovalCuiSurface>(rig.Owner.OriginalSurface);
+        var model = Assert.IsType<CuiViewModel>(typeof(HomeApprovalCuiSurface)
+            .GetField("_model", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(surface));
+        var callbacks = 0;
+        PropertyChangedEventHandler completedStatus = (_, args) =>
+        {
+            if (args.PropertyName != "Status" || model.Get("Status") is not string text ||
+                !text.Contains("approved", StringComparison.OrdinalIgnoreCase)) return;
+            // This synchronous genuine model notification is the LAST published status of
+            // actual Decide+Refresh. Only the final decision observer's profile read follows.
+            rig.Principals.NextCallback = () => ExecutionContext.Run(beforeOriginal.CreateCopy(), _ =>
+            {
+                ++callbacks;
+                Assert.Throws<InvalidOperationException>(surface.DemandExternalOriginalRetirementJoin);
+                Assert.Throws<InvalidOperationException>(rig.Owner.DemandExternalOriginalRetirementJoin);
+                Assert.Throws<InvalidOperationException>(rig.Owner.RequestRetirement);
+                Assert.Null(rig.Owner.OriginalClose);
+            }, null);
+        };
+        model.PropertyChanged += completedStatus;
+        try
+        {
+            rig.Click("approval-accept");
+            Assert.Equal(HomePermissionRequestState.Approved, (await observation.WaitAsync(rig.Token)).State);
+            Assert.Equal(1, callbacks);
+            Assert.False(rig.Owner.OriginalRetirementCapturedAndSettled);
+        }
+        finally { model.PropertyChanged -= completedStatus; rig.Principals.NextCallback = null; }
+    }
+
+    [AvaloniaFact]
     public async Task Actual_actor_unavailability_before_click_refuses_decision_and_retains_failure()
     {
         await using var rig = await Rig.CreateAsync();
@@ -326,6 +367,7 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
     {
         private readonly OperatingSystemPrincipalSource _original = new();
         internal bool Unavailable;
+        internal Action? NextCallback;
         private int _hold;
         internal TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -333,6 +375,7 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
         public async ValueTask<string?> GetPrincipalAsync(CancellationToken token)
         {
             var actual = await _original.GetPrincipalAsync(token);
+            Interlocked.Exchange(ref NextCallback, null)?.Invoke();
             if (Interlocked.Exchange(ref _hold, 0) == 1)
             {
                 Entered.TrySetResult();

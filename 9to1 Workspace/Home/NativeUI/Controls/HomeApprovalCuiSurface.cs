@@ -110,6 +110,7 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
     private async Task<HomeNativeApprovalDecisionObservation> WaitForOriginalDecisionAsync(Task start, DecisionWait wait, CancellationToken caller)
     {
         await start.ConfigureAwait(false);
+        using var originalPhase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _lifetime.Token);
         var source = wait.Signal.Task.WaitAsync(linked.Token);
         HomeNativeApprovalDecisionObservation observed;
@@ -133,7 +134,13 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
             }
         }
         DemandWaitCurrent();
-        var actorSource = profiles.GetCurrentAsync(linked.Token).AsTask();
+        var originals = new CloudflareOriginalTaskLedger();
+        originals.BindOriginalOwner(this);
+        originals.BindOriginalCallerCallback(body => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
+            () => { DemandWaitCurrent(); body(); return true; }));
+        var actorSource = originals.RunToOriginalSettlementAsync(() => originals.AwaitAsync(originals.Invoke(() =>
+            profiles.GetCurrentAsync(body => originals.Invoke(() => { DemandWaitCurrent(); body(); return true; }),
+                actual => { _ = originals.Track(actual); }, linked.Token).AsTask())));
         AuthenticatedResourceActor? current;
         try { current = await actorSource.ConfigureAwait(false); }
         catch (Exception error)
