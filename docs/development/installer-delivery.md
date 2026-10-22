@@ -1,113 +1,88 @@
-# Authenticated ARM installer delivery
+# ARM installer delivery: private custody required
 
-Delivery is separate from packaging, acceptance and installation. Run
-`eng/release-delivery/installer_delivery.py` on the actual receiving laptop. It
-uses the owner's existing authenticated GitHub CLI session, or verifies archives
-already downloaded through GitHub's authenticated UI. It never installs, launches,
-changes services/credentials, dispatches a worker or makes a package release-ready.
-Mercury is revoked; no model is called.
+**Actual delivery is BLOCKED.** Read-only GitHub inspection on22October2026
+confirmed that `CroakyJake12/9to1` is **PUBLIC**, repository ID1378313608.
+Authentication to its Actions artifacts does not make them private: ordinary
+GitHub users with public-repository access can retrieve those artifacts.
+Do not upload private installers there or treat a draft upload, signed URL,
+cloud reference or logged-in download as proof of private custody.
 
-The inspected laptop bridge supports only health/read_evidence/status and131072-byte
-bounded reads. It has no registered transfer/exec operation. Do not replace it,
-expand its roots, invent an operation, expose public packages or evade a cloud
-download tool's size limit. Native laptop downloads are the intended operation.
-Until a supported laptop invocation channel exists, the owner must run the helper
-locally. A link, cloud upload or queued journal entry is not laptop delivery.
+The current helper at `eng/release-delivery/installer_delivery.py` pins this
+source repository as its artifact store and requires `private:true`. It therefore
+correctly refuses the actual repository. Earlier documentation calling it the
+existing private repository was incorrect. Keep the privacy gate; do not change
+repository visibility, repurpose unrelated repositories, create a new store or
+publish packages merely to make the helper pass.
 
-## Prepare exact accepted inputs
+## What has actually been verified
 
-Root must independently accept the runnable candidate against the canonical spec,
-eight mandatory gates and seven quality criteria. The ARM journey aggregate
-`9to1.arm-package-journey-aggregate/v1` deliberately has `release_ready:false`
-even for its passing checkpoint. The builder's `ASSEMBLED_NOT_NATIVE_ACCEPTED`
-receipt and green build cannot authorise transfer. If mandatory physical GNOME
-acceptance is missing, keep the blocker; this helper provides no waiver.
+The `fc4e1215` protocol/source review passed29 fixture tests and17 independent
+repair/positive observations. The final documentation correction changes neither
+Python file. Tests use real tiny ARM64/AMD64 DEBs and filesystem/ZIP operations,
+with fake provider transport, host policy and READY decisions. They establish
+protocol invariants, **not** an operational private route, real GitHub download,
+laptop delivery, installation, GNOME or application acceptance.
 
-Root prepares `delivery-manifest.json` with schema `9to1.installer-delivery/v1`:
+The protocol binds tested source revision, source patch SHA and inner DEB SHA to
+an independently reviewed retained READY verdict. All eight mandatory release
+gates and seven quality criteria remain required. The package builder's
+`ASSEMBLED_NOT_NATIVE_ACCEPTED` receipt, green build, or ARM journey aggregate
+with `release_ready:false` cannot authorise delivery. Metadata validation cannot
+establish the semantic truth of arbitrary review claims. No current package is
+made READY by these checks or by this document.
 
-| Field | Required actual value |
-|---|---|
-| repository | CroakyJake12/9to1, existing private repo ID1378313608 |
-| source_revision / source_patch_sha256 | Exact tested40-character revision and64-character patch digest |
-| package | file_name, safe ZIP member, exact inner bytes/SHA256, dpkg name/version and architecture=arm64 |
-| acceptance | status=READY, coordinator, independent reviewer, implementer, matching source_revision/source_patch_sha256/package_sha256, mandatory_gates, quality, evidence identity |
-| artifacts | Pinned IDs, run_id, workflow_head_sha, name, compressed ZIP bytes/SHA256 and roles |
-| target | distribution=ubuntu, version=26.04, architecture=arm64, gnome_acceptance=NOT RUN |
-
-No current package is authorised by this document. Do not populate READY from a
-failed or unaccepted package, historical report, label or fixture. The eight
-`mandatory_gates` must actually PASS: cui-conformance, donor-licences,
-visual-category, packaged-workflows, privacy-security-accessibility,
-platform-performance, cross-app, independent-acceptance. The seven `quality`
-values must PASS: Usability, Product fit, Functionality, Integration, Separation
-and authenticity, User fit, Refinement. Reviewer and implementer must differ.
-
-`acceptance.evidence` pins a retained verdict's exact bytes/SHA. That verdict repeats
-status, source_revision, source_patch_sha256, package_sha256, reviewer, implementer, mandatory_gates and
-quality. Use either safe relative `acceptance.evidence_file` beside the manifest,
-or `acceptance.evidence_member` in the corresponding source/evidence artifact,
-never both. Adjacent post-build approval avoids rebuilding/repacking immutable
-packages merely to add independent review. Keep reviewed inputs in the existing
-private authenticated repository/checkpoint custody. The helper checks structure,
-applicability and bytes; it cannot establish semantic truth of arbitrary review
-claims. Root must perform and independently review the required acceptance.
-
-Preserve all four existing artifact roles: package,
-corresponding-source-and-evidence, browser-sidecar, upstream-engine-source. Exactly
-one artifact supplies the package and one supplies corresponding source/evidence.
-Normal package ZIP contents are DEB + SHA256SUMS + package-receipt.json. ZIP digest
-and inner DEB digest differ. Retention workflow revision may differ from tested
-source: pin both and verify the embedded package source. No tokens, signed download
-URLs, personal data or binary packages belong in Git. This helper publishes nothing.
-
-## Receive on the laptop
-
-Root supplies the reviewed helper and genuinely accepted inputs through the
-existing authenticated private path. The owner's `gh` must already have private
-repository access; no login or token read is performed. The owner may inspect
-`gh auth status` using their normal account workflow. Use a new private directory:
-
-```sh
-mkdir -m 700 "$HOME/Downloads/9to1-accepted-candidate"
-python3 installer_delivery.py preflight --manifest delivery-manifest.json \
-  --destination "$HOME/Downloads/9to1-accepted-candidate" \
-  --baseline "$HOME/Downloads/9to1-preview-2026-10-21/9to1-preview_0.1.0~internal.native16.20261021.39571247743.1+icu78.1_arm64.deb"
-python3 installer_delivery.py receive --manifest delivery-manifest.json \
-  --destination "$HOME/Downloads/9to1-accepted-candidate" \
-  --baseline "$HOME/Downloads/9to1-preview-2026-10-21/9to1-preview_0.1.0~internal.native16.20261021.39571247743.1+icu78.1_arm64.deb"
-```
-
-Preflight checks actual Ubuntu26.04/aarch64, the old baseline, private repository,
-unexpired exact artifact metadata and free space for all ZIPs + DEB +256MiB reserve.
-It downloads no package. Missing access, expiry, capacity or baseline mismatch
-blocks transfer. For authenticated browser downloads, save each ZIP as
-`artifact-ID.zip` in a separate directory. Use `verify-local --archives /actual/dir`
-with the same arguments; it honestly records authentication NOT CHECKED by that
-command while verifying every pinned archive/package/provenance/acceptance byte.
-
-Receive stages privately, verifies actual dpkg metadata, retains source/licence
-archives and publishes without overwriting existing bytes or symlinks. Identical
-files may be reused. The historical startup baseline is62,010,524 bytes, SHA256
+The helper checks private repository/artifact/run/digest identity, bounded regular
+metadata, actual dpkg architecture/name/version, package receipt and checksums,
+private receiving capacity, source/licence sidecars and no-overwrite publication.
+It requires the historical startup baseline to match locally before and after.
+That baseline is62,010,524 bytes, SHA256
 `91f302640f912d0ef86da2ce9d07809ca8b3f082c72a668dae9b9b1b56399fcf`.
-The helper rehashes it locally before and after; a historical report alone is not
-proof. Preserve its directory and never substitute the distinct69MB draft asset.
+Its present laptop existence is NOT RUN here. Never substitute the distinct69MB
+historical draft asset. A target-side receipt must state actual path, bytes, SHA,
+time and preserved baseline. Native use/installation remain separate.
 
-Only a successful target receipt says DELIVERED_BYTES_VERIFIED with actual path,
-bytes, SHA, timestamp, retained archives and unchanged baseline. Blocked attempts
-retain private failure receipts where safe. Installation, GNOME, local inference,
-browser and shutdown remain NOT RUN by delivery. Root must inspect the actual
-receipt through a supported path; prepared commands do not prove execution.
+## Read-only custody audit and smallest next step
 
-## Focused checks
+Nine owner-private GitHub repositories are visible, but none was identified as
+project-related. None was selected or modified. The connected personal OneDrive
+contains an existing 9to1 project folder. Actual folder metadata and effective
+permissions showed one owner grant and no anonymous/organisation sharing link.
+The existing connector offers large-file upload sessions. No upload, permission
+change, test file or package transfer was performed. Exact private IDs and raw
+permission evidence stay outside Git in the current Root custody audit.
+
+The smallest proposed route is Root-approved use of that existing owner-only
+project custody. It avoids creating a repository or changing source visibility.
+Before use, verify the selected target's actual permissions again, prove the
+supported upload/input-size path without bypassing tool caps, retain exact
+provider IDs/bytes/digests, and verify authenticated receiving-side download.
+A callable upload API alone is not proof that a large package can be supplied or
+that the laptop received it. Retain all source/licence artifacts with the package.
+
+A reviewed successor must separate the **public source identity** from the
+**private artifact-store identity** in its configuration, approval and receipts.
+The existing helper is GitHub-specific; it does not yet implement OneDrive
+custody/permission verification. Its `verify-local` mode reports authentication
+NOT CHECKED and must not be used to infer private origin or approve public-hosted
+packages. No owner command is requested until a genuine READY package and the
+approved private route exist. Keep earlier accepted code/evidence immutable;
+new backend/custody behaviour requires appropriate focused independent review.
+
+The registered laptop coordinator currently exposes only health/read_evidence/
+status and131072-byte bounded reads. It has no registered invocation/transfer
+operation. The desktop's separate Git task channel does not change that fact.
+Do not replace the bridge or invent an operation. Missing laptop invocation and
+actual receipt readback remain separate blockers even after private custody is
+resolved. Root records installation, GNOME, local inference/browser and ordinary
+close as NOT RUN until those actual journeys execute.
+
+## Focused protocol checks
 
 ```sh
 python3 -B -m unittest discover -s eng/release-delivery -p test_installer_delivery.py -v
 ```
 
-Tests use real tiny ARM64/AMD64 DEBs and filesystem/ZIP operations, fixture review
-decisions and fake provider transport. They claim no real application acceptance,
-GitHub download, laptop delivery or GNOME success. No SDK is needed. When global
-/tmp is full, set NINETOONE_DELIVERY_TEST_TMP to an existing private scratch directory.
-Fixtures use explicit0755 control directories and a private dpkg temp directory,
-retaining failures. Register this focused command in the existing infrastructure
-workflow during integration; do not create a parallel CI/packaging system.
+No SDK is needed. Set NINETOONE_DELIVERY_TEST_TMP to an existing private scratch
+directory when global/tmp is full; fixtures use explicit control permissions and
+private dpkg scratch. Register this focused command in the existing infrastructure
+workflow during integration. Do not create a parallel packaging/CI system.
