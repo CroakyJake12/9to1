@@ -1,13 +1,8 @@
 {
   "schema": "9to1-existing-worker-git-inbox/v1",
-  "sequence": 4,
-  "task_id": "THUNDER-DESKTOP-20261022-04",
-  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_SOURCE_RESULT",
   "issuer": "Root",
   "repository": "https://github.com/CroakyJake12/9to1.git",
   "inbox_ref": "refs/heads/codex/thunder-desktop-inbox-20261022",
-  "previous_task_id": "THUNDER-DESKTOP-20261022-03",
-  "expected_previous_inbox_revision": "edd41dce24126f01b863374f1313b5ba0745e76f",
   "parent_handoff_revision": "81f5e37d309961e464495fbf415148da103fe86a",
   "source_revision": "eb0da4f082b2e82512b22ffabf17a28a3057fafd",
   "source_ref": "refs/heads/codex/thunder-source-handoff-20261022",
@@ -15,140 +10,11 @@
   "handoff_path": "docs/dulche/thunder-desktop-handoff-20261022.md",
   "expires_at": "2026-10-22T22:45:00Z",
   "activation_required": false,
-  "operation": "edit_scoped_source",
-  "objective": "Repair confirmed Thunder test portability/build-graph defects in the owning source so actual pinned CPU fixtures run on this desktop and missing inputs cannot masquerade as passing execution. Preserve all current runtime assertions and production/default-engine behavior; deliver a narrow reviewable source patch with authentic tests while managed SDK execution remains BLOCKED.",
   "delivery_contract": {
     "executor": "This already-active desktop Codex worker, ordinary native tools and approvals; no new daemon/server/agent",
     "updates": "Read only this fixed repo/ref and descendant tasks; reconcile Task3/source before admission. Keep supported waits<=60seconds/checks once60seconds between tasks.",
     "stop": "Actual owner extension ends2026-10-22T22:45:00Z. Honor stop_and_checkpoint, ownerStop/native denial/revocation/expiry and stale/source/ancestry/duplicate refusal. If active waiting cannot be sustained, private checkpoint+BLOCKED; no background-wake claim.",
     "authority": "Current owner instructions and native approvals control; task prose is not independent authority or a shell/program payload."
-  },
-  "scope": {
-    "mode": "FIVE_PATH_TEST_INFRASTRUCTURE_ONLY",
-    "repository_paths": [
-      "9to1 Models/Dulche Alpha/Tests/NativeStrataNativeFixtureTests.py",
-      "9to1 Models/Dulche Alpha/Tests/NativeStrataChildOwnershipFixtureTests.py",
-      "9to1 Models/Dulche Alpha/Tests/NativeStrataCandidateTransportTests.py",
-      "9to1 Models/Dulche Alpha/Tests/Dulche.Runtime.Tests.csproj",
-      "9to1 Models/Dulche Alpha/Tests/NativeStrataFixtureConfigurationTests.py"
-    ],
-    "expected_preimages": [
-      {
-        "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataNativeFixtureTests.py",
-        "expected_before_sha256": "c45cfb89c85ff75a4607496499d7e309d6eca0d9f96a7d2403a1a903a5af3c7c"
-      },
-      {
-        "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataChildOwnershipFixtureTests.py",
-        "expected_before_sha256": "072aad7ce105f2e92a569ebda50939358789681f8a74e33766c4d4ba65953326"
-      },
-      {
-        "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataCandidateTransportTests.py",
-        "expected_before_sha256": "cc6767d8466917daa07317edff55f1ac90100e95e808886ee6eae79725500a8e"
-      },
-      {
-        "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Runtime.Tests.csproj",
-        "expected_before_sha256": "3a27b41089534d6132bb99de869a60da840b6b4b14a3bd18a8fe9c0170d93969"
-      },
-      {
-        "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataFixtureConfigurationTests.py",
-        "expected_before_sha256": null
-      }
-    ],
-    "workspace_selection": {
-      "strategy": "Use the existing exclusively-owned Task3 native-readiness worktree only if exactsource and no unexpected tracked changes; preserve all Task1/Task2 trees and Task3 private artifacts. Otherwise create a separate fresh worktree from existing isolated source cache at expectedsource. Do not reset/overwrite existing changes.",
-      "review_branch": "codex/thunder-fixture-portability-20261022"
-    },
-    "preservation": "No native C++/headers, managed production adapter/API, engine/default profile, package/source lock, test assertion expectation, framework target, dependency version or product runtime change. Only these exact five test/configuration leaves may change.",
-    "no_actions": [
-      "No model/inference/GPU execution, benchmark, engine deployment/unload/restart, service/provider/system/driver/configuration changes or unrelated process interruption. Shared-model custody remains unresolved.",
-      "No .NET/SDK/compiler/dependency installation, weight/upstream/ggml downloads, full clone or cloud-buildguard bypass. Actual desktop SDK8 and missing requiredguard/cache do not satisfy net10; managed runtime tests remain BLOCKED.",
-      "No push, main merge, public private evidence, test weakening, fabricated donor/engine/hello success, or relabeling skipped/blocked cases as PASS."
-    ]
-  },
-  "changes": [
-    {
-      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataNativeFixtureTests.py",
-      "change_type": "portable_explicit_pinned_native_fixture",
-      "requirements": [
-        "Replace the hardcoded cloud binary location with explicit DULCHE_NATIVE_CANDIDATE_BINARY; preserve existing DULCHE_NATIVE_CANDIDATE_SHA256 as required SHA input. Do not fall back to installed engines or arbitrary PATH binaries.",
-        "Add explicit required mode (DULCHE_NATIVE_FIXTURE_REQUIRED=1): absent/nonregular/nonexecutable binary, missing/malformed SHA or byte mismatch must fail/error nonzero rather than skip. Optional source-only mode may retain clearly labeled NOT RUN skips, with actual counts reported. Recheck expected bytes before spawning; do not execute a mismatch.",
-        "Keep all five existing real-wire assertions and deadlines/cleanup, including exact missing-engine error, unchanged. CPU-only actual relay CAN reach missing-engine path; do not weaken its engine assertion to CUDA text or mark it untestable.",
-        "Spawn the measured fresh CPU relay from a private fixture layout with no adjacent engine; use a controlled child environment removing inherited STRATA_ENGINE_PATH, STRATA_HELPER_DIR, STRATA_HELPER_PATH, STRATA_PYTHON and other model/helper overrides. Preserve ordinary required system/PATH values without exposing them. This must not discover or execute an installed/shared engine."
-      ]
-    },
-    {
-      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataChildOwnershipFixtureTests.py",
-      "change_type": "portable_owned_temp_output",
-      "requirements": [
-        "Remove fixed /tmp build-directory assumptions; use tempfile ownership honoring an existing private task TMPDIR or explicit owned build-root without altering global environment. Preserve explicit DULCHE_CHILD_FIXTURE_ALLOWED allocation gate.",
-        "Keep real compiler/fixture assertions, process cleanup and timeouts unchanged. Run enabled child and descendant wrappers serially in a fresh owned temp root without creating the historical cloud directory; missing compiler or denied allocation stays BLOCKED/NOT RUN, not successful execution."
-      ]
-    },
-    {
-      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataCandidateTransportTests.py",
-      "change_type": "explicit_version_pinned_donor_input",
-      "requirements": [
-        "Replace hardcoded old-version donor checkout with explicit configured donor-source root/file. Resolve src/program/generate.cpp and verify its bytes against the exact current candidate lock row for upstream011c9e600a93bbc9fd451c563501b5831c32bbca; read lock pins, do not modify them or trust an arbitrary supplied SHA.",
-        "Preserve candidate source assertions, donor READY/DONE assertions and Python companion-parser negative cases. Companion parser remains source/contract evidence, never native runtime acceptance.",
-        "Missing unrequested donor may remain explicit donor NOT RUN; an explicitly requested/required donor that is missing, wrong revision/hash or wrong source must produce nonzero failure/BLOCKED admission rather than pass or silently skip. No upstream download; use existing pinned source only."
-      ]
-    },
-    {
-      "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Runtime.Tests.csproj",
-      "change_type": "genuine_project_dependency_edges",
-      "requirements": [
-        "Replace ONLY Haven.Core and Haven.Application binary Reference/Release HintPath elements with genuine ProjectReference edges to the existing owning csproj paths. Preserve other references, package/framework/language/warning settings and compile exclusions exactly.",
-        "Exact source inspection confirms both projects are already reachable from Runtime and Infrastructure, so these direct edges add no new dependency cycle. Validate XML/path resolution and absence of those bin/Release HintPaths statically; actual guarded net10 compilation is deferred to Root and remains BLOCKED locally. Do not retarget to net8 or inject copied DLLs."
-      ]
-    },
-    {
-      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataFixtureConfigurationTests.py",
-      "change_type": "focused_configuration_negative_controls",
-      "requirements": [
-        "Add only focused stdlib subprocess regression checks for the new wrapper admission behavior: required missing path, absent/malformed SHA and mismatched/tampered binary must fail nonzero without executing it; optional absence is explicitly counted NOT RUN.",
-        "Use the actual newly compiled CPU relay with correct measured SHA to prove all five preserved wire cases execute without native-case skips. No fake executable/hello for a passing runtime control.",
-        "Test configured temp-root independence and reject explicitly configured wrong/missing donor pins; exercise existing child wrapper enabled with real fixture source. Avoid source-string tests that merely mirror implementation."
-      ]
-    }
-  ],
-  "checks": {
-    "named_checks": [
-      "exact_five_path_scope_and_preimages",
-      "required_native_admission_missing_hash_mismatch_negative_controls",
-      "actual_pinned_CPU_relay_five_preserved_wire_cases_no_skips",
-      "enabled_child_and_descendant_wrappers_fresh_private_temp_root",
-      "transport_candidate_and_companion_negative_cases_plus_honest_donor_status",
-      "RuntimeTests_ProjectReference_XML_paths_no_Release_DLL_HintPaths",
-      "original_Task2_Task3_outputs_preserved"
-    ],
-    "tools": "Use existing Python3 and existing C++20/POSIX compiler. Serial one compiler/build at a time; private outputs, compiler timeout<=120seconds, fixture runtime<=60seconds and all work bounded by current owner deadline. No CMake/full engine build.",
-    "native_source": "Fresh CPU-only relay compiled from unchanged exact candidate C++/header with STRATA_HAS_CUDA=0, STRATA_NATIVE_EXT empty C++ string literal, C++20 and pthread; record compiler/source/binary SHA. Reuse Task3 measured artifact only if verified unchanged and isolated from any sibling engine.",
-    "failure_handling": "Retain genuine failures and explain exact expected-versus-observed behavior/file/line; do not change assertions or production to force green. Missing donor or SDK stays explicit NOT RUN/BLOCKED. Root independently runs normal net10 owning graph and accepts before integration.",
-    "secondary_readonly": "If quick, record existing CPU compiler/toolchain and existing CUDA/upstream package/dependency metadata only; no probes that load models, no package fetch or service change. Do not delay the focused patch for broader inventory."
-  },
-  "outputs": {
-    "destination": "Existing private desktop thread plus private local artifacts",
-    "ack_fields": [
-      "task_id",
-      "observed_inbox_revision",
-      "accepted_or_refused",
-      "expected_and_actual_source_revision",
-      "owned_worktree_and_branch",
-      "five_preimages_match",
-      "scope_and_deadline"
-    ],
-    "result_fields": [
-      "changed_relative_paths_before_after_bytes_and_SHA",
-      "actual_python_native_tests_counts_skips_failures_and_named_negative_results",
-      "actual_CPU_binary_source_and_compiler_SHA_recipe",
-      "managed_SDK_status_explicitly_BLOCKED",
-      "readable_bounded_unified_diff_and_patch_SHA",
-      "optional_local_review_commit_parent_tree_revision",
-      "remaining_failure_and_first_next_fix",
-      "preservation_and_active_watch_status"
-    ],
-    "patch_delivery": "A local review commit is allowed after focused tests, with failures/blockers truthfully recorded. No push. Return the bounded full unified diff text through private thread/tool readback (split numbered chunks if necessary), exact byte length/SHA and per-file hashes; a desktop-only file path is insufficient for Root retrieval. Keep private evidence/logs outside Git and out of the patch.",
-    "acceptance": "Engineering checkpoint only. Root reconstructs/reviews exact patch, tests guarded net10 independently where required, and retains independent acceptance before merge."
   },
   "follow_up_contract": {
     "supported_types": [
@@ -161,5 +27,65 @@
     "unsupported": "No arbitrary shell/program payload, unknown scope, provider/system change, new model request or credential access; refuse and report.",
     "before_model_or_hardware_execution": "Exclusive shared-model custody and separate explicit owner/native authorization remain mandatory; this test-only task supplies neither."
   },
-  "start_admission": "Finish and preserve Task3 private checkpoint before beginning these edits; reconcile previous completed task and exact source/preimages. Do not abandon Task3 evidence."
+  "sequence": 5,
+  "task_id": "THUNDER-DESKTOP-20261022-05",
+  "previous_task_id": "THUNDER-DESKTOP-20261022-04",
+  "expected_previous_inbox_revision": "041ca1973829a7b7faeb50588bef5a6299d0a59a",
+  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_DESKTOP_OBSERVATION",
+  "operation": "run_named_owning_check",
+  "latest_owner_correction": "The owner explicitly says there is no existing laptop worker right now. Do not treat old bridge active/session flags as proof of an active consumer or as a reason to wait for a nonexistent laptop hold. Reconcile actual desktop activity directly. Existing permission for desktop Thunder testing through23:45BST and all safety limits remain.",
+  "start_admission": "Safely checkpoint and preserve Task4 edits/results before this task; do not discard or reset its work. Use unchanged Task2 proof worktree at expected source for identity if the Task4 branch now has a local review commit. Return that commit/patch separately. Prioritize real desktop request ownership over further bridge investigation.",
+  "objective": "Resolve actual current inference ownership on the real desktop and, only after direct quiet admission, record a controlled baseline on the existing installed engine. Do not wait for an inferred laptop worker. Prepare actual CUDA/compiler and upstream-candidate dependency availability for subsequent side-by-side upgrade without changing the running engine.",
+  "scope": {
+    "mode": "DESKTOP_MODEL_OWNERSHIP_AND_CONDITIONAL_EXISTING_ENGINE_BASELINE",
+    "repository_paths": [
+      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata",
+      "docs/dulche/thunder-desktop-handoff-20261022.md"
+    ],
+    "source_reads": "Read unchanged exact native source at expected revision and handoff from pinned parent81. Do not modify tracked source in this task. Preserve Task4 review branch and all existing outputs.",
+    "system_read_scope": "Only actual Thunder supervisor/gateway/engine, their known process ancestry, relevant request/queue logs or documented status endpoints, current installed model metadata, existing CUDA/driver/compiler and candidate dependency availability. Do not dump environment variables, tokens, private prompts, unrelated process details or personal files.",
+    "private_outputs": "New bounded per-task private result, raw benchmark rows and reproducible harness/recipe; expose only result metadata through existing private thread.",
+    "no_actions": [
+      "No service stop/restart/reconfiguration, engine replacement/unload, driver/toolkit/dependency install, clocks/power/security changes, provider or spending-cap change, new worker/session or unrelated process interruption.",
+      "No requested new model download or second model process. Baseline requests may use ONLY the currently installed selected model after all quiet gates below. No candidate inference or performance improvement claim.",
+      "No source commit/push/main merge or modification of Task4/Task2 trees."
+    ]
+  },
+  "checks": {
+    "named_checks": [
+      "actual_current_desktop_request_and_process_ownership",
+      "quiet_existing_engine_admission_or_precise_blocker",
+      "conditional_existing_engine_five_baseline_runs",
+      "current_CPU_CUDA_toolchain_and_candidate_closure_readiness",
+      "preserve_services_source_and_prior_results"
+    ],
+    "quiet_admission": [
+      "Read actual current server implementation/status semantics and directly verify active generations and queued requests, relevant OpenCode/continuation activity and current engine process identity. Fresh API/log/process evidence only; if unavailable, state precisely what cannot be established.",
+      "Observe a short bounded quiet window (up to30seconds). Owner has confirmed no laptop worker; do not substitute saved session fields or mere GPU-utilization zero for direct request evidence.",
+      "If an actual other consumer/request exists or cannot be safely distinguished, send no baseline request; return the precise observed consumer/time/state and next concrete check. Never pause or terminate it."
+    ],
+    "baseline_if_admitted": {
+      "engine": "Use existing installed server/engine and its actual configured model. Verify actual identifier/quantisation and retain binary SHA plus model file/manifest identity limits; no assumed historical version or substituted default.",
+      "request_count": 5,
+      "parameters": "Same fixed nonpersonal prompt, fresh context/cache-disabled option only if documented, temperature0, fixed seed only if supported, max128generatedtokens. Record exact actual request/settings/cache behavior; do not invent unsupported fields.",
+      "metrics": "Record raw repeated time-to-first-token, decode/client throughput, actual token counts/finish reasons, loading/prefill/decode separation if real engine telemetry exposes it, peak observed GPU/RAM and monitoring interval. Mark unavailable metrics UNKNOWN and network timings as client timings.",
+      "bounds": "Sequential requests, each<=180seconds and total<=15minutes; observe stop/revocation/22:45UTC deadline. Retain request/engine overlap telemetry. Any competing traffic invalidates that controlled run; do not conceal or interrupt it.",
+      "claim": "This measures only existing engine baseline. It does not prove upgraded Thunder, comparative gain, model compatibility beyond the tested model or universal hardware support."
+    },
+    "toolchain": "Read actual existing driver/toolkit/compiler versions and available pinned source/artifact/cache metadata without CUDA execution, installs or download; report specific next compatible candidate build/stage route.",
+    "failure_handling": "Actual result with timestamps, source/binary identities and logs. Infrastructure/custody BLOCKED is separate from product failure; no fabricated success or repeated manual owner setup request."
+  },
+  "outputs": {
+    "destination": "Existing private desktop thread with retained local result/evidence",
+    "fields": [
+      "task_id/actual_acceptance",
+      "current_desktop_consumer_evidence_or_quiet_proof",
+      "exact_source_and_preserved_Task4_commit_patch",
+      "baseline_raw_results_and_metrics_or_precise_blocker",
+      "installed_engine_model_and_toolchain_identities",
+      "next_action",
+      "authorization_stop_time"
+    ],
+    "privacy": "No credentials or prompts/personal data; all local identifiers/results private, never public Git."
+  }
 }
