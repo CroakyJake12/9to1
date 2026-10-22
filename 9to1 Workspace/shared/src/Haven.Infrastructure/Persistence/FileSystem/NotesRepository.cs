@@ -19,7 +19,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents notes repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class NotesRepository(
+public sealed partial class NotesRepository(
     IAppPaths paths,
     INotesDocumentValidator validator,
     IProductionDiagnostics diagnostics) : INotesRepository
@@ -199,14 +199,24 @@ public sealed class NotesRepository(
             var prepared = await InspectFileCoreAsync(temporary, expectedId, cancellationToken).ConfigureAwait(false);
             if (prepared.Binding != intent.Intended)
                 throw new IOException("The prepared Notes bytes changed after their durable publication intent was staged.");
+            if (transaction.OriginalHome is { } home)
+            {
+                await home.DemandPublicationAsync(expectedId, cancellationToken).ConfigureAwait(false);
+                var finalPrior = await InspectCurrentCoreAsync(expectedId, cancellationToken).ConfigureAwait(false);
+                if (finalPrior.Binding != prior.Binding)
+                    throw new IOException("The original Notes current changed before protected publication.");
+            }
             await MarkPublicationAttemptedAsync(intent, cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
+            transaction.OriginalHome?.Custody.DemandCurrent();
             attempted = true;
+            if (transaction.OriginalHome is { } effect) effect.PublicationAttempted = true;
             try
             {
                 if (!prior.Absent) File.Replace(temporary, currentPath, backup, ignoreMetadataErrors: true);
                 else File.Move(temporary, currentPath);
                 committed = true;
+                transaction.OriginalHome?.Custody.DemandCurrent();
             }
             catch (Exception publicationError)
             {
@@ -224,6 +234,7 @@ public sealed class NotesRepository(
                 else if (observed is not null && observed.Binding == intent.Prior)
                 {
                     attempted = false; // exact prior-state observation justifies rollback
+                    if (transaction.OriginalHome is { } unchanged) unchanged.PublicationAttempted = false;
                     throw;
                 }
                 else
@@ -510,7 +521,7 @@ public sealed class NotesRepository(
     private async Task<NotesDocument> ReadAndValidateAsync(string path, Guid expectedId, CancellationToken cancellationToken,
         bool applyPendingRecovery = false)
     {
-        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await using var stream = OpenOriginalTransactionFile(path, FileMode.Open, FileAccess.Read);
         var document = await JsonSerializer.DeserializeAsync<NotesDocument>(stream, JsonOptions, cancellationToken).ConfigureAwait(false)
                        ?? throw new InvalidDataException("The Notes document was empty.");
         if (document.Id != expectedId)
@@ -541,8 +552,7 @@ public sealed class NotesRepository(
     {
         try
         {
-            await using var stream = new FileStream(PendingRecoveryPath(id), FileMode.Open, FileAccess.Read,
-                FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await using var stream = OpenOriginalTransactionFile(PendingRecoveryPath(id), FileMode.Open, FileAccess.Read, bufferSize: 4096);
             var pending = await JsonSerializer.DeserializeAsync<PendingNotesRecovery>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
             if (pending is null || pending.SchemaVersion != 1 || pending.DocumentId != id || id == Guid.Empty ||
                 pending.Version <= 0 || pending.RecoveryRevisionId == Guid.Empty || pending.RecoveredAt == default ||
@@ -605,10 +615,14 @@ public sealed class NotesRepository(
         private bool _active = true;
         private bool _diagnosticsClosed;
         internal NotesSaveResult? CommittedReceipt { get; private set; }
-        private Transaction(NotesRepository owner) => _owner = owner;
+        internal OriginalNotesRoot? OriginalRoot { get; private set; }
+        internal OriginalHomeTransaction? OriginalHome { get; set; }
+        internal OriginalDocumentCustody? OriginalRead { get; set; }
+        internal OriginalDocumentCustody? PhysicalCustody => OriginalHome?.Custody ?? OriginalRead;
+        private Transaction(NotesRepository owner, OriginalNotesRoot? originalRoot) { _owner = owner; OriginalRoot = originalRoot; }
         // Issued instances are inert until their owner registers the exact
         // instance while holding its gate and physical lease.
-        internal static Transaction Issue(NotesRepository owner) => new(owner);
+        internal static Transaction Issue(NotesRepository owner, OriginalNotesRoot? originalRoot = null) => new(owner, originalRoot);
 
         private Task<T> Admit<T>(Func<Task<T>> operation)
         {
@@ -648,6 +662,11 @@ public sealed class NotesRepository(
         {
             if (!_active || !ReferenceEquals(issuer, _owner) || !ReferenceEquals(_owner._currentTransaction, this))
                 throw new InvalidOperationException("The Notes transaction is no longer owned and active.");
+        }
+        internal bool IsOwnedActiveBy(NotesRepository original)
+        {
+            lock (_admission)
+                return _active && ReferenceEquals(_owner, original) && ReferenceEquals(_owner._currentTransaction, this);
         }
         internal Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, Guid expectedId,
             long expectedVersion, CancellationToken token, bool integrityRequired = false) =>
@@ -716,18 +735,30 @@ public sealed class NotesRepository(
         }
     }
 
-    internal async Task<T> WithTransactionAsync<T>(Func<Transaction, Task<T>> operation, CancellationToken cancellationToken)
+    internal Task<T> WithTransactionAsync<T>(Func<Transaction, Task<T>> operation, CancellationToken cancellationToken)
+        => WithTransactionCoreAsync(operation, cancellationToken, originalObservation: null);
+
+    private async Task<T> WithTransactionCoreAsync<T>(Func<Transaction, Task<T>> operation, CancellationToken cancellationToken,
+        OriginalObservation? originalObservation)
     {
         ArgumentNullException.ThrowIfNull(operation);
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         Transaction? transaction = null;
         FileStream? lease = null;
+        OriginalNotesRoot? originalRoot = null;
         T? result = default;
         var errors = new List<Exception>();
         try
         {
-            lease = await AcquireRepositoryLeaseAsync(cancellationToken).ConfigureAwait(false);
-            transaction = Transaction.Issue(this);
+            if (originalObservation is not null)
+            {
+                var data = Path.GetDirectoryName(Path.GetDirectoryName(_root)!)!;
+                originalRoot = OriginalNotesRoot.Open(data, initialise: false);
+                lease = await originalRoot.AcquireCanonicalRepositoryLockAsync(cancellationToken).ConfigureAwait(false);
+                DemandOriginalObservationWithinTransaction(originalRoot, originalObservation);
+            }
+            else lease = await AcquireRepositoryLeaseAsync(cancellationToken).ConfigureAwait(false);
+            transaction = Transaction.Issue(this, originalRoot);
             _currentTransaction = transaction;
             Task<T>? original = null;
             try
@@ -751,7 +782,12 @@ public sealed class NotesRepository(
                 }
             }
             catch (Exception error) { AddOriginalTaskFailures(errors, originalDispose, error); }
-            finally { _gate.Release(); }
+            finally
+            {
+                try { originalRoot?.Dispose(); }
+                catch (Exception error) { AddOriginalTaskFailures(errors, null, error); }
+                finally { _gate.Release(); }
+            }
         }
         if (transaction is not null) errors.AddRange(await transaction.ReplayDiagnosticsAsync().ConfigureAwait(false));
         errors = errors.Distinct<Exception>(ReferenceEqualityComparer.Instance).ToList();
@@ -812,8 +848,7 @@ public sealed class NotesRepository(
     {
         try
         {
-            await using var stream = new FileStream(PublicationPath(id), FileMode.Open, FileAccess.Read, FileShare.Read,
-                4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await using var stream = OpenOriginalTransactionFile(PublicationPath(id), FileMode.Open, FileAccess.Read, bufferSize: 4096);
             var intent = await JsonSerializer.DeserializeAsync<NotesPublicationIntent>(stream, JsonOptions, token).ConfigureAwait(false);
             if (intent is null || intent.SchemaVersion != 1 || intent.OperationId == Guid.Empty || intent.DocumentId != id ||
                 id == Guid.Empty || intent.SavedAt == default || intent.Intended is null || intent.Prior is null ||
@@ -839,8 +874,7 @@ public sealed class NotesRepository(
     {
         try
         {
-            await using var stream = new FileStream(PendingIntegrityPath(id), FileMode.Open, FileAccess.Read, FileShare.Read,
-                4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await using var stream = OpenOriginalTransactionFile(PendingIntegrityPath(id), FileMode.Open, FileAccess.Read, bufferSize: 4096);
             var pending = await JsonSerializer.DeserializeAsync<PendingNotesIntegrity>(stream, JsonOptions, token).ConfigureAwait(false);
             if (intent is null || !intent.IntegrityRequired || pending is null || pending.SchemaVersion != 1 ||
                 pending.OperationId != intent.OperationId || pending.Manifest is null || pending.Manifest.Version != 1 ||
@@ -881,8 +915,8 @@ public sealed class NotesRepository(
     }
     private async Task<NotesCurrentSnapshot> InspectFileCoreAsync(string path, Guid id, CancellationToken token)
     {
-        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await using var stream = OpenOriginalTransactionFile(path, FileMode.Open, FileAccess.Read);
+        var before = CaptureOriginalReadVersion(stream);
         var document = await JsonSerializer.DeserializeAsync<NotesDocument>(stream, JsonOptions, token).ConfigureAwait(false)
             ?? throw new InvalidDataException("The Notes document was empty.");
         if (document.Id != id) throw new InvalidDataException("The Notes file does not belong to its canonical document identity.");
@@ -892,6 +926,7 @@ public sealed class NotesRepository(
         document = validated;
         stream.Position = 0;
         var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, token).ConfigureAwait(false)).ToLowerInvariant();
+        DemandOriginalReadCurrent(path, stream, before);
         return new(document, hash, stream.Length);
     }
 
@@ -972,7 +1007,7 @@ public sealed class NotesRepository(
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                await using var stream = File.OpenRead(meta);
+                await using var stream = OpenOriginalTransactionFile(meta, FileMode.Open, FileAccess.Read);
                 var manifest = await JsonSerializer.DeserializeAsync<NotesVersionManifest>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
                 if (manifest is null) continue;
                 result.Add(new NotesVersionInfo(Path.GetFileName(meta)[..^".meta.json".Length], manifest.Version, manifest.CreatedAt, manifest.Reason, manifest.SizeBytes, manifest.Sha256));
@@ -1043,7 +1078,8 @@ public sealed class NotesRepository(
     /// <summary>
     /// Performs the document directory step owned by this component.
     /// </summary>
-    private string DocumentDirectory(Guid id) => Path.Combine(_root, id.ToString("D"));
+    private string DocumentDirectory(Guid id) => _currentTransaction?.PhysicalCustody is { } custody
+        ? custody.DirectoryFor(id) : Path.Combine(_root, id.ToString("D"));
     /// <summary>
     /// Performs the current path step owned by this component.
     /// </summary>
@@ -1055,7 +1091,8 @@ public sealed class NotesRepository(
     /// <summary>
     /// Performs the versions directory step owned by this component.
     /// </summary>
-    private string VersionsDirectory(Guid id) => Path.Combine(DocumentDirectory(id), "Versions");
+    private string VersionsDirectory(Guid id) => _currentTransaction?.PhysicalCustody is { } custody
+        ? custody.VersionsFor(id) : Path.Combine(DocumentDirectory(id), "Versions");
     /// <summary>
     /// Performs the version file name step owned by this component.
     /// </summary>
@@ -1065,10 +1102,10 @@ public sealed class NotesRepository(
     /// </summary>
     private static string NormalizeReason(string reason) => string.IsNullOrWhiteSpace(reason) ? "Save" : reason.Trim()[..Math.Min(reason.Trim().Length, 160)];
 
-    private static async Task WriteJsonDurablyAsync<T>(string path, T value, CancellationToken cancellationToken, bool overwrite = false)
+    private async Task WriteJsonDurablyAsync<T>(string path, T value, CancellationToken cancellationToken, bool overwrite = false)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await using var stream = new FileStream(path, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, 64 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough);
+        await using var stream = OpenOriginalTransactionFile(path, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, options: FileOptions.Asynchronous | FileOptions.WriteThrough);
         await JsonSerializer.SerializeAsync(stream, value, JsonOptions, cancellationToken).ConfigureAwait(false);
         await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
         stream.Flush(flushToDisk: true);
@@ -1077,11 +1114,11 @@ public sealed class NotesRepository(
     /// <summary>
     /// Performs copy durably asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private static async Task CopyDurablyAsync(string source, string destination, CancellationToken cancellationToken)
+    private async Task CopyDurablyAsync(string source, string destination, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-        await using var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
-        await using var output = new FileStream(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None, 64 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough);
+        await using var input = OpenOriginalTransactionFile(source, FileMode.Open, FileAccess.Read);
+        await using var output = OpenOriginalTransactionFile(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None, options: FileOptions.Asynchronous | FileOptions.WriteThrough);
         await input.CopyToAsync(output, cancellationToken).ConfigureAwait(false);
         await output.FlushAsync(cancellationToken).ConfigureAwait(false);
         output.Flush(flushToDisk: true);
@@ -1090,9 +1127,9 @@ public sealed class NotesRepository(
     /// <summary>
     /// Performs compute sha256 asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private static async Task<string> ComputeSha256Async(string path, CancellationToken cancellationToken)
+    private async Task<string> ComputeSha256Async(string path, CancellationToken cancellationToken)
     {
-        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await using var stream = OpenOriginalTransactionFile(path, FileMode.Open, FileAccess.Read);
         return Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false)).ToLowerInvariant();
     }
 
