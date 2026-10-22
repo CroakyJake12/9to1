@@ -141,7 +141,13 @@ public static class InferenceCompatibilityRegistry
         }
         if (engine.Engine == InferenceEngine.Strata)
         {
-            Require(model.WeightFormat == "Safetensors", "strata.weight-format", "Original Safetensors", model.WeightFormat);
+            // Truthful format eligibility: legacy V1 is Safetensors-only; the candidate V2 worker is
+            // engine-native GGUF. Membership in `engine.WeightFormats` (above) already requires the
+            // model format to be one the actual verified build declares, so this only distinguishes the
+            // two trusted Strata formats; unknown formats still fail closed and the engine's own build
+            // support decides which is admissible.
+            Require(model.WeightFormat is "Safetensors" or "GGUF",
+                "strata.weight-format", "Original Safetensors or engine-native GGUF", model.WeightFormat);
             Require(model.NativeRegistration is not null && engine.NativeRegistrations?.Contains(model.NativeRegistration) == true,
                 "strata.registration", "Actual native registry entry", model.NativeRegistration);
             Require(model.Topology is "centralized" or "rank-local-tp2", "strata.topology", "centralized or rank-local-tp2", model.Topology);

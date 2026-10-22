@@ -27,6 +27,8 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
     {
         if (record is MemoryEntry or BlobReferenceRecord or StorageQuotaRecord)
             throw new DenException(DenErrorCode.Forbidden, "This record type must use its policy- and quota-enforcing Den operation.");
+        if (record is ModelRecord model && model.OfficialArtifact is { } official)
+            official.ValidateForModel(model);
         var capturedJson = JsonSerializer.Serialize<DenRecord>(record, DenJson.Options);
         RejectSecrets(capturedJson);
         var captured = JsonSerializer.Deserialize<DenRecord>(capturedJson, DenJson.Options) as T
@@ -592,6 +594,15 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
             throw new DenException(DenErrorCode.Forbidden, "The principal cannot change this model's local installation state.");
         var quota = await GetStorageQuotaAsync(namespaceId, cancellationToken);
         var registry = new LocalModelRegistry(Store.RootPath, Store.Manifest.DeviceId, quota.ModelWeightBytes);
+        // B6: optional official artifact tuple. The tuple is corroborated against the freshly loaded record
+        // AT REGISTER TIME too (not only on DulcheDen.SaveAsync), so a record written through the underlying
+        // DenStore author-path — which does not run tuple validation — cannot publish mismatched weights.
+        // Generic models (no tuple) are untouched. An explicit tuple never falls back silently to generic.
+        if (model.OfficialArtifact is { } official)
+        {
+            official.ValidateForModel(model);
+            ValidateOfficialArtifactAdmission(official, model, registry);
+        }
         async ValueTask<bool> CurrentAuthority(CancellationToken ct)
         {
             if (!await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, modelId, DenPermission.Write, ct)) return false;
@@ -604,6 +615,44 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
                 await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, modelId, DenPermission.Write, ct);
         }
         return await registry.RegisterGuardedAsync(modelId, absolutePath, artifactSha256, CurrentAuthority, cancellationToken);
+    }
+
+    /// <summary>Admission gate for an optional official artifact tuple, using the existing typed preflight
+    /// on the real configured device quota (the registry injects its own quota as authority). A recognized
+    /// official stage is required; every other stage is a truthful refusal. Absent tuple = generic unchanged.</summary>
+    private static void ValidateOfficialArtifactAdmission(OfficialArtifactTuple official, ModelRecord model,
+        LocalModelRegistry registry)
+    {
+        var request = new ModelPreflightRequest(
+            ModelId: official.ExternalModelId,
+            ArtifactRepoArn: official.ArtifactRepo,
+            ArtifactRevision: official.ArtifactRevision,
+            ArtifactFileName: official.FileName,
+            LengthBytes: official.LengthBytes,
+            Sha256: official.Sha256,
+            Quantization: official.Quantization,
+            WeightFormat: model.Format ?? "",
+            ArchitectureFamily: model.Family ?? "",
+            DeviceQuotaBytes: 0); // the registry injects its configured device quota as the authority.
+        var report = registry.Preflight(request);
+        switch (report.Stage)
+        {
+            case ModelAdmissionStage.Recognized:
+                return; // explicit success; admission may proceed to on-disk evidence.
+            case ModelAdmissionStage.Unknown:
+                throw new DenException(DenErrorCode.InvalidRecord, "The official artifact tuple references an unrecognized official model identity.");
+            case ModelAdmissionStage.ArtifactIdentityMismatch:
+                throw new DenException(DenErrorCode.InvalidRecord, "The installed artifact identity does not match the official catalogue tuple.");
+            case ModelAdmissionStage.FormatBlocked:
+                throw new DenException(DenErrorCode.InvalidRecord, "The official model format/architecture is not admitted.");
+            case ModelAdmissionStage.SizeAboveCeilingBlocked:
+                throw new DenException(DenErrorCode.InvalidRecord, "The official model exceeds the centralized source ceiling.");
+            case ModelAdmissionStage.QuotaBlocked:
+                throw new DenException(DenErrorCode.RetentionBlocked, "The official model exceeds this device's configured model-weight quota.", recoverable: true);
+            default:
+                // Fail closed: any unknown/future stage refuses admission with a structured DenException.
+                throw new DenException(DenErrorCode.InvalidRecord, "The official artifact tuple admission stage is not recognized.");
+        }
     }
 
     public async Task<long> CollectUnreferencedBlobsAsync(string namespaceId, bool explicitlyConfirmed,

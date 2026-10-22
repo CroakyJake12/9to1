@@ -151,6 +151,53 @@ public sealed record ModelRecord : DenRecord
     public PortableMetric ActiveMoeParameters { get; init; } = PortableMetric.Empty();
     public PortableMetric StorageBytes { get; init; } = PortableMetric.Empty();
     public PortableMetric HardwareMemoryBytes { get; init; } = PortableMetric.Empty();
+    /// <summary>Optional official published GGUF artifact identity for this model entry. When absent the
+    /// entry stays an ordinary generic model and no official support claim is made. The property is omitted
+    /// from serialized JSON when null so existing records encode byte-identically to older versions.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OfficialArtifactTuple? OfficialArtifact { get; init; }
+}
+
+/// <summary>Immutable official published GGUF artifact identity for an owner-requested model entry, bound to
+/// the Den record via an explicit external model id that is distinct from the stable Den ModelRecord.Id. The
+/// tuple is portable metadata only; it never carries device paths, quotas, availability, or GPU readiness. It
+/// is not a claim the device can load or execute the artifact (that remains candidate/registration evidence).
+/// </summary>
+public sealed record OfficialArtifactTuple(
+    string ArtifactRepo,
+    string ArtifactRevision,
+    string FileName,
+    long LengthBytes,
+    string Sha256,
+    string Quantization,
+    string ExternalModelId)
+{
+    /// <summary>Domain validation for the tuple. It runs on the Den model-record save path so an invalid
+    /// official tuple is rejected truthfully before it can be persisted. The check corroborates the existing
+    /// record's artifact SHA, artifact revision, and quantization witnesses where present; estimated display
+    /// metrics are never used as size proof. The record's ArtifactRevision is the artifact (GGUF) revision —
+    /// it is never conflated with the separate original BF16 source revision, which lives elsewhere as distinct
+    /// metadata. Generic records with no tuple are untouched (null back-compat preserved).</summary>
+    public void ValidateForModel(ModelRecord model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        if (string.IsNullOrWhiteSpace(ArtifactRepo) || string.IsNullOrWhiteSpace(ArtifactRevision) ||
+            string.IsNullOrWhiteSpace(FileName) || string.IsNullOrWhiteSpace(Sha256) ||
+            string.IsNullOrWhiteSpace(Quantization) || string.IsNullOrWhiteSpace(ExternalModelId))
+            throw new DenException(DenErrorCode.InvalidRecord, "An official artifact tuple requires repo, revision, filename, SHA-256, quantization and external model id.");
+        if (LengthBytes <= 0)
+            throw new DenException(DenErrorCode.InvalidRecord, "An official artifact length must be positive.");
+        if (!System.Text.RegularExpressions.Regex.IsMatch(Sha256, "^[A-Fa-f0-9]{64}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant))
+            throw new DenException(DenErrorCode.InvalidRecord, "An official artifact hash must be SHA-256.");
+        if (model.ArtifactSha256 is { } existingSha && !string.Equals(existingSha, Sha256, StringComparison.OrdinalIgnoreCase))
+            throw new DenException(DenErrorCode.InvalidRecord, "The official artifact SHA does not match the model record's artifact hash.");
+        if (!string.IsNullOrWhiteSpace(model.ArtifactRevision) &&
+            !string.Equals(model.ArtifactRevision, ArtifactRevision, StringComparison.Ordinal))
+            throw new DenException(DenErrorCode.InvalidRecord, "The official artifact revision does not match the model record's artifact revision.");
+        if (!string.IsNullOrWhiteSpace(model.Quantisation) &&
+            !string.Equals(model.Quantisation, Quantization, StringComparison.OrdinalIgnoreCase))
+            throw new DenException(DenErrorCode.InvalidRecord, "The official artifact quantization does not match the model record's quantization.");
+    }
 }
 
 public sealed record ModelReplacement(string PreviousArtifactRevision, string NewArtifactRevision,

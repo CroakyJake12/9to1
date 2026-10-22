@@ -1,0 +1,331 @@
+"""Bounded build-free transport/protocol tests for the candidate (v0.2.2) relay.
+
+The candidate worker is C++ and cannot be compiled in this source-only checkpoint, so this suite pins
+the WIRE CONTRACT the relay and the donor engine actually speak, then validates it three ways:
+
+  1. Source-scan cross-checks against the candidate worker (`dulche_strata_candidate_worker.cpp`) and
+     the donor engine (`src/program/generate.cpp`): frame envelope types, operation dispatch, READY
+     and GEN line shapes, and the DONE field layout.
+  2. A deterministic fixture (a captured donor-shaped engine transcript, including the optional
+     `chunk=`/`experts_streamed=` tail) fed through a small Python mirror of the candidate's parse
+     contract. The mirror is a COMPANION to the C++ parser, not a substitute: it pins the exact
+     grammar the C++ code documents, so a future real build has a regression reference.
+  3. Malformed variants that must be rejected (negative telemetry, unknown finish, truncated lines,
+     bare non-key tail fields).
+
+These tests never compile, link, run inference, download models or install packages.
+"""
+import hashlib
+import json
+import os
+import pathlib
+import re
+import unittest
+
+NATIVE = pathlib.Path(__file__).resolve().parents[1] / "InferenceEngines" / "NativeStrata"
+CANDIDATE = NATIVE / "dulche_strata_candidate_worker.cpp"
+DONOR_LOCK = NATIVE / "prep" / "strata-v0.2.2-lock.candidate.json"
+
+
+def _read_pinned_donor():
+    supplied = os.environ.get("DULCHE_NATIVE_DONOR_SOURCE")
+    if not supplied:
+        if os.environ.get("DULCHE_NATIVE_DONOR_REQUIRED") == "1":
+            raise ValueError("BLOCKED: required donor source is not configured")
+        raise unittest.SkipTest("NOT RUN: donor source not configured; companion parser is contract evidence only")
+    donor = pathlib.Path(supplied)
+    if donor.is_dir():
+        donor = donor / "src" / "program" / "generate.cpp"
+    if not donor.is_file():
+        raise ValueError("BLOCKED: explicitly configured donor source is missing")
+    lock = json.loads(DONOR_LOCK.read_text(encoding="utf-8"))
+    if (lock.get("commit") != VERIFIED_UPSTREAM["candidate_commit"]
+            or lock.get("origin") != VERIFIED_UPSTREAM["repo"]):
+        raise ValueError("BLOCKED: donor lock revision does not match the current candidate")
+    rows = [row for row in lock["rows"] if row.get("path") == "src/program/generate.cpp"]
+    if len(rows) != 1 or re.fullmatch(r"[0-9a-fA-F]{64}", rows[0].get("sha256", "")) is None:
+        raise ValueError("BLOCKED: current candidate lock lacks one exact donor source pin")
+    pin = rows[0]
+    if donor.stat().st_size != pin["bytes"]:
+        raise ValueError("BLOCKED: donor source bytes do not match the current candidate lock")
+    content = donor.read_bytes()
+    if len(content) != pin["bytes"] or hashlib.sha256(content).hexdigest() != pin["sha256"].lower():
+        raise ValueError("BLOCKED: donor source bytes do not match the current candidate lock")
+    return content.decode("utf-8")
+
+FINISH_VOCAB = {"stop", "length", "cancel", "nonfinite"}
+
+
+# ---------------------------------------------------------------------------
+# Contract strings pulled from the two sources (a source-string existence check is
+# evidence of the *documented contract*, never of a working engine).
+# ---------------------------------------------------------------------------
+class WireContractSourceTests(unittest.TestCase):
+    def test_candidate_frame_envelope_types(self):
+        # hello frame type 0 carries ABI version 2; load ack type 4; stop ack type 3;
+        # failure type 5; hardware-probe result type 6.
+        src = CANDIDATE.read_text()
+        self.assertIn("write_frame(stdout, 0, hello)", src)
+        self.assertIn("kAbiVersion = 2", src)
+        self.assertIn("write_frame(stdout, 4, loaded)", src)
+        self.assertIn("write_frame(stdout, 3, stopped)", src)
+        self.assertIn("write_frame(stdout, 5, failure)", src)
+        self.assertIn("write_frame(stdout, 6, observed)", src)
+
+    def test_candidate_operation_dispatch(self):
+        src = CANDIDATE.read_text()
+        # The worker names its ops: op 1 = load, op 2 = text generate, op 4 = structured-tools
+        # generate, op 3 = stop, op 5 = cancel. Dispatch uses the named constants (not bare literals).
+        self.assertIn("kOpLoad = 1", src)
+        self.assertIn("kOpGenerate = 2", src)
+        self.assertIn("kOpStop = 3", src)
+        self.assertIn("kOpStructuredGenerate = 4", src)
+        self.assertIn("kOpCancel = 5", src)
+        self.assertIn("operation == kOpLoad", src)
+        self.assertIn("operation == kOpGenerate || operation == kOpStructuredGenerate", src)
+        self.assertIn("operation == kOpStop", src)
+
+    def test_candidate_gen_line_shape(self):
+        src = CANDIDATE.read_text()
+        self.assertIn('"GEN " + std::to_string(max_new)', src)
+        self.assertIn('line += " temperature=" + std::to_string(temperature)', src)
+        self.assertIn('line += " "', src)
+        self.assertIn("line += \",\"", src)
+
+    def test_candidate_ready_accepts_donor_shape(self):
+        src = CANDIDATE.read_text()
+        self.assertIn('line.rfind("READY ", 0) == 0', src)
+        self.assertIn('line.rfind("ERR ", 0) == 0', src)
+
+    def test_donor_ready_shape(self):
+        # donor emits `READY <max_context> stop` (see generate.cpp:10920).
+        src = _read_pinned_donor()
+        self.assertIn('std::printf("READY %lld stop\\n", (long long) o.max_context)', src)
+
+    def test_donor_done_finish_vocab(self):
+        src = _read_pinned_donor()
+        # The donor's finish field is one of stop|length|cancel|nonfinite (DONE comment)
+        self.assertIn("stop|length|cancel|nonfinite", src)
+
+
+# ---------------------------------------------------------------------------
+# Python mirror of the candidate's parse contract (companion to parse_done).
+# ---------------------------------------------------------------------------
+def mirror_parse_done(line: str):
+    """Mirror `parse_done` in the candidate worker.
+
+    Grammar (positional): DONE <generated> <prompt> <prompt_ms> <decode_ms> <finish>
+    <draft_accepted> <draft_offered> <reused> <hits> <lookups> <ram> <file> <file_mb>
+    <read_n> <offload> [key=value ...]
+    """
+    if not line.startswith("DONE "):
+        raise ValueError("Missing DONE terminal.")
+    tok = line.split()
+    if len(tok) < 9:
+        raise ValueError("Malformed DONE terminal.")
+
+    def i64(s, what):
+        if not re.fullmatch(r"-?\d+", s):
+            raise ValueError("Malformed DONE field: %s" % what)
+        return int(s)
+
+    def dbl(s, what):
+        if not re.fullmatch(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?", s):
+            raise ValueError("Malformed DONE field: %s" % what)
+        return float(s)
+
+    m = {
+        "generated": i64(tok[1], "generated"),
+        "prompt": i64(tok[2], "prompt"),
+        "prompt_ms": dbl(tok[3], "prompt_ms"),
+        "decode_ms": dbl(tok[4], "decode_ms"),
+        "finish": tok[5],
+        "drafts_accepted": i64(tok[6], "drafts_accepted"),
+        "drafts_offered": i64(tok[7], "drafts_offered"),
+        "reused": i64(tok[8], "reused"),
+        "hits": i64(tok[9], "hits") if len(tok) > 9 else 0,
+        "lookups": i64(tok[10], "lookups") if len(tok) > 10 else 0,
+    }
+    negative = ["generated", "prompt", "prompt_ms", "decode_ms", "drafts_accepted",
+                "drafts_offered", "reused", "hits", "lookups"]
+    for key in negative:
+        if m[key] < 0:
+            raise ValueError("DONE telemetry must be finite and nonnegative.")
+    if m["finish"] not in FINISH_VOCAB:
+        raise ValueError("DONE finish vocabulary is not recognized.")
+    if len(tok) > 14:
+        m["read_n"] = i64(tok[14], "read_n")
+        if m["read_n"] < 0:
+            raise ValueError("DONE read_n must be nonnegative.")
+    else:
+        m["read_n"] = m["prompt"] - m["reused"]
+        if m["read_n"] < 0:
+            raise ValueError("DONE read_n is inconsistent.")
+    if len(tok) > 15:
+        m["offload"] = i64(tok[15], "offload")
+        if m["offload"] < 0:
+            raise ValueError("DONE offload must be nonnegative.")
+    for field in tok[16:]:
+        if "=" not in field or len(field) > 128:
+            raise ValueError("DONE trailing field is malformed.")
+    return m
+
+
+class DoneParseFixtureTests(unittest.TestCase):
+    # A captured donor-shaped transcript: fixed fields plus the optional
+    # `chunk=`/`experts_streamed=` tail the engine appends (see generate.cpp:15106).
+    DONE_FIXTURE = (
+        "DONE 42 128 312.5 845.0 stop 0 0 0 3 7 1 0 0.0 128 3"
+        " chunk=4 experts_streamed=8"
+    )
+
+    def test_fixture_parses(self):
+        m = mirror_parse_done(self.DONE_FIXTURE)
+        self.assertEqual(m["generated"], 42)
+        self.assertEqual(m["prompt"], 128)
+        self.assertEqual(m["finish"], "stop")
+        self.assertEqual(m["read_n"], 128)
+        self.assertEqual(m["offload"], 3)
+        # the key=value tail (chunk=... experts_streamed=...) is validated, not parsed
+
+    def test_fixture_field_positions_match_donor(self):
+        # Positional assertions derived from the donor's DONE printf
+        # (generate.cpp:15106): field 14 is read_n, field 15 is offload.
+        parts = self.DONE_FIXTURE.split()
+        self.assertEqual(parts[0], "DONE")
+        self.assertEqual(parts[14], "128")   # read_n
+        self.assertEqual(parts[15], "3")     # offload
+        self.assertTrue(parts[16].startswith("chunk="))
+        self.assertTrue(parts[17].startswith("experts_streamed="))
+
+    def test_finish_vocab_rejects_unknown(self):
+        line = self.DONE_FIXTURE.replace("stop", "bogus", 1)
+        with self.assertRaises(ValueError):
+            mirror_parse_done(line)
+
+    def test_negative_telemetry_rejected(self):
+        for field_idx in (1, 2, 6, 7, 8):
+            parts = self.DONE_FIXTURE.split()
+            parts[field_idx] = "-5"
+            with self.assertRaises(ValueError):
+                mirror_parse_done(" ".join(parts))
+
+    def test_read_n_inconsistent_rejected(self):
+        # prompt=128, reused=120, no read_n field -> read_n = 8; but force prompt < reused
+        parts = ("DONE 42 100 312.5 845.0 stop 0 0 120 3 7 1 0 0.0").split()
+        with self.assertRaises(ValueError):
+            mirror_parse_done(" ".join(parts))
+
+    def test_truncated_rejected(self):
+        parts = self.DONE_FIXTURE.split()[:7]
+        with self.assertRaises(ValueError):
+            mirror_parse_done(" ".join(parts))
+
+    def test_bare_tail_field_rejected(self):
+        # a bare number (e.g. an unexpected chain field) is malformed for the non-lookup-chain path
+        parts = self.DONE_FIXTURE.split()[:16] + ["7"]
+        with self.assertRaises(ValueError):
+            mirror_parse_done(" ".join(parts))
+
+    def test_done_missing_terminal_rejected(self):
+        with self.assertRaises(ValueError):
+            mirror_parse_done("INFO 1 2 3")
+
+
+class GenLineMirrorTests(unittest.TestCase):
+    def test_gen_line_shapes(self):
+        # Basic request: GEN <max_new> <ids>
+        self.assertEqual(mirror_gen_line(64, [1, 2, 3]), "GEN 64 1,2,3")
+        # With sampling keys inserted between max_new and the ids.
+        self.assertEqual(mirror_gen_line(64, [1, 2, 3], temperature=0.8, top_p=0.9),
+                         "GEN 64 temperature=0.800000 top_p=0.900000 1,2,3")
+
+
+def mirror_gen_line(max_new, ids, temperature=0.0, top_p=1.0, top_k=0, seed=0,
+                    min_p=0.0, penalty_repeat=0.0, penalty_freq=0.0,
+                    penalty_present=0.0, penalty_last_n=0):
+    line = "GEN %d" % max_new
+    if temperature > 0.0:
+        # std::to_string(double) uses %.6f (6 decimals), match that exactly.
+        line += " temperature=%.6f" % temperature
+        line += " top_p=%.6f" % (top_p if top_p > 0.0 else 1.0)
+        if top_k:
+            line += " top_k=%d" % top_k
+        if min_p > 0.0:
+            line += " min_p=%.6f" % min_p
+        if penalty_last_n > 0:
+            line += " penalty_last_n=%d" % penalty_last_n
+        if penalty_repeat > 0.0:
+            line += " penalty_repeat=%.6f" % penalty_repeat
+        if penalty_freq > 0.0:
+            line += " penalty_freq=%.6f" % penalty_freq
+        if penalty_present > 0.0:
+            line += " penalty_present=%.6f" % penalty_present
+        if seed:
+            line += " seed=%d" % seed
+    line += " " + ",".join(str(i) for i in ids)
+    return line
+
+
+# ---------------------------------------------------------------------------
+# Verified official upstream serve contract (21 Oct 2026) — used as a regression
+# guard. The candidate worker is now pinned to v0.2.2 (same latest verified upstream);
+# this class records that the LATEST verified upstream (v0.2.2 / engine 0.1.47) uses the
+# SAME serve-line contract, so a bump changes origin/engine-version receipts and the source
+# lock, NOT the wire. Source-scan only; no build/run.
+# ---------------------------------------------------------------------------
+VERIFIED_UPSTREAM = {
+    # Official repo and latest stable tag/commit/tree verified 2026-10-21.
+    "repo": "https://github.com/Niko1221/Strata",
+    "latest_tag": "v0.2.2",
+    "latest_commit": "011c9e600a93bbc9fd451c563501b5831c32bbca",
+    "latest_tree": "539755e6d6b799bd75a47225befc786c436f6d8b",
+    "engine_version": "0.1.47",        # project(strata VERSION 0.1.47) in-tree
+    "license": "MIT",                  # LICENSE (© 2026 Niko1221 and Strata contributors)
+    # Candidate pin today (bumped to v0.2.2 this pass).
+    "candidate_tag": "v0.2.2",
+    "candidate_commit": "011c9e600a93bbc9fd451c563501b5831c32bbca",
+}
+
+
+class UpstreamServeContractCustodyTests(unittest.TestCase):
+    """The candidate worker's serve-wire expectations must match the OFFICIALLY verified
+    upstream serve contract (present in both v0.2.1 and the latest v0.2.2), so the future
+    version bump does not silently change or re-invent the wire."""
+
+    def test_verified_upstream_facts_recorded(self):
+        self.assertTrue(VERIFIED_UPSTREAM["repo"].endswith("/Strata"))
+        self.assertEqual(VERIFIED_UPSTREAM["latest_tag"], "v0.2.2")
+        self.assertEqual(len(VERIFIED_UPSTREAM["latest_commit"]), 40)
+        self.assertEqual(len(VERIFIED_UPSTREAM["latest_tree"]), 40)
+        self.assertEqual(VERIFIED_UPSTREAM["engine_version"], "0.1.47")
+        self.assertEqual(VERIFIED_UPSTREAM["license"], "MIT")
+
+    def test_candidate_pinned_to_v0_2_2(self):
+        # Honesty guard: the candidate is now pinned to the verified v0.2.2 commit.
+        src = CANDIDATE.read_text()
+        self.assertIn(VERIFIED_UPSTREAM["candidate_commit"], src)
+        self.assertIn(VERIFIED_UPSTREAM["latest_commit"], src)
+        self.assertEqual(VERIFIED_UPSTREAM["candidate_commit"], VERIFIED_UPSTREAM["latest_commit"])
+
+    def test_worker_ready_contract_matches_verified_upstream(self):
+        # Upstream prints `READY <max_context> stop` (verified in v0.2.2 generate.cpp).
+        src = CANDIDATE.read_text()
+        self.assertIn('line.rfind("READY ", 0)', src)
+        self.assertNotIn('"READY" == line', src)   # exact-match would miss the trailing " stop"
+
+    def test_worker_gen_contract_matches_verified_upstream(self):
+        # Upstream parses `GEN <max_new> [keys] <id,id,...>`; the worker must emit that form.
+        src = CANDIDATE.read_text()
+        self.assertIn('std::string line = "GEN " + std::to_string(max_new);', src)
+        self.assertIn('line += " ";', src)
+        self.assertIn('line += ",";', src)
+
+    def test_worker_stop_quit_contract_matches_verified_upstream(self):
+        src = CANDIDATE.read_text()
+        self.assertIn('engine_send(session.engine, "QUIT\\n");', src)
+        self.assertIn('engine_send(session.engine, "STOP\\n");', src)
+
+
+if __name__ == "__main__":
+    unittest.main()

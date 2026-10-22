@@ -226,6 +226,12 @@ public sealed class HomeApprovedStrataDeveloperArtifactSource : IStrataVerifiedI
         public override IReadOnlyList<StrataInstalledFile> OriginalCheckpointFiles => Grant.Selection.Selection.CheckpointFiles;
         public override InferenceModelRequirements OriginalRequirements => Grant.Selection.Requirements;
         public override InferenceEngineSupport? OriginalBuildSupport => Grant.Selection.BuildSupport;
+        public override StrataNativeProfile? InstalledProfile => Grant.Selection.Profile;
+        public override string? OriginalPythonInterpreterPath => Grant.Selection.PythonInterpreterPath;
+        public override string? OriginalEngineRoot => Grant.Selection.Selection.EngineRoot;
+        public override StrataInstalledFile? OriginalEngineFile => Grant.Selection.Selection.EngineFile;
+        public override IReadOnlyList<StrataInstalledFile>? OriginalHelperFiles => Grant.Selection.Selection.HelperFiles;
+        public override IReadOnlyList<StrataInstalledFile>? OriginalNativeLibraries => Grant.Selection.Selection.NativeLibraries;
         public override IReadOnlyList<int> OriginalCudaDeviceIndices => Grant.Selection.Selection.CudaDeviceIndices;
         public override void DemandCurrentOriginalInstallation()
         { lock (Owner._gate) if (Closed || !Owner._leases.Contains(this)) throw new ObjectDisposedException("Original developer-artifact READ lease"); Owner.DemandGrant(Grant); }

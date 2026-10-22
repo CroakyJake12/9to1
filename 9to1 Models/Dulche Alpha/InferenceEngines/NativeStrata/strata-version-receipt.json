@@ -1,0 +1,65 @@
+{
+  "schema": "strata-version-receipt/v1",
+  "purpose": "Separate the candidate pin's ORIGIN / ENGINE-VERSION / LICENSE receipt from the immutable source blob lock (strata-source-lock.json / prep/strata-v0.2.2-lock.candidate.json). The hardcoded origin string in dulche_strata_candidate_worker.cpp and StrataNativeWorker.cs (CANDIDATE_ORIGIN / origin text) must equal the `candidate.commit` below. A future upstream bump is a DATA change: update `candidate` (tag/commit/tree/engineVersion/license) and re-generate the blob lock from the verified archive with prepare-upstream-update.py; the wire contract is verified unchanged (see Tests/NativeStrataCandidateTransportTests.py VERIFIED_UPSTREAM).",
+  "verifiedAt": "2026-10-21T15:54:36Z",
+  "candidate": {
+    "tag": "v0.2.2",
+    "commit": "011c9e600a93bbc9fd451c563501b5831c32bbca",
+    "tree": "539755e6d6b799bd75a47225befc786c436f6d8b",
+    "engineVersion": "0.1.47",
+    "license": "MIT",
+    "repo": "https://github.com/Niko1221/Strata",
+    "archive": {
+      "bytes": 28901367,
+      "sha256": "ccfffeaabfb410b734b95d202576b98b3d2f2d28080a69ea8a3c49268d95c93a"
+    },
+    "sourceLock": "prep/strata-v0.2.2-lock.candidate.json",
+    "note": "Candidate pin BUMPED this pass to v0.2.2 (engine 0.1.47). The archive was acquired IN MEMORY and streamed (codeload tarball of commit 011c9e6...): 28,901,367 bytes, sha256 ccfffeaa...; full 4625-blob member rows cross-check against the authenticated tree (539755e6...) with 16 CRLF->LF EOL-export normalizations explained and 0 unexplained. No disk persistence of the ~28MB archive was performed to hold the >=256MiB /tmp reserve."
+  },
+  "previousCandidate": {
+    "tag": "v0.2.1",
+    "commit": "90767252f420e25223c739d604145ad15911d48b",
+    "tree": "f7adcc9073dc4bc12d5b001f1c85b58f2c2e9ead",
+    "engineVersion": "0.1.46",
+    "license": "MIT",
+    "repo": "https://github.com/Niko1221/Strata",
+    "archive": {
+      "bytes": 27912843,
+      "sha256": "2601d5df5cf2a210a674900e2c5984b6dbc8071e0290943a376005661989cbc4"
+    },
+    "sourceLock": "work/pc-worker/thunder-benchmark/prep/strata-v0.2.1-lock.candidate.json",
+    "note": "Known-good rollback candidate preserved from the prior pass (frozen in the earlier acceptance tree). The maintained legacy ro99/strata donor lock remains strata-source-lock.json (303 blobs, commit 015b0750...)."
+  },
+  "latestVerifiedUpstream": {
+    "tag": "v0.2.2",
+    "commit": "011c9e600a93bbc9fd451c563501b5831c32bbca",
+    "tree": "539755e6d6b799bd75a47225befc786c436f6d8b",
+    "engineVersion": "0.1.47",
+    "license": "MIT",
+    "repo": "https://github.com/Niko1221/Strata",
+    "archiveUrl": "https://codeload.github.com/Niko1221/Strata/tar.gz/011c9e600a93bbc9fd451c563501b5831c32bbca",
+    "status": "VERIFIED_ACQUIRED",
+    "archiveStatus": "ACQUIRED_IN_MEMORY_BYTES_SHA_VERIFIED",
+    "note": "Tag v0.2.2 -> annotated tag object e6fff4ad... -> commit 011c9e6... -> tree 539755e6... chain authenticated via GitHub API. Archive streamed in memory: bytes 28901367, sha256 ccfffeaa...; lock rows (4625) match the authenticated tree blob map exactly (16 CRLF->LF EOL normalizations explained, 0 unexplained). Candidate full build remains BLOCKED without the CUDA toolchain slot; package/lock preparation uses the actual v0.2.2 source."
+  },
+  "confirmedModels": {
+    "ornith": {
+      "id": "Ornith-1.5-122B",
+      "repo": "ornith-ai/Ornith-1.5-122B",
+      "revision": "7681ef608624e7532d8164128bcffdbdbaf1b1af",
+      "license": "MIT",
+      "architecture": "qwen3_5_moe",
+      "family": "qwen35moe",
+      "capability": "text-only (candidate relay); tools/vision/MTP never advertised"
+    },
+    "sage": {
+      "id": "Sage-A1.5",
+      "repo": "InternScience/Sage-A1.5",
+      "revision": "6bc623eacb712d79d27c0913e4816ccd33d41b0a",
+      "license": "Apache-2.0",
+      "architecture": "qwen3_5_moe",
+      "family": "qwen35moe",
+      "capability": "text-only (candidate relay); tools/vision/MTP never advertised"
+    }
+  }
+}

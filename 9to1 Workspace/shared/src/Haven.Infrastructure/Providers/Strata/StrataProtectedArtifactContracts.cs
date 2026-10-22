@@ -22,6 +22,30 @@ public abstract class StrataVerifiedInstallationLease : IAsyncDisposable
     public abstract string OriginalCheckpointRoot { get; }
     public abstract IReadOnlyList<StrataInstalledFile> OriginalCheckpointFiles { get; }
     public abstract InferenceModelRequirements OriginalRequirements { get; }
+    /// <summary>Trusted installed native profile identity (null => legacy V1/ABI 1 default). Supplied
+    /// only by the genuine installation owner for a verified candidate installation; a bare path/hash/
+    /// profile label alone grants nothing.</summary>
+    public virtual StrataNativeProfile? InstalledProfile => null;
+    /// <summary>Approved absolute interpreter path for the bundled tokenizer helper (candidate V2).
+    /// Null means no approved interpreter is supplied; the candidate then refuses text generation with a
+    /// precise missing-dependency cause. Never inherited from ambient PATH or secrets.</summary>
+    public virtual string? OriginalPythonInterpreterPath => null;
+    /// <summary>Candidate V2 bundle-closure root: the sibling engine directory (e.g.
+    /// runtimes/&lt;target&gt;/engine). Null for legacy V1 single-executable semantics. Supplied only by
+    /// the genuine installation owner for a verified candidate installation; a path/hash alone grants
+    /// nothing, and the whole engine/helper closure must be actually held and digest-pinned before use.</summary>
+    public virtual string? OriginalEngineRoot => null;
+    /// <summary>Candidate V2 engine sibling observation (base name "strata" under OriginalEngineRoot);
+    /// null for legacy V1.</summary>
+    public virtual StrataInstalledFile? OriginalEngineFile => null;
+    /// <summary>Candidate V2 helper text-path closure observations (f our pinned members under
+    /// OriginalWorkerRoot); null for legacy V1.</summary>
+    public virtual IReadOnlyList<StrataInstalledFile>? OriginalHelperFiles => null;
+    /// <summary>Candidate V2 optional native library closure observations (e.g. the K-quant MMQ
+    /// DSO libstrata_kq.so beside the engine under OriginalEngineRoot); null for legacy V1. Supplied
+    /// only by the genuine installation owner for a verified candidate installation; a path/hash
+    /// alone grants nothing, and the whole closure must be actually held and digest-pinned before use.</summary>
+    public virtual IReadOnlyList<StrataInstalledFile>? OriginalNativeLibraries => null;
     /// <summary>Actual verified package/build capability inventory, never copied from model
     /// requirements or user settings. An explicitly Home-reviewed independent developer-signed
     /// inventory is verified against the exact worker; actual native hello/hardware must still
