@@ -66,6 +66,9 @@
     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
     <!-- Build native binding and same genuine Linux Home/Files rig; no alternative test host. -->
     <Compile Include="BuildBrowseAppContentIntegrationTests.cs;BuildBrowseAppContentAuthenticTests.cs" />
+    <!-- Exact shared Boards CUI/session controls run in the maintained production App
+         headless host above, with the same source-fork renderer and no alternate host. -->
+    <Compile Include="BoardsBrowseAppContentSessionTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
     <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->
