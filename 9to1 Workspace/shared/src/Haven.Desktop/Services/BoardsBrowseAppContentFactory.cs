@@ -52,7 +52,7 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         var verified = _provider.GetRequiredService<VerifiedNotesRepository>();
         var admission = _provider.GetRequiredService<HomeNotesResourceAdmissionSource>();
         var approvals = _provider.GetRequiredService<HomeNativeApprovalWindowOwner>();
-        if (!verified.IsBoundToOriginal(notes) || !admission.IsBoundToOriginalNotes(notes) ||
+        if (!admission.IsBoundToOriginalNotes(notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(NotesRepository)), notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(HomeNotesResourceAdmissionSource)), admission) ||
             !approvals.IsBoundToOriginalComposition(_home))

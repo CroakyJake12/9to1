@@ -215,6 +215,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
                 if (_accepted) return Task.FromException(new InvalidOperationException("An accepted Boards close cannot be reversed."));
                 return _abort = Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(owner);
                     if (_aborted) return;
                     if (!IsCurrent) throw new InvalidOperationException("The original Boards preparation is no longer current.");
                     owner._prepared = null;
@@ -269,6 +270,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private async Task CloseOnUiAsync()
     {
         Dispatcher.UIThread.VerifyAccess();
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         var originals = new CloudflareOriginalTaskLedger();
         async Task Join(Task? actual)
         { if (actual is null) return; try { await originals.AwaitAsync(actual); } catch (Exception error) { originals.Capture(actual, error); } }

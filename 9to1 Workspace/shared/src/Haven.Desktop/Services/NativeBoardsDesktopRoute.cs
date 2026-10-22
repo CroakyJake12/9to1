@@ -147,7 +147,7 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute
                 throw new UnauthorizedAccessException(authorization.Message);
             // Retain both the actual dispatcher operation AND the returned original decision wait.
             // Global Home owns the review window; canceling this route only cancels its own wait.
-            var dispatch = originals.Invoke(() => Dispatcher.UIThread.InvokeAsync(() =>
+            var dispatch = originals.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task<HomeNativeApprovalDecisionObservation>>(() =>
                 originals.Invoke(() => _approvals.OpenAndObserveDecisionOriginalAsync(authorization.RequestId, token))).GetTask());
             var decisionTask = await originals.AwaitAsync(dispatch).ConfigureAwait(false);
             var decision = await originals.AwaitAsync(decisionTask).ConfigureAwait(false);
