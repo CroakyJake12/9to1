@@ -1,0 +1,502 @@
+{
+  "schema": "thunder-source-closure/v1",
+  "base_revision": "37ba63a92a509013435d61af73cbe17e246167bf",
+  "native_source_revision": "76fbd02073348f2bbca376c66049a0c01dff56a2",
+  "owner_probe_revision": "080f6ba0ec3d3b7a7763a504fa152b3cb64b758a",
+  "files": [
+    {
+      "path": ".github/scripts/thunder-artifact-audit.py",
+      "bytes": 40082,
+      "sha256": "bc43983d75051f7e178ad490adccd0ab78a62b056896de5b3ff2cb79485a45a2",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": ".github/scripts/thunder-cuda-compile.sh",
+      "bytes": 19534,
+      "sha256": "9f5ef0617f4e57c84e47f07f2217bf9fc249f2d9dc3ee5f1128b9355ae6d2f09",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": ".github/scripts/thunder-runner-preflight.sh",
+      "bytes": 5791,
+      "sha256": "99e20316a1fa6ae188c4da84b6f6b861cde35e96c791f94fcd9c73b5c0c2c2a5",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": ".github/workflows/haven-chat-model-ci.yml",
+      "bytes": 11225,
+      "sha256": "5c96158b78f55cb5a6bf787b2c2700447938c89c7d0d84942cd21c18b5b420d0",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "different",
+      "base_sha256": "a6202ac547c753888de35acd218a78e1d412c885b876eb0eb37663084f3f9a64"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Catalogue/LocalModelRegistry.cs",
+      "bytes": 12828,
+      "sha256": "07e46c3b8e92baf1cc224e39bf2066bee235d2b29b2617c7ea40f05bd4e89b70",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "different",
+      "base_sha256": "71de73060bb475c17643325bdd9a6a49d55f98a724b76abd0a23efe4b06a60ac"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Catalogue/ModelAdmissionPolicy.cs",
+      "bytes": 9406,
+      "sha256": "39730d820bc5539d94e722fdbf0d5cf7c4f7cf87ce8c912c6eab1f028de8dc9d",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Domain/DenRecords.cs",
+      "bytes": 24796,
+      "sha256": "0baef2a6e3b2dec4ee6172e67696268033df114f671fcb682cff48dede5eeaf0",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "different",
+      "base_sha256": "f0df3229244576c20da2aab7b97a2a8ad9ae20fb46440b34c3dcaf5999bf32bf"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/InferenceEngineContracts.cs",
+      "bytes": 13303,
+      "sha256": "6a5809484a7040de48a8e63463c4973a3b4c753aa97c338992d2b138f7f20750",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "127fdf7e2c1a9fbee6b416747fa13bd39b24487a46aafaab1fb6f89073cebe7d"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/ManagedInferenceEngineFactories.cs",
+      "bytes": 31680,
+      "sha256": "2233c8e770fff5a6ab341d6e743ad421381ad12ce56496fbc3600a4663c709f9",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "741e784d04dd5ed5ae02f3fbfe222d3571753d16d7fe8205cf02ef0a0e575aba"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/CMakeLists.txt",
+      "bytes": 8830,
+      "sha256": "447462042be90effb586603a30c826b3f47b2163f822c660a17e91bb9d87c310",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "different",
+      "base_sha256": "b3dbeca1a36e7cc7de855308534fd250ef0f2b60a2a4e372054833ad02e252ac"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/MAINTAINED-FORK.md",
+      "bytes": 8858,
+      "sha256": "8555428187a9d1b59be2a6d20fe16ced51751267121733eb3e7bc1d857bc283e",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "different",
+      "base_sha256": "75f70bc0dda863d0f1dfba79d714f88feb16e745dfbbfc72963bb82b48620b08"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/build-package.py",
+      "bytes": 29686,
+      "sha256": "518325d33ac6da9e2a3474fe097ed1fffa317bfa1c20ffbad6cb9c6c68965b21",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "different",
+      "base_sha256": "c97b596477a9c06d82d882c9ad571ffbbfa82243811e4bbd02fbd3d646cd2acf"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/dulche_child_process.h",
+      "bytes": 27593,
+      "sha256": "418603b9e64bb2b048ab26350f03cdc05f2268bf4c1029865c1dcd05eba6ad3c",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/dulche_strata_candidate_worker.cpp",
+      "bytes": 55271,
+      "sha256": "dcf582dcd9236ca1da9a271588e508e1ce8598afcdb850e4994639382032e861",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/llama.cpp-dependency-lock.json",
+      "bytes": 1644,
+      "sha256": "88b3584ed245cd7f25ce849ac15a6964ee7b6fb400e9cb0b8e0f62f6922070eb",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prep/strata-v0.2.2-lock.candidate.json",
+      "bytes": 1169819,
+      "sha256": "9952dc3f5bb79c3cd44e831b94039ba564fdc600e21a0317dcecc3e110eeaebf",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/prepare-upstream-update.py",
+      "bytes": 13959,
+      "sha256": "4fe8bfb2bde1b429c9b9b3c91b2a17e763b9fcd2b248efc51ff5cacbeb9e9a5b",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/strata-runtime-dependencies.json",
+      "bytes": 2692,
+      "sha256": "fd79f5b1949daa8c555de16daba03a242f2aa1dca0de1dd9ff042c8a98c16dbb",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/strata-version-receipt.json",
+      "bytes": 3980,
+      "sha256": "9be62ed98db7098e104a7a1be4ceaf173e1b6034d94bf3db4ee559cd03c49226",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata/strata_tokenizer_helper.py",
+      "bytes": 13749,
+      "sha256": "6181ac1e76a9a0373c7dd7da3edcc282290322574116ba88129994550bb877e2",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/StrataNativeWorker.cs",
+      "bytes": 84040,
+      "sha256": "b7084c80c0f212554bf55ff7484e5ad2601cf6deb5f073dad930a0b8d49ff692",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "60cb3c99879c62c754d11423cbe219905dc7a279d0c9a1eca5e384f0eee43091"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/InferenceEngines/StrataRawModelProvider.cs",
+      "bytes": 3857,
+      "sha256": "25ea53b589dbc7e02a3d87f3d32dda5576f93725cdb5e42c34b663fce5203367",
+      "provenance": "accepted-managed-recovered-exact-qa2",
+      "base_status": "different",
+      "base_sha256": "37bd4386c15b0fcd9880553d9d01d96213c4a6122bb21fdce2485e92648c838d"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Services/DulcheDen.cs",
+      "bytes": 59752,
+      "sha256": "56bbfd05ca41b37da76d15c38de2d4a8eac92edc5a4294966c2405f0fafa29aa",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "different",
+      "base_sha256": "22c07d53c5f6ef3f2f6d8aaeda86522a83918f166beb1c9660e3cf9ba5ed0b94"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAdmission/Dulche.DenAdmission.Tests.csproj",
+      "bytes": 813,
+      "sha256": "555b5ae1059a9db9106fbea1cf54184d56320bfcef335a55800c8ed76017f712",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAdmission/ModelAdmissionPolicyTests.cs",
+      "bytes": 11880,
+      "sha256": "55d3f1f46fe0fb3c42c0fbb787f8c1339675d4302076fbe6737dfc64bc3f233a",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/DenAdmission/ModelRegistrationServiceTests.cs",
+      "bytes": 19497,
+      "sha256": "69a2cad2f66dd5d51aa6a3a0c9a7cd6c7651dd9d1f996c321536231b760dc3b6",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Agents.Tests.csproj",
+      "bytes": 910,
+      "sha256": "2feab4a3dcf3afda38c776e7231ca593f1768dddf4bfe9d9db3390a94daf36dd",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "different",
+      "base_sha256": "b784f05850efac8b4218592ab13f9a8eb6c0fd4e4827d74c5ff6a918bf9b8755"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/Dulche.Runtime.Tests.csproj",
+      "bytes": 1237,
+      "sha256": "3a27b41089534d6132bb99de869a60da840b6b4b14a3bd18a8fe9c0170d93969",
+      "provenance": "accepted-managed-B6-consumer-frozen",
+      "base_status": "different",
+      "base_sha256": "69a31830a0d8e767f56cb5c1d05b968f3451b5ed2acb5f4fe98b4e97d8020099"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/ManagedProviderDulcheAdapterOriginalTests.StrataCandidateFactorySelection.cs",
+      "bytes": 16657,
+      "sha256": "3090d24214f5b4cb812a468e64bf9bd90a625810c6ed2712f40c74f706780d73",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataBuildEngineArgsFixture.cpp",
+      "bytes": 5333,
+      "sha256": "c79fd844f25b0c73bd3a77e32d585cf13005de2bf00323ef7d6fa399378df775",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataCandidateManagedWireTests.py",
+      "bytes": 14123,
+      "sha256": "8fe4738df7fd217ba8c4b4f1290a16239c7dbdbfdd4074b72d04d9a5539024f3",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataCandidatePlanTests.py",
+      "bytes": 5444,
+      "sha256": "60b6d556420ac7e0005b02d8ec93ffcc1516e77e2f729eb3afab70c247806503",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataCandidateTransportTests.py",
+      "bytes": 14385,
+      "sha256": "cc6767d8466917daa07317edff55f1ac90100e95e808886ee6eae79725500a8e",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataCapabilityDispatchTests.py",
+      "bytes": 9784,
+      "sha256": "8747d55dc30da0cab4b44367e758d83725871c38de27289058c1edfdfb5ba542",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataChildOwnershipFixture.cpp",
+      "bytes": 5640,
+      "sha256": "9dd20302302ed3b1d4ca6511a617678e75a9690d2ca22116937c8a6bef40fa2a",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataChildOwnershipFixtureTests.py",
+      "bytes": 7230,
+      "sha256": "072aad7ce105f2e92a569ebda50939358789681f8a74e33766c4d4ba65953326",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataDescendantAfterReapFixture.cpp",
+      "bytes": 4411,
+      "sha256": "2a2f9150bff0abd7b55daf895528270882d737e297be6cc5d6d325d1c7b2152e",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataEOLFixtures/canonical-tree-blobs.json",
+      "bytes": 1393,
+      "sha256": "ca5a17a7184fab59b577f9583b028239026721e9b5fcac55819d616bdafbf302",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataEOLFixtures/eol-real-bodies.json",
+      "bytes": 61969,
+      "sha256": "2f81c7bfd8adc26804d84a0f9962b753997e031fe9641d486e41af350ede8a77",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataEOLFixtures/tq-vendor-bodies.json",
+      "bytes": 11720,
+      "sha256": "4a793cb045fc846aef94cebf4c6f3595325b54f3e8f1474fadc4606fbf740bb1",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataEOLVerificationTests.py",
+      "bytes": 11534,
+      "sha256": "4b3d95ec152c4443fe777cd1516b79244c5ecf8abf13102521a62ffa29466781",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataNativeFixtureTests.py",
+      "bytes": 10455,
+      "sha256": "c45cfb89c85ff75a4607496499d7e309d6eca0d9f96a7d2403a1a903a5af3c7c",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataPackageTests.py",
+      "bytes": 34500,
+      "sha256": "b57a28d63599e5e5b3f5c4a6bf1a9ca19160ec7787763b886111792e703a365d",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "different",
+      "base_sha256": "5285c359bff1e63f071d5d07af961679bee8d83fc3b9237c4c840f23b1bc3c34"
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataRpathParityFixture/CMakeLists.txt",
+      "bytes": 607,
+      "sha256": "38d7632d6aa6855076b89b8c18ebc5139ec21067e142ffafbfa5faab4d12cf70",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataRpathParityFixture/main.cpp",
+      "bytes": 354,
+      "sha256": "f64de8f94a897874cc4a3ffa648a3532820fca7173e7bec98455b915553665c5",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataThunderInventoryFixture.sh",
+      "bytes": 4318,
+      "sha256": "ea04ff40c6d88267ed9ae7e179ae86393b9f3b4b30bf1ac344cb61ac3aa9f85f",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataThunderPathFixture.sh",
+      "bytes": 1790,
+      "sha256": "691739e7e12bc0a6c6ae9b951176c8eb8e98cb44bae0fc67bf94db48f5c56ebe",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataThunderPythonBootstrapFixture.sh",
+      "bytes": 2639,
+      "sha256": "3a1308be0b11a451a08a0ae9423909777aaa67be555ad135fe43b6d9829bef14",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataThunderShellFailureJsonFixture.sh",
+      "bytes": 3381,
+      "sha256": "1970efdc647b0bd955965f3fc5acb2f14a1e29b3db35daeb4173ced3bde77f05",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataTokenizerHelperTests.py",
+      "bytes": 12909,
+      "sha256": "7c579a151dfccd0e899cdc017cfd48f6d695caaa13049ad659e3bcb85150f3be",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/NativeStrataUpdateToolTests.py",
+      "bytes": 14702,
+      "sha256": "8ed52bec53ddf835bd1ef38fd66a1234162cf5dc546056e91ed6788e64b86735",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Models/Dulche Alpha/Tests/ThunderCandidateAcceptanceTests.cs",
+      "bytes": 4944,
+      "sha256": "268e3d59328c8113e2f452e206ca73000b245dbea3eced72333305c987f260f7",
+      "provenance": "accepted-managed-recovered-exact-qa2",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/Strata/HomeApprovedStrataDeveloperArtifactSource.cs",
+      "bytes": 28313,
+      "sha256": "efb59ddbfd184a62309c8c0d5402c4942f1c7fa4f60a48c64c438abb9e0a725c",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "31a7898a9d497d8aec5c8f9d9572d24c11d2300e2185e7d4875ad709834be688"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/Strata/StrataDeveloperArtifactSelection.cs",
+      "bytes": 24294,
+      "sha256": "30c27e549b8773bdba44f42c697952e675dedd2572569aae22cee17216ba24c2",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "8cf22301479813e4c56ac446e20dbf07d772b913c62d7e21725dea230845b7e2"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/Strata/StrataHardwareObservationSource.cs",
+      "bytes": 21401,
+      "sha256": "a8039baee1715cbd9c8310676d0deee403373cc3df1fa7027616a0dc71a4153b",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "0fd2ee08af972fe2ed5f23352b75b224ab157205a873444adc0d0d0965adcc95"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/Strata/StrataNativeArtifactSource.cs",
+      "bytes": 56196,
+      "sha256": "8c6186391ceb5659f001821114ed67725a9a07514c5c379cd5037d7bd6943d83",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "0e5717a85cea31f3d0e8cfb93480ff02f1b7707a68fed3482fc6debaea679668"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/Strata/StrataProtectedArtifactContracts.cs",
+      "bytes": 5678,
+      "sha256": "606a38fb3d3f612aa33ef8e0d2f7989d93a1e574e12742434d1bd36563f78954",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "8765420af60f1f0fe416d38f7ad6305eba4da237e5dc1f8a6eb75991e9678b77"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/StrataDeveloperArtifactAuthorityTests.cs",
+      "bytes": 38425,
+      "sha256": "384bb76b87a1b0cdfa40ef21a244983e5d906492b33e8cf4d72f8b84f42e2211",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "different",
+      "base_sha256": "f190e311e185d7a902d89359a607942d095aab1bbdd29d22207c6dae4a15d257"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/StrataHardwareObservationSourceTests.cs",
+      "bytes": 9377,
+      "sha256": "f90622e51ed39b0af708115e2fa6e469261f785819e37fd0946390607de402b1",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/StrataKqDsoCustodyTests.cs",
+      "bytes": 7366,
+      "sha256": "f1e9a7c416ff85e318a0e973c16a9a586d3abf1e5d25ade1b1c55f88b83eaf39",
+      "provenance": "accepted-managed-A36-custody-frozen",
+      "base_status": "absent",
+      "base_sha256": null
+    },
+    {
+      "path": "work/pc-worker/thunder-benchmark/test_thunder_artifact_audit.py",
+      "bytes": 33111,
+      "sha256": "8a07ef42a6c21b9f07894d98e1d5f44e36afc94c10b1476bed3da6e32a77ccef",
+      "provenance": "public-native-ci-source-76fbd02073348f2bbca376c66049a0c01dff56a2",
+      "base_status": "absent",
+      "base_sha256": null
+    }
+  ],
+  "total_files": 61,
+  "total_uncompressed_bytes": 2171095,
+  "scope": "Exact reviewed managed source/tests plus already-public native package, owning native tests and compile/audit scripts. Owner-specific probe files are excluded; retrieve published probe revision080f6ba0ec3d3b7a7763a504fa152b3cb64b758a separately only within authorised private observation workflow. No model weights, credentials, personal PC network identifiers, private evidence or private worker checkpoint narratives. Overlay onto exact base revision; this assembled combination has not been built or GPU tested.",
+  "source_checkpoint_revision": "eb0da4f082b2e82512b22ffabf17a28a3057fafd",
+  "assembly_verification": "Source byte preservation verified. Assembled combination NOT BUILT / NOT TESTED; prior93 component cases belong to earlier exact tested graph.",
+  "publication": "Review material; does not imply source published or deployment accepted."
+}
