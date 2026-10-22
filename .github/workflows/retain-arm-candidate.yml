@@ -1,0 +1,31 @@
+name: Retain existing failed ARM candidate without rebuilding
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: retain-arm-candidate-39698883180
+  cancel-in-progress: false
+jobs:
+  retain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified 2026-10-22
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts/native16-arm64
+      - name: Verify and retain original immutable archives and failure identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/native16-arm64/retain-immutable-artifacts.py --output "${{ runner.temp }}/original-arm-artifacts"
+      - name: Preserve original artifacts behind the existing authenticated Actions access
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
+        with:
+          name: retained-original-arm-run-39698883180
+          path: ${{ runner.temp }}/original-arm-artifacts/
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
