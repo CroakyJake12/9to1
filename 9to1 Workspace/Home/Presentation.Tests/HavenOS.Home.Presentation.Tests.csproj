@@ -12,11 +12,18 @@
                       SetTargetFramework="TargetFramework=net10.0" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/AssemblyInfo.cs" Link="AssemblyInfo.cs" />
     <Compile Include="HomePresentationTestApp.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/HomeNativeApprovalDecisionContinuationTests.cs" Link="HomeNativeApprovalDecisionContinuationTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/HomeNativeApprovalWindowOwnerTests.cs" Link="HomeNativeApprovalWindowOwnerTests.cs" />
+    <Compile Include="../../shared/tests/Haven.Desktop.Tests/NativeHomeApprovalRetirementGuardTests.cs" Link="NativeHomeApprovalRetirementGuardTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/HomeDashboardCuiRenderTests.cs" Link="HomeDashboardCuiRenderTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/HomeDiscoverCuiRenderTests.cs" Link="HomeDiscoverCuiRenderTests.cs" />
     <Compile Include="../../shared/tests/Haven.Desktop.Tests/DashboardWidgetCanvasTests.cs" Link="DashboardWidgetCanvasTests.cs" />
     <Using Include="Xunit" />
-    <PackageReference Include="Avalonia.Headless.XUnit" />
+    <!-- SAME approved source-fork headless backend as the portable Desktop owning tests. -->
+    <ProjectReference Include="../../../framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.XUnit/Avalonia.Headless.XUnit.csproj" />
+    <ProjectReference Include="../../../framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj" />
+    <ProjectReference Include="../../../framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj" />
+    <PackageReference Include="Avalonia" ExcludeAssets="all" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>

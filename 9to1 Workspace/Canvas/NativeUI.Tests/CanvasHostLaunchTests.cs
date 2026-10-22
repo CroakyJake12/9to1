@@ -60,8 +60,13 @@ public sealed class CanvasHostLaunchTests
             var search = Assert.IsType<TextBox>(Find(window, "canvas-search-query"));
             search.Text = "Maths";
             Click(Assert.IsType<Button>(Find(window, "canvas-search")));
-            await UntilAsync(() => Cards(window).Length == 1 &&
-                AutomationProperties.GetName(Cards(window)[0]).Contains("Maths", StringComparison.Ordinal));
+            await UntilAsync(() =>
+            {
+                var cards = Cards(window);
+                if (cards.Length != 1) return false;
+                var name = Assert.IsType<string>(AutomationProperties.GetName(cards[0]));
+                return name.Contains("Maths", StringComparison.Ordinal);
+            });
             Click(Assert.Single(Cards(window)));
             await UntilAsync(() => window.GetVisualDescendants().OfType<TextBlock>().Any(text =>
                 text.Text?.Contains("no Rnote engine state", StringComparison.Ordinal) == true));

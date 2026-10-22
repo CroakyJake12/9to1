@@ -204,7 +204,7 @@ public sealed class CanvasNativeInputTests
         public HostedItemId FolderId { get; private set; }
         private ResourceAuthorizationService _resources = null!;
         public ICuiSceneReadiness Readiness => ReadinessFor(Opened.CasRevisionId);
-        public ICuiSceneReadiness ReadinessFor(FilesRevisionId revision) => new HomeResourceCuiReadiness(Runtime, Profiles, _resources,
+        public ICuiSceneReadiness ReadinessFor(FilesRevisionId revision) => new CanvasOriginalResourceReadiness(Runtime, Profiles, _resources,
             "canvas.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", FileId.ToString(), revision.ToString(), ResourceAccess.Read)]));
         public async Task<CanvasRnoteDocument> OpenDocument(CancellationToken ct)
         {

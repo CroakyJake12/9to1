@@ -178,9 +178,7 @@ public sealed partial class CanvasHostWindow : Window
         _create = new(_files, Get<HomeResourceOperationBroker>(), actors);
         _stroke = new(_files, Get<HomeResourceOperationBroker>(), actors);
         if (!workspace.Configuration.AppFolders.TryGetValue("canvas", out var folder)) throw new InvalidDataException("The Files workspace has no Canvases folder.");
-        var listed = query.Length == 0
-            ? await workspace.Provider.ListAsync(folder, new("", Limit: 100), page, ct)
-            : await workspace.Provider.SearchAsync(new(query, ParentId: folder, Limit: 100), page, ct);
+        var listed = await workspace.Provider.ListAsync(folder, new FilesSearchQuery(query, Limit: 100), page, ct);
         var documents = new List<HostedItemMetadata>();
         foreach (var item in listed.Items.Where(item => item.Kind == HostedItemKind.Artifact))
         {
