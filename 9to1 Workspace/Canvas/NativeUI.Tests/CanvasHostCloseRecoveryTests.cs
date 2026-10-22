@@ -122,6 +122,38 @@ public sealed class CanvasHostCloseRecoveryTests
         }, CancellationToken.None);
     }
 
+    [Fact]
+    public async Task Repeated_successful_searches_prune_success_receipts_without_losing_the_original_failed_proof()
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        await native.Dispatch<bool>(async () =>
+        {
+            await using var fixture = await CanvasHostLaunchTests.Fixture.CreateAsync();
+            var window = await fixture.ShowAsync();
+            RejectSearch(window);
+            var failure = await fixture.ExpectSingleCommandFailureAsync();
+            Assert.Equal(1, window.RetainedReadProofCount);
+            for (var index = 0; index < 6; index++)
+            {
+                var previous = window.LatestOriginalCommand;
+                Assert.IsType<TextBox>(CanvasHostLaunchTests.Find(window, "canvas-search-query")).Text = "Revision " + index;
+                CanvasHostLaunchTests.Click(Assert.IsType<Button>(CanvasHostLaunchTests.Find(window, "canvas-search")));
+                var actual = Assert.IsAssignableFrom<Task>(window.LatestOriginalCommand);
+                Assert.NotSame(previous, actual);
+                await actual;
+                Assert.True(actual.IsCompletedSuccessfully);
+                Assert.Equal(2, window.RetainedReadProofCount); // prior fault + newest success only
+            }
+            var closed = false; window.Closed += (_, _) => closed = true;
+            window.Close();
+            await CanvasHostLaunchTests.UntilAsync(() => closed && !window.IsVisible);
+            Assert.Same(failure, window.RecoveredNoEffectCloseFailure);
+            Assert.True(window.OriginalCloseTask!.IsFaulted);
+            Assert.Same(failure, await Record.ExceptionAsync(() => window.OriginalCloseTask!));
+            return true;
+        }, CancellationToken.None);
+    }
+
     private static void RejectSearch(CanvasHostWindow window)
     {
         Assert.IsType<TextBox>(CanvasHostLaunchTests.Find(window, "canvas-search-query")).Text = new string('x', 257);

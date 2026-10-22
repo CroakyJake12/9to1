@@ -16,6 +16,7 @@ public sealed partial class CanvasHostWindow
     private Task? _latestOriginalCommand, _originalChildrenClose;
     private bool _nativeOwnerAcquired;
     internal Task? LatestOriginalCommand => _latestOriginalCommand;
+    internal int RetainedReadProofCount { get { lock (_noEffectGate) return _noEffectReads.Count; } }
     internal Exception? RecoveredNoEffectCloseFailure { get; private set; }
 
     // UI/native-owner observation only. Never read these controls from the CUI validator,
