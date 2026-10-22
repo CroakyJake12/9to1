@@ -27,83 +27,57 @@
     "unsupported": "No arbitrary shell/program payload, unknown scope, provider/system change, new model request or credential access; refuse and report.",
     "before_model_or_hardware_execution": "Exclusive shared-model custody and separate explicit owner/native authorization remain mandatory; this test-only task supplies neither."
   },
-  "sequence": 7,
-  "task_id": "THUNDER-DESKTOP-20261022-07",
-  "previous_task_id": "THUNDER-DESKTOP-20261022-06",
-  "expected_previous_inbox_revision": "b1b76fd0679ac1d69e70ce6b787b562e3e324831",
-  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_RESULT",
-  "operation": "run_named_owning_check",
-  "owner_context": "Owner says no laptop worker exists right now. Task5 directly observed real competing model traffic399to401, but did not identify its originating client. Preserve this distinction: do not infer a laptop consumer or ask the owner to stop one.",
-  "objective": "Finish/checkpoint Task6 including actual five-run baseline/cache/unknown caller evidence, then resolve the pinned tokenizer module in a private overlay and run bounded CPU/loader capability readiness. Prepare the smallest documented reversible exclusive upgrade transaction; do not load candidate models or alter the existing serving engine in this task.",
+  "sequence": 8,
+  "task_id": "THUNDER-DESKTOP-20261022-08",
+  "previous_task_id": "THUNDER-DESKTOP-20261022-07",
+  "expected_previous_inbox_revision": "409ed1402bb55160909b91b229c99ac8f567730d",
+  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_NATIVE_SCHEDULE_RECEIPT",
+  "operation": "stop_and_checkpoint",
+  "owner_context": "Latest direct owner instruction in the authenticated Root conversation22Oct2026: Tell it to power off my pc at23:45. This explicitly authorises this one-time PC power-off at the existing testing deadline, not other system changes.",
+  "objective": "Arrange actual one-time desktop power-off at23:45Europe/London(BST) tonight22October2026, equivalent22:45UTC. Preserve/checkpoint current Task7 and all9to1/Thunder work first; confirm actual scheduled host/time/receipt or exact native permission blocker. Do not merely claim the instruction was sent.",
   "scope": {
-    "mode": "PINNED_PRIVATE_TOKENIZER_AND_CPU_LOADER_READINESS_NO_MODEL_EXECUTION",
-    "repository_paths": [
-      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata"
-    ],
-    "private_stage": "Existing exact staged candidate archive; new task-owned private overlay outside tracked trees. No edits to installed venv, source, server/model configuration or global/user package environment.",
-    "allowed_acquisition": "One exact807783byte official PyPI CPython3.12 Linuxx86_64 regex wheel plus exact1113921byte pinned upstream generate.cpp if needed; bounded hashes required. No toolkit/driver/SDK/models, fullclone or newworkers.",
-    "preservation": "Finish and retain Task6 final receipt before admission; preserve all five valid runs and first/repeated cache distinction, failed admission, actual source/engine identity, raw logs, Task4patch and all previous work.",
-    "no_actions": [
-      "No candidate model load, second resident engine, inference requests, production selection/promotion, old-engine stop/restart/unload, service/process hold, firmware/driver/security/power/provider changes, globalinstall or sourcecommit/push.",
-      "No fake laptop consumer or inferred exclusive lease; actual inactive observation is not a durable reservation.",
-      "Use existing worker/native approvals and supported bounded tools only; no arbitrary shell payload."
+    "mode": "OWNER_AUTHORISED_ONE_TIME_POWER_OFF_AND_SAFE_CHECKPOINT",
+    "private_evidence": "Existing task-owned private receipts and source/evidence custody; no tracked source edits required",
+    "before_schedule": "If Task7 is currently running, checkpoint its exact state and bounded owned processes. Schedule may be registered now without interrupting ongoing safe CPU work; ensure completion/checkpoint before the target.",
+    "after_schedule": "Task7 may continue within its existing no-model/no-service-change scope and window after actual OS schedule confirmation. If waiting cannot persist, the verified OS schedule is the authority; report agent liveness limitation.",
+    "forbidden": [
+      "Do not power off laptop/coordinator/cloud or wrong machine.",
+      "Do not infer schedule success from exit0 alone if an actual receipt/state query is available.",
+      "Do not widen privileges, alter OS security, disrupt unrelated processes early, erase source/results or claim unscheduled power-off."
     ]
-  },
-  "candidate_artifact": {
-    "source_CI_run": 39660364662,
-    "source_revision": "0749524b904a3b8035d68b2915197293c87fbc11",
-    "GitHub_artifact_id": 12377275853,
-    "private_owner_project_folder": "9to1 in the existing personal OneDrive connection",
-    "file_name": "thunder-cuda-compile-install-closure-0749524b-20261022.zip",
-    "bytes": 42950082,
-    "sha256": "91bbcfe7ac5ff9f0c0b1293341b2ca3d440964c76d6b4b1c5de1f49643f502b5",
-    "actual_Root_custody": "Cloud downloaded actual authenticated GitHub artifact using connected download interface, verified provider ZIP bytes/SHA, privately uploaded once, then actual raw OneDrive readback matched full43MB SHA and owner-only effective ACL. This proves staging bytes, not runtime.",
-    "upstream": "Niko1221/Strata v0.2.2 engine0.1.47 commit011c9e600a93bbc9fd451c563501b5831c32bbca",
-    "toolchain": "CIbuiltLinuxx64 ELF64 sm120 CUDA13.0 portable; actual target compatibility stillmustbechecked",
-    "expected_members": 13,
-    "expected_uncompressed_bytes": 100992631,
-    "engine_sha256": "318644d80a876883d43241213008244708818fbf32cd8ff33772a52e081e86a7",
-    "engine_bytes": 85138528,
-    "worker_sha256": "d134c92af233f5af0f551c58514d4bd6e089eceb8b05685f2c79f36c266226c3",
-    "kq_DSO_sha256": "c5e7b777367c3d2d0a3c305dea65016a0e4a41e9971fca0f00124f7a22dc2aa2",
-    "source_parity": "Root raw-source check at CI074 matches exacteb candidate.cppdcf582... and childheader418603... byte-for-byte. Build receipt, source lock, MITStrata/GGMLlicences and tokenizer closure are inside ZIP. Do not relabel CPUfixtures as GPUacceptance.",
-    "transport": "Use actual available connected search/fetch/rawfile tools by exact file name and current owner ACL, or the exact authenticated GitHub artifact interface. No credentials/signed URLs in Git or results. Missing tool/auth => precise stagingBLOCKED, no owner setup request or privacy bypass.",
-    "extraction": "Validate paths/no traversal/symlinks/bombs and declared sizes, preflight disk/memory, extract only to fresh owned private directory preserving licences/source lock. Set executable permission only for verified owned ELF files if archive lost modes; never modify installed system files. Inspect readelf/loader/library/module compatibility without loading models; record exact missing dependencies. No giant rebuild."
   },
   "checks": {
     "named_checks": [
-      "task06_final_receipt_preserved",
-      "private_pinned_python_module_closure",
-      "real_helper_metadata_identity_encode_decode_CPU_readiness",
-      "candidate_loader_and_model_capability_static_and_safe_help_only",
-      "documented_exclusive_upgrade_and_rollback_recipe"
+      "verify_actual_pc_clock_and_timezone",
+      "owner_authorised_poweroff_OS_schedule",
+      "read_back_exact_poweroff_schedule",
+      "safe_current_task_checkpoint_before_deadline"
     ],
-    "python": "Use exact staged helper and donor modules with real configured GGUF tokenizer/chat-template metadata only, bounded CPU/memory/time, no weights/GPU/model inference. Prove actual loaded regex2026.9.29/Jinja2 3.1.6 origins and isolatedoverlay; real identity and nonpersonal encode/decode/render where declared supported, unsupported currentqwen4exp metadata => honestcapabilityrefusal. Retain actualfailures, no guessed token ids/template.",
-    "loader": "Actual dynamic loader verification permitted without starting GPU/model execution; candidate --help/version allowed ONLY after inspecting exact pinned source confirms exit before CUDAcontext/model/resourceallocation. Otherwise leaveNOTRUN with precise reason.",
-    "next_upgrade": "Read existing documented serving/supervisor lifecycle/reservation/drain and rollback controls; identify exact current request ingress owner without reading prompts/credentials. Return a reviewable reversible existing/upstream/candidate benchmark recipe, immutable oldbinary/config/model identity and known-goodrestore. No new maintenance/hold mechanism or servicechange here. Need actual exclusiveadmission before laterGPUload; empty samplesalone do not establish reservation.",
-    "bounds": "All operations <=60secondtoolwait, subprocessbounded, minimal dependencies, resourcefloors; stop22:45UTC/native denial/ownerrevocation."
+    "required_result": "Reply promptly with actual ACK, real verified scheduled UTC/localtime and scheduling mechanism/receipt, or precise BLOCKED permission/error. Keep any sensitive OS metadata private.",
+    "bounds": "No long blocking sleep; <=60second tool waits; honour owner revocation. Hardware/model actions end22:45UTC, and owner specifically requests power-off then."
   },
   "outputs": {
-    "destination": "Existing private thread and task-owned raw receipts",
+    "destination": "Existing authenticated private desktop thread and task-owned result receipt",
     "fields": [
-      "Task6finalresult/path/hash and exact5rawrows",
-      "Task7ACK/inputpins/actualinterpreter/modulefiles",
-      "CPUhelperresults or exactcapabilityfailure",
-      "actualno-model loader/help result orNOTRUN",
-      "precise currentconsumer/ingress and reversibleupgrade/rollback admissiongate"
+      "Task8ACK",
+      "actualpcidentity/timezone/currenttime",
+      "actualOSscheduledpowerofftimeUTC/local",
+      "verifiedreceiptpath/hash/commandresult or exactBLOCKED",
+      "Task7/source/checkpointpreserved",
+      "safecheckpointbeforedeadlineplan"
     ],
-    "privacy": "No credentials/signedURLs/privateprompts/unrelatedpersonaldata; publictask contains onlypublic immutable dependency pins."
+    "privacy": "No credentials/signedURLs/privateprompts/unrelatedpersonaldata."
   },
-  "runtime_dependency": {
-    "name": "regex",
-    "version": "2026.9.29",
-    "canonical_sdist_sha256": "8b5fcc4771732191b2b7d1dd68d8f0353f47f8d90b6150f6dce58bf1112442cb",
-    "wheel": {
-      "filename": "regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
-      "bytes": 807783,
-      "sha256": "39ab5894d971f9ac68baa6eca5c50387db579cfcacf36ae8df3feceb1815e6d0",
-      "url": "https://files.pythonhosted.org/packages/26/83/d2fbd2e4e3afb1167daa825187d196f313cbaa1a4768f311fb041bb0e3d2/regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-    },
-    "installation": "Private task-owned --target overlay using existing interpreter/tooling, no-deps/no-index/no-compile, after exact hash/size and real platform tag match. Never mutate installed existingvenv. jinja2 existing3.1.6 and actualMarkupsafe may be reused with retained path/version/hash closure. Missing tooling/compatibility => preciseBLOCKED."
+  "shutdown": {
+    "owner_requested": true,
+    "local_date": "2026-10-22",
+    "local_time": "23:45:00",
+    "timezone": "Europe/London",
+    "UTC": "2026-10-22T22:45:00Z",
+    "target": "This verified pc desktop, not laptop/coordinator/cloudhost",
+    "schedule_now": "Use genuinely supported installed OS shutdown scheduling through ordinary native permissions. Verify actual host/timezone/current clock before absolute scheduling; retain a real schedule/logind/OS timer receipt. Prefer native OS schedule rather than relying on agent remaining active or a long sleep.",
+    "checkpoint_before": "Stop admissions and safely checkpoint all owned in-flight experiments/source/results before22:45; leave time to save actual uncommitted work, failures, baseline and rollback instructions. Do not kill unrelated processes early or discard data.",
+    "preserve_existing_schedule": "First inspect existing scheduled shutdown/timer metadata. If exact requested shutdown already exists verify/reuse it; do not duplicate, cancel or overwrite unrelated scheduled work. Conflicting schedule or insufficient native permission => report exact blocker, no privilege/security bypass.",
+    "limitations": "No firmware/driver/security/powerlimit/clock/provider/credential changes or new remote shell. One authorised power-off is the only new system action. No restart/reboot or earlier shutdown."
   }
 }
