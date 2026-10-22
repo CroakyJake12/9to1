@@ -74,6 +74,9 @@ progress and next executable action. Use COMPLETED, VERIFIED, CHECKPOINT,
 WORKING, STALLED or BLOCKED. Record unexecuted checks explicitly as NOT RUN in
 evidence; do not invent a passing task. `dashboard` renders the actual structured
 state. `verified_revision` defaults to null; observed HEAD is a different field.
+VERIFIED records require matching task/evidence source revisions, retained regular
+evidence files, actual steps and a different reviewer/implementer. An old PASS
+label or missing artifact cannot promote the current revision.
 
 Before interruption/compaction: safely finish or checkpoint the current command;
 record exact revisions/candidates, dirty/untracked work, source packs, raw failures,
@@ -135,6 +138,7 @@ promptly without rebuilding identical inputs in each worker.
 
 `pin-rc --expect N --candidate SNAPSHOT` pins an immutable candidate and manifest
 identity separately from active development. Existing RCs cannot be overwritten.
+Dirty snapshots remain development checkpoints and cannot be pinned as releases.
 For a necessary release fix, create a new snapshot and `advance-rc` with a reviewed
 patch record: ID, reason, different reviewer/implementer, exact source/target
 candidate IDs, actual changed file list and active-development backport targets.
@@ -142,7 +146,9 @@ Unrelated undeclared source changes are rejected. The predecessor remains in
 `release_history`, old-candidate evidence cannot satisfy successor acceptance,
 and backports remain explicit pending changes. `verify-backport` checks exact
 reviewed file content in each target, recording actual HEAD. Release stays blocked
-until required backports are verified. Review semantic compatibility and normal
+until required backports are verified and their retained target files still match.
+Generic checkpoint updates cannot overwrite controlled RC-backport records.
+Review semantic compatibility and normal
 branch cleanliness separately before merging; matching file bytes alone is not
 independent application acceptance.
 
@@ -165,6 +171,13 @@ product failures. Preserve original failed attempts and exact outputs.
 Before a normal test: check production DI/service/image-loader registrations,
 actual owning project references, restored assets/toolchain identity, deterministic
 fixtures and available native/display/browser/model dependencies. Use production
+project targets as declared: globally forcing a portable `TargetFramework` during
+restore can break donor analyzers requiring `netstandard2.0` (NETSDK1005). A Linux
+restore of legitimate Windows multi-target projects may require
+`EnableWindowsTargeting`; prove each owning project's normal assets/required TFM
+instead of treating a top-level restore exit as graph readiness. Do not remove
+analyzers, references or supported targets to silence NETSDK1100/1005.
+Use production
 composition behind the existing typed infrastructure boundaries; no alternative
 app authoring or mock native success. CUI/theme changes require representative
 downstream UI checks. Icons need real asset/loader validation; names or manifests

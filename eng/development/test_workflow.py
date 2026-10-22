@@ -24,6 +24,14 @@ def racing_writer(path, queue):
         queue.put("stale")
 
 
+def racing_initializer(path, value, queue):
+    try:
+        w.initialize(path, value)
+        queue.put("created")
+    except w.Refusal:
+        queue.put("preserved")
+
+
 class WorkflowTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -61,6 +69,15 @@ class WorkflowTests(unittest.TestCase):
         for process in processes: process.join(10); self.assertEqual(0, process.exitcode)
         self.assertEqual(["stale", "updated"], sorted(queue.get(timeout=2) for _ in processes))
         self.assertEqual(1, w.read(self.state_path)["generation"])
+
+    def test_concurrent_initialisers_publish_one_complete_checkpoint(self):
+        path = self.root / "new-state.json"
+        queue = multiprocessing.Queue()
+        processes = [multiprocessing.Process(target=racing_initializer, args=(path, self.state, queue)) for _ in range(2)]
+        for process in processes: process.start()
+        for process in processes: process.join(10); self.assertEqual(0, process.exitcode)
+        self.assertEqual(["created", "preserved"], sorted(queue.get(timeout=2) for _ in processes))
+        self.assertEqual(self.state, w.read(path))
 
     def test_failed_transaction_leaves_original_intact(self):
         before = self.state_path.read_bytes()
@@ -172,9 +189,18 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(w.Refusal, "already pinned"):
             w.pin_rc(self.state, self.candidate, self.candidate_path)
 
+    def test_dirty_development_checkpoint_cannot_be_pinned_for_release(self):
+        (self.repo / "src/logic.txt").write_text("uncommitted work\n")
+        path = self.root / "dirty-checkpoint.json"
+        candidate = w.snapshot(self.repo, path)
+        self.assertFalse(candidate["worktree_clean"])
+        with self.assertRaisesRegex(w.Refusal, "committed clean source"):
+            w.pin_rc(self.state, candidate, path)
+
     def test_reviewed_rc_fix_retains_predecessor_and_requires_backport(self):
         w.pin_rc(self.state, self.candidate, self.candidate_path)
         (self.repo / "src/logic.txt").write_text("fixed\n")
+        subprocess.run(["git", "-C", str(self.repo), "-c", "user.name=Workflow test", "-c", "user.email=workflow@example.invalid", "commit", "-qam", "reviewed RC fix fixture"], check=True)
         successor_path = self.root / "successor.json"
         successor = w.snapshot(self.repo, successor_path)
         patch = {"id": "release-fix", "reviewer": "QA", "implementer": "worker", "reason": "actual crash", "files": ["src/logic.txt"],
@@ -188,6 +214,17 @@ class WorkflowTests(unittest.TestCase):
         (self.repo / "src/logic.txt").write_text("fixed\n")
         w.verify_backport(self.state, "release-fix", "development", self.repo)
         self.assertEqual("VERIFIED", self.state["pending_changes"]["release-fix"]["status"])
+        self.assertNotIn("backport:release-fix", w.release_ready(self.state)["missing"])
+        (self.repo / "src/logic.txt").write_text("accepted fix overwritten later\n")
+        self.assertIn("backport:release-fix", w.release_ready(self.state)["missing"])
+
+    def test_generic_checkpoint_cannot_forge_verified_rc_backport(self):
+        self.state["pending_changes"]["release-fix"] = {"kind": "rc-backport", "status": "CHECKPOINT", "verified_targets": {}}
+        with self.assertRaisesRegex(w.Refusal, "never a generic checkpoint"):
+            w.apply_checkpoint(self.state, {"pending_changes": {"release-fix": {"kind": "rc-backport", "status": "VERIFIED", "verified_targets": {}}}})
+        self.assertEqual("CHECKPOINT", self.state["pending_changes"]["release-fix"]["status"])
+        w.apply_checkpoint(self.state, {"pending_changes": {"unrelated-product": {"status": "WORKING"}}})
+        self.assertIn("unrelated-product", self.state["pending_changes"])
 
     def test_rc_fix_cannot_include_undeclared_unrelated_changes(self):
         w.pin_rc(self.state, self.candidate, self.candidate_path)
@@ -295,6 +332,14 @@ class WorkflowTests(unittest.TestCase):
             w.run_check(self.repo, self.candidate, "stale", 1, [sys.executable, "-c", "pass"], self.root / "run", str(old))
         self.assertEqual("old", old.read_text())
 
+    def test_malformed_trx_retains_blocked_receipt_not_process_success(self):
+        trx = self.root / "malformed.trx"
+        command = [sys.executable, "-c", "from pathlib import Path;Path(" + repr(str(trx)) + ").write_text('<broken')"]
+        receipt = w.run_check(self.repo, self.candidate, "malformed-evidence", 1, command, self.root / "run", str(trx))
+        self.assertEqual(0, receipt["exit_code"])
+        self.assertEqual(("BLOCKED", "INFRASTRUCTURE"), (receipt["result"], receipt["classification"]))
+        self.assertEqual("BLOCKED", w.read(self.root / "run/receipt.json")["result"])
+
     def test_reuse_requires_exact_toolchain_and_evidence_inputs(self):
         trx = self.root / "real.trx"
         code = "from pathlib import Path;Path(" + repr(str(trx)) + ").write_text(" + repr('<TestRun><Results><UnitTestResult outcome="Passed" testName="validator-fixture"/></Results><ResultSummary><Counters total="1" executed="1" passed="1" failed="0"/></ResultSummary></TestRun>') + ")"
@@ -335,6 +380,23 @@ class WorkflowTests(unittest.TestCase):
         self.state["tasks"]["x"] = {"status": "GREEN"}
         with self.assertRaises(w.Refusal): w.validate_state(self.state)
 
+    def test_verified_status_requires_exact_revision_and_retained_independent_artifact(self):
+        artifact = self.root / "independent-review.json"
+        artifact.write_text('{"fixture_only":true}')
+        source = "f" * 40
+        self.state["tasks"]["scope"] = {"status": "VERIFIED", "source_revision": source, "verified_revision": source, "evidence": ["review"]}
+        self.state["evidence"]["review"] = {"result": "PASS", "source_revision": source, "reviewer": "reviewer", "implementer": "worker", "steps": ["evidence validator fixture"],
+                                               "artifact": {"path": str(artifact), **w.file_identity(artifact)}}
+        self.state["verified_revision"] = source
+        w.validate_state(self.state)  # positive control: structural validator fixture, not real app acceptance
+        self.state["evidence"]["review"]["source_revision"] = "e" * 40
+        with self.assertRaisesRegex(w.Refusal, "different source"):
+            w.validate_state(self.state)
+        self.state["evidence"]["review"]["source_revision"] = source
+        artifact.unlink()
+        with self.assertRaisesRegex(w.Refusal, "artifact unavailable"):
+            w.validate_state(self.state)
+
     def test_recovery_retains_ownership_and_flags_unverified_liveness(self):
         w.claim(self.state, "worker", ["src/**"], "product")
         self.state["blockers"]["native"] = {"status": "BLOCKED", "reason": "no endpoint"}
@@ -349,6 +411,14 @@ class WorkflowTests(unittest.TestCase):
         self.state["observed_revision"] = "stale"
         self.assertTrue(w.recovery(self.state, self.repo)["discrepancies"])
 
+    def test_recovery_revalidates_old_verified_labels_against_evidence(self):
+        self.state["tasks"]["old"] = {"status": "VERIFIED", "source_revision": "f" * 40, "verified_revision": "f" * 40, "evidence": ["old-pass"]}
+        self.state["evidence"]["old-pass"] = {"result": "PASS", "source_revision": "e" * 40}
+        self.state["verified_revision"] = "f" * 40
+        result = w.recovery(self.state, self.repo)
+        self.assertEqual("BLOCKED", result["recovery_status"])
+        self.assertTrue(any("Ledger evidence/schema" in x for x in result["discrepancies"]))
+
     def test_recovery_missing_temporary_asset_is_blocked(self):
         asset = self.root / "temporary-source.zip"
         asset.write_bytes(b"retained source fixture")
@@ -358,6 +428,17 @@ class WorkflowTests(unittest.TestCase):
         recovered = w.recovery(self.state, self.repo)
         self.assertEqual("BLOCKED", recovered["recovery_status"])
         self.assertTrue(any("Recovery asset unavailable" in x for x in recovered["discrepancies"]))
+
+    def test_symlink_cannot_hide_missing_required_recovery_payload(self):
+        payload = self.root / "lost-payload.zip"
+        payload.write_bytes(b"payload")
+        link = self.root / "durable-looking-link"
+        link.symlink_to(payload)
+        self.state["recovery_assets"]["source"] = {"path": str(link), **w.file_identity(link)}
+        payload.unlink()
+        recovered = w.recovery(self.state, self.repo)
+        self.assertEqual("BLOCKED", recovered["recovery_status"])
+        self.assertTrue(any("retained regular files" in x for x in recovered["discrepancies"]))
 
     def test_initialisation_never_invents_missing_programme_checkpoint(self):
         with self.assertRaisesRegex(w.Refusal, "Existing ROOT-LIVE"):

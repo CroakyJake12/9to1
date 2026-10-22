@@ -61,6 +61,15 @@ def atomic(path, value):
         if os.path.exists(temp): os.unlink(temp)
 
 
+def initialize(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with Path(str(path) + ".lock").open("a+b") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if path.exists(): raise Refusal("Existing checkpoint preserved; reread/reconcile instead of initialising over it")
+        atomic(path, value)
+
+
 def git(repo, *args):
     return subprocess.check_output(["git", "--no-optional-locks", "-C", str(repo), *args], stderr=subprocess.PIPE)
 
@@ -128,7 +137,8 @@ def manifest(repo, files=None):
     repo = Path(repo).resolve()
     if files is None:
         files = tree(repo)
-    payload = {"schema": SCHEMA, "source": files, "revision": git(repo, "rev-parse", "HEAD").decode().strip()}
+    clean = not git(repo, "status", "--porcelain=v1", "--untracked-files=normal", "--ignore-submodules=none").strip()
+    payload = {"schema": SCHEMA, "source": files, "revision": git(repo, "rev-parse", "HEAD").decode().strip(), "worktree_clean": clean}
     return {**payload, "identity": digest(encoded(payload))}
 
 
@@ -149,7 +159,7 @@ def snapshot(repo, destination, accepted=None, required=None):
                 raise Refusal("Accepted fix content changed/disappeared: " + key + ": " + path)
     candidate["accepted_fixes"] = fixes
     # Bind fix lineage too; never overwrite an existing snapshot/RC.
-    candidate["identity"] = digest(encoded({"schema": SCHEMA, "source": candidate["source"], "revision": candidate["revision"], "accepted_fixes": candidate["accepted_fixes"]}))
+    candidate["identity"] = digest(encoded({"schema": SCHEMA, "source": candidate["source"], "revision": candidate["revision"], "worktree_clean": candidate["worktree_clean"], "accepted_fixes": candidate["accepted_fixes"]}))
     path = Path(destination)
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -160,13 +170,13 @@ def snapshot(repo, destination, accepted=None, required=None):
 
 
 def validate_candidate(candidate, repo=None):
-    payload = {"schema": SCHEMA, "source": candidate["source"], "revision": candidate["revision"], "accepted_fixes": candidate.get("accepted_fixes", {})}
+    payload = {"schema": SCHEMA, "source": candidate["source"], "revision": candidate["revision"], "worktree_clean": candidate["worktree_clean"], "accepted_fixes": candidate.get("accepted_fixes", {})}
     if candidate.get("identity") != digest(encoded(payload)):
         raise Refusal("Candidate/fix-lineage identity mismatch")
     if repo:
         # Includes all tracked + ordinary untracked inputs: adding an unlisted input invalidates reuse.
         current = manifest(repo)
-        if current["source"] != candidate["source"] or current["revision"] != candidate["revision"]:
+        if current["source"] != candidate["source"] or current["revision"] != candidate["revision"] or current["worktree_clean"] != candidate["worktree_clean"]:
             raise Refusal("Candidate source/revision changed (including new/deleted inputs)")
 
 
@@ -184,12 +194,28 @@ def initial_state(repo, root_checkpoint):
 
 def validate_state(state):
     if state.get("schema") != SCHEMA: raise Refusal("Unsupported ledger schema")
+    for field in ("workers", "tasks", "pending_changes", "blockers", "evidence", "artifacts", "recovery_assets", "development_candidates"):
+        if not isinstance(state.get(field), dict): raise Refusal("Ledger field must be a named object: " + field)
     for task in state.get("tasks", {}).values():
         if task.get("status") not in STATUSES: raise Refusal("Invalid task status")
         if task["status"] == "VERIFIED":
             refs = task.get("evidence", [])
             if not refs or any(x not in state["evidence"] for x in refs): raise Refusal("VERIFIED task needs evidence references")
             if any(state["evidence"][x].get("result") != "PASS" for x in refs): raise Refusal("VERIFIED task has nonpassing evidence")
+            source = task.get("source_revision")
+            if not source or task.get("verified_revision") != source: raise Refusal("VERIFIED task requires the exact source/verified revision")
+            for ref in refs:
+                evidence = state["evidence"][ref]
+                if evidence.get("source_revision") != source or (task.get("candidate") and evidence.get("candidate") != task["candidate"]):
+                    raise Refusal("VERIFIED task evidence belongs to a different source/candidate")
+                if (not evidence.get("reviewer") or not evidence.get("implementer") or evidence["reviewer"] == evidence["implementer"]
+                        or evidence["reviewer"] in ("NOT RUN", "PENDING", "UNASSIGNED") or not evidence.get("steps")):
+                    raise Refusal("VERIFIED task requires an independent reviewer and executed steps")
+                artifact = evidence.get("artifact", {})
+                try:
+                    if artifact.get("kind") != "file" or file_identity(artifact["path"]) != {k: v for k, v in artifact.items() if k != "path"}:
+                        raise Refusal("VERIFIED task evidence artifact changed or is not a retained regular file")
+                except (OSError, KeyError) as error: raise Refusal("VERIFIED task evidence artifact unavailable") from error
             if task.get("stage") == "release" and not release_ready(state)["ready"]: raise Refusal("Release task still has mandatory outstanding gates")
     if state.get("verified_revision") is not None:
         matching = [t for t in state.get("tasks", {}).values() if t.get("status") == "VERIFIED" and t.get("verified_revision") == state["verified_revision"]]
@@ -237,6 +263,7 @@ def claim(state, worker, paths, role):
 
 def pin_rc(state, candidate, path):
     validate_candidate(candidate)
+    if not candidate.get("worktree_clean"): raise Refusal("Release candidate requires committed clean source; retain dirty snapshots as development checkpoints")
     if read(path) != candidate: raise Refusal("RC path does not contain the reviewed candidate")
     if state.get("release_candidate"):
         raise Refusal("RC already pinned; create a traceable successor after retaining the prior candidate")
@@ -258,6 +285,7 @@ def advance_rc(state, candidate, path, patch):
     changed = {p for p in set(previous["source"]) | set(candidate["source"]) if previous["source"].get(p) != candidate["source"].get(p)}
     if not changed or changed != set(patch.get("files", [])): raise Refusal("RC patch scope differs from actual source changes")
     if not patch.get("id") or not patch.get("backport_targets"): raise Refusal("RC fix needs an ID and active-development backport targets")
+    if patch["id"] in state["pending_changes"]: raise Refusal("RC patch ID already retained; use a new traceable successor ID")
     if set(previous["accepted_fixes"]) - set(candidate["accepted_fixes"]): raise Refusal("Successor drops accepted fixes")
     for key, fix in previous["accepted_fixes"].items():
         replacement = candidate["accepted_fixes"][key]
@@ -273,6 +301,12 @@ def advance_rc(state, candidate, path, patch):
 def verify_backport(state, patch_id, target, repo):
     pending = state["pending_changes"][patch_id]
     if target not in pending["patch"]["backport_targets"]: raise Refusal("Target is not declared in the reviewed patch")
+    check_backport_files(pending, repo)
+    pending["verified_targets"][target] = {"at": now(), "revision": git(repo, "rev-parse", "HEAD").decode().strip(), "repo": str(Path(repo).resolve())}
+    if set(pending["patch"]["backport_targets"]) <= set(pending["verified_targets"]): pending["status"] = "VERIFIED"
+
+
+def check_backport_files(pending, repo):
     for name, identity in pending["expected_files"].items():
         safe_relative(name)
         path = Path(repo) / name
@@ -281,8 +315,33 @@ def verify_backport(state, patch_id, target, repo):
         elif identity.get("kind") == "gitlink":
             if git(path, "rev-parse", "HEAD").decode().strip() != identity["revision"]: raise Refusal("Backport donor pin differs: " + name)
         elif file_identity(path) != identity: raise Refusal("Backport file differs from reviewed RC fix: " + name)
-    pending["verified_targets"][target] = {"at": now(), "revision": git(repo, "rev-parse", "HEAD").decode().strip(), "repo": str(Path(repo).resolve())}
-    if set(pending["patch"]["backport_targets"]) <= set(pending["verified_targets"]): pending["status"] = "VERIFIED"
+
+
+def backports_current(change):
+    targets = set(change.get("patch", {}).get("backport_targets", []))
+    verified = change.get("verified_targets", {})
+    if change.get("status") != "VERIFIED" or not targets or not targets <= set(verified) or not change.get("expected_files"): return False
+    try:
+        for target in targets:
+            if not verified[target].get("revision"): return False
+            check_backport_files(change, verified[target]["repo"])
+    except (OSError, KeyError, Refusal, subprocess.CalledProcessError): return False
+    return True
+
+
+def apply_checkpoint(state, patch):
+    forbidden = set(patch) & {"schema", "generation", "release_candidate", "release_history", "workers", "authority", "projection_of"}
+    if forbidden: raise Refusal("Protected checkpoint fields: " + ", ".join(sorted(forbidden)))
+    if "pending_changes" in patch:
+        incoming = patch["pending_changes"]
+        if not isinstance(incoming, dict): raise Refusal("Pending changes must be named records")
+        for key, value in incoming.items():
+            if not isinstance(value, dict): raise Refusal("Pending change must be a named record: " + key)
+            if state["pending_changes"].get(key, {}).get("kind") == "rc-backport" or value.get("kind") == "rc-backport":
+                raise Refusal("RC backport records require advance-rc/verify-backport, never a generic checkpoint")
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(state.get(key), dict): state[key].update(value)
+        else: state[key] = value
 
 
 def trx(path):
@@ -364,6 +423,7 @@ def run_check(repo, candidate, check_id, layer, command, output, trx_path=None, 
     log = output / "process.log"
     started = time.monotonic()
     receipt = {"schema": SCHEMA, "check_id": check_id, "candidate": candidate["identity"], "layer": layer,
+               "source_revision": candidate["revision"],
                "command": command, "cwd": str(Path(repo).resolve()), "started_at": now(),
                "platform": {"system": sys.platform, "machine": os.uname().machine}, "result": "NOT RUN",
                "classification": "UNTRIAGED", "kind": kind}
@@ -404,7 +464,7 @@ def run_check(repo, candidate, check_id, layer, command, output, trx_path=None, 
         if environment:
             try: environment_inputs(environment)
             except Refusal as error: receipt.update(result="INVALIDATED", classification="INFRASTRUCTURE", reason=str(error))
-    except (OSError, Refusal) as error:
+    except (OSError, Refusal, ET.ParseError, ValueError) as error:
         receipt.update(result="BLOCKED", classification="INFRASTRUCTURE", reason=str(error))
     finally:
         receipt.update(ended_at=now(), duration_seconds=round(time.monotonic() - started, 6))
@@ -459,7 +519,7 @@ def release_ready(state):
             valid.append(e)
         if not valid: missing.append(gate)
     for key, change in state.get("pending_changes", {}).items():
-        if change.get("kind") == "rc-backport" and change.get("status") != "VERIFIED": missing.append("backport:" + key)
+        if change.get("kind") == "rc-backport" and not backports_current(change): missing.append("backport:" + key)
     # Readiness is an evidence gate, never inferred from green build steps or a stored label.
     return {"ready": not missing, "candidate": rc["identity"], "missing": missing}
 
@@ -546,6 +606,8 @@ def recovery(state, repo):
     revision = git(repo, "rev-parse", "HEAD").decode().strip()
     rc = state.get("release_candidate")
     discrepancies = []
+    try: validate_state(state)
+    except (Refusal, KeyError, TypeError) as error: discrepancies.append("Ledger evidence/schema validation failed: " + str(error))
     if revision != state.get("observed_revision"): discrepancies.append("Repository HEAD differs from checkpoint")
     if rc:
         try:
@@ -558,6 +620,7 @@ def recovery(state, repo):
     if object_closure["result"] != "PASS": discrepancies.extend(object_closure["problems"])
     for key, asset in state.get("recovery_assets", {}).items():
         try:
+            if asset.get("kind") != "file": raise Refusal("required recovery assets must be retained regular files, not symlink targets")
             if file_identity(asset["path"]) != {k: v for k, v in asset.items() if k != "path"}: raise Refusal("content identity changed")
         except (OSError, Refusal) as error: discrepancies.append("Recovery asset unavailable/changed: " + key + ": " + str(error))
     return {"schema": SCHEMA, "recovered_at": now(), "generation": state["generation"], "actual_revision": revision,
@@ -603,8 +666,7 @@ def main(argv=None):
         if a.action == "init":
             if not a.state: raise Refusal("--state required")
             value = initial_state(a.repo, a.root_checkpoint)
-            a.state.parent.mkdir(parents=True, exist_ok=True)
-            with a.state.open("xb") as stream: stream.write(encoded(value)); stream.flush(); os.fsync(stream.fileno())
+            initialize(a.state, value)
         elif a.action == "snapshot":
             old = read(a.previous_candidate)["accepted_fixes"] if a.previous_candidate else []
             value = snapshot(a.repo, a.out, [read(f) for f in a.accepted_fix], old)
@@ -618,12 +680,7 @@ def main(argv=None):
             if not a.state: raise Refusal("--state required")
             with transaction(a.state, a.expect) as state:
                 if a.action == "checkpoint":
-                    patch = read(a.patch)
-                    forbidden = set(patch) & {"schema", "generation", "release_candidate", "release_history", "workers", "authority", "projection_of"}
-                    if forbidden: raise Refusal("Protected checkpoint fields: " + ", ".join(sorted(forbidden)))
-                    for key, val in patch.items():
-                        if isinstance(val, dict) and isinstance(state.get(key), dict): state[key].update(val)
-                        else: state[key] = val
+                    apply_checkpoint(state, read(a.patch))
                 elif a.action == "claim": claim(state, a.worker, a.paths, a.role)
                 elif a.action == "release": state["workers"][a.worker].update(status="CHECKPOINT", released_at=now())
                 elif a.action == "advance-rc": advance_rc(state, read(a.candidate), a.candidate, read(a.patch))
@@ -633,7 +690,8 @@ def main(argv=None):
         else:
             if not a.state: raise Refusal("--state required")
             state = read(a.state)
-            if a.action == "dashboard": print(dashboard(state)); return 0
+            if a.action == "dashboard": validate_state(state); print(dashboard(state)); return 0
+            if a.action == "release-status": validate_state(state)
             value = recovery(state, a.repo) if a.action == "recover" else release_ready(state)
         print(json.dumps(value, indent=2, ensure_ascii=False))
         if a.action == "run" and value["result"] not in ("PASS", "PROCESS_SUCCEEDED"): return 1
