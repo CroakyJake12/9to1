@@ -215,7 +215,15 @@ public sealed class CanvasHostLaunchTests
         private readonly List<Exception> _expectedFailures = [];
         private bool _expectedCloseRefusal;
         internal string HomeStatePath => Path.Combine(_root, "home.json");
-        internal void ExpectNormalCloseRefusal() => _expectedCloseRefusal = true;
+        internal void ExpectNormalCloseRefusal(Exception actualFailure)
+        {
+            var actual = _window?.OriginalCloseTask ?? throw new InvalidOperationException("No original close was issued.");
+            Assert.True(actual.IsFaulted);
+            Assert.Contains(actual.Exception!.InnerExceptions, cause => ReferenceEquals(cause, actualFailure));
+            // The negative test already asserted actual user-close refusal. Attest its same
+            // failed receipt ONLY for teardown; never convert it into a successful close.
+            _expectedFailures.Add(actualFailure); _expectedCloseRefusal = true;
+        }
         internal void ExpectExactFailure(Exception cause) => _expectedFailures.Add(cause);
         internal NativeFilesWorkspace Workspace = null!;
         internal CanvasFilesArtifactBridge Bridge = null!;
@@ -267,23 +275,42 @@ public sealed class CanvasHostLaunchTests
         {
             var actual = _window?.LatestOriginalCommand ?? throw new InvalidOperationException("No actual command task was issued.");
             Assert.NotNull(await Record.ExceptionAsync(() => actual)); Assert.True(actual.IsFaulted);
-            var cause = Assert.Single(ActualLeaves(actual.Exception!));
+            var cause = Assert.Single(ActualLeaves(actual, _window!.ObserveOwnedFailureCauses));
             _expectedFailures.Add(cause); return cause;
         }
-        private static IReadOnlyList<Exception> ActualLeaves(AggregateException actualTaskWrapper)
+        internal static IReadOnlyList<Exception> ActualLeaves(Task actual,
+            Func<Exception, IReadOnlyList<Exception>?> ownedCauses)
         {
-            var pending = new Stack<Exception>(actualTaskWrapper.InnerExceptions);
+            var wrapper = actual.Exception ?? throw new InvalidOperationException("No actual fault wrapper was retained.");
+            var pending = new Stack<Exception>(wrapper.InnerExceptions);
             var seen = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
             var leaves = new List<Exception>();
             while (pending.Count != 0)
             {
                 var current = pending.Pop(); if (!seen.Add(current)) continue;
                 if (seen.Count > 4096) throw new InvalidOperationException("Canvas test receipt exceeded bounded inspection.");
-                if (current is AggregateException { InnerExceptions.Count: > 0 } group)
-                    foreach (var child in group.InnerExceptions) pending.Push(child);
-                else leaves.Add(current); // foreign empty/opaque failure remains a real leaf
+                if (ownedCauses(current) is { Count: > 0 } direct)
+                    foreach (var child in direct) pending.Push(child);
+                else leaves.Add(current); // every unknown/foreign aggregate remains opaque
             }
             return leaves;
+        }
+        internal static bool ContainsOnlyAttestedCauses(Task actual, IReadOnlyList<Exception> expected,
+            Func<Exception, IReadOnlyList<Exception>?> ownedCauses)
+        {
+            var wrapper = actual.Exception;
+            if (!actual.IsFaulted || wrapper is null || wrapper.InnerExceptions.Count == 0) return false;
+            var pending = new Stack<Exception>(wrapper.InnerExceptions);
+            var seen = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
+            while (pending.Count != 0)
+            {
+                var current = pending.Pop(); if (!seen.Add(current)) continue;
+                if (seen.Count > 4096) return false;
+                if (expected.Any(cause => ReferenceEquals(cause, current))) continue;
+                if (ownedCauses(current) is not { Count: > 0 } direct) return false;
+                foreach (var child in direct) pending.Push(child);
+            }
+            return seen.Count != 0;
         }
         public async ValueTask DisposeAsync()
         {
@@ -294,8 +321,7 @@ public sealed class CanvasHostLaunchTests
                 try { await actual; }
                 catch (Exception error)
                 {
-                    if (actual.Exception is not { } wrapper || ActualLeaves(wrapper).Count == 0 ||
-                        !ActualLeaves(wrapper).All(cause => _expectedFailures.Any(expected => ReferenceEquals(expected, cause))))
+                    if (!ContainsOnlyAttestedCauses(actual, _expectedFailures, _window.ObserveOwnedFailureCauses))
                         failures.Add(error);
                 }
                 try

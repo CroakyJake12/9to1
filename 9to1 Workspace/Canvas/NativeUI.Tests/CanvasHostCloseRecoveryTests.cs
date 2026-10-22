@@ -82,7 +82,7 @@ public sealed class CanvasHostCloseRecoveryTests
             Assert.False(window.CanCompleteKnownNoEffectClose(actual, failure!));
             Assert.Contains(actual.Exception!.Flatten().InnerExceptions, error => ReferenceEquals(error, first));
             Assert.Contains(actual.Exception.Flatten().InnerExceptions, error => ReferenceEquals(error, unknown));
-            fixture.ExpectNormalCloseRefusal();
+            fixture.ExpectNormalCloseRefusal(failure!);
             return true;
         }, CancellationToken.None);
     }
@@ -117,7 +117,7 @@ public sealed class CanvasHostCloseRecoveryTests
             Assert.True(window.IsVisible); Assert.False(closed);
             Assert.Null(window.RecoveredNoEffectCloseFailure);
             Assert.False(window.CanCompleteKnownNoEffectClose(actual, failure!));
-            fixture.ExpectNormalCloseRefusal();
+            fixture.ExpectNormalCloseRefusal(failure!);
             return true;
         }, CancellationToken.None);
     }
@@ -152,6 +152,33 @@ public sealed class CanvasHostCloseRecoveryTests
             Assert.Same(failure, await Record.ExceptionAsync(() => window.OriginalCloseTask!));
             return true;
         }, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Fixture_rejects_unknown_cleanup_wrapper_even_when_it_reuses_an_expected_source_cause()
+    {
+        var cause = new IOException("Exact original source.");
+        var owner = new CanvasOriginalWorkOwner();
+        var original = owner.RunOriginalAsync(_ => Task.FromException(cause));
+        await Record.ExceptionAsync(() => original);
+        var foreign = new AggregateException("Unknown independent cleanup wrapper.", cause);
+        var actualCleanup = Task.FromException(foreign);
+        var close = owner.CloseAndDrainAsync(() => actualCleanup);
+        await Record.ExceptionAsync(() => close);
+        IReadOnlyList<Exception>? Known(Exception wrapper)
+            => owner.TryGetOwnedFailureCauses(wrapper, out var direct) ? direct : null;
+        Assert.True(close.IsFaulted); Assert.True(actualCleanup.IsFaulted);
+        Assert.False(CanvasHostLaunchTests.Fixture.ContainsOnlyAttestedCauses(close, new[] { cause }, Known));
+        Assert.Contains(CanvasHostLaunchTests.Fixture.ActualLeaves(close, Known), error => ReferenceEquals(error, foreign));
+        Assert.False(owner.TryGetOwnedFailureCauses(foreign, out _));
+        var sourceOnly = new CanvasOriginalWorkOwner();
+        await Record.ExceptionAsync(() => sourceOnly.RunOriginalAsync(_ => Task.FromException(cause)));
+        var sourceClose = sourceOnly.CloseAndDrainAsync();
+        await Record.ExceptionAsync(() => sourceClose);
+        IReadOnlyList<Exception>? KnownSource(Exception wrapper)
+            => sourceOnly.TryGetOwnedFailureCauses(wrapper, out var direct) ? direct : null;
+        Assert.True(CanvasHostLaunchTests.Fixture.ContainsOnlyAttestedCauses(sourceClose, new[] { cause }, KnownSource));
+        Assert.True(sourceClose.IsFaulted); // fixture inspection never changes the strict original receipt
     }
 
     private static void RejectSearch(CanvasHostWindow window)
