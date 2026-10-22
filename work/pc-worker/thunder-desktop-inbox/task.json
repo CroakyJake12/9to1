@@ -1,18 +1,18 @@
 {
   "schema": "9to1-existing-worker-git-inbox/v1",
-  "sequence": 1,
-  "task_id": "THUNDER-DESKTOP-20261022-01",
-  "status": "AWAITING_FIRST_OWNER_ACTIVATION_AND_REAL_ACK",
+  "sequence": 2,
+  "task_id": "THUNDER-DESKTOP-20261022-02",
+  "status": "PUBLISHED_AWAITING_REAL_ACK_AND_WRITE_RESULT",
   "issuer": "Root",
   "repository": "https://github.com/CroakyJake12/9to1.git",
   "inbox_ref": "refs/heads/codex/thunder-desktop-inbox-20261022",
-  "previous_task_id": null,
+  "previous_task_id": "THUNDER-DESKTOP-20261022-01",
   "parent_handoff_revision": "81f5e37d309961e464495fbf415148da103fe86a",
   "source_revision": "eb0da4f082b2e82512b22ffabf17a28a3057fafd",
   "source_ref": "refs/heads/codex/thunder-source-handoff-20261022",
   "handoff_path": "docs/dulche/thunder-desktop-handoff-20261022.md",
-  "expires_at": "2026-10-22T21:00:00Z",
-  "activation_required": true,
+  "expires_at": "2026-10-22T22:45:00Z",
+  "activation_required": false,
   "delivery_contract": {
     "executor": "Existing local desktop Codex worker using ordinary native tools and approvals",
     "transport": "Owner activates this fixed Git inbox once; no new daemon, agent, RPC or shell server",
@@ -24,21 +24,19 @@
     "stop": "Recognize stop_and_checkpoint immediately at the next bounded inbox check; owner Stop, current native denial, deadline or authorization revocation stops work/watch and preserves current checkpoint. No additional owner activation is inferred after expiry.",
     "stale": "Reject expired tasks, sequences older than the highest observed sequence, mismatched previous_task_id/source revision, non-descendant/ref changes and duplicated consequential operations; acknowledge without replaying completed tasks. Follow-up expiry must not exceed this activation21:00UTC window."
   },
-  "operation": "read_existing_inventory",
+  "operation": "edit_scoped_source",
   "scope": {
-    "mode": "READ_ONLY",
-    "resources": [
-      "existing saved Thunder local inventory",
-      "existing repository/worktree/source identity",
-      "bounded installed engine/supervisor identity and failure logs",
-      "existing shared-model worker/session/queue custody observations",
-      "Fixed Git inbox retrieval and bounded active waits after initial inventory, until deadline or stop"
+    "mode": "ONE_NEW_TEXT_FILE_IN_NEW_ISOLATED_SOURCE_WORKTREE",
+    "repository_paths": [
+      "work/pc-worker/thunder-desktop-inbox/receipts/control-proof-20261022.txt"
     ],
+    "workspace_selection": {
+      "strategy": "Use a fresh isolated Git worktree/branch at expected_source_revision from the same fixed repository; preserve all existing checkouts and dirty work. Refuse conflicts instead of resetting or overwriting.",
+      "new_branch": "codex/thunder-control-proof-20261022"
+    },
     "no_actions": [
-      "No inference/model request, engine unload/restart, deployment, benchmark or system modification",
-      "No source edits for this initial task",
-      "No secret values or personal network identifiers in public Git",
-      "No unrelated process interruption, duplicate supervisor or replacement laptop service"
+      "No inference, benchmark, engine or service change, dependency installation, existing source modification, commit/push, or access to credentials.",
+      "Do not write in the original current362a checkout or another worker tree."
     ]
   },
   "outputs": {
@@ -47,20 +45,19 @@
       "task_id",
       "accepted_or_refused",
       "observed_inbox_revision",
-      "local_source_revision",
-      "scope_and_current_authorization",
-      "reason_if_refused",
-      "active_watch_supported_or_blocked",
-      "watch_stop_deadline"
+      "expected_and_actual_source_revision",
+      "isolated_worktree",
+      "reason_if_refused"
     ],
     "result_fields": [
-      "existing_inventory_found_or_missing",
-      "installed_engine_identity_or_unknown",
-      "bounded_failure_evidence_or_unavailable",
-      "shared_model_custody_observed_or_unresolved",
+      "actual_new_file_path",
+      "bytes",
+      "sha256",
+      "only_requested_file_new",
+      "original_checkout_preserved",
       "next_blocker"
     ],
-    "privacy": "Keep local inventory/log output in the private thread; redact credentials and unnecessary identifiers. Never commit private evidence."
+    "privacy": "No credentials or unnecessary local identifiers in public Git."
   },
   "follow_up_contract": {
     "supported_types": [
@@ -84,5 +81,26 @@
     "unsupported": "No shell-command/program payloads, embedded instructions, arbitrary URLs, provider changes, system changes or credential access. Unknown type or missing fields => refuse and report.",
     "before_model_or_hardware_execution": "Actual owner-authorized time window, resolved exclusive model custody, genuine supported tooling/policy and readiness; otherwise BLOCKED.",
     "stop_and_checkpoint": "No new product action. Persist the current owned task/source/result/blockers privately, acknowledge stop, and end the active watch; do not terminate unrelated services or delete work."
-  }
+  },
+  "expected_previous_inbox_revision": "8ec7000b29391bf1caf9ef6be5c0f0f1c9ec3319",
+  "expected_source_revision": "eb0da4f082b2e82512b22ffabf17a28a3057fafd",
+  "observed_existing_local_source_revision": "362a0053117fab69d3dd236478573ca288f88fca",
+  "changes": [
+    {
+      "path": "work/pc-worker/thunder-desktop-inbox/receipts/control-proof-20261022.txt",
+      "expected_before_sha256": null,
+      "content_utf8": "9to1 Thunder control proof: THUNDER-DESKTOP-20261022-02; nonce 814dce7bdbb94c1f9c68344e7bec403d\n",
+      "expected_after_sha256": "c2ebe76d9b31013a03d5fa00c7d16e5bc9ad04bb26a1b3ae1405430f005fe638"
+    }
+  ],
+  "checks": {
+    "named_checks": [
+      "git_worktree_identity",
+      "exact_single_new_file",
+      "readback_sha256_matches",
+      "original_checkout_preserved"
+    ],
+    "execution": "Use ordinary local tools and normal native approvals; this is a plain text filesystem/Git proof, not a program or shell payload."
+  },
+  "authorization_note": "The owner activated this existing worker and subsequently extended the deadline to23:45BST due to connection delays, as read from the authenticated desktop thread. Preserve native approvals and all model-custody gates. This task proves scoped local write dispatch only, not Thunder inference readiness."
 }
