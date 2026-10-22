@@ -43,16 +43,25 @@ time and preserved baseline. Native use/installation remain separate.
 
 ## Read-only custody audit and smallest next step
 
-Nine owner-private GitHub repositories are visible, but none was identified as
-project-related. None was selected or modified. The connected personal OneDrive
-contains an existing 9to1 project folder. Actual folder metadata and effective
-permissions showed one owner grant and no anonymous/organisation sharing link.
-The existing connector offers large-file upload sessions. No upload, permission
-change, test file or package transfer was performed. Exact private IDs and raw
-permission evidence stay outside Git in the current Root custody audit.
+Existing private GitHub repositories were inspected; none was identified as
+project-related, selected or modified. The connected personal OneDrive contains
+an existing 9to1 project folder. Root rechecked the exact folder and effective
+permissions: one matching owner grant, no additional sharing grant. Normalised
+owner-link display metadata has null type/scope; Root reviewed it rather than
+assuming privacy from the URL. Private IDs and full permission evidence stay
+outside Git in the current Root custody audit.
 
-The smallest proposed route is Root-approved use of that existing owner-only
-project custody. It avoids creating a repository or changing source visibility.
+After review, Root uploaded one harmless61-byte nonce file with conflict=fail.
+Actual item/parent/size/owner permission readback matched, and a successful raw
+fetch/download returned the same61 bytes, SHA256 and nonce. No upload retry,
+second probe, sharing change or deletion occurred. This proves a small private
+custody roundtrip only, not large-file support, package readiness or laptop
+transfer. The browser-URL fetch first failed403/serviceReadOnly; the documented
+Graph item URL using actual returned IDs succeeded without changing access.
+Use returned Graph IDs for that bounded read path; retain the original failure.
+
+The smallest route is Root-approved use of that existing owner-only
+project custody, starting from the demonstrated small-file channel. It avoids creating a repository or changing source visibility.
 Before use, verify the selected target's actual permissions again, prove the
 supported upload/input-size path without bypassing tool caps, retain exact
 provider IDs/bytes/digests, and verify authenticated receiving-side download.
