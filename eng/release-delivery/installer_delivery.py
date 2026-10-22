@@ -89,8 +89,9 @@ def validate_manifest(manifest):
     for key, required in (("mandatory_gates", GATES), ("quality", QUALITY)):
         proof = acceptance.get(key, {})
         require(required <= proof.keys() and all(proof[k] == "PASS" for k in required), "Mandatory acceptance incomplete: " + key)
-    require(acceptance.get("evidence_member"), "Independent acceptance evidence member required")
-    member_name(acceptance["evidence_member"])
+    evidence_paths = [acceptance.get(k) for k in ("evidence_member", "evidence_file") if acceptance.get(k)]
+    require(len(evidence_paths) == 1, "One retained independent acceptance member or adjacent file required")
+    member_name(evidence_paths[0])
     expected_identity(acceptance.get("evidence", {}))
     artifacts = manifest.get("artifacts", [])
     require(isinstance(artifacts, list) and artifacts, "Pinned authenticated artifact set required")
@@ -113,7 +114,14 @@ def validate_manifest(manifest):
 def load_manifest(path):
     require(not Path(path).is_symlink(), "Manifest must be a retained regular file")
     raw = Path(path).read_bytes()
-    return validate_manifest(json.loads(raw)), hashlib.sha256(raw).hexdigest()
+    manifest = validate_manifest(json.loads(raw))
+    proof = None
+    if manifest["acceptance"].get("evidence_file"):
+        evidence = Path(path).parent / manifest["acceptance"]["evidence_file"]
+        check_identity(identity(evidence), manifest["acceptance"]["evidence"], "Retained independent acceptance file")
+        proof = evidence.read_bytes()
+        validate_acceptance_bytes(manifest, proof)
+    return manifest, hashlib.sha256(raw).hexdigest(), proof
 
 
 def host_preflight():
@@ -216,7 +224,9 @@ def zip_member(archive, member, maximum):
 def read_json_member(path, member):
     with zipfile.ZipFile(path) as archive:
         info = zip_member(archive, member_name(member), 1024 * 1024)
-        return json.loads(archive.read(info))
+        value = json.loads(archive.read(info))
+        require(isinstance(value, dict), "Required JSON archive member must be an object")
+        return value
 
 
 def inspect_package(manifest, archives, stage):
@@ -245,13 +255,23 @@ def inspect_package(manifest, archives, stage):
     return output
 
 
-def acceptance_evidence(manifest, archives):
+def acceptance_evidence(manifest, archives, local_proof=None):
     artifact = next(a for a in manifest["artifacts"] if "corresponding-source-and-evidence" in a["roles"])
     expected = manifest["acceptance"]
-    with zipfile.ZipFile(archives[artifact["id"]]) as archive:
-        proof = archive.read(zip_member(archive, expected["evidence_member"], 1024 * 1024))
+    if expected.get("evidence_file"):
+        require(local_proof is not None, "Adjacent accepted proof was not loaded")
+        proof = local_proof
+    else:
+        with zipfile.ZipFile(archives[artifact["id"]]) as archive:
+            proof = archive.read(zip_member(archive, expected["evidence_member"], 1024 * 1024))
+    validate_acceptance_bytes(manifest, proof)
+
+
+def validate_acceptance_bytes(manifest, proof):
+    expected = manifest["acceptance"]
     check_identity({"bytes": len(proof), "sha256": hashlib.sha256(proof).hexdigest()}, expected["evidence"], "Independent acceptance evidence")
     verdict = json.loads(proof)
+    require(isinstance(verdict, dict), "Independent verdict must be an object")
     require(verdict.get("status") == "READY" and verdict.get("source_revision") == manifest["source_revision"] and verdict.get("package_sha256") == manifest["package"]["sha256"] and verdict.get("reviewer") == expected["reviewer"] and verdict.get("implementer") == expected["implementer"], "Retained independent verdict is not this READY candidate")
     require(verdict.get("mandatory_gates") == expected["mandatory_gates"] and verdict.get("quality") == expected["quality"], "Retained acceptance gate proof differs")
 
@@ -265,7 +285,7 @@ def publish_file(source, target):
     os.link(source, target, follow_symlinks=False)  # Atomic, same filesystem, refuses overwrite.
 
 
-def receive(manifest, manifest_sha, destination, baseline, local_archives=None, client=None):
+def receive(manifest, manifest_sha, destination, baseline, local_archives=None, client=None, local_proof=None):
     host = host_preflight()
     preserved = baseline_preflight(baseline)
     destination, required = prepare_destination(manifest, destination, baseline)
@@ -286,7 +306,7 @@ def receive(manifest, manifest_sha, destination, baseline, local_archives=None, 
                     os.fsync(outgoing.fileno())
             check_identity(identity(staged), artifact, "Staged archive")
             archives[artifact["id"]] = staged
-        acceptance_evidence(manifest, archives)
+        acceptance_evidence(manifest, archives, local_proof)
         package = inspect_package(manifest, archives, stage)
         check_identity(identity(baseline), preserved, "Startup-only baseline after staging")
         # Nothing becomes visible as a candidate until every required byte/proof passes.
@@ -322,7 +342,7 @@ def main(argv=None):
     parser.add_argument("--archives", type=Path)
     args = parser.parse_args(argv)
     try:
-        manifest, sha = load_manifest(args.manifest)
+        manifest, sha, local_proof = load_manifest(args.manifest)
         if args.command == "preflight":
             host = host_preflight()
             baseline = baseline_preflight(args.baseline)
@@ -331,7 +351,7 @@ def main(argv=None):
         else:
             require(args.command != "verify-local" or args.archives is not None, "--archives required for verify-local")
             require(args.command != "receive" or args.archives is None, "receive uses authenticated GitHub, not a local archive override")
-            result = receive(manifest, sha, args.destination, args.baseline, args.archives if args.command == "verify-local" else None)
+            result = receive(manifest, sha, args.destination, args.baseline, args.archives if args.command == "verify-local" else None, local_proof=local_proof)
         print(json.dumps(result, indent=2))
         return 0
     except (Blocked, OSError, ValueError, KeyError, TypeError, zipfile.BadZipFile, subprocess.SubprocessError, KeyboardInterrupt) as error:

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -48,9 +49,13 @@ class Delivery(unittest.TestCase):
         for arch in ("arm64", "amd64"):
             tree = cls.root / arch
             (tree / "DEBIAN").mkdir(parents=True)
+            (tree / "DEBIAN").chmod(0o755)
             (tree / "DEBIAN/control").write_text(f"Package: 9to1-delivery-fixture\nVersion: 0.1.0~fixture\nArchitecture: {arch}\nMaintainer: Fixture <fixture@example.invalid>\nDescription: Delivery protocol fixture only\n")
             p = cls.root / (arch + ".deb")
-            subprocess.run(["dpkg-deb", "--root-owner-group", "--build", str(tree), str(p)], check=True, capture_output=True)
+            built = subprocess.run(["dpkg-deb", "--root-owner-group", "--build", str(tree), str(p)], capture_output=True, env={**os.environ, "TMPDIR": str(cls.root)})
+            if built.returncode:
+                sys.stderr.write(built.stderr.decode(errors="replace"))
+                built.check_returncode()
             cls.payload[arch] = p.read_bytes()
 
     @classmethod
@@ -248,6 +253,28 @@ class Delivery(unittest.TestCase):
         self.assertEqual(receipt["delivery"], "NOT CONFIRMED")
         self.assertEqual(json.loads(Path(receipt["failure_receipt_path"]).read_text())["status"], "BLOCKED")
         self.assertFalse((self.dest / self.name).exists())
+
+    def test_adjacent_ready_proof_avoids_rebuilding_immutable_package_artifacts(self):
+        raw = self.proof_bytes()
+        acceptance = self.m["acceptance"]
+        acceptance.pop("evidence_member")
+        acceptance["evidence_file"] = "independent-ready.json"
+        proof = self.root / "independent-ready.json"; proof.write_bytes(raw)
+        path = self.root / "manifest.json"; path.write_text(json.dumps(self.m))
+        manifest, sha, loaded = d.load_manifest(path)
+        self.assertEqual(loaded, raw)
+        with patch.object(d, "host_preflight", return_value={"scope": "UNIT host-policy fixture"}), patch.object(d, "BASELINE", self.baseline_id):
+            receipt = d.receive(manifest, sha, self.dest, self.baseline, self.archives, local_proof=loaded)
+        self.assertEqual(receipt["status"], "DELIVERED_BYTES_VERIFIED")
+        proof.write_bytes(b"changed")
+        with self.assertRaises(d.Blocked): d.load_manifest(path)
+
+    def test_absent_or_ambiguous_local_proof_refused(self):
+        self.m["acceptance"]["evidence_file"] = "independent-ready.json"
+        with self.assertRaises(d.Blocked): d.validate_manifest(self.m)
+        self.m["acceptance"].pop("evidence_member")
+        path = self.root / "manifest.json"; path.write_text(json.dumps(self.m))
+        with self.assertRaises(OSError): d.load_manifest(path)
 
     def test_no_debug_token_logging_or_interactive_login(self):
         with patch.dict(d.os.environ, {"GH_DEBUG": "api"}):
