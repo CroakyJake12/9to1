@@ -185,7 +185,12 @@ public sealed partial class NotesRepository
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         library.DemandCurrent();
-                        using var document = library.OpenDocument(id);
+                        OriginalDocumentCustody document;
+                        try { document = library.OpenDocument(id); }
+                        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                        { throw new NotesOriginalReadRecoveryRequiredException(id,
+                            "A canonical Notes library entry is not its retained owned document directory; it was preserved.", error); }
+                        using var retainedDocument = document;
                         transaction.OriginalRead = document;
                         try
                         {
@@ -248,11 +253,13 @@ public sealed partial class NotesRepository
 
     internal async Task DemandReadRecoveryClearAsync(Guid id, CancellationToken cancellationToken)
     {
+        var custody = _currentTransaction?.OriginalRead
+            ?? throw new UnauthorizedAccessException("Original read custody is required.");
         try
         {
             if (await ReadPublicationIntentAsync(id, cancellationToken).ConfigureAwait(false) is not null ||
-                File.Exists(PendingIntegrityPath(id)) || Directory.Exists(PendingIntegrityPath(id)) ||
-                File.Exists(PendingRecoveryPath(id)) || Directory.Exists(PendingRecoveryPath(id)))
+                custody.HasNamedEntry("current.integrity.pending.json") ||
+                custody.HasNamedEntry("current.recovery.json"))
                 throw new NotesOriginalReadRecoveryRequiredException(id,
                     "The original Notes document has pending recovery/publication state; a read cannot repair it.");
         }
@@ -318,7 +325,7 @@ public sealed partial class NotesRepository
         internal IReadOnlyList<Guid> EnumerateDocumentIds()
         {
             DemandCurrent();
-            return _documents is null ? [] : Directory.EnumerateDirectories(OriginalNotesRoot.Alias(_documents))
+            return _documents is null ? [] : Directory.EnumerateFileSystemEntries(OriginalNotesRoot.Alias(_documents))
                 .Select(Path.GetFileName).Where(leaf => Guid.TryParseExact(leaf, "D", out var id) &&
                     id != Guid.Empty && leaf == id.ToString("D"))
                 .Select(leaf => Guid.ParseExact(leaf!, "D")).Order().ToArray();
@@ -353,6 +360,18 @@ public sealed partial class NotesRepository
         private readonly string _id;
         private readonly int _directoryFlag, _noFollow;
         internal string DocumentPath => OriginalNotesRoot.Alias(_document);
+        // Metadata presence is a no-follow native observation of the retained parent, not
+        // File.Exists (which follows links and silently hides dangling pending artifacts).
+        internal bool HasNamedEntry(string leaf)
+        {
+            if (string.IsNullOrWhiteSpace(leaf) || leaf is "." or ".." || leaf.IndexOfAny(['/', (char)92]) >= 0)
+                throw new ArgumentException("One canonical Notes leaf is required.", nameof(leaf));
+            DemandCurrent();
+            var metadata = new byte[256];
+            if (NamedStat(OriginalNotesRoot.Fd(_document), leaf, 0x100, 1, metadata) == 0) return true;
+            if (Marshal.GetLastPInvokeError() == 2) return false;
+            throw Error("Observe original Notes pending metadata without following links");
+        }
         internal bool HasVersionArtifacts => _versions is not null &&
             Directory.EnumerateFileSystemEntries(OriginalNotesRoot.Alias(_versions)).Any();
         internal string VersionsPath => _versions is null ? throw new IOException("The original Notes versions directory is absent.") : OriginalNotesRoot.Alias(_versions);
@@ -439,6 +458,8 @@ public sealed partial class NotesRepository
         public void Dispose() { _versions?.Dispose(); _document.Dispose(); _documents.Dispose(); }
         private static IOException Error(string operation) => new(operation + " failed.", new Win32Exception(Marshal.GetLastPInvokeError()));
         [DllImport("libc", EntryPoint = "mkdirat", SetLastError = true, CharSet = CharSet.Ansi)] private static extern int MakeDirectory(int fd, string leaf, uint mode);
+        [DllImport("libc", EntryPoint = "statx", SetLastError = true, CharSet = CharSet.Ansi)]
+        private static extern int NamedStat(int fd, string leaf, int flags, uint mask, [Out] byte[] metadata);
         [DllImport("libc", EntryPoint = "fsync", SetLastError = true)] private static extern int SyncDirectory(int fd);
         [DllImport("libc", EntryPoint = "geteuid")] private static extern uint UserId();
     }

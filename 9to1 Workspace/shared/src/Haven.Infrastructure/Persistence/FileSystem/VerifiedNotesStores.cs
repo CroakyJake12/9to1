@@ -138,9 +138,8 @@ public sealed class VerifiedNotesRepository(
             var observed = await transaction.InspectCurrentAsync(id, cancellationToken).ConfigureAwait(false);
             if (observed.Absent)
             {
-                var backup = Path.Combine(DirectoryPath(id), "backup.haven-notes.json");
-                if (File.Exists(backup) || Directory.Exists(backup) || File.Exists(ManifestPath(id)) ||
-                    Directory.Exists(ManifestPath(id)) || transaction.OriginalRead.HasVersionArtifacts)
+                if (transaction.OriginalRead.HasNamedEntry("backup.haven-notes.json") ||
+                    transaction.OriginalRead.HasNamedEntry("current.integrity.json") || transaction.OriginalRead.HasVersionArtifacts)
                     throw new NotesOriginalReadRecoveryRequiredException(id,
                         "The original Notes current is absent but recovery artifacts exist; a read cannot hide or restore them.");
                 return null;

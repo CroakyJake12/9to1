@@ -701,6 +701,69 @@ public sealed class NotesOriginalStoreTests
         await rig.AssertNotesFilesUnchangedAsync(before);
     }
 
+    [LinuxNotesFact]
+    public async Task Dangling_pending_metadata_is_present_and_requires_preserved_recovery()
+    {
+        foreach (var leaf in new[] { "current.integrity.pending.json", "current.recovery.json" })
+        {
+            await using var rig = await HomeRig.CreateAsync();
+            var document = NotesDocument.Create("Pending-link revision");
+            var saved = await rig.Verified.SaveAsync(document, "Existing actual note", rig.Token);
+            var directory = Path.GetDirectoryName(saved.CurrentPath)!;
+            var manifest = Path.Combine(directory, "current.integrity.json");
+            var currentBytes = await File.ReadAllBytesAsync(saved.CurrentPath, rig.Token);
+            var manifestBytes = await File.ReadAllBytesAsync(manifest, rig.Token);
+            var pending = Path.Combine(directory, leaf);
+            var missing = Path.Combine(rig.Notes.DataDirectory, "missing-pending-target");
+            File.CreateSymbolicLink(pending, missing);
+            var names = Directory.EnumerateFileSystemEntries(directory).Select(Path.GetFileName).Order().ToArray();
+            var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(document.Id, rig.Token);
+            var (review, admission) = await rig.AcceptReadAsync(request);
+            var error = await Record.ExceptionAsync(() => rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request,
+                admission, rig.Verified, rig.Token));
+            Assert.NotNull(error);
+            Assert.Contains(Leaves(error!), cause => cause is NotesOriginalReadRecoveryRequiredException);
+            Assert.Equal(missing, new FileInfo(pending).LinkTarget);
+            Assert.False(File.Exists(missing));
+            Assert.Equal(names, Directory.EnumerateFileSystemEntries(directory).Select(Path.GetFileName).Order());
+            Assert.Equal(currentBytes, await File.ReadAllBytesAsync(saved.CurrentPath, rig.Token));
+            Assert.Equal(manifestBytes, await File.ReadAllBytesAsync(manifest, rig.Token));
+            Assert.Equal(HomePermissionRequestState.Failed,
+                (await rig.Admission.GetLibrarySnapshotAuthorizationAsync(review, rig.Token)).State);
+        }
+    }
+
+    [LinuxNotesFact]
+    public async Task Canonical_UUID_entries_that_are_not_directories_cannot_be_silently_omitted()
+    {
+        foreach (var danglingLink in new[] { false, true })
+        {
+            await using var rig = await HomeRig.CreateAsync();
+            var document = NotesDocument.Create("Canonical-entry revision");
+            var saved = await rig.Verified.SaveAsync(document, "Existing actual note", rig.Token);
+            var canonical = Path.GetDirectoryName(saved.CurrentPath)!;
+            var preserved = Path.Combine(rig.Notes.DataDirectory, "preserved-original-directory");
+            Directory.Move(canonical, preserved);
+            var preservedCurrent = Path.Combine(preserved, "current.haven-notes.json");
+            var originalBytes = await File.ReadAllBytesAsync(preservedCurrent, rig.Token);
+            var missing = Path.Combine(rig.Notes.DataDirectory, "missing-document-directory");
+            if (danglingLink) File.CreateSymbolicLink(canonical, missing);
+            else await File.WriteAllTextAsync(canonical, "Preserve this canonical non-directory entry", rig.Token);
+            var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(document.Id, rig.Token);
+            var (review, admission) = await rig.AcceptReadAsync(request);
+            var error = await Record.ExceptionAsync(() => rig.Notes.Owner.ReadOriginalLibraryWithHomeAsync(request,
+                admission, rig.Verified, rig.Token));
+            Assert.NotNull(error);
+            Assert.Contains(Leaves(error!), cause => cause is NotesOriginalReadRecoveryRequiredException);
+            Assert.Equal(originalBytes, await File.ReadAllBytesAsync(preservedCurrent, rig.Token));
+            if (danglingLink) Assert.Equal(missing, new FileInfo(canonical).LinkTarget);
+            else Assert.Equal("Preserve this canonical non-directory entry", await File.ReadAllTextAsync(canonical, rig.Token));
+            Assert.False(Directory.Exists(missing));
+            Assert.Equal(HomePermissionRequestState.Failed,
+                (await rig.Admission.GetLibrarySnapshotAuthorizationAsync(review, rig.Token)).State);
+        }
+    }
+
     private static IEnumerable<Exception> Leaves(Exception error) => error is AggregateException aggregate
         ? aggregate.InnerExceptions.SelectMany(Leaves) : [error];
 
