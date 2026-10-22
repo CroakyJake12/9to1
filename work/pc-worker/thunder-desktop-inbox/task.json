@@ -27,26 +27,26 @@
     "unsupported": "No arbitrary shell/program payload, unknown scope, provider/system change, new model request or credential access; refuse and report.",
     "before_model_or_hardware_execution": "Exclusive shared-model custody and separate explicit owner/native authorization remain mandatory; this test-only task supplies neither."
   },
-  "sequence": 6,
-  "task_id": "THUNDER-DESKTOP-20261022-06",
-  "previous_task_id": "THUNDER-DESKTOP-20261022-05",
-  "expected_previous_inbox_revision": "9fc660db9154157b9b645199a96cca2b81def816",
+  "sequence": 7,
+  "task_id": "THUNDER-DESKTOP-20261022-07",
+  "previous_task_id": "THUNDER-DESKTOP-20261022-06",
+  "expected_previous_inbox_revision": "b1b76fd0679ac1d69e70ce6b787b562e3e324831",
   "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_RESULT",
   "operation": "run_named_owning_check",
   "owner_context": "Owner says no laptop worker exists right now. Task5 directly observed real competing model traffic399to401, but did not identify its originating client. Preserve this distinction: do not infer a laptop consumer or ask the owner to stop one.",
-  "objective": "Identify the actual current model request path/consumer, stage the already compiled exact candidate privately without rebuilding or changing the running engine, and record an existing-engine baseline only within a directly observed quiet/overlap-free window. Do not remain blocked on the disproven laptop assumption.",
+  "objective": "Finish/checkpoint Task6 including actual five-run baseline/cache/unknown caller evidence, then resolve the pinned tokenizer module in a private overlay and run bounded CPU/loader capability readiness. Prepare the smallest documented reversible exclusive upgrade transaction; do not load candidate models or alter the existing serving engine in this task.",
   "scope": {
-    "mode": "ACTUAL_REQUEST_ATTRIBUTION_PRIVATE_CANDIDATE_STAGING_AND_CONDITIONAL_EXISTING_BASELINE",
+    "mode": "PINNED_PRIVATE_TOKENIZER_AND_CPU_LOADER_READINESS_NO_MODEL_EXECUTION",
     "repository_paths": [
       "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata"
     ],
-    "identity": "Use preserved unchanged expected-source tree for reads; preserve Task4 five-path branch/patch and all Task1-5 results. No tracked-source edits.",
-    "system_reads": "Only actual Thunder gateway/supervisor/engine, their documented current counters, request-path/source logs and known relevant local client/session/process/bridge metadata. Identify the actual host/process using live evidence, not copied pathnames or old status. If inspecting bridge config/doctor, retain only installation/version/host identity and nonsecret capability metadata; never credentials, environment dumps or private prompts.",
-    "private_stage": "New private task-owned directory outside tracked trees; exact43MB ZIP through existing authenticated connected OneDrive tools or existing authenticated GitHub artifact download. Verify destination owner-only ACL and exact archive SHA; no public link or new auth. No full clone/model/SDK/dependency download.",
+    "private_stage": "Existing exact staged candidate archive; new task-owned private overlay outside tracked trees. No edits to installed venv, source, server/model configuration or global/user package environment.",
+    "allowed_acquisition": "One exact807783byte official PyPI CPython3.12 Linuxx86_64 regex wheel plus exact1113921byte pinned upstream generate.cpp if needed; bounded hashes required. No toolkit/driver/SDK/models, fullclone or newworkers.",
+    "preservation": "Finish and retain Task6 final receipt before admission; preserve all five valid runs and first/repeated cache distinction, failed admission, actual source/engine identity, raw logs, Task4patch and all previous work.",
     "no_actions": [
-      "No process/service stop/restart/pause/reconfiguration, existing engine unload/replacement, driver/toolkit/security/power/clock/provider/spending changes, new workers or unrelated interruption. Return precise current consumer if an actual future-dispatch hold is required; do not invent a writer.",
-      "No candidate inference/model load or second engine; no global install, production selection/promotion, commit/push/main merge. Current-engine baseline ONLY under the conditional admission below.",
-      "Do not change Task4 source to force tests green or lose its28KB patch; preserve and report exact review source/evidence."
+      "No candidate model load, second resident engine, inference requests, production selection/promotion, old-engine stop/restart/unload, service/process hold, firmware/driver/security/power/provider changes, globalinstall or sourcecommit/push.",
+      "No fake laptop consumer or inferred exclusive lease; actual inactive observation is not a durable reservation.",
+      "Use existing worker/native approvals and supported bounded tools only; no arbitrary shell payload."
     ]
   },
   "candidate_artifact": {
@@ -72,28 +72,38 @@
   },
   "checks": {
     "named_checks": [
-      "direct_request_origin_attribution",
-      "actual_private_candidate_archive_and_ELF_closure",
-      "current_engine_overlap_free_baseline_if_admitted",
-      "preservation_and_next_upgrade_admission"
+      "task06_final_receipt_preserved",
+      "private_pinned_python_module_closure",
+      "real_helper_metadata_identity_encode_decode_CPU_readiness",
+      "candidate_loader_and_model_capability_static_and_safe_help_only",
+      "documented_exclusive_upgrade_and_rollback_recipe"
     ],
-    "attribution": "Correlate exact current request/queue counters and bounded gateway/access logs with relevant known local clients and service/session ownership. If possible identify whether a real9to1background continuation is local on this PC versus a remote client. Do not report a saved active/session flag as a current model request or assign it to a laptop. Do not stop anything.",
-    "baseline_admission": "Task5 historical30swindowfailed; that is retained. A NEW30swindow may admit current-engine baseline only when actual server counters show no active/queued generations and no competing requests throughout. Monitor counters and exact engine/model identity DURING every sequential request; any extra consumer/request or overlap invalidates that run. No inferred exclusive lease or unloaded engine.",
-    "baseline": "If newly admitted, use actual existing selectedmodel/quantisation, fixed nonpersonal prompt, temperature0, supported fresh-cache setting only if documented, max128tokens, sequential five valid runs at mostone retry per invalidrun, total<=15minutes/currentexpiry. Record raw TTFT/tokens/throughput/cache/native telemetry whereavailable; client timing!=enginecompute. Missing/competingtraffic => BLOCKED, zero fabricated passes.",
-    "candidate_readiness": "Confirm current installed driver/CUDA13/toolkit and exact staged ELF DSOs/Python module closure, current GGUFqwen4exp/MOSTLY_IQ3_S with mixed tensor types versus actual pinned upstream capabilities. Stageonly; no model start or claim compatibility before proof. Return exact next safe old/upstream/candidate execution recipe and required ownership/dependency gate.",
-    "bounds": "Atmost60second waits, onecompiler/buildatime ifany(no rebuild requested), resource floors/normal approvals, absolute stop22:45UTC or earlier ownerrevocation."
+    "python": "Use exact staged helper and donor modules with real configured GGUF tokenizer/chat-template metadata only, bounded CPU/memory/time, no weights/GPU/model inference. Prove actual loaded regex2026.9.29/Jinja2 3.1.6 origins and isolatedoverlay; real identity and nonpersonal encode/decode/render where declared supported, unsupported currentqwen4exp metadata => honestcapabilityrefusal. Retain actualfailures, no guessed token ids/template.",
+    "loader": "Actual dynamic loader verification permitted without starting GPU/model execution; candidate --help/version allowed ONLY after inspecting exact pinned source confirms exit before CUDAcontext/model/resourceallocation. Otherwise leaveNOTRUN with precise reason.",
+    "next_upgrade": "Read existing documented serving/supervisor lifecycle/reservation/drain and rollback controls; identify exact current request ingress owner without reading prompts/credentials. Return a reviewable reversible existing/upstream/candidate benchmark recipe, immutable oldbinary/config/model identity and known-goodrestore. No new maintenance/hold mechanism or servicechange here. Need actual exclusiveadmission before laterGPUload; empty samplesalone do not establish reservation.",
+    "bounds": "All operations <=60secondtoolwait, subprocessbounded, minimal dependencies, resourcefloors; stop22:45UTC/native denial/ownerrevocation."
   },
   "outputs": {
-    "destination": "Existing private desktop thread plus owned private result/raw evidence",
+    "destination": "Existing private thread and task-owned raw receipts",
     "fields": [
-      "task_ID/source/actual_ACK",
-      "actual_request_caller_or_precise_unknown",
-      "current_real_host/bridge_scope_ifrelevant_withoutsecrets",
-      "staged_actual_path/ZIPbytesSHA/ELFclosure/dependencies",
-      "new_quietwindow_andbaseline_raw_results_orblocker",
-      "Task4patch_preserved",
-      "nextminimal_upgrade_step"
+      "Task6finalresult/path/hash and exact5rawrows",
+      "Task7ACK/inputpins/actualinterpreter/modulefiles",
+      "CPUhelperresults or exactcapabilityfailure",
+      "actualno-model loader/help result orNOTRUN",
+      "precise currentconsumer/ingress and reversibleupgrade/rollback admissiongate"
     ],
-    "privacy": "No credentials,signed URLs,privatepromptsorunrelated personalfiles. Public task contains only public source/artifact metadata and nonsecret filename."
+    "privacy": "No credentials/signedURLs/privateprompts/unrelatedpersonaldata; publictask contains onlypublic immutable dependency pins."
+  },
+  "runtime_dependency": {
+    "name": "regex",
+    "version": "2026.9.29",
+    "canonical_sdist_sha256": "8b5fcc4771732191b2b7d1dd68d8f0353f47f8d90b6150f6dce58bf1112442cb",
+    "wheel": {
+      "filename": "regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "bytes": 807783,
+      "sha256": "39ab5894d971f9ac68baa6eca5c50387db579cfcacf36ae8df3feceb1815e6d0",
+      "url": "https://files.pythonhosted.org/packages/26/83/d2fbd2e4e3afb1167daa825187d196f313cbaa1a4768f311fb041bb0e3d2/regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+    },
+    "installation": "Private task-owned --target overlay using existing interpreter/tooling, no-deps/no-index/no-compile, after exact hash/size and real platform tag match. Never mutate installed existingvenv. jinja2 existing3.1.6 and actualMarkupsafe may be reused with retained path/version/hash closure. Missing tooling/compatibility => preciseBLOCKED."
   }
 }
