@@ -40,10 +40,10 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public BoardsBrowserCore(INotesRepository authorisedRepository, INotesAttachmentStore? attachments = null,
-        Func<Exception, bool>? unknownOutcome = null)
+        Func<Exception, bool>? unknownOutcome = null, IBoardsNotebookSummarySource? summarySource = null)
     {
         _repository = authorisedRepository ?? throw new ArgumentNullException(nameof(authorisedRepository));
-        _writes = new(authorisedRepository); _boards = new(_writes, attachments);
+        _writes = new(authorisedRepository); _boards = new(_writes, attachments, summarySource);
         _unknown = unknownOutcome ?? (_ => false);
     }
     public NotesDocument? GetDocumentSnapshot() => _document is null ? null : Clone(_document);
