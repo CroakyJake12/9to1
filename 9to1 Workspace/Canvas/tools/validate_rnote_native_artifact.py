@@ -12,7 +12,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import stat
 import struct
 import subprocess
@@ -26,21 +25,45 @@ cake_canvas_save_rnote cake_canvas_buffer_release cake_canvas_render_frame
 cake_canvas_render_frame_release""".split())
 MACHINES = {"x86_64-unknown-linux-gnu": 62, "aarch64-unknown-linux-gnu": 183}
 CANVAS = Path("9to1 Workspace/Canvas")
+MAX_SNAPSHOT_BYTES = 512 * 1024 * 1024
 
 
-def receipt(path: Path) -> dict:
-    data = path.read_bytes()
+def read_snapshot(path: Path) -> bytes:
+    """Own bounded regular-file bytes through one descriptor, not a second path read.
+
+    NONBLOCK makes a replacement FIFO refuse after fstat rather than hanging open.
+    This is a byte snapshot, not a claim that another process cannot modify a file.
+    """
+    descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NONBLOCK)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise ValueError("Inspection requires a regular file")
+        if metadata.st_size > MAX_SNAPSHOT_BYTES:
+            raise ValueError("File exceeds 512 MiB inspection bound")
+        with os.fdopen(descriptor, "rb", closefd=False) as source:
+            data = source.read(MAX_SNAPSHOT_BYTES + 1)
+        if len(data) > MAX_SNAPSHOT_BYTES:
+            raise ValueError("File exceeds 512 MiB inspection bound")
+        return data
+    finally:
+        os.close(descriptor)
+
+
+def receipt(path: Path, *, snapshot: bytes | None = None) -> dict:
+    data = read_snapshot(path) if snapshot is None else snapshot
+    if not isinstance(data, bytes):
+        raise TypeError("An owned immutable byte snapshot is required")
     return {"path": str(path), "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
 
 
-def inspect_elf(path: Path) -> dict:
-    """Bounded ELF64 LE section-table reader; no ctypes, dlopen, ldd or execution."""
-    metadata = path.stat()
-    if not stat.S_ISREG(metadata.st_mode):
-        raise ValueError("ELF inspection requires a regular file")
-    if metadata.st_size > 512 * 1024 * 1024:
+def inspect_elf(path: Path, *, snapshot: bytes | None = None) -> dict:
+    """Parse and hash the same ELF64 LE bytes; no library loading or execution."""
+    data = read_snapshot(path) if snapshot is None else snapshot
+    if not isinstance(data, bytes):
+        raise TypeError("An owned immutable byte snapshot is required")
+    if len(data) > MAX_SNAPSHOT_BYTES:
         raise ValueError("ELF exceeds 512 MiB inspection bound")
-    data = path.read_bytes()
 
     def unpack(fmt: str, offset: int):
         size = struct.calcsize(fmt)
@@ -104,7 +127,7 @@ def inspect_elf(path: Path) -> dict:
                 if definition and info >> 4 in (1, 2) and info & 15 == 2 and visibility & 3 == 0:
                     exports.add(string(table, name))
     return {"machine": machine, "exports": sorted(exports), "needed": needed,
-            "soname": soname, "rpath_runpath": search_paths, **receipt(path)}
+            "soname": soname, "rpath_runpath": search_paths, **receipt(path, snapshot=data)}
 
 
 def dependency_closure(library: Path, machine: int, directories: list[Path], copy_to: Path | None = None) -> list[dict]:
@@ -117,7 +140,8 @@ def dependency_closure(library: Path, machine: int, directories: list[Path], cop
         if len(seen) >= 256:
             raise ValueError("Native dependency closure exceeds 256-object bound")
         seen.add(path)
-        item = inspect_elf(path)
+        snapshot = read_snapshot(path)
+        item = inspect_elf(path, snapshot=snapshot)
         if item["machine"] != machine:
             raise ValueError(f"Wrong ELF architecture: {path}")
         if item["rpath_runpath"]:
@@ -136,7 +160,8 @@ def dependency_closure(library: Path, machine: int, directories: list[Path], cop
         if copy_to is not None:
             destination = copy_to / item["sha256"] / path.name
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(path, destination)
+            # Retain exactly what was parsed/hashed, even if the original path changed.
+            destination.write_bytes(snapshot)
             item["retained_copy"] = str(destination)
         result.append(item)
     return sorted(result, key=lambda item: item["path"])
@@ -144,8 +169,10 @@ def dependency_closure(library: Path, machine: int, directories: list[Path], cop
 
 def source_policy(repo: Path) -> dict:
     manifest_path, lock_path = (repo / CANVAS / "rnote-poc" / name for name in ("Cargo.toml", "Cargo.lock"))
-    manifest, lock = tomllib.loads(manifest_path.read_text()), tomllib.loads(lock_path.read_text())
-    policy = json.loads((repo / "eng/donor-sources.json").read_text())["upstreams"]["rnote"]
+    managed, donor = repo / CANVAS / "RnoteCanvasEngine.cs", repo / "eng/donor-sources.json"
+    inputs = {path: read_snapshot(path) for path in (manifest_path, lock_path, managed, donor)}
+    manifest, lock = (tomllib.loads(inputs[path].decode("utf-8")) for path in (manifest_path, lock_path))
+    policy = json.loads(inputs[donor])["upstreams"]["rnote"]
     selected = policy["commit"]
     if not re.fullmatch(r"[0-9a-f]{40}", selected):
         raise ValueError("Selected Rnote revision is not an immutable commit")
@@ -163,14 +190,13 @@ def source_policy(repo: Path) -> dict:
     for package in lock["package"]:
         if package.get("source", "").startswith("registry+") and not re.fullmatch(r"[0-9a-f]{64}", package.get("checksum", "")):
             raise ValueError(f"Registry checksum absent/invalid: {package['name']}")
-    managed = repo / CANVAS / "RnoteCanvasEngine.cs"
-    imports = sorted(set(re.findall(r'EntryPoint\s*=\s*"(cake_canvas_[^\"]+)"', managed.read_text())))
+    imports = sorted(set(re.findall(r'EntryPoint\s*=\s*"(cake_canvas_[^\"]+)"', inputs[managed].decode("utf-8"))))
     if not CORE <= set(imports):
         raise ValueError("Managed boundary no longer contains the audited core ABI")
     return {"selected_donor": selected, "locked_sources": pins,
             "selected_matches_locked": all(value == selected for value in pins.values()),
             "managed_imports": imports, "core_imports": sorted(CORE),
-            "source_inputs": [receipt(path) for path in (manifest_path, lock_path, managed, repo / "eng/donor-sources.json")],
+            "source_inputs": [receipt(path, snapshot=data) for path, data in inputs.items()],
             "runtime_abi_version_execution": "NOT RUN by artifact inspector"}
 
 

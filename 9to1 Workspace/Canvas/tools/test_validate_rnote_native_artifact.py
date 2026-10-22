@@ -1,5 +1,6 @@
 """Synthetic binary/source controls; none execute a native library or imply ARM runtime success."""
 import contextlib
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -90,6 +91,48 @@ class NativeArtifactTests(unittest.TestCase):
             self.assertEqual(Path(item["path"]).read_bytes(), Path(item["retained_copy"]).read_bytes())
             self.assertEqual(check.receipt(Path(item["retained_copy"]))["sha256"], item["sha256"])
 
+    def assert_same_path_replacement_preserves_snapshot(self, stage, machine, exports):
+        library = self.root / "bridge.so"
+        elf(library, exports=check.CORE)
+        parsed_bytes = library.read_bytes()
+        replaced = False
+        actual = getattr(check, stage)
+
+        def replace_once(path, **kwargs):
+            nonlocal replaced
+            if stage == "inspect_elf":
+                result = actual(path, **kwargs)
+            if path == library and not replaced:
+                replaced = True
+                elf(library, machine=machine, exports=exports)
+            return result if stage == "inspect_elf" else actual(path, **kwargs)
+
+        with patch.object(check, stage, side_effect=replace_once):
+            item, = check.dependency_closure(library, 62, [self.root], self.root / "retained")
+        self.assertTrue(replaced, "The real inspection boundary must actually replace the input")
+        self.assertNotEqual(parsed_bytes, library.read_bytes())
+        self.assertEqual(sorted(check.CORE), item["exports"])
+        self.assertEqual(62, item["machine"])
+        self.assertEqual(len(parsed_bytes), item["bytes"])
+        self.assertEqual(hashlib.sha256(parsed_bytes).hexdigest(), item["sha256"])
+        retained = Path(item["retained_copy"])
+        self.assertEqual(parsed_bytes, retained.read_bytes())
+        retained_inspection = check.inspect_elf(retained)
+        self.assertEqual(item["exports"], retained_inspection["exports"])
+        self.assertEqual(item["machine"], retained_inspection["machine"])
+
+    def test_same_path_no_core_replacement_cannot_rebind_parsed_receipt(self):
+        self.assert_same_path_replacement_preserves_snapshot("receipt", 62, ())
+
+    def test_same_path_wrong_arch_replacement_cannot_rebind_parsed_receipt(self):
+        self.assert_same_path_replacement_preserves_snapshot("receipt", 183, check.CORE)
+
+    def test_same_path_no_core_replacement_after_inspection_retains_snapshot(self):
+        self.assert_same_path_replacement_preserves_snapshot("inspect_elf", 62, ())
+
+    def test_same_path_wrong_arch_replacement_after_inspection_retains_snapshot(self):
+        self.assert_same_path_replacement_preserves_snapshot("inspect_elf", 183, check.CORE)
+
     def test_missing_or_wrong_arch_dependency_refuses_including_transitive(self):
         path, dependency = self.root / "bridge.so", self.root / "other.so"
         elf(path, needed=[dependency.name])
@@ -127,6 +170,29 @@ class NativeArtifactTests(unittest.TestCase):
         policy = check.source_policy(self.root)
         self.assertFalse(policy["selected_matches_locked"])
         self.assertEqual("8" * 40, policy["locked_sources"]["rnote-engine"])
+
+    def test_source_receipts_hash_exact_parsed_snapshot_when_manifest_replaced(self):
+        self.source_fixture()
+        manifest = self.root / check.CANVAS / "rnote-poc/Cargo.toml"
+        parsed_bytes = manifest.read_bytes()
+        actual_receipt = check.receipt
+        replaced = False
+
+        def replace_manifest(path, **kwargs):
+            nonlocal replaced
+            if path == manifest and not replaced:
+                replaced = True
+                manifest.write_bytes(parsed_bytes.replace(b"8" * 40, b"9" * 40))
+            return actual_receipt(path, **kwargs)
+
+        with patch.object(check, "receipt", side_effect=replace_manifest):
+            policy = check.source_policy(self.root)
+        self.assertTrue(replaced)
+        self.assertNotEqual(parsed_bytes, manifest.read_bytes())
+        self.assertEqual("8" * 40, policy["locked_sources"]["rnote-engine"])
+        item = next(item for item in policy["source_inputs"] if item["path"] == str(manifest))
+        self.assertEqual(len(parsed_bytes), item["bytes"])
+        self.assertEqual(hashlib.sha256(parsed_bytes).hexdigest(), item["sha256"])
 
     def test_lock_tampering_and_missing_registry_checksum_refuse(self):
         self.source_fixture()
