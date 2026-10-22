@@ -259,8 +259,12 @@ class WorkflowTests(unittest.TestCase):
         code, result = self.cli("preflight", "--repo", self.repo, "--execution", "active")
         self.assertEqual(2, code, result)
         self.assertFalse(result.get("ready", False))
-        self.assertEqual("BLOCKED", result["result"])
-        self.assertEqual("INFRASTRUCTURE", result["classification"])
+        if "execution_custody" in result:
+            self.assertEqual("BLOCKED", result["execution_custody"]["result"])
+            self.assertEqual("INFRASTRUCTURE", result["execution_custody"]["candidates"]["active"]["classification"])
+        else:
+            self.assertEqual("BLOCKED", result["result"])
+            self.assertEqual("INFRASTRUCTURE", result["classification"])
         self.assertEqual(before, self.state_path.read_bytes())
         code, recovered = self.cli("recover", "--repo", self.repo, "--execution", "active")
         self.assertEqual(2, code, recovered)
