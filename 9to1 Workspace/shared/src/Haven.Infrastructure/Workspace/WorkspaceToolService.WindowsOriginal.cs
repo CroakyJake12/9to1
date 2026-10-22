@@ -96,7 +96,7 @@ public sealed partial class WorkspaceToolService
             invocation.Fence.RunOriginalEffect(invocation.Root, WorkspaceToolEffectKind.AtomicWrite, path, digest, () =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                RenameOriginalStagedHandle(originalHandle, path);
+                RenameOriginalStagedHandle(originalHandle, path, replaceIfExists: manualFence?.RequiresAbsentTarget != true);
                 renamed = true;
                 return true;
             });
@@ -162,14 +162,14 @@ public sealed partial class WorkspaceToolService
         throw new Win32Exception(error, "The original staged file could not be created.");
     }
 
-    private static void RenameOriginalStagedHandle(SafeFileHandle original, string canonicalTarget)
+    private static void RenameOriginalStagedHandle(SafeFileHandle original, string canonicalTarget, bool replaceIfExists = true)
     {
         var name = Encoding.Unicode.GetBytes(canonicalTarget);
         var rootOffset = IntPtr.Size == 8 ? 8 : 4;
         var lengthOffset = rootOffset + IntPtr.Size;
         var nameOffset = lengthOffset + sizeof(uint);
         var payload = new byte[nameOffset + name.Length];
-        payload[0] = 1; // FILE_RENAME_INFO.ReplaceIfExists; original target replacement behaviour.
+        payload[0] = replaceIfExists ? (byte)1 : (byte)0; // CREATE must not replace a racing existing target.
         BitConverter.GetBytes((uint)name.Length).CopyTo(payload, lengthOffset);
         name.CopyTo(payload, nameOffset);
         if (!SetFileInformationByHandle(original, 3, payload, (uint)payload.Length))

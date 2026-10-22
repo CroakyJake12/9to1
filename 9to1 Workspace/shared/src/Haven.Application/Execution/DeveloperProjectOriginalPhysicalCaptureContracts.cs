@@ -15,6 +15,26 @@ public interface IDeveloperProjectOriginalPhysicalSelection : IAsyncDisposable
 }
 public interface IDeveloperProjectOriginalPhysicalCaptureSource
 {
+    /// <summary>Uses the SAME configured kernel's existing descriptor engine. A source lacking
+    /// that capability refuses saved-project operations; callers never fall back to path-only IO.</summary>
+    IDeveloperOriginalRegisteredProjectNativeSource CreateOriginalRegisteredProjectNativeSource(
+        Func<IDeveloperOriginalRegisteredProjectSelectionSource> sameSelections,
+        IDeveloperProjectOriginalWorkspaceMetadataStore sameConfiguredStore)
+        => throw new NotSupportedException("The SAME kernel has no registered-project metadata custody.");
+    Task ValidateOriginalCreateTargetAsync(IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+        string projectRelativePath, CancellationToken cancellationToken)
+        => throw new NotSupportedException("The native source cannot verify absent-target CREATE.");
+    /// <summary>Retains the existing parent descriptor and probes actual native absence. No
+    /// caller path check or remembered absence can authorize the final no-replace publication.</summary>
+    Task<IDeveloperProjectOriginalEditCurrentnessPin> AcquireOriginalCreateCurrentnessPinAsync(
+        IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+        string projectRelativePath, string reviewedAfterSha256, CancellationToken cancellationToken)
+        => throw new NotSupportedException("The native source has no absent-target currentness owner.");
+    Task<string> ApplyOriginalCapturedFileCreateAsync(IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+        IDeveloperProjectOriginalReadAdmission sameReadAdmission,
+        IDeveloperProjectOriginalEditAdmission sameCreateAdmission,
+        string projectRelativePath, string reviewedAfterText, CancellationToken cancellationToken)
+        => throw new NotSupportedException("The native source does not implement reviewed absent-target CREATE.");
     Task<IDeveloperProjectOriginalPhysicalSelection> OpenOriginalSelectionAsync(
         string sameConfiguredFilesRoot, string explicitlySelectedExistingProjectRoot, CancellationToken cancellationToken);
     bool IsIssuedOriginalSelection(IDeveloperProjectOriginalPhysicalSelection sameSelection);

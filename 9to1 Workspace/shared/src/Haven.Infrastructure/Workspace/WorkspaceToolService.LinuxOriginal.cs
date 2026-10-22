@@ -37,6 +37,8 @@ public sealed partial class WorkspaceToolService
                     throw new PlatformNotSupportedException("A privileged/sticky file mode requires its explicit metadata owner; no staging occurred.");
             }
             catch (FileNotFoundException) { } // a genuine original absence may create a private 0600 file
+            if (manualFence?.RequiresAbsentTarget == true && beforeTarget is not null)
+                throw new UnauthorizedAccessException("The reviewed CREATE target already exists; an empty file is not absence.");
 
             actualAcquire = invocation.Fence.AcquireOriginalCommitPinAsync(cancellationToken).AsTask();
             pin = await actualAcquire.ConfigureAwait(false) ?? throw new UnauthorizedAccessException("The actual original Linux staging pin is unavailable.");
@@ -93,7 +95,8 @@ public sealed partial class WorkspaceToolService
                 if (LinuxLinkAt(LinuxDescriptor(original), "", LinuxDescriptor(parent), stageName, 0x1000) != 0)
                     throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "The original anonymous inode could not be linked.");
                 linked = true;
-                if (LinuxRenameAt2(LinuxDescriptor(parent), stageName, LinuxDescriptor(parent), leaf, 0) != 0)
+                if (LinuxRenameAt2(LinuxDescriptor(parent), stageName, LinuxDescriptor(parent), leaf,
+                    manualFence?.RequiresAbsentTarget == true ? 1U : 0U) != 0) // RENAME_NOREPLACE for CREATE only.
                     throw new Win32Exception(System.Runtime.InteropServices.Marshal.GetLastPInvokeError(), "The original Linux target swap failed.");
                 renamed = true;
                 return true;

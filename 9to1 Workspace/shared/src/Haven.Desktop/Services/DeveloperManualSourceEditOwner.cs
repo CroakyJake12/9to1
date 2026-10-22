@@ -57,8 +57,7 @@ public sealed class DeveloperManualSourceEditOwner(
         if (!IsHash(expectedSha256)) throw new ArgumentException("The exact reviewed current SHA-256 revision is required.", nameof(expectedSha256));
         var configuration = await files.GetConfigurationAsync(token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
-        var root = project.Root.Location ?? throw new InvalidOperationException("The resolved project has no local root location.");
-        var selection = await selections.SelectOriginalExistingProjectAsync(configuration.StoreId, root, token).ConfigureAwait(false);
+        var selection = await selections.SelectOriginalRegisteredProjectAsync(configuration.StoreId, project, token).ConfigureAwait(false);
         var readAdmission = await reads.AcquireOriginalAsync(selection, token).ConfigureAwait(false);
         try
         {
@@ -78,8 +77,7 @@ public sealed class DeveloperManualSourceEditOwner(
     {
         var configuration = await files.GetConfigurationAsync(token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
-        var root = project.Root.Location ?? throw new InvalidOperationException("The resolved project has no local root location.");
-        var selection = await selections.SelectOriginalExistingProjectAsync(configuration.StoreId, root, token).ConfigureAwait(false);
+        var selection = await selections.SelectOriginalRegisteredProjectAsync(configuration.StoreId, project, token).ConfigureAwait(false);
         var readAdmission = await reads.AcquireOriginalAsync(selection, token).ConfigureAwait(false);
         try
         {

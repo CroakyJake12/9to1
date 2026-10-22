@@ -8,29 +8,31 @@ public interface IDeveloperOriginalCurrentProjectSelection : IDeveloperProjectOr
 
 /// <summary>Metadata from the SAME source's current registered project observation. The
 /// native owner must recognize the exact selection/descriptor/store, then require READ.</summary>
-public interface IDeveloperOriginalCurrentProjectDescriptor
+public interface IDeveloperOriginalCurrentProjectDescriptor : IDeveloperOriginalRegisteredProjectDescriptor
 {
-    IDeveloperProjectOriginalWorkspaceMetadataStore OriginalStore { get; }
-    Guid WorkspaceId { get; }
-    Guid ProjectId { get; }
-    Guid RootId { get; }
-    long WorkspaceRevision { get; }
-    long ProjectRevision { get; }
-    string? RepositoryBindingId { get; }
-    string ExactProjectReferenceJson { get; }
+    // Retain the existing Task descriptor's declared members as well as the metadata-only base.
+    // Existing implementations provide their SAME properties to both typed contracts.
+    new IDeveloperProjectOriginalWorkspaceMetadataStore OriginalStore { get; }
+    new Guid WorkspaceId { get; }
+    new Guid ProjectId { get; }
+    new Guid RootId { get; }
+    new long WorkspaceRevision { get; }
+    new long ProjectRevision { get; }
+    new string? RepositoryBindingId { get; }
+    new string ExactProjectReferenceJson { get; }
     Conversation OriginalConversation { get; }
     ContainerDefinition OriginalContainer { get; }
-    AuthenticatedResourceActor OriginalActor { get; }
-    string ConfiguredFilesRoot { get; }
-    string RegisteredProjectRoot { get; }
-    string OriginalRegistrationStatePath { get; }
-    string OriginalRegistrationStateJson { get; }
-    string OriginalSelectedRegistrationJson { get; }
-    string? ExpectedWorkspaceDocumentSha256 { get; }
-    string? ExpectedRegisteredRootFingerprint { get; }
+    new AuthenticatedResourceActor OriginalActor { get; }
+    new string ConfiguredFilesRoot { get; }
+    new string RegisteredProjectRoot { get; }
+    new string OriginalRegistrationStatePath { get; }
+    new string OriginalRegistrationStateJson { get; }
+    new string OriginalSelectedRegistrationJson { get; }
+    new string? ExpectedWorkspaceDocumentSha256 { get; }
+    new string? ExpectedRegisteredRootFingerprint { get; }
 }
 
-public interface IDeveloperOriginalCurrentProjectSelectionSource : IDeveloperProjectOriginalReadSelectionSource
+public interface IDeveloperOriginalCurrentProjectSelectionSource : IDeveloperOriginalRegisteredProjectSelectionSource
 {
     Task<IDeveloperOriginalCurrentProjectSelection> SelectOriginalWithinSourceAsync(
         Conversation sameConversation, ContainerDefinition sameActualContainer, string exactProjectReferenceJson,
@@ -43,6 +45,23 @@ public interface IDeveloperOriginalCurrentProjectSelectionSource : IDeveloperPro
         AuthenticatedResourceActor sameActor, Action<Action> originalSynchronousScope,
         Action<Task> retainOriginalTask, CancellationToken token);
     void DemandExternalOriginalCurrentProjectJoin();
+
+    IDeveloperOriginalRegisteredProjectDescriptor IDeveloperOriginalRegisteredProjectSelectionSource.GetOriginalRegisteredDescriptor(
+        IDeveloperProjectOriginalReadSelection sameSelection)
+        => GetOriginalDescriptor(sameSelection as IDeveloperOriginalCurrentProjectSelection
+            ?? throw new UnauthorizedAccessException("The SAME privately issued Task current-project selection is required."));
+    bool IDeveloperOriginalRegisteredProjectSelectionSource.IsIssuedOriginalRegisteredDescriptor(
+        IDeveloperProjectOriginalReadSelection sameSelection, IDeveloperOriginalRegisteredProjectDescriptor sameDescriptor)
+        => sameSelection is IDeveloperOriginalCurrentProjectSelection current &&
+            sameDescriptor is IDeveloperOriginalCurrentProjectDescriptor descriptor && IsIssuedOriginalDescriptor(current, descriptor);
+    Task IDeveloperOriginalRegisteredProjectSelectionSource.RevalidateOriginalRegisteredWithinSourceAsync(
+        IDeveloperProjectOriginalReadSelection sameSelection, AuthenticatedResourceActor sameActor,
+        Action<Action> originalSynchronousScope, Action<Task> retainOriginalTask, CancellationToken token)
+        => RevalidateOriginalWithinSourceAsync(sameSelection as IDeveloperOriginalCurrentProjectSelection
+            ?? throw new UnauthorizedAccessException("The SAME privately issued Task current-project selection is required."),
+            sameActor, originalSynchronousScope, retainOriginalTask, token);
+    void IDeveloperOriginalRegisteredProjectSelectionSource.DemandExternalOriginalRegisteredJoin()
+        => DemandExternalOriginalCurrentProjectJoin();
 }
 
 /// <summary>Configured private Home issuer for the SAME current selection READ.

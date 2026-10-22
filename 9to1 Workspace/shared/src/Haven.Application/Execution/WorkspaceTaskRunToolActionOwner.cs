@@ -18,7 +18,7 @@ public sealed partial class WorkspaceTaskRunEffectAuthority : IWorkspaceToolFina
         IPermissionOriginalEffectFence effects)
         : this(tasks, policy, effects, null) { }
     public WorkspaceTaskRunEffectAuthority(TaskRunPermissionAuthority tasks, IPermissionDecisionEngine policy,
-        IPermissionOriginalEffectFence effects, Func<IWorkspaceOriginalProcessStartConsentSource>? processConsents,
+        IPermissionOriginalEffectFence effects, Func<IWorkspaceOriginalProcessStartConsentSource>? processConsents = null,
         Func<IWorkspaceManualEditFinalFenceValidator>? manualValidator = null)
     {
         _processConsents = processConsents;

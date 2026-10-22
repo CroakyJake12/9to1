@@ -112,6 +112,7 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
         };
         return path is "DisplayName" or "PersistenceStatus" or "CompatibilityStatus" or "SelectionSummary" or "ArtifactId" or "RevisionId"
             or "CanOpen" or "CanImport" or "CanFlush" or "CanUndo" or "CanRedo" or "CanEditInk"
+            or "CanFitView" or "CanZoomIn" or "CanZoomOut"
             or "CanNaturalErase" or "CanQuickErase" or "CanWholeErase" or "CanPartialErase" or "CanEditEraser" or "CanChooseEraseTarget" or "CanEraseChosenTarget" or "EraseTargetSummary" or "EraseInputStatus" or "EraserOptionsVisible" or "PenOptionsVisible"
             or "SelectedToolName" or "ToolOptionsVisible" or "ToolOptionsSummary" or "ToolCapabilityStatus" or "AiSurfaceVisible" or "AiIndicatorVisible" or "AiIndicatorLabel";
     }

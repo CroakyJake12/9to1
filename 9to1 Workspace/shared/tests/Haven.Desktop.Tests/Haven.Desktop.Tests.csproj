@@ -81,6 +81,11 @@
     <Compile Include="OriginalNativeColdProjectCompositionTests.cs;OriginalNativeColdProjectCompositionTests.Execution.cs;OriginalNativeColdProjectCompositionTests.ClosedInput.cs;OriginalNativeColdProjectCompositionTests.PreparedInputValidation.cs" />
     <!-- The maintained LinuxDirectoryFact attribute is owned in this existing test source. -->
     <Compile Include="FilesDeveloperOriginalDirectorySetupProducerTests.cs" />
+    <!-- Genuine Home/Files manual source CREATE/EDIT and native publication controls. -->
+    <Compile Include="FilesDeveloperOriginalSourcePublicationTests.cs" />
+    <!-- SAME existing Task current-project native controls and their unchanged partial helper
+         closure. Their synthetic READ is kernel compatibility evidence, not Home acceptance. -->
+    <Compile Include="FilesDeveloperOriginalCurrentProjectNativeTests.cs;FilesDeveloperOriginalExecutionPinTests.cs;FilesDeveloperOriginalWorkspaceMetadataSetupProducerTests.cs;FilesDeveloperOriginalProjectRegistrationProducerTests.cs" />
     <!-- Genuine separate manual Home WRITE + protected SQLite create-only composition, including its original rig. -->
     <Compile Include="CanonicalCompatibleTaskContextCompositionTests.Rig.cs;CanonicalCompatibleTaskContextCompositionTests.Tests.cs" />
     <Compile Include="OriginalAutomationLibraryDesktopTests.cs" />

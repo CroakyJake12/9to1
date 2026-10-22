@@ -1,5 +1,12 @@
 namespace Haven.Application;
 
+/// <summary>A tagged CREATE precondition, deliberately distinct from every SHA-256, including
+/// the SHA-256 of zero bytes. This describes scope; only the original owner grants authority.</summary>
+public static class DeveloperProjectSourceWriteRevision
+{
+    public const string Absent = "absent";
+}
+
 /// <summary>Separate WRITE authorization for a manual (no-AI) source edit. A READ admission
 /// never authorizes a WRITE; the configured Files issuer and Home owner must recognize the SAME
 /// selection/capture and the exact project-relative file/revision. Broker approval and private
@@ -8,6 +15,20 @@ namespace Haven.Application;
 /// operation identity, so a replacement that changes any byte/target/hash after review is refused.</summary>
 public interface IDeveloperProjectOriginalEditAdmissionSource
 {
+    /// <summary>Separately reviewed CREATE of one genuinely absent target beneath an existing
+    /// captured parent. Absence is a distinct precondition, never the hash of an empty file.</summary>
+    Task<IDeveloperProjectOriginalEditAdmission> AcquireOriginalCreateAsync(
+        IDeveloperProjectOriginalReadSelection sameSelection,
+        IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+        string projectRelativePath, string reviewedAfterText, CancellationToken cancellationToken)
+        => throw new NotSupportedException("This original issuer does not admit absent-target CREATE.");
+    Task ValidateOriginalCreateAsync(IDeveloperProjectOriginalReadSelection sameSelection,
+        IDeveloperProjectOriginalExistingSourceCapture sameCapture, string projectRelativePath,
+        IDeveloperProjectOriginalEditAdmission sameAdmission, CancellationToken cancellationToken)
+        => throw new NotSupportedException("This original issuer does not validate absent-target CREATE.");
+    IWorkspaceToolFinalFence MintOriginalCreateFence(IDeveloperProjectOriginalEditAdmission sameAdmission,
+        string projectRelativePath, string reviewedAfterText)
+        => throw new NotSupportedException("This original issuer does not mint absent-target CREATE fences.");
     Task<IDeveloperProjectOriginalEditAdmission> AcquireOriginalEditAsync(
         IDeveloperProjectOriginalReadSelection sameSelection,
         IDeveloperProjectOriginalExistingSourceCapture sameCapture,
@@ -35,6 +56,9 @@ public interface IDeveloperProjectOriginalEditAdmissionSource
 /// The admission joins raw child tasks and closes/drains them.</summary>
 public interface IDeveloperProjectOriginalEditAdmission : IAsyncDisposable
 {
+    /// <summary>Privately bound by the configured issuer. A public implementation of this
+    /// property is not authority; the kernel still requires that issuer's admission and fence.</summary>
+    bool RequiresAbsentTarget => false;
     /// <summary>Stable identity of this reviewed edit operation from review through authorized apply.</summary>
     Guid OperationId { get; }
     /// <summary>The exact reviewed replacement text (canonical bounded UTF-8).</summary>
@@ -51,6 +75,13 @@ public interface IDeveloperProjectOriginalEditAdmission : IAsyncDisposable
 /// captured source file/revision and revalidates the SAME selection/capture/file on demand.</summary>
 public interface IDeveloperProjectOriginalEditScopeSource
 {
+    IReadOnlyList<ResourceScope> GetOriginalCreateScopes(IDeveloperProjectOriginalReadSelection sameSelection,
+        IDeveloperProjectOriginalExistingSourceCapture sameCapture, string projectRelativePath)
+        => throw new NotSupportedException("The configured Files source does not issue CREATE scopes.");
+    Task RevalidateOriginalCreateScopeAsync(IDeveloperProjectOriginalReadSelection sameSelection,
+        IDeveloperProjectOriginalExistingSourceCapture sameCapture, string projectRelativePath,
+        AuthenticatedResourceActor sameActor, CancellationToken cancellationToken)
+        => throw new NotSupportedException("The configured Files source does not validate CREATE scopes.");
     IReadOnlyList<ResourceScope> GetOriginalEditScopes(IDeveloperProjectOriginalReadSelection sameSelection,
         IDeveloperProjectOriginalExistingSourceCapture sameCapture, string projectRelativePath, string expectedSha256);
     Task RevalidateOriginalEditScopeAsync(IDeveloperProjectOriginalReadSelection sameSelection,

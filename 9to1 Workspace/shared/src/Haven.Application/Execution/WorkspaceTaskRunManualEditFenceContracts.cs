@@ -19,6 +19,9 @@ public interface IWorkspaceManualEditFinalFenceValidator
 /// Home entry (`DemandOriginalEffect`/`RunOriginalEffect`).</summary>
 public interface IWorkspaceManualEditFinalFence : IWorkspaceToolFinalFence
 {
+    /// <summary>CREATE requires actual native absence and a no-replace final rename. False
+    /// retains the existing captured-file EDIT contract; empty file content is never absence.</summary>
+    bool RequiresAbsentTarget => false;
     /// <summary>The reviewed BEFORE SHA-256 of the exact captured source file (lower-case hex).</summary>
     string ReviewedBeforeSha256 { get; }
 

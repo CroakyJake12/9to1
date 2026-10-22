@@ -40,6 +40,7 @@ public sealed class HomeSourceEditCommitFence : IWorkspaceManualEditFinalFence, 
     private int _pins;
     private bool _closed;
     private bool _refused;
+    private bool _committedEffect;
     private Entry? _entry;
     private IDeveloperProjectOriginalEditCurrentnessPin? _pin;
     private Task<IAsyncDisposable?>? _acquireDriver;
@@ -73,12 +74,14 @@ public sealed class HomeSourceEditCommitFence : IWorkspaceManualEditFinalFence, 
     public string CanonicalWorkspaceRoot => _root;
     public OllamaToolCall OriginalCall => _call;
     public string ReviewedBeforeSha256 => _beforeSha256;
+    public bool RequiresAbsentTarget => _edit.RequiresAbsentTarget;
     internal string RelativePath => _relativePath;
     internal string BeforeSha256 => _beforeSha256;
     internal string ReviewedAfterSha256 => _afterSha256;
     internal string ReviewedAfterText => _afterText;
     internal HomeDeveloperProjectEditAdmissionSource Owner => _owner;
     internal bool IsClosed { get { lock (_sync) return _closed; } }
+    internal bool HasCommittedEffect { get { lock (_sync) return _committedEffect; } }
 
     internal void Seal() { lock (_sync) _closed = true; }
     private void DemandLive()
@@ -150,8 +153,9 @@ public sealed class HomeSourceEditCommitFence : IWorkspaceManualEditFinalFence, 
         // cheap returned probe is synchronous and safe beneath the held Home entry.
         IDeveloperProjectOriginalEditCurrentnessPin? pin = null;
         bool transferred = false;
-        pin = await _scopeSource.AcquireOriginalEditCurrentnessPinAsync(
-            _edit.Selection, _edit.Capture, _relativePath, _beforeSha256, _afterSha256, token).ConfigureAwait(false)
+        pin = await (RequiresAbsentTarget
+            ? _scopeSource.AcquireOriginalCreateCurrentnessPinAsync(_edit.Selection, _edit.Capture, _relativePath, _afterSha256, token)
+            : _scopeSource.AcquireOriginalEditCurrentnessPinAsync(_edit.Selection, _edit.Capture, _relativePath, _beforeSha256, _afterSha256, token)).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original manual edit currentness producer returned no genuine pin.");
         var sources = new CloudflareOriginalTaskLedger();
         sources.BindOriginalOwner(this);
@@ -237,6 +241,8 @@ public sealed class HomeSourceEditCommitFence : IWorkspaceManualEditFinalFence, 
         if (_pin is not { } pin)
             throw new UnauthorizedAccessException("The original manual edit final swap requires genuine Files currentness custody.");
         pin.DemandOriginalEditCurrentness();
+        if (pin.RequiresAbsentTarget != RequiresAbsentTarget)
+            throw new UnauthorizedAccessException("The SAME native pin must bind the reviewed CREATE or EDIT precondition.");
         if (!string.Equals(pin.ReviewedAfterSha256, _afterSha256, StringComparison.OrdinalIgnoreCase))
             throw new UnauthorizedAccessException("The SAME manual edit currentness pin is bound to a different reviewed AFTER revision.");
         DemandOriginalParingCore(actualRoot, kind, target, sha);
@@ -284,7 +290,9 @@ public sealed class HomeSourceEditCommitFence : IWorkspaceManualEditFinalFence, 
             // completion/rejection observed after pin acquisition and before the finite effect.
             if (!_capability.IsUncompletedClaim(_broker))
                 throw new UnauthorizedAccessException("The original Home edit claim completed or was revoked before the finite effect.");
-            return body();
+            var result = body();
+            _committedEffect = true;
+            return result;
         }
     }
 

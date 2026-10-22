@@ -62,7 +62,8 @@ public static class FilesDeveloperOriginalSetupComposition
             RequirePort<IDeveloperProjectOriginalWorkspaceMetadataSource>(provider));
         services.AddSingleton<FilesDeveloperOriginalSourceSelection>(provider => new(
             provider.GetRequiredService<NativeFilesWorkspaceAuthority>(),
-            provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>(), originalReads(provider)));
+            provider.GetRequiredService<IDeveloperProjectOriginalPhysicalCaptureSource>(), originalReads(provider),
+            originalWorkspaceStore(provider)));
         services.AddSingleton<IDeveloperProjectOriginalPhysicalReadSelectionSource>(provider =>
             provider.GetRequiredService<FilesDeveloperOriginalSourceSelection>());
         services.AddSingleton<IDeveloperProjectOriginalEditScopeSource>(provider =>

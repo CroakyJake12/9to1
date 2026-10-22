@@ -15,12 +15,37 @@ public sealed partial class WorkspaceToolService
         Func<IDeveloperOriginalCurrentProjectSelectionSource> originalSelections,
         IDeveloperOriginalCurrentProjectReadAdmissionSource originalReads,
         IDeveloperProjectOriginalWorkspaceMetadataStore originalStore)
-        => new CurrentProjectNativeSource(originalSelections, originalReads, originalStore);
+    {
+        return new CurrentProjectNativeSource(() => originalSelections(), Validate, originalStore);
+        Task Validate(IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalReadAdmission admission,
+            Action<Action> scope, Action<Task> retain, CancellationToken token)
+        {
+            if (selection is not IDeveloperOriginalCurrentProjectSelection current ||
+                !originalReads.IsIssuedOriginalCurrentProjectRead(current, admission))
+                throw new UnauthorizedAccessException("The configured Home owner did not privately issue this Task current-project READ.");
+            return originalReads.ValidateOriginalCurrentProjectReadWithinSourceAsync(current, admission, scope, retain, token);
+        }
+    }
+
+    /// <summary>Manual saved-project composition uses the SAME native descriptor engine and the
+    /// actual configured Home READ issuer. Public metadata or an arbitrary read callback never
+    /// replaces its private selection/admission validation.</summary>
+    private IDeveloperOriginalRegisteredProjectNativeSource CreateOriginalRegisteredProjectNativeSource(
+        Func<IDeveloperOriginalRegisteredProjectSelectionSource> originalSelections,
+        IDeveloperProjectOriginalReadAdmissionSource originalReads,
+        IDeveloperProjectOriginalWorkspaceMetadataStore originalStore)
+        => new CurrentProjectNativeSource(originalSelections,
+            (selection, admission, scope, retain, token) => originalReads.ValidateOriginalAsync(selection, admission, token),
+            originalStore);
+
+    private delegate Task RegisteredProjectReadValidation(IDeveloperProjectOriginalReadSelection selection,
+        IDeveloperProjectOriginalReadAdmission admission, Action<Action> scope, Action<Task> retain, CancellationToken token);
 
     private sealed partial class CurrentProjectNativeSource(
-        Func<IDeveloperOriginalCurrentProjectSelectionSource> selections,
-        IDeveloperOriginalCurrentProjectReadAdmissionSource reads,
-        IDeveloperProjectOriginalWorkspaceMetadataStore store) : IDeveloperOriginalCurrentProjectNativeSource
+        Func<IDeveloperOriginalRegisteredProjectSelectionSource> selections,
+        RegisteredProjectReadValidation validateRead,
+        IDeveloperProjectOriginalWorkspaceMetadataStore store) : IDeveloperOriginalCurrentProjectNativeSource,
+            IDeveloperOriginalRegisteredProjectNativeSource
     {
         private readonly object _gate = new();
         private readonly AsyncLocal<Work?> _executing = new();
@@ -39,14 +64,14 @@ public sealed partial class WorkspaceToolService
             internal readonly List<Exception> Publication = [];
         }
         private sealed class Read(CurrentProjectNativeSource owner, Work work,
-            IDeveloperOriginalCurrentProjectSelection selection, IDeveloperOriginalCurrentProjectDescriptor descriptor,
-            IDeveloperOriginalCurrentProjectSelectionSource issuer) : IDeveloperOriginalCurrentProjectNativeRead
+            IDeveloperProjectOriginalReadSelection selection, IDeveloperOriginalRegisteredProjectDescriptor descriptor,
+            IDeveloperOriginalRegisteredProjectSelectionSource issuer) : IDeveloperOriginalCurrentProjectNativeRead
         {
             internal CurrentProjectNativeSource Owner => owner;
             internal Work Work => work;
-            internal IDeveloperOriginalCurrentProjectSelection Selection => selection;
-            internal IDeveloperOriginalCurrentProjectDescriptor Descriptor => descriptor;
-            internal IDeveloperOriginalCurrentProjectSelectionSource Issuer => issuer;
+            internal IDeveloperProjectOriginalReadSelection Selection => selection;
+            internal IDeveloperOriginalRegisteredProjectDescriptor Descriptor => descriptor;
+            internal IDeveloperOriginalRegisteredProjectSelectionSource Issuer => issuer;
             internal Task? Close, NativeClose;
             internal readonly object NativeGate = new();
             internal bool Sealed, Published;
@@ -164,29 +189,23 @@ public sealed partial class WorkspaceToolService
             finally { work.Live = false; _executing.Value = before; }
         }
 
-        public Task<IDeveloperOriginalCurrentProjectNativeRead> CaptureOriginalWithinSourceAsync(
-            IDeveloperOriginalCurrentProjectSelection selection, IDeveloperProjectOriginalReadAdmission admission,
+        public Task<IDeveloperOriginalCurrentProjectNativeRead> CaptureRegisteredOriginalWithinSourceAsync(
+            IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalReadAdmission admission,
             Action<Action> scope, Action<Task> retain, CancellationToken token)
             => Start<IDeveloperOriginalCurrentProjectNativeRead>(scope, retain, async work =>
         {
             var source = Invoke(work, selections) ?? throw new InvalidOperationException("The actual current Files project source is unavailable.");
-            var descriptor = Invoke(work, () => source.GetOriginalDescriptor(selection));
+            var descriptor = Invoke(work, () => source.GetOriginalRegisteredDescriptor(selection));
             Invoke(work, () =>
             {
-                if (!source.IsIssuedOriginal(selection) || !source.IsIssuedOriginalDescriptor(selection, descriptor) ||
+                if (!source.IsIssuedOriginal(selection) || !source.IsIssuedOriginalRegisteredDescriptor(selection, descriptor) ||
                     !ReferenceEquals(descriptor.OriginalStore, store))
                     throw new UnauthorizedAccessException("The actual current project selection/descriptor/store was substituted.");
                 return true;
             });
-            await ObserveVoid(work, () => source.RevalidateOriginalWithinSourceAsync(selection, descriptor.OriginalActor,
+            await ObserveVoid(work, () => source.RevalidateOriginalRegisteredWithinSourceAsync(selection, descriptor.OriginalActor,
                 callback => Invoke(work, () => { callback(); return true; }), task => Retain(work, task), token)).ConfigureAwait(false);
-            Invoke(work, () =>
-            {
-                if (!reads.IsIssuedOriginalCurrentProjectRead(selection, admission))
-                    throw new UnauthorizedAccessException("The configured Home owner did not privately issue this current project READ.");
-                return true;
-            });
-            await ObserveVoid(work, () => reads.ValidateOriginalCurrentProjectReadWithinSourceAsync(selection, admission,
+            await ObserveVoid(work, () => validateRead(selection, admission,
                 callback => Invoke(work, () => { callback(); return true; }), task => Retain(work, task), token)).ConfigureAwait(false);
             var read = new Read(this, work, selection, descriptor, source);
             lock (_gate) { if (_retiring || _reads.Count >= 128) throw new InvalidOperationException("Current project read custody is sealed or full."); _reads.Add(read); }
@@ -268,12 +287,12 @@ public sealed partial class WorkspaceToolService
                     throw new UnauthorizedAccessException("Current project document/root no longer matches the authenticated detached identity.");
                 return true;
             });
-            await ObserveVoid(work, () => read.Issuer.RevalidateOriginalWithinSourceAsync(read.Selection, descriptor.OriginalActor,
+            await ObserveVoid(work, () => read.Issuer.RevalidateOriginalRegisteredWithinSourceAsync(read.Selection, descriptor.OriginalActor,
                 callback => Invoke(work, () => { callback(); return true; }), task => Retain(work, task), token)).ConfigureAwait(false);
             Invoke(work, () =>
             {
                 token.ThrowIfCancellationRequested(); DemandNative(read);
-                if (!ReferenceEquals(selections(), read.Issuer) || !read.Issuer.IsIssuedOriginalDescriptor(read.Selection, descriptor))
+                if (!ReferenceEquals(selections(), read.Issuer) || !read.Issuer.IsIssuedOriginalRegisteredDescriptor(read.Selection, descriptor))
                     throw new UnauthorizedAccessException("The configured current project source changed before native publication.");
                 lock (_gate) { if (_retiring || read.Sealed) throw new ObjectDisposedException("current project reconciliation"); read.Published = true; }
                 return true;
@@ -356,7 +375,7 @@ public sealed partial class WorkspaceToolService
                 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(errors[0]).Throw();
             Throw(errors); return result ?? throw new InvalidDataException("No actual current project bytes were read.");
         }
-        private static void DemandDocument(JsonElement envelope, IDeveloperOriginalCurrentProjectDescriptor descriptor)
+        private static void DemandDocument(JsonElement envelope, IDeveloperOriginalRegisteredProjectDescriptor descriptor)
         {
             if (envelope.GetProperty("schemaVersion").GetInt32() != 1)
                 throw new InvalidDataException("The saved workspace has an unsupported original schema.");
@@ -380,6 +399,25 @@ public sealed partial class WorkspaceToolService
                     .Where(value => value.GetProperty("bindingId").GetString() == binding).Take(2).ToArray();
                 if (repositories.Length != 1 || repositories[0].GetProperty("rootId").GetGuid() != descriptor.RootId)
                     throw new UnauthorizedAccessException("The saved repository binding differs from the selected actual root.");
+            }
+            if (descriptor is IDeveloperOriginalRegisteredProjectSnapshotDescriptor snapshot)
+            {
+                using var expectedProject = JsonDocument.Parse(snapshot.ExactSelectedProjectJson);
+                using var expectedRoot = JsonDocument.Parse(snapshot.ExactSelectedRootJson);
+                if (!JsonElement.DeepEquals(projects[0], expectedProject.RootElement) ||
+                    !JsonElement.DeepEquals(roots[0], expectedRoot.RootElement))
+                    throw new UnauthorizedAccessException("The exact selected saved project/root records changed.");
+                if (snapshot.ExactSelectedRepositoryJson is { } expectedRepository)
+                {
+                    using var expected = JsonDocument.Parse(expectedRepository);
+                    var repositories = workspace.GetProperty("sourceControlBindings").EnumerateArray()
+                        .Where(value => value.GetProperty("bindingId").GetString() == descriptor.RepositoryBindingId).Take(2).ToArray();
+                    if (descriptor.RepositoryBindingId is null || repositories.Length != 1 ||
+                        !JsonElement.DeepEquals(repositories[0], expected.RootElement))
+                        throw new UnauthorizedAccessException("The exact selected saved repository record changed.");
+                }
+                else if (descriptor.RepositoryBindingId is not null)
+                    throw new UnauthorizedAccessException("The selected saved repository record is missing.");
             }
         }
         private static string Digest(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
@@ -423,29 +461,46 @@ public sealed partial class WorkspaceToolService
             lock (_gate)
                 if (_retiring || read.Sealed) throw new ObjectDisposedException("current project original pin");
         }
-        private bool Owned(IDeveloperOriginalCurrentProjectSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
+        private bool Owned(IDeveloperProjectOriginalReadSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
             => value is Read read && ReferenceEquals(read.Owner, this) && _reads.Contains(read) &&
                 ReferenceEquals(read.Selection, selection) && ReferenceEquals(read.Work.Driver, actual);
-        public bool IsOwnedOriginalRead(IDeveloperOriginalCurrentProjectSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
+        public bool IsOwnedRegisteredOriginalRead(IDeveloperProjectOriginalReadSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
         { lock (_gate) return Owned(selection, actual, value); }
-        public bool IsIssuedOriginalRead(IDeveloperOriginalCurrentProjectSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
+        public bool IsIssuedRegisteredOriginalRead(IDeveloperProjectOriginalReadSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
         { lock (_gate) return Owned(selection, actual, value) && !_retiring && value is Read { Sealed: false, Published: true } read && read.Work.Driver.IsCompletedSuccessfully; }
-        public bool IsClosedOriginalRead(IDeveloperOriginalCurrentProjectSelection selection, Task actual,
+        public bool IsClosedRegisteredOriginalRead(IDeveloperProjectOriginalReadSelection selection, Task actual,
             IDeveloperOriginalCurrentProjectNativeRead value, Task close)
         { lock (_gate) return Owned(selection, actual, value) && value is Read read && read.Published && read.Work.Driver.IsCompletedSuccessfully &&
             ReferenceEquals(read.Close, close) && close.IsCompletedSuccessfully && read.NativeClose?.IsCompletedSuccessfully == true; }
-        public Task ValidateOriginalReadWithinSourceAsync(IDeveloperOriginalCurrentProjectSelection selection, Task actual,
+        public Task ValidateRegisteredOriginalReadWithinSourceAsync(IDeveloperProjectOriginalReadSelection selection, Task actual,
             IDeveloperOriginalCurrentProjectNativeRead value, Action<Action> scope, Action<Task> retain, CancellationToken token)
             => Start(scope, retain, async work =>
         {
             Read read;
             lock (_gate) { if (!Owned(selection, actual, value) || value is not Read issued) throw new UnauthorizedAccessException("Unknown original current project read."); read = issued; }
-            Invoke(work, () => { if (!IsIssuedOriginalRead(selection, actual, value) || !ReferenceEquals(selections(), read.Issuer))
+            Invoke(work, () => { if (!IsIssuedRegisteredOriginalRead(selection, actual, value) || !ReferenceEquals(selections(), read.Issuer))
                 throw new UnauthorizedAccessException("The actual current project native source/selection changed."); return true; });
-            await ObserveVoid(work, () => read.Issuer.RevalidateOriginalWithinSourceAsync(selection, read.Descriptor.OriginalActor,
+            await ObserveVoid(work, () => read.Issuer.RevalidateOriginalRegisteredWithinSourceAsync(selection, read.Descriptor.OriginalActor,
                 callback => Invoke(work, () => { callback(); return true; }), task => Retain(work, task), token)).ConfigureAwait(false);
             Invoke(work, () => { token.ThrowIfCancellationRequested(); Demand(read); return true; }); return true;
         });
+
+        // Preserve the existing strict Task API and its EXACT returned driver identity. These
+        // forwarders add no async wrapper/second Task and share the one descriptor implementation.
+        public Task<IDeveloperOriginalCurrentProjectNativeRead> CaptureOriginalWithinSourceAsync(
+            IDeveloperOriginalCurrentProjectSelection selection, IDeveloperProjectOriginalReadAdmission admission,
+            Action<Action> scope, Action<Task> retain, CancellationToken token)
+            => CaptureRegisteredOriginalWithinSourceAsync(selection, admission, scope, retain, token);
+        public bool IsOwnedOriginalRead(IDeveloperOriginalCurrentProjectSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
+            => IsOwnedRegisteredOriginalRead(selection, actual, value);
+        public bool IsIssuedOriginalRead(IDeveloperOriginalCurrentProjectSelection selection, Task actual, IDeveloperOriginalCurrentProjectNativeRead value)
+            => IsIssuedRegisteredOriginalRead(selection, actual, value);
+        public bool IsClosedOriginalRead(IDeveloperOriginalCurrentProjectSelection selection, Task actual,
+            IDeveloperOriginalCurrentProjectNativeRead value, Task close)
+            => IsClosedRegisteredOriginalRead(selection, actual, value, close);
+        public Task ValidateOriginalReadWithinSourceAsync(IDeveloperOriginalCurrentProjectSelection selection, Task actual,
+            IDeveloperOriginalCurrentProjectNativeRead value, Action<Action> scope, Action<Task> retain, CancellationToken token)
+            => ValidateRegisteredOriginalReadWithinSourceAsync(selection, actual, value, scope, retain, token);
         private void OwnedCleanup(Work work, Action fixedPrivateCleanup)
         {
             var errors = new List<Exception>(); var attempted = false;

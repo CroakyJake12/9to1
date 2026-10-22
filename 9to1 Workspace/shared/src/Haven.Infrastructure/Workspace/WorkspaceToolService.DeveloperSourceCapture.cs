@@ -60,11 +60,30 @@ public sealed partial class WorkspaceToolService
         private readonly object _gate = new();
         private readonly HashSet<PhysicalSelection> _issued = [];
         private readonly HashSet<Capture> _captures = [];
+        private readonly HashSet<CapturedCreatePin> _createPins = [];
         private bool _retiring;
         private Task? _close;
         private readonly IDeveloperProjectOriginalEditAdmissionSource? _edits;
         private WorkspaceToolService? _service;
         internal void BindOriginalService(WorkspaceToolService service) => _service = service ?? throw new ArgumentNullException(nameof(service));
+
+        public IDeveloperOriginalRegisteredProjectNativeSource CreateOriginalRegisteredProjectNativeSource(
+            Func<IDeveloperOriginalRegisteredProjectSelectionSource> sameSelections,
+            IDeveloperProjectOriginalWorkspaceMetadataStore sameConfiguredStore)
+        {
+            // Bind the metadata supplier to this physical kernel's SAME configured Files issuer.
+            // A foreign source must not pair a genuine project's READ with another descriptor/store.
+            IDeveloperOriginalRegisteredProjectSelectionSource Configured()
+            {
+                var actual = selections() as IDeveloperOriginalRegisteredProjectSelectionSource
+                    ?? throw new NotSupportedException("The SAME configured Files issuer has no registered saved-project capability.");
+                if (!ReferenceEquals(sameSelections(), actual))
+                    throw new UnauthorizedAccessException("The registered metadata source is not this kernel's SAME configured Files issuer.");
+                return actual;
+            }
+            return (_service ?? throw new NotSupportedException("The SAME source kernel has no configured service owner."))
+                .CreateOriginalRegisteredProjectNativeSource(Configured, admissions, sameConfiguredStore);
+        }
 
         internal DeveloperCaptureSource(IDeveloperProjectOriginalReadAdmissionSource reads,
             Func<IDeveloperProjectOriginalPhysicalReadSelectionSource> selections,
@@ -433,6 +452,156 @@ public sealed partial class WorkspaceToolService
             }
             catch { return false; }
         }
+
+        public async Task ValidateOriginalCreateTargetAsync(IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+            string projectRelativePath, CancellationToken token)
+        {
+            // This observation is not a commit pin and carries no fabricated reviewed payload.
+            var pin = await AcquireCreatePinAsync(sameCapture, projectRelativePath, null, token).ConfigureAwait(false);
+            await pin.DisposeAsync().ConfigureAwait(false);
+        }
+
+        public Task<IDeveloperProjectOriginalEditCurrentnessPin> AcquireOriginalCreateCurrentnessPinAsync(
+            IDeveloperProjectOriginalExistingSourceCapture sameCapture, string projectRelativePath,
+            string reviewedAfterSha256, CancellationToken token)
+        {
+            if (!IsHexDigest(reviewedAfterSha256)) throw new ArgumentException("The reviewed AFTER SHA-256 is required.", nameof(reviewedAfterSha256));
+            return AcquireCreatePinAsync(sameCapture, projectRelativePath, reviewedAfterSha256, token);
+        }
+
+        private Task<IDeveloperProjectOriginalEditCurrentnessPin> AcquireCreatePinAsync(
+            IDeveloperProjectOriginalExistingSourceCapture sameCapture, string projectRelativePath,
+            string? reviewedAfterSha256, CancellationToken token)
+        {
+            if (sameCapture is not Capture actual || !IsIssuedOriginalCapture(actual, actual.Physical, actual.Logical))
+                throw new UnauthorizedAccessException("The SAME original captured source is required for CREATE.");
+            DemandCapturedCreateTarget(actual, projectRelativePath);
+            return Start<IDeveloperProjectOriginalEditCurrentnessPin>(actual.Physical, async () =>
+            {
+                token.ThrowIfCancellationRequested();
+                CapturedCreatePin pin;
+                lock (_gate)
+                {
+                    if (_retiring || _createPins.Count >= 128) throw new InvalidOperationException("Original CREATE custody is sealed or full.");
+                    pin = new(this, actual, projectRelativePath, reviewedAfterSha256);
+                    _createPins.Add(pin); // Retain the partial owner BEFORE opening a native descriptor.
+                }
+                try
+                {
+                    Invoke(() => { pin.OpenOriginalParent(); pin.DemandOriginalEditCurrentness(); return true; });
+                    return pin;
+                }
+                catch (Exception primary)
+                {
+                    var errors = new List<Exception>(); AddOriginalErrors(errors, null, primary);
+                    Task? close = null;
+                    try { close = pin.DisposeAsync().AsTask(); Retain(actual.Physical, close); await close.ConfigureAwait(false); }
+                    catch (Exception cleanup) { AddOriginalErrors(errors, close, cleanup); }
+                    ThrowOriginalErrors(errors); throw;
+                }
+            });
+        }
+
+        private static void DemandCapturedCreateTarget(Capture capture, string relativePath)
+        {
+            DemandSafeProjectRelativePath(relativePath);
+            if (relativePath.Contains('/'))
+                throw new NotSupportedException("CREATE currently supports direct project-root files only; nested directory custody is not implemented.");
+            if (relativePath.Contains('\\') || relativePath.Split('/').Any(part => !SafeLeaf(part)))
+                throw new ArgumentException("CREATE requires canonical bounded path components.", nameof(relativePath));
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            if (capture.OriginalFiles.Any(file => string.Equals(file.RelativePath, relativePath, comparison)) ||
+                capture.OriginalFolderPaths.Any(folder => string.Equals(folder, relativePath, comparison)))
+                throw new UnauthorizedAccessException("CREATE cannot replace an existing captured entry, including an empty file.");
+            var slash = relativePath.LastIndexOf('/'); var parent = slash < 0 ? "" : relativePath[..slash];
+            if (parent.Length != 0 && !capture.OriginalFolderPaths.Any(folder => string.Equals(folder, parent, comparison)))
+                throw new UnauthorizedAccessException("CREATE requires an already captured parent directory.");
+        }
+
+        private sealed class CapturedCreatePin(DeveloperCaptureSource owner, Capture capture, string relativePath,
+            string? afterSha256) : IDeveloperProjectOriginalEditCurrentnessPin
+        {
+            private readonly object _sync = new();
+            private SafeFileHandle? _parent;
+            private LinuxIdentity _linuxIdentity;
+            private DeveloperWindowsIdentity? _windowsIdentity;
+            private Task? _close;
+            internal Capture Capture => capture;
+            public bool RequiresAbsentTarget => true;
+            public string ReviewedAfterSha256 => afterSha256
+                ?? throw new UnauthorizedAccessException("An absence observation is not a reviewed publication pin.");
+            private string ParentPath => Path.GetDirectoryName(Path.Combine(capture.OriginalExistingProjectRoot, relativePath))!;
+            internal void OpenOriginalParent()
+            {
+                owner.DemandCurrent(capture.Physical);
+                if (capture.Physical.WindowsRoot is { } windows)
+                {
+                    _parent = windows.OpenDirectory(ParentPath);
+                    _windowsIdentity = ReadDeveloperWindowsIdentity(_parent);
+                    if (capture.Physical.WindowsProjectIdentity is not { } project || !_windowsIdentity.Value.SameFile(project))
+                        throw new IOException("The CREATE parent is not the retained original project directory.");
+                }
+                else
+                {
+                    _parent = capture.Physical.Root.OpenDirectory(ParentPath);
+                    _linuxIdentity = ReadLinuxIdentity(_parent);
+                    if (!_linuxIdentity.SameFile(capture.Physical.ProjectIdentity))
+                        throw new IOException("The CREATE parent is not the retained original project directory.");
+                }
+            }
+            public void DemandOriginalEditCurrentness()
+            {
+                lock (owner._gate) lock (_sync)
+                {
+                    if (owner._retiring || _close is not null || !owner._createPins.Contains(this) ||
+                        _parent is null || !owner.IsIssuedOriginalCapture(capture, capture.Physical, capture.Logical))
+                        throw new UnauthorizedAccessException("The original CREATE native parent/capture retired.");
+                    DemandCapturedCreateTarget(capture, relativePath);
+                    owner.DemandCurrent(capture.Physical);
+                    if (_windowsIdentity is { } windows)
+                    {
+                        DemandDeveloperWindowsPath(_parent, ParentPath, true);
+                        if (!ReadDeveloperWindowsIdentity(_parent).SameFile(windows))
+                            throw new IOException("The original CREATE parent changed.");
+                    }
+                    else
+                    {
+                        DemandLinuxDescriptorPath(_parent, ParentPath);
+                        if (!ReadLinuxIdentity(_parent).SameFile(_linuxIdentity))
+                            throw new IOException("The original CREATE parent changed.");
+                    }
+                    SafeFileHandle? found = null;
+                    try
+                    {
+                        // Probe through the SAME retained parent; reparse/symlink/access errors
+                        // fail closed. Only actual native ENOENT/OBJECT_NAME_NOT_FOUND is absence.
+                        found = _windowsIdentity is not null
+                            ? OpenDeveloperWindowsAt(_parent, Path.GetFileName(relativePath), DeveloperWindowsAttributes, 7, 1, null)
+                            : OpenLinuxAt(_parent, Path.GetFileName(relativePath), LinuxPath | LinuxCloseOnExec);
+                    }
+                    catch (FileNotFoundException) { return; }
+                    finally { found?.Dispose(); }
+                    throw new UnauthorizedAccessException("The reviewed CREATE target already exists; no replacement is authorized.");
+                }
+            }
+            public ValueTask DisposeAsync()
+            {
+                lock (owner._gate) lock (_sync)
+                {
+                    if (_close is not null) return new(_close);
+                    var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _close = Close(start.Task);
+                    capture.Physical.OriginalCleanupTasks.Add(_close);
+                    start.SetResult(); return new(_close);
+                }
+            }
+            private async Task Close(Task start)
+            {
+                await start.ConfigureAwait(false);
+                _parent?.Dispose();
+                lock (owner._gate) owner._createPins.Remove(this);
+            }
+        }
         /// <summary>Genuine confined re-read of one captured source file's complete text. It requires
         /// the SAME returned admission validated at capture and revalidates it before reading, then
         /// reads the retained captured handle under <see cref="IDeveloperProjectOriginalReadAdmission.RunOriginalRead"/>
@@ -508,12 +677,26 @@ public sealed partial class WorkspaceToolService
             IDeveloperProjectOriginalReadAdmission sameReadAdmission,
             IDeveloperProjectOriginalEditAdmission sameEditAdmission,
             string projectRelativePath, string expectedSha256, string newText, CancellationToken token)
+            => ApplyOriginalCapturedFileWriteAsync(sameCapture, sameReadAdmission, sameEditAdmission,
+                projectRelativePath, expectedSha256, newText, false, token);
+
+        public Task<string> ApplyOriginalCapturedFileCreateAsync(IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+            IDeveloperProjectOriginalReadAdmission sameReadAdmission,
+            IDeveloperProjectOriginalEditAdmission sameCreateAdmission,
+            string projectRelativePath, string reviewedAfterText, CancellationToken token)
+            => ApplyOriginalCapturedFileWriteAsync(sameCapture, sameReadAdmission, sameCreateAdmission,
+                projectRelativePath, DeveloperProjectSourceWriteRevision.Absent, reviewedAfterText, true, token);
+
+        private Task<string> ApplyOriginalCapturedFileWriteAsync(IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+            IDeveloperProjectOriginalReadAdmission sameReadAdmission,
+            IDeveloperProjectOriginalEditAdmission sameEditAdmission,
+            string projectRelativePath, string expectedSha256, string newText, bool requiresAbsentTarget, CancellationToken token)
         {
             if (sameCapture is not Capture actual || !IsIssuedOriginalCapture(actual, actual.Physical, actual.Logical))
                 throw new UnauthorizedAccessException("Foreign or retired original capture.");
             DemandSafeProjectRelativePath(projectRelativePath);
-            if (!IsHexDigest(expectedSha256)) throw new ArgumentException("The exact reviewed current SHA-256 revision is required.", nameof(expectedSha256));
-            var newBytes = Encoding.UTF8.GetBytes(newText);
+            if (!requiresAbsentTarget && !IsHexDigest(expectedSha256)) throw new ArgumentException("The exact reviewed current SHA-256 revision is required.", nameof(expectedSha256));
+            var newBytes = new UTF8Encoding(false, true).GetBytes(newText);
             if (!string.Equals(DecodeBoundedText(newBytes), newText, StringComparison.Ordinal))
                 throw new InvalidOperationException("The replacement text must be canonical bounded UTF-8 without NUL bytes.");
             var afterHash = Convert.ToHexString(SHA256.HashData(newBytes)).ToLowerInvariant();
@@ -526,7 +709,8 @@ public sealed partial class WorkspaceToolService
                     entry = candidate;
                 }
             }
-            if (entry is null) throw new UnauthorizedAccessException("The exact captured source file is not part of this selected project.");
+            if (requiresAbsentTarget) DemandCapturedCreateTarget(actual, projectRelativePath);
+            else if (entry is null) throw new UnauthorizedAccessException("The exact captured source file is not part of this selected project.");
             return Start(actual.Physical, async () =>
             {
                 var errors = new List<Exception>(); Task? write = null;
@@ -534,57 +718,62 @@ public sealed partial class WorkspaceToolService
                 {
                     // Fresh SAME read + edit admission validation before any disclosure/effect.
                     await Observe(actual.Physical, () => admissions.ValidateOriginalAsync(actual.Logical, sameReadAdmission, token)).ConfigureAwait(false);
-                    await Observe(actual.Physical, () => Edits().ValidateOriginalEditAsync(actual.Logical, sameCapture,
-                        projectRelativePath, expectedSha256, sameEditAdmission, token)).ConfigureAwait(false);
-                    HeldFile held;
-                    lock (_gate)
+                    await Observe(actual.Physical, ValidateWrite).ConfigureAwait(false);
+                    if (sameEditAdmission.RequiresAbsentTarget != requiresAbsentTarget)
+                        throw new UnauthorizedAccessException("The original admission does not bind this CREATE or EDIT precondition.");
+                    if (requiresAbsentTarget)
+                        await Observe(actual.Physical, () => ValidateOriginalCreateTargetAsync(actual, projectRelativePath, token)).ConfigureAwait(false);
+                    else
                     {
-                        var matches = actual.Held.Where(value => StringComparer.Ordinal.Equals(value.RelativePath, projectRelativePath)).Take(2).ToArray();
-                        if (matches.Length != 1) throw new InvalidOperationException("The captured source handle is missing or duplicated.");
-                        held = matches[0];
-                    }
-                    Invoke(() =>
-                    {
-                        DemandCurrent(actual.Physical);
-                        var full = Path.Combine(actual.OriginalExistingProjectRoot, held.RelativePath);
-                        if (held.WindowsIdentity is { } windows)
+                        HeldFile held;
+                        lock (_gate)
                         {
-                            DemandDeveloperWindowsPath(held.OriginalHandle, full, false);
-                            if (!ReadDeveloperWindowsIdentity(held.OriginalHandle).SameReadVersion(windows))
-                                throw new IOException("Captured original Windows source changed before its confined edit.");
+                            var matches = actual.Held.Where(value => StringComparer.Ordinal.Equals(value.RelativePath, projectRelativePath)).Take(2).ToArray();
+                            if (matches.Length != 1) throw new InvalidOperationException("The captured source handle is missing or duplicated.");
+                            held = matches[0];
                         }
-                        else DemandLinuxDescriptorPath(held.OriginalHandle, full);
-                        return true;
-                    });
-                    // Read the exact current text under the READ admission; refuse any stale base.
-                    string beforeText;
-                    using (var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
-                    using (var body = new MemoryStream())
-                    {
-                        held.OriginalStream.Seek(0, SeekOrigin.Begin);
-                        var buffer = new byte[16384]; long bytes = 0;
-                        while (true)
+                        Invoke(() =>
                         {
-                            await Observe(actual.Physical, () => admissions.ValidateOriginalAsync(actual.Logical, sameReadAdmission, token)).ConfigureAwait(false);
-                            var count = await ObserveRead(actual.Physical, sameReadAdmission,
-                                () => held.OriginalStream.ReadAsync(buffer.AsMemory(), token).AsTask(), token).ConfigureAwait(false);
-                            if (count == 0) break;
-                            bytes += count; body.Write(buffer, 0, count);
-                            if (bytes > DeveloperProjectSetupIntent.MaximumFileBytes)
-                                throw new InvalidOperationException("The captured source file exceeds the bounded read size; it is not truncated.");
-                            hash.AppendData(buffer, 0, count);
+                            DemandCurrent(actual.Physical);
+                            var full = Path.Combine(actual.OriginalExistingProjectRoot, held.RelativePath);
+                            if (held.WindowsIdentity is { } windows)
+                            {
+                                DemandDeveloperWindowsPath(held.OriginalHandle, full, false);
+                                if (!ReadDeveloperWindowsIdentity(held.OriginalHandle).SameReadVersion(windows))
+                                    throw new IOException("Captured original Windows source changed before its confined edit.");
+                            }
+                            else DemandLinuxDescriptorPath(held.OriginalHandle, full);
+                            return true;
+                        });
+                        // Read the exact current text under the READ admission; refuse any stale base.
+                        string beforeText;
+                        using (var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+                        using (var body = new MemoryStream())
+                        {
+                            held.OriginalStream.Seek(0, SeekOrigin.Begin);
+                            var buffer = new byte[16384]; long bytes = 0;
+                            while (true)
+                            {
+                                await Observe(actual.Physical, () => admissions.ValidateOriginalAsync(actual.Logical, sameReadAdmission, token)).ConfigureAwait(false);
+                                var count = await ObserveRead(actual.Physical, sameReadAdmission,
+                                    () => held.OriginalStream.ReadAsync(buffer.AsMemory(), token).AsTask(), token).ConfigureAwait(false);
+                                if (count == 0) break;
+                                bytes += count; body.Write(buffer, 0, count);
+                                if (bytes > DeveloperProjectSetupIntent.MaximumFileBytes)
+                                    throw new InvalidOperationException("The captured source file exceeds the bounded read size; it is not truncated.");
+                                hash.AppendData(buffer, 0, count);
+                            }
+                            var digest = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+                            if (bytes != entry!.SizeBytes || !string.Equals(digest, entry.ContentSha256, StringComparison.Ordinal))
+                                throw new IOException("Captured source changed after its original read; no stale edit base was accepted.");
+                            if (!string.Equals(digest, expectedSha256, StringComparison.Ordinal))
+                                throw new UnauthorizedAccessException("The current captured source revision does not match the reviewed expected source hash; no write occurred.");
+                            beforeText = DecodeBoundedText(body.ToArray());
                         }
-                        var digest = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
-                        if (bytes != entry.SizeBytes || !string.Equals(digest, entry.ContentSha256, StringComparison.Ordinal))
-                            throw new IOException("Captured source changed after its original read; no stale edit base was accepted.");
-                        if (!string.Equals(digest, expectedSha256, StringComparison.Ordinal))
-                            throw new UnauthorizedAccessException("The current captured source revision does not match the reviewed expected source hash; no write occurred.");
-                        beforeText = DecodeBoundedText(body.ToArray());
                     }
                     // Revalidate both admissions between the read and the finite kernel write start.
                     await Observe(actual.Physical, () => admissions.ValidateOriginalAsync(actual.Logical, sameReadAdmission, token)).ConfigureAwait(false);
-                    await Observe(actual.Physical, () => Edits().ValidateOriginalEditAsync(actual.Logical, sameCapture,
-                        projectRelativePath, expectedSha256, sameEditAdmission, token)).ConfigureAwait(false);
+                    await Observe(actual.Physical, ValidateWrite).ConfigureAwait(false);
                     // Apply the exact reviewed replacement under the SAME EDIT admission, routed
                     // through a genuine original Invocation so the finite effect executes through the
                     // retained native write engine (WriteOriginalLinuxAsync/WriteOriginalWindowsAsync)
@@ -594,8 +783,9 @@ public sealed partial class WorkspaceToolService
                     // after its private recognition; a caller-supplied or AlwaysAllow admission cannot
                     // mint it. The returned fence holds real claimed Home authorization through the
                     // finite native write and binds the exact target + reviewed BEFORE/AFTER digests.
-                    var fence = Edits().MintOriginalEditFence(sameEditAdmission,
-                        projectRelativePath, expectedSha256, newText);
+                    var fence = requiresAbsentTarget
+                        ? Edits().MintOriginalCreateFence(sameEditAdmission, projectRelativePath, newText)
+                        : Edits().MintOriginalEditFence(sameEditAdmission, projectRelativePath, expectedSha256, newText);
                     var writer = _service ?? throw new InvalidOperationException("The original workspace writer is unavailable.");
                     IWorkspaceOriginalInvocation? invocation = null;
                     try
@@ -636,6 +826,10 @@ public sealed partial class WorkspaceToolService
                 catch (Exception error) { AddOriginalErrors(errors, write, error); }
                 ThrowOriginalErrors(errors);
                 throw new InvalidOperationException("No original source edit was applied.");
+
+                Task ValidateWrite() => requiresAbsentTarget
+                    ? Edits().ValidateOriginalCreateAsync(actual.Logical, sameCapture, projectRelativePath, sameEditAdmission, token)
+                    : Edits().ValidateOriginalEditAsync(actual.Logical, sameCapture, projectRelativePath, expectedSha256, sameEditAdmission, token);
             });
         }
         /// <summary>Opens the committed file fresh through the retained native root lease and reads its
@@ -764,6 +958,11 @@ public sealed partial class WorkspaceToolService
             await DrainOriginalFileRegistrations(actual, errors).ConfigureAwait(false);
             await DrainOriginalWorkspaceMetadata(actual, errors).ConfigureAwait(false);
             await DrainOriginalSavedRoots(actual, errors).ConfigureAwait(false);
+            CapturedCreatePin[] createPins;
+            lock (_gate) createPins = _createPins.Where(pin => ReferenceEquals(pin.Capture.Physical, actual)).ToArray();
+            foreach (var pin in createPins)
+                try { await pin.DisposeAsync().ConfigureAwait(false); }
+                catch (Exception error) { AddOriginalErrors(errors, null, error); }
             Capture[] captures; lock (_gate) captures = _captures.Where(value => ReferenceEquals(value.Physical, actual)).ToArray();
             foreach (var capture in captures)
             {

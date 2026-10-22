@@ -13,6 +13,7 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
     ICanonicalResourceAccessResolver, IWorkspaceManualEditFinalFenceValidator, IAsyncDisposable
 {
     public const string EditAction = "dev.project.source.edit";
+    public const string CreateAction = "dev.project.source.create";
     public string ResourceKind => "dev.project.file";
     private readonly FileHomeCoreStateStore _store;
     private readonly HomeLocalProfileIdentity _profiles;
@@ -62,6 +63,17 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
     public Task<IDeveloperProjectOriginalEditAdmission> AcquireOriginalEditAsync(
         IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalExistingSourceCapture capture,
         string projectRelativePath, string expectedSha256, string reviewedAfterText, CancellationToken token)
+        => AcquireOriginalWriteAsync(selection, capture, projectRelativePath, expectedSha256, reviewedAfterText, false, token);
+
+    public Task<IDeveloperProjectOriginalEditAdmission> AcquireOriginalCreateAsync(
+        IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalExistingSourceCapture capture,
+        string projectRelativePath, string reviewedAfterText, CancellationToken token)
+        => AcquireOriginalWriteAsync(selection, capture, projectRelativePath, DeveloperProjectSourceWriteRevision.Absent,
+            reviewedAfterText, true, token);
+
+    private Task<IDeveloperProjectOriginalEditAdmission> AcquireOriginalWriteAsync(
+        IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalExistingSourceCapture capture,
+        string projectRelativePath, string expectedRevision, string reviewedAfterText, bool requiresAbsentTarget, CancellationToken token)
     {
         DemandExternalOriginalEditAdmissionJoin();
         lock (_sync)
@@ -72,33 +84,54 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
             if (existing is not null)
             {
                 // The SAME reviewed operation must match the exact AFTER payload already bound to it.
-                if (!string.Equals(existing.ReviewedAfterText, reviewedAfterText, StringComparison.Ordinal))
-                    throw new UnauthorizedAccessException("The reviewed AFTER replacement does not match the SAME original edit operation.");
+                if (existing.RequiresAbsentTarget != requiresAbsentTarget ||
+                    !string.Equals(existing.ExpectedSha256, expectedRevision, StringComparison.Ordinal) ||
+                    !string.Equals(existing.ReviewedAfterText, reviewedAfterText, StringComparison.Ordinal))
+                    throw new UnauthorizedAccessException("The reviewed write kind, BEFORE precondition or AFTER payload differs from the SAME original operation.");
                 return existing.OriginalAcquisition;
             }
             if (_originals.Count >= 128) throw new InvalidOperationException("Unresolved original EDIT custody is full.");
-            var edit = new Edit(this, selection, capture, projectRelativePath, expectedSha256, reviewedAfterText); _originals.Add(edit); return edit.Start(token);
+            var edit = new Edit(this, selection, capture, projectRelativePath, expectedRevision, reviewedAfterText, requiresAbsentTarget); _originals.Add(edit); return edit.Start(token);
         }
     }
     public Task ValidateOriginalEditAsync(IDeveloperProjectOriginalReadSelection selection,
         IDeveloperProjectOriginalExistingSourceCapture capture, string projectRelativePath, string expectedSha256,
         IDeveloperProjectOriginalEditAdmission admission, CancellationToken token)
+        => ValidateOriginalWriteAsync(selection, capture, projectRelativePath, expectedSha256, admission, false, token);
+
+    public Task ValidateOriginalCreateAsync(IDeveloperProjectOriginalReadSelection selection,
+        IDeveloperProjectOriginalExistingSourceCapture capture, string projectRelativePath,
+        IDeveloperProjectOriginalEditAdmission admission, CancellationToken token)
+        => ValidateOriginalWriteAsync(selection, capture, projectRelativePath, DeveloperProjectSourceWriteRevision.Absent, admission, true, token);
+
+    private Task ValidateOriginalWriteAsync(IDeveloperProjectOriginalReadSelection selection,
+        IDeveloperProjectOriginalExistingSourceCapture capture, string projectRelativePath, string expectedRevision,
+        IDeveloperProjectOriginalEditAdmission admission, bool requiresAbsentTarget, CancellationToken token)
     {
         Edit original;
         lock (_sync)
-            original = admission is Edit actual && ReferenceEquals(actual.Selection, selection) && ReferenceEquals(actual.Capture, capture) &&
-                string.Equals(actual.RelativePath, projectRelativePath, StringComparison.Ordinal) && string.Equals(actual.ExpectedSha256, expectedSha256, StringComparison.Ordinal)
+            original = admission is Edit actual && _originals.Contains(actual) && actual.RequiresAbsentTarget == requiresAbsentTarget &&
+                ReferenceEquals(actual.Selection, selection) && ReferenceEquals(actual.Capture, capture) &&
+                string.Equals(actual.RelativePath, projectRelativePath, StringComparison.Ordinal) && string.Equals(actual.ExpectedSha256, expectedRevision, StringComparison.Ordinal)
                 ? actual : throw new UnauthorizedAccessException("SAME original Home EDIT issuer/selection/capture/file required.");
         return original.RevalidateOriginalEditAsync(token);
     }
     public IWorkspaceToolFinalFence MintOriginalEditFence(IDeveloperProjectOriginalEditAdmission admission,
         string projectRelativePath, string expectedSha256, string reviewedAfterText)
+        => MintOriginalWriteFence(admission, projectRelativePath, expectedSha256, reviewedAfterText, false);
+
+    public IWorkspaceToolFinalFence MintOriginalCreateFence(IDeveloperProjectOriginalEditAdmission admission,
+        string projectRelativePath, string reviewedAfterText)
+        => MintOriginalWriteFence(admission, projectRelativePath, DeveloperProjectSourceWriteRevision.Absent, reviewedAfterText, true);
+
+    private IWorkspaceToolFinalFence MintOriginalWriteFence(IDeveloperProjectOriginalEditAdmission admission,
+        string projectRelativePath, string expectedSha256, string reviewedAfterText, bool requiresAbsentTarget)
     {
         DemandExternalOriginalEditAdmissionJoin();
         lock (_sync)
         {
             if (_sealed) throw new ObjectDisposedException(nameof(HomeDeveloperProjectEditAdmissionSource));
-            if (admission is not Edit edit || !_originals.Contains(edit))
+            if (admission is not Edit edit || !_originals.Contains(edit) || edit.RequiresAbsentTarget != requiresAbsentTarget)
                 throw new UnauthorizedAccessException("Only the SAME private Home EDIT admission can mint a manual edit fence.");
             if (!string.Equals(edit.RelativePath, projectRelativePath, StringComparison.Ordinal))
                 throw new UnauthorizedAccessException("The fence relative target does not match the SAME edit.");
@@ -136,8 +169,8 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
     {
         lock (_sync)
         {
-            var original = action == EditAction && !_sealed
-                ? _originals.SingleOrDefault(x => x.HasOriginalScope(actor, scope)) : null;
+            var original = !_sealed && action is EditAction or CreateAction
+                ? _originals.SingleOrDefault(x => x.Action == action && x.HasOriginalScope(actor, scope)) : null;
             return original is null
                 ? ValueTask.FromResult(new ResourceAccessDecision(false, "DEV_ORIGINAL_EDIT_SCOPE_REQUIRED", actor.ActorId, scope.Revision, actor.OrganisationId))
                 : new(original.StartOriginalEvaluation(actor, scope, token));
@@ -146,12 +179,13 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
 
     internal sealed class Edit(HomeDeveloperProjectEditAdmissionSource owner,
         IDeveloperProjectOriginalReadSelection selection, IDeveloperProjectOriginalExistingSourceCapture capture,
-        string relativePath, string expectedSha256, string reviewedAfterText) : IDeveloperProjectOriginalEditAdmission
+        string relativePath, string expectedSha256, string reviewedAfterText, bool requiresAbsentTarget = false) : IDeveloperProjectOriginalEditAdmission
     {
         private readonly object _gate = new(); private readonly CloudflareOriginalTaskLedger _stages = new();
         private readonly CloudflareOriginalTaskLedger _closingStages = new();
         private Task<IDeveloperProjectOriginalEditAdmission> _acquisition = null!;
         private readonly List<Task> _validations = []; private readonly List<Task> _evaluations = []; private CancellationTokenSource? _stop; private bool _sealed;
+        private readonly List<HomeSourceEditCommitFence> _fences = [];
         private AuthenticatedResourceActor? _actor; private IDeveloperProjectOriginalEditScopeSource _source = null!;
         private ResourceScope[] _scopes = []; private HomeResourcePreparedReview? _review; private HomeResourceExecutionCapability? _capability;
         private HomeClaimedResourceAttestation? _attestation; private Task? _close;
@@ -160,6 +194,8 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
         internal IDeveloperProjectOriginalExistingSourceCapture Capture => capture;
         internal string RelativePath => relativePath;
         internal string ExpectedSha256 => expectedSha256;
+        public bool RequiresAbsentTarget => requiresAbsentTarget;
+        internal string Action => requiresAbsentTarget ? CreateAction : EditAction;
         internal Task<IDeveloperProjectOriginalEditAdmission> OriginalAcquisition => _acquisition;
         internal bool IsSealed { get { lock (_gate) return _sealed; } }
         internal string? CapabilityRequestId { get { lock (_gate) return _capability?.RequestId; } }
@@ -183,20 +219,25 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
                 var root = capture.OriginalExistingProjectRoot
                     ?? throw new InvalidOperationException("The captured source project root is unavailable.");
                 var afterSha256 = ReviewedAfterSha256;
-                return new HomeSourceEditCommitFence(source, this, owner._broker, owner._store, owner._profiles,
+                if (_fences.Count >= 128) throw new InvalidOperationException("Original source-write fence custody is full.");
+                var fence = new HomeSourceEditCommitFence(source, this, owner._broker, owner._store, owner._profiles,
                     _attestation, _capability, _actor, OperationId, root, projectRelativePath, expectedSha256,
                     reviewedAfterText, afterSha256, ScopeSource);
+                _fences.Add(fence); return fence;
             }
         }
         public Guid OperationId { get; } = Guid.NewGuid();
-        public string ReviewedAfterText { get; } = BindReviewedAfterText(reviewedAfterText);
+        public string ReviewedAfterText { get; } = BindReviewedAfterText(reviewedAfterText, requiresAbsentTarget);
         public string ReviewedAfterSha256 { get; } = Sha256Hex(reviewedAfterText);
         public long ReviewedAfterUtf8Length { get; } = Encoding.UTF8.GetByteCount(reviewedAfterText);
-        private static string BindReviewedAfterText(string after)
+        private static string BindReviewedAfterText(string after, bool permitsEmpty)
         {
             ArgumentNullException.ThrowIfNull(after);
-            if (after.Length == 0 || after.Length > DeveloperProjectSetupIntent.MaximumFileBytes) throw new ArgumentOutOfRangeException(nameof(reviewedAfterText));
-            var bytes = Encoding.UTF8.GetBytes(after);
+            if ((!permitsEmpty && after.Length == 0) || after.Length > DeveloperProjectSetupIntent.MaximumFileBytes) throw new ArgumentOutOfRangeException(nameof(reviewedAfterText));
+            byte[] bytes;
+            try { bytes = new UTF8Encoding(false, true).GetBytes(after); }
+            catch (EncoderFallbackException) { throw new ArgumentException("The reviewed AFTER payload must be valid Unicode.", nameof(reviewedAfterText)); }
+            if (bytes.Length > DeveloperProjectSetupIntent.MaximumFileBytes) throw new ArgumentOutOfRangeException(nameof(reviewedAfterText));
             if (bytes.AsSpan().IndexOf((byte)0) >= 0) throw new ArgumentException("The reviewed AFTER replacement must be canonical bounded UTF-8 without NUL bytes.", nameof(reviewedAfterText));
             try { var round = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(bytes); }
             catch (DecoderFallbackException) { throw new ArgumentException("The reviewed AFTER replacement must be valid UTF-8.", nameof(reviewedAfterText)); }
@@ -241,7 +282,9 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
         {
             DemandLive();
             if (!_stages.Invoke(() => ReferenceEquals(owner._edits(), _source))) throw new UnauthorizedAccessException("The original configured edit-scope issuer retired.");
-            await _stages.AwaitAsync(_stages.Invoke(() => _source.RevalidateOriginalEditScopeAsync(selection, capture, relativePath, expectedSha256, actor, token))).ConfigureAwait(false);
+            await _stages.AwaitAsync(_stages.Invoke(() => requiresAbsentTarget
+                ? _source.RevalidateOriginalCreateScopeAsync(selection, capture, relativePath, actor, token)
+                : _source.RevalidateOriginalEditScopeAsync(selection, capture, relativePath, expectedSha256, actor, token))).ConfigureAwait(false);
             DemandLive();
         }
         private async Task<IDeveloperProjectOriginalEditAdmission> AcquirePublishedAsync(Task begin, CancellationToken token)
@@ -254,7 +297,9 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
                 var stop = _stages.Invoke(() => CancellationTokenSource.CreateLinkedTokenSource(token));
                 lock (_gate) { _stop = stop; if (_sealed || owner._sealed) throw new ObjectDisposedException("Original project EDIT admission"); }
                 _actor = await ActorAsync(_stop.Token).ConfigureAwait(false); await ValidateSourceAsync(_actor, _stop.Token).ConfigureAwait(false);
-                var scopes = _stages.Invoke(() => _source.GetOriginalEditScopes(selection, capture, relativePath, expectedSha256)).ToArray();
+                var scopes = _stages.Invoke(() => requiresAbsentTarget
+                    ? _source.GetOriginalCreateScopes(selection, capture, relativePath)
+                    : _source.GetOriginalEditScopes(selection, capture, relativePath, expectedSha256)).ToArray();
                 if (scopes.Length != 1 || scopes[0].Kind != "dev.project.file" || scopes[0].Access != ResourceAccess.Write ||
                     string.IsNullOrWhiteSpace(scopes[0].Id) || string.IsNullOrWhiteSpace(scopes[0].Revision))
                     throw new UnauthorizedAccessException("The configured Files issuer must issue one distinct exact original source WRITE scope.");
@@ -263,10 +308,15 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
                 lock (_gate) _scopes = scopes;
                 var arguments = JsonSerializer.SerializeToElement(new { sourceSelection = scopes[0].Id, sourceRevision = scopes[0].Revision,
                     file = relativePath, reviewedAfterSha256 = ReviewedAfterSha256, reviewedAfterUtf8Length = ReviewedAfterUtf8Length,
-                    operationId = OperationId, limits = "single file; 4 MiB per file; exact reviewed SHA-256; atomic replace" });
-                _review = _stages.Invoke(() => owner._broker.PrepareReviewForActor(_actor, "dev", EditAction, scopes, arguments,
-                    "Replace the exactly reviewed source file beneath your verified Files root with the reviewed text. READ approval does not authorize this WRITE.", null,
-                    "dev:edit:" + _actor.AuthenticationRevision));
+                    operationId = OperationId, requiresAbsentTarget,
+                    limits = requiresAbsentTarget
+                        ? "single absent file; existing captured parent; 4 MiB; exact reviewed SHA-256; atomic no-replace"
+                        : "single file; 4 MiB per file; exact reviewed SHA-256; atomic replace" });
+                _review = _stages.Invoke(() => owner._broker.PrepareReviewForActor(_actor, "dev", Action, scopes, arguments,
+                    requiresAbsentTarget
+                        ? "Create the exactly reviewed new source file beneath your verified Files root. An existing file, including an empty file, will never be replaced. READ approval does not authorize this WRITE."
+                        : "Replace the exactly reviewed source file beneath your verified Files root with the reviewed text. READ approval does not authorize this WRITE.", null,
+                    (requiresAbsentTarget ? "dev:create:" : "dev:edit:") + _actor.AuthenticationRevision));
                 var observed = await _stages.AwaitAsync(_stages.Invoke(() => owner._broker.AuthorizePreparedReviewAsync(_review, _stop.Token))).ConfigureAwait(false);
                 var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
                 while (observed.State == HomePreparedReviewState.RequestObserved && observed.Request?.State == HomePermissionRequestState.PendingApproval)
@@ -281,7 +331,7 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
                 if (await ActorAsync(_stop.Token).ConfigureAwait(false) != _actor) throw new UnauthorizedAccessException("The original Home actor changed before EDIT admission.");
                 _capability = await _stages.AwaitAsync(_stages.Invoke(() => owner._broker.BeginExecutionCapabilityAsync(_review.RequestId, arguments, _stop.Token))).ConfigureAwait(false)
                     ?? throw new UnauthorizedAccessException("Original Home EDIT capability unavailable.");
-                var claim = await _stages.AwaitAsync(_stages.Invoke(() => owner._broker.ClaimExecutionObservedAsync(_capability, "dev", EditAction, scopes, arguments, _stop.Token))).ConfigureAwait(false);
+                var claim = await _stages.AwaitAsync(_stages.Invoke(() => owner._broker.ClaimExecutionObservedAsync(_capability, "dev", Action, scopes, arguments, _stop.Token))).ConfigureAwait(false);
                 if (claim.Disposition != HomeResourceClaimDisposition.Claimed || claim.Actor != _actor) throw new UnauthorizedAccessException("Original Home EDIT claim rejected.");
                 _attestation = owner._broker.CaptureClaimedAttestation(_capability) ?? throw new UnauthorizedAccessException("Individual original Home EDIT Accept is required.");
                 DemandLive(); return this;
@@ -336,14 +386,28 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
             foreach (var original in drivers) try { await _closingStages.AwaitAsync(original).ConfigureAwait(false); } catch (Exception cause) { errors.Add(cause); }
             await _stages.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
             foreach (var cause in _stages.OriginalErrors) if (!errors.Any(x => ReferenceEquals(x, cause))) errors.Add(cause);
+            HomeSourceEditCommitFence[] fences; lock (_gate) fences = _fences.ToArray();
+            foreach (var fence in fences)
+                try { await _closingStages.AwaitAsync(_closingStages.Invoke(fence.DisposeAsync)).ConfigureAwait(false); }
+                catch (Exception cause) { errors.Add(cause); }
             if (_capability is not null)
             {
                 try
                 {
+                    var committed = fences.Any(fence => fence.HasCommittedEffect);
+                    var state = errors.Count != 0 ? HomePermissionRequestState.Failed
+                        : requiresAbsentTarget && (!committed || _finiteCalls == 0)
+                            ? HomePermissionRequestState.Cancelled : HomePermissionRequestState.Succeeded;
                     var audit = await _closingStages.AwaitAsync(_closingStages.Invoke(() => owner._broker.CompleteExecutionAsync(_capability,
-                        new(errors.Count == 0 ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
-                            errors.Count == 0 ? "DEV_ORIGINAL_SOURCE_EDIT_CLOSED" : "DEV_ORIGINAL_SOURCE_EDIT_UNFINISHED",
-                            "The actual admitted local EDIT task cohort was joined; physical source settlement remains a separate kernel original.", []), CancellationToken.None))).ConfigureAwait(false);
+                        new(state,
+                            requiresAbsentTarget
+                                ? state == HomePermissionRequestState.Cancelled ? "DEV_ORIGINAL_SOURCE_CREATE_NOT_PUBLISHED"
+                                    : state == HomePermissionRequestState.Succeeded ? "DEV_ORIGINAL_SOURCE_CREATE_CLOSED" : "DEV_ORIGINAL_SOURCE_CREATE_UNFINISHED"
+                                : errors.Count == 0 ? "DEV_ORIGINAL_SOURCE_EDIT_CLOSED" : "DEV_ORIGINAL_SOURCE_EDIT_UNFINISHED",
+                            requiresAbsentTarget
+                                ? committed ? "The original CREATE finite swap ran; its admitted writer and cleanup cohort were joined. See the terminal state for verification failures."
+                                    : "The accepted CREATE was closed without an original committed publication. No CREATE success is claimed."
+                                : "The actual admitted local EDIT task cohort was joined; physical source settlement remains a separate kernel original.", []), CancellationToken.None))).ConfigureAwait(false);
                     if (!audit.Succeeded) throw new InvalidOperationException("Original project EDIT audit unfinished: " + audit.Code);
                 }
                 catch (Exception cause) { errors.Add(cause); }
@@ -359,7 +423,7 @@ public sealed class HomeDeveloperProjectEditAdmissionSource : IDeveloperProjectO
 public sealed class HomeDeveloperProjectEditActionPolicySource : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
-        appId == "dev" && actionId == HomeDeveloperProjectEditAdmissionSource.EditAction
+        appId == "dev" && actionId is HomeDeveloperProjectEditAdmissionSource.EditAction or HomeDeveloperProjectEditAdmissionSource.CreateAction
             ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, false, false, RequiresPerActionApproval: true) : null;
 }
 

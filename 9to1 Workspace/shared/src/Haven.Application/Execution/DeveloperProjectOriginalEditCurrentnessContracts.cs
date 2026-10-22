@@ -8,6 +8,7 @@ namespace Haven.Application;
 /// public Home/Files/store methods and is safe beneath a held Home lease.</summary>
 public interface IDeveloperProjectOriginalEditCurrentnessPin : IAsyncDisposable
 {
+    bool RequiresAbsentTarget => false;
     /// <summary>Synchronous private probe run immediately before the finite native swap (beneath
     /// the held Home entry). Throws when the SAME configured Files selection/capture/target is no
     /// longer the producer's live, privately owned product or the exact captured file is missing.
@@ -26,6 +27,11 @@ public interface IDeveloperProjectOriginalEditCurrentnessPin : IAsyncDisposable
 /// returned pin's probe is pure, synchronous and cheap.</summary>
 public interface IDeveloperProjectOriginalEditCurrentnessPinSource
 {
+    Task<IDeveloperProjectOriginalEditCurrentnessPin> AcquireOriginalCreateCurrentnessPinAsync(
+        IDeveloperProjectOriginalReadSelection sameSelection,
+        IDeveloperProjectOriginalExistingSourceCapture sameCapture,
+        string projectRelativePath, string reviewedAfterSha256, CancellationToken cancellationToken)
+        => throw new NotSupportedException("The configured Files source has no genuine CREATE currentness custody.");
     Task<IDeveloperProjectOriginalEditCurrentnessPin> AcquireOriginalEditCurrentnessPinAsync(
         IDeveloperProjectOriginalReadSelection sameSelection,
         IDeveloperProjectOriginalExistingSourceCapture sameCapture,

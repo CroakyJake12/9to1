@@ -88,8 +88,7 @@ public sealed class DeveloperManualSourceReadOwner(
     {
         var configuration = await files.GetConfigurationAsync(token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
-        var root = project.Root.Location ?? throw new InvalidOperationException("The resolved project has no local root location.");
-        var selection = await selections.SelectOriginalExistingProjectAsync(configuration.StoreId, root, token).ConfigureAwait(false);
+        var selection = await selections.SelectOriginalRegisteredProjectAsync(configuration.StoreId, project, token).ConfigureAwait(false);
         var admission = await reads.AcquireOriginalAsync(selection, token).ConfigureAwait(false);
         try
         {

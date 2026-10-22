@@ -79,7 +79,7 @@ public sealed partial class WorkspaceToolService
                 _declaredWrites.Add(ResolveDeclared(RequiredText("path")), Text("content"));
                 // A genuine manual (no-AI) Home edit binds the reviewed BEFORE digest directly into the
                 // retained native writer preimage check, so a before-change during staging is refused.
-                if (fence is IWorkspaceManualEditFinalFence manualFence)
+                if (fence is IWorkspaceManualEditFinalFence { RequiresAbsentTarget: false } manualFence)
                     _expectedPreimageHashes.Add(ResolveDeclared(RequiredText("path")), manualFence.ReviewedBeforeSha256);
             }
             else if (_call.Name == "replace_in_file") _declaredWrites.Add(ResolveDeclared(RequiredText("path")), string.Empty);
@@ -271,7 +271,10 @@ public sealed partial class WorkspaceToolService
         public void EnsureOriginalWriteParent(string path, Action<string> createOriginal)
         {
             if (_physicalRoot is null) throw new PlatformNotSupportedException("The original mutation has no retained Windows parent owner.");
-            _physicalRoot.EnsureDirectory(Path.GetDirectoryName(path)!, createOriginal);
+            // Absent-target CREATE is limited to an existing captured parent, so it cannot
+            // turn a racing missing parent into an unreviewed directory-creation operation.
+            _physicalRoot.EnsureDirectory(Path.GetDirectoryName(path)!,
+                Fence is IWorkspaceManualEditFinalFence { RequiresAbsentTarget: true } ? null : createOriginal);
         }
 
         private async Task<string> ReadOriginalTextAsync(string path, CancellationToken token)
