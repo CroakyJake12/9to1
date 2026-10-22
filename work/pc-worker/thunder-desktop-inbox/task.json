@@ -27,65 +27,73 @@
     "unsupported": "No arbitrary shell/program payload, unknown scope, provider/system change, new model request or credential access; refuse and report.",
     "before_model_or_hardware_execution": "Exclusive shared-model custody and separate explicit owner/native authorization remain mandatory; this test-only task supplies neither."
   },
-  "sequence": 5,
-  "task_id": "THUNDER-DESKTOP-20261022-05",
-  "previous_task_id": "THUNDER-DESKTOP-20261022-04",
-  "expected_previous_inbox_revision": "041ca1973829a7b7faeb50588bef5a6299d0a59a",
-  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_DESKTOP_OBSERVATION",
+  "sequence": 6,
+  "task_id": "THUNDER-DESKTOP-20261022-06",
+  "previous_task_id": "THUNDER-DESKTOP-20261022-05",
+  "expected_previous_inbox_revision": "9fc660db9154157b9b645199a96cca2b81def816",
+  "status": "PUBLISHED_AWAITING_ACTUAL_ACK_AND_RESULT",
   "operation": "run_named_owning_check",
-  "latest_owner_correction": "The owner explicitly says there is no existing laptop worker right now. Do not treat old bridge active/session flags as proof of an active consumer or as a reason to wait for a nonexistent laptop hold. Reconcile actual desktop activity directly. Existing permission for desktop Thunder testing through23:45BST and all safety limits remain.",
-  "start_admission": "Safely checkpoint and preserve Task4 edits/results before this task; do not discard or reset its work. Use unchanged Task2 proof worktree at expected source for identity if the Task4 branch now has a local review commit. Return that commit/patch separately. Prioritize real desktop request ownership over further bridge investigation.",
-  "objective": "Resolve actual current inference ownership on the real desktop and, only after direct quiet admission, record a controlled baseline on the existing installed engine. Do not wait for an inferred laptop worker. Prepare actual CUDA/compiler and upstream-candidate dependency availability for subsequent side-by-side upgrade without changing the running engine.",
+  "owner_context": "Owner says no laptop worker exists right now. Task5 directly observed real competing model traffic399to401, but did not identify its originating client. Preserve this distinction: do not infer a laptop consumer or ask the owner to stop one.",
+  "objective": "Identify the actual current model request path/consumer, stage the already compiled exact candidate privately without rebuilding or changing the running engine, and record an existing-engine baseline only within a directly observed quiet/overlap-free window. Do not remain blocked on the disproven laptop assumption.",
   "scope": {
-    "mode": "DESKTOP_MODEL_OWNERSHIP_AND_CONDITIONAL_EXISTING_ENGINE_BASELINE",
+    "mode": "ACTUAL_REQUEST_ATTRIBUTION_PRIVATE_CANDIDATE_STAGING_AND_CONDITIONAL_EXISTING_BASELINE",
     "repository_paths": [
-      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata",
-      "docs/dulche/thunder-desktop-handoff-20261022.md"
+      "9to1 Models/Dulche Alpha/InferenceEngines/NativeStrata"
     ],
-    "source_reads": "Read unchanged exact native source at expected revision and handoff from pinned parent81. Do not modify tracked source in this task. Preserve Task4 review branch and all existing outputs.",
-    "system_read_scope": "Only actual Thunder supervisor/gateway/engine, their known process ancestry, relevant request/queue logs or documented status endpoints, current installed model metadata, existing CUDA/driver/compiler and candidate dependency availability. Do not dump environment variables, tokens, private prompts, unrelated process details or personal files.",
-    "private_outputs": "New bounded per-task private result, raw benchmark rows and reproducible harness/recipe; expose only result metadata through existing private thread.",
+    "identity": "Use preserved unchanged expected-source tree for reads; preserve Task4 five-path branch/patch and all Task1-5 results. No tracked-source edits.",
+    "system_reads": "Only actual Thunder gateway/supervisor/engine, their documented current counters, request-path/source logs and known relevant local client/session/process/bridge metadata. Identify the actual host/process using live evidence, not copied pathnames or old status. If inspecting bridge config/doctor, retain only installation/version/host identity and nonsecret capability metadata; never credentials, environment dumps or private prompts.",
+    "private_stage": "New private task-owned directory outside tracked trees; exact43MB ZIP through existing authenticated connected OneDrive tools or existing authenticated GitHub artifact download. Verify destination owner-only ACL and exact archive SHA; no public link or new auth. No full clone/model/SDK/dependency download.",
     "no_actions": [
-      "No service stop/restart/reconfiguration, engine replacement/unload, driver/toolkit/dependency install, clocks/power/security changes, provider or spending-cap change, new worker/session or unrelated process interruption.",
-      "No requested new model download or second model process. Baseline requests may use ONLY the currently installed selected model after all quiet gates below. No candidate inference or performance improvement claim.",
-      "No source commit/push/main merge or modification of Task4/Task2 trees."
+      "No process/service stop/restart/pause/reconfiguration, existing engine unload/replacement, driver/toolkit/security/power/clock/provider/spending changes, new workers or unrelated interruption. Return precise current consumer if an actual future-dispatch hold is required; do not invent a writer.",
+      "No candidate inference/model load or second engine; no global install, production selection/promotion, commit/push/main merge. Current-engine baseline ONLY under the conditional admission below.",
+      "Do not change Task4 source to force tests green or lose its28KB patch; preserve and report exact review source/evidence."
     ]
+  },
+  "candidate_artifact": {
+    "source_CI_run": 39660364662,
+    "source_revision": "0749524b904a3b8035d68b2915197293c87fbc11",
+    "GitHub_artifact_id": 12377275853,
+    "private_owner_project_folder": "9to1 in the existing personal OneDrive connection",
+    "file_name": "thunder-cuda-compile-install-closure-0749524b-20261022.zip",
+    "bytes": 42950082,
+    "sha256": "91bbcfe7ac5ff9f0c0b1293341b2ca3d440964c76d6b4b1c5de1f49643f502b5",
+    "actual_Root_custody": "Cloud downloaded actual authenticated GitHub artifact using connected download interface, verified provider ZIP bytes/SHA, privately uploaded once, then actual raw OneDrive readback matched full43MB SHA and owner-only effective ACL. This proves staging bytes, not runtime.",
+    "upstream": "Niko1221/Strata v0.2.2 engine0.1.47 commit011c9e600a93bbc9fd451c563501b5831c32bbca",
+    "toolchain": "CIbuiltLinuxx64 ELF64 sm120 CUDA13.0 portable; actual target compatibility stillmustbechecked",
+    "expected_members": 13,
+    "expected_uncompressed_bytes": 100992631,
+    "engine_sha256": "318644d80a876883d43241213008244708818fbf32cd8ff33772a52e081e86a7",
+    "engine_bytes": 85138528,
+    "worker_sha256": "d134c92af233f5af0f551c58514d4bd6e089eceb8b05685f2c79f36c266226c3",
+    "kq_DSO_sha256": "c5e7b777367c3d2d0a3c305dea65016a0e4a41e9971fca0f00124f7a22dc2aa2",
+    "source_parity": "Root raw-source check at CI074 matches exacteb candidate.cppdcf582... and childheader418603... byte-for-byte. Build receipt, source lock, MITStrata/GGMLlicences and tokenizer closure are inside ZIP. Do not relabel CPUfixtures as GPUacceptance.",
+    "transport": "Use actual available connected search/fetch/rawfile tools by exact file name and current owner ACL, or the exact authenticated GitHub artifact interface. No credentials/signed URLs in Git or results. Missing tool/auth => precise stagingBLOCKED, no owner setup request or privacy bypass.",
+    "extraction": "Validate paths/no traversal/symlinks/bombs and declared sizes, preflight disk/memory, extract only to fresh owned private directory preserving licences/source lock. Set executable permission only for verified owned ELF files if archive lost modes; never modify installed system files. Inspect readelf/loader/library/module compatibility without loading models; record exact missing dependencies. No giant rebuild."
   },
   "checks": {
     "named_checks": [
-      "actual_current_desktop_request_and_process_ownership",
-      "quiet_existing_engine_admission_or_precise_blocker",
-      "conditional_existing_engine_five_baseline_runs",
-      "current_CPU_CUDA_toolchain_and_candidate_closure_readiness",
-      "preserve_services_source_and_prior_results"
+      "direct_request_origin_attribution",
+      "actual_private_candidate_archive_and_ELF_closure",
+      "current_engine_overlap_free_baseline_if_admitted",
+      "preservation_and_next_upgrade_admission"
     ],
-    "quiet_admission": [
-      "Read actual current server implementation/status semantics and directly verify active generations and queued requests, relevant OpenCode/continuation activity and current engine process identity. Fresh API/log/process evidence only; if unavailable, state precisely what cannot be established.",
-      "Observe a short bounded quiet window (up to30seconds). Owner has confirmed no laptop worker; do not substitute saved session fields or mere GPU-utilization zero for direct request evidence.",
-      "If an actual other consumer/request exists or cannot be safely distinguished, send no baseline request; return the precise observed consumer/time/state and next concrete check. Never pause or terminate it."
-    ],
-    "baseline_if_admitted": {
-      "engine": "Use existing installed server/engine and its actual configured model. Verify actual identifier/quantisation and retain binary SHA plus model file/manifest identity limits; no assumed historical version or substituted default.",
-      "request_count": 5,
-      "parameters": "Same fixed nonpersonal prompt, fresh context/cache-disabled option only if documented, temperature0, fixed seed only if supported, max128generatedtokens. Record exact actual request/settings/cache behavior; do not invent unsupported fields.",
-      "metrics": "Record raw repeated time-to-first-token, decode/client throughput, actual token counts/finish reasons, loading/prefill/decode separation if real engine telemetry exposes it, peak observed GPU/RAM and monitoring interval. Mark unavailable metrics UNKNOWN and network timings as client timings.",
-      "bounds": "Sequential requests, each<=180seconds and total<=15minutes; observe stop/revocation/22:45UTC deadline. Retain request/engine overlap telemetry. Any competing traffic invalidates that controlled run; do not conceal or interrupt it.",
-      "claim": "This measures only existing engine baseline. It does not prove upgraded Thunder, comparative gain, model compatibility beyond the tested model or universal hardware support."
-    },
-    "toolchain": "Read actual existing driver/toolkit/compiler versions and available pinned source/artifact/cache metadata without CUDA execution, installs or download; report specific next compatible candidate build/stage route.",
-    "failure_handling": "Actual result with timestamps, source/binary identities and logs. Infrastructure/custody BLOCKED is separate from product failure; no fabricated success or repeated manual owner setup request."
+    "attribution": "Correlate exact current request/queue counters and bounded gateway/access logs with relevant known local clients and service/session ownership. If possible identify whether a real9to1background continuation is local on this PC versus a remote client. Do not report a saved active/session flag as a current model request or assign it to a laptop. Do not stop anything.",
+    "baseline_admission": "Task5 historical30swindowfailed; that is retained. A NEW30swindow may admit current-engine baseline only when actual server counters show no active/queued generations and no competing requests throughout. Monitor counters and exact engine/model identity DURING every sequential request; any extra consumer/request or overlap invalidates that run. No inferred exclusive lease or unloaded engine.",
+    "baseline": "If newly admitted, use actual existing selectedmodel/quantisation, fixed nonpersonal prompt, temperature0, supported fresh-cache setting only if documented, max128tokens, sequential five valid runs at mostone retry per invalidrun, total<=15minutes/currentexpiry. Record raw TTFT/tokens/throughput/cache/native telemetry whereavailable; client timing!=enginecompute. Missing/competingtraffic => BLOCKED, zero fabricated passes.",
+    "candidate_readiness": "Confirm current installed driver/CUDA13/toolkit and exact staged ELF DSOs/Python module closure, current GGUFqwen4exp/MOSTLY_IQ3_S with mixed tensor types versus actual pinned upstream capabilities. Stageonly; no model start or claim compatibility before proof. Return exact next safe old/upstream/candidate execution recipe and required ownership/dependency gate.",
+    "bounds": "Atmost60second waits, onecompiler/buildatime ifany(no rebuild requested), resource floors/normal approvals, absolute stop22:45UTC or earlier ownerrevocation."
   },
   "outputs": {
-    "destination": "Existing private desktop thread with retained local result/evidence",
+    "destination": "Existing private desktop thread plus owned private result/raw evidence",
     "fields": [
-      "task_id/actual_acceptance",
-      "current_desktop_consumer_evidence_or_quiet_proof",
-      "exact_source_and_preserved_Task4_commit_patch",
-      "baseline_raw_results_and_metrics_or_precise_blocker",
-      "installed_engine_model_and_toolchain_identities",
-      "next_action",
-      "authorization_stop_time"
+      "task_ID/source/actual_ACK",
+      "actual_request_caller_or_precise_unknown",
+      "current_real_host/bridge_scope_ifrelevant_withoutsecrets",
+      "staged_actual_path/ZIPbytesSHA/ELFclosure/dependencies",
+      "new_quietwindow_andbaseline_raw_results_orblocker",
+      "Task4patch_preserved",
+      "nextminimal_upgrade_step"
     ],
-    "privacy": "No credentials or prompts/personal data; all local identifiers/results private, never public Git."
+    "privacy": "No credentials,signed URLs,privatepromptsorunrelated personalfiles. Public task contains only public source/artifact metadata and nonsecret filename."
   }
 }
