@@ -600,12 +600,14 @@ def export_files(source, revision):
     with os.fdopen(fd, "rb") as stream:
         before = os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode): raise Refusal("Export manifest must be a regular file")
+        if before.st_size != asset["bytes"]: raise Refusal("Export manifest size differs from its receipt")
         raw = stream.read(asset["bytes"] + 1)
         after = os.fstat(stream.fileno())
         identity = {"kind": "file", "bytes": len(raw), "sha256": digest(raw), "mode": before.st_mode & 0o777}
         if identity != {k: v for k, v in asset.items() if k != "path"} or before != after:
             raise Refusal("Export manifest changed/unavailable")
     manifest = json.loads(raw)
+    if not isinstance(manifest, dict): raise Refusal("Export manifest must be a JSON object")
     if (manifest.get("schema") != "9to1.exact-source-export/v1" or manifest.get("root") != source["path"]
             or manifest.get("origin_git") != source["git"]["path"]
             or manifest.get("source_revision") != source["git"]["revision"]
@@ -858,10 +860,19 @@ def recovery_checkpoint(state):
 
 
 def check_execution_context(state, repo, execution):
-    record = state.get("execution_custody", {}).get(execution)
+    custody = state.get("execution_custody", {})
+    if not isinstance(custody, dict): raise Refusal("Execution custody must be a named object")
+    record = custody.get(execution)
     if not isinstance(record, dict): raise Refusal("Named execution requires structured custody")
-    permitted = {state["repository"], record["source"]["path"], record["source"]["git"]["path"]}
-    if Path(repo).resolve() not in {Path(p).resolve() for p in permitted}:
+    source = record.get("source")
+    if not isinstance(source, dict) or source.get("kind") not in ("git-worktree", "source-export"):
+        raise Refusal("Named execution requires a structured source of a supported kind")
+    origin = source.get("git")
+    if not isinstance(origin, dict): raise Refusal("Named execution requires structured Git custody")
+    permitted = [absolute_path(state.get("repository"), "Original repository"),
+                 absolute_path(source.get("path"), "Named execution source"),
+                 absolute_path(origin.get("path"), "Named execution Git repository")]
+    if absolute_path(repo, "Requested repository").resolve() not in {p.resolve() for p in permitted}:
         raise Refusal("Requested repository is unrelated to named execution custody")
 
 

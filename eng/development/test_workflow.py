@@ -252,6 +252,69 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual("BLOCKED", w.recovery(self.state, exported, "active")["recovery_status"])
         self.assert_checkpoint_refused_unchanged(patch)
 
+    def assert_named_cli_refused_without_mutation(self, state):
+        w.atomic(self.state_path, state)
+        before = self.state_path.read_bytes()
+        generation = w.read(self.state_path)["generation"]
+        code, result = self.cli("preflight", "--repo", self.repo, "--execution", "active")
+        self.assertEqual(2, code, result)
+        self.assertFalse(result.get("ready", False))
+        self.assertEqual("BLOCKED", result["result"])
+        self.assertEqual("INFRASTRUCTURE", result["classification"])
+        self.assertEqual(before, self.state_path.read_bytes())
+        code, recovered = self.cli("recover", "--repo", self.repo, "--execution", "active")
+        self.assertEqual(2, code, recovered)
+        self.assertEqual("BLOCKED", recovered["recovery_status"])
+        self.assertEqual(before, self.state_path.read_bytes())
+        self.assertEqual(generation, w.read(self.state_path)["generation"])
+
+    def test_execution_malformed_named_source_cli_refuses_structurally(self):
+        _, _, _, _, patch = self.execution_fixture()
+        w.apply_checkpoint(self.state, patch)
+        for source in (None, [], "stale-path-string", {"kind": "unknown"}):
+            state = copy.deepcopy(self.state)
+            state["execution_custody"]["active"]["source"] = source
+            with self.subTest(source=source): self.assert_named_cli_refused_without_mutation(state)
+
+    def test_execution_malformed_named_git_and_paths_cli_refuse_structurally(self):
+        _, _, _, _, patch = self.execution_fixture()
+        w.apply_checkpoint(self.state, patch)
+        for field, value in (("git", None), ("git", []), ("path", None), ("path", []), ("path", "relative"),
+                             ("git-path", None), ("git-path", {}), ("git-path", "relative")):
+            state = copy.deepcopy(self.state)
+            source = state["execution_custody"]["active"]["source"]
+            if field == "git-path": source["git"]["path"] = value
+            else: source[field] = value
+            with self.subTest(field=field, value=value): self.assert_named_cli_refused_without_mutation(state)
+
+    def test_execution_export_nonobject_json_cli_refuses_without_publication(self):
+        active, _, _, _, patch = self.execution_fixture()
+        manifest_path = self.root / "malformed-export.json"
+        for value in (None, [], "not-a-manifest", 42):
+            manifest_path.write_bytes(w.encoded(value))
+            incoming = copy.deepcopy(patch)
+            source = incoming["execution_custody"]["active"]["source"]
+            del source["files"]; source.update(kind="source-export", manifest={"path": str(manifest_path), **w.file_identity(manifest_path)})
+            with self.subTest(value=value):
+                self.assert_checkpoint_refused_unchanged(incoming)
+                state = copy.deepcopy(self.state)
+                state["development_candidates"].update(incoming["development_candidates"])
+                state["execution_custody"].update(incoming["execution_custody"])
+                self.assert_named_cli_refused_without_mutation(state)
+                w.atomic(self.state_path, self.state)
+
+    def test_execution_export_declared_size_cannot_escape_bounded_read(self):
+        _, _, _, _, patch = self.execution_fixture()
+        manifest_path = self.root / "small-export.json"; manifest_path.write_text("{}\n")
+        source = patch["execution_custody"]["active"]["source"]
+        del source["files"]; source.update(kind="source-export", manifest={"path": str(manifest_path), **w.file_identity(manifest_path)})
+        source["manifest"]["bytes"] = 2 ** 100
+        self.assert_checkpoint_refused_unchanged(patch)
+        state = copy.deepcopy(self.state)
+        state["development_candidates"].update(patch["development_candidates"])
+        state["execution_custody"].update(patch["execution_custody"])
+        self.assert_named_cli_refused_without_mutation(state)
+
     def test_stale_writer_does_not_overwrite_checkpoint(self):
         with w.transaction(self.state_path, 0) as state:
             state["next_actions"] = ["new progress"]

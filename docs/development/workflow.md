@@ -195,7 +195,10 @@ Named recovery still reconciles `repository`/`observed_revision` against the
 original projection; it separately reports requested context and selected source.
 It never rewrites either identity. Without an explicit name, using a component
 repository instead of the original remains a discrepancy. Unknown/unrelated named
-contexts refuse. Default recovery checks all declared candidates; named recovery
+contexts refuse. Malformed named source/Git/path shapes and non-object export
+JSON also return structured INFRASTRUCTURE/BLOCKED responses, with no checkpoint
+mutation or generation advance. Export manifest size must match its receipt before
+the bounded read. Default recovery checks all declared candidates; named recovery
 checks the selected one and retains the full owners/tasks/gates/next actions.
 `execution_next_actions` adds restore/rebuild actions without changing state.
 
