@@ -109,6 +109,17 @@ public sealed class LocalModelRegistry(string denRoot, string deviceId, long max
         if (File.Exists(path)) File.Delete(path);
     }
 
+    /// <summary>Truthful typed preflight for a candidate model before any installation evidence. Source
+    /// recognition, pinned-artifact identity, format admission, source ceiling and this registry's
+    /// configured device-weight quota are reported separately; none claim installation, runtime
+    /// compatibility, GPU, or initialized readiness. The registry injects its own configured quota,
+    /// overriding any caller-supplied quota value (the registry is the device quota authority).</summary>
+    public ModelPreflightReport Preflight(ModelPreflightRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return ModelAdmissionPolicy.Preflight(request with { DeviceQuotaBytes = _maximumModelWeightBytes });
+    }
+
     public async Task<long> GetEnabledWeightUsageAsync(CancellationToken cancellationToken = default)
     {
         if (!Directory.Exists(_root)) return 0;

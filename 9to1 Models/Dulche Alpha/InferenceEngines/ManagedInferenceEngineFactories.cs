@@ -21,7 +21,16 @@ public abstract class StrataOriginalWorkerLease : IAsyncDisposable
     public abstract StrataBundledWorker OriginalWorker { get; }
     public abstract void DemandCurrentOriginalBinding();
     public abstract ValueTask DisposeAsync();
+    /// <summary>Trusted installed native worker profile identity, bound to the SAME held protected
+    /// binary/installation lease. Null (default) means the legacy V1 (ABI 1) profile. Candidate V2
+    /// is selected only when the trusted producer explicitly identifies the verified candidate source;
+    /// a bare path/hash/profile label never grants selection.</summary>
+    public virtual StrataNativeProfile? InstalledProfile => null;
 }
+/// <summary>Trusted installed native worker profile identity. `SourceIdentity` is the pinned source
+/// commit/tree identity of the verified build (e.g. the candidate v0.2.2 commit); it is supplied by
+/// the trusted installation producer, never guessed from a filename or a loose registration.</summary>
+public sealed record StrataNativeProfile(string Profile, int AbiVersion, string SourceIdentity);
 /// <summary>The producer retains/drains undisclosed or rejected products. Historical IsIssued must
 /// remain valid for authentic returned leases through seal/retirement, without granting current use.</summary>
 public interface IOriginalStrataWorkerSource
@@ -127,13 +136,13 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
             throw new InferenceEngineException(new(DulcheErrorCode.UnsupportedCapability,
                 "The actual native Strata transport has no image execution protocol.",sameModel.StableKey,false));
         lock(_custodyGate) { if(_admissions>=128)throw new InvalidOperationException("Original native factory custody is full.");_admissions++; }
-        Task<StrataOriginalModelLease>? acquisition=null; Task<StrataNativeWorker>? creation=null;
+        Task<StrataOriginalModelLease>? acquisition=null; Task<IStrataNativeWorker>? creation=null;
         Task<ProviderConfiguration?>? currentConfiguration=null;
         Task<StrataOriginalWorkerLease>? binaryAcquisition=null;StrataOriginalWorkerLease? originalBinary=null;
         bool modelOwned=false,binaryOwned=false,toolsObserved=false;
         Task<bool>? toolProbe=null; Task<TaskRunAttemptAdmission?>? toolAdmissionLookup=null;
         StrataOriginalModelLease? originalModel=null; ScopedOriginalModel? scopedModel=null;
-        StrataNativeWorker? worker=null; ManagedProviderDulcheAdapter? adapter=null;
+        IStrataNativeWorker? worker=null; ManagedProviderDulcheAdapter? adapter=null;
         try
         {
             binaryAcquisition=ManagedEngineLease.Own(originalScope,()=>binaries.AcquireOriginalAsync(_modelUseAdmission,originalScope,cancellationToken));
@@ -149,6 +158,29 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
             });
             var heldBinary=originalBinary??throw new InvalidOperationException("No actual issued worker lease was returned.");
             originalScope.InvokeOriginalFactory(()=> {heldBinary.DemandCurrentOriginalBinding();return true;});
+            // Trusted worker-profile selection happens HERE, before any single native create call.
+            // The legacy V1 (ABI 1) profile is the default. The candidate V2 worker is selected only
+            // when the trusted installed profile explicitly names the verified candidate source.
+            // Unknown/foreign profile/ABI/source fail closed — never a silent fallback to another ABI
+            // and never a probe-then-create double launch.
+            var profile=heldBinary.InstalledProfile;
+            bool candidateSelect;
+            if(profile is null)
+            {
+                candidateSelect=false;   // legacy V1 default for owners without explicit candidate trusted metadata
+            }
+            else if(profile.Profile=="candidate" && profile.AbiVersion==2)
+            {
+                if(profile.SourceIdentity!=StrataCandidateWorker.VerifiedCandidateSourceCommit)
+                    throw new InferenceEngineException(new(DulcheErrorCode.ProviderUnavailable,
+                        "The candidate worker profile does not match the verified Strata v0.2.2 source identity.",sameModel.StableKey,false));
+                candidateSelect=true;
+            }
+            else
+            {
+                throw new InferenceEngineException(new(DulcheErrorCode.ProviderUnavailable,
+                    "The Strata native worker profile is unknown or unsupported for this registration.",sameModel.StableKey,false));
+            }
             acquisition=ManagedEngineLease.Own(originalScope,()=>models.AcquireOriginalAsync(sameModel,_modelUseAdmission,originalScope,cancellationToken));
             lock(_custodyGate)_originalAcquisitions.Add(acquisition);
             originalModel=await acquisition.ConfigureAwait(false);
@@ -180,7 +212,19 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
             var start=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             creation=ManagedEngineLease.Own(originalScope,()=> {
                 heldBinary.DemandCurrentOriginalBinding();
-                return StrataNativeWorker.CreateAfterPublicationAsync(start.Task,heldBinary.OriginalWorker,scopedModel,cancellationToken);
+                var binary=heldBinary.OriginalWorker;
+                // One actual create call for the selected profile (legacy V1 or candidate V2). The
+                // candidate worker requires the SAME held protected binary/installation binding plus
+                // the approved interpreter path carried by that binding (no ambient PATH/secrets).
+                // The async wrapper only forwards the single selected create task; it never launches a
+                // second native process and preserves the original fault/cancellation semantics.
+                async Task<IStrataNativeWorker> CreateSelectedAsync()
+                {
+                    return candidateSelect
+                        ? await StrataCandidateWorker.CreateCandidateAfterPublicationAsync(start.Task,binary,scopedModel,cancellationToken).ConfigureAwait(false)
+                        : await StrataNativeWorker.CreateAfterPublicationAsync(start.Task,binary,scopedModel,cancellationToken).ConfigureAwait(false);
+                }
+                return CreateSelectedAsync();
             });
             lock(_custodyGate)_originalAcquisitions.Add(creation);
             start.SetResult(); worker=await creation.ConfigureAwait(false);
@@ -266,6 +310,7 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
         protected T Read<T>(Func<T> callback) { bool published;lock(_gate) published=_published;return published?callback():scope.InvokeOriginalFactory(callback); }
         public override InferenceModelRequirements Requirements=>Read(()=>original.Requirements);
         public override string OriginalCheckpointDirectory=>Read(()=>original.OriginalCheckpointDirectory);
+        public override string? OriginalCheckpointFileFdPath=>Read(()=>original.OriginalCheckpointFileFdPath);
         public override IReadOnlyList<int> ActualCudaDeviceIndices=>Read(()=>original.ActualCudaDeviceIndices);
         public override InferenceEngineSupport? OriginalBuildSupport=>Read(()=>original.OriginalBuildSupport);
         public override void DemandCurrentOriginalBinding()=>Read(()=> { binary.DemandCurrentOriginalBinding();original.DemandCurrentOriginalBinding();return true; });
@@ -294,14 +339,14 @@ public sealed class StrataManagedInferenceEngineFactory : IInferenceEngineAdapte
     }
 }
 
-internal sealed class ManagedEngineLease(ManagedProviderDulcheAdapter adapter,StrataNativeWorker? worker,StrataOriginalWorkerLease? binary=null,
+internal sealed class ManagedEngineLease(ManagedProviderDulcheAdapter adapter,IStrataNativeWorker? worker,StrataOriginalWorkerLease? binary=null,
     IOriginalInferenceEngineRequestSource? originalRequestSource=null):OriginalInferenceEngineLease,IOriginalInferenceCalibrationLease,IOriginalInferenceEngineRequestLease
 {
     private readonly object _gate=new();private Task? _close;private Task? _adapterClose;private Task? _workerClose;private Task? _binaryClose;
     private readonly AsyncLocal<ClosePhase?> _executing=new();
     [ThreadStatic]private static List<ManagedEngineLease>? _physical;
     public override IDulcheOriginalProviderAdapter Adapter=>adapter;
-    public IOriginalInferenceCalibrationSource? CalibrationSource=>worker;
+    public IOriginalInferenceCalibrationSource? CalibrationSource=>worker as IOriginalInferenceCalibrationSource;
     public IOriginalInferenceEngineRequestSource OriginalRequestSource=>originalRequestSource
         ??throw new NotSupportedException("This original engine lease has no actual typed request transport.");
     public override void DemandExternalOriginalJoin()
@@ -336,7 +381,7 @@ internal sealed class ManagedEngineLease(ManagedProviderDulcheAdapter adapter,St
     private T Physical<T>(Func<T> callback)
     {var stack=_physical??=[];stack.Add(this);try{return callback();}finally{stack.RemoveAt(stack.Count-1);}}
     private sealed class ClosePhase {public volatile bool Live=true;}
-    internal static async Task CloseFailedAsync(ManagedProviderDulcheAdapter? adapter,StrataNativeWorker? worker,
+    internal static async Task CloseFailedAsync(ManagedProviderDulcheAdapter? adapter,IStrataNativeWorker? worker,
         IInferenceEngineOriginalSourceScope scope,List<Exception> errors)
     {
         Task? a=null,w=null;

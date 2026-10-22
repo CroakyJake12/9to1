@@ -19,7 +19,8 @@ public sealed record StrataOriginalHardwareObservation(InferenceHardware Hardwar
 /// and actual admitted request are required; all native originals settle before disclosure.</summary>
 public sealed class StrataHardwareObservationSource(IOriginalStrataWorkerSource workers)
 {
-    private const string Origin = "015b075079c51a7aec670ee24924f920f5e7bb2b";
+    private const string LegacyOrigin = "015b075079c51a7aec670ee24924f920f5e7bb2b";
+    private const string CandidateOrigin = "011c9e600a93bbc9fd451c563501b5831c32bbca";
     public Task<StrataOriginalHardwareObservation> ObserveOriginalAsync(TaskRunAttemptAdmission sameAdmission,
         IInferenceEngineOriginalSourceScope scope, CancellationToken token)
     {
@@ -43,6 +44,16 @@ public sealed class StrataHardwareObservationSource(IOriginalStrataWorkerSource 
             custody.Invoke(() => { if (worker is null || !workers.IsIssuedOriginalWorkerLease(worker, admission))
                 throw new UnauthorizedAccessException("The actual hardware probe requires the SAME privately issued original worker lease."); return 0; });
             var actualWorker = worker ?? throw new InvalidOperationException("The original protected worker lease was not acquired.");
+            // Trusted installed-profile selection: null => legacy V1 (ABI 1) default; the verified
+            // candidate profile selects ABI 2. Anything else fails closed before any probe launch.
+            var profile = custody.Invoke(() => { actualWorker.DemandCurrentOriginalBinding(); return actualWorker.InstalledProfile; });
+            string origin; uint abiVersion; bool candidate;
+            if (profile is null) { origin = LegacyOrigin; abiVersion = 1; candidate = false; }
+            else if (profile.Profile == "candidate" && profile.AbiVersion == 2 &&
+                     profile.SourceIdentity == StrataCandidateWorker.VerifiedCandidateSourceCommit)
+            { origin = CandidateOrigin; abiVersion = 2; candidate = true; }
+            else
+                throw new UnauthorizedAccessException("The protected hardware probe only admits the verified legacy V1 or candidate V2 installed profile.");
             var original = custody.Invoke(() => { actualWorker.DemandCurrentOriginalBinding(); return actualWorker.OriginalWorker; });
             custody.Invoke(() =>
             {
@@ -61,11 +72,29 @@ public sealed class StrataHardwareObservationSource(IOriginalStrataWorkerSource 
             try { custody.RetainOriginalTask(stderr); } finally { stderrGate.SetResult(); }
             var hello = await ReadFrameAsync(actualProcess.StandardOutput.BaseStream, custody, linked.Token).ConfigureAwait(false);
             using var helloInput = Reader(hello.Body);
-            if (hello.Type != 0 || helloInput.ReadUInt32() != 1 || Text(helloInput) != Origin)
-                throw new InvalidDataException("The actual no-model worker ABI/origin handshake is invalid.");
-            var cuda = Bool(helloInput); var nccl = Bool(helloInput);
-            var registrations = Text(helloInput).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            End(helloInput);
+            if (hello.Type != 0) throw new InvalidDataException("The actual no-model worker ABI/origin handshake is invalid.");
+            bool cuda, nccl; IReadOnlyList<string> registrations;
+            if (candidate)
+            {
+                var version = helloInput.ReadUInt32(); var originText = Text(helloInput);
+                cuda = Bool(helloInput); nccl = Bool(helloInput); var family = Text(helloInput); End(helloInput);
+                if (version != 2 || originText != CandidateOrigin)
+                    throw new InvalidDataException("The actual candidate ABI/origin handshake is invalid.");
+                if (family != "qwen35moe")
+                    throw new NotSupportedException("The candidate worker registers the qwen35moe GGUF family only.");
+                if (!cuda)
+                    throw new InferenceEngineException(new(DulcheErrorCode.ProviderUnavailable,
+                        "No actual CUDA build exists in this candidate worker.", "Strata", false));
+                registrations = [family];
+            }
+            else
+            {
+                if (helloInput.ReadUInt32() != 1 || Text(helloInput) != LegacyOrigin)
+                    throw new InvalidDataException("The actual no-model worker ABI/origin handshake is invalid.");
+                cuda = Bool(helloInput); nccl = Bool(helloInput);
+                registrations = Text(helloInput).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                End(helloInput);
+            }
             var frame = await ReadFrameAsync(actualProcess.StandardOutput.BaseStream, custody, linked.Token).ConfigureAwait(false);
             if (frame.Type != 6) throw new InvalidDataException("The fixed hardware probe has no actual terminal type6 record.");
             using var input = Reader(frame.Body); NativeErrors(input);
@@ -98,8 +127,8 @@ public sealed class StrataHardwareObservationSource(IOriginalStrataWorkerSource 
                 Features = features.Order(StringComparer.Ordinal).ToArray(), Runtime = runtime, Driver = driver, Gpus = gpus }))).ToLowerInvariant();
             custody.Invoke(() => { actualWorker.DemandCurrentOriginalBinding(); return 0; });
             result = new(new(fingerprint, "Linux", RuntimeInformation.ProcessArchitecture.ToString(), available,
-                gpus.AsReadOnly(), features), $"strata/{Origin}/abi1/{original.ExpectedSha256.ToLowerInvariant()}",
-                runtime, driver, cuda, nccl, Array.AsReadOnly(registrations), indices.AsReadOnly());
+                gpus.AsReadOnly(), features), $"strata/{origin}/abi{abiVersion}/{original.ExpectedSha256.ToLowerInvariant()}",
+                runtime, driver, cuda, nccl, Array.AsReadOnly<string>(registrations.ToArray()), indices.AsReadOnly());
         }
         catch (Exception cause) { custody.Add(null, cause); }
         finally

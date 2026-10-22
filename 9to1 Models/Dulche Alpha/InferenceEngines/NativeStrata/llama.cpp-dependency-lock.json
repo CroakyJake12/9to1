@@ -1,0 +1,28 @@
+{
+  "dependency": "llama.cpp (ggml-cpu/ggml-base)",
+  "repository": "https://github.com/ggml-org/llama.cpp",
+  "pinnedCommit": "3cf03257f219afbe7334045ff7c6a06ac68c627d",
+  "pinnedCommitDate": "2026-09-20T08:08:11Z",
+  "commitMessage": "CUDA: enable sparse fa for qwen4 (#28770)",
+  "tree": "d255198f04f9b8349f1dff24501d513f83cbfeda",
+  "treeEntries": 3982,
+  "treeBlobs": 3608,
+  "ggmlSubtreeBlobs": 1376,
+  "license": "MIT",
+  "howPinned": "Candidate strata CMakeLists.txt: STRATA_NATIVE_EXPERTS default ON; FetchContent clones llama.cpp@3cf03257f219afbe7334045ff7c6a06ac68c627d unless STRATA_GGML_DIR is provided (third_party/ggml/VERSION.txt records the same commit).",
+  "vendoredReferenceHeaders": [
+    "third_party/ggml/LICENSE",
+    "third_party/ggml/VERSION.txt",
+    "third_party/ggml/ggml-common.h",
+    "third_party/ggml/ggml-common-tq.h",
+    "third_party/ggml-tq/tq.cuh",
+    "third_party/ggml-tq/tq-mmq-tiles.cuh"
+  ],
+  "verification": {
+    "status": "METADATA-VERIFIED; full checkout NOT fetched in this source checkpoint",
+    "commitAndTreeVetted": true,
+    "fullLocalCheckout": "BLOCKED until coordinator allocates a bounded dependency fetch/build slot",
+    "use": "Pass a verified local checkout to STRATA_GGML_DIR during the candidate build; never disable required quantisations to avoid dependency custody.",
+    "note": "Re-verified against the acquired v0.2.2 source tree: third_party/ggml/VERSION.txt still records 3cf03257f219afbe7334045ff7c6a06ac68c627d Sun Sep 20 16:08:11 2026 +0800 (unchanged from the v0.2.1 candidate pin). Do not fetch mutable/unrecorded dependencies during a claimed offline build."
+  }
+}
