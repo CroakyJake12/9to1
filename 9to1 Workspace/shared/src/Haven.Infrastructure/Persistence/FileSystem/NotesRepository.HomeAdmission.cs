@@ -154,12 +154,12 @@ public sealed partial class NotesRepository
         internal async ValueTask DemandPublicationAsync(Guid documentId, CancellationToken token)
         {
             if (documentId != intent.DocumentId) throw new UnauthorizedAccessException("The original Notes document changed.");
-            custody.DemandCurrent();
+            Custody.DemandCurrent();
             if (!await fence.ValidateAsync(token).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The held original Home Notes fence is no longer current.");
-            custody.DemandCurrent();
+            Custody.DemandCurrent();
         }
-        public void Dispose() => custody.Dispose();
+        public void Dispose() => Custody.Dispose();
     }
 
     private sealed record OriginalLibraryReadOutcome(NotesRepository Issuer, INotesOriginalLibraryReadRequest Request,
