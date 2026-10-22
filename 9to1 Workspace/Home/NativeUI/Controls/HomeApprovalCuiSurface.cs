@@ -61,6 +61,7 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         internal TaskCompletionSource<HomeNativeApprovalDecisionObservation> Signal { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal Task<HomeNativeApprovalDecisionObservation> Original = null!;
         internal bool ExpectedWaitCancellation;
+        internal List<OperationCanceledException> OwnGuardCancellations { get; } = [];
     }
     private sealed class DecisionDispatch(string requestId, AuthenticatedResourceActor? actor)
     {
@@ -130,6 +131,7 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
             {
                 if (error.CancellationToken != linked.Token || !linked.Token.IsCancellationRequested)
                     throw new AggregateException("The original Home wait guard faulted outside its cancellation lifetime.", error);
+                wait.OwnGuardCancellations.Add(error);
                 wait.ExpectedWaitCancellation = true; throw;
             }
         }
@@ -145,6 +147,15 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         try { current = await actorSource.ConfigureAwait(false); }
         catch (Exception error)
         {
+            // The existing ledger envelopes synchronous callback OCEs. Requalify ONLY the
+            // complete actual error graph of exceptions issued by our direct own guard.
+            // Any mixed source/cleanup/foreign/opaque failure remains a genuine fault.
+            if (wait.OwnGuardCancellations.Count > 0 &&
+                IsOnlyOwnGuardCancellation(actorSource.Exception ?? error, wait.OwnGuardCancellations))
+            {
+                ExceptionDispatchInfo.Capture(wait.OwnGuardCancellations[0]).Throw();
+                throw;
+            }
             if (actorSource.IsCanceled && error is OperationCanceledException canceled && canceled.CancellationToken == linked.Token)
                 wait.ExpectedWaitCancellation = true;
             var failure = OriginalDecisionFailure(actorSource, error);
@@ -157,6 +168,11 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
             throw new UnauthorizedAccessException("The original Home decision actor changed before observation.");
         return observed;
     }
+
+    private static bool IsOnlyOwnGuardCancellation(Exception error, IReadOnlyList<OperationCanceledException> issued)
+        => error is AggregateException aggregate
+            ? aggregate.InnerExceptions.Count > 0 && aggregate.InnerExceptions.All(inner => IsOnlyOwnGuardCancellation(inner, issued))
+            : issued.Any(original => ReferenceEquals(original, error));
 
     private static Exception OriginalDecisionFailure(Task? actual, Exception observed)
     {

@@ -226,6 +226,40 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
     }
 
     [AvaloniaFact]
+    public async Task Cancellation_after_actual_decision_during_final_profile_read_does_not_poison_shared_Home_close()
+    {
+        await using var rig = await Rig.CreateAsync();
+        var request = await rig.RequestAsync();
+        using var route = CancellationTokenSource.CreateLinkedTokenSource(rig.Token);
+        var observation = rig.Owner.OpenAndObserveDecisionOriginalAsync(request.RequestId, route.Token);
+        await rig.Owner.OpenOriginalAsync(request.RequestId, rig.Token);
+        var surface = Assert.IsType<HomeApprovalCuiSurface>(rig.Owner.OriginalSurface);
+        var model = Assert.IsType<CuiViewModel>(typeof(HomeApprovalCuiSurface)
+            .GetField("_model", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(surface));
+        var callbacks = 0;
+        PropertyChangedEventHandler completedStatus = (_, args) =>
+        {
+            if (args.PropertyName == "Status" && model.Get("Status") is string text &&
+                text.Contains("approved", StringComparison.OrdinalIgnoreCase))
+                rig.Store.NextReadCallback = () => { ++callbacks; route.Cancel(); };
+        };
+        model.PropertyChanged += completedStatus;
+        try
+        {
+            rig.Click("approval-accept");
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => observation.WaitAsync(rig.Token));
+            Assert.True(observation.IsCanceled); Assert.Equal(1, callbacks);
+            Assert.Equal(HomePermissionRequestState.Approved,
+                (await rig.Permissions.GetAuthorizationAsync(request.RequestId, rig.Token)).State);
+            var late = await rig.Owner.OpenAndObserveDecisionOriginalAsync(request.RequestId, rig.Token).WaitAsync(rig.Token);
+            Assert.Equal(HomePermissionRequestState.Approved, late.State);
+            await rig.CloseAsync(); // Genuine shared close must not turn own route cancellation into a fault.
+            Assert.True(rig.Owner.OriginalRetirementCapturedAndSettled);
+        }
+        finally { model.PropertyChanged -= completedStatus; rig.Store.NextReadCallback = null; }
+    }
+
+    [AvaloniaFact]
     public async Task Actual_actor_unavailability_before_click_refuses_decision_and_retains_failure()
     {
         await using var rig = await Rig.CreateAsync();
@@ -390,12 +424,21 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
     private sealed class ActualStore(IHomeCoreStateStore original) : IHomeCoreStateStore
     {
         internal Exception? DecisionFailure;
+        internal Action? NextReadCallback;
         internal Exception? RefreshFailureAfterDecision;
         private Exception? _nextReadFailure;
         public Task<HomeStateReadResult> ReadAsync(CancellationToken token = default)
         {
             if (_nextReadFailure is { } cause) { _nextReadFailure = null; return Task.FromException<HomeStateReadResult>(cause); }
-            return original.ReadAsync(token);
+            var actual = original.ReadAsync(token);
+            var callback = Interlocked.Exchange(ref NextReadCallback, null);
+            return callback is null ? actual : ReadThenCallbackAsync(actual, callback);
+        }
+        private static async Task<HomeStateReadResult> ReadThenCallbackAsync(Task<HomeStateReadResult> actual, Action callback)
+        {
+            var result = await actual;
+            callback(); // Only after the genuine original read succeeded; no result is fabricated.
+            return result;
         }
         public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expected, CancellationToken token = default)
         {
