@@ -45,13 +45,13 @@ public static class HomeAppBrandingIcons
     /// <summary>Themed packaged-asset root path on the Haven assembly.</summary>
     public const string AssetRoot = "/Assets/OwnerAppIcons/";
 
-    /// <summary>Exact 14 canonical built-in brand mappings: AppId GUID → PNG stem.</summary>
+    /// <summary>Exact 19 canonical built-in brand mappings: AppId GUID → PNG stem.</summary>
     private static readonly IReadOnlyDictionary<Guid, string> BrandByGuid =
         new Dictionary<Guid, string>
         {
             [Guid.Parse("a0000000-0000-0000-0000-000000000003")] = "automations",
             [Guid.Parse("a0000000-0000-0000-0000-000000000023")] = "boards",
-            [Guid.Parse("a0000000-0000-0000-0000-000000000018")] = "canvas",
+            [Guid.Parse("a0000000-0000-0000-0000-000000000018")] = "canvas-whiteboard",
             [Guid.Parse("a0000000-0000-0000-0000-000000000010")] = "data",
             [Guid.Parse("a0000000-0000-0000-0000-000000000030")] = "files",
             [Guid.Parse("a0000000-0000-0000-0000-000000000026")] = "forms",
@@ -63,13 +63,19 @@ public static class HomeAppBrandingIcons
             [Guid.Parse("a0000000-0000-0000-0000-000000000009")] = "present",
             [Guid.Parse("a0000000-0000-0000-0000-000000000022")] = "spaces",
             [Guid.Parse("a0000000-0000-0000-0000-000000000004")] = "ai-studio",
+            [Guid.Parse("a0000000-0000-0000-0000-000000000028")] = "build",
+            [Guid.Parse("a0000000-0000-0000-0000-000000000006")] = "plan",
+            [Guid.Parse("a0000000-0000-0000-0000-000000000020")] = "terminal",
+            [Guid.Parse("a0000000-0000-0000-0000-000000000011")] = "voice-vision",
+            [Guid.Parse("a0000000-0000-0000-0000-000000000017")] = "write",
         };
 
     /// <summary>The only brand stems the bounded resolver recognises.</summary>
     private static readonly IReadOnlySet<string> KnownStems = new HashSet<string>(StringComparer.Ordinal)
     {
         "automations", "boards", "canvas", "data", "files", "forms", "picture", "shelf",
-        "maps", "motion", "play", "present", "spaces", "ai-studio"
+        "maps", "motion", "play", "present", "spaces", "ai-studio",
+        "canvas-whiteboard", "build", "plan", "terminal", "voice-vision", "write", "wave"
     };
 
     /// <summary>Bounded packaged-PNG provider. Defaults to the backend asset decoder. This is a
@@ -100,6 +106,29 @@ public static class HomeAppBrandingIcons
         if (!TryGetBrandStem(canonicalId, source, out var stem))
             return "icon:" + key;
         return SourcePrefix + stem + "|" + key;
+    }
+
+    /// <summary>The canonical Create navigation group reuses the owner's original Canvas brush
+    /// artwork byte-for-byte. It remains a group, without an invented app GUID or installation.</summary>
+    public static string SourceForGroup(string? groupKey, string? iconKey) =>
+        string.Equals(groupKey, HomeCreateGroup.Key, StringComparison.Ordinal)
+            ? SourcePrefix + "canvas|" + SafeIconKey(iconKey)
+            : "icon:" + SafeIconKey(iconKey);
+
+    /// <summary>Real Create member artwork. The canonical built-in Wave reference has no native
+    /// GUID yet; its known group identity may carry artwork without changing its disabled/unavailable
+    /// state. Other unavailable references retain their catalogue fallback; custom Wave lookalikes
+    /// never acquire the built-in image.</summary>
+    public static string SourceForGroupMember(HomeGroupMember member)
+    {
+        ArgumentNullException.ThrowIfNull(member);
+        var key = SafeIconKey(member.IconKey);
+        if (member.Source == ModeSource.BuiltIn
+            && string.Equals(member.Key, "wave", StringComparison.OrdinalIgnoreCase))
+            return SourcePrefix + "wave|" + key;
+        return member.IsInstalled
+            ? SourceFor(key, member.CanonicalId, member.Source)
+            : "icon:" + key;
     }
 
     /// <summary>Resolves a brand source to a packaged themed PNG, or falls back to the app's existing
@@ -151,12 +180,12 @@ public static class HomeAppBrandingIcons
     }
 
     /// <summary>The bounded packaged URI for a stem under an explicit appearance folder. Accepts only
-    /// one of the 14 known brand stems and exactly "light"/"dark"; traversal, near-matches and any
+    /// one of the known brand stems and exactly "light"/"dark"; traversal, near-matches and any
     /// arbitrary file/network/data shape are rejected.</summary>
     public static string ResourceUri(string stem, string folder)
     {
         if (stem is null || !KnownStems.Contains(stem))
-            throw new ArgumentException($"'{stem}' is not one of the 14 owner brand stems.", nameof(stem));
+            throw new ArgumentException($"'{stem}' is not one of the owner brand stems.", nameof(stem));
         if (folder is not ("light" or "dark"))
             throw new ArgumentException("The folder must be exactly 'light' or 'dark'.", nameof(folder));
         return "avares://" + AssemblyName + AssetRoot + folder + "/" + stem + ".png";

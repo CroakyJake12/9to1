@@ -82,7 +82,7 @@
                           Padding="10" Margin="0 0 12 12">
                     <Container id="home-create-member-body" Type="Vertical Stack" CellGap="6">
                       <Image id="home-create-member-icon" Source="{Binding member.iconSource}"
-                             Width="32" Height="32" HorizontalAlignment="Center"
+                             Width="56" Height="56" HorizontalAlignment="Center"
                              accessible-name="{Binding member.name}" />
                       <Text id="home-create-member-name" Text="{Binding member.name}" TextAlignment="Center" />
                     </Container>
@@ -116,7 +116,7 @@
                           Padding="10" Margin="0 0 12 12">
                     <Container id="home-create-tile-body" Type="Vertical Stack" CellGap="6">
                       <Image id="home-create-tile-icon" Source="{Binding app.iconSource}"
-                             Width="32" Height="32" HorizontalAlignment="Center"
+                             Width="56" Height="56" HorizontalAlignment="Center"
                              accessible-name="{Binding app.name}" />
                       <Text id="home-create-tile-name" Text="{Binding app.name}" TextAlignment="Center" />
                     </Container>
@@ -129,7 +129,7 @@
                           Padding="10" Margin="0 0 12 12">
                     <Container id="home-app-tile-body" Type="Vertical Stack" CellGap="6">
                       <Image id="home-app-tile-icon" Source="{Binding app.iconSource}"
-                             Width="32" Height="32" HorizontalAlignment="Center"
+                             Width="56" Height="56" HorizontalAlignment="Center"
                              accessible-name="{Binding app.name}" />
                       <Text id="home-app-tile-name" Text="{Binding app.name}" TextAlignment="Center" />
                     </Container>

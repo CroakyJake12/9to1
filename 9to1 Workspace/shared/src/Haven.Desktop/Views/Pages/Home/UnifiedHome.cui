@@ -1,8 +1,9 @@
 <Cui id="home.unified" version="1">
   <!--
     Canonical CUI Home/NewTab surface with an icon-only navigation rail (owner request relayed
-    2026-10-21). The left rail is bounded to a fixed ~56px column so the remaining width is
-    maximised for content, and every destination is one filled, rounded canonical icon. Each rail
+    2026-10-21). The left rail keeps a compact 56px minimum and measures to its controls plus the
+    themed scrollbar only when needed, preserving the remaining content width. Each destination is
+    one filled, rounded canonical icon. Each rail
     button pairs a Tooltip (the visible label, now presented for keyboard focus by the canonical CUI
     keyboard-tooltip host) with an AccessibleName (screen-reader semantics only — NOT a visible
     tooltip). The current in-page section (Apps / Dashboard / Models / New Tab) carries the Selected
@@ -26,8 +27,8 @@
   -->
   <Theme Name="user_preference">
     <Page AccessibleName="9to1 Home">
-      <Container id="unified-home-root" Type="Grid" ColumnSizes="56 1fr" RowSizes="1fr" Background="{Resource CuiBackgroundBrush}">
-        <Container id="home-sidebar" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
+      <Container id="unified-home-root" Type="Grid" ColumnSizes="Auto 1fr" RowSizes="1fr" Background="{Resource CuiBackgroundBrush}">
+        <Container id="home-sidebar" MinWidth="56" role="navigation" accessible-name="Home navigation" Type="Grid" RowSizes="1fr Auto" Padding="5 8 5 8" CellGap="8" Background="{Resource CuiPanelBrush}" BorderColor="{Resource CuiLineBrush}" BorderThickness="0 0 1 0">
           <Container id="home-rail-nav" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8">
             <Button id="home-apps" action="home.apps" accessible-name="Apps" Tooltip="Apps" Selected="{Binding rail.appsSelected}" Width="44" Height="44" Padding="8" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
               <Image id="home-apps-icon" Source="icon:apps" Width="22" Height="22" />
