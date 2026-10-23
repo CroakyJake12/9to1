@@ -177,6 +177,22 @@ jobs:
             '9to1 Workspace/Canvas/Source/DONOR-PROVENANCE.md' 'eng/donor-sources.json'
           cmp "$DIAGNOSTICS/Cargo.lock.before" '9to1 Workspace/Canvas/rnote-poc/Cargo.lock'
 
+      - name: Check installed toolchain and every locked manifest before native build
+        id: build_preflight
+        run: |
+          set -euo pipefail
+          exec > >(tee "$DIAGNOSTICS/build-preflight.log") 2>&1
+          # `which` resolves already installed binaries; the inspector refuses
+          # rustup proxies and never acquires a toolchain or package itself.
+          rustc_binary=$(rustup which --toolchain "$RUST_TOOLCHAIN" rustc)
+          cargo_binary=$(rustup which --toolchain "$RUST_TOOLCHAIN" cargo)
+          python3 -B '9to1 Workspace/Canvas/tools/validate_rnote_native_artifact.py' \
+            --build-preflight --repo "$GITHUB_WORKSPACE" --revision "$GITHUB_SHA" \
+            --target "$TARGET" --rust-toolchain "$RUST_TOOLCHAIN" \
+            --rustc "$rustc_binary" --cargo "$cargo_binary" \
+            --cargo-metadata "$DIAGNOSTICS/cargo-metadata.json" \
+            --output "$DIAGNOSTICS/build-preflight.json"
+
       - name: Build only the native C ABI engine
         id: build
         run: |
@@ -247,6 +263,7 @@ jobs:
       - name: Retain actual outcomes and block unqualified release promotion
         if: always()
         env:
+          PREFLIGHT_OUTCOME: ${{ steps.build_preflight.outcome }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
           TEST_OUTCOME: ${{ steps.native_tests.outcome }}
           LOAD_OUTCOME: ${{ steps.native_load.outcome }}
@@ -258,6 +275,7 @@ jobs:
           import json, os, pathlib
           pathlib.Path(os.environ['DIAGNOSTICS'], 'stage-outcomes.json').write_text(json.dumps({
               'source_revision': os.environ['GITHUB_SHA'], 'target': os.environ['TARGET'],
+              'installed_build_prerequisites': os.environ['PREFLIGHT_OUTCOME'],
               'build': os.environ['BUILD_OUTCOME'], 'native_tests': os.environ['TEST_OUTCOME'],
               'exact_library_load_probe': os.environ['LOAD_OUTCOME'],
               'full_application_acceptance': 'NOT RUN', 'release_ready': False}, indent=2) + '\n')
