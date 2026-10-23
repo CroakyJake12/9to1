@@ -251,7 +251,65 @@ def installed_tool(path: Path | None, tool: str) -> dict:
     return result
 
 
-def metadata_requirements(path: Path, lock: dict, root_manifest: Path) -> dict:
+def linux_system_cfg(expression: str, target_os: str | None) -> bool:
+    """Audited system-deps target_os/all/any/not subset; unknown syntax refuses."""
+    if target_os != "linux" or len(expression) > 512:
+        raise ValueError("Unsupported system-deps cfg target or expression")
+    outer = re.fullmatch(r"cfg\((.*)\)", expression, re.DOTALL)
+    if outer is None:
+        raise ValueError("Unsupported system-deps cfg expression")
+    source, tokens, offset = outer[1], [], 0
+    while offset < len(source):
+        if not source[offset:].strip():
+            break
+        token = re.match(r'\s*(target_os|all|any|not|[()=,]|"[A-Za-z0-9_-]+")', source[offset:])
+        if token is None:
+            raise ValueError("Unsupported system-deps cfg predicate")
+        tokens.append(token[1])
+        offset += token.end()
+    position = 0
+
+    def take(expected=None):
+        nonlocal position
+        if position >= len(tokens) or (expected is not None and tokens[position] != expected):
+            raise ValueError("Malformed system-deps cfg expression")
+        value = tokens[position]
+        position += 1
+        return value
+
+    def predicate(depth=0):
+        if depth > 16:
+            raise ValueError("Unsupported system-deps cfg nesting")
+        operator = take()
+        if operator == "target_os":
+            take("=")
+            value = take()
+            if value not in ('"linux"', '"macos"', '"windows"'):
+                raise ValueError("Unsupported system-deps cfg target_os value")
+            return value == '"linux"'
+        if operator not in ("all", "any", "not"):
+            raise ValueError("Unsupported system-deps cfg predicate")
+        take("(")
+        values = []
+        while position < len(tokens) and tokens[position] != ")":
+            values.append(predicate(depth + 1))
+            if position < len(tokens) and tokens[position] == ")":
+                break
+            take(",")
+        take(")")
+        if operator == "not":
+            if len(values) != 1:
+                raise ValueError("Malformed system-deps cfg not predicate")
+            return not values[0]
+        return all(values) if operator == "all" else any(values)
+
+    result = predicate()
+    if position != len(tokens):
+        raise ValueError("Malformed system-deps cfg trailing tokens")
+    return result
+
+
+def metadata_requirements(path: Path, lock: dict, root_manifest: Path, *, target_os=None) -> dict:
     """Inspect all locked manifests, not a guessed MSRV from Cargo.lock versions.
 
     Cargo metadata is a supplied observation from the existing locked acquisition
@@ -284,7 +342,7 @@ def metadata_requirements(path: Path, lock: dict, root_manifest: Path) -> dict:
     package_ids = [package["id"] for package in packages]
     if len(set(package_ids)) != len(package_ids) or len(features) != len(nodes) or set(features) != set(package_ids):
         raise ValueError("Resolved feature nodes must cover every package exactly once")
-    records, native, unspecified = [], {}, []
+    records, native, unspecified, fallback_names = [], {}, [], {}
     maximum = (0, 0, 0)
     root_seen = False
     for package in packages:
@@ -349,37 +407,59 @@ def metadata_requirements(path: Path, lock: dict, root_manifest: Path) -> dict:
         system = package_metadata.get("system-deps", {})
         if not isinstance(system, dict):
             raise ValueError("Malformed Cargo system-deps metadata")
+        entries = []
         for key, spec in system.items():
-            if not isinstance(spec, dict) or "name" not in spec or "version" not in spec:
+            if key.startswith("cfg("):
+                active = linux_system_cfg(key, target_os)
+                if not isinstance(spec, dict) or any(key.startswith("cfg(") for key in spec):
+                    raise ValueError("Unsupported nested system-deps cfg declaration")
+                entries.extend((key, value, active) for key, value in spec.items())
+            else:
+                entries.append((key, spec, True))
+        for key, spec, active in entries:
+            # system-deps 7.0.8 accepts version shorthand and defaults name to key.
+            if isinstance(spec, str):
+                spec = {"version": spec}
+            if not isinstance(spec, dict) or "version" not in spec:
                 raise ValueError(f"Unsupported system-deps declaration: {package['name']}/{key}")
-            name, required = spec["name"], numeric_version(spec["version"])
+            name, required = spec.get("name", key), numeric_version(spec["version"])
             if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_.+-]+", name):
                 raise ValueError("Unsupported native pkg-config module name")
+            if "optional" in spec and not isinstance(spec["optional"], bool):
+                raise ValueError("Unsupported system-deps optional declaration")
+            fallbacks = spec.get("fallback-names", [])
+            if not isinstance(fallbacks, list) or any(not isinstance(name, str)
+                    or not re.fullmatch(r"[A-Za-z0-9_.+-]+", name) for name in fallbacks):
+                raise ValueError("Unsupported system-deps fallback-names declaration")
             selector = spec.get("feature")
             if "feature" in spec and (not isinstance(selector, str)
                                       or not re.fullmatch(r"[A-Za-z0-9_.+-]+", selector)):
                 raise ValueError(f"Unsupported system-deps feature selector: {key}")
             for feature, value in spec.items():
-                if feature in ("name", "version", "optional", "feature"):
+                if feature in ("name", "version", "optional", "feature", "fallback-names"):
                     continue
                 if not isinstance(value, dict) or set(value) != {"version"}:
                     raise ValueError(f"Unsupported feature-conditioned system-deps declaration: {key}/{feature}")
+                floor = numeric_version(value["version"])
                 if feature in features[package["id"]]:
-                    required = max(required, numeric_version(value["version"]))
+                    required = max(required, floor)
             # system-deps 7.0.8 gates the entire module on this Cargo feature.
             # Validate every declaration above even when its selector is inactive.
             enabled = {feature.upper().replace("-", "_") for feature in features[package["id"]]}
-            if selector is not None and selector.upper().replace("-", "_") not in enabled:
+            if not active or (selector is not None and selector.upper().replace("-", "_") not in enabled):
                 continue
-            # Requiring optional declared modules is conservative: it cannot
-            # approve a missing library due to unmodelled build-script toggles.
+            # Conservatively require optional modules and the PRIMARY name even
+            # if upstream could use a fallback. Never claim fallback execution.
             native[name] = max(native.get(name, (0, 0, 0)), required)
+            if fallbacks:
+                fallback_names[name] = sorted(set(fallback_names.get(name, []) + fallbacks))
     if not root_seen:
         raise ValueError("Cargo metadata omits the actual bridge manifest path")
     return {"metadata": receipt(path, snapshot=snapshot), "locked_packages": len(expected),
             "package_manifests": records, "maximum_declared_rust_version": list(maximum),
             "packages_without_declared_msrv": unspecified, "native_requirements": native,
-            "scope": "Declared MSRVs and static system-deps floors only; exact MSRV and arbitrary build-script requirements remain UNVERIFIED"}
+            "declared_fallback_names": fallback_names,
+            "scope": "Declared MSRVs and static system-deps floors only; optional modules and primary names are conservatively required, fallback execution is NOT RUN; exact MSRV and arbitrary build-script requirements remain UNVERIFIED"}
 
 
 def build_preflight(args) -> tuple[dict, int]:
@@ -391,6 +471,8 @@ def build_preflight(args) -> tuple[dict, int]:
               "blockers": [], "release_blockers": ["Immutable native environment and full native/application acceptance remain unqualified"]}
     blockers = report["blockers"]
     try:
+        if args.target not in MACHINES:
+            raise ValueError("Unsupported native preflight target")
         toolchain = numeric_version(args.rust_toolchain)
         if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", args.rust_toolchain):
             raise ValueError("Select an exact installed Rust toolchain version")
@@ -439,7 +521,9 @@ def build_preflight(args) -> tuple[dict, int]:
     try:
         if args.cargo_metadata is None or lock is None:
             raise ValueError("All locked package manifests require retained cargo metadata; lockfile alone cannot establish transitive MSRV")
-        requirements = metadata_requirements(args.cargo_metadata, lock, manifest_path)
+        # Both admitted native targets are Linux. Do not infer another OS from
+        # the cloud inspector's host or treat unsupported cfg predicates as false.
+        requirements = metadata_requirements(args.cargo_metadata, lock, manifest_path, target_os="linux")
         report["declared_requirements"] = requirements
         root_identity = next(record["manifest"] for record in requirements["package_manifests"]
                              if Path(record["manifest"]["path"]).resolve() == manifest_path.resolve())
