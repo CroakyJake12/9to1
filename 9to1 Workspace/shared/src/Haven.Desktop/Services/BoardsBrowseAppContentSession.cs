@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui;
@@ -15,7 +16,7 @@ namespace Haven.Desktop.Services;
 /// tasks remain owned even when publication fails. Private reversible close preparation freezes
 /// the actual clean core; a rejected preparation restores the same editor and document.</summary>
 internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSession,
-    IBrowseAppContentClosePreparationParticipant, ICuiActionDispatcher, ICuiActionAvailability
+    IBrowseAppContentClosePreparationParticipant, ICuiResultReportingDispatcher, ICuiActionAvailability
 {
     internal const string CuiResourceName = "Haven.Desktop.Boards.cui";
     private readonly BrowseAppContentRequest _request;
@@ -25,6 +26,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private readonly CancellationToken _token;
     private readonly Func<bool> _reduceMotion;
     private readonly CuiThemePreferenceContext? _theme;
+    private readonly SessionBindings _bindings;
     private readonly object _gate = new();
     private Task? _initialization, _close;
     private Task<Task>? _initializationDispatch, _closeDispatch;
@@ -38,12 +40,13 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private Task<CuiSceneAvailability>? _show;
     private Preparation? _prepared;
     private volatile bool _published, _closing, _preparing;
+    private int _activeDispatches;
 
     internal BoardsBrowseAppContentSession(BrowseAppContentRequest request, BoardsBrowseAppContentAddress address,
         IBoardsOriginalDesktopRoute route, CancellationTokenSource lifetime, Func<bool> reduceMotion,
         CuiThemePreferenceContext? theme = null)
     { _request = request; _address = address; _route = route; _lifetime = lifetime; _token = lifetime.Token;
-        _reduceMotion = reduceMotion; _theme = theme;
+        _reduceMotion = reduceMotion; _theme = theme; _bindings = new(this);
         if (route is IBoardsOriginalPresentationOwnerRoute original) original.BindOriginalPresentationOwner(this); }
 
     public AppContentAddress Address => _request.Address;
@@ -52,8 +55,9 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     public event EventHandler? StateChanged;
     public Task? OriginalInitialization { get { lock (_gate) return _initialization; } }
     public Task? OriginalClose { get { lock (_gate) return _close; } }
+    internal Task<CuiSceneAvailability>? OriginalCuiShow => _show;
     public bool IsPublicationCurrent => _published && !_closing && !_token.IsCancellationRequested && _route.IsAlive &&
-        OriginalInitialization is { IsCompletedSuccessfully: true } && _host is not null && _presentation is not null;
+        OriginalInitialization is { IsCompletedSuccessfully: true } && _host is not null;
     public bool CanRetireOriginalView => OriginalClose is { IsCompletedSuccessfully: true };
     public Control OriginalNativeView
     {
@@ -95,35 +99,31 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         DemandAlive(); token.ThrowIfCancellationRequested();
         await RevalidateOriginalAsync(token);
         DemandAlive(); token.ThrowIfCancellationRequested();
-        _core = _route.AcquireOriginalCore(); // Retain BEFORE any later IO, presentation or CUI acquisition.
-        _core.PrepareUnadmittedPresentation();
-        await _core.ListAsync(token); // Actual Home review/ownership and verified snapshot; no raw fallback.
-        await RevalidateOriginalAsync(token);
-        DemandAlive(); token.ThrowIfCancellationRequested();
-        if (_address.DocumentId is { } id)
-        {
-            var opened = await _core.OpenAsync(id, token: token);
-            if (!opened.Succeeded) throw new InvalidOperationException(opened.Message);
-            await RevalidateOriginalAsync(token);
-        }
+        // A production Notes route first mounts the SAME authored CUI setup/library
+        // document. CUI commands/effects choose when to acquire genuine content; a
+        // missing library never masquerades as a ready editor or trigger implicit setup.
+        if (_route is not IBoardsOriginalStoreSetupRoute)
+            await AcquireOriginalWorkspaceAsync(token);
         DemandAlive(); token.ThrowIfCancellationRequested();
         using var stream = typeof(BoardsBrowseAppContentSession).Assembly.GetManifestResourceStream(CuiResourceName)
             ?? throw new InvalidOperationException("The SAME canonical Boards CUI resource is unavailable.");
         using var reader = new StreamReader(stream);
         var document = new CuiDocumentSource(reader.ReadToEnd(), "Boards.cui").Document;
-        _presentation = new BoardsCuiWorkspacePresentation(_core, _reduceMotion);
-        _host = new CuiSceneHost(_presentation.ControlRegistry);
-        _show = _host.ShowAsync(new("boards", "Boards", "Boards", document, _core, this, _route)
-        { ThemePreference = _theme, ControlRegistry = _presentation.ControlRegistry,
+        var registry = new CuiControlRegistry();
+        NineToOne.Web.BrowserCanonicalIcons.Register(registry);
+        registry.RegisterObjectRenderer("BoardsNotebookSurface", _ => _presentation?.Control
+            ?? throw new InvalidOperationException("The original Boards content has not been admitted."));
+        _host = new CuiSceneHost(registry);
+        _show = _host.ShowAsync(new("boards", "Boards", "Boards", document, _bindings, this, _route)
+        { ThemePreference = _theme, ControlRegistry = registry,
             IsPublicationCurrent = () => !_closing && !_token.IsCancellationRequested && _route.IsAlive }, token);
         var availability = await _show;
         if (availability.State != CuiSceneAvailabilityState.Ready)
             throw new InvalidOperationException(availability.Message);
         await RevalidateOriginalAsync(token);
         DemandAlive(); token.ThrowIfCancellationRequested(); _route.DemandPublicationCurrent();
-        _core.AdmitPresentation();
         _published = true;
-        _core.NotifySelectionChanged();
+        _core?.NotifySelectionChanged();
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { StateChanged?.Invoke(this, EventArgs.Empty); return true; });
         DemandAlive(); _route.DemandPublicationCurrent();
     }
@@ -136,11 +136,59 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         return originals.RunToOriginalSettlementAsync(() => _route.RevalidateAsync(token));
     }
 
-    public bool? IsActionAvailable(string command) => IsPublicationCurrent && !_preparing && _prepared is null && _core?.IsActionAvailable(command) == true;
-    public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+    private async Task AcquireOriginalWorkspaceAsync(CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess();
-        DemandAlive();
+        if (_core is { IsPresentationAdmitted: true }) return;
+        if (_core is null)
+        {
+            _core = _route.AcquireOriginalCore(); // Retain before content IO or presentation acquisition.
+            _core.PrepareUnadmittedPresentation();
+            _core.PropertyChanged += _bindings.ForwardOriginalChange;
+        }
+        await _core.ListAsync(token); // Separate actual Notes review/Begin; ownership is not content consent.
+        await RevalidateOriginalAsync(token);
+        if (_address.DocumentId is { } id)
+        {
+            var opened = await _core.OpenAsync(id, token: token);
+            if (!opened.Succeeded) throw new InvalidOperationException(opened.Message);
+            await RevalidateOriginalAsync(token);
+        }
+        DemandAlive(); token.ThrowIfCancellationRequested(); _route.DemandPublicationCurrent();
+        _presentation ??= new BoardsCuiWorkspacePresentation(_core, _reduceMotion);
+        _core.AdmitPresentation(); _core.NotifySelectionChanged();
+    }
+
+    private sealed class SessionBindings(BoardsBrowseAppContentSession owner)
+        : ICuiWritableBindingContext, INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public bool TryGetValue(string path, out object? value)
+        {
+            if (path == "OriginalStoreGateRequired") { value = owner._route is IBoardsOriginalStoreSetupRoute; return true; }
+            if (path == "StorageSourceBusy") { value = owner._activeDispatches > 0; return true; }
+            if (owner._core is { } core) return core.TryGetValue(path, out value);
+            value = null; return false;
+        }
+        public bool TrySetValue(string path, object? value) => owner._core?.TrySetValue(path, value) == true;
+        internal void ForwardOriginalChange(object? sender, PropertyChangedEventArgs args) =>
+            CloudflareOriginalExecutionGuard.InvokeOriginal(owner, () => { PropertyChanged?.Invoke(this, args); return true; });
+        internal void SourcesChanged() => ForwardOriginalChange(this, new PropertyChangedEventArgs("StorageSourceBusy"));
+    }
+
+    private static bool IsStorageCommand(string command) => command.StartsWith("boards.storage.", StringComparison.Ordinal);
+    public bool? IsActionAvailable(string command) => !_closing && !_token.IsCancellationRequested &&
+        !_preparing && _prepared is null && _route.IsAlive &&
+        (command == "boards.host.observe" ? _host is not null : IsStorageCommand(command) ? _route is IBoardsOriginalStoreSetupRoute && _host is not null :
+            IsPublicationCurrent && _activeDispatches == 0 && _core?.IsActionAvailable(command) == true);
+
+    public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
+        new(DispatchWithOutcomeAsync(command, parameter, cancellationToken).AsTask());
+
+    public ValueTask<CuiCommandOutcome> DispatchWithOutcomeAsync(string command, object? parameter,
+        CancellationToken cancellationToken = default)
+    {
+        Dispatcher.UIThread.VerifyAccess(); DemandAlive();
         if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Boards action is unavailable.");
         lock (_gate)
         {
@@ -151,16 +199,57 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             _actions.Add(original); start.SetResult(); return new(original);
         }
     }
-    private async Task DispatchOriginalAsync(Task start, string command, object? parameter, CancellationToken caller)
+    private async Task<CuiCommandOutcome> DispatchOriginalAsync(Task start, string command, object? parameter, CancellationToken caller)
     {
         await start;
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         using var scope = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
+        var failures = new CloudflareOriginalTaskLedger();
+        ++_activeDispatches;
+        try
+        {
+        _bindings.SourcesChanged();
         await RevalidateOriginalAsync(scope.Token);
         DemandAlive(); _route.DemandPublicationCurrent();
-        await _core!.DispatchAsync(command, parameter, scope.Token);
+        object? value = null;
+        if (command == "boards.host.observe")
+            value = new BoardsHostStorageCapabilities(_route is IBoardsOriginalStoreSetupRoute);
+        else if (IsStorageCommand(command))
+        {
+            var route = (IBoardsOriginalStoreSetupRoute)_route;
+            if (command == "boards.storage.open") await AcquireOriginalWorkspaceAsync(scope.Token);
+            else
+            {
+                var operation = command switch
+                {
+                    "boards.storage.inspect" => BoardsOriginalStoreSetupOperation.Inspect,
+                    "boards.storage.initialise" => BoardsOriginalStoreSetupOperation.InitialiseIdentity,
+                    "boards.storage.bind-empty" => BoardsOriginalStoreSetupOperation.BindEmpty,
+                    "boards.storage.request-import" => BoardsOriginalStoreSetupOperation.RequestImport,
+                    "boards.storage.review" => BoardsOriginalStoreSetupOperation.OpenReview,
+                    "boards.storage.complete-import" => BoardsOriginalStoreSetupOperation.CompleteImport,
+                    "boards.storage.retry-audit" => BoardsOriginalStoreSetupOperation.RetryAudit,
+                    _ => throw new NotSupportedException("Unknown typed local-library operation.")
+                };
+                value = await route.ExecuteOriginalStoreSetupAsync(operation, parameter as BoardsOriginalStoreSetupBackend.Snapshot, scope.Token);
+            }
+        }
+        else await _core!.DispatchAsync(command, parameter, scope.Token);
         await RevalidateOriginalAsync(scope.Token);
         DemandAlive(); _route.DemandPublicationCurrent();
+        return new(true, false, "Succeeded", null, value);
+        }
+        catch (Exception error) { failures.Retain(error); throw; }
+        finally
+        {
+            --_activeDispatches;
+            try { _bindings.SourcesChanged(); }
+            catch (Exception error)
+            {
+                failures.Retain(error);
+                throw new AggregateException("Original Boards source and publication notification failed.", failures.OriginalErrors);
+            }
+        }
     }
 
     public bool SupportsReversibleClosePreparation => true;
@@ -212,24 +301,31 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             // External preparation: exact loader actions, never an action joining itself.
             if (_host is { } host && _show is { } show) await host.CaptureOriginalActionSettlement(show);
             await RevalidateOriginalAsync(scope.Token);
-            var result = await _core!.PrepareToCloseAsync(scope.Token);
-            if (!result.Succeeded) return null; // Genuine refused save/unknown outcome keeps same draft/view alive.
+            var core = _core; var restore = core?.IsPresentationAdmitted == true;
+            if (restore)
+            {
+                var result = await core!.PrepareToCloseAsync(scope.Token);
+                if (!result.Succeeded) return null;
+            }
+            else if (core is { IsDirty: true } or { HasUnknownCommitOutcome: true }) return null;
             DemandAlive(); _route.DemandPublicationCurrent();
-            var id = _core.DocumentId; var revision = _core.DurableRevision; var generation = _core.EditGeneration;
-            if (!_core.TrySuspendPreparedPresentation(id, revision, generation)) return null;
-            return _prepared = new Preparation(this, id, revision, generation);
+            var id = core?.DocumentId; var revision = core?.DurableRevision ?? 0; var generation = core?.EditGeneration ?? 0;
+            if (restore && !core!.TrySuspendPreparedPresentation(id, revision, generation)) return null;
+            return _prepared = new Preparation(this, core, restore, id, revision, generation);
         }
         finally { _preparing = false; }
     }
-    private sealed class Preparation(BoardsBrowseAppContentSession owner, Guid? id, long revision, long generation)
+    private sealed class Preparation(BoardsBrowseAppContentSession owner, BoardsBrowserCore? originalCore,
+        bool restoreCore, Guid? id, long revision, long generation)
         : IBrowseAppContentClosePreparation
     {
         private Task? _abort;
         private bool _aborted, _accepted;
         public IBrowseAppContentSession Session => owner;
         public bool IsCurrent => !_aborted && !_accepted && !owner._closing && !owner._token.IsCancellationRequested &&
-            ReferenceEquals(owner._prepared, this) && owner._core is { IsPresentationAdmitted: false, IsDirty: false, HasUnknownCommitOutcome: false } core &&
-            core.DocumentId == id && core.DurableRevision == revision && core.EditGeneration == generation;
+            ReferenceEquals(owner._prepared, this) && ReferenceEquals(owner._core, originalCore) &&
+            (originalCore is null || originalCore is { IsPresentationAdmitted: false, IsDirty: false, HasUnknownCommitOutcome: false } core &&
+                core.DocumentId == id && core.DurableRevision == revision && core.EditGeneration == generation);
         public Task AbortAsync()
         {
             CloudflareOriginalExecutionGuard.DemandExternalJoin(owner);
@@ -243,7 +339,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
                     if (_aborted) return;
                     if (!IsCurrent) throw new InvalidOperationException("The original Boards preparation is no longer current.");
                     owner._prepared = null;
-                    try { owner._core!.AdmitPresentation(); }
+                    try { if (restoreCore) originalCore!.AdmitPresentation(); }
                     catch { owner._prepared = this; throw; }
                     _aborted = true;
                 }).GetTask();
@@ -312,7 +408,10 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         if (_host is not null)
             try { await Join(_host.CloseOriginalAsync()); } catch (Exception error) { originals.Retain(error); }
         if (_core is not null)
+        {
+            _core.PropertyChanged -= _bindings.ForwardOriginalChange;
             try { await Join(_core.DisposeAsync().AsTask()); } catch (Exception error) { originals.Retain(error); }
+        }
         if (_core is not { IsDirty: true } and not { HasUnknownCommitOutcome: true })
             try { _presentation?.Dispose(); } catch (Exception error) { originals.Retain(error); }
         // Route drains only tab observations; it never disposes borrowed Home/Notes/global windows.

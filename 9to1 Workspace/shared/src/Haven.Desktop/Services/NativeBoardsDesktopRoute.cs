@@ -26,16 +26,24 @@ internal interface IBoardsOriginalPresentationOwnerRoute
     void BindOriginalPresentationOwner(BoardsBrowseAppContentSession originalOwner);
 }
 
+internal interface IBoardsOriginalStoreSetupRoute : IBoardsOriginalPresentationOwnerRoute
+{
+    Task<BoardsOriginalStoreSetupBackend.Snapshot> ExecuteOriginalStoreSetupAsync(
+        BoardsOriginalStoreSetupOperation operation, BoardsOriginalStoreSetupBackend.Snapshot? expected,
+        CancellationToken cancellationToken);
+}
+
 /// <summary>The original Home observer and reviewed Notes backend for one Boards presentation.
 /// Every content read/save still uses HomeNotesResourceAdmissionSource plus the original Notes
 /// transaction/fence. A runtime observation or native approval-window observation is no grant.
 /// Store ownership/setup/import is never manufactured here, and shared owners are never closed.</summary>
-internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IBoardsOriginalPresentationOwnerRoute
+internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IBoardsOriginalStoreSetupRoute
 {
     private readonly IServiceProvider _provider;
     private readonly HomeNativeWindowsComposition _home;
     private readonly HomeNotesResourceAdmissionSource _admission;
     private readonly HomeNativeApprovalWindowOwner _approvals;
+    private readonly BoardsOriginalStoreSetupBackend? _setup;
     private readonly NotesOriginalWorkspaceRepository _repository;
     private readonly string _profile;
     private readonly CancellationToken _appLifetime, _lifetime;
@@ -51,8 +59,15 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IB
         NotesRepository notes, VerifiedNotesRepository verified, HomeNotesResourceAdmissionSource admission,
         HomeNativeApprovalWindowOwner approvals, string profile, string sessionId,
         CancellationToken actualAppLifetime, CancellationToken actualRouteLifetime)
+        : this(provider, home, notes, verified, admission, approvals, null, profile, sessionId, actualAppLifetime, actualRouteLifetime) { }
+
+    internal NativeBoardsDesktopRoute(IServiceProvider provider, HomeNativeWindowsComposition home,
+        NotesRepository notes, VerifiedNotesRepository verified, HomeNotesResourceAdmissionSource admission,
+        HomeNativeApprovalWindowOwner approvals, BoardsOriginalStoreSetupBackend? setup, string profile, string sessionId,
+        CancellationToken actualAppLifetime, CancellationToken actualRouteLifetime)
     {
         _provider = provider; _home = home; _admission = admission; _approvals = approvals;
+        _setup = setup;
         _profile = profile; _appLifetime = actualAppLifetime; _lifetime = actualRouteLifetime;
         _repository = NotesOriginalWorkspaceRepository.BindOriginal(notes, verified, admission,
             sessionId, PresentReadAsync, PresentSaveAsync, actualRouteLifetime);
@@ -68,6 +83,20 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IB
             _presentationOwner = originalOwner;
         }
     }
+
+    public Task<BoardsOriginalStoreSetupBackend.Snapshot> ExecuteOriginalStoreSetupAsync(
+        BoardsOriginalStoreSetupOperation operation, BoardsOriginalStoreSetupBackend.Snapshot? expected,
+        CancellationToken cancellationToken) => RunOriginalAsync(async originals =>
+        {
+            await originals.AwaitAsync(originals.Invoke(() => RevalidateAsync(cancellationToken))).ConfigureAwait(false);
+            void Own(Action body) => originals.Invoke(() => { DemandAlive(); cancellationToken.ThrowIfCancellationRequested(); body(); return true; });
+            var setup = _setup ?? throw new InvalidOperationException("The original local-library setup owner is unavailable.");
+            var actual = originals.Invoke(() => setup.ExecuteWithinOriginalSourceAsync(operation, expected,
+                Own, task => { originals.Track(task); }, cancellationToken));
+            var result = await originals.AwaitAsync(actual).ConfigureAwait(false);
+            await originals.AwaitAsync(originals.Invoke(() => RevalidateAsync(cancellationToken))).ConfigureAwait(false);
+            return result;
+        });
 
     public bool IsAlive { get { lock (_gate) return !_retiring && !_lifetime.IsCancellationRequested && !_appLifetime.IsCancellationRequested; } }
     public BoardsBrowserCore AcquireOriginalCore()
@@ -190,13 +219,13 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IB
         await start.ConfigureAwait(false);
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
-        // Every nested actor/store callback physically owns BOTH route and parent,
-        // including callbacks that restore a pre-owner ExecutionContext.
-        originals.BindOriginalCallerCallback(callback =>
+        // The physical parent scope survives restored ExecutionContext inside any
+        // nested actor/store callback. A callback cannot join its pending parent.
+        originals.BindOriginalCallerCallback(body =>
         {
             var parent = _presentationOwner
                 ?? throw new InvalidOperationException("The original Boards presentation owner is not bound.");
-            CloudflareOriginalExecutionGuard.InvokeOriginal(parent, () => { callback(); return true; });
+            CloudflareOriginalExecutionGuard.InvokeOriginal(parent, () => { body(); return true; });
         });
         return await originals.RunToOriginalSettlementAsync(() => body(originals)).ConfigureAwait(false);
     }

@@ -53,16 +53,18 @@ internal sealed class BoardsBrowseAppContentFactory : IBrowseAppContentFactory
         var verified = _provider.GetRequiredService<VerifiedNotesRepository>();
         var admission = _provider.GetRequiredService<HomeNotesResourceAdmissionSource>();
         var approvals = _provider.GetRequiredService<HomeNativeApprovalWindowOwner>();
+        var evidence = _provider.GetRequiredService<NotesLocalStoreEvidenceProvider>();
+        var setup = _provider.GetRequiredService<BoardsOriginalStoreSetupBackend>();
         if (!admission.IsBoundToOriginalNotes(notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(NotesRepository)), notes) ||
             !ReferenceEquals(_home.Services.GetService(typeof(HomeNotesResourceAdmissionSource)), admission) ||
-            !approvals.IsBoundToOriginalComposition(_home))
+            !approvals.IsBoundToOriginalComposition(_home) || !setup.HasOriginalComposition(notes, evidence, _home, approvals))
             throw new UnauthorizedAccessException("Boards must borrow the SAME original Notes, verified store and Home admission/review owners.");
         var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_appLifetime, _hostLifetime);
         try
         {
             var route = new NativeBoardsDesktopRoute(_provider, _home, notes, verified, admission,
-                approvals, request.ProfileId, "boards-tab:" + request.TabId.ToString("D"),
+                approvals, setup, request.ProfileId, "boards-tab:" + request.TabId.ToString("D"),
                 _appLifetime, lifetime.Token);
             return new BoardsBrowseAppContentSession(request, address, route, lifetime, _reduceMotion, _theme);
         }

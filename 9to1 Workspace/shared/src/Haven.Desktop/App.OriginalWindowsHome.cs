@@ -28,6 +28,7 @@ public sealed partial class App
             global::Haven.Desktop.Services.WindowsNativePersonalTaskStoreSetupCommand.DemandSamePaths(paths);
             PrepareOriginalAssistantSqliteComposition(collection, paths);
             var notes = PrepareOriginalNotesComposition(collection, paths);
+            var notesEvidence = new NotesLocalStoreEvidenceProvider(notes);
             PrepareOriginalAssistantMiniComputerConfiguration(paths);
             var principal = new OperatingSystemPrincipalSource();
             var ordinary = RetainOriginalAssistantConversationProcess();
@@ -69,11 +70,12 @@ public sealed partial class App
                     files = new(identity.StateStore, identity.Profiles);
                     personalDen = RetainOriginalAssistantPersonalDen(paths, identity.Profiles);
                     // Metadata evidence does not initialise, import or bind a Notes store.
-                    return new([files, personalDen, miniEvidence, new NotesLocalStoreEvidenceProvider(notes), .. sqliteEvidence], new Dictionary<Type, object>
+                    return new([files, personalDen, miniEvidence, notesEvidence, .. sqliteEvidence], new Dictionary<Type, object>
                     {
                         [typeof(NativeFilesWorkspaceService)] = files,
                         [typeof(OriginalAssistantPersonalDenHost)] = personalDen,
-                        [typeof(NotesRepository)] = notes
+                        [typeof(NotesRepository)] = notes,
+                        [typeof(NotesLocalStoreEvidenceProvider)] = notesEvidence
                     });
                 },
                 configureOriginalResolvers: ownership =>
@@ -98,6 +100,8 @@ public sealed partial class App
             RegisterOriginalHomeRootOwners(collection, _actualWindowsHome, rootClient);
             collection.AddSingleton(notesAdmission
                 ?? throw new InvalidOperationException("The SAME original Notes admission owner is unavailable."));
+            collection.AddSingleton(notesEvidence);
+            RegisterOriginalBoardsStoreSetup(collection, _actualWindowsHome, notes, notesEvidence);
             collection.AddSingleton(files!); collection.AddSingleton(authority!); collection.AddSingleton(resolver!);
             collection.AddSingleton(personalDen!);
             RegisterOriginalAssistantSqliteOwners(collection);
@@ -227,12 +231,16 @@ public sealed partial class App
 
     private void DemandOriginalWindowsHomeRetirementJoin()
     {
+        DemandOriginalBoardsStoreSetupRetirementJoin();
         _actualWindowsHome?.DemandExternalOriginalProcessJoin();
         DemandOriginalHomeRootRetirementJoin();
     }
 
-    private Task JoinOriginalWindowsHomeAfterBorrowersAsync() =>
-        JoinOriginalHomeThenRootAfterBorrowersAsync();
+    private async Task JoinOriginalWindowsHomeAfterBorrowersAsync()
+    {
+        await JoinOriginalBoardsStoreSetupAfterBorrowersAsync();
+        await JoinOriginalHomeThenRootAfterBorrowersAsync();
+    }
 
     private Task JoinOriginalUntransferredWindowsHomeAsync()
     {
