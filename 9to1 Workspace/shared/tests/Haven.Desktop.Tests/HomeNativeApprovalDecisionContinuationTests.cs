@@ -330,6 +330,10 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
     public async Task A_real_decision_during_held_refocus_reaches_both_original_observers(bool decisionStillInFlight)
         => await ExerciseHeldDecisionFocusAsync(decisionStillInFlight);
 
+    [AvaloniaFact]
+    public async Task Canceling_the_late_inflight_observer_keeps_the_actual_decision_and_shared_window_joined()
+        => await ExerciseHeldDecisionFocusAsync(decisionStillInFlight: true, cancelLateObserver: true);
+
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
@@ -341,12 +345,14 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
         await ExerciseHeldDecisionFocusAsync(decisionStillInFlight: true, cause);
     }
 
-    private static async Task ExerciseHeldDecisionFocusAsync(bool decisionStillInFlight, Exception? sourceFault = null)
+    private static async Task ExerciseHeldDecisionFocusAsync(bool decisionStillInFlight, Exception? sourceFault = null,
+        bool cancelLateObserver = false)
     {
         await using var rig = await Rig.CreateAsync();
+        using var lateRoute = CancellationTokenSource.CreateLinkedTokenSource(rig.Token);
         var request = await rig.RequestAsync();
         var errors = new List<Exception>();
-        Task<HomeNativeApprovalDecisionObservation>? first = null, second = null;
+        Task<HomeNativeApprovalDecisionObservation>? first = null, second = null, resumed = null;
         Task? focus = null; Exception? expectedFirst = null, expectedSecond = null, expectedClose = null;
         var focusHold = new OriginalPrincipalHold(); var decisionHold = new OriginalPrincipalHold { Failure = sourceFault };
         TextBlock? identity = null; EventHandler<Avalonia.AvaloniaPropertyChangedEventArgs>? changed = null;
@@ -379,7 +385,7 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
                 identity.PropertyChanged += changed;
             }
             rig.Principals.HoldNextOriginal(focusHold);
-            second = rig.Owner.OpenAndObserveDecisionOriginalAsync(request.RequestId, rig.Token);
+            second = rig.Owner.OpenAndObserveDecisionOriginalAsync(request.RequestId, lateRoute.Token);
             focus = CaptureActualCurrentFocus(rig.Owner);
             await focusHold.Entered.Task.WaitAsync(rig.Token);
             Assert.False(focus.IsCompleted); Assert.False(second.IsCompleted); Assert.False(first.IsCompleted);
@@ -400,12 +406,28 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
             if (decisionStillInFlight)
             {
                 Assert.False(first.IsCompleted); Assert.False(second.IsCompleted);
+                var captured = await CaptureActualDispatchWaitAsync(surface, request.RequestId, rig.Token);
+                Assert.False(captured.Wait.IsCompleted); Assert.False(captured.Settlement.IsCompleted);
+                if (cancelLateObserver)
+                {
+                    lateRoute.Cancel();
+                    var canceled = await Record.ExceptionAsync(() => second.WaitAsync(rig.Token));
+                    Assert.IsAssignableFrom<OperationCanceledException>(canceled); Assert.True(second.IsCanceled);
+                    expectedSecond = canceled;
+                    Assert.False(first.IsCompleted); Assert.Same(window, rig.Owner.OriginalWindow);
+                    Assert.Null(rig.Owner.OriginalClose);
+                }
                 decisionHold.Release.TrySetResult();
             }
             if (sourceFault is null)
             {
                 observed ??= await first.WaitAsync(rig.Token);
-                Assert.Same(observed, await second.WaitAsync(rig.Token));
+                if (cancelLateObserver)
+                {
+                    resumed = rig.Owner.OpenAndObserveDecisionOriginalAsync(request.RequestId, rig.Token);
+                    Assert.Same(observed, await resumed.WaitAsync(rig.Token));
+                }
+                else Assert.Same(observed, await second.WaitAsync(rig.Token));
                 Assert.Equal(request.RequestId, observed.RequestId); Assert.True(observed.DecisionRecorded);
                 Assert.Equal(HomePermissionRequestState.Approved, observed.State);
                 Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).Grants);
@@ -434,7 +456,8 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
             if (identity is not null && changed is not null) identity.PropertyChanged -= changed;
             focusHold.Release.TrySetResult(); decisionHold.Release.TrySetResult();
             foreach (var pair in new[] { (Original: (Task?)first, Expected: expectedFirst),
-                (Original: (Task?)second, Expected: expectedSecond), (Original: focus, Expected: (Exception?)null) })
+                (Original: (Task?)second, Expected: expectedSecond), (Original: (Task?)resumed, Expected: (Exception?)null),
+                (Original: focus, Expected: (Exception?)null) })
                 if (pair.Original is { } original)
                 {
                     var error = await Record.ExceptionAsync(() => original.WaitAsync(rig.Token));
@@ -462,6 +485,31 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
             var review = typeof(HomeNativeApprovalWindowOwner).GetField("_current", flags)!.GetValue(owner)!;
             var originals = Assert.IsAssignableFrom<IEnumerable<Task>>(review.GetType().GetProperty("Focuses", flags)!.GetValue(review));
             return Assert.Single(originals.Where(original => !original.IsCompletedSuccessfully));
+        }
+    }
+
+    private static async Task<(Task Wait, Task Settlement)> CaptureActualDispatchWaitAsync(
+        HomeApprovalCuiSurface surface, string requestId, CancellationToken token)
+    {
+        const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+        var gate = typeof(HomeApprovalCuiSurface).GetField("_originalSync", flags)!.GetValue(surface)!;
+        while (true)
+        {
+            token.ThrowIfCancellationRequested();
+            lock (gate)
+            {
+                var waits = Assert.IsAssignableFrom<System.Collections.IEnumerable>(typeof(HomeApprovalCuiSurface)
+                    .GetField("_decisionWaits", flags)!.GetValue(surface));
+                foreach (var wait in waits)
+                {
+                    var type = wait!.GetType();
+                    if (!Equals(type.GetProperty("RequestId", flags)!.GetValue(wait), requestId) ||
+                        type.GetField("OriginalDispatch", flags)?.GetValue(wait) is not { } actual) continue;
+                    return (Assert.IsAssignableFrom<Task>(type.GetField("Original", flags)!.GetValue(wait)),
+                        Assert.IsAssignableFrom<Task>(actual.GetType().GetField("Settlement", flags)!.GetValue(actual)));
+                }
+            }
+            await Task.Yield(); // Observe actual custody; no timing-based source completion assertion.
         }
     }
 
