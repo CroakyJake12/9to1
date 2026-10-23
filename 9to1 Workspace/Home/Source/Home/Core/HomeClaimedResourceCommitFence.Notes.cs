@@ -14,7 +14,21 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default)
+        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default) =>
+        CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, cancellationToken, null, null);
+
+    public static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveWithinOriginalSourceAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        CaptureNotesSaveCoreAsync(broker, store, profiles, ownership, originalSource, originalIntent, originalCapability, originalActor, cancellationToken, scope, retain);
+
+    private static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesSaveCoreAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalSaveIntent originalIntent, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain)
     {
         ArgumentNullException.ThrowIfNull(broker); ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(profiles); ArgumentNullException.ThrowIfNull(ownership);
@@ -61,9 +75,9 @@ public sealed partial class HomeClaimedResourceCommitFence
         { return Deny(); }
         // Pure original-owner identity only. No async Notes/Home read is invoked while the
         // eventual same Home lease is held; the private Notes transaction enforces custody/CAS.
-        return CaptureCoreAsync(broker, store, profiles, ownership, HomeNotesResourceAdmissionSource.StoreKind,
-            identity.StoreId.ToString("D"), originalCapability, originalActor, [],
-            () => originalSource.IsIssuedOriginalSaveIntent(originalIntent), cancellationToken);
+        return CaptureOriginalNotesCoreAsync(broker, store, profiles, ownership, identity.StoreId.ToString("D"),
+            originalCapability, originalActor, () => originalSource.IsIssuedOriginalSaveIntent(originalIntent),
+            originalScope, retain, cancellationToken);
     }
 
     /// <summary>Exact original metadata-only Notes library read. The actual owner must retain
@@ -73,7 +87,21 @@ public sealed partial class HomeClaimedResourceCommitFence
         HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
         INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
-        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default)
+        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken = default) =>
+        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, cancellationToken, null, null);
+
+    public static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadWithinOriginalSourceAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        CaptureNotesLibraryReadCoreAsync(broker, store, profiles, ownership, originalSource, originalRequest, originalCapability, originalActor, cancellationToken, scope, retain);
+
+    private static ValueTask<HomeClaimedResourceCommitFence?> CaptureNotesLibraryReadCoreAsync(
+        HomeResourceOperationBroker broker, FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
+        HomeResourceStoreOwnershipAuthority ownership, INotesOriginalStoreSource originalSource,
+        INotesOriginalLibraryReadRequest originalRequest, HomeResourceExecutionCapability originalCapability,
+        AuthenticatedResourceActor originalActor, CancellationToken cancellationToken, Action<Action>? originalScope, Action<Task>? retain)
     {
         ArgumentNullException.ThrowIfNull(broker); ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(profiles); ArgumentNullException.ThrowIfNull(ownership);
@@ -114,8 +142,46 @@ public sealed partial class HomeClaimedResourceCommitFence
         }
         catch (Exception error) when (error is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException)
         { return Deny(); }
-        return CaptureCoreAsync(broker, store, profiles, ownership, HomeNotesResourceAdmissionSource.StoreKind,
-            identity.StoreId.ToString("D"), originalCapability, originalActor, [],
-            () => originalSource.IsIssuedOriginalLibraryReadRequest(originalRequest), cancellationToken);
+        return CaptureOriginalNotesCoreAsync(broker, store, profiles, ownership, identity.StoreId.ToString("D"),
+            originalCapability, originalActor, () => originalSource.IsIssuedOriginalLibraryReadRequest(originalRequest),
+            originalScope, retain, cancellationToken);
+    }
+
+    private static ValueTask<HomeClaimedResourceCommitFence?> CaptureOriginalNotesCoreAsync(HomeResourceOperationBroker broker,
+        FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
+        string storeId, HomeResourceExecutionCapability capability, AuthenticatedResourceActor actor, Func<bool> originalLifetime,
+        Action<Action>? scope, Action<Task>? retain, CancellationToken token)
+    {
+        if (scope is null) return CaptureCoreAsync(broker, store, profiles, ownership, HomeNotesResourceAdmissionSource.StoreKind,
+            storeId, capability, actor, [], originalLifetime, token);
+        ArgumentNullException.ThrowIfNull(retain);
+        // Reuse the SAME fence's original capture ledger and leak-safe resource retention.
+        // Notes has no unrelated configuration records; the exact issuer/request/claim above
+        // supplies its narrower original tuple before the ordinary capture core.
+        var original = new OriginalFenceCapture(); original.Sources = new(original, scope, retain);
+        var begin = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (OriginalCaptureGate)
+        {
+            OriginalCaptures.RemoveAll(value => value.Driver.IsCompletedSuccessfully && value.Sources.IsHealthy &&
+                (value.Fence is null || value.Fence.OriginalClose?.IsCompletedSuccessfully == true));
+            if (OriginalCaptures.Count >= 128) throw new InvalidOperationException("Actual unresolved Home fence captures remain retained.");
+            original.Driver = Drive(); OriginalCaptures.Add(original);
+        }
+        original.Sources.Publish(original.Driver); begin.SetResult(); return new(original.Driver);
+
+        async Task<HomeClaimedResourceCommitFence?> Drive()
+        {
+            await begin.Task.ConfigureAwait(false); using var active = CloudflareOriginalExecutionGuard.EnterOriginal(original);
+            HomeClaimedResourceCommitFence? result = null;
+            try
+            {
+                original.Sources.DemandHealthy();
+                result = await original.Sources.Capture(() => CaptureCoreAsync(broker, store, profiles, ownership,
+                    HomeNotesResourceAdmissionSource.StoreKind, storeId, capability, actor, [], originalLifetime, token,
+                    original.Sources).AsTask(), actual => original.Fence = actual).ConfigureAwait(false);
+            }
+            catch (Exception cause) { original.Sources.Add(cause); }
+            await original.Sources.Settle().ConfigureAwait(false); return result;
+        }
     }
 }

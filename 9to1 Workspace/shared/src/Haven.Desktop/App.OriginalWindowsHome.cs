@@ -27,6 +27,8 @@ public sealed partial class App
             var paths = new AppPaths();
             global::Haven.Desktop.Services.WindowsNativePersonalTaskStoreSetupCommand.DemandSamePaths(paths);
             PrepareOriginalAssistantSqliteComposition(collection, paths);
+            var notes = PrepareOriginalNotesComposition(collection, paths);
+            var notesEvidence = new NotesLocalStoreEvidenceProvider(notes);
             PrepareOriginalAssistantMiniComputerConfiguration(paths);
             var principal = new OperatingSystemPrincipalSource();
             var ordinary = RetainOriginalAssistantConversationProcess();
@@ -39,25 +41,41 @@ public sealed partial class App
             FilesArtifactResourceResolver? resolver = null;
             Services.SitesNativeWorkspaceAuthority? sites = null;
             SiteNativeProjectAccessResolver? sitesResolver = null;
+            HomeNotesResourceAdmissionSource? notesAdmission = null;
+            var notesResolver = new OriginalNotesResourceResolver(() => notesAdmission
+                ?? throw new InvalidOperationException("The SAME original Notes admission owner is not captured."));
             // Retain the actual constructed owner before any registration can fail. This
             // uses the genuine OS principal; CAKE login cannot substitute for this actor.
             _actualWindowsHome = new(new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "Home", "state.json")),
                 principal, paths, new("9to1.home.desktop.v1"),
                 protectedInstalledPeerVerifier: rootClient,
-                originalResourceResolvers: OriginalWindowsDeveloperResolvers().Concat(OriginalInstalledHomeAppsResolvers()).Concat([_actualAssistantTaskContextWriteResolver!, _actualAssistantMemoryWriteResolver!, _actualAssistantCapabilityInitializationResolver!, _actualAssistantMiniComputerOperationResolver!, _actualAssistantMiniComputerIdentityResolver!, _actualAutomationLibraryWriteResolver!, _actualAssistantAttachmentReadResolver!, _actualAssistantAttachmentImportResolver!, _actualAssistantAttachmentEgressResolver!, _actualGeneratedUiResolver!]),
-                originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!, new HomeModelRouteActionPolicies()]),
-                configureOriginalOwners: owners => CaptureOriginalHomeRootOwnerComponents(original, owners, rootClient,
-                    new SiteNativeAuthoringSession(sites!, owners.Profiles, owners.Resources, owners.Broker)),
+                originalResourceResolvers: OriginalWindowsDeveloperResolvers().Concat(OriginalInstalledHomeAppsResolvers()).Concat([_actualAssistantTaskContextWriteResolver!, _actualAssistantMemoryWriteResolver!, _actualAssistantCapabilityInitializationResolver!, _actualAssistantMiniComputerOperationResolver!, _actualAssistantMiniComputerIdentityResolver!, _actualAutomationLibraryWriteResolver!, _actualAssistantAttachmentReadResolver!, _actualAssistantAttachmentImportResolver!, _actualAssistantAttachmentEgressResolver!, _actualGeneratedUiResolver!, notesResolver]),
+                originalActionPolicies: OriginalWindowsDeveloperPolicies().Concat(OriginalInstalledHomeAppsPolicies()).Concat([new FilesNativeBrowserActionPolicySource(), new SiteNativeActionPolicies(), _actualAssistantTaskContextWritePolicy!, _actualAssistantMemoryWritePolicy!, new HomeUcmlContextActionPolicy(), _actualAssistantCapabilityInitializationPolicy!, _actualAssistantMiniComputerOperationPolicy!, _actualAssistantMiniComputerIdentityPolicy!, _actualAutomationLibraryWritePolicy!, _actualAssistantAttachmentReadPolicy!, _actualAssistantAttachmentImportPolicy!, _actualAssistantAttachmentEgressPolicy!, _actualGeneratedUiPolicy!, new HomeModelRouteActionPolicies(), new HomeNotesActionPolicies()]),
+                configureOriginalOwners: owners =>
+                {
+                    // Resources and its broker now exist. The resolver slot above and
+                    // both service registries borrow this one original admission source.
+                    notesAdmission = new(notes, owners.StateStore, owners.Profiles,
+                        owners.Ownership, owners.Resources, owners.Permissions, owners.Broker);
+                    var registered = CaptureOriginalHomeRootOwnerComponents(original, owners, rootClient,
+                        new SiteNativeAuthoringSession(sites!, owners.Profiles, owners.Resources, owners.Broker))
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    registered.Add(typeof(HomeNotesResourceAdmissionSource), notesAdmission);
+                    return registered;
+                },
                 configureOriginalStores: identity =>
                 {
                     var sqliteEvidence = CreateOriginalAssistantSqliteEvidence(identity, paths);
                     var miniEvidence = CreateOriginalAssistantMiniComputerCatalogEvidence(identity.Profiles);
                     files = new(identity.StateStore, identity.Profiles);
                     personalDen = RetainOriginalAssistantPersonalDen(paths, identity.Profiles);
-                    return new([files, personalDen, miniEvidence, .. sqliteEvidence], new Dictionary<Type, object>
+                    // Metadata evidence does not initialise, import or bind a Notes store.
+                    return new([files, personalDen, miniEvidence, notesEvidence, .. sqliteEvidence], new Dictionary<Type, object>
                     {
                         [typeof(NativeFilesWorkspaceService)] = files,
-                        [typeof(OriginalAssistantPersonalDenHost)] = personalDen
+                        [typeof(OriginalAssistantPersonalDenHost)] = personalDen,
+                        [typeof(NotesRepository)] = notes,
+                        [typeof(NotesLocalStoreEvidenceProvider)] = notesEvidence
                     });
                 },
                 configureOriginalResolvers: ownership =>
@@ -80,6 +98,10 @@ public sealed partial class App
             original.DemandPublication();
             collection.AddHavenOwnedWindowsHomeDomain(_actualWindowsHome, paths, principal);
             RegisterOriginalHomeRootOwners(collection, _actualWindowsHome, rootClient);
+            collection.AddSingleton(notesAdmission
+                ?? throw new InvalidOperationException("The SAME original Notes admission owner is unavailable."));
+            collection.AddSingleton(notesEvidence);
+            RegisterOriginalBoardsStoreSetup(collection, _actualWindowsHome, notes, notesEvidence);
             collection.AddSingleton(files!); collection.AddSingleton(authority!); collection.AddSingleton(resolver!);
             collection.AddSingleton(personalDen!);
             RegisterOriginalAssistantSqliteOwners(collection);
@@ -158,6 +180,47 @@ public sealed partial class App
         }));
     }
 
+    // Replace only the maintained, still-uninstantiated concrete owners. Their
+    // existing interface aliases and verified/migrating wrappers keep their authority.
+    private NotesRepository PrepareOriginalNotesComposition(IServiceCollection collection, AppPaths paths)
+    {
+        ServiceDescriptor Demand(Type service, Type implementation)
+        {
+            var rows = collection.Where(row => row.ServiceType == service).Take(2).ToArray();
+            if (rows.Length != 1 || rows[0].Lifetime != ServiceLifetime.Singleton ||
+                rows[0].ImplementationType != implementation)
+                throw new InvalidOperationException("Use the maintained uninstantiated canonical owner: " + service.Name);
+            return rows[0];
+        }
+        var diagnosticsDescriptor = Demand(typeof(ProductionDiagnostics), typeof(ProductionDiagnostics));
+        var validatorDescriptor = Demand(typeof(INotesDocumentValidator), typeof(NotesDocumentValidator));
+        var notesDescriptor = Demand(typeof(NotesRepository), typeof(NotesRepository));
+        if (_productionDiagnostics is not null || collection.Any(row => row.ServiceType == typeof(HomeNotesResourceAdmissionSource)))
+            throw new InvalidOperationException("The original Notes/diagnostics composition already exists.");
+        var diagnostics = new ProductionDiagnostics(paths);
+        // Retain before any later acquisition/registration can fail. The actual App
+        // shutdown path joins this same diagnostics owner after all borrowers settle.
+        _productionDiagnostics = diagnostics;
+        var validator = new NotesDocumentValidator();
+        var notes = new NotesRepository(paths, validator, diagnostics);
+        collection.Remove(diagnosticsDescriptor); collection.AddSingleton(diagnostics);
+        collection.Remove(validatorDescriptor); collection.AddSingleton<INotesDocumentValidator>(validator);
+        collection.Remove(notesDescriptor); collection.AddSingleton(notes);
+        return notes;
+    }
+
+    private sealed class OriginalNotesResourceResolver(Func<HomeNotesResourceAdmissionSource> original)
+        : ICanonicalResourceAccessResolver, IOriginalScopedCanonicalResourceAccessResolver
+    {
+        public string ResourceKind => HomeNotesResourceAdmissionSource.ScopeKind;
+        public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor,
+            string actionId, ResourceScope scope, CancellationToken cancellationToken) =>
+            original().EvaluateAsync(actor, actionId, scope, cancellationToken);
+        public Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor, string actionId,
+            ResourceScope resource, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+            original().EvaluateWithinOriginalSourceAsync(actor, actionId, resource, scope, retain, token);
+    }
+
     private Task StartOriginalWindowsHomeAsync()
     {
         var home = _actualWindowsHome;
@@ -171,12 +234,16 @@ public sealed partial class App
 
     private void DemandOriginalWindowsHomeRetirementJoin()
     {
+        DemandOriginalBoardsStoreSetupRetirementJoin();
         _actualWindowsHome?.DemandExternalOriginalProcessJoin();
         DemandOriginalHomeRootRetirementJoin();
     }
 
-    private Task JoinOriginalWindowsHomeAfterBorrowersAsync() =>
-        JoinOriginalHomeThenRootAfterBorrowersAsync();
+    private async Task JoinOriginalWindowsHomeAfterBorrowersAsync()
+    {
+        await JoinOriginalBoardsStoreSetupAfterBorrowersAsync();
+        await JoinOriginalHomeThenRootAfterBorrowersAsync();
+    }
 
     private Task JoinOriginalUntransferredWindowsHomeAsync()
     {

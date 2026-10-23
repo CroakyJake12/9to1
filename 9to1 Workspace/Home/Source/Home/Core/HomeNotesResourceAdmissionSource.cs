@@ -9,7 +9,7 @@ namespace HavenOS.Home.Core;
 /// <summary>Actual Home ownership and policy admission for the original Notes store, never
 /// a path/profile predicate promoted into content permission. An approved save is bound to the
 /// original repository's immutable intent, not a mutable editor or raw repository fallback.</summary>
-public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessResolver
+public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessResolver, IOriginalScopedCanonicalResourceAccessResolver
 {
     public const string TargetAppId = "boards";
     public const string ReadAction = "boards.library.read";
@@ -21,6 +21,7 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
     private readonly HomeLocalProfileIdentity _profiles;
     private readonly HomeResourceStoreOwnershipAuthority _ownership;
     private readonly HomeResourceOperationBroker _broker;
+    private readonly HomePermissionTrustService _permissions;
 
     public HomeNotesResourceAdmissionSource(INotesOriginalStoreSource notes, FileHomeCoreStateStore store,
         HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
@@ -31,7 +32,7 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
             !ownership.IsBoundTo(store, profiles) || !resources.IsBoundToActorSource(profiles) ||
             !broker.IsBoundToOriginalComposition(resources, permissions))
             throw new UnauthorizedAccessException("Retain the same original Home, actor, ownership and resource broker.");
-        _notes = notes; _store = store; _profiles = profiles; _ownership = ownership; _broker = broker;
+        _notes = notes; _store = store; _profiles = profiles; _ownership = ownership; _broker = broker; _permissions = permissions;
     }
 
     public string ResourceKind => ScopeKind;
@@ -39,7 +40,15 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
     /// <summary>Composition identity only. It grants no ownership, approval or Notes IO.</summary>
     public bool IsBoundToOriginalNotes(INotesOriginalStoreSource source) => ReferenceEquals(_notes, source);
 
-    public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor,
+    public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor,
+        string actionId, ResourceScope scope, CancellationToken cancellationToken) => new(EvaluateCoreAsync(null, actor, actionId, scope, cancellationToken));
+
+    public Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor,
+        string actionId, ResourceScope scope,
+        Action<Action> originalScope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        HomeNotesOriginalSource.RunAsync(originalScope, retain, source => EvaluateCoreAsync(source, actor, actionId, scope, cancellationToken));
+
+    private async Task<ResourceAccessDecision> EvaluateCoreAsync(HomeNotesOriginalSource? source, AuthenticatedResourceActor actor,
         string actionId, ResourceScope scope, CancellationToken cancellationToken)
     {
         ResourceAccessDecision Deny() => new(false, "NotesOriginalStoreNotOwned", actor.ActorId,
@@ -48,58 +57,73 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
             actionId is not (ReadAction or SaveAction) || scope.Kind != ScopeKind ||
             scope.Access != (actionId == ReadAction ? ResourceAccess.Read : ResourceAccess.Write) ||
             !Guid.TryParseExact(scope.Id, "D", out var id) || id == Guid.Empty || scope.Id != id.ToString("D") ||
-            await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor) return Deny();
-        var observed = await _notes.ObserveOriginalStoreAsync(cancellationToken).ConfigureAwait(false);
+            await ReadActorAsync(source, cancellationToken).ConfigureAwait(false) != actor) return Deny();
+        var observed = await ObserveStoreAsync(source, cancellationToken).ConfigureAwait(false);
         if (!_notes.IsIssuedOriginalStoreObservation(observed) || observed.StoreIdentity.SchemaVersion != 1 ||
             observed.StoreIdentity.StoreId != id || observed.Revision != scope.Revision) return Deny();
-        var binding = await _ownership.GetVerifiedAsync(StoreKind, scope.Id, cancellationToken).ConfigureAwait(false);
+        var binding = await ReadOwnershipAsync(source, scope.Id, cancellationToken).ConfigureAwait(false);
         if (binding is null || binding.ProfileId != actor.ProfileId || binding.Receipt is null ||
-            !await _ownership.IsCurrentAsync(binding, actor, cancellationToken).ConfigureAwait(false) ||
-            !await _notes.IsOriginalStoreObservationCurrentAsync(observed, cancellationToken).ConfigureAwait(false) ||
-            await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor) return Deny();
+            !await IsOwnershipCurrentAsync(source, binding, actor, cancellationToken).ConfigureAwait(false) ||
+            !await IsStoreCurrentAsync(source, observed, cancellationToken).ConfigureAwait(false) ||
+            await ReadActorAsync(source, cancellationToken).ConfigureAwait(false) != actor) return Deny();
         return new(true, "NotesOriginalStoreOwned", actor.ActorId, scope.Revision, actor.OrganisationId);
     }
 
     /// <summary>Requests the genuine broker review after actual ownership resolution. It does
     /// not read documents, consume approval, issue an execution capability or authorise a save.</summary>
-    public async Task<HomePermissionAuthorization> RequestLibraryReadAsync(string sessionId,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionAuthorization> RequestLibraryReadAsync(string sessionId,
+        CancellationToken cancellationToken = default) => RequestLibraryReadCoreAsync(null, sessionId, cancellationToken);
+
+    public Task<HomePermissionAuthorization> RequestLibraryReadWithinOriginalSourceAsync(string sessionId,
+        Action<Action> originalScope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        HomeNotesOriginalSource.RunAsync(originalScope, retain, source => RequestLibraryReadCoreAsync(source, sessionId, cancellationToken));
+
+    private async Task<HomePermissionAuthorization> RequestLibraryReadCoreAsync(HomeNotesOriginalSource? source, string sessionId,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
-        var actor = await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
+        var actor = await ReadActorAsync(source, cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original Home actor is unavailable.");
-        var observed = await _notes.ObserveOriginalStoreAsync(cancellationToken).ConfigureAwait(false);
+        var observed = await ObserveStoreAsync(source, cancellationToken).ConfigureAwait(false);
         if (!_notes.IsIssuedOriginalStoreObservation(observed))
             throw new UnauthorizedAccessException("The original Notes observation was not issued by this owner.");
         var scope = new ResourceScope(ScopeKind, observed.StoreIdentity.StoreId.ToString("D"),
             observed.Revision, ResourceAccess.Read);
-        var decision = await EvaluateAsync(actor, ReadAction, scope, cancellationToken).ConfigureAwait(false);
+        var decision = await EvaluateCoreAsync(source, actor, ReadAction, scope, cancellationToken).ConfigureAwait(false);
         if (!decision.Allowed) throw new UnauthorizedAccessException("Set up or explicitly import this original Notes store in Home first.");
-        return await _broker.AuthorizeForActorAsync(actor, TargetAppId, ReadAction, [scope],
+        return await AuthorizeReviewAsync(source, actor, ReadAction, [scope],
             JsonSerializer.SerializeToElement(new { storeId = observed.StoreIdentity.StoreId, revision = observed.Revision }),
             "Read this owned local Boards library", null, sessionId, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Review the private candidate already detached by this exact canonical owner.
     /// No document is read or published and no approval is inferred from ownership.</summary>
-    public async Task<HomeNotesSaveReview> RequestSaveAsync(INotesOriginalSaveIntent intent,
-        string sessionId, CancellationToken cancellationToken = default)
+    public Task<HomeNotesSaveReview> RequestSaveAsync(INotesOriginalSaveIntent intent,
+        string sessionId, CancellationToken cancellationToken = default) => RequestSaveCoreAsync(null, intent, sessionId, cancellationToken);
+
+    public Task<HomeNotesSaveReview> RequestSaveWithinOriginalSourceAsync(INotesOriginalSaveIntent intent,
+        string sessionId,
+        Action<Action> originalScope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        HomeNotesOriginalSource.RunAsync(originalScope, retain, source => RequestSaveCoreAsync(source, intent, sessionId, cancellationToken));
+
+    private async Task<HomeNotesSaveReview> RequestSaveCoreAsync(HomeNotesOriginalSource? source, INotesOriginalSaveIntent intent,
+        string sessionId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
         if (!_notes.IsIssuedOriginalSaveIntent(intent) ||
             !_notes.IsIssuedOriginalStoreObservation(intent.StoreObservation) ||
-            !await _notes.IsOriginalStoreObservationCurrentAsync(intent.StoreObservation, cancellationToken).ConfigureAwait(false))
+            !await IsStoreCurrentAsync(source, intent.StoreObservation, cancellationToken).ConfigureAwait(false))
             throw new UnauthorizedAccessException("Prepare this candidate with the original Notes owner first.");
-        var actor = await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
+        var actor = await ReadActorAsync(source, cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original Home actor is unavailable.");
         var scope = new ResourceScope(ScopeKind, intent.StoreObservation.StoreIdentity.StoreId.ToString("D"),
             intent.StoreObservation.Revision, ResourceAccess.Write);
-        if (!(await EvaluateAsync(actor, SaveAction, scope, cancellationToken).ConfigureAwait(false)).Allowed)
+        if (!(await EvaluateCoreAsync(source, actor, SaveAction, scope, cancellationToken).ConfigureAwait(false)).Allowed)
             throw new UnauthorizedAccessException("Set up or explicitly import this original Notes store in Home first.");
         var preview = $"Save 1 Boards document.\nDocument: {intent.DocumentId:D}\n" +
             $"Version: {intent.ExpectedVersion} → {checked(intent.ExpectedVersion + 1)}\nReason: {intent.Reason}";
-        var authorization = await _broker.AuthorizeForActorAsync(actor, TargetAppId, SaveAction, [scope],
+        var authorization = await AuthorizeReviewAsync(source, actor, SaveAction, [scope],
             intent.Arguments, preview, null, sessionId,
             cancellationToken).ConfigureAwait(false);
         return new(this, intent, actor, scope, authorization);
@@ -109,35 +133,42 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
         CancellationToken cancellationToken = default)
     {
         DemandOriginalReview(review);
-        return _broker.GetAuthorizationAsync(review.Authorization.RequestId, cancellationToken);
+        return ReadAuthorizationAsync(null, review.Authorization.RequestId, cancellationToken);
     }
 
     /// <summary>Pending reviews remain pending. A real approved request is consumed once and
     /// claimed for its exact original tuple; the returned handle still grants no raw Notes IO.</summary>
-    public async Task<HomeNotesSaveAdmission?> BeginSaveAsync(HomeNotesSaveReview review,
-        CancellationToken cancellationToken = default)
+    public Task<HomeNotesSaveAdmission?> BeginSaveAsync(HomeNotesSaveReview review,
+        CancellationToken cancellationToken = default) => BeginSaveCoreAsync(null, review, cancellationToken);
+
+    public Task<HomeNotesSaveAdmission?> BeginSaveWithinOriginalSourceAsync(HomeNotesSaveReview review,
+        Action<Action> originalScope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        HomeNotesOriginalSource.RunAsync(originalScope, retain, source => BeginSaveCoreAsync(source, review, cancellationToken));
+
+    private async Task<HomeNotesSaveAdmission?> BeginSaveCoreAsync(HomeNotesOriginalSource? source, HomeNotesSaveReview review,
+        CancellationToken cancellationToken)
     {
         DemandOriginalReview(review);
-        await review.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitGateAsync(source, review.Gate, cancellationToken).ConfigureAwait(false);
         try
         {
             if (review.Admission is not null) return review.Admission;
             if (review.BeginAttempted) return null;
-            if (await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != review.Actor ||
-                !await _notes.IsOriginalStoreObservationCurrentAsync(review.Intent.StoreObservation, cancellationToken).ConfigureAwait(false))
+            if (await ReadActorAsync(source, cancellationToken).ConfigureAwait(false) != review.Actor ||
+                !await IsStoreCurrentAsync(source, review.Intent.StoreObservation, cancellationToken).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The Home actor or original Notes store changed during review.");
-            var authorization = await _broker.GetAuthorizationAsync(review.Authorization.RequestId, cancellationToken).ConfigureAwait(false);
+            var authorization = await ReadAuthorizationAsync(source, review.Authorization.RequestId, cancellationToken).ConfigureAwait(false);
             if (!authorization.IsAllowed) return null;
             review.BeginAttempted = true;
-            var capability = await _broker.BeginExecutionCapabilityAsync(review.Authorization.RequestId,
+            var capability = await BeginCapabilityAsync(source, review.Authorization.RequestId,
                 review.Intent.Arguments, cancellationToken).ConfigureAwait(false);
             if (capability is null) return null;
             review.Capability = capability;
-            var claimed = await _broker.ClaimExecutionObservedAsync(capability, TargetAppId, SaveAction,
+            var claimed = await ClaimAsync(source, capability, SaveAction,
                 [review.Scope], review.Intent.Arguments, cancellationToken).ConfigureAwait(false);
             if (claimed.Disposition != HomeResourceClaimDisposition.Claimed || claimed.Actor != review.Actor) return null;
             return review.Admission = new(_notes, review.Intent, _store, _profiles, _ownership,
-                _broker, review.Actor, capability);
+                _broker, review.Actor, capability, source?.OriginalScope, source?.OriginalRetain);
         }
         finally { review.Gate.Release(); }
     }
@@ -158,22 +189,30 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
 
     /// <summary>Reviews a private metadata-only library request. This never calls the raw
     /// Notes List/Load recovery paths or reads document content before genuine Home consent.</summary>
-    public async Task<HomeNotesLibraryReadReview> RequestLibrarySnapshotAsync(INotesOriginalLibraryReadRequest request,
-        string sessionId, CancellationToken cancellationToken = default)
+    public Task<HomeNotesLibraryReadReview> RequestLibrarySnapshotAsync(INotesOriginalLibraryReadRequest request,
+        string sessionId, CancellationToken cancellationToken = default) => RequestLibrarySnapshotCoreAsync(null, request, sessionId, cancellationToken);
+
+    public Task<HomeNotesLibraryReadReview> RequestLibrarySnapshotWithinOriginalSourceAsync(INotesOriginalLibraryReadRequest request,
+        string sessionId,
+        Action<Action> originalScope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        HomeNotesOriginalSource.RunAsync(originalScope, retain, source => RequestLibrarySnapshotCoreAsync(source, request, sessionId, cancellationToken));
+
+    private async Task<HomeNotesLibraryReadReview> RequestLibrarySnapshotCoreAsync(HomeNotesOriginalSource? source, INotesOriginalLibraryReadRequest request,
+        string sessionId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
         if (!_notes.IsIssuedOriginalLibraryReadRequest(request) ||
             !_notes.IsIssuedOriginalStoreObservation(request.StoreObservation) ||
-            !await _notes.IsOriginalStoreObservationCurrentAsync(request.StoreObservation, cancellationToken).ConfigureAwait(false))
+            !await IsStoreCurrentAsync(source, request.StoreObservation, cancellationToken).ConfigureAwait(false))
             throw new UnauthorizedAccessException("Prepare this library request with the original Notes owner first.");
-        var actor = await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
+        var actor = await ReadActorAsync(source, cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original Home actor is unavailable.");
         var scope = new ResourceScope(ScopeKind, request.StoreObservation.StoreIdentity.StoreId.ToString("D"),
             request.StoreObservation.Revision, ResourceAccess.Read);
-        if (!(await EvaluateAsync(actor, ReadAction, scope, cancellationToken).ConfigureAwait(false)).Allowed)
+        if (!(await EvaluateCoreAsync(source, actor, ReadAction, scope, cancellationToken).ConfigureAwait(false)).Allowed)
             throw new UnauthorizedAccessException("Set up or explicitly import this original Notes store in Home first.");
-        var authorization = await _broker.AuthorizeForActorAsync(actor, TargetAppId, ReadAction, [scope],
+        var authorization = await AuthorizeReviewAsync(source, actor, ReadAction, [scope],
             request.Arguments, request.DocumentId is { } selected
                 ? $"Read this Boards library's summaries and document {selected:D}."
                 : "Read this Boards library's summaries without requesting a document body.",
@@ -185,33 +224,40 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
         CancellationToken cancellationToken = default)
     {
         DemandOriginalReadReview(review);
-        return _broker.GetAuthorizationAsync(review.Authorization.RequestId, cancellationToken);
+        return ReadAuthorizationAsync(null, review.Authorization.RequestId, cancellationToken);
     }
 
-    public async Task<HomeNotesLibraryReadAdmission?> BeginLibrarySnapshotAsync(HomeNotesLibraryReadReview review,
-        CancellationToken cancellationToken = default)
+    public Task<HomeNotesLibraryReadAdmission?> BeginLibrarySnapshotAsync(HomeNotesLibraryReadReview review,
+        CancellationToken cancellationToken = default) => BeginLibrarySnapshotCoreAsync(null, review, cancellationToken);
+
+    public Task<HomeNotesLibraryReadAdmission?> BeginLibrarySnapshotWithinOriginalSourceAsync(HomeNotesLibraryReadReview review,
+        Action<Action> originalScope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        HomeNotesOriginalSource.RunAsync(originalScope, retain, source => BeginLibrarySnapshotCoreAsync(source, review, cancellationToken));
+
+    private async Task<HomeNotesLibraryReadAdmission?> BeginLibrarySnapshotCoreAsync(HomeNotesOriginalSource? source, HomeNotesLibraryReadReview review,
+        CancellationToken cancellationToken)
     {
         DemandOriginalReadReview(review);
-        await review.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WaitGateAsync(source, review.Gate, cancellationToken).ConfigureAwait(false);
         try
         {
             if (review.Admission is not null) return review.Admission;
             if (review.BeginAttempted) return null;
-            if (await _profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != review.Actor ||
-                !await _notes.IsOriginalStoreObservationCurrentAsync(review.Request.StoreObservation, cancellationToken).ConfigureAwait(false))
+            if (await ReadActorAsync(source, cancellationToken).ConfigureAwait(false) != review.Actor ||
+                !await IsStoreCurrentAsync(source, review.Request.StoreObservation, cancellationToken).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The Home actor or original Notes store changed during review.");
-            var authorization = await _broker.GetAuthorizationAsync(review.Authorization.RequestId, cancellationToken).ConfigureAwait(false);
+            var authorization = await ReadAuthorizationAsync(source, review.Authorization.RequestId, cancellationToken).ConfigureAwait(false);
             if (!authorization.IsAllowed) return null;
             review.BeginAttempted = true;
-            var capability = await _broker.BeginExecutionCapabilityAsync(review.Authorization.RequestId,
+            var capability = await BeginCapabilityAsync(source, review.Authorization.RequestId,
                 review.Request.Arguments, cancellationToken).ConfigureAwait(false);
             if (capability is null) return null;
             review.Capability = capability;
-            var claimed = await _broker.ClaimExecutionObservedAsync(capability, TargetAppId, ReadAction,
+            var claimed = await ClaimAsync(source, capability, ReadAction,
                 [review.Scope], review.Request.Arguments, cancellationToken).ConfigureAwait(false);
             if (claimed.Disposition != HomeResourceClaimDisposition.Claimed || claimed.Actor != review.Actor) return null;
             return review.Admission = new(_notes, review.Request, _store, _profiles, _ownership,
-                _broker, review.Actor, capability);
+                _broker, review.Actor, capability, source?.OriginalScope, source?.OriginalRetain);
         }
         finally { review.Gate.Release(); }
     }
@@ -228,6 +274,27 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
             : _broker.RetryRejectedBeginAuditAsync(review.Authorization.RequestId, cancellationToken);
     }
 
+    public Task<HomePermissionOperationResult> RetrySaveDispatchAuditWithinOriginalSourceAsync(HomeNotesSaveReview review,
+        Action<Action> scope, Action<Task> retain, CancellationToken token = default)
+    {
+        DemandOriginalReview(review);
+        if (!review.BeginAttempted || review.Admission is not null)
+            return Task.FromResult(new HomePermissionOperationResult(false, "NOTES_DISPATCH_AUDIT_NOT_OWNED", "No original save dispatch audit is retained."));
+        return review.Capability is { } capability
+            ? _broker.RetryNotesRejectedClaimWithinOriginalSourceAsync(capability, scope, retain, token)
+            : _broker.RetryNotesRejectedBeginWithinOriginalSourceAsync(review.Authorization.RequestId, scope, retain, token);
+    }
+    public Task<HomePermissionOperationResult> RetryLibrarySnapshotDispatchAuditWithinOriginalSourceAsync(HomeNotesLibraryReadReview review,
+        Action<Action> scope, Action<Task> retain, CancellationToken token = default)
+    {
+        DemandOriginalReadReview(review);
+        if (!review.BeginAttempted || review.Admission is not null)
+            return Task.FromResult(new HomePermissionOperationResult(false, "NOTES_READ_DISPATCH_AUDIT_NOT_OWNED", "No original read dispatch audit is retained."));
+        return review.Capability is { } capability
+            ? _broker.RetryNotesRejectedClaimWithinOriginalSourceAsync(capability, scope, retain, token)
+            : _broker.RetryNotesRejectedBeginWithinOriginalSourceAsync(review.Authorization.RequestId, scope, retain, token);
+    }
+
     private void DemandOriginalReadReview(HomeNotesLibraryReadReview review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -240,6 +307,130 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
         ArgumentNullException.ThrowIfNull(review);
         if (!ReferenceEquals(review.Issuer, this) || !_notes.IsIssuedOriginalSaveIntent(review.Intent))
             throw new UnauthorizedAccessException("The Notes review belongs to a different original owner.");
+    }
+
+    private Task<AuthenticatedResourceActor?> ReadActorAsync(HomeNotesOriginalSource? source, CancellationToken token) => source is null
+        ? _profiles.GetCurrentAsync(token).AsTask()
+        : source.Read(() => _profiles.GetCurrentAsync(source.Scope, source.Retain, token).AsTask());
+    private Task<INotesOriginalStoreObservation> ObserveStoreAsync(HomeNotesOriginalSource? source, CancellationToken token) => source is null
+        ? _notes.ObserveOriginalStoreAsync(token).AsTask()
+        : source.Read(() => OriginalScopedNotes.ObserveOriginalStoreWithinOriginalSourceAsync(source.Scope, source.Retain, token).AsTask());
+    private Task<bool> IsStoreCurrentAsync(HomeNotesOriginalSource? source, INotesOriginalStoreObservation observed, CancellationToken token) => source is null
+        ? _notes.IsOriginalStoreObservationCurrentAsync(observed, token).AsTask()
+        : source.Read(() => OriginalScopedNotes.IsOriginalStoreObservationCurrentWithinOriginalSourceAsync(observed, source.Scope, source.Retain, token).AsTask());
+    private INotesOriginalScopedStoreSource OriginalScopedNotes => _notes as INotesOriginalScopedStoreSource
+        ?? throw new InvalidOperationException("The SAME original Notes metadata owner lacks scoped source custody.");
+    private Task<VerifiedResourceStoreOwnership?> ReadOwnershipAsync(HomeNotesOriginalSource? source, string id, CancellationToken token) => source is null
+        ? _ownership.GetVerifiedAsync(StoreKind, id, token).AsTask()
+        : source.Read(() => _ownership.GetVerifiedWithinOriginalSourceAsync(StoreKind, id, source.Scope, source.Retain, token).AsTask());
+    private Task<bool> IsOwnershipCurrentAsync(HomeNotesOriginalSource? source, VerifiedResourceStoreOwnership ownership,
+        AuthenticatedResourceActor actor, CancellationToken token) => source is null
+        ? _ownership.IsCurrentAsync(ownership, actor, token).AsTask()
+        : source.Read(() => _ownership.IsCurrentWithinOriginalSourceAsync(ownership, actor, source.Scope, source.Retain, token).AsTask());
+    private Task<HomePermissionAuthorization> ReadAuthorizationAsync(HomeNotesOriginalSource? source, string requestId, CancellationToken token) => source is null
+        ? _broker.GetAuthorizationAsync(requestId, token)
+        : source.Read(() => _permissions.GetImportAuthorizationWithinOriginalSourceAsync(requestId, source.Scope, source.Retain, token));
+    private async Task<HomePermissionAuthorization> AuthorizeReviewAsync(HomeNotesOriginalSource? source,
+        AuthenticatedResourceActor actor, string action, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
+        string preview, string? backupId, string sessionId, CancellationToken token)
+    {
+        if (source is null) return await _broker.AuthorizeForActorAsync(actor, TargetAppId, action, scopes, arguments,
+            preview, backupId, sessionId, token).ConfigureAwait(false);
+        var prepared = source.Invoke(() => _broker.PrepareReviewForActor(actor, TargetAppId, action, scopes,
+            arguments, preview, backupId, sessionId));
+        var observed = await source.Read(() => _broker.AuthorizePreparedReviewWithinOriginalSourceAsync(prepared,
+            source.Scope, source.Retain, token, originalPermissionSources: true)).ConfigureAwait(false);
+        if (observed.State != HomePreparedReviewState.RequestObserved || observed.Request is null)
+            throw new UnauthorizedAccessException("The original Notes review was not admitted by its actual Home sources.");
+        return await ReadAuthorizationAsync(source, prepared.RequestId, token).ConfigureAwait(false);
+    }
+    private Task<HomeResourceExecutionCapability?> BeginCapabilityAsync(HomeNotesOriginalSource? source, string requestId,
+        JsonElement arguments, CancellationToken token) => source is null
+        ? _broker.BeginExecutionCapabilityAsync(requestId, arguments, token)
+        : source.Read(() => _broker.BeginExecutionCapabilityWithinOriginalSourceAsync(requestId, arguments,
+            source.Scope, source.Retain, source.Scope, token, originalPermissionSources: true));
+    private Task<HomeResourceClaimResult> ClaimAsync(HomeNotesOriginalSource? source, HomeResourceExecutionCapability capability,
+        string action, IReadOnlyList<ResourceScope> scopes, JsonElement arguments, CancellationToken token) => source is null
+        ? _broker.ClaimExecutionObservedAsync(capability, TargetAppId, action, scopes, arguments, token)
+        : source.Read(() => _broker.ClaimExecutionWithinOriginalSourceAsync(capability, TargetAppId, action, scopes, arguments,
+            source.Scope, source.Retain, source.Scope, token, originalPermissionSources: true));
+    private static Task WaitGateAsync(HomeNotesOriginalSource? source, SemaphoreSlim gate, CancellationToken token) => source is null
+        ? gate.WaitAsync(token) : HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(source.Callbacks, gate, token);
+
+    public Task<HomePermissionAuthorization> GetLibrarySnapshotAuthorizationWithinOriginalSourceAsync(HomeNotesLibraryReadReview review,
+        Action<Action> scope, Action<Task> retain, CancellationToken token = default)
+    {
+        DemandOriginalReadReview(review);
+        return HomeNotesOriginalSource.RunAsync(scope, retain, source => ReadAuthorizationAsync(source, review.Authorization.RequestId, token));
+    }
+    public Task<HomePermissionAuthorization> GetSaveAuthorizationWithinOriginalSourceAsync(HomeNotesSaveReview review,
+        Action<Action> scope, Action<Task> retain, CancellationToken token = default)
+    {
+        DemandOriginalReview(review);
+        return HomeNotesOriginalSource.RunAsync(scope, retain, source => ReadAuthorizationAsync(source, review.Authorization.RequestId, token));
+    }
+}
+
+/// <summary>Finite original borrower callback and raw task custody, without content authority.</summary>
+internal sealed class HomeNotesOriginalSource
+{
+    internal HomeOwnershipOriginalSourceCallbacks Callbacks { get; }
+    internal Action<Action> OriginalScope { get; }
+    internal Action<Task> OriginalRetain { get; }
+    internal Action<Action> Scope => Callbacks.Run;
+    internal Action<Task> Retain => Callbacks.Retain;
+    private HomeNotesOriginalSource(Action<Action> scope, Action<Task> retain)
+    { OriginalScope = scope; OriginalRetain = retain; Callbacks = new(scope, retain); }
+    internal T Invoke<T>(Func<T> body) => Callbacks.Invoke(body);
+    internal async Task<T> Read<T>(Func<Task<T>> body)
+    {
+        Task<T>? actual = null; Exception? invocation = null, observed = null; T result = default!;
+        try
+        {
+            _ = Invoke(() =>
+            {
+                actual = body() ?? throw new InvalidOperationException("No original Notes Home task was returned.");
+                Retain(actual); return actual; // Capture precedes any external retainer/post-scope fault.
+            });
+        }
+        catch (Exception error) { invocation = error; }
+        if (actual is not null)
+            try { result = await actual.ConfigureAwait(false); }
+            catch (Exception error) { observed = error; }
+        if (invocation is null && actual?.IsCanceled == true && observed is OperationCanceledException)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(observed).Throw();
+        var failures = new List<Exception>();
+        if (invocation is not null) failures.Add(invocation);
+        if (actual?.Exception is { } group) failures.AddRange(group.InnerExceptions);
+        else if (observed is not null) failures.Add(observed);
+        if (failures.Count != 0)
+            throw new AggregateException("The actual original Notes Home callback or source failed.", failures);
+        return actual is null ? throw new InvalidOperationException("No original Notes Home task was captured.") : result;
+    }
+    internal static async Task<T> RunAsync<T>(Action<Action> scope, Action<Task> retain, Func<HomeNotesOriginalSource, Task<T>> body)
+    {
+        ArgumentNullException.ThrowIfNull(scope); ArgumentNullException.ThrowIfNull(retain);
+        var originals = new CloudflareOriginalTaskLedger();
+        var source = new HomeNotesOriginalSource(scope, raw => { originals.Track(raw); retain(raw); });
+        T result = default!; Task<T>? actualBody = null; Exception? primary = null;
+        try
+        {
+            actualBody = body(source) ?? throw new InvalidOperationException("No original Notes Home body task was returned.");
+            result = await actualBody.ConfigureAwait(false);
+        }
+        catch (Exception error) { primary = error; originals.Retain(error); }
+        await originals.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
+        foreach (var error in source.Callbacks.Errors) originals.Retain(error);
+        // Status of the exact retained body AND every captured child establishes genuine
+        // cancellation. A faulted raw Task carrying OCE, a synchronous finite callback OCE,
+        // or an independent post-scope/retainer fault can never take this branch.
+        if (actualBody?.IsCanceled == true && primary is OperationCanceledException &&
+            source.Callbacks.Errors.Length == 0 && originals.OriginalTasks.All(raw => !raw.IsFaulted) &&
+            originals.OriginalErrors.All(error => error is OperationCanceledException))
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
+        if (originals.OriginalErrors.Count != 0)
+            throw new AggregateException("The original Notes Home sources did not settle cleanly.", originals.OriginalErrors);
+        return result;
     }
 }
 
@@ -276,6 +467,8 @@ public sealed class HomeNotesSaveAdmission
     private readonly HomeResourceOperationBroker _broker;
     private readonly AuthenticatedResourceActor _actor;
     private readonly HomeResourceExecutionCapability _capability;
+    private readonly Action<Action>? _originalScope;
+    private readonly Action<Task>? _retain;
     private readonly SemaphoreSlim _completionGate = new(1, 1);
     private INotesOriginalSaveOutcome? _retainedOutcome;
     private int _captureAttempted;
@@ -283,9 +476,15 @@ public sealed class HomeNotesSaveAdmission
     internal HomeNotesSaveAdmission(INotesOriginalStoreSource source, INotesOriginalSaveIntent intent,
         FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
         HomeResourceStoreOwnershipAuthority ownership, HomeResourceOperationBroker broker,
-        AuthenticatedResourceActor actor, HomeResourceExecutionCapability capability)
+        AuthenticatedResourceActor actor, HomeResourceExecutionCapability capability,
+        Action<Action>? originalScope = null, Action<Task>? retain = null)
     { _source = source; _intent = intent; _store = store; _profiles = profiles; _ownership = ownership;
-        _broker = broker; _actor = actor; _capability = capability; }
+        _broker = broker; _actor = actor; _capability = capability; _originalScope = originalScope; _retain = retain; }
+
+    public ValueTask<bool> ValidateCommitFenceAsync(HomeClaimedResourceCommitFence fence, CancellationToken token = default) =>
+        _originalScope is null ? fence.ValidateAsync(token) : fence.ValidateWithinOriginalSourceAsync(_originalScope, _retain!, token);
+    public ValueTask DisposeCommitFenceAsync(HomeClaimedResourceCommitFence fence) =>
+        _originalScope is null ? fence.DisposeAsync() : fence.DisposeWithinOriginalSourceAsync(_originalScope, _retain!);
 
     public bool IsBoundToOriginalNotes(INotesOriginalStoreSource source, INotesOriginalSaveIntent intent) =>
         ReferenceEquals(_source, source) && ReferenceEquals(_intent, intent) &&
@@ -296,18 +495,27 @@ public sealed class HomeNotesSaveAdmission
     {
         if (!IsBoundToOriginalNotes(source, intent) || Interlocked.CompareExchange(ref _captureAttempted, 1, 0) != 0)
             return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
-        return HomeClaimedResourceCommitFence.CaptureNotesSaveAsync(_broker, _store, _profiles,
-            _ownership, source, intent, _capability, _actor, cancellationToken);
+        return _originalScope is null
+            ? HomeClaimedResourceCommitFence.CaptureNotesSaveAsync(_broker, _store, _profiles, _ownership,
+                source, intent, _capability, _actor, cancellationToken)
+            : HomeClaimedResourceCommitFence.CaptureNotesSaveWithinOriginalSourceAsync(_broker, _store, _profiles, _ownership,
+                source, intent, _capability, _actor, _originalScope, _retain!, cancellationToken);
     }
 
-    public async Task<HomePermissionOperationResult> CompleteObservedAsync(INotesOriginalStoreSource source,
-        INotesOriginalSaveOutcome outcome, CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> CompleteObservedAsync(INotesOriginalStoreSource source,
+        INotesOriginalSaveOutcome outcome, CancellationToken cancellationToken = default) => _originalScope is null
+        ? CompleteObservedCoreAsync(null, source, outcome, cancellationToken)
+        : HomeNotesOriginalSource.RunAsync(_originalScope, _retain!, callbacks => CompleteObservedCoreAsync(callbacks, source, outcome, cancellationToken));
+
+    private async Task<HomePermissionOperationResult> CompleteObservedCoreAsync(HomeNotesOriginalSource? callbacks, INotesOriginalStoreSource source,
+        INotesOriginalSaveOutcome outcome, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source); ArgumentNullException.ThrowIfNull(outcome);
         if (!ReferenceEquals(source, _source) || !ReferenceEquals(outcome.Intent, _intent) ||
             !source.IsIssuedOriginalSaveOutcome(outcome, _intent))
             return new(false, "NOTES_OUTCOME_NOT_OWNED", "Only the original repository's observed save outcome can complete this claim.");
-        await _completionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await (callbacks is null ? _completionGate.WaitAsync(cancellationToken)
+            : HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(callbacks.Callbacks, _completionGate, cancellationToken)).ConfigureAwait(false);
         try
         {
             if (_retainedOutcome is not null && !ReferenceEquals(_retainedOutcome, outcome))
@@ -325,17 +533,28 @@ public sealed class HomeNotesSaveAdmission
                 _ => new HomeExecutionOutcome(HomePermissionRequestState.PartiallyCompleted,
                     "NOTES_SAVE_UNCERTAIN", "The original Notes publication outcome is uncertain; preserve recovery and do not repeat the mutation.", affected)
             };
-            return await _broker.CompleteExecutionAsync(_capability, terminal, cancellationToken).ConfigureAwait(false);
+            return await (callbacks is null ? _broker.CompleteExecutionAsync(_capability, terminal, cancellationToken)
+                : callbacks.Read(() => _broker.CompleteSetupExecutionWithinOriginalSourceAsync(_capability, terminal, callbacks.Scope, callbacks.Retain, cancellationToken))).ConfigureAwait(false);
         }
         finally { _completionGate.Release(); }
     }
 
-    public async Task<HomePermissionOperationResult> RetryCompletionAuditAsync(INotesOriginalStoreSource source,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> RetryCompletionAuditAsync(INotesOriginalStoreSource source,
+        CancellationToken cancellationToken = default) => _originalScope is null
+        ? RetryCompletionAuditCoreAsync(null, source, cancellationToken)
+        : HomeNotesOriginalSource.RunAsync(_originalScope, _retain!, callbacks => RetryCompletionAuditCoreAsync(callbacks, source, cancellationToken));
+
+    private async Task<HomePermissionOperationResult> RetryCompletionAuditCoreAsync(HomeNotesOriginalSource? callbacks, INotesOriginalStoreSource source,
+        CancellationToken cancellationToken)
     {
+        if (callbacks is not null)
+            return _retainedOutcome is null
+                ? new(false, "NOTES_OUTCOME_NOT_RETAINED", "No original observed save outcome is retained for audit retry.")
+                : await CompleteObservedCoreAsync(callbacks, source, _retainedOutcome, cancellationToken).ConfigureAwait(false);
         if (!ReferenceEquals(source, _source))
             return new(false, "NOTES_OUTCOME_NOT_OWNED", "The original Notes owner is required.");
-        await _completionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await (callbacks is null ? _completionGate.WaitAsync(cancellationToken)
+            : HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(callbacks.Callbacks, _completionGate, cancellationToken)).ConfigureAwait(false);
         try
         {
             return _retainedOutcome is null
@@ -361,11 +580,14 @@ public sealed class HomeNotesSaveAdmission
 
 /// <summary>Lazy composition breaks the registered-resource/broker constructor cycle. The
 /// original host must provide the same retained owner; no request supplies this resolver.</summary>
-public sealed class HomeNotesResourceResolver(Func<HomeNotesResourceAdmissionSource> original) : ICanonicalResourceAccessResolver
+public sealed class HomeNotesResourceResolver(Func<HomeNotesResourceAdmissionSource> original) : ICanonicalResourceAccessResolver, IOriginalScopedCanonicalResourceAccessResolver
 {
     public string ResourceKind => HomeNotesResourceAdmissionSource.ScopeKind;
     public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId,
         ResourceScope scope, CancellationToken cancellationToken) => original().EvaluateAsync(actor, actionId, scope, cancellationToken);
+    public Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor, string actionId,
+        ResourceScope resource, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        original().EvaluateWithinOriginalSourceAsync(actor, actionId, resource, scope, retain, token);
 }
 
 /// <summary>One private original Home read review. Authorization fields are observations,
@@ -401,6 +623,8 @@ public sealed class HomeNotesLibraryReadAdmission
     private readonly HomeResourceOperationBroker _broker;
     private readonly AuthenticatedResourceActor _actor;
     private readonly HomeResourceExecutionCapability _capability;
+    private readonly Action<Action>? _originalScope;
+    private readonly Action<Task>? _retain;
     private readonly SemaphoreSlim _completionGate = new(1, 1);
     private INotesOriginalLibraryReadOutcome? _retainedOutcome;
     private int _captureAttempted;
@@ -410,26 +634,45 @@ public sealed class HomeNotesLibraryReadAdmission
 
     internal HomeNotesLibraryReadAdmission(INotesOriginalStoreSource source, INotesOriginalLibraryReadRequest request,
         FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
-        HomeResourceOperationBroker broker, AuthenticatedResourceActor actor, HomeResourceExecutionCapability capability)
+        HomeResourceOperationBroker broker, AuthenticatedResourceActor actor, HomeResourceExecutionCapability capability,
+        Action<Action>? originalScope = null, Action<Task>? retain = null)
     { _source = source; _request = request; _store = store; _profiles = profiles; _ownership = ownership;
-        _broker = broker; _actor = actor; _capability = capability; }
+        _broker = broker; _actor = actor; _capability = capability; _originalScope = originalScope; _retain = retain; }
+
+    public ValueTask<bool> ValidateCommitFenceAsync(HomeClaimedResourceCommitFence fence, CancellationToken token = default) =>
+        _originalScope is null ? fence.ValidateAsync(token) : fence.ValidateWithinOriginalSourceAsync(_originalScope, _retain!, token);
+    public ValueTask DisposeCommitFenceAsync(HomeClaimedResourceCommitFence fence) =>
+        _originalScope is null ? fence.DisposeAsync() : fence.DisposeWithinOriginalSourceAsync(_originalScope, _retain!);
 
     public bool IsBoundToOriginalNotes(INotesOriginalStoreSource source, INotesOriginalLibraryReadRequest request) =>
         ReferenceEquals(_source, source) && ReferenceEquals(_request, request) &&
         source.IsIssuedOriginalLibraryReadRequest(request) && _broker.CaptureClaimedAttestation(_capability) is not null;
 
-    public async ValueTask<HomeClaimedResourceCommitFence?> CaptureCommitFenceAsync(INotesOriginalStoreSource source,
-        INotesOriginalLibraryReadRequest request, CancellationToken cancellationToken = default)
+    public ValueTask<HomeClaimedResourceCommitFence?> CaptureCommitFenceAsync(INotesOriginalStoreSource source,
+        INotesOriginalLibraryReadRequest request, CancellationToken cancellationToken = default) => _originalScope is null
+        ? new(CaptureCommitFenceCoreAsync(null, source, request, cancellationToken))
+        : new(HomeNotesOriginalSource.RunAsync(_originalScope, _retain!, callbacks => CaptureCommitFenceCoreAsync(callbacks, source, request, cancellationToken)));
+
+    private async Task<HomeClaimedResourceCommitFence?> CaptureCommitFenceCoreAsync(HomeNotesOriginalSource? callbacks,
+        INotesOriginalStoreSource source, INotesOriginalLibraryReadRequest request, CancellationToken cancellationToken)
     {
         if (!IsBoundToOriginalNotes(source, request) || Interlocked.CompareExchange(ref _captureAttempted, 1, 0) != 0)
             return null;
         _observedAdmission = _broker.CaptureClaimedAttestation(_capability);
-        _observedOwnership = await _ownership.GetVerifiedAsync(HomeNotesResourceAdmissionSource.StoreKind,
-            request.StoreObservation.StoreIdentity.StoreId.ToString("D"), cancellationToken).ConfigureAwait(false);
+        _observedOwnership = callbacks is null
+            ? await _ownership.GetVerifiedAsync(HomeNotesResourceAdmissionSource.StoreKind,
+                request.StoreObservation.StoreIdentity.StoreId.ToString("D"), cancellationToken).ConfigureAwait(false)
+            : await callbacks.Read(() => _ownership.GetVerifiedWithinOriginalSourceAsync(HomeNotesResourceAdmissionSource.StoreKind,
+                request.StoreObservation.StoreIdentity.StoreId.ToString("D"), callbacks.Scope, callbacks.Retain, cancellationToken).AsTask()).ConfigureAwait(false);
         if (_observedAdmission is null || _observedOwnership?.Receipt is null ||
-            !await _ownership.IsCurrentAsync(_observedOwnership, _actor, cancellationToken).ConfigureAwait(false)) return null;
-        return await HomeClaimedResourceCommitFence.CaptureNotesLibraryReadAsync(_broker, _store, _profiles,
-            _ownership, source, request, _capability, _actor, cancellationToken).ConfigureAwait(false);
+            !await (callbacks is null ? _ownership.IsCurrentAsync(_observedOwnership, _actor, cancellationToken).AsTask()
+                : callbacks.Read(() => _ownership.IsCurrentWithinOriginalSourceAsync(_observedOwnership, _actor,
+                    callbacks.Scope, callbacks.Retain, cancellationToken).AsTask())).ConfigureAwait(false)) return null;
+        return await (callbacks is null
+            ? HomeClaimedResourceCommitFence.CaptureNotesLibraryReadAsync(_broker, _store, _profiles,
+                _ownership, source, request, _capability, _actor, cancellationToken)
+            : HomeClaimedResourceCommitFence.CaptureNotesLibraryReadWithinOriginalSourceAsync(_broker, _store, _profiles,
+                _ownership, source, request, _capability, _actor, callbacks.OriginalScope, callbacks.OriginalRetain, cancellationToken)).ConfigureAwait(false);
     }
 
     /// <summary>Narrows presentation of this completed read's already-returned metadata. This
@@ -445,11 +688,36 @@ public sealed class HomeNotesLibraryReadAdmission
             !source.IsIssuedOriginalLibraryReadOutcome(outcome, request) || Volatile.Read(ref _completionAudited) != 1 ||
             _observedAdmission is null || _observedOwnership?.Receipt is null)
             return ValueTask.FromResult<IHomeLocalOperationLease?>(null);
-        return _store.AcquireLocalOperationLeaseCoreAsync(_profiles, _actor, new ObservedSnapshotGuard(this), cancellationToken);
+        return _originalScope is null
+            ? _store.AcquireLocalOperationLeaseCoreAsync(_profiles, _actor, new ObservedSnapshotGuard(this), cancellationToken)
+            : new(CaptureScopedObservedLeaseAsync(cancellationToken));
     }
 
-    private sealed class ObservedSnapshotGuard(HomeNotesLibraryReadAdmission original) : IHomeStateCommitActorGuard
+    private async Task<IHomeLocalOperationLease?> CaptureScopedObservedLeaseAsync(CancellationToken token)
     {
+        var actual = await _store.AcquireLocalOperationLeaseCoreAsync(_profiles, _actor, new ObservedSnapshotGuard(this),
+            _originalScope!, _retain!, token).ConfigureAwait(false);
+        if (actual is null) return null;
+        if (actual is IHomeOriginalScopedLocalOperationLeaseCleanup original)
+            return new ObservedScopedLease(original, _originalScope!, _retain!);
+        // The owning store is concrete and issues a scoped lease. A changed producer is
+        // refused, and its acquired actual resource is still independently released.
+        await actual.DisposeAsync().ConfigureAwait(false);
+        throw new InvalidOperationException("The actual Home snapshot lease lacks original scoped check/cleanup custody.");
+    }
+
+    private sealed class ObservedScopedLease(IHomeOriginalScopedLocalOperationLeaseCleanup original,
+        Action<Action> scope, Action<Task> retain) : IHomeLocalOperationLease
+    {
+        public ValueTask<bool> IsCurrentAsync(CancellationToken token = default) => original.IsCurrentAsync(scope, retain, token);
+        public ValueTask DisposeAsync() => original.DisposeWithinOriginalSourceAsync(scope, retain);
+    }
+
+    private sealed class ObservedSnapshotGuard(HomeNotesLibraryReadAdmission original) : IHomeOriginalScopedStateCommitActorGuard
+    {
+        public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor actor,
+            HomeStateCommitPhase phase, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+            CheckAsync(state, actor, phase, token); // Pure held-state/issuer comparison; invokes no external producer.
         public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor actor,
             HomeStateCommitPhase phase, CancellationToken cancellationToken)
         {
@@ -460,14 +728,20 @@ public sealed class HomeNotesLibraryReadAdmission
         }
     }
 
-    public async Task<HomePermissionOperationResult> CompleteObservedAsync(INotesOriginalStoreSource source,
-        INotesOriginalLibraryReadOutcome outcome, CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> CompleteObservedAsync(INotesOriginalStoreSource source,
+        INotesOriginalLibraryReadOutcome outcome, CancellationToken cancellationToken = default) => _originalScope is null
+        ? CompleteObservedCoreAsync(null, source, outcome, cancellationToken)
+        : HomeNotesOriginalSource.RunAsync(_originalScope, _retain!, callbacks => CompleteObservedCoreAsync(callbacks, source, outcome, cancellationToken));
+
+    private async Task<HomePermissionOperationResult> CompleteObservedCoreAsync(HomeNotesOriginalSource? callbacks, INotesOriginalStoreSource source,
+        INotesOriginalLibraryReadOutcome outcome, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source); ArgumentNullException.ThrowIfNull(outcome);
         if (!ReferenceEquals(source, _source) || !ReferenceEquals(outcome.Request, _request) ||
             !source.IsIssuedOriginalLibraryReadOutcome(outcome, _request))
             return new(false, "NOTES_READ_OUTCOME_NOT_OWNED", "Only the original repository's observed library read outcome can complete this claim.");
-        await _completionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await (callbacks is null ? _completionGate.WaitAsync(cancellationToken)
+            : HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(callbacks.Callbacks, _completionGate, cancellationToken)).ConfigureAwait(false);
         try
         {
             if (_retainedOutcome is not null && !ReferenceEquals(_retainedOutcome, outcome))
@@ -484,19 +758,30 @@ public sealed class HomeNotesLibraryReadAdmission
                     "The original Notes owner observed its reviewed library snapshot without recovery writes.", affected)
                 : new HomeExecutionOutcome(HomePermissionRequestState.Failed, "NOTES_READ_REFUSED",
                     "The original Notes owner did not return a library snapshot; any recovery needs separate authority.", []);
-            var completed = await _broker.CompleteExecutionAsync(_capability, terminal, cancellationToken).ConfigureAwait(false);
+            var completed = await (callbacks is null ? _broker.CompleteExecutionAsync(_capability, terminal, cancellationToken)
+                : callbacks.Read(() => _broker.CompleteSetupExecutionWithinOriginalSourceAsync(_capability, terminal, callbacks.Scope, callbacks.Retain, cancellationToken))).ConfigureAwait(false);
             if (completed.Succeeded) Volatile.Write(ref _completionAudited, 1);
             return completed;
         }
         finally { _completionGate.Release(); }
     }
 
-    public async Task<HomePermissionOperationResult> RetryCompletionAuditAsync(INotesOriginalStoreSource source,
-        CancellationToken cancellationToken = default)
+    public Task<HomePermissionOperationResult> RetryCompletionAuditAsync(INotesOriginalStoreSource source,
+        CancellationToken cancellationToken = default) => _originalScope is null
+        ? RetryCompletionAuditCoreAsync(null, source, cancellationToken)
+        : HomeNotesOriginalSource.RunAsync(_originalScope, _retain!, callbacks => RetryCompletionAuditCoreAsync(callbacks, source, cancellationToken));
+
+    private async Task<HomePermissionOperationResult> RetryCompletionAuditCoreAsync(HomeNotesOriginalSource? callbacks, INotesOriginalStoreSource source,
+        CancellationToken cancellationToken)
     {
+        if (callbacks is not null)
+            return _retainedOutcome is null
+                ? new(false, "NOTES_OUTCOME_NOT_RETAINED", "No original observed read outcome is retained for audit retry.")
+                : await CompleteObservedCoreAsync(callbacks, source, _retainedOutcome, cancellationToken).ConfigureAwait(false);
         if (!ReferenceEquals(source, _source))
             return new(false, "NOTES_READ_OUTCOME_NOT_OWNED", "The original Notes owner is required.");
-        await _completionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await (callbacks is null ? _completionGate.WaitAsync(cancellationToken)
+            : HomeResourceOperationBroker.WaitColdProjectBrokerGateAsync(callbacks.Callbacks, _completionGate, cancellationToken)).ConfigureAwait(false);
         try
         {
             if (_retainedOutcome is null)
@@ -516,6 +801,13 @@ public sealed class HomeNotesLibraryReadAdmission
 // reclassified as an uncompleted execution capability or used to admit new content IO.
 public sealed partial class HomeResourceOperationBroker
 {
+    internal Task<HomePermissionOperationResult> RetryNotesRejectedClaimWithinOriginalSourceAsync(HomeResourceExecutionCapability capability,
+        Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        RunOriginalSetupCoreEnvelopeAsync(scope, retain, source => RetryRejectedClaimOriginalSetupCoreAsync(capability, token, source));
+    internal Task<HomePermissionOperationResult> RetryNotesRejectedBeginWithinOriginalSourceAsync(string requestId,
+        Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        RunOriginalSetupCoreEnvelopeAsync(scope, retain, source => RetryRejectedBeginOriginalSetupCoreAsync(requestId, token, source));
+
     internal bool IsObservedNotesReadCurrentInState(HomeClaimedResourceAttestation original,
         AuthenticatedResourceActor actor, HomeCoreStoredState actualState)
     {

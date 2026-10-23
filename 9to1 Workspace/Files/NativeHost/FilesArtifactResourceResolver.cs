@@ -158,7 +158,8 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         ResourceScope scope, CancellationToken cancellationToken) => EvaluateCoreAsync(actor, actionId, scope, cancellationToken, null);
 
     private async ValueTask<ResourceAccessDecision> EvaluateCoreAsync(AuthenticatedResourceActor actor, string actionId,
-        ResourceScope scope, CancellationToken cancellationToken, IFilesProvider? originalProvider, Func<CancellationToken, ValueTask<bool>>? originalCurrent = null, Guid? originalStoreId = null)
+        ResourceScope scope, CancellationToken cancellationToken, IFilesProvider? originalProvider, Func<CancellationToken, ValueTask<bool>>? originalCurrent = null, Guid? originalStoreId = null,
+        FilesOriginalReadSourceScope? originalSource = null, IReadOnlyDictionary<string, HostedItemId>? originalFolders = null)
     {
         ResourceAccessDecision Deny(string code) => new(false, code, actor.ActorId, scope.Revision, actor.OrganisationId);
         if (scope.Kind != ResourceKind || !Guid.TryParse(scope.Id, out var id) || id == Guid.Empty || actor.OrganisationId is not null)
@@ -195,12 +196,16 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         FilesResult<HostedItemMetadata> result;
         if (trashRead || trashRestore)
         {
+            if (originalSource is not null) throw new NotSupportedException("The original scoped Files trash producer is unavailable.");
             if (provider is not DurableDriveProvider durableTrash) return Deny("FilesTrashUnavailable");
             result = originalStoreId is { } trashStore
                 ? await durableTrash.GetTrashedForOriginalStoreAsync(trashStore, new(id), cancellationToken).ConfigureAwait(false)
                 : await durableTrash.GetTrashedAsync(new(id), cancellationToken).ConfigureAwait(false);
         }
-        else result = originalStoreId is { } store
+        else result = originalSource is not null && originalStoreId is { } scopedStore
+            ? await originalSource.Observe(() => ((DurableDriveProvider)provider).GetForOriginalStoreAsync(scopedStore,
+                new(id), cancellationToken, originalSource.OriginalSynchronousScope, originalSource.RetainOriginalTask)).ConfigureAwait(false)
+            : originalStoreId is { } store
             ? await ((DurableDriveProvider)provider).GetForOriginalStoreAsync(store, new(id), cancellationToken).ConfigureAwait(false)
             : await provider.GetAsync(new(id), cancellationToken).ConfigureAwait(false);
         if (originalCurrent is not null && !await originalCurrent(cancellationToken).ConfigureAwait(false)) return Deny("FilesOriginalReadChanged");
@@ -215,7 +220,10 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         if (sitesWrite || pictureImport || ((pictureExport || pictureCopy) && scope.Access == ResourceAccess.Write))
         {
             // This folder comes from the verified host configuration, never from caller arguments.
-            var configured = _appFolders is null ? null : await _appFolders(actor, pictureExport || pictureImport || pictureCopy ? "picture" : "sites", cancellationToken).ConfigureAwait(false);
+            var folderApp = pictureExport || pictureImport || pictureCopy ? "picture" : "sites";
+            HostedItemId? configured = originalSource is not null
+                ? originalFolders is not null && originalFolders.TryGetValue(folderApp, out var originalFolder) ? originalFolder : null
+                : _appFolders is null ? null : await _appFolders(actor, folderApp, cancellationToken).ConfigureAwait(false);
             if (item.Kind != HostedItemKind.Folder || configured != item.Id)
                 return Deny("FilesAppFolderDenied");
             return new(true, "Allowed", actor.ActorId, revision, null);
@@ -236,7 +244,10 @@ public sealed partial class FilesArtifactResourceResolver : IOriginalCanonicalRe
         if (!creating)
         {
             if (provider is not DurableDriveProvider durable) return Deny("FilesOwningAppUnavailable");
-            var artifact = originalStoreId is { } originalStore
+            var artifact = originalSource is not null && originalStoreId is { } scopedArtifactStore
+                ? await originalSource.Observe(() => durable.GetArtifactForOriginalStoreAsync(scopedArtifactStore, item.Id,
+                    item.CurrentRevisionId, cancellationToken, originalSource.OriginalSynchronousScope, originalSource.RetainOriginalTask)).ConfigureAwait(false)
+                : originalStoreId is { } originalStore
                 ? await durable.GetArtifactForOriginalStoreAsync(originalStore, item.Id, item.CurrentRevisionId, cancellationToken).ConfigureAwait(false)
                 : await durable.GetArtifactAsync(item.Id, cancellationToken).ConfigureAwait(false);
             if (originalCurrent is not null && !await originalCurrent(cancellationToken).ConfigureAwait(false)) return Deny("FilesOriginalReadChanged");

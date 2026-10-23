@@ -13,7 +13,7 @@ namespace Haven.Infrastructure;
 /// <summary>Original Notes store metadata under the SAME repository semaphore and physical
 /// .repository.lock used by ordinary Notes transactions. No content authority is minted here.
 /// The first physical implementation is Linux; unsupported systems fail explicitly.</summary>
-public sealed partial class NotesRepository : INotesOriginalStoreSource
+public sealed partial class NotesRepository : INotesOriginalScopedStoreSource, IHomeOriginalScopedResourceStoreIdentitySource
 {
     private const string OriginalIdentityLeaf = ".store-identity.json";
     private sealed record OriginalIdentityDocument(int SchemaVersion, Guid StoreId, DateTimeOffset CreatedAtUtc);
@@ -126,58 +126,229 @@ public sealed partial class NotesRepository : INotesOriginalStoreSource
             && current.File == original.File;
     }
 
-    private async Task<OriginalObservation> ObserveOriginalStoreCoreAsync(bool initialise, CancellationToken token)
+    private sealed record OriginalSetupInspection(NotesRepository Issuer, NotesOriginalStoreSetupState State,
+        INotesOriginalStoreObservation? Observation, string Code, string Message) : INotesOriginalStoreSetupInspection;
+
+    public bool IsIssuedOriginalSetupInspection(INotesOriginalStoreSetupInspection inspection) =>
+        inspection is OriginalSetupInspection actual && ReferenceEquals(actual.Issuer, this);
+
+    public ValueTask<INotesOriginalStoreSetupInspection> InspectOriginalStoreSetupWithinOriginalSourceAsync(
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default)
+    {
+        var source = new OriginalMetadataSource(this, scope, retain);
+        return new(source.RunAsync<INotesOriginalStoreSetupInspection>(async () =>
+        {
+            // The probe reads no document and creates no directory, lock or identity.
+            // Expected physical refusals are classified INSIDE the finite source callback;
+            // a caller callback failure remains an original fault, never a setup result.
+            var probe = source.Invoke(() => ProbeOriginalStoreSetup(cancellationToken));
+            if (probe.State != NotesOriginalStoreSetupState.Available) return probe;
+            var observed = await ObserveOriginalStoreCoreAsync(false, cancellationToken, source).ConfigureAwait(false);
+            return new OriginalSetupInspection(this, NotesOriginalStoreSetupState.Available, observed,
+                "NotesIdentityAvailable", "The original local library identity is available.");
+        }));
+    }
+
+    private OriginalSetupInspection ProbeOriginalStoreSetup(CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        OriginalSetupInspection Result(NotesOriginalStoreSetupState state, string code, string message) =>
+            new(this, state, null, code, message);
+        if (!OperatingSystem.IsLinux() || !BitConverter.IsLittleEndian ||
+            RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
+            return Result(NotesOriginalStoreSetupState.Unsupported, "NotesPhysicalBoundaryUnsupported",
+                "This platform does not yet provide the required local library storage boundary.");
+        try
+        {
+            var dataRoot = Path.GetDirectoryName(Path.GetDirectoryName(_root)!)!;
+            using var root = OriginalNotesRoot.Open(dataRoot, false);
+            using var identity = root.OpenIdentity(false, out _);
+            root.DemandCurrent();
+            return Result(NotesOriginalStoreSetupState.Available, "NotesIdentityPresent", "Inspect the original local library.");
+        }
+        catch (IOException error) when (_originalStoreBaseline is null &&
+            (error is DirectoryNotFoundException or FileNotFoundException || error.InnerException is Win32Exception { NativeErrorCode: 2 }))
+        {
+            return Result(NotesOriginalStoreSetupState.MissingIdentity, "NotesIdentitySetupRequired",
+                "Set up this device's library or review an existing library. Nothing has been imported.");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Result(NotesOriginalStoreSetupState.Inaccessible, "NotesOriginalStoreInaccessible",
+                "The original local library is not accessible to this operating-system user. Preserve it and repair access.");
+        }
+        catch (IOException)
+        {
+            return Result(NotesOriginalStoreSetupState.RecoveryRequired, "NotesOriginalStoreRecoveryRequired",
+                "The original local library needs recovery. Its files and ownership have been preserved.");
+        }
+    }
+
+    public ValueTask<ResourceStoreIdentity> GetStoreIdentityWithinOriginalSourceAsync(
+        Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        new(ReadOriginalMetadataAsync(scope, retain, async source =>
+            (await ObserveOriginalStoreCoreAsync(false, token, source).ConfigureAwait(false)).StoreIdentity));
+
+    public ValueTask<ResourceStoreIdentity> InitialiseOriginalStoreIdentityWithinOriginalSourceAsync(
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        new(ReadOriginalMetadataAsync(scope, retain, async source =>
+            (await ObserveOriginalStoreCoreAsync(true, cancellationToken, source).ConfigureAwait(false)).StoreIdentity));
+
+    public ValueTask<INotesOriginalStoreObservation> ObserveOriginalStoreWithinOriginalSourceAsync(
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        new(ReadOriginalMetadataAsync<INotesOriginalStoreObservation>(scope, retain, async source =>
+            await ObserveOriginalStoreCoreAsync(false, cancellationToken, source).ConfigureAwait(false)));
+
+    public ValueTask<bool> IsOriginalStoreObservationCurrentWithinOriginalSourceAsync(INotesOriginalStoreObservation observation,
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default) =>
+        new(ReadOriginalMetadataAsync(scope, retain, async source =>
+        {
+            if (observation is not OriginalObservation original || !ReferenceEquals(original.Issuer, this)) return false;
+            var current = await ObserveOriginalStoreCoreAsync(false, cancellationToken, source).ConfigureAwait(false);
+            return current.StoreIdentity.StoreId == original.StoreIdentity.StoreId && current.Revision == original.Revision &&
+                current.IsEmpty == original.IsEmpty && SameNode(current.CanonicalLock, original.CanonicalLock) &&
+                SameNode(current.DataRoot, original.DataRoot) && SameNode(current.NotesRoot, original.NotesRoot) && current.File == original.File;
+        }));
+
+    private Task<T> ReadOriginalMetadataAsync<T>(Action<Action> scope, Action<Task> retain,
+        Func<OriginalMetadataSource, Task<T>> body)
+    {
+        var source = new OriginalMetadataSource(this, scope, retain);
+        return source.RunAsync(() => body(source));
+    }
+
+    // Finite source/task custody shared by metadata inspection and explicit identity
+    // creation. This is a producer boundary, not a second application state machine.
+    internal sealed class OriginalMetadataSource
+    {
+        private readonly CloudflareOriginalTaskLedger _originals = new();
+        private readonly Action<Task> _retain;
+        internal OriginalMetadataSource(NotesRepository owner, Action<Action> scope, Action<Task> retain)
+        {
+            ArgumentNullException.ThrowIfNull(scope); ArgumentNullException.ThrowIfNull(retain);
+            _retain = retain; _originals.BindOriginalOwner(owner);
+            _originals.BindOriginalCallerCallback(body =>
+            {
+                int active = 1, used = 0, thread = Environment.CurrentManagedThreadId;
+                Exception? originalFailure = null;
+                try
+                {
+                    scope(() =>
+                    {
+                        if (Volatile.Read(ref active) != 1 || Environment.CurrentManagedThreadId != thread ||
+                            Interlocked.Exchange(ref used, 1) != 0)
+                        {
+                            var refusal = new InvalidOperationException("The original Notes metadata callback is inactive, foreign-thread or consumed.");
+                            _originals.Retain(refusal); throw refusal;
+                        }
+                        try { body(); }
+                        catch (Exception cause) { originalFailure = cause; _originals.Retain(cause); throw; }
+                    });
+                    if (Volatile.Read(ref used) == 0) throw new InvalidOperationException("The original Notes metadata callback was not invoked.");
+                    if (originalFailure is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(originalFailure).Throw();
+                }
+                finally { Interlocked.Exchange(ref active, 0); }
+            });
+        }
+        internal T Invoke<T>(Func<T> body) => _originals.Invoke(body);
+        internal void Retain(Exception error) => _originals.Retain(error);
+        internal void Run(Action body) => Invoke(() => { body(); return true; });
+        internal Task<T> RunAsync<T>(Func<Task<T>> body) => _originals.RunToOriginalSettlementAsync(body);
+        internal async Task<T> CaptureAsync<T>(Func<Task<T>> acquire, Action<T> capture)
+        {
+            Task<T>? actual = null; T value = default!;
+            try { _ = _originals.Invoke(() => { actual = acquire(); _originals.Track(actual); _retain(actual); return actual; }); }
+            catch (Exception error) { _originals.Retain(error); }
+            if (actual is not null)
+                try { value = await _originals.AwaitAsync(actual).ConfigureAwait(false); capture(value); }
+                catch (Exception error) { _originals.Capture(actual, error); }
+            Throw();
+            return actual is null ? throw new InvalidOperationException("No original Notes acquisition task was captured.") : value;
+        }
+        internal async Task WaitAsync(Func<Task> acquire, Action? acquired = null)
+        {
+            Task? actual = null;
+            try { _ = _originals.Invoke(() => { actual = acquire(); _originals.Track(actual); _retain(actual); return actual; }); }
+            catch (Exception error) { _originals.Retain(error); }
+            if (actual is not null)
+                try { await _originals.AwaitAsync(actual).ConfigureAwait(false); acquired?.Invoke(); }
+                catch (Exception error) { _originals.Capture(actual, error); }
+            Throw();
+            if (actual is null) throw new InvalidOperationException("No original Notes source task was captured.");
+        }
+        private void Throw()
+        {
+            if (_originals.OriginalErrors.Count != 0)
+                throw new AggregateException("The original Notes metadata source or finite callback failed.", _originals.OriginalErrors);
+        }
+    }
+
+    private async Task<OriginalObservation> ObserveOriginalStoreCoreAsync(bool initialise, CancellationToken token,
+        OriginalMetadataSource? source = null)
     {
         if (!OperatingSystem.IsLinux() || !BitConverter.IsLittleEndian ||
             RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
             throw new PlatformNotSupportedException("The original Notes physical identity boundary requires the supported Linux backend.");
-        await _gate.WaitAsync(token).ConfigureAwait(false);
+        T Read<T>(Func<T> body) => source is null ? body() : source.Invoke(body);
+        void Run(Action body) { if (source is null) body(); else source.Run(body); }
+        bool entered = false; OriginalNotesRoot? root = null; FileStream? lease = null, file = null;
         try
         {
-            token.ThrowIfCancellationRequested();
-            // Bind the constructor-captured canonical Notes root, never a later mutable IAppPaths value.
+            if (source is null) { await _gate.WaitAsync(token).ConfigureAwait(false); entered = true; }
+            else await source.WaitAsync(() => _gate.WaitAsync(token), () => entered = true).ConfigureAwait(false);
+            Run(token.ThrowIfCancellationRequested);
             var originalDataRoot = Path.GetDirectoryName(Path.GetDirectoryName(_root)!)!;
-            using var root = OriginalNotesRoot.Open(originalDataRoot, initialise);
-            await using var lease = await root.AcquireCanonicalRepositoryLockAsync(token).ConfigureAwait(false);
-            root.DemandCurrent();
+            if (source is null) root = OriginalNotesRoot.Open(originalDataRoot, initialise);
+            else await source.CaptureAsync(() => Task.FromResult(OriginalNotesRoot.Open(originalDataRoot, initialise)),
+                value => root = value).ConfigureAwait(false);
+            var actualRoot = root!;
+            if (source is null) lease = await actualRoot.AcquireCanonicalRepositoryLockAsync(token).ConfigureAwait(false);
+            else await source.CaptureAsync(() => actualRoot.AcquireCanonicalRepositoryLockAsync(token, source),
+                value => lease = value).ConfigureAwait(false);
+            Run(actualRoot.DemandCurrent);
             if (_originalStoreBaseline is { } baseline &&
-                (!SameNode(root.DataIdentity, baseline.DataRoot) || !SameNode(root.NotesIdentity, baseline.NotesRoot) ||
-                 !SameNode(root.CanonicalLockIdentity!, baseline.CanonicalLock)))
+                (!SameNode(actualRoot.DataIdentity, baseline.DataRoot) || !SameNode(actualRoot.NotesIdentity, baseline.NotesRoot) ||
+                 !SameNode(actualRoot.CanonicalLockIdentity!, baseline.CanonicalLock)))
                 throw new IOException("The original Notes directory identity changed; preserve the store for recovery.");
-            var empty = root.IsContentEmpty();
-            using var file = root.OpenIdentity(initialise && _originalStoreBaseline is null, out var created);
+            var empty = Read(actualRoot.IsContentEmpty);
+            bool created = false;
+            if (source is null) file = actualRoot.OpenIdentity(initialise && _originalStoreBaseline is null, out created);
+            else await source.CaptureAsync(() =>
+            {
+                var opened = actualRoot.OpenIdentity(initialise && _originalStoreBaseline is null, out var wasCreated);
+                return Task.FromResult((File: opened, Created: wasCreated));
+            }, value => { file = value.File; created = value.Created; }).ConfigureAwait(false);
+            var actualFile = file!;
             if (created)
             {
                 var identity = new OriginalIdentityDocument(1, Guid.NewGuid(), DateTimeOffset.UtcNow);
                 var bytes = JsonSerializer.SerializeToUtf8Bytes(identity, JsonOptions);
-                await file.WriteAsync(bytes, token).ConfigureAwait(false);
-                file.Flush(flushToDisk: true);
-                root.Flush();
-                _identityCreatedInThisOwner = identity.StoreId;
-                _identityCreatedOnEmptyRoot = empty;
+                if (source is null) await actualFile.WriteAsync(bytes, token).ConfigureAwait(false);
+                else await source.WaitAsync(() => actualFile.WriteAsync(bytes, token).AsTask()).ConfigureAwait(false);
+                Run(() => { actualFile.Flush(flushToDisk: true); actualRoot.Flush(); });
+                _identityCreatedInThisOwner = identity.StoreId; _identityCreatedOnEmptyRoot = empty;
             }
-            var before = OriginalNotesRoot.Stat(file.SafeFileHandle);
-            OriginalNotesRoot.DemandPrivateRegular(before);
+            var before = Read(() => OriginalNotesRoot.Stat(actualFile.SafeFileHandle));
+            Run(() => OriginalNotesRoot.DemandPrivateRegular(before));
             if (before.Size is 0 or > 4096) throw new InvalidDataException("The Notes store identity has an invalid size.");
-            file.Position = 0;
+            Run(() => actualFile.Position = 0);
             var buffer = new byte[checked((int)before.Size)];
-            await file.ReadExactlyAsync(buffer, token).ConfigureAwait(false);
-            var after = OriginalNotesRoot.Stat(file.SafeFileHandle);
-            if (before != after || root.ReadIdentityVersion() != after)
+            if (source is null) await actualFile.ReadExactlyAsync(buffer, token).ConfigureAwait(false);
+            else await source.WaitAsync(() => actualFile.ReadExactlyAsync(buffer, token).AsTask()).ConfigureAwait(false);
+            var after = Read(() => OriginalNotesRoot.Stat(actualFile.SafeFileHandle));
+            if (before != after || Read(actualRoot.ReadIdentityVersion) != after)
                 throw new IOException("The original Notes identity changed while it was read.");
-            root.DemandCurrent();
+            Run(actualRoot.DemandCurrent);
             OriginalIdentityDocument stored;
             try
             {
                 using var json = JsonDocument.Parse(buffer);
-                if (json.RootElement.ValueKind != JsonValueKind.Object)
-                    throw new JsonException("The store identity must be an object.");
+                if (json.RootElement.ValueKind != JsonValueKind.Object) throw new JsonException("The store identity must be an object.");
                 var names = json.RootElement.EnumerateObject().Select(property => property.Name).ToArray();
                 if (names.Length != 3 || names.Distinct(StringComparer.Ordinal).Count() != 3 ||
                     !names.Order(StringComparer.Ordinal).SequenceEqual(new[] { "createdAtUtc", "schemaVersion", "storeId" }))
                     throw new JsonException("Unknown or repeated store identity field.");
-                stored = json.RootElement.Deserialize<OriginalIdentityDocument>(JsonOptions)
-                    ?? throw new JsonException("No store identity.");
+                stored = json.RootElement.Deserialize<OriginalIdentityDocument>(JsonOptions) ?? throw new JsonException("No store identity.");
                 if (stored.SchemaVersion != 1 || stored.StoreId == Guid.Empty || stored.CreatedAtUtc.Offset != TimeSpan.Zero)
                     throw new JsonException("Invalid store identity.");
             }
@@ -189,11 +360,24 @@ public sealed partial class NotesRepository : INotesOriginalStoreSource
             var observation = new OriginalObservation(this,
                 new(stored.SchemaVersion, stored.StoreId, stored.CreatedAtUtc,
                     _identityCreatedInThisOwner == stored.StoreId && _identityCreatedOnEmptyRoot),
-                fingerprint, empty, root.DataIdentity, root.NotesIdentity, after, root.CanonicalLockIdentity!);
+                fingerprint, empty, actualRoot.DataIdentity, actualRoot.NotesIdentity, after, actualRoot.CanonicalLockIdentity!);
             _originalStoreBaseline ??= observation;
             return observation;
         }
-        finally { _gate.Release(); }
+        catch (Exception error) { source?.Retain(error); throw; }
+        finally
+        {
+            // Physical resources acquired before a post-callback fault are retained above
+            // and released here, independently of whether the caller scope is still live.
+            var cleanup = new List<Exception>();
+            void Release(Action body)
+            { try { body(); } catch (Exception error) { cleanup.Add(error); source?.Retain(error); } }
+            if (file is not null) Release(file.Dispose);
+            if (lease is not null) Release(lease.Dispose);
+            if (root is not null) Release(root.Dispose);
+            if (entered) Release(() => _gate.Release());
+            if (cleanup.Count != 0) throw new AggregateException("Original Notes metadata cleanup failed.", cleanup);
+        }
     }
 
     private void DemandOriginalObservationWithinTransaction(OriginalNotesRoot root, OriginalObservation observed)
@@ -302,7 +486,9 @@ public sealed partial class NotesRepository : INotesOriginalStoreSource
             using var actual = OpenRelative(_notes, OriginalIdentityLeaf, ReadOnly | NonBlock | NoFollow | CloseOnExec);
             var identity = Stat(actual); DemandPrivateRegular(identity); return identity;
         }
-        internal async Task<FileStream> AcquireCanonicalRepositoryLockAsync(CancellationToken token)
+        internal Task<FileStream> AcquireCanonicalRepositoryLockAsync(CancellationToken token) =>
+            AcquireCanonicalRepositoryLockAsync(token, null);
+        internal async Task<FileStream> AcquireCanonicalRepositoryLockAsync(CancellationToken token, OriginalMetadataSource? source)
         {
             // flock is the same physical lock used by FileShare.None in the existing Unix
             // Notes transaction. No second lock file or independent storage authority.
@@ -310,30 +496,41 @@ public sealed partial class NotesRepository : INotesOriginalStoreSource
             while (true)
             {
                 token.ThrowIfCancellationRequested();
-                var handle = OpenRelative(_notes, ".repository.lock", ReadWrite | Create | NonBlock | NoFollow | CloseOnExec, 384);
+                FileStream? acquired = null;
+                FileStream? Attempt()
+                {
+                    var handle = OpenRelative(_notes, ".repository.lock", ReadWrite | Create | NonBlock | NoFollow | CloseOnExec, 384);
+                    try
+                    {
+                        var identity = Stat(handle);
+                        if ((identity.Mode & 0xf000) != 0x8000 || identity.User != NativeGetEffectiveUser() || identity.Links != 1)
+                            throw new UnauthorizedAccessException("The original Notes repository lock is not an owned regular file.");
+                        if (NativeFlock(Fd(handle), 2 | 4) == 0)
+                        {
+                            using var probe = OpenRelative(_notes, ".repository.lock", ReadWrite | NonBlock | NoFollow | CloseOnExec);
+                            if (!SameNode(Stat(probe), identity))
+                                throw new IOException("The original Notes repository lock was replaced while being acquired.");
+                            if (NativeFlock(Fd(probe), 2 | 4) == 0)
+                                throw new IOException("Original Notes storage did not enforce its canonical process lock.");
+                            if (Marshal.GetLastPInvokeError() != 11) throw NativeFailure("Verify original Notes lock");
+                            CanonicalLockIdentity = identity; DemandCurrent();
+                            return new FileStream(handle, FileAccess.ReadWrite, 1, isAsync: false);
+                        }
+                        if (Marshal.GetLastPInvokeError() != 11) throw NativeFailure("Acquire original Notes lock");
+                    }
+                    catch { handle.Dispose(); throw; }
+                    handle.Dispose(); return null;
+                }
                 try
                 {
-                    var identity = Stat(handle);
-                    if ((identity.Mode & 0xf000) != 0x8000 || identity.User != NativeGetEffectiveUser() || identity.Links != 1)
-                        throw new UnauthorizedAccessException("The original Notes repository lock is not an owned regular file.");
-                    if (NativeFlock(Fd(handle), 2 | 4) == 0)
-                    {
-                        using var probe = OpenRelative(_notes, ".repository.lock", ReadWrite | NonBlock | NoFollow | CloseOnExec);
-                        if (!SameNode(Stat(probe), identity))
-                            throw new IOException("The original Notes repository lock was replaced while being acquired.");
-                        if (NativeFlock(Fd(probe), 2 | 4) == 0)
-                            throw new IOException("Original Notes storage did not enforce its canonical process lock.");
-                        if (Marshal.GetLastPInvokeError() != 11) throw NativeFailure("Verify original Notes lock");
-                        CanonicalLockIdentity = identity;
-                        DemandCurrent();
-                        return new FileStream(handle, FileAccess.ReadWrite, 1, isAsync: false);
-                    }
-                    if (Marshal.GetLastPInvokeError() != 11) throw NativeFailure("Acquire original Notes lock");
+                    if (source is null) acquired = Attempt();
+                    else await source.CaptureAsync(() => Task.FromResult(Attempt()), value => acquired = value).ConfigureAwait(false);
+                    if (acquired is not null) return acquired;
                 }
-                catch { handle.Dispose(); throw; }
-                handle.Dispose();
+                catch { acquired?.Dispose(); throw; }
                 if (timer.Elapsed >= RepositoryLockTimeout) throw new IOException("Timed out acquiring the original Notes repository lock.");
-                await Task.Delay(25, token).ConfigureAwait(false);
+                if (source is null) await Task.Delay(25, token).ConfigureAwait(false);
+                else await source.WaitAsync(() => Task.Delay(25, token)).ConfigureAwait(false);
             }
         }
         internal OriginalDocumentCustody OpenDocumentCustody(Guid id, bool createDirectories = true)

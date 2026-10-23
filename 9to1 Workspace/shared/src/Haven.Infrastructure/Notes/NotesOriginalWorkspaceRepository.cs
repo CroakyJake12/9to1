@@ -19,6 +19,7 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
     private readonly Func<HomeNotesLibraryReadReview, CancellationToken, Task> _presentRead;
     private readonly Func<HomeNotesSaveReview, CancellationToken, Task> _presentSave;
     private readonly CancellationToken _lifetime;
+    private readonly Action<Action>? _originalScope;
     private readonly SemaphoreSlim _operations = new(1, 1);
     private (INotesOriginalSaveIntent Intent, HomeNotesSaveAdmission Home)? _retainedSave;
     private (INotesOriginalLibraryReadRequest Request, HomeNotesLibraryReadAdmission Home)? _retainedRead;
@@ -29,14 +30,14 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
     private NotesOriginalWorkspaceRepository(NotesRepository notes, VerifiedNotesRepository verified,
         HomeNotesResourceAdmissionSource home, string sessionId,
         Func<HomeNotesLibraryReadReview, CancellationToken, Task> presentRead,
-        Func<HomeNotesSaveReview, CancellationToken, Task> presentSave, CancellationToken lifetime)
+        Func<HomeNotesSaveReview, CancellationToken, Task> presentSave, CancellationToken lifetime, Action<Action>? originalScope)
     { _notes = notes; _verified = verified; _home = home; _sessionId = sessionId;
-        _presentRead = presentRead; _presentSave = presentSave; _lifetime = lifetime; }
+        _presentRead = presentRead; _presentSave = presentSave; _lifetime = lifetime; _originalScope = originalScope; }
 
     public static NotesOriginalWorkspaceRepository BindOriginal(NotesRepository notes, VerifiedNotesRepository verified,
         HomeNotesResourceAdmissionSource home, string sessionId,
         Func<HomeNotesLibraryReadReview, CancellationToken, Task> presentRead,
-        Func<HomeNotesSaveReview, CancellationToken, Task> presentSave, CancellationToken lifetime)
+        Func<HomeNotesSaveReview, CancellationToken, Task> presentSave, CancellationToken lifetime, Action<Action>? originalScope = null)
     {
         ArgumentNullException.ThrowIfNull(notes); ArgumentNullException.ThrowIfNull(verified);
         ArgumentNullException.ThrowIfNull(home); ArgumentNullException.ThrowIfNull(presentRead);
@@ -44,16 +45,16 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         lifetime.ThrowIfCancellationRequested();
         if (!lifetime.CanBeCanceled || !verified.IsBoundToOriginal(notes) || !home.IsBoundToOriginalNotes(notes))
             throw new UnauthorizedAccessException("Retain the original Notes/verified/Home composition and actual route lifetime.");
-        return new(notes, verified, home, sessionId, presentRead, presentSave, lifetime);
+        return new(notes, verified, home, sessionId, presentRead, presentSave, lifetime, originalScope);
     }
 
     public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken cancellationToken)
-        => RunAsync(async token => (await ReadAsync(null, token).ConfigureAwait(false)).Snapshot.Documents, cancellationToken);
+        => RunAsync(async (token, source) => (await ReadAsync(null, token, source).ConfigureAwait(false)).Snapshot.Documents, cancellationToken);
 
     public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(bool deleted, CancellationToken cancellationToken)
-        => RunAsync(async token =>
+        => RunAsync(async (token, source) =>
         {
-            var read = await ReadAsync(null, token).ConfigureAwait(false);
+            var read = await ReadAsync(null, token, source).ConfigureAwait(false);
             return await _notes.CreateOriginalBoardsSummarySource(read.Request, read.Snapshot, read.Home)
                 .ListAsync(deleted, token).ConfigureAwait(false);
         }, cancellationToken);
@@ -61,7 +62,7 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
     public Task<NotesDocument?> LoadAsync(Guid documentId, CancellationToken cancellationToken)
     {
         if (documentId == Guid.Empty) throw new ArgumentException("A canonical Notes document ID is required.", nameof(documentId));
-        return RunAsync(async token => (await ReadAsync(documentId, token).ConfigureAwait(false)).Snapshot.SelectedDocument,
+        return RunAsync(async (token, source) => (await ReadAsync(documentId, token, source).ConfigureAwait(false)).Snapshot.SelectedDocument,
             cancellationToken);
     }
 
@@ -74,7 +75,7 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         var originalBytes = JsonSerializer.SerializeToUtf8Bytes(document, Json);
         var captured = JsonSerializer.Deserialize<NotesDocument>(originalBytes, Json)
             ?? throw new InvalidDataException("The original Boards candidate could not be detached.");
-        return RunAsync(async token =>
+        return RunAsync(async (token, source) =>
         {
             if (_pendingReadReview is not null)
                 throw new UnauthorizedAccessException("Resolve the retained original read review before starting a save.");
@@ -86,13 +87,15 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
             else
             {
                 intent = await _notes.PrepareOriginalSaveAsync(captured, reason, token).ConfigureAwait(false);
-                review = await _home.RequestSaveAsync(intent, _sessionId, token).ConfigureAwait(false);
+                review = await (source is null ? _home.RequestSaveAsync(intent, _sessionId, token)
+                    : _home.RequestSaveWithinOriginalSourceAsync(intent, _sessionId, source.Scope, source.Retain, token)).ConfigureAwait(false);
                 _pendingSaveReview = (intent, review, originalBytes, reason);
             }
             // Retain before ANY borrowed presenter/Begin callback, including task faults.
             await PresentOriginalAsync(() => _presentSave(review, token)).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
-            var home = await _home.BeginSaveAsync(review, token).ConfigureAwait(false)
+            var home = await (source is null ? _home.BeginSaveAsync(review, token)
+                : _home.BeginSaveWithinOriginalSourceAsync(review, source.Scope, source.Retain, token)).ConfigureAwait(false)
                 ?? throw new UnauthorizedAccessException("The original save still needs its genuine Home decision.");
             _pendingSaveReview = null; _retainedSave = (intent, home);
             NotesSaveResult receipt;
@@ -131,27 +134,31 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         CancellationToken cancellationToken) => RunAsync(SettleRetainedAuditsAsync, cancellationToken, settlePrevious: false);
 
     private async Task<IReadOnlyList<HavenOS.Home.PermissionsTrustNotifications.HomePermissionOperationResult>> SettleRetainedAuditsAsync(
-        CancellationToken token)
+        CancellationToken token, OriginalWorkspaceSources? source)
     {
         var results = new List<HavenOS.Home.PermissionsTrustNotifications.HomePermissionOperationResult>();
         if (_pendingSaveReview is { } saveReview)
         {
             if (saveReview.Review.WasDispatchAttempted)
             {
-                var audit = await _home.RetrySaveDispatchAuditAsync(saveReview.Review, token).ConfigureAwait(false);
+                var audit = await (source is null ? _home.RetrySaveDispatchAuditAsync(saveReview.Review, token)
+                    : _home.RetrySaveDispatchAuditWithinOriginalSourceAsync(saveReview.Review, source.Scope, source.Retain, token)).ConfigureAwait(false);
                 results.Add(audit); if (audit.Succeeded) _pendingSaveReview = null;
             }
-            else if (IsRefused((await _home.GetSaveAuthorizationAsync(saveReview.Review, token).ConfigureAwait(false)).State))
+            else if (IsRefused((await (source is null ? _home.GetSaveAuthorizationAsync(saveReview.Review, token)
+                : _home.GetSaveAuthorizationWithinOriginalSourceAsync(saveReview.Review, source.Scope, source.Retain, token)).ConfigureAwait(false)).State))
                 _pendingSaveReview = null;
         }
         if (_pendingReadReview is { } readReview)
         {
             if (readReview.Review.WasDispatchAttempted)
             {
-                var audit = await _home.RetryLibrarySnapshotDispatchAuditAsync(readReview.Review, token).ConfigureAwait(false);
+                var audit = await (source is null ? _home.RetryLibrarySnapshotDispatchAuditAsync(readReview.Review, token)
+                    : _home.RetryLibrarySnapshotDispatchAuditWithinOriginalSourceAsync(readReview.Review, source.Scope, source.Retain, token)).ConfigureAwait(false);
                 results.Add(audit); if (audit.Succeeded) _pendingReadReview = null;
             }
-            else if (IsRefused((await _home.GetLibrarySnapshotAuthorizationAsync(readReview.Review, token).ConfigureAwait(false)).State))
+            else if (IsRefused((await (source is null ? _home.GetLibrarySnapshotAuthorizationAsync(readReview.Review, token)
+                : _home.GetLibrarySnapshotAuthorizationWithinOriginalSourceAsync(readReview.Review, source.Scope, source.Retain, token)).ConfigureAwait(false)).State))
                 _pendingReadReview = null;
         }
 
@@ -176,7 +183,7 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
             HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Cancelled;
 
     private async Task<(INotesOriginalLibraryReadRequest Request, NotesOriginalLibrarySnapshot Snapshot,
-        HomeNotesLibraryReadAdmission Home)> ReadAsync(Guid? id, CancellationToken token)
+        HomeNotesLibraryReadAdmission Home)> ReadAsync(Guid? id, CancellationToken token, OriginalWorkspaceSources? source)
     {
         if (_pendingSaveReview is not null)
             throw new UnauthorizedAccessException("Resolve the retained original save review before reading another snapshot.");
@@ -187,12 +194,14 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         else
         {
             request = await _notes.PrepareOriginalLibraryReadAsync(id, token).ConfigureAwait(false);
-            review = await _home.RequestLibrarySnapshotAsync(request, _sessionId, token).ConfigureAwait(false);
+            review = await (source is null ? _home.RequestLibrarySnapshotAsync(request, _sessionId, token)
+                : _home.RequestLibrarySnapshotWithinOriginalSourceAsync(request, _sessionId, source.Scope, source.Retain, token)).ConfigureAwait(false);
             _pendingReadReview = (request, review);
         }
         await PresentOriginalAsync(() => _presentRead(review, token)).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
-        var home = await _home.BeginLibrarySnapshotAsync(review, token).ConfigureAwait(false)
+        var home = await (source is null ? _home.BeginLibrarySnapshotAsync(review, token)
+            : _home.BeginLibrarySnapshotWithinOriginalSourceAsync(review, source.Scope, source.Retain, token)).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original read still needs its genuine Home decision.");
         _pendingReadReview = null; _retainedRead = (request, home);
         var snapshot = await _notes.ReadOriginalLibraryWithHomeAsync(request, home, _verified, token).ConfigureAwait(false);
@@ -203,18 +212,40 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         return (request, snapshot, home);
     }
 
-    private async Task<T> RunAsync<T>(Func<CancellationToken, Task<T>> operation, CancellationToken caller, bool settlePrevious = true)
+    private sealed record OriginalWorkspaceSources(Action<Action> Scope, Action<Task> Retain);
+
+    private async Task<T> RunAsync<T>(Func<CancellationToken, OriginalWorkspaceSources?, Task<T>> operation,
+        CancellationToken caller, bool settlePrevious = true)
     {
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(_lifetime, caller);
-        await _operations.WaitAsync(linked.Token).ConfigureAwait(false);
-        try
+        if (_originalScope is null)
         {
-            linked.Token.ThrowIfCancellationRequested();
-            if (settlePrevious && (await SettleRetainedAuditsAsync(linked.Token).ConfigureAwait(false)).Any(result => !result.Succeeded))
-                throw new IOException("The previous original Home audit is still unresolved; its admission was preserved.");
-            return await operation(linked.Token).ConfigureAwait(false);
+            await _operations.WaitAsync(linked.Token).ConfigureAwait(false);
+            try
+            {
+                linked.Token.ThrowIfCancellationRequested();
+                if (settlePrevious && (await SettleRetainedAuditsAsync(linked.Token, null).ConfigureAwait(false)).Any(result => !result.Succeeded))
+                    throw new IOException("The previous original Home audit is still unresolved; its admission was preserved.");
+                return await operation(linked.Token, null).ConfigureAwait(false);
+            }
+            finally { _operations.Release(); }
         }
-        finally { _operations.Release(); }
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        if (_originalScope is not null) originals.BindOriginalCallerCallback(_originalScope);
+        void Own(Action body) => originals.Invoke(() => { body(); return true; });
+        var source = _originalScope is null ? null : new OriginalWorkspaceSources(Own, raw => { originals.ReleaseSuccessfullyObservedOriginals(); originals.Track(raw); });
+        return await originals.RunToOriginalSettlementAsync(async () =>
+        {
+            await _operations.WaitAsync(linked.Token).ConfigureAwait(false);
+            try
+            {
+                linked.Token.ThrowIfCancellationRequested();
+                if (settlePrevious && (await SettleRetainedAuditsAsync(linked.Token, source).ConfigureAwait(false)).Any(result => !result.Succeeded))
+                    throw new IOException("The previous original Home audit is still unresolved; its admission was preserved.");
+                return await operation(linked.Token, source).ConfigureAwait(false);
+            }
+            finally { _operations.Release(); }
+        }).ConfigureAwait(false);
     }
 
     private static async Task PresentOriginalAsync(Func<Task> present)

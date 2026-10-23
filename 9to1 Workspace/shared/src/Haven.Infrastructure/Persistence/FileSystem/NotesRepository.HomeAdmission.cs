@@ -73,13 +73,13 @@ public sealed partial class NotesRepository
             var transactionTask = WithTransactionCoreAsync(async transaction =>
             {
                 var root = transaction.OriginalRoot ?? throw new InvalidOperationException("Original Notes root custody is absent.");
-                if (!await fence.ValidateAsync(cancellationToken).ConfigureAwait(false))
+                if (!await originalHome.ValidateCommitFenceAsync(fence, cancellationToken).ConfigureAwait(false))
                     throw new UnauthorizedAccessException("The original Home ownership, actor or save approval changed.");
                 try
                 {
                     // Even directory creation and the prepared journal remain under the actual
                     // Home fence. Retained descriptors prevent path replacement redirecting IO.
-                    originalTransaction = new(root.OpenDocumentCustody(intent.DocumentId), fence, intent);
+                    originalTransaction = new(root.OpenDocumentCustody(intent.DocumentId), fence, intent, originalHome);
                     transaction.OriginalHome = originalTransaction;
                     var saved = await originalVerified.SaveWithinOriginalTransactionAsync(transaction,
                         intent.Candidate, intent.Reason, intent.DocumentId, intent.ExpectedVersion, cancellationToken).ConfigureAwait(false);
@@ -90,7 +90,7 @@ public sealed partial class NotesRepository
                 finally
                 {
                     // No diagnostics or Home completion audit while this Home lease is held.
-                    await fence.DisposeAsync().ConfigureAwait(false);
+                    await originalHome.DisposeCommitFenceAsync(fence).ConfigureAwait(false);
                 }
             }, cancellationToken, (OriginalObservation)intent.StoreObservation);
             originalStage = transactionTask;
@@ -104,7 +104,7 @@ public sealed partial class NotesRepository
             // This is idempotent, including failed final admission or owner construction.
             if (fence is not null)
             {
-                try { await fence.DisposeAsync().ConfigureAwait(false); }
+                try { await originalHome.DisposeCommitFenceAsync(fence).ConfigureAwait(false); }
                 catch (Exception error) { primary = primary is null ? error : new AggregateException(primary, error); }
             }
             try { originalTransaction?.Dispose(); }
@@ -147,7 +147,7 @@ public sealed partial class NotesRepository
     }
 
     internal sealed class OriginalHomeTransaction(OriginalDocumentCustody custody,
-        HomeClaimedResourceCommitFence fence, INotesOriginalSaveIntent intent) : IDisposable
+        HomeClaimedResourceCommitFence fence, INotesOriginalSaveIntent intent, HomeNotesSaveAdmission originalHome) : IDisposable
     {
         internal OriginalDocumentCustody Custody { get; } = custody;
         internal bool PublicationAttempted { get; set; }
@@ -155,7 +155,7 @@ public sealed partial class NotesRepository
         {
             if (documentId != intent.DocumentId) throw new UnauthorizedAccessException("The original Notes document changed.");
             Custody.DemandCurrent();
-            if (!await fence.ValidateAsync(token).ConfigureAwait(false))
+            if (!await originalHome.ValidateCommitFenceAsync(fence, token).ConfigureAwait(false))
                 throw new UnauthorizedAccessException("The held original Home Notes fence is no longer current.");
             Custody.DemandCurrent();
         }
@@ -197,7 +197,7 @@ public sealed partial class NotesRepository
             var transactionTask = WithTransactionCoreAsync(async transaction =>
             {
                 var root = transaction.OriginalRoot ?? throw new InvalidOperationException("Original Notes read root custody is absent.");
-                if (!await fence.ValidateAsync(cancellationToken).ConfigureAwait(false))
+                if (!await originalHome.ValidateCommitFenceAsync(fence, cancellationToken).ConfigureAwait(false))
                     throw new UnauthorizedAccessException("The original Home read actor, ownership or review changed.");
                 try
                 {
@@ -240,7 +240,7 @@ public sealed partial class NotesRepository
                     library.DemandCurrent();
                     if (library.SnapshotVersion != libraryVersion)
                         throw new IOException("The original Notes library changed during its authorised snapshot.");
-                    if (!await fence.ValidateAsync(cancellationToken).ConfigureAwait(false))
+                    if (!await originalHome.ValidateCommitFenceAsync(fence, cancellationToken).ConfigureAwait(false))
                         throw new UnauthorizedAccessException("The held original Home read fence changed.");
                     request.ObservedMetadata = Array.AsReadOnly(metadata.OrderByDescending(value => value.Summary.UpdatedAt).ToArray());
                     request.ReadWitness = new(libraryVersion, Array.AsReadOnly(witnesses.ToArray()));
@@ -249,7 +249,7 @@ public sealed partial class NotesRepository
                         Array.AsReadOnly(summaries.OrderByDescending(value => value.UpdatedAt).ToArray()), selected)
                         { Metadata = request.ObservedMetadata };
                 }
-                finally { await fence.DisposeAsync().ConfigureAwait(false); }
+                finally { await originalHome.DisposeCommitFenceAsync(fence).ConfigureAwait(false); }
             }, cancellationToken, (OriginalObservation)request.StoreObservation);
             originalStage = transactionTask;
             snapshot = await transactionTask.ConfigureAwait(false);
@@ -258,7 +258,7 @@ public sealed partial class NotesRepository
         finally
         {
             if (fence is not null)
-                try { await fence.DisposeAsync().ConfigureAwait(false); }
+                try { await originalHome.DisposeCommitFenceAsync(fence).ConfigureAwait(false); }
                 catch (Exception error) { primary = primary is null ? error : new AggregateException(primary, error); }
         }
         request.Outcome = new(this, request, snapshot is not null, snapshot?.Documents.Count ?? 0,

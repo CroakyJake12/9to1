@@ -1,12 +1,77 @@
 <Cui id="boards.browser" version="1">
   <Import Source="framework/CUI/Components/App.cui" />
+  <Variable Type="bool" ID="BoardsWorkspaceVisible">False</Variable>
+  <Variable Type="commandstate" ID="BoardsHostResult" />
+  <Variable Type="commandstate" ID="BoardsStoreResult" />
+  <Variable Type="commandstate" ID="BoardsOpenResult" />
   <Actions>
+    <Action name="ObserveBoardsHost" command="boards.host.observe" result="BoardsHostResult">
+      <Set Target="BoardsWorkspaceVisible" Value="True" When="{Binding BoardsHostResult.Value.UsesProvidedWorkspace}" />
+    </Action>
+    <Action name="InspectBoardsLibrary" command="boards.storage.inspect" result="BoardsStoreResult" />
+    <Action name="InitialiseBoardsLibrary" command="boards.storage.initialise" parameter="{Binding BoardsStoreResult.Value}" result="BoardsStoreResult" />
+    <Action name="BindEmptyBoardsLibrary" command="boards.storage.bind-empty" parameter="{Binding BoardsStoreResult.Value}" result="BoardsStoreResult" />
+    <Action name="RequestBoardsLibraryImport" command="boards.storage.request-import" parameter="{Binding BoardsStoreResult.Value}" result="BoardsStoreResult" />
+    <Action name="ReviewBoardsLibraryImport" command="boards.storage.review" parameter="{Binding BoardsStoreResult.Value}" result="BoardsStoreResult" />
+    <Action name="CompleteBoardsLibraryImport" command="boards.storage.complete-import" parameter="{Binding BoardsStoreResult.Value}" result="BoardsStoreResult" />
+    <Action name="RetryBoardsLibraryAudit" command="boards.storage.retry-audit" parameter="{Binding BoardsStoreResult.Value}" result="BoardsStoreResult" />
+    <Action name="OpenOriginalBoardsLibrary" command="boards.storage.open" result="BoardsOpenResult">
+      <Set Target="BoardsWorkspaceVisible" Value="True" When="{Binding BoardsOpenResult.Succeeded}" />
+    </Action>
     <Action name="OpenSavedNotebook" command="Open" parameter="{Binding savedNotebook}" />
     <Action name="ChoosePage" command="SelectPage" parameter="{Binding page}" />
     <Action name="RecoverPage" command="RestorePage" parameter="{Binding deletedPage}" />
   </Actions>
+  <Effects>
+    <Effect name="observe-owning-host" Condition="True" Action="ObserveBoardsHost" />
+    <Effect name="inspect-original-device-library" Condition="{Binding BoardsHostResult.Value.RequiresOriginalStoreSetup}" Action="InspectBoardsLibrary" />
+    <Effect name="open-verified-owned-library" Condition="{Binding BoardsStoreResult.Value.IsOwned}" Action="OpenOriginalBoardsLibrary" />
+  </Effects>
   <Theme Name="user_preference">
     <Page>
+      <If condition="!{Binding BoardsWorkspaceVisible}">
+        <Container id="boards-storage-setup" Type="Vertical Stack" Padding="32" CellGap="16" max-width="680" horizontal-alignment="Center" background="{Resource CuiBackgroundBrush}" AccessibleName="Set up or open your Boards library">
+          <Text text="Your Boards library" font-size="28" font-weight="SemiBold" />
+          <Text text="Keep your boards on this device. Signing in to an account does not sync this local library." text-wrapping="Wrap" />
+          <If condition="{Binding StorageSourceBusy}">
+            <Text id="boards-storage-busy" text="Checking your library or waiting for its Home review…" text-wrapping="Wrap" AccessibleName="Library operation in progress" />
+          </If>
+          <Container id="boards-storage-actions" Type="Vertical Stack" Active="{Binding StorageSourceIdle}" Interactive="{Binding StorageSourceIdle}">
+            <If condition="{Binding BoardsStoreResult.Succeeded}">
+              <Text id="boards-storage-status" text="{Binding BoardsStoreResult.Value.Message}" text-wrapping="Wrap" />
+            </If>
+            <Else>
+              <Text id="boards-storage-error" text="{Binding BoardsStoreResult.Message}" text-wrapping="Wrap" />
+            </Else>
+            <If condition="{Binding BoardsStoreResult.Value.CanInitialise}">
+              <Button id="boards-storage-create" content="Create local library" action="InitialiseBoardsLibrary" horizontal-alignment="Left" />
+            </If>
+            <If condition="{Binding BoardsStoreResult.Value.CanBindEmpty}">
+              <Text text="Your new library is empty. Connect it to your current device profile before opening it." text-wrapping="Wrap" />
+              <Button id="boards-storage-bind-empty" content="Use this empty library" action="BindEmptyBoardsLibrary" horizontal-alignment="Left" />
+            </If>
+            <If condition="{Binding BoardsStoreResult.Value.CanRequestImport}">
+              <Button id="boards-storage-request-import" content="Review existing library in Home" action="RequestBoardsLibraryImport" horizontal-alignment="Left" />
+            </If>
+            <If condition="{Binding BoardsStoreResult.Value.CanOpenReview}">
+              <Button id="boards-storage-review" content="Open Home review" action="ReviewBoardsLibraryImport" horizontal-alignment="Left" />
+            </If>
+            <If condition="{Binding BoardsStoreResult.Value.CanCompleteImport}">
+              <Button id="boards-storage-complete-import" content="Use this approved library" action="CompleteBoardsLibraryImport" horizontal-alignment="Left" />
+            </If>
+            <If condition="{Binding BoardsStoreResult.Value.CanRetryAudit}">
+              <Button id="boards-storage-retry-audit" content="Finish library confirmation" action="RetryBoardsLibraryAudit" horizontal-alignment="Left" />
+            </If>
+            <If condition="{Binding BoardsStoreResult.Value.IsOwned}">
+              <Text text="Your library is connected. Home will check permission to read its boards separately." text-wrapping="Wrap" />
+              <Button id="boards-storage-open" content="Open library" action="OpenOriginalBoardsLibrary" horizontal-alignment="Left" />
+            </If>
+            <Text text="{Binding BoardsOpenResult.Message}" text-wrapping="Wrap" />
+            <Button id="boards-storage-inspect" content="Check library again" action="InspectBoardsLibrary" horizontal-alignment="Left" />
+          </Container>
+        </Container>
+      </If>
+      <If condition="{Binding BoardsWorkspaceVisible}">
       <Container id="boards-workspace" background="{Resource CuiBackgroundBrush}" Type="Grid" RowSizes="Auto 1fr Auto">
         <Container padding="16,10" background="{Resource CuiPanelBrush}" Type="Overlay">
           <Container Type="Grid" ColumnSizes="Auto 1fr Auto">
@@ -186,6 +251,7 @@
           </Container>
         </Container>
       </Container>
+      </If>
     </Page>
   </Theme>
 </Cui>
