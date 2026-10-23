@@ -315,6 +315,12 @@ command and outputs when correcting selection; keep valid assertions unchanged.
 
 ## Integration and immutable release candidates
 
+`main` is the owner's canonical completed-work integration branch. Parallel unfinished work stays on its existing isolated branch; after source review, applicable owning checks and independent review, Root integrates the exact completed change promptly through this existing workflow. Compare its base, dependencies and retained accepted-fix identities before merging or replaying a curated change. A branch label or an ancestor relationship is not a readiness result.
+
+Root initialises or advances local `main` from the identified reviewed integration checkpoint with an expected-old-ref check. An absent local `main` must be created without checking out, resetting or rebasing an active or dirty worktree. Keep source-only staging separate, preserve historical refs and unfinished work, and record the integrated source/evidence and still-open gates in the existing CAS projection. Use the existing review/PR mechanism within the current publication permission; do not create another ledger or integration workflow.
+
+Synchronise `main` under the existing repository access, publication rules and owner instructions; this policy adds no new approval requirement. Keep credentials and private evidence outside Git. `main` does not satisfy RC pinning, native/package/platform acceptance or the seven quality criteria; the immutable release process below remains mandatory.
+
 Implementers retain focused evidence and hand off exact source/dependency identity.
 An independent reviewer validates the affected requirements before integration.
 Resolve file/scope conflicts first; compare retained accepted-fix identities so a
@@ -346,6 +352,8 @@ independent reviewers must actually execute and inspect the specified workflows.
 Separate packaging, native runtime, complete acceptance and authenticated delivery.
 
 ## Troubleshooting and evidence
+
+For owner UI feedback, collect a small set of screenshots as part of an existing required UI/native run, without a separate rebuild merely to obtain images. Capture changed screens or meaningful checkpoints and include them in the existing progress report. Each capture records the exact source/build, time, screen, theme, viewport, platform and whether it is native or headless. Reuse only demonstrably applicable unchanged outputs; distinguish older images from the current candidate. Retain capture failures without concealing product failures or creating substitute mockups. A screenshot is feedback evidence, not acceptance by itself.
 
 Classify failures from actual evidence as INFRASTRUCTURE, TEST or PRODUCT; leave
 ambiguous failures UNTRIAGED. Missing SDK/dependency/object store/endpoint is an
