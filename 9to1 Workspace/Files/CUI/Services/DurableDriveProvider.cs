@@ -19,25 +19,32 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         public IReadOnlyList<FilesRevision> Revisions { get; init; } = [];
         public IReadOnlyDictionary<string, string?> RevisionContentReferences { get; init; } = new Dictionary<string, string?>();
         public IReadOnlyList<FilesUploadedContent> UploadedContents { get; init; } = [];
+        public IReadOnlyList<FilesEmailShare> Shares { get; init; } = [];
+        public IReadOnlyList<FilesShareJournalEntry> ShareJournal { get; init; } = [];
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyList<FilesBrowserDownloadRegistration>? BrowserDownloads { get; init; }
     }
     private readonly VersionedJsonStateStore<State> _store;
     private readonly string _owner;
+    private readonly TimeProvider _shareClock;
     private readonly Guid _creationSessionId = Guid.NewGuid();
     private static readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, Channel<bool>>> Subscriptions = new(
         OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private readonly ConcurrentDictionary<Guid, Channel<bool>> _subscribers;
 
     public DurableDriveProvider(string statePath, FilesLocationId locationId, string ownerPrincipalId)
+        : this(statePath, locationId, ownerPrincipalId, TimeProvider.System) { }
+
+    public DurableDriveProvider(string statePath, FilesLocationId locationId, string ownerPrincipalId, TimeProvider? shareClock)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ownerPrincipalId);
         _owner = ownerPrincipalId;
+        _shareClock = shareClock ?? TimeProvider.System;
         _subscribers = Subscriptions.GetOrAdd(Path.GetFullPath(statePath), static _ => new());
         Location = new(locationId, "9to1 Drive", FilesLocationKind.Drive,
             FilesProviderCapabilities.Read | FilesProviderCapabilities.Write | FilesProviderCapabilities.Rename |
             FilesProviderCapabilities.Move | FilesProviderCapabilities.Trash | FilesProviderCapabilities.Search |
-            FilesProviderCapabilities.ChangeFeed, "9to1.drive");
+            FilesProviderCapabilities.ChangeFeed | FilesProviderCapabilities.Sharing, "9to1.drive");
         _store = new(statePath, 1, () => new State([], [], [])
         {
             StoreId = Guid.NewGuid(), StoreCreatedAtUtc = DateTimeOffset.UtcNow,
@@ -51,7 +58,7 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
     {
         var state = await _store.ReadAsync(cancellationToken);
         var item = state.Items.FirstOrDefault(item => item.Metadata.Id == itemId);
-        return item is null || !IsVisible(state, item) ? Fail<HostedItemMetadata>(FilesErrorCode.ItemNotFound, "Item is unavailable.", "Get", itemId) : FilesResult<HostedItemMetadata>.Success(item.Metadata);
+        return item is null || !IsVisible(state, item) ? Fail<HostedItemMetadata>(FilesErrorCode.ItemNotFound, "Item is unavailable.", "Get", itemId) : FilesResult<HostedItemMetadata>.Success(ProjectSharingMetadata(state, item.Metadata));
     }
 
     public async Task<FilesPage<HostedItemMetadata>> ListAsync(HostedItemId? parentId, FilesSearchQuery? query, string? pageToken, CancellationToken cancellationToken)
@@ -62,7 +69,7 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         if (limit is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(query));
         var items = state.Items.Where(item => IsVisible(state, item) && item.Metadata.ParentId == parentId &&
             (query is null || item.Metadata.Name.Contains(query.Text, StringComparison.OrdinalIgnoreCase)))
-            .Select(item => item.Metadata).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.Id.Value).ToArray();
+            .Select(item => ProjectSharingMetadata(state, item.Metadata)).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.Id.Value).ToArray();
         if (offset > items.Length) throw new ArgumentException("Invalid page token.", nameof(pageToken));
         var page = items.Skip(offset).Take(limit).ToArray();
         return new(page, offset + page.Length < items.Length ? (offset + page.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
@@ -124,11 +131,19 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
     private async Task<FilesResult<FilesOperation>> MutateCoreAsync(FilesOperation operation, string? newName,
         Guid? originalStoreId, IReadOnlyList<FilesItemRevisionPrecondition> originalParents,
         FilesCommitAuthorityGuard? originalAuthority, CancellationToken cancellationToken,
-        string? expectedStoreRevision = null)
+        string? expectedStoreRevision = null, FilesShareId? sharedAccess = null, Guid? sharedStoreId = null)
     {
         FilesResult<FilesOperation>? result = null;
         try
         {
+        State? sharedSnapshot = null;
+        async ValueTask ValidateAuthorityAsync(CancellationToken token)
+        {
+            await originalAuthority!.ValidateAsync(token).ConfigureAwait(false);
+            if (sharedAccess is { } shared && sharedSnapshot is { } snapshot &&
+                !CanUseShare(snapshot, shared, operation.ActorId, operation.ItemId, write: true))
+                throw new FilesCommitAuthorityChangedException();
+        }
         Task<State> actual;
         try { actual = _store.UpdateAsync(state =>
         {
@@ -144,6 +159,13 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
                     actual.Metadata.CurrentRevisionId != expected.ExpectedRevision)
                 { result = Fail<FilesOperation>(FilesErrorCode.RevisionConflict, "An original project parent changed before folder publication.", operation.Operation, operation.ItemId); return state; }
             }
+            if (sharedAccess is not null && (sharedStoreId is null || state.StoreId != sharedStoreId))
+                throw new FilesCommitAuthorityChangedException();
+            if (sharedAccess is { } shared && (originalAuthority is null || originalAuthority.ActorId != operation.ActorId ||
+                operation.Operation != "Rename" || operation.State != FilesOperationState.Pending || operation.Id.Value == Guid.Empty ||
+                !CanUseShare(state, shared, operation.ActorId, operation.ItemId, write: true)))
+            { result = Fail<FilesOperation>(FilesErrorCode.PermissionDenied, "The current grant does not permit this action on this item.", operation.Operation, operation.ItemId); return state; }
+            if (sharedAccess is not null) sharedSnapshot = state;
             var prior = state.Operations.FirstOrDefault(item => item.Id == operation.Id);
             if (originalStoreId is not null && prior is not null)
             { result = Fail<FilesOperation>(FilesErrorCode.InvalidState, "The original setup step is already recorded; inspect its outcome without another folder admission.", operation.Operation, operation.ItemId); return state; }
@@ -154,7 +176,7 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
                     ? FilesResult<FilesOperation>.Success(prior) : Fail<FilesOperation>(FilesErrorCode.InvalidState, "Operation ID was reused with different arguments.", operation.Operation, operation.ItemId);
                 return state;
             }
-            if (operation.ActorId != _owner)
+            if (sharedAccess is null && operation.ActorId != _owner)
             { result = Fail<FilesOperation>(FilesErrorCode.PermissionDenied, "Caller does not own this Drive.", operation.Operation, operation.ItemId); return state; }
             var existing = state.Items.FirstOrDefault(item => item.Metadata.Id == operation.ItemId);
             bool create = operation.Operation == "CreateFolder";
@@ -204,7 +226,7 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
             var change = new FilesChangeEvent(Guid.NewGuid().ToString("N"), new(state.Events.Count + 1), operation.Id, operation.ItemId, operation.ActorId, operation.Operation, operation.BaseRevisionId, revision, now, metadata);
             result = FilesResult<FilesOperation>.Success(committed);
             return state with { Items = [.. state.Items.Where(item => item.Metadata.Id != operation.ItemId), entry], Operations = [.. state.Operations, committed], Events = [.. state.Events, change] };
-        }, originalAuthority is null ? null : originalAuthority.ValidateAsync, cancellationToken); }
+        }, originalAuthority is null ? null : ValidateAuthorityAsync, cancellationToken); }
         catch (OperationCanceledException original) when (originalAuthority is not null)
         { throw new AggregateException("The original folder commit source returned no canceled original Task; outcome may be unknown.", original); }
         try { await actual.ConfigureAwait(false); }
