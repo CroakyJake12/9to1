@@ -1,24 +1,23 @@
-name: Repair and validate beta feature pass
+name: Validate historical repair of beta feature pass
 
+# Historical patch scripts run only in this disposable checkout. Review the
+# resulting source.patch through the normal integration process; no branch writes.
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/repair-beta-feature-pass.yml
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   repair-build-test:
-    if: ${{ !contains(github.event.head_commit.message || '', 'Record repaired beta feature validation') }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: main
+          ref: ${{ github.sha }}
+          persist-credentials: false
           fetch-depth: 1
 
       - uses: actions/setup-python@v5
@@ -30,14 +29,17 @@ jobs:
           global-json-file: global.json
 
       - name: Prepare report folder
+        if: always()
         shell: pwsh
         run: New-Item -ItemType Directory -Force artifacts/beta-feature-pass | Out-Null
 
-      - name: Repair exact compile blockers and stale patch anchor
+      - name: Repair exact historical anchors
         id: repair
+        if: always()
         continue-on-error: true
         shell: pwsh
         run: |
+          Start-Transcript -Path artifacts/beta-feature-pass/REPAIR.log
           $tracker = "9to1 Workspace/shared/src/Haven.Application/Chat/ChatExecutionTracker.cs"
           $text = Get-Content $tracker -Raw
           $text = $text.Replace('return ValueTask.CompletdTask;', 'return default;')
@@ -56,9 +58,11 @@ jobs:
             '"    private static WorkspaceToolResult UnavailableToolResult(",',
             '"    private ToolAvailabilityPlan CreateAvailabilityPlan(",')
           Set-Content $patch $text -Encoding utf8
+          Stop-Transcript
 
-      - name: Apply Chat orchestration patch
+      - name: Apply historical patch
         id: patch
+        if: always()
         continue-on-error: true
         shell: pwsh
         run: |
@@ -68,6 +72,7 @@ jobs:
 
       - name: Restore
         id: restore
+        if: always()
         continue-on-error: true
         shell: pwsh
         run: |
@@ -77,6 +82,7 @@ jobs:
 
       - name: Build
         id: build
+        if: always()
         continue-on-error: true
         shell: pwsh
         run: |
@@ -86,10 +92,11 @@ jobs:
 
       - name: Test
         id: test
+        if: always()
         continue-on-error: true
         shell: pwsh
         run: |
-          dotnet test "9to1 Workspace/shared/Haven.sln" -c Release --no-build 2>&1 |
+          dotnet test "9to1 Workspace/shared/Haven.sln" -c Release --no-build --logger trx --results-directory "artifacts/beta-feature-pass/TestResults" 2>&1 |
             Tee-Object artifacts/beta-feature-pass/TEST.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -98,7 +105,7 @@ jobs:
         shell: pwsh
         run: |
           @(
-            '# Repaired beta feature validation',
+            '# Historical patch validation',
             '',
             '| Stage | Result |',
             '|---|---|',
@@ -106,22 +113,45 @@ jobs:
             '| Patch | ${{ steps.patch.outcome }} |',
             '| Restore | ${{ steps.restore.outcome }} |',
             '| Build | ${{ steps.build.outcome }} |',
-            '| Test | ${{ steps.test.outcome }} |'
+            '| Test | ${{ steps.test.outcome }} |',
+            '',
+            'Classify failures from retained logs/TRX as INFRASTRUCTURE, TEST or PRODUCT; leave unresolved outcomes UNTRIAGED.',
+            'Successful stages record process results, not product, native or release acceptance.',
+            'Review source.patch against SOURCE.json before proposing changes through normal independent review.'
           ) | Set-Content artifacts/beta-feature-pass/VALIDATION.md
 
-      - name: Record source and validation result
+      - name: Record reviewable source patch
         if: always()
         shell: pwsh
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "9to1 Workspace/shared/src" "9to1 Workspace/shared/tests" "9to1 Workspace/shared/scripts" artifacts/beta-feature-pass
-          if (-not (git diff --cached --quiet)) {
-            git commit -m "Record repaired beta feature validation"
-            git push origin HEAD:main
-          }
+          git rev-parse HEAD | Set-Content artifacts/beta-feature-pass/source.sha
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $checkoutSha = (Get-Content artifacts/beta-feature-pass/source.sha -Raw).Trim()
+          if ($checkoutSha -ne '${{ github.sha }}') { throw 'Checkout identity differs from dispatched commit' }
+          git add --intent-to-add -- "9to1 Workspace/shared/src" "9to1 Workspace/shared/tests" "9to1 Workspace/shared/scripts"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --binary --output=artifacts/beta-feature-pass/source.patch HEAD -- "9to1 Workspace/shared/src" "9to1 Workspace/shared/tests" "9to1 Workspace/shared/scripts"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          @{
+            repository = '${{ github.repository }}'
+            dispatched_sha = '${{ github.sha }}'
+            checkout_sha = $checkoutSha
+            run_id = '${{ github.run_id }}'
+            run_attempt = '${{ github.run_attempt }}'
+            patch_sha256 = (Get-FileHash artifacts/beta-feature-pass/source.patch -Algorithm SHA256).Hash.ToLowerInvariant()
+            scope = 'Manual patch validation; independent review required before integration. No native or release acceptance.'
+          } | ConvertTo-Json | Set-Content artifacts/beta-feature-pass/SOURCE.json
 
-      - name: Fail when validation failed
+      - name: Retain patch, reports and actual validation logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: beta-feature-pass-validation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/beta-feature-pass/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Fail when validation incomplete
         if: always()
         shell: pwsh
         run: |
@@ -132,4 +162,5 @@ jobs:
             '${{ steps.build.outcome }}',
             '${{ steps.test.outcome }}'
           )
-          if ($outcomes -contains 'failure') { exit 1 }
+          $incomplete = @($outcomes | Where-Object { $_ -ne 'success' })
+          if ($incomplete.Count -gt 0) { exit 1 }
