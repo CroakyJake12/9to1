@@ -130,7 +130,7 @@ public sealed class CuiSceneHostOriginalPublicationTests
         {
             var cause = new InvalidOperationException("Original action behind the same mounted failure banner.");
             var action = new BannerSequenceAction(cause);
-            rig.Track(action.Failed); rig.Track(action.Held.Task); rig.Release(() => action.Held.TrySetResult()); rig.Expect(cause);
+            _ = rig.Track(action.Failed); _ = rig.Track(action.Held.Task); rig.Release(() => action.Held.TrySetResult()); rig.Expect(cause);
             var bindings = new OriginalBindings();
             Task<CuiSceneAvailability>? show = null;
             CuiControlLoader? primary = null, banner = null; Button? root = null; Task? observed = null;
@@ -200,7 +200,7 @@ public sealed class CuiSceneHostOriginalPublicationTests
         await RunAsync(async rig =>
         {
             var cause = new InvalidOperationException("Original banner guard control.");
-            var action = new BannerSequenceAction(cause); rig.Track(action.Failed); rig.Expect(cause);
+            var action = new BannerSequenceAction(cause); _ = rig.Track(action.Failed); rig.Expect(cause);
             var current = true; Task<CuiSceneAvailability>? show = null; Task? pipeline = null;
             await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene(actions: action) with { IsPublicationCurrent = () => current })));
             await show!;
