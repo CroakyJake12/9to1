@@ -89,6 +89,7 @@ public sealed class HomeLocalDomainComposition : IAsyncDisposable
         var resolvers = Capture(originalResourceResolvers);
         var policies = Capture(originalActionPolicies);
         var coreReadPolicy = new HomeCoreServiceReadActionPolicies();
+        var localStorePolicy = new HomeLocalStoreOwnershipActionPolicies();
         Profiles = new(StateStore, new LayoutCheckedPrincipal(_principals, _layout));
         Permissions = new(StateStore, ResolvePolicy);
         var identity = new HomeLocalDomainIdentityComponents(StateStore, Profiles, Permissions);
@@ -135,7 +136,7 @@ public sealed class HomeLocalDomainComposition : IAsyncDisposable
 
         HomePermissionActionPolicy? ResolvePolicy(string appId, string actionId)
         {
-            var core = coreReadPolicy.TryGet(appId, actionId);
+            var core = coreReadPolicy.TryGet(appId, actionId) ?? localStorePolicy.TryGet(appId, actionId);
             HomePermissionActionPolicy? registered = null;
             foreach (var source in policies)
             {

@@ -89,6 +89,38 @@ public sealed class HomeNativeWindowsCompositionTests
             Assert.Same(close, original.CloseAndDrainAsync());
         });
 
+    private sealed class SupportedProducerFactAttribute : FactAttribute
+    {
+        public SupportedProducerFactAttribute()
+        {
+            if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
+                Skip = "Requires the actual Windows or Linux Home process-local producer.";
+        }
+    }
+
+    [SupportedProducerFact]
+    public Task Original_native_Home_owns_high_risk_store_import_and_requires_explicit_decline_then_accept() =>
+        WithOriginalAsync(async rig =>
+        {
+            using var store = new OriginalLocalStoreImportCompositionControl();
+            rig.Compose(new OperatingSystemPrincipalSource(), store);
+            var original = rig.Composition!;
+            rig.Start = original.StartOriginalAsync(); await rig.Start;
+            await store.DemandManualImportAsync(original.Profiles, original.LocalStoreOwnership, original.Permissions);
+        });
+
+    [SupportedProducerFact]
+    public Task Original_native_Home_refuses_duplicate_import_policy_instead_of_overriding_its_owner() =>
+        WithOriginalAsync(async rig =>
+        {
+            using var store = new OriginalLocalStoreImportCompositionControl();
+            rig.Compose(new OperatingSystemPrincipalSource(), store,
+                [new OriginalLocalStoreImportCompositionControl.DuplicatePolicy()]);
+            var original = rig.Composition!;
+            rig.Start = original.StartOriginalAsync(); await rig.Start;
+            await store.DemandDuplicatePolicyRefusedAsync(original.Profiles, original.LocalStoreOwnership, original.Permissions);
+        });
+
     private static async Task WithOriginalAsync(Func<OriginalRig, Task> body)
     {
         var rig = new OriginalRig();
@@ -120,12 +152,14 @@ public sealed class HomeNativeWindowsCompositionTests
         // This bound controls test observation only; the Home owner has its own process token.
         internal CancellationToken Token => (_bound ??= new CancellationTokenSource(TimeSpan.FromSeconds(30))).Token;
 
-        internal void Compose(ITrustedHostPrincipalSource actual)
+        internal void Compose(ITrustedHostPrincipalSource actual, IHomeLocalStoreEvidenceProvider? evidence = null,
+            IHomeActionPolicySource[]? policies = null)
         {
             var token = Token;
             token.ThrowIfCancellationRequested();
             Composition = new(new FileHomeCoreStateStore(Path.Combine(_root, "Home", "home-core-state.json")),
-                actual, new OriginalPaths(_root), new("home.producer.test." + Guid.NewGuid().ToString("N")));
+                actual, new OriginalPaths(_root), new("home.producer.test." + Guid.NewGuid().ToString("N")),
+                originalStoreEvidence: evidence is null ? null : [evidence], originalActionPolicies: policies);
         }
         internal void ObserveExpected(Exception error) => _observed.Add(error);
         internal async Task CloseOriginalsAsync()
