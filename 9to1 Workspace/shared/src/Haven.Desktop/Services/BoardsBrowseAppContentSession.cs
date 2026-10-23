@@ -168,13 +168,18 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         {
             if (path == "OriginalStoreGateRequired") { value = owner._route is IBoardsOriginalStoreSetupRoute; return true; }
             if (path == "StorageSourceBusy") { value = owner._activeDispatches > 0; return true; }
+            if (path == "StorageSourceIdle") { value = owner._activeDispatches == 0; return true; }
             if (owner._core is { } core) return core.TryGetValue(path, out value);
             value = null; return false;
         }
         public bool TrySetValue(string path, object? value) => owner._core?.TrySetValue(path, value) == true;
         internal void ForwardOriginalChange(object? sender, PropertyChangedEventArgs args) =>
             CloudflareOriginalExecutionGuard.InvokeOriginal(owner, () => { PropertyChanged?.Invoke(this, args); return true; });
-        internal void SourcesChanged() => ForwardOriginalChange(this, new PropertyChangedEventArgs("StorageSourceBusy"));
+        internal void SourcesChanged()
+        {
+            ForwardOriginalChange(this, new PropertyChangedEventArgs("StorageSourceBusy"));
+            ForwardOriginalChange(this, new PropertyChangedEventArgs("StorageSourceIdle"));
+        }
     }
 
     private static bool IsStorageCommand(string command) => command.StartsWith("boards.storage.", StringComparison.Ordinal);
