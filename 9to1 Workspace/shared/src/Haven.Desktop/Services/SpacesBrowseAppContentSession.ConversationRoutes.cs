@@ -61,10 +61,9 @@ internal sealed partial class SpacesBrowseAppContentSession
         var row = await conversations.GetAsync(route.ConversationId, token)
             ?? throw new InvalidOperationException("The saved Chat conversation is unavailable.");
         await ValidateSavedConversationAsync(row, route, token);
-        var factory = new OverlayChatSessionFactory(_services, conversations,
-            _services.GetRequiredService<CapabilityRegistryService>(),
-            _services.GetRequiredService<ICatalogRepository>(),
-            _services.GetRequiredService<IModeRegistry>());
+        // Restoration retains the same host recovery wiring as new/sidebar-opened chats.
+        // A saved route must not turn the genuine Manage local models action into a no-op.
+        var factory = NewChatSessionFactory();
         var chat = await factory.RestoreAsync(route.ConversationId, token)
             ?? throw new InvalidOperationException("The saved Chat conversation is no longer available.");
         _ownedChats.Add(chat); // Retain the real acquired page before validation/publication can fail.

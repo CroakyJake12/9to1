@@ -532,23 +532,10 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         if (spaceId is not { } registeredSpaceId || registeredSpaceId == Guid.Empty)
             throw new InvalidOperationException("The Space action has no registered Space to scope its conversation.");
         var key = registeredSpaceId;
-        if (_chatsBySpace.TryGetValue(key, out var existing) && existing.CurrentConversation.SpaceId == spaceId)
-        {
-            lock (_gate)
-            {
-                token.ThrowIfCancellationRequested();
-                DemandAlive();
-                PublishChatPage(existing);
-            }
-            PublishStateChanged();
-            return;
-        }
-        var factory = new OverlayChatSessionFactory(_services,
-            _services.GetRequiredService<IConversationRepository>(),
-            _services.GetRequiredService<CapabilityRegistryService>(),
-            _services.GetRequiredService<ICatalogRepository>(),
-            _services.GetRequiredService<IModeRegistry>());
-        WireChatRecovery(factory);
+        // Opening/selecting a Space is an explicit new-chat action. Prior chats stay owned
+        // with their identities and drafts; only explicit history/restore or management return
+        // may reopen them. Reusing the last page here would silently undo that navigation intent.
+        var factory = NewChatSessionFactory();
         var page = await factory.CreateNewAsync(token);
         _ownedChats.Add(page);
         var published = false;
@@ -708,9 +695,12 @@ internal sealed partial class SpacesBrowseAppContentSession : IBrowseNativeAppCo
         {
             if (_hostQueueNavigation is null)
                 throw new SpacesWorkspaceActionRefusal("No host navigation seam is available; local-model recovery cannot route.");
-            // A retired / no-longer-published page must never queue navigation.
-            if (!IsPublicationCurrent)
-                throw new SpacesWorkspaceActionRefusal("The Spaces session no longer owns a live page; local-model recovery is unrouted.");
+            // Retained history pages keep their drafts and close ownership, but only the exact
+            // currently published Chat page may request host navigation. Session-wide readiness
+            // alone would let an old page route recovery after a fresh chat or editor is shown.
+            lock (_gate)
+                if (!IsPublicationCurrent || !ReferenceEquals(_publishedChatRoute?.Page, page))
+                    throw new SpacesWorkspaceActionRefusal("The Spaces session no longer publishes this Chat page; local-model recovery is unrouted.");
 
             var address = AppContentAddress.Parse("browse://home/models");
             Task settlement;
