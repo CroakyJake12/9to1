@@ -1016,6 +1016,82 @@ public sealed class NotesOriginalStoreTests
     }
 
     [LinuxNotesFact]
+    public async Task Owned_workspace_scopes_post_await_actual_Home_principal_callbacks_and_round_trips_real_content()
+    {
+        var preOwner = ExecutionContext.Capture() ?? throw new InvalidOperationException("Retain a genuine pre-owner context.");
+        var principal = new OriginalObservedPrincipal();
+        await using var rig = await HomeRig.CreateAsync(principal);
+        var parent = new object(); Task? original = null;
+        Task JoinOriginal()
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(parent);
+            return original ?? throw new InvalidOperationException("The original content operation is unavailable.");
+        }
+        var refusals = new List<Exception?>();
+        var adapter = NotesOriginalWorkspaceRepository.BindOriginal(rig.Notes.Owner, rig.Verified, rig.Admission,
+            rig.SessionId,
+            async (review, token) => Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded),
+            async (review, token) => Assert.True((await rig.Permissions.DecideAsync(review.Authorization.RequestId,
+                HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded),
+            rig.Token, body => CloudflareOriginalExecutionGuard.InvokeOriginal(parent, () => { body(); return true; }));
+        principal.HoldNextObservation = true;
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task<IReadOnlyList<NotesDocumentSummary>> ReadOriginal()
+        { await start.Task; return await adapter.ListAsync(false, rig.Token); }
+        var read = ReadOriginal(); original = read; start.SetResult();
+        await principal.Entered.Task.WaitAsync(rig.Token);
+        Assert.False(read.IsCompleted);
+        principal.Callback = () => ExecutionContext.Run(preOwner.CreateCopy(), _ =>
+        {
+            // Inspect OUTSIDE the callback: a swallowed assertion/source exception
+            // must never masquerade as the intended synchronous self-join refusal.
+            var refusal = Record.Exception(() => { _ = JoinOriginal(); });
+            lock (refusals) refusals.Add(refusal);
+        }, null);
+        principal.Release.SetResult();
+        Assert.Empty(await read);
+        Assert.NotEmpty(refusals); Assert.All(refusals, refusal => Assert.IsType<InvalidOperationException>(refusal));
+
+        // The same scoped owner still executes genuine review/Begin/claim/fence,
+        // durable Notes CAS, completion audit, observed summary and selected body.
+        var document = NotesDocument.Create("Owned scoped revision");
+        document.Metadata[BoardsWorkspaceService.ProductKey] = "boards";
+        document.Sections[0].Pages[0].Blocks[0].PlainText = "A queue is first in, first out.";
+        var save = adapter.SaveAsync(document, "Real scoped original save", rig.Token); original = save;
+        Assert.Equal(1, (await save).Version);
+        var summaryRead = adapter.ListAsync(false, rig.Token); original = summaryRead;
+        Assert.Equal(document.Id, Assert.Single(await summaryRead).Id);
+        var load = adapter.LoadAsync(document.Id, rig.Token); original = load;
+        var reopened = await load;
+        Assert.NotNull(reopened); Assert.Equal(1, reopened!.Version);
+        Assert.Contains(reopened.Sections[0].Pages[0].Blocks, block => block.PlainText == "A queue is first in, first out.");
+        Assert.All(refusals, refusal => Assert.IsType<InvalidOperationException>(refusal));
+        principal.Callback = null;
+        var actual = await rig.Notes.Owner.LoadAsync(document.Id, rig.Token);
+        Assert.NotNull(actual); Assert.Equal(document.Version, actual!.Version);
+    }
+
+    private sealed class OriginalObservedPrincipal : ITrustedHostPrincipalSource
+    {
+        private readonly OperatingSystemPrincipalSource _original = new();
+        internal bool HoldNextObservation;
+        internal Action? Callback;
+        internal TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            var actual = await _original.GetPrincipalAsync(token);
+            if (HoldNextObservation)
+            {
+                HoldNextObservation = false; Entered.TrySetResult(); await Release.Task.ConfigureAwait(false);
+                return actual; // Probe the NEXT real source entry after this actual await.
+            }
+            Callback?.Invoke(); return actual;
+        }
+    }
+
+    [LinuxNotesFact]
     public async Task Workspace_adapter_requires_same_original_composition_and_a_real_cancellable_lifetime()
     {
         await using var rig = await HomeRig.CreateAsync();
@@ -1270,10 +1346,10 @@ public sealed class NotesOriginalStoreTests
         internal string SessionId { get; } = Guid.NewGuid().ToString("N");
         internal CancellationToken Token => _lifetime.Token;
         internal string Documents => Path.Combine(Notes.Notes, "Documents");
-        private HomeRig()
+        private HomeRig(ITrustedHostPrincipalSource? actualPrincipal = null)
         {
             Store = new(Path.Combine(Notes.DataDirectory, "home-core-state.json"));
-            Profiles = new(Store, new OperatingSystemPrincipalSource());
+            Profiles = new(Store, actualPrincipal ?? new OperatingSystemPrincipalSource());
             Permissions = new(Store, new HomeNotesActionPolicies().TryGet);
             var provider = new NotesLocalStoreEvidenceProvider(Notes.Owner);
             var ownership = new HomeLocalStoreOwnership(Store, Profiles, new HomeLocalStoreEvidenceRegistry([provider]), Permissions);
@@ -1286,9 +1362,9 @@ public sealed class NotesOriginalStoreTests
             Setup = new("notes", Notes.Owner, Profiles, ownership, provider);
         }
         private HomeLocalStoreSetupSession Setup { get; }
-        internal static async Task<HomeRig> CreateAsync()
+        internal static async Task<HomeRig> CreateAsync(ITrustedHostPrincipalSource? actualPrincipal = null)
         {
-            var rig = new HomeRig();
+            var rig = new HomeRig(actualPrincipal);
             try
             {
                 await rig.Notes.Owner.InitialiseOriginalStoreIdentityAsync(rig.Token);

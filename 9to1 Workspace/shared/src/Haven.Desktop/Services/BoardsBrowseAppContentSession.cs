@@ -179,7 +179,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private static bool IsStorageCommand(string command) => command.StartsWith("boards.storage.", StringComparison.Ordinal);
     public bool? IsActionAvailable(string command) => !_closing && !_token.IsCancellationRequested &&
         !_preparing && _prepared is null && _route.IsAlive &&
-        (command == "boards.host.observe" ? _host is not null : IsStorageCommand(command) ? _route is IBoardsOriginalStoreSetupRoute && _host is not null :
+        (command == "boards.host.observe" ? _host is not null : IsStorageCommand(command) ? _route is IBoardsOriginalStoreSetupRoute && _host is not null && _activeDispatches == 0 :
             IsPublicationCurrent && _activeDispatches == 0 && _core?.IsActionAvailable(command) == true);
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
@@ -195,6 +195,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             _actions.RemoveAll(task => task.IsCompletedSuccessfully);
             if (_actions.Count >= 128) throw new InvalidOperationException("Settle retained Boards action failures before admitting more work.");
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            ++_activeDispatches; // Reserve the accepted source before its asynchronous driver can run.
             var original = DispatchOriginalAsync(start.Task, command, parameter, cancellationToken);
             _actions.Add(original); start.SetResult(); return new(original);
         }
@@ -205,13 +206,12 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         using var scope = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
         var failures = new CloudflareOriginalTaskLedger();
-        ++_activeDispatches;
         try
         {
         _bindings.SourcesChanged();
         await RevalidateOriginalAsync(scope.Token);
         DemandAlive(); _route.DemandPublicationCurrent();
-        object? value = null;
+        object? value = null; CuiCommandOutcome? domainOutcome = null;
         if (command == "boards.host.observe")
             value = new BoardsHostStorageCapabilities(_route is IBoardsOriginalStoreSetupRoute);
         else if (IsStorageCommand(command))
@@ -234,10 +234,10 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
                 value = await route.ExecuteOriginalStoreSetupAsync(operation, parameter as BoardsOriginalStoreSetupBackend.Snapshot, scope.Token);
             }
         }
-        else await _core!.DispatchAsync(command, parameter, scope.Token);
+        else domainOutcome = await _core!.DispatchWithOutcomeAsync(command, parameter, scope.Token);
         await RevalidateOriginalAsync(scope.Token);
         DemandAlive(); _route.DemandPublicationCurrent();
-        return new(true, false, "Succeeded", null, value);
+        return domainOutcome ?? new(true, false, "Succeeded", null, value);
         }
         catch (Exception error) { failures.Retain(error); throw; }
         finally

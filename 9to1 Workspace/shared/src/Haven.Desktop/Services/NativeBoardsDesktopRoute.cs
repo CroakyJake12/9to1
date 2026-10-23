@@ -70,7 +70,14 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IB
         _setup = setup;
         _profile = profile; _appLifetime = actualAppLifetime; _lifetime = actualRouteLifetime;
         _repository = NotesOriginalWorkspaceRepository.BindOriginal(notes, verified, admission,
-            sessionId, PresentReadAsync, PresentSaveAsync, actualRouteLifetime);
+            sessionId, PresentReadAsync, PresentSaveAsync, actualRouteLifetime, InvokeOriginalRepositoryCallback);
+    }
+
+    private void InvokeOriginalRepositoryCallback(Action body)
+    {
+        var parent = _presentationOwner ?? throw new InvalidOperationException("Bind the original Boards presentation before content IO.");
+        CloudflareOriginalExecutionGuard.InvokeOriginal(parent, () =>
+            CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; }));
     }
 
     public void BindOriginalPresentationOwner(BoardsBrowseAppContentSession originalOwner)

@@ -167,11 +167,14 @@ public sealed class BoardsOriginalStoreSetupTests
         public string LogsDirectory => Path.Combine(root, "Logs");
         public string LegacyStatePath => Path.Combine(root, "legacy.json");
     }
-    private sealed class Resolver(Func<HomeNotesResourceAdmissionSource> original) : ICanonicalResourceAccessResolver
+    private sealed class Resolver(Func<HomeNotesResourceAdmissionSource> original) : ICanonicalResourceAccessResolver, IOriginalScopedCanonicalResourceAccessResolver
     {
         public string ResourceKind => HomeNotesResourceAdmissionSource.ScopeKind;
         public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId,
             ResourceScope scope, CancellationToken token) => original().EvaluateAsync(actor, actionId, scope, token);
+        public Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor, string actionId,
+            ResourceScope resource, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+            original().EvaluateWithinOriginalSourceAsync(actor, actionId, resource, scope, retain, token);
     }
     private sealed class Rig : IAsyncDisposable
     {

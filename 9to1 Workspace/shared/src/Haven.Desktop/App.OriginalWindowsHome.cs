@@ -210,12 +210,15 @@ public sealed partial class App
     }
 
     private sealed class OriginalNotesResourceResolver(Func<HomeNotesResourceAdmissionSource> original)
-        : ICanonicalResourceAccessResolver
+        : ICanonicalResourceAccessResolver, IOriginalScopedCanonicalResourceAccessResolver
     {
         public string ResourceKind => HomeNotesResourceAdmissionSource.ScopeKind;
         public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor,
             string actionId, ResourceScope scope, CancellationToken cancellationToken) =>
             original().EvaluateAsync(actor, actionId, scope, cancellationToken);
+        public Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor, string actionId,
+            ResourceScope resource, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+            original().EvaluateWithinOriginalSourceAsync(actor, actionId, resource, scope, retain, token);
     }
 
     private Task StartOriginalWindowsHomeAsync()
