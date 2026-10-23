@@ -234,6 +234,25 @@ hardware or creates another coordinator.
 
 ## Verification and reuse
 
+Record verification scope from the actual `UnitTestResult` names and counters.
+`workflow.trx` rejects empty, inconsistent or skipped runs; retain the result names
+as well and check that every required method and parameterised case ran. Check
+labels, filenames and guessed method counts do not establish app coverage. A
+passing Files dependency check cannot stand in for native Build acceptance.
+
+A RED proof must reach its intended regression after valid fixture setup. Retain
+a purpose-specific diagnostic or assertion sentinel and its actual stack. Compiler,
+fixture, dependency or resource failures are not a demonstrated RED. Preserve them,
+correct the concrete cause and retry only affected stages. Do not rerun passing
+checks merely to fix reporting or count bookkeeping.
+
+Preserve the primary body failure and independent cleanup failures with their
+original cause references; cleanup must not hide the original defect. New platform
+fixtures must report a genuine skip/NOT RUN outside their supported platform,
+never pass through an early return. Mandatory native and release gates remain
+required. Check the current resource guard before launching; an exhausted host is
+BLOCKED, and an empty log or process exit zero cannot substitute for test results.
+
 | Layer | Scope | Promotion limit |
 |---|---|---|
 | 1 | Static/format/configuration, affected compilation, owning unit/component checks | Development evidence only |
