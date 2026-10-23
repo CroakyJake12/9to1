@@ -220,6 +220,149 @@ var checks = await headless.Dispatch(async () =>
             semanticHost.Dispose();
             Check(semanticHost.ToggleSemanticCharacter(retired, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.Disposed && Runs() == beforeDispose,
                 "disposed adapter rejects old requests without disposing or mutating canonical document/history");
+
+            // Keep all preceding adapter cases. Exercise genuinely unvisited
+            // PlainText-only blocks, not another fixture with prebuilt Runs.
+            grid.Children.Remove(semanticHost);
+            using var fallbackHost = new WriteRetainedSceneControl(() => true);
+            grid.Children.Add(fallbackHost);
+            fallbackHost.SetInputAllowed(true);
+            foreach (var fallbackKind in new[] { NotesBlockKind.Paragraph, NotesBlockKind.Heading, NotesBlockKind.Quote, NotesBlockKind.Code })
+            {
+                var fallbackDocument = NotesDocument.Create("Unvisited " + fallbackKind);
+                var first = First(fallbackDocument);
+                first.PlainText = "AB";
+                first.Runs = [new() { Text = "AB", Bold = true, Italic = true, Underline = true, StrikeThrough = true }];
+                var fallbackPage = fallbackDocument.Sections.SelectMany(section => section.Pages).Single();
+                var middle = new NotesBlock { Kind = fallbackKind, Order = 1, PlainText = "xy" };
+                var last = new NotesBlock { Kind = NotesBlockKind.Paragraph, Order = 2, PlainText = "CD",
+                    Runs = [new() { Text = "CD", Bold = true, Italic = true, Underline = true, StrikeThrough = true }] };
+                fallbackPage.Blocks.Add(middle); fallbackPage.Blocks.Add(last);
+                var firstId = first.Id; var middleId = middle.Id; var lastId = last.Id;
+                var fallbackEditor = new WriteDocumentEditor(fallbackDocument);
+                fallbackHost.SetEditor(fallbackEditor);
+                fallbackEditor.SetDocumentCaret(firstId, 1);
+                fallbackEditor.SetDocumentCaret(lastId, 1, extendSelection: true);
+                NotesBlock FallbackBlock(Guid id) => fallbackDocument.Sections.SelectMany(section => section.Pages)
+                    .SelectMany(value => value.Blocks).Single(value => value.Id == id);
+                int[] FallbackMarks(Guid id) => FallbackBlock(id).Runs.SelectMany(run => Enumerable.Repeat(
+                    (run.Bold ? 1 : 0) | (run.Italic ? 2 : 0) | (run.Underline ? 4 : 0) | (run.StrikeThrough ? 8 : 0), run.Text.Length)).ToArray();
+                var beforeFallbackRead = JsonSerializer.Serialize(fallbackDocument);
+                var fallback = fallbackHost.CaptureSemanticSelection();
+                Check(fallback.RangeKind == WriteSemanticRangeKind.Document &&
+                    fallback.Bold == (fallbackKind == NotesBlockKind.Heading ? WriteSemanticMark.On : WriteSemanticMark.Mixed) &&
+                    fallback.Italic == (fallbackKind == NotesBlockKind.Quote ? WriteSemanticMark.On : WriteSemanticMark.Mixed) &&
+                    fallback.Underline == WriteSemanticMark.Mixed && fallback.StrikeThrough == WriteSemanticMark.Mixed,
+                    fallbackKind + " unvisited middle block contributes actual engine-default marks to the entire range");
+                Check(FallbackBlock(middleId).Runs.Count == 0 && JsonSerializer.Serialize(fallbackDocument) == beforeFallbackRead &&
+                    !fallbackEditor.CanUndo && !fallbackEditor.CanRedo && fallbackHost.CaptureSemanticSelection() == fallback &&
+                    JsonSerializer.Serialize(fallbackDocument) == beforeFallbackRead,
+                    fallbackKind + " repeated range capture preserves empty Runs, canonical bytes and history");
+                var enabled = fallbackKind != NotesBlockKind.Heading;
+                var fallbackApplied = fallbackHost.ToggleSemanticCharacter(fallback, WriteCharacterFormat.Bold);
+                var middleOtherMarks = fallbackKind == NotesBlockKind.Quote ? 2 : 0;
+                Check(fallbackApplied.Succeeded && fallbackApplied.Selection!.Bold == (enabled ? WriteSemanticMark.On : WriteSemanticMark.Off) &&
+                    FallbackMarks(firstId).SequenceEqual(new[] { 15, 14 | (enabled ? 1 : 0) }) &&
+                    FallbackMarks(middleId).SequenceEqual(new[] { middleOtherMarks | (enabled ? 1 : 0), middleOtherMarks | (enabled ? 1 : 0) }) &&
+                    FallbackMarks(lastId).SequenceEqual(new[] { 14 | (enabled ? 1 : 0), 15 }) &&
+                    fallbackEditor.SelectedDocumentText == "B\nxy\nC",
+                    fallbackKind + " original toggle enables a mixed range or clears a common mark without touching boundary neighbours");
+                var afterFirstFallbackToggle = JsonSerializer.Serialize(fallbackDocument);
+                Check(fallbackHost.ToggleSemanticCharacter(fallbackApplied.Selection, WriteCharacterFormat.Bold).Succeeded &&
+                    FallbackMarks(firstId).SequenceEqual(new[] { 15, 14 | (enabled ? 0 : 1) }) &&
+                    FallbackMarks(middleId).All(value => value == (middleOtherMarks | (enabled ? 0 : 1))) &&
+                    FallbackMarks(lastId).SequenceEqual(new[] { 14 | (enabled ? 0 : 1), 15 }),
+                    fallbackKind + " second typed toggle reverses the same exact selected characters");
+                Check(fallbackEditor.Undo() && JsonSerializer.Serialize(fallbackDocument) == afterFirstFallbackToggle,
+                    fallbackKind + " original Undo restores the exact first-toggle document and generated run identities");
+                // The original engine materializes SelectedRuns before its undo
+                // snapshot. Undo retains that representation, not empty Runs.
+                Check(fallbackEditor.Undo() && !fallbackEditor.CanUndo && fallbackEditor.CanRedo &&
+                    FallbackMarks(firstId).SequenceEqual(new[] { 15, 15 }) && FallbackMarks(lastId).SequenceEqual(new[] { 15, 15 }) &&
+                    FallbackBlock(middleId).Runs.Count == 1 && FallbackBlock(middleId).PlainText == "xy" &&
+                    FallbackMarks(middleId).SequenceEqual(new[] { middleOtherMarks | (fallbackKind == NotesBlockKind.Heading ? 1 : 0),
+                        middleOtherMarks | (fallbackKind == NotesBlockKind.Heading ? 1 : 0) }) &&
+                    fallbackHost.CaptureSemanticSelection().Bold == fallback.Bold && fallbackHost.CaptureSemanticSelection().Italic == fallback.Italic,
+                    fallbackKind + " original Undo restores fallback formatting while retaining the engine's pre-transaction materialization");
+            }
+
+            var caretDocument = NotesDocument.Create("Read-only post-Undo empty Runs");
+            var caretFirst = First(caretDocument);
+            caretFirst.PlainText = "abcd"; caretFirst.Runs = [new() { Text = "abcd" }];
+            var caretLast = NotesBlock.CreateParagraph("efgh"); caretLast.Order = 1;
+            caretDocument.Sections.SelectMany(section => section.Pages).Single().Blocks.Add(caretLast);
+            var caretLastId = caretLast.Id;
+            var caretEditor = new WriteDocumentEditor(caretDocument);
+            fallbackHost.SetEditor(caretEditor);
+            Check(caretEditor.InsertDocumentText("x"), "caret-purity fixture creates a genuine original Undo preimage");
+            caretEditor.SelectBlock(caretLastId);
+            Check(caretEditor.Undo() && caretEditor.SelectedBlockId == caretLastId &&
+                caretDocument.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                    .Single(value => value.Id == caretLastId).Runs.Count == 0,
+                "original Undo restores an empty-Runs caret block that was previously materialized by selection");
+            fallbackHost.SetReadOnly(true);
+            var beforeCaretRead = JsonSerializer.Serialize(caretDocument);
+            var caretFallback = fallbackHost.CaptureSemanticSelection();
+            Check(caretFallback.RangeKind == WriteSemanticRangeKind.Caret && caretFallback.Bold == WriteSemanticMark.Off &&
+                caretFallback.Italic == WriteSemanticMark.Off && !caretFallback.CanEdit &&
+                fallbackHost.CaptureSemanticSelection() == caretFallback && JsonSerializer.Serialize(caretDocument) == beforeCaretRead &&
+                !caretEditor.CanUndo && caretEditor.CanRedo,
+                "repeated read-only caret capture after Undo observes fallback marks without materialization or history changes");
+            fallbackHost.SetReadOnly(false);
+
+            var shortenedDocument = NotesDocument.Create("Undo-normalized endpoints");
+            var shortenedFirst = First(shortenedDocument);
+            shortenedFirst.PlainText = "abcd"; shortenedFirst.Runs = [new() { Text = "abcd" }];
+            var shortenedLast = new NotesBlock { Order = 1, PlainText = "efgh", Runs = [new() { Text = "efgh" }] };
+            shortenedDocument.Sections.SelectMany(section => section.Pages).Single().Blocks.Add(shortenedLast);
+            var shortenedFirstId = shortenedFirst.Id; var shortenedLastId = shortenedLast.Id;
+            var shortenedEditor = new WriteDocumentEditor(shortenedDocument);
+            fallbackHost.SetEditor(shortenedEditor);
+            shortenedEditor.SetDocumentCaret(shortenedFirstId, 4);
+            Check(shortenedEditor.InsertDocumentText("LONG"), "endpoint fixture lengthens real text using original history");
+            shortenedEditor.SetDocumentCaret(shortenedFirstId, 8);
+            shortenedEditor.SetDocumentCaret(shortenedLastId, 2, extendSelection: true);
+            Check(shortenedEditor.Undo() && shortenedEditor.DocumentAnchor == new WriteDocumentPosition(shortenedFirstId, 8) &&
+                shortenedEditor.SelectionForBlock(shortenedFirstId) == (4, 4),
+                "original Undo retains a raw out-of-bounds anchor while its selected range normalizes to restored text");
+            var beforeShortenedRead = JsonSerializer.Serialize(shortenedDocument);
+            var shortened = fallbackHost.CaptureSemanticSelection();
+            Check(shortened.Anchor == new WriteDocumentPosition(shortenedFirstId, 4) &&
+                shortened.Caret == new WriteDocumentPosition(shortenedLastId, 2) && shortened.RangeKind == WriteSemanticRangeKind.Document &&
+                fallbackHost.CaptureSemanticSelection() == shortened && JsonSerializer.Serialize(shortenedDocument) == beforeShortenedRead &&
+                shortenedEditor.DocumentAnchor == new WriteDocumentPosition(shortenedFirstId, 8),
+                "snapshot exposes the engine-normalized shortened anchor without rewriting cached selection or canonical content");
+            Check(fallbackHost.ToggleSemanticCharacter(shortened, WriteCharacterFormat.Bold).Succeeded &&
+                shortenedDocument.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                    .Single(value => value.Id == shortenedFirstId).Runs.All(run => !run.Bold) &&
+                shortenedDocument.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                    .Single(value => value.Id == shortenedLastId).Runs.SelectMany(run => Enumerable.Repeat(run.Bold, run.Text.Length))
+                    .SequenceEqual(new[] { true, true, false, false }),
+                "normalized snapshot action formats only the original engine's actual post-Undo range");
+            Check(shortenedEditor.Undo() && JsonSerializer.Serialize(shortenedDocument) == beforeShortenedRead,
+                "original Undo restores the exact shortened-endpoint formatting preimage");
+
+            var removed = shortenedEditor.InsertBlock(NotesBlockKind.Heading);
+            shortenedEditor.SetDocumentCaret(removed.Id, 2);
+            shortenedEditor.SetDocumentCaret(shortenedLastId, 2, extendSelection: true);
+            Check(shortenedEditor.Undo() && shortenedEditor.DocumentAnchor == new WriteDocumentPosition(removed.Id, 2) &&
+                shortenedEditor.TextBlocks().All(value => value.Id != removed.Id) && shortenedEditor.SelectedDocumentText == "abcd\nef",
+                "original Undo removes the anchor block and uses first scoped text block as its canonical fallback");
+            var beforeRemovedRead = JsonSerializer.Serialize(shortenedDocument);
+            var removedAnchor = fallbackHost.CaptureSemanticSelection();
+            Check(removedAnchor.Anchor == new WriteDocumentPosition(shortenedFirstId, 0) &&
+                removedAnchor.Caret == new WriteDocumentPosition(shortenedLastId, 2) && removedAnchor.AnchorPageId == removedAnchor.CaretPageId &&
+                fallbackHost.CaptureSemanticSelection() == removedAnchor && JsonSerializer.Serialize(shortenedDocument) == beforeRemovedRead,
+                "removed-anchor snapshot reports actual fallback block identity and offset without mutating the original engine");
+            Check(fallbackHost.ToggleSemanticCharacter(removedAnchor, WriteCharacterFormat.Italic).Succeeded &&
+                shortenedDocument.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                    .Single(value => value.Id == shortenedFirstId).Runs.All(run => run.Italic) &&
+                shortenedDocument.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks)
+                    .Single(value => value.Id == shortenedLastId).Runs.SelectMany(run => Enumerable.Repeat(run.Italic, run.Text.Length))
+                    .SequenceEqual(new[] { true, true, false, false }),
+                "removed-anchor typed action forwards the canonical fallback range rather than a deleted block identity");
+            Check(shortenedEditor.Undo() && JsonSerializer.Serialize(shortenedDocument) == beforeRemovedRead,
+                "original Undo restores the exact removed-anchor action preimage");
             return assertions;
         }
         finally { semanticWindow.Close(); }

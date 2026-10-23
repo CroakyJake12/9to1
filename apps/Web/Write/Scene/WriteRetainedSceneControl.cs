@@ -141,12 +141,23 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
                 WriteSemanticMark.Unavailable, WriteSemanticMark.Unavailable, WriteSemanticMark.Unavailable, WriteSemanticMark.Unavailable,
                 false, false, false, false, false);
         var selected = editor.SelectedBlock;
+        var textBlocks = editor.TextBlocks();
         var textAvailable = selected is not null &&
-            editor.TextBlocks().Any(block => block.Id == selected.Id);
+            textBlocks.Any(block => block.Id == selected.Id);
+        int TextLength(NotesBlock block) => block.Runs.Count == 0 ? block.PlainText.Length
+            : block.Runs.Sum(run => run.Text.Length);
+        WriteDocumentPosition Normalize(WriteDocumentPosition position)
+        {
+            // Match the engine's Normalise/DocumentCaretFallback without changing
+            // its cached endpoints. Undo can shorten text or remove the anchor.
+            var block = textBlocks.FirstOrDefault(value => value.Id == position.BlockId);
+            return block is not null ? new(block.Id, Math.Clamp(position.Offset, 0, TextLength(block)))
+                : textBlocks.FirstOrDefault() is { } first ? new(first.Id, 0) : default;
+        }
         var kind = !textAvailable ? WriteSemanticRangeKind.Unavailable : editor.HasDocumentSelection
             ? WriteSemanticRangeKind.Document : editor.HasSelection ? WriteSemanticRangeKind.Block : WriteSemanticRangeKind.Caret;
         WriteDocumentPosition? caret = textAvailable ? editor.DocumentCaret : null;
-        WriteDocumentPosition? anchor = textAvailable ? editor.DocumentAnchor : null;
+        WriteDocumentPosition? anchor = textAvailable && editor.DocumentAnchor is { } rawAnchor ? Normalize(rawAnchor) : null;
         if (kind == WriteSemanticRangeKind.Block)
             anchor = caret?.Offset == editor.SelectionStart ? new WriteDocumentPosition(selected!.Id, editor.SelectionEnd)
                 : caret?.Offset == editor.SelectionEnd ? new WriteDocumentPosition(selected!.Id, editor.SelectionStart) : null;
@@ -154,29 +165,39 @@ public sealed class WriteRetainedSceneControl : Panel, IDisposable
         Guid? PageFor(WriteDocumentPosition? position) => position is { } value
             ? editor.Document.Sections.SelectMany(section => section.Pages)
                 .FirstOrDefault(page => page.Blocks.Any(block => block.Id == value.BlockId))?.Id : null;
-        var runs = new List<NotesTextRun>();
+        var marks = new List<(bool Bold, bool Italic, bool Underline, bool StrikeThrough)>();
+        void Observe(NotesTextRun run) => marks.Add((run.Bold, run.Italic, run.Underline, run.StrikeThrough));
+        // These are the existing WriteNamedStyleOperations.EnsureRuns character
+        // defaults. Observe them without materializing a run or allocating an ID.
+        void ObserveFallback(NotesBlock block) => marks.Add((block.Kind == NotesBlockKind.Heading,
+            block.Kind == NotesBlockKind.Quote, false, false));
         if (textAvailable)
         {
             if (kind == WriteSemanticRangeKind.Caret)
             {
-                if (editor.ActiveRun is { } run) runs.Add(run);
+                // ActiveRun calls EnsureRuns and can mutate even a read-only
+                // snapshot after Undo restores an unvisited PlainText block.
+                if (selected!.Runs.Count == 0) ObserveFallback(selected);
+                else Observe(selected.Runs[Math.Clamp(editor.ActiveRunIndex, 0, selected.Runs.Count - 1)]);
             }
-            else foreach (var block in editor.TextBlocks())
+            else foreach (var block in textBlocks)
             {
                 var range = kind == WriteSemanticRangeKind.Document ? editor.SelectionForBlock(block.Id)
                     : block.Id == selected!.Id ? (editor.SelectionStart, editor.SelectionEnd) : ((int, int)?)null;
                 if (range is not { } bounds) continue;
+                if (block.Runs.Count == 0 && block.PlainText.Length > bounds.Item1 && bounds.Item2 > 0)
+                    ObserveFallback(block);
                 var offset = 0;
                 foreach (var run in block.Runs)
                 {
                     var end = offset + run.Text.Length;
-                    if (end > bounds.Item1 && offset < bounds.Item2) runs.Add(run);
+                    if (end > bounds.Item1 && offset < bounds.Item2) Observe(run);
                     offset = end;
                 }
             }
         }
-        WriteSemanticMark Mark(Func<NotesTextRun, bool> enabled) => runs.Count == 0 ? WriteSemanticMark.Unavailable
-            : runs.All(enabled) ? WriteSemanticMark.On : runs.Any(enabled) ? WriteSemanticMark.Mixed : WriteSemanticMark.Off;
+        WriteSemanticMark Mark(Func<(bool Bold, bool Italic, bool Underline, bool StrikeThrough), bool> enabled) => marks.Count == 0 ? WriteSemanticMark.Unavailable
+            : marks.All(enabled) ? WriteSemanticMark.On : marks.Any(enabled) ? WriteSemanticMark.Mixed : WriteSemanticMark.Off;
         return new(1, _semanticOwner, _semanticGeneration, editor.Document.Id,
             editor.Document.Version, editor.PageScopeId, PageFor(anchor), PageFor(caret), selected?.Id,
             anchor, caret, kind, editor.SelectionStart, editor.SelectionEnd,
