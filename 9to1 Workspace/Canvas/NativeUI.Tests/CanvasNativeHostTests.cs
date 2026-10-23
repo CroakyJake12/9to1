@@ -22,7 +22,7 @@ public sealed class CanvasNativeHostTests
     public async Task Actual_native_host_creates_then_draws_only_after_each_real_Home_approval()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             var ct = CancellationToken.None;
             var root = Path.Combine(Path.GetTempPath(), "canvas-native-host-" + Guid.NewGuid().ToString("N"));
@@ -90,6 +90,7 @@ public sealed class CanvasNativeHostTests
                 finally { window.Close(); }
             }
             finally { Directory.Delete(root, true); }
+            return true;
         }, CancellationToken.None);
     }
     [Theory]
@@ -98,7 +99,7 @@ public sealed class CanvasNativeHostTests
     public async Task Actual_host_retries_only_negative_audit_after_claim_or_admission_storage_failure(bool beginFailure)
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             var ct = CancellationToken.None;
             var root = Path.Combine(Path.GetTempPath(), "canvas-native-host-" + Guid.NewGuid().ToString("N"));
@@ -152,6 +153,7 @@ public sealed class CanvasNativeHostTests
                 finally { window.Close(); }
             }
             finally { Directory.Delete(root, true); }
+            return true;
         }, CancellationToken.None);
     }
 

@@ -11,7 +11,7 @@ public sealed class CanvasFailedSurfaceInitializationTests
     public async Task Failed_acquired_surface_initialization_joins_close_and_preserves_all_original_faults()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             var canceledLikeFault = new OperationCanceledException("Faulted readiness payload.");
             var sibling = new IOException("Original readiness sibling.");
@@ -33,6 +33,7 @@ public sealed class CanvasFailedSurfaceInitializationTests
             Assert.True(close.IsCompleted);
             Assert.Same(close, surface.CloseAndDrainAsync());
             Assert.Null(surface.Content);
+            return true;
         }, CancellationToken.None);
     }
 
@@ -42,7 +43,7 @@ public sealed class CanvasFailedSurfaceInitializationTests
     public async Task Failed_acquired_surface_keeps_foreign_aggregate_identity_and_its_close_faulted(bool nested)
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             var empty = new AggregateException("Foreign empty readiness fault.");
             var source = nested ? new AggregateException("Foreign nested readiness fault.", empty, new IOException("Nested readiness sibling.")) : empty;
@@ -56,6 +57,7 @@ public sealed class CanvasFailedSurfaceInitializationTests
             Assert.Same(source, await Record.ExceptionAsync(() => close));
             Assert.Same(close, surface.CloseAndDrainAsync());
             Assert.Null(surface.Content);
+            return true;
         }, CancellationToken.None);
     }
 
