@@ -150,12 +150,56 @@ public sealed class BuildBrowseAppContentIntegrationTests
             [new NativeAppContentRegistration(Dev.Id, "dev", HavenAppRouteKind.Dev, factory)],
             () => true);
 
-        var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://dev"), "original-profile", BrowserTabPrivacy.Standard);
-        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(registry.CreateSession(request));
-        Assert.Equal("Build", session.Title);
-        Assert.Equal("code", session.IconKey);
-        Assert.False(session.IsPublicationCurrent); // uninitialized stub session, no publication.
-        await session.CloseAndDrainAsync();
+        // Closing an unopened wrapper must not acquire a native owner. The next wrapper
+        // acquires exactly one owner only through its retained initialization task.
+        await VerifySession(initialize: false);
+        Assert.Equal(0, factory.Calls);
+        await VerifySession(initialize: true);
+        Assert.Equal(1, factory.Calls);
+
+        async Task VerifySession(bool initialize)
+        {
+            var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://dev"), "original-profile", BrowserTabPrivacy.Standard);
+            var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(registry.CreateSession(request));
+            var failures = new List<Exception>();
+            try
+            {
+                Assert.Equal("Opening app", session.Title);
+                Assert.Equal("apps", session.IconKey);
+                Assert.Equal(0, factory.Calls);
+                Assert.Null(session.OriginalInitialization);
+                Assert.Null(session.OriginalClose);
+                Assert.False(session.IsPublicationCurrent);
+                Assert.Throws<InvalidOperationException>(() => session.OriginalNativeView);
+                if (initialize)
+                {
+                    var initialization = session.InitializeAsync(TestContext.Current.CancellationToken);
+                    await initialization;
+                    Assert.Same(initialization, session.OriginalInitialization);
+                    Assert.Equal("Build", session.Title);
+                    Assert.Equal("code", session.IconKey);
+                    Assert.True(session.IsPublicationCurrent);
+                    Assert.Same(factory.View, session.OriginalNativeView);
+                    Assert.Equal(1, factory.Calls);
+                }
+            }
+            catch (Exception error) { failures.Add(error); }
+            // Drain even after an admission/assertion failure and keep its causes alongside
+            // any independent failure of the SAME wrapper's actual retirement task.
+            try
+            {
+                var close = session.CloseAndDrainAsync();
+                await close;
+                Assert.Same(close, session.OriginalClose);
+                Assert.True(session.CanRetireOriginalView);
+                Assert.False(session.IsPublicationCurrent);
+                Assert.Throws<InvalidOperationException>(() => session.OriginalNativeView);
+                Assert.Equal(initialize ? 1 : 0, factory.Calls);
+                if (!initialize) Assert.Null(session.OriginalInitialization);
+            }
+            catch (Exception error) { failures.Add(error); }
+            if (failures.Count != 0) throw new AggregateException("The actual lazy native registry initialization/close contract failed.", failures);
+        }
     }
 
     [AvaloniaFact]
