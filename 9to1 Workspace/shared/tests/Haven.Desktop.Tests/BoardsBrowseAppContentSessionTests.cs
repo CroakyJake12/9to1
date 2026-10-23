@@ -314,8 +314,10 @@ public sealed class BoardsBrowseAppContentSessionTests
             {
                 appLifetime.Token.ThrowIfCancellationRequested();
                 await view.CaptureOriginalActionSettlement(show).WaitAsync(appLifetime.Token);
+                // Let the genuine attached window lay out conditional branches before visual lookup.
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(window.UpdateLayout,
+                    Avalonia.Threading.DispatcherPriority.Background, appLifetime.Token);
                 if (view.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "boards-storage-create")) break;
-                await Task.Yield();
             }
             Assert.DoesNotContain(view.GetVisualDescendants().OfType<Control>(), control => control.Name == "boards-workspace");
             Assert.Empty((await home.Permissions.GetSnapshotAsync(cancellationToken: appLifetime.Token)).Grants);
