@@ -39,9 +39,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+from importlib import import_module, metadata
 import json
 import os
 import pathlib
+import stat
 import sys
 
 # ------------------------------------------------------------------ precise dependency diagnostics
@@ -78,6 +80,95 @@ except Exception as exc:  # pragma: no cover - dependency gate
 
 MAX_FRAME = 16 * 1024 * 1024
 MAX_ID_COUNT = 4 * 1024 * 1024
+MAX_RUNTIME_LOCK_BYTES = 16 * 1024
+
+
+def verify_runtime_dependency_versions():
+    """Admit the selected interpreter's distribution versions against the held sibling lock.
+
+    Version metadata establishes compatibility admission, not distribution-byte authenticity or
+    transitive dependency custody. Keep the lexical helper directory: resolving it would escape
+    the installation owner's held directory descriptor after an original-path replacement.
+    """
+    lock_path = _helper_dir / "strata-runtime-dependencies.json"
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    try:
+        fd = os.open(lock_path, flags)
+    except OSError as exc:
+        raise ValueError("runtime dependency lock is unavailable: %s" % exc) from exc
+    try:
+        before = os.fstat(fd)
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError("runtime dependency lock is not a regular file")
+        if before.st_size > MAX_RUNTIME_LOCK_BYTES:
+            raise ValueError("runtime dependency lock exceeds %d bytes" % MAX_RUNTIME_LOCK_BYTES)
+        data = bytearray()
+        while len(data) <= MAX_RUNTIME_LOCK_BYTES:
+            chunk = os.read(fd, MAX_RUNTIME_LOCK_BYTES + 1 - len(data))
+            if not chunk:
+                break
+            data.extend(chunk)
+        if len(data) > MAX_RUNTIME_LOCK_BYTES:
+            raise ValueError("runtime dependency lock exceeds %d bytes" % MAX_RUNTIME_LOCK_BYTES)
+        after = os.fstat(fd)
+        stable = lambda info: (info.st_dev, info.st_ino, info.st_size,
+                               info.st_mtime_ns, info.st_ctime_ns)
+        if stable(before) != stable(after) or len(data) != before.st_size:
+            raise ValueError("runtime dependency lock changed while reading")
+    except OSError as exc:
+        raise ValueError("runtime dependency lock could not be read: %s" % exc) from exc
+    finally:
+        os.close(fd)
+
+    def unique_keys(pairs):
+        values = {}
+        for key, value in pairs:
+            if key in values:
+                raise ValueError("runtime dependency lock has duplicate JSON key: " + key)
+            values[key] = value
+        return values
+
+    try:
+        lock = json.loads(data.decode("utf-8"), object_pairs_hook=unique_keys)
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+        raise ValueError("runtime dependency lock contains invalid JSON: %s" % exc) from exc
+    if not isinstance(lock, dict) or lock.get("schema") != "strata-runtime-dependencies/v1":
+        raise ValueError("runtime dependency lock has an unsupported schema")
+    modules = lock.get("runtimeModules")
+    if not isinstance(modules, dict) or set(modules) != {"regex", "jinja2"}:
+        raise ValueError("runtime dependency lock must name exactly regex and jinja2")
+    pins = {}
+    for name in ("regex", "jinja2"):
+        entry = modules[name]
+        pin = entry.get("pin") if isinstance(entry, dict) else None
+        if (not isinstance(pin, str) or not 1 <= len(pin) <= 128
+                or any(c not in "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.!+_-" for c in pin)):
+            raise ValueError("runtime dependency " + name + " has an invalid version pin")
+        pins[name] = pin
+    for name, pin in pins.items():
+        try:
+            observed = metadata.version(name)
+        except metadata.PackageNotFoundError as exc:
+            raise ValueError("runtime dependency " + name + " distribution is unavailable") from exc
+        except Exception as exc:
+            raise ValueError("runtime dependency " + name + " version metadata is unavailable: %s" % exc) from exc
+        if observed != pin:
+            raise ValueError("runtime dependency %s version mismatch: required %s; observed %s"
+                             % (name, pin, observed))
+    # Intact dist-info alone does not establish that the selected interpreter can import the
+    # implementation. In particular Jinja2 imports MarkupSafe; retain that real cause if absent.
+    for name in pins:
+        try:
+            import_module(name)
+        except Exception as exc:
+            raise ValueError("runtime dependency " + name + " import is unavailable: %s" % exc) from exc
+    try:
+        sandbox = import_module("jinja2.sandbox")
+        if not callable(getattr(sandbox, "ImmutableSandboxedEnvironment", None)):
+            raise ImportError("ImmutableSandboxedEnvironment is unavailable")
+    except Exception as exc:
+        raise ValueError("runtime dependency jinja2 sandbox is unavailable: %s" % exc) from exc
 
 
 def read_frame(stream) -> tuple[bytes, int]:
@@ -281,6 +372,12 @@ def main() -> int:
     parser.add_argument("--tokenizer-dir", help="extracted tokenizer/ directory (pack layout)")
     parser.add_argument("--expected-identity", help="registered model tokenizer identity to compare")
     args = parser.parse_args()
+
+    try:
+        verify_runtime_dependency_versions()
+    except ValueError as exc:
+        sys.stderr.write("dependency: %s\n" % exc)
+        return 3
 
     if not _BUNDLED_DONOR_AVAILABLE:
         sys.stderr.write("dependency: %s\n" % (_DONOR_CAUSE,))
