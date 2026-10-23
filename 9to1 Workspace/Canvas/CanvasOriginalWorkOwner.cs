@@ -89,21 +89,26 @@ public sealed class CanvasOriginalWorkOwner : IAsyncDisposable
     public async Task<T> ObserveOriginalAsync<T>(Task<T> actual)
     { await ObserveOriginalAsync((Task)actual).ConfigureAwait(true); return actual.Result; }
 
-    public Task CloseAndDrainAsync(Func<Task>? independentCleanup = null)
+    /// <summary>The optional host source wraps the actual private-token cancellation,
+    /// including its synchronous dependency callbacks. It must invoke once on this
+    /// physical thread; its finite scope never spans an await.</summary>
+    public Task CloseAndDrainAsync(Func<Task>? independentCleanup = null,
+        Action<Action>? originalCancellationSource = null)
     {
         TaskCompletionSource start; Task original;
         lock (_gate)
         {
             if (_close is not null) return _close;
             _sealed = true; start = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            original = _close = ClosePublishedAsync(start.Task, _originals.ToArray(), independentCleanup);
+            original = _close = ClosePublishedAsync(start.Task, _originals.ToArray(), independentCleanup, originalCancellationSource);
         }
         start.SetResult(); return original;
     }
-    private async Task ClosePublishedAsync(Task start, Task[] originals, Func<Task>? cleanup)
+    private async Task ClosePublishedAsync(Task start, Task[] originals, Func<Task>? cleanup,
+        Action<Action>? originalCancellationSource)
     {
         await start.ConfigureAwait(true); var errors = new List<Exception>();
-        try { _lifetime.Cancel(); } catch (Exception error) { Add(errors, error); }
+        try { CancelOriginalLifetime(originalCancellationSource); } catch (Exception error) { Add(errors, error); }
         foreach (var actual in originals)
         {
             try { await actual.ConfigureAwait(true); }
@@ -116,6 +121,41 @@ public sealed class CanvasOriginalWorkOwner : IAsyncDisposable
         lock (_gate) foreach (var error in _sourceErrors) Add(errors, error);
         try { _lifetime.Dispose(); } catch (Exception error) { Add(errors, error); }
         Throw(errors);
+    }
+    private void CancelOriginalLifetime(Action<Action>? source)
+    {
+        if (source is null) { _lifetime.Cancel(); return; }
+        var thread = Environment.CurrentManagedThreadId;
+        var active = true; var invoked = false; InvalidOperationException? refusal = null;
+        try
+        {
+            source(() =>
+            {
+                try
+                {
+                    lock (_gate)
+                    {
+                        if (!active || invoked || Environment.CurrentManagedThreadId != thread)
+                        {
+                            refusal ??= new InvalidOperationException("Invoke actual Canvas cancellation once inside its finite original host source.");
+                            throw refusal;
+                        }
+                        invoked = true;
+                    }
+                    _lifetime.Cancel();
+                }
+                catch (Exception error)
+                {
+                    // The host may catch this exact callback failure or refusal. Its
+                    // propagation is independent of this owner's retained failure custody.
+                    lock (_gate) Add(_sourceErrors, error);
+                    throw;
+                }
+            });
+            lock (_gate)
+                if (!invoked) throw new InvalidOperationException("The original Canvas host did not invoke actual cancellation.");
+        }
+        finally { lock (_gate) active = false; }
     }
     public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
     private void Capture(List<Exception> errors, Task? actual, Exception caught)

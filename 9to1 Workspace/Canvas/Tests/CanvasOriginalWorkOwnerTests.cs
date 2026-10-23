@@ -192,6 +192,123 @@ public sealed class CanvasOriginalWorkOwnerTests
         Assert.False(owner.OwnsOriginalTask(actualCleanup));
     }
 
+    [Fact]
+    public async Task Swallowed_private_cancellation_fault_stays_opaque_and_joins_original_and_cleanup()
+    {
+        var owner = new CanvasOriginalWorkOwner();
+        var callbackCause = new IOException("Actual private-token cancellation callback.");
+        var foreign = new AggregateException("Foreign cancellation payload.", new AggregateException(), callbackCause);
+        var cleanupCause = new IOException("Independent cleanup after swallowed cancellation.");
+        using var registration = owner.Token.Register(() => throw foreign);
+        var entered = NewSignal(); var raw = NewSignal(); var canceled = NewSignal();
+        var cleanupCalls = 0; Exception? swallowed = null; Exception? failure = null;
+        Exception? originalFailure = null; Task? close = null;
+        var original = owner.RunOriginalAsync(_ => { entered.SetResult(); return raw.Task; });
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            close = owner.CloseAndDrainAsync(
+                () => { ++cleanupCalls; return Task.FromException(cleanupCause); },
+                cancel =>
+                {
+                    try { cancel(); } catch (Exception error) { swallowed = error; }
+                    finally { canceled.SetResult(); }
+                });
+            await canceled.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(original.IsCompleted); Assert.False(close.IsCompleted); Assert.Equal(0, cleanupCalls);
+            Assert.Same(close, owner.CloseAndDrainAsync());
+            Assert.True(owner.Token.IsCancellationRequested);
+        }
+        finally
+        {
+            raw.TrySetResult();
+            originalFailure = await Record.ExceptionAsync(() => original.WaitAsync(TimeSpan.FromSeconds(10)));
+            failure = await Record.ExceptionAsync(() => (close ?? owner.CloseAndDrainAsync()).WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+        Assert.Null(originalFailure); Assert.True(original.IsCompletedSuccessfully); Assert.Equal(1, cleanupCalls);
+        var cancellation = Assert.IsType<AggregateException>(swallowed);
+        Assert.Same(foreign, Assert.Single(cancellation.InnerExceptions));
+        Assert.True(owner.TryGetOwnedFailureCauses(failure!, out var causes)); Assert.Equal(2, causes.Count);
+        Assert.Contains(causes, error => ReferenceEquals(error, cancellation));
+        Assert.Contains(causes, error => ReferenceEquals(error, cleanupCause));
+        Assert.False(owner.TryGetOwnedFailureCauses(cancellation, out _));
+        Assert.False(owner.TryGetOwnedFailureCauses(foreign, out _));
+        Assert.Same(callbackCause, foreign.InnerExceptions[1]);
+        Assert.True(close!.IsFaulted); Assert.Same(close, owner.OriginalCloseTask);
+    }
+
+    [Fact]
+    public async Task Swallowed_repeat_cancellation_refusals_still_fault_the_same_joined_close()
+    {
+        var owner = new CanvasOriginalWorkOwner();
+        var entered = NewSignal(); var raw = NewSignal(); var attempted = NewSignal();
+        var cleanupCalls = 0; Exception? firstRefusal = null; Exception? secondRefusal = null;
+        Exception? originalFailure = null; Exception? failure = null; Task? close = null;
+        var original = owner.RunOriginalAsync(_ => { entered.SetResult(); return raw.Task; });
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            close = owner.CloseAndDrainAsync(
+                () => { ++cleanupCalls; return Task.CompletedTask; },
+                cancel =>
+                {
+                    cancel();
+                    try { cancel(); } catch (Exception error) { firstRefusal = error; }
+                    try { cancel(); } catch (Exception error) { secondRefusal = error; }
+                    attempted.SetResult();
+                });
+            await attempted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(original.IsCompleted); Assert.False(close.IsCompleted); Assert.Equal(0, cleanupCalls);
+            Assert.Same(close, owner.CloseAndDrainAsync());
+            Assert.Throws<ObjectDisposedException>(() => { _ = owner.RunOriginalAsync(_ => Task.CompletedTask); });
+        }
+        finally
+        {
+            raw.TrySetResult();
+            originalFailure = await Record.ExceptionAsync(() => original.WaitAsync(TimeSpan.FromSeconds(10)));
+            failure = await Record.ExceptionAsync(() => (close ?? owner.CloseAndDrainAsync()).WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+        Assert.Null(originalFailure); Assert.True(original.IsCompletedSuccessfully); Assert.Equal(1, cleanupCalls);
+        Assert.IsType<InvalidOperationException>(firstRefusal);
+        Assert.Same(firstRefusal, secondRefusal); Assert.Same(firstRefusal, failure);
+        Assert.True(close!.IsFaulted); Assert.Same(close, owner.OriginalCloseTask);
+    }
+
+    [Fact]
+    public async Task Missing_cancellation_invocation_joins_original_and_independent_cleanup_before_refusal()
+    {
+        var owner = new CanvasOriginalWorkOwner(); var token = owner.Token;
+        var entered = NewSignal(); var raw = NewSignal(); var sourceReturned = NewSignal();
+        var cleanupEntered = NewSignal(); var cleanupRelease = NewSignal();
+        var cleanupCalls = 0; Task? close = null; Exception? originalFailure = null; Exception? failure = null;
+        var original = owner.RunOriginalAsync(_ => { entered.SetResult(); return raw.Task; });
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            close = owner.CloseAndDrainAsync(
+                () => { ++cleanupCalls; cleanupEntered.SetResult(); return cleanupRelease.Task; },
+                _ => sourceReturned.SetResult());
+            await sourceReturned.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(token.IsCancellationRequested); Assert.False(close.IsCompleted);
+            Assert.False(original.IsCompleted); Assert.Equal(0, cleanupCalls);
+            raw.SetResult();
+            await cleanupEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(close.IsCompleted); Assert.Same(close, owner.CloseAndDrainAsync());
+            Assert.Throws<ObjectDisposedException>(() => { _ = owner.RunOriginalAsync(_ => Task.CompletedTask); });
+        }
+        finally
+        {
+            raw.TrySetResult(); cleanupRelease.TrySetResult();
+            originalFailure = await Record.ExceptionAsync(() => original.WaitAsync(TimeSpan.FromSeconds(10)));
+            failure = await Record.ExceptionAsync(() => (close ?? owner.CloseAndDrainAsync()).WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+        Assert.Null(originalFailure); Assert.True(original.IsCompletedSuccessfully); Assert.Equal(1, cleanupCalls);
+        var refusal = Assert.IsType<InvalidOperationException>(failure);
+        Assert.Equal("The original Canvas host did not invoke actual cancellation.", refusal.Message);
+        Assert.False(token.IsCancellationRequested); Assert.True(close!.IsFaulted);
+        Assert.Same(close, owner.OriginalCloseTask);
+    }
+
     private static bool ContainsSameCause(Exception actual, Exception sought)
         => ReferenceEquals(actual, sought) || actual is AggregateException group && group.InnerExceptions.Any(child => ContainsSameCause(child, sought));
     private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
