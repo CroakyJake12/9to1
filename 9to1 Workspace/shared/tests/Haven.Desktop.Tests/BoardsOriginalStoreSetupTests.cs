@@ -230,7 +230,7 @@ public sealed class BoardsOriginalStoreSetupTests
         internal Task<BoardsOriginalStoreSetupBackend.Snapshot> ExecuteAsync(BoardsOriginalStoreSetupOperation operation,
             BoardsOriginalStoreSetupBackend.Snapshot? expected = null) =>
             Backend.ExecuteWithinOriginalSourceAsync(operation, expected, body => body(), _ => { }, Token);
-        internal async Task<HomePermissionRequest> WaitForRequestAsync(string action)
+        internal async Task<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest> WaitForRequestAsync(string action)
         {
             while (true)
             {

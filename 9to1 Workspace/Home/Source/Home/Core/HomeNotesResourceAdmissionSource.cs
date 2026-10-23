@@ -382,17 +382,52 @@ internal sealed class HomeNotesOriginalSource
     private HomeNotesOriginalSource(Action<Action> scope, Action<Task> retain)
     { OriginalScope = scope; OriginalRetain = retain; Callbacks = new(scope, retain); }
     internal T Invoke<T>(Func<T> body) => Callbacks.Invoke(body);
-    internal Task<T> Read<T>(Func<Task<T>> body) => Callbacks.ReadAsync(body);
+    internal async Task<T> Read<T>(Func<Task<T>> body)
+    {
+        Task<T>? actual = null; Exception? invocation = null, observed = null; T result = default!;
+        try
+        {
+            _ = Invoke(() =>
+            {
+                actual = body() ?? throw new InvalidOperationException("No original Notes Home task was returned.");
+                Retain(actual); return actual; // Capture precedes any external retainer/post-scope fault.
+            });
+        }
+        catch (Exception error) { invocation = error; }
+        if (actual is not null)
+            try { result = await actual.ConfigureAwait(false); }
+            catch (Exception error) { observed = error; }
+        if (invocation is null && actual?.IsCanceled == true && observed is OperationCanceledException)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(observed).Throw();
+        var failures = new List<Exception>();
+        if (invocation is not null) failures.Add(invocation);
+        if (actual?.Exception is { } group) failures.AddRange(group.InnerExceptions);
+        else if (observed is not null) failures.Add(observed);
+        if (failures.Count != 0)
+            throw new AggregateException("The actual original Notes Home callback or source failed.", failures);
+        return actual is null ? throw new InvalidOperationException("No original Notes Home task was captured.") : result;
+    }
     internal static async Task<T> RunAsync<T>(Action<Action> scope, Action<Task> retain, Func<HomeNotesOriginalSource, Task<T>> body)
     {
         ArgumentNullException.ThrowIfNull(scope); ArgumentNullException.ThrowIfNull(retain);
         var originals = new CloudflareOriginalTaskLedger();
         var source = new HomeNotesOriginalSource(scope, raw => { originals.Track(raw); retain(raw); });
-        T result = default!;
-        try { result = await body(source).ConfigureAwait(false); }
-        catch (Exception error) { originals.Retain(error); }
+        T result = default!; Task<T>? actualBody = null; Exception? primary = null;
+        try
+        {
+            actualBody = body(source) ?? throw new InvalidOperationException("No original Notes Home body task was returned.");
+            result = await actualBody.ConfigureAwait(false);
+        }
+        catch (Exception error) { primary = error; originals.Retain(error); }
         await originals.ObserveAllOriginalTasksAsync().ConfigureAwait(false);
         foreach (var error in source.Callbacks.Errors) originals.Retain(error);
+        // Status of the exact retained body AND every captured child establishes genuine
+        // cancellation. A faulted raw Task carrying OCE, a synchronous finite callback OCE,
+        // or an independent post-scope/retainer fault can never take this branch.
+        if (actualBody?.IsCanceled == true && primary is OperationCanceledException &&
+            source.Callbacks.Errors.Length == 0 && originals.OriginalTasks.All(raw => !raw.IsFaulted) &&
+            originals.OriginalErrors.All(error => error is OperationCanceledException))
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
         if (originals.OriginalErrors.Count != 0)
             throw new AggregateException("The original Notes Home sources did not settle cleanly.", originals.OriginalErrors);
         return result;
