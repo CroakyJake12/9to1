@@ -69,6 +69,30 @@ public sealed class HomeLocalDomainCompositionTests
     }
 
     [Fact]
+    public async Task Actual_linux_Home_owns_high_risk_store_import_and_requires_explicit_decline_then_accept()
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        using var store = new OriginalLocalStoreImportCompositionControl();
+        await WithDomain(new OperatingSystemPrincipalSource(), async (domain, _) =>
+        {
+            await domain.StartOriginalAsync();
+            await store.DemandManualImportAsync(domain.Profiles, domain.LocalStoreOwnership, domain.Permissions);
+        }, evidence: [store]);
+    }
+
+    [Fact]
+    public async Task Actual_linux_Home_refuses_duplicate_import_policy_instead_of_overriding_its_owner()
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        using var store = new OriginalLocalStoreImportCompositionControl();
+        await WithDomain(new OperatingSystemPrincipalSource(), async (domain, _) =>
+        {
+            await domain.StartOriginalAsync();
+            await store.DemandDuplicatePolicyRefusedAsync(domain.Profiles, domain.LocalStoreOwnership, domain.Permissions);
+        }, policies: [new OriginalLocalStoreImportCompositionControl.DuplicatePolicy()], evidence: [store]);
+    }
+
+    [Fact]
     public async Task Held_actual_principal_keeps_whole_close_pending_and_seals_disclosure()
     {
         if (!OperatingSystem.IsLinux()) return;
@@ -524,7 +548,8 @@ public sealed class HomeLocalDomainCompositionTests
     }
     private static async Task WithDomain(ITrustedHostPrincipalSource principals,
         Func<HomeLocalDomainComposition, HashSet<Exception>, Task> body, IHomeActionPolicySource[]? policies = null,
-        Action<Action>? originalScope = null, Action<Task>? retainRaw = null)
+        Action<Action>? originalScope = null, Action<Task>? retainRaw = null,
+        IHomeLocalStoreEvidenceProvider[]? evidence = null)
     {
         var root = Path.Combine(Path.GetTempPath(), "home-original-linux-domain-" + Guid.NewGuid().ToString("N"));
         HomeLocalDomainComposition? domain = null; Task? actualBody = null; Task? close = null;
@@ -535,7 +560,8 @@ public sealed class HomeLocalDomainCompositionTests
             Directory.CreateDirectory(root);
             if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("The original local Home fixture requires Linux.");
             File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            domain = new(new(Path.Combine(root, "home-state.json")), principals, originalActionPolicies: policies,
+            domain = new(new(Path.Combine(root, "home-state.json")), principals, originalStoreEvidence: evidence,
+                originalActionPolicies: policies,
                 originalSynchronousScope: originalScope, retainOriginalTask: retainRaw);
             actualBody = body(domain, expected);
             await actualBody;
@@ -568,4 +594,98 @@ public sealed class HomeLocalDomainCompositionTests
         }
         if (errors.Count != 0) throw new AggregateException("Actual root control body/independent cleanup failed.", errors);
     }
+}
+
+/// <summary>Physical pre-existing store fixture for the two genuine Home producers.
+/// Evidence reads the durable UUID and actual non-empty bytes under the real OS principal;
+/// it grants no policy, approval, binding or application/content readiness.</summary>
+internal sealed class OriginalLocalStoreImportCompositionControl : IHomeLocalStoreEvidenceProvider, IDisposable
+{
+    private readonly string _root = Path.Combine(Path.GetTempPath(), "home-existing-store-import-" + Guid.NewGuid().ToString("N"));
+    private readonly string _id = Guid.NewGuid().ToString("D");
+    private readonly byte[] _before = System.Text.Encoding.UTF8.GetBytes("Existing revision material: a stack is last in, first out.");
+    private string IdentityPath => Path.Combine(_root, "store-id");
+    private string ArtifactPath => Path.Combine(_root, "revision-material.txt");
+    public string ResourceKind => "home-import-component-store";
+    internal OriginalLocalStoreImportCompositionControl()
+    {
+        Directory.CreateDirectory(_root);
+        if (OperatingSystem.IsLinux())
+            File.SetUnixFileMode(_root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        File.WriteAllText(IdentityPath, _id);
+        File.WriteAllBytes(ArtifactPath, _before);
+    }
+    public async ValueTask<HomeLocalStoreEvidence?> ReadAsync(string storeId, CancellationToken token)
+    {
+        var principal = await new OperatingSystemPrincipalSource().GetPrincipalAsync(token);
+        if (string.IsNullOrWhiteSpace(principal)) throw new UnauthorizedAccessException("Actual OS principal unavailable.");
+        var id = await File.ReadAllTextAsync(IdentityPath, token);
+        if (id != storeId || !Guid.TryParseExact(id, "D", out _)) return null;
+        var bytes = await File.ReadAllBytesAsync(ArtifactPath, token);
+        return new(ResourceKind, id, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)),
+            NewlyCreated: false, IsEmpty: bytes.Length == 0, AccessibleToCurrentOsPrincipal: true);
+    }
+    internal async Task DemandManualImportAsync(HomeLocalProfileIdentity profiles, HomeLocalStoreOwnership ownership,
+        HomePermissionTrustService permissions)
+    {
+        using var bound = new CancellationTokenSource(TimeSpan.FromSeconds(30)); var token = bound.Token;
+        var actor = await profiles.GetCurrentAsync(token) ?? throw new InvalidOperationException("Actual local Home profile unavailable.");
+        Assert.Null(await ownership.GetVerifiedAsync(ResourceKind, _id, token));
+        var pending = await ownership.RequestImportAsync(actor, ResourceKind, _id, actor.AuthenticationRevision, token);
+        Assert.True(pending.State == HomePermissionRequestState.PendingApproval,
+            "HOME_OWNED_IMPORT_POLICY_MISSING: " + pending.Code + ": " + pending.Message);
+        var request = Assert.Single((await permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests,
+            item => item.RequestId == pending.RequestId);
+        Assert.Equal("9to1.home.local-profile", request.Scope.TargetAppId);
+        Assert.Equal("home.profile.importStore", request.Scope.ActionName);
+        Assert.Equal(new HomeObjectReference("local-resource-store", ResourceKind + ":" + _id), Assert.Single(request.Scope.Objects));
+        Assert.Equal(actor.ActorId, request.Caller.CallerId); Assert.Equal(actor.ProfileId, request.Caller.Origin);
+        Assert.True(request.Caller.IsVerified);
+        Assert.Equal(HomePermissionRisk.High, request.Policy.Risk);
+        Assert.True(request.Policy.RequiresPerActionApproval);
+        Assert.False(request.Policy.IsReversible); Assert.False(request.Policy.HasExternalSideEffects);
+        Assert.False((await permissions.BeginExecutionAsync(pending.RequestId, token)).IsAllowed);
+        Assert.Null(await ownership.GetVerifiedAsync(ResourceKind, _id, token));
+        Assert.Equal(_before, await File.ReadAllBytesAsync(ArtifactPath, token));
+        Assert.True((await permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Decline, cancellationToken: token)).Succeeded);
+        Assert.Equal(HomePermissionRequestState.Denied, (await permissions.GetAuthorizationAsync(pending.RequestId, token)).State);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ownership.CompleteImportAsync(pending.RequestId, token));
+        Assert.Null(await ownership.GetVerifiedAsync(ResourceKind, _id, token));
+        Assert.Equal(_before, await File.ReadAllBytesAsync(ArtifactPath, token));
+
+        var next = await ownership.RequestImportAsync(actor, ResourceKind, _id, actor.AuthenticationRevision, token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, next.State); Assert.NotEqual(pending.RequestId, next.RequestId);
+        Assert.True((await permissions.DecideAsync(next.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        // Approval is informational until the SAME canonical ownership owner explicitly completes it.
+        Assert.Null(await ownership.GetVerifiedAsync(ResourceKind, _id, token));
+        var imported = await ownership.CompleteImportAsync(next.RequestId, token);
+        Assert.Equal(actor.ProfileId, imported.ProfileId); Assert.Equal(next.RequestId, imported.ImportApprovalId);
+        Assert.Equal(imported, await ownership.GetVerifiedAsync(ResourceKind, _id, token));
+        Assert.Equal(_id, await File.ReadAllTextAsync(IdentityPath, token));
+        Assert.Equal(_before, await File.ReadAllBytesAsync(ArtifactPath, token));
+        var snapshot = await permissions.GetSnapshotAsync(cancellationToken: token);
+        Assert.Empty(snapshot.PendingRequests);
+        Assert.DoesNotContain(snapshot.Grants, grant => grant.Scope.TargetAppId is "boards" or "notes");
+        Assert.Equal(HomePermissionRequestState.Succeeded, (await permissions.GetAuthorizationAsync(next.RequestId, token)).State);
+    }
+    internal async Task DemandDuplicatePolicyRefusedAsync(HomeLocalProfileIdentity profiles, HomeLocalStoreOwnership ownership,
+        HomePermissionTrustService permissions)
+    {
+        using var bound = new CancellationTokenSource(TimeSpan.FromSeconds(30)); var token = bound.Token;
+        var actor = await profiles.GetCurrentAsync(token) ?? throw new InvalidOperationException("Actual local Home profile unavailable.");
+        var denied = await ownership.RequestImportAsync(actor, ResourceKind, _id, actor.AuthenticationRevision, token);
+        Assert.Equal(HomePermissionRequestState.Denied, denied.State);
+        Assert.Equal("HOME_ACTION_NOT_REGISTERED", denied.Code);
+        Assert.False((await permissions.GetAuthorizationAsync(denied.RequestId, token)).IsAllowed);
+        Assert.Null(await ownership.GetVerifiedAsync(ResourceKind, _id, token));
+        Assert.Equal(_before, await File.ReadAllBytesAsync(ArtifactPath, token));
+        Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken: token)).Grants);
+    }
+    internal sealed class DuplicatePolicy : IHomeActionPolicySource
+    {
+        public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
+            appId == "9to1.home.local-profile" && actionId == "home.profile.importStore"
+                ? new(HomePermissionRisk.Routine, true, false) : null;
+    }
+    public void Dispose() => Directory.Delete(_root, true);
 }
