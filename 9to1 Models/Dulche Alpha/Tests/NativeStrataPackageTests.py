@@ -166,12 +166,15 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
     28 MB archive download.
     """
 
-    def _invoke_prepare(self, lock, archive_bytes):
-        archive_bytes = _build_donor_tar_with_tq(archive_bytes)
-        rows = list(lock["rows"]) + _tq_rows()
+    def _invoke_prepare(self, lock, archive_bytes, *, profile="candidate", lock_edit=None, expect_no_work=False):
+        if profile == "candidate":
+            archive_bytes = _build_donor_tar_with_tq(archive_bytes)
+        rows = list(lock["rows"]) + (_tq_rows() if profile == "candidate" else [])
         lock = dict(lock)
         lock["rows"] = rows
         lock["blobCount"] = len(rows)
+        if lock_edit is not None:
+            lock_edit(lock)
         lock["archive"] = {"path": None, "bytes": len(archive_bytes),
                            "sha256": hashlib.sha256(archive_bytes).hexdigest()}
         with tempfile.TemporaryDirectory(prefix="thunder-verif-") as td:
@@ -181,21 +184,26 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
             apath.write_bytes(archive_bytes)
             work = pathlib.Path(td) / "work"
             old = sys.argv[:]
-            sys.argv = ["build-package.py", "--profile", "candidate",
+            sys.argv = ["build-package.py", "--profile", profile,
                         "--lock", str(lpath), "--archive", str(apath),
-                        "--work", str(work)]
+                        "--work", str(work),
+                        "--cmake", str(pathlib.Path(td) / "unavailable-cmake"),
+                        "--nvcc", str(pathlib.Path(td) / "unavailable-nvcc")]
             try:
                 _build_package_module().main()
             finally:
                 sys.argv = old
+                if expect_no_work:
+                    self.assertFalse(work.exists(), "Invalid lock must refuse before extraction creates work")
             rec = json.loads((work / "source-verification.json").read_text())
             # Path-custody regression: the candidate embedded build must expose the pinned
             # trellis vendor closure at the fork root (top-level CMake source dir) so the
             # upstream overlay's `third_party/ggml-tq` resolves; verify the symlink + real bodies.
             fork_link = work / "dulche-fork" / "third_party" / "ggml-tq"
-            self.assertTrue(fork_link.is_symlink(), "candidate prepare must expose fork third_party/ggml-tq")
-            self.assertTrue((fork_link / "tq.cuh").is_file())
-            self.assertTrue((fork_link / "tq-mmq-tiles.cuh").is_file())
+            if profile == "candidate":
+                self.assertTrue(fork_link.is_symlink(), "candidate prepare must expose fork third_party/ggml-tq")
+                self.assertTrue((fork_link / "tq.cuh").is_file())
+                self.assertTrue((fork_link / "tq-mmq-tiles.cuh").is_file())
             extracted = {}
             for rel in ("README.md", "BENCH.bat"):
                 f = work / "upstream" / rel
@@ -222,6 +230,46 @@ class CandidateArchiveVerifierControls(unittest.TestCase):
                                "missingFromTree": [], "extraInTree": [],
                                "eolExportNormalized": list(eol_normalized)},
         }
+
+    def test_duplicate_lock_rows_rejected_before_extraction(self):
+        body = b"source\n"
+        archive = _make_donor_tar("strata-v0.2.2", {"README.md": body})
+        row = {"path": "README.md", "bytes": len(body), "gitBlobSha": _git_blob_sha(body),
+               "sha256": hashlib.sha256(body).hexdigest()}
+        for conflicting in (False, True):
+            with self.subTest(conflicting=conflicting):
+                def duplicate(lock):
+                    shadow = dict(lock["rows"][0])
+                    if conflicting:
+                        shadow["sha256"] = "0" * 64
+                    lock["rows"].insert(0, shadow)
+                    # Keep blobCount at the unique path count: the old dict-comprehension
+                    # hid this earlier row and admitted/extracted the otherwise valid archive.
+                with self.assertRaisesRegex(ValueError, "Duplicate source-lock path"):
+                    self._invoke_prepare(self._lock(archive, [row], []), archive,
+                                         lock_edit=duplicate, expect_no_work=True)
+
+    def test_invalid_blob_count_rejected_before_extraction(self):
+        body = b"source\n"
+        archive = _make_donor_tar("strata-v0.2.2", {"README.md": body})
+        row = {"path": "README.md", "bytes": len(body), "gitBlobSha": _git_blob_sha(body),
+               "sha256": hashlib.sha256(body).hexdigest()}
+        # Three unique candidate members after the real TQ closure is added. 3.0
+        # compared equal to len(verified) before the strict integer admission.
+        for count in (None, False, True, "3", 3.0, 2, 4):
+            with self.subTest(count=count, kind=type(count).__name__):
+                with self.assertRaisesRegex(ValueError, "Invalid source-lock blobCount"):
+                    self._invoke_prepare(self._lock(archive, [row], []), archive,
+                        lock_edit=lambda lock: lock.update(blobCount=count), expect_no_work=True)
+
+    def test_boolean_blob_count_rejected_in_single_member_legacy_lock(self):
+        body = b"source\n"
+        archive = _make_donor_tar("strata-v0.2.2", {"README.md": body})
+        row = {"path": "README.md", "bytes": len(body), "gitBlobSha": _git_blob_sha(body),
+               "sha256": hashlib.sha256(body).hexdigest()}
+        with self.assertRaisesRegex(ValueError, "Invalid source-lock blobCount"):
+            self._invoke_prepare(self._lock(archive, [row], []), archive, profile="legacy",
+                lock_edit=lambda lock: lock.update(blobCount=True), expect_no_work=True)
 
     def test_declared_eol_crlf_accepted_and_extracted(self):
         root = "strata-v0.2.2"
