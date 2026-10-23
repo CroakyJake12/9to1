@@ -524,7 +524,8 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
                         Assert.IsAssignableFrom<Task>(actual.GetType().GetField("Settlement", flags)!.GetValue(actual)));
                 }
             }
-            await Task.Yield(); // Observe actual custody; no timing-based source completion assertion.
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(static () => { },
+                Avalonia.Threading.DispatcherPriority.Background, token); // Allow original Default-priority acquisition to publish custody.
         }
     }
 

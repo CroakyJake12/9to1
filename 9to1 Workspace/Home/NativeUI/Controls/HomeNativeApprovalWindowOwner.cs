@@ -87,9 +87,6 @@ public sealed class HomeNativeApprovalWindowOwner(
     /// <summary>Returns the actual acquisition/publication task, not the window's lifetime.
     /// Exact request identifiers are observations; the same surface rereads canonical Home.</summary>
     public Task OpenOriginalAsync(string? requestId = null, CancellationToken cancellationToken = default)
-        => OpenOriginalCore(requestId, cancellationToken, observeDecision: false);
-
-    private Task OpenOriginalCore(string? requestId, CancellationToken cancellationToken, bool observeDecision)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (requestId is not null) ArgumentException.ThrowIfNullOrWhiteSpace(requestId);
@@ -107,7 +104,7 @@ public sealed class HomeNativeApprovalWindowOwner(
             if (_current is { } active && active.Close is null)
             {
                 // A new request uses the same real surface, never a copied model or new Home owner.
-                return FocusOriginalAsync(active, requestId, cancellationToken, observeDecision);
+                return FocusOriginalAsync(active, requestId, cancellationToken);
             }
             review = new Review(cancellationToken);
             _current = review;
@@ -141,7 +138,7 @@ public sealed class HomeNativeApprovalWindowOwner(
             // A decision can settle between real window publication and an observer attaching.
             // Only this same still-owned window's actual receipt can answer that race.
             var open = _current is { Close: null, Surface: { } surface } && surface.HasOriginalSettledDecision(requestId)
-                ? Task.CompletedTask : OpenOriginalCore(requestId, CancellationToken.None, observeDecision: true);
+                ? Task.CompletedTask : OpenOriginalAsync(requestId);
             // The global Home window belongs to this owner. Canceling one route's observation
             // must not poison the shared window's lifetime or another caller's pending review.
             var review = _current ?? throw new InvalidOperationException("The original Home review owner was not retained.");
@@ -280,25 +277,24 @@ public sealed class HomeNativeApprovalWindowOwner(
         }
     }
 
-    private Task FocusOriginalAsync(Review review, string? requestId, CancellationToken caller, bool observeDecision)
+    private Task FocusOriginalAsync(Review review, string? requestId, CancellationToken caller)
     {
         // Called under the owning gate: publish each actual focus before its callbacks.
         review.Focuses.RemoveAll(task => task.IsCompletedSuccessfully);
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var original = FocusCoreAsync(start.Task, review, requestId, caller, observeDecision);
+        var original = FocusCoreAsync(start.Task, review, requestId, caller);
         review.Focuses.Add(original);
         _work.Add(original);
         start.SetResult();
         return original;
     }
 
-    private async Task FocusCoreAsync(Task start, Review review, string? requestId, CancellationToken caller, bool observeDecision)
+    private async Task FocusCoreAsync(Task start, Review review, string? requestId, CancellationToken caller)
     {
         await start.ConfigureAwait(false);
         using var originalScope = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         List<Exception> errors = [];
         CancellationTokenSource? request = null;
-        var focused = true;
         try
         {
             request = CancellationTokenSource.CreateLinkedTokenSource(review.Lifetime.Token, caller);
@@ -312,18 +308,12 @@ public sealed class HomeNativeApprovalWindowOwner(
                     return originalFocus = review.Surface!.FocusRequestAsync(requestId, request.Token);
                 }, errors).ConfigureAwait(false);
                 if (errors.Count != 0) Throw(errors);
-                focused = originalFocus!.GetAwaiter().GetResult();
+                if (!originalFocus!.GetAwaiter().GetResult())
+                    throw new InvalidOperationException("The exact canonical Home request is no longer reviewable.");
             }
             await Dispatcher.UIThread.InvokeAsync(() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
             {
                 DemandOpen(review, caller);
-                // The visible surface may have accepted the real CUI decision while
-                // focus was awaiting its original profile/refresh tasks. Only this
-                // observational call can hand off to that exact retained source.
-                if (!focused && !(observeDecision && requestId is not null && ReferenceEquals(_current, review) &&
-                    review.Window is { IsVisible: true } && review.Surface is { } surface &&
-                    ReferenceEquals(review.Window.Content, surface) && surface.HasOriginalDecisionSource(requestId)))
-                    throw new InvalidOperationException("The exact canonical Home request is no longer reviewable.");
                 review.Window!.Activate();
                 DemandOpen(review, caller);
                 return true;
