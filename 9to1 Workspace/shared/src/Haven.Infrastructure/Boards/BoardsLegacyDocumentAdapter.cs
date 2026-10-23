@@ -80,7 +80,7 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
             if (!Try(root, "format", out _) && Try(root, "id", out _) && Try(root, "groups", out _))
             {
                 inspection.Format = BoardsLegacyFormat.RawSnapshot;
-                ValidateSnapshot(root, "/snapshot", inspection.MutableIssues);
+                ValidateSnapshot(root, "", inspection.MutableIssues);
                 ScanUnknown(root, typeof(HavenBoardSnapshot), "", inspection.MutableIssues);
             }
             else
@@ -96,25 +96,25 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
                 inspection.SchemaVersion = number;
                 if (number is < 0 or > HavenBoardDocument.CurrentSchemaVersion)
                 {
-                    Add(inspection.MutableIssues, "UnsupportedSchema", "/schemaVersion", "This schema is preserved without guessing, migrating or falling back to another file.", true);
+                    Add(inspection.MutableIssues, "UnsupportedSchema", PropertyPointer(root, "schemaVersion", ""), "This schema is preserved without guessing, migrating or falling back to another file.", true);
                     return inspection;
                 }
                 if (number > 0)
                 {
                     if (Try(root, "documentId", out var id) && id.ValueKind == JsonValueKind.String &&
                         id.TryGetGuid(out var value) && value != Guid.Empty) inspection.LegacyDocumentId = value;
-                    else Add(inspection.MutableIssues, "MissingIdentity", "/documentId", "This envelope requires its original nonempty document UUID.", true);
+                    else Add(inspection.MutableIssues, "MissingIdentity", PropertyPointer(root, "documentId", ""), "This envelope requires its original nonempty document UUID.", true);
                     RequireTimestamp(root, "createdUtc", inspection.MutableIssues);
                     RequireTimestamp(root, "modifiedUtc", inspection.MutableIssues);
                 }
                 var snapshot = Try(root, "snapshot", out var task) && task.ValueKind != JsonValueKind.Null;
                 var rich = Try(root, "richNotes", out var notes) && notes.ValueKind != JsonValueKind.Null;
-                if (snapshot) ValidateSnapshot(task, "/snapshot", inspection.MutableIssues);
-                if (rich && number >= 2) ValidateRich(notes, number, inspection.MutableIssues);
+                if (snapshot) ValidateSnapshot(task, PropertyPointer(root, "snapshot", ""), inspection.MutableIssues);
+                if (rich && number >= 2) ValidateRich(notes, number, PropertyPointer(root, "richNotes", ""), inspection.MutableIssues);
                 if ((!snapshot && !rich) || (number < 2 && !snapshot))
                     Add(inspection.MutableIssues, "MissingStructure", "", "The original schema has no required content facet.", true);
                 if (rich && number < 2)
-                    Add(inspection.MutableIssues, "UnsupportedFacetPreserved", "/richNotes", "Rich content in this older schema remains original data; it is not guessed into a newer schema.");
+                    Add(inspection.MutableIssues, "UnsupportedFacetPreserved", PropertyPointer(root, "richNotes", ""), "Rich content in this older schema remains original data; it is not guessed into a newer schema.");
                 ScanUnknown(root, typeof(HavenBoardDocument), "", inspection.MutableIssues);
             }
             Add(inspection.MutableIssues, "OriginalSourcePreserved", "", "Exact source bytes are retained. Original export excludes subsequent edits to an imported canonical snapshot.");
@@ -151,7 +151,7 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
         if (issues.Any(issue => issue.PreventsProjection)) return new(documentId, null, issues);
         if (original.SchemaVersion is null or < 2 || !Try(original.Root, "richNotes", out var rawRich) || rawRich.ValueKind == JsonValueKind.Null)
         {
-            Add(issues, "SnapshotRequiresCanonicalMapping", "/snapshot", "The task facet is preserved. Its groups, hierarchy, freeform placement and attachments require canonical Data/Boards semantics; a generated checklist is not substituted.", true);
+            Add(issues, "SnapshotRequiresCanonicalMapping", original.Format == BoardsLegacyFormat.RawSnapshot ? "" : PropertyPointer(original.Root, "snapshot", ""), "The task facet is preserved. Its groups, hierarchy, freeform placement and attachments require canonical Data/Boards semantics; a generated checklist is not substituted.", true);
             return new(documentId, null, issues);
         }
         var rich = rawRich.Deserialize<HavenRichNotes>(Json)!;
@@ -305,70 +305,95 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
 
     private static void ValidateSnapshot(JsonElement value, string pointer, List<BoardsLegacyDocumentIssue> issues)
     {
-        var count = issues.Count;
         ValidateDeclaredShape(value, typeof(HavenBoardSnapshot), pointer, issues);
         RequireId(value, pointer, issues);
         if (Array(value, "groups", pointer, issues) is { } groups)
-            IdArray(groups, pointer + "/groups", issues, group =>
+            IdArray(groups, PropertyPointer(value, "groups", pointer), issues, (group, groupPointer) =>
             {
-                if (Array(group, "cards", pointer + "/groups", issues) is { } cards)
-                    IdArray(cards, pointer + "/cards", issues, card =>
+                if (Array(group, "cards", groupPointer, issues) is { } cards)
+                    IdArray(cards, PropertyPointer(group, "cards", groupPointer), issues, (card, cardPointer) =>
                     {
                         if (Try(card, "attachments", out var attachments) && attachments.ValueKind != JsonValueKind.Null)
-                            IdArray(attachments, pointer + "/attachments", issues);
+                            IdArray(attachments, PropertyPointer(card, "attachments", cardPointer), issues);
                     });
             });
-        if (issues.Skip(count).Any(issue => issue.PreventsProjection)) return;
+        if (issues.Any(issue => issue.PreventsProjection)) return;
         try { HavenBoardReducer.Validate(value.Deserialize<HavenBoardSnapshot>(Json)!); }
         catch (Exception error) when (error is InvalidOperationException or ArgumentException or JsonException)
         { Add(issues, "InvalidSnapshot", pointer, error.Message, true); }
     }
 
-    private static void ValidateRich(JsonElement value, int schema, List<BoardsLegacyDocumentIssue> issues)
+    private static void ValidateRich(JsonElement value, int schema, string pointer, List<BoardsLegacyDocumentIssue> issues)
     {
-        var count = issues.Count;
-        ValidateDeclaredShape(value, typeof(HavenRichNotes), "/richNotes", issues);
-        if (Array(value, "sections", "/richNotes", issues) is { } sections)
-            IdArray(sections, "/richNotes/sections", issues, section =>
+        ValidateDeclaredShape(value, typeof(HavenRichNotes), pointer, issues);
+        if (Array(value, "sections", pointer, issues) is { } sections)
+            IdArray(sections, PropertyPointer(value, "sections", pointer), issues, (section, sectionPointer) =>
             {
-                if (Array(section, "pages", "/richNotes/sections", issues) is { } pages)
-                    IdArray(pages, "/richNotes/pages", issues, page =>
+                if (Array(section, "pages", sectionPointer, issues) is { } pages)
+                    IdArray(pages, PropertyPointer(section, "pages", sectionPointer), issues, (page, pagePointer) =>
                     {
-                        if (Array(page, "blocks", "/richNotes/pages", issues) is { } blocks)
-                            IdArray(blocks, "/richNotes/blocks", issues, block =>
+                        if (Array(page, "blocks", pagePointer, issues) is { } blocks)
+                            IdArray(blocks, PropertyPointer(page, "blocks", pagePointer), issues, (block, blockPointer) =>
                             {
-                                OptionalIds(block, "items", "/richNotes/blocks", issues);
-                                OptionalObjectId(block, "image", issues);
-                                OptionalObjectId(block, "attachment", issues);
-                                InspectAsset(block, "image", issues);
-                                InspectAsset(block, "attachment", issues);
+                                OptionalIds(block, "items", blockPointer, issues);
+                                OptionalObjectId(block, "image", blockPointer, issues);
+                                OptionalObjectId(block, "attachment", blockPointer, issues);
+                                InspectAsset(block, "image", blockPointer, issues);
+                                InspectAsset(block, "attachment", blockPointer, issues);
                                 if (Try(block, "table", out var table) && table.ValueKind != JsonValueKind.Null &&
-                                    Array(table, "rows", "/richNotes/table", issues) is { } rows)
+                                    Array(table, "rows", PropertyPointer(block, "table", blockPointer), issues) is { } rows)
+                                {
+                                    var rowPointer = PropertyPointer(table, "rows", PropertyPointer(block, "table", blockPointer));
+                                    var rowIndex = 0;
                                     foreach (var row in rows.EnumerateArray())
-                                        if (Array(row, "cells", "/richNotes/table/rows", issues) is { } cells)
-                                            IdArray(cells, "/richNotes/table/cells", issues);
+                                    {
+                                        var location = rowPointer + "/" + rowIndex++;
+                                        if (Array(row, "cells", location, issues) is { } cells)
+                                            IdArray(cells, PropertyPointer(row, "cells", location), issues);
+                                    }
+                                }
                                 if (Try(block, "graph", out var graph) && graph.ValueKind != JsonValueKind.Null)
                                 {
-                                    if (Array(graph, "expressions", "/richNotes/graph", issues) is { } expressions)
-                                        IdArray(expressions, "/richNotes/graph/expressions", issues);
+                                    var graphPointer = PropertyPointer(block, "graph", blockPointer);
+                                    if (Array(graph, "expressions", graphPointer, issues) is { } expressions)
+                                        IdArray(expressions, PropertyPointer(graph, "expressions", graphPointer), issues);
                                 }
                             });
-                        OptionalIds(page, "canvas", "/richNotes/pages", issues);
+                        OptionalIds(page, "canvas", pagePointer, issues);
                     });
             });
-        OptionalIds(value, "styles", "/richNotes", issues);
-        if (issues.Skip(count).Any(issue => issue.PreventsProjection)) return;
+        OptionalIds(value, "styles", pointer, issues);
+        // Raw lookup deliberately never chooses a last duplicate member. Do not
+        // join its indexes with a typed serializer's last-member-wins view after
+        // any structural refusal, including a duplicate found before this facet.
+        if (issues.Any(issue => issue.PreventsProjection)) return;
         try
         {
             var rich = value.Deserialize<HavenRichNotes>(Json)!;
             SupplyEarlierStyleDefaults(rich, schema);
             HavenRichNotesValidator.Validate(rich);
-            foreach (var block in rich.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks))
-                if (!rich.Styles.Any(style => style.Id == block.StyleId))
-                    Add(issues, "UnresolvedStyle", "/richNotes/blocks/" + Escape(block.Id) + "/styleId", "The original style reference has no definition. It was not rewritten to Paragraph.", true);
+            var rawSections = value.GetPropertyCaseInsensitive("sections");
+            for (var sectionIndex = 0; sectionIndex < rich.Sections.Count; sectionIndex++)
+            {
+                var rawSection = rawSections[sectionIndex];
+                var sectionPointer = PropertyPointer(value, "sections", pointer) + "/" + sectionIndex;
+                var rawPages = rawSection.GetPropertyCaseInsensitive("pages");
+                for (var pageIndex = 0; pageIndex < rich.Sections[sectionIndex].Pages.Count; pageIndex++)
+                {
+                    var page = rich.Sections[sectionIndex].Pages[pageIndex];
+                    var rawPage = rawPages[pageIndex];
+                    var pagePointer = PropertyPointer(rawSection, "pages", sectionPointer) + "/" + pageIndex;
+                    var rawBlocks = rawPage.GetPropertyCaseInsensitive("blocks");
+                    for (var blockIndex = 0; blockIndex < page.Blocks.Count; blockIndex++)
+                        if (!rich.Styles.Any(style => style.Id == page.Blocks[blockIndex].StyleId))
+                            Add(issues, "UnresolvedStyle", PropertyPointer(rawBlocks[blockIndex], "styleId",
+                                PropertyPointer(rawPage, "blocks", pagePointer) + "/" + blockIndex),
+                                "The original style reference has no definition. It was not rewritten to Paragraph.", true);
+                }
+            }
         }
         catch (Exception error) when (error is InvalidOperationException or ArgumentException or JsonException)
-        { Add(issues, "InvalidRichContent", "/richNotes", error.Message, true); }
+        { Add(issues, "InvalidRichContent", pointer, error.Message, true); }
     }
 
     private static void SupplyEarlierStyleDefaults(HavenRichNotes rich, int schema)
@@ -395,16 +420,16 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
         LineSpacing = spacing == 0 ? 1.25 : spacing, SpaceBefore = before, SpaceAfter = after, IndentLeft = indent < 0 ? 0 : indent
     };
 
-    private static void OptionalObjectId(JsonElement parent, string property, List<BoardsLegacyDocumentIssue> issues)
+    private static void OptionalObjectId(JsonElement parent, string property, string pointer, List<BoardsLegacyDocumentIssue> issues)
     {
         if (Try(parent, property, out var value) && value.ValueKind != JsonValueKind.Null)
-            RequireId(value, "/richNotes/" + property, issues);
+            RequireId(value, PropertyPointer(parent, property, pointer), issues);
     }
 
-    private static void InspectAsset(JsonElement block, string property, List<BoardsLegacyDocumentIssue> issues)
+    private static void InspectAsset(JsonElement block, string property, string parentPointer, List<BoardsLegacyDocumentIssue> issues)
     {
         if (!Try(block, property, out var asset) || asset.ValueKind != JsonValueKind.Object) return;
-        var pointer = "/richNotes/" + property;
+        var pointer = PropertyPointer(block, property, parentPointer);
         if (Try(asset, "dataBase64", out var data) && data.ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(data.GetString()))
         {
             // Validate embedded data without following references or creating an asset store.
@@ -418,7 +443,7 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
             { Add(issues, "InvalidEmbeddedAsset", pointer, "The embedded base64 is invalid. Original bytes remain unchanged; no attachment is materialised."); }
         }
         if (Try(asset, "localReference", out var reference) && reference.ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(reference.GetString()))
-            Add(issues, "ExternalAssetReferencePreserved", pointer + "/localReference", "This opaque reference is preserved, not opened, fetched or granted authority.");
+            Add(issues, "ExternalAssetReferencePreserved", PropertyPointer(asset, "localReference", pointer), "This opaque reference is preserved, not opened, fetched or granted authority.");
     }
 
     private static long EmbeddedByteLength(string value)
@@ -438,17 +463,17 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
 
     private static void OptionalIds(JsonElement parent, string property, string pointer, List<BoardsLegacyDocumentIssue> issues)
     {
-        if (Try(parent, property, out var value)) IdArray(value, pointer + "/" + property, issues);
+        if (Try(parent, property, out var value)) IdArray(value, PropertyPointer(parent, property, pointer), issues);
     }
 
     private static JsonElement? Array(JsonElement parent, string property, string pointer, List<BoardsLegacyDocumentIssue> issues)
     {
         if (Try(parent, property, out var array) && array.ValueKind == JsonValueKind.Array) return array;
-        Add(issues, "MissingStructure", pointer + "/" + property, "The original array must be present; a default collection is not invented.", true);
+        Add(issues, "MissingStructure", PropertyPointer(parent, property, pointer), "The original array must be present; a default collection is not invented.", true);
         return null;
     }
 
-    private static void IdArray(JsonElement array, string pointer, List<BoardsLegacyDocumentIssue> issues, Action<JsonElement>? visit = null)
+    private static void IdArray(JsonElement array, string pointer, List<BoardsLegacyDocumentIssue> issues, Action<JsonElement, string>? visit = null)
     {
         if (array.ValueKind != JsonValueKind.Array)
         { Add(issues, "MissingStructure", pointer, "An array was required; null or another value is not replaced by a default.", true); return; }
@@ -459,21 +484,21 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
             var location = pointer + "/" + index++;
             var id = RequireId(value, location, issues);
             if (id is not null && !ids.Add(id)) Add(issues, "AmbiguousIdentity", location, "Duplicate source identity is not deduplicated or renamed.", true);
-            if (value.ValueKind == JsonValueKind.Object) visit?.Invoke(value);
+            if (value.ValueKind == JsonValueKind.Object) visit?.Invoke(value, location);
         }
     }
 
     private static string? RequireId(JsonElement value, string pointer, List<BoardsLegacyDocumentIssue> issues)
     {
         if (Try(value, "id", out var id) && id.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(id.GetString())) return id.GetString();
-        Add(issues, "MissingIdentity", pointer + "/id", "The original nonempty string ID must be present before typed defaults run.", true);
+        Add(issues, "MissingIdentity", PropertyPointer(value, "id", pointer), "The original nonempty string ID must be present before typed defaults run.", true);
         return null;
     }
 
     private static void RequireTimestamp(JsonElement root, string property, List<BoardsLegacyDocumentIssue> issues)
     {
         if (!Try(root, property, out var value) || value.ValueKind != JsonValueKind.String || !value.TryGetDateTimeOffset(out var timestamp) || timestamp == default)
-            Add(issues, "InvalidTimestamp", "/" + property, "The original timestamp is absent or invalid; a clock value is not substituted.", true);
+            Add(issues, "InvalidTimestamp", PropertyPointer(root, property, ""), "The original timestamp is absent or invalid; a clock value is not substituted.", true);
     }
 
     private static void RejectDuplicateProperties(JsonElement value, string pointer, List<BoardsLegacyDocumentIssue> issues)
@@ -549,6 +574,14 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
         return new Guid(digest.AsSpan(0, 16)); // Identity mapping only, never authentication.
     }
     private static string Escape(string value) => value.Replace("~", "~0", StringComparison.Ordinal).Replace("/", "~1", StringComparison.Ordinal);
+    private static string PropertyPointer(JsonElement parent, string property, string pointer)
+    {
+        if (parent.ValueKind == JsonValueKind.Object)
+            foreach (var item in parent.EnumerateObject())
+                if (string.Equals(item.Name, property, StringComparison.OrdinalIgnoreCase))
+                    return pointer + "/" + Escape(item.Name);
+        return pointer + "/" + Escape(property);
+    }
     private static bool Try(JsonElement value, string property, out JsonElement found)
     {
         if (value.ValueKind == JsonValueKind.Object)

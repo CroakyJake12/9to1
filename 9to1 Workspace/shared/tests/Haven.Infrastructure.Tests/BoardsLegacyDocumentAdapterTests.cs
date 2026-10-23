@@ -353,6 +353,219 @@ public sealed class BoardsLegacyDocumentAdapterTests
         Assert.Equal(input, codec.ExportOriginal(inspection));
     }
 
+    [Fact]
+    public void Nested_identity_diagnostics_distinguish_sections_pages_and_table_rows()
+    {
+        var data = MultiplePages();
+        var sections = data["richNotes"]!["sections"]!;
+        sections[0]!["pages"]![0]!["blocks"]![0]!.AsObject().Remove("id");
+        sections[0]!["pages"]![1]!["blocks"]![0]!.AsObject().Remove("id");
+        var lastPage = sections[1]!["pages"]![1]!;
+        lastPage["blocks"]![2]!["items"]![0]!.AsObject().Remove("id");
+        var rows = lastPage["blocks"]![5]!["table"]!["rows"]!.AsArray();
+        rows.Add(rows[0]!.DeepClone());
+        rows[1]!["cells"]![0]!.AsObject().Remove("id");
+        lastPage["blocks"]![8]!["graph"]!["expressions"]![1]!.AsObject().Remove("id");
+        lastPage["canvas"]![0]!.AsObject().Remove("id");
+        var bytes = Bytes(data);
+        var codec = new BoardsLegacyDocumentAdapter();
+        var inspection = codec.Inspect(bytes, Source);
+        string[] expected = [
+            "/richNotes/sections/0/pages/0/blocks/0/id",
+            "/richNotes/sections/0/pages/1/blocks/0/id",
+            "/richNotes/sections/1/pages/1/blocks/2/items/0/id",
+            "/richNotes/sections/1/pages/1/blocks/5/table/rows/1/cells/0/id",
+            "/richNotes/sections/1/pages/1/blocks/8/graph/expressions/1/id",
+            "/richNotes/sections/1/pages/1/canvas/0/id"
+        ];
+
+        Assert.Equal(expected.OrderBy(path => path, StringComparer.Ordinal),
+            inspection.Issues.Where(issue => issue.Code == "MissingIdentity").Select(issue => issue.Pointer).OrderBy(path => path, StringComparer.Ordinal));
+        foreach (var pointer in expected)
+            Assert.NotNull(AtPointer(data, pointer[..pointer.LastIndexOf('/')]));
+        Assert.Equal("Cell text", AtPointer(data, "/richNotes/sections/1/pages/1/blocks/5/table/rows/1/cells/0/text")!.GetValue<string>());
+        Assert.False(codec.PrepareCanonicalImport(inspection, ObservedAt).IsCanonicalProjectionAvailable);
+        Assert.Equal(bytes, codec.ExportOriginal(inspection));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Snapshot_identity_diagnostics_keep_the_actual_raw_or_envelope_root(bool envelope)
+    {
+        var snapshot = Snapshot();
+        var groups = snapshot["groups"]!.AsArray();
+        groups.Add(groups[0]!.DeepClone());
+        groups[1]!["id"] = "second-group";
+        snapshot["id"] = null;
+        groups[0]!["cards"]![1]!.AsObject().Remove("id");
+        groups[1]!["cards"]![1]!["attachments"]![0]!.AsObject().Remove("id");
+        JsonObject data = envelope ? Envelope(1) : snapshot;
+        if (envelope) data["snapshot"] = snapshot;
+        var bytes = Bytes(data);
+        var codec = new BoardsLegacyDocumentAdapter();
+        var inspection = codec.Inspect(bytes, Source);
+        var prefix = envelope ? "/snapshot" : "";
+        string[] expected = [prefix + "/id", prefix + "/groups/0/cards/1/id", prefix + "/groups/1/cards/1/attachments/0/id"];
+
+        Assert.Equal(envelope ? BoardsLegacyFormat.Envelope : BoardsLegacyFormat.RawSnapshot, inspection.Format);
+        Assert.Equal(expected.OrderBy(path => path, StringComparer.Ordinal),
+            inspection.Issues.Where(issue => issue.Code == "MissingIdentity").Select(issue => issue.Pointer).OrderBy(path => path, StringComparer.Ordinal));
+        Assert.Equal("Source", AtPointer(data, prefix + "/groups/1/cards/1/attachments/0/displayName")!.GetValue<string>());
+        Assert.False(codec.PrepareCanonicalImport(inspection, ObservedAt).IsCanonicalProjectionAvailable);
+        Assert.Equal(bytes, codec.ExportOriginal(inspection));
+    }
+
+    [Fact]
+    public void Asset_diagnostics_navigate_to_distinct_original_payloads_on_different_pages()
+    {
+        var data = MultiplePages();
+        var pages = data["richNotes"]!["sections"]![1]!["pages"]!;
+        var first = pages[0]!["blocks"]![6]!["image"]!;
+        first["dataBase64"] = "invalid-first-image!";
+        first["localReference"] = "opaque:first";
+        var second = pages[1]!["blocks"]![6]!["image"]!;
+        second["sizeBytes"] = 4;
+        second["localReference"] = "opaque:second";
+        var bytes = Bytes(data);
+        var codec = new BoardsLegacyDocumentAdapter();
+        var inspection = codec.Inspect(bytes, Source);
+        var invalid = Assert.Single(inspection.Issues, issue => issue.Code == "InvalidEmbeddedAsset");
+        var mismatch = Assert.Single(inspection.Issues, issue => issue.Code == "InvalidAssetMetadata");
+
+        Assert.Equal("/richNotes/sections/1/pages/0/blocks/6/image", invalid.Pointer);
+        Assert.Equal("/richNotes/sections/1/pages/1/blocks/6/image", mismatch.Pointer);
+        Assert.Equal("invalid-first-image!", AtPointer(data, invalid.Pointer)!["dataBase64"]!.GetValue<string>());
+        Assert.Equal(4, AtPointer(data, mismatch.Pointer)!["sizeBytes"]!.GetValue<int>());
+        var references = inspection.Issues.Where(issue => issue.Code == "ExternalAssetReferencePreserved").ToArray();
+        Assert.Equal(new[] { "opaque:first", "opaque:second" },
+            references.Select(issue => AtPointer(data, issue.Pointer)!.GetValue<string>()));
+        Assert.Equal(bytes, codec.ExportOriginal(inspection));
+    }
+
+    [Fact]
+    public void Repeated_block_IDs_on_different_pages_keep_distinct_unresolved_style_locations()
+    {
+        var data = MultiplePages();
+        data["richNotes"]!["sections"]![0]!["pages"]![1]!["blocks"]![0]!["styleId"] = "unknown-first-style";
+        data["richNotes"]!["sections"]![1]!["pages"]![0]!["blocks"]![0]!["styleId"] = "unknown-second-style";
+        var bytes = Bytes(data);
+        var codec = new BoardsLegacyDocumentAdapter();
+        var inspection = codec.Inspect(bytes, Source);
+        var issues = inspection.Issues.Where(issue => issue.Code == "UnresolvedStyle").ToArray();
+
+        Assert.Equal(new[] { "/richNotes/sections/0/pages/1/blocks/0/styleId", "/richNotes/sections/1/pages/0/blocks/0/styleId" },
+            issues.Select(issue => issue.Pointer));
+        Assert.Equal(new[] { "unknown-first-style", "unknown-second-style" },
+            issues.Select(issue => AtPointer(data, issue.Pointer)!.GetValue<string>()));
+        Assert.DoesNotContain(inspection.Issues, issue => issue.Code == "AmbiguousIdentity");
+        Assert.False(codec.PrepareCanonicalImport(inspection, ObservedAt).IsCanonicalProjectionAvailable);
+        Assert.Equal(bytes, codec.ExportOriginal(inspection));
+    }
+
+    [Fact]
+    public void Accepted_mixed_case_members_keep_their_exact_source_spelling_in_diagnostics()
+    {
+        var data = Envelope();
+        Rename(data, "richNotes", "RichNotes");
+        var rich = data["RichNotes"]!.AsObject();
+        Rename(rich, "sections", "Sections");
+        var section = rich["Sections"]![0]!.AsObject();
+        Rename(section, "pages", "Pages");
+        var page = section["Pages"]![0]!.AsObject();
+        Rename(page, "blocks", "Blocks");
+        var block = page["Blocks"]![6]!.AsObject();
+        Rename(block, "image", "Image");
+        var image = block["Image"]!.AsObject();
+        Rename(image, "id", "ID");
+        image["ID"] = "";
+        image["dataBase64"] = "invalid-mixed-case-image!";
+        image["LocalReference"] = "opaque:mixed-case";
+        var bytes = Bytes(data);
+        var codec = new BoardsLegacyDocumentAdapter();
+        var inspection = codec.Inspect(bytes, Source);
+        var missing = Assert.Single(inspection.Issues, issue => issue.Code == "MissingIdentity");
+        var invalid = Assert.Single(inspection.Issues, issue => issue.Code == "InvalidEmbeddedAsset");
+        var reference = Assert.Single(inspection.Issues, issue => issue.Code == "ExternalAssetReferencePreserved");
+
+        Assert.Equal("/RichNotes/Sections/0/Pages/0/Blocks/6/Image/ID", missing.Pointer);
+        Assert.Equal("/RichNotes/Sections/0/Pages/0/Blocks/6/Image", invalid.Pointer);
+        Assert.Equal("/RichNotes/Sections/0/Pages/0/Blocks/6/Image/LocalReference", reference.Pointer);
+        Assert.Equal("", AtPointer(data, missing.Pointer)!.GetValue<string>());
+        Assert.Equal("opaque:mixed-case", AtPointer(data, reference.Pointer)!.GetValue<string>());
+        Assert.DoesNotContain(inspection.Issues, issue => issue.Code == "UnknownFieldPreserved");
+        Assert.Equal(bytes, codec.ExportOriginal(inspection));
+    }
+
+    [Theory]
+    [InlineData("sections")]
+    [InlineData("pages")]
+    [InlineData("blocks")]
+    public void Unequal_duplicate_collections_refuse_without_joining_different_raw_and_typed_indexes(string collection)
+    {
+        var data = Envelope();
+        var rich = data["richNotes"]!;
+        var owner = collection switch
+        {
+            "sections" => rich,
+            "pages" => rich["sections"]![0]!,
+            _ => rich["sections"]![0]!["pages"]![0]!
+        };
+        var original = owner[collection]!.AsArray();
+        var larger = original.DeepClone().AsArray();
+        var additional = original[0]!.DeepClone();
+        additional["id"] = "second-" + collection;
+        if (collection == "blocks") additional["styleId"] = "unresolved-in-larger-duplicate";
+        larger.Add(additional);
+        var alias = char.ToUpperInvariant(collection[0]) + collection[1..];
+        var member = JsonSerializer.Serialize(collection) + ":" + original.ToJsonString();
+        var replacement = member + "," + JsonSerializer.Serialize(alias) + ":" + larger.ToJsonString();
+        var text = Encoding.UTF8.GetString(Bytes(data));
+        Assert.Contains(member, text, StringComparison.Ordinal);
+        var bytes = Encoding.UTF8.GetBytes(text.Replace(member, replacement, StringComparison.Ordinal));
+        var codec = new BoardsLegacyDocumentAdapter();
+        var inspection = codec.Inspect(bytes, Source);
+
+        Assert.Equal(BoardsLegacyFormat.Envelope, inspection.Format);
+        Assert.Contains(inspection.Issues, issue => issue.Code == "AmbiguousProperty" && issue.PreventsProjection && issue.Pointer.EndsWith("/" + alias, StringComparison.Ordinal));
+        Assert.False(codec.PrepareCanonicalImport(inspection, ObservedAt).IsCanonicalProjectionAvailable);
+        Assert.Equal(bytes, codec.ExportOriginal(inspection));
+    }
+
+    private static JsonNode? AtPointer(JsonNode root, string pointer)
+    {
+        JsonNode? node = root;
+        foreach (var part in pointer.Split('/').Skip(1))
+        {
+            var key = part.Replace("~1", "/", StringComparison.Ordinal).Replace("~0", "~", StringComparison.Ordinal);
+            node = node is JsonArray array ? array[int.Parse(key)] : node![key];
+        }
+        return node;
+    }
+
+    private static void Rename(JsonObject parent, string name, string replacement)
+    {
+        var value = parent[name];
+        parent.Remove(name);
+        parent[replacement] = value;
+    }
+
+    private static JsonObject MultiplePages()
+    {
+        var data = Envelope();
+        var sections = data["richNotes"]!["sections"]!.AsArray();
+        sections.Add(sections[0]!.DeepClone());
+        sections[1]!["id"] = "second-section";
+        foreach (var section in sections)
+        {
+            var pages = section!["pages"]!.AsArray();
+            pages.Add(pages[0]!.DeepClone());
+            pages[1]!["id"] = "second-page";
+            pages[1]!["order"] = 1;
+        }
+        return data;
+    }
+
     private static byte[] Bytes(JsonNode node) => Encoding.UTF8.GetBytes(node.ToJsonString());
 
     private static JsonObject Snapshot() => JsonNode.Parse("""
