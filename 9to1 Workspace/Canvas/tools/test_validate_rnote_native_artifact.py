@@ -448,6 +448,48 @@ class BuildPreflightTests(unittest.TestCase):
         self.assertIsNone(result["exit_code"])
         self.assertEqual("TimeoutExpired", result["error"]["type"])
 
+    def test_sibling_rustup_hardlinks_outside_path_refuse_before_safe_marker_execution(self):
+        marker = self.root / "proxy-was-executed.marker"
+        rustup = self.root / "rustup"
+        rustup.write_text(f"#!/bin/sh\nprintf executed > '{marker}'\n")
+        rustup.chmod(0o700)
+        for tool in ("rustc", "cargo"):
+            proxy = self.root / tool
+            os.link(rustup, proxy)
+            self.assertTrue(os.path.samefile(proxy, rustup))
+            with patch.dict(os.environ, {"PATH": ""}), patch.object(check, "observe", wraps=check.observe) as observe:
+                self.assertIsNone(check.shutil.which("rustup"))
+                with self.assertRaisesRegex(ValueError, "Refusing rustup proxy"):
+                    check.installed_tool(proxy, tool)
+                observe.assert_not_called()
+            self.assertFalse(marker.exists())
+
+    def test_supplied_symlink_directory_proxy_identity_is_checked_before_execution(self):
+        supplied = self.root / "proxy-bin"
+        resolved = self.root / "elsewhere"
+        supplied.mkdir()
+        resolved.mkdir()
+        rustup = supplied / "rustup"
+        rustup.write_bytes(b"unexecuted proxy fixture")
+        alias = resolved / "compiler-alias"
+        os.link(rustup, alias)
+        proxy = supplied / "rustc"
+        proxy.symlink_to(alias)
+        with patch.dict(os.environ, {"PATH": ""}), patch.object(check, "observe") as observe:
+            with self.assertRaisesRegex(ValueError, "Refusing rustup proxy"):
+                check.installed_tool(proxy, "rustc")
+            observe.assert_not_called()
+
+    def test_explicit_distinct_binary_identity_can_be_observed_with_empty_path(self):
+        binary = self.root / "compiler"
+        binary.write_bytes(b"synthetic direct-binary identity; never executed")
+        (self.root / "rustup").write_bytes(b"a different inode")
+        observation = {"exit_code": 0, "stdout": "release: 1.92.0\n"}
+        with patch.dict(os.environ, {"PATH": ""}), patch.object(check, "observe", return_value=observation) as observe:
+            result = check.installed_tool(binary, "rustc")
+        observe.assert_called_once_with([str(binary), "-Vv"])
+        self.assertEqual(check.receipt(binary), result["binary"])
+
     def test_preflight_cli_retains_blocked_report_without_library_or_toolchain_acquisition(self):
         output = self.root / "preflight.json"
         arguments = ["--build-preflight", "--repo", str(self.root), "--target", self.args.target,

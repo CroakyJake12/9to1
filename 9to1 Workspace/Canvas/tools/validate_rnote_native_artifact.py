@@ -227,7 +227,22 @@ def installed_tool(path: Path | None, tool: str) -> dict:
         raise ValueError(f"Explicit installed {tool} binary is required; no toolchain is acquired")
     actual = path.resolve(strict=True)
     rustup = shutil.which("rustup")
-    if actual.name == "rustup" or (rustup and os.path.samefile(actual, rustup)):
+    # rustup normally installs hardlink proxies in its bin directory. A caller
+    # can supply that absolute proxy while PATH omits the directory entirely.
+    # Compare actual inode identities in BOTH supplied/resolved directories;
+    # neither the candidate's basename nor PATH absence proves a direct binary.
+    proxy_identities = {path.parent / "rustup", actual.parent / "rustup"}
+    if rustup:
+        proxy_identities.add(Path(rustup))
+    is_proxy = actual.name == "rustup"
+    for candidate in proxy_identities:
+        try:
+            is_proxy |= os.path.samefile(actual, candidate)
+        except FileNotFoundError:
+            continue
+        except OSError as error:
+            raise ValueError(f"Cannot establish installed {tool} proxy identity: {candidate}") from error
+    if is_proxy:
         raise ValueError(f"Refusing rustup proxy for {tool}; supply the actual installed toolchain binary")
     result = observe([str(actual), "-Vv"])
     result["binary"] = receipt(actual)
