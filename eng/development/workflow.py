@@ -954,6 +954,7 @@ def main(argv=None):
     q = sub.add_parser("advance-rc"); q.add_argument("--expect", type=int, required=True); q.add_argument("--candidate", required=True); q.add_argument("--patch", required=True)
     q = sub.add_parser("verify-backport"); q.add_argument("--expect", type=int, required=True); q.add_argument("--patch-id", required=True); q.add_argument("--target", required=True); q.add_argument("--repo", required=True)
     q = sub.add_parser("preflight"); q.add_argument("--repo", required=True); q.add_argument("--candidate"); q.add_argument("--execution")
+    q = sub.add_parser("copy-budget"); q.add_argument("--manifest", required=True); q.add_argument("--sha256", required=True)
     q = sub.add_parser("plan"); q.add_argument("--changed", required=True); q.add_argument("--registry", default=str(Path(__file__).with_name("checks.json"))); q.add_argument("--release", action="store_true")
     q = sub.add_parser("run"); q.add_argument("--repo", required=True); q.add_argument("--candidate", required=True); q.add_argument("--check", required=True); q.add_argument("--layer", type=int, required=True); q.add_argument("--out", required=True); q.add_argument("--trx"); q.add_argument("--environment-manifest"); q.add_argument("--timeout-seconds", type=float, default=300); q.add_argument("--kind", choices=["test", "build"], default="test"); q.add_argument("command", nargs=argparse.REMAINDER)
     q = sub.add_parser("recover"); q.add_argument("--repo", required=True); q.add_argument("--execution")
@@ -968,6 +969,9 @@ def main(argv=None):
             old = read(a.previous_candidate)["accepted_fixes"] if a.previous_candidate else []
             value = snapshot(a.repo, a.out, [read(f) for f in a.accepted_fix], old)
         elif a.action == "preflight": value = preflight(a.repo, read(a.candidate) if a.candidate else None, state=read(a.state) if a.state else None, execution=a.execution)
+        elif a.action == "copy-budget":
+            from copy_budget import assess
+            value = assess(a.manifest, a.sha256)
         elif a.action == "plan": value = plan(read(a.changed), read(a.registry), a.release)
         elif a.action == "run":
             cmd = a.command[1:] if a.command[:1] == ["--"] else a.command
@@ -993,6 +997,7 @@ def main(argv=None):
         print(json.dumps(value, indent=2, ensure_ascii=False))
         if a.action == "run" and value["result"] not in ("PASS", "PROCESS_SUCCEEDED"): return 1
         if a.action == "preflight" and not value["ready"]: return 2
+        if a.action == "copy-budget" and not value["known_copy_budget_fits"]: return 2
         if a.action == "recover" and value["recovery_status"] == "BLOCKED": return 2
         if a.action == "release-status" and not value["ready"]: return 1
         return 0

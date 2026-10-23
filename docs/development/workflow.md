@@ -398,3 +398,30 @@ located by the current ROOT-LIVE checkpoint under
 `development-workflow-overhaul-20261022/independent-recovery/successor-90d5803b/VERDICT-90d5803b.json`.
 That result covers the reviewed helper revision and that recovery scope; product,
 native, ARM release and later candidate acceptance remain separate requirements.
+
+## Owning copy budgets before SDK launch
+
+Run the read-only budget check before an owning SDK step when a reviewed copy
+manifest is available:
+
+```sh
+python3 -B eng/development/workflow.py copy-budget --manifest /actual/frozen-copy-manifest.json --sha256 REVIEWED_SHA256
+```
+
+The manifest pins the package origins, complete destination contents and expected
+source identities. The checker rehashes real inputs and outputs, refuses stale
+identities and symlinks, and budgets missing or stale complete copies separately
+for each actual filesystem, preserving the 256 MiB reserve. Possible hardlinks
+receive no optimistic credit. Existing verified identical outputs may reuse
+their bytes. Inputs are read only: no SDK, model, copy, cleanup or ledger write.
+
+Exit 2 refuses the listed copy budget or its inputs. Exit 0 means only that the
+listed conservative copy budget fits; `sdk_launch_admitted` remains false. It
+never establishes a complete conditional/custom-target copy closure, scratch
+peak, toolchain/native environment or launch permission. Preserve the owning
+resource, memory, timeout and process-custody guards and obtain those remaining
+requirements separately. The Native17 disk-full failure demonstrated this gap:
+its 468 missing verified copies alone require 275,447,808 bytes in addition to
+the 268,435,456-byte reserve. Retain the original failure and do not retry when
+only the reserve has been recovered. The existing workflow test entrypoint also
+loads the copy-budget regressions; broad discovery runs each suite once.

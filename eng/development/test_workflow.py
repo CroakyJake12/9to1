@@ -1022,5 +1022,13 @@ class WorkflowTests(unittest.TestCase):
         w.provider_allowed(["dotnet", "build", "/workspace/9to1-mercury-profile10-first-main-close-20261021/Tests.csproj"])
 
 
+def load_tests(loader, tests, pattern):
+    # The existing CI/selector names this suite explicitly. Include the owning
+    # copy-budget regression suite there; broad discovery loads it separately.
+    if pattern in (None, "test_workflow.py"):
+        tests.addTests(loader.loadTestsFromName("test_copy_budget"))
+    return tests
+
+
 if __name__ == "__main__":
     unittest.main()
