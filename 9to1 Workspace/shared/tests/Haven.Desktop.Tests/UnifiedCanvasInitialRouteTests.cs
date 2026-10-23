@@ -198,7 +198,7 @@ public sealed class UnifiedCanvasInitialRouteTests
             Assert.True(rig.App.TryInvokeOriginalStartupContinuation(original, () =>
                 ExecutionContext.Run(neutral.CreateCopy(), _ =>
                 {
-                    Assert.Throws<InvalidOperationException>(() => rig.Owner.CloseAndDrainAsync());
+                    Assert.Throws<InvalidOperationException>(() => { _ = rig.Owner.CloseAndDrainAsync(); });
                     Assert.Null(rig.Owner.OriginalClose);
                     guarded = true;
                 }, null)));
