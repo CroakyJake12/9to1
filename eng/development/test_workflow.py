@@ -1113,6 +1113,7 @@ def load_tests(loader, tests, pattern):
     if pattern in (None, "test_workflow.py"):
         tests.addTests(loader.loadTestsFromName("test_copy_budget"))
         tests.addTests(loader.loadTestsFromName("test_autopatch_workflow_policy"))
+        tests.addTests(loader.loadTestsFromName("test_workflow_runner_context_policy"))
     return tests
 
 
