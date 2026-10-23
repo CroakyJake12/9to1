@@ -554,7 +554,13 @@ public sealed partial class App
                     }).GetTask());
                     var original = await ledger.AwaitAsync(dispatch).ConfigureAwait(false);
                     await ledger.AwaitAsync(original).ConfigureAwait(false);
-                    return true;
+                    // Navigation settlement cannot certify a host that retired while it was awaited.
+                    // Re-enter the same finite physical owner before startup consumes this result.
+                    return ledger.Invoke(() =>
+                    {
+                        DemandCurrent(); token.ThrowIfCancellationRequested();
+                        return true;
+                    });
                 });
             }
         }
