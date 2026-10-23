@@ -208,6 +208,73 @@ public sealed class UnifiedCanvasInitialRouteTests
         await rig.Owner.CloseAndDrainAsync().WaitAsync(rig.Token);
     });
 
+    [Fact]
+    public Task A_current_App_owner_publishes_actual_startup_error_and_keeps_the_failed_original() => WithRig(async rig =>
+    {
+        var source = new IOException("Actual failed startup source.");
+        var startup = FailedOriginal(rig, source);
+        Assert.False(startup.IsCompleted); Assert.False(rig.Read.IsCompleted);
+        await rig.ReleaseAsync();
+        Assert.Same(source, await Record.ExceptionAsync(() => startup.WaitAsync(rig.Token)));
+        var path = Path.Combine(rig.Paths.DataDirectory, "actual-startup-error.txt");
+        Assert.True(rig.App.TryPublishOriginalStartupFailure(() => File.WriteAllText(path, source.Message)));
+        Assert.Equal(source.Message, File.ReadAllText(path));
+        Assert.True(startup.IsFaulted); Assert.False(rig.Completed());
+        rig.ExpectedCloseFailure = await Record.ExceptionAsync(() => rig.Owner.CloseAndDrainAsync().WaitAsync(rig.Token));
+        Assert.Same(source, rig.ExpectedCloseFailure);
+    });
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task Accepted_App_retirement_skips_error_publication_without_losing_the_actual_startup_cause(bool nested) => WithRig(async rig =>
+    {
+        var empty = new AggregateException("Actual foreign empty startup failure.");
+        var source = nested ? new AggregateException("Actual foreign nested startup failure.", empty,
+            new OperationCanceledException("Faulted startup sibling.")) : empty;
+        var startup = FailedOriginal(rig, source);
+        Assert.False(startup.IsCompleted); Assert.False(rig.Read.IsCompleted);
+        await rig.ReleaseAsync();
+        Assert.Same(source, await Record.ExceptionAsync(() => startup.WaitAsync(rig.Token)));
+        rig.Owner.RequestRetirement();
+        var close = Assert.IsAssignableFrom<Task>(rig.Owner.OriginalClose);
+        rig.ExpectedCloseFailure = await Record.ExceptionAsync(() => close.WaitAsync(rig.Token));
+        Assert.Same(source, rig.ExpectedCloseFailure);
+        var path = Path.Combine(rig.Paths.DataDirectory, "forbidden-late-error.txt");
+        Assert.False(rig.App.TryPublishOriginalStartupFailure(() => File.WriteAllText(path, source.Message)));
+        Assert.False(File.Exists(path)); Assert.True(startup.IsFaulted); Assert.True(close.IsFaulted);
+        Assert.Same(close, rig.Owner.CloseAndDrainAsync()); Assert.False(rig.Completed());
+        Assert.Same(source, await Record.ExceptionAsync(() => close.WaitAsync(rig.Token)));
+    });
+
+    [Fact]
+    public Task Error_publication_self_retirement_cannot_hide_its_actual_source_failure_as_admission_refusal() => WithRig(async rig =>
+    {
+        var source = new IOException("Actual startup source fault before presentation.");
+        var publication = new ObjectDisposedException("actual-presentation", "Actual presentation fault after its owner retires.");
+        var startup = FailedOriginal(rig, source);
+        await rig.ReleaseAsync();
+        Assert.Same(source, await Record.ExceptionAsync(() => startup.WaitAsync(rig.Token)));
+        Assert.Same(publication, Assert.Throws<ObjectDisposedException>(() =>
+        {
+            _ = rig.App.TryPublishOriginalStartupFailure(() =>
+            {
+                rig.Owner.RequestRetirement();
+                throw publication;
+            });
+        }));
+        var close = Assert.IsAssignableFrom<Task>(rig.Owner.OriginalClose);
+        rig.ExpectedCloseFailure = await Record.ExceptionAsync(() => close.WaitAsync(rig.Token));
+        AssertExactCauses(rig.ExpectedCloseFailure, source, publication);
+        Assert.True(startup.IsFaulted); Assert.True(close.IsFaulted); Assert.False(rig.Completed());
+    });
+
+    private static Task FailedOriginal(Rig rig, Exception actualCause) => rig.Owner.RunAsync(async original =>
+    {
+        await original.AwaitAsync(rig.Read);
+        ExceptionDispatchInfo.Capture(actualCause).Throw();
+    });
+
     private static void AssertExactCauses(Exception? actual, params Exception[] expected)
     {
         var group = Assert.IsType<AggregateException>(actual);

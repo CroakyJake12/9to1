@@ -216,9 +216,16 @@ public sealed partial class App : Avalonia.Application
         {
             if (_actualUnifiedWorkspace is not null)
             {
-                _actualUnifiedWorkspace.ShowStartupFailureForHost(Guid.NewGuid().ToString("N"), failure);
+                TryPublishOriginalStartupFailure(() =>
+                    _actualUnifiedWorkspace.ShowStartupFailureForHost(Guid.NewGuid().ToString("N"), failure));
             }
         }
+    }
+
+    internal bool TryPublishOriginalStartupFailure(Action actualPresentation)
+    {
+        actualPresentation();
+        return true;
     }
 #endif
 
@@ -398,8 +405,15 @@ public sealed partial class App : Avalonia.Application
     // Its result reports source admission, never product or route readiness.
     internal bool TryInvokeOriginalStartupContinuation(DesktopOriginalWorkLifetime.Original original, Action actualSource)
     {
-        AcquireOriginalAppSynchronous(original, () => { actualSource(); return true; });
-        return true;
+        var invoked = false;
+        AcquireOriginalAppSynchronous(original, () =>
+        {
+            original.RunAcceptedPublicationCallback(() => { invoked = true; actualSource(); });
+            return true;
+        });
+        // A source that retired its owner after acquiring work still ran. Its
+        // actual Task must settle; only the next admission is skipped.
+        return invoked;
     }
 
     internal async Task<bool> TryAwaitOriginalStartupContinuationAsync(
