@@ -1,5 +1,6 @@
 using CakeOS.Cui.Themes;
 using Haven.Browser;
+using Haven.Core;
 using Haven.Infrastructure;
 using HavenOS.Apps.Browse;
 using HavenOS.Home.Core;
