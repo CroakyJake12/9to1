@@ -10,10 +10,15 @@ namespace HavenOS.Home.Tests;
 // observations do not grant an app session, write approval, or physical-path ancestry.
 public sealed class NativeFilesOriginalScopedResourceResolverTests
 {
-    [Fact]
+    private const string LinuxRequirement = "Requires the actual Linux Home domain and Unix file permissions; Windows/native acceptance is separate.";
+    private sealed class LinuxFactAttribute : FactAttribute
+    { public LinuxFactAttribute() { if (!OperatingSystem.IsLinux()) Skip = LinuxRequirement; } }
+    private sealed class LinuxTheoryAttribute : TheoryAttribute
+    { public LinuxTheoryAttribute() { if (!OperatingSystem.IsLinux()) Skip = LinuxRequirement; } }
+
+    [LinuxFact]
     public async Task Registered_authority_resolves_real_Canvas_folder_and_artifact_under_restored_context()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             rig.Principal.RequireScope = true;
@@ -30,7 +35,7 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Theory]
+    [LinuxTheory]
     [InlineData("revision")]
     [InlineData("actor")]
     [InlineData("owner-app")]
@@ -39,7 +44,6 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
     [InlineData("store")]
     public async Task Real_policy_rejects_changed_revision_actor_artifact_owner_and_type(string changed)
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var actor = changed == "actor" ? rig.Actor with { AuthenticationRevision = "different-authentication" } : rig.Actor;
@@ -74,10 +78,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         Assert.Equal(0, calls);
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Configuration_change_after_metadata_acquisition_refuses_same_cached_workspace()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var changed = 0;
@@ -91,10 +94,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Configuration_is_rechecked_inside_final_publication_callback()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var callbacks = 0;
@@ -114,10 +116,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Artifact_producer_preserves_original_store_and_revision_checks()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var wrongRevision = rig.Keep(rig.Workspace.Provider.GetArtifactForOriginalStoreAsync(rig.Workspace.Configuration.StoreId,
@@ -132,10 +133,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Held_principal_is_retained_before_scope_fault_and_independently_joined()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var cause = new IOException("actual resolver parent failure after raw principal acquisition");
@@ -158,10 +158,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Faulted_principal_OCE_and_independent_IO_fault_stay_faults()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var cancellation = new OperationCanceledException("faulted raw resolver principal");
@@ -176,10 +175,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Actually_canceled_principal_preserves_the_returned_Task_cancellation()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             rig.Principal.Arm(); rig.Principal.Raw.SetCanceled(new CancellationToken(true));
@@ -191,10 +189,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Artifact_raw_repository_Task_is_retained_and_joined_when_parent_swallows_enrollment_failure()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -223,10 +220,9 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Actual_repository_cancellation_keeps_the_raw_and_producer_Tasks_canceled()
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -250,14 +246,13 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
         });
     }
 
-    [Theory]
+    [LinuxTheory]
     [InlineData("omitted")]
     [InlineData("repeated")]
     [InlineData("cross-thread")]
     [InlineData("post-callback")]
     public async Task Direct_artifact_producer_rejects_finite_callback_protocol_failures(string failure)
     {
-        if (!OperatingSystem.IsLinux()) return;
         await WithRig(async rig =>
         {
             Action? late = null; Exception? refused = null; var first = 0;
@@ -361,6 +356,7 @@ public sealed class NativeFilesOriginalScopedResourceResolverTests
 
     private static async Task WithRig(Func<Rig, Task> body)
     {
+        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException(LinuxRequirement);
         var root = Path.Combine(Path.GetTempPath(), "home-files-scoped-resolver-" + Guid.NewGuid().ToString("N"));
         var rig = new Rig(); Task? actualBody = null; List<Exception> failures = [];
         try

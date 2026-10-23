@@ -10,6 +10,14 @@ namespace HavenOS.Home.Tests;
 
 public sealed class HomeLocalDomainCompositionTests
 {
+    private sealed class LinuxFactAttribute : FactAttribute
+    {
+        public LinuxFactAttribute()
+        {
+            if (!OperatingSystem.IsLinux()) Skip = "Requires the actual Linux Home local-domain producer.";
+        }
+    }
+
     [Fact]
     public async Task Actual_linux_profile_and_aliases_share_one_domain_and_issue_no_native_session()
     {
@@ -68,10 +76,9 @@ public sealed class HomeLocalDomainCompositionTests
         }, [new ExecutePolicy()]);
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Actual_linux_Home_owns_high_risk_store_import_and_requires_explicit_decline_then_accept()
     {
-        if (!OperatingSystem.IsLinux()) return;
         using var store = new OriginalLocalStoreImportCompositionControl();
         await WithDomain(new OperatingSystemPrincipalSource(), async (domain, _) =>
         {
@@ -80,10 +87,9 @@ public sealed class HomeLocalDomainCompositionTests
         }, evidence: [store]);
     }
 
-    [Fact]
+    [LinuxFact]
     public async Task Actual_linux_Home_refuses_duplicate_import_policy_instead_of_overriding_its_owner()
     {
-        if (!OperatingSystem.IsLinux()) return;
         using var store = new OriginalLocalStoreImportCompositionControl();
         await WithDomain(new OperatingSystemPrincipalSource(), async (domain, _) =>
         {
