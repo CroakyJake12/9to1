@@ -12,6 +12,7 @@ using HavenOS.Home.Core;
 using HavenOS.Home.NativeUI;
 using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
+using HomePermissionRequest = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest;
 
 namespace Haven.Desktop.Tests;
 
