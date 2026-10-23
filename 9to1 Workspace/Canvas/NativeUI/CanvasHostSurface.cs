@@ -59,12 +59,18 @@ public sealed partial class CanvasHostSurface : ContentControl
     private CanvasOriginalFilesCommit? _retainedOriginalCommit;
     public CanvasOriginalFilesCommit? OriginalFilesAcknowledgement => _retainedOriginalCommit is { } original
         ? new(original.FileId, CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(original.Artifact)), original.Revision) : null;
-    private bool _busy, _ready, _closed;
+    private volatile bool _busy, _ready, _closed;
     private Task? _initialization;
     private Task<CuiSceneAvailability>? _sceneInitialization;
     private readonly Action<Action>? _originalHostCallback;
     private readonly CuiThemePreferenceContext? _themePreference;
+    private readonly object _sourceGate = new();
+    private readonly List<Task> _sourceTasks = [];
+    private Task<ClosePreparation?>? _preparation;
+    private volatile ClosePreparation? _preparedClose;
+    private bool _preparing;
     public Task Initialization => _initialization ?? Task.CompletedTask;
+    public bool IsAlive => !_closed && !_lifetime.IsCancellationRequested && OriginalCloseTask is null;
 
     internal CanvasHostSurface(IServiceProvider services, CancellationToken originalProcess,
         Func<NativeFilesWorkspace, HomeResourceExecutionCapability, Func<bool>, CancellationToken, ValueTask<HomeClaimedResourceCommitFence>>? captureHomeFence,
@@ -100,7 +106,8 @@ public sealed partial class CanvasHostSurface : ContentControl
         if (_closed || _view is not CanvasNativeCuiSurface surface || !EditorViewActive()) return Task.CompletedTask;
         return _originalWork.RunOriginalAsync(async token =>
         {
-            if (!await Original(() => surface.RefreshAsync(token)))
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, cancellationToken);
+            if (!await Original(() => surface.RefreshAsync(linked.Token)))
             {
                 await _originalWork.ObserveOriginalAsync(Original(surface.CloseAndDrainAsync));
                 _view = null; _content.Content = null; _opened = null; _openedFile = null;
@@ -116,6 +123,73 @@ public sealed partial class CanvasHostSurface : ContentControl
         if (!CanCompleteKnownNoEffectClose(actual, error)) return false;
         RecoveredNoEffectCloseFailure = error; return true;
     }
+    /// <summary>External native-host retirement only. A private preparation freezes new
+    /// document mutation admission; it neither grants permission nor changes authored view state.</summary>
+    public Task<ClosePreparation?> PrepareCloseAsync(CancellationToken cancellationToken = default)
+    {
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        Dispatcher.UIThread.VerifyAccess();
+        if (_closed) return Task.FromResult<ClosePreparation?>(null);
+        if (_preparedClose is { IsCurrent: true } prepared) return Task.FromResult<ClosePreparation?>(prepared);
+        if (_preparation is { IsCompletedSuccessfully: false }) return _preparation;
+        _preparing = true; RefreshBindings();
+        try { return _preparation = _originalWork.RunOriginalAsync(PrepareOriginalCloseAsync, cancellationToken); }
+        catch { _preparing = false; RefreshBindings(); throw; }
+    }
+    private async Task<ClosePreparation?> PrepareOriginalCloseAsync(CancellationToken token)
+    {
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        try
+        {
+            if (_initialization is null || _sceneInitialization is null) return null;
+            await _originalWork.ObserveOriginalAsync(_initialization);
+            await _originalWork.ObserveOriginalAsync(Original(() => _shell.CaptureOriginalActionSettlement(_sceneInitialization)));
+            token.ThrowIfCancellationRequested();
+            if (_closed || _busy || _requestUncertain || _pendingRequest is not null || _pendingOwnership is not null ||
+                _pendingAudit is not null || _pendingBeginAudit is not null || _pendingExecute is not null || _pendingDisposable is not null)
+                return null;
+            return _preparedClose = new ClosePreparation(this);
+        }
+        finally { _preparing = false; RefreshBindings(); }
+    }
+    public sealed class ClosePreparation
+    {
+        private readonly CanvasHostSurface _owner;
+        private bool _accepted, _aborted;
+        private Task? _abort;
+        internal ClosePreparation(CanvasHostSurface owner) => _owner = owner;
+        public bool IsCurrent => !_accepted && !_aborted && _owner.IsAlive && ReferenceEquals(_owner._preparedClose, this);
+        public Task AbortAsync()
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(_owner);
+            Dispatcher.UIThread.VerifyAccess();
+            if (_abort is not null) return _abort;
+            if (_accepted) return Task.FromException(new InvalidOperationException("An accepted Canvas close cannot be reversed."));
+            if (!IsCurrent) return Task.FromException(new InvalidOperationException("The original Canvas preparation is no longer current."));
+            return _abort = _owner._originalWork.RunOriginalAsync(_ =>
+            {
+                _owner._preparedClose = null; _aborted = true;
+                _owner.Original(() => { _owner.RefreshBindings(); return true; });
+                return Task.CompletedTask;
+            });
+        }
+        public Task BeginClose()
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(_owner);
+            Dispatcher.UIThread.VerifyAccess();
+            if (_accepted) return _owner.OriginalCloseTask ?? throw new InvalidOperationException("The accepted Canvas close is absent.");
+            if (!IsCurrent) throw new InvalidOperationException("The original Canvas preparation is no longer current.");
+            _accepted = true;
+            return _owner.CloseAndDrainAsync();
+        }
+    }
+    /// <summary>Finite native-host source scope, including real lifetime cancellation callbacks.
+    /// This provides a join guard only, never action or resource authority.</summary>
+    public void RunOriginalHostSource(Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        Original(() => { callback(); return true; });
+    }
     private T Original<T>(Func<T> callback)
     {
         T result = default!; var invoked = false;
@@ -123,17 +197,32 @@ public sealed partial class CanvasHostSurface : ContentControl
         {
             if (invoked) throw new InvalidOperationException("A Canvas source callback must be invoked exactly once.");
             invoked = true; result = CloudflareOriginalExecutionGuard.InvokeOriginal(this, callback);
+            // Capture a returned original before a containing finite scope can fail.
+            if (result is Task actual) RetainOriginalSource(actual);
         }
         if (_originalHostCallback is { } host) host(Invoke); else Invoke();
         if (!invoked) throw new InvalidOperationException("The actual Canvas host did not invoke its source callback.");
         return result;
     }
+    private void RetainOriginalSource(Task actual)
+    {
+        if (ReferenceEquals(actual, _originalWork.OriginalCloseTask)) return;
+        lock (_sourceGate)
+        {
+            _sourceTasks.RemoveAll(task => task.IsCompletedSuccessfully);
+            if (!_sourceTasks.Any(task => ReferenceEquals(task, actual))) _sourceTasks.Add(actual);
+        }
+    }
+    private ValueTask<AuthenticatedResourceActor?> ObserveOriginalActorAsync(HomeLocalProfileIdentity profiles, CancellationToken token)
+        => Original(() => profiles.GetCurrentAsync(RunOriginalHostSource, RetainOriginalSource, token));
+    private ValueTask Original(Func<ValueTask> callback) => new(Original(() => callback().AsTask()));
+    private ValueTask<T> Original<T>(Func<ValueTask<T>> callback) => new(Original(() => callback().AsTask()));
     private T Get<T>() where T : notnull => Original(() => _services.GetRequiredService<T>());
     // The platform picker belongs to the actual attached native top-level or a supplied OS adapter.
     private IStorageProvider NativePicker => Original(() => _services.GetService<IStorageProvider>())
         ?? TopLevel.GetTopLevel(this)?.StorageProvider
         ?? throw new InvalidOperationException("Canvas has no attached native picker.");
-    private bool WriteAvailable() => !_closed && _ready && _workspace is not null;
+    private bool WriteAvailable() => !_closed && _preparedClose is null && _ready && _workspace is not null;
     private bool HasRetainedCanvas() => _view is CanvasNativeCuiSurface { OriginalCloseTask: null } && _opened is not null && _openedFile is not null;
     private bool EditorViewActive() => !_closed && _workspaceSurface?.IsEffectivelyVisible == true &&
         HasRetainedCanvas() && ReferenceEquals(_content.Content, _view);
@@ -172,9 +261,9 @@ public sealed partial class CanvasHostSurface : ContentControl
     {
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         var profiles = Get<HomeLocalProfileIdentity>();
-        var actor = await Original(() => profiles.GetCurrentAsync(ct));
+        var actor = await ObserveOriginalActorAsync(profiles, ct);
         var snapshot = await Original(() => Get<HomeCoreRuntime>().StartAsync(ct));
-        _ready = actor is not null && actor == await Original(() => profiles.GetCurrentAsync(ct)) &&
+        _ready = actor is not null && actor == await ObserveOriginalActorAsync(profiles, ct) &&
             new[] { "home.core", "home.state", "permissions.trust" }.All(id => snapshot.Services.Any(service => service.ServiceId == id &&
                 service.IsAvailable && service.State == HomeServiceLifecycleState.Ready &&
                 service.ContractVersion.Major == HomeCoreServiceCatalog.CurrentContractVersion.Major &&
@@ -222,9 +311,10 @@ public sealed partial class CanvasHostSurface : ContentControl
         SetStatus(_documents.Length == 0 ? "No Canvas documents on this page. Create a canvas to begin." : "Choose a Canvas document to open.");
         RefreshBindings();
     }
-    private void RefreshBindings()
+    private void RefreshBindings() => Original(() => { RefreshBindingsCore(); return true; });
+    private void RefreshBindingsCore()
     {
-        var idle = !_busy && !_closed && !_requestUncertain;
+        var idle = !_busy && !_closed && !_requestUncertain && !_preparing && _preparedClose is null;
         var noPending = _pendingRequest is null && _pendingOwnership is null && _pendingAudit is null && _pendingBeginAudit is null;
         var retained = HasRetainedCanvas();
         _model.Set("HasRetainedCanvas", retained);
@@ -248,11 +338,11 @@ public sealed partial class CanvasHostSurface : ContentControl
         _model.Set("CanPage", idle && _nextPage is not null && noPending);
         _model.Set("SelectedName", _documents.Length == 0 ? "No document selected" : _documents[_selected].Name);
     }
-    private void SetStatus(string message) => _model.Set("Status", message);
+    private void SetStatus(string message) => Original(() => { _model.Set("Status", message); return true; });
     private async Task ShowViewAsync(Control control, IDisposable owner, Func<Task> validatePublication)
     {
         var previous = _view;
-        if (previous is CanvasNativeCuiSurface native) await _originalWork.ObserveOriginalAsync(native.CloseAndDrainAsync());
+        if (previous is CanvasNativeCuiSurface native) await _originalWork.ObserveOriginalAsync(Original(native.CloseAndDrainAsync));
         else previous?.Dispose();
         await validatePublication();
         if (_closed) throw new OperationCanceledException("Canvas closed before native publication.");
@@ -271,7 +361,8 @@ public sealed partial class CanvasHostSurface : ContentControl
             throw RejectBeforeEffect(proof, new NotSupportedException(
                 "The artifact has no Rnote engine state; open it using the registered native Canvas renderer."));
         var readiness = new CanvasOriginalResourceReadiness(Get<HomeCoreRuntime>(), Get<IAuthenticatedResourceActorSource>(), Get<ResourceAuthorizationService>(),
-            "canvas.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", fileId.ToString(), captured.CasRevisionId.ToString(), ResourceAccess.Read)]));
+            "canvas.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", fileId.ToString(), captured.CasRevisionId.ToString(), ResourceAccess.Read)]),
+            RunOriginalHostSource, RetainOriginalSource);
         var originalReadiness=new OriginalCanvasReadiness(readiness,async token=>
         {
             await RequireOriginalOwnerAsync(original,captured.StoreId,token);
@@ -317,7 +408,7 @@ public sealed partial class CanvasHostSurface : ContentControl
             publication = ShowViewAsync(surface, surface, async () =>
             {
                 await RequireOriginalOwnerAsync(original, captured.StoreId, ct);
-                if (!await _originalWork.ObserveOriginalAsync(surface.RefreshAsync(ct)))
+                if (!await _originalWork.ObserveOriginalAsync(Original(() => surface.RefreshAsync(ct))))
                     throw new UnauthorizedAccessException("Canvas source changed before native publication.");
                 ct.ThrowIfCancellationRequested();
             });
@@ -456,6 +547,7 @@ public sealed partial class CanvasHostSurface : ContentControl
 
     private ValueTask DispatchAsync(string action, object? parameter, CancellationToken ct)
     {
+        if (_preparing || _preparedClose is not null) throw new InvalidOperationException("Canvas is preparing to close.");
         var proof = CaptureReadAdmission(action);
         var actual = _originalWork.RunOriginalAsync(token => DispatchOriginalAsync(action, parameter, token, proof), ct);
         _latestOriginalCommand = actual;
@@ -470,6 +562,7 @@ public sealed partial class CanvasHostSurface : ContentControl
     }
     private async Task DispatchOriginalAsync(string action, object? parameter, CancellationToken ct, NoEffectReadProof? proof)
     {
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         if (_busy || _closed || parameter is not null && action != "canvas.host.openItem")
             throw new InvalidOperationException("This Canvas action is unavailable.");
         var startOnly = action is "canvas.host.openItem" or "canvas.host.open" or "canvas.host.create" or
@@ -522,7 +615,7 @@ public sealed partial class CanvasHostSurface : ContentControl
                 OwnerCommit? committed = null;
                 try
                 {
-                    var actual = execute(cap, ct);
+                    var actual = Original(() => execute(cap, ct));
                     committed = await _originalWork.ObserveOriginalAsync(actual);
                     if (_files!.TryGetOriginalCommit(cap, out var known)) _retainedOriginalCommit = known;
                     _pendingAudit = new(cap, new(HomePermissionRequestState.Succeeded, "CANVAS_COMMITTED",
@@ -556,9 +649,9 @@ public sealed partial class CanvasHostSurface : ContentControl
             }
             else if (action == "canvas.host.resume" && _view is CanvasNativeCuiSurface retained && _opened is not null)
             {
-                if (!await _originalWork.ObserveOriginalAsync(retained.RefreshAsync(ct)))
+                if (!await _originalWork.ObserveOriginalAsync(Original(() => retained.RefreshAsync(ct))))
                 {
-                    await _originalWork.ObserveOriginalAsync(retained.CloseAndDrainAsync());
+                    await _originalWork.ObserveOriginalAsync(Original(retained.CloseAndDrainAsync));
                     _view = null; _content.Content = null;
                     _opened = null; _openedFile = null;
                     throw new UnauthorizedAccessException("This Canvas source changed. Open its current version from Files.");
@@ -570,9 +663,9 @@ public sealed partial class CanvasHostSurface : ContentControl
             else if (action == "canvas.host.page") await RefreshAsync(_nextPage, ct, proof);
             else if (action == "canvas.host.previous" && _selected > 0) _selected--;
             else if (action == "canvas.host.next" && _selected + 1 < _documents.Length) _selected++;
-            else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await _files!.OpenAsync(_documents[_selected].Id, ct), ct, proof);
+            else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await Original(() => _files!.OpenAsync(_documents[_selected].Id, ct)), ct, proof);
             else if (action == "canvas.host.openItem" && selectedRow is not null)
-                await OpenAsync(selectedRow.Item.Id, await _files!.OpenAsync(selectedRow.Item.Id, ct), ct, proof);
+                await OpenAsync(selectedRow.Item.Id, await Original(() => _files!.OpenAsync(selectedRow.Item.Id, ct)), ct, proof);
             else if (action == "canvas.host.create" && WriteAvailable())
             {
                 if (!_model.TryGetValue("NewName", out var value) || string.IsNullOrWhiteSpace(value?.ToString()))

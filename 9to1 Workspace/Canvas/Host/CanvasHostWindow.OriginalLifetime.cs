@@ -141,13 +141,23 @@ public sealed partial class CanvasHostSurface
         // Deeper aggregates belong to the source. Even an empty group is a fault.
         if (!errors.Any(previous => ReferenceEquals(previous, error))) errors.Add(error);
     }
-    public Task? OriginalCloseTask => _originalWork.OriginalCloseTask;
+    private Task? _surfaceClose, _workOwnerClose;
+    public Task? OriginalCloseTask => _surfaceClose;
     public Task CloseAndDrainAsync()
     {
         CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         if (!Dispatcher.UIThread.CheckAccess()) return Dispatcher.UIThread.InvokeAsync(CloseAndDrainAsync);
+        if (_surfaceClose is not null) return _surfaceClose;
         _closed = true;
-        return _originalWork.CloseAndDrainAsync(() => _originalChildrenClose = CloseOriginalChildrenAsync());
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _surfaceClose = CloseOriginalSurfaceAsync(start.Task); start.SetResult(); return _surfaceClose;
+    }
+    private async Task CloseOriginalSurfaceAsync(Task start)
+    {
+        await start;
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        _workOwnerClose = Original(() => _originalWork.CloseAndDrainAsync(() => _originalChildrenClose = CloseOriginalChildrenAsync()));
+        await _workOwnerClose;
     }
     private async Task CloseOriginalChildrenAsync()
     {
@@ -157,7 +167,10 @@ public sealed partial class CanvasHostSurface
         var snapshot = CaptureNoEffectCloseSnapshot();
         lock (_noEffectGate) _noEffectCloseSnapshot = snapshot;
         var errors = new List<Exception>();
-        try { _lifetime.Cancel(); } catch (Exception error) { errors.Add(error); }
+        try { Original(() => { _lifetime.Cancel(); return true; }); } catch (Exception error) { errors.Add(error); }
+        Task[] sources; lock (_sourceGate) sources = _sourceTasks.ToArray();
+        foreach (var actual in sources)
+            try { await actual; } catch (Exception error) { CaptureOriginalFailure(errors, actual, error); }
         Task? view = null;
         try
         {

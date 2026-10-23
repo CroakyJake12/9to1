@@ -146,7 +146,7 @@ public sealed partial class App : Avalonia.Application
             }
             preferences.ApplyAppearance(preferences.Appearance, save: false);
             // Linux uses the Browse-based unified host now that the Home composition runs.
-            if (ValidateOriginalInitialProductDeclaration(typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()) is null)
+            if (OriginalInitialProduct is null or "canvas")
             {
                 var window = new MainWindow(preferences) { Title = "9to1", PreserveWorkspaceSessionOnClose = true };
                 UnifiedWorkspaceHost? workspace = null;
@@ -285,6 +285,9 @@ public sealed partial class App : Avalonia.Application
                 var initialization = AcquireOriginalAppSynchronous(original, () => workspace.TryAcquireInitialization(original.Token));
                 if (initialization is null) return;
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => initialization!));
+                if (original.Token.IsCancellationRequested || _originalAppWork.IsRetiring) return;
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                    () => OpenOriginalInitialUnifiedProductRouteAsync(workspace, original.Token)));
             }
 #endif
 

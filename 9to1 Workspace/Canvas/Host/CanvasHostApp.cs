@@ -1,17 +1,8 @@
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
-
 namespace HavenOS.Apps.Canvas;
 
-/// <summary>The real window belongs to the genuine Home process through CanvasHomeWindowFactory.
-/// This executable cannot turn an unconfigured standalone launch into an installed app grant.</summary>
-public sealed partial class CanvasHostApp : Application
+/// <summary>Thin executable adapter to the original Home bootstrap and CUI workspace.
+/// Canvas borrows the same Home/Files services and native retirement graph as a Haven tab.</summary>
+public static class CanvasHostApp
 {
-    public override void Initialize() => CakeOS.Cui.Runtime.CuiNativeHost.InitialisePrimitiveTheme(this);
-    public override void OnFrameworkInitializationCompleted()
-    {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-            throw new PlatformNotSupportedException("Open Canvas through the genuine Home host. Independent installed Canvas domain admission is not configured.");
-        base.OnFrameworkInitializationCompleted();
-    }
+    public static void RunOriginal(string[] args) => Haven.Desktop.App.RunOriginalCanvasDesktop(args);
 }
