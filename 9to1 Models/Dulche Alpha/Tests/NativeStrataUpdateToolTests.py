@@ -344,5 +344,69 @@ class VerifyTreeCrossCheckTests(unittest.TestCase):
             self.assertIn("cross-check failed", str(ctx.exception))
 
 
+class LockRowValidationTests(unittest.TestCase):
+    def _fixture(self, root):
+        mod = load_tool()
+        archive = root / "source.tar.gz"
+        archive.write_bytes(make_archive({"a.cpp": b"int value = 1;\n"}))
+        lock_path = root / "lock.json"
+        args = Args()
+        args.archive = archive
+        args.origin = "https://example.invalid/upstream"
+        args.commit, args.tree = "a" * 40, "b" * 40
+        args.archive_url = ""
+        args.verified_tree_blobs = None
+        args.out = lock_path
+        self.assertEqual(mod.generate(args), 0)
+        lock = json.loads(lock_path.read_text())
+        tree_path = root / "tree.json"
+        tree_path.write_text(json.dumps({"treeSha": args.tree,
+            "blobs": {row["path"]: row["gitBlobSha"] for row in lock["rows"]}}))
+        verify = Args(); verify.archive = archive; verify.lock = lock_path
+        tree = Args(); tree.archive = archive; tree.lock = lock_path; tree.tree_blobs = tree_path
+        return mod, lock, lock_path, (("verify", verify), ("verify-tree", tree))
+
+    def _invoke(self, mod, mode, args):
+        return mod.verify(args) if mode == "verify" else mod.verify_tree(args)
+
+    def test_unique_lock_rows_preserve_valid_round_trip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            mod, lock, _, modes = self._fixture(pathlib.Path(tmp))
+            self.assertEqual((lock["commit"], lock["gitCommitTree"]), ("a" * 40, "b" * 40))
+            self.assertEqual(lock["blobCount"], 1)
+            for mode, args in modes:
+                with self.subTest(mode=mode):
+                    self.assertEqual(self._invoke(mod, mode, args), 0)
+
+    def test_duplicate_lock_rows_rejected_even_when_last_row_is_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            mod, lock, lock_path, modes = self._fixture(pathlib.Path(tmp))
+            valid = dict(lock["rows"][0])
+            # Equal duplicates and a conflicting first row must both refuse. A dict
+            # comprehension previously hid the first row behind the valid last one.
+            for conflicting in (False, True):
+                shadowed = dict(valid)
+                if conflicting:
+                    shadowed["gitBlobSha"], shadowed["sha256"] = "0" * 40, "0" * 64
+                lock["rows"] = [shadowed, valid]
+                lock["blobCount"] = 1  # same unique count; cannot legitimize duplicate rows
+                lock_path.write_text(json.dumps(lock))
+                for mode, args in modes:
+                    with self.subTest(mode=mode, conflicting=conflicting):
+                        with self.assertRaisesRegex(ValueError, "Duplicate source-lock path"):
+                            self._invoke(mod, mode, args)
+
+    def test_declared_blob_count_must_match_unique_rows(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            mod, lock, lock_path, modes = self._fixture(pathlib.Path(tmp))
+            for count in (0, 2, -1, True, 1.0, None, "1"):
+                lock["blobCount"] = count
+                lock_path.write_text(json.dumps(lock))
+                for mode, args in modes:
+                    with self.subTest(mode=mode, count=count):
+                        with self.assertRaisesRegex(ValueError, "source-lock blobCount"):
+                            self._invoke(mod, mode, args)
+
+
 if __name__ == "__main__":
     unittest.main()

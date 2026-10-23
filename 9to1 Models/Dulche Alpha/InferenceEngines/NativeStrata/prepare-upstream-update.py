@@ -31,6 +31,20 @@ def git_blob_sha(body: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(body)).encode("ascii") + b"\0" + body).hexdigest()
 
 
+def validated_lock_rows(lock: dict) -> dict:
+    """Keep source-lock rows one-to-one; never hide an earlier row behind a later path."""
+    expected = {}
+    for row in lock["rows"]:
+        path = row["path"]
+        if path in expected:
+            raise ValueError("Duplicate source-lock path: " + path)
+        expected[path] = row
+    count = lock["blobCount"]
+    if type(count) is not int or count != len(expected):
+        raise ValueError("Invalid source-lock blobCount: expected %d unique rows" % len(expected))
+    return expected
+
+
 def member_body(archive: pathlib.Path, relative: str) -> bytes:
     """Return the raw body of one regular member of the archive (by relative path)."""
     with tarfile.open(archive, "r:gz") as source:
@@ -192,7 +206,7 @@ def verify_tree(args) -> int:
               file=sys.stderr)
         return 2
     blobs = tree.get("blobs") or {}
-    rows = {r["path"]: r for r in lock["rows"]}
+    rows = validated_lock_rows(lock)
     missing = [p for p in rows if p not in blobs]
     extra = [p for p in blobs if p not in rows]
     mismatch = [p for p in rows if p in blobs and blobs[p] != rows[p]["gitBlobSha"]]
@@ -215,7 +229,7 @@ def verify(args) -> int:
         raise ValueError("Archive byte-count mismatch")
     if hashlib.sha256(archive).hexdigest() != lock["archive"]["sha256"]:
         raise ValueError("Archive SHA256 mismatch")
-    expected = {row["path"]: row for row in lock["rows"]}
+    expected = validated_lock_rows(lock)
     verified = {}
     with tarfile.open(args.archive, "r:gz") as source:
         roots = set()
