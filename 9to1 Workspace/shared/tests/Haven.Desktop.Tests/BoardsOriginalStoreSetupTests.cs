@@ -40,13 +40,13 @@ public sealed class BoardsOriginalStoreSetupTests
         var view = Assert.IsType<CuiSceneHost>(session.OriginalNativeView);
         window = new Window { Content = view, Width = 1000, Height = 760 };
         window.Show();
-            await IdleAsync(session, view);
+            await WaitForControlAsync(session, view, "boards-storage-create", rig.Token);
             Assert.NotNull(Find(view, "boards-storage-setup"));
             Assert.Null(Find(view, "boards-workspace"));
             Assert.False(Directory.Exists(rig.NotesDirectory));
             Assert.Empty((await rig.Home.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).Grants);
 
-            Click(view, "boards-storage-create"); await IdleAsync(session, view);
+            Click(view, "boards-storage-create"); await WaitForControlAsync(session, view, "boards-storage-bind-empty", rig.Token);
             var identity = await rig.Notes.GetStoreIdentityAsync(rig.Token);
             Assert.True(identity.NewlyCreated); Assert.True(File.Exists(rig.Identity));
             Assert.Null(await rig.Home.Ownership.GetVerifiedAsync("notes", identity.StoreId.ToString("D"), rig.Token));
@@ -57,7 +57,7 @@ public sealed class BoardsOriginalStoreSetupTests
             var read = await rig.WaitForRequestAsync(HomeNotesResourceAdmissionSource.ReadAction);
             Assert.NotNull(await rig.Home.Ownership.GetVerifiedAsync("notes", identity.StoreId.ToString("D"), rig.Token));
             Assert.Null(Find(view, "boards-workspace"));
-            await rig.DecideAsync(read.RequestId, "approval-accept"); await IdleAsync(session, view);
+            await rig.DecideAsync(read.RequestId, "approval-accept"); await WaitForControlAsync(session, view, "boards-workspace", rig.Token);
             Assert.NotNull(Find(view, "boards-workspace")); Assert.Null(Find(view, "boards-storage-setup"));
 
             // Genuine typed Create uses the SAME command as the authored Create button,
@@ -165,10 +165,19 @@ public sealed class BoardsOriginalStoreSetupTests
         var button = Assert.IsType<Button>(Find(root, name)); Assert.True(button.IsEffectivelyEnabled);
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     }
-    private static async Task IdleAsync(BoardsBrowseAppContentSession session, CuiSceneHost view)
+    private static async Task WaitForControlAsync(BoardsBrowseAppContentSession session, CuiSceneHost view,
+        string name, CancellationToken token)
     {
         var show = session.OriginalCuiShow ?? throw new InvalidOperationException("Retain actual CUI Show.");
-        await view.CaptureOriginalActionSettlement(show);
+        // Each capture is finite. A completed command can publish its result and admit
+        // the next genuine effect; join new snapshots until the actual expected control exists.
+        while (true)
+        {
+            token.ThrowIfCancellationRequested();
+            await view.CaptureOriginalActionSettlement(show).WaitAsync(token);
+            if (Find(view, name) is not null) return;
+            await Task.Yield();
+        }
     }
 
     private sealed class PrivateRoot : IDisposable

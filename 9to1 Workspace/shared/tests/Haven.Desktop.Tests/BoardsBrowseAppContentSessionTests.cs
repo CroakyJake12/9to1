@@ -1,3 +1,5 @@
+using Avalonia.Controls;
+using Avalonia.VisualTree;
 using Avalonia.Headless.XUnit;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -163,23 +165,29 @@ public sealed class BoardsBrowseAppContentSessionTests
         using var appLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         using var hostLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var principal = new ActualPrincipal();
+        var evidence = new NotesLocalStoreEvidenceProvider(rig.Notes);
         var home = new HomeNativeWindowsComposition(new FileHomeCoreStateStore(Path.Combine(rig.OriginalPaths.DataDirectory, "home.json")),
-            principal, rig.OriginalPaths, new("9to1.home.boards.guard-test.v1"));
+            principal, rig.OriginalPaths, new("9to1.home.boards.guard-test.v1"),
+            configureOriginalStores: _ => new([evidence], new Dictionary<Type, object>
+            { [typeof(NotesRepository)] = rig.Notes, [typeof(NotesLocalStoreEvidenceProvider)] = evidence }));
         var registrations = new ServiceCollection();
         registrations.AddSingleton<IAppPaths>(rig.OriginalPaths);
         registrations.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
         registrations.AddHavenOwnedWindowsHomeDomain(home, rig.OriginalPaths, principal);
         await using var provider = registrations.BuildServiceProvider();
         BoardsBrowseAppContentSession? session = null;
+        HomeNativeApprovalWindowOwner? approvals = null; BoardsOriginalStoreSetupBackend? setup = null; Window? window = null;
+        var failures = new List<Exception>();
         try
         {
             await home.StartOriginalAsync();
             var actor = await home.Profiles.GetCurrentAsync(default) ?? throw new InvalidOperationException("Actual local Home profile unavailable.");
             var admission = new HomeNotesResourceAdmissionSource(rig.Notes, home.StateStore, home.Profiles,
                 home.Ownership, home.Resources, home.Permissions, home.Broker);
-            var approvals = new HomeNativeApprovalWindowOwner(home.Runtime, home.Profiles, home.Permissions);
+            approvals = new HomeNativeApprovalWindowOwner(home.Runtime, home.Profiles, home.Permissions);
+            setup = new BoardsOriginalStoreSetupBackend(rig.Notes, evidence, home, approvals, appLifetime.Token);
             var route = new NativeBoardsDesktopRoute(provider, home, rig.Notes,
-                new VerifiedNotesRepository(rig.Notes, rig.OriginalPaths, rig.Diagnostics), admission, approvals,
+                new VerifiedNotesRepository(rig.Notes, rig.OriginalPaths, rig.Diagnostics), admission, approvals, setup,
                 actor.ProfileId, "actual-home-parent-guard", appLifetime.Token, hostLifetime.Token);
             var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://boards"), actor.ProfileId, BrowserTabPrivacy.Standard);
             session = new(request, BoardsBrowseAppContentAddress.Parse(request.Address), route,
@@ -195,35 +203,49 @@ public sealed class BoardsBrowseAppContentSessionTests
                 closeRefusal = Record.Exception(() => { _ = session.CloseAndDrainAsync(); });
                 closeDuringCallback = session.OriginalClose;
             }, null);
-            // Missing Notes ownership/identity remains an authentic admission refusal.
-            // The control targets the preceding actual Home actor callback, not a fake Ready editor.
+            // The genuine metadata-only setup can succeed without creating a Notes identity,
+            // ownership or content grant. The preceding actual Home callback remains the guard target.
             var initialization = session.InitializeAsync();
             await principal.Entered.Task.WaitAsync(appLifetime.Token);
             Assert.False(initialization.IsCompleted); principal.Release.TrySetResult();
-            var failure = await Record.ExceptionAsync(() => initialization.WaitAsync(appLifetime.Token));
+            await initialization.WaitAsync(appLifetime.Token);
             Assert.Equal(1, callbacks); Assert.True(initializationWasPending);
             Assert.IsType<InvalidOperationException>(prepareRefusal); Assert.IsType<InvalidOperationException>(closeRefusal);
             Assert.Null(closeDuringCallback);
-            if (failure is not null)
+            var view = Assert.IsType<CuiSceneHost>(session.OriginalNativeView);
+            window = new Window { Content = view, Width = 1000, Height = 760 }; window.Show();
+            var show = session.OriginalCuiShow ?? throw new InvalidOperationException("Retain same setup Show.");
+            while (true)
             {
-                Assert.False(session.IsPublicationCurrent);
-                Assert.NotNull(await Record.ExceptionAsync(() => session.CloseAndDrainAsync().WaitAsync(appLifetime.Token)));
+                appLifetime.Token.ThrowIfCancellationRequested();
+                await view.CaptureOriginalActionSettlement(show).WaitAsync(appLifetime.Token);
+                if (view.GetVisualDescendants().OfType<Button>().Any(button => button.Name == "boards-storage-create")) break;
+                await Task.Yield();
             }
-            else
-            {
-                // A later genuine setup surface may mount without reading content.
-                // This guard control does not accept that surface or grant ownership.
-                var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
-                await preparation.BeginClose().WaitAsync(appLifetime.Token);
-            }
+            Assert.DoesNotContain(view.GetVisualDescendants().OfType<Control>(), control => control.Name == "boards-workspace");
+            Assert.Empty((await home.Permissions.GetSnapshotAsync(cancellationToken: appLifetime.Token)).Grants);
+            var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
+            await preparation.BeginClose().WaitAsync(appLifetime.Token);
+            Assert.True(session.CanRetireOriginalView);
             Assert.False(Directory.Exists(Path.Combine(rig.OriginalPaths.DataDirectory, "Notes")));
-            await approvals.CloseAndDrainAsync();
         }
+        catch (Exception error) { failures.Add(error); }
         finally
         {
             principal.NextCallback = null;
-            await home.CloseAndDrainAsync();
+            if (window is not null)
+            {
+                try { window.Content = null; } catch (Exception error) { failures.Add(error); }
+                try { window.Close(); } catch (Exception error) { failures.Add(error); }
+            }
+            if (session is not null)
+                try { await (session.OriginalClose ?? session.CloseAndDrainAsync()); } catch (Exception error) { failures.Add(error); }
+            if (setup is not null) try { await setup.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
+            if (approvals is not null) try { await approvals.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
+            try { await home.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
         }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Actual ancestor assertion and independent cleanup failed.", failures);
     }
 
     private sealed class ActualPrincipal : ITrustedHostPrincipalSource
