@@ -430,8 +430,8 @@ public sealed class BoardsLegacyDocumentAdapterTests
         var bytes = Bytes(data);
         var codec = new BoardsLegacyDocumentAdapter();
         var inspection = codec.Inspect(bytes, Source);
-        var invalid = Assert.Single(inspection.Issues.Where(issue => issue.Code == "InvalidEmbeddedAsset"));
-        var mismatch = Assert.Single(inspection.Issues.Where(issue => issue.Code == "InvalidAssetMetadata"));
+        var invalid = Assert.Single(inspection.Issues, issue => issue.Code == "InvalidEmbeddedAsset");
+        var mismatch = Assert.Single(inspection.Issues, issue => issue.Code == "InvalidAssetMetadata");
 
         Assert.Equal("/richNotes/sections/1/pages/0/blocks/6/image", invalid.Pointer);
         Assert.Equal("/richNotes/sections/1/pages/1/blocks/6/image", mismatch.Pointer);
@@ -484,9 +484,9 @@ public sealed class BoardsLegacyDocumentAdapterTests
         var bytes = Bytes(data);
         var codec = new BoardsLegacyDocumentAdapter();
         var inspection = codec.Inspect(bytes, Source);
-        var missing = Assert.Single(inspection.Issues.Where(issue => issue.Code == "MissingIdentity"));
-        var invalid = Assert.Single(inspection.Issues.Where(issue => issue.Code == "InvalidEmbeddedAsset"));
-        var reference = Assert.Single(inspection.Issues.Where(issue => issue.Code == "ExternalAssetReferencePreserved"));
+        var missing = Assert.Single(inspection.Issues, issue => issue.Code == "MissingIdentity");
+        var invalid = Assert.Single(inspection.Issues, issue => issue.Code == "InvalidEmbeddedAsset");
+        var reference = Assert.Single(inspection.Issues, issue => issue.Code == "ExternalAssetReferencePreserved");
 
         Assert.Equal("/RichNotes/Sections/0/Pages/0/Blocks/6/Image/ID", missing.Pointer);
         Assert.Equal("/RichNotes/Sections/0/Pages/0/Blocks/6/Image", invalid.Pointer);
