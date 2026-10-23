@@ -418,6 +418,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
                 || !actual.OriginalReaderDispose.IsCompletedSuccessfully || !actual.OriginalResourceClose.IsCompletedSuccessfully
                 || !actual.OriginalTerminalObserver.IsCompletedSuccessfully || !actual.OriginalTurnCancel.IsCompletedSuccessfully
                 || !actual.OriginalTurnRelease.IsCompletedSuccessfully || turn.OriginalErrors.Count != 0
+                || request.OriginalCancellationControls.Any(control => !control.IsCompletedSuccessfully)
                 || request.Owner.Errors.Any(error => !ReferenceEquals(error, actual.OriginalOutwardFailure)
                     && !ReferenceEquals(error, actual.OriginalReaderCause) && !ReferenceEquals(error, actual.OriginalRawCause))) return false;
             observation = actual; return true;
@@ -764,7 +765,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         {
             InvokePhysicalOriginal(owner, () => { request.Lifetime.Cancel(); return true; }); // Only this owned request.
             return Task.FromResult(OperationResult<Unit>.Success(Unit.Value));
-        }, cancellationToken, allowRetiredCancellationBody: true));
+        }, cancellationToken, allowRetiredCancellationBody: true, cancellationRequest: request));
     }
     public ValueTask<OperationResult<Unit>> PauseAsync(DulcheEndpoint endpoint, string requestId, CancellationToken cancellationToken)
         => ValueTask.FromResult(Unsupported("Exact provider pause is not exposed.", requestId));
@@ -868,7 +869,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
     }
 
     private Task<T> StartOwned<T>(Endpoint owner, Func<Task<T>> body, CancellationToken cancellationToken,
-        bool allowRetiredCancellationBody = false)
+        bool allowRetiredCancellationBody = false, Request? cancellationRequest = null)
     {
         TaskCompletionSource gate;
         Task<T> actual;
@@ -881,6 +882,13 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
             gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
             actual = RunOwnedAsync(owner, gate.Task, body, cancellationToken, allowRetiredCancellationBody);
             owner.Work.Add(actual);
+            if (cancellationRequest is not null)
+            {
+                // Publish the SAME finite request control before any cancellation callback runs.
+                // Faulted/canceled controls stay in both their request and endpoint custody.
+                cancellationRequest.OriginalCancellationControls.RemoveAll(control => control.IsCompletedSuccessfully);
+                cancellationRequest.OriginalCancellationControls.Add(actual);
+            }
         }
         gate.SetResult(); return actual;
     }
@@ -1187,6 +1195,7 @@ public sealed class ManagedProviderDulcheAdapter : IDulcheOriginalProviderAdapte
         public readonly TaskRunAttemptAdmission Admission = admission;
         public readonly Guid ActionId = actionId;
         public readonly CancellationTokenSource Lifetime = new();
+        public readonly List<Task> OriginalCancellationControls = new();
         public readonly List<Task> OriginalFrames = new(), RawTasks = new();
         public readonly Dictionary<string, OllamaToolCall> PendingCalls = new(StringComparer.Ordinal);
         public readonly HashSet<string> ToolResults = new(StringComparer.Ordinal);
