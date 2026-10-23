@@ -3,7 +3,7 @@ namespace Haven.Core;
 /// <summary>
 /// Automation schedule kind values.
 /// </summary>
-public enum AutomationScheduleKind { Once, Hourly, Daily, Weekly, ConditionWatch }
+public enum AutomationScheduleKind { Once = 0, Hourly = 1, Daily = 2, Weekly = 3, ConditionWatch = 4, Unscheduled = 5 }
 /// <summary>
 /// Automation run status values.
 /// </summary>

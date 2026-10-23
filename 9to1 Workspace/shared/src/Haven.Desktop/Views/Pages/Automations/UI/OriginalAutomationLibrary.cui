@@ -1,5 +1,6 @@
 <Cui id="automations.saved-library" version="1">
   <Actions>
+    <Action name="RecoverOriginalAutomationCreation" command="recover-creation" parameter="{Binding creation.Target}" />
     <Action name="OpenSavedAutomation" command="select" parameter="{Binding automation.Target}" />
     <Action name="InspectSavedGraphNode" command="graph-node" parameter="{Binding graphNode.Target}" />
     <Action name="FollowSavedGraphConnection" command="graph-node" parameter="{Binding graphConnection.Target}" />
@@ -8,6 +9,23 @@
     <Container Type="Vertical Stack" Margin="24" VerticalScrolling="True" CellGap="16">
       <Text Text="Saved automation library" FontSize="28" FontWeight="Bold" />
       <Text Text="Browse saved settings, review legacy automations, and edit disabled automations with individual Home approval." TextWrapping="Wrap" />
+      <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasCreationSource}">
+        <Text Text="Create an Automation Draft" FontSize="22" FontWeight="SemiBold" />
+        <Text Text="Save the first step: a named, disabled Automation with an empty canonical graph Draft. Home reviews the graph and saved definition separately. This does not configure a schedule or run the Automation." TextWrapping="Wrap" />
+        <Input id="automation-library-new-name" Type="Text" PlaceholderText="Name your new Automation" Value="{Binding NewAutomationName, Mode=TwoWay}" Interactive="{Binding CanNameNewAutomation}" AccessibleName="New Automation name" />
+        <Button id="automation-library-create-draft" action="create-draft" Interactive="{Binding CanCreateDraft}">Create Draft for Home review</Button>
+        <Button id="automation-library-discard-new" action="discard-new" Interactive="{Binding CanDiscardNew}">Discard unsaved name</Button>
+        <Text id="automation-library-creation-status" Text="{Binding CreationStatus}" TextWrapping="Wrap" AccessibleName="Automation creation status" />
+        <Button id="automation-library-refresh-creations" action="refresh-creations" Interactive="{Binding CanRefreshCreations}">Check original creations</Button>
+        <Text Text="After an interruption, refresh the saved library, then check the original creation. Recovery observes the same IDs and receipts; it does not repeat graph publication or run the Automation." TextWrapping="Wrap" />
+        <Repeat Source="{Binding CreationRows}" As="creation" Key="{Binding creation.Key}">
+          <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+            <Text Text="{Binding creation.Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <Text Text="{Binding creation.Identity}" TextWrapping="Wrap" />
+            <Button action="RecoverOriginalAutomationCreation" Interactive="{Binding creation.CanRecover}">Review original creation recovery</Button>
+          </Container>
+        </Repeat>
+      </Container>
       <Input id="automation-library-search" Type="Text" PlaceholderText="Search names and instructions" AccessibleName="Search saved automations" Value="{Binding Search, Mode=TwoWay}" Interactive="{Binding CanRefresh}" />
       <Container Type="Vertical Stack" CellGap="8">
         <Button id="automation-library-refresh" action="refresh" Interactive="{Binding CanRefresh}">Search and refresh</Button>

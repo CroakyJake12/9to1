@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Haven.Application;
 
 namespace Haven.Application.NodeGraph;
@@ -10,15 +11,19 @@ public sealed record GraphOwnerDescriptor(string AppId, Guid StoreId, string Ent
 }
 public enum GraphPublicationKind { SaveDraft, Activate }
 public sealed record GraphPublicationReceipt(Guid OperationId, string ArgumentsDigest, GraphPublicationKind Kind,
-    GraphOwnerDescriptor Owner, Guid GraphId, long ExpectedGraphRevision, long CommittedGraphRevision);
+    GraphOwnerDescriptor Owner, Guid GraphId, long ExpectedGraphRevision, long CommittedGraphRevision)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? OriginalRequestId { get; init; }
+}
 
 /// <summary>Detached proposal only. Capture performs structural/schema admission; it cannot issue permission or a run permit.</summary>
 public sealed class GraphPublicationIntent
 {
     private GraphPublicationIntent(GraphOwnerDescriptor owner, AuthenticatedResourceActor actor, Guid operationId,
-        GraphPublicationKind kind, GraphDocument graph, long expectedRevision, IReadOnlyList<ResourceScope> scopes)
+        GraphPublicationKind kind, GraphDocument graph, long expectedRevision, IReadOnlyList<ResourceScope> scopes, GraphOwnerCreationOrigin? creationOrigin)
     { Owner = owner; OriginalActor = actor; OperationId = operationId; Kind = kind; Graph = graph;
-      ExpectedGraphRevision = expectedRevision; Scopes = scopes; }
+      ExpectedGraphRevision = expectedRevision; Scopes = scopes; CreationOrigin = creationOrigin; }
     public GraphOwnerDescriptor Owner { get; }
     public AuthenticatedResourceActor OriginalActor { get; }
     public Guid OperationId { get; }
@@ -26,12 +31,16 @@ public sealed class GraphPublicationIntent
     public GraphDocument Graph { get; }
     public long ExpectedGraphRevision { get; }
     public IReadOnlyList<ResourceScope> Scopes { get; }
-    public JsonElement Arguments => JsonSerializer.SerializeToElement(new
-    { SchemaVersion = 1, Owner, OriginalActor, OperationId, Kind, Graph, ExpectedGraphRevision, Scopes });
+    public GraphOwnerCreationOrigin? CreationOrigin { get; }
+    public JsonElement Arguments => CreationOrigin is null ? JsonSerializer.SerializeToElement(new
+    { SchemaVersion = 1, Owner, OriginalActor, OperationId, Kind, Graph, ExpectedGraphRevision, Scopes }) :
+        JsonSerializer.SerializeToElement(new
+        { SchemaVersion = 1, Owner, OriginalActor, OperationId, Kind, Graph, ExpectedGraphRevision, Scopes, CreationOrigin });
 
     public static GraphPublicationIntent Capture(GraphOwnerDescriptor owner, AuthenticatedResourceActor originalActor,
         Guid operationId, GraphPublicationKind kind, GraphDocument graph, long expectedGraphRevision,
-        IReadOnlyList<ResourceScope> scopes, NodeGraphSchemaRegistry schemas, GraphConfigurationCaptureLimits configurationLimits)
+        IReadOnlyList<ResourceScope> scopes, NodeGraphSchemaRegistry schemas, GraphConfigurationCaptureLimits configurationLimits,
+        GraphOwnerCreationOrigin? creationOrigin = null)
     {
         ArgumentNullException.ThrowIfNull(owner); ArgumentNullException.ThrowIfNull(originalActor);
         ArgumentNullException.ThrowIfNull(graph); ArgumentNullException.ThrowIfNull(scopes);
@@ -42,6 +51,13 @@ public sealed class GraphPublicationIntent
             kind == GraphPublicationKind.SaveDraft && (expectedGraphRevision == long.MaxValue || graph.Revision != expectedGraphRevision + 1) ||
             kind == GraphPublicationKind.Activate && (expectedGraphRevision == 0 || graph.Revision != expectedGraphRevision))
             throw new ArgumentException("Exact canonical graph publication proposal required.");
+        if (creationOrigin is { } origin && (kind != GraphPublicationKind.SaveDraft || expectedGraphRevision != 0 ||
+            owner.EntityKind != "automation.definition" || origin.SchemaVersion != 1 || origin.StoreId != owner.StoreId ||
+            origin.AutomationId != owner.EntityId || origin.GraphOperationId != operationId || origin.DefinitionOperationId == Guid.Empty ||
+            origin.DefinitionOperationId == operationId || origin.OriginalActor != originalActor || origin.CapturedAt == default ||
+            string.IsNullOrWhiteSpace(origin.Name) || origin.Name.Length > 256 || origin.OriginalAbsenceSha256 is not { Length: 64 } ||
+            !origin.OriginalAbsenceSha256.All(Uri.IsHexDigit)))
+            throw new ArgumentException("Exact source-issued bounded graph creation origin required.");
         var configurations = new GraphConfigurationCapture(configurationLimits);
         var allowed = schemas.ListNodeTypes(graph.CapabilityProfileId);
         var nodes = new List<GraphNode>();
@@ -76,6 +92,6 @@ public sealed class GraphPublicationIntent
         }
         if (capturedScopes.Count == 0) throw new ArgumentException("Owning resource scopes required.");
         return new(owner, originalActor, operationId, kind, capturedGraph, expectedGraphRevision,
-            Array.AsReadOnly(capturedScopes.ToArray()));
+            Array.AsReadOnly(capturedScopes.ToArray()), creationOrigin);
     }
 }

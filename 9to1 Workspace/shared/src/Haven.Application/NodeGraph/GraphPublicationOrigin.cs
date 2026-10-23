@@ -9,6 +9,10 @@ public interface IOriginalGraphOwnerSelection { }
 public interface IGraphPublicationOriginAuthority
 {
     string OwnerAppId { get; }
+    // Trusted same-provider origin describes its actual physical ownership kind;
+    // caller metadata/UUID matching cannot select or replace that origin.
+    string OwningStoreResourceKind => "automations";
+    bool SupportsEntityKind(string kind) => kind == "automation.reusable-task";
     // Trusted same-provider identity check, not a public descriptor or an execution grant.
     // A copied Home graph store with colliding IDs cannot substitute for the actual publisher.
     bool IsBoundToGraphRepository(IVersionedNodeGraphRepository actualRepository) => false;

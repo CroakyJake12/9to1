@@ -10,7 +10,7 @@ public sealed partial class HomeVersionedNodeGraphRepository
     // Internal only: the public persistence interface cannot supply arbitrary actor guards as authority.
     // The owning Home issuer must claim its distinct graph capability before calling this body.
     internal async Task<GraphPublicationReceipt?> TryPublishGuardedAsync(GraphPublicationIntent intent,
-        string argumentsDigest, IHomeStateCommitActorGuard issuedGuard, CancellationToken ct)
+        string argumentsDigest, IHomeStateCommitActorGuard issuedGuard, CancellationToken ct, string? originalRequestId = null)
     {
         ArgumentNullException.ThrowIfNull(intent); ArgumentNullException.ThrowIfNull(issuedGuard);
         var record = await ReadRecordAsync(intent.Graph.GraphId, ct).ConfigureAwait(false);
@@ -27,7 +27,8 @@ public sealed partial class HomeVersionedNodeGraphRepository
             if (intent.ExpectedGraphRevision == long.MaxValue || intent.Graph.Revision != intent.ExpectedGraphRevision + 1 ||
                 intent.Graph.State != GraphRevisionState.Draft) return null;
             next = new(intent.Owner.AppId, intent.Owner.CanonicalEntityId, intent.Graph, prior?.Active)
-                { CanonicalOwner = intent.Owner, ActivatedRevisions = prior?.ActivatedRevisions ?? [] };
+                { CanonicalOwner = intent.Owner, ActivatedRevisions = prior?.ActivatedRevisions ?? [],
+                    CreationOrigin = prior?.CreationOrigin ?? intent.CreationOrigin };
         }
         else
         {
@@ -38,7 +39,7 @@ public sealed partial class HomeVersionedNodeGraphRepository
             next = prior with { Active = active, ActivatedRevisions = prior.ActivatedRevisions.Append(active).ToArray() };
         }
         var receipt = new GraphPublicationReceipt(intent.OperationId, argumentsDigest, intent.Kind, intent.Owner,
-            intent.Graph.GraphId, intent.ExpectedGraphRevision, intent.Graph.Revision);
+            intent.Graph.GraphId, intent.ExpectedGraphRevision, intent.Graph.Revision) { OriginalRequestId = originalRequestId };
         next = next with { LastPublication = receipt };
         var candidate = new HomeCoreStateRecord(Id(intent.Graph.GraphId), RecordType, 1, HomeDataScope.DeviceLocal,
             HomeRecordAuthority.LocalCanonical, 0, JsonSerializer.SerializeToElement(next));

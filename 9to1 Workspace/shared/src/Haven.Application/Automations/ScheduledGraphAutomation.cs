@@ -186,7 +186,8 @@ public static class ScheduledGraphAutomationPayloadCodec
     }
 
     public static bool IsPayload(string? instruction) =>
-        !string.IsNullOrWhiteSpace(instruction) && instruction.StartsWith(Prefix, StringComparison.Ordinal);
+        !string.IsNullOrWhiteSpace(instruction) && (instruction.StartsWith(Prefix, StringComparison.Ordinal) ||
+            CanonicalAutomationGraphReferenceCodec.IsReference(instruction));
 
     public static bool TryDeserialize(string? instruction, out ScheduledGraphAutomationPayload payload)
     {

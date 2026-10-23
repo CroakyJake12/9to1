@@ -49,6 +49,11 @@ internal sealed partial class OriginalAutomationLibraryBindings
             _graphStatus = "This saved automation contains plain instructions, with no embedded graph snapshot.";
             return;
         }
+        if (CanonicalAutomationGraphReferenceCodec.IsReference(saved.Instruction))
+        {
+            _graphStatus = "This saved definition references a canonical Home graph. The actual current graph must be observed through its protected source; the reference alone grants no readiness.";
+            return;
+        }
         _graphDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(saved.Instruction))).ToLowerInvariant();
         if (!ScheduledGraphAutomationPayloadCodec.TryDeserialize(saved.Instruction, out var payload) ||
             !AutomationGraphCodec.TryDeserialize(payload.GraphJson, out var graph))
@@ -91,6 +96,20 @@ internal sealed partial class OriginalAutomationLibraryBindings
                 (issue.EdgeId is { } edge ? $" · Connection {edge:D}" : ""))).ToArray());
         _graphStatus = $"Saved snapshot: {graph.Nodes.Count} nodes · {graph.Edges.Count} connections · {issues.Count} structure/configuration diagnostic(s). Permissions, live capabilities and execution readiness have not been checked.";
         RefreshGraphRows(); RefreshGraphDiagnostics();
+    }
+    private void LoadCanonicalGraphInspection(RowTarget selection, Haven.Application.NodeGraph.GraphDocument graph)
+    {
+        if (!ReferenceEquals(DemandRow(selection), _selectedTarget) ||
+            !CanonicalAutomationGraphReferenceCodec.TryDeserialize(selection.Row.Value.Instruction, out var reference) ||
+            graph.GraphId != reference.GraphId || graph.Revision != reference.DraftRevision)
+            throw new UnauthorizedAccessException("The actual current saved selection and source-observed canonical graph must agree.");
+        ClearGraphInspection(); _hasStoredGraph = true;
+        _graphIdentity = $"Automation {selection.Row.Value.Id:D} · Canonical graph {graph.GraphId:D} · Revision {graph.Revision} · {graph.State} · Schema {graph.SchemaVersion} · Profile {graph.CapabilityProfileId}";
+        _graphDigest = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(graph))).ToLowerInvariant();
+        _graphStatus = $"Actual canonical Home Draft: {graph.Nodes.Count} nodes · {graph.Connections.Count} connections. This first saved step is disabled and unscheduled; it cannot run.";
+        _graphNodeTitle = graph.Nodes.Count == 0 ? "This saved Draft has no nodes yet" : "Canonical graph inspection requires its registered editor";
+        _graphAllDiagnostics = [new("canonical-draft-empty", "draft.incomplete", "An empty saved Draft has no runnable graph. Configure supported nodes and a schedule before execution can be admitted.")];
+        RefreshGraphDiagnostics();
     }
     private object? GraphValue(string path) => path switch
     {

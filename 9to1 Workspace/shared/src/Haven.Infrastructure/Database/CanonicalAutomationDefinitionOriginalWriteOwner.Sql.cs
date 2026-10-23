@@ -83,6 +83,24 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         return new(row, AutomationDefinitionChange.ComputeRawRowSHA256(row), descriptor, current, previous,
             operationJson is null ? null : Parse<DurableOperation>(operationJson), operationJson);
     }
+    internal static async Task<AutomationOwnerRead<AutomationDefinition>> ObserveOriginalCreatedLibraryRowAsync(
+        CanonicalSqliteOriginalStoreLease lease, AutomationOwnerRead<AutomationDefinition> actual, CancellationToken token)
+    {
+        if (!CanonicalAutomationGraphReferenceCodec.TryDeserialize(actual.Value.Instruction, out var reference)) return actual;
+        var snapshot = await ReadSnapshotWithinLeaseAsync(lease, actual.Value.Id,
+            RawText(actual.RetainedProtectedDescriptors, "id"), Guid.Empty, token).ConfigureAwait(false);
+        if (snapshot.Descriptor is not { GraphBinding: not null, CreationOriginSha256: { Length: 64 },
+            OriginalCreateRequestId: not null, OriginalCreateArgumentsSha256: { Length: 64 } } descriptor) return actual;
+        DemandDescriptor(snapshot, lease.Actor, lease.OriginalIdentity, actual.Value.Id);
+        if (snapshot.RowSha256 != AutomationDefinitionChange.ComputeRawRowSHA256(actual.RetainedProtectedDescriptors) ||
+            descriptor.GraphBinding != reference.Binding)
+            throw new InvalidDataException("The actual saved creation row and its immutable graph descriptor differ; refresh before review.");
+        // Descriptive protected READ only. The writer still requires fresh actual
+        // disabled/unleased eligibility, CAS and individual Home approval.
+        return actual with { Value = actual.Value with { Revision = descriptor.Revision, OwnerBinding = descriptor.Owner,
+            GraphBinding = descriptor.GraphBinding, OperationalState = descriptor.State, LastOwnerCommit = descriptor.Receipt },
+            RequiresRecovery = false, RecoveryCode = "ORIGINAL_AUTOMATION_CREATION_DESCRIPTOR_OBSERVED" };
+    }
     private static T Parse<T>(string text)
     {
         if (Encoding.UTF8.GetByteCount(text) > 256 * 1024) throw new InvalidDataException("Preserve the oversized Automation owner descriptor/receipt.");

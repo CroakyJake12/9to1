@@ -42,11 +42,27 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     {
         Commit[] all; lock (_gate) { _retiring = true; all = _activeCommits.ToArray(); }
         foreach (var current in all) AcquireOriginalPendingWithdrawal(current);
+        RequestOriginalCreationReviewWithdrawals();
+    }
+    private void RequestOriginalCreationReviewWithdrawals()
+    {
+        CreationProcess[] processes; lock (_gate) processes = _creationProcesses.Values.ToArray();
+        foreach (var process in processes)
+        {
+            lock (_gate)
+            {
+                if (process.Driver.IsCompleted || process.Review is null || process.Withdrawal is not null) continue;
+                try { process.Withdrawal = process.Review.WithdrawPendingAsync(); _withdrawals.Add(process.Withdrawal); }
+                catch (Exception cause) { _withdrawalBirthFailures.Add(cause); }
+            }
+        }
     }
     public void RequestOriginalRetirement()
     {
         RequestOriginalPendingReviewWithdrawals();
         RetireOriginalDeliveries();
+        CreationDelivery[] deliveries; lock (_gate) deliveries = _ownedCreationDeliveries.ToArray();
+        foreach (var delivery in deliveries) delivery.RequestOriginalRetirement();
     }
     public void DemandExternalOriginalJoin()
     {
@@ -85,6 +101,13 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             catch (Exception cause) { CanonicalSqliteOriginalStoreOwner.Capture(errors, raw, cause); }
         try { await JoinOriginalProcessDeliveriesAsync().ConfigureAwait(false); }
         catch (Exception cause) { errors.Add(cause); }
+        CreationDelivery[] creations; lock (_gate) creations = _ownedCreationDeliveries.ToArray();
+        foreach (var delivery in creations)
+            try { await delivery.CloseAndDrainOriginalAsync().ConfigureAwait(false); }
+            catch (Exception cause) { errors.Add(cause); }
+        if (_creationGraphs is not null)
+            try { await _creationGraphs.JoinOriginalEntitySourcesAsync().ConfigureAwait(false); }
+            catch (Exception cause) { errors.Add(cause); }
         CanonicalSqliteOriginalStoreOwner.Throw(errors);
     }
     public ValueTask DisposeAsync() => new(CloseAndDrainOriginalAsync());

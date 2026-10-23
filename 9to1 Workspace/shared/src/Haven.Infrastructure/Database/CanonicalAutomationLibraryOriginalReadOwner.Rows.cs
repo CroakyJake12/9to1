@@ -82,6 +82,8 @@ public sealed partial class CanonicalAutomationLibraryOriginalReadOwner
             {
                 ArchivedAt = hasArchive ? reader.NullableDateTimeOffset("archived_at") : null
             };
+            if (CanonicalAutomationGraphReferenceCodec.TryDeserialize(definition.Instruction, out var reference))
+                definition = definition with { GraphBinding = reference.Binding };
             // Current maintained schemas have no source-issued protected owner/CAS
             // writer. Stored IDs/configuration do not manufacture that missing owner.
             var observed = new AutomationOwnerRead<AutomationDefinition>(definition, true,
@@ -89,7 +91,11 @@ public sealed partial class CanonicalAutomationLibraryOriginalReadOwner
             return new Row(observed, reader.String("updated_at"), reader.String("id"));
         }, query.Limit + 1, token).ConfigureAwait(false);
         var selected = rows.Take(query.Limit).ToArray();
-        return new(Array.AsReadOnly(selected.Select(row => row.Definition).ToArray()), rows.Count > query.Limit, selected.LastOrDefault());
+        var definitions = new List<AutomationOwnerRead<AutomationDefinition>>();
+        foreach (var selectedRow in selected)
+            definitions.Add(await CanonicalAutomationDefinitionOriginalWriteOwner.ObserveOriginalCreatedLibraryRowAsync(
+                lease, selectedRow.Definition, token).ConfigureAwait(false));
+        return new(definitions.AsReadOnly(), rows.Count > query.Limit, selected.LastOrDefault());
     }
     private static bool SameRows(IReadOnlyList<AutomationOwnerRead<AutomationDefinition>> first,
         IReadOnlyList<AutomationOwnerRead<AutomationDefinition>> second) => first.Count == second.Count &&

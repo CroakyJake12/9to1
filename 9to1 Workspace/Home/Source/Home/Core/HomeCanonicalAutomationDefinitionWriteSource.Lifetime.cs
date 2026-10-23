@@ -95,6 +95,13 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                 {
                     if (!auditMayReenterHome)
                         throw new InvalidOperationException("Unknown held-entry release refuses Home audit reentry.");
+                    if (acknowledged && released && _reviewChangeKind == CanonicalAutomationOriginalChangeKind.RecoverCreated)
+                    {
+                        var proof = owner.CaptureOriginalAutomationCreationAuditProof(this, acknowledgment!, sql!);
+                        var reconciled = await sources.Read(() => owner._broker.ReconcileOriginalAutomationCreationAuditAsync(capability,
+                            proof, CancellationToken.None)).ConfigureAwait(false);
+                        if (!reconciled.Succeeded) throw new InvalidOperationException("The original creation audit remains pending: " + reconciled.Code);
+                    }
                     var audit = await sources.Read(() => capability.IsUncompletedClaim(owner._broker)
                         ? owner._broker.CompleteSetupExecutionWithinOriginalSourceAsync(capability,
                             new(acknowledged && released ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
@@ -103,6 +110,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                                     {
                                         CanonicalAutomationOriginalChangeKind.RecoverLegacy => "HOME_AUTOMATION_DEFINITION_RECOVERED_NEEDS_REVIEW",
                                         CanonicalAutomationOriginalChangeKind.EditDisabled => "HOME_AUTOMATION_DEFINITION_EDITED_DISABLED",
+                                        CanonicalAutomationOriginalChangeKind.CreateDisabled => "HOME_AUTOMATION_DEFINITION_CREATED_DISABLED",
+                                        CanonicalAutomationOriginalChangeKind.RecoverCreated => "HOME_AUTOMATION_DEFINITION_CREATION_AUDIT_RECOVERED",
                                         _ => "HOME_AUTOMATION_DEFINITION_DISABLED"
                                     }
                                     : sql is null ? "HOME_AUTOMATION_WRITE_NOT_DISPATCHED" : "HOME_AUTOMATION_WRITE_OUTCOME_UNCONFIRMED",

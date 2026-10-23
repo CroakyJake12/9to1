@@ -18,6 +18,7 @@ public static class ScheduledTaskScheduleComposer
     public static string Compose(AutomationScheduleKind kind, ScheduledTaskScheduleDraft draft)
     {
         ArgumentNullException.ThrowIfNull(draft);
+        if (kind == AutomationScheduleKind.Unscheduled) throw new InvalidOperationException("An unscheduled graph Draft has no configured schedule.");
         var value = kind switch
         {
             AutomationScheduleKind.Once => new Dictionary<string, object?>
@@ -48,6 +49,7 @@ public static class ScheduledTaskScheduleComposer
         string? scheduleJson,
         DateTimeOffset now)
     {
+        if (kind == AutomationScheduleKind.Unscheduled) throw new InvalidOperationException("Configure a real graph trigger before scheduling this Draft.");
         var fallback = new ScheduledTaskScheduleDraft(now.AddHours(1), new TimeOnly(8, 0), DayOfWeek.Monday, 1, 60);
         if (string.IsNullOrWhiteSpace(scheduleJson)) return fallback;
         try
@@ -82,6 +84,7 @@ public static class ScheduledTaskScheduleComposer
 
     public static string Describe(AutomationScheduleKind kind, ScheduledTaskScheduleDraft draft) => kind switch
     {
+        AutomationScheduleKind.Unscheduled => "Unscheduled graph Draft · execution unavailable",
         AutomationScheduleKind.Once => $"Once at {draft.OnceAt.ToLocalTime():g}",
         AutomationScheduleKind.Hourly => draft.IntervalHours == 1 ? "Every hour" : $"Every {draft.IntervalHours} hours",
         AutomationScheduleKind.Daily => $"Daily at {FormatTime(draft.Time)}",
@@ -102,7 +105,8 @@ public sealed class ScheduledTaskScheduleCalculator(TimeZoneInfo? timeZone = nul
 
     public DateTimeOffset? GetNextRun(AutomationDefinition task, DateTimeOffset after)
     {
-        if (!task.IsEnabled) return null;
+        if (!task.IsEnabled || task.ScheduleKind == AutomationScheduleKind.Unscheduled ||
+            CanonicalAutomationGraphReferenceCodec.IsReference(task.Instruction)) return null;
         using var document = Parse(task.ScheduleJson);
         var root = document.RootElement;
         return task.ScheduleKind switch
@@ -118,6 +122,8 @@ public sealed class ScheduledTaskScheduleCalculator(TimeZoneInfo? timeZone = nul
 
     public DateTimeOffset GetInitialRun(AutomationScheduleKind kind, string scheduleJson, DateTimeOffset now)
     {
+        if (!Enum.IsDefined(kind) || kind == AutomationScheduleKind.Unscheduled)
+            throw new InvalidOperationException("A configured supported schedule is required; an unscheduled Draft has no initial run.");
         var placeholder = new AutomationDefinition(Guid.Empty, string.Empty, HavenMode.Chat, string.Empty, kind, scheduleJson, null, null, true, now, now);
         return GetNextRun(placeholder, now.AddTicks(-1)) ?? now.ToUniversalTime();
     }
@@ -198,6 +204,9 @@ public sealed class ScheduledTaskRunner(
         foreach (var task in due)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (!task.IsEnabled || !Enum.IsDefined(task.ScheduleKind) || task.ScheduleKind == AutomationScheduleKind.Unscheduled ||
+                CanonicalAutomationGraphReferenceCodec.IsReference(task.Instruction))
+            { skipped++; continue; } // No lease, Run record, model request or fallback for an unconfigured canonical graph.
             var leaseToken = Guid.NewGuid().ToString("N");
             if (!await repository.TryAcquireLeaseAsync(task.Id, leaseToken, now.AddMinutes(15), cancellationToken).ConfigureAwait(false))
             {
@@ -218,6 +227,9 @@ public sealed class ScheduledTaskRunner(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(task);
+        if (!Enum.IsDefined(task.ScheduleKind) || task.ScheduleKind == AutomationScheduleKind.Unscheduled ||
+            CanonicalAutomationGraphReferenceCodec.IsReference(task.Instruction))
+            throw new InvalidOperationException("Configure this canonical graph Draft before requesting a run; no lease or Run was created.");
         var leaseToken = Guid.NewGuid().ToString("N");
         if (!await repository.TryAcquireLeaseAsync(task.Id, leaseToken, requestedAt.AddMinutes(15), cancellationToken).ConfigureAwait(false))
             throw new InvalidOperationException("This Task is already running in another 9to1 process.");
@@ -279,6 +291,9 @@ public sealed class ScheduledTaskRunner(
 
     private async Task<string> ExecuteOnceAsync(AutomationDefinition task, int attempt, int maximumAttempts, CancellationToken cancellationToken)
     {
+        if (!Enum.IsDefined(task.ScheduleKind) || task.ScheduleKind == AutomationScheduleKind.Unscheduled ||
+            CanonicalAutomationGraphReferenceCodec.IsReference(task.Instruction))
+            throw new InvalidOperationException("This canonical graph Draft is unconfigured; scheduling and instruction fallback are unavailable.");
         if (ScheduledGraphAutomationPayloadCodec.IsPayload(task.Instruction))
         {
             if (!ScheduledGraphAutomationPayloadCodec.TryDeserialize(task.Instruction, out var payload))

@@ -15,7 +15,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     private sealed class CreationReservation(CanonicalAutomationDefinitionOriginalWriteOwner owner,
         CanonicalAutomationLibraryOriginalReadOwner.OriginalCreationOrigin origin, string name,
         Guid automation, Guid graph, Guid definitionOperation, Guid graphOperation,
-        string schemaDigest, DateTimeOffset capturedAt) : ICanonicalAutomationDefinitionOriginalCreationReservation
+        string schemaDigest, DateTimeOffset capturedAt, string? recoveredAbsenceSha256 = null) : ICanonicalAutomationDefinitionOriginalCreationReservation
     {
         internal readonly CanonicalAutomationDefinitionOriginalWriteOwner Owner = owner;
         internal readonly CanonicalAutomationLibraryOriginalReadOwner.OriginalCreationOrigin Origin = origin;
@@ -29,7 +29,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         public string Name { get; } = name;
         public string OriginalSchemaSha256 { get; } = schemaDigest;
         public DateTimeOffset CapturedAt { get; } = capturedAt;
-        public string OriginalAbsenceSha256 => Hash(new { SchemaVersion = 1, Actor, OriginalStoreIdentity,
+        public string OriginalAbsenceSha256 => recoveredAbsenceSha256 ?? Hash(new { SchemaVersion = 1, Actor, OriginalStoreIdentity,
             AutomationId, GraphId, DefinitionOperationId, GraphOperationId, Name, OriginalSchemaSha256,
             SqlDefinitionTargetAbsent = true, OwnerDescriptorAbsent = true, OperationReceiptsAbsent = true,
             HomeGraphAbsenceObserved = false, GraphPublicationAdmitted = false });
@@ -123,6 +123,21 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             if (!_store.IsIssuedOriginalLease(lease!) || lease!.OriginalIdentity != identity)
                 throw new UnauthorizedAccessException("The SAME physical protected store is required for creation absence.");
             await source.JoinAllAsync().ConfigureAwait(false);
+            snapshot = await ReadCreationAbsenceWithinLeaseAsync(lease, automation, definitionOperation, graphOperation, token).ConfigureAwait(false);
+            await source.Read(() => lease.RevalidateWithinSourceAsync(source.Run, source.Retain, token)).ConfigureAwait(false);
+        }
+        catch (Exception cause) { errors.Add(cause); }
+        Task? close = null;
+        if (lease is not null)
+            try { close = lease.CloseAndDrainAsync(); source.Retain(close); await close.ConfigureAwait(false); }
+            catch (Exception cause) { CanonicalSqliteOriginalStoreOwner.Capture(errors, close, cause); }
+        try { await source.JoinAllAsync().ConfigureAwait(false); } catch (Exception cause) { errors.Add(cause); }
+        CanonicalSqliteOriginalStoreOwner.Throw(errors);
+        return snapshot ?? throw new InvalidOperationException("No healthy original creation absence observation was retained.");
+    }
+    private static async Task<CreationAbsenceSnapshot> ReadCreationAbsenceWithinLeaseAsync(CanonicalSqliteOriginalStoreLease lease,
+        Guid automation, Guid definitionOperation, Guid graphOperation, CancellationToken token)
+    {
             var before = await Query(lease, command => command.CommandText = "PRAGMA data_version;",
                 reader => reader.GetInt64(0), 1, token).ConfigureAwait(false);
             var schema = await Query(lease, command => command.CommandText =
@@ -155,17 +170,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             }
             var after = await Query(lease, command => command.CommandText = "PRAGMA data_version;",
                 reader => reader.GetInt64(0), 1, token).ConfigureAwait(false);
-            snapshot = new(Hash(schema), supported, targetAbsent, operationsAbsent,
+            return new(Hash(schema), supported, targetAbsent, operationsAbsent,
                 before.Count == 1 && after.Count == 1 && before[0] == after[0]);
-            await source.Read(() => lease.RevalidateWithinSourceAsync(source.Run, source.Retain, token)).ConfigureAwait(false);
-        }
-        catch (Exception cause) { errors.Add(cause); }
-        Task? close = null;
-        if (lease is not null)
-            try { close = lease.CloseAndDrainAsync(); source.Retain(close); await close.ConfigureAwait(false); }
-            catch (Exception cause) { CanonicalSqliteOriginalStoreOwner.Capture(errors, close, cause); }
-        try { await source.JoinAllAsync().ConfigureAwait(false); } catch (Exception cause) { errors.Add(cause); }
-        CanonicalSqliteOriginalStoreOwner.Throw(errors);
-        return snapshot ?? throw new InvalidOperationException("No healthy original creation absence observation was retained.");
     }
 }

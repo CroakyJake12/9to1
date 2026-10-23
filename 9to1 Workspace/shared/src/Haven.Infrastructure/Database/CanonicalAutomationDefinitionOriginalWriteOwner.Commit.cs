@@ -84,6 +84,10 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             await DemandCurrentAsync(intent.Actor, intent.OriginalStoreIdentity, intent.OriginalStoreOwnership, source, token).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false);
             source.Run(() => DemandOriginalChangeCommit(intent));
+            // Creation alone takes native SQLite transaction BEFORE held Home.
+            // This avoids Home -> SQLite acquisition while the graph fingerprint is held.
+            if (intent.Creation is not null)
+                source.Run(() => current.Pin!.BeginPinnedOriginalWriter(() => DemandOriginalChangeCommit(intent)));
             await source.Read(() => writes.AcquireOriginalCommitEntryWithinSourceAsync(claim, source.Run, source.Retain, token)).ConfigureAwait(false);
             await source.Read(() => writes.ValidateOriginalCommitWithinSourceAsync(claim, source.Run, source.Retain, token)).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false);
@@ -136,10 +140,11 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     {
         if (!await start.ConfigureAwait(false)) throw new InvalidOperationException("Actual setup atomic publication was declined before SQL effects.");
         var source = current.Source; var intent = current.Intent; var pin = current.Pin!;
+        if (intent.Creation is not null) return await AtomicCreationAsync(current, writes, token).ConfigureAwait(false);
         void Demand() { DemandOriginalChangeCommit(intent); writes.DemandOriginalCommit(current.Claim!, intent); }
         source.Run(() => { token.ThrowIfCancellationRequested(); Demand(); pin.BeginPinnedOriginalWriter(Demand); });
         var snapshot = await ReadSnapshotWithinLeaseAsync(pin, intent.OriginalDefinition.Id,
-            RawText(intent.Selection.Row.RetainedProtectedDescriptors, "id"), intent.OperationId, token).ConfigureAwait(false);
+            intent.OriginalRawId, intent.OperationId, token).ConfigureAwait(false);
         if (Hash(snapshot) != Hash(intent.Snapshot))
             throw new UnauthorizedAccessException("The full raw row/descriptor/receipt changed before atomic CAS.");
         DemandNoLegacyLease(snapshot.Row); DemandDescriptor(snapshot, intent.Actor, intent.OriginalStoreIdentity, intent.OriginalDefinition.Id);
@@ -170,10 +175,81 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
                 intent.ExpectedRevision, checked(intent.ExpectedRevision + 1), now, owner);
             var descriptor = new Descriptor(1, receipt.StoreId, receipt.EntityId, receipt.CommittedRevision, owner,
                 intent.ChangeKind == CanonicalAutomationOriginalChangeKind.RecoverLegacy ? AutomationOperationalState.NeedsAttention : AutomationOperationalState.Disabled,
-                intent.OperationId, beforeHash, afterHash, snapshot.DescriptorJson is null ? null : RawJsonDigest(snapshot.DescriptorJson), receipt);
+                intent.OperationId, beforeHash, afterHash, snapshot.DescriptorJson is null ? null : RawJsonDigest(snapshot.DescriptorJson), receipt)
+            {
+                GraphBinding = snapshot.Descriptor?.GraphBinding, CreationOriginSha256 = snapshot.Descriptor?.CreationOriginSha256,
+                OriginalCreateRequestId = snapshot.Descriptor?.OriginalCreateRequestId,
+                OriginalCreateArgumentsSha256 = snapshot.Descriptor?.OriginalCreateArgumentsSha256
+            };
             operation = new(1, receipt.StoreId, receipt.EntityId, receipt.OperationId, intent.ChangeKind,
                 receipt.PayloadSha256, beforeHash, afterHash, descriptor);
             await InsertSettingWithinLeaseAsync(pin, DescriptorKey(descriptor.EntityId, descriptor.Revision), descriptor, now, Demand, token).ConfigureAwait(false);
+            await InsertSettingWithinLeaseAsync(pin, ReceiptPrefix + intent.OperationId.ToString("N"), operation, now, Demand, token).ConfigureAwait(false);
+        }
+        await pin.CommitPinnedOriginalAsync(Demand, token).ConfigureAwait(false);
+        var acknowledgment = new Acknowledgment(intent, operation);
+        source.Run(() => { Demand(); current.Acknowledgment = acknowledgment; _acknowledgments.Add(acknowledgment, acknowledgment); });
+        return acknowledgment;
+    }
+    private async Task<ICanonicalAutomationDefinitionOriginalChangeAcknowledgment> AtomicCreationAsync(Commit current,
+        ICanonicalAutomationDefinitionOriginalHomeWriteSource writes, CancellationToken token)
+    {
+        var source = current.Source; var intent = current.Intent; var creation = intent.Creation!;
+        var reservation = creation.Reservation; var pin = current.Pin!;
+        void Demand() { DemandOriginalChangeCommit(intent); writes.DemandOriginalCommit(current.Claim!, intent); }
+        source.Run(() => { token.ThrowIfCancellationRequested(); Demand(); });
+        // The actual transaction was acquired before Home. No recursive Home read,
+        // new native pin or graph publication occurs while this held guard is active.
+        DurableOperation operation;
+        if (intent.ChangeKind == CanonicalAutomationOriginalChangeKind.RecoverCreated)
+        {
+            var snapshot = await ReadSnapshotWithinLeaseAsync(pin, reservation.AutomationId,
+                intent.OriginalRawId, intent.OperationId, token).ConfigureAwait(false);
+            if (Hash(snapshot) != Hash(intent.Snapshot)) throw new UnauthorizedAccessException("The original creation receipt or full postimage changed before recovery observation.");
+            DemandCreatedSnapshot(snapshot, reservation, creation.Graph);
+            operation = snapshot.Operation!; // Genuine observation only; never INSERT or owner rewrite.
+        }
+        else
+        {
+            var absence = await ReadCreationAbsenceWithinLeaseAsync(pin, reservation.AutomationId,
+                reservation.DefinitionOperationId, reservation.GraphOperationId, token).ConfigureAwait(false);
+            if (!absence.SupportedTables || !absence.Coherent || !absence.TargetAbsent || !absence.OperationsAbsent ||
+                absence.SchemaSha256 != reservation.OriginalSchemaSha256 || Hash(absence) != intent.Snapshot.RowSha256)
+                throw new UnauthorizedAccessException("The exact target/history/schema absence CAS failed inside the original native transaction.");
+            var columns = await Query(pin, command => command.CommandText = "PRAGMA table_info(automations);",
+                reader => reader.GetString(1), 256, token).ConfigureAwait(false);
+            string[] required = ["id", "name", "mode", "instruction", "schedule_kind", "schedule_json", "next_run_at", "container_id",
+                "is_enabled", "created_at", "updated_at", "lease_token", "lease_until"];
+            if (columns.Count != required.Length || required.Any(name => !columns.Contains(name, StringComparer.Ordinal)))
+                throw new InvalidDataException("Creation supports the maintained canonical row schema only; unknown columns require explicit migration.");
+            var proposal = intent.ProposedDefinition;
+            await Execute(pin, command =>
+            {
+                Demand(); command.CommandText = "INSERT INTO automations(id,name,mode,instruction,schedule_kind,schedule_json,next_run_at,container_id,is_enabled,created_at,updated_at,lease_token,lease_until) VALUES($id,$name,$mode,$instruction,$kind,$schedule,NULL,NULL,0,$created,$updated,NULL,NULL);";
+                command.Parameters.AddWithValue("$id", proposal.Id.ToString("D")); command.Parameters.AddWithValue("$name", proposal.Name);
+                command.Parameters.AddWithValue("$mode", (int)proposal.Mode); command.Parameters.AddWithValue("$instruction", proposal.Instruction);
+                command.Parameters.AddWithValue("$kind", (int)proposal.ScheduleKind); command.Parameters.AddWithValue("$schedule", proposal.ScheduleJson);
+                command.Parameters.AddWithValue("$created", proposal.CreatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+                command.Parameters.AddWithValue("$updated", proposal.UpdatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            }, token).ConfigureAwait(false);
+            var after = await ReadRowWithinLeaseAsync(pin, reservation.AutomationId.ToString("D"), token).ConfigureAwait(false);
+            if (!MatchesCreatedRow(after, reservation)) throw new InvalidDataException("The actual inserted full raw row differs from the exact disabled unscheduled inception proposal.");
+            var owner = new AutomationOwnerBinding(intent.OriginalStoreIdentity.StoreId, intent.Actor.ProfileId,
+                intent.Actor.ActorId, intent.Actor.AuthenticationRevision, intent.Actor.AccountId, intent.Actor.OrganisationId);
+            var now = DateTimeOffset.UtcNow; var afterHash = AutomationDefinitionChange.ComputeRawRowSHA256(after);
+            var request = current.Claim!.OriginalApprovalRequestId;
+            var arguments = current.Claim.OriginalArgumentsSha256;
+            if (string.IsNullOrWhiteSpace(request) || arguments is not { Length: 64 } || !arguments.All(Uri.IsHexDigit))
+                throw new UnauthorizedAccessException("The actual individually claimed creation request/digest is unavailable; no commit may proceed.");
+            var receipt = new AutomationOwnerCommitReceipt(1, owner.StoreId, proposal.Id, AutomationDefinitionEntityKind.Automation,
+                intent.OperationId, GetOriginalChangeIntentDigest(intent), 0, 1, now, owner);
+            var descriptor = new Descriptor(1, owner.StoreId, proposal.Id, 1, owner, AutomationOperationalState.Disabled,
+                intent.OperationId, intent.Snapshot.RowSha256, afterHash, null, receipt)
+            { GraphBinding = proposal.GraphBinding, CreationOriginSha256 = Hash(creation.Graph.Origin),
+                OriginalCreateRequestId = request, OriginalCreateArgumentsSha256 = arguments };
+            operation = new(1, owner.StoreId, proposal.Id, intent.OperationId, CanonicalAutomationOriginalChangeKind.CreateDisabled,
+                receipt.PayloadSha256, intent.Snapshot.RowSha256, afterHash, descriptor);
+            await InsertSettingWithinLeaseAsync(pin, DescriptorKey(proposal.Id, 1), descriptor, now, Demand, token).ConfigureAwait(false);
             await InsertSettingWithinLeaseAsync(pin, ReceiptPrefix + intent.OperationId.ToString("N"), operation, now, Demand, token).ConfigureAwait(false);
         }
         await pin.CommitPinnedOriginalAsync(Demand, token).ConfigureAwait(false);

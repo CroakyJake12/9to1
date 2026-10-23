@@ -17,7 +17,16 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
     public const string RecoveryAction = "automations.recover";
     public const string DisableAction = "automations.disable";
     public const string EditAction = "automations.update";
-    public static bool IsSupportedAction(string action) => action is RecoveryAction or DisableAction or EditAction;
+    public const string CreateAction = "automations.create";
+    public const string CreationRecoveryAction = "automations.create.recover";
+    private HomeGraphCreationAssociationSource? _creationGraphs;
+    public void BindOriginalCreationGraphSource(HomeGraphCreationAssociationSource source)
+    {
+        if (!source.IsBoundToOriginalProducer(_profiles, _creator, this))
+            throw new UnauthorizedAccessException("The SAME original graph creation composition is required.");
+        lock (_gate) { DemandLive(); if (_creationGraphs is not null) throw new InvalidOperationException("Creation graph source is already bound."); _creationGraphs = source; }
+    }
+    public static bool IsSupportedAction(string action) => action is RecoveryAction or DisableAction or EditAction or CreateAction or CreationRecoveryAction or "automations.graph.save-draft";
     public string ResourceKind => "automation.definition";
     private readonly FileHomeCoreStateStore _store;
     private readonly HomeLocalProfileIdentity _profiles;
@@ -104,6 +113,14 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
     public Task<ResourceAccessDecision> EvaluateWithinOriginalSourceAsync(AuthenticatedResourceActor actor, string action, ResourceScope resource,
         Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
+        if (action == "automations.graph.save-draft")
+        {
+            if (_creationGraphs is null) return Task.FromResult(new ResourceAccessDecision(false,
+                "HOME_AUTOMATION_CREATION_ORIGIN_UNAVAILABLE", actor.ActorId, resource.Revision, actor.OrganisationId));
+            // The graph review's owning entity scope is admitted only by its actual
+            // source-issued creation selection, not a row WRITE or public UUID.
+            return _creationGraphs.EvaluateOriginalGraphEntityWithinSourceAsync(actor, resource, scope, retain, token);
+        }
         Claim? actual; lock (_gate) actual = IsSupportedAction(action)
             ? _active.SingleOrDefault(value => value.Actor == actor && value.Intent.ActionId == action && value.Scope == resource && value.IsReviewEligible) : null;
         if (actual is null) return Task.FromResult(new ResourceAccessDecision(false, "HOME_AUTOMATION_PRIVATE_WRITE_REQUIRED", actor.ActorId, resource.Revision, actor.OrganisationId));
@@ -160,11 +177,15 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
         private Exception? _acknowledgedRefusal; private HomePreparedReviewObservation? _declined;
         private HomeResourcePreparedReview? _review; private HomeResourceExecutionCapability? _capability;
         private HomeClaimedResourceAttestation? _attestation; private IAsyncDisposable? _completion;
+        internal HomeResourceExecutionCapability? CreationAuditCapability => _capability;
+        internal VerifiedResourceStoreOwnership? CreationAuditOwnership => _ownership;
+        internal HomeClaimedResourceAttestation? CreationAuditAttestation => _attestation;
         private IHomeLocalOperationLease? _home; private Task? _entry, _settlement, _close;
         private Task<ICanonicalAutomationDefinitionOriginalChangeAcknowledgment>? _sql;
         private JsonElement _arguments; private CanonicalAutomationOriginalChangeKind _reviewChangeKind; internal ResourceScope? Scope;
         internal AuthenticatedResourceActor? Actor; private VerifiedResourceStoreOwnership? _ownership;
         public string? OriginalApprovalRequestId { get { lock (_gate) return _review?.RequestId; } }
+        public string? OriginalArgumentsSha256 { get { lock (_gate) return Scope?.Revision; } }
         public Task? OriginalClose { get { lock (_gate) return _close; } }
         internal bool IsLive { get { lock (_gate) return !_retired; } }
         internal bool IsReviewEligible { get { lock (_gate) return !_retired && _close is null && _entry is null && _settlement is null; } }
@@ -227,7 +248,7 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
                     OriginalIntentDigest = owner._creator.GetOriginalChangeIntentDigest(intent),
                     Store = intent.OriginalStoreIdentity, intent.OriginalDefinition, intent.ChangeKind, intent.ExpectedRevision, intent.OriginalRowSha256,
                     Ownership = new { _ownership.ResourceKind, _ownership.StoreId, _ownership.ProfileId, _ownership.ObservedStoreRevision } });
-                if (_reviewChangeKind == CanonicalAutomationOriginalChangeKind.EditDisabled)
+                if (_reviewChangeKind is CanonicalAutomationOriginalChangeKind.EditDisabled or CanonicalAutomationOriginalChangeKind.CreateDisabled or CanonicalAutomationOriginalChangeKind.RecoverCreated)
                     _arguments = JsonSerializer.SerializeToElement(new { intent.OperationId, intent.Actor,
                         OriginalIntentDigest = owner._creator.GetOriginalChangeIntentDigest(intent),
                         Store = intent.OriginalStoreIdentity, intent.OriginalDefinition, intent.ProposedDefinition,
@@ -243,6 +264,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
                 _reviewChangeKind switch
                 {
                     CanonicalAutomationOriginalChangeKind.RecoverLegacy => "Recover this exact stored automation as disabled and needing review, preserving its other values and history; execution remains unavailable",
+                    CanonicalAutomationOriginalChangeKind.CreateDisabled => "Create this exact new disabled and unscheduled Automation referencing its separately reviewed empty Home graph Draft. This does not activate, schedule or run an Automation",
+                    CanonicalAutomationOriginalChangeKind.RecoverCreated => "Observe this exact original SQL creation receipt and reconcile only its original Home audit, without inserting, activating, scheduling or running an Automation",
                     CanonicalAutomationOriginalChangeKind.EditDisabled => "Save the reviewed name, instructions and schedule to this disabled automation; preserve its identity, graph and history, clear its pending next time and keep execution disabled",
                     _ => "Disable this exact stored automation while preserving its other values and history; execution remains unavailable"
                 },
@@ -260,7 +283,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
             }
             finally { _originalReviewPrepared.TrySetResult(null); }
             await DemandReviewNotWithdrawn(sources).ConfigureAwait(false);
-            for (var poll = 0; observed.Request?.State == HomePermissionRequestState.PendingApproval && poll < 300; poll++)
+            for (var poll = 0; observed.Request?.State == HomePermissionRequestState.PendingApproval &&
+                (_reviewChangeKind is CanonicalAutomationOriginalChangeKind.CreateDisabled or CanonicalAutomationOriginalChangeKind.RecoverCreated || poll < 300); poll++)
             {
                 DemandLive(); await sources.Read(() => Task.Delay(TimeSpan.FromSeconds(1), token)).ConfigureAwait(false);
                 await DemandReviewNotWithdrawn(sources).ConfigureAwait(false);
@@ -315,7 +339,7 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
 public sealed class HomeCanonicalAutomationDefinitionActionPolicySource : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
-        appId == "automations" && HomeCanonicalAutomationDefinitionWriteSource.IsSupportedAction(actionId)
+        appId == "automations" && actionId != "automations.graph.save-draft" && HomeCanonicalAutomationDefinitionWriteSource.IsSupportedAction(actionId)
         ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.Elevated, false, false, RequiresPerActionApproval: true) : null;
 }
 

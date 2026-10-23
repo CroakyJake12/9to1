@@ -49,7 +49,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         if (actualWriter is not null && actualSource is null) throw new ArgumentException("The actual writer requires its configured saved library.");
         _status = actualSource is null ? "Open Automations from Home to view your saved library."
             : "Your saved automations will appear here.";
-        _work = new(RetireChangeDeliveriesAsync, JoinChangeDeliveriesAsync);
+        _work = new(RetireLibraryDeliveriesAsync, JoinLibraryDeliveriesAsync);
     }
     internal Task InitializeAsync() => OriginalInitialization ??= _source is null ? Task.CompletedTask : Start("refresh", null);
 
@@ -75,13 +75,14 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
             "CanEditName" => CanEditDraft, "CanEditContent" => CanEditDraft && !_editGraph,
             "HasEditDay" => _selectedTarget?.Row.Value.ScheduleKind == AutomationScheduleKind.Weekly,
             "CanSaveEdits" => IsActionAvailable("save-edits") == true,
-            "CanDiscardEdits" => IsActionAvailable("discard-edits") == true, _ => GraphValue(path)
+            "CanDiscardEdits" => IsActionAvailable("discard-edits") == true, _ => CreationValue(path) ?? GraphValue(path)
         };
         return value is not null;
     }
     public bool TrySetValue(string path, object? value)
     {
         if (_retiring || _busy || value is not string text) return false;
+        if (path == "NewAutomationName") return SetCreationValue(path, text);
         if (path == "GraphNodeSearch") return SetGraphValue(path, text);
         if (path != "Search") return SetEditValue(path, text);
         if (HasUnsubmittedEdits || text.Length > 256) return false;
@@ -89,7 +90,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         _work.RunSynchronous(original => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
         {
             _search = text; _epoch++; _issued.Clear(); _rows = []; _next = null; _pageNumber = 0;
-            ClearSelection(); Changed(); return true;
+            _currentPage = null; _creationRows = []; ClearSelection(); Changed(); return true;
         }));
         return true;
     }
@@ -101,11 +102,13 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         "recover" or "disable" => !HasUnsubmittedEdits && _writer is not null && IsCurrentSelection,
         "save-edits" => CanEditDraft && EditValuesChanged,
         "discard-edits" => HasUnsubmittedEdits,
-        _ => GraphActionAvailable(command)
+        _ => CreationActionAvailable(command) || GraphActionAvailable(command)
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (command is "create-draft" or "recover-creation" or "refresh-creations" or "discard-new")
+            return new(StartCreationAction(command, parameter));
         if (command is "graph-node" or "graph-back" or "graph-next" or "graph-links-back" or "graph-links-next" or "graph-diagnostics-back" or "graph-diagnostics-next")
         { RunGraphAction(command, parameter); return ValueTask.CompletedTask; }
         if (command == "discard-edits")
@@ -156,6 +159,10 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
                         var current = await command.Read(() => _profiles!.GetCurrentAsync(command.Run, command.Retain,
                             CancellationToken.None).AsTask());
                         if (current != actor) throw new UnauthorizedAccessException("Your Home profile changed while opening this saved automation.");
+                        Haven.Application.NodeGraph.GraphDocument? canonical = null;
+                        if (CanonicalAutomationGraphReferenceCodec.IsReference(target.Row.Value.Instruction) && _creationSource is { } creationSource)
+                            canonical = await command.Read(() => creationSource.ReadOriginalCanonicalGraphWithinSourceAsync(target.Observation,
+                                target.Row, command.Run, command.Retain, CancellationToken.None));
                         await command.Join();
                         if (!_work.IsRetiring && epoch == _epoch)
                         {
@@ -164,6 +171,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
                             _selectedTarget = target; _selectedName = saved.Name; _instruction = saved.Instruction;
                             _selectedSchedule = saved.ScheduleKind + " · " + saved.ScheduleJson;
                             _selectedState = DescribeState(saved); _changeStatus = ""; LoadEditDraft(saved); LoadGraphInspection(target);
+                            if (canonical is not null) LoadCanonicalGraphInspection(target, canonical);
                             _review = target.Row.RequiresRecovery
                                 ? "Recover legacy settings with Home review before saving edits. Each edit is checked against the current protected saved row."
                                 : "Saving edits requires its own Home review and keeps this automation disabled.";
@@ -187,7 +195,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
                         await command.Join();
                         if (!_work.IsRetiring && epoch == _epoch && search == _search)
                         {
-                            _epoch++; _issued.Clear(); _includeArchived = archived; _next = page.NextContinuation;
+                            _epoch++; _issued.Clear(); _currentPage = page; _creationRows = []; _includeArchived = archived; _next = page.NextContinuation;
                             _pageNumber = action == "older" ? _pageNumber + 1 : 1;
                             _rows = Array.AsReadOnly(page.Definitions.Select((row, index) =>
                             {
@@ -240,7 +248,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
     { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); return true; });
     public bool TryGetItemValue(object item, string path, out object? value)
     {
-        if (TryGetGraphItemValue(item, path, out value)) return true;
+        if (TryGetCreationItemValue(item, path, out value) || TryGetGraphItemValue(item, path, out value)) return true;
         value = item is LibraryRow row && _rows.Any(current => ReferenceEquals(current, row)) ? path switch
         { "Key" => row.Key, "Name" => row.Name, "Status" => row.Status, "Schedule" => row.Schedule, "Target" => row.Target,
           "CanOpen" => !_retiring && !_busy && !HasUnsubmittedEdits && row.Target is RowTarget target &&

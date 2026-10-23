@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Haven.Application.NodeGraph;
 using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Core;
@@ -11,7 +13,7 @@ namespace Haven.Infrastructure;
 /// <summary>Recover, disable or edit ONLY a SAME protected library row. Its original raw
 /// row, native store and individually accepted Home WRITE are rechecked before
 /// one atomic transaction. Scheduling and Task/provider admission remain absent.</summary>
-public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : ICanonicalAutomationDefinitionOriginalProcessSource, ICanonicalAutomationDefinitionOriginalCreateSource, IAsyncDisposable
+public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : ICanonicalAutomationDefinitionOriginalProcessSource, ICanonicalAutomationDefinitionOriginalCreationProcessSource, ICanonicalAutomationDefinitionOriginalCreationAuditSource, IGraphPublicationOriginAuthority, IAsyncDisposable
 {
     private readonly CanonicalAutomationLibraryOriginalReadOwner _library;
     private readonly CanonicalSqliteOriginalStoreOwner _store;
@@ -63,28 +65,38 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
     private sealed record Descriptor(int SchemaVersion, Guid StoreId, Guid EntityId, long Revision,
         AutomationOwnerBinding Owner, AutomationOperationalState State, Guid OperationId,
         string BeforeRowSha256, string AfterRowSha256, string? PreviousDescriptorSha256,
-        AutomationOwnerCommitReceipt Receipt);
+        AutomationOwnerCommitReceipt Receipt)
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public AutomationDefinitionGraphBinding? GraphBinding { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? CreationOriginSha256 { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? OriginalCreateRequestId { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? OriginalCreateArgumentsSha256 { get; init; }
+    }
     private sealed record DurableOperation(int SchemaVersion, Guid StoreId, Guid EntityId, Guid OperationId,
         CanonicalAutomationOriginalChangeKind Kind, string IntentSha256, string BeforeRowSha256,
         string AfterRowSha256, Descriptor Descriptor);
     private sealed class Intent(CanonicalAutomationDefinitionOriginalWriteOwner owner,
-        CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection selection,
+        CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection? selection,
         CanonicalAutomationOriginalChangeKind kind, Guid operationId, Snapshot snapshot,
-        CanonicalAutomationOriginalEdit? edit = null, AutomationDefinition? proposed = null) : ICanonicalAutomationDefinitionOriginalChangeIntent
+        CanonicalAutomationOriginalEdit? edit = null, AutomationDefinition? proposed = null, CreationReady? creation = null) : ICanonicalAutomationDefinitionOriginalChangeIntent
     {
         internal readonly CanonicalAutomationDefinitionOriginalWriteOwner Owner = owner;
-        internal readonly CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection Selection = selection;
+        internal readonly CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection? Selection = selection;
+        internal readonly CreationReady? Creation = creation;
+        internal string OriginalRawId => Selection is { } row ? RawText(row.Row.RetainedProtectedDescriptors, "id") : ProposedDefinition.Id.ToString("D");
         internal readonly Snapshot Snapshot = snapshot;
         internal readonly CanonicalAutomationOriginalEdit? Edit = edit;
-        public AuthenticatedResourceActor Actor => Selection.Observation.Actor;
-        public ResourceStoreIdentity OriginalStoreIdentity => Selection.Observation.OriginalStoreIdentity!;
-        public VerifiedResourceStoreOwnership OriginalStoreOwnership => Selection.Ownership;
-        public AutomationDefinition OriginalDefinition => Selection.Row.Value;
+        public AuthenticatedResourceActor Actor => Creation?.Reservation.Actor ?? Selection!.Observation.Actor;
+        public ResourceStoreIdentity OriginalStoreIdentity => Creation?.Reservation.OriginalStoreIdentity ?? Selection!.Observation.OriginalStoreIdentity!;
+        public VerifiedResourceStoreOwnership OriginalStoreOwnership => Creation?.Reservation.OriginalStoreOwnership ?? Selection!.Ownership;
+        public AutomationDefinition OriginalDefinition => Selection?.Row.Value ?? proposed ?? throw new InvalidOperationException("The private creation proposal is unavailable.");
         public AutomationDefinition ProposedDefinition => proposed ?? OriginalDefinition;
         public CanonicalAutomationOriginalChangeKind ChangeKind { get; } = kind;
         public string ActionId => ChangeKind switch
         { CanonicalAutomationOriginalChangeKind.RecoverLegacy => "automations.recover",
-          CanonicalAutomationOriginalChangeKind.EditDisabled => "automations.update", _ => "automations.disable" };
+          CanonicalAutomationOriginalChangeKind.EditDisabled => "automations.update",
+          CanonicalAutomationOriginalChangeKind.CreateDisabled => "automations.create",
+          CanonicalAutomationOriginalChangeKind.RecoverCreated => "automations.create.recover", _ => "automations.disable" };
         public Guid OperationId { get; } = operationId;
         public long ExpectedRevision => Snapshot.Descriptor?.Revision ?? 0;
         public string OriginalRowSha256 => Snapshot.RowSha256;
@@ -144,14 +156,15 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             if (hadPrior) map[this] = prior; else map.Remove(this);
         }
     };
-    private bool IsInside => _logical.Value != 0 || _executing.Value is not null || _physical?.ContainsKey(this) == true;
+    private bool IsInside => _creationExecution.Value is not null || _logical.Value != 0 || _executing.Value is not null || _physical?.ContainsKey(this) == true;
     private Original Reserve(CanonicalSqliteOriginalSourceScope source, Intent? sameValidation = null)
     {
         lock (_gate)
         {
             var current = _physical?.TryGetValue(this, out var physical) == true ? physical : _executing.Value;
             var admittedSameCommit = sameValidation is not null && current is not null && ReferenceEquals(current.Intent, sameValidation) && !current.Driver.IsCompleted;
-            ObjectDisposedException.ThrowIf(_retiring && !admittedSameCommit, this);
+            var admittedCreation = _creationExecution.Value is { } creation && ReferenceEquals(creation.Owner, this) && !creation.Driver.IsCompleted;
+            ObjectDisposedException.ThrowIf(_retiring && !admittedSameCommit && !admittedCreation, this);
             _originals.RemoveAll(item => item.Joined && item.Raw is { } raw && (raw.IsCompletedSuccessfully || IsAcknowledgedOriginalChangeSourceRefusal(raw)));
             if (_originals.Count >= 128) throw new InvalidOperationException("Automation change custody is full; unresolved originals remain retained.");
             var record = new Original(source); _originals.Add(record); return record;
@@ -181,6 +194,10 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
     public string GetOriginalChangeIntentDigest(ICanonicalAutomationDefinitionOriginalChangeIntent value)
     {
         var actual = RequireIntent(value);
+        if (actual.Creation is { } creation) return Hash(new { SchemaVersion = 1, actual.Actor, actual.OperationId,
+            actual.ChangeKind, actual.OriginalStoreIdentity, actual.ProposedDefinition, actual.Snapshot.RowSha256,
+            creation.Reservation.OriginalSchemaSha256, Origin = creation.Graph.Origin,
+            GraphFingerprint = creation.Graph.FingerprintSha256 });
         return ReviewDigest(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalDefinition.Id,
             actual.OperationId, actual.ChangeKind, actual.Snapshot, actual.Edit);
     }
@@ -257,13 +274,15 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
     public Task RevalidateOriginalChangeIntentWithinSourceAsync(ICanonicalAutomationDefinitionOriginalChangeIntent value,
         Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
-        var actual = RequireIntent(value); var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
+        var actual = RequireIntent(value);
+        if (actual.Creation is not null) return RevalidateCreationIntentAsync(actual, scope, retain, token);
+        var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
         return Admit(source, () => _store.RetainOriginalReader(source, async () =>
         {
             await DemandCurrentAsync(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalStoreOwnership, source, token).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false);
             var snapshot = await ReadSnapshotAsync(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalDefinition.Id,
-                RawText(actual.Selection.Row.RetainedProtectedDescriptors, "id"), actual.OperationId, source, token).ConfigureAwait(false);
+                actual.OriginalRawId, actual.OperationId, source, token).ConfigureAwait(false);
             if (Hash(snapshot) != Hash(actual.Snapshot))
                 throw new UnauthorizedAccessException("The full reviewed row/owner descriptor/operation changed; obtain a fresh observation and approval.");
             DemandNoLegacyLease(snapshot.Row);

@@ -40,7 +40,7 @@ public sealed class HomeGraphPublicationOwner
         var authorities = _origins.Where(owner => owner.OwnerAppId == intent.Owner.AppId).ToArray();
         if (authorities.Length != 1 || !authorities[0].IsBoundToGraphRepository(_graphs))
             throw new NotSupportedException("One actual original owner bound to this canonical graph repository required.");
-        if (owningResourceKind != "automations") throw new ArgumentException("Actual registered Automation store kind required.");
+        if (owningResourceKind != authorities[0].OwningStoreResourceKind) throw new ArgumentException("Actual registered Automation store kind required.");
         var entityScopeId = intent.Owner.StoreId.ToString("D") + "/" + intent.Owner.EntityId.ToString("D");
         var graphScopeId = intent.OriginalActor.ProfileId + "/" + intent.Graph.GraphId.ToString("D");
         if (intent.Scopes.Count(scope => scope.Kind == intent.Owner.EntityKind && scope.Id == entityScopeId &&
@@ -53,7 +53,7 @@ public sealed class HomeGraphPublicationOwner
         // references and locked-state guards provide the local origin check. Missing genuine resolver denies.
         var action = intent.Kind == GraphPublicationKind.SaveDraft ? "automations.graph.save-draft" : "automations.activate";
         // Restrict this first owning adapter; no generic arbitrary target/action mapping or legacy ownership adoption.
-        if (intent.Owner.AppId != "automations" || intent.Owner.EntityKind != "automation.reusable-task")
+        if (intent.Owner.AppId != "automations" || !authorities[0].SupportsEntityKind(intent.Owner.EntityKind))
             throw new NotSupportedException("Registered owning graph publication adapter unavailable.");
         if (_reviews.Count >= 1024) throw new InvalidOperationException("Retained graph review capacity exceeded.");
         var prepared = _broker.PrepareReviewForActor(intent.OriginalActor, intent.Owner.AppId, action, intent.Scopes,
@@ -91,6 +91,7 @@ public sealed class HomeGraphPublicationOwner
         private HomePermissionActionPolicy? _policy;
         private int _executionReserved;
         private bool _claimed;
+        private bool _submissionStarted, _withdrawn;
         private bool _retired;
         private GraphPublicationReceipt? _known;
         private bool _publicationAttempted;
@@ -116,12 +117,43 @@ public sealed class HomeGraphPublicationOwner
             return valid && await _issuer._profiles.GetCurrentAsync(ct).ConfigureAwait(false) == _intent.OriginalActor;
         }
         public string RequestId => _prepared.RequestId;
+        public async Task<HomePreparedReviewObservation> ObserveAsync(CancellationToken ct = default)
+        {
+            await _gate.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                if (_withdrawn) return new(HomePreparedReviewState.OutcomeUnconfirmed, null, false,
+                    "HOME_ORIGINAL_GRAPH_REVIEW_WITHDRAWN"); // Completion authority remains the SAME withdrawal Task.
+                return await _issuer._broker.ObservePreparedReviewAsync(_prepared, ct).ConfigureAwait(false);
+            }
+            finally { _gate.Release(); }
+        }
+        // Only this issuer's original unresolved review may be withdrawn. Approval
+        // or publication which already won is observed, never cancelled or replayed.
+        public async Task<bool> WithdrawPendingAsync(CancellationToken ct = default)
+        {
+            await _gate.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                if (_retired) return true;
+                if (Volatile.Read(ref _executionReserved) != 0) return false;
+                var withdrawn = !_submissionStarted
+                    ? await _issuer._broker.RetirePreparedReviewAsync(_prepared, ct).ConfigureAwait(false)
+                    : await _issuer._broker.WithdrawOriginalAutomationReviewWithinSourceAsync(
+                        _prepared, body => body(), _ => { }, ct).ConfigureAwait(false);
+                if (!withdrawn) return false;
+                _withdrawn = true; Volatile.Write(ref _retired, true); _issuer._resources.Retire(this);
+                _issuer._reviews.TryRemove(this, out _); return true;
+            }
+            finally { _gate.Release(); }
+        }
         public async Task<HomePreparedReviewObservation> SubmitAsync(CancellationToken ct = default)
         {
             await _gate.WaitAsync(ct).ConfigureAwait(false);
             try
             {
                 if (_retired) throw new UnauthorizedAccessException("Graph review retired.");
+                _submissionStarted = true;
                 await RequireOriginAsync(ct).ConfigureAwait(false);
                 if (_binding is null)
                 {
@@ -166,7 +198,7 @@ public sealed class HomeGraphPublicationOwner
                     if (actor != _intent.OriginalActor) { _noPublicationKnown = true; return null; }
                     _claimed = true;
                     _publicationAttempted = true; // BEFORE entering the writer; a lost return is unknown.
-                    _known = await _issuer._graphs.TryPublishGuardedAsync(_intent, _prepared.Submission.Impact.ArgumentsDigest!, new PublicationGuard(this), ct).ConfigureAwait(false);
+                    _known = await _issuer._graphs.TryPublishGuardedAsync(_intent, _prepared.Submission.Impact.ArgumentsDigest!, new PublicationGuard(this), ct, _intent.CreationOrigin is null ? null : RequestId).ConfigureAwait(false);
                     _noPublicationKnown = _known is null; // Actual writer returned refusal, not an inferred transport failure.
                     return _known;
                 }

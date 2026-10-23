@@ -177,7 +177,8 @@ public sealed class AutomationToolRuntime(
     {
         var name = RequiredText(call, "name");
         var instruction = RequiredText(call, "instruction");
-        if (!Enum.TryParse<AutomationScheduleKind>(RequiredText(call, "schedule_kind"), true, out var kind))
+        if (!Enum.TryParse<AutomationScheduleKind>(RequiredText(call, "schedule_kind"), true, out var kind) ||
+            !Enum.IsDefined(kind) || kind == AutomationScheduleKind.Unscheduled)
             throw new ArgumentException("schedule_kind must be Once, Hourly, Daily, Weekly, or ConditionWatch.");
         var scheduleJson = RequiredText(call, "schedule_json");
         using var schedule = JsonDocument.Parse(scheduleJson);
@@ -244,6 +245,8 @@ public sealed class AutomationToolRuntime(
     /// </summary>
     private static DateTimeOffset? CalculateInitialRun(AutomationScheduleKind kind, JsonElement schedule, DateTimeOffset now)
     {
+        if (!Enum.IsDefined(kind) || kind == AutomationScheduleKind.Unscheduled)
+            throw new ArgumentException("A supported configured schedule is required; an unscheduled graph Draft has no initial run.");
         if (kind == AutomationScheduleKind.ConditionWatch) return now.AddMinutes(5);
         if (kind == AutomationScheduleKind.Hourly) return now.AddHours(1);
         if (kind == AutomationScheduleKind.Once)

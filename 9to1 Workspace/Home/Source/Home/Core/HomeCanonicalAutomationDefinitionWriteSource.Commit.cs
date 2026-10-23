@@ -94,6 +94,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                         if (expected != claim.Actor || claim._ownership is null || claim._attestation is null ||
                             !HomeLocalStoreOwnership.IsReceiptCurrentInState(state, claim._ownership) ||
                             !claim.Owner._broker.IsClaimedAttestationCurrentInState(claim._attestation, expected, state)) return false;
+                        if ((claim.Intent.ChangeKind is CanonicalAutomationOriginalChangeKind.CreateDisabled or CanonicalAutomationOriginalChangeKind.RecoverCreated) &&
+                            claim.Owner._creationGraphs?.IsIntentGraphCurrentInState(claim.Intent, state) != true) return false;
                         claim.Owner._creator.DemandOriginalChangeCommit(claim.Intent); return true;
                     });
                     if (valid) valid = await sources.Read(() => claim.Owner._profiles.CheckAsync(state, expected, phase,

@@ -1,5 +1,6 @@
 #if !ANDROID
 using Haven.Application.Automations;
+using Haven.Application.NodeGraph;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
 using HavenOS.Home.Core;
@@ -14,12 +15,21 @@ public sealed partial class App
     private HomeCanonicalAutomationDefinitionResourceResolver? _actualAutomationLibraryWriteResolver;
     private HomeCanonicalAutomationDefinitionActionPolicySource? _actualAutomationLibraryWritePolicy;
     private Task? _actualAutomationLibraryWriteDrain;
+    private HomeGraphPublicationResourceRegistry? _actualAutomationCreationGraphRegistry;
+    private HomeAutomationCreationGraphActionPolicySource? _actualAutomationCreationGraphPolicy;
+    private NodeGraphSchemaRegistry? _actualAutomationCreationSchemas;
+    private HomeGraphCreationAssociationSource? _actualAutomationCreationGraphs;
 
     private void PrepareOriginalAutomationLibraryWritePolicies()
     {
         _actualAutomationLibraryWriteResolver = new(() => _actualAutomationLibraryWrites
             ?? throw new InvalidOperationException("The actual saved-automation Home review owner has not been captured."));
         _actualAutomationLibraryWritePolicy = new();
+        _actualAutomationCreationGraphRegistry = new();
+        _actualAutomationCreationGraphPolicy = new();
+        // This trusted profile reflects the actual zero registered node adapters.
+        // It permits an empty saved Draft only and advertises no execution capability.
+        _actualAutomationCreationSchemas = new([], [new("automations.empty-draft.v1", new HashSet<string>(), new HashSet<string>())]);
     }
     private void ConfigureOriginalAutomationLibraryWriteRegistrations(IServiceCollection collection,
         HomeNativeWindowsComposition home)
@@ -40,12 +50,20 @@ public sealed partial class App
             var writes = _actualAutomationLibraryWrites = new(home.StateStore, home.Profiles,
                 home.Resources, home.Broker, home.Permissions, actual);
             actual.BindOriginalHomeWriteSource(writes);
+            var graphs = new HomeVersionedNodeGraphRepository(home.StateStore, _actualAutomationCreationSchemas!);
+            var publisher = new HomeGraphPublicationOwner(home.StateStore, home.Profiles, home.Ownership,
+                graphs, home.Broker, home.Permissions, [actual], _actualAutomationCreationGraphRegistry!);
+            _actualAutomationCreationGraphs = new(home.StateStore, home.Profiles, home.Ownership, graphs,
+                publisher, home.Broker, writes, actual);
+            actual.BindOriginalCreationGraphSource(_actualAutomationCreationGraphs, _actualAutomationCreationSchemas!);
             DemandOriginalAutomationLibraryWriteComposition(provider, home, actual);
             return actual;
         }));
         collection.AddSingleton<ICanonicalAutomationDefinitionOriginalWriteSource>(provider =>
             provider.GetRequiredService<CanonicalAutomationDefinitionOriginalWriteOwner>());
         collection.AddSingleton<ICanonicalAutomationDefinitionOriginalProcessSource>(provider =>
+            provider.GetRequiredService<CanonicalAutomationDefinitionOriginalWriteOwner>());
+        collection.AddSingleton<ICanonicalAutomationDefinitionOriginalCreationProcessSource>(provider =>
             provider.GetRequiredService<CanonicalAutomationDefinitionOriginalWriteOwner>());
         collection.AddSingleton<HomeCanonicalAutomationDefinitionWriteSource>(provider => AcquireOriginalAssistantCapabilitySingleton(() =>
         {
@@ -68,7 +86,8 @@ public sealed partial class App
             _actualAutomationLibraryWrites is not { } writes || writes.OriginalClose is not null ||
             !ReferenceEquals(actual.OriginalHomeWriteSource, writes) ||
             !writes.HasOriginalComposition(home.StateStore, home.Profiles, actual) ||
-            !_actualAutomationLibraryWriteResolver!.IsBoundToOriginalOwner(writes))
+            !_actualAutomationLibraryWriteResolver!.IsBoundToOriginalOwner(writes) ||
+            _actualAutomationCreationGraphs?.IsBoundToOriginalProducer(home.Profiles, actual, writes) != true)
             throw new UnauthorizedAccessException("The actual protected automation library/store/repository/Home review pairing changed.");
         DemandOriginalAutomationLibraryComposition(provider, home, actual.OriginalLibrary);
     }
