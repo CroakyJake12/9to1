@@ -9,6 +9,8 @@
     <RootNamespace>HavenOS.Apps.Canvas</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Shared native types compile once in Canvas.NativeUI, never again in this entry executable. -->
+    <Compile Remove="CanvasHomeWindowFactory.cs;CanvasHostWindow.cs;CanvasHostWindow.Eraser.cs;CanvasHostWindow.OriginalLifetime.cs;CanvasOriginalResourceReadiness.cs" />
     <ProjectReference Include="../NativeUI/HavenOS.Canvas.NativeUI.csproj" />
     <ProjectReference Include="../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
     <ProjectReference Include="../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />

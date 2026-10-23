@@ -5,7 +5,18 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <ProjectReference Include="../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <Compile Include="../CanvasNativeViewport.cs" Link="CanvasNativeViewport.cs" />
+    <!-- One shared native presentation assembly; executable Host and Haven borrow it. -->
+    <Compile Include="../Host/CanvasHomeWindowFactory.cs" Link="Host/CanvasHomeWindowFactory.cs" />
+    <Compile Include="../Host/CanvasHostWindow.cs" Link="Host/CanvasHostWindow.cs" />
+    <Compile Include="../Host/CanvasHostWindow.Eraser.cs" Link="Host/CanvasHostWindow.Eraser.cs" />
+    <Compile Include="../Host/CanvasHostWindow.OriginalLifetime.cs" Link="Host/CanvasHostWindow.OriginalLifetime.cs" />
+    <Compile Include="../Host/CanvasOriginalResourceReadiness.cs" Link="Host/CanvasOriginalResourceReadiness.cs" />
+    <EmbeddedResource Include="../Host/UI/CanvasHost.cui" LogicalName="HavenOS.Apps.Canvas.UI.CanvasHost.cui" />
+    <InternalsVisibleTo Include="HavenOS.Canvas.NativeUI.Tests" />
+    <InternalsVisibleTo Include="Haven.Desktop.Tests" />
   </ItemGroup>
 </Project>
