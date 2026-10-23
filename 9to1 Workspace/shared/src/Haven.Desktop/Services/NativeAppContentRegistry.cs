@@ -590,12 +590,14 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         private static readonly ModeDefinition Spaces = BuiltInModeSeed.Modes.Single(mode => mode.Key == "spaces");
         private static readonly ModeDefinition Dev = BuiltInModeSeed.Modes.Single(mode => mode.Key == "dev");
         private static readonly ModeDefinition Boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
+        private static readonly ModeDefinition Canvas = BuiltInModeSeed.Modes.Single(mode => mode.Key == "canvas");
 
         public static IEnumerable<NativeAppContentRegistration> Build(
             IBrowseAppContentFactory files,
             IBrowseAppContentFactory spaces,
             IBrowseAppContentFactory build,
-            IBrowseAppContentFactory? boards = null)
+            IBrowseAppContentFactory? boards = null,
+            IBrowseAppContentFactory? canvas = null)
         {
             ArgumentNullException.ThrowIfNull(files);
             ArgumentNullException.ThrowIfNull(spaces);
@@ -606,8 +608,10 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
                 new(Spaces.Id, Spaces.Key, HavenAppRouteKind.Spaces, spaces),
                 new(Dev.Id, Dev.Key, HavenAppRouteKind.Dev, build),
             ];
-            return boards is null ? registered :
-                [.. registered, new(Boards.Id, Boards.Key, HavenAppRouteKind.ModeWorkspace, boards)];
+            List<NativeAppContentRegistration> result = [.. registered];
+            if (boards is not null) result.Add(new(Boards.Id, Boards.Key, HavenAppRouteKind.ModeWorkspace, boards));
+            if (canvas is not null) result.Add(new(Canvas.Id, Canvas.Key, HavenAppRouteKind.ModeWorkspace, canvas));
+            return result;
         }
     }
 }
