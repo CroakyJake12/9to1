@@ -48,16 +48,16 @@
   <Theme Name="user_preference">
     <Page id="home-apps-page" role="main" accessible-name="Apps">
       <Container id="home-apps-body" Type="Grid" RowSizes="Auto 1fr Auto" CellGap="12" Padding="16">
-        <Container id="home-apps-search-row" Type="Horizontal Stack" Row="0" CellGap="8">
+        <Container id="home-apps-search-row" Type="Grid" ColumnSizes="1fr Auto" RowSizes="Auto Auto" Row="0" CellGap="8" MaxWidth="520" HorizontalAlignment="Left">
           <Input id="home-app-search" Type="Text" Value="{Binding apps.query, mode=TwoWay}"
                  accessible-name="Search apps" Tooltip="Filter the installed apps"
-                 Width="320" MinWidth="160" MaxWidth="480" HorizontalAlignment="Left" />
-          <Button id="home-apps-clear" action="home.clear-app-query" accessible-name="Clear app search"
+                 MinWidth="160" MaxWidth="480" HorizontalAlignment="Stretch" />
+          <Button id="home-apps-clear" Column="1" action="home.clear-app-query" accessible-name="Clear app search"
                   Tooltip="Clear the app search" Width="32" Height="32" Padding="8"
                   IsVisible="{Binding apps.hasQuery}">
             <Image id="home-apps-clear-icon" Source="icon:close" Width="16" Height="16" />
           </Button>
-          <Text id="home-apps-count" Text="{Binding apps.countLabel}" accessible-name="Installed app count" />
+          <Text id="home-apps-count" Row="1" ColumnSpan="2" Text="{Binding apps.countLabel}" accessible-name="Installed app count" />
         </Container>
         <Container id="home-apps-results" Type="Vertical Stack" Row="1" CellGap="12"
                    VerticalScrolling="True" HorizontalScrolling="False">
@@ -82,7 +82,7 @@
                           Padding="10" Margin="0 0 12 12">
                     <Container id="home-create-member-body" Type="Vertical Stack" CellGap="6">
                       <Image id="home-create-member-icon" Source="{Binding member.iconSource}"
-                             Width="32" Height="32" HorizontalAlignment="Center"
+                             Width="56" Height="56" HorizontalAlignment="Center"
                              accessible-name="{Binding member.name}" />
                       <Text id="home-create-member-name" Text="{Binding member.name}" TextAlignment="Center" />
                     </Container>
@@ -116,7 +116,7 @@
                           Padding="10" Margin="0 0 12 12">
                     <Container id="home-create-tile-body" Type="Vertical Stack" CellGap="6">
                       <Image id="home-create-tile-icon" Source="{Binding app.iconSource}"
-                             Width="32" Height="32" HorizontalAlignment="Center"
+                             Width="56" Height="56" HorizontalAlignment="Center"
                              accessible-name="{Binding app.name}" />
                       <Text id="home-create-tile-name" Text="{Binding app.name}" TextAlignment="Center" />
                     </Container>
@@ -129,7 +129,7 @@
                           Padding="10" Margin="0 0 12 12">
                     <Container id="home-app-tile-body" Type="Vertical Stack" CellGap="6">
                       <Image id="home-app-tile-icon" Source="{Binding app.iconSource}"
-                             Width="32" Height="32" HorizontalAlignment="Center"
+                             Width="56" Height="56" HorizontalAlignment="Center"
                              accessible-name="{Binding app.name}" />
                       <Text id="home-app-tile-name" Text="{Binding app.name}" TextAlignment="Center" />
                     </Container>

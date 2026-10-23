@@ -129,10 +129,17 @@ public sealed partial class WriteDocumentEditor
 
     public void ToggleSelectionCharacter(WriteCharacterFormat format)
     {
-        if (!HasSelection) { ToggleCharacter(format); return; }
+        if (HasDocumentSelection || !HasSelection) { ToggleCharacter(format); return; }
         if (SelectedBlock is not { } block || !TryActiveRun(out var run)) return;
-        var value = !CharacterEnabled(run, format);
-        Mutate(() => ApplyCharacterFormatting(block, run, format, value), nameof(ToggleSelectionCharacter));
+        // Decide from the whole range before splitting, so mixed marks enable
+        // consistently and the undo preimage retains its original run boundaries.
+        var value = SelectedFormattingRuns(block, splitBoundaries: false)
+            .Any(selected => !CharacterEnabled(selected, format));
+        Mutate(() =>
+        {
+            ApplyCharacterFormatting(block, run, format, value);
+            ActiveRunIndex = RunIndexAtCaret(block, CaretIndex);
+        }, nameof(ToggleSelectionCharacter));
     }
 
     public void SetFontFamily(string value) => SetRun(run => run.FontFamily = string.IsNullOrWhiteSpace(value) ? "Montserrat" : value.Trim(), "Changed font");
@@ -449,7 +456,24 @@ public sealed partial class WriteDocumentEditor
     public bool Undo() { if (_undo.Count == 0) return false; _redo.Add(Clone(Document)); var restored = _undo[^1]; _undo.RemoveAt(_undo.Count - 1); Restore(restored); Changed?.Invoke(this, EventArgs.Empty); return true; }
     public bool Redo() { if (_redo.Count == 0) return false; _undo.Add(Clone(Document)); var restored = _redo[^1]; _redo.RemoveAt(_redo.Count - 1); Restore(restored); Changed?.Invoke(this, EventArgs.Empty); return true; }
 
-    private IReadOnlyList<NotesTextRun> SelectedFormattingRuns(NotesBlock block) { EnsureRuns(block); SplitRunBoundary(block, SelectionEnd); SplitRunBoundary(block, SelectionStart); var result = new List<NotesTextRun>(); var offset = 0; foreach (var run in block.Runs) { var end = offset + run.Text.Length; if (offset < SelectionEnd && end > SelectionStart) result.Add(run); offset = end; } return result; }
+    private IReadOnlyList<NotesTextRun> SelectedFormattingRuns(NotesBlock block, bool splitBoundaries = true)
+    {
+        EnsureRuns(block);
+        if (splitBoundaries)
+        {
+            SplitRunBoundary(block, SelectionEnd);
+            SplitRunBoundary(block, SelectionStart);
+        }
+        var result = new List<NotesTextRun>();
+        var offset = 0;
+        foreach (var run in block.Runs)
+        {
+            var end = offset + run.Text.Length;
+            if (offset < SelectionEnd && end > SelectionStart) result.Add(run);
+            offset = end;
+        }
+        return result;
+    }
     private void ApplyCharacterFormatting(NotesBlock block, NotesTextRun run, WriteCharacterFormat format, bool value) { if (!HasSelection) { SetCharacter(run, format, value); return; } foreach (var selected in SelectedFormattingRuns(block)) SetCharacter(selected, format, value); }
     private static bool CharacterEnabled(NotesTextRun run, WriteCharacterFormat format) => format switch { WriteCharacterFormat.Bold => run.Bold, WriteCharacterFormat.Italic => run.Italic, WriteCharacterFormat.Underline => run.Underline, WriteCharacterFormat.StrikeThrough => run.StrikeThrough, _ => false };
     private static void SetCharacter(NotesTextRun run, WriteCharacterFormat format, bool value) { switch (format) { case WriteCharacterFormat.Bold: run.Bold = value; break; case WriteCharacterFormat.Italic: run.Italic = value; break; case WriteCharacterFormat.Underline: run.Underline = value; break; case WriteCharacterFormat.StrikeThrough: run.StrikeThrough = value; break; } }

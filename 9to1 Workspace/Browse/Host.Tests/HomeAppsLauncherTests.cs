@@ -17,9 +17,11 @@ using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
+using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Home;
+using Haven.Desktop.Views.Shell;
 using Xunit;
 
 namespace HavenOS.Browse.Host.Tests;
@@ -585,8 +587,8 @@ public sealed class HomeAppsLauncherTests
         }
     }
 
-    /// <summary>Pins the exact 14 canonical built-in GUID → PNG stem brand map and confirms held/
-    /// excluded/missing identities (Build/dev, Terminal, Plan, Wave) never map.</summary>
+    /// <summary>Pins all 19 canonical built-in app GUID → PNG identities. A missing native Wave
+    /// GUID remains missing; its separate group-reference artwork never fabricates installation.</summary>
     [Fact]
     public void Owner_brand_map_is_exact_builtin_GUID_and_stem()
     {
@@ -594,7 +596,7 @@ public sealed class HomeAppsLauncherTests
         {
             ["a0000000-0000-0000-0000-000000000003"] = "automations",
             ["a0000000-0000-0000-0000-000000000023"] = "boards",
-            ["a0000000-0000-0000-0000-000000000018"] = "canvas",
+            ["a0000000-0000-0000-0000-000000000018"] = "canvas-whiteboard",
             ["a0000000-0000-0000-0000-000000000010"] = "data",
             ["a0000000-0000-0000-0000-000000000030"] = "files",
             ["a0000000-0000-0000-0000-000000000026"] = "forms",
@@ -605,18 +607,19 @@ public sealed class HomeAppsLauncherTests
             ["a0000000-0000-0000-0000-000000000012"] = "play",
             ["a0000000-0000-0000-0000-000000000009"] = "present",
             ["a0000000-0000-0000-0000-000000000022"] = "spaces",
-            ["a0000000-0000-0000-0000-000000000004"] = "ai-studio"
+            ["a0000000-0000-0000-0000-000000000004"] = "ai-studio",
+            ["a0000000-0000-0000-0000-000000000028"] = "build",
+            ["a0000000-0000-0000-0000-000000000006"] = "plan",
+            ["a0000000-0000-0000-0000-000000000020"] = "terminal",
+            ["a0000000-0000-0000-0000-000000000011"] = "voice-vision",
+            ["a0000000-0000-0000-0000-000000000017"] = "write"
         };
         foreach (var pair in expected)
         {
             Assert.True(HomeAppBrandingIcons.TryGetBrandStem(Guid.Parse(pair.Key), ModeSource.BuiltIn, out var stem));
             Assert.Equal(pair.Value, stem);
         }
-        // Held/excluded/missing identities never map: Build (dev) has no reached image, Terminal failed
-        // verification, Plan variants are held, and Wave has no native GUID in this composition.
-        Assert.False(HomeAppBrandingIcons.TryGetBrandStem(Guid.Parse("a0000000-0000-0000-0000-000000000028"), ModeSource.BuiltIn, out _));
-        Assert.False(HomeAppBrandingIcons.TryGetBrandStem(Guid.Parse("a0000000-0000-0000-0000-000000000020"), ModeSource.BuiltIn, out _));
-        Assert.False(HomeAppBrandingIcons.TryGetBrandStem(Guid.Parse("a0000000-0000-0000-0000-000000000006"), ModeSource.BuiltIn, out _));
+        // Wave still has no native GUID in this composition.
         Assert.False(HomeAppBrandingIcons.TryGetBrandStem(null, ModeSource.BuiltIn, out _));
     }
 
@@ -635,8 +638,8 @@ public sealed class HomeAppsLauncherTests
         // Shared-icon-key apps that ARE mapped keep their distinct stems (never by key alone).
         Assert.Equal("ownerbrand:files|folder", HomeAppBrandingIcons.SourceFor("folder", files, ModeSource.BuiltIn));
         Assert.Equal("ownerbrand:shelf|folder", HomeAppBrandingIcons.SourceFor("folder", shelf, ModeSource.BuiltIn));
-        // Build shares 'code' with AI Studio but is NOT on the reached brand map.
-        Assert.Equal("icon:code", HomeAppBrandingIcons.SourceFor("code", build, ModeSource.BuiltIn));
+        // Build shares 'code' with AI Studio but keeps its own newly completed brand identity.
+        Assert.Equal("ownerbrand:build|code", HomeAppBrandingIcons.SourceFor("code", build, ModeSource.BuiltIn));
         // Custom/created apps (even same name, key or icon) are never branded.
         Assert.Equal("icon:palette", HomeAppBrandingIcons.SourceFor("palette", Guid.NewGuid(), ModeSource.Created));
         Assert.Equal("icon:file", HomeAppBrandingIcons.SourceFor("file", picture, ModeSource.Created));
@@ -644,10 +647,10 @@ public sealed class HomeAppsLauncherTests
         Assert.Equal("icon:wave", HomeAppBrandingIcons.SourceFor("wave", null, ModeSource.BuiltIn));
     }
 
-    /// <summary>Both Apps and installed Create member projection carry the brand source; the Wave
-    /// reference (no native GUID) remains unmapped and keeps its catalog icon.</summary>
+    /// <summary>Apps and installed Create members retain exact brand identities; Wave has reference
+    /// artwork while its lack of native GUID and unavailable state stay explicit.</summary>
     [Fact]
-    public void Installed_Create_members_project_brand_sources_wave_stays_unmapped()
+    public void Create_members_project_brand_sources_without_fabricating_wave_installation()
     {
         var group = HomeCreateGroup.Build(RealCatalogue());
 
@@ -666,6 +669,9 @@ public sealed class HomeAppsLauncherTests
         var wave = Assert.Single(group.Members, member => member.Key == "wave");
         Assert.Null(wave.CanonicalId);
         Assert.Equal("icon:wave", HomeAppBrandingIcons.SourceFor(wave.IconKey, wave.CanonicalId, wave.Source));
+        Assert.Equal("ownerbrand:wave|wave", HomeAppBrandingIcons.SourceForGroupMember(wave));
+        Assert.False(wave.IsInstalled);
+        Assert.False(string.IsNullOrWhiteSpace(wave.AvailabilityNote));
     }
 
     /// <summary>The real effective CUI appearance selects the themed PNG folder: SuperBright/Bright →
@@ -741,7 +747,8 @@ public sealed class HomeAppsLauncherTests
         string[] stems =
         [
             "automations", "boards", "canvas", "data", "files", "forms", "picture", "shelf",
-            "maps", "motion", "play", "present", "spaces", "ai-studio"
+            "maps", "motion", "play", "present", "spaces", "ai-studio",
+            "canvas-whiteboard", "build", "plan", "terminal", "voice-vision", "write", "wave"
         ];
         foreach (var folder in new[] { "light", "dark" })
         foreach (var stem in stems)
@@ -752,6 +759,84 @@ public sealed class HomeAppsLauncherTests
             Assert.True(bitmap.PixelSize.Width > 0 && bitmap.PixelSize.Height > 0, uri);
             bitmap.Dispose();
         }
+    }
+
+    [Fact]
+    public void Canvas_whiteboard_and_Create_brush_are_distinct_without_rebranding_lookalikes()
+    {
+        var canvas = Guid.Parse("a0000000-0000-0000-0000-000000000018");
+        Assert.Equal("ownerbrand:canvas-whiteboard|file", HomeAppBrandingIcons.SourceFor("file", canvas, ModeSource.BuiltIn));
+        Assert.Equal("ownerbrand:canvas|palette", HomeAppBrandingIcons.SourceForGroup("create", "palette"));
+        Assert.Equal("icon:palette", HomeAppBrandingIcons.SourceForGroup("other-group", "palette"));
+        Assert.Equal("icon:file", HomeAppBrandingIcons.SourceFor("file", canvas, ModeSource.Created));
+        var lookalike = new HomeGroupMember("wave", "Wave", "Custom audio app", "wave", true, "", Source: ModeSource.Created);
+        Assert.Equal("icon:wave", HomeAppBrandingIcons.SourceForGroupMember(lookalike));
+    }
+
+    [AvaloniaFact]
+    public async Task Canonical_app_and_Create_tile_icons_use_the_larger_authored_size()
+    {
+        var bindings = new HomeAppsCuiBindings(() => GroupState(), (_, _, _) => ValueTask.CompletedTask);
+        var (root, loader) = Render(bindings, out var diagnostics);
+        using (loader)
+        {
+            Assert.DoesNotContain(diagnostics, item => item.Severity == CuiDiagnosticSeverity.Error);
+            var icons = root.GetVisualDescendants().OfType<Image>()
+                .Where(image => image.Name is "home-app-tile-icon" or "home-create-tile-icon").ToArray();
+            Assert.NotEmpty(icons);
+            foreach (var icon in icons)
+            {
+                Assert.Equal(56, icon.Width);
+                Assert.Equal(56, icon.Height);
+                Assert.NotNull(icon.Source);
+            }
+            Assert.Single(root.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-create-tile")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await loader.WhenActionsIdleAsync();
+            Dispatcher.UIThread.RunJobs();
+            var members = root.GetVisualDescendants().OfType<Button>()
+                .Where(button => button.Name == "home-create-member").ToArray();
+            Assert.Equal(3, members.Length);
+            foreach (var member in members)
+            {
+                var icon = Assert.Single(member.GetVisualDescendants().OfType<Image>());
+                Assert.Equal(56, icon.Width);
+                Assert.Equal(56, icon.Height);
+                Assert.NotNull(icon.Source);
+            }
+            Assert.False(Assert.Single(members, member => AutomationProperties.GetName(member) == "Unavailable: Wave").IsEnabled);
+        }
+    }
+
+    /// <summary>Uses the real seed and the same route policy as UnifiedHomePage, rather than a second
+    /// hand-maintained list of visible apps. Every supported appearance must resolve a packaged bitmap;
+    /// the generic vector fallback is useful elsewhere but cannot conceal a missing launch-grid asset.</summary>
+    [AvaloniaTheory]
+    [InlineData("SuperBright")]
+    [InlineData("Bright")]
+    [InlineData("Dark")]
+    [InlineData("SuperDark")]
+    public void Every_visible_builtin_app_and_Create_reference_has_a_packaged_bitmap(string appearance)
+    {
+        var visible = BuiltInModeSeed.Modes
+            .Where(mode => mode.IsEnabled && !HavenAppRoutePolicy.IsDeprecatedStandalone(mode)).ToArray();
+        Assert.NotEmpty(visible);
+        var target = new ContentControl();
+        target.Resources["CuiAppearance"] = appearance;
+        foreach (var mode in visible)
+        {
+            var source = HomeAppBrandingIcons.SourceFor(mode.IconKey, mode.Id, mode.Source);
+            Assert.StartsWith("ownerbrand:", source, StringComparison.Ordinal);
+            Assert.IsType<Avalonia.Media.Imaging.Bitmap>(HomeAppBrandingIcons.Resolve(source, target));
+        }
+        Assert.IsType<Avalonia.Media.Imaging.Bitmap>(HomeAppBrandingIcons.Resolve(
+            HomeAppBrandingIcons.SourceForGroup(HomeCreateGroup.Key, HomeCreateGroup.IconKey), target));
+        var catalogue = visible.Select(mode => new HomeAppItem(mode.Key, mode.Name, mode.Description,
+            mode.IconKey, CanonicalId: mode.Id, Source: mode.Source)).ToArray();
+        var wave = Assert.Single(HomeCreateGroup.Build(catalogue).Members, member => member.Key == "wave");
+        Assert.False(wave.IsInstalled);
+        Assert.IsType<Avalonia.Media.Imaging.Bitmap>(HomeAppBrandingIcons.Resolve(
+            HomeAppBrandingIcons.SourceForGroupMember(wave), target));
     }
 
     // ------------------------------------------------------------------------------------------
@@ -1001,10 +1086,10 @@ public sealed class HomeAppsLauncherTests
         return (string)value!;
     }
 
-    /// <summary>The actual binding projection: a member with a real canonical GUID but not installed
-    /// stays on its catalog icon (never branded); only installed members emit owner branding.</summary>
+    /// <summary>Unavailable references preserve their availability truth. Picture/Motion retain their
+    /// catalogue fallback; the known Wave reference has artwork without becoming installed.</summary>
     [Fact]
-    public void Unavailable_member_reference_never_emits_owner_branding()
+    public void Unavailable_member_reference_keeps_installation_truth_and_wave_artwork()
     {
         var catalogue = new[] { new HomeAppItem("files", "Files", "Private browser workspace", "folder") };
         var group = HomeCreateGroup.Build(catalogue);
@@ -1019,15 +1104,18 @@ public sealed class HomeAppsLauncherTests
 
         var bindings = new HomeAppsCuiBindings(() => new HomeAppsViewState([], [], string.Empty, ""),
             (_, _, _) => ValueTask.CompletedTask);
-        // Real GUIDs are carried, yet absent/unavailable members stay on their generic catalog icon.
+        // Absent Picture/Motion stay generic; Wave has explicit reference art without installation.
         Assert.Equal("icon:palette", ItemIconSource(bindings, picture));
         Assert.Equal("icon:play", ItemIconSource(bindings, motion));
-        Assert.Equal("icon:wave", ItemIconSource(bindings, wave));
+        Assert.Equal("ownerbrand:wave|wave", ItemIconSource(bindings, wave));
+        Assert.False(wave.IsInstalled);
+        Assert.Equal("Unavailable: Wave", wave.OpenLabel);
+        Assert.False(string.IsNullOrWhiteSpace(wave.AvailabilityNote));
     }
 
     /// <summary>Installed members carry the owner-brand source (no baked-in folder; light/dark is chosen
-    /// at resolution time from the actual target scope); the group tile itself stays generic navigation
-    /// (never branded).</summary>
+    /// at resolution time from the actual target scope); Create reuses the old Canvas artwork while
+    /// remaining a group-navigation entry, without minting an app identity.</summary>
     [Fact]
     public void Installed_member_binding_projects_owner_brand_with_current_appearance()
     {
@@ -1042,9 +1130,9 @@ public sealed class HomeAppsLauncherTests
             (_, _, _) => ValueTask.CompletedTask);
         Assert.Equal("ownerbrand:picture|palette", ItemIconSource(bindings, picture));
         Assert.Equal("ownerbrand:motion|play", ItemIconSource(bindings, motion));
-        // The group navigation tile stays generic, never branded.
-        Assert.Equal("icon:folder", ItemIconSource(bindings,
-            new HomeAppItem("create", "Create", "Open Picture, Motion and Wave", "folder", IsGroup: true)));
+        // Create is still group navigation; its exact artwork is the owner's old Canvas PNG pair.
+        Assert.Equal("ownerbrand:canvas|palette", ItemIconSource(bindings,
+            new HomeAppItem("create", "Create", "Open Picture, Motion and Wave", "palette", IsGroup: true)));
     }
 
     /// <summary>Real canonical fixture: Picture (built-in GUID …0008) is installed at top level; Motion
@@ -1118,11 +1206,11 @@ public sealed class HomeAppsLauncherTests
     }
 
     /// <summary>Rendered proof with a REAL Create fixture: Picture installed, Motion/Wave unavailable.
-    /// The real canonical Picture drives the genuine Create tile. Only the installed Picture row may
-    /// request its owner PNG; unavailable Motion/Wave rows stay generic (never branded) despite carrying
-    /// real canonical GUIDs, and the group-navigation tile itself stays generic.</summary>
+    /// The real canonical Picture drives the genuine Create tile. Installed Picture uses its artwork,
+    /// absent Motion stays generic, and Wave's new reference artwork does not enable its row. Create
+    /// itself requests the original Canvas brush, without becoming an installable app.</summary>
     [AvaloniaFact]
-    public void Rendered_Create_with_Picture_installed_Motion_unavailable_requests_png_only_for_installed()
+    public void Rendered_Create_with_Picture_installed_retains_unavailable_Motion_and_Wave_truth()
     {
         using var armed = new ArmedImaging();
         Window? window = null;
@@ -1149,9 +1237,9 @@ public sealed class HomeAppsLauncherTests
                 var motionRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Motion");
                 var waveRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Wave");
                 Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/picture.png", StringComparison.Ordinal));
-                Assert.DoesNotContain(armed.Recording.Attempts, uri =>
-                    uri.Contains("/motion.png", StringComparison.Ordinal)
-                    || uri.Contains("/wave.png", StringComparison.Ordinal));
+                Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.Contains("/motion.png", StringComparison.Ordinal));
+                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/wave.png", StringComparison.Ordinal));
+                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/canvas.png", StringComparison.Ordinal));
                 Assert.IsType<DrawingImage>(Assert.Single(motionRow.GetVisualDescendants().OfType<Image>()).Source);
                 Assert.IsType<DrawingImage>(Assert.Single(waveRow.GetVisualDescendants().OfType<Image>()).Source);
             }
@@ -1159,10 +1247,10 @@ public sealed class HomeAppsLauncherTests
         finally { window?.Close(); }
     }
 
-    /// <summary>Converse real fixture: Motion installed, Picture/Wave unavailable. Only Motion requests
-    /// its owner PNG; unavailable Picture/Wave stay generic.</summary>
+    /// <summary>Converse real fixture: Motion installed, Picture/Wave unavailable. Missing Picture
+    /// stays generic; Wave requests its reference artwork while its row remains disabled.</summary>
     [AvaloniaFact]
-    public void Rendered_Create_with_Motion_installed_Picture_unavailable_requests_png_only_for_installed()
+    public void Rendered_Create_with_Motion_installed_retains_unavailable_Picture_and_Wave_truth()
     {
         using var armed = new ArmedImaging();
         Window? window = null;
@@ -1188,9 +1276,9 @@ public sealed class HomeAppsLauncherTests
                 Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Picture");
                 Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Wave");
                 Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/motion.png", StringComparison.Ordinal));
-                Assert.DoesNotContain(armed.Recording.Attempts, uri =>
-                    uri.Contains("/picture.png", StringComparison.Ordinal)
-                    || uri.Contains("/wave.png", StringComparison.Ordinal));
+                Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.Contains("/picture.png", StringComparison.Ordinal));
+                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/wave.png", StringComparison.Ordinal));
+                Assert.Contains(armed.Recording.Attempts, uri => uri.EndsWith("/canvas.png", StringComparison.Ordinal));
             }
         }
         finally { window?.Close(); }
@@ -1198,7 +1286,7 @@ public sealed class HomeAppsLauncherTests
 
     /// <summary>Live retained-UI proof: the same rendered Apps brand image and an ALREADY-OPEN Create
     /// installed-member image remain (same control instances) across all four appearances, each source
-    /// is genuinely re-resolved through the typed CUI binding, unavailable members stay generic, and a
+    /// is genuinely re-resolved through the typed CUI binding, unavailable members remain disabled, and a
     /// NONEMPTY authored query plus a focused real search input / selection / open-group / current theme
     /// survive every appearance change.</summary>
     [AvaloniaFact]
@@ -1240,7 +1328,8 @@ public sealed class HomeAppsLauncherTests
                 Assert.Same(retainedFileTile, tileNow);
                 Assert.Same(retainedFileImage, Assert.Single(tileNow.GetVisualDescendants().OfType<Image>()));
                 Assert.True(armed.Recording.Attempts.Count > before, $"stimulus {text} must yield a fresh request");
-                Assert.Equal($"avares://Haven/Assets/OwnerAppIcons/{folder}/files.png", armed.LastAttempt);
+                Assert.Contains(armed.Recording.Attempts.Skip(before), uri =>
+                    uri == $"avares://Haven/Assets/OwnerAppIcons/{folder}/files.png");
             }
 
             // Phase 2: NONEMPTY authored query ('create' matches the group's own identity and filters
@@ -1284,10 +1373,11 @@ public sealed class HomeAppsLauncherTests
                 host.Resources["CuiAppearance"] = text;
                 Dispatcher.UIThread.RunJobs();
                 Assert.True(armed.Recording.Attempts.Count > before, $"stimulus {text} must yield a fresh request");
-                Assert.Equal($"avares://Haven/Assets/OwnerAppIcons/{folder}/picture.png", armed.LastAttempt);
-                Assert.DoesNotContain(armed.Recording.Attempts, uri =>
-                    uri.Contains("/motion.png", StringComparison.Ordinal)
-                    || uri.Contains("/wave.png", StringComparison.Ordinal));
+                Assert.Contains(armed.Recording.Attempts.Skip(before), uri =>
+                    uri == $"avares://Haven/Assets/OwnerAppIcons/{folder}/picture.png");
+                Assert.Contains(armed.Recording.Attempts.Skip(before), uri =>
+                    uri == $"avares://Haven/Assets/OwnerAppIcons/{folder}/wave.png");
+                Assert.DoesNotContain(armed.Recording.Attempts, uri => uri.Contains("/motion.png", StringComparison.Ordinal));
 
                 var motionRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Motion");
                 var waveRow = Assert.Single(members, b => !b.IsEnabled && AutomationProperties.GetName(b) == "Unavailable: Wave");

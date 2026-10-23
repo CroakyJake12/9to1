@@ -1,8 +1,13 @@
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text.Json;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CakeOS.Cui.Runtime;
@@ -11,6 +16,7 @@ using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
+using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Events;
 using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Apps.Browse;
@@ -226,7 +232,7 @@ public sealed class UnifiedHomeContentTests
         await session.InitializeAsync();
         var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
         var window = Show(page);
-        var button = page.GetVisualDescendants().OfType<Button>().Single(item => item.Content?.ToString() == "Apps");
+        var button = HomeRailButton(page, "home-apps", "Apps");
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await page.WhenActionsIdleAsync();
         Assert.Equal(2, source.Reads);
@@ -273,6 +279,10 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaTheory]
+    [InlineData(360, 844, CuiAppearance.SuperBright)]
+    [InlineData(360, 844, CuiAppearance.Bright)]
+    [InlineData(360, 844, CuiAppearance.Dark)]
+    [InlineData(360, 844, CuiAppearance.SuperDark)]
     [InlineData(390, 844, CuiAppearance.SuperBright)]
     [InlineData(390, 844, CuiAppearance.Bright)]
     [InlineData(390, 844, CuiAppearance.Dark)]
@@ -283,21 +293,41 @@ public sealed class UnifiedHomeContentTests
     [InlineData(1280, 900, CuiAppearance.SuperDark)]
     public async Task Shared_Home_renders_canonical_apps_and_keeps_controls_inside_the_window(int width, int height, CuiAppearance appearance)
     {
-        CuiNativeHost.InitialisePrimitiveTheme(global::Avalonia.Application.Current!, "9to1", appearance);
+        var application = global::Avalonia.Application.Current!;
+        var previousResources = application.Resources;
+        var previousVariant = application.RequestedThemeVariant;
+        var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         using var lifetime = new CancellationTokenSource();
-        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token).CreateSession(Request()));
-        await session.InitializeAsync();
-        var page = session.OriginalNativeView;
-        var window = new Window { Width = width, Height = height, Content = page };
+        IBrowseNativeAppContentSession? session = null;
+        Window? window = null;
+        Task? initialization = null, close = null;
+        Task? searchActions = null;
+        var failures = new List<Exception>();
         try
         {
+            // Use the production primitive snapshot inside a fresh owned dictionary.
+            // Never merge mutable original brushes, publish a global palette event, or
+            // rewrite the previous custom/accessibility/accent projection.
+            var fixtureResources = new ResourceDictionary();
+            fixtureResources.MergedDictionaries.Add(CuiSceneVisualResources.Create("Home", appearance));
+            application.Resources = fixtureResources;
+            application.RequestedThemeVariant = CuiSceneVisualResources.Variant(appearance);
+            session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token).CreateSession(Request()));
+            initialization = session.InitializeAsync();
+            await initialization;
+            var page = session.OriginalNativeView;
+            window = new Window { Width = width, Height = height, Content = page };
             window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
             using var frame = window.CaptureRenderedFrame();
             Assert.NotNull(frame);
             Assert.Equal(width, frame.PixelSize.Width); Assert.Equal(height, frame.PixelSize.Height);
-            foreach (var label in new[] { "Apps", "Models / Discover", "New Tab" })
+            // Preserve the actual frame/mode before checking the requested appearance.
+            CaptureOptionalFrame(window, frame, $"home-apps-{width}-{appearance}", "UnifiedHome Apps layout fixture", appearance);
+            Assert.Equal(appearance, CuiThemeScopeApplier.DetectAppearance());
+            foreach (var (id, label) in new[] { ("home-apps", "Apps"), ("home-models", "Models / Discover"), ("home-newtab", "New Tab") })
             {
-                var button = page.GetVisualDescendants().OfType<Button>().Single(item => item.Content?.ToString() == label);
+                // Owner-refined icon-only rail: Content is an Image, not its accessible label.
+                var button = HomeRailButton(page, id, label);
                 Assert.True(button.Bounds.Width >= 44 && button.Bounds.Height >= 24);
                 var origin = button.TranslatePoint(default, window);
                 Assert.NotNull(origin);
@@ -305,14 +335,129 @@ public sealed class UnifiedHomeContentTests
                 Assert.InRange(origin.Value.Y, -1, height - 23);
                 Assert.True(origin.Value.X + button.Bounds.Width <= width + 1);
             }
-            var folder = Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES");
-            if (!string.IsNullOrEmpty(folder))
+            if (width is 360 or 390 or 1280)
             {
-                Directory.CreateDirectory(folder);
-                frame.Save(Path.Combine(folder, $"home-apps-{width}-{appearance}.png"));
+                // Real canonical Apps controls in the original owning page, including the query-visible Clear button.
+                var home = Assert.IsType<UnifiedHomePage>(page);
+                var searchRow = Assert.Single(page.GetVisualDescendants().OfType<CuiContainerControl>(),
+                    control => control.Name == "home-apps-search-row");
+                var search = Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
+                    control => control.Name == "home-app-search");
+                var clear = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "home-apps-clear");
+                var count = Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Name == "home-apps-count");
+                Assert.Equal("Search apps", AutomationProperties.GetName(search));
+                Assert.Equal("Installed app count", AutomationProperties.GetName(count));
+                Assert.Equal("19 apps", count.Text);
+                Assert.False(clear.IsEffectivelyVisible);
+                AssertSearchGeometry();
+                Assert.True(search.Focus(), "The narrow app search must remain keyboard-focusable.");
+                search.Text = "Boards";
+                // Query/Clear projection is synchronous today. This outer Home drain is not an Apps-loader settlement proof;
+                // the original session close below joins both loaders and retains their failures.
+                searchActions = home.WhenActionsIdleAsync(); await searchActions;
+                SearchLayout();
+                Assert.Equal("Boards", search.Text);
+                Assert.True(clear.IsEffectivelyVisible);
+                Assert.Equal("19 apps", count.Text);
+                var filteredTile = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "home-app-tile" && control.IsEffectivelyVisible);
+                Assert.Equal("Boards", Assert.Single(filteredTile.GetVisualDescendants().OfType<TextBlock>()).Text);
+                AssertSearchGeometry();
+                clear.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                searchActions = home.WhenActionsIdleAsync(); await searchActions;
+                SearchLayout();
+                Assert.Equal(string.Empty, search.Text);
+                Assert.False(clear.IsEffectivelyVisible);
+                Assert.Equal("19 apps", count.Text);
+                Assert.Same(search, Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
+                    control => control.Name == "home-app-search"));
+                Assert.True(page.GetVisualDescendants().OfType<Button>()
+                    .Count(control => control.Name == "home-app-tile" && control.IsEffectivelyVisible) > 1);
+                AssertSearchGeometry();
+
+                void SearchLayout()
+                {
+                    window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                }
+                void AssertSearchGeometry()
+                {
+                    var visible = clear.IsEffectivelyVisible
+                        ? new Control[] { search, clear, count } : new Control[] { search, count };
+                    var rowOrigin = searchRow.TranslatePoint(default, window);
+                    Assert.NotNull(rowOrigin);
+                    Assert.True(rowOrigin.Value.X >= -.5 && rowOrigin.Value.X + searchRow.Bounds.Width <= width + .5);
+                    foreach (var control in visible)
+                    {
+                        Assert.True(control.IsEffectivelyVisible);
+                        Assert.True(control.Bounds.Width > 0 && control.Bounds.Height > 0);
+                        var insideRow = control.TranslatePoint(default, searchRow);
+                        var insideWindow = control.TranslatePoint(default, window);
+                        Assert.NotNull(insideRow); Assert.NotNull(insideWindow);
+                        Assert.True(insideRow.Value.X >= -.5 && insideRow.Value.X + control.Bounds.Width <= searchRow.Bounds.Width + .5,
+                            $"{control.Name} exceeds the Apps search row: X={insideRow.Value.X}, Width={control.Bounds.Width}, RowWidth={searchRow.Bounds.Width}.");
+                        Assert.True(insideRow.Value.Y >= -.5 && insideRow.Value.Y + control.Bounds.Height <= searchRow.Bounds.Height + .5);
+                        Assert.True(insideWindow.Value.X >= -.5 && insideWindow.Value.X + control.Bounds.Width <= width + .5);
+                        Assert.True(insideWindow.Value.Y >= -.5 && insideWindow.Value.Y + control.Bounds.Height <= height + .5);
+                    }
+                    Assert.True(search.Bounds.Width >= 160 && search.Bounds.Width <= 480);
+                    Assert.True(count.DesiredSize.Width <= count.Bounds.Width + .5, "The full installed-app count must remain readable.");
+                    var searchOrigin = search.TranslatePoint(default, searchRow)!.Value;
+                    var countOrigin = count.TranslatePoint(default, searchRow)!.Value;
+                    Assert.True(searchOrigin.X <= .5, "App search must stay at the left edge on desktop as well as narrow viewports.");
+                    Assert.True(searchRow.Bounds.Width <= 520.5);
+                    Assert.True(searchOrigin.Y + search.Bounds.Height <= countOrigin.Y + .5,
+                        "The full installed-app count must occupy a separate row below search.");
+                    if (clear.IsEffectivelyVisible)
+                    {
+                        var clearOrigin = clear.TranslatePoint(default, searchRow)!.Value;
+                        Assert.True(searchOrigin.X + search.Bounds.Width <= clearOrigin.X + .5);
+                        Assert.InRange(clearOrigin.X - searchOrigin.X - search.Bounds.Width, -.5, 8.5);
+                        Assert.True(clearOrigin.Y + clear.Bounds.Height <= countOrigin.Y + .5);
+                    }
+                }
             }
         }
-        finally { await session.CloseAndDrainAsync(); window.Close(); }
+        catch (Exception cause) { Retain(cause); RetainTask(initialization); RetainTask(searchActions); }
+        finally
+        {
+            if (session is not null)
+            {
+                try { close = session.CloseAndDrainAsync(); await close; }
+                catch (Exception cause) { Retain(cause); RetainTask(close); }
+            }
+            if (window is not null && session?.CanRetireOriginalView == true)
+            {
+                try { window.Content = null; window.Close(); }
+                catch (Exception cause) { Retain(cause); }
+            }
+            // The supported Application.Resources setter restores the SAME dictionary
+            // and owner, including key absence, merged providers and mutable brush identities.
+            try { application.Resources = previousResources; }
+            catch (Exception cause) { Retain(cause); }
+            try { application.RequestedThemeVariant = previousVariant; }
+            catch (Exception cause) { Retain(cause); }
+            try
+            {
+                Assert.Same(previousResources, application.Resources);
+                Assert.Same(application, ((IResourceProvider)previousResources).Owner);
+                Assert.Equal(previousVariant, application.RequestedThemeVariant);
+                Assert.Equal(previousTheme, CuiSurfacePaletteCatalog.ActiveTheme);
+            }
+            catch (Exception cause) { Retain(cause); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Home layout assertion and independent original cleanup/theme restoration failed.", failures);
+        void Retain(Exception cause)
+        {
+            if (!failures.Any(existing => ReferenceEquals(existing, cause))) failures.Add(cause);
+        }
+        void RetainTask(Task? source)
+        {
+            if (source?.Exception is { } original)
+                foreach (var cause in original.InnerExceptions) Retain(cause);
+        }
     }
 
     [AvaloniaTheory]
@@ -330,52 +475,60 @@ public sealed class UnifiedHomeContentTests
         window.Width = width; window.Height = height;
         try
         {
+            // The real host registers this SAME resolver on the exact scene before Show.
+            // Keep renderer/readiness unchanged; failures still reach the original close/drain.
+            RegisterProductionImageResolver(window);
             window.Show(); await window.InitializeAsync().WaitAsync(TimeSpan.FromSeconds(20)); Layout();
+            using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
+            CaptureOptionalFrame(window, frame, $"browse-home-{width}x{height}", "Browse/Home layout fixture; explicit fixture readiness");
             var page = Assert.Single(window.GetVisualDescendants().OfType<UnifiedHomePage>());
             var sidebar = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
                 .Single(item => item.Name == "home-sidebar"));
             var main = page.GetVisualDescendants().OfType<Control>().Single(item => item.Name == "home-main");
             var sideOrigin = sidebar.TranslatePoint(default, window)!.Value;
             var mainOrigin = main.TranslatePoint(default, window)!.Value;
-            var scroll = Assert.IsType<ScrollViewer>(sidebar.Child);
-            var buttons = sidebar.AuthoredChildren.OfType<Button>().ToArray();
-            Assert.Equal(10, buttons.Length);
+            // Canonical Home is seven scrolling icon destinations plus a pinned Settings footer.
+            // Profile/notifications/model remain on Haven's persistent topbar, not this rail.
+            var nav = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
+                .Single(item => item.Name == "home-rail-nav"));
+            var footer = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
+                .Single(item => item.Name == "home-rail-footer"));
+            var scroll = Assert.IsType<ScrollViewer>(nav.Child);
+            var buttons = nav.AuthoredChildren.OfType<Button>().ToArray();
+            Assert.Equal(7, buttons.Length);
+            Assert.Equal(new[] { "home-apps", "home-dashboard", "home-models", "home-newtab", "home-library", "home-events", "home-mesh" },
+                buttons.Select(button => button.Name));
+            var settings = Assert.Single(footer.AuthoredChildren.OfType<Button>());
+            Assert.Same(settings, HomeRailButton(page, "home-settings", "Settings"));
+            Assert.Equal(global::Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(nav.Layout).Orientation);
+            Assert.True(sideOrigin.X + sidebar.Bounds.Width <= mainOrigin.X + .5);
+            double previousBottom = -1;
             foreach (var button in buttons)
             {
-                var caption = Assert.Single(button.GetVisualDescendants().OfType<TextBlock>());
-                Assert.True(caption.TextLayout.Width <= caption.Bounds.Width + .5,
-                    $"{button.Content} caption is clipped at {width}×{height}.");
-            }
-            if (width >= 720)
-            {
-                Assert.Equal(global::Avalonia.Layout.Orientation.Vertical, Assert.IsType<WrapPanel>(sidebar.Layout).Orientation);
-                Assert.True(sideOrigin.X + sidebar.Bounds.Width <= mainOrigin.X + .5);
-                double previousBottom = -1;
-                foreach (var button in buttons)
-                {
-                    var origin = button.TranslatePoint(default, sidebar.Layout)!.Value;
-                    Assert.True(origin.Y >= previousBottom, "The sidebar wrapped into a second column.");
-                    Assert.InRange(origin.X, 0, 1);
-                    previousBottom = origin.Y + button.Bounds.Height;
-                }
-            }
-            else
-            {
-                Assert.Equal(global::Avalonia.Layout.Orientation.Horizontal, Assert.IsType<WrapPanel>(sidebar.Layout).Orientation);
-                Assert.InRange(sidebar.Bounds.Height, 40, 160);
-                Assert.True(sideOrigin.Y + sidebar.Bounds.Height <= mainOrigin.Y + .5);
+                var origin = button.TranslatePoint(default, nav.Layout)!.Value;
+                Assert.True(origin.Y >= previousBottom, "The icon rail wrapped into a second column.");
+                Assert.True(origin.X >= 0 && origin.X + button.Bounds.Width <= nav.Bounds.Width + .5,
+                    $"{button.Name}: X={origin.X}, Width={button.Bounds.Width}, NavigationWidth={nav.Bounds.Width}, ViewportWidth={scroll.Viewport.Width}.");
+                previousBottom = origin.Y + button.Bounds.Height;
+                Assert.False(string.IsNullOrWhiteSpace(AutomationProperties.GetName(button)));
+                var icon = Assert.Single(button.GetVisualDescendants().OfType<Image>());
+                Assert.NotNull(icon.Source);
+                Assert.True(icon.Bounds.Width > 0 && icon.Bounds.Height > 0);
             }
             Assert.True(main.Bounds.Height >= height - 300, $"Apps has only {main.Bounds.Height} vertical space.");
             Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + .5, "Sidebar content spills horizontally.");
-            if (height <= 520 || width < 720)
+            var settingsOrigin = settings.TranslatePoint(default, window)!.Value;
+            Assert.True(settingsOrigin.Y >= sideOrigin.Y);
+            Assert.True(settingsOrigin.Y + settings.Bounds.Height <= sideOrigin.Y + sidebar.Bounds.Height + .5);
+            if (scroll.Extent.Height > scroll.Viewport.Height + .5)
             {
-                Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
                 scroll.Offset = new Vector(0, scroll.Extent.Height); Layout();
                 Assert.True(scroll.Offset.Y > 0);
-                var last = buttons.Single(item => item.Content?.ToString() == "Notifications");
-                var lastOrigin = last.TranslatePoint(default, window)!.Value;
-                Assert.True(lastOrigin.Y >= sideOrigin.Y);
-                Assert.True(lastOrigin.Y + last.Bounds.Height <= sideOrigin.Y + sidebar.Bounds.Height + .5);
+                var last = HomeRailButton(page, "home-mesh", "Mesh");
+                var lastOrigin = last.TranslatePoint(default, scroll)!.Value;
+                Assert.True(lastOrigin.Y >= -.5);
+                Assert.True(lastOrigin.Y + last.Bounds.Height <= scroll.Viewport.Height + .5);
+                Assert.Equal(settingsOrigin, settings.TranslatePoint(default, window)!.Value);
             }
             var appRegion = Assert.Single(page.GetVisualDescendants().OfType<Control>(),
                 item => item.Name == "home-apps-results");
@@ -387,10 +540,11 @@ public sealed class UnifiedHomeContentTests
             await page.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(20));
             Assert.Equal(selectedId, chrome.State.SelectedTabId);
             Assert.Same(page, Assert.Single(window.GetVisualDescendants().OfType<UnifiedHomePage>()));
-            using var frame = window.CaptureRenderedFrame(); Assert.NotNull(frame);
-            var folder = Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES");
-            if (!string.IsNullOrEmpty(folder))
-            { Directory.CreateDirectory(folder); frame.Save(Path.Combine(folder, $"browse-home-{width}x{height}.png")); }
+            // Preserve the existing 44px requirement; authored40px targets may still FAIL.
+            // A captured failing frame is evidence, never a waived product-quality assertion.
+            foreach (var button in buttons.Append(settings))
+                Assert.True(button.Bounds.Width >= 44 && button.Bounds.Height >= 24);
+
         }
         finally
         {
@@ -403,6 +557,200 @@ public sealed class UnifiedHomeContentTests
             Directory.Delete(paths.DataDirectory, true);
         }
         void Layout() { window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Shared_Home_rail_scrolls_in_a_short_component_viewport_and_keeps_Settings_pinned()
+    {
+        // Stress the SAME canonical Home component below Browse's 520px shipping window minimum.
+        // This is component overflow coverage, not acceptance of a below-minimum browser window.
+        using var lifetime = new CancellationTokenSource();
+        IBrowseNativeAppContentSession? session = null;
+        Window? window = null;
+        var failures = new List<Exception>();
+        Task? initialization = null, close = null;
+        try
+        {
+            session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token).CreateSession(Request()));
+            initialization = session.InitializeAsync();
+            await initialization;
+            var page = session.OriginalNativeView;
+            // Retain the acquired window before setting properties or attaching the owned view.
+            window = new Window(); window.Width = 390; window.Height = 320; window.Content = page;
+            window.Show(); Layout();
+            var nav = Assert.IsType<CuiContainerControl>(page.GetVisualDescendants().OfType<Control>()
+                .Single(item => item.Name == "home-rail-nav"));
+            var scroll = Assert.IsType<ScrollViewer>(nav.Child);
+            var settings = HomeRailButton(page, "home-settings", "Settings");
+            var pinnedOrigin = settings.TranslatePoint(default, window)!.Value;
+            Assert.True(scroll.Viewport.Height > 0);
+            Assert.True(scroll.Extent.Height > scroll.Viewport.Height, "Short real Home viewport must exercise rail overflow.");
+            scroll.Offset = new Vector(0, scroll.Extent.Height); Layout();
+            Assert.True(scroll.Offset.Y > 0);
+            var last = HomeRailButton(page, "home-mesh", "Mesh");
+            var lastOrigin = last.TranslatePoint(default, scroll)!.Value;
+            Assert.True(lastOrigin.Y >= -.5);
+            Assert.True(lastOrigin.Y + last.Bounds.Height <= scroll.Viewport.Height + .5);
+            Assert.Equal(pinnedOrigin, settings.TranslatePoint(default, window)!.Value);
+        }
+        catch (Exception cause) { Retain(cause); }
+        finally
+        {
+            var drained = false;
+            if (session is not null)
+            {
+                try
+                {
+                    close = session.CloseAndDrainAsync();
+                    await close;
+                    Assert.True(session.CanRetireOriginalView);
+                    drained = true;
+                }
+                catch (Exception cause) { Retain(cause); }
+            }
+            // A failed original drain retains its mounted view; never detach or close around it.
+            if (window is not null && drained)
+            {
+                try { window.Content = null; } catch (Exception cause) { Retain(cause); }
+                try { window.Close(); } catch (Exception cause) { Retain(cause); }
+            }
+            // Await may expose only one fault. Preserve raw direct siblings on the exact tasks.
+            RetainTask(initialization); RetainTask(close);
+            if (session is not null) { RetainTask(session.OriginalInitialization); RetainTask(session.OriginalClose); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Short Home layout assertion and independent original cleanup failed.", failures);
+        void Retain(Exception cause)
+        {
+            if (!failures.Any(existing => ReferenceEquals(existing, cause))) failures.Add(cause);
+        }
+        void RetainTask(Task? source)
+        {
+            if (source?.Exception is { } original)
+                foreach (var cause in original.InnerExceptions) Retain(cause);
+        }
+        void Layout() { window!.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData(CuiAppearance.SuperBright)]
+    [InlineData(CuiAppearance.Bright)]
+    [InlineData(CuiAppearance.Dark)]
+    [InlineData(CuiAppearance.SuperDark)]
+    public void Theme_detection_reads_merged_bootstrap_and_preserves_direct_preference_precedence(CuiAppearance appearance)
+    {
+        var application = global::Avalonia.Application.Current!;
+        var resources = application.Resources;
+        var hadDirect = resources.TryGetValue("CuiAppearance", out var previousDirect);
+        var snapshot = CuiSceneVisualResources.Create("Home", appearance);
+        var failures = new List<Exception>();
+        try
+        {
+            resources.Remove("CuiAppearance");
+            resources.MergedDictionaries.Add(snapshot);
+            // Exact primitive-bootstrap provider shape, without a direct preference shadowing it.
+            Assert.Equal(appearance, CuiThemeScopeApplier.DetectAppearance());
+            var direct = appearance == CuiAppearance.Bright ? CuiAppearance.SuperDark : CuiAppearance.Bright;
+            resources["CuiAppearance"] = direct.ToString();
+            Assert.Equal(direct, CuiThemeScopeApplier.DetectAppearance());
+        }
+        catch (Exception cause) { failures.Add(cause); }
+        finally
+        {
+            try { resources.MergedDictionaries.Remove(snapshot); }
+            catch (Exception cause) { failures.Add(cause); }
+            try
+            {
+                if (hadDirect) resources["CuiAppearance"] = previousDirect;
+                else resources.Remove("CuiAppearance");
+            }
+            catch (Exception cause) { failures.Add(cause); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Theme lookup assertion and independent resource restoration failed.", failures);
+    }
+
+    private static Button HomeRailButton(Control page, string id, string label)
+    {
+        var button = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == id);
+        Assert.Equal(label, AutomationProperties.GetName(button));
+        Assert.Equal(label, ToolTip.GetTip(button));
+        Assert.True(button.IsEffectivelyVisible);
+        return button;
+    }
+
+    private static void RegisterProductionImageResolver(BrowseNativeWindow window)
+    {
+        // Same retained scene seam used by existing BrowseWorkspaceLayoutTests.
+        var scene = typeof(BrowseNativeWindow).GetField("_originalScene", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(window) as CuiNativeScene;
+        Assert.NotNull(scene);
+        scene!.ControlRegistry!.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
+    }
+
+    private static readonly object CaptureGate = new();
+    private static int CaptureCount;
+    private static long CaptureBytes;
+    private static void CaptureOptionalFrame(Window window, Bitmap frame, string name, string fixture, CuiAppearance? requestedAppearance = null)
+    {
+        var directory = Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES");
+        if (string.IsNullOrWhiteSpace(directory)) return;
+        lock (CaptureGate)
+        {
+            try
+            {
+                const int maximumBytes = 1024 * 1024;
+                var source = Environment.GetEnvironmentVariable("HAVEN_CAPTURE_SOURCE_REVISION");
+                var build = Environment.GetEnvironmentVariable("HAVEN_CAPTURE_BUILD_REVISION");
+                if (CaptureCount >= 6 || CaptureBytes >= maximumBytes || !IsRevision(source) || !IsRevision(build))
+                    throw new InvalidOperationException("NO_IMAGE: capture allowance or exact runner source/build identity unavailable.");
+                // Fixed capacity refuses oversized encoding BEFORE any file write.
+                using var encoded = new MemoryStream(new byte[maximumBytes], writable: true);
+                encoded.SetLength(0); frame.Save(encoded);
+                var png = encoded.ToArray();
+                if (CaptureBytes + png.Length > maximumBytes) throw new IOException("NO_IMAGE: PNG run allowance exceeded.");
+                var stem = name + "-" + Guid.NewGuid().ToString("N");
+                var pngPath = Path.Combine(directory, stem + ".png");
+                var metadata = JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    captured_utc = DateTimeOffset.UtcNow, source_revision = source, build_revision = build,
+                    fixture, renderer = "headless-Skia", installed_native = false,
+                    requested_appearance = requestedAppearance?.ToString(),
+                    appearance = CuiThemeScopeApplier.DetectAppearance().ToString(),
+                    viewport = new { window.ClientSize.Width, window.ClientSize.Height },
+                    pixels = new { frame.PixelSize.Width, frame.PixelSize.Height },
+                    outcome = "PRE_ASSERTION_FRAME; owning TRX and original cleanup determine result",
+                    png = new { path = pngPath, bytes = png.Length, sha256 = Convert.ToHexString(SHA256.HashData(png)).ToLowerInvariant() },
+                    assemblies = new[] { typeof(UnifiedHomeContentTests).Assembly, typeof(UnifiedHomePage).Assembly,
+                        typeof(CuiSceneHost).Assembly, typeof(BrowseNativeWorkspace).Assembly }.Distinct().Select(assembly => new
+                        {
+                            name = assembly.GetName().Name, path = assembly.Location,
+                            sha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.Location))).ToLowerInvariant()
+                        }).ToArray()
+                });
+                foreach (var location in new[] { "/workspace", Path.GetTempPath(), directory }.Where(Directory.Exists))
+                {
+                    // Longest actual mount prefix also checks the separate cloud /tmp volume.
+                    var full = Path.GetFullPath(location).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                    var drive = DriveInfo.GetDrives().Where(item => full.StartsWith(item.Name, StringComparison.Ordinal))
+                        .OrderByDescending(item => item.Name.Length).First();
+                    if (drive.AvailableFreeSpace < 268435456L + png.Length + metadata.Length + 8192)
+                        throw new IOException("NO_IMAGE: disk floor would be crossed.");
+                }
+                Directory.CreateDirectory(directory);
+                CaptureCount++; CaptureBytes += png.Length;
+                using (var output = new FileStream(pngPath, FileMode.CreateNew, FileAccess.Write)) output.Write(png);
+                using (var output = new FileStream(Path.Combine(directory, stem + ".json"), FileMode.CreateNew, FileAccess.Write))
+                    output.Write(metadata);
+                Console.WriteLine("PRE_ASSERTION_CAPTURE: " + pngPath);
+            }
+            catch (Exception failure)
+            {
+                // Optional capture cannot suppress/replace genuine assertions or original drain faults.
+                Console.WriteLine("OPTIONAL_CAPTURE_FAILED_OR_REFUSED: " + failure);
+            }
+        }
+        static bool IsRevision(string? value) => value is { Length: 40 } && value.All(Uri.IsHexDigit);
     }
 
     // The New Tab fixture renders the real dashboard with empty, local repositories.

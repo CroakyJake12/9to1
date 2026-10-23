@@ -56,7 +56,7 @@ public static class HomeCreateGroup
 {
     public const string Key = "create";
     public const string Name = "Create";
-    public const string IconKey = "folder";
+    public const string IconKey = "palette";
     public const string Description = "Open Picture, Motion and Wave";
 
     private sealed record MemberSpec(string Key, string DisplayName, string IconKey, Guid? CanonicalId);
@@ -376,7 +376,7 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
             "apps.emptyDetail" => snapshot.EmptyDetail,
             "apps.status" => snapshot.Status,
             "apps.group.name" => snapshot.Group?.Name,
-            "apps.group.iconSource" => IconSource(snapshot.Group?.IconKey),
+            "apps.group.iconSource" => HomeAppBrandingIcons.SourceForGroup(snapshot.Group?.Key, snapshot.Group?.IconKey),
             "apps.group.members" => snapshot.EffectiveGroupVisible,
             "apps.group.hasMembers" => snapshot.EffectiveGroupVisible.Count > 0,
             "apps.group.visibleCount" => snapshot.GroupRowCount,
@@ -430,7 +430,7 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
                     _ when path.Equals("openLabel", StringComparison.OrdinalIgnoreCase) => app.OpenLabel,
                     _ when path.Equals("iconSource", StringComparison.OrdinalIgnoreCase) =>
                         app.IsGroup
-                            ? IconSource(app.IconKey)
+                            ? HomeAppBrandingIcons.SourceForGroup(app.Key, app.IconKey)
                             : HomeAppBrandingIcons.SourceFor(app.IconKey, app.CanonicalId, app.Source),
                     _ when path.Equals("isGroup", StringComparison.OrdinalIgnoreCase) => app.IsGroup,
                     _ when path.Equals("notGroup", StringComparison.OrdinalIgnoreCase) => !app.IsGroup,
@@ -445,9 +445,7 @@ public sealed class HomeAppsCuiBindings : ICuiWritableBindingContext, ICuiAction
                     _ when path.Equals("description", StringComparison.OrdinalIgnoreCase) => member.Description,
                     _ when path.Equals("openLabel", StringComparison.OrdinalIgnoreCase) => member.OpenLabel,
                     _ when path.Equals("iconSource", StringComparison.OrdinalIgnoreCase) =>
-                        member.IsInstalled
-                            ? HomeAppBrandingIcons.SourceFor(member.IconKey, member.CanonicalId, member.Source)
-                            : IconSource(member.IconKey),
+                        HomeAppBrandingIcons.SourceForGroupMember(member),
                     _ when path.Equals("isInstalled", StringComparison.OrdinalIgnoreCase) => member.IsInstalled,
                     _ when path.Equals("notInstalled", StringComparison.OrdinalIgnoreCase) => !member.IsInstalled,
                     _ when path.Equals("availabilityNote", StringComparison.OrdinalIgnoreCase) => member.AvailabilityNote,
