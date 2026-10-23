@@ -1,0 +1,20 @@
+{
+  "schema": "9to1.owner-amendment/v1",
+  "recorded_at": "2026-10-23T13:09:11.105822+00:00",
+  "owner_quote": "legacy app as in what? the standalone apps are the current apps they just need integrating into home and finishing",
+  "scope": [
+    "Boards",
+    "Canvas",
+    "Home integration",
+    "screenshots and acceptance"
+  ],
+  "requirements": [
+    "Finish and integrate the current standalone apps into Home while preserving useful features and data.",
+    "Use one shared implementation for each app across standalone and Home surfaces.",
+    "Different launch/store/test wiring does not by itself establish that an app is obsolete. Review actual specification coverage and functionality before consolidation.",
+    "Existing authoritative specification, CUI-only application authoring and all seven independent acceptance criteria remain mandatory.",
+    "Report screenshot source and actual launch/service composition; distinguish headless previews from native drawing/save/reopen and installed-app acceptance."
+  ],
+  "supersedes": "Any worker interpretation that separate standalone launch wiring alone makes the current standalone apps obsolete.",
+  "authority": "Direct owner clarification, 23 October 2026; complements earlier one-app-implementation requirement."
+}
