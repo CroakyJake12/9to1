@@ -224,8 +224,25 @@ public sealed partial class App : Avalonia.Application
 
     internal bool TryPublishOriginalStartupFailure(Action actualPresentation)
     {
-        actualPresentation();
-        return true;
+        var entered = false;
+        var invoked = false;
+        try
+        {
+            // The startup original is already terminal and remains in the App
+            // cohort. Error presentation needs its own SAME-owner admission.
+            _originalAppWork.RunSynchronous(original =>
+            {
+                entered = true;
+                invoked = TryInvokeOriginalStartupContinuation(original, actualPresentation);
+            });
+        }
+        catch (ObjectDisposedException) when (!entered && _originalAppWork.IsRetiring)
+        {
+            // RunSynchronous refused before entering our callback. A fault from
+            // an actual presentation (even after self-retirement) is not waived.
+            return false;
+        }
+        return invoked;
     }
 #endif
 
