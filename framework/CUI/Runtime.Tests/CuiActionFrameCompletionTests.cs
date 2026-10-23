@@ -425,6 +425,165 @@ public sealed class CuiActionFrameCompletionTests
         Assert.False(MatchFailureGraph([new AggregateException()], allowed, knownGroups, opaque, true, out _));
     }
 
+    private const string LocalParameterMarkup = """
+        <Cui>
+          <Variable Type="commandstate" ID="Receipt" />
+          <Actions>
+            <Action name="observe" command="parameter.observe" result="Receipt" />
+            <Action name="use" command="parameter.use" parameter="{Binding Receipt.Value}" />
+          </Actions>
+          <Container Type="Vertical Stack">
+            <Button id="observe-parameter" Action="observe" Content="Observe" />
+            <Button id="use-parameter" Action="use" Content="Use original" />
+          </Container>
+        </Cui>
+        """;
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task Local_command_result_parameter_keeps_exact_issued_identity_for_button_and_effect(bool effect) => RunAsync(async fixture =>
+    {
+        var issued = new object(); var source = new ParameterDispatcher(issued);
+        fixture.Loader.SetActionDispatcher(source);
+        var markup = effect ? LocalParameterMarkup.Replace("</Actions>",
+            "</Actions><Effects><Effect Condition=\"{Binding Receipt.Succeeded}\" Action=\"use\" /></Effects>") : LocalParameterMarkup;
+        var root = fixture.Mount(markup);
+        Click(Find<Button>(root, "observe-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+        if (!effect) Click(Find<Button>(root, "use-parameter"));
+        await fixture.Loader.WhenActionsIdleAsync();
+        Assert.True(ReferenceEquals(issued, Assert.Single(source.Parameters)),
+            "CUI_LOCAL_COMMAND_RESULT_PARAMETER_IDENTITY_LOST: forward the exact issued opaque local result, without a host mirror or clone.");
+    });
+
+    [Fact]
+    public Task Local_command_result_parameter_reads_latest_receipt_on_the_same_wired_button() => RunAsync(async fixture =>
+    {
+        var first = new object(); var latest = new object(); var source = new ParameterDispatcher(first, latest);
+        fixture.Loader.SetActionDispatcher(source); var root = fixture.Mount(LocalParameterMarkup);
+        var observe = Find<Button>(root, "observe-parameter"); var use = Find<Button>(root, "use-parameter");
+        Click(observe); await fixture.Loader.WhenActionsIdleAsync(); Click(use); await fixture.Loader.WhenActionsIdleAsync();
+        Click(observe); await fixture.Loader.WhenActionsIdleAsync();
+        Assert.Same(use, Find<Button>(root, "use-parameter")); Click(use); await fixture.Loader.WhenActionsIdleAsync();
+        Assert.Equal(2, source.Parameters.Count); Assert.Same(first, source.Parameters[0]); Assert.Same(latest, source.Parameters[1]);
+    });
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public Task Local_command_result_parameter_never_borrows_a_colliding_external_path(int state) => RunAsync(async fixture =>
+    {
+        var spoof = new object(); var issued = new object();
+        fixture.Model.Set("Receipt.Value", spoof);
+        var source = new ParameterDispatcher(new object?[] { state == 2 ? issued : null });
+        fixture.Loader.SetActionDispatcher(source); var root = fixture.Mount(LocalParameterMarkup);
+        if (state != 0) { Click(Find<Button>(root, "observe-parameter")); await fixture.Loader.WhenActionsIdleAsync(); }
+        Click(Find<Button>(root, "use-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+        var actual = Assert.Single(source.Parameters);
+        if (state == 2) Assert.Same(issued, actual); else Assert.Null(actual);
+        Assert.NotSame(spoof, actual);
+    });
+
+    [Fact]
+    public Task Local_parameter_repair_preserves_latest_external_repeat_row_and_its_query_owner() => RunAsync(async fixture =>
+    {
+        var first = new Dictionary<string, object?> { ["Id"] = "stable", ["Name"] = "First" };
+        var latest = new Dictionary<string, object?> { ["Id"] = "stable", ["Name"] = "Latest" };
+        var source = new ParameterDispatcher(); fixture.Loader.SetActionDispatcher(source);
+        fixture.Model.Set("Source", new ParameterRows(first));
+        var root = fixture.Mount("""
+            <Cui><Actions><Action name="use-row" command="parameter.use" parameter="{Binding row}" /></Actions>
+              <Container Type="QueryViewport" Source="{Binding Source}">
+                <Repeat Source="{Binding Items}" As="row" Key="{Binding row.Id}">
+                  <Button id="parameter-row" Action="use-row" Content="{Binding row.Name}" />
+                </Repeat>
+              </Container>
+            </Cui>
+            """);
+        var button = Find<Button>(root, "parameter-row");
+        Click(button); await fixture.Loader.WhenActionsIdleAsync();
+        fixture.Model.Set("Source", new ParameterRows(latest));
+        fixture.Window.UpdateLayout();
+        Assert.Same(button, Find<Button>(root, "parameter-row"));
+        // Detaching native ancestry cannot replace the captured authored query/Repeat scope.
+        fixture.Window.Content = null; fixture.Model.Set("row", new object());
+        Click(button); await fixture.Loader.WhenActionsIdleAsync();
+        Assert.Equal(2, source.Parameters.Count); Assert.Same(first, source.Parameters[0]); Assert.Same(latest, source.Parameters[1]);
+    });
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task Local_command_result_parameter_old_controls_cannot_read_replaced_or_disposed_frame(bool dispose) => RunAsync(async fixture =>
+    {
+        var first = new object(); var latest = new object(); var source = new ParameterDispatcher(first, latest);
+        fixture.Loader.SetActionDispatcher(source); var root = fixture.Mount(LocalParameterMarkup);
+        Click(Find<Button>(root, "observe-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+        var old = Find<Button>(root, "use-parameter");
+        if (dispose) fixture.Loader.Dispose();
+        else
+        {
+            var replacement = fixture.Mount(LocalParameterMarkup);
+            Click(Find<Button>(replacement, "observe-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+        }
+        Click(old); await fixture.Loader.WhenActionsIdleAsync(); Assert.Empty(source.Parameters);
+    });
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task Local_command_result_parameter_getter_reentry_cannot_dispatch_after_frame_retirement(bool dispose) => RunAsync(async fixture =>
+    {
+        Control? replacement = null; var retained = new object(); var latest = new object();
+        var getter = new ParameterMember(() =>
+        {
+            Assert.False(fixture.Loader.WhenActionsIdleAsync().IsCompleted);
+            if (dispose) fixture.Loader.Dispose(); else replacement = fixture.Mount(LocalParameterMarkup);
+            return retained;
+        });
+        var source = new ParameterDispatcher(getter, latest); fixture.Loader.SetActionDispatcher(source);
+        var markup = LocalParameterMarkup.Replace("parameter=\"{Binding Receipt.Value}\"", "parameter=\"{Binding Receipt.Value.Payload}\"");
+        var root = fixture.Mount(markup);
+        Click(Find<Button>(root, "observe-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+        Click(Find<Button>(root, "use-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+        Assert.Equal(1, getter.Reads); Assert.Empty(source.Parameters);
+        if (!dispose)
+        {
+            Assert.NotNull(replacement);
+            Click(Find<Button>(replacement!, "observe-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+            Click(Find<Button>(replacement!, "use-parameter")); await fixture.Loader.WhenActionsIdleAsync();
+            Assert.Same(latest, Assert.Single(source.Parameters));
+        }
+    });
+
+    private sealed class ParameterDispatcher(params object?[] results) : ICuiResultReportingDispatcher
+    {
+        private readonly Queue<object?> _results = new(results);
+        internal List<object?> Parameters { get; } = [];
+        public ValueTask<CuiCommandOutcome> DispatchWithOutcomeAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (command == "parameter.observe")
+                return new(new CuiCommandOutcome(true, false, "Observed", null, _results.Dequeue()));
+            Assert.Equal("parameter.use", command); Parameters.Add(parameter);
+            return new(new CuiCommandOutcome(true, false, "Used", null, null));
+        }
+        public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        { _ = await DispatchWithOutcomeAsync(command, parameter, cancellationToken); }
+    }
+
+    private sealed class ParameterRows(object row) : ICuiPagedSource
+    {
+        public CuiPagedResult Evaluate(string? query, CuiPageCursor? cursor) => new(new object[] { row }, 1, 0, null, null);
+    }
+
+    private sealed class ParameterMember(Func<object?> read)
+    {
+        internal int Reads;
+        public object? Payload { get { ++Reads; return read(); } }
+    }
+
     private static bool IsExactExpectedCause(Exception observed, Exception expected)
     {
         for (var depth = 0; depth < 32; depth++)
