@@ -491,7 +491,8 @@ def run_check(repo, candidate, check_id, layer, command, output, trx_path=None, 
             except subprocess.TimeoutExpired:
                 receipt.update(timed_out=True, reason="Bounded execution timed out; raw failure remains untriaged")
                 stop_owned(process, identity)
-        receipt.update(exit_code=process.returncode, result="PROCESS_SUCCEEDED" if process.returncode == 0 else "FAIL")
+        completed_successfully = process.returncode == 0 and not receipt.get("timed_out")
+        receipt.update(exit_code=process.returncode, result="PROCESS_SUCCEEDED" if completed_successfully else "FAIL")
         for _ in range(20):
             group = remaining_group(identity)
             if not group: break
@@ -501,7 +502,7 @@ def run_check(repo, candidate, check_id, layer, command, output, trx_path=None, 
             receipt["tests"] = trx(trx_path)
             receipt["test_artifact"] = {"path": str(Path(trx_path).resolve()), **file_identity(trx_path)}
             if receipt["test_artifact"]["kind"] != "file": raise Refusal("Test evidence must be a retained regular file")
-            if process.returncode == 0: receipt["result"] = receipt["tests"]["result"]
+            if completed_successfully: receipt["result"] = receipt["tests"]["result"]
         if kind == "test" and receipt["result"] == "PROCESS_SUCCEEDED":
             receipt["result"] = "UNVERIFIED"  # exit zero alone never proves tests actually executed
         if group:
@@ -522,6 +523,7 @@ def run_check(repo, candidate, check_id, layer, command, output, trx_path=None, 
 
 def reusable(receipt, candidate, command, platform):
     validate_candidate(candidate)
+    if receipt.get("timed_out"): return False  # also reject historically misclassified receipts
     if receipt.get("candidate") != candidate["identity"]: return False
     if receipt.get("command") != command or receipt.get("platform") != platform or receipt.get("result") != "PASS": return False
     environment = receipt.get("environment")
