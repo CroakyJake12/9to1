@@ -17,7 +17,7 @@ public sealed partial class DurableDriveProvider
             var item = state.Items.SingleOrDefault(entry => entry.Metadata.Id == fileId);
             if (item is null || !IsVisible(state, item))
                 result = Fail<HostedItemMetadata>(FilesErrorCode.ItemNotFound, "Original item is unavailable.", "GetOriginalItem", fileId);
-            else { RequireOriginalReadItem(item.Metadata); result = FilesResult<HostedItemMetadata>.Success(item.Metadata); }
+            else { RequireOriginalReadItem(item.Metadata); result = FilesResult<HostedItemMetadata>.Success(ProjectSharingMetadata(state, item.Metadata)); }
         }, originalSynchronousScope);
         return result ?? throw new InvalidOperationException("No actual original metadata observation exists.");
     }
