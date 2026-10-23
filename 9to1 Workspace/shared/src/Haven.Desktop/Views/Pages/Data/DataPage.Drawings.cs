@@ -18,6 +18,7 @@ public sealed partial class DataPage
     {
         var editor = DrawingEditorForCurrent();
         if (editor is null) return;
+        CaptureSpreadsheetUndo();
         editor.AddCustomShape(DocumentVectorShapes.CreateEditableStarter());
         _drawingIndex = editor.Sheet.Drawings.Count - 1;
         MarkDirty();
@@ -41,6 +42,8 @@ public sealed partial class DataPage
         var editor = DrawingEditorForCurrent();
         var selected = editor?.SelectedDrawing;
         if (editor is null || selected is null) return;
+        if (selected.Locked || selected.Kind == DataDrawingKind.SharedInk) return;
+        CaptureSpreadsheetUndo();
         if (!editor.RotateSelected(selected.Rotation + 15)) return;
         MarkDirty();
         RenderCurrent();
@@ -50,7 +53,9 @@ public sealed partial class DataPage
     private void OnDeleteDrawingRequested(object? sender, EventArgs e)
     {
         var editor = DrawingEditorForCurrent();
-        if (editor is null || !editor.RemoveSelected()) return;
+        if (editor?.SelectedDrawing is not { Locked: false }) return;
+        CaptureSpreadsheetUndo();
+        if (!editor.RemoveSelected()) return;
         _drawingIndex = Math.Clamp(_drawingIndex, 0, Math.Max(0, editor.Sheet.Drawings.Count - 1));
         MarkDirty();
         RenderCurrent();

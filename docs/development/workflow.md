@@ -438,3 +438,20 @@ loads the copy-budget regressions; broad discovery runs each suite once.
 
 Read [the latest implementation-window decision](../specification/owner-references/2026-10-23-implementation-window/owner-correction.json). Until **24 October 2026 03:00 Europe/London (02:00 UTC)**, prioritise implementation of feature gaps and basic smoke checks. Defer full acceptance and acceptance-only audits until that time; preserve their queue and evidence. Then resume independent acceptance from the exact latest candidate, unless a newer owner instruction changes the priority. This defers gates; it does not waive them or authorise an unaccepted release. Keep ordinary development, scoped Thunder work and progress reporting moving.
 
+## Current execution admission immediately before launch
+
+`execution-admission` is a read-only consistency check over the current existing ledger, not another admission record. It requires the named source-export candidate and exact manifest pin, `build_dependencies.actual-guarded-sdk-runner`, and the adopted `recovery_assets.latest-root-checkpoint` / `last_root_checkpoint_observed` pair. That pinned ROOT-LIVE must bind the same candidate, source manifest and `sdk_admission.runner`; its expected CAS generation must already have been reached. The actual manifest, Root proof and runner must still match their regular-file path/bytes/mode/SHA pins. Missing or stale historical admission refuses launch without changing legacy recovery behavior.
+
+Prefer calling `execution_admission(state_path, execution, source_path, revision, manifest_path, manifest_sha256, runner_path)` inside the admitted Python runner immediately before `subprocess.Popen`, with `runner_path=Path(__file__).resolve()`. A refusal raises and must stop that launch. The CLI form must also control the following command:
+
+```sh
+python3 -B eng/development/workflow.py --state "$NINETOONE_DEVELOPMENT_STATE" execution-admission \
+  --execution cloud-owning-v2 --source "$NINETOONE_EXECUTION_SOURCE" \
+  --revision "$NINETOONE_EXPECTED_REVISION" --manifest "$NINETOONE_SOURCE_MANIFEST" \
+  --manifest-sha256 "$NINETOONE_EXPECTED_MANIFEST_SHA256" --runner "$NINETOONE_GUARDED_RUNNER" &&
+python3 -B "$NINETOONE_GUARDED_RUNNER" "$NINETOONE_ADMITTED_STAGE"
+```
+
+Use the expected values captured for the intended command, not a stale shell snapshot or an automatically substituted newer runner. Exit2 is INFRASTRUCTURE/BLOCKED; retain the failed CAS/admission receipt and reconcile through the existing coordinator. Do not follow refusal with an unconditional launch or mint a new approval record.
+
+The helper re-reads relevant current ledger pins before returning and checks only the pinned manifest metadata, not every exported source file. The admitted owning runner retains its full source check and resource/memory/timeout/process-group guards. No SDK process, ledger write, ownership claim, allocation, acceptance or RC permission is created. This check does not hold a lease over later caller actions; invoke it immediately before launch under the existing exclusive coordinator custody.

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Haven.Core;
 
 public sealed class DataDrawingObject
@@ -12,11 +14,15 @@ public sealed class DataDrawingObject
     public double Rotation { get; set; }
     public int ZIndex { get; set; }
     public bool Locked { get; set; }
+    public JsonElement? SharedProductivityBundle { get; set; }
     public DocumentVectorShape? VectorShape { get; set; }
     public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.Ordinal);
 
     public void Normalize()
     {
+        if (!Enum.IsDefined(Kind)) throw new InvalidDataException("This drawing kind is unsupported; preserve its original workbook.");
+        if (Kind == DataDrawingKind.SharedInk && (Id == Guid.Empty || SharedProductivityBundle is not { ValueKind: JsonValueKind.Object }))
+            throw new InvalidDataException("Shared ink requires its original object identity and complete Home bundle.");
         if (Id == Guid.Empty) Id = Guid.NewGuid();
         Name = string.IsNullOrWhiteSpace(Name) ? "Custom shape" : Name.Trim();
         X = double.IsFinite(X) ? X : 40;

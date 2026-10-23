@@ -628,6 +628,121 @@ def export_files(source, revision):
     return files
 
 
+def _execution_json(path, label, expected=None):
+    """Parse the same stable no-follow regular-file bytes that were checked."""
+    path = absolute_path(str(path), label)
+    flags = os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW
+    try: fd = os.open(path, flags | getattr(os, "O_NOATIME", 0))
+    except PermissionError: fd = os.open(path, flags)
+    with os.fdopen(fd, "rb") as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode) or before.st_size > 16 * 1024 * 1024:
+            raise Refusal(label + " must be a bounded regular JSON file")
+        if expected is not None and before.st_size != expected["bytes"]:
+            raise Refusal(label + " identity changed")
+        raw = stream.read(before.st_size + 1); after = os.fstat(stream.fileno())
+        identity = {"kind": "file", "bytes": len(raw), "mode": before.st_mode & 0o777, "sha256": digest(raw)}
+        stable = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+        if (len(raw) != before.st_size or any(getattr(before, key) != getattr(after, key) for key in stable)
+                or expected is not None and identity != expected):
+            raise Refusal(label + " identity changed while reading")
+    value = json.loads(raw)
+    if not isinstance(value, dict): raise Refusal(label + " must be a JSON object")
+    return value
+
+
+def _execution_admission_scope(state, execution):
+    if state.get("schema") != SCHEMA or type(state.get("generation")) is not int or state["generation"] < 0:
+        raise Refusal("Current execution ledger schema/generation is invalid")
+    fields = ("development_candidates", "execution_custody", "recovery_assets")
+    if any(not isinstance(state.get(key), dict) for key in fields):
+        raise Refusal("Current execution candidate/custody/Root admission is missing")
+    return {"candidate": state["development_candidates"].get(execution),
+            "custody": state["execution_custody"].get(execution),
+            "Root": state["recovery_assets"].get("latest-root-checkpoint"),
+            "observed_Root": state.get("last_root_checkpoint_observed")}
+
+
+def execution_admission(state_path, execution, source_path, revision, manifest_path, manifest_sha256, runner_path):
+    """Match existing coordinator admission immediately before launch. Never grant or launch.
+
+    This intentionally checks manifest metadata/pins, not all source files: the
+    admitted owning runner must keep its full source, resources and process guards.
+    """
+    if not isinstance(execution, str) or not execution: raise Refusal("A named current execution admission is required")
+    state = _execution_json(state_path, "Current execution ledger")
+    scope = _execution_admission_scope(state, execution)
+    candidate, record = scope["candidate"], scope["custody"]
+    revision = revision_id(revision)
+    if not isinstance(candidate, dict) or not isinstance(record, dict) or candidate.get("revision") != revision or record.get("revision") != revision:
+        raise Refusal("Current candidate revision does not admit the requested execution")
+    if set(record) != {"revision", "owner", "source", "build_dependencies"} or not isinstance(record["owner"], str) or not record["owner"].strip():
+        raise Refusal("Current execution custody has no exact owner/source admission")
+    source = record["source"]
+    if not isinstance(source, dict) or set(source) != {"kind", "path", "git", "manifest"} or source.get("kind") != "source-export":
+        raise Refusal("Execution admission requires the current source-export custody")
+    root = absolute_path(str(source_path), "Requested execution source")
+    if source.get("path") != str(root) or candidate.get("worktree") != str(root) or not root.is_dir():
+        raise Refusal("Current candidate source path differs or is unavailable")
+    origin = source["git"]
+    if not isinstance(origin, dict) or set(origin) != {"path", "common_directory", "revision", "required_revisions"}:
+        raise Refusal("Execution export Git metadata is invalid")
+    absolute_path(origin["path"], "Export origin"); absolute_path(origin["common_directory"], "Export object store")
+    base = revision_id(origin["revision"])
+    if candidate.get("base_revision", base) != base or not isinstance(origin["required_revisions"], list):
+        raise Refusal("Current candidate export base differs")
+    for value in origin["required_revisions"]: revision_id(value)
+    asset = source["manifest"]; recovery_reference(asset)
+    if (candidate.get("manifest") != asset or asset["path"] != str(absolute_path(str(manifest_path), "Requested execution manifest"))
+            or asset["sha256"] != manifest_sha256):
+        raise Refusal("Current candidate/export manifest pin differs from the requested execution")
+    dependencies = record["build_dependencies"]
+    runner = dependencies.get("actual-guarded-sdk-runner") if isinstance(dependencies, dict) else None
+    if not isinstance(runner, dict) or set(runner) != {"path", "identity", "recovery", "next_action"}:
+        raise Refusal("Current guarded runner admission is missing or invalid")
+    if runner["recovery"] not in ("restore", "rebuild") or not isinstance(runner["next_action"], str) or not runner["next_action"].strip():
+        raise Refusal("Current guarded runner admission has invalid recovery metadata")
+    if not isinstance(runner["identity"], dict) or set(runner["identity"]) != {"kind", "bytes", "mode", "sha256"}:
+        raise Refusal("Current guarded runner admission requires its exact file identity")
+    if runner["path"] != str(absolute_path(str(runner_path), "Requested guarded runner")):
+        raise Refusal("Current guarded runner path differs from the requested execution")
+    runner_pin = {"path": runner["path"], **runner["identity"]}; recovery_reference(runner_pin)
+    latest, observed = scope["Root"], scope["observed_Root"]
+    try:
+        recovery_reference(latest); recovery_locator(observed)
+        if (observed["path"] != latest["path"] or observed["sha256"] != latest["sha256"] or
+                any(key in observed and observed[key] != latest[key] for key in ("kind", "bytes", "mode"))):
+            raise Refusal("Root observation and current retained proof must match")
+        proof = _execution_json(latest["path"], "Root execution admission proof", {key: value for key, value in latest.items() if key != "path"})
+    except (OSError, ValueError, TypeError, KeyError, Refusal) as error:
+        raise Refusal("Root admission proof unavailable/changed: " + str(error)) from error
+    admitted = proof.get("sdk_admission")
+    generation = proof.get("expected_next_generation")
+    if (proof.get("schema") != "9to1.root-live/v1" or proof.get("candidate") != revision or proof.get("source_manifest") != asset
+            or type(generation) is not int or not 0 < generation <= state["generation"]):
+        raise Refusal("Root proof candidate/manifest/generation was not adopted by the current ledger")
+    if not isinstance(admitted, dict) or admitted.get("runner") != runner_pin:
+        raise Refusal("Root SDK admission does not bind this exact guarded runner")
+    try:
+        # Same existing parser binds root/origin/base/candidate and validates the
+        # actual pinned manifest bytes. Do not call execution_files/tree here.
+        files = export_files(source, revision)
+        for name, identity in files.items():
+            safe_relative(name); recovery_reference({"path": str(root / name), **identity})
+    except (OSError, ValueError, TypeError, KeyError, Refusal) as error:
+        raise Refusal("Execution manifest unavailable/changed: " + str(error)) from error
+    for label, pin in (("Root proof", latest), ("Execution manifest", asset), ("Guarded runner", runner_pin)):
+        try: recovery_reference(pin, content=True)
+        except (OSError, Refusal) as error: raise Refusal(label + " identity changed: " + str(error)) from error
+    current = _execution_json(state_path, "Current execution ledger")
+    if _execution_admission_scope(current, execution) != scope or current["generation"] < state["generation"]:
+        raise Refusal("Current execution admission changed during validation; reread before any launch")
+    return {"result": "PASS", "classification": "INFRASTRUCTURE", "execution": execution, "revision": revision,
+            "generation": current["generation"], "source_path": str(root), "source_manifest": asset, "runner": runner_pin,
+            "Root_checkpoint": latest, "admission_created": False, "process_launched": False, "source_files_revalidated": False,
+            "scope": "Existing current coordinator pins matched only. Invoke immediately before the exact guarded runner; keep its full source/resource/process checks. No launch, ownership, allocation, acceptance or release authority is created."}
+
+
 def execution_record(record, candidate, *, publication=False):
     """Check observed execution inputs; never infer acceptance from their availability."""
     if not isinstance(record, dict) or set(record) != {"revision", "owner", "source", "build_dependencies"}:
@@ -957,6 +1072,7 @@ def main(argv=None):
     q = sub.add_parser("verify-backport"); q.add_argument("--expect", type=int, required=True); q.add_argument("--patch-id", required=True); q.add_argument("--target", required=True); q.add_argument("--repo", required=True)
     q = sub.add_parser("preflight"); q.add_argument("--repo", required=True); q.add_argument("--candidate"); q.add_argument("--execution")
     q = sub.add_parser("copy-budget"); q.add_argument("--manifest", required=True); q.add_argument("--sha256", required=True)
+    q = sub.add_parser("execution-admission"); q.add_argument("--execution", required=True); q.add_argument("--source", required=True); q.add_argument("--revision", required=True); q.add_argument("--manifest", required=True); q.add_argument("--manifest-sha256", required=True); q.add_argument("--runner", required=True)
     q = sub.add_parser("plan"); q.add_argument("--changed", required=True); q.add_argument("--registry", default=str(Path(__file__).with_name("checks.json"))); q.add_argument("--release", action="store_true")
     q = sub.add_parser("run"); q.add_argument("--repo", required=True); q.add_argument("--candidate", required=True); q.add_argument("--check", required=True); q.add_argument("--layer", type=int, required=True); q.add_argument("--out", required=True); q.add_argument("--trx"); q.add_argument("--environment-manifest"); q.add_argument("--timeout-seconds", type=float, default=300); q.add_argument("--kind", choices=["test", "build"], default="test"); q.add_argument("command", nargs=argparse.REMAINDER)
     q = sub.add_parser("recover"); q.add_argument("--repo", required=True); q.add_argument("--execution")
@@ -971,6 +1087,9 @@ def main(argv=None):
             old = read(a.previous_candidate)["accepted_fixes"] if a.previous_candidate else []
             value = snapshot(a.repo, a.out, [read(f) for f in a.accepted_fix], old)
         elif a.action == "preflight": value = preflight(a.repo, read(a.candidate) if a.candidate else None, state=read(a.state) if a.state else None, execution=a.execution)
+        elif a.action == "execution-admission":
+            if not a.state: raise Refusal("--state required for current execution admission")
+            value = execution_admission(a.state, a.execution, a.source, a.revision, a.manifest, a.manifest_sha256, a.runner)
         elif a.action == "copy-budget":
             from copy_budget import assess
             value = assess(a.manifest, a.sha256)

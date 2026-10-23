@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -32,6 +33,25 @@ public sealed class DataSheetDrawingEditor
         return drawing;
     }
 
+    /// <summary>Insert an already validated Home bundle into the SAME owning sheet; no ink conversion or store.</summary>
+    public DataDrawingObject AddSharedInk(Guid objectId, JsonElement canonicalBundle)
+    {
+        if (objectId == Guid.Empty || Sheet.Drawings.Any(value => value.Id == objectId) ||
+            canonicalBundle.ValueKind != JsonValueKind.Object ||
+            !canonicalBundle.TryGetProperty("objects", out var objects) || objects.ValueKind != JsonValueKind.Array || objects.GetArrayLength() != 1 ||
+            !objects[0].TryGetProperty("objectId", out var id) || !id.TryGetGuid(out var capturedId) || capturedId != objectId ||
+            !objects[0].TryGetProperty("objectType", out var type) || type.GetString() != "drawing.ink")
+            throw new InvalidDataException("A unique canonical shared ink object is required for this sheet drawing.");
+        var drawing = new DataDrawingObject
+        {
+            Id = objectId, Kind = DataDrawingKind.SharedInk, Name = "Drawing stroke",
+            X = 0, Y = 0, Width = 960, Height = 540,
+            ZIndex = Sheet.Drawings.Count == 0 ? 0 : Sheet.Drawings.Max(value => value.ZIndex) + 1,
+            SharedProductivityBundle = canonicalBundle.Clone()
+        };
+        drawing.Normalize(); Sheet.Drawings.Add(drawing); SelectedDrawingId = objectId; return drawing;
+    }
+
     public bool Select(Guid drawingId)
     {
         if (!Sheet.Drawings.Any(value => value.Id == drawingId)) return false;
@@ -59,7 +79,7 @@ public sealed class DataSheetDrawingEditor
     public bool MoveSelected(double x, double y)
     {
         var selected = SelectedDrawing;
-        if (selected is null || selected.Locked || !double.IsFinite(x) || !double.IsFinite(y)) return false;
+        if (selected is null || selected.Locked || selected.Kind == DataDrawingKind.SharedInk || !double.IsFinite(x) || !double.IsFinite(y)) return false;
         if (Math.Abs(selected.X - x) < .001 && Math.Abs(selected.Y - y) < .001) return false;
         selected.X = x; selected.Y = y; return true;
     }
@@ -67,14 +87,14 @@ public sealed class DataSheetDrawingEditor
     public bool ResizeSelected(double width, double height)
     {
         var selected = SelectedDrawing;
-        if (selected is null || selected.Locked || !double.IsFinite(width) || !double.IsFinite(height) || width <= 0 || height <= 0) return false;
+        if (selected is null || selected.Locked || selected.Kind == DataDrawingKind.SharedInk || !double.IsFinite(width) || !double.IsFinite(height) || width <= 0 || height <= 0) return false;
         selected.Width = Math.Clamp(width, 1, 100000); selected.Height = Math.Clamp(height, 1, 100000); return true;
     }
 
     public bool RotateSelected(double degrees)
     {
         var selected = SelectedDrawing;
-        if (selected is null || selected.Locked || !double.IsFinite(degrees)) return false;
+        if (selected is null || selected.Locked || selected.Kind == DataDrawingKind.SharedInk || !double.IsFinite(degrees)) return false;
         selected.Rotation = ((degrees % 360) + 360) % 360; return true;
     }
 

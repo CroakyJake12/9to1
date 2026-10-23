@@ -23,13 +23,13 @@ public sealed class CanvasInkObjectHandler : IHomeProductivityObjectHandler, IHo
     public HomeProductivityObject Create(Guid objectId, JsonElement content)
     {
         var result = new HomeProductivityObject(objectId, Schema.ObjectType, Schema.SchemaVersion, content.Clone(), Json("{}"), Json("{}"), [], Json("{}"));
-        Read(result);
+        ReadStroke(result);
         return result;
     }
 
     public HomeProductivityObject CloneForPaste(HomeProductivityObject source, Guid newObjectId)
     {
-        Read(source);
+        ReadStroke(source);
         if (newObjectId == Guid.Empty || newObjectId == source.ObjectId)
             throw new ArgumentException("A copied stroke requires a distinct nonempty canonical ID.", nameof(newObjectId));
         var content = JsonNode.Parse(source.Content.GetRawText())!.AsObject();
@@ -38,13 +38,13 @@ public sealed class CanvasInkObjectHandler : IHomeProductivityObjectHandler, IHo
         // Target LayerId is deliberately not inferred from selection or paths.
         // The destination owner must explicitly validate/rebind that placement.
         var result = source with { ObjectId = newObjectId, Content = JsonSerializer.SerializeToElement(content) };
-        Read(result);
+        ReadStroke(result);
         return result;
     }
 
     public HomeProductivityObject Transform(HomeProductivityObject source, HomeProductivityAction action)
     {
-        Read(source);
+        ReadStroke(source);
         if (action.ActionId != "ink.color" || action.Version != 1 || action.ObjectType != Schema.ObjectType ||
             !action.ObjectIds.Contains(source.ObjectId) || action.Arguments.ValueKind != JsonValueKind.Object ||
             action.Arguments.EnumerateObject().Count() != 1 || !action.Arguments.TryGetProperty("color", out var color) || color.ValueKind != JsonValueKind.String)
@@ -52,16 +52,16 @@ public sealed class CanvasInkObjectHandler : IHomeProductivityObjectHandler, IHo
         var content = JsonNode.Parse(source.Content.GetRawText())!.AsObject();
         content["ResolvedBrushProperties"]!.AsObject()["Color"] = color.GetString();
         var result = source with { Content = JsonSerializer.SerializeToElement(content) };
-        Read(result); // validate without dropping unknown fields or minting an owner revision
+        ReadStroke(result); // validate without dropping unknown fields or minting an owner revision
         return result;
     }
 
     public HomeProductivityObjectRenderResult Render(HomeProductivityObject source)
     {
-        var stroke = Read(source);
+        var stroke = ReadStroke(source);
         if (stroke.Transform != new CanvasTransform())
             throw new NotSupportedException("The shared native ink renderer requires the owning transformed-stroke renderer for nonidentity transforms.");
-        var style = Style(stroke);
+        var style = ResolveStyle(stroke);
         using var engine = RnoteCanvasEngine.Create();
         engine.DrawStroke(stroke.Samples.Select(sample => new RnotePointerSample(sample.X, sample.Y, sample.Pressure, sample.TiltX, sample.TiltY)).ToArray(), style);
         // Match save/reopen donor numeric precision rather than displaying a transient higher-precision path.
@@ -69,6 +69,16 @@ public sealed class CanvasInkObjectHandler : IHomeProductivityObjectHandler, IHo
         var vector = durable.Render();
         var pixels = CanvasSvgRasterizer.Render(vector.Svg, 512, 512);
         var id = "ink-" + source.ObjectId.ToString("N");
+        var unsupported = RetainedUnsupportedProperties(source, stroke);
+        return new($"<Cui><Object Type=\"spe.raster\" id=\"{id}\" /></Cui>", unsupported)
+        {
+            RasterBindings = [new HomeProductivityRasterBinding(id, source.ObjectId,
+                new HomeProductivityRasterFrame(pixels.Width, pixels.Height, pixels.Stride, pixels.PremultipliedBgra))]
+        };
+    }
+
+    internal static IReadOnlyList<string> RetainedUnsupportedProperties(HomeProductivityObject source, CanvasInkStroke stroke)
+    {
         var unsupported = new List<string>();
         if (stroke.Samples.Any(sample => sample.TiltX != 0 || sample.TiltY != 0)) unsupported.Add("content.Samples.tilt (retained; current donor brush does not use tilt)");
         if (stroke.ExtensionData is not null) unsupported.AddRange(stroke.ExtensionData.Keys.Select(key => "content." + key));
@@ -78,14 +88,10 @@ public sealed class CanvasInkObjectHandler : IHomeProductivityObjectHandler, IHo
             .Select(property => "content.Transform." + property.Name));
         unsupported.AddRange(source.Formatting.EnumerateObject().Select(property => "formatting." + property.Name));
         unsupported.AddRange(source.Layout.EnumerateObject().Select(property => "layout." + property.Name));
-        return new($"<Cui><Object Type=\"spe.raster\" id=\"{id}\" /></Cui>", unsupported)
-        {
-            RasterBindings = [new HomeProductivityRasterBinding(id, source.ObjectId,
-                new HomeProductivityRasterFrame(pixels.Width, pixels.Height, pixels.Stride, pixels.PremultipliedBgra))]
-        };
+        return unsupported;
     }
 
-    private CanvasInkStroke Read(HomeProductivityObject value)
+    internal CanvasInkStroke ReadStroke(HomeProductivityObject value)
     {
         if (value.ObjectId == Guid.Empty || value.ObjectType != Schema.ObjectType || value.SchemaVersion != Schema.SchemaVersion ||
             value.Content.ValueKind != JsonValueKind.Object || value.Formatting.ValueKind != JsonValueKind.Object || value.Layout.ValueKind != JsonValueKind.Object)
@@ -98,11 +104,11 @@ public sealed class CanvasInkObjectHandler : IHomeProductivityObjectHandler, IHo
             stroke.Transform is null || stroke.ResolvedBrushProperties is null || stroke.ResolvedBrushProperties.EngineParameters is null)
             throw new InvalidDataException("Shared ink identity and structure must match the canonical stroke.");
         RnoteCanvasEngine.CaptureSamples(stroke.Samples.Select(sample => new RnotePointerSample(sample.X, sample.Y, sample.Pressure, sample.TiltX, sample.TiltY)).ToArray());
-        Style(stroke).ValidateAndResolve();
+        ResolveStyle(stroke).ValidateAndResolve();
         return stroke;
     }
 
-    private static CanvasRnoteInkStyle Style(CanvasInkStroke stroke)
+    internal static CanvasRnoteInkStyle ResolveStyle(CanvasInkStroke stroke)
     {
         var brush = stroke.ResolvedBrushProperties;
         if (brush.EngineId != "rnote" || !brush.EngineParameters.TryGetValue("brushStyle", out var style) || style.ValueKind != JsonValueKind.String ||

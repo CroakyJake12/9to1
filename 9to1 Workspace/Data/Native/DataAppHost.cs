@@ -31,7 +31,9 @@ public sealed class DataAppHost : IAsyncDisposable
         DataPage? created = null;
         try
         {
-            Page = created = new(_events, repository, formats, queries);
+            // Same Home-authoritative schema/handler library as embedded Data; no private ink store.
+            var sharedInk = new HavenOS.Home.Core.HomeProductivityEngine(handlers: [new HavenOS.Apps.Canvas.CanvasInkObjectHandler()]);
+            Page = created = new(_events, repository, formats, queries, null, null, sharedInk);
             var root = ((HavenSceneControl)Page.Content!).Root
                 ?? throw new InvalidOperationException("The maintained Data editor did not provide its original scene.");
             _landingNew = root.DescendantsAndSelf().OfType<Button>().Single(item => item.Name == "Data.Landing.New");

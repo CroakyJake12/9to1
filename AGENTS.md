@@ -16,6 +16,10 @@ Resume the existing coordinator and cloud ROOT-LIVE checkpoint projection. Inspe
 
 Run `python3 -B eng/development/workflow.py --state <existing-projection.json> recover --repo <actual-repo>` after reading this file. Follow its read order and next actions, reconcile discrepancies and inspect live sessions separately; recovery never proves endpoint access or native acceptance. Before interruption, checkpoint exact source/evidence, ownership, failures, uncommitted changes and next executable actions. No runtime compaction hook is currently configured: this startup procedure and independently tested fresh-context recovery are the supported fallback. Do not create a replacement project or overwrite the remote milestone ledger.
 
+## Guarded SDK and native launches
+
+Before every expensive SDK/native launch, call the read-only `eng/development/workflow.py execution-admission` check (or its `execution_admission` Python API) immediately before invoking the exact guarded runner. Require the actual current named candidate, export-manifest pin, guarded-runner file identity and adopted latest ROOT-LIVE `sdk_admission.runner` proof to match. A failed CAS/check must stop control flow; use a checked Python call or `&&`, never a separate failing command followed by an unconditional shell newline. The validator does not create permission, ownership or an allocation; preserve the existing coordinator admission, full-source/resource/time/process guards and all RC gates. Never refresh pins merely to make a refusal pass.
+
 ## Canonical main — owner amendment, 23 October 2026
 
 The owner requests one consolidated `main` branch: parallel work may stay on branches while in progress, and completed work must be integrated into `main`. Root uses the existing coordinator, isolated scopes, independent review, applicable owning checks and verified-integration workflow for this consolidation. Integrate completed compatible changes promptly, preserving exact accepted-fix lineage, dependencies, source identity and evidence. Source-only or uncompiled staging remains on its development branch until its required integration checks pass.

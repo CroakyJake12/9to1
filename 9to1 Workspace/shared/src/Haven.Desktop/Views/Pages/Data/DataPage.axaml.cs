@@ -36,6 +36,10 @@ public sealed partial class DataPage : UserControl, IDisposable
     private bool _disposed;
 
     public DataPage(HavenEventBus bus, IDataWorkbookRepository repository, IDataWorkbookFormatService formats, IDataWorkbookQueryService queries, GenUiLiveActivityTracker? activities = null, GenUiInstanceStore? genUiInstances = null)
+        : this(bus, repository, formats, queries, activities, genUiInstances, null) { }
+
+    public DataPage(HavenEventBus bus, IDataWorkbookRepository repository, IDataWorkbookFormatService formats, IDataWorkbookQueryService queries,
+        GenUiLiveActivityTracker? activities, GenUiInstanceStore? genUiInstances, HavenOS.Home.Core.HomeProductivityEngine? sharedInkEngine)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -44,7 +48,7 @@ public sealed partial class DataPage : UserControl, IDisposable
         _activities = activities ?? new GenUiLiveActivityTracker();
         _genUiInstances = genUiInstances ?? new GenUiInstanceStore();
         InitializeComponent();
-        _route = new DataHavenScene(); Scene.Root = _route.Root; _ = VisualQueryGraph; _ = SpreadsheetChrome; InitializeSpreadsheetEditingTools(); InitializeRecoveredDataUi();
+        _route = new DataHavenScene(); InitializeSharedInkMount(sharedInkEngine); _ = VisualQueryGraph; _ = SpreadsheetChrome; InitializeSpreadsheetEditingTools(); InitializeRecoveredDataUi();
         _route.PreviousWorkbookRequested += OnPreviousWorkbookRequested; _route.NextWorkbookRequested += OnNextWorkbookRequested; _route.NewWorkbookRequested += OnNewWorkbookRequested; _route.SaveRequested += OnSaveRequested; _route.ImportRequested += OnImportRequested; _route.ExportRequested += OnExportRequested;
         _route.AddSheetRequested += OnAddSheetRequested; _route.DeleteSheetRequested += OnDeleteSheetRequested; _route.AddQueryRequested += OnAddQueryRequested; _route.DeleteQueryRequested += OnDeleteQueryRequested; _route.BuildSqlRequested += OnBuildSqlRequested; _route.RunQueryRequested += OnRunQueryRequested;
         _route.AddShapeRequested += OnAddShapeRequested; _route.PreviousDrawingRequested += OnPreviousDrawingRequested; _route.NextDrawingRequested += OnNextDrawingRequested; _route.RotateDrawingRequested += OnRotateDrawingRequested; _route.DeleteDrawingRequested += OnDeleteDrawingRequested;
@@ -57,7 +61,7 @@ public sealed partial class DataPage : UserControl, IDisposable
 
     public DataWorkbook? Workbook { get; private set; }
     public bool IsDirty => _dirty;
-    internal DataHavenScene Route => _route; internal HavenSceneControl SceneHost => Scene; internal Haven.UI.Components.Page SceneRoot => _route.Root;
+    internal DataHavenScene Route => _route; internal HavenSceneControl SceneHost => _dataScene; internal Haven.UI.Components.Page SceneRoot => _route.Root;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -103,6 +107,7 @@ public sealed partial class DataPage : UserControl, IDisposable
 
     public async Task<bool> SaveAsync(string reason = "Manual save", CancellationToken cancellationToken = default)
     {
+        if (_sharedInkInput?.PendingSubmission is { IsCompleted: false }) { _route.SetStatus("Finish the current drawing stroke before saving or closing Data."); return false; }
         if (Workbook is null) return true; if (Interlocked.Exchange(ref _saveRunning, 1) != 0) return false;
         try
         {
@@ -113,7 +118,7 @@ public sealed partial class DataPage : UserControl, IDisposable
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex) { _route.SetStatus("Couldn’t save this workbook: " + ex.Message); return false; }
-        finally { Interlocked.Exchange(ref _saveRunning, 0); }
+        finally { Interlocked.Exchange(ref _saveRunning, 0); RefreshSharedInkMount(); }
     }
 
     internal async Task<bool> ImportFromPathAsync(string sourcePath, CancellationToken cancellationToken = default)
@@ -225,20 +230,20 @@ public sealed partial class DataPage : UserControl, IDisposable
         var temporary = Path.Combine(Path.GetTempPath(), $"haven-data-export-{Guid.NewGuid():N}.xlsx"); try { if (!await ExportToPathAsync(temporary)) return; await using var source = File.OpenRead(temporary); await using var destination = await file.OpenWriteAsync(); destination.SetLength(0); await source.CopyToAsync(destination); await destination.FlushAsync(); _route.SetStatus("Exported " + file.Name); } finally { TryDeleteTemporary(temporary); }
     }
 
-    private void MarkDirty() { if (Workbook is null) return; Workbook.UpdatedAt = DateTimeOffset.UtcNow; _dirty = true; _route.SetStatus("Unsaved changes · autosave is on"); }
-    private void RenderCurrent() { if (Workbook is null) return; Workbook.Normalize(); _sheetIndex = Math.Clamp(_sheetIndex, 0, Workbook.Sheets.Count - 1); _queryIndex = Math.Clamp(_queryIndex, 0, Workbook.Queries.Count - 1); var sheet = CurrentSheet; if (sheet is not null) _drawingIndex = Math.Clamp(_drawingIndex, 0, Math.Max(0, sheet.Drawings.Count - 1)); _route.SetWorkbook(Workbook, _workbookIndex, _workbooks.Count, _sheetIndex, _queryIndex, _selectedRow, _selectedColumn, _rowOffset, _columnOffset, _lastQueryResult); if (sheet is not null) _route.SetDrawingState(sheet, _drawingIndex); RenderFormulaState(); SyncSpreadsheetEditingUi(); SyncRecoveredDataUi(); }
+    private void MarkDirty() { if (Workbook is null) return; ++_sharedInkEditGeneration; Workbook.UpdatedAt = DateTimeOffset.UtcNow; _dirty = true; _route.SetStatus("Unsaved changes · autosave is on"); }
+    private void RenderCurrent() { if (Workbook is null) return; Workbook.Normalize(); _sheetIndex = Math.Clamp(_sheetIndex, 0, Workbook.Sheets.Count - 1); _queryIndex = Math.Clamp(_queryIndex, 0, Workbook.Queries.Count - 1); var sheet = CurrentSheet; if (sheet is not null) _drawingIndex = Math.Clamp(_drawingIndex, 0, Math.Max(0, sheet.Drawings.Count - 1)); _route.SetWorkbook(Workbook, _workbookIndex, _workbooks.Count, _sheetIndex, _queryIndex, _selectedRow, _selectedColumn, _rowOffset, _columnOffset, _lastQueryResult); if (sheet is not null) _route.SetDrawingState(sheet, _drawingIndex); RenderFormulaState(); SyncSpreadsheetEditingUi(); SyncRecoveredDataUi(); RefreshSharedInkMount(); }
     private void ResetViewState() { _sheetIndex = _queryIndex = _selectedRow = _selectedColumn = _drawingIndex = _rowOffset = _columnOffset = 0; _lastQueryResult = null; ResetSpreadsheetHistory(); }
     private void ResetGridState() { _selectedRow = _selectedColumn = _drawingIndex = _rowOffset = _columnOffset = 0; }
     private async Task RefreshWorkbooksAsync(CancellationToken cancellationToken) => _workbooks = await _repository.ListAsync(cancellationToken);
     private int IndexOfWorkbook(Guid id) { for (var index = 0; index < _workbooks.Count; index++) if (_workbooks[index].Id == id) return index; return 0; }
     private async Task RunBusyAsync(Func<Task> action, string description) { if (_busy || _disposed) return; SetBusy(true); try { await action(); } catch (Exception ex) { _route.SetStatus($"Couldn’t {description}: {ex.Message}"); } finally { SetBusy(false); } }
-    private void SetBusy(bool busy) { _busy = busy; _route.SetBusy(busy); }
+    private void SetBusy(bool busy) { _busy = busy; _route.SetBusy(busy); RefreshSharedInkMount(); }
     private static string SanitizeFileName(string title) { var value = string.IsNullOrWhiteSpace(title) ? "Untitled workbook" : title.Trim(); foreach (var invalid in Path.GetInvalidFileNameChars()) value = value.Replace(invalid, '_'); return value; }
     private void TryDeleteTemporary(string path) { try { if (File.Exists(path)) File.Delete(path); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { _route.SetStatus(_route.StatusText.Content + " Temporary-file cleanup failed: " + ex.Message); } }
 
     public void Dispose()
     {
-        if (_disposed) return; DemandQueryResultsSettledBeforeDispose(); _disposed = true; _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
+        if (_disposed) return; DemandQueryResultsSettledBeforeDispose(); DemandSharedInkSettledBeforeDispose(); DisposeSharedInkMount(); _disposed = true; _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
         _route.PreviousWorkbookRequested -= OnPreviousWorkbookRequested; _route.NextWorkbookRequested -= OnNextWorkbookRequested; _route.NewWorkbookRequested -= OnNewWorkbookRequested; _route.SaveRequested -= OnSaveRequested; _route.ImportRequested -= OnImportRequested; _route.ExportRequested -= OnExportRequested;
         _route.AddSheetRequested -= OnAddSheetRequested; _route.DeleteSheetRequested -= OnDeleteSheetRequested; _route.AddQueryRequested -= OnAddQueryRequested; _route.DeleteQueryRequested -= OnDeleteQueryRequested; _route.BuildSqlRequested -= OnBuildSqlRequested; _route.RunQueryRequested -= OnRunQueryRequested;
         _route.AddShapeRequested -= OnAddShapeRequested; _route.PreviousDrawingRequested -= OnPreviousDrawingRequested; _route.NextDrawingRequested -= OnNextDrawingRequested; _route.RotateDrawingRequested -= OnRotateDrawingRequested; _route.DeleteDrawingRequested -= OnDeleteDrawingRequested;

@@ -3,7 +3,7 @@ using System.Text;
 namespace Haven.Core;
 
 public enum DataCellKind { Text = 0, Number = 1, Boolean = 2, Date = 3, Formula = 4 }
-public enum DataDrawingKind { CustomShape = 0 }
+public enum DataDrawingKind { CustomShape = 0, SharedInk = 1 }
 public enum DataSqlRisk { ReadOnly = 0, Mutating = 1, Destructive = 2, MultipleStatements = 3, Unknown = 4 }
 public sealed record DataSqlSafetyResult(DataSqlRisk Risk, bool IsReadOnly, string Message);
 
@@ -50,7 +50,7 @@ public static class DataSqlSafety
 
 public sealed class DataWorkbook
 {
-    public const int CurrentSchemaVersion = 6;
+    public const int CurrentSchemaVersion = 7;
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = "Untitled workbook";
@@ -177,6 +177,7 @@ public sealed class DataSheet
             drawing.Normalize();
             if (drawing.Id == Guid.Empty || !drawingIds.Add(drawing.Id))
             {
+                if (drawing.Kind == DataDrawingKind.SharedInk) throw new InvalidDataException("Shared drawing identities must remain unique; normalization cannot replace them.");
                 drawing.Id = Guid.NewGuid();
                 drawingIds.Add(drawing.Id);
             }

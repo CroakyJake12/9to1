@@ -24,7 +24,34 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
         services.AddSingleton<IBrowserNavigationPolicy>(provider => provider.GetRequiredService<BrowserNavigationPolicy>());
         services.AddSingleton<BrowserAutomationStore>();
         services.AddSingleton<IBrowserAutomationStore>(provider => provider.GetRequiredService<BrowserAutomationStore>());
-        services.AddSingleton<BrowserDownloadTransport>();
+        if (OperatingSystem.IsLinux())
+        {
+            // Configuration only: both owners consume this exact canonical directory.
+            // Registration neither creates/chmods a root nor grants Files/Home authority.
+            Type[] downloads = [typeof(LinuxOriginalDownloadDirectory),
+                typeof(Haven.Infrastructure.Native.Linux.BrowserOriginalNativeDownloadPhysicalOwner),
+                typeof(IBrowserOriginalNativeDownloadPhysicalOwner), typeof(IBrowserOriginalDownloadFilesPhysicalOwner)];
+            if (services.Any(item => downloads.Contains(item.ServiceType)))
+                throw new InvalidOperationException("Configure the original Linux Browser download owner once.");
+            services.AddSingleton(provider =>
+            {
+                var paths = provider.GetRequiredService<IAppPaths>();
+                var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                return new LinuxOriginalDownloadDirectory(Path.GetFullPath(string.IsNullOrWhiteSpace(profile)
+                    ? Path.Combine(paths.DataDirectory, "Downloads") : Path.Combine(profile, "Downloads", "Haven")));
+            });
+            services.AddSingleton(provider => new Haven.Infrastructure.Native.Linux.BrowserOriginalNativeDownloadPhysicalOwner(
+                provider.GetRequiredService<LinuxOriginalDownloadDirectory>().Path));
+            services.AddSingleton<IBrowserOriginalNativeDownloadPhysicalOwner>(provider =>
+                provider.GetRequiredService<Haven.Infrastructure.Native.Linux.BrowserOriginalNativeDownloadPhysicalOwner>());
+            services.AddSingleton<IBrowserOriginalDownloadFilesPhysicalOwner>(provider =>
+                provider.GetRequiredService<Haven.Infrastructure.Native.Linux.BrowserOriginalNativeDownloadPhysicalOwner>());
+            services.AddSingleton(provider => new BrowserDownloadTransport(
+                provider.GetRequiredService<IBrowserNavigationPolicy>(),
+                provider.GetRequiredService<LinuxOriginalDownloadDirectory>().Path,
+                provider.GetRequiredService<IBrowserOriginalNativeDownloadPhysicalOwner>()));
+        }
+        else services.AddSingleton<BrowserDownloadTransport>();
         services.AddSingleton<BrowserBackgroundPageLoader>();
         services.AddSingleton(provider => new BrowserAutomationService(
             provider.GetRequiredService<BrowserSessionService>(),
@@ -85,6 +112,7 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
         services.AddSingleton(new Registration());
         return services;
     }
+    private sealed record LinuxOriginalDownloadDirectory(string Path);
     private sealed class Registration { }
 }
 

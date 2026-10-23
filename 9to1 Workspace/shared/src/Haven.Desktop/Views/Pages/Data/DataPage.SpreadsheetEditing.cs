@@ -172,15 +172,20 @@ public sealed partial class DataPage
         workbook.Id, sheet.Id, sheet.Cells.Select(CloneCell).ToList(), new Dictionary<string, string>(sheet.Metadata, StringComparer.Ordinal),
         workbook.Tables.Where(value => value.SheetId == sheet.Id).Select(CloneTableDefinition).ToList(),
         workbook.Validations.Where(value => value.SheetId == sheet.Id).Select(CloneValidationRule).ToList(),
-        workbook.Charts.Where(value => value.SheetId == sheet.Id).Select(CloneChartDefinition).ToList());
+        workbook.Charts.Where(value => value.SheetId == sheet.Id).Select(CloneChartDefinition).ToList(),
+        sheet.Drawings.Select(CloneDrawing).ToList());
 
     private static void RestoreSheetSnapshot(DataWorkbook workbook, DataSheet sheet, DataSheetEditSnapshot snapshot)
     {
+        sheet.Drawings = snapshot.Drawings.Select(CloneDrawing).ToList();
         sheet.Cells = snapshot.Cells.Select(CloneCell).ToList(); sheet.Metadata = new Dictionary<string, string>(snapshot.Metadata, StringComparer.Ordinal); sheet.Normalize(sheet.Order);
         workbook.Tables.RemoveAll(value => value.SheetId == sheet.Id); workbook.Tables.AddRange(snapshot.Tables.Select(CloneTableDefinition));
         workbook.Validations.RemoveAll(value => value.SheetId == sheet.Id); workbook.Validations.AddRange(snapshot.Validations.Select(CloneValidationRule));
         workbook.Charts.RemoveAll(value => value.SheetId == sheet.Id); workbook.Charts.AddRange(snapshot.Charts.Select(CloneChartDefinition));
     }
+
+    private static DataDrawingObject CloneDrawing(DataDrawingObject value) => System.Text.Json.JsonSerializer.Deserialize<DataDrawingObject>(System.Text.Json.JsonSerializer.Serialize(value))
+        ?? throw new InvalidDataException("The canonical drawing could not be included in spreadsheet history.");
 
     private static DataCell CloneCell(DataCell cell) => new() { Row = cell.Row, Column = cell.Column, Kind = cell.Kind, Value = cell.Value, Formula = cell.Formula, Metadata = new Dictionary<string, string>(cell.Metadata, StringComparer.Ordinal) };
     private static DataTableDefinition CloneTableDefinition(DataTableDefinition value) => new() { Id = value.Id, SheetId = value.SheetId, Name = value.Name, Range = value.Range.Clone(), HasHeaders = value.HasHeaders, SortColumn = value.SortColumn, SortDescending = value.SortDescending, Filters = value.Filters.Select(filter => new DataTableFilter { Column = filter.Column, Operator = filter.Operator, Value = filter.Value }).ToList(), Metadata = new Dictionary<string, string>(value.Metadata, StringComparer.Ordinal) };
@@ -190,6 +195,6 @@ public sealed partial class DataPage
     private static string Address(int row, int column) => ColumnNameForTools(column) + (row + 1).ToString(CultureInfo.InvariantCulture);
     private static string ColumnNameForTools(int column) { var value = column + 1; var result = string.Empty; while (value > 0) { value--; result = (char)('A' + value % 26) + result; value /= 26; } return result; }
 
-    private sealed record DataSheetEditSnapshot(Guid WorkbookId, Guid SheetId, List<DataCell> Cells, Dictionary<string, string> Metadata, List<DataTableDefinition> Tables, List<DataValidationRule> Validations, List<DataChartDefinition> Charts);
+    private sealed record DataSheetEditSnapshot(Guid WorkbookId, Guid SheetId, List<DataCell> Cells, Dictionary<string, string> Metadata, List<DataTableDefinition> Tables, List<DataValidationRule> Validations, List<DataChartDefinition> Charts, List<DataDrawingObject> Drawings);
     private sealed record SpreadsheetSortRow(int Row, DataCell? Cell);
 }

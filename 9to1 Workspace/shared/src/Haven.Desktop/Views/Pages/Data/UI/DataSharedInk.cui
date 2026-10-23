@@ -1,0 +1,20 @@
+<Cui id="9to1.Data.SharedInk" version="1">
+  <Page>
+    <Container Type="Vertical Stack" CellGap="8" Padding="8" accessible-name="Draw on this worksheet">
+      <Text text="Draw on this worksheet" />
+      <Container Type="Wrap" CellGap="6" accessible-name="Worksheet drawing tools">
+        <Button content="Pen" action="data.ink.pen" Interactive="{Binding CanDraw}" />
+        <Button content="Highlighter" action="data.ink.marker" Interactive="{Binding CanDraw}" />
+        <Button content="Delete selected stroke" action="data.ink.delete" Interactive="{Binding CanDelete}" />
+        <Button content="Undo" action="data.ink.undo" Interactive="{Binding CanUndo}" />
+        <Button content="Redo" action="data.ink.redo" Interactive="{Binding CanRedo}" />
+        <Button content="Retry drawing" action="data.ink.refresh" />
+      </Container>
+      <Text text="{Binding DrawingContext}" accessible-name="Current drawing sheet and selected tool" />
+      <Container Type="Grid" Height="300" Background="#FFFFFFFF" accessible-name="Worksheet drawing paper">
+        <Object Type="shared.ink.input" id="data-shared-ink-input" Height="300" accessible-name="Draw a stroke using a pen, mouse or touch" />
+      </Container>
+      <Text text="{Binding Status}" accessible-name="Worksheet drawing availability" />
+    </Container>
+  </Page>
+</Cui>

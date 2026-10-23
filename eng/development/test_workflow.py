@@ -1107,6 +1107,169 @@ class WorkflowTests(unittest.TestCase):
         w.provider_allowed(["dotnet", "build", "/workspace/9to1-mercury-profile10-first-main-close-20261021/Tests.csproj"])
 
 
+
+class ExecutionAdmissionTests(unittest.TestCase):
+    """Read-only current launch-pin checks; fixtures use no Git, SDK or network."""
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="execution-admission-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.source = self.root / "export"; self.source.mkdir()
+        self.logic = self.source / "logic.txt"; self.logic.write_text("actual fixture source\n")
+        self.runner = self.root / "guarded runner.py"; self.runner.write_text("# exact admitted guarded runner\n"); self.runner.chmod(0o600)
+        self.revision = "b" * 40; self.base = "a" * 40
+        self.manifest = self.root / "manifest.json"
+        identity = w.file_identity(self.logic)
+        self.manifest.write_bytes(w.encoded({"schema": "9to1.exact-source-export/v1", "root": str(self.source),
+            "origin_git": str(self.root / "objects"), "source_revision": self.base, "candidate_revision": self.revision,
+            "files": [{"path": "logic.txt", **{k: v for k, v in identity.items() if k != "kind"}}]}))
+        self.manifest.chmod(0o600)
+        self.manifest_pin = {"path": str(self.manifest), **w.file_identity(self.manifest)}
+        self.runner_pin = {"path": str(self.runner), **w.file_identity(self.runner)}
+        self.proof_path = self.root / "ROOT-LIVE-admitted.json"
+        self.proof = {"schema": "9to1.root-live/v1", "candidate": self.revision, "expected_next_generation": 7,
+                      "source_manifest": self.manifest_pin, "sdk_admission": {"runner": self.runner_pin}}
+        self.proof_path.write_bytes(w.encoded(self.proof)); self.proof_path.chmod(0o600)
+        self.root_pin = {"path": str(self.proof_path), **w.file_identity(self.proof_path)}
+        self.state = {"schema": 1, "generation": 7, "development_candidates": {"active": {
+            "revision": self.revision, "base_revision": self.base, "worktree": str(self.source), "manifest": self.manifest_pin}},
+            "execution_custody": {"active": {"revision": self.revision, "owner": "/root", "source": {
+                "kind": "source-export", "path": str(self.source), "manifest": self.manifest_pin,
+                "git": {"path": str(self.root / "objects"), "common_directory": str(self.root / "objects"),
+                        "revision": self.base, "required_revisions": [self.revision]}}, "build_dependencies": {
+                "actual-guarded-sdk-runner": {"path": str(self.runner), "identity": w.file_identity(self.runner),
+                    "recovery": "restore", "next_action": "Run only the admitted guarded fixture"}}}},
+            "recovery_assets": {"latest-root-checkpoint": self.root_pin}, "last_root_checkpoint_observed": self.root_pin}
+        self.state_path = self.root / "state.json"; self.save()
+        self.args = dict(state_path=self.state_path, execution="active", source_path=self.source, revision=self.revision,
+                         manifest_path=self.manifest, manifest_sha256=self.manifest_pin["sha256"], runner_path=self.runner)
+
+    def save(self): self.state_path.write_bytes(w.encoded(self.state))
+
+    def refuse(self, reason, **arguments):
+        before = self.state_path.read_bytes()
+        with self.assertRaisesRegex(w.Refusal, reason): w.execution_admission(**{**self.args, **arguments})
+        self.assertEqual(before, self.state_path.read_bytes(), "refusal must not change the ledger")
+
+    def test_current_proof_and_all_exact_pins_match_without_launch_or_mutation(self):
+        before = self.state_path.read_bytes()
+        with patch.object(w, "execution_files", side_effect=AssertionError("whole-source rehash is the owning runner's job")), \
+             patch.object(w, "git", side_effect=AssertionError("this narrow validator must not invoke Git")):
+            result = w.execution_admission(**self.args)
+        self.assertEqual("PASS", result["result"])
+        self.assertEqual(self.revision, result["revision"])
+        self.assertFalse(result["admission_created"])
+        self.assertFalse(result["process_launched"])
+        self.assertFalse(result["source_files_revalidated"])
+        self.assertEqual(before, self.state_path.read_bytes())
+
+    def test_stale_requested_candidate_and_stale_record_refuse(self):
+        self.refuse("candidate revision", revision="c" * 40)
+        self.state["execution_custody"]["active"]["revision"] = "c" * 40; self.save()
+        self.refuse("candidate revision")
+
+    def test_missing_current_runner_admission_refuses(self):
+        del self.state["execution_custody"]["active"]["build_dependencies"]["actual-guarded-sdk-runner"]; self.save()
+        self.refuse("runner admission")
+
+    def test_runner_admission_strict_shape_and_identity_are_required(self):
+        original = copy.deepcopy(self.state)
+        for key, value in (("identity", None), ("recovery", "invent"), ("next_action", ""), ("extra", True)):
+            with self.subTest(field=key):
+                self.state = copy.deepcopy(original)
+                self.state["execution_custody"]["active"]["build_dependencies"]["actual-guarded-sdk-runner"][key] = value
+                self.save(); self.refuse("runner admission")
+
+    def test_changed_runner_bytes_and_mode_refuse(self):
+        self.runner.write_text("# replacement runner\n"); self.refuse("runner.*identity|content identity")
+        self.runner.write_text("# exact admitted guarded runner\n"); self.runner.chmod(0o700)
+        self.refuse("runner.*identity|content identity")
+
+    def test_same_bytes_at_another_runner_path_and_symlink_refuse(self):
+        other = self.root / "copied.py"; other.write_bytes(self.runner.read_bytes()); other.chmod(0o600)
+        self.refuse("runner path", runner_path=other)
+        self.runner.unlink(); self.runner.symlink_to(other)
+        self.refuse("runner.*identity|content identity")
+
+    def test_changed_manifest_bytes_and_unadopted_manifest_pin_refuse(self):
+        self.manifest.write_bytes(self.manifest.read_bytes()+b" "); self.refuse("manifest")
+        self.manifest.write_bytes(self.manifest.read_bytes()[:-1])
+        self.state["development_candidates"]["active"]["manifest"] = {**self.manifest_pin, "sha256": "f" * 64}; self.save()
+        self.refuse("manifest pin")
+
+    def test_missing_latest_root_proof_and_missing_sdk_admission_refuse(self):
+        for key in ("recovery_assets", "last_root_checkpoint_observed"):
+            original = copy.deepcopy(self.state); self.state.pop(key); self.save(); self.refuse("Root")
+            self.state = original; self.save()
+        self.proof.pop("sdk_admission"); self.adopt_proof(); self.refuse("Root.*admission")
+
+    def adopt_proof(self):
+        self.proof_path.write_bytes(w.encoded(self.proof))
+        pin = {"path": str(self.proof_path), **w.file_identity(self.proof_path)}
+        self.state["recovery_assets"]["latest-root-checkpoint"] = pin
+        self.state["last_root_checkpoint_observed"] = pin; self.save()
+
+    def test_changed_root_bytes_and_unadopted_observation_refuse(self):
+        self.proof_path.write_bytes(self.proof_path.read_bytes()+b" "); self.refuse("Root")
+        self.proof_path.write_bytes(self.proof_path.read_bytes()[:-1])
+        self.state["last_root_checkpoint_observed"] = {"path": str(self.root / "unadopted.json"), "sha256": "0" * 64}; self.save()
+        self.refuse("Root.*match")
+
+    def test_root_candidate_manifest_runner_or_failed_cas_generation_mismatch_refuses(self):
+        original = copy.deepcopy(self.proof)
+        for mutate in (lambda p: p.update(candidate="c" * 40),
+                       lambda p: p.update(source_manifest={**self.manifest_pin, "sha256": "f" * 64}),
+                       lambda p: p.update(sdk_admission={"runner": {**self.runner_pin, "sha256": "f" * 64}}),
+                       lambda p: p.update(expected_next_generation=8)):
+            with self.subTest(mutation=mutate):
+                self.proof = copy.deepcopy(original); mutate(self.proof); self.adopt_proof(); self.refuse("Root")
+
+    def test_new_runner_record_without_adopted_root_proof_refuses(self):
+        self.runner.write_text("# not yet admitted replacement\n")
+        dependency = self.state["execution_custody"]["active"]["build_dependencies"]["actual-guarded-sdk-runner"]
+        dependency["identity"] = w.file_identity(self.runner); self.save()
+        # An unadopted Root file cannot repair the current ledger's old proof.
+        unadopted = {**self.proof, "sdk_admission": {"runner": {"path": str(self.runner), **dependency["identity"]}}}
+        (self.root / "unadopted.json").write_bytes(w.encoded(unadopted))
+        self.refuse("Root.*runner")
+
+    def test_state_changed_during_validation_refuses_instead_of_using_snapshot(self):
+        original = w.export_files
+        def changed(source, revision):
+            files = original(source, revision)
+            self.state["development_candidates"]["active"]["revision"] = "c" * 40; self.save(); return files
+        with patch.object(w, "export_files", side_effect=changed), self.assertRaisesRegex(w.Refusal, "changed during"):
+            w.execution_admission(**self.args)
+        self.assertEqual(w.encoded(self.state), self.state_path.read_bytes(), "the real concurrent update must remain preserved")
+
+    def test_unrelated_later_checkpoint_is_allowed_with_same_current_admission(self):
+        self.state["generation"] += 1; self.state["unrelated_task"] = "checkpoint only"; self.save()
+        self.assertEqual("PASS", w.execution_admission(**self.args)["result"])
+
+    def test_cli_refusal_prevents_chained_harmless_launch(self):
+        import shlex
+        del self.state["execution_custody"]["active"]["build_dependencies"]["actual-guarded-sdk-runner"]; self.save()
+        marker = self.root / "must-not-launch.txt"
+        command = [sys.executable, "-B", str(Path(w.__file__)), "--state", str(self.state_path), "execution-admission",
+                   "--execution", "active", "--source", str(self.source), "--revision", self.revision,
+                   "--manifest", str(self.manifest), "--manifest-sha256", self.manifest_pin["sha256"], "--runner", str(self.runner)]
+        harmless = [sys.executable, "-B", "-c", "from pathlib import Path; Path("+repr(str(marker))+").write_text('launched')"]
+        result = subprocess.run(["bash", "-c", shlex.join(command)+" && "+shlex.join(harmless)], capture_output=True, text=True, timeout=15)
+        self.assertEqual(2, result.returncode); self.assertEqual("", result.stderr)
+        self.assertEqual("BLOCKED", json.loads(result.stdout)["result"])
+        self.assertFalse(marker.exists(), "a failed admission must stop the following launch")
+
+    def test_cli_success_reads_only_and_does_not_mint_admission(self):
+        before = self.state_path.read_bytes()
+        command = [sys.executable, "-B", str(Path(w.__file__)), "--state", str(self.state_path), "execution-admission",
+                   "--execution", "active", "--source", str(self.source), "--revision", self.revision,
+                   "--manifest", str(self.manifest), "--manifest-sha256", self.manifest_pin["sha256"], "--runner", str(self.runner)]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=15)
+        self.assertEqual(0, result.returncode, result.stdout+result.stderr)
+        self.assertEqual("PASS", json.loads(result.stdout)["result"])
+        self.assertFalse(json.loads(result.stdout)["admission_created"])
+        self.assertEqual(before, self.state_path.read_bytes())
+
 def load_tests(loader, tests, pattern):
     # The existing CI/selector names this suite explicitly. Include the owning
     # copy-budget regression suite there; broad discovery loads it separately.

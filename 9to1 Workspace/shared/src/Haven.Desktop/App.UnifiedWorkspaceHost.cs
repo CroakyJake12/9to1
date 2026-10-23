@@ -344,7 +344,8 @@ public sealed partial class App
             _chrome = await _chromeCreation;
             DemandCurrent();
             _sharedGateway = new HavenGateway(this);
-            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent, sharedContext: new SharedHostContext(this));
+            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent,
+                CaptureOriginalDownloadFilesService(), sharedContext: new SharedHostContext(this));
             var theme = _homeTheme?.Context
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, theme);
@@ -691,6 +692,7 @@ public sealed partial class App
         public void DemandExternalOriginalRetirementJoin()
         {
             CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+            _originalDownloadFiles?.DemandExternalOriginalRetirementJoin();
             if (_workspace is { } workspace) workspace.DemandExternalOriginalRetirementJoin();
             else _chrome?.DemandExternalOriginalRetirementJoin();
         }
@@ -770,6 +772,10 @@ public sealed partial class App
                 await JoinSharedPanelSettlementAsync(failures);
                 if (producersStopped)
                 {
+                    // Browser admission/commands and native engines have drained. Only
+                    // then retire this Files registration cohort; Home/Files are borrowed.
+                    try { await JoinOriginalDownloadFilesAsync(failures); }
+                    catch (Exception error) { AddAppCause(failures, error); }
                     try { _sceneClose ??= _scene?.CloseOriginalAsync(); } catch (Exception error) { AddAppCause(failures, error); }
                     await Join(_sceneClose);
                     if (_sceneClose is null or { IsCompletedSuccessfully: true })

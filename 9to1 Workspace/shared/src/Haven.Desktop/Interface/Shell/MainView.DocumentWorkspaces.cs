@@ -43,7 +43,8 @@ public sealed partial class MainView
                 sharedInkEngine: services.GetService<HavenOS.Home.Core.HomeNativeWindowsComposition>()?.Productivity.Engine),
             "data" or "data-database" or "data-spreadsheet" => new DataPage(_bus, services.GetRequiredService<IDataWorkbookRepository>(),
                 services.GetRequiredService<IDataWorkbookFormatService>(), services.GetRequiredService<IDataWorkbookQueryService>(),
-                services.GetRequiredService<GenUiLiveActivityTracker>(), services.GetRequiredService<GenUiInstanceStore>()),
+                services.GetRequiredService<GenUiLiveActivityTracker>(), services.GetRequiredService<GenUiInstanceStore>(),
+                sharedInkEngine: services.GetService<HavenOS.Home.Core.HomeNativeWindowsComposition>()?.Productivity.Engine),
             "boards" => new BoardsPage(_bus, services.GetRequiredService<IBoardsWorkspaceService>(),
                 services.GetService<INotesAttachmentStore>()),
             _ => throw new InvalidOperationException($"{key} is not a direct document workspace.")
