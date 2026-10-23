@@ -297,12 +297,16 @@ public sealed partial class App
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement));
             var build = BuildBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
                 (intent, settlement) => OriginalClose is null && _workspace is { } workspace && workspace.QueueNavigation(intent, settlement));
+            var actualTheme = _homeTheme
+                ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
+            var boards = BoardsBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
+                () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context);
             var modes = _services.GetRequiredService<IModeRegistry>();
             // The SAME production registration helper builds the genuine native-app set (files, spaces,
-            // dev) and is exercised verbatim by the routing regression (NativeAppContentRegistryTests).
+            // dev, boards) and is exercised verbatim by the routing regression (NativeAppContentRegistryTests).
             // Chat is canonicalized to the Spaces Chat resource by HomeLaunchRouteResolver before admission.
             var apps = new NativeAppContentRegistry(modes,
-                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build), () => IsCurrent);
+                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build, boards), () => IsCurrent);
             var catalogue = _app.RetainOriginalModelCatalogueRegistry(_services.GetRequiredService<IServiceProvider>());
             var privacy = _services.GetRequiredService<IPrivacyPreferenceStore>();
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,

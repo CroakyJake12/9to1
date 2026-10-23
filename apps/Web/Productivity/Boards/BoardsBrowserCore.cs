@@ -20,6 +20,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     private readonly ObservedNotesRepository _writes;
     private readonly BoardsWorkspaceService _boards;
     private readonly Func<Exception, bool> _unknown;
+    private readonly string? _storageDetail;
     private readonly SemaphoreSlim _operations = new(1, 1);
     private NotesDocument? _document;
     private IReadOnlyList<NotesDocumentSummary> _notebooks = [];
@@ -40,11 +41,13 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public BoardsBrowserCore(INotesRepository authorisedRepository, INotesAttachmentStore? attachments = null,
-        Func<Exception, bool>? unknownOutcome = null, IBoardsNotebookSummarySource? summarySource = null)
+        Func<Exception, bool>? unknownOutcome = null, IBoardsNotebookSummarySource? summarySource = null,
+        string? storageDetail = null)
     {
         _repository = authorisedRepository ?? throw new ArgumentNullException(nameof(authorisedRepository));
         _writes = new(authorisedRepository); _boards = new(_writes, attachments, summarySource);
         _unknown = unknownOutcome ?? (_ => false);
+        _storageDetail = storageDetail;
     }
     public NotesDocument? GetDocumentSnapshot() => _document is null ? null : Clone(_document);
     public async Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken token = default)
@@ -65,6 +68,17 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         if (IsBusy || _disposed || DocumentId != id || DurableRevision != revision || _generation != generation)
             throw new InvalidOperationException("A changed core cannot be rolled back as an untransferred view.");
         _presentationPending = true;
+    }
+    /// <summary>Freeze the exact clean owner snapshot after actual close preparation. No
+    /// save, ownership or discard is implied. The native preparation keeps this same core
+    /// and restores it with AdmitPresentation if external retirement is aborted.</summary>
+    internal bool TrySuspendPreparedPresentation(Guid? id, long revision, long generation)
+    {
+        if (_disposed || _presentationPending || IsBusy || IsDirty || _pending is not null ||
+            _operations.CurrentCount != 1 || DocumentId != id || DurableRevision != revision || _generation != generation) return false;
+        _presentationPending = true;
+        try { Notify(); } catch { _presentationPending = false; throw; }
+        return true;
     }
     internal void AbandonUnadmittedPresentation()
     {
@@ -144,7 +158,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         var candidate = Clone(_document); candidate.Version = DurableRevision;
         var intended = Clone(candidate); var generation = _generation;
         _writes.Reset();
-        try { await _boards.SaveAsync(candidate, "Saved browser Boards notebook", ct); }
+        try { await _boards.SaveAsync(candidate, "Saved Boards notebook", ct); }
         catch (Exception error) when (_unknown(error)) { _pending = new(intended, DurableRevision, generation); throw; }
         var receipt = _writes.Receipt ?? throw new InvalidDataException("The owner returned without a canonical save receipt.");
         _document.Version = receipt.Version; _document.UpdatedAt = candidate.UpdatedAt; _document.Recovery = candidate.Recovery;
@@ -195,7 +209,9 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         if (_document?.Id != receipt.DocumentId) throw new InvalidDataException("The canonical receipt identity differs from this notebook.");
         LastAcknowledgedSave = receipt; DurableRevision = receipt.Version;
         RememberBoard();
-        Status = receipt.VersionHistoryComplete ? IsDirty ? "Unsaved changes" : "Saved" : "Saved; version history needs attention";
+        Status = IsDirty ? "Saved copy acknowledged; newer changes remain unsaved" : "Saved";
+        if (!receipt.VersionHistoryComplete) Status += "; version history needs attention";
+        if (!string.IsNullOrWhiteSpace(receipt.PostCommitWarning)) Status += "; " + receipt.PostCommitWarning;
     }
     private async Task<HomeCoreOperationResult<T>> Operate<T>(Func<CancellationToken, Task<HomeCoreOperationResult<T>>> action, CancellationToken token)
     {
@@ -212,6 +228,10 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     }
     public bool TryGetValue(string path, out object? value)
     {
+        // Host wording describes the actual same repository location, never a storage guarantee.
+        // Browser callers retain their existing browser-data notice; native composition supplies
+        // its genuine device-store description without forking the shared CUI workspace.
+        if (path == "StorageDetail" && _storageDetail is not null) { value = _storageDetail; return true; }
         if (TryGetWorkspaceValue(path, out value)) return true;
         value = path switch
         {

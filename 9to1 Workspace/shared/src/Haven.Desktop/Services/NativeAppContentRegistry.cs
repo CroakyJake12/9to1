@@ -589,21 +589,25 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         private static readonly ModeDefinition Files = BuiltInModeSeed.Modes.Single(mode => mode.Key == "files");
         private static readonly ModeDefinition Spaces = BuiltInModeSeed.Modes.Single(mode => mode.Key == "spaces");
         private static readonly ModeDefinition Dev = BuiltInModeSeed.Modes.Single(mode => mode.Key == "dev");
+        private static readonly ModeDefinition Boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
 
         public static IEnumerable<NativeAppContentRegistration> Build(
             IBrowseAppContentFactory files,
             IBrowseAppContentFactory spaces,
-            IBrowseAppContentFactory build)
+            IBrowseAppContentFactory build,
+            IBrowseAppContentFactory? boards = null)
         {
             ArgumentNullException.ThrowIfNull(files);
             ArgumentNullException.ThrowIfNull(spaces);
             ArgumentNullException.ThrowIfNull(build);
-            return
+            NativeAppContentRegistration[] registered =
             [
                 new(Files.Id, Files.Key, HavenAppRouteKind.Files, files),
                 new(Spaces.Id, Spaces.Key, HavenAppRouteKind.Spaces, spaces),
                 new(Dev.Id, Dev.Key, HavenAppRouteKind.Dev, build),
             ];
+            return boards is null ? registered :
+                [.. registered, new(Boards.Id, Boards.Key, HavenAppRouteKind.ModeWorkspace, boards)];
         }
     }
 }

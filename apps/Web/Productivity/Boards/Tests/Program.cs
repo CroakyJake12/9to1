@@ -6,8 +6,8 @@ using Haven.Core;
 using Haven.Infrastructure;
 using NineToOne.Web.Productivity.Boards;
 
-if (args.Length != 1 || args[0] is not ("seed" or "verify" or "unknown" or "workspace") || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")))
-    throw new ArgumentException("Choose seed/verify/unknown in an explicitly isolated actual repository fixture.");
+if (args.Length != 1 || args[0] is not ("seed" or "verify" or "unknown" or "workspace" or "warnings") || string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("HAVEN_DATA_DIR")))
+    throw new ArgumentException("Choose seed/verify/unknown/workspace/warnings in an explicitly isolated actual repository fixture.");
 var paths = new AppPaths();
 var repository = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
 var core = new BoardsBrowserCore(repository);
@@ -95,6 +95,30 @@ else if (args[0] == "verify")
     Check(!(await core.PrepareToCloseAsync()).Succeeded && core.DocumentId == state.Id && core.IsDirty,
         "failed actual close preparation preserves unresolved canonical draft");
 }
+else if (args[0] == "warnings")
+{
+    Check((await repository.ListAsync(default)).Count == 0, "warning fixture uses a fresh actual canonical repository");
+    var reported = new LostReceipt(repository) { Warning = "Original Home outcome audit needs attention", HistoryComplete = false };
+    var warningCore = new BoardsBrowserCore(reported, storageDetail: "Original Home-owned Notes store on this device; account sign-in does not sync this library.");
+    Check((await warningCore.CreateAsync("Actual owner warning")).Succeeded && warningCore.DurableRevision == 1 && !warningCore.IsDirty,
+        "real committed save with post-commit warning remains acknowledged without blind replay");
+    Check(warningCore.Status.Contains("version history needs attention", StringComparison.Ordinal) &&
+        warningCore.Status.Contains(reported.Warning, StringComparison.Ordinal) &&
+        ReferenceEquals(warningCore.LastAcknowledgedSave, reported.Receipt),
+        "visible shared CUI save status preserves exact owner warning and genuine history notice");
+    Check(warningCore.TryGetValue("Status", out var status) && Equals(status, warningCore.Status) &&
+        warningCore.TryGetValue("StorageDetail", out var nativeStorage) && ((string)nativeStorage!).Contains("Home-owned", StringComparison.Ordinal) &&
+        core.TryGetValue("StorageDetail", out var browserStorage) && ((string)browserStorage!).Contains("browser data", StringComparison.Ordinal),
+        "same core keeps actual native and existing browser storage wording without separate presentation");
+    var saved = await repository.LoadAsync(warningCore.DocumentId!.Value, default);
+    Check(saved!.Version == 1 && (await repository.ListAsync(default)).Count == 1,
+        "warning acknowledgement does not create duplicate canonical documents or a second commit");
+    await warningCore.AddSectionAsync("Further actual change");
+    reported.Warning = null; reported.HistoryComplete = true;
+    Check((await warningCore.SaveAsync()).Succeeded && warningCore.Status == "Saved" && warningCore.DurableRevision == 2,
+        "next clean genuine receipt clears prior warning rather than permanently reporting stale failure");
+    await warningCore.CloseAsync(); await warningCore.DisposeAsync();
+}
 else
 {
     Check((await repository.ListAsync(default)).Count == 0, "unknown-commit actual repository fixture is fresh");
@@ -123,10 +147,12 @@ internal sealed record State(Guid Id, long Version, string Canonical, Guid PageI
 sealed class LostReceipt(INotesRepository actual) : INotesRepository
 {
     public bool Lose { get; set; }
+    public string? Warning { get; set; }
+    public bool HistoryComplete { get; set; } = true;
     public IOException Error { get; } = new("Controlled loss after genuine canonical owner commit");
     public NotesSaveResult? Receipt { get; private set; }
     public async Task<NotesSaveResult> SaveAsync(NotesDocument document, string reason, CancellationToken token)
-    { Receipt = await actual.SaveAsync(document, reason, token); if (Lose) { Lose = false; throw Error; } return Receipt; }
+    { Receipt = (await actual.SaveAsync(document, reason, token)) with { PostCommitWarning = Warning, VersionHistoryComplete = HistoryComplete }; if (Lose) { Lose = false; throw Error; } return Receipt; }
     public Task<IReadOnlyList<NotesDocumentSummary>> ListAsync(CancellationToken token) => actual.ListAsync(token);
     public Task<NotesDocument?> LoadAsync(Guid id, CancellationToken token) => actual.LoadAsync(id, token);
     public Task DeleteAsync(Guid id, CancellationToken token) => actual.DeleteAsync(id, token);
