@@ -25,7 +25,7 @@ var output = Path.GetFullPath(args[0]);
 var results = new List<object>();
 var failures = 0;
 await using var session = HeadlessUnitTestSession.StartNew(typeof(BoardsProductionMountApplication));
-await session.Dispatch(async () =>
+await session.Dispatch<int>(async () =>
 {
     async Task Case(string name, Func<Task> body)
     {
@@ -94,6 +94,7 @@ await session.Dispatch(async () =>
         view.Cancel(); Demand(!actual.IsCompleted, "View retirement fabricated original settlement.");
         owner.Release.SetResult(); Demand((await actual).Succeeded, "Legacy completed source lost its prior implicit outcome.");
     });
+    return 0;
 }, CancellationToken.None);
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
 await File.WriteAllTextAsync(output, JsonSerializer.Serialize(new { discovered = results.Count, passed = results.Count - failures,
