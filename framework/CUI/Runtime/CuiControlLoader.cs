@@ -567,7 +567,9 @@ public sealed partial class CuiControlLoader : IDisposable
         // teardown callbacks can settle old work. Domain tasks/receipts remain owned and drained;
         // only publication of their UI outcome/local transitions into this frame is withdrawn.
         _committedActionFrame = new object();
+        var mountingFrame = _committedActionFrame;
         _effectsReady = false; // a rejected preflight leaves prior effects operational
+        _effectRoot = null; // a failed replacement must not reactivate the retired root
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -635,6 +637,7 @@ public sealed partial class CuiControlLoader : IDisposable
 
         // The first component is the root
         var root = LoadComponent(visibleRoot);
+        EnsureCurrentMount();
 
         // Record whether the authored root owns its own composite backdrop (so a
         // rounded authored surface, not a square host fill, owns the scene).
@@ -645,13 +648,24 @@ public sealed partial class CuiControlLoader : IDisposable
         if (_bindingContext is not null)
             root.DataContext = _bindingContext;
 
-        // Install declarative auto-invocation effects for this loaded document.
+        // Renderer factories, bound getters and native observers are external callbacks. A
+        // stale outer mount must not overwrite the effects of a replacement or closed loader.
+        EnsureCurrentMount();
+        // Prepare effects without executing them against a partially wired control tree.
+        // WireBindings activates only this exact committed root after all descendants are wired.
         _effects = document.Effects ?? Array.Empty<CuiEffectDefinition>();
         _effectFired = new bool[_effects.Count];
         _effectRoot = root;
-        _effectsReady = true;
 
         return root;
+
+        void EnsureCurrentMount()
+        {
+            if (!IsLoadAttemptCurrent(generation) || !IsActionFrameCurrent(mountingFrame))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR073", CuiDiagnosticSeverity.Error,
+                    "The CUI mount was replaced or closed during loading; its effects were not activated.", visibleRoot.Span));
+        }
     }
 
     /// <summary>Load a document without throwing runtime diagnostics to the host.</summary>
@@ -719,7 +733,12 @@ public sealed partial class CuiControlLoader : IDisposable
     /// </summary>
     public void WireBindings(Control root)
     {
+        if (_disposed) return;
+        var frame = _committedActionFrame;
         WireBindingsRecursive(root);
+        if (_effectsReady || !IsActionOriginCurrent(frame, root, frameOwned: true)) return;
+        _effectsReady = true;
+        EvaluateEffects();
     }
 
     private async Task DispatchActionAsync(Task start, Control control, ICuiActionDispatcher dispatcher,
@@ -736,6 +755,9 @@ public sealed partial class CuiControlLoader : IDisposable
             // been retained, using the SAME configured context captured at load.
             // App row owners still validate current selection and provenance.
             var parameter = invocation.ResolveCurrentParameter();
+            // An initial effect's parameter getter can synchronously replace/close the loader.
+            // Admission retains its real pipeline, but no retired frame may start a command.
+            if (invocation.FrameOwned && !IsActionOriginCurrent(frame, control, frameOwned: true)) return;
             // Prefer a result-reporting dispatcher so CUI can branch on a typed outcome; fall back
             // to the lifetime-aware/generic contracts with an implicit success outcome.
             if (dispatcher is ICuiResultReportingDispatcher reporting)
@@ -980,30 +1002,40 @@ public sealed partial class CuiControlLoader : IDisposable
     private void EvaluateEffects()
     {
         if (_disposed || !_effectsReady || _effectRoot is null) return;
-        for (var i = 0; i < _effects.Count; i++)
+        var frame = _committedActionFrame;
+        var root = _effectRoot;
+        var effects = _effects;
+        var fired = _effectFired;
+        bool IsCurrent() => _effectsReady && IsActionOriginCurrent(frame, root, frameOwned: true);
+        for (var i = 0; i < effects.Count; i++)
         {
-            var effect = _effects[i];
+            if (!IsCurrent()) return;
+            var effect = effects[i];
             bool satisfied;
             try { satisfied = EvaluateCondition(effect.Condition); }
             catch { satisfied = false; }
+            // Condition evaluation can synchronously replace/dispose the frame. Never consult
+            // the new frame's fired array or dispatch the old declaration into its dispatcher.
+            if (!IsCurrent()) return;
 
-            if (satisfied && !_effectFired[i])
+            if (satisfied && !fired[i])
             {
                 // Validate BEFORE this effect runs: a satisfied effect must reference a declared
                 // action (the compiled-artifact codec already enforces this at admission; this is
                 // the same invariant for markup-loaded documents). Never silently drop an effect.
                 var invocation = BuildEffectInvocation(effect.ActionName);
+                if (!IsCurrent()) return;
                 if (invocation is null)
                     throw new CuiRuntimeLoadException(new CuiDiagnostic(
                         "CUIR073", CuiDiagnosticSeverity.Error,
                         $"Declarative effect '{effect.Name}' references undeclared action '{effect.ActionName}'.",
                         effect.Span));
-                _effectFired[i] = true;
+                fired[i] = true;
                 DispatchEffectAction(invocation);
             }
             else if (!satisfied)
             {
-                _effectFired[i] = false;
+                fired[i] = false;
             }
         }
     }
