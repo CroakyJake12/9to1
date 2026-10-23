@@ -14,6 +14,69 @@ namespace Haven.Infrastructure.Tests;
 public sealed class NotesOriginalStoreTests
 {
     [LinuxNotesFact]
+    public async Task Original_setup_probe_is_read_only_and_its_missing_result_is_not_a_foreign_owner_capability()
+    {
+        await using var rig = new Rig();
+        var snapshot = await rig.Owner.InspectOriginalStoreSetupWithinOriginalSourceAsync(body => body(), _ => { });
+        Assert.Equal(NotesOriginalStoreSetupState.MissingIdentity, snapshot.State);
+        Assert.Null(snapshot.Observation); Assert.True(rig.Owner.IsIssuedOriginalSetupInspection(snapshot));
+        Assert.False(rig.NewOwner().IsIssuedOriginalSetupInspection(snapshot));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(rig.DataDirectory));
+    }
+
+    [LinuxNotesFact]
+    public async Task Scoped_identity_and_same_evidence_preserve_UUID_and_new_owner_requires_existing_store_review()
+    {
+        await using var rig = new Rig(); var retained = new List<Task>();
+        var identity = await rig.Owner.InitialiseOriginalStoreIdentityWithinOriginalSourceAsync(body => body(), retained.Add);
+        Assert.True(identity.NewlyCreated); Assert.NotEmpty(retained); Assert.All(retained, task => Assert.True(task.IsCompletedSuccessfully));
+        var bytes = await File.ReadAllBytesAsync(rig.Identity);
+        var evidence = new NotesLocalStoreEvidenceProvider(rig.Owner);
+        Assert.True(evidence.IsBoundToOriginalNotes(rig.Owner));
+        var observed = await evidence.ReadWithinOriginalSourceAsync(identity.StoreId.ToString("D"), body => body(), retained.Add, default);
+        Assert.True(observed!.NewlyCreated); Assert.True(observed.IsEmpty);
+        var reopened = await rig.NewOwner().InspectOriginalStoreSetupWithinOriginalSourceAsync(body => body(), retained.Add);
+        Assert.Equal(identity.StoreId, reopened.Observation!.StoreIdentity.StoreId);
+        Assert.False(reopened.Observation.StoreIdentity.NewlyCreated);
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(rig.Identity));
+    }
+
+    [LinuxNotesFact]
+    public async Task Metadata_retainer_fault_after_semaphore_acquisition_releases_the_actual_gate_and_preserves_cause()
+    {
+        await using var rig = new Rig(); var cause = new IOException("Controlled original metadata retainer fault.");
+        var issued = false;
+        var error = await Record.ExceptionAsync(() => rig.Owner.InitialiseOriginalStoreIdentityWithinOriginalSourceAsync(
+            body => body(), actual => { if (!issued) { issued = true; throw cause; } }).AsTask());
+        Assert.NotNull(error); Assert.Contains(cause, ExceptionGraph(error!));
+        Assert.False(Directory.Exists(rig.Notes));
+        var identity = await rig.Owner.InitialiseOriginalStoreIdentityAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.NotEqual(Guid.Empty, identity.StoreId);
+    }
+
+    [LinuxNotesFact]
+    public async Task Retired_metadata_callback_cannot_replay_a_physical_identity_effect()
+    {
+        await using var rig = new Rig(); Action? captured = null;
+        var identity = await rig.Owner.InitialiseOriginalStoreIdentityWithinOriginalSourceAsync(
+            body => { captured = body; body(); }, _ => { });
+        var bytes = await File.ReadAllBytesAsync(rig.Identity);
+        Assert.NotNull(captured); Assert.Throws<InvalidOperationException>(() => captured!());
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(rig.Identity));
+        Assert.Equal(identity.StoreId, (await rig.Owner.GetStoreIdentityAsync(default)).StoreId);
+    }
+
+    private static IEnumerable<Exception> ExceptionGraph(Exception error)
+    {
+        yield return error;
+        if (error is AggregateException group)
+            foreach (var child in group.InnerExceptions)
+                foreach (var cause in ExceptionGraph(child)) yield return cause;
+        else if (error.InnerException is { } inner)
+            foreach (var cause in ExceptionGraph(inner)) yield return cause;
+    }
+
+    [LinuxNotesFact]
     public async Task Observation_does_not_create_a_missing_identity_or_Notes_directory()
     {
         await using var rig = new Rig();
