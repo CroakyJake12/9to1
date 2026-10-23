@@ -1016,6 +1016,45 @@ public sealed class NotesOriginalStoreTests
     }
 
     [LinuxNotesFact]
+    public async Task Scoped_Home_Notes_preserves_actual_principal_cancellation_vs_faulted_and_synchronous_OCE()
+    {
+        foreach (var mode in new[] { "canceled-task", "faulted-task", "synchronous-fault", "canceled-with-retainer-fault" })
+        {
+            var principal = new OriginalObservedPrincipal();
+            await using var rig = await HomeRig.CreateAsync(principal);
+            var request = await rig.Notes.Owner.PrepareOriginalLibraryReadAsync(null, rig.Token);
+            using var canceled = new CancellationTokenSource(); canceled.Cancel();
+            var cause = new OperationCanceledException("Controlled actual principal source failure.", canceled.Token);
+            var retentionCause = new IOException("Controlled original principal retainer failure after acquisition.");
+            Task<string?>? raw = mode == "synchronous-fault" ? null : mode == "faulted-task"
+                ? Task.FromException<string?>(cause) : Task.FromCanceled<string?>(canceled.Token);
+            principal.NextOriginal = _ => raw is null ? throw cause : new ValueTask<string?>(raw);
+            var retained = new List<Task>();
+            var actual = rig.Admission.RequestLibrarySnapshotWithinOriginalSourceAsync(request, rig.SessionId,
+                body => body(), same =>
+                {
+                    retained.Add(same);
+                    if (mode == "canceled-with-retainer-fault" && ReferenceEquals(same, raw)) throw retentionCause;
+                }, rig.Token);
+            var failure = await Record.ExceptionAsync(() => actual);
+            Assert.NotNull(failure);
+            if (raw is not null) Assert.Contains(retained, same => ReferenceEquals(same, raw));
+            if (mode == "canceled-task")
+            {
+                Assert.True(raw!.IsCanceled); Assert.True(actual.IsCanceled, "NOTES_ACTUAL_CANCELED_SOURCE_RELABELLED_FAULTED"); Assert.False(actual.IsFaulted);
+                Assert.IsAssignableFrom<OperationCanceledException>(failure);
+            }
+            else
+            {
+                Assert.True(actual.IsFaulted); Assert.False(actual.IsCanceled);
+                if (mode == "faulted-task") Assert.True(raw!.IsFaulted);
+                Assert.Contains(mode == "canceled-with-retainer-fault" ? retentionCause : cause, ExceptionGraph(failure!));
+            }
+            Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+        }
+    }
+
+    [LinuxNotesFact]
     public async Task Owned_workspace_scopes_post_await_actual_Home_principal_callbacks_and_round_trips_real_content()
     {
         var preOwner = ExecutionContext.Capture() ?? throw new InvalidOperationException("Retain a genuine pre-owner context.");
@@ -1077,9 +1116,15 @@ public sealed class NotesOriginalStoreTests
         private readonly OperatingSystemPrincipalSource _original = new();
         internal bool HoldNextObservation;
         internal Action? Callback;
+        internal Func<CancellationToken, ValueTask<string?>>? NextOriginal;
         internal TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public async ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            var next = Interlocked.Exchange(ref NextOriginal, null);
+            return next is null ? ObserveActualAsync(token) : next(token); // Preserve the exact injected raw Task status.
+        }
+        private async ValueTask<string?> ObserveActualAsync(CancellationToken token)
         {
             var actual = await _original.GetPrincipalAsync(token);
             if (HoldNextObservation)
