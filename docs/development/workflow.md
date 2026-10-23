@@ -433,3 +433,8 @@ its 468 missing verified copies alone require 275,447,808 bytes in addition to
 the 268,435,456-byte reserve. Retain the original failure and do not retry when
 only the reserve has been recovered. The existing workflow test entrypoint also
 loads the copy-budget regressions; broad discovery runs each suite once.
+
+## Temporary owner priority — implementation until 03:00 BST, 24 October 2026
+
+Read [the latest implementation-window decision](../specification/owner-references/2026-10-23-implementation-window/owner-correction.json). Until **24 October 2026 03:00 Europe/London (02:00 UTC)**, prioritise implementation of feature gaps and basic smoke checks. Defer full acceptance and acceptance-only audits until that time; preserve their queue and evidence. Then resume independent acceptance from the exact latest candidate, unless a newer owner instruction changes the priority. This defers gates; it does not waive them or authorise an unaccepted release. Keep ordinary development, scoped Thunder work and progress reporting moving.
+
