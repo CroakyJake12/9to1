@@ -301,12 +301,13 @@ public sealed partial class App
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var boards = BoardsBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
                 () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context);
+            var canvas = CanvasBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime, actualTheme.Context);
             var modes = _services.GetRequiredService<IModeRegistry>();
             // The SAME production registration helper builds the genuine native-app set (files, spaces,
-            // dev, boards) and is exercised verbatim by the routing regression (NativeAppContentRegistryTests).
+            // dev, boards, canvas) and is exercised verbatim by the routing regression (NativeAppContentRegistryTests).
             // Chat is canonicalized to the Spaces Chat resource by HomeLaunchRouteResolver before admission.
             var apps = new NativeAppContentRegistry(modes,
-                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build, boards), () => IsCurrent);
+                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build, boards, canvas), () => IsCurrent);
             var catalogue = _app.RetainOriginalModelCatalogueRegistry(_services.GetRequiredService<IServiceProvider>());
             var privacy = _services.GetRequiredService<IPrivacyPreferenceStore>();
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,
@@ -533,6 +534,36 @@ public sealed partial class App
         /// Home/publication via a benign control-flow return (never by erasing a genuine faulted source).</summary>
         private bool IsAcceptedStartupRetirement(CancellationToken token)
             => (_startupRetirement || _closed || OriginalClose is not null) && token.IsCancellationRequested;
+
+        /// <summary>Compiled Canvas entry after the SAME Home/onboarding/workspace startup.
+        /// Selection is not authority; the existing Browse registration and Canvas owner admit it.</summary>
+        internal Task? TryAcquireInitialCanvasRoute(CancellationToken token)
+        {
+            Dispatcher.UIThread.VerifyAccess(); DemandExternalOriginalRetirementJoin();
+            lock (_gate)
+            {
+                if (_startupRetirement || _closed || OriginalClose is not null) return null;
+                if (_initialization is not { IsCompletedSuccessfully: true } || _chrome is not { } chrome || _workspace is not { IsReady: true })
+                    throw new InvalidOperationException("The actual unified workspace must complete startup before Canvas navigation.");
+                return RunObservation(async ledger =>
+                {
+                    var dispatch = ledger.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task>(() =>
+                    {
+                        DemandCurrent(); token.ThrowIfCancellationRequested();
+                        return ledger.Invoke(() => chrome.NavigateAsync("9to1://canvas", token));
+                    }).GetTask());
+                    var original = await ledger.AwaitAsync(dispatch).ConfigureAwait(false);
+                    await ledger.AwaitAsync(original).ConfigureAwait(false);
+                    // Navigation settlement cannot certify a host that retired while it was awaited.
+                    // Re-enter the same finite physical owner before startup consumes this result.
+                    return ledger.Invoke(() =>
+                    {
+                        DemandCurrent(); token.ThrowIfCancellationRequested();
+                        return true;
+                    });
+                });
+            }
+        }
 
         private NewDashboardPage CreateDashboard()
         {

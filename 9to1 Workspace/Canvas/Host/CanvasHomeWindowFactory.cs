@@ -1,4 +1,5 @@
 using Haven.Application;
+using CakeOS.Cui.Themes;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
 
@@ -36,15 +37,42 @@ public sealed class CanvasHomeWindowFactory
             !_authority.IsBoundToOriginalComposition(_workspaces, _home.Profiles, _home.Ownership))
             throw new UnauthorizedAccessException("Canvas requires the SAME supplied native Home/Files process composition and lifetime.");
     }
-    public CanvasHostWindow CreateOriginalWindow()
+    public CanvasHostWindow CreateOriginalWindow() => new(CreateSurface(_process, null, null));
+
+    /// <summary>Borrow the SAME canonical content inside an existing Home-owned native host.
+    /// The callback is its finite original-source scope, not authority to create Home or grants.</summary>
+    public CanvasHostSurface CreateOriginalSurface(CancellationToken originalPresentationLifetime,
+        Action<Action> runWithinOriginalHostSource, CuiThemePreferenceContext? themePreference = null)
+    {
+        ArgumentNullException.ThrowIfNull(runWithinOriginalHostSource);
+        originalPresentationLifetime.ThrowIfCancellationRequested();
+        if (!originalPresentationLifetime.CanBeCanceled)
+            throw new UnauthorizedAccessException("Retain the actual Canvas presentation lifetime.");
+        return WithinSource(runWithinOriginalHostSource,
+            () => CreateSurface(originalPresentationLifetime, runWithinOriginalHostSource, themePreference));
+    }
+    private CanvasHostSurface CreateSurface(CancellationToken presentation, Action<Action>? source,
+        CuiThemePreferenceContext? theme)
     {
         DemandOriginal();
+        // Keep the authentic native-engine admission: no fixture, preview or managed substitute.
         using (var native = RnoteCanvasEngine.Create()) { }
-        return new CanvasHostWindow(_home.Services, _process, (original, capability, alive, token) =>
+        return new CanvasHostSurface(_home.Services, _process, (original, capability, alive, token) =>
         {
             DemandOriginal();
             return _authority.CaptureOriginalCanvasCommitFenceAsync(original, _home.Broker, capability,
                 () => !_process.IsCancellationRequested && alive(), token);
+        }, source, theme, presentation);
+    }
+    private static T WithinSource<T>(Action<Action> source, Func<T> actual)
+    {
+        T result = default!; var invoked = false;
+        source(() =>
+        {
+            if (invoked) throw new InvalidOperationException("A Canvas host source callback may run only once.");
+            invoked = true; result = actual();
         });
+        if (!invoked) throw new InvalidOperationException("The Canvas host did not invoke its original source callback.");
+        return result;
     }
 }
