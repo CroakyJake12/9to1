@@ -53,8 +53,10 @@
       <Container Type="Wrap">
         <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
         <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />
+        <Button id="dev-save-reviewed" action="dev.save-reviewed" content="Save reviewed" accessible-name="Save all current reviewed drafts through individual Home write approvals" Interactive="{Binding CanSaveReviewed}" />
         <Button id="dev-revert-pass" action="dev.revert-pass" content="Prepare last pass revert" Interactive="{Binding CanRevert}" />
       </Container>
+      <Text text="{Binding SaveReviewedStatus}" text-wrapping="Wrap" accessible-name="Actual per-file save outcomes" />
       <Text text="{Binding ReviewSummary}" text-wrapping="Wrap" accessible-name="This edit pass only" />
       <Text text="Before this pass" font-size="18" />
       <Object type="ReadOnlyText" id="dev-pass-before" text="{Binding BeforeText}" font-family="monospace" min-height="100" accessible-name="Exact source before this pass" />

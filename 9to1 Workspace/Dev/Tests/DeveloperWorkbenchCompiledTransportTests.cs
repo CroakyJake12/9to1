@@ -91,7 +91,7 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             .Select(value => value.Name)
             .ToArray();
         string[] expected = ["dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff", "dev.git-branches", "dev.open-source",
-            "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.revert-pass", "dev.run-command", "dev.run-tests",
+            "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
             "dev.run-stage", "dev.create-branch", "dev.switch-branch",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
             "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next"];
@@ -111,7 +111,7 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             .Select(value => value.Name)
             .ToArray();
         string[] expected = ["dev.refresh", "dev.tree", "dev.git-status", "dev.git-diff", "dev.git-branches", "dev.open-source",
-            "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.revert-pass", "dev.run-command", "dev.run-tests",
+            "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
             "dev.run-stage", "dev.create-branch", "dev.switch-branch",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
             "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next"];

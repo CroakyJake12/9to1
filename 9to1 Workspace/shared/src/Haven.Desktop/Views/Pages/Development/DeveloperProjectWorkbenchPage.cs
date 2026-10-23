@@ -83,6 +83,9 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     private string _sourcePath = "", _searchQuery = "", _command = "", _testCommand = "";
     private string _stageTaskId = "", _stageId = "", _branchName = "";
     private string _files = "", _searchResults = "", _status = "", _processStatus = "", _processOutput = "";
+    private string _saveReviewedStatus = "";
+    internal IReadOnlyList<DeveloperManualSaveOutcome> OriginalManualSaveBatch { get; private set; } = [];
+    private readonly List<IReadOnlyList<DeveloperManualSaveOutcome>> _originalManualSaveBatches = [];
     private Task? _hostClose, _reviewClose, _readinessChildClose, _detachOriginalDispatcher;
     private IDesktopOriginalRetirementParticipant? _readinessChild;
     private IDesktopOriginalRetirementJoinGuard? _readinessChildGuard;
@@ -336,7 +339,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 "CanProjectEntriesPrevious" => IsActionAvailable("dev.project-entries-previous"),
                 "CanProjectEntriesNext" => IsActionAvailable("dev.project-entries-next"),
                 "CanOpenSource" => IsActionAvailable("dev.open-source"), "CanPreview" => IsActionAvailable("dev.preview-edit"),
-                "CanApply" => IsActionAvailable("dev.apply-edit"), "CanRevert" => IsActionAvailable("dev.revert-pass"), _ => null
+                "CanApply" => IsActionAvailable("dev.apply-edit"), "CanRevert" => IsActionAvailable("dev.revert-pass"),
+                "CanSaveReviewed" => IsActionAvailable("dev.save-reviewed"), "SaveReviewedStatus" => _saveReviewedStatus, _ => null
             };
         }
         return path is "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
@@ -344,7 +348,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert" or
             "SourceTabs" or "SourceTabPinLabel" or "CanPinSourceTab" or "CanEditSource" or "SourceTabsStatus" or
             "ProjectEntries" or "ProjectFolder" or "ProjectExplorerStatus" or "ShowProjectExplorer" or "ShowLegacyFiles" or
-            "CanProjectFolderUp" or "CanProjectEntriesPrevious" or "CanProjectEntriesNext";
+            "CanProjectFolderUp" or "CanProjectEntriesPrevious" or "CanProjectEntriesNext" or "CanSaveReviewed" or "SaveReviewedStatus";
     }
     public bool TrySetValue(string path, object? value)
     {
@@ -415,6 +419,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                     "dev.preview-edit" => _manualEditor is not null && CurrentSourceTab() is { } previewTab && StringComparer.Ordinal.Equals(previewTab.Path, _sourcePath) &&
                         !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline),
                     "dev.apply-edit" => _manualEditor is not null && _manualReviewed && CurrentSourceTab() is { } applyTab && StringComparer.Ordinal.Equals(applyTab.Path, _sourcePath),
+                    "dev.save-reviewed" => _manualEditor is not null && _originalManualSaveBatches.Count < 64 && _sourceTabs.Any(IsTabDirty),
                     _ => false
                 };
             }
@@ -439,6 +444,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         string manualBeforeText, manualDraftText, manualBeforeSha256, manualAfterSha256; bool manualReviewed; long manualReviewRevision;
         Guid? requestedTab = null;
         string? projectFolder = null, entryPath = null;
+        IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed = null;
         lock (_gate)
         {
             if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Dev operation is unavailable.");
@@ -460,6 +466,16 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             {
                 var separator = _projectFolder.LastIndexOf('/'); projectFolder = separator < 0 ? "" : _projectFolder[..separator];
             }
+            if (command == "dev.save-reviewed")
+            {
+                StoreSelectedTab();
+                saveReviewed = Array.AsReadOnly(_sourceTabs.Where(IsTabDirty).Select(tab =>
+                {
+                    var state = tab.Manual ?? throw new InvalidOperationException("This open source tab has no manual draft owner.");
+                    return new DeveloperManualSaveRequest(tab.Id, tab.Path, state.Baseline, state.BeforeSha256,
+                        state.Draft, state.AfterSha256, state.DraftRevision, state.ReviewRevision, state.Reviewed);
+                }).ToArray());
+            }
             _pending = true; generation = _generation; path = _sourcePath; query = _searchQuery; terminal = _command; test = _testCommand;
             stageTask = _stageTaskId; stage = _stageId; branch = _branchName; editor = _editor; pass = _pass;
             if (command == "dev.select-source-tab") path = _sourceTabs.Single(tab => tab.Id == requestedTab).Path;
@@ -475,7 +491,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 return DispatchTabPresentationAsync(command, requestedTab, generation);
             if (_manual)
                 return DispatchManualAsync(command, path, query, manualBeforeText, manualDraftText, manualBeforeSha256,
-                    manualAfterSha256, manualReviewed, manualReviewRevision, generation, cancellationToken);
+                    manualAfterSha256, manualReviewed, manualReviewRevision, saveReviewed, generation, cancellationToken);
             return new(_work.RunAsync(async original =>
             {
                 original.BindPublicationGuard(() => IsCurrent(generation));
@@ -582,7 +598,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     /// and process execution require a separate current authorized Task/execution authority.</summary>
     private ValueTask DispatchManualAsync(string command, string path, string query,
         string manualBeforeText, string manualDraftText, string manualBeforeSha256, string manualAfterSha256,
-        bool manualReviewed, long manualReviewRevision,
+        bool manualReviewed, long manualReviewRevision, IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed,
         long generation, CancellationToken cancellationToken)
     {
         return new(_work.RunAsync(async original =>
@@ -626,6 +642,35 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         _status = "Manual source opened through the genuine Home read owner. Other tabs retain their drafts and review state.";
                     }).ConfigureAwait(false);
                     await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
+                }
+                if (command == "dev.save-reviewed")
+                {
+                    var editor = _manualEditor ?? throw new InvalidOperationException("The genuine manual edit owners are not configured.");
+                    var requests = saveReviewed ?? throw new InvalidOperationException("No owned dirty-tab snapshot was captured.");
+                    original.DemandPublication(); // Last UI admission; accepted business token is unchanged thereafter.
+                    var batch = await original.AwaitAsync(InvokeOriginalSource(() => editor.SaveReviewedAsync(project, requests,
+                        body => InvokeOriginalSource(() => { body(); return true; }), _businessToken))).ConfigureAwait(false);
+                    // Private custody/reconciliation must survive presentation withdrawal.
+                    // PublishAsync alone may skip an inactive view after a real commit.
+                    lock (_gate)
+                    {
+                        _originalManualSaveBatches.RemoveAll(prior => prior.All(value => value.OriginalFailures.Count == 0 &&
+                            value.OriginalSources.All(source => source.IsCompletedSuccessfully)));
+                        _originalManualSaveBatches.Add(batch); // Failed raw sources survive later user actions.
+                        OriginalManualSaveBatch = batch;
+                        ReconcileOriginalManualSaves(batch);
+                        _saveReviewedStatus = string.Join("\n", batch.Select(value =>
+                            value.Request.RelativePath + ": " + (value.State == DeveloperManualSaveState.NeedsReview ? "Needs review" : value.State.ToString()) + " — " + value.Detail));
+                        var saved = batch.Count(value => value.State == DeveloperManualSaveState.Saved);
+                        var dirty = _sourceTabs.Count(IsTabDirty);
+                        _status = $"Save reviewed: {saved} / {batch.Count} source writes verified; {dirty} open drafts remain unsaved.";
+                    }
+                    foreach (var failure in batch.SelectMany(value => value.OriginalFailures)) original.Retain(failure);
+                    await PublishAsync(original, () => { }).ConfigureAwait(false);
+                    // Existing canonical CAS/execution fence remains the sole layout
+                    // persistence path and refuses while any live draft is dirty.
+                    await SaveCleanSessionAsync(original, project, _businessToken).ConfigureAwait(false);
+                    return;
                 }
                 if (command == "dev.preview-edit")
                 {
@@ -727,6 +772,31 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         }));
 
     private SourceTab? CurrentSourceTab() => _sourceTabs.SingleOrDefault(tab => tab.Id == _selectedSourceTab);
+    private void ReconcileOriginalManualSaves(IReadOnlyList<DeveloperManualSaveOutcome> batch)
+    {
+        StoreSelectedTab();
+        foreach (var outcome in batch.Where(value => value.State == DeveloperManualSaveState.Saved))
+        {
+            var request = outcome.Request;
+            var tab = _sourceTabs.SingleOrDefault(value => value.Id == request.TabId && StringComparer.Ordinal.Equals(value.Path, request.RelativePath));
+            if (tab?.Manual is not { } live || DeveloperManualSourceEditOwner.ReconcileSavedDraft(outcome,
+                live.Baseline, live.BeforeSha256, live.Draft, live.DraftRevision) is not { } confirmed) continue;
+            // Only actual exact reopened commits advance the baseline. Typing
+            // during another file's approval preserves the newer draft verbatim.
+            tab.Manual = live with
+            {
+                Baseline = confirmed.Baseline, Before = confirmed.Baseline, BeforeSha256 = confirmed.BeforeSha256,
+                Draft = confirmed.Draft, DraftRevision = confirmed.DraftRevision,
+                After = "", AfterSha256 = "", Reviewed = false, ReviewRevision = -1
+            };
+        }
+        if (CurrentSourceTab() is { } selected)
+        {
+            var typedPath = _sourcePath;
+            SelectTab(selected); _sourcePath = typedPath; // Save never switches the user's current tab or path query.
+        }
+    }
+
     private bool IsTabDirty(SourceTab tab) => tab.Id == _selectedSourceTab
         ? _manual ? !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline) : _editor is { IsDirty: true }
         : tab.Editor?.IsDirty == true || tab.Manual is { } state && !StringComparer.Ordinal.Equals(state.Draft, state.Baseline);
