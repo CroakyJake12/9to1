@@ -1041,7 +1041,7 @@ public sealed class NotesOriginalStoreTests
             if (raw is not null) Assert.Contains(retained, same => ReferenceEquals(same, raw));
             if (mode == "canceled-task")
             {
-                Assert.True(raw!.IsCanceled); Assert.True(actual.IsCanceled); Assert.False(actual.IsFaulted);
+                Assert.True(raw!.IsCanceled); Assert.True(actual.IsCanceled, "NOTES_ACTUAL_CANCELED_SOURCE_RELABELLED_FAULTED"); Assert.False(actual.IsFaulted);
                 Assert.IsAssignableFrom<OperationCanceledException>(failure);
             }
             else

@@ -156,7 +156,11 @@ public sealed class BoardsOriginalStoreSetupTests
     private sealed class PrivateRoot : IDisposable
     {
         internal string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "9to1-boards-real-setup-" + Guid.NewGuid().ToString("N"));
-        internal PrivateRoot() => Directory.CreateDirectory(Path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        internal PrivateRoot()
+        {
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This original Notes fixture requires Linux.");
+            Directory.CreateDirectory(Path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
         public void Dispose() => Directory.Delete(Path, true);
     }
     private sealed class Paths(string root) : IAppPaths
