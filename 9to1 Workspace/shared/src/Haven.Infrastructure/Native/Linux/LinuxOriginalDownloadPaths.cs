@@ -33,14 +33,18 @@ internal sealed class LinuxOriginalDownloadRoot : IDisposable
     private readonly bool _private;
     private bool _closed;
     internal LinuxOriginalDownloadRoot(string path, bool requirePrivate)
+        : this(path, requirePrivate, null, null) { }
+    internal LinuxOriginalDownloadRoot(string path, bool requirePrivate, SafeFileHandle? heldRoot, uint? expectedUid)
     {
         LinuxOriginalDownloadPaths.RequireCapabilities();
         _path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         if (_path == "/") throw new UnauthorizedAccessException("A download owner needs an existing bounded directory.");
-        _uid = LinuxOriginalDownloadPaths.CurrentUid(); _private = requirePrivate;
-        _root = LinuxOriginalDownloadPaths.OpenAbsoluteDirectory(_path, mutable: false);
+        _uid = expectedUid ?? LinuxOriginalDownloadPaths.CurrentUid(); _private = requirePrivate;
+        LinuxOriginalDownloadPaths.DemandCurrentUid(_uid);
+        _root = heldRoot ?? LinuxOriginalDownloadPaths.OpenAbsoluteDirectory(_path, mutable: false);
         try
         {
+            LinuxOriginalDownloadPaths.DemandPath(_root, _path, directory: true);
             LinuxOriginalDownloadPaths.DemandOwner(_root, _uid, requirePrivate);
             _identity = LinuxOriginalDownloadPaths.ReadIdentity(_root);
         }
@@ -89,7 +93,7 @@ internal static class LinuxOriginalDownloadPaths
             throw new PlatformNotSupportedException("Original Linux downloads require the supported C library.");
         try
         {
-            foreach (var entry in new[] { "open", "syscall", "statx", "readlink", "renameat2", "fsync", "geteuid" })
+            foreach (var entry in new[] { "open", "syscall", "statx", "readlink", "renameat2", "mkdirat", "fsync", "geteuid" })
                 if (!NativeLibrary.TryGetExport(library, entry, out _))
                     throw new PlatformNotSupportedException("Required original Linux entrypoint is unavailable: " + entry);
         }
@@ -99,6 +103,67 @@ internal static class LinuxOriginalDownloadPaths
     internal static void DemandCurrentUid(uint expected)
     { if (CurrentUid() != expected) throw new UnauthorizedAccessException("The original Linux effective user changed."); }
     internal static LinuxOriginalDownloadRoot RetainRoot(string path, bool requirePrivate = false) => new(path, requirePrivate);
+    /// <summary>Configuration permits only the designated missing child under this exact
+    /// existing parent. Call only inside the validated original transport-plan source.
+    /// Neither this configuration nor directory creation grants Home/Files authority.</summary>
+    internal static LinuxOriginalDownloadRoot RetainOrCreatePrivateRoot(string path, string configuredParent, uint principal, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        DemandCurrentUid(principal);
+        path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        configuredParent = Path.TrimEndingDirectorySeparator(Path.GetFullPath(configuredParent));
+        if (!StringComparer.Ordinal.Equals(Path.GetDirectoryName(path), configuredParent) || !IsSafeLeaf(Path.GetFileName(path)))
+            throw new UnauthorizedAccessException("Only the exact configured single-child download root may be created.");
+        try { return new LinuxOriginalDownloadRoot(path, requirePrivate: true, heldRoot: null, expectedUid: principal); }
+        catch (FileNotFoundException)
+        {
+            // Missing ancestors are never recursively created. Symlinks, foreign ownership,
+            // nonprivate roots and unsupported native custody are not 'missing' fallbacks.
+            using var parent = OpenAbsoluteDirectory(configuredParent, mutable: true);
+            return CreatePrivateChildRoot(parent, configuredParent, Path.GetFileName(path), principal, cancellationToken);
+        }
+    }
+
+    internal static LinuxOriginalDownloadRoot CreatePrivateChildRoot(SafeFileHandle parent, string parentPath, string leaf, uint principal, CancellationToken cancellationToken = default)
+    {
+        if (!IsSafeLeaf(leaf)) throw new UnauthorizedAccessException("The configured download root leaf is invalid.");
+        parentPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(parentPath));
+        DemandCurrentUid(principal); DemandPath(parent, parentPath, directory: true); DemandOwner(parent, principal);
+        var originalParent = ReadIdentity(parent);
+        if (!originalParent.IsDirectory) throw new UnauthorizedAccessException("The configured download parent is not a real directory.");
+        DemandCurrentUid(principal);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (MkdirAt(Fd(parent), leaf, 0x1c0) != 0) // exact child, mode0700 subject only to a narrowing umask
+        {
+            var error = Marshal.GetLastPInvokeError();
+            if (error == 17) throw new LinuxOriginalDownloadCollisionException(); // no race adoption/retry
+            ThrowNative("create the configured private Linux download root", error);
+        }
+        SafeFileHandle? child = null;
+        try
+        {
+            child = OpenAt(parent, leaf, DirectoryFlags(mutable: true)); // BENEATH|NO_XDEV|NO_SYMLINKS|NO_MAGICLINKS
+            var path = Path.Combine(parentPath, leaf);
+            DemandCurrentUid(principal); DemandPath(parent, parentPath, directory: true); DemandOwner(parent, principal);
+            if (!originalParent.SamePermissions(ReadIdentity(parent)))
+                throw new UnauthorizedAccessException("The original download parent changed during root creation; preserve the outcome.");
+            DemandPath(child, path, directory: true); DemandOwner(child, principal, privateDirectory: true);
+            Flush(child); Flush(parent);
+            DemandCurrentUid(principal); DemandPath(parent, parentPath, directory: true); DemandOwner(parent, principal);
+            if (!originalParent.SamePermissions(ReadIdentity(parent)))
+                throw new UnauthorizedAccessException("The original download parent changed before root retention; preserve the outcome.");
+            var retained = new LinuxOriginalDownloadRoot(path, requirePrivate: true, heldRoot: child, expectedUid: principal);
+            child = null; // transfer the SAME held descriptor; do not reopen/adopt another inode
+            return retained;
+        }
+        finally
+        {
+            child?.Dispose();
+            // No chmod/chown, path cleanup or deletion of an uncertain created outcome.
+            // As elsewhere in this owner, same-UID external-writer exclusion is not promised.
+        }
+    }
+
     internal static bool IsSafeLeaf(string leaf) => !string.IsNullOrWhiteSpace(leaf) && leaf is not ("." or "..") &&
         !leaf.Any(character => character is '/' or '\\' || char.IsControl(character)) && Encoding.UTF8.GetByteCount(leaf) <= 255;
     internal static SafeFileHandle OpenAbsoluteDirectory(string path, bool mutable)
@@ -216,6 +281,7 @@ internal static class LinuxOriginalDownloadPaths
     [DllImport("libc", EntryPoint = "statx", SetLastError = true)] private static extern int Statx(int parent, [MarshalAs(UnmanagedType.LPUTF8Str)] string path, int flags, uint mask, [Out] byte[] result);
     [DllImport("libc", EntryPoint = "readlink", SetLastError = true)] private static extern long ReadLink([MarshalAs(UnmanagedType.LPUTF8Str)] string path, [Out] byte[] result, ulong size);
     [DllImport("libc", EntryPoint = "renameat2", SetLastError = true)] private static extern int RenameAt2(int parent, [MarshalAs(UnmanagedType.LPUTF8Str)] string oldName, int destination, [MarshalAs(UnmanagedType.LPUTF8Str)] string newName, uint flags);
+    [DllImport("libc", EntryPoint = "mkdirat", SetLastError = true)] private static extern int MkdirAt(int parent, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, uint mode);
     [DllImport("libc", EntryPoint = "fsync", SetLastError = true)] private static extern int Fsync(int fd);
     [DllImport("libc", EntryPoint = "geteuid")] private static extern uint GetEuid();
 }

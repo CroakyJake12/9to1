@@ -24,6 +24,8 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
     private CanvasRnoteInkStyle _style = CanvasRnoteInkStyle.Default;
     private CanvasRnoteInkStyle? _capturedStyle;
     private Task? _submission, _close;
+    private readonly CanvasSharedInkSubmissionLedger _originalSubmissions = new();
+    private bool _paintPreparedScene = true;
     private CanvasSharedInkOwnerSnapshot? _failedOwner;
     private bool _disposed, _releasing, _submitting, _retiring;
     public event EventHandler? Changed;
@@ -31,6 +33,13 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
     public string Status { get; private set; } = "The shared drawing renderer has not started.";
     public Exception? LastError { get; private set; }
     public Task? PendingSubmission => _submission;
+    public IReadOnlyList<Task> OriginalSubmissions => _originalSubmissions.Originals;
+    /// <summary>False when the owning ordered scene already paints this exact canonical ink below the input overlay.</summary>
+    public bool PaintPreparedScene
+    {
+        get => _paintPreparedScene;
+        set { Dispatcher.UIThread.VerifyAccess(); _paintPreparedScene = value; InvalidateVisual(); }
+    }
     public IReadOnlyList<string> RetainedUnsupportedProperties => _scene?.Rendered.RetainedUnsupportedProperties ?? [];
     public CanvasRnoteInkStyle Style
     {
@@ -100,12 +109,12 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         // Avalonia draw-list hit testing needs a full-bounds drawing even before the first stroke.
         context.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size));
         // Only already prepared native output is painted. No parsing, loading or engine work occurs here.
-        if (_rendered is null || _scene is not { IsEmpty: false } scene) return;
+        if (!PaintPreparedScene || _rendered is null || _shown is null || _scene is not { IsEmpty: false } scene) return;
         var image = _rendered.BorrowRasterImage();
-        var destination = new Rect(scene.X / CanvasSharedInkStrokeFactory.LogicalWidth * Bounds.Width,
-            scene.Y / CanvasSharedInkStrokeFactory.LogicalHeight * Bounds.Height,
-            scene.Width / CanvasSharedInkStrokeFactory.LogicalWidth * Bounds.Width,
-            scene.Height / CanvasSharedInkStrokeFactory.LogicalHeight * Bounds.Height);
+        var destination = new Rect(scene.X / _shown.LogicalWidth * Bounds.Width,
+            scene.Y / _shown.LogicalHeight * Bounds.Height,
+            scene.Width / _shown.LogicalWidth * Bounds.Width,
+            scene.Height / _shown.LogicalHeight * Bounds.Height);
         context.DrawImage(image, new Rect(image.Size), destination);
     }
 
@@ -123,11 +132,13 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
     private bool Add(Point position, PointerPointProperties properties, PointerType type)
     {
         if (_samples.Count >= CanvasSharedInkStrokeFactory.MaximumSamples || Bounds.Width <= 0 || Bounds.Height <= 0 ||
-            position.X < 0 || position.Y < 0 || position.X > Bounds.Width || position.Y > Bounds.Height)
+            position.X < 0 || position.Y < 0 || position.X > Bounds.Width || position.Y > Bounds.Height || Clip?.FillContains(position) == false)
         { CancelCapture(); Status = "The stroke exceeded the drawing bounds; no partial stroke was added."; return false; }
         var pen = type == PointerType.Pen;
-        var sample = new RnotePointerSample(position.X / Bounds.Width * CanvasSharedInkStrokeFactory.LogicalWidth,
-            position.Y / Bounds.Height * CanvasSharedInkStrokeFactory.LogicalHeight,
+        var logicalWidth = _captured?.LogicalWidth ?? _shown?.LogicalWidth ?? CanvasSharedInkStrokeFactory.LogicalWidth;
+        var logicalHeight = _captured?.LogicalHeight ?? _shown?.LogicalHeight ?? CanvasSharedInkStrokeFactory.LogicalHeight;
+        var sample = new RnotePointerSample(position.X / Bounds.Width * logicalWidth,
+            position.Y / Bounds.Height * logicalHeight,
             pen ? properties.Pressure : .5, pen ? properties.XTilt : 0, pen ? properties.YTilt : 0);
         if (!sample.IsValid) { CancelCapture(); Status = "The input device returned invalid pen data."; return false; }
         _samples.Add(sample); return true;
@@ -165,7 +176,8 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
     {
         if (_pointer != args.Pointer || _disposed || _retiring || _submitting) return;
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _submission = SubmitAfterPublicationAsync(start.Task, args); start.SetResult();
+        _submission = SubmitAfterPublicationAsync(start.Task, args);
+        _originalSubmissions.Observe(_submission); start.SetResult();
         _ = ObserveSubmissionAsync(_submission);
     }
 
@@ -180,7 +192,7 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
             if (expected is null || style is null || !Current(expected) || !IsEffectivelyEnabled) return;
             var point = args.GetCurrentPoint(this);
             if (!Add(point.Position, point.Properties, args.Pointer.Type)) return;
-            var bundle = CanvasSharedInkStrokeFactory.Capture(_engine, expected.Context, expected.LayerId, _samples, style);
+            var bundle = CanvasSharedInkStrokeFactory.Capture(_engine, expected.Context, expected.LayerId, _samples, style, expected.LogicalWidth, expected.LogicalHeight);
             // Actual donor render/raster validation precedes owner insertion. Failure leaves canonical state intact.
             _ = CanvasSharedInkStrokeFactory.RenderScene(_engine, expected.Context, expected.LayerId, [.. expected.Bundles, bundle]);
             if (!Current(expected)) { submissionNotice = "The owning drawing changed; this stroke was not added."; return; }
@@ -227,16 +239,14 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         Dispatcher.UIThread.VerifyAccess();
         if (_close is not null) return _close;
         _retiring = true; CanDraw = false; CancelCapture();
-        var original = _submission;
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _close = CloseAfterPublicationAsync(start.Task, original); start.SetResult(); return _close;
+        _close = CloseAfterPublicationAsync(start.Task); start.SetResult(); return _close;
     }
-    private async Task CloseAfterPublicationAsync(Task start, Task? original)
+    private async Task CloseAfterPublicationAsync(Task start)
     {
         await start;
         var failures = new List<Exception>();
-        if (original is not null)
-            try { await original; } catch (Exception error) { failures.Add(error); }
+        try { await _originalSubmissions.DrainAsync(); } catch (Exception error) { failures.Add(error); }
         try { Dispose(); } catch (Exception error) { failures.Add(error); }
         if (failures.Count != 0) throw new AggregateException("Shared ink retirement retained original submission and cleanup failures.", failures);
     }
@@ -244,9 +254,36 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_disposed) return;
-        if (_submission is { IsCompleted: false }) throw new InvalidOperationException("The original shared ink submission must settle before disposal.");
+        if (_originalSubmissions.Originals.Any(original => !original.IsCompleted)) throw new InvalidOperationException("The original shared ink submission must settle before disposal.");
         _disposed = true; _lifetime.Cancel(); Clear("Drawing closed.");
         PointerPressed -= Pressed; PointerMoved -= Moved; PointerReleased -= Released;
         PointerCaptureLost -= CaptureLost; DetachedFromVisualTree -= Detached; _lifetime.Dispose(); Changed = null;
+    }
+}
+
+/// <summary>Original task custody only. This does not emulate input, renderer readiness or artifact success.</summary>
+internal sealed class CanvasSharedInkSubmissionLedger
+{
+    private readonly List<Task> _originals = [];
+    public IReadOnlyList<Task> Originals => _originals.AsReadOnly();
+    public void Observe(Task original)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        if (_originals.Any(item => ReferenceEquals(item, original))) return;
+        _originals.Add(original); _ = ObserveFailureAsync(original);
+    }
+    private static async Task ObserveFailureAsync(Task original)
+    { try { await original; } catch { /* The exact original remains retained for the final independent join. */ } }
+    public async Task DrainAsync()
+    {
+        var originals = _originals.ToArray(); var failures = new List<Exception>();
+        foreach (var original in originals)
+            try { await original; }
+            catch (Exception error)
+            {
+                if (original.IsFaulted && original.Exception is { } aggregate) failures.AddRange(aggregate.InnerExceptions);
+                else failures.Add(error);
+            }
+        if (failures.Count > 0) throw new AggregateException("Original shared ink submissions retained their failures.", failures);
     }
 }

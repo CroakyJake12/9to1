@@ -63,8 +63,9 @@ public sealed partial class BrowserDownloadTransport : IBrowserOriginalNativeDow
             Directory.CreateDirectory(_downloadDirectory);
             BrowserDownloadFilePolicy.CleanupStalePartialFiles(_downloadDirectory, DateTimeOffset.UtcNow);
         }
-        else if (!Directory.Exists(_downloadDirectory))
-            throw new NotSupportedException("Configure the existing original download directory before native transport preparation.");
+        // A genuine original physical owner validates/pins its exact issued plan below.
+        // It alone may provision an explicitly configured missing private child root;
+        // an existence check here would prevent that safe first-use path from running.
         ContentDispositionHeaderValue? parsedDisposition = null;
         if (!string.IsNullOrWhiteSpace(contentDisposition))
             ContentDispositionHeaderValue.TryParse(contentDisposition, out parsedDisposition);

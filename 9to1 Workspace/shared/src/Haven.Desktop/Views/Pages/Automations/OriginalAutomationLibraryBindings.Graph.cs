@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Core;
 using Haven.Desktop.Services;

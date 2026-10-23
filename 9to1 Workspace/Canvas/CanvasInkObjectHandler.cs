@@ -67,7 +67,13 @@ public sealed class CanvasInkObjectHandler : IHomeProductivityObjectHandler, IHo
         // Match save/reopen donor numeric precision rather than displaying a transient higher-precision path.
         using var durable = RnoteCanvasEngine.Open(engine.Save());
         var vector = durable.Render();
-        var pixels = CanvasSvgRasterizer.Render(vector.Svg, 512, 512);
+        if (!double.IsFinite(vector.Width) || !double.IsFinite(vector.Height) || vector.Width <= 0 || vector.Height <= 0)
+            throw new InvalidDataException("The ink renderer returned invalid native bounds.");
+        // Keep the native crop aspect. A square intermediate raster would add a second letterbox
+        // when the same object is placed at precise slide geometry.
+        var scale = Math.Min(2, 512 / Math.Max(vector.Width, vector.Height));
+        var pixels = CanvasSvgRasterizer.Render(vector.Svg, Math.Max(1, (int)Math.Ceiling(vector.Width * scale)),
+            Math.Max(1, (int)Math.Ceiling(vector.Height * scale)));
         var id = "ink-" + source.ObjectId.ToString("N");
         var unsupported = RetainedUnsupportedProperties(source, stroke);
         return new($"<Cui><Object Type=\"spe.raster\" id=\"{id}\" /></Cui>", unsupported)

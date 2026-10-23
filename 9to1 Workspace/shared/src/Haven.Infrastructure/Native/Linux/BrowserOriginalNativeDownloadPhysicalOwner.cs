@@ -13,6 +13,7 @@ public sealed partial class BrowserOriginalNativeDownloadPhysicalOwner : IBrowse
 {
     private const long MaximumBytes = 250L * 1024 * 1024;
     private readonly string _downloadDirectory;
+    private readonly string? _configuredCreationParent;
     private readonly object _gate = new();
     private readonly ConditionalWeakTable<IBrowserOriginalNativeDownloadTransportPlan, Plan> _issued = new();
     private readonly ConditionalWeakTable<IBrowserOriginalDownloadContent, Content> _contents = new();
@@ -28,6 +29,18 @@ public sealed partial class BrowserOriginalNativeDownloadPhysicalOwner : IBrowse
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(actualDownloadDirectory);
         _downloadDirectory = Path.GetFullPath(actualDownloadDirectory);
+    }
+    /// <summary>Explicit host configuration for the one designated app-private child. This
+    /// does not create it, grant a download, or adopt another transport's pending request.</summary>
+    public BrowserOriginalNativeDownloadPhysicalOwner(string actualDownloadDirectory, string actualConfiguredParent)
+        : this(actualDownloadDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(actualConfiguredParent);
+        _configuredCreationParent = Path.TrimEndingDirectorySeparator(Path.GetFullPath(actualConfiguredParent));
+        var root = Path.TrimEndingDirectorySeparator(_downloadDirectory);
+        if (!StringComparer.Ordinal.Equals(Path.GetDirectoryName(root), _configuredCreationParent)
+            || !LinuxOriginalDownloadPaths.IsSafeLeaf(Path.GetFileName(root)))
+            throw new ArgumentException("The configured download root must be the exact direct child of its authorized parent.", nameof(actualConfiguredParent));
     }
     public IBrowserOriginalNativeDownloadTransportSource? OriginalTransportSource
     { get { lock (_gate) return _transport; } }
@@ -126,7 +139,10 @@ public sealed partial class BrowserOriginalNativeDownloadPhysicalOwner : IBrowse
                     plan.Description = transport.GetOriginalTransportPlanDescription(originalPlan);
                     ValidateDescription(plan.Description);
                     plan.Principal = LinuxOriginalDownloadPaths.CurrentUid();
-                    plan.Root = LinuxOriginalDownloadPaths.RetainRoot(_downloadDirectory, requirePrivate: true);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    plan.Root = _configuredCreationParent is null
+                        ? LinuxOriginalDownloadPaths.RetainRoot(_downloadDirectory, requirePrivate: true)
+                        : LinuxOriginalDownloadPaths.RetainOrCreatePrivateRoot(_downloadDirectory, _configuredCreationParent, plan.Principal, cancellationToken);
                     source.CaptureOriginalResource(new OriginalDisposable(plan.Root));
                     plan.Parent = plan.Root.OpenDirectory(_downloadDirectory, mutable: true);
                     source.CaptureOriginalResource(new OriginalDisposable(plan.Parent));

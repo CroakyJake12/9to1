@@ -5,7 +5,11 @@ using HavenOS.Home.Core;
 namespace HavenOS.Apps.Canvas;
 
 public sealed record CanvasSharedInkOwnerSnapshot(HomeProductivityContext Context, Guid LayerId,
-    string OwnerRevision, IReadOnlyList<JsonElement> Bundles);
+    string OwnerRevision, IReadOnlyList<JsonElement> Bundles)
+{
+    public double LogicalWidth { get; init; } = CanvasSharedInkStrokeFactory.LogicalWidth;
+    public double LogicalHeight { get; init; } = CanvasSharedInkStrokeFactory.LogicalHeight;
+}
 public sealed record CanvasSharedInkStrokeRequest(CanvasSharedInkOwnerSnapshot Expected, JsonElement Bundle);
 public sealed record CanvasSharedInkCommitResult(bool Succeeded, string Code, string Message);
 public sealed record CanvasSharedInkScene(HomeProductivityObjectRenderResult Rendered,
@@ -21,13 +25,17 @@ public static class CanvasSharedInkStrokeFactory
     private static readonly CanvasInkObjectHandler Handler = new();
 
     public static JsonElement Capture(HomeProductivityEngine engine, HomeProductivityContext context,
-        Guid layerId, IReadOnlyList<RnotePointerSample> samples, CanvasRnoteInkStyle? style = null)
+        Guid layerId, IReadOnlyList<RnotePointerSample> samples, CanvasRnoteInkStyle? style = null) =>
+        Capture(engine, context, layerId, samples, style, LogicalWidth, LogicalHeight);
+
+    public static JsonElement Capture(HomeProductivityEngine engine, HomeProductivityContext context,
+        Guid layerId, IReadOnlyList<RnotePointerSample> samples, CanvasRnoteInkStyle? style, double logicalWidth, double logicalHeight)
     {
-        DemandOwner(engine, context);
+        DemandOwner(engine, context); DemandDimensions(logicalWidth, logicalHeight);
         if (layerId == Guid.Empty) throw new ArgumentException("The owning drawing layer must have a stable identity.", nameof(layerId));
         var captured = RnoteCanvasEngine.CaptureSamples(samples);
         if (captured.Length > MaximumSamples) throw new InvalidDataException("This shared stroke exceeds the supported sample count.");
-        if (captured.Any(sample => sample.X < 0 || sample.X > LogicalWidth || sample.Y < 0 || sample.Y > LogicalHeight))
+        if (captured.Any(sample => sample.X < 0 || sample.X > logicalWidth || sample.Y < 0 || sample.Y > logicalHeight))
             throw new InvalidDataException("The stroke lies outside the shared drawing viewport.");
         var resolved = style ?? CanvasRnoteInkStyle.Default;
         var id = Guid.NewGuid();
@@ -73,7 +81,7 @@ public static class CanvasSharedInkStrokeFactory
 
     public static CanvasSharedInkOwnerSnapshot Snapshot(HomeProductivityEngine engine, CanvasSharedInkOwnerSnapshot owner)
     {
-        DemandOwner(engine, owner.Context);
+        DemandOwner(engine, owner.Context); DemandDimensions(owner.LogicalWidth, owner.LogicalHeight);
         if (owner.LayerId == Guid.Empty || string.IsNullOrWhiteSpace(owner.OwnerRevision) || owner.Bundles is null || owner.Bundles.Count > MaximumObjects)
             throw new InvalidDataException("A current artifact, layer and unsaved revision are required for shared ink.");
         var characters = 0L;
@@ -94,7 +102,7 @@ public static class CanvasSharedInkStrokeFactory
     public static bool SameOwner(CanvasSharedInkOwnerSnapshot left, CanvasSharedInkOwnerSnapshot right) =>
         left.Context.AppId == right.Context.AppId && left.Context.ArtifactId == right.Context.ArtifactId &&
         left.Context.CanonicalRevision == right.Context.CanonicalRevision && left.LayerId == right.LayerId &&
-        left.OwnerRevision == right.OwnerRevision && left.Bundles.Count == right.Bundles.Count &&
+        left.OwnerRevision == right.OwnerRevision && left.LogicalWidth == right.LogicalWidth && left.LogicalHeight == right.LogicalHeight && left.Bundles.Count == right.Bundles.Count &&
         left.Bundles.Zip(right.Bundles).All(pair => JsonElement.DeepEquals(pair.First, pair.Second));
 
     /// <summary>The SAME Rnote renderer and handler rules for an entire drawing, preserving native
@@ -132,6 +140,12 @@ public static class CanvasSharedInkStrokeFactory
         var rendered = new HomeProductivityObjectRenderResult($"<Cui><Object Type=\"spe.raster\" id=\"{id}\" /></Cui>", unsupported)
         { RasterBindings = [new(id, layerId, new(pixels.Width, pixels.Height, pixels.Stride, pixels.PremultipliedBgra))] };
         return new(rendered, vector.X, vector.Y, vector.Width, vector.Height, objects.Length == 0);
+    }
+
+    private static void DemandDimensions(double width, double height)
+    {
+        if (!double.IsFinite(width) || !double.IsFinite(height) || width is < 1 or > 100_000 || height is < 1 or > 100_000)
+            throw new InvalidDataException("The shared logical viewport must have finite supported dimensions.");
     }
 
     private static void DemandOwner(HomeProductivityEngine engine, HomeProductivityContext context)

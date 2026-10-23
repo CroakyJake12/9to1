@@ -107,6 +107,8 @@
     <EmbeddedResource Include="Views/Pages/Files/FilesWorkspaceSetup.cui" LogicalName="Haven.Desktop.Files.WorkspaceSetup.cui" />
     <EmbeddedResource Include="Views/Pages/Data/UI/DataQueryResults.cui" LogicalName="Haven.Desktop.Data.QueryResults.cui" />
     <EmbeddedResource Include="Views/Pages/Data/UI/DataSharedInk.cui" LogicalName="Haven.Desktop.Data.SharedInk.cui" />
+    <EmbeddedResource Include="Views/Pages/Present/UI/PresentFreehandTools.cui" LogicalName="Haven.Desktop.Present.PresentFreehandTools.cui" />
+    <EmbeddedResource Include="Views/Pages/Present/UI/PresentFreehandInput.cui" LogicalName="Haven.Desktop.Present.PresentFreehandInput.cui" />
     <EmbeddedResource Include="Views/Pages/Spaces/SpaceDetailsDecision.cui" LogicalName="Haven.Desktop.Spaces.SpaceDetailsDecision.cui" />
     <EmbeddedResource Include="Views/Pages/Chat/ChatRecovery.cui" LogicalName="Haven.Desktop.Chat.Recovery.cui" />
     <EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />

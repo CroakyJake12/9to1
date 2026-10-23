@@ -55,6 +55,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
     <Compile Include="DataSharedInkTests.cs" />
+    <Compile Include="PresentFreehandTests.cs" />
     <Compile Include="DeveloperManualSaveAllTests.cs" />
     <Compile Include="NotificationServiceOriginalLifetimeTests.cs" />
     <Compile Include="NotificationServiceStorageStartupTests.cs" />

@@ -1,0 +1,8 @@
+<Cui id="9to1.Present.Freehand.Tools" version="1">
+  <Page>
+    <Container Type="Horizontal Stack" CellGap="4" accessible-name="Slide drawing tools">
+      <Button id="present-draw-toggle" content="{Binding DrawLabel}" action="present.ink.toggle" Interactive="{Binding CanToggle}" Width="64" Height="36" Tooltip="{Binding Status}" accessible-name="Start or finish drawing on this slide" />
+      <Button id="present-draw-tool" content="{Binding ToolLabel}" action="present.ink.tool" Active="{Binding Drawing}" Interactive="{Binding CanDraw}" Width="78" Height="36" Tooltip="Switch between pen and highlighter" accessible-name="Current drawing instrument" />
+    </Container>
+  </Page>
+</Cui>

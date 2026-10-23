@@ -1,5 +1,6 @@
 #if !ANDROID
 using System.Runtime.ExceptionServices;
+using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Desktop.Services;
 using HavenOS.Home.Core;

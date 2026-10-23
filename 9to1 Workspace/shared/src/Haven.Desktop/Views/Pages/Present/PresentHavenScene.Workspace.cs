@@ -56,6 +56,8 @@ internal sealed partial class PresentHavenScene
     public Container SlideRail { get; private set; } = null!;
     public Container StageHost { get; private set; } = null!;
     public Container CanvasOverlay { get; private set; } = null!;
+    internal NativeHost FreehandToolsHost { get; private set; } = null!;
+    internal NativeHost FreehandInputHost { get; private set; } = null!;
     public Container WorkspacePill { get; private set; } = null!;
     public HavenButton AdvancedButton { get; private set; } = null!;
     public Container AdvancedPanel { get; private set; } = null!;
@@ -191,6 +193,14 @@ internal sealed partial class PresentHavenScene
         CanvasOverlay.SetValue(HavenProperties.Row, 0);
         CanvasOverlay.SetValue(HavenProperties.MinHeight, HavenLength.Px(500));
         CanvasOverlay.Add(SlideCanvas);
+        // Typed CUI input slot follows measured paper bounds; the existing slide scene still paints ink.
+        FreehandInputHost = new NativeHost { Name = "Present.Freehand.Input" };
+        FreehandInputHost.SetValue(HavenProperties.LayoutParticipation, HavenLayoutParticipation.Overlay);
+        FreehandInputHost.SetValue(HavenProperties.HorizontalAlignment, HavenHorizontalAlignment.Start);
+        FreehandInputHost.SetValue(HavenProperties.VerticalAlignment, HavenVerticalAlignment.Start);
+        FreehandInputHost.SetValue(HavenProperties.ZIndex, 45);
+        FreehandInputHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
+        CanvasOverlay.Add(FreehandInputHost);
 
         InlineTextInput = new Input { Name = "Present.InlineText", Multiline = true, Placeholder = "Type on the slide…" };
         InlineTextInput.Accessibility.AccessibleName = "Selected slide text";
@@ -221,6 +231,11 @@ internal sealed partial class PresentHavenScene
         insert = ActionButton("Present.Insert", "+", ButtonVariant.Primary, () => ShowInsertMenu(insert));
         insert.Accessibility.AccessibleName = "Insert";
         WorkspacePill.Add(insert);
+        // One compact CUI drawing command slot inside the existing unified toolbar.
+        FreehandToolsHost = new NativeHost { Name = "Present.Freehand.Tools" };
+        FreehandToolsHost.SetValue(HavenProperties.Width, HavenLength.Px(150));
+        FreehandToolsHost.SetValue(HavenProperties.Height, HavenLength.Px(40));
+        WorkspacePill.Add(FreehandToolsHost);
         WorkspacePill.Add(ActionButton("Present.Workspace.Undo", "Undo", ButtonVariant.Ghost, () => UndoRequested?.Invoke(this, EventArgs.Empty)));
         WorkspacePill.Add(ActionButton("Present.Workspace.Redo", "Redo", ButtonVariant.Ghost, () => RedoRequested?.Invoke(this, EventArgs.Empty)));
         WorkspacePill.Add(ActionButton("Present.Workspace.AI", "AI edit", ButtonVariant.Tertiary, () => AiEditRequested?.Invoke(this, EventArgs.Empty)));

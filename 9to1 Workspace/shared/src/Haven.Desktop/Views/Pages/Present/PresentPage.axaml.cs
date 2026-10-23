@@ -54,6 +54,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
             Scene = new HavenSceneControl(_sharedInkResources, _sharedInkResources) { Name = "Scene" };
             OriginalSceneHost.Content = Scene;
             InitializeSharedInkMount();
+            InitializeFreehandMount();
             Scene.Root = _route.Root;
             _route.PreviousDeckRequested += OnPreviousDeckRequested; _route.NextDeckRequested += OnNextDeckRequested; _route.NewDeckRequested += OnNewDeckRequested;
             _route.SaveRequested += OnSaveRequested; _route.ExportRequested += OnExportRequested;
@@ -129,7 +130,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex) { RetainHandledOriginalPresentCause(ex); PublishOriginalPresentSource(() => _route.SetStatus("Couldn’t save this presentation: " + ex.Message)); return false; }
-        finally { Interlocked.Exchange(ref _saveRunning, 0); }
+        finally { Interlocked.Exchange(ref _saveRunning, 0); RefreshFreehandMount(); }
     });
 
     /// <summary>Refuses close over active owner work or edits newer than the saved snapshot.</summary>
@@ -143,7 +144,8 @@ public sealed partial class PresentPage : UserControl, IDisposable
             PublishOriginalPresentSource(() => _route.SetStatus("Finish opening the original Present workspace before closing."));
             return false;
         }
-        if (_busy || _closePreparing || Volatile.Read(ref _saveRunning) != 0 || Volatile.Read(ref _activeOriginalPresentBodies) > 1)
+        if (_busy || _closePreparing || Volatile.Read(ref _saveRunning) != 0 || Volatile.Read(ref _activeOriginalPresentBodies) > 1 ||
+            _freehandInput?.PendingSubmission is { IsCompleted: false })
         {
             PublishOriginalPresentSource(() => _route.SetStatus("Finish the current Present operation before closing."));
             return false;
@@ -361,7 +363,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         PublishOriginalPresentSource(() => _route.SetDocument(Document, _deckIndex, _documents.Count, _slideIndex)); RenderPhase2();
         PublishOriginalPresentSource(() => _route.SetWorkspaceDocument(Document, _slideIndex));
         PublishOriginalPresentSource(() => _route.SetWorkspaceSelection(Document, _slideIndex, _editor!.Selection.ElementIds));
-        PublishSharedInkState();
+        PublishSharedInkState(); RefreshFreehandMount();
     }
     private async Task RefreshDocumentsAsync(CancellationToken cancellationToken) => _documents = await AwaitOriginalPresentSource(() => _repository.ListAsync(cancellationToken));
     private int IndexOfDocument(Guid id) { for (var index = 0; index < _documents.Count; index++) if (_documents[index].Id == id) return index; return 0; }
@@ -370,7 +372,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (_busy || _disposed || _closePreparing) return; SetBusy(true);
         try { await action(); } catch (Exception ex) { RetainHandledOriginalPresentCause(ex); PublishOriginalPresentSource(() => _route.SetStatus($"Couldn’t {description}: {ex.Message}")); } finally { SetBusy(false); }
     });
-    private void SetBusy(bool busy) { _busy = busy; PublishOriginalPresentSource(() => _route.SetBusy(busy)); PublishOriginalPresentSource(() => _route.SetPhase2Busy(busy)); }
+    private void SetBusy(bool busy) { _busy = busy; PublishOriginalPresentSource(() => _route.SetBusy(busy)); PublishOriginalPresentSource(() => _route.SetPhase2Busy(busy)); RefreshFreehandMount(); }
     private static string SanitizeFileName(string title)
     {
         var value = string.IsNullOrWhiteSpace(title) ? "Untitled presentation" : title.Trim(); foreach (var invalid in Path.GetInvalidFileNameChars()) value = value.Replace(invalid, '_'); return value;
@@ -389,7 +391,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         _route.PreviousDeckRequested -= OnPreviousDeckRequested; _route.NextDeckRequested -= OnNextDeckRequested; _route.NewDeckRequested -= OnNewDeckRequested; _route.SaveRequested -= OnSaveRequested; _route.ExportRequested -= OnExportRequested;
         _route.PreviousSlideRequested -= OnPreviousSlideRequested; _route.NextSlideRequested -= OnNextSlideRequested; _route.AddSlideRequested -= OnAddSlideRequested; _route.DeleteSlideRequested -= OnDeleteSlideRequested;
         _route.DeckTitleChanged -= OnDeckTitleChanged; _route.SlideTitleChanged -= OnSlideTitleChanged; _route.BodyChanged -= OnBodyChanged; _route.NotesChanged -= OnNotesChanged;
-        DisposeSharedInkMount(); DisposeWorkspace(); DisposePhase2(); _route.Dispose();
+        DisposeFreehandMount(); DisposeSharedInkMount(); DisposeWorkspace(); DisposePhase2(); _route.Dispose();
         if (Scene is not null) Scene.Root = null;
     }
 }

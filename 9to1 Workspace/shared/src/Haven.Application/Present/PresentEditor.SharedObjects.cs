@@ -53,6 +53,41 @@ public sealed partial class PresentEditor
         return new(true, "PreparedInDocument", "The shared object is in the undoable document; save is still required.", element.Id);
     }
 
+    /// <summary>Insert an owner-validated fresh shared stroke, with precise placement in ONE existing
+    /// undo transaction. Native rendering/readiness and persistence remain the owning surface's jobs.</summary>
+    public PresentSharedObjectInsertionResult TryInsertPreparedSharedObject(Guid expectedDocumentId, int expectedDocumentVersion,
+        Guid selectedSlideId, JsonElement canonicalBundle, IPresentSharedObjectBridge bridge,
+        double x, double y, double width, double height)
+    {
+        ArgumentNullException.ThrowIfNull(bridge);
+        var document = Document;
+        if (IsLiveTextEditActive) return new(false, "TextEditInProgress", "Finish the current text edit before drawing.");
+        if (document.Id != expectedDocumentId || document.Version != expectedDocumentVersion || Selection.SlideId != selectedSlideId)
+            return new(false, "RevisionConflict", "The presentation or selected slide changed before stroke insertion.");
+        var slide = document.Slides.SingleOrDefault(value => value.Id == selectedSlideId);
+        if (slide is null) return new(false, "SlideNotFound", "The original slide no longer exists.");
+        if (!double.IsFinite(x) || !double.IsFinite(y) || !double.IsFinite(width) || !double.IsFinite(height) ||
+            x is < -1 or > 1 || y is < -1 or > 1 || width is < .000001 or > 2 || height is < .000001 or > 2)
+            return new(false, "InvalidGeometry", "The actual shared stroke bounds cannot be placed on this slide.");
+        PresentSharedObjectCapture captured;
+        try { captured = bridge.Capture(canonicalBundle); }
+        catch (PresentSharedObjectCapabilityException error) { return new(false, error.Code, error.Message); }
+        catch (Exception error) when (error is InvalidDataException or JsonException or ArgumentException or NotSupportedException)
+        { return new(false, "InvalidOrUnsupportedObject", error.Message); }
+        if (captured.ObjectId == Guid.Empty || captured.ObjectType != "drawing.ink" || captured.SchemaVersion != 1 ||
+            document.Slides.SelectMany(value => value.Elements).Any(value => value.Id == captured.ObjectId))
+            return new(false, "ObjectIdentityMismatch", "The fresh shared stroke identity is invalid or already belongs to this presentation.");
+        if (IsLiveTextEditActive || !ReferenceEquals(Document, document) || document.Version != expectedDocumentVersion ||
+            Selection.SlideId != selectedSlideId || !document.Slides.Any(value => ReferenceEquals(value, slide)))
+            return new(false, "RevisionConflict", "The original slide changed while the shared stroke was prepared.");
+        var inserted = AddElement(selectedSlideId, new PresentElement
+        {
+            Id = captured.ObjectId, Kind = PresentElementKind.SharedObject, SharedProductivityBundle = captured.Bundle.Clone(),
+            AlternativeText = "Drawing stroke", X = x, Y = y, Width = width, Height = height
+        });
+        return new(true, "PreparedInDocument", "The stroke is in the existing undo history; save is still required.", inserted.Id);
+    }
+
     /// <summary>Apply an owner-prepared shared change to the exact current payload, in the existing undo history.
     /// The owning session must still perform its normal permission/lifetime checks and durable save.</summary>
     public PresentSharedObjectUpdateResult TryReplaceSharedObject(Guid expectedDocumentId, int expectedDocumentVersion,

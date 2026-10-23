@@ -133,6 +133,7 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
             return !_originalPresentWork.IsRetiring && !_disposed && _initialized &&
                 _originalInitializationFailure is null && !_busy && !_closePreparing &&
                 Volatile.Read(ref _saveRunning) == 0 && Volatile.Read(ref _activeOriginalPresentBodies) == 0 &&
+                _freehandInput?.PendingSubmission is not { IsCompleted: false } &&
                 !_dirty && Document?.Recovery.RecoveredFromBackup != true;
         }
     }
@@ -208,13 +209,20 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
     private async Task StopOriginalPresentSourcesAsync()
     {
         await _originalPresentConstruction.Task;
-        _originalPresentWork.RunCloseCallback(() =>
+        var failures = new List<Exception>();
+        try { await DrainFreehandInputAsync(); } catch (Exception error) { failures.Add(error); }
+        try
         {
-            _autosaveTimer?.Stop();
-            if (_autosaveTimer is not null) _autosaveTimer.Tick -= OnAutosaveTick;
-            Loaded -= OnLoaded;
-            DetachedFromVisualTree -= OnDetachedFromVisualTree;
-        });
+            _originalPresentWork.RunCloseCallback(() =>
+            {
+                _autosaveTimer?.Stop();
+                if (_autosaveTimer is not null) _autosaveTimer.Tick -= OnAutosaveTick;
+                Loaded -= OnLoaded;
+                DetachedFromVisualTree -= OnDetachedFromVisualTree;
+            });
+        }
+        catch (Exception error) { failures.Add(error); }
+        if (failures.Count > 0) throw new AggregateException("Present retained shared input and source-stop failures.", failures);
     }
     private async Task CleanupOriginalPresentAsync()
     {

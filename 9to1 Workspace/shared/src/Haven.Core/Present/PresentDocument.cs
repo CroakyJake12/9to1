@@ -286,10 +286,18 @@ public sealed class PresentElement
         TextStyle ??= new PresentTextStyle();
         Media ??= new PresentMediaSettings();
         Properties ??= new Dictionary<string, string>(StringComparer.Ordinal);
-        X = ClampUnit(X);
-        Y = ClampUnit(Y);
-        Width = ClampSize(Width);
-        Height = ClampSize(Height);
+        if (Kind == PresentElementKind.SharedObject)
+        {
+            // Shared ink uses its actual native crop, including sub-percent strokes and edge bleed.
+            X = double.IsFinite(X) ? Math.Clamp(X, -1, 1) : 0;
+            Y = double.IsFinite(Y) ? Math.Clamp(Y, -1, 1) : 0;
+            Width = double.IsFinite(Width) && Width > 0 ? Math.Clamp(Width, .000001, 2) : .1;
+            Height = double.IsFinite(Height) && Height > 0 ? Math.Clamp(Height, .000001, 2) : .1;
+        }
+        else
+        {
+            X = ClampUnit(X); Y = ClampUnit(Y); Width = ClampSize(Width); Height = ClampSize(Height);
+        }
         RotationDegrees = double.IsFinite(RotationDegrees) ? NormalizeDegrees(RotationDegrees) : 0;
         Opacity = double.IsFinite(Opacity) ? Math.Clamp(Opacity, 0, 1) : 1;
         Style.Normalize();

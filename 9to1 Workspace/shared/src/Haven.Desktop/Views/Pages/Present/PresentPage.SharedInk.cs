@@ -146,12 +146,12 @@ public sealed partial class PresentPage
             var retainedProperties = next.Values.Sum(entry => entry.Session.RetainedUnsupportedProperties.Count);
             SharedInkRenderState = wanted.Length == 0 ? new(false, "NoSharedDrawing", "This presentation has no shared drawing.")
                 : unavailable == 0 && retainedProperties > 0 ? new(true, "RenderedWithRetainedProperties",
-                    $"{ready} shared drawing(s) rendered read-only; {retainedProperties} canonical property path(s) are retained but not rendered. Pen editing and insertion are unavailable.")
-                : unavailable == 0 ? new(true, "RenderedReadOnly", $"{ready} shared drawing(s) rendered through Home/Rnote; pen editing and insertion are unavailable.")
+                    $"{ready} shared drawing(s) rendered read-only; {retainedProperties} canonical property path(s) are retained but not rendered. Use Draw to add strokes when the shared renderer is available.")
+                : unavailable == 0 ? new(true, "RenderedReadOnly", $"{ready} shared drawing(s) rendered through Home/Rnote. Use Draw to add strokes when the shared renderer is available.")
                 : new(false, budgetLimited ? "SharedInkRenderBudgetExceeded" : _sharedInkEngine is null ? "HomeInkOwnerUnavailable" : "SharedInkRenderUnavailable",
                     $"{ready}/{wanted.Length} shared drawing(s) rendered read-only; {unavailable} unavailable. " +
                     (budgetLimited ? "This view retains at most 32 drawings/32 MiB; current-slide drawings take priority. " : string.Empty) +
-                    "Canonical payloads are retained; pen editing and insertion are unavailable.");
+                    "Canonical payloads are retained. Draw adds new strokes only when the shared renderer is available.");
         }
         finally
         {

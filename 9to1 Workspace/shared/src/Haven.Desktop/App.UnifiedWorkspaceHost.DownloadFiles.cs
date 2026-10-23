@@ -207,8 +207,7 @@ public sealed partial class App
             }
             if (_originalDownloadFilesClose is { } close)
             {
-                Track(close);
-                await JoinOriginalAppTaskAsync(close, failures);
+                await JoinOriginalAppTaskAsync(Track(close), failures);
             }
             else AddAppCause(failures, new InvalidOperationException("The actual Browser Files owner supplied no retirement Task."));
         }

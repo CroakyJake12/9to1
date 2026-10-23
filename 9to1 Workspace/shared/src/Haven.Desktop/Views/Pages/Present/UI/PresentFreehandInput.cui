@@ -1,0 +1,7 @@
+<Cui id="9to1.Present.Freehand.Input" version="1">
+  <Page>
+    <Container Type="Grid" RowSizes="1fr" accessible-name="Current slide drawing input">
+      <Object Type="shared.ink.input" id="present-freehand-input" accessible-name="Draw a stroke on the current slide using a pen, mouse or touch" />
+    </Container>
+  </Page>
+</Cui>

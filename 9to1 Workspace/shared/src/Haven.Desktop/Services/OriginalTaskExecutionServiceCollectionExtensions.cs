@@ -27,7 +27,8 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
         if (OperatingSystem.IsLinux())
         {
             // Configuration only: both owners consume this exact canonical directory.
-            // Registration neither creates/chmods a root nor grants Files/Home authority.
+            // Registration only configures the one child root; creation waits for the genuine
+            // issued transport plan. It never changes existing permissions or grants Files/Home authority.
             Type[] downloads = [typeof(LinuxOriginalDownloadDirectory),
                 typeof(Haven.Infrastructure.Native.Linux.BrowserOriginalNativeDownloadPhysicalOwner),
                 typeof(IBrowserOriginalNativeDownloadPhysicalOwner), typeof(IBrowserOriginalDownloadFilesPhysicalOwner)];
@@ -37,11 +38,14 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
             {
                 var paths = provider.GetRequiredService<IAppPaths>();
                 var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                return new LinuxOriginalDownloadDirectory(Path.GetFullPath(string.IsNullOrWhiteSpace(profile)
-                    ? Path.Combine(paths.DataDirectory, "Downloads") : Path.Combine(profile, "Downloads", "Haven")));
+                var root = Path.GetFullPath(string.IsNullOrWhiteSpace(profile)
+                    ? Path.Combine(paths.DataDirectory, "Downloads") : Path.Combine(profile, "Downloads", "Haven"));
+                return new LinuxOriginalDownloadDirectory(root, Path.GetDirectoryName(root)
+                    ?? throw new InvalidOperationException("The configured Linux download root has no bounded parent."));
             });
             services.AddSingleton(provider => new Haven.Infrastructure.Native.Linux.BrowserOriginalNativeDownloadPhysicalOwner(
-                provider.GetRequiredService<LinuxOriginalDownloadDirectory>().Path));
+                provider.GetRequiredService<LinuxOriginalDownloadDirectory>().Path,
+                provider.GetRequiredService<LinuxOriginalDownloadDirectory>().Parent));
             services.AddSingleton<IBrowserOriginalNativeDownloadPhysicalOwner>(provider =>
                 provider.GetRequiredService<Haven.Infrastructure.Native.Linux.BrowserOriginalNativeDownloadPhysicalOwner>());
             services.AddSingleton<IBrowserOriginalDownloadFilesPhysicalOwner>(provider =>
@@ -112,7 +116,7 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
         services.AddSingleton(new Registration());
         return services;
     }
-    private sealed record LinuxOriginalDownloadDirectory(string Path);
+    private sealed record LinuxOriginalDownloadDirectory(string Path, string Parent);
     private sealed class Registration { }
 }
 

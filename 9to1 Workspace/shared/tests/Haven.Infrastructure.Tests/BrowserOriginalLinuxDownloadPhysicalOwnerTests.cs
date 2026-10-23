@@ -16,6 +16,178 @@ namespace Haven.Infrastructure.Tests;
 public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
 {
     [Fact]
+    public async Task Explicit_single_child_configuration_alone_creates_nothing_and_cannot_escape_its_parent()
+    {
+        using var folder = new PrivateDirectory();
+        var root = Path.Combine(folder.Path, "Haven");
+        await using var owner = new BrowserOriginalNativeDownloadPhysicalOwner(root, folder.Path);
+        Assert.False(Directory.Exists(root));
+        Assert.Throws<ArgumentException>(() => new BrowserOriginalNativeDownloadPhysicalOwner(
+            Path.Combine(folder.Path, "other", "Haven"), folder.Path));
+        Assert.False(Directory.Exists(Path.Combine(folder.Path, "other")));
+    }
+
+    [LinuxDownloadFact]
+    public async Task Fresh_configured_private_root_is_created_and_real_approved_EOF_uses_the_same_pipeline()
+    {
+        await using var rig = new Rig(createDownloads: false, allowProvision: true);
+        Assert.False(Directory.Exists(rig.Downloads));
+        var content = await rig.ApproveAsync();
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute, File.GetUnixFileMode(rig.Downloads));
+        Assert.Equal(rig.Body, await File.ReadAllBytesAsync(content.OriginalRecord.StoredPath));
+        Assert.True(rig.Owner.IsIssuedOriginalContent(content));
+        Assert.False(File.Exists(rig.Execution!.Plan.PartialPath));
+    }
+
+    [LinuxDownloadFact]
+    public async Task Home_rejection_leaves_only_the_empty_configured_private_setup_root()
+    {
+        await using var rig = new Rig(createDownloads: false, allowProvision: true);
+        var plan = await rig.Transport.PrepareNativeDownloadAsync(Guid.NewGuid(), new("https://example.test/attachment"),
+            null, "report.bin", null, CancellationToken.None);
+        Assert.True(Directory.Exists(rig.Downloads));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(rig.Downloads));
+        var execution = new OriginalFileExecution(rig.Transport, plan, rig.Body, null, rig.Retain);
+        var pending = await rig.Service.RequestNativeDownloadAsync(new(plan.ActionId, new("https://example.test/attachment"),
+            plan.FileName, false), execution, CancellationToken.None);
+        var rejected = await rig.Service.RejectAsync(pending.Id, CancellationToken.None);
+        Assert.Equal(BrowserActionState.Rejected, rejected.State);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(rig.Downloads));
+        Assert.Empty(await rig.Store.GetDownloadsAsync(10, CancellationToken.None));
+        Assert.Null(execution.Content);
+    }
+
+    [LinuxDownloadFact]
+    public async Task An_owner_without_explicit_setup_configuration_does_not_create_a_missing_root()
+    {
+        await using var rig = new Rig(createDownloads: false);
+        Assert.True(ContainsKind<FileNotFoundException>(await Failure(rig.Transport.PrepareNativeDownloadAsync(Guid.NewGuid(),
+            new("https://example.test/attachment"), null, "report.bin", null, CancellationToken.None))));
+        Assert.False(Directory.Exists(rig.Downloads));
+        rig.ExpectOwnerFailure = true;
+    }
+
+    [LinuxDownloadFact]
+    public async Task Another_real_transport_plan_cannot_create_the_configured_missing_root()
+    {
+        await using var foreign = new Rig();
+        await using var target = new Rig(createDownloads: false, allowProvision: true);
+        var foreignPlan = await foreign.Transport.PrepareNativeDownloadAsync(Guid.NewGuid(), new("https://example.test/file"),
+            null, "foreign.bin", null, CancellationToken.None);
+        Assert.True(ContainsKind<UnauthorizedAccessException>(await Failure(target.Owner.PrepareOriginalTransportPlanWithinSourceAsync(
+            foreign.Transport.GetOriginalTransportPlan(foreignPlan), Run, target.Retain, CancellationToken.None))));
+        Assert.False(Directory.Exists(target.Downloads));
+        target.ExpectOwnerFailure = true;
+    }
+
+    [LinuxDownloadFact]
+    public async Task Invalid_issued_description_is_rejected_before_empty_root_setup()
+    {
+        using var folder = new PrivateDirectory();
+        var root = Path.Combine(folder.Path, "Haven");
+        var owner = new BrowserOriginalNativeDownloadPhysicalOwner(root, folder.Path);
+        var source = new FaultySetupTransport(root, invalidDescription: true);
+        owner.BindOriginalTransportSource(source);
+        Assert.True(ContainsKind<UnauthorizedAccessException>(await Failure(owner.PrepareOriginalTransportPlanWithinSourceAsync(
+            source.Plan, Run, _ => { }, CancellationToken.None))));
+        Assert.False(Directory.Exists(root));
+        await Assert.ThrowsAnyAsync<Exception>(() => owner.CloseAndDrainAsync());
+    }
+
+    [LinuxDownloadFact]
+    public async Task Cancellation_during_description_validation_creates_no_root()
+    {
+        using var folder = new PrivateDirectory();
+        using var cancellation = new CancellationTokenSource();
+        var root = Path.Combine(folder.Path, "Haven");
+        var owner = new BrowserOriginalNativeDownloadPhysicalOwner(root, folder.Path);
+        var source = new FaultySetupTransport(root, duringDescription: cancellation.Cancel);
+        owner.BindOriginalTransportSource(source);
+        Assert.True(ContainsKind<OperationCanceledException>(await Failure(owner.PrepareOriginalTransportPlanWithinSourceAsync(
+            source.Plan, Run, _ => { }, cancellation.Token))));
+        Assert.False(Directory.Exists(root));
+        await Assert.ThrowsAnyAsync<Exception>(() => owner.CloseAndDrainAsync());
+    }
+
+    [LinuxDownloadFact]
+    public async Task Provisioning_refuses_insecure_existing_root_and_parent_without_changing_permissions()
+    {
+        await using (var rig = new Rig(allowProvision: true))
+        {
+            var unsafeMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead;
+            File.SetUnixFileMode(rig.Downloads, unsafeMode);
+            await File.WriteAllTextAsync(Path.Combine(rig.Downloads, "existing.txt"), "retain original");
+            Assert.True(ContainsKind<UnauthorizedAccessException>(await Failure(rig.Transport.PrepareNativeDownloadAsync(Guid.NewGuid(),
+                new("https://example.test/file"), null, "new.bin", null, CancellationToken.None))));
+            Assert.Equal(unsafeMode, File.GetUnixFileMode(rig.Downloads));
+            Assert.Equal("retain original", await File.ReadAllTextAsync(Path.Combine(rig.Downloads, "existing.txt")));
+            rig.ExpectOwnerFailure = true;
+        }
+        await using (var rig = new Rig(createDownloads: false, allowProvision: true))
+        {
+            var unsafeMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+                | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute;
+            File.SetUnixFileMode(rig.Root, unsafeMode);
+            Assert.True(ContainsKind<UnauthorizedAccessException>(await Failure(rig.Transport.PrepareNativeDownloadAsync(Guid.NewGuid(),
+                new("https://example.test/file"), null, "new.bin", null, CancellationToken.None))));
+            Assert.False(Directory.Exists(rig.Downloads));
+            Assert.Equal(unsafeMode, File.GetUnixFileMode(rig.Root));
+            rig.ExpectOwnerFailure = true;
+        }
+    }
+
+    [LinuxDownloadFact]
+    public async Task Provisioning_never_follows_a_symlink_parent_or_creates_missing_ancestors()
+    {
+        using var folder = new PrivateDirectory();
+        var actualParent = Path.Combine(folder.Path, "actual");
+        Directory.CreateDirectory(actualParent, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        var alias = Path.Combine(folder.Path, "alias"); Directory.CreateSymbolicLink(alias, actualParent);
+        var root = Path.Combine(alias, "Haven");
+        var owner = new BrowserOriginalNativeDownloadPhysicalOwner(root, alias);
+        var transport = new BrowserDownloadTransport(new FixturePolicy(), root, owner);
+        Assert.True(ContainsKind<UnauthorizedAccessException>(await Failure(transport.PrepareNativeDownloadAsync(Guid.NewGuid(),
+            new("https://example.test/file"), null, "new.bin", null, CancellationToken.None))));
+        Assert.False(Directory.Exists(Path.Combine(actualParent, "Haven")));
+        Assert.Equal(actualParent, new DirectoryInfo(alias).LinkTarget);
+        await Assert.ThrowsAnyAsync<Exception>(() => owner.CloseAndDrainAsync());
+        var linkedRoot = Path.Combine(folder.Path, "linked-root"); Directory.CreateSymbolicLink(linkedRoot, actualParent);
+        owner = new(linkedRoot, folder.Path); transport = new(new FixturePolicy(), linkedRoot, owner);
+        Assert.True(ContainsKind<UnauthorizedAccessException>(await Failure(transport.PrepareNativeDownloadAsync(Guid.NewGuid(),
+            new("https://example.test/file"), null, "new.bin", null, CancellationToken.None))));
+        Assert.Equal(actualParent, new DirectoryInfo(linkedRoot).LinkTarget);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(actualParent));
+        await Assert.ThrowsAnyAsync<Exception>(() => owner.CloseAndDrainAsync());
+        var absentParent = Path.Combine(folder.Path, "not-created");
+        root = Path.Combine(absentParent, "Haven");
+        owner = new(root, absentParent); transport = new(new FixturePolicy(), root, owner);
+        Assert.True(ContainsKind<FileNotFoundException>(await Failure(transport.PrepareNativeDownloadAsync(Guid.NewGuid(),
+            new("https://example.test/file"), null, "new.bin", null, CancellationToken.None))));
+        Assert.False(Directory.Exists(absentParent));
+        await Assert.ThrowsAnyAsync<Exception>(() => owner.CloseAndDrainAsync());
+    }
+
+    [LinuxDownloadFact]
+    public void Create_only_EEXIST_and_changed_effective_principal_never_adopt_or_mutate_a_competing_root()
+    {
+        using var folder = new PrivateDirectory();
+        var root = Path.Combine(folder.Path, "Haven");
+        Directory.CreateDirectory(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        using var held = LinuxOriginalDownloadPaths.OpenAbsoluteDirectory(root, mutable: false);
+        var original = LinuxOriginalDownloadPaths.ReadIdentity(held);
+        using var parent = LinuxOriginalDownloadPaths.OpenAbsoluteDirectory(folder.Path, mutable: true);
+        var uid = LinuxOriginalDownloadPaths.CurrentUid();
+        Assert.Throws<LinuxOriginalDownloadCollisionException>(() =>
+            LinuxOriginalDownloadPaths.CreatePrivateChildRoot(parent, folder.Path, "Haven", uid));
+        Assert.True(original.SameReadVersion(LinuxOriginalDownloadPaths.ReadIdentity(held)));
+        var changedUid = uid == uint.MaxValue ? 0 : uid + 1;
+        Assert.Throws<UnauthorizedAccessException>(() => LinuxOriginalDownloadPaths.RetainOrCreatePrivateRoot(
+            Path.Combine(folder.Path, "missing"), folder.Path, changedUid));
+        Assert.False(Directory.Exists(Path.Combine(folder.Path, "missing")));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(root));
+    }
+
+    [Fact]
     public void Supported_ABIs_have_explicit_directory_flags_and_other_ABIs_are_refused()
     {
         Assert.Equal(0x10000UL, LinuxOriginalDownloadPaths.DirectoryFlagFor(Architecture.X64));
@@ -237,6 +409,9 @@ public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
         BitConverter.GetBytes(7U).CopyTo(bytes, 120); BitConverter.GetBytes(2U).CopyTo(bytes, 136);
         BitConverter.GetBytes(3U).CopyTo(bytes, 140); BitConverter.GetBytes(9UL).CopyTo(bytes, 144); return bytes;
     }
+    private static bool ContainsKind<T>(Exception error) where T : Exception => error is T
+        || error is AggregateException group && group.InnerExceptions.Any(ContainsKind<T>)
+        || error.InnerException is { } inner && ContainsKind<T>(inner);
     private static bool Contains(Exception error, Exception same) => ReferenceEquals(error, same) ||
         error is AggregateException group && group.InnerExceptions.Any(value => Contains(value, same));
     private static async Task<Exception> Failure(Task task)
@@ -273,11 +448,15 @@ public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
         internal BrowserNativeDownloadAutomationService Service { get; }
         internal OriginalFileExecution? Execution;
         internal bool ExpectOwnerFailure, ExpectApprovalFailure;
-        internal Rig()
+        internal Rig(bool createDownloads = true, bool allowProvision = false)
         {
-            Directory.CreateDirectory(Downloads);
-            if (OperatingSystem.IsLinux()) File.SetUnixFileMode(Downloads, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            Owner = new(Downloads); var policy = new FixturePolicy(); Transport = new(policy, Downloads, Owner);
+            if (createDownloads)
+            {
+                Directory.CreateDirectory(Downloads);
+                if (OperatingSystem.IsLinux()) File.SetUnixFileMode(Downloads, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
+            Owner = allowProvision ? new(Downloads, Root) : new(Downloads);
+            var policy = new FixturePolicy(); Transport = new(policy, Downloads, Owner);
             Store = new(new Paths(Root)); Service = new(new StoreQueries(Store), policy, Store);
         }
         internal void Retain(Task task) { lock (_sources) _sources.Add(task); }
@@ -354,6 +533,23 @@ public sealed class BrowserOriginalLinuxDownloadPhysicalOwnerTests
         public Task RevalidateOriginalCompletionWithinSourceAsync(IBrowserOriginalNativeDownloadCompletion value,
             Action<Action> scope, Action<Task> retainActual, CancellationToken token)
         { token.ThrowIfCancellationRequested(); scope(() => DemandOriginalCompletedDownload(value)); return Task.CompletedTask; }
+    }
+    // Fault injection at an actual bound transport-source seam. This fixture grants no Home
+    // approval and never writes a native body; malformed/cancelled setup must stop before mkdir.
+    private sealed class FaultySetupTransport(string root, bool invalidDescription = false, Action? duringDescription = null)
+        : IBrowserOriginalNativeDownloadTransportSource
+    {
+        private sealed record Marker(Guid ActionId) : IBrowserOriginalNativeDownloadTransportPlan;
+        internal IBrowserOriginalNativeDownloadTransportPlan Plan { get; } = new Marker(Guid.NewGuid());
+        public bool IsIssuedOriginalTransportPlan(IBrowserOriginalNativeDownloadTransportPlan originalPlan) => ReferenceEquals(originalPlan, Plan);
+        public BrowserOriginalNativeDownloadPlanDescription GetOriginalTransportPlanDescription(IBrowserOriginalNativeDownloadTransportPlan originalPlan)
+        {
+            if (!IsIssuedOriginalTransportPlan(originalPlan)) throw new UnauthorizedAccessException();
+            duringDescription?.Invoke();
+            var final = Path.Combine(invalidDescription ? Path.GetDirectoryName(root)! : root, "file.bin");
+            return new(Plan.ActionId, root, final + ".haven-download-" + Guid.NewGuid().ToString("N") + ".tmp",
+                final, "file.bin", "https://example.test/file", DateTimeOffset.UtcNow);
+        }
     }
     private sealed record ForeignCompletion(IBrowserOriginalNativeDownloadTransportPlan OriginalPlan,
         IBrowserOriginalNativeDownloadApprovalSource OriginalApprovalSource, IBrowserOriginalNativeDownloadApproval OriginalApproval,
