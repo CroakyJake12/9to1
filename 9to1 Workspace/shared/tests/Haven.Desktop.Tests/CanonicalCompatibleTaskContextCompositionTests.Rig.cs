@@ -78,7 +78,7 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
                 new OperatingSystemPrincipalSource(), _paths,
                 originalResolvers: [new HomeColdProjectReadResourceResolver(() => reads ?? throw new InvalidOperationException("Actual READ owner unavailable.")),
                     new HomeCompatibleTaskContextWriteResourceResolver(() => _writes ?? throw new InvalidOperationException("Actual WRITE owner unavailable."))],
-                originalPolicies: [new FixtureLocalProfileImportPolicy(), new HomeColdProjectReadActionPolicySource(), new HomeCompatibleTaskContextWriteActionPolicy()],
+                originalPolicies: [new HomeColdProjectReadActionPolicySource(), new HomeCompatibleTaskContextWriteActionPolicy()],
                 configureOriginalStores: identity =>
                 {
                     files = new(identity.StateStore, identity.Profiles);
@@ -316,17 +316,6 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
             if (!errors.Any(prior => ReferenceEquals(prior, cause))) errors.Add(cause);
         }
     }
-    // Register the same exact trusted import action declared by HomeAppAiServices.
-    // This is catalogue metadata; only the actual Home broker's individual Accept
-    // can authorize the populated canonical store import below.
-    private sealed class FixtureLocalProfileImportPolicy : IHomeActionPolicySource
-    {
-        public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
-            appId == "9to1.home.local-profile" && actionId == "home.profile.importStore"
-                ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, false, false, true)
-                : null;
-    }
-
     private sealed class Paths(string root) : IAppPaths
     {
         public string DataDirectory => root; public string DatabasePath => Path.Combine(root, "haven.db");
