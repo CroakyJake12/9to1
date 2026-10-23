@@ -53,7 +53,8 @@ internal interface IBoardsLegacyOriginalFileObservation
 /// <summary>Unbound host-adapter seam, not a Files authority or registered producer. Future
 /// trusted Desktop composition must bridge genuine Files Application contracts here; Files
 /// must not reference Desktop. All starts return their actual Task, never success wrappers.
-/// The source must bound content and own physical selection, hashes, permission and revision.
+/// The source must enforce the supplied positive byte budget before materializing content,
+/// and own physical selection, hashes, permission and revision.
 /// Descendants must be retained before their owning parent becomes terminal; retained
 /// callbacks expire when the original operation and its complete task closure settle.</summary>
 internal interface IBoardsLegacyOriginalFileReadSource
@@ -63,7 +64,7 @@ internal interface IBoardsLegacyOriginalFileReadSource
     Task<bool> IsObservationCurrentAsync(IBoardsLegacyOriginalFileObservation observation,
         Action<Action> withinOriginalSource, Action<Task> retainOriginal, CancellationToken cancellationToken);
     Task<IBoardsLegacyOriginalFileReadLease> OpenReadAsync(IBoardsLegacyOriginalFileObservation observation,
-        Action<Action> withinOriginalSource, Action<Task> retainOriginal, CancellationToken cancellationToken);
+        int maximumReadBytes, Action<Action> withinOriginalSource, Action<Task> retainOriginal, CancellationToken cancellationToken);
     bool IsIssuedLease(IBoardsLegacyOriginalFileReadLease lease, IBoardsLegacyOriginalFileObservation observation);
 }
 
@@ -73,7 +74,7 @@ internal interface IBoardsLegacyOriginalFileReadLease
     // The privately owned source freezes bytes for the exact issued observation.
     // ReadOnlyMemory alone is not an immutability guarantee; the host copies and
     // verifies its original length/hash before handing data to the pure codec.
-    Task<ReadOnlyMemory<byte>> ReadAsync(Action<Action> withinOriginalSource,
+    Task<ReadOnlyMemory<byte>> ReadAsync(int maximumReadBytes, Action<Action> withinOriginalSource,
         Action<Task> retainOriginal, CancellationToken cancellationToken);
     // Close must remain possible after caller/source cancellation. The same finite
     // original owner still guards cleanup; no unscoped disposal fallback is allowed.
@@ -99,8 +100,17 @@ internal sealed class BoardsLegacyFileInspectionResult
 /// approval, select an argv candidate or implement application/CUI orchestration.</summary>
 internal sealed class BoardsLegacyDocumentFileActions(IBoardsLegacyDocumentCodec codec,
     IBoardsLegacyOriginalFileReadSource? source = null, Action<Action>? originalScope = null,
-    Action<Task>? retainOriginal = null, CancellationToken actualAppLifetime = default)
+    Action<Task>? retainOriginal = null, CancellationToken actualAppLifetime = default,
+    int maximumReadBytes = 256 * 1024 * 1024)
 {
+    internal const int MaximumSupportedReadBytes = 256 * 1024 * 1024;
+    private readonly int _maximumReadBytes = ValidateReadBudget(maximumReadBytes);
+
+    private static int ValidateReadBudget(int maximumReadBytes) =>
+        maximumReadBytes is > 0 and <= MaximumSupportedReadBytes ? maximumReadBytes :
+            throw new ArgumentOutOfRangeException(nameof(maximumReadBytes), maximumReadBytes,
+                "The original legacy read budget must be positive and no greater than 256 MiB.");
+
     public async Task<BoardsLegacyFileInspectionResult> InspectOriginalAsync(
         IBoardsLegacyOriginalFileObservation? observation, CancellationToken cancellationToken = default)
     {
@@ -183,7 +193,9 @@ internal sealed class BoardsLegacyDocumentFileActions(IBoardsLegacyDocumentCodec
                 // A synchronous OCE is a fault. Only the actual canceled Task below
                 // may establish cancellation; opaque aggregates are never flattened.
                 originals.Retain(error);
-                throw new AggregateException("Synchronous original legacy read callback failed.", error);
+                var fault = new AggregateException("Synchronous original legacy read callback failed.", error);
+                originals.Retain(fault); // Preserve the SAME semantic fault even if a producer swallows it.
+                throw fault;
             }
             finally
             {
@@ -209,7 +221,9 @@ internal sealed class BoardsLegacyDocumentFileActions(IBoardsLegacyDocumentCodec
             catch (OperationCanceledException error)
             {
                 originals.Retain(error);
-                throw new AggregateException("Synchronous original task-retention callback failed.", error);
+                var fault = new AggregateException("Synchronous original task-retention callback failed.", error);
+                originals.Retain(fault);
+                throw fault;
             }
             catch (Exception error) { originals.Retain(error); throw; }
             finally { ExitCallback(); }
@@ -262,7 +276,8 @@ internal sealed class BoardsLegacyDocumentFileActions(IBoardsLegacyDocumentCodec
             }
             if (failure is not null)
             {
-                if (failure is OperationCanceledException && raw?.IsCanceled == true)
+                if (failure is OperationCanceledException && raw?.IsCanceled == true &&
+                    originals.OriginalErrors.All(error => error is OperationCanceledException))
                     ExceptionDispatchInfo.Capture(failure).Throw();
                 throw new AggregateException("The original read acquisition or finite scope failed.", originals.OriginalErrors);
             }
@@ -280,7 +295,8 @@ internal sealed class BoardsLegacyDocumentFileActions(IBoardsLegacyDocumentCodec
             }
             if (failure is not null)
             {
-                if (failure is OperationCanceledException && raw?.IsCanceled == true)
+                if (failure is OperationCanceledException && raw?.IsCanceled == true &&
+                    originals.OriginalErrors.All(error => error is OperationCanceledException))
                     ExceptionDispatchInfo.Capture(failure).Throw();
                 throw new AggregateException("The original read cleanup or finite scope failed.", originals.OriginalErrors);
             }
@@ -314,13 +330,17 @@ internal sealed class BoardsLegacyDocumentFileActions(IBoardsLegacyDocumentCodec
                         if (length < 0 || digest is null || digest.Length != 64 ||
                             digest.Any(value => (value < '0' || value > '9') && (value < 'a' || value > 'f')))
                             return BoardsLegacyFileInspectionResult.Refused("MissingIdentity", "The original observation has no exact content length and SHA256 binding.");
+                        if (length > _maximumReadBytes)
+                            return BoardsLegacyFileInspectionResult.Refused("ReadBudgetExceeded", "The original document exceeds this host's admitted read budget.");
                         if (!await Capture(() => source.IsObservationCurrentAsync(observation, Within, Retain, token)).ConfigureAwait(false))
                             return BoardsLegacyFileInspectionResult.Refused("SourceChanged", "The original Files observation is no longer current.");
-                        _ = await Capture(() => source.OpenReadAsync(observation, Within, Retain, token), value => acquired = value).ConfigureAwait(false);
+                        _ = await Capture(() => source.OpenReadAsync(observation, _maximumReadBytes, Within, Retain, token), value => acquired = value).ConfigureAwait(false);
                         if (acquired is null || !Finite(() => source.IsIssuedLease(acquired, observation)) || Finite(() => acquired.Source) != identity)
                             return BoardsLegacyFileInspectionResult.Refused("PermissionDenied", "The acquired read is not the exact issued original source.");
-                        var memory = await Capture(() => acquired.ReadAsync(Within, Retain, token)).ConfigureAwait(false);
+                        var memory = await Capture(() => acquired.ReadAsync(_maximumReadBytes, Within, Retain, token)).ConfigureAwait(false);
                         token.ThrowIfCancellationRequested();
+                        if (memory.Length > _maximumReadBytes)
+                            return BoardsLegacyFileInspectionResult.Refused("ReadBudgetExceeded", "The original read returned content beyond this host's admitted budget.");
                         if (memory.Length != length)
                             return BoardsLegacyFileInspectionResult.Refused("SourceChanged", "The original read length does not match the issued observation.");
                         var detached = Finite(() => memory.ToArray());
