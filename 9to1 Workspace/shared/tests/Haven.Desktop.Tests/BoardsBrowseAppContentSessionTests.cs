@@ -137,14 +137,25 @@ public sealed class BoardsBrowseAppContentSessionTests
             if (rig is not null) rig.Route.OnAliveCheck = null;
             held.TrySetResult(); stopWatchdog.Cancel();
             if (watchdog is not null)
-                try { await watchdog; } catch (OperationCanceledException) when (stopWatchdog.IsCancellationRequested) { }
+                try { await watchdog; } catch (OperationCanceledException) when (watchdog.IsCanceled && stopWatchdog.IsCancellationRequested) { }
                 catch (Exception error) { failures.Add(error); }
             if (direct is not null) try { await direct; } catch (Exception error) { failures.Add(error); }
             if (preparing is not null)
                 try { var accepted = await preparing; if (accepted is { IsCurrent: true }) await accepted.BeginClose(); }
                 catch (Exception error) { failures.Add(error); }
             if (session is not null)
+            {
+                if (session.OriginalClose is null && session.OriginalInitialization is { IsCompletedSuccessfully: true })
+                    try
+                    {
+                        // Even a broken canceled preparation gets a fresh legitimate strong
+                        // cleanup attempt after its direct source settled. Preserve all failures.
+                        var cleanup = await session.PrepareCloseAsync(bound.Token);
+                        if (cleanup is not null) await cleanup.BeginClose();
+                    }
+                    catch (Exception error) { failures.Add(error); }
                 try { await (session.OriginalClose ?? session.CloseAndDrainAsync()); } catch (Exception error) { failures.Add(error); }
+            }
             if (window is not null)
             {
                 try { window.Content = null; } catch (Exception error) { failures.Add(error); }
