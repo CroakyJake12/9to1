@@ -344,7 +344,7 @@ namespace Avalonia.Controls.Presenters
         /// <param name="typeface"></param>
         /// <param name="textStyleOverrides"></param>
         /// <returns>A <see cref="TextLayout"/> object.</returns>
-        private TextLayout CreateTextLayoutInternal(Size constraint, string? text, Typeface typeface,
+        protected virtual TextLayout CreateTextLayoutInternal(Size constraint, string? text, Typeface typeface,
             IReadOnlyList<ValueSpan<TextRunProperties>>? textStyleOverrides)
         {
             var maxWidth = MathUtilities.IsZero(constraint.Width) ? double.PositiveInfinity : constraint.Width;
@@ -636,6 +636,10 @@ namespace Avalonia.Controls.Presenters
             InvalidateVisual();
             InvalidateMeasure();
         }
+
+        /// <summary>Refresh cached caret/IME geometry after a derived layout changes,
+        /// preserving the native character affinity and logical caret/selection.</summary>
+        protected void RefreshCaretBounds() => UpdateCaret(_lastCharacterHit, false);
 
         protected override Size MeasureOverride(Size availableSize)
         {

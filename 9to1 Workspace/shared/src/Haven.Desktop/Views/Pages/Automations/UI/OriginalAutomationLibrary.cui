@@ -1,6 +1,8 @@
 <Cui id="automations.saved-library" version="1">
   <Actions>
     <Action name="OpenSavedAutomation" command="select" parameter="{Binding automation.Target}" />
+    <Action name="InspectSavedGraphNode" command="graph-node" parameter="{Binding graphNode.Target}" />
+    <Action name="FollowSavedGraphConnection" command="graph-node" parameter="{Binding graphConnection.Target}" />
   </Actions>
   <Page id="saved-automation-library" AccessibleName="Saved automation library">
     <Container Type="Vertical Stack" Margin="24" VerticalScrolling="True" CellGap="16">
@@ -27,6 +29,67 @@
         <Text Text="{Binding SelectedState}" TextWrapping="Wrap" />
         <Text Text="{Binding SelectedSchedule}" TextWrapping="Wrap" />
         <Text Text="{Binding Instruction}" TextWrapping="Wrap" />
+        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasStoredGraph}">
+          <Text Text="Saved graph" FontSize="20" FontWeight="SemiBold" />
+          <Text Text="Inspect the actual saved snapshot. These controls do not edit, activate, test or run the workflow." TextWrapping="Wrap" />
+          <Text id="automation-library-graph-status" Text="{Binding GraphStatus}" TextWrapping="Wrap" AccessibleName="Saved graph inspection status" />
+          <Text Text="{Binding GraphIdentity}" TextWrapping="Wrap" />
+          <Text Text="Payload SHA-256" FontWeight="SemiBold" />
+          <Text Text="{Binding GraphDigest}" TextWrapping="Wrap" />
+          <Input id="automation-library-graph-search" Type="Text" Value="{Binding GraphNodeSearch, Mode=TwoWay}" PlaceholderText="Find nodes by name, category, action, target or ID" Interactive="{Binding CanInspectGraph}" AccessibleName="Search saved graph nodes" />
+          <Text Text="{Binding GraphPageLabel}" />
+          <Repeat Source="{Binding GraphNodes}" As="graphNode" Key="{Binding graphNode.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+              <Text Text="{Binding graphNode.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding graphNode.Category}" TextWrapping="Wrap" />
+              <Text Text="{Binding graphNode.Identity}" TextWrapping="Wrap" />
+              <Button action="InspectSavedGraphNode" Interactive="{Binding graphNode.CanOpen}">Inspect node</Button>
+            </Container>
+          </Repeat>
+          <Button action="graph-back" Interactive="{Binding CanGraphBack}">Previous nodes</Button>
+          <Button action="graph-next" Interactive="{Binding CanGraphNext}">Next nodes</Button>
+          <Text Text="{Binding GraphNodeTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <Text Text="{Binding GraphNodeIdentity}" TextWrapping="Wrap" />
+          <Text Text="{Binding GraphNodeAction}" TextWrapping="Wrap" />
+          <Text Text="{Binding GraphNodeDevice}" TextWrapping="Wrap" />
+          <Text Text="{Binding GraphPortSummary}" TextWrapping="Wrap" />
+          <Repeat Source="{Binding GraphPorts}" As="graphPort" Key="{Binding graphPort.Key}">
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="{Binding graphPort.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding graphPort.Detail}" TextWrapping="Wrap" />
+            </Container>
+          </Repeat>
+          <Text Text="Stored parameters" FontWeight="SemiBold" />
+          <Repeat Source="{Binding GraphParameters}" As="graphParameter" Key="{Binding graphParameter.Key}">
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="{Binding graphParameter.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding graphParameter.Detail}" TextWrapping="Wrap" />
+            </Container>
+          </Repeat>
+          <Text Text="{Binding GraphFieldSummary}" TextWrapping="Wrap" />
+          <Text Text="Connections" FontWeight="SemiBold" />
+          <Text Text="{Binding GraphConnectionPageLabel}" />
+          <Repeat Source="{Binding GraphConnections}" As="graphConnection" Key="{Binding graphConnection.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,8">
+              <Text Text="{Binding graphConnection.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding graphConnection.Detail}" TextWrapping="Wrap" />
+              <Button action="FollowSavedGraphConnection" Interactive="{Binding graphConnection.CanOpen}">Inspect connected node</Button>
+            </Container>
+          </Repeat>
+          <Button action="graph-links-back" Interactive="{Binding CanGraphLinksBack}">Previous connections</Button>
+          <Button action="graph-links-next" Interactive="{Binding CanGraphLinksNext}">Next connections</Button>
+          <Text Text="Structure and saved configuration diagnostics" FontWeight="SemiBold" />
+          <Text Text="These checks do not establish permissions, live device or capability availability, or execution readiness." TextWrapping="Wrap" />
+          <Text Text="{Binding GraphDiagnosticPageLabel}" />
+          <Repeat Source="{Binding GraphDiagnostics}" As="graphDiagnostic" Key="{Binding graphDiagnostic.Key}">
+            <Container Type="Vertical Stack" CellGap="4">
+              <Text Text="{Binding graphDiagnostic.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding graphDiagnostic.Detail}" TextWrapping="Wrap" />
+            </Container>
+          </Repeat>
+          <Button action="graph-diagnostics-back" Interactive="{Binding CanGraphDiagnosticsBack}">Previous diagnostics</Button>
+          <Button action="graph-diagnostics-next" Interactive="{Binding CanGraphDiagnosticsNext}">Next diagnostics</Button>
+        </Container>
         <Text Text="{Binding Review}" TextWrapping="Wrap" />
         <Text Text="Recovering legacy settings marks them for attention and disables execution. Saving edits or disabling also requires individual Home approval. Running requires separate setup and approval." TextWrapping="Wrap" />
         <Button id="automation-library-recover" action="recover" Interactive="{Binding CanRecover}">Review saved settings</Button>
@@ -36,14 +99,18 @@
           <Text Text="Edit a recovered, disabled automation. Save sends these exact changes to Home for review and keeps execution disabled. Discard unsaved edits before switching rows or refreshing." TextWrapping="Wrap" />
           <Text Text="Name" />
           <Input id="automation-library-edit-name" Type="Text" Value="{Binding EditName, Mode=TwoWay}" Interactive="{Binding CanEditName}" AccessibleName="Automation name" />
+          <Container Type="Vertical Stack" CellGap="4" IsVisible="{Binding ShowPlainInstruction}">
           <Text Text="Instructions" />
           <Input id="automation-library-edit-instruction" Type="Text" Value="{Binding EditInstruction, Mode=TwoWay}" Interactive="{Binding CanEditContent}" Multiline="True" MinHeight="140" TextWrapping="Wrap" AccessibleName="Automation instructions" />
+          </Container>
           <Text Text="{Binding EditScheduleKind}" FontWeight="SemiBold" />
           <Text Text="{Binding EditScheduleHint}" TextWrapping="Wrap" />
+          <Container Type="Vertical Stack" CellGap="4" IsVisible="{Binding ShowPlainInstruction}">
           <Input id="automation-library-edit-schedule" Type="Text" Value="{Binding EditScheduleValue, Mode=TwoWay}" Interactive="{Binding CanEditContent}" AccessibleName="Saved schedule time or interval" />
           <Container Type="Vertical Stack" CellGap="4" IsVisible="{Binding HasEditDay}">
             <Text Text="Day of week" />
             <Input id="automation-library-edit-day" Type="Text" Value="{Binding EditDay, Mode=TwoWay}" Interactive="{Binding CanEditContent}" AccessibleName="Schedule day of week, Monday to Sunday" />
+          </Container>
           </Container>
           <Button id="automation-library-save-edits" action="save-edits" Interactive="{Binding CanSaveEdits}">Save edits for Home review</Button>
           <Button id="automation-library-discard-edits" action="discard-edits" Interactive="{Binding CanDiscardEdits}">Discard unsaved edits</Button>

@@ -28,6 +28,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private string _selectedBlockId = "block-para";
     private bool _syncing;
     private readonly Dictionary<TextBox, Action> _textRangeBindings = [];
+    private readonly Dictionary<TextBox, (string Page, string Block)> _formattedTextBindings = [];
     private TextBox? _textRangeControl;
     private string? _textRangeBlock, _textRangePage;
     private long _textRangeEpoch;
@@ -534,6 +535,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 break;
         }
         _session.MarkDirty();
+        RefreshTextPresentations();
     }
 
     private bool EditDynamicText(string controlName, string text)
@@ -756,11 +758,25 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             box.PropertyChanged -= Changed; box.GotFocus -= Focused; box.DetachedFromVisualTree -= Detached;
             _textRangeBindings.Remove(box);
+            _formattedTextBindings.Remove(box);
+            CuiFormattedTextInput.SetPresentation(box, null);
             if (ReferenceEquals(_textRangeControl, box)) { InvalidateTextRange(); RefreshTextRangeBindings(); }
         }
         void Detached(object? sender, Avalonia.VisualTreeAttachmentEventArgs args) => Remove();
         box.PropertyChanged += Changed; box.GotFocus += Focused; box.DetachedFromVisualTree += Detached;
         _textRangeBindings.Add(box, Remove);
+        _formattedTextBindings.Add(box, (SelectedPageId, blockId));
+        RefreshTextPresentations();
+    }
+
+    private void RefreshTextPresentations()
+    {
+        foreach (var (input, owner) in _formattedTextBindings.ToArray())
+        {
+            var block = owner.Page == SelectedPageId ? FindBlock(owner.Block) : null;
+            if (block is null) CuiFormattedTextInput.SetPresentation(input, null);
+            else BlockRenderer.UpdateTextPresentation(input, block, StyleList.FirstOrDefault(style => style.Id == block.StyleId));
+        }
     }
 
     private BoardTextSelection? CurrentTextRange()
@@ -2257,6 +2273,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             _syncing = false;
         }
+        RefreshTextPresentations();
         RefreshTextRangeBindings();
     }
 

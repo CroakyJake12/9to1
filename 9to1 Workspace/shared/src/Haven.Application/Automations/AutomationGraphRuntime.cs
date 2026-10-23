@@ -48,13 +48,26 @@ public sealed class AutomationGraphRunner(IEnumerable<IAutomationGraphNodeExecut
 {
     private readonly IReadOnlyList<IAutomationGraphNodeExecutor> _executors = executors?.ToArray() ?? [];
 
-    public IReadOnlyList<AutomationGraphValidationIssue> Validate(AutomationGraphDefinition graph)
+    public IReadOnlyList<AutomationGraphValidationIssue> Validate(AutomationGraphDefinition graph) => ValidateCore(graph, true);
+
+    /// <summary>Pure structure checks for inspecting saved definitions. This does not
+    /// inspect permissions, live capability availability, executor support or run a node.</summary>
+    public static IReadOnlyList<AutomationGraphValidationIssue> ValidateStructure(AutomationGraphDefinition graph) =>
+        new AutomationGraphRunner([]).ValidateCore(graph, false);
+
+    private IReadOnlyList<AutomationGraphValidationIssue> ValidateCore(AutomationGraphDefinition graph, bool checkExecutorSupport)
     {
         ArgumentNullException.ThrowIfNull(graph);
         var issues = new List<AutomationGraphValidationIssue>();
         var nodes = graph.Nodes ?? [];
         var edges = graph.Edges ?? [];
         if (nodes.Count == 0) issues.Add(new("graph.empty", "The workflow graph does not contain any nodes."));
+        if (nodes.Any(node => node is null || node.EffectivePorts.Any(port => port is null)) ||
+            edges.Any(edge => edge is null || edge.FromPortId is null || edge.ToPortId is null))
+        {
+            issues.Add(new("graph.shape", "The saved graph contains a missing node, port or connection value."));
+            return issues;
+        }
 
         var ids = new HashSet<Guid>();
         foreach (var node in nodes)
@@ -69,7 +82,7 @@ public sealed class AutomationGraphRunner(IEnumerable<IAutomationGraphNodeExecut
                 if (string.IsNullOrWhiteSpace(port.Id)) issues.Add(new("port.id.missing", "Node ports must have an ID.", node.Id));
                 else if (!portIds.Add(port.Id)) issues.Add(new("port.id.duplicate", $"Port '{port.Id}' is duplicated on this node.", node.Id));
             }
-            if (!IsBuiltIn(node) && !_executors.Any(executor => executor.CanExecute(node))) issues.Add(new("node.unsupported", $"No runtime executor is registered for node category '{node.Category}'.", node.Id));
+            if (checkExecutorSupport && !string.IsNullOrWhiteSpace(node.Category) && !IsBuiltIn(node) && !_executors.Any(executor => executor.CanExecute(node))) issues.Add(new("node.unsupported", $"No runtime executor is registered for node category '{node.Category}'.", node.Id));
         }
 
         var nodeById = nodes.Where(node => node.Id != Guid.Empty).GroupBy(node => node.Id).ToDictionary(group => group.Key, group => group.First());

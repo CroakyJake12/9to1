@@ -100,6 +100,8 @@ public static class AutomationGraphCodec
     {
         if (graph.Version != AutomationGraphDefinition.CurrentVersion)
             throw new InvalidOperationException($"Unsupported Automation graph version {graph.Version}.");
+        if (graph.Nodes is null || graph.Edges is null || graph.Nodes.Any(node => node is null) || graph.Edges.Any(edge => edge is null))
+            throw new InvalidOperationException("Automation graph node and connection collections must contain actual values.");
         if (graph.Nodes.Select(node => node.Id).Distinct().Count() != graph.Nodes.Count)
             throw new InvalidOperationException("Automation graph node IDs must be unique.");
         var ids = graph.Nodes.Select(node => node.Id).ToHashSet();

@@ -8,12 +8,12 @@ public sealed partial class BrowseChrome
     private readonly List<ClosedTab> _closedTabs = [];
     public bool CanReopenClosedTab => !_nativeRetiring && !_disposed && _closedTabs.Count > 0;
 
-    private sealed record ClosedTab(Guid Id, string Title, AppContentAddress Address, string ProfileId, string Group, int Index, BrowseEngineKind? EngineOverride);
+    private sealed record ClosedTab(Guid Id, string Title, AppContentAddress Address, string ProfileId, string Group, int Index, BrowseEngineKind? EngineOverride, bool IsPinned);
 
     private void RememberClosedTab(TabRuntime tab, int index, BrowseEngineKind? engineOverride)
     {
         if (tab.Privacy != BrowserTabPrivacy.Standard) return;
-        _closedTabs.Add(new(tab.Id, tab.Title, tab.Address, tab.ProfileId, tab.Group, index, engineOverride));
+        _closedTabs.Add(new(tab.Id, tab.Title, tab.Address, tab.ProfileId, tab.Group, index, engineOverride, tab.IsPinned));
         if (_closedTabs.Count > MaximumClosedTabs) _closedTabs.RemoveAt(0);
     }
 
@@ -31,7 +31,7 @@ public sealed partial class BrowseChrome
         try
         {
             tab = await AddRuntimeAsync(closed.Id, closed.Title, closed.Address,
-                BrowserTabPrivacy.Standard, closed.Group, token, closed.ProfileId).ConfigureAwait(false);
+                BrowserTabPrivacy.Standard, closed.Group, token, closed.ProfileId, isPinned: closed.IsPinned).ConfigureAwait(false);
         }
         catch
         {
@@ -42,6 +42,7 @@ public sealed partial class BrowseChrome
         // including when a later durable write fails and is retained by its owner.
         _closedTabs.RemoveAt(_closedTabs.Count - 1);
         _tabs.Remove(tab); _tabs.Insert(Math.Clamp(closed.Index, 0, _tabs.Count), tab);
+        NormalizeTabPlacement();
         _selectedTabId = tab.Id;
         await SaveEnginePreferencesAsync(token).ConfigureAwait(false);
         await SaveTabsAsync(token).ConfigureAwait(false);

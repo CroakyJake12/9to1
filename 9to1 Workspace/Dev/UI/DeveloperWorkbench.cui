@@ -1,5 +1,6 @@
 <Cui id="dev.project-workbench" version="1">
   <Actions>
+    <Action name="dev.open-project-entry" command="dev.open-project-entry" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.select-source-tab" command="dev.select-source-tab" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.close-source-tab" command="dev.close-source-tab" parameter="{Binding item.SelectionKey}" />
   </Actions>
@@ -14,7 +15,24 @@
         <Button id="dev-git-diff" action="dev.git-diff" content="Working-tree diff" />
         <Button id="dev-git-branches" action="dev.git-branches" content="Branches" />
       </Container>
-      <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" />
+      <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" IsVisible="{Binding ShowLegacyFiles}" />
+      <Container Type="Vertical Stack" CellGap="6" IsVisible="{Binding ShowProjectExplorer}" accessible-name="Project explorer">
+        <Container Type="Wrap" CellGap="6">
+          <Text text="{Binding ProjectFolder}" font-size="18" />
+          <Button id="dev-project-folder-up" action="dev.project-folder-up" content="Parent folder" Interactive="{Binding CanProjectFolderUp}" />
+        </Container>
+        <Repeat id="dev-project-entries" Source="{Binding ProjectEntries}" As="item" Key="{Binding item.SelectionKey}">
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Button id="dev-open-project-entry" action="dev.open-project-entry" content="{Binding item.Name}" accessible-name="{Binding item.AccessibleName}" Interactive="{Binding item.CanOpen}" />
+            <Text text="{Binding item.Details}" foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+        </Repeat>
+        <Container Type="Wrap" CellGap="6">
+          <Button id="dev-project-entries-previous" action="dev.project-entries-previous" content="Previous files" Interactive="{Binding CanProjectEntriesPrevious}" />
+          <Button id="dev-project-entries-next" action="dev.project-entries-next" content="Next files" Interactive="{Binding CanProjectEntriesNext}" />
+        </Container>
+        <Text text="{Binding ProjectExplorerStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+      </Container>
       <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
       <Button id="dev-open-source" action="dev.open-source" content="Open source" Interactive="{Binding CanOpenSource}" />
       <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />

@@ -58,6 +58,38 @@ public sealed class CanvasPresentInkBridge : IPresentSharedObjectBridge
         return Capture(snapshot.RootElement);
     }
 
+    /// <summary>Render through the registered Home object handler, which owns the real Rnote renderer.
+    /// Rendering is outside any paint loop and grants no mutation or save authority.</summary>
+    public HomeProductivityObjectRenderResult Render(JsonElement canonicalBundle)
+    {
+        var captured = Capture(canonicalBundle);
+        var parsed = _engine.ParseBundle(captured.Bundle.GetRawText());
+        var result = _engine.RenderObject(parsed.Objects[0]);
+        if (result.RasterBindings.Count != 1 || result.RasterBindings[0].ObjectId != captured.ObjectId)
+            throw new InvalidDataException("The ink renderer did not return the exact canonical object's raster.");
+        return result;
+    }
+
+    /// <summary>Pure canonical action preparation. The Present owner must CAS the resulting payload and save it.</summary>
+    public PresentSharedObjectCapture PrepareAction(JsonElement canonicalBundle, HomeProductivityAction action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        var captured = Capture(canonicalBundle);
+        var context = _target with { SelectedObjectIds = new[] { captured.ObjectId } };
+        var validation = _engine.ApplyAction(context, action);
+        if (validation.Code != "ArtifactExecutionRequired")
+            throw new PresentSharedObjectCapabilityException(validation.Code, validation.Message);
+        var parsed = _engine.ParseBundle(captured.Bundle.GetRawText());
+        // Reuse the canonical handler; no per-Present brush model or approximate recolouring.
+        var transformed = new CanvasInkObjectHandler().Transform(parsed.Objects[0], action);
+        if (transformed.ObjectId != captured.ObjectId || transformed.ObjectType != captured.ObjectType ||
+            transformed.SchemaVersion != captured.SchemaVersion)
+            throw new InvalidDataException("The ink action changed a stable identity or schema.");
+        var replacement = parsed with { Objects = new[] { transformed } };
+        using var snapshot = JsonDocument.Parse(_engine.SerializeBundle(replacement));
+        return Capture(snapshot.RootElement);
+    }
+
     public PresentSharedObjectSupport GetSupport(JsonElement canonicalBundle)
     {
         try { _ = Capture(canonicalBundle); }

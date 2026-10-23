@@ -5,8 +5,8 @@ using Haven.Core;
 
 namespace Haven.Desktop.Services;
 
-/// <summary>Stores only the content address/profile projection inside the existing
-/// tab StateJson. Existing document, navigation and extension state remains intact.
+/// <summary>Maps content address/profile into the existing StateJson and the explicit pin
+/// projection into the canonical tab flag. Document, navigation and extension state stays intact.
 /// A restored address is a request; each app still performs fresh admission.</summary>
 internal static class UnifiedWorkspaceTabState
 {
@@ -55,7 +55,7 @@ internal static class UnifiedWorkspaceTabState
         if (!AppContentAddress.TryParse(address, out var parsed) || parsed is null) return false;
         parsed = AppContentRouteMigration.Canonicalize(parsed);
         projected = new(tab.Id, tab.Title, parsed.Value, BrowserTabPrivacy.Standard,
-            tab.GroupId?.ToString("D") ?? string.Empty, tab.UpdatedAt) { ProfileId = profile };
+            tab.GroupId?.ToString("D") ?? string.Empty, tab.UpdatedAt) { ProfileId = profile, IsPinned = tab.IsPinned };
         return true;
     }
 
@@ -95,11 +95,11 @@ internal static class UnifiedWorkspaceTabState
         var group = Guid.TryParse(current.Group, out var groupId) ? groupId : (Guid?)null;
         return existing is null
             ? new(current.Id, appKey, current.Title, state.ToJsonString(), null, null, group,
-                false, address.Value == "browse://home", current.UpdatedAt, current.UpdatedAt)
+                current.IsPinned ?? false, address.Value == "browse://home", current.UpdatedAt, current.UpdatedAt)
             : existing with
             {
                 AppKey = appKey, Title = current.Title, StateJson = state.ToJsonString(),
-                GroupId = group, UpdatedAt = current.UpdatedAt
+                GroupId = group, IsPinned = current.IsPinned ?? existing.IsPinned, UpdatedAt = current.UpdatedAt
             };
     }
 

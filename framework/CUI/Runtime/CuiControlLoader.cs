@@ -2464,8 +2464,30 @@ public sealed partial class CuiControlLoader : IDisposable
 
     private void ApplyAuthoredValue(Control control, string property, CuiValue value, CuiPropertyLevel level = CuiPropertyLevel.Instance)
     {
+        if (NormalizeProperty(property) == "formattedtext")
+        {
+            if (value is CuiBindingValue { Mode: CuiBindingMode.TwoWay })
+                throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                    "FormattedText is a one-way typed presentation port.", value.Span));
+            SetFormattedText(control, ResolveObject(value), value.Span);
+            return;
+        }
         if (value is CuiResourceValue resource) ApplyResourceProperty(control, property, resource, level);
         else if (ResolveValue(value) is { } literal) ApplyLiteralProperty(control, property, literal, value.Span, level);
+    }
+
+    private static void SetFormattedText(Control control, object? value, CuiSourceSpan span)
+    {
+        if (control is not TextBox input)
+            throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                "FormattedText requires a text Input.", span));
+        if (value is not null && value is not CuiFormattedText)
+        {
+            CuiFormattedTextInput.SetPresentation(input, null);
+            throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                $"FormattedText requires a CuiFormattedText snapshot; got '{value.GetType().Name}'.", span));
+        }
+        CuiFormattedTextInput.SetPresentation(input, (CuiFormattedText?)value);
     }
 
     private void ApplyResourceProperty(Control control, string property, CuiResourceValue resource, CuiPropertyLevel level = CuiPropertyLevel.Instance)
@@ -3777,6 +3799,19 @@ public sealed partial class CuiControlLoader : IDisposable
         var alreadyApplying = !_applyingHostValues.Add(control);
         try
         {
+            if (NormalizeProperty(property) == "formattedtext")
+            {
+                if (binding.Mode == CuiBindingMode.TwoWay)
+                    throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
+                        "FormattedText is a one-way typed presentation port.", span));
+                // Resolve once, preserving the typed object and local/repeat context.
+                // Never call ToString or publish a stale run snapshot as input text.
+                var found = TryResolveLocal(binding.Path, out var rich);
+                if (!found && context is not null) found = context.TryGetValue(binding.Path, out rich);
+                if (!found) rich = binding.Fallback;
+                SetFormattedText(control, rich, span);
+                return;
+            }
             // The authored QueryViewport source is a scoped runtime port: resolve the typed object
             // from the context and assign it (validating type), including live source replacement.
             if (control is CuiQueryViewport vp && NormalizeProperty(property) == "source")

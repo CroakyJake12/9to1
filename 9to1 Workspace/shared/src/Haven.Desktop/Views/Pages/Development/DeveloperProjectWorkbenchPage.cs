@@ -63,6 +63,12 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         string CloseAccessibleName, bool CanSelect, bool CanClose);
     private readonly List<SourceTab> _sourceTabs = [];
     private Guid? _selectedSourceTab;
+    private const int ProjectExplorerPageSize = 100;
+    private IReadOnlyList<DeveloperProjectTreeEntry>? _projectEntries;
+    private IReadOnlyList<DeveloperProjectTreeEntry> _projectDirectoryEntries = [];
+    private string _projectFolder = "";
+    private int _projectEntryPage;
+    private sealed record ProjectEntryItem(string SelectionKey, string Name, string Details, string AccessibleName, bool CanOpen);
     [ThreadStatic] private static List<DeveloperProjectWorkbenchPage>? _sourceCallbacks;
     private DeveloperResolvedProject _project;
     private DeveloperEditorSnapshot? _editor;
@@ -91,10 +97,11 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         ICuiSceneReadiness readiness,
         Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> resolveOriginalDocument,
         Action demandOriginalDocumentSourceExternalJoin, CancellationToken explicitBusinessCancellationToken,
-        Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition)
+        Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition,
+        DeveloperManualSourceReadOwner? sourceExplorerReader = null)
         : this(development, canonical, actualProject, actualTaskId, actualExecutionId, actualContextId, readiness,
             resolveOriginalDocument, demandOriginalDocumentSourceExternalJoin, explicitBusinessCancellationToken,
-            retainOriginalAcquisition, null) { }
+            retainOriginalAcquisition, null, sourceExplorerReader) { }
 
     internal DeveloperProjectWorkbenchPage(DeveloperTaskWorkspaceService development, TaskExecutionCoordinator canonical,
         DeveloperResolvedProject actualProject, Guid actualTaskId, Guid actualExecutionId, Guid actualContextId,
@@ -102,11 +109,13 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> resolveOriginalDocument,
         Action demandOriginalDocumentSourceExternalJoin, CancellationToken explicitBusinessCancellationToken,
         Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition,
-        Func<DeveloperProjectWorkbenchPage, ICuiSceneReadiness>? createOriginalReadinessChild)
+        Func<DeveloperProjectWorkbenchPage, ICuiSceneReadiness>? createOriginalReadinessChild,
+        DeveloperManualSourceReadOwner? sourceExplorerReader = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
         _project = actualProject ?? throw new ArgumentNullException(nameof(actualProject));
+        _manualReader = sourceExplorerReader; // Optional genuine user-navigation reader; no new source authority.
         if (actualTaskId == Guid.Empty || actualExecutionId == Guid.Empty || actualContextId == Guid.Empty)
             throw new ArgumentException("The existing canonical Task/Run/context must be supplied together.");
         _taskId = actualTaskId; _runId = actualExecutionId; _contextId = actualContextId;
@@ -299,6 +308,17 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 "CanPinSourceTab" => IsActionAvailable("dev.toggle-source-tab-pin"),
                 "CanEditSource" => CurrentSourceTab() is not null,
                 "SourceTabsStatus" => $"{_sourceTabs.Count} / {DeveloperSourceReviewSession.MaximumOpenDocuments} open documents. Unsaved tabs are retained; closing never discards a draft.",
+                "ProjectEntries" => ProjectFolderEntries().Skip(_projectEntryPage * ProjectExplorerPageSize).Take(ProjectExplorerPageSize)
+                    .Select(entry => new ProjectEntryItem(entry.SelectionKey, entry.Name,
+                        entry.IsDirectory ? "Folder" : $"{entry.SizeBytes:N0} bytes", entry.RelativePath + (entry.IsDirectory ? ", open folder" : ", open source"), !_pending)).ToArray(),
+                "ProjectFolder" => string.IsNullOrEmpty(_projectFolder) ? "Project files" : "Project / " + _projectFolder,
+                "ProjectExplorerStatus" => _projectEntries is null ? "Refresh project files to browse the genuine captured tree."
+                    : $"{ProjectFolderEntries().Count()} entries in this folder; showing page {_projectEntryPage + 1} ({ProjectExplorerPageSize} per page).",
+                "ShowProjectExplorer" => _manualReader is not null,
+                "ShowLegacyFiles" => _manualReader is null,
+                "CanProjectFolderUp" => IsActionAvailable("dev.project-folder-up"),
+                "CanProjectEntriesPrevious" => IsActionAvailable("dev.project-entries-previous"),
+                "CanProjectEntriesNext" => IsActionAvailable("dev.project-entries-next"),
                 "CanOpenSource" => IsActionAvailable("dev.open-source"), "CanPreview" => IsActionAvailable("dev.preview-edit"),
                 "CanApply" => IsActionAvailable("dev.apply-edit"), "CanRevert" => IsActionAvailable("dev.revert-pass"), _ => null
             };
@@ -306,7 +326,9 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         return path is "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
             "EditorTitle" or "DraftText" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
             "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert" or
-            "SourceTabs" or "SourceTabPinLabel" or "CanPinSourceTab" or "CanEditSource" or "SourceTabsStatus";
+            "SourceTabs" or "SourceTabPinLabel" or "CanPinSourceTab" or "CanEditSource" or "SourceTabsStatus" or
+            "ProjectEntries" or "ProjectFolder" or "ProjectExplorerStatus" or "ShowProjectExplorer" or "ShowLegacyFiles" or
+            "CanProjectFolderUp" or "CanProjectEntriesPrevious" or "CanProjectEntriesNext";
     }
     public bool TrySetValue(string path, object? value)
     {
@@ -358,6 +380,11 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             if (!_active || _work.IsRetiring || _pending) return false;
             if (command is "dev.select-source-tab" or "dev.close-source-tab") return _sourceTabs.Count > 0;
             if (command == "dev.toggle-source-tab-pin") return CurrentSourceTab() is not null;
+            if (command == "dev.open-project-entry") return _manualReader is not null && _projectEntries is not null;
+            if (command == "dev.project-folder-up") return _projectEntries is not null && !string.IsNullOrEmpty(_projectFolder);
+            if (command == "dev.project-entries-previous") return _projectEntries is not null && _projectEntryPage > 0;
+            if (command == "dev.project-entries-next") return _projectEntries is not null &&
+                ProjectFolderEntries().Count() > (_projectEntryPage + 1) * ProjectExplorerPageSize;
             if (_manual)
             {
                 // Manual (no-AI) open offers only confined read/tree/search. Every mutation and
@@ -395,6 +422,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         long generation; string path, query, terminal, test, stageTask, stage, branch; DeveloperEditorSnapshot? editor; DeveloperSourceChangePass? pass;
         string manualBeforeText, manualDraftText, manualBeforeSha256, manualAfterSha256; bool manualReviewed; long manualReviewRevision;
         Guid? requestedTab = null;
+        string? projectFolder = null, entryPath = null;
         lock (_gate)
         {
             if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Dev operation is unavailable.");
@@ -404,14 +432,29 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                     throw new InvalidOperationException("The source tab is not owned by this open project.");
                 requestedTab = tabId;
             }
+            if (command == "dev.open-project-entry")
+            {
+                if (parameter is not string entryKey || _projectEntries?.SingleOrDefault(entry => entry.SelectionKey == entryKey) is not { } entry ||
+                    !StringComparer.Ordinal.Equals(entry.ParentPath, _projectFolder))
+                    throw new InvalidOperationException("The selected entry is not in this captured project folder. Refresh the project files.");
+                if (entry.IsDirectory) projectFolder = entry.RelativePath;
+                else { entryPath = entry.RelativePath; command = "dev.open-source"; }
+            }
+            if (command == "dev.project-folder-up")
+            {
+                var separator = _projectFolder.LastIndexOf('/'); projectFolder = separator < 0 ? "" : _projectFolder[..separator];
+            }
             _pending = true; generation = _generation; path = _sourcePath; query = _searchQuery; terminal = _command; test = _testCommand;
             stageTask = _stageTaskId; stage = _stageId; branch = _branchName; editor = _editor; pass = _pass;
             if (command == "dev.select-source-tab") path = _sourceTabs.Single(tab => tab.Id == requestedTab).Path;
+            if (entryPath is not null) path = entryPath; // Normal Open below still performs the genuine fresh authorized read.
             manualBeforeText = _manualBeforeText; manualDraftText = _manualDraftText; manualBeforeSha256 = _manualBeforeSha256;
             manualAfterSha256 = _manualAfterSha256; manualReviewed = _manualReviewed; manualReviewRevision = _manualReviewRevision;
         }
         try
         {
+            if (projectFolder is not null || command is "dev.project-entries-previous" or "dev.project-entries-next")
+                return DispatchProjectFolderAsync(projectFolder, command, generation);
             if (command is "dev.close-source-tab" or "dev.toggle-source-tab-pin")
                 return DispatchTabPresentationAsync(command, requestedTab, generation);
             if (_manual)
@@ -426,6 +469,11 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                     var project = await ResolveProjectAsync(original, cancellationToken).ConfigureAwait(false);
                     if (command == "dev.refresh")
                     { await PublishAsync(original, () => { _project = project; _status = "Existing project descriptors refreshed."; }).ConfigureAwait(false); return; }
+                    if (command == "dev.tree" && _manualReader is not null)
+                    {
+                        var entries = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader.ListEntriesAsync(project, cancellationToken))).ConfigureAwait(false);
+                        await PublishAsync(original, () => { _project = project; PublishProjectTree(entries); }).ConfigureAwait(false); return;
+                    }
                     if (command == "dev.revert-pass")
                     {
                         original.DemandPublication();
@@ -528,8 +576,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 { await PublishAsync(original, () => { _project = project; _status = "Existing project descriptors refreshed."; }).ConfigureAwait(false); return; }
                 if (command == "dev.tree")
                 {
-                    var listing = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.ListAsync(project, cancellationToken))).ConfigureAwait(false);
-                    await PublishAsync(original, () => { _project = project; _files = listing; _status = "Manual project tree read from the genuine saved-root capture."; }).ConfigureAwait(false); return;
+                    var entries = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.ListEntriesAsync(project, cancellationToken))).ConfigureAwait(false);
+                    await PublishAsync(original, () => { _project = project; PublishProjectTree(entries); }).ConfigureAwait(false); return;
                 }
                 if (command == "dev.search")
                 {
@@ -614,6 +662,47 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             }
         }));
     }
+
+    private IEnumerable<DeveloperProjectTreeEntry> ProjectFolderEntries() => _projectDirectoryEntries;
+    private void RebuildProjectFolderEntries() => _projectDirectoryEntries =
+        (_projectEntries ?? []).Where(entry => StringComparer.Ordinal.Equals(entry.ParentPath, _projectFolder))
+            .OrderByDescending(entry => entry.IsDirectory).ThenBy(entry => entry.Name, StringComparer.Ordinal).ToArray();
+    private void PublishProjectTree(IReadOnlyList<DeveloperProjectTreeEntry> entries)
+    {
+        _projectEntries = entries;
+        if (!string.IsNullOrEmpty(_projectFolder) && !entries.Any(entry => entry.IsDirectory && entry.RelativePath == _projectFolder)) _projectFolder = "";
+        _projectEntryPage = 0; RebuildProjectFolderEntries();
+        _status = "Project explorer refreshed through the genuine Home READ and captured Files root. Opening a file reads it again with current authorization.";
+    }
+    private ValueTask DispatchProjectFolderAsync(string? folder, string command, long generation) =>
+        new(_work.RunAsync(async original =>
+        {
+            original.BindPublicationGuard(() => IsCurrent(generation));
+            try
+            {
+                await PublishAsync(original, () =>
+                {
+                    if (folder is not null)
+                    {
+                        if (folder.Length != 0 && _projectEntries?.Any(entry => entry.IsDirectory && entry.RelativePath == folder) != true)
+                            throw new InvalidOperationException("The project folder is no longer in this captured tree. Refresh project files.");
+                        _projectFolder = folder; _projectEntryPage = 0; RebuildProjectFolderEntries();
+                    }
+                    else if (command == "dev.project-entries-previous") _projectEntryPage = Math.Max(0, _projectEntryPage - 1);
+                    else if (command == "dev.project-entries-next" && ProjectFolderEntries().Count() > (_projectEntryPage + 1) * ProjectExplorerPageSize) _projectEntryPage++;
+                    _status = "Browsing the captured project tree; source tabs and drafts remain unchanged.";
+                }).ConfigureAwait(false);
+            }
+            catch (Exception error) { original.Retain(error); }
+            finally
+            {
+                lock (_gate) _pending = false;
+                if (IsCurrent(generation))
+                    try { await PublishAsync(original, () => { }).ConfigureAwait(false); }
+                    catch (Exception error) { original.Retain(error); }
+                original.ThrowRetained();
+            }
+        }));
 
     private SourceTab? CurrentSourceTab() => _sourceTabs.SingleOrDefault(tab => tab.Id == _selectedSourceTab);
     private bool IsTabDirty(SourceTab tab) => tab.Id == _selectedSourceTab

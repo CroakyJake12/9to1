@@ -36,6 +36,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
 
     public bool TryGetItemValue(object item, string path, out object? value)
     {
+        if (TryGetFolderTabItemValue(item, path, out value)) return true;
         value = null;
         if (!SharingVisible || item is not FilesEmailShare grant
             || !_sharingPage!.Grants.Any(row => ReferenceEquals(row, grant))) return false;

@@ -14,6 +14,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CakeOS.Apps.Boards.Contract;
+using CakeOS.Cui.Runtime;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -187,19 +188,46 @@ public static class BlockRenderer
         box.GotFocus += (_, _) => vm.FocusBlock(captured);
         vm.BindTextSelection(box, captured);
         shell.Children.Add(box);
-        // Extended flags that plain text cannot show stay as a whisper, not chrome.
-        var quiet = new List<string>();
-        if (block.Strike) quiet.Add("strikethrough");
-        if (block.Baseline is "subscript" or "superscript") quiet.Add(block.Baseline);
-        if (quiet.Count > 0)
-            shell.Children.Add(new TextBlock
-            {
-                Text = string.Join(" · ", quiet),
-                FontSize = 11,
-                Foreground = BoardsTheme.SecondaryTextBrush,
-                Margin = new Thickness(2, 0, 0, 2),
-            });
         return shell;
+    }
+
+    // Renderer projection only: the SAME persisted RichTextRun values shape the
+    // existing input. No parallel document/editor or visual-only text overlay.
+    internal static void UpdateTextPresentation(TextBox input, RichBoardBlock block, RichStyleView? style)
+    {
+        if (!BoardTextRanges.Matches(block) || !string.Equals(input.Text ?? string.Empty, block.Text, StringComparison.Ordinal))
+        {
+            CuiFormattedTextInput.SetPresentation(input, null);
+            return;
+        }
+        static Color? Colour(string? value) => Color.TryParse(value, out var colour) ? colour : null;
+        static BaselineAlignment Baseline(string value) => value switch
+        {
+            "subscript" => BaselineAlignment.Subscript, "superscript" => BaselineAlignment.Superscript,
+            _ => BaselineAlignment.Baseline
+        };
+        var runs = new List<CuiFormattedTextRun>();
+        if (block.Runs.Count > 0)
+        {
+            foreach (var run in block.Runs.Where(run => run.Text.Length > 0))
+                runs.Add(new CuiFormattedTextRun(run.Text,
+                    run.Bold ? FontWeight.Bold : FontWeight.Normal, run.Italic ? FontStyle.Italic : FontStyle.Normal,
+                    run.FontFamily, run.FontSize, run.Underline, run.StrikeThrough,
+                    Baseline(run.Baseline.ToString().ToLowerInvariant()), Colour(run.Foreground), Colour(run.Background)));
+        }
+        else if (block.Text.Length > 0)
+        {
+            // Empty run lists use the existing block/named-style presentation.
+            // Persisted explicit run booleans override style booleans above;
+            // empty/zero run font and colour values inherit the input defaults.
+            runs.Add(new CuiFormattedTextRun(block.Text, input.FontWeight, input.FontStyle,
+                Underline: block.Underline || style?.Underline == true,
+                StrikeThrough: block.Strike || style?.Strike == true,
+                Baseline: Baseline(block.Baseline != "normal" ? block.Baseline : style?.Baseline ?? "normal")));
+        }
+        var current = CuiFormattedTextInput.GetPresentation(input);
+        if (current is not null && current.Text == block.Text && current.Runs.SequenceEqual(runs)) return;
+        CuiFormattedTextInput.SetPresentation(input, new CuiFormattedText(block.Text, runs));
     }
 
     private static double ResolveFontSize(RichBoardBlock block, RichStyleView? style, double fallback)

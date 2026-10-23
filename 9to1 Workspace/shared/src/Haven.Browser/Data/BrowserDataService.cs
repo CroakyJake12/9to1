@@ -31,6 +31,8 @@ public sealed record BrowserTabState(Guid Id, string Title, string Address, Brow
     /// <summary>Presentation metadata, never authentication. The actual app owner
     /// revalidates its original Home profile on every launch and restore.</summary>
     public string ProfileId { get; init; } = string.Empty;
+    /// <summary>Null means an older/narrow producer did not project the canonical pin flag.</summary>
+    public bool? IsPinned { get; init; }
 }
 /// <summary>
 /// Represents the durable, non-private Browse Research checkpoint restored across restarts.

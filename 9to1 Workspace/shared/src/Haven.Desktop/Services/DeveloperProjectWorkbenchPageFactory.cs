@@ -40,7 +40,7 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             {
                 page = originalPage; // SAME returned partial before the caller's capture/publication callback.
                 retainOriginalChild(originalPage);
-            });
+            }, sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>());
     }
     /// <summary>Creates the SAME compiled-CUI workbench in manual (no-AI) mode for a resolved saved
     /// project. No Task/Run/context/model or generation is involved: the real saved project identity
@@ -89,7 +89,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
                 return files.ResolveOriginalDeveloperDocumentAsync(project, relative,
                     originalPage.CaptureOriginalDocumentObservationCurrentness(), token);
             }, files.DemandExternalOriginalDeveloperReadJoin, explicitBusinessCancellationToken,
-            originalPage => { page = originalPage; retainOriginalChild(originalPage); }, createOriginalReadinessChild);
+            originalPage => { page = originalPage; retainOriginalChild(originalPage); }, createOriginalReadinessChild,
+            sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>());
     }
 
 }

@@ -51,6 +51,7 @@ public sealed record BrowseTabSnapshot(
     public string ProfileId { get; init; } = string.Empty;
     public string IconKey { get; init; } = "web";
     public bool IsHome { get; init; }
+    public bool IsPinned { get; init; }
     public bool IsCloseable { get; init; } = true;
 }
 
@@ -176,7 +177,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 if (!TryStoredAddress(tab.Address, out var address)) continue;
                 if (chrome._tabs.Any(existing => existing.Id == tab.Id || IsHomeAddress(address!) && existing.IsHome)) continue;
                 await chrome.AddRuntimeAsync(tab.Id, tab.Title, address!, tab.Privacy, tab.Group, cancellationToken,
-                    string.IsNullOrEmpty(tab.ProfileId) ? homeProfileId : tab.ProfileId, restoring: true).ConfigureAwait(false);
+                    string.IsNullOrEmpty(tab.ProfileId) ? homeProfileId : tab.ProfileId, restoring: true, isPinned: tab.IsPinned == true).ConfigureAwait(false);
             }
 
             if (internalContentFactory is not null && !chrome._tabs.Any(tab => tab.IsHome))
@@ -189,6 +190,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                 await chrome.AddRuntimeAsync(Guid.NewGuid(), "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
             }
 
+            chrome.NormalizeTabPlacement();
             chrome._selectedTabId = projected?.SelectedTabId is { } restoredSelection && chrome._tabs.Any(tab => tab.Id == restoredSelection)
                 ? restoredSelection : chrome._tabs.FirstOrDefault(tab => tab.IsHome)?.Id ?? chrome._tabs[0].Id;
             chrome._status = chrome._tabs[0].EngineState == BrowseEngineState.Ready
@@ -766,13 +768,15 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         string group,
         CancellationToken cancellationToken,
         string? profileId = null,
-        bool restoring = false)
+        bool restoring = false,
+        bool isPinned = false)
     {
         using var transition = AdmitContentTransition();
         address = AppContentRouteMigration.Canonicalize(address);
         var session = new BrowserSessionService(new TabPaths(StandardProfileDirectory));
         var tab = new TabRuntime(id, title, address, privacy, group, session,
-            address.WebUri is { } web ? _enginePolicy.Resolve(web, id) : _enginePolicy.DefaultEngine, profileId ?? _homeProfileId);
+            address.WebUri is { } web ? _enginePolicy.Resolve(web, id) : _enginePolicy.DefaultEngine, profileId ?? _homeProfileId)
+            { IsPinned = isPinned };
         _tabs.Add(tab);
         if (!_tabs.Any(item => item.Id == _selectedTabId)) _selectedTabId = tab.Id;
         try
@@ -907,7 +911,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         // one timestamp so its stable order survives that sort and restoration.
         var capturedAt = DateTimeOffset.UtcNow;
         return _tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Standard)
-            .Select(tab => new BrowserTabState(tab.Id, tab.Title, tab.Address.Value, tab.Privacy, tab.Group, capturedAt) { ProfileId = tab.ProfileId }).ToArray();
+            .Select(tab => new BrowserTabState(tab.Id, tab.Title, tab.Address.Value, tab.Privacy, tab.Group, capturedAt)
+                { ProfileId = tab.ProfileId, IsPinned = tab.IsPinned }).ToArray();
     }
 
     private async Task SaveTabsAsync(CancellationToken cancellationToken)
@@ -936,7 +941,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             tab.Id, tab.Title, tab.Address, tab.Privacy, tab.EngineState,
             tab.CanGoBack, tab.CanGoForward, tab.IsLoading, tab.Status)
             { Engine = tab.Engine, NativePage = tab.NativePage, ProfileId = tab.ProfileId, IconKey = tab.IconKey,
-                IsHome = tab.IsHome, IsCloseable = !tab.IsHome }).ToArray();
+                IsHome = tab.IsHome, IsPinned = tab.IsPinned, IsCloseable = !tab.IsHome }).ToArray();
         var security = SecurityFor(selected);
         return new BrowseChromeSnapshot(
             tabs,
@@ -1148,6 +1153,7 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         public AppContentAddress Address { get; set; } = address;
         public string ProfileId { get; } = profileId;
         public bool IsHome => IsHomeAddress(Address);
+        public bool IsPinned { get; set; }
         public string IconKey { get; set; } = "web";
         public AppContentOwner? AppOwner { get; set; }
         public List<AppContentOwner> AppOwners { get; } = [];

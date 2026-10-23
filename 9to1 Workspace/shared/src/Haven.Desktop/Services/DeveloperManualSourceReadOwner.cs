@@ -7,6 +7,17 @@ using HavenOS.Files.NativeHost;
 
 namespace Haven.Desktop.Services;
 
+/// <summary>Observed entries within an actually captured project, never Files IDs or grants.</summary>
+public sealed record DeveloperProjectTreeEntry(string RelativePath, bool IsDirectory, long? SizeBytes)
+{
+    public string SelectionKey => (IsDirectory ? "folder:" : "file:") + RelativePath;
+    public string Name => RelativePath[(RelativePath.LastIndexOf('/') + 1)..];
+    public string ParentPath
+    {
+        get { var separator = RelativePath.LastIndexOf('/'); return separator >= 0 ? RelativePath[..separator] : ""; }
+    }
+}
+
 /// <summary>
 /// Genuine manual (no-AI) source-read owner over a resolved saved project. It composes the REAL
 /// configured Files selection, Home read-admission broker and kernel capture owners: every read
@@ -34,6 +45,30 @@ public sealed class DeveloperManualSourceReadOwner(
         : IAsyncDisposable
     {
         public ValueTask DisposeAsync() => Admission.DisposeAsync();
+    }
+
+    /// <summary>Actual metadata from the same issued Home/Files/kernel source capture. These
+    /// entries are navigation observations, not durable Files IDs or a read/write grant.</summary>
+    public async Task<IReadOnlyList<DeveloperProjectTreeEntry>> ListEntriesAsync(DeveloperResolvedProject project, CancellationToken token)
+    {
+        await using var lease = await AcquireAsync(project, token).ConfigureAwait(false);
+        var entries = new List<DeveloperProjectTreeEntry>();
+        foreach (var folder in lease.Capture.OriginalFolderPaths)
+        {
+            var relative = folder.Replace('\\', '/').TrimEnd('/');
+            if (relative is "" or ".") continue;
+            DemandSafeProjectRelativePath(relative); entries.Add(new(relative, true, null));
+        }
+        foreach (var file in lease.Capture.OriginalFiles)
+        {
+            var relative = file.RelativePath.Replace('\\', '/');
+            DemandSafeProjectRelativePath(relative);
+            if (file.SizeBytes < 0) throw new InvalidDataException("The captured project file has an invalid length.");
+            entries.Add(new(relative, false, file.SizeBytes));
+        }
+        if (entries.Select(value => value.RelativePath).Distinct(StringComparer.Ordinal).Count() != entries.Count)
+            throw new InvalidDataException("The captured project tree contains ambiguous paths.");
+        return entries.OrderBy(value => value.RelativePath, StringComparer.Ordinal).ToArray();
     }
 
     public async Task<string> ListAsync(DeveloperResolvedProject project, CancellationToken token)

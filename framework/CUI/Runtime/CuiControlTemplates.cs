@@ -274,7 +274,8 @@ public static class CuiControlTemplates
             }
             owner.ContextMenu=menu;owner.DetachedFromVisualTree+=(_,_)=>menu.Close();
         }
-        var text = Name(new TextPresenter(), "PART_TextPresenter", scope);
+        var text = Name(new CuiFormattedTextPresenter(), "PART_TextPresenter", scope);
+        text.Bind(CuiFormattedTextPresenter.PresentationProperty, owner.GetObservable(CuiFormattedTextInput.PresentationProperty));
         foreach (var (property, path) in new (AvaloniaProperty, string)[]
         {
             (TextPresenter.CaretIndexProperty,"CaretIndex"),(TextPresenter.SelectionStartProperty,"SelectionStart"),

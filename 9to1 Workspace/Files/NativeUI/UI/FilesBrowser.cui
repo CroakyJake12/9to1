@@ -1,10 +1,31 @@
 <Cui id="9to1.Files.NativeBrowser" version="1">
   <Actions>
+    <Action name="SelectFolderTab" command="9to1.Files.Tab.Select" parameter="{Binding tab}" />
+    <Action name="CloseFolderTab" command="9to1.Files.Tab.Close" parameter="{Binding tab}" />
     <Action name="RevokeDisplayedGrant" command="9to1.Files.Share.Revoke" parameter="{Binding share}" />
   </Actions>
   <Page>
-    <Container id="files-browser-shell" accessible-name="Files browser" Type="Grid" RowSizes="Auto Auto Auto 1fr Auto Auto">
-      <Container orientation="Horizontal" Type="Wrap">
+    <Container id="files-browser-shell" accessible-name="Files browser" Type="Grid" RowSizes="Auto Auto Auto Auto 1fr Auto Auto">
+      <Container id="files-folder-tabs" Type="Vertical Stack" CellGap="4" MaxHeight="128" VerticalScrolling="True" HorizontalScrolling="False" Row="0" accessible-name="Files folder tabs">
+        <Container Type="Wrap" CellGap="6">
+          <Button id="files-new-tab" content="New tab" action="9to1.Files.Tab.New" Interactive="{Binding CanNewFolderTab}" accessible-name="Open Files root in a new tab" />
+          <Button id="files-open-folder-tab" content="Open folder in new tab" action="9to1.Files.Tab.OpenFolder" Interactive="{Binding CanOpenFolderTab}" accessible-name="Open the selected canonical folder in a new tab" />
+          <Text text="{Binding FolderTabSummary}" />
+          <Repeat Source="{Binding FolderTabs}" As="tab" Key="{Binding tab.id}" Type="Wrap">
+            <Container Type="Vertical Stack" CellGap="2">
+              <Container Type="Horizontal Stack" CellGap="4">
+                <Button content="{Binding tab.label}" action="SelectFolderTab" Interactive="{Binding tab.canSelect}" accessible-name="{Binding tab.label}" />
+                <If Condition="{Binding tab.active}"><Text text="Current" accessible-name="Current Files tab" /></If>
+                <Button content="Close" action="CloseFolderTab" Interactive="{Binding tab.canClose}" accessible-name="{Binding tab.closeName}" />
+              </Container>
+              <Text text="{Binding tab.locationState}" accessible-name="Tab location status" />
+              <Text text="{Binding tab.searchState}" />
+            </Container>
+          </Repeat>
+        </Container>
+        <Text text="{Binding FolderTabHint}" />
+      </Container>
+      <Container orientation="Horizontal" Type="Wrap" Row="1">
         <Button id="files-home" content="Files" action="9to1.Files.Home" accessible-name="Go to Files root" Interactive="{Binding CanNavigate}" />
         <Button id="files-trash" content="Trash" action="9to1.Files.Trash" accessible-name="Browse recoverable deleted items" Interactive="{Binding CanNavigate}" />
         <Button id="files-up" content="Up" action="9to1.Files.Up" accessible-name="Go to canonical parent folder" Interactive="{Binding CanUp}" />
@@ -15,12 +36,12 @@
         <Button id="files-next" content="More" action="9to1.Files.More" accessible-name="Load next Files page" Interactive="{Binding CanMore}" />
         <Text text="{Binding FolderTitle}" accessible-name="Current folder" />
       </Container>
-      <Container Type="Horizontal Stack" Row="1">
+      <Container Type="Horizontal Stack" Row="2">
         <Input id="files-search-input" accessible-name="Search this folder" Type="Text" />
         <Input id="files-displayed-sort" accessible-name="Sort names on this displayed page" Type="Select" />
         <Button id="files-search" content="Search" action="9to1.Files.Search" accessible-name="Search canonical names in this folder" Interactive="{Binding CanNavigate}" />
       </Container>
-      <Container orientation="Horizontal" accessible-name="Folder and item changes" Type="Wrap" Row="2">
+      <Container orientation="Horizontal" accessible-name="Folder and item changes" Type="Wrap" Row="3">
         <Input id="files-name-input" accessible-name="Folder or item name" Type="Text" />
         <Button id="files-create-folder" content="New folder" action="9to1.Files.CreateFolder" accessible-name="Review creating a folder in Home" Interactive="{Binding CanCreateFolder}" />
         <Button id="files-rename" content="Rename" action="9to1.Files.Rename" accessible-name="Review renaming the selected item in Home" Interactive="{Binding CanRename}" />
@@ -35,8 +56,8 @@
         <Button id="files-cancel-review" content="Cancel change" action="9to1.Files.CancelReview" accessible-name="Cancel the pending change before execution" Interactive="{Binding CanCancelReview}" />
         <Button id="files-retry-audit" content="Retry audit" action="9to1.Files.RetryAudit" accessible-name="Retry Home audit without repeating the Files change" Interactive="{Binding CanRetryAudit}" />
       </Container>
-      <Input id="files-canonical-list" accessible-name="Canonical Files items" Type="List" Row="3" />
-      <Container Type="Vertical Stack" Row="4">
+      <Input id="files-canonical-list" accessible-name="Canonical Files items" Type="List" Row="4" />
+      <Container Type="Vertical Stack" Row="5">
         <Button id="files-technical-details" content="{Binding TechnicalDetailsLabel}" action="9to1.Files.TechnicalDetails" accessible-name="Show or hide stable identity and technical details for the selected item" Interactive="{Binding CanShowDetails}" />
         <Text id="files-selected-details" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
         <Button id="files-review-access" content="Manage access" action="9to1.Files.Share.Get" accessible-name="Review direct access grants on the selected owned item" Interactive="{Binding CanReviewAccess}" />
@@ -63,7 +84,7 @@
           </Container>
         </If>
       </Container>
-      <Text id="files-status" text="{Binding Status}" accessible-name="Files operation status" Row="5" />
+      <Text id="files-status" text="{Binding Status}" accessible-name="Files operation status" Row="6" />
     </Container>
   </Page>
 </Cui>

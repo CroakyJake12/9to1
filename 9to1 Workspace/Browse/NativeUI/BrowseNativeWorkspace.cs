@@ -103,6 +103,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         value = path switch
         {
             "Tabs" => _tabRows,
+            "SelectedTabTarget" => _tabRows.FirstOrDefault(row => row.Selected)?.Target,
+            "PinTabLabel" => selected.IsPinned ? "Unpin selected tab" : "Pin selected tab",
+            "HasUnsavedTabPlacement" => _chrome.HasUnsavedTabPlacement,
             "ToolsOpen" => _toolsOpen,
             "IsLoading" => selected.IsLoading,
             "IsNotLoading" => !selected.IsLoading,
@@ -251,6 +254,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.FirefoxTab" or "9to1.Browse.ChromiumTab" or "9to1.Browse.ResetTabEngine" => tab.Address.IsWeb,
             "9to1.Browse.ReopenClosedTab" => _chrome.CanReopenClosedTab,
             "9to1.Browse.RemoveBookmark" => _snapshot.Bookmarks.Count > 0,
+            "9to1.Browse.ToggleTabPinned" => !tab.IsHome,
+            "9to1.Browse.MoveTabLeft" => _chrome.CanMoveTab(tab.Id, -1),
+            "9to1.Browse.MoveTabRight" => _chrome.CanMoveTab(tab.Id, 1),
+            "9to1.Browse.SaveTabPlacement" => _chrome.HasUnsavedTabPlacement,
             "9to1.Browse.CloseTab" => tab.IsCloseable,
             "9to1.Browse.CloseTabRow" => _snapshot.Tabs.Any(item => item.IsCloseable),
             "9to1.Browse.ShowDownloadInFiles" => _originalDownloadFilesService is not null,
@@ -299,6 +306,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         }
         if ((command is "9to1.Browse.SelectTab" or "9to1.Browse.CloseTabRow") && !IsCurrentTabTarget(parameter))
         { _status = "The tab row changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
+        if (IsTabPlacementCommand(command) && !IsCurrentSelectedTabTarget(parameter))
+        { _status = "The selected tab changed. Use its current tab controls."; Changed(); return ValueTask.CompletedTask; }
         if (command == "9to1.Browse.CloseTabRow" &&
             !_chrome.State.Tabs.Any(tab => tab.Id == ((TabSelection)parameter!).TabId && tab.IsCloseable))
             return ValueTask.CompletedTask;
@@ -360,6 +369,17 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     if (closingTarget.TabId == tabId) _addressDraft = false;
                     break;
                 case "9to1.Browse.ReopenClosedTab": await Operation(() => _chrome.ReopenClosedTabAsync(token)); _addressDraft = false; break;
+                case "9to1.Browse.ToggleTabPinned":
+                case "9to1.Browse.MoveTabLeft":
+                case "9to1.Browse.MoveTabRight":
+                    if (!IsCurrentSelectedTabTarget(parameter)) { _status = "The selected tab changed before arranging it; use its current controls."; break; }
+                    var placementTarget = (TabSelection)parameter!;
+                    if (command == "9to1.Browse.ToggleTabPinned")
+                        await Operation(() => _chrome.SetTabPinnedAsync(placementTarget.TabId, !placementTarget.IsPinned, token));
+                    else
+                        await Operation(() => _chrome.MoveTabAsync(placementTarget.TabId, command == "9to1.Browse.MoveTabLeft" ? -1 : 1, token));
+                    break;
+                case "9to1.Browse.SaveTabPlacement": await Operation(() => _chrome.SaveTabPlacementAsync(token)); break;
                 case "9to1.Browse.SelectTab":
                     if (!IsCurrentTabTarget(parameter)) { _status = "The tab row changed before selection; select its current row again."; break; }
                     var selectedTarget = (TabSelection)parameter!;
@@ -633,26 +653,37 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _chrome.StateChanged -= OnChromeStateChanged;
         _chrome.RetirementStarted -= OnChromeRetirementStarted; _disposed = true;
     }
-    private sealed record TabSelection(BrowseNativeWorkspace Owner, Guid TabId, long Epoch);
+    private sealed record TabSelection(BrowseNativeWorkspace Owner, Guid TabId, long Epoch, bool IsPinned, string PlacementStamp);
     private void IssueCurrentRows()
     {
         var actualRows = _snapshot.Tabs.Select(tab => (tab.Id, Key: tab.Id.ToString("D"),
-            Label: tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
+            Label: (tab.IsPinned ? "Pinned · " : string.Empty) + tab.Title + (tab.Privacy == BrowserTabPrivacy.Private ? " · Private" : string.Empty),
             Description: tab.Title + " · " + (tab.Address.IsWeb
                 ? (tab.Engine == BrowseEngineKind.Chromium ? "Chromium" : "Firefox")
                 : tab.IsHome ? "Home" : tab.Address.Authority),
-            Selected: tab.Id == _snapshot.SelectedTabId, CanClose: tab.IsCloseable)).ToArray();
+            Selected: tab.Id == _snapshot.SelectedTabId, CanClose: tab.IsCloseable && !tab.IsPinned, Pinned: tab.IsPinned)).ToArray();
         if (_tabRows.Length == actualRows.Length && _tabRows.Zip(actualRows).All(pair =>
             pair.First.Key == pair.Second.Key && pair.First.Label == pair.Second.Label &&
             pair.First.Description == pair.Second.Description && pair.First.Selected == pair.Second.Selected &&
             pair.First.CanClose == pair.Second.CanClose)) return;
         var epoch = checked(++_rowEpoch);
-        _tabRows = actualRows.Select(row => new TabRow(new TabSelection(this, row.Id, epoch), row.Key, row.Label, row.Selected)
+        var placementStamp = TabPlacementStamp(_snapshot);
+        _tabRows = actualRows.Select(row => new TabRow(new TabSelection(this, row.Id, epoch, row.Pinned, placementStamp), row.Key, row.Label, row.Selected)
             { Description = row.Description, CanClose = row.CanClose }).ToArray();
     }
     private bool IsCurrentTabTarget(object? parameter) => parameter is TabSelection target &&
         ReferenceEquals(target.Owner, this) && target.Epoch == _rowEpoch &&
         _tabRows.Any(row => ReferenceEquals(row.Target, target)) && _chrome.State.Tabs.Any(tab => tab.Id == target.TabId);
+    private static bool IsTabPlacementCommand(string command) => command is
+        "9to1.Browse.ToggleTabPinned" or "9to1.Browse.MoveTabLeft" or "9to1.Browse.MoveTabRight";
+    private static string TabPlacementStamp(BrowseChromeSnapshot snapshot) => string.Join(";", snapshot.Tabs.Select(tab =>
+        tab.Id.ToString("N") + (tab.IsPinned ? ":p" : ":u") + (tab.IsHome ? ":h" : string.Empty)));
+    private bool IsCurrentSelectedTabTarget(object? parameter)
+    {
+        if (!IsCurrentTabTarget(parameter) || parameter is not TabSelection target) return false;
+        var actual = _chrome.State;
+        return actual.SelectedTabId == target.TabId && string.Equals(target.PlacementStamp, TabPlacementStamp(actual), StringComparison.Ordinal);
+    }
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         if (TryGetDownloadDestinationItem(item, path, out value)) return true;
