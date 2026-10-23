@@ -14,17 +14,22 @@ namespace Haven.Infrastructure;
 public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
 {
     public const int DefaultMaximumDocumentBytes = 256 * 1024 * 1024;
+    public const int DefaultMaximumInlineArchiveBytes = 8 * 1024 * 1024;
     public const string ArchiveKey = "boards.legacy.original.v1";
     public const string ProvenanceKey = "boards.legacy.provenance.v1";
     public const string IdentityMapKey = "boards.legacy.identities.v1";
     public const string ProjectionIssuesKey = "boards.legacy.projection-issues.v1";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly int _maximumDocumentBytes;
+    private readonly int _maximumInlineArchiveBytes;
 
-    public BoardsLegacyDocumentAdapter(int maximumDocumentBytes = DefaultMaximumDocumentBytes)
+    public BoardsLegacyDocumentAdapter(int maximumDocumentBytes = DefaultMaximumDocumentBytes,
+        int maximumInlineArchiveBytes = DefaultMaximumInlineArchiveBytes)
     {
         if (maximumDocumentBytes <= 0) throw new ArgumentOutOfRangeException(nameof(maximumDocumentBytes));
+        if (maximumInlineArchiveBytes <= 0) throw new ArgumentOutOfRangeException(nameof(maximumInlineArchiveBytes));
         _maximumDocumentBytes = maximumDocumentBytes;
+        _maximumInlineArchiveBytes = Math.Min(maximumDocumentBytes, maximumInlineArchiveBytes);
     }
 
     private sealed class Inspection(BoardsLegacyDocumentAdapter issuer, byte[]? bytes,
@@ -62,7 +67,7 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
             var offset = bytes.AsSpan().StartsWith(new byte[] { 0xef, 0xbb, 0xbf }) ? 3 : 0;
             // Reject invalid UTF-8 instead of accepting replacement characters. BOM and all
             // lexical detail remain in Bytes, independently from the JSON parsing view.
-            _ = new UTF8Encoding(false, true).GetString(bytes, offset, bytes.Length - offset);
+            _ = new UTF8Encoding(false, true).GetCharCount(bytes, offset, bytes.Length - offset);
             using var document = JsonDocument.Parse(bytes.AsMemory(offset));
             inspection.Root = document.RootElement.Clone();
             if (inspection.Root.ValueKind != JsonValueKind.Object)
@@ -140,6 +145,9 @@ public sealed class BoardsLegacyDocumentAdapter : IBoardsLegacyDocumentCodec
         else documentId ??= StableGuid(source.StoreId, "legacy-file/" + source.FileId.ToString("D"));
         if (importObservedAt == default)
             Add(issues, "ImportObservationMissing", "", "The actual import observation time must be supplied separately from legacy provenance.", true);
+        Add(issues, "CanonicalIdentityReviewRequired", "", "A proposed document UUID is not proof of an absent or matching canonical document. The same Notes/Home owner must review provenance, collisions and the exact candidate before any commit.");
+        if (original.OriginalByteLength > _maximumInlineArchiveBytes)
+            Add(issues, "CanonicalArchiveStorageRequired", "", "This original is retained for inspection/export, but needs a genuine canonical Files archive/asset reference before import. It is not truncated or dropped to fit inline Notes metadata.", true);
         if (issues.Any(issue => issue.PreventsProjection)) return new(documentId, null, issues);
         if (original.SchemaVersion is null or < 2 || !Try(original.Root, "richNotes", out var rawRich) || rawRich.ValueKind == JsonValueKind.Null)
         {

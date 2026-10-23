@@ -340,6 +340,19 @@ public sealed class BoardsLegacyDocumentAdapterTests
         Assert.Throws<ArgumentException>(() => new BoardsLegacyDocumentAdapter().ExportOriginal(inspection));
     }
 
+    [Fact]
+    public void A_large_inline_archive_requires_canonical_Files_storage_without_losing_its_original()
+    {
+        var input = Bytes(Envelope());
+        var codec = new BoardsLegacyDocumentAdapter(maximumInlineArchiveBytes: 64);
+        var inspection = codec.Inspect(input, Source);
+        var candidate = codec.PrepareCanonicalImport(inspection, ObservedAt);
+        Assert.True(inspection.OriginalBytesRetained);
+        Assert.False(candidate.IsCanonicalProjectionAvailable);
+        Assert.Contains(candidate.Issues, issue => issue.Code == "CanonicalArchiveStorageRequired" && issue.PreventsProjection);
+        Assert.Equal(input, codec.ExportOriginal(inspection));
+    }
+
     private static byte[] Bytes(JsonNode node) => Encoding.UTF8.GetBytes(node.ToJsonString());
 
     private static JsonObject Snapshot() => JsonNode.Parse("""
