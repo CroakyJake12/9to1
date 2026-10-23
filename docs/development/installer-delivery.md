@@ -93,5 +93,28 @@ python3 -B -m unittest discover -s eng/release-delivery -p test_installer_delive
 
 No SDK is needed. Set NINETOONE_DELIVERY_TEST_TMP to an existing private scratch
 directory when global/tmp is full; fixtures use explicit control permissions and
-private dpkg scratch. Register this focused command in the existing infrastructure
-workflow during integration. Do not create a parallel packaging/CI system.
+private dpkg scratch. The existing development-infrastructure workflow now runs
+this command, retains its actual log/exit/duration receipt and hashes the delivery
+and shared workflow inputs. Its push/PR selectors include the delivery sources
+and ARM workflow; `eng/development/checks.json` registers the focused delivery
+check with the shared workflow dependency. No parallel packaging/CI system is used.
+
+## Public CI publication prevention
+
+The existing ARM packaging workflow's same-repository artifact uploads and optional
+draft release upload previously lacked a privacy gate. It now reads the actual
+pinned repository metadata before checkout/assembly and again after the native
+journeys, before publication. Only an exact repository name/ID with `private:true`
+and matching Actions repository context emits custody authorization. All four
+artifact uploads and the optional draft upload require the second authorization,
+including uploads selected by `always()` after failed tests. A failed API read,
+public repository, absent privacy value or mismatched identity leaves every
+publication path blocked. Authentication alone never passes the privacy check.
+
+This deliberately blocks the actual PUBLIC source repository. It does not create
+a private store, change source visibility, implement a OneDrive backend or waive
+any package/native/independent acceptance gate. Source-backed regression checks
+execute both actual CI guard scripts with local fake metadata/authentication and
+verify every publication condition; they make no real provider calls. The accepted
+installer runtime Python remains unchanged. Full-size private custody, authenticated
+receiving invocation/receipt and actual ARM/GNOME acceptance remain separate blockers.

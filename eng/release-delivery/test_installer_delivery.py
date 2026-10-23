@@ -8,10 +8,12 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 from unittest.mock import patch
 import warnings
@@ -317,6 +319,100 @@ class Delivery(unittest.TestCase):
         with patch.dict(d.os.environ, {"GH_DEBUG": "api"}):
             self.assertNotIn("GH_DEBUG", d.gh_environment())
             self.assertEqual(d.gh_environment()["GH_PROMPT_DISABLED"], "1")
+
+
+class PipelinePublicationPolicy(unittest.TestCase):
+    """Execute the actual CI custody scripts with local provider metadata fixtures."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.workflow = (Path(__file__).resolve().parents[2] / ".github/workflows/havenos-linux-package.yml").read_text()
+        cls.steps = re.split(r"(?m)^      - ", cls.workflow)[1:]
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(dir=SCRATCH)
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def step(self, step_id):
+        matches = [step for step in self.steps if f"        id: {step_id}\n" in step]
+        self.assertEqual(len(matches), 1, "Missing or ambiguous custody check: " + step_id)
+        return matches[0]
+
+    def run_guard(self, step_id, metadata, *, auth_failure=False, repository=d.REPOSITORY, repository_id=str(d.REPOSITORY_ID)):
+        step = self.step(step_id)
+        script = textwrap.dedent(step.split("        run: |\n", 1)[1])
+        case = self.root / str(len(list(self.root.iterdir())))
+        case.mkdir()
+        fixture = case / "metadata.json"
+        fixture.write_text(json.dumps(metadata))
+        binary = case / "gh"
+        binary.write_text(f"#!{sys.executable}\n" + textwrap.dedent("""\
+            import os, pathlib, sys
+            if sys.argv[1:] != ['api', '--hostname', 'github.com', 'repos/CroakyJake12/9to1']:
+                raise SystemExit('Unexpected fixture API request')
+            if os.environ.get('CUSTODY_FIXTURE_AUTH_FAILURE') == '1':
+                raise SystemExit(1)
+            sys.stdout.write(pathlib.Path(os.environ['CUSTODY_FIXTURE_METADATA']).read_text())
+            """))
+        binary.chmod(0o700)
+        output = case / "github-output"
+        output.touch()
+        environment = {**os.environ, "PATH": str(case) + os.pathsep + os.environ.get("PATH", ""),
+                       "RUNNER_TEMP": str(case), "GITHUB_OUTPUT": str(output),
+                       "GITHUB_REPOSITORY": repository, "GITHUB_REPOSITORY_ID": repository_id,
+                       "CUSTODY_FIXTURE_METADATA": str(fixture), "CUSTODY_FIXTURE_AUTH_FAILURE": str(int(auth_failure))}
+        result = subprocess.run(["bash", "--noprofile", "--norc", "-c", script], env=environment,
+                                capture_output=True, text=True, timeout=5)
+        return result, output.read_text()
+
+    def test_public_unknown_and_wrong_repository_metadata_never_authorizes(self):
+        valid = {"id": d.REPOSITORY_ID, "full_name": d.REPOSITORY, "private": True}
+        invalid = [dict(valid, private=False), dict(valid, private="true"), dict(valid, private=None),
+                   {key: value for key, value in valid.items() if key != "private"},
+                   dict(valid, id=d.REPOSITORY_ID + 1), dict(valid, full_name="unrelated/store"), []]
+        for step_id in ("custody_admission", "publication_custody"):
+            for metadata in invalid:
+                with self.subTest(step=step_id, metadata=metadata):
+                    result, output = self.run_guard(step_id, metadata)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertNotIn("authorized=true", output)
+            for repository, repository_id in (("unrelated/store", str(d.REPOSITORY_ID)), (d.REPOSITORY, "1")):
+                with self.subTest(step=step_id, repository=repository, repository_id=repository_id):
+                    result, output = self.run_guard(step_id, valid, repository=repository, repository_id=repository_id)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertNotIn("authorized=true", output)
+
+    def test_actual_private_pinned_metadata_is_only_custody_admission(self):
+        for step_id in ("custody_admission", "publication_custody"):
+            with self.subTest(step=step_id):
+                result, output = self.run_guard(step_id, {"id": d.REPOSITORY_ID, "full_name": d.REPOSITORY, "private": True})
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(output, "authorized=true\n")
+                receipt = json.loads(result.stdout)
+                self.assertEqual(receipt["status"], "PRIVATE_CUSTODY_VERIFIED")
+                self.assertEqual(receipt["release_acceptance"], "NOT CHECKED")
+
+    def test_failed_authentication_never_authorizes(self):
+        for step_id in ("custody_admission", "publication_custody"):
+            with self.subTest(step=step_id):
+                result, output = self.run_guard(step_id, {"id": d.REPOSITORY_ID, "full_name": d.REPOSITORY, "private": True}, auth_failure=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(output, "")
+
+    def test_every_package_artifact_and_draft_upload_requires_fresh_custody(self):
+        publishers = [step for step in self.steps if "uses: actions/upload-artifact@" in step or "gh release upload " in step]
+        self.assertEqual(len(publishers), 5, "Review every added or removed publication path")
+        for step in publishers:
+            condition = next((line for line in step.splitlines() if line.startswith("        if:")), "")
+            self.assertIn("steps.publication_custody.outputs.authorized == 'true'", condition,
+                          "Public package/source/draft publication is not custody guarded: " + step.splitlines()[0])
+        admission = self.step("custody_admission")
+        publication = self.step("publication_custody")
+        self.assertLess(self.workflow.index(admission), self.workflow.index("uses: actions/checkout@"))
+        self.assertIn("steps.custody_admission.outputs.authorized == 'true'", publication)
+        self.assertGreater(self.workflow.index(publication), self.workflow.index("aggregate-package-journeys.py"))
+        self.assertLess(self.workflow.index(publication), min(self.workflow.index(step) for step in publishers))
 
 
 if __name__ == "__main__":

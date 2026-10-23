@@ -27,6 +27,38 @@ jobs:
       NATIVE_DOTNET_VERSION: '10.0.301'
       PREVIEW_INPUT_CACHE: ${{ runner.temp }}/9to1-pinned-inputs
     steps:
+      # This workflow only has same-repository GitHub custody configured. The
+      # actual source repository is PUBLIC, so packaging must remain blocked
+      # until a separately reviewed private route exists; never change visibility.
+      - name: Require private artifact custody before assembling a package
+        id: custody_admission
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_PROMPT_DISABLED: '1'
+          GH_NO_UPDATE_NOTIFIER: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset GH_DEBUG
+          mkdir -p "$RUNNER_TEMP/arm-custody"
+          gh api --hostname github.com repos/CroakyJake12/9to1 > "$RUNNER_TEMP/arm-custody/admission-repository.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          repository = json.loads((pathlib.Path(os.environ['RUNNER_TEMP']) / 'arm-custody/admission-repository.json').read_text())
+          allowed = (os.environ.get('GITHUB_REPOSITORY') == 'CroakyJake12/9to1'
+                     and os.environ.get('GITHUB_REPOSITORY_ID') == '1378313608'
+                     and isinstance(repository, dict) and repository.get('id') == 1378313608
+                     and repository.get('full_name') == 'CroakyJake12/9to1' and repository.get('private') is True)
+          if not allowed:
+              print(json.dumps({'status': 'BLOCKED_PRIVATE_CUSTODY_REQUIRED',
+                                'reason': 'The configured same-repository artifact route is not verified private. Never upload private packages/source to public Actions or change repository visibility.',
+                                'release_acceptance': 'NOT CHECKED'}))
+              raise SystemExit(2)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('authorized=true\n')
+          print(json.dumps({'status': 'PRIVATE_CUSTODY_VERIFIED', 'repository': 'CroakyJake12/9to1',
+                            'repository_id': 1378313608, 'release_acceptance': 'NOT CHECKED'}))
+          PY
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified 2026-10-22
         with:
           fetch-depth: 16
@@ -202,8 +234,40 @@ jobs:
           BROWSER_OUTCOME: ${{ steps.browser.outcome }}
           REMOVAL_OUTCOME: ${{ steps.removal.outcome }}
         run: python3 .github/scripts/native16-arm64/aggregate-package-journeys.py
+      # Recheck actual visibility after the native work. Early admission alone
+      # cannot authorise any later upload, including always() failure artifacts.
+      - name: Reverify private custody immediately before every publication path
+        id: publication_custody
+        if: ${{ always() && steps.custody_admission.outputs.authorized == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_PROMPT_DISABLED: '1'
+          GH_NO_UPDATE_NOTIFIER: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset GH_DEBUG
+          mkdir -p "$RUNNER_TEMP/arm-custody"
+          gh api --hostname github.com repos/CroakyJake12/9to1 > "$RUNNER_TEMP/arm-custody/publication-repository.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          repository = json.loads((pathlib.Path(os.environ['RUNNER_TEMP']) / 'arm-custody/publication-repository.json').read_text())
+          allowed = (os.environ.get('GITHUB_REPOSITORY') == 'CroakyJake12/9to1'
+                     and os.environ.get('GITHUB_REPOSITORY_ID') == '1378313608'
+                     and isinstance(repository, dict) and repository.get('id') == 1378313608
+                     and repository.get('full_name') == 'CroakyJake12/9to1' and repository.get('private') is True)
+          if not allowed:
+              print(json.dumps({'status': 'BLOCKED_PRIVATE_CUSTODY_REQUIRED',
+                                'reason': 'The configured same-repository artifact route is not verified private. Never upload private packages/source to public Actions or change repository visibility.',
+                                'release_acceptance': 'NOT CHECKED'}))
+              raise SystemExit(2)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('authorized=true\n')
+          print(json.dumps({'status': 'PRIVATE_CUSTODY_VERIFIED', 'repository': 'CroakyJake12/9to1',
+                            'repository_id': 1378313608, 'release_acceptance': 'NOT CHECKED'}))
+          PY
       - name: Optional same-repository INTERNAL draft asset upload (never publishes release)
-        if: ${{ success() && inputs.upload_draft_asset }}
+        if: ${{ success() && inputs.upload_draft_asset && steps.publication_custody.outputs.authorized == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -226,7 +290,7 @@ jobs:
           assert x['draft'] is True and x['published_at'] is None
           PY
       - name: Upload actual package plus SHA/provenance (no profile/database)
-        if: ${{ always() && env.PREVIEW_PACKAGE_DIR != '' }}
+        if: ${{ always() && steps.publication_custody.outputs.authorized == 'true' && env.PREVIEW_PACKAGE_DIR != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-native16-arm64-internal-package
@@ -237,7 +301,7 @@ jobs:
           retention-days: 14
           if-no-files-found: error
       - name: Upload bundled Chromium source/provenance sidecar
-        if: ${{ always() && env.BROWSER_SIDECAR != '' }}
+        if: ${{ always() && steps.publication_custody.outputs.authorized == 'true' && env.BROWSER_SIDECAR != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-browser-source-sidecar
@@ -245,7 +309,7 @@ jobs:
           retention-days: 14
           if-no-files-found: error
       - name: Upload unchanged corresponding upstream engine source (no inference executable or weights)
-        if: ${{ always() && env.PREVIEW_INFERENCE_SOURCE != '' }}
+        if: ${{ always() && steps.publication_custody.outputs.authorized == 'true' && env.PREVIEW_INFERENCE_SOURCE != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-pinned-llamacpp-upstream-source
@@ -265,7 +329,7 @@ jobs:
             --source "${RUNNER_TEMP}/9to1-browser-evidence" \
             --dest "${GITHUB_WORKSPACE}/evidence/browser-supply"
       - name: Upload bounded evidence and exact source archive
-        if: always()
+        if: ${{ always() && steps.publication_custody.outputs.authorized == 'true' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified 2026-10-22
         with:
           name: 9to1-native16-arm64-source-and-startup-evidence
