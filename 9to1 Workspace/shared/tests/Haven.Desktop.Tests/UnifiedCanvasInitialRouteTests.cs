@@ -139,18 +139,20 @@ public sealed class UnifiedCanvasInitialRouteTests
     [Fact]
     public Task A_faulted_actual_OCE_stays_faulted_in_the_App_original_and_cached_close() => WithRig(async rig =>
     {
-        var source = new OperationCanceledException("Actual faulted continuation, not a canceled source Task.");
+        OperationCanceledException? source = null;
         Task? captured = null;
         var startup = rig.Owner.RunAsync(async original =>
         {
+            var actualCause = new OperationCanceledException("Actual faulted continuation, not a canceled source Task.", original.Token);
+            source = actualCause;
             await rig.App.TryAwaitOriginalStartupContinuationAsync(original,
                 () => captured = rig.Read.ContinueWith(read =>
                 {
                     Assert.True(read.IsCompletedSuccessfully);
-                    throw source;
+                    throw actualCause;
                 }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default));
         });
-        Assert.NotNull(captured); Assert.False(captured.IsCompleted); Assert.False(startup.IsCompleted);
+        Assert.NotNull(source); Assert.NotNull(captured); Assert.False(captured.IsCompleted); Assert.False(startup.IsCompleted);
         rig.Owner.RequestRetirement();
         var close = Assert.IsAssignableFrom<Task>(rig.Owner.OriginalClose);
         Assert.False(close.IsCompleted);
@@ -161,6 +163,28 @@ public sealed class UnifiedCanvasInitialRouteTests
         AssertExactCauses(rig.ExpectedCloseFailure, source);
         Assert.True(close.IsFaulted); Assert.Same(close, rig.Owner.CloseAndDrainAsync());
         Assert.False(rig.Completed());
+    });
+
+    [Fact]
+    public Task Actual_App_owner_cancellation_keeps_a_genuinely_canceled_source_cooperative() => WithRig(async rig =>
+    {
+        Task? captured = null;
+        var continued = false;
+        var startup = rig.Owner.RunAsync(async original =>
+        {
+            await rig.App.TryAwaitOriginalStartupContinuationAsync(original,
+                () => captured = Task.Delay(Timeout.Infinite, original.Token));
+            continued = true;
+            await rig.App.TryAwaitOriginalStartupContinuationAsync(original,
+                () => rig.Recovery.MarkStartupCompletedAsync(CancellationToken.None));
+        });
+        Assert.NotNull(captured); Assert.False(captured.IsCompleted); Assert.False(startup.IsCompleted);
+        rig.Owner.RequestRetirement();
+        var close = Assert.IsAssignableFrom<Task>(rig.Owner.OriginalClose);
+        await startup.WaitAsync(rig.Token); await close.WaitAsync(rig.Token);
+        Assert.True(captured.IsCanceled); Assert.False(captured.IsFaulted);
+        Assert.True(startup.IsCompletedSuccessfully); Assert.True(close.IsCompletedSuccessfully);
+        Assert.False(continued); Assert.False(rig.Completed());
     });
 
     [Fact]
