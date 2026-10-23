@@ -50,6 +50,180 @@ var checks = await headless.Dispatch(async () =>
     string Text(NotesDocument document) => string.Concat(First(document).Runs.Select(run => run.Text));
     var paths = new AppPaths();
     var repository = new NotesRepository(paths, new NotesDocumentValidator(), new ProductionDiagnostics(paths));
+    if (args.Contains("semantic-selection", StringComparer.Ordinal))
+    {
+        // Adapter fixture only: the original editor/model/history and real retained
+        // scene are used. This is not a replacement Boards document or application.
+        var document = NotesDocument.Create("Semantic selection fixture");
+        document.Version = 17;
+        var block = First(document);
+        block.PlainText = "AAbbccDD";
+        block.Runs = [new() { Text = "AA" }, new() { Text = "bb", Bold = true },
+            new() { Text = "cc", Italic = true }, new() { Text = "DD", Underline = true }];
+        var blockId = block.Id;
+        var page = document.Sections.SelectMany(section => section.Pages).Single(value => value.Blocks.Contains(block));
+        var pageId = page.Id;
+        var nextBlock = new NotesBlock { Kind = NotesBlockKind.Paragraph, Order = block.Order + 1,
+            PlainText = "tail", Runs = [new() { Text = "tail", Underline = true }] };
+        page.Blocks.Add(nextBlock);
+        var nextBlockId = nextBlock.Id;
+        var editor = new WriteDocumentEditor(document, pageId);
+        using var semanticHost = new WriteRetainedSceneControl(() => true);
+        semanticHost.SetEditor(editor);
+        semanticHost.SetInputAllowed(true);
+        var fixtureButton = new Button { Content = "Semantic command fixture" };
+        var grid = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
+        grid.Children.Add(semanticHost); Grid.SetRow(fixtureButton, 1); grid.Children.Add(fixtureButton);
+        var semanticWindow = new Window { Width = 1000, Height = 760, Content = grid };
+        NotesBlock Current() => document.Sections.SelectMany(section => section.Pages)
+            .SelectMany(page => page.Blocks).Single(value => value.Id == blockId);
+        int[] Marks() => Current().Runs.SelectMany(run => Enumerable.Repeat(
+            (run.Bold ? 1 : 0) | (run.Italic ? 2 : 0) | (run.Underline ? 4 : 0) | (run.StrikeThrough ? 8 : 0), run.Text.Length)).ToArray();
+        string Runs() => JsonSerializer.Serialize(Current().Runs);
+        var originalRuns = Runs();
+        semanticWindow.Show();
+        try
+        {
+            using (var frame = semanticWindow.CaptureRenderedFrame())
+                Check(frame is not null && semanticHost.Bounds.Width > 0, "semantic contract uses a genuinely rendered original retained surface");
+            var retainedScene = semanticHost.GetVisualDescendants().OfType<HavenSceneControl>().Single();
+            var retainedNode = retainedScene.Root;
+            editor.SelectBlock(blockId, caretIndex: 6, selectionStart: 2, selectionEnd: 6);
+            var selected = semanticHost.CaptureSemanticSelection();
+            Check(selected.ContractVersion == 1 && selected.ArtifactId == document.Id && selected.Revision == 17 &&
+                selected.PageScopeId == pageId && selected.AnchorPageId == pageId && selected.CaretPageId == pageId &&
+                selected.SelectedBlockId == blockId && selected.Anchor == new WriteDocumentPosition(blockId, 2) &&
+                selected.Caret == new WriteDocumentPosition(blockId, 6) && selected.RangeKind == WriteSemanticRangeKind.Block,
+                "semantic snapshot identifies exact artifact/page/block and partial range without pixel inference");
+            Check(selected.Bold == WriteSemanticMark.Mixed && selected.Italic == WriteSemanticMark.Mixed &&
+                selected.Underline == WriteSemanticMark.Off && selected.StrikeThrough == WriteSemanticMark.Off && selected.CanEdit,
+                "semantic partial range reports common and mixed marks from actual existing runs");
+            Check(Runs() == originalRuns && !editor.CanUndo &&
+                semanticHost.CaptureSemanticSelection().Generation == selected.Generation,
+                "semantic reads do not split runs, mutate content or manufacture undo/history generations");
+            var applied = semanticHost.ToggleSemanticCharacter(selected, WriteCharacterFormat.Bold);
+            Check(applied.Succeeded && applied.Code == WriteSemanticActionCode.Applied &&
+                Marks().SequenceEqual(new[] { 0, 0, 1, 1, 3, 3, 4, 4 }) && editor.HasSelection &&
+                editor.SelectionStart == 2 && editor.SelectionEnd == 6 && editor.CaretIndex == 6,
+                "typed mark operation changes only selected characters and preserves unrelated marks/caret");
+            Check(ReferenceEquals(retainedScene.Root, retainedNode) && editor.CanUndo && applied.Selection!.Bold == WriteSemanticMark.On,
+                "typed operation keeps original surface and original editor undo history");
+            Check(semanticHost.ToggleSemanticCharacter(applied.Selection, WriteCharacterFormat.Bold).Succeeded &&
+                Marks().SequenceEqual(new[] { 0, 0, 0, 0, 2, 2, 4, 4 }),
+                "typed repeated toggle clears only the exact selected range");
+            Check(editor.Undo() && editor.Undo() && Runs() == originalRuns,
+                "original engine undo restores exact original run bytes and identities across both mark transactions");
+            Check(semanticHost.ToggleSemanticCharacter(selected, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.StaleSelection &&
+                Runs() == originalRuns, "undo returning to old content cannot revive a stale action generation");
+
+            editor.SetDocumentCaret(blockId, 6);
+            editor.SetDocumentCaret(blockId, 2, extendSelection: true);
+            var reversed = semanticHost.CaptureSemanticSelection();
+            Check(reversed.RangeKind == WriteSemanticRangeKind.Document && reversed.Anchor == new WriteDocumentPosition(blockId, 6) &&
+                reversed.Caret == new WriteDocumentPosition(blockId, 2) && reversed.Bold == WriteSemanticMark.Mixed,
+                "semantic document selection preserves reversed anchor/caret direction");
+            Check(semanticHost.ToggleSemanticCharacter(reversed, WriteCharacterFormat.Italic).Succeeded &&
+                Marks().SequenceEqual(new[] { 0, 0, 3, 3, 2, 2, 4, 4 }) &&
+                editor.DocumentAnchor == reversed.Anchor && editor.DocumentCaret == reversed.Caret,
+                "reversed range forwards through the same shared operation without collapsing direction");
+            Check(editor.Undo() && Runs() == originalRuns, "original undo restores reversed-range formatting preimage");
+            editor.SetDocumentCaret(blockId, 7); editor.SetDocumentCaret(nextBlockId, 2, extendSelection: true);
+            var acrossBlocks = semanticHost.CaptureSemanticSelection();
+            Check(acrossBlocks.Anchor == new WriteDocumentPosition(blockId, 7) &&
+                acrossBlocks.Caret == new WriteDocumentPosition(nextBlockId, 2) && acrossBlocks.Underline == WriteSemanticMark.On,
+                "cross-block semantic context retains both stable block endpoints and common selected marks");
+            Check(semanticHost.ToggleSemanticCharacter(acrossBlocks, WriteCharacterFormat.Underline).Succeeded &&
+                Marks().SequenceEqual(new[] { 0, 0, 1, 1, 2, 2, 4, 0 }) &&
+                document.Sections.SelectMany(section => section.Pages).SelectMany(value => value.Blocks).Single(value => value.Id == nextBlockId)
+                    .Runs.SelectMany(run => Enumerable.Repeat(run.Underline, run.Text.Length)).SequenceEqual(new[] { false, false, true, true }),
+                "cross-block typed mark operation preserves unselected characters at both boundaries");
+            Check(editor.Undo() && Runs() == originalRuns, "shared undo restores cross-block formatting without replacing editor ownership");
+            var beforeMove = semanticHost.CaptureSemanticSelection();
+            editor.SetDocumentCaret(blockId, 1);
+            Check(semanticHost.ToggleSemanticCharacter(beforeMove, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.StaleSelection &&
+                Runs() == originalRuns, "programmatic selection changes without mutation notifications still reject stale range actions");
+
+            var beforeRevision = semanticHost.CaptureSemanticSelection();
+            document.Version++;
+            Check(semanticHost.ToggleSemanticCharacter(beforeRevision, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.RevisionConflict &&
+                Runs() == originalRuns, "changed owning persisted revision rejects a captured action without touching content");
+            document.Version = 17; // Restore only this deliberately injected fixture revision.
+            var beforeOwner = semanticHost.CaptureSemanticSelection();
+            semanticHost.SetEditor(new WriteDocumentEditor(NotesDocument.Create("Other owner")));
+            semanticHost.SetEditor(editor);
+            Check(semanticHost.ToggleSemanticCharacter(beforeOwner, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.StaleOwner &&
+                Runs() == originalRuns, "editor ABA rebinding cannot revive an old owner token");
+            var guarded = semanticHost.CaptureSemanticSelection();
+            semanticHost.SetReadOnly(true);
+            Check(semanticHost.ToggleSemanticCharacter(guarded, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.ReadOnly &&
+                !semanticHost.CaptureSemanticSelection().CanEdit && Runs() == originalRuns,
+                "actual host read-only fence rejects typed edits even with an older editable snapshot");
+            semanticHost.SetReadOnly(false);
+            Check(semanticHost.ToggleSemanticCharacter(guarded, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.StaleSelection,
+                "read-only permission ABA does not revive an older action generation");
+            semanticHost.SetInputAllowed(false);
+            Check(semanticHost.ToggleSemanticCharacter(semanticHost.CaptureSemanticSelection(), WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.InputSuspended &&
+                Runs() == originalRuns, "save/navigation input suspension fences typed mutations as well as native input");
+            semanticHost.SetInputAllowed(true);
+            guarded = semanticHost.CaptureSemanticSelection();
+            Check(semanticHost.ToggleSemanticCharacter(guarded, (WriteCharacterFormat)999).Code == WriteSemanticActionCode.UnsupportedFormat &&
+                Runs() == originalRuns, "unknown formatting enum refuses without creating a mutation/history entry");
+            Check(semanticHost.ToggleSemanticCharacter(guarded with { CaretPageId = Guid.NewGuid() }, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.StaleSelection &&
+                Runs() == originalRuns, "a mismatched page identity cannot redirect a captured block range action");
+            var wrongThread = await Task.Run(() => semanticHost.ToggleSemanticCharacter(guarded, WriteCharacterFormat.Bold));
+            Check(wrongThread.Code == WriteSemanticActionCode.WrongThread && Runs() == originalRuns,
+                "off-owner-thread typed operation refuses before accessing retained UI or document state");
+            Check(semanticHost.ToggleSemanticCharacter(null, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.InvalidArgument &&
+                semanticHost.ToggleSemanticCharacter(guarded with { ContractVersion = 999 }, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.UnsupportedVersion,
+                "missing or unknown-version context refuses instead of silently selecting a different target");
+
+            editor.SetDocumentCaret(blockId, 6); editor.SetDocumentCaret(blockId, 2, extendSelection: true);
+            retainedScene.FocusElement(retainedScene.Root!);
+            var focused = semanticHost.CaptureSemanticSelection();
+            Check(focused.EditorHadFocus, "focus restoration precondition observes real retained editor focus");
+            fixtureButton.Focus();
+            Check(fixtureButton.IsKeyboardFocusWithin && !retainedScene.IsKeyboardFocusWithin,
+                "actual fixture toolbar owns focus before the typed formatting request");
+            Check(semanticHost.ToggleSemanticCharacter(focused, WriteCharacterFormat.StrikeThrough, restoreEditorFocus: true).Succeeded &&
+                retainedScene.IsKeyboardFocusWithin && editor.DocumentAnchor == focused.Anchor && editor.DocumentCaret == focused.Caret,
+                "explicit toolbar request restores previously held editor focus without losing reversed selection");
+            fixtureButton.Focus();
+            var toolbarFocused = semanticHost.CaptureSemanticSelection();
+            Check(!toolbarFocused.EditorHadFocus &&
+                semanticHost.ToggleSemanticCharacter(toolbarFocused, WriteCharacterFormat.StrikeThrough, restoreEditorFocus: true).Succeeded &&
+                fixtureButton.IsKeyboardFocusWithin,
+                "typed action never steals focus that the captured editor did not own");
+            retainedScene.FocusElement(retainedScene.Root!);
+            var beforeRetire = semanticHost.CaptureSemanticSelection();
+            fixtureButton.Focus();
+            var replacementDocument = NotesDocument.Create("Reentrant replacement owner");
+            var replacementEditor = new WriteDocumentEditor(replacementDocument);
+            var replacementBefore = JsonSerializer.Serialize(replacementDocument);
+            void RetireDuringMutation(object? sender, EventArgs eventArgs) => semanticHost.SetEditor(replacementEditor);
+            editor.Changed += RetireDuringMutation;
+            WriteSemanticActionResult retiredDuringMutation;
+            try { retiredDuringMutation = semanticHost.ToggleSemanticCharacter(beforeRetire, WriteCharacterFormat.Bold, restoreEditorFocus: true); }
+            finally { editor.Changed -= RetireDuringMutation; }
+            Check(retiredDuringMutation.Succeeded && retiredDuringMutation.Code == WriteSemanticActionCode.AppliedOwnerRetired &&
+                retiredDuringMutation.Selection is null && JsonSerializer.Serialize(replacementDocument) == replacementBefore &&
+                fixtureButton.IsKeyboardFocusWithin && semanticHost.CaptureSemanticSelection().ArtifactId == replacementDocument.Id,
+                "reentrant retirement reports original-owner mutation truthfully without formatting or focusing the replacement owner");
+            semanticHost.SetEditor(editor);
+            var retired = semanticHost.CaptureSemanticSelection();
+            semanticHost.SetEditor(null);
+            Check(semanticHost.ToggleSemanticCharacter(retired, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.NoEditor &&
+                semanticHost.CaptureSemanticSelection().Bold == WriteSemanticMark.Unavailable,
+                "detached owner exposes unavailable semantic state and refuses captured edits");
+            semanticHost.SetEditor(editor);
+            retired = semanticHost.CaptureSemanticSelection();
+            var beforeDispose = Runs();
+            semanticHost.Dispose();
+            Check(semanticHost.ToggleSemanticCharacter(retired, WriteCharacterFormat.Bold).Code == WriteSemanticActionCode.Disposed && Runs() == beforeDispose,
+                "disposed adapter rejects old requests without disposing or mutating canonical document/history");
+            return assertions;
+        }
+        finally { semanticWindow.Close(); }
+    }
     // A real one-pixel PNG, so the picked image journey stages genuine image bytes.
     var fixtureImagePath = Path.Combine(Path.GetTempPath(), "write-scene-image.png");
     File.WriteAllBytes(fixtureImagePath, Convert.FromBase64String(
