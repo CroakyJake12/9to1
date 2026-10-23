@@ -161,25 +161,26 @@ public sealed class BoardsBrowseAppContentSessionTests
     public async Task Actual_Home_actor_callback_cannot_join_its_parent_session_under_restored_pre_owner_context()
     {
         var beforeOwner = ExecutionContext.Capture() ?? throw new InvalidOperationException("Capture genuine pre-owner context.");
-        await using var rig = new Rig();
         using var appLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         using var hostLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var principal = new ActualPrincipal();
-        var evidence = new NotesLocalStoreEvidenceProvider(rig.Notes);
-        var home = new HomeNativeWindowsComposition(new FileHomeCoreStateStore(Path.Combine(rig.OriginalPaths.DataDirectory, "home.json")),
-            principal, rig.OriginalPaths, new("9to1.home.boards.guard-test.v1"),
-            configureOriginalStores: _ => new([evidence], new Dictionary<Type, object>
-            { [typeof(NotesRepository)] = rig.Notes, [typeof(NotesLocalStoreEvidenceProvider)] = evidence }));
-        var registrations = new ServiceCollection();
-        registrations.AddSingleton<IAppPaths>(rig.OriginalPaths);
-        registrations.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
-        registrations.AddHavenOwnedWindowsHomeDomain(home, rig.OriginalPaths, principal);
-        await using var provider = registrations.BuildServiceProvider();
+        Rig? rig = null; HomeNativeWindowsComposition? home = null; ServiceProvider? provider = null;
         BoardsBrowseAppContentSession? session = null;
         HomeNativeApprovalWindowOwner? approvals = null; BoardsOriginalStoreSetupBackend? setup = null; Window? window = null;
         var failures = new List<Exception>();
         try
         {
+            rig = new Rig();
+            var evidence = new NotesLocalStoreEvidenceProvider(rig.Notes);
+            home = new HomeNativeWindowsComposition(new FileHomeCoreStateStore(Path.Combine(rig.OriginalPaths.DataDirectory, "home.json")),
+                principal, rig.OriginalPaths, new("9to1.home.boards.guard-test.v1"),
+                configureOriginalStores: _ => new([evidence], new Dictionary<Type, object>
+                { [typeof(NotesRepository)] = rig.Notes, [typeof(NotesLocalStoreEvidenceProvider)] = evidence }));
+            var registrations = new ServiceCollection();
+            registrations.AddSingleton<IAppPaths>(rig.OriginalPaths);
+            registrations.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
+            registrations.AddHavenOwnedWindowsHomeDomain(home, rig.OriginalPaths, principal);
+            provider = registrations.BuildServiceProvider();
             await home.StartOriginalAsync();
             var actor = await home.Profiles.GetCurrentAsync(default) ?? throw new InvalidOperationException("Actual local Home profile unavailable.");
             var admission = new HomeNotesResourceAdmissionSource(rig.Notes, home.StateStore, home.Profiles,
@@ -232,7 +233,7 @@ public sealed class BoardsBrowseAppContentSessionTests
         catch (Exception error) { failures.Add(error); }
         finally
         {
-            principal.NextCallback = null;
+            principal.NextCallback = null; principal.Release.TrySetResult();
             if (window is not null)
             {
                 try { window.Content = null; } catch (Exception error) { failures.Add(error); }
@@ -242,7 +243,9 @@ public sealed class BoardsBrowseAppContentSessionTests
                 try { await (session.OriginalClose ?? session.CloseAndDrainAsync()); } catch (Exception error) { failures.Add(error); }
             if (setup is not null) try { await setup.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
             if (approvals is not null) try { await approvals.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
-            try { await home.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
+            if (home is not null) try { await home.CloseAndDrainAsync(); } catch (Exception error) { failures.Add(error); }
+            if (provider is not null) try { await provider.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+            if (rig is not null) try { await rig.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
         }
         if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count > 1) throw new AggregateException("Actual ancestor assertion and independent cleanup failed.", failures);
