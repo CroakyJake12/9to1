@@ -108,6 +108,7 @@ static T Field<T>(BrowserApplication app, string name) => (T)typeof(BrowserAppli
 
 static async Task MountActualBoardsAsync(bool useAccent)
 {
+    if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This owning mount uses the actual Linux Notes store.");
     var root = Path.Combine(Path.GetTempPath(), "9to1-boards-production-render-" + Guid.NewGuid().ToString("N"));
     Directory.CreateDirectory(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
     var paths = new ActualPaths(root);
