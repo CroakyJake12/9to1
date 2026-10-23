@@ -23,6 +23,20 @@ internal sealed class ManagedInferenceEngineRequestSource(IModelProvider provide
   public async Task<OllamaToolResponse> ToolsOriginalAsync(OllamaToolRequest sameRequest, TaskRunAttemptAdmission sameAdmission,
     Guid acknowledgedResponseAction, IInferenceEngineOriginalSourceScope originalScope, CancellationToken cancellationToken)
   {
+    ArgumentNullException.ThrowIfNull(sameAdmission); ArgumentNullException.ThrowIfNull(originalScope);
+    cancellationToken.ThrowIfCancellationRequested();
+    // A native settings limit is a restriction, never proof of a native tool transport.
+    // Refuse before model/catalogue callbacks unless the SAME factory-held raw provider
+    // retains its frozen descriptor and a completed, still-live same-worker tool probe.
+    if (nativeContextLimit is not null)
+    {
+      bool available;
+      try { available = provider is StrataRawModelProvider native &&
+        Capture(originalScope, () => native.OriginalStructuredToolsAvailable); }
+      catch (OperationCanceledException cause)
+      { throw new AggregateException("The original native tool-capability observation faulted synchronously.", cause); }
+      if (!available) throw Unsupported("No actual same-worker structured tool transport is available.");
+    }
     await ValidateAsync(sameRequest.Model, sameRequest.ExecutionContext, sameAdmission, acknowledgedResponseAction,
       originalScope, [ToolCapability.Text, ToolCapability.Tools], sameRequest.Messages.Any(message => message.Images?.Count > 0), cancellationToken).ConfigureAwait(false);
     DemandNativeSettings(sameRequest.Effort, sameRequest.Options);

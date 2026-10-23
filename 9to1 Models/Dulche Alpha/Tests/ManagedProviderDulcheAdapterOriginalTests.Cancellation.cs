@@ -8,8 +8,10 @@ namespace Dulche.Runtime.Tests;
 
 public sealed partial class ManagedProviderDulcheAdapterOriginalTests
 {
-    [Fact]
-    public async Task Private_cancellation_observation_waits_real_cleanup_and_retains_faulted_inner_and_public_moves()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Private_cancellation_observation_waits_real_cleanup_and_retains_faulted_inner_and_public_moves(bool cancelAdapter)
     {
         await Control(async h =>
         {
@@ -30,6 +32,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
                 Assert.True(proof.OriginalProducer.IsCanceled);
                 Assert.True(proof.OriginalResourceClose.IsCompletedSuccessfully);
                 Assert.True(proof.OriginalTurnRelease.IsCompletedSuccessfully);
+                if (cancelAdapter) Assert.True(actual.AdapterCancel!.IsCompletedSuccessfully);
                 Assert.False(source.TryObserveOriginalCancellation(actual.Bound.Handle, new AggregateException(actual.Error), actual.Token, out _));
                 var copiedHandle = new RuntimeRequestHandle(actual.Bound.Handle.RequestId, actual.Bound.Handle.SessionId,
                     actual.Bound.Handle.EndpointId, actual.Bound.Handle.AwaitResult, actual.Bound.Handle.ReadEvents);
@@ -45,7 +48,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
                 Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, proof.OriginalReaderCause));
                 h.Expect(error!);
                 Assert.True(actual.PublicMove.IsFaulted); // Response observation never changes an original into success.
-            });
+            }, cancelAdapter: cancelAdapter);
         }, remote: true, required: [ToolCapability.Text, ToolCapability.Streaming]);
     }
 
@@ -88,19 +91,68 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         }, remote: true, required: [ToolCapability.Text, ToolCapability.Streaming]);
     }
 
-    [Fact]
-    public async Task Known_original_adapter_cancel_callback_fault_refuses_private_cancellation_proof()
+    [Theory]
+    [InlineData("healthy")]
+    [InlineData("held")]
+    public async Task Known_original_adapter_cancel_callback_fault_refuses_private_cancellation_proof(string cleanup)
     {
         await Control(async h =>
         {
-            await CancellationTurn(h, 0, "healthy", true, actual =>
+            await CancellationTurn(h, 0, cleanup, true, async actual =>
             {
                 Assert.True(actual.Raw.IsCanceled);
                 Assert.False(((IDulcheOriginalCancellationSource)h.Adapter).TryObserveOriginalCancellation(
                     actual.Bound.Handle, actual.Error, actual.Token, out _));
                 Assert.NotNull(actual.AdapterCancel);
-                Assert.False(actual.AdapterCancel!.IsCompletedSuccessfully);
-                return Task.CompletedTask;
+                Assert.True(actual.AdapterCancel!.IsFaulted);
+                var callbackCause = Assert.Single(Leaves(actual.AdapterCancel.Exception!));
+                var close = h.Adapter.StopAsync(h.Endpoint, default).AsTask();
+                var error = await Record.ExceptionAsync(() => close);
+                Assert.NotNull(error); Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, callbackCause)); h.Expect(error!);
+                Assert.True(actual.AdapterCancel.IsFaulted); Assert.True(actual.Raw.IsCanceled);
+            });
+        }, required: [ToolCapability.Text, ToolCapability.Streaming]);
+    }
+
+    [Fact]
+    public async Task Other_request_cancel_callback_fault_does_not_reclassify_healthy_original_cancellation()
+    {
+        await Control(async h =>
+        {
+            await CancellationTurn(h, 0, "held", false, async actual =>
+            {
+                var source = (IDulcheOriginalCancellationSource)h.Adapter;
+                Assert.True(source.TryObserveOriginalCancellation(actual.Bound.Handle, actual.Error, actual.Token, out var proof));
+                var entered = Signal(); var raw = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var callbackFault = new IOException("other request original cancellation callback fault");
+                var stream = new OriginalStream(1);
+                stream.MoveFactory = index => { if (index == 0) return Task.FromResult(true); entered.TrySetResult(); return raw.Task; };
+                stream.CaptureToken = token => token.Register(() => { raw.TrySetCanceled(token); throw callbackFault; });
+                h.Provider.StreamFactory = (_, _) => stream;
+                var other = await h.BindAsync(stream: true);
+                var enumerator = h.Adapter.GenerateAsync(h.Endpoint, other.Request, other.Handle.RequestId, default).GetAsyncEnumerator();
+                Task<bool>? move = null;
+                try
+                {
+                    Assert.True(await enumerator.MoveNextAsync()); move = enumerator.MoveNextAsync().AsTask();
+                    await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                    var cancel = h.Adapter.CancelAsync(h.Endpoint, other.Handle.RequestId, default).AsTask();
+                    var cancelError = await Record.ExceptionAsync(() => cancel);
+                    Assert.NotNull(cancelError); Assert.True(cancel.IsFaulted);
+                    Assert.Contains(Leaves(cancelError!), cause => ReferenceEquals(cause, callbackFault)); h.Expect(cancelError!);
+                    var moveError = await Record.ExceptionAsync(() => move);
+                    Assert.NotNull(moveError); h.Expect(moveError!);
+                    if (move.Exception is { } group) foreach (var cause in group.InnerExceptions) h.Expect(cause);
+                    Assert.True(source.TryObserveOriginalCancellation(actual.Bound.Handle, actual.Error, actual.Token, out var retained));
+                    Assert.Same(proof, retained); Assert.True(cancel.IsFaulted); Assert.True(raw.Task.IsCanceled);
+                }
+                finally
+                {
+                    raw.TrySetCanceled();
+                    if (move is not null) { var error = await Record.ExceptionAsync(() => move); if (error is not null) h.Expect(error); }
+                    var disposalError = await Record.ExceptionAsync(() => enumerator.DisposeAsync().AsTask()); if (disposalError is not null) h.Expect(disposalError);
+                    stream.CapturedRegistration.Dispose();
+                }
             });
         }, required: [ToolCapability.Text, ToolCapability.Streaming]);
     }
@@ -510,7 +562,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         Task? AdapterCancel);
 
     private static async Task CancellationTurn(Harness h, int rawMode, string cleanup, bool callbackFault,
-        Func<CancellationTurnResult, Task> inspect)
+        Func<CancellationTurnResult, Task> inspect, bool cancelAdapter = false)
     {
         using var caller = new CancellationTokenSource(); var token = caller.Token;
         var entered = Signal(); var release = Signal(); var raw = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -553,11 +605,15 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
             if (rawMode == 3) move = enumerator.MoveNextAsync().AsTask();
             else { Assert.True(await enumerator.MoveNextAsync()); move = enumerator.MoveNextAsync().AsTask(); }
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
-            if (callbackFault)
+            if (callbackFault || cancelAdapter)
             {
                 cancel = h.Adapter.CancelAsync(h.Endpoint, bound.Handle.RequestId, default).AsTask();
-                var error = await Record.ExceptionAsync(() => cancel); Assert.NotNull(error);
-                Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, callbackError)); h.Expect(error!);
+                if (callbackFault)
+                {
+                    var error = await Record.ExceptionAsync(() => cancel); Assert.NotNull(error);
+                    Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, callbackError)); h.Expect(error!);
+                }
+                else await cancel;
             }
             if (!caller.IsCancellationRequested) caller.Cancel();
             if (cleanup == "held")
