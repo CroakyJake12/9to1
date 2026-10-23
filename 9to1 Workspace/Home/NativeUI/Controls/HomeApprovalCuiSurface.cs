@@ -60,6 +60,7 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         internal AuthenticatedResourceActor Actor { get; } = actor;
         internal TaskCompletionSource<HomeNativeApprovalDecisionObservation> Signal { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal Task<HomeNativeApprovalDecisionObservation> Original = null!;
+        internal DecisionDispatch? OriginalDispatch;
         internal bool ExpectedWaitCancellation;
         internal List<OperationCanceledException> OwnGuardCancellations { get; } = [];
     }
@@ -81,6 +82,18 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
     internal bool HasOriginalSettledDecision(string requestId)
     { lock (_originalSync) return _settledDecisions.ContainsKey(requestId); }
 
+    internal bool HasOriginalDecisionSource(string requestId)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_originalSync)
+        {
+            RequireOriginalCurrent(_lifetime.Token);
+            return _actor is { } actor &&
+                (_settledDecisions.TryGetValue(requestId, out var receipt) && receipt.Actor == actor ||
+                    _decisionDispatches.Any(actual => actual.RequestId == requestId && actual.Actor == actor));
+        }
+    }
+
     /// <summary>Observation only, over this actual surface's settled CUI decision. Opening,
     /// focusing, cancellation and window closure cannot manufacture a decision or grant.</summary>
     internal Task<HomeNativeApprovalDecisionObservation> ObserveOriginalDecisionAsync(string requestId, CancellationToken token)
@@ -95,13 +108,21 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
             var actor = _actor ?? throw new UnauthorizedAccessException("The original Home review actor is unavailable.");
             _decisionWaits.RemoveAll(item => item.Original.IsCompletedSuccessfully || item.ExpectedWaitCancellation && item.Original.IsCanceled);
             if (_decisionWaits.Count >= 128) throw new InvalidOperationException("Join original Home decision observations before another wait.");
-            if (!_settledDecisions.ContainsKey(requestId) &&
-                _snapshot?.PendingRequests.Any(item => item.RequestId == requestId) != true)
+            var pending = _snapshot?.PendingRequests.Any(item => item.RequestId == requestId) == true;
+            _settledDecisions.TryGetValue(requestId, out var observed);
+            if (observed is not null && observed.Actor != actor)
+                throw new UnauthorizedAccessException("The original Home decision belongs to another actor.");
+            // Capture the actual published dispatch under the same lock as its
+            // settlement. Its refresh may already have removed the pending row.
+            // A failed settled source must not turn into a generic focus refusal.
+            var dispatch = observed is null ? _decisionDispatches.LastOrDefault(actual =>
+                actual.RequestId == requestId && actual.Actor == actor && (!pending || !actual.Settlement.IsCompleted)) : null;
+            if (observed is null && !pending && dispatch is null)
                 throw new InvalidOperationException("The exact request is not owned by this original review surface.");
-            wait = new(requestId, actor);
+            wait = new(requestId, actor) { OriginalDispatch = dispatch };
             wait.Original = WaitForOriginalDecisionAsync(start.Task, wait, token);
             _decisionWaits.Add(wait);
-            if (_settledDecisions.TryGetValue(requestId, out var observed) && observed.Actor == actor)
+            if (observed is not null)
                 wait.Signal.TrySetResult(observed);
         }
         start.SetResult();
@@ -113,7 +134,8 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         await start.ConfigureAwait(false);
         using var originalPhase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, _lifetime.Token);
-        var source = wait.Signal.Task.WaitAsync(linked.Token);
+        var source = wait.OriginalDispatch is { } originalDispatch
+            ? ObserveOriginalDispatchAsync(originalDispatch, linked.Token) : wait.Signal.Task.WaitAsync(linked.Token);
         HomeNativeApprovalDecisionObservation observed;
         try { observed = await source.ConfigureAwait(false); }
         catch (Exception error)
@@ -167,6 +189,32 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         if (current != wait.Actor || observed.Actor != wait.Actor)
             throw new UnauthorizedAccessException("The original Home decision actor changed before observation.");
         return observed;
+    }
+
+    private static async Task<HomeNativeApprovalDecisionObservation> ObserveOriginalDispatchAsync(
+        DecisionDispatch actual, CancellationToken token)
+    {
+        var wait = actual.Settlement.WaitAsync(token);
+        try { await wait.ConfigureAwait(false); }
+        catch (Exception error)
+        {
+            // Cancellation belongs to this observer only when its own wait was
+            // canceled. The actual dispatch remains in independent close custody.
+            if (wait.IsCanceled && token.IsCancellationRequested && !actual.Settlement.IsCanceled && !actual.Settlement.IsFaulted)
+                throw;
+            var failure = OriginalDecisionFailure(actual.Settlement, error);
+            if (failure is OperationCanceledException)
+                failure = new AggregateException("The actual Home decision settlement canceled outside its observer wait.", failure);
+            ExceptionDispatchInfo.Capture(failure).Throw(); throw;
+        }
+        if (actual.Failure is { } originalFailure)
+        {
+            if (originalFailure is OperationCanceledException)
+                throw new AggregateException("The actual Home decision source faulted with a cancellation exception.", originalFailure);
+            ExceptionDispatchInfo.Capture(originalFailure).Throw();
+        }
+        return actual.Observation
+            ?? throw new InvalidOperationException("The original Home decision settled without its actual observation.");
     }
 
     private static bool IsOnlyOwnGuardCancellation(Exception error, IReadOnlyList<OperationCanceledException> issued)
@@ -580,7 +628,8 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         {
             if (failure is null && observation is { DecisionRecorded: true, State: not HomePermissionRequestState.PendingApproval })
                 _settledDecisions[decision.RequestId] = observation;
-            waits = _decisionWaits.Where(item => item.RequestId == decision.RequestId && item.Actor == decision.Actor).ToArray();
+            waits = _decisionWaits.Where(item => item.OriginalDispatch is null &&
+                item.RequestId == decision.RequestId && item.Actor == decision.Actor).ToArray();
         }
         // The actual dispatch (including refresh and finally-release of its gate) settled above.
         // RunContinuationsAsynchronously prevents a target action reentering this Home callback.
