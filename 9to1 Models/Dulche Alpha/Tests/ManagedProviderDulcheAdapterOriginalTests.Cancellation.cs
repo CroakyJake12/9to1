@@ -8,8 +8,10 @@ namespace Dulche.Runtime.Tests;
 
 public sealed partial class ManagedProviderDulcheAdapterOriginalTests
 {
-    [Fact]
-    public async Task Private_cancellation_observation_waits_real_cleanup_and_retains_faulted_inner_and_public_moves()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Private_cancellation_observation_waits_real_cleanup_and_retains_faulted_inner_and_public_moves(bool cancelAdapter)
     {
         await Control(async h =>
         {
@@ -45,7 +47,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
                 Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, proof.OriginalReaderCause));
                 h.Expect(error!);
                 Assert.True(actual.PublicMove.IsFaulted); // Response observation never changes an original into success.
-            });
+            }, cancelAdapter: cancelAdapter);
         }, remote: true, required: [ToolCapability.Text, ToolCapability.Streaming]);
     }
 
@@ -88,18 +90,20 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         }, remote: true, required: [ToolCapability.Text, ToolCapability.Streaming]);
     }
 
-    [Fact]
-    public async Task Known_original_adapter_cancel_callback_fault_refuses_private_cancellation_proof()
+    [Theory]
+    [InlineData("healthy")]
+    [InlineData("held")]
+    public async Task Known_original_adapter_cancel_callback_fault_refuses_private_cancellation_proof(string cleanup)
     {
         await Control(async h =>
         {
-            await CancellationTurn(h, 0, "healthy", true, actual =>
+            await CancellationTurn(h, 0, cleanup, true, actual =>
             {
                 Assert.True(actual.Raw.IsCanceled);
                 Assert.False(((IDulcheOriginalCancellationSource)h.Adapter).TryObserveOriginalCancellation(
                     actual.Bound.Handle, actual.Error, actual.Token, out _));
                 Assert.NotNull(actual.AdapterCancel);
-                Assert.False(actual.AdapterCancel!.IsCompletedSuccessfully);
+                Assert.True(actual.AdapterCancel!.IsFaulted);
                 return Task.CompletedTask;
             });
         }, required: [ToolCapability.Text, ToolCapability.Streaming]);
@@ -510,7 +514,7 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
         Task? AdapterCancel);
 
     private static async Task CancellationTurn(Harness h, int rawMode, string cleanup, bool callbackFault,
-        Func<CancellationTurnResult, Task> inspect)
+        Func<CancellationTurnResult, Task> inspect, bool cancelAdapter = false)
     {
         using var caller = new CancellationTokenSource(); var token = caller.Token;
         var entered = Signal(); var release = Signal(); var raw = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -553,11 +557,15 @@ public sealed partial class ManagedProviderDulcheAdapterOriginalTests
             if (rawMode == 3) move = enumerator.MoveNextAsync().AsTask();
             else { Assert.True(await enumerator.MoveNextAsync()); move = enumerator.MoveNextAsync().AsTask(); }
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
-            if (callbackFault)
+            if (callbackFault || cancelAdapter)
             {
                 cancel = h.Adapter.CancelAsync(h.Endpoint, bound.Handle.RequestId, default).AsTask();
-                var error = await Record.ExceptionAsync(() => cancel); Assert.NotNull(error);
-                Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, callbackError)); h.Expect(error!);
+                if (callbackFault)
+                {
+                    var error = await Record.ExceptionAsync(() => cancel); Assert.NotNull(error);
+                    Assert.Contains(Leaves(error!), cause => ReferenceEquals(cause, callbackError)); h.Expect(error!);
+                }
+                else await cancel;
             }
             if (!caller.IsCancellationRequested) caller.Cancel();
             if (cleanup == "held")
