@@ -486,7 +486,7 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
         {
             var review = typeof(HomeNativeApprovalWindowOwner).GetField("_current", flags)!.GetValue(owner)!;
             var originals = Assert.IsAssignableFrom<IEnumerable<Task>>(review.GetType().GetProperty("Focuses", flags)!.GetValue(review));
-            return Assert.Single(originals.Where(original => !original.IsCompletedSuccessfully));
+            return Assert.Single(originals, original => !original.IsCompletedSuccessfully);
         }
     }
 
