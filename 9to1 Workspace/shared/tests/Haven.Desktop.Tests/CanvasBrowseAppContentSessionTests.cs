@@ -6,6 +6,7 @@ using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Browser;
+using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
 using HavenOS.Apps.Browse;
