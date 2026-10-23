@@ -294,23 +294,24 @@ public sealed partial class App : Avalonia.Application
 #endif
 
 #if !ANDROID
-            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>().InitializeAsync(CancellationToken.None)));
+            if (!await TryAwaitOriginalStartupContinuationAsync(original,
+                () => services.GetRequiredService<Haven.Desktop.Overlay.OverlayWorkspaceController>().InitializeAsync(CancellationToken.None))) return;
 #endif
             // Scheduled Tasks have no parallel automation delivery loop.
 
             if (recoveryState.IsSafeMode)
             {
-                AcquireOriginalAppSynchronous(original, () =>
+                if (!TryInvokeOriginalStartupContinuation(original, () =>
                 {
                     services.GetRequiredService<NotificationService>().Show(
                         "9to1 recovery safe mode",
                         recoveryState.Reason + " Local Ollama chat and read-only workspace inspection remain available.",
                         ToastKind.Warning, TimeSpan.FromSeconds(30));
-                    return true;
-                });
+                })) return;
             }
 
-            await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => recovery.MarkStartupCompletedAsync(CancellationToken.None)));
+            if (!await TryAwaitOriginalStartupContinuationAsync(original,
+                () => recovery.MarkStartupCompletedAsync(CancellationToken.None))) return;
 
             // Optional Mesh warmup must not delay interactive readiness; data-safety
             // work above stays on the critical path, Mesh does not.
@@ -318,20 +319,21 @@ public sealed partial class App : Avalonia.Application
             {
                 try
                 {
-                    await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => services.GetRequiredService<MeshCoordinator>().InitialiseAsync(CancellationToken.None)));
+                    if (!await TryAwaitOriginalStartupContinuationAsync(original,
+                        () => services.GetRequiredService<MeshCoordinator>().InitialiseAsync(CancellationToken.None))) return;
                 }
                 catch (Exception meshException)
                 {
                     original.Retain(meshException); // Optional UI startup tolerance is not a clean original drain.
                     try
                     {
-                        await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
+                        if (!await TryAwaitOriginalStartupContinuationAsync(original,
                             () => (_productionDiagnostics ?? services.GetRequiredService<IProductionDiagnostics>()).WriteAsync(
                                 ReliabilitySeverity.Warning,
                                 "mesh",
                                 "startup-unavailable",
                                 meshException.ToString(),
-                                cancellationToken: CancellationToken.None).AsTask()));
+                                cancellationToken: CancellationToken.None).AsTask())) return;
                     }
                     catch (Exception diagnosticFailure)
                     {
@@ -363,7 +365,8 @@ public sealed partial class App : Avalonia.Application
             {
                 try
                 {
-                    await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => LogExceptionAsync("startup-failed", ex, correlationId)));
+                    if (!await TryAwaitOriginalStartupContinuationAsync(original,
+                        () => LogExceptionAsync("startup-failed", ex, correlationId))) return;
                 }
                 catch (Exception diagnosticFailure)
                 {
@@ -372,23 +375,54 @@ public sealed partial class App : Avalonia.Application
             }
 
             var userMessage = $"9to1 could not finish starting. Diagnostic reference: {correlationId}.";
-            AcquireOriginalAppSynchronous(original, () => { shell?.SetStartupError(userMessage); return true; });
+            if (!TryInvokeOriginalStartupContinuation(original, () => shell?.SetStartupError(userMessage))) return;
             if (shell is null && _actualUnifiedWorkspace is not null)
-                _actualUnifiedWorkspace.ShowStartupFailureForHost(correlationId, ex);
+                if (!TryInvokeOriginalStartupContinuation(original,
+                    () => _actualUnifiedWorkspace.ShowStartupFailureForHost(correlationId, ex))) return;
             try
             {
-                AcquireOriginalAppSynchronous(original, () =>
+                if (!TryInvokeOriginalStartupContinuation(original, () =>
                 {
                     _services?.GetService<NotificationService>()?.Show(
                         "9to1 startup problem", userMessage, ToastKind.Error, TimeSpan.FromSeconds(30));
-                    return true;
-                });
+                })) return;
             }
             catch (Exception toastFailure)
             {
                 original.Retain(toastFailure); // Persistent UI status still exists; failed original remains inspectable.
             }
         }
+    }
+
+    // This adapter preserves each actual startup source and its original owner.
+    // Its result reports source admission, never product or route readiness.
+    internal bool TryInvokeOriginalStartupContinuation(DesktopOriginalWorkLifetime.Original original, Action actualSource)
+    {
+        AcquireOriginalAppSynchronous(original, () => { actualSource(); return true; });
+        return true;
+    }
+
+    internal async Task<bool> TryAwaitOriginalStartupContinuationAsync(
+        DesktopOriginalWorkLifetime.Original original, Func<Task> actualSource)
+    {
+        Task? actual = null;
+        Exception? admissionFailure = null;
+        try
+        {
+            TryInvokeOriginalStartupContinuation(original, () =>
+                actual = actualSource() ?? throw new InvalidOperationException("The original startup source supplied no Task."));
+        }
+        catch (Exception cause) { original.Retain(cause); admissionFailure = cause; }
+        // A source may have returned work before its enclosing publication scope
+        // failed. Join that SAME acquired Task outside the finite source callback.
+        if (actual is not null)
+        {
+            try { await original.AwaitAsync(actual); }
+            catch (Exception cause) { admissionFailure ??= cause; }
+        }
+        if (admissionFailure is not null)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(admissionFailure).Throw();
+        return actual is not null;
     }
 
     /// <summary>Runs the verified bundled-model bootstrap/readiness under an OWNED TRACKED background
