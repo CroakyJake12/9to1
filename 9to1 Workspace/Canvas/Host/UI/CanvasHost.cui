@@ -1,29 +1,86 @@
 <Cui id="9to1.Canvas.NativeHost" version="1">
+  <Variable Type="bool" ID="ShowStart">True</Variable>
+  <Variable Type="bool" ID="ShowWorkspace">False</Variable>
+  <Variable Type="commandstate" ID="OpenResult" />
+  <Variable Type="commandstate" ID="StartResult" />
+  <Actions>
+    <Action name="OpenCanvasItem" command="canvas.host.openItem" parameter="{Binding canvas}" result="OpenResult">
+      <Set Target="ShowStart" Value="False" When="{Binding OpenResult.Succeeded}" />
+      <Set Target="ShowWorkspace" Value="True" When="{Binding OpenResult.Succeeded}" />
+    </Action>
+    <Action name="ResumeCanvas" command="canvas.host.resume" result="OpenResult">
+      <Set Target="ShowStart" Value="False" When="{Binding OpenResult.Succeeded}" />
+      <Set Target="ShowWorkspace" Value="True" When="{Binding OpenResult.Succeeded}" />
+    </Action>
+    <Action name="FinishCanvasRequest" command="canvas.host.finish" result="OpenResult">
+      <Set Target="ShowStart" Value="False" When="{Binding OpenResult.Succeeded}" />
+      <Set Target="ShowWorkspace" Value="True" When="{Binding OpenResult.Succeeded}" />
+    </Action>
+    <Action name="ShowCanvasStart" command="canvas.host.start" result="StartResult">
+      <Set Target="ShowWorkspace" Value="False" When="{Binding StartResult.Succeeded}" />
+      <Set Target="ShowStart" Value="True" When="{Binding StartResult.Succeeded}" />
+    </Action>
+  </Actions>
   <Page>
-    <Container id="canvas-native-host" accessible-name="Canvas" Type="Grid" RowSizes="Auto Auto 1fr Auto" ColumnSizes="2fr 1fr">
-      <Container orientation="Horizontal" Type="Wrap" ColumnSpan="2">
-        <Button content="Refresh Canvases" action="canvas.host.refresh" Interactive="{Binding CanNavigate}" />
-        <Button content="Set up Canvases" action="canvas.host.setup" Interactive="{Binding CanSetup}" />
-        <Button content="Review Files ownership" action="canvas.host.reviewOwnership" Interactive="{Binding CanReviewWorkspace}" />
-        <Button content="Create canvas" action="canvas.host.create" Interactive="{Binding CanWrite}" />
-        <Button content="Finish approved request" action="canvas.host.finish" Interactive="{Binding CanFinish}" />
-      </Container>
-      <Container Type="Vertical Stack" Row="1" ColumnSpan="2" CellGap="6">
-        <Container Type="Horizontal Stack" CellGap="8">
-          <Button content="Previous document" action="canvas.host.previous" Interactive="{Binding CanPrevious}" />
-          <Text text="{Binding SelectedName}" />
-          <Button content="Next document" action="canvas.host.next" Interactive="{Binding CanNext}" />
-          <Button content="Open selected" action="canvas.host.open" Interactive="{Binding CanOpen}" />
-          <Button content="Next page" action="canvas.host.page" Interactive="{Binding CanPage}" />
+    <Container id="canvas-native-host" accessible-name="Canvas" Type="Grid" RowSizes="1fr Auto" ColumnSizes="1fr Auto" background="{Resource CuiBackgroundBrush}">
+      <Container id="canvas-launch" accessible-name="Canvas start" Type="Overlay" Row="0" Column="0" Active="{Binding ShowStart}" VerticalScrolling="True">
+        <Container Type="Vertical Stack" max-width="1040" margin="32" horizontal-alignment="Center" CellGap="20">
+          <Container Type="Vertical Stack" CellGap="6">
+            <Text text="Canvas" font-size="34" font-weight="Bold" />
+            <Text text="A place to write, sketch and work through ideas." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="8" Active="{Binding CanResume}">
+            <Text text="Continue editing" font-weight="SemiBold" />
+            <Button id="canvas-resume" content="{Binding OpenedName}" action="ResumeCanvas" accessible-name="Resume the retained Canvas document" horizontal-alignment="Left" padding="18,12" Interactive="{Binding CanResume}" />
+          </Container>
+          <Container Type="Vertical Stack" CellGap="10">
+            <Text text="Create a canvas" font-size="20" font-weight="SemiBold" />
+            <Container Type="Wrap" CellGap="10">
+              <Input id="canvas-host-new-name" accessible-name="New canvas name" Type="Text" Value="{Binding NewName, Mode=TwoWay}" min-width="240" Interactive="{Binding CanWrite}" />
+              <Button id="canvas-create" content="Create canvas" action="canvas.host.create" padding="18,10" Interactive="{Binding CanWrite}" />
+            </Container>
+          </Container>
+          <Container Type="Vertical Stack" CellGap="12">
+            <Text text="Your canvases" font-size="20" font-weight="SemiBold" />
+            <Container Type="Wrap" CellGap="10">
+              <Input id="canvas-search-query" accessible-name="Search canvases" Type="Text" Value="{Binding SearchQuery, Mode=TwoWay}" min-width="240" Interactive="{Binding CanSearch}" />
+              <Button id="canvas-search" content="Search" action="canvas.host.search" Interactive="{Binding CanSearch}" />
+              <Button content="Refresh" action="canvas.host.refresh" Interactive="{Binding CanNavigate}" />
+            </Container>
+            <Text text="No canvases match this view. Create a canvas or change your search." foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" Active="{Binding HasNoDocuments}" />
+            <Container id="canvas-launch-cards" Type="Wrap" CellGap="12">
+              <Repeat Source="{Binding Canvases}" As="canvas" Key="{Binding canvas.Id}">
+                <Button action="OpenCanvasItem" accessible-name="{Binding canvas.Name}" width="280" padding="20" corner-radius="16" horizontal-content-alignment="Left" Interactive="{Binding CanOpen}">
+                  <Container Type="Vertical Stack" CellGap="8">
+                    <Text text="{Binding canvas.Name}" font-size="18" font-weight="SemiBold" text-wrapping="Wrap" />
+                    <Text text="{Binding canvas.Modified}" foreground="{Resource CuiTextSoftBrush}" />
+                  </Container>
+                </Button>
+              </Repeat>
+            </Container>
+            <Button content="More canvases" action="canvas.host.page" horizontal-alignment="Left" Active="{Binding HasMoreDocuments}" Interactive="{Binding CanPage}" />
+          </Container>
+          <Container Type="Wrap" CellGap="10">
+            <Button content="Set up Canvases" action="canvas.host.setup" Active="{Binding CanSetup}" Interactive="{Binding CanSetup}" />
+            <Button content="Review Files ownership" action="canvas.host.reviewOwnership" Active="{Binding CanReviewWorkspace}" Interactive="{Binding CanReviewWorkspace}" />
+          </Container>
         </Container>
-        <Container Type="Horizontal Stack" CellGap="8">
-          <Text text="New canvas name" />
-          <Input id="canvas-host-new-name" accessible-name="New canvas name" Type="Text" Value="{Binding NewName, Mode=TwoWay}" Interactive="{Binding CanWrite}" />
-        </Container>
       </Container>
-      <Container id="canvas-native-content" accessible-name="Canvas document and requests" Type="Overlay" Row="2" />
-      <Container id="canvas-home-approvals" accessible-name="Home approvals" Type="Overlay" Row="2" Column="1" />
-      <Text text="{Binding Status}" text-wrapping="Wrap" Row="3" ColumnSpan="2" />
+      <Container id="canvas-active-workspace" accessible-name="Canvas editor" Type="Grid" RowSizes="Auto 1fr" Row="0" Column="0" Active="{Binding ShowWorkspace}">
+        <Container Type="Horizontal Stack" CellGap="8" padding="12,8">
+          <Button id="canvas-return-start" content="All canvases" accessible-name="Return to Canvas start without closing this document" action="ShowCanvasStart" Interactive="{Binding CanReturnStart}" />
+        </Container>
+        <Container Type="Vertical Stack" Row="1" margin="24" Active="{Binding HasNoRetainedCanvas}">
+          <Text text="This Canvas is no longer available. Return to your canvases to reopen its current version." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+        </Container>
+        <Container id="canvas-native-content" accessible-name="Active Canvas document" Type="Overlay" Row="1" Active="{Binding HasRetainedCanvas}" />
+      </Container>
+      <Container Type="Vertical Stack" Row="0" Column="1" width="340" CellGap="10" padding="16" Active="{Binding HasPendingRequest}">
+        <Text text="Review this Canvas request" font-size="18" font-weight="SemiBold" />
+        <Container id="canvas-home-approvals" accessible-name="Home approvals" Type="Overlay" />
+        <Button content="Finish approved request" action="FinishCanvasRequest" Interactive="{Binding CanFinish}" />
+      </Container>
+      <Text text="{Binding Status}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" margin="16,8" Row="1" ColumnSpan="2" />
     </Container>
   </Page>
 </Cui>

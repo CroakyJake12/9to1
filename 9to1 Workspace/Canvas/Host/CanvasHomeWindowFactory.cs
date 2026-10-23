@@ -25,7 +25,9 @@ public sealed class CanvasHomeWindowFactory
     private void DemandOriginal()
     {
         _process.ThrowIfCancellationRequested();
-        if (!OperatingSystem.IsWindows() || !_process.CanBeCanceled ||
+        // The same Home composition owns an explicit Linux process bootstrap as well as
+        // the Windows producer. This borrowed-window port issues no installed-app grant.
+        if (!(OperatingSystem.IsWindows() || OperatingSystem.IsLinux()) || !_process.CanBeCanceled ||
             !ReferenceEquals(_home.Services.GetService(typeof(HomeCoreRuntime)), _home.Runtime) ||
             !ReferenceEquals(_home.Services.GetService(typeof(IAuthenticatedResourceActorSource)), _home.Profiles) ||
             !ReferenceEquals(_home.Services.GetService(typeof(HomeResourceOperationBroker)), _home.Broker) ||

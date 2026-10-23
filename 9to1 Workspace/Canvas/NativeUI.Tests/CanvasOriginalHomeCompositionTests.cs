@@ -9,12 +9,46 @@ using Xunit;
 
 namespace HavenOS.Apps.Canvas.NativeUI.Tests;
 
-/// <summary>Actual Windows OS profile, private Home broker, File state and owned Files store.
+/// <summary>Actual OS profile, private Home broker, File state and owned Files store.
 /// No GUI/native-engine/installed-domain acceptance is inferred from these guard controls.</summary>
 public sealed class CanvasOriginalHomeCompositionTests
 {
     private sealed class WindowsFactAttribute : FactAttribute
     { public WindowsFactAttribute() { if (!OperatingSystem.IsWindows()) Skip = "Requires the actual Windows Home producer."; } }
+    private sealed class LinuxFactAttribute : FactAttribute
+    { public LinuxFactAttribute() { if (!OperatingSystem.IsLinux()) Skip = "Requires the actual Linux Home process bootstrap."; } }
+
+    [LinuxFact]
+    public async Task Linux_factory_accepts_the_same_original_Home_Files_tuple()
+    {
+        // Rig starts the actual OS-profile Home producer and binds its real Files store.
+        // Constructor admission does not create an Rnote window or attest its native ABI.
+        await using var original = await Rig.CreateAsync();
+        _ = new CanvasHomeWindowFactory(original.Home, original.Files, original.Authority, original.Process.Token);
+    }
+
+    [LinuxFact]
+    public async Task Linux_factory_refuses_foreign_Home_Files_tuples()
+    {
+        await using var original = await Rig.CreateAsync(); await using var foreign = await Rig.CreateAsync();
+        Assert.Throws<UnauthorizedAccessException>(() => new CanvasHomeWindowFactory(original.Home, foreign.Files, foreign.Authority, original.Process.Token));
+        Assert.Throws<UnauthorizedAccessException>(() => new CanvasHomeWindowFactory(foreign.Home, original.Files, original.Authority, foreign.Process.Token));
+    }
+
+    [LinuxFact]
+    public async Task Linux_factory_refuses_an_uncancellable_original_process()
+    {
+        await using var original = await Rig.CreateAsync();
+        Assert.Throws<UnauthorizedAccessException>(() => new CanvasHomeWindowFactory(original.Home, original.Files, original.Authority, CancellationToken.None));
+    }
+
+    [LinuxFact]
+    public async Task Linux_factory_refuses_a_cancelled_original_process()
+    {
+        await using var original = await Rig.CreateAsync();
+        original.Process.Cancel();
+        Assert.ThrowsAny<OperationCanceledException>(() => new CanvasHomeWindowFactory(original.Home, original.Files, original.Authority, original.Process.Token));
+    }
 
     [WindowsFact]
     public async Task Factory_refuses_foreign_Home_Files_tuple_and_canceled_original_process()
