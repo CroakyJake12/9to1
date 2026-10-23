@@ -126,18 +126,36 @@ public sealed class CanvasOriginalWorkOwner : IAsyncDisposable
     {
         if (source is null) { _lifetime.Cancel(); return; }
         var thread = Environment.CurrentManagedThreadId;
-        var active = true; var invoked = false;
+        var active = true; var invoked = false; InvalidOperationException? refusal = null;
         try
         {
             source(() =>
             {
-                if (!active || invoked || Environment.CurrentManagedThreadId != thread)
-                    throw new InvalidOperationException("Invoke actual Canvas cancellation once inside its finite original host source.");
-                invoked = true; _lifetime.Cancel();
+                try
+                {
+                    lock (_gate)
+                    {
+                        if (!active || invoked || Environment.CurrentManagedThreadId != thread)
+                        {
+                            refusal ??= new InvalidOperationException("Invoke actual Canvas cancellation once inside its finite original host source.");
+                            throw refusal;
+                        }
+                        invoked = true;
+                    }
+                    _lifetime.Cancel();
+                }
+                catch (Exception error)
+                {
+                    // The host may catch this exact callback failure or refusal. Its
+                    // propagation is independent of this owner's retained failure custody.
+                    lock (_gate) Add(_sourceErrors, error);
+                    throw;
+                }
             });
-            if (!invoked) throw new InvalidOperationException("The original Canvas host did not invoke actual cancellation.");
+            lock (_gate)
+                if (!invoked) throw new InvalidOperationException("The original Canvas host did not invoke actual cancellation.");
         }
-        finally { active = false; }
+        finally { lock (_gate) active = false; }
     }
     public ValueTask DisposeAsync() => new(CloseAndDrainAsync());
     private void Capture(List<Exception> errors, Task? actual, Exception caught)
