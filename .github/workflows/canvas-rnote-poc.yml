@@ -66,9 +66,7 @@ jobs:
     timeout-minutes: 60
     env:
       RUST_TOOLCHAIN: 1.92.0
-      CARGO_TARGET_DIR: ${{ runner.temp }}/canvas-rnote-target
       CARGO_BUILD_JOBS: 2
-      DIAGNOSTICS: ${{ runner.temp }}/canvas-rnote-evidence
       TARGET: ${{ matrix.target }}
       EXPECTED_ARCH: ${{ matrix.arch }}
     defaults:
@@ -81,6 +79,9 @@ jobs:
       - name: Verify native host and retain exact candidate inputs
         run: |
           set -euo pipefail
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/canvas-rnote-target"
+          export DIAGNOSTICS="$RUNNER_TEMP/canvas-rnote-evidence"
+          printf '%s\n' "CARGO_TARGET_DIR=$CARGO_TARGET_DIR" "DIAGNOSTICS=$DIAGNOSTICS" >> "$GITHUB_ENV"
           mkdir -p "$DIAGNOSTICS"
           exec > >(tee "$DIAGNOSTICS/preflight.log") 2>&1
           test "$(uname -m)" = "$EXPECTED_ARCH"

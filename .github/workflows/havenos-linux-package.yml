@@ -25,7 +25,6 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
       NATIVE_DOTNET_VERSION: '10.0.301'
-      PREVIEW_INPUT_CACHE: ${{ runner.temp }}/9to1-pinned-inputs
     steps:
       # This workflow only has same-repository GitHub custody configured. The
       # actual source repository is PUBLIC, so packaging must remain blocked
@@ -39,6 +38,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export PREVIEW_INPUT_CACHE="$RUNNER_TEMP/9to1-pinned-inputs"
+          printf '%s\n' "PREVIEW_INPUT_CACHE=$PREVIEW_INPUT_CACHE" >> "$GITHUB_ENV"
           unset GH_DEBUG
           mkdir -p "$RUNNER_TEMP/arm-custody"
           gh api --hostname github.com repos/CroakyJake12/9to1 > "$RUNNER_TEMP/arm-custody/admission-repository.json"

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "source": "Direct owner messages in Root conversation on23October2026",
+  "recorded_at": "2026-10-23T15:54:13.914224+00:00",
+  "owner_quotes": [
+    "generate missing icons in the same style as the existing ones. swap canvas' for a whiteboard-style icon and give canvas' icon to create",
+    "also make the app icons substantially larger"
+  ],
+  "requirements": [
+    "Generate missing app icons matching the existing owner-provided icon family. Preserve existing owner artwork and its provenance.",
+    "Canvas uses a whiteboard-style icon. Create reuses the exact previous Canvas artwork.",
+    "Make app tile icons substantially larger while preserving readable labels, centered alignment, light/dark contrast and supported viewport layouts."
+  ],
+  "scope": "Refinement of the current Home app catalogue screenshot and its shared app/group presentation. Preserve canonical app identities, catalogue, actions and the one shared standalone/Haven implementation.",
+  "implementation_notes": "An actual inspected owner ZIP contains themed PNG artwork. This request does not require replacing that functioning decoder or calling existing raster assets SVG. A56px tile glyph is an engineering choice, not a quoted owner size. No toolbar/navigation size change is implied.",
+  "authority": "Later explicit owner refinement; canonical product specification and seven acceptance criteria remain in force.",
+  "acceptance": "Verify actual icon resolver mappings, light/dark artwork, Canvas/Createreuse, missing-icon coverage, native/CUI rendering, geometry and accessibility. Generation/source review alone is not UI or release acceptance."
+}

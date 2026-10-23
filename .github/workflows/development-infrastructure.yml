@@ -9,6 +9,7 @@ on:
       - 'docs/development/**'
       - '.github/workflows/development-infrastructure.yml'
       - '.github/workflows/havenos-linux-package.yml'
+      - '.github/workflows/canvas-rnote-poc.yml'
   push:
     paths:
       - 'eng/development/**'
@@ -17,6 +18,7 @@ on:
       - 'docs/development/**'
       - '.github/workflows/development-infrastructure.yml'
       - '.github/workflows/havenos-linux-package.yml'
+      - '.github/workflows/canvas-rnote-poc.yml'
   workflow_dispatch:
 
 permissions:
@@ -69,7 +71,7 @@ jobs:
           files = {p for root in ('eng/development', 'eng/release-delivery', 'docs/development')
                    for p in pathlib.Path(root).rglob('*') if p.is_file()}
           files.update(pathlib.Path(p) for p in ('AGENTS.md', '.github/workflows/development-infrastructure.yml',
-                                                '.github/workflows/havenos-linux-package.yml'))
+                                                '.github/workflows/havenos-linux-package.yml', '.github/workflows/canvas-rnote-poc.yml'))
           result = {
               'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
               'python': platform.python_version(),
