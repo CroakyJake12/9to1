@@ -76,6 +76,9 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         internal List<(Exception Wrapper, Exception[] Causes)> ProducedShowFailures { get; } = [];
         internal CuiControlLoader? Loader;
         internal Control? Root;
+        // A failure banner decorates the same primary Root; it never becomes a new
+        // action owner. Retain the exact composed mount separately from that root.
+        internal Grid? FailureLayout;
         internal Avalonia.Controls.ResourceDictionary? Resources;
         internal CuiSceneThemeBinding? ThemeBinding;
         internal Task? Actions;
@@ -138,7 +141,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                 publication.Generation != Interlocked.Read(ref _generation) ||
                 publication.Retired || publication.DisposeAttempted || publication.Loader is null || publication.Root is null ||
                 !ReferenceEquals(_loader, publication.Loader) || !ReferenceEquals(_contentLoader, publication.Loader) ||
-                !ReferenceEquals(_contentRoot, publication.Root) || !ReferenceEquals(Content, publication.Root))
+                !HasSameMountedOriginalRoot(publication))
                 throw new InvalidOperationException("Only the same live mounted guarded scene can capture its action settlement.");
         }
     }
@@ -349,6 +352,18 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
         if (loader is null) return null;
         lock (_originalGate)
             return _originalPublications.FirstOrDefault(publication => ReferenceEquals(publication.Loader, loader));
+    }
+
+    // Pure identity checks only. A host-owned banner may wrap the original root, but
+    // detached/foreign Content or a substituted child must never acquire capture authority.
+    private bool HasSameMountedOriginalRoot(OriginalPublication publication)
+    {
+        var mounted = (Control?)publication.FailureLayout ?? publication.Root;
+        if (mounted is null || !ReferenceEquals(_contentRoot, mounted) || !ReferenceEquals(Content, mounted)) return false;
+        if (publication.FailureLayout is not { } layout) return true;
+        var banner = PublicationFor(_failureLoader);
+        return layout.Children.Count == 2 && ReferenceEquals(layout.Children[1], publication.Root) &&
+            banner is { Retired: false, DisposeAttempted: false } && ReferenceEquals(banner.Root, layout);
     }
 
     private async Task<CuiSceneAvailability> ShowCoreAsync(CuiNativeScene scene, OriginalPublication? publication,
@@ -613,6 +628,10 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
             publication = AdmitOriginalBanner();
             errors = publication.Errors;
             DemandPublicationCurrent(generation, isPublicationCurrent, CancellationToken.None, publication);
+            if (originalOwner is null || originalOwner.Retired || originalOwner.DisposeAttempted ||
+                !ReferenceEquals(originalOwner.Loader, sender) || !ReferenceEquals(_contentLoader, sender) ||
+                !HasSameMountedOriginalRoot(originalOwner))
+                throw new InvalidOperationException("Only the same mounted primary CUI scene can acquire its failure banner.");
             Publish(() => LastActionFailure = failure);
             Publish(() => Diagnostics = Diagnostics.Append(new CuiDiagnostic(failure.Code,
                 failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error, failure.Message, default)).ToArray());
@@ -638,6 +657,7 @@ public sealed class CuiSceneHost : ContentControl, IDisposable
                     Publish(() => layout.Children.Add(original));
                 }
                 publication.Root = layout;
+                originalOwner.FailureLayout = layout;
                 _contentLoader = sender; _contentRoot = layout;
                 Publish(() => Content = layout);
             }

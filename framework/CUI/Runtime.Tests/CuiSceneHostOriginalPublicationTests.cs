@@ -123,6 +123,113 @@ public sealed class CuiSceneHostOriginalPublicationTests
         });
     }
 
+    [Fact]
+    public async Task Actual_failure_banner_preserves_same_primary_capture_held_actions_repeated_banner_and_both_loader_drains()
+    {
+        await RunAsync(async rig =>
+        {
+            var cause = new InvalidOperationException("Original action behind the same mounted failure banner.");
+            var action = new BannerSequenceAction(cause);
+            _ = rig.Track(action.Failed); _ = rig.Track(action.Held.Task); rig.Release(() => action.Held.TrySetResult()); rig.Expect(cause);
+            var bindings = new OriginalBindings();
+            Task<CuiSceneAvailability>? show = null;
+            CuiControlLoader? primary = null, banner = null; Button? root = null; Task? observed = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene(actions: action, bindings: bindings) with
+            { IsPublicationCurrent = () => true })));
+            await show!;
+            await rig.Ui(() =>
+            {
+                primary = Field<CuiControlLoader>(rig.Host, "_loader"); root = Assert.IsType<Button>(rig.Host.Content);
+                root.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); observed = rig.Track(primary.WhenActionsIdleAsync());
+            });
+            Assert.Same(cause, await Record.ExceptionAsync(() => observed!));
+            await rig.Ui(() =>
+            {
+                var layout = Assert.IsType<Grid>(rig.Host.Content);
+                Assert.Same(root, layout.Children[1]); Assert.Same(primary, Field<CuiControlLoader>(rig.Host, "_loader"));
+                banner = Field<CuiControlLoader>(rig.Host, "_failureLoader"); Assert.NotSame(primary, banner);
+                observed = rig.Track(rig.Host.CaptureOriginalActionSettlement(show!));
+            });
+            Assert.Same(cause, await Record.ExceptionAsync(() => observed!)); // After banner publication, not before.
+            await rig.Ui(() =>
+            {
+                root!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                observed = rig.Track(rig.Host.CaptureOriginalActionSettlement(show!));
+                Assert.False(observed.IsCompleted); // SAME primary pipeline includes the second actual held source.
+            });
+            Assert.Equal(2, action.Calls); action.Held.SetResult();
+            Assert.Same(cause, await Record.ExceptionAsync(() => observed!));
+            await rig.Ui(() =>
+            {
+                root!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                observed = rig.Track(primary!.WhenActionsIdleAsync());
+            });
+            Assert.Same(cause, await Record.ExceptionAsync(() => observed!));
+            await rig.Ui(() =>
+            {
+                Assert.Equal(3, action.Calls);
+                Assert.Same(primary, Field<CuiControlLoader>(rig.Host, "_loader"));
+                Assert.Same(banner, Field<CuiControlLoader>(rig.Host, "_failureLoader"));
+                Assert.Same(root, Assert.IsType<Grid>(rig.Host.Content).Children[1]);
+                observed = rig.Track(rig.Host.CaptureOriginalActionSettlement(show!));
+            });
+            Assert.Same(cause, await Record.ExceptionAsync(() => observed!));
+            Task? close = null;
+            await rig.Ui(() => close = rig.Track(rig.Host.CloseOriginalAsync()));
+            Assert.Same(cause, await Record.ExceptionAsync(() => close!));
+            await rig.Ui(() =>
+            {
+                Assert.Null(rig.Host.Content); Assert.Equal(1, bindings.Removes);
+                var primaryDrain = Field<Task>(primary!, "_disposalTask"); var bannerDrain = Field<Task>(banner!, "_disposalTask");
+                Assert.True(primaryDrain.IsFaulted); Assert.True(bannerDrain.IsCompletedSuccessfully);
+                Assert.Same(close, rig.Host.CloseOriginalAsync());
+                Assert.Same(primaryDrain, Field<Task>(primary!, "_disposalTask"));
+                Assert.Same(bannerDrain, Field<Task>(banner!, "_disposalTask"));
+            });
+        });
+    }
+
+    [Theory]
+    [InlineData("detached")]
+    [InlineData("substituted-child")]
+    [InlineData("owner-withdrawn")]
+    [InlineData("replacement")]
+    [InlineData("closing")]
+    public async Task Failure_banner_never_allows_detached_substituted_retired_or_replaced_primary_capture(string change)
+    {
+        await RunAsync(async rig =>
+        {
+            var cause = new InvalidOperationException("Original banner guard control.");
+            var action = new BannerSequenceAction(cause); _ = rig.Track(action.Failed); rig.Expect(cause);
+            var current = true; Task<CuiSceneAvailability>? show = null; Task? pipeline = null;
+            await rig.Ui(() => show = rig.Track(rig.Host.ShowAsync(Scene(actions: action) with { IsPublicationCurrent = () => current })));
+            await show!;
+            await rig.Ui(() =>
+            {
+                Assert.IsType<Button>(rig.Host.Content).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                pipeline = rig.Track(Field<CuiControlLoader>(rig.Host, "_loader").WhenActionsIdleAsync());
+            });
+            Assert.Same(cause, await Record.ExceptionAsync(() => pipeline!));
+            Task<CuiSceneAvailability>? replacement = null; Task? close = null;
+            await rig.Ui(() =>
+            {
+                var layout = Assert.IsType<Grid>(rig.Host.Content);
+                switch (change)
+                {
+                    case "detached": rig.Host.Content = new TextBlock { Text = "Unowned replacement" }; break;
+                    case "substituted-child": layout.Children.RemoveAt(1); layout.Children.Add(new Button()); break;
+                    case "owner-withdrawn": current = false; break;
+                    case "replacement": replacement = rig.Track(rig.Host.ShowAsync(Scene(markup: "<Cui><Text text=\"Replacement\" /></Cui>") with { IsPublicationCurrent = () => true })); break;
+                    case "closing": close = rig.Track(rig.Host.CloseOriginalAsync()); break;
+                }
+                Assert.Throws<InvalidOperationException>(() => { _ = rig.Host.CaptureOriginalActionSettlement(show!); });
+            });
+            if (replacement is not null) await replacement;
+            if (close is not null) Assert.Same(cause, await Record.ExceptionAsync(() => close));
+            await rig.Ui(() => Assert.Throws<InvalidOperationException>(() => { _ = rig.Host.CaptureOriginalActionSettlement(show!); }));
+        });
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -1127,6 +1234,15 @@ public sealed class CuiSceneHostOriginalPublicationTests
         internal void Complete() => _original.TrySetResult(new(CuiSceneAvailabilityState.Ready, "ready", "Original ready."));
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken)
         { Calls++; return new(Original); }
+    }
+
+    private sealed class BannerSequenceAction(Exception cause) : ICuiActionDispatcher
+    {
+        internal Task Failed { get; } = Task.FromException(cause);
+        internal TaskCompletionSource Held { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal int Calls { get; private set; }
+        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
+            new(++Calls == 2 ? Held.Task : Failed);
     }
 
     private sealed class HeldAction : ICuiActionDispatcher
