@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Browser;
@@ -336,6 +337,182 @@ public sealed class SpacesConversationRouteTests
         finally { await session!.CloseAndDrainAsync().WaitAsync(Bound); }
     }
 
+    // The owner's Space entry is deliberately different from explicit conversation history.
+    // Exercise the same dispatcher used by the rail and Open control, including revisiting a Space.
+    [AvaloniaTheory]
+    [InlineData("spaces.select")]
+    [InlineData("spaces.open")]
+    public async Task Opening_or_selecting_a_Space_always_starts_a_fresh_chat_and_retains_prior_work(string command)
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+            await spaces.DispatchAsync(command, SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var first = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var firstId = first.ConversationId;
+            var original = rig.Written[firstId];
+            first.SetDraft("Retained unsent draft while selecting another new chat");
+
+            await spaces.DispatchAsync(command, SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var second = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotSame(first, second);
+            Assert.NotEqual(firstId, second.ConversationId);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, second.CurrentConversation.SpaceId);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, spaces.Controller.State.Selection?.Id);
+            Assert.Equal(original, rig.Written[firstId]);
+            Assert.Equal(firstId, first.ConversationId);
+            Assert.Equal("Retained unsent draft while selecting another new chat", RouteScene(first).Input.Text);
+            Assert.Equal(string.Empty, RouteScene(second).Input.Text);
+            Assert.Same(spaces, root.Content); // Same authored rail + contextual sidebar owner.
+
+            await spaces.DispatchAsync(command, SpaceRegistry.StudySpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var study = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.Equal(SpaceRegistry.StudySpaceId, study.CurrentConversation.SpaceId);
+            await spaces.DispatchAsync(command, SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var returning = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.DoesNotContain(returning.ConversationId, new[] { firstId, second.ConversationId, study.ConversationId });
+            Assert.Equal(SpaceRegistry.ChatSpaceId, returning.CurrentConversation.SpaceId);
+            Assert.Equal("Retained unsent draft while selecting another new chat", RouteScene(first).Input.Text);
+
+            // History remains an explicit request for the exact saved identity, not another Fresh.
+            var writesBeforeRestore = rig.ConversationWrites;
+            await spaces.DispatchAsync("spaces.open-conversation", firstId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            Assert.Equal(firstId, Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent).ConversationId);
+            Assert.Equal(writesBeforeRestore, rig.ConversationWrites);
+            Assert.Same(spaces, root.Content);
+            await session.CloseAndDrainAsync().WaitAsync(Bound);
+            Assert.True(session.CanRetireOriginalView);
+            Assert.Null(root.Content);
+        }
+        finally
+        {
+            try { if (session is not null) await session.CloseAndDrainAsync().WaitAsync(Bound); }
+            finally { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Saved_chat_rendered_model_recovery_is_scoped_to_the_current_page_and_keeps_prior_work()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        Window? window = null;
+        var navigations = new List<(BrowseNavigationIntent Intent, Task Settlement)>();
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            var original = rig.Row!;
+            var tabId = Guid.NewGuid();
+            session = rig.Session($"9to1://spaces/chat/{original.Id:D}", tabId, actor.ProfileId,
+                queueNavigation: (intent, settlement) => { navigations.Add((intent, settlement)); return true; });
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+            var chat = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var scene = RouteScene(chat);
+            window = new Window { Content = root, Width = 1280, Height = 900 };
+            window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            Assert.Equal(ChatModelAvailability.Unavailable, chat.ModelAvailability);
+            chat.SetDraft("Saved chat local-model recovery draft");
+            var button = scene.RecoveryView.GetVisualDescendants().OfType<Button>()
+                .Single(value => AutomationProperties.GetAutomationId(value) == "recovery-manage-button");
+            Assert.True(button.IsEffectivelyVisible);
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await scene.RecoveryView.CaptureOriginalActionSettlement().WaitAsync(Bound);
+            var navigation = Assert.Single(navigations);
+            await navigation.Settlement.WaitAsync(Bound);
+            Assert.Equal(tabId, navigation.Intent.SourceTabId);
+            Assert.Equal("browse://home/models", navigation.Intent.Address.Value);
+            Assert.True(navigation.Intent.OpenInNewTab);
+            Assert.Same(chat, spaces.SpaceWorkspaceContent);
+            Assert.Equal(original.Id, chat.ConversationId);
+            Assert.Equal("Saved chat local-model recovery draft", scene.Input.Text);
+            Assert.Equal(ChatModelAvailability.Unavailable, chat.ModelAvailability);
+            Assert.Equal(0, rig.ConversationWrites);
+            Assert.Equal($"9to1://spaces/chat/{original.Id:D}", session.Address.Value);
+
+            // A fresh chat replaces the published route while the prior owned page stays alive.
+            // Retaining that old control's text proves live-page preservation only, not a saved
+            // draft or restart guarantee; the existing canonical draft suites own those checks.
+            await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var current = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotSame(chat, current);
+            Assert.NotEqual(original.Id, current.ConversationId);
+            var writesAfterFreshOpen = rig.ConversationWrites;
+            var stale = Assert.Throws<SpacesWorkspaceActionRefusal>(chat.RequestManageLocalModels);
+            Assert.Contains("no longer publishes this Chat page", stale.Message, StringComparison.Ordinal);
+            Assert.Single(navigations); // The inactive old page must never queue a host action.
+            Assert.Equal(writesAfterFreshOpen, rig.ConversationWrites);
+            Assert.Same(current, spaces.SpaceWorkspaceContent);
+            Assert.Equal(original.Id, chat.ConversationId);
+            Assert.Equal("Saved chat local-model recovery draft", scene.Input.Text);
+
+            // The current page still routes the same genuine recovery action after that refusal.
+            current.RequestManageLocalModels();
+            Assert.Equal(2, navigations.Count);
+            await navigations[1].Settlement.WaitAsync(Bound);
+            Assert.Equal(tabId, navigations[1].Intent.SourceTabId);
+            Assert.Equal("browse://home/models", navigations[1].Intent.Address.Value);
+            Assert.True(navigations[1].Intent.OpenInNewTab);
+            Assert.Same(current, spaces.SpaceWorkspaceContent);
+            Assert.Equal(writesAfterFreshOpen, rig.ConversationWrites);
+        }
+        finally
+        {
+            try { if (session is not null) await session.CloseAndDrainAsync().WaitAsync(Bound); }
+            finally { window?.Close(); await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Saved_chat_model_recovery_without_a_host_route_reports_refusal_and_preserves_the_saved_target()
+    {
+        using var rig = new Rig(withHome: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            var original = rig.Row!;
+            session = rig.Session($"9to1://spaces/chat/{original.Id:D}", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var spaces = Assert.IsType<SpacesHomePage>(Assert.IsType<ContentControl>(session.OriginalNativeView).Content);
+            var chat = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            chat.SetDraft("Unrouted saved-chat recovery draft");
+            var refusal = Assert.Throws<SpacesWorkspaceActionRefusal>(chat.RequestManageLocalModels);
+            Assert.Contains("No host navigation seam", refusal.Message, StringComparison.Ordinal);
+            Assert.Equal(original.Id, chat.ConversationId);
+            Assert.Equal("Unrouted saved-chat recovery draft", RouteScene(chat).Input.Text);
+            Assert.Same(chat, spaces.SpaceWorkspaceContent);
+            Assert.Equal(0, rig.ConversationWrites);
+        }
+        finally
+        {
+            try { if (session is not null) await session.CloseAndDrainAsync().WaitAsync(Bound); }
+            finally { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+        }
+    }
+
+    private static ChatHavenScene RouteScene(NewChatPage page) =>
+        (ChatHavenScene)typeof(NewChatPage).GetField("_scene", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page)!;
+
     /// <summary>
     /// A UI action that faults must leave the session closable. On HEAD 71661cf3 a failed Space
     /// sidebar action left the real app unable to complete an ordinary close for the rest of its
@@ -534,16 +711,30 @@ public sealed class SpacesConversationRouteTests
             Assert.All(visiblePublications, observed => Assert.Equal(
                 $"9to1://spaces/selected/{SpaceRegistry.ChatSpaceId:D}/chat/{observed.ConversationId:D}", observed.Address));
 
-            // Ordinary Chat navigation also exits management after the actual cached-page publication.
-            var writesBeforeCachedOpen = rig.ConversationWrites;
+            // Ordinary Space Open also creates a fresh canonical chat, then exits management.
+            // The previous owned page retains its identity and live draft; that is distinct from
+            // repository/history/restart draft persistence, which this controlled rig does not prove.
+            var secondId = second.ConversationId;
+            second.SetDraft("Prior chat draft retained across manager navigation");
+            var writesBeforeFreshOpen = rig.ConversationWrites;
             await spaces.DispatchAsync("spaces.manage", null).AsTask().WaitAsync(Bound);
             Assert.True(spaces.Controller.State.IsManaging);
             await spaces.DispatchAsync("spaces.open", SpaceRegistry.ChatSpaceId).AsTask().WaitAsync(Bound);
             await session.OriginalQueuedNavigation!.WaitAsync(Bound);
             Assert.False(spaces.Controller.State.IsManaging);
-            Assert.Same(second, spaces.SpaceWorkspaceContent);
+            var third = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotSame(second, third);
+            Assert.NotEqual(firstId, third.ConversationId);
+            Assert.NotEqual(secondId, third.ConversationId);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, third.CurrentConversation.SpaceId);
+            Assert.Equal(secondId, second.ConversationId);
+            Assert.Equal("Prior chat draft retained across manager navigation", RouteScene(second).Input.Text);
+            Assert.Equal(SpaceRegistry.ChatSpaceId, rig.Written[secondId].SpaceId);
+            Assert.Equal(third.ConversationId, rig.Written[third.ConversationId].Id);
             Assert.Same(spaces, root.Content);
-            Assert.Equal(writesBeforeCachedOpen, rig.ConversationWrites);
+            Assert.True(rig.ConversationWrites > writesBeforeFreshOpen);
+            Assert.Contains(visiblePublications, observed => observed.ConversationId == third.ConversationId &&
+                observed.Address == session.Address.Value);
         }
         catch (Exception failure) { failures.Add(failure); }
         finally
