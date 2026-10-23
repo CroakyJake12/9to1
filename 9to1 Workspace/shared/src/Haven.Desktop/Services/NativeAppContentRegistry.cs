@@ -591,13 +591,19 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
         private static readonly ModeDefinition Dev = BuiltInModeSeed.Modes.Single(mode => mode.Key == "dev");
         private static readonly ModeDefinition Boards = BuiltInModeSeed.Modes.Single(mode => mode.Key == "boards");
         private static readonly ModeDefinition Canvas = BuiltInModeSeed.Modes.Single(mode => mode.Key == "canvas");
+        private static readonly ModeDefinition Present = BuiltInModeSeed.Modes.Single(mode => mode.Key == "present");
 
         public static IEnumerable<NativeAppContentRegistration> Build(
             IBrowseAppContentFactory files,
             IBrowseAppContentFactory spaces,
             IBrowseAppContentFactory build,
             IBrowseAppContentFactory? boards = null,
-            IBrowseAppContentFactory? canvas = null)
+            IBrowseAppContentFactory? canvas = null) => Build(files, spaces, build, boards, canvas, null);
+
+        // Keep the original five-argument CLR entrypoint; native composition supplies Present explicitly.
+        public static IEnumerable<NativeAppContentRegistration> Build(
+            IBrowseAppContentFactory files, IBrowseAppContentFactory spaces, IBrowseAppContentFactory build,
+            IBrowseAppContentFactory? boards, IBrowseAppContentFactory? canvas, IBrowseAppContentFactory? present)
         {
             ArgumentNullException.ThrowIfNull(files);
             ArgumentNullException.ThrowIfNull(spaces);
@@ -611,6 +617,7 @@ internal sealed class NativeAppContentRegistry : IBrowseAppContentFactory
             List<NativeAppContentRegistration> result = [.. registered];
             if (boards is not null) result.Add(new(Boards.Id, Boards.Key, HavenAppRouteKind.ModeWorkspace, boards));
             if (canvas is not null) result.Add(new(Canvas.Id, Canvas.Key, HavenAppRouteKind.ModeWorkspace, canvas));
+            if (present is not null) result.Add(new(Present.Id, Present.Key, HavenAppRouteKind.ModeWorkspace, present));
             return result;
         }
     }

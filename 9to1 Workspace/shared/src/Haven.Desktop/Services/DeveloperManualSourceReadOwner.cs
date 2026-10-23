@@ -7,6 +7,11 @@ using HavenOS.Files.NativeHost;
 
 namespace Haven.Desktop.Services;
 
+/// <summary>Complete freshly authorised clean content for this restore only; never durable text.</summary>
+public sealed record DeveloperRestoredCleanEditorTab(DeveloperCleanEditorTab Observation, string Text);
+public sealed record DeveloperRestoredCleanEditorSession(DeveloperCleanEditorSession Session,
+    IReadOnlyList<DeveloperRestoredCleanEditorTab> Tabs);
+
 /// <summary>Observed entries within an actually captured project, never Files IDs or grants.</summary>
 public sealed record DeveloperProjectTreeEntry(string RelativePath, bool IsDirectory, long? SizeBytes)
 {
@@ -118,6 +123,118 @@ public sealed class DeveloperManualSourceReadOwner(
             ?? throw new FileNotFoundException("The requested source file is not part of the genuine saved-project capture.", relativePath);
         return text;
     }
+
+    /// <summary>Loads metadata from the SAME store recognised by a privately issued registered
+    /// selection, then freshly reads every file through its actual Home/kernel admission. Paths
+    /// and hashes are comparisons, never grants. Any missing, changed or denied file refuses the
+    /// entire restore, preserving the prior session rather than returning a truncated success.</summary>
+    public async Task<DeveloperOperationResult<DeveloperRestoredCleanEditorSession?>> RestoreCleanEditorSessionAsync(
+        FileDeveloperWorkspaceStore store, DeveloperResolvedProject project, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        try
+        {
+            await using var lease = await AcquireAsync(project, token).ConfigureAwait(false);
+            var profile = DemandEditorSessionStore(store, lease);
+            var loaded = await store.GetEditorSessionAsync(project, profile, token).ConfigureAwait(false);
+            if (!loaded.Succeeded) return SessionError<DeveloperRestoredCleanEditorSession?>(loaded.Error!);
+            if (loaded.Value is not { } session)
+                return DeveloperOperationResult<DeveloperRestoredCleanEditorSession?>.Success(null);
+            var tabs = new List<DeveloperRestoredCleanEditorTab>();
+            foreach (var tab in session.Tabs)
+            {
+                var text = await capture.ReadOriginalCapturedFileTextAsync(lease.Capture, lease.Admission,
+                    tab.RelativePath, token).ConfigureAwait(false);
+                if (text is null || !StringComparer.OrdinalIgnoreCase.Equals(DeveloperManualSourceEditOwner.Sha256(text), tab.ContentSha256))
+                    return DeveloperOperationResult<DeveloperRestoredCleanEditorSession?>.Failure(
+                        DeveloperOperationErrorCode.RevisionConflict,
+                        "A saved tab is missing or changed. The previous session was preserved; open current project files explicitly.", project.Reference.ProjectId.ToString("D"));
+                tabs.Add(new(tab, text));
+            }
+            await lease.Admission.RevalidateOriginalAsync(token).ConfigureAwait(false);
+            return DeveloperOperationResult<DeveloperRestoredCleanEditorSession?>.Success(new(session, Array.AsReadOnly(tabs.ToArray())));
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (Exception error) when (error is UnauthorizedAccessException or IOException or InvalidOperationException or AggregateException)
+        {
+            // The actual configured owners retain their original read/close failures. Returning
+            // a structured refused restoration keeps ordinary manual open usable; no source text
+            // from a failed capture is returned and the prior canonical session is not rewritten.
+            return DeveloperOperationResult<DeveloperRestoredCleanEditorSession?>.Failure(
+                error is UnauthorizedAccessException ? DeveloperOperationErrorCode.PermissionRequired :
+                    error is IOException or AggregateException ? DeveloperOperationErrorCode.StorageUnavailable : DeveloperOperationErrorCode.RevisionConflict,
+                "Clean tab restoration could not obtain a current authorised source observation. Open files explicitly; the previous session remains saved.",
+                project.Reference.ProjectId.ToString("D"));
+        }
+    }
+
+    /// <summary>Re-observes the complete bounded clean session under real READ, closes that
+    /// observation, then CAS-updates its presentation metadata in the canonical workspace. No
+    /// draft text leaves the page, and no source write or project revision change occurs.</summary>
+    public async Task<DeveloperOperationResult<DeveloperCleanEditorSession>> SaveCleanEditorSessionAsync(
+        FileDeveloperWorkspaceStore store, FilesDeveloperOriginalCurrentProjectExecutionBridge? execution,
+        DeveloperResolvedProject project, long expectedGeneration,
+        IReadOnlyList<DeveloperCleanEditorTab> cleanTabs, string? selectedRelativePath, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(store); ArgumentNullException.ThrowIfNull(cleanTabs);
+        if (execution is null)
+            return DeveloperOperationResult<DeveloperCleanEditorSession>.Failure(DeveloperOperationErrorCode.CapabilityUnavailable,
+                "The genuine command/pin reservation owner is unavailable. Clean tab state was not changed.", project.Reference.ProjectId.ToString("D"));
+        if (cleanTabs.Count > DeveloperSourceReviewSession.MaximumOpenDocuments)
+            throw new ArgumentOutOfRangeException(nameof(cleanTabs));
+        var tabs = Array.AsReadOnly(cleanTabs.ToArray());
+        IDisposable? reservation = null;
+        try
+        {
+            Guid profile; IDeveloperProjectOriginalReadSelection selection; AuthenticatedResourceActor actor;
+            await using (var lease = await AcquireAsync(project, token).ConfigureAwait(false))
+            {
+                profile = DemandEditorSessionStore(store, lease);
+                selection = lease.Selection;
+                actor = selections.GetOriginalRegisteredDescriptor(selection).OriginalActor;
+                // Actual admission fence precedes the physical metadata write and is held across
+                // every await, including exact READ close and the canonical CAS/atomic rename.
+                reservation = execution.AcquireOriginalEditorSessionUpdate(project.Reference.WorkspaceId, actor);
+                foreach (var tab in tabs)
+                {
+                    DemandSafeProjectRelativePath(tab.RelativePath);
+                    var text = await capture.ReadOriginalCapturedFileTextAsync(lease.Capture, lease.Admission,
+                        tab.RelativePath, token).ConfigureAwait(false);
+                    if (text is null || !StringComparer.OrdinalIgnoreCase.Equals(DeveloperManualSourceEditOwner.Sha256(text), tab.ContentSha256))
+                        return DeveloperOperationResult<DeveloperCleanEditorSession>.Failure(DeveloperOperationErrorCode.RevisionConflict,
+                            "A clean tab changed before its session could be saved. The previous session was preserved.", project.Reference.ProjectId.ToString("D"));
+                }
+                await lease.Admission.RevalidateOriginalAsync(token).ConfigureAwait(false);
+            }
+            // Do not mutate the workspace document while this metadata-read witness is held.
+            await selections.RevalidateOriginalAsync(selection, actor, token).ConfigureAwait(false);
+            return await store.SaveEditorSessionAsync(project, profile, expectedGeneration, tabs, selectedRelativePath, token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (Exception error) when (error is UnauthorizedAccessException or IOException or InvalidOperationException or AggregateException)
+        {
+            var code = error is UnauthorizedAccessException ? DeveloperOperationErrorCode.PermissionRequired :
+                error is IOException or AggregateException ? DeveloperOperationErrorCode.StorageUnavailable : DeveloperOperationErrorCode.RevisionConflict;
+            return DeveloperOperationResult<DeveloperCleanEditorSession>.Failure(code,
+                "Clean tab state could not be saved under the current source/execution owners. Its previous session was preserved; reopen the project to retry.",
+                project.Reference.ProjectId.ToString("D"));
+        }
+        finally { reservation?.Dispose(); }
+    }
+
+    private Guid DemandEditorSessionStore(FileDeveloperWorkspaceStore store, ManualReadLease lease)
+    {
+        var descriptor = selections.GetOriginalRegisteredDescriptor(lease.Selection);
+        if (!selections.IsIssuedOriginalRegisteredDescriptor(lease.Selection, descriptor) ||
+            !ReferenceEquals(descriptor.OriginalStore, store) || descriptor.OriginalActor.AccountId is not null ||
+            descriptor.OriginalActor.OrganisationId is not null ||
+            !Guid.TryParse(descriptor.OriginalActor.ProfileId, out var profile) || profile == Guid.Empty)
+            throw new UnauthorizedAccessException("The actual registered source/profile must recognise the SAME canonical editor-session store.");
+        return profile;
+    }
+
+    private static DeveloperOperationResult<T> SessionError<T>(DeveloperOperationError error) =>
+        DeveloperOperationResult<T>.Failure(error.Code, error.Message, error.TargetId, error.Recoverable, error.Retryable);
 
     private async Task<ManualReadLease> AcquireAsync(DeveloperResolvedProject project, CancellationToken token)
     {

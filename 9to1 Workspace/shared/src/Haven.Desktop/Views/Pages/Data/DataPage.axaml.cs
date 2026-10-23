@@ -199,11 +199,7 @@ public sealed partial class DataPage : UserControl, IDisposable
     private void AddQuery() { if (Workbook is null) return; var query = DataQuery.Create($"Query {Workbook.Queries.Count + 1}"); query.Visual.Source = CurrentSheet?.Name ?? "Sheet 1"; query.Sql = query.Visual.BuildSql(); Workbook.Queries.Add(query); _queryIndex = Workbook.Queries.Count - 1; _lastQueryResult = null; MarkDirty(); RenderCurrent(); _bus.Fire("Data.Query.Added"); }
     private void DeleteQuery() { if (Workbook is null) return; if (Workbook.Queries.Count == 1) Workbook.Queries[0] = DataQuery.Create("Query 1"); else Workbook.Queries.RemoveAt(Math.Clamp(_queryIndex, 0, Workbook.Queries.Count - 1)); for (var i = 0; i < Workbook.Queries.Count; i++) Workbook.Queries[i].Order = i; _queryIndex = Math.Clamp(_queryIndex, 0, Workbook.Queries.Count - 1); _lastQueryResult = null; MarkDirty(); RenderCurrent(); _bus.Fire("Data.Query.Deleted"); }
 
-    private async Task RunCurrentQueryAsync()
-    {
-        if (Workbook is null || CurrentQuery is null) return; RecalculateWorkbook(); if (_formulaReport.ChangedCells > 0) MarkDirty(); var safety = DataSqlSafety.Analyze(CurrentQuery.Sql); if (!safety.IsReadOnly) { _route.SetStatus(safety.Message); _route.SetQuerySafety(CurrentQuery.Sql); RenderFormulaState(); return; }
-        _lastQueryResult = await _queries.ExecuteReadOnlyAsync(Workbook, CurrentQuery.Sql, 200, CancellationToken.None); _route.SetQueryResult(_lastQueryResult); _route.SetStatus($"Query preview returned {_lastQueryResult.Rows.Count} row{(_lastQueryResult.Rows.Count == 1 ? string.Empty : "s")}{(_lastQueryResult.Truncated ? " (truncated)" : string.Empty)}."); _bus.Fire("Data.Query.Previewed");
-    }
+    private Task RunCurrentQueryAsync() => RunOriginalQueryWithInspectorAsync();
 
     private async Task MoveWorkbookAsync(int offset) { if (_workbooks.Count <= 1) return; if (_dirty && !await SaveAsync("Autosave before switching workbook")) return; var next = (_workbookIndex + offset + _workbooks.Count) % _workbooks.Count; await OpenWorkbookAtAsync(next, CancellationToken.None, false); }
     private async Task CreateWorkbookAsync(CancellationToken cancellationToken)
@@ -242,7 +238,7 @@ public sealed partial class DataPage : UserControl, IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return; _disposed = true; _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
+        if (_disposed) return; DemandQueryResultsSettledBeforeDispose(); _disposed = true; _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
         _route.PreviousWorkbookRequested -= OnPreviousWorkbookRequested; _route.NextWorkbookRequested -= OnNextWorkbookRequested; _route.NewWorkbookRequested -= OnNewWorkbookRequested; _route.SaveRequested -= OnSaveRequested; _route.ImportRequested -= OnImportRequested; _route.ExportRequested -= OnExportRequested;
         _route.AddSheetRequested -= OnAddSheetRequested; _route.DeleteSheetRequested -= OnDeleteSheetRequested; _route.AddQueryRequested -= OnAddQueryRequested; _route.DeleteQueryRequested -= OnDeleteQueryRequested; _route.BuildSqlRequested -= OnBuildSqlRequested; _route.RunQueryRequested -= OnRunQueryRequested;
         _route.AddShapeRequested -= OnAddShapeRequested; _route.PreviousDrawingRequested -= OnPreviousDrawingRequested; _route.NextDrawingRequested -= OnNextDrawingRequested; _route.RotateDrawingRequested -= OnRotateDrawingRequested; _route.DeleteDrawingRequested -= OnDeleteDrawingRequested;

@@ -302,12 +302,13 @@ public sealed partial class App
             var boards = BoardsBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime,
                 () => actualTheme.Current.Accessibility.ReduceMotion, actualTheme.Context);
             var canvas = CanvasBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime, actualTheme.Context);
+            var present = PresentBrowseAppContentFactory.BindOriginalSameProcess(_services, _home, _appLifetime, _windowLifetime);
             var modes = _services.GetRequiredService<IModeRegistry>();
             // The SAME production registration helper builds the genuine native-app set (files, spaces,
-            // dev, boards, canvas) and is exercised verbatim by the routing regression (NativeAppContentRegistryTests).
+            // dev, boards, canvas, present); legacy callers retain their existing registration set.
             // Chat is canonicalized to the Spaces Chat resource by HomeLaunchRouteResolver before admission.
             var apps = new NativeAppContentRegistry(modes,
-                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build, boards, canvas), () => IsCurrent);
+                NativeAppContentRegistry.NativeAppContentRegistrations.Build(files, spaces, build, boards, canvas, present), () => IsCurrent);
             var catalogue = _app.RetainOriginalModelCatalogueRegistry(_services.GetRequiredService<IServiceProvider>());
             var privacy = _services.GetRequiredService<IPrivacyPreferenceStore>();
             var home = new UnifiedHomeContentFactory(modes, CreateDashboard,

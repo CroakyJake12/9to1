@@ -40,7 +40,9 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             {
                 page = originalPage; // SAME returned partial before the caller's capture/publication callback.
                 retainOriginalChild(originalPage);
-            }, sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>());
+            }, sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>(),
+            editorSessionStore: services.GetService<FileDeveloperWorkspaceStore>(),
+            editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>());
     }
     /// <summary>Creates the SAME compiled-CUI workbench in manual (no-AI) mode for a resolved saved
     /// project. No Task/Run/context/model or generation is involved: the real saved project identity
@@ -67,7 +69,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             (project, relative, token) => throw new NotSupportedException("Manual open reads through its genuine Home/Files/kernel capture; no Task resolution is used."),
             files.DemandExternalOriginalDeveloperReadJoin, explicitBusinessCancellationToken,
             originalPage => { page = originalPage; retainOriginalChild(originalPage); },
-            createOriginalReadinessChild, manualRead, manualEdit);
+            createOriginalReadinessChild, manualRead, manualEdit, services.GetService<FileDeveloperWorkspaceStore>(),
+            services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>());
     }
 
     /// <summary>Creates a genuine presentation child bound to this exact Dev host, independent
@@ -90,7 +93,9 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
                     originalPage.CaptureOriginalDocumentObservationCurrentness(), token);
             }, files.DemandExternalOriginalDeveloperReadJoin, explicitBusinessCancellationToken,
             originalPage => { page = originalPage; retainOriginalChild(originalPage); }, createOriginalReadinessChild,
-            sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>());
+            sourceExplorerReader: services.GetService<DeveloperManualSourceReadOwner>(),
+            editorSessionStore: services.GetService<FileDeveloperWorkspaceStore>(),
+            editorSessionExecution: services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>());
     }
 
 }

@@ -9,6 +9,7 @@ using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.ViewModels;
 using HavenOS.Apps.Dev;
+using HavenOS.Files.NativeHost;
 
 namespace Haven.Desktop.Views.Pages.Development;
 
@@ -41,6 +42,10 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     private readonly bool _manual;
     private readonly DeveloperManualSourceReadOwner? _manualReader;
     private readonly DeveloperManualSourceEditOwner? _manualEditor;
+    private readonly FileDeveloperWorkspaceStore? _editorSessionStore;
+    private readonly FilesDeveloperOriginalCurrentProjectExecutionBridge? _editorSessionExecution;
+    private bool _cleanSessionLoaded, _cleanSessionBlocked;
+    private long _cleanSessionGeneration;
     private string _manualDraftText = "";
     private string _manualDraftBaseline = "";
     private string _manualBeforeText = "", _manualAfterText = "", _manualBeforeSha256 = "", _manualAfterSha256 = "";
@@ -98,10 +103,12 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         Func<DeveloperResolvedProject, string, CancellationToken, Task<DeveloperOperationResult<DeveloperCodeDocument>>> resolveOriginalDocument,
         Action demandOriginalDocumentSourceExternalJoin, CancellationToken explicitBusinessCancellationToken,
         Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition,
-        DeveloperManualSourceReadOwner? sourceExplorerReader = null)
+        DeveloperManualSourceReadOwner? sourceExplorerReader = null,
+        FileDeveloperWorkspaceStore? editorSessionStore = null,
+        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null)
         : this(development, canonical, actualProject, actualTaskId, actualExecutionId, actualContextId, readiness,
             resolveOriginalDocument, demandOriginalDocumentSourceExternalJoin, explicitBusinessCancellationToken,
-            retainOriginalAcquisition, null, sourceExplorerReader) { }
+            retainOriginalAcquisition, null, sourceExplorerReader, editorSessionStore, editorSessionExecution) { }
 
     internal DeveloperProjectWorkbenchPage(DeveloperTaskWorkspaceService development, TaskExecutionCoordinator canonical,
         DeveloperResolvedProject actualProject, Guid actualTaskId, Guid actualExecutionId, Guid actualContextId,
@@ -110,12 +117,16 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         Action demandOriginalDocumentSourceExternalJoin, CancellationToken explicitBusinessCancellationToken,
         Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition,
         Func<DeveloperProjectWorkbenchPage, ICuiSceneReadiness>? createOriginalReadinessChild,
-        DeveloperManualSourceReadOwner? sourceExplorerReader = null)
+        DeveloperManualSourceReadOwner? sourceExplorerReader = null,
+        FileDeveloperWorkspaceStore? editorSessionStore = null,
+        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
         _project = actualProject ?? throw new ArgumentNullException(nameof(actualProject));
         _manualReader = sourceExplorerReader; // Optional genuine user-navigation reader; no new source authority.
+        _editorSessionStore = editorSessionStore;
+        _editorSessionExecution = editorSessionExecution;
         if (actualTaskId == Guid.Empty || actualExecutionId == Guid.Empty || actualContextId == Guid.Empty)
             throw new ArgumentException("The existing canonical Task/Run/context must be supplied together.");
         _taskId = actualTaskId; _runId = actualExecutionId; _contextId = actualContextId;
@@ -172,7 +183,9 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         Action<DeveloperProjectWorkbenchPage>? retainOriginalAcquisition,
         Func<DeveloperProjectWorkbenchPage, ICuiSceneReadiness>? createOriginalReadinessChild,
         DeveloperManualSourceReadOwner manualReader,
-        DeveloperManualSourceEditOwner? manualEditor = null)
+        DeveloperManualSourceEditOwner? manualEditor = null,
+        FileDeveloperWorkspaceStore? editorSessionStore = null,
+        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
@@ -187,6 +200,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         _manual = true;
         _manualReader = manualReader ?? throw new ArgumentNullException(nameof(manualReader));
         _manualEditor = manualEditor; // Optional: without it manual preview/apply fail closed (genuine owners unconfigured).
+        _editorSessionStore = editorSessionStore;
+        _editorSessionExecution = editorSessionExecution;
         _review = null; // No AI Task-backed review session; manual edits route through the genuine edit admission + kernel.
         Document = DeveloperWorkbenchCuiDocument.Load();
         _controls = new();
@@ -256,7 +271,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             original.BindPublicationGuard(() => IsCurrent(generation));
             using var scope = CancellationTokenSource.CreateLinkedTokenSource(original.Token, cancellationToken);
             var project = await ResolveProjectAsync(original, scope.Token).ConfigureAwait(false);
-            await PublishAsync(original, () => { _project = project; _status = "Existing project opened. Commands use its canonical task and permissions."; }).ConfigureAwait(false);
+            await PublishAsync(original, () => { _project = project; _status = "Existing project opened. Source reads use its current Home permissions."; }).ConfigureAwait(false);
+            await RestoreCleanSessionAsync(original, project, scope.Token).ConfigureAwait(false);
             Task? show = null;
             var dispatcher = Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -503,7 +519,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                             else tab.Editor = value;
                             _project = project; SelectTab(tab);
                             _status = "Complete source opened through its current owner. Other tabs retain their drafts and review state.";
-                        }).ConfigureAwait(false); return;
+                        }).ConfigureAwait(false);
+                        await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
                     }
                     if (command is "dev.preview-edit" or "dev.apply-edit")
                     {
@@ -512,7 +529,10 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                             : _review!.ApplyAsync(editor!.EditorId, pass!.ChangeSetId, editor.DraftRevision, context, _businessToken));
                         var reply = await original.AwaitAsync(actual).ConfigureAwait(false);
                         var value = DemandValue(reply); OriginalSourcePass = value; OriginalDeveloperObservation = value.OriginalObservation;
-                        await PublishAsync(original, () => { _pass = value; _editor = _review!.GetSnapshot(editor!.EditorId); StoreSelectedTab(); _status = value.State == DeveloperSourceChangeState.Applied ? "This exact pass was acknowledged. Later repository changes were preserved." : "Exact before/after reviewed. Apply requires this current draft revision."; }).ConfigureAwait(false); return;
+                        await PublishAsync(original, () => { _pass = value; _editor = _review!.GetSnapshot(editor!.EditorId); StoreSelectedTab(); _status = value.State == DeveloperSourceChangeState.Applied ? "This exact pass was acknowledged. Later repository changes were preserved." : "Exact before/after reviewed. Apply requires this current draft revision."; }).ConfigureAwait(false);
+                        if (value.State == DeveloperSourceChangeState.Applied)
+                            await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false);
+                        return;
                     }
                     Task<DeveloperOperationResult<DeveloperActionObservation>> operation = InvokeOriginalSource(() => command switch
                     {
@@ -604,7 +624,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         }
                         _project = project; SelectTab(tab);
                         _status = "Manual source opened through the genuine Home read owner. Other tabs retain their drafts and review state.";
-                    }).ConfigureAwait(false); return;
+                    }).ConfigureAwait(false);
+                    await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
                 }
                 if (command == "dev.preview-edit")
                 {
@@ -644,7 +665,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewed = false; _manualDraftRevision++; _manualReviewRevision = -1;
                         StoreSelectedTab();
                         _status = $"Reviewed edit applied and verified (post-write revision {after}); unrelated content preserved.";
-                    }).ConfigureAwait(false); return;
+                    }).ConfigureAwait(false);
+                    await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
                 }
                 throw new InvalidOperationException("This operation requires a current authorized Build Task/execution authority; not available in a manual no-AI open.");
             }
@@ -764,6 +786,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         CloseTab(tab); _status = "Saved tab closed. Select another tab to read it through its current owner.";
                     }
                 }).ConfigureAwait(false);
+                await SaveCleanSessionAsync(original, _project, _businessToken).ConfigureAwait(false);
             }
             catch (Exception error) { original.Retain(error); }
             finally
@@ -775,6 +798,111 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 original.ThrowRetained();
             }
         }));
+
+    private async Task RestoreCleanSessionAsync(DesktopOriginalWorkLifetime.Original original,
+        DeveloperResolvedProject project, CancellationToken token)
+    {
+        lock (_gate)
+        {
+            if (_cleanSessionLoaded || _sourceTabs.Count != 0 || _editorSessionStore is null || _manualReader is null) return;
+        }
+        var loaded = await original.AwaitAsync(InvokeOriginalSource(() =>
+            _manualReader.RestoreCleanEditorSessionAsync(_editorSessionStore, project, token))).ConfigureAwait(false);
+        if (!loaded.Succeeded)
+        {
+            await PublishAsync(original, () =>
+            {
+                _cleanSessionLoaded = true; _cleanSessionBlocked = true;
+                _status = loaded.Error!.Message + " You can still open files and edit. Apply unsaved changes before closing.";
+            }).ConfigureAwait(false);
+            return;
+        }
+        if (loaded.Value is not { } restored)
+        {
+            await PublishAsync(original, () => { _cleanSessionLoaded = true; _cleanSessionGeneration = 0; }).ConfigureAwait(false);
+            return;
+        }
+        var prepared = new List<SourceTab>();
+        string? refused = null;
+        DeveloperCanonicalActionContext? context = null;
+        if (!_manual && restored.Tabs.Count > 0) context = await CaptureContextAsync(original, token).ConfigureAwait(false);
+        foreach (var item in restored.Tabs)
+        {
+            original.DemandPublication();
+            if (_manual)
+            {
+                prepared.Add(new(Guid.NewGuid(), item.Observation.RelativePath, null,
+                    new(item.Text, item.Text, item.Text, "", item.Observation.ContentSha256, "", 1, -1, false))
+                { IsPinned = item.Observation.IsPinned });
+                continue;
+            }
+            // Task-backed restoration re-resolves genuine Files identity and opens through the
+            // SAME canonical Task source owner. The manual capture is not a substitute grant.
+            var document = await original.AwaitAsync(InvokeOriginalSource(() =>
+                _resolveDocument(project, item.Observation.RelativePath, token))).ConfigureAwait(false);
+            if (!document.Succeeded || document.Value is null) { refused = document.Error?.Message ?? "A restored canonical document is unavailable."; break; }
+            var opened = await original.AwaitAsync(InvokeOriginalSource(() =>
+                _review!.OpenAsync(project.Reference, context!, document.Value, _businessToken))).ConfigureAwait(false);
+            if (!opened.Succeeded || opened.Value is null) { refused = opened.Error?.Message ?? "A restored canonical source read was refused."; break; }
+            var editor = opened.Value;
+            prepared.Add(new(editor.EditorId, editor.Document.RelativePath, editor, null) { IsPinned = item.Observation.IsPinned });
+            if (!StringComparer.OrdinalIgnoreCase.Equals(editor.OriginalSha256, item.Observation.ContentSha256))
+            { refused = "A saved tab changed during its canonical source rebind. The previous session was preserved."; break; }
+        }
+        if (refused is not null)
+        {
+            // These are clean, fully awaited products, never dirty user buffers. Release their
+            // exact review slots when a later document refuses the all-or-nothing restoration.
+            foreach (var tab in prepared)
+                if (tab.Editor is { } editor) InvokeOriginalSource(() => { _review!.CloseEditor(editor.EditorId, editor.DraftRevision); return true; });
+            await PublishAsync(original, () =>
+            {
+                _cleanSessionLoaded = true; _cleanSessionBlocked = true; _status = refused + " Open project files explicitly.";
+            }).ConfigureAwait(false);
+            return;
+        }
+        await PublishAsync(original, () =>
+        {
+            if (_sourceTabs.Count != 0) throw new InvalidOperationException("Live source tabs appeared during restoration; they were preserved.");
+            _sourceTabs.AddRange(prepared);
+            if (prepared.SingleOrDefault(tab => StringComparer.Ordinal.Equals(tab.Path, restored.Session.SelectedRelativePath)) is { } selected)
+                SelectTab(selected);
+            _cleanSessionGeneration = restored.Session.Generation; _cleanSessionLoaded = true;
+            _status = $"Restored {prepared.Count} clean source tabs. Apply unsaved changes before closing.";
+        }).ConfigureAwait(false);
+    }
+
+    private async Task SaveCleanSessionAsync(DesktopOriginalWorkLifetime.Original original,
+        DeveloperResolvedProject project, CancellationToken token)
+    {
+        IReadOnlyList<DeveloperCleanEditorTab>? tabs = null;
+        string? selected = null; long expected = 0;
+        await PublishAsync(original, () =>
+        {
+            // Task-backed source observations may retain execution bindings. They can restore
+            // through fresh owners, but session writes require a future source-issued rebind.
+            if (!_manual || !_cleanSessionLoaded || _cleanSessionBlocked || _editorSessionStore is null || _manualReader is null) return;
+            StoreSelectedTab();
+            // Persist no dirty payload, and do not replace the previous restart state while
+            // live drafts exist. Normal close still refuses through HasUnsavedWork.
+            if (_sourceTabs.Any(IsTabDirty)) return;
+            tabs = Array.AsReadOnly(_sourceTabs.Select(tab => new DeveloperCleanEditorTab(tab.Path,
+                tab.Manual?.BeforeSha256 ?? tab.Editor!.OriginalSha256, tab.IsPinned)).ToArray());
+            selected = CurrentSourceTab()?.Path; expected = _cleanSessionGeneration;
+        }).ConfigureAwait(false);
+        if (tabs is null || !original.IsPublicationCurrent) return;
+        var saved = await original.AwaitAsync(InvokeOriginalSource(() =>
+            _manualReader!.SaveCleanEditorSessionAsync(_editorSessionStore!, _editorSessionExecution, project, expected, tabs, selected, token))).ConfigureAwait(false);
+        // A completed physical metadata update remains recorded even if the visible page was
+        // withdrawn. This is private owner state, not publication to an inactive presentation.
+        if (saved.Succeeded)
+        { lock (_gate) _cleanSessionGeneration = saved.Value!.Generation; }
+        else await PublishAsync(original, () =>
+        {
+            _cleanSessionBlocked = true;
+            _status += " Tab layout was not saved: " + saved.Error!.Message;
+        }).ConfigureAwait(false);
+    }
 
     private async Task<DeveloperResolvedProject> ResolveProjectAsync(DesktopOriginalWorkLifetime.Original original, CancellationToken token)
     {

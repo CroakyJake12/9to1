@@ -80,7 +80,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     {
         var actual = RequireCreationReservation(value);
         var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
-        return Admit(source, () => _store.RetainOriginalReader(source, async () =>
+        return Admit(source, () => _store.RetainOriginalReader<object?>(source, async () =>
         {
             await source.Read(() => _library.RevalidateOriginalObservationWithinSourceAsync(actual.Origin.Observation,
                 actual.Actor, source.Run, source.Retain, token)).ConfigureAwait(false);
@@ -96,6 +96,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             }
             await DemandCurrentAsync(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalStoreOwnership, source, token).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false);
+            return null;
         }));
     }
     private static void DemandCreationAbsence(CreationAbsenceSnapshot snapshot, CanonicalSqliteOriginalSourceScope source)

@@ -1,0 +1,65 @@
+<Cui id="9to1.Data.QueryResults" version="1">
+  <Actions>
+    <Action name="InspectReturnedCell" command="data.results.cell.select" parameter="{Binding cell}" />
+  </Actions>
+  <Page>
+    <Container id="data-results-shell" Type="Grid" RowSizes="Auto Auto Auto Auto 1fr Auto Auto Auto" CellGap="8" Padding="16" accessible-name="Read-only Data query results">
+      <Container Type="Vertical Stack" CellGap="4" Row="0">
+        <Text text="{Binding Source}" accessible-name="Executed workbook identity" />
+        <Text text="{Binding Revision}" />
+        <Text text="{Binding InputSnapshot}" accessible-name="Exact query input snapshot fingerprint" />
+        <Text text="{Binding Target}" accessible-name="Actual SQL execution target" />
+        <Text text="{Binding Execution}" accessible-name="Query identity and execution time" />
+        <Text text="{Binding Notice}" accessible-name="Snapshot freshness and execution outcome" />
+      </Container>
+      <Text text="{Binding ResultSummary}" Row="1" accessible-name="Returned row count and truncation" />
+      <Container Type="Vertical Stack" CellGap="4" MaxHeight="125" VerticalScrolling="True" Row="2" accessible-name="SQL that produced these rows">
+        <Text text="{Binding SqlText}" />
+        <Container Type="Wrap" CellGap="6">
+          <Text text="{Binding SqlRange}" />
+          <Button content="Previous SQL text" action="data.results.sql.previous" Interactive="{Binding CanPreviousSql}" />
+          <Button content="More SQL text" action="data.results.sql.next" Interactive="{Binding CanNextSql}" />
+        </Container>
+      </Container>
+      <Container Type="Wrap" CellGap="6" Row="3" accessible-name="Returned result page controls">
+        <Button content="Previous rows" action="data.results.rows.previous" Interactive="{Binding CanPreviousRows}" />
+        <Button content="Next rows" action="data.results.rows.next" Interactive="{Binding CanNextRows}" />
+        <Button content="Previous columns" action="data.results.columns.previous" Interactive="{Binding CanPreviousColumns}" />
+        <Button content="Next columns" action="data.results.columns.next" Interactive="{Binding CanNextColumns}" />
+        <Text text="{Binding Viewport}" />
+      </Container>
+      <Container id="data-results-grid" Type="Vertical Stack" CellGap="2" VerticalScrolling="True" HorizontalScrolling="True" Row="4" accessible-name="Returned query cells">
+        <Container Type="Horizontal Stack" CellGap="2">
+          <Text text="Row" Width="60" />
+          <Repeat Source="{Binding Columns}" As="column" Key="{Binding column.id}" Type="Horizontal Stack">
+            <Text text="{Binding column.label}" Width="160" />
+          </Repeat>
+        </Container>
+        <If Condition="{Binding Empty}"><Text text="No rows returned." /></If>
+        <Repeat Source="{Binding Rows}" As="row" Key="{Binding row.id}" Type="Vertical Stack">
+          <Container Type="Horizontal Stack" CellGap="2">
+            <Text text="{Binding row.number}" Width="60" />
+            <Repeat Source="{Binding row.cells}" As="cell" Key="{Binding cell.id}" Type="Horizontal Stack">
+              <Button content="{Binding cell.preview}" action="InspectReturnedCell" Width="160" Height="36" accessible-name="{Binding cell.name}" />
+            </Repeat>
+          </Container>
+        </Repeat>
+      </Container>
+      <Container Type="Vertical Stack" CellGap="4" Row="5">
+        <Text text="{Binding CellTitle}" />
+        <Text text="{Binding CellRange}" />
+      </Container>
+      <Container Type="Vertical Stack" MaxHeight="170" VerticalScrolling="True" HorizontalScrolling="True" Row="6" accessible-name="Actual returned cell text">
+        <Text text="{Binding CellText}" />
+        <Container Type="Wrap" CellGap="6">
+          <Button content="Previous value text" action="data.results.cell.previous" Interactive="{Binding CanPreviousCell}" />
+          <Button content="More value text" action="data.results.cell.next" Interactive="{Binding CanNextCell}" />
+        </Container>
+      </Container>
+      <Container Type="Wrap" CellGap="8" Row="7">
+        <Text text="Column labels and cell previews are shortened. These are returned preview values, not live or editable cells. Closing keeps the last successful snapshot in this Data session." />
+        <Button id="data-results-close" content="Return to editor" action="data.results.close" accessible-name="Close query results and return to the original Data editor" />
+      </Container>
+    </Container>
+  </Page>
+</Cui>

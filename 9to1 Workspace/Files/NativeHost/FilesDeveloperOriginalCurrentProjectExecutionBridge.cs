@@ -95,6 +95,7 @@ public sealed partial class FilesDeveloperOriginalCurrentProjectExecutionBridge
     {
         ArgumentNullException.ThrowIfNull(originalCommand);
         Task<DeveloperOperationResult<DeveloperActionObservation>>? actual = null;
+        EditorSessionCommand? editorSessionCommand = null;
         var errors = new List<Exception>();
         try
         {
@@ -105,6 +106,9 @@ public sealed partial class FilesDeveloperOriginalCurrentProjectExecutionBridge
                 if (!_reads.IsIssuedOriginalCommandRead(sameRead))
                     throw new UnauthorizedAccessException("No SAME current privately issued command READ exists.");
                 DemandDescriptor(sameRead.OriginalDescriptor, sameProject, sameAction);
+                // Enrol before invoking the original command: even a synchronous reentrant
+                // metadata writer sees this real admission before the command Task exists.
+                editorSessionCommand = AdmitEditorSessionCommand(sameProject.WorkspaceId, sameRead.OriginalDescriptor.OriginalActor);
                 var previous = _command.Value;
                 _command.Value = new(sameRead, sameProject, sameAction);
                 try
@@ -112,7 +116,11 @@ public sealed partial class FilesDeveloperOriginalCurrentProjectExecutionBridge
                     actual = originalCommand() ?? throw new InvalidOperationException("The actual Dev command returned no Task.");
                     retainOriginalTask(actual);
                 }
-                finally { _command.Value = previous; }
+                finally
+                {
+                    _command.Value = previous;
+                    CompleteEditorSessionCommandAcquisition(editorSessionCommand, actual);
+                }
             }, originalSynchronousScope));
         }
         catch (Exception error) { Add(errors, error); }

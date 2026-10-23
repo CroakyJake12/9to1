@@ -9,6 +9,20 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
     [ThreadStatic] private static List<PresentPage>? _actualPresentSources;
     private int _activeOriginalPresentBodies;
     private Task? _latestOriginalPresentAction;
+    private Action<Action>? _originalPresentationParent;
+    private Func<bool>? _originalPresentationCanAdmit;
+    internal void BindOriginalBrowsePresentation(Action<Action> originalParent, Func<bool> canAdmit)
+    {
+        ArgumentNullException.ThrowIfNull(originalParent); ArgumentNullException.ThrowIfNull(canAdmit);
+        if (_originalPresentConstruction.Task.IsCompleted || _originalPresentationParent is not null)
+            throw new InvalidOperationException("Bind the original Browse parent once, inside the existing page constructor capture.");
+        _originalPresentationParent = originalParent; _originalPresentationCanAdmit = canAdmit;
+    }
+    private bool CanAdmitOriginalPresentation => _originalPresentationCanAdmit?.Invoke() != false;
+    private void DemandOriginalPresentationAdmission()
+    {
+        if (!CanAdmitOriginalPresentation) throw new ObjectDisposedException(nameof(PresentPage), "The original Present presentation is no longer current.");
+    }
     internal Task? LatestOriginalAction => _latestOriginalPresentAction;
     internal Task? OriginalClose => _originalPresentWork.OriginalClose;
 
@@ -19,6 +33,7 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
     {
         if (_originalPresentWork.Executing is { } admitted)
             return admitted.AwaitAsync(AcquireOriginalPresentSource(body));
+        DemandOriginalPresentationAdmission();
         return _originalPresentWork.RunAsync(async original =>
         {
             Interlocked.Increment(ref _activeOriginalPresentBodies);
@@ -30,6 +45,7 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
     {
         if (_originalPresentWork.Executing is { } admitted)
             return admitted.AwaitAsync(AcquireOriginalPresentSource(body));
+        DemandOriginalPresentationAdmission();
         return _originalPresentWork.RunAsync(async original =>
         {
             Interlocked.Increment(ref _activeOriginalPresentBodies);
@@ -69,7 +85,13 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
     private T AcquireOriginalPresentSource<T>(Func<T> body)
     {
         (_actualPresentSources ??= []).Add(this);
-        try { return body(); }
+        try
+        {
+            T result = default!;
+            if (_originalPresentationParent is { } parent) parent(() => result = body());
+            else result = body();
+            return result;
+        }
         catch (OperationCanceledException error)
         { throw new AggregateException("A synchronous Present callback supplied no canceled original Task.", error); }
         finally { _actualPresentSources.RemoveAt(_actualPresentSources.Count - 1); }
@@ -81,18 +103,19 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
             try { return AcquireOriginalPresentSource(body); }
             catch (Exception error) { admitted.Retain(error); throw; }
         }
+        DemandOriginalPresentationAdmission();
         T result = default!;
         _originalPresentWork.RunSynchronous(original => result = AcquireOriginalPresentSource(body));
         return result;
     }
     private void RunOriginalPresentEvent(Action body)
     {
-        if (_disposed || _originalPresentWork.IsRetiring) return;
+        if (_disposed || _originalPresentWork.IsRetiring || !CanAdmitOriginalPresentation) return;
         RunOriginalPresentSynchronous(() => { body(); return true; });
     }
     private void ObserveOriginalPresentEvent(Func<Task> body)
     {
-        if (_disposed || _originalPresentWork.IsRetiring) return;
+        if (_disposed || _originalPresentWork.IsRetiring || !CanAdmitOriginalPresentation) return;
         // RunAsync publishes the SAME actual task before invoking the event body.
         // Observation prevents an async-void escape; the owner retains failures.
         var actual = RunOriginalPresentAsync(body);
@@ -133,6 +156,35 @@ public sealed partial class PresentPage : IDesktopOriginalRetirementParticipant,
     }
     private void PublishOriginalPresentSource(Action publication) =>
         RunOriginalPresentSynchronous(() => { publication(); return true; });
+    // This is a pure, page-issued observation, not a frozen/reversible lease. A late edit invalidates it.
+    private sealed record OriginalBrowseCloseFence(PresentPage Owner, Haven.Core.PresentDocument Document, int Version, long Generation, string Fingerprint);
+    private static string OriginalBrowseCloseFingerprint(Haven.Core.PresentDocument document) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(document, DocumentJson)));
+    internal object? CaptureOriginalBrowseCloseFence()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.VerifyAccess();
+        return IsOriginalDocumentClosePrepared && Document is { } document
+            ? new OriginalBrowseCloseFence(this, document, document.Version, _editGeneration, OriginalBrowseCloseFingerprint(document)) : null;
+    }
+    internal bool IsOriginalBrowseCloseFenceCurrent(object fence)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.VerifyAccess();
+        return fence is OriginalBrowseCloseFence original && ReferenceEquals(original.Owner, this) &&
+            ReferenceEquals(original.Document, Document) && original.Version == Document?.Version &&
+            original.Generation == _editGeneration && IsOriginalDocumentClosePrepared &&
+            string.Equals(original.Fingerprint, OriginalBrowseCloseFingerprint(original.Document), StringComparison.Ordinal);
+    }
+    internal Task BeginOriginalPreparedBrowseClose(object fence)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.VerifyAccess();
+        DemandExternalOriginalRetirementJoin();
+        // Refusal admits no new page work, changes no history and does not start retirement.
+        if (!IsOriginalBrowseCloseFenceCurrent(fence))
+            throw new InvalidOperationException("Present changed after close preparation; save the current draft before closing.");
+        _originalPresentWork.RequestRetirement();
+        return _originalPresentWork.OriginalClose ?? throw new InvalidOperationException("The original Present close was not retained.");
+    }
+
     private void StartOriginalPresentAutosave() => PublishOriginalPresentSource(() =>
     {
         if (!_originalPresentWork.IsRetiring) _autosaveTimer.Start();

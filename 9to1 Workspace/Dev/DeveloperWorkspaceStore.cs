@@ -213,9 +213,9 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
                     DeveloperOperationErrorCode.WorkspaceNotFound,
                     "The requested workspace does not exist.", workspace.WorkspaceId.ToString("D"));
 
-            var currentResult = await GetAsync(workspace.WorkspaceId, cancellationToken).ConfigureAwait(false);
-            if (!currentResult.Succeeded) return currentResult;
-            var current = currentResult.Value!;
+            var currentResult = await ReadEditorDocumentAsync(workspace.WorkspaceId, cancellationToken).ConfigureAwait(false);
+            if (!currentResult.Succeeded) return CopyEditorError<DeveloperWorkspace>(currentResult.Error!);
+            var current = currentResult.Value!.Workspace;
             if (current.Revision != expectedRevision || workspace.CreatedAt != current.CreatedAt)
                 return DeveloperOperationResult<DeveloperWorkspace>.Failure(
                     DeveloperOperationErrorCode.RevisionConflict,
@@ -226,7 +226,7 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
             if (updated.Validate() is { } updatedValidation)
                 return DeveloperOperationResult<DeveloperWorkspace>.Failure(
                     DeveloperOperationErrorCode.InvalidInput, updatedValidation, workspace.WorkspaceId.ToString("D"));
-            await WriteAsync(path, updated, cancellationToken).ConfigureAwait(false);
+            await WriteAsync(path, updated, cancellationToken, currentResult.Value!.EditorSessions).ConfigureAwait(false);
             return DeveloperOperationResult<DeveloperWorkspace>.Success(updated);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
@@ -269,9 +269,13 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
     private string GetWorkspacePath(Guid workspaceId) =>
         Path.Combine(_workspaceDirectory, workspaceId.ToString("N") + ".json");
 
-    private static async Task WriteAsync(string path, DeveloperWorkspace workspace, CancellationToken cancellationToken)
+    private static Task WriteAsync(string path, DeveloperWorkspace workspace, CancellationToken cancellationToken,
+        IReadOnlyList<DeveloperCleanEditorSession>? editorSessions = null) =>
+        WriteEditorDocumentAsync(path, new WorkspaceDocument(CurrentSchemaVersion, workspace, editorSessions), cancellationToken);
+
+    private static async Task WriteEditorDocumentAsync(string path, WorkspaceDocument document, CancellationToken cancellationToken)
     {
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(new WorkspaceDocument(CurrentSchemaVersion, workspace), JsonOptions);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(document, JsonOptions);
         var temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
@@ -307,7 +311,11 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
         exception is UnauthorizedAccessException ? "Dev cannot access its workspace-data location." :
         "Dev could not read or atomically save workspace state.";
 
-    private sealed record WorkspaceDocument(int SchemaVersion, DeveloperWorkspace Workspace);
+    // Editor sessions are metadata only, in this SAME atomic document. Their independent CAS
+    // generation does not change the workspace/project authority revision or registered route.
+    private sealed record WorkspaceDocument(int SchemaVersion, DeveloperWorkspace Workspace,
+        [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<DeveloperCleanEditorSession>? EditorSessions = null);
 
     private sealed class ReleasingFileLock(FileStream file, SemaphoreSlim processLock) : IAsyncDisposable
     {

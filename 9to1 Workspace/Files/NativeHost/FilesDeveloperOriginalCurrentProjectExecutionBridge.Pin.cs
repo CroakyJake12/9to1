@@ -55,6 +55,10 @@ public sealed partial class FilesDeveloperOriginalCurrentProjectExecutionBridge
                     captured.OriginalRead.DemandOriginalExecutionBinding();
                     lock (_gate)
                     {
+                        // Same gate as clean-session update reservation: no pin can be promoted
+                        // after its document is admitted for a presentation-only metadata write.
+                        if (_editorSessionUpdates.ContainsKey(binding.WorkspaceId))
+                            throw new InvalidOperationException("The workspace is finishing a clean editor-session update; no native execution pin was admitted.");
                         if (_pins.Count >= 128) throw new InvalidOperationException("Native execution pin custody is full.");
                         pin = new(this, binding, captured, original); _pins.Add(pin);
                     }
