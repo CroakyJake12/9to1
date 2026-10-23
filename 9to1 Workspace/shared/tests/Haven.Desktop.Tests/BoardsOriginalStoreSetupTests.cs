@@ -171,6 +171,91 @@ public sealed class BoardsOriginalStoreSetupTests
     }
 
     [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original Linux Notes boundary; other platform acceptance is separate.")]
+    public async Task Shared_CUI_busy_Create_retains_its_exact_authored_origin_until_the_actual_identity_result_is_published()
+    {
+        PrivateRoot? root = null; Rig? rig = null; BoardsBrowseAppContentSession? session = null; Window? window = null;
+        var principal = new HeldActualPrincipal(); var failures = new List<Exception>(); Task? acceptedAction = null;
+        System.ComponentModel.INotifyPropertyChanged? observedBindings = null;
+        System.ComponentModel.PropertyChangedEventHandler? observer = null;
+        try
+        {
+            root = new PrivateRoot(); rig = await Rig.CreateAsync(root.Path, principal);
+            var factory = BoardsBrowseAppContentFactory.BindOriginalSameProcess(rig.Provider, rig.Home, rig.Token, rig.HostToken, () => true);
+            session = Assert.IsType<BoardsBrowseAppContentSession>(factory.CreateSession(new(Guid.NewGuid(),
+                AppContentAddress.Parse("9to1://boards"), rig.Actor.ProfileId, BrowserTabPrivacy.Standard)));
+            await session.InitializeAsync(rig.Token);
+            var view = Assert.IsType<CuiSceneHost>(session.OriginalNativeView);
+            window = new Window { Content = view, Width = 1000, Height = 760 }; window.Show();
+            await WaitForControlAsync(session, view, window, "boards-storage-create", rig.Token);
+            var button = Assert.IsType<Button>(Find(view, "boards-storage-create"));
+            var loader = Assert.IsType<CuiControlLoader>(typeof(CuiSceneHost)
+                .GetField("_loader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(view));
+            var bindings = Assert.IsAssignableFrom<CakeOS.Cui.ICuiBindingContext>(typeof(BoardsBrowseAppContentSession)
+                .GetField("_bindings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(session));
+            observedBindings = Assert.IsAssignableFrom<System.ComponentModel.INotifyPropertyChanged>(bindings);
+            var armed = 0;
+            observer = (_, change) =>
+            {
+                if (change.PropertyName == "StorageSourceBusy" && bindings.TryGetValue("StorageSourceBusy", out var busy) && busy is true &&
+                    Interlocked.CompareExchange(ref armed, 1, 0) == 0) principal.Arm();
+            };
+            observedBindings.PropertyChanged += observer;
+            Click(view, "boards-storage-create");
+            await principal.Entered.Task.WaitAsync(rig.Token);
+            var heldOriginal = Assert.IsAssignableFrom<Task<string?>>(principal.HeldOriginal);
+            var show = session.OriginalCuiShow ?? throw new InvalidOperationException("Retain actual original Show.");
+            acceptedAction = view.CaptureOriginalActionSettlement(show);
+            Assert.False(heldOriginal.IsCompleted); Assert.False(acceptedAction.IsCompleted);
+            Assert.True(loader.IsAuthoredControl(button),
+                "BOARDS_STORAGE_BUSY_RETIRED_ACCEPTED_ACTION_ORIGIN: busy participation must retain the exact original action's authored result owner.");
+            Assert.False(button.IsEffectivelyEnabled);
+            Assert.False(Directory.Exists(rig.NotesDirectory));
+            Assert.Empty((await rig.Home.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).Grants);
+            principal.Release.SetResult(); await acceptedAction;
+            Assert.True(heldOriginal.IsCompletedSuccessfully); Assert.Equal(1, armed);
+            await WaitForControlAsync(session, view, window, "boards-storage-bind-empty", rig.Token);
+            var identity = await rig.Notes.GetStoreIdentityAsync(rig.Token);
+            Assert.True(identity.NewlyCreated);
+            Assert.Null(await rig.Home.Ownership.GetVerifiedAsync("notes", identity.StoreId.ToString("D"), rig.Token));
+            Assert.Null(Find(view, "boards-workspace"));
+            Assert.False(Directory.Exists(Path.Combine(rig.NotesDirectory, "Documents")));
+            var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync(rig.Token));
+            await preparation.BeginClose(); Assert.True(session.CanRetireOriginalView);
+        }
+        catch (Exception error) { failures.Add(error); }
+        finally
+        {
+            principal.Release.TrySetResult();
+            if (observedBindings is not null && observer is not null) observedBindings.PropertyChanged -= observer;
+            if (acceptedAction is not null)
+                try { await acceptedAction; } catch (Exception error) { failures.Add(error); }
+            // Keep the actual scene mounted until real preparation/retirement has settled.
+            // The old CUI may fail the origin assertion, but its metadata-only owner still gets
+            // the same genuine strong-preparation cleanup rather than a forced close/discard.
+            if (session is not null)
+                try
+                {
+                    if (session.OriginalClose is { } close) await close;
+                    else
+                    {
+                        var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
+                        await preparation.BeginClose();
+                    }
+                }
+                catch (Exception error) { failures.Add(error); }
+            if (window is not null)
+            {
+                try { window.Content = null; } catch (Exception error) { failures.Add(error); }
+                try { window.Close(); } catch (Exception error) { failures.Add(error); }
+            }
+            if (rig is not null) try { await rig.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+            if (root is not null) try { root.Dispose(); } catch (Exception error) { failures.Add(error); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Actual busy action origin assertion and independent cleanup failed.", failures);
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original Linux Notes boundary; other platform acceptance is separate.")]
     public async Task Existing_revision_material_is_not_empty_bound_and_actual_Home_decline_then_accept_retains_original_import()
     {
         using var root = new PrivateRoot(); await using var rig = await Rig.CreateAsync(root.Path);
