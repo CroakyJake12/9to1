@@ -29,7 +29,7 @@ public sealed class CuiInitialEffectActivationTests
           </Effects>
           <Container Type="Vertical Stack">
             <Button id="toggle" Action="toggle" Content="Toggle" />
-            <Container Active="False"><Button id="other" Action="other" Content="Other" /></Container>
+            <Container Type="Horizontal Stack" Active="False"><Button id="other" Action="other" Content="Other" /></Container>
             <Text id="outcome" Text="{Binding Result.Code}" />
           </Container>
         </Cui>
@@ -49,6 +49,8 @@ public sealed class CuiInitialEffectActivationTests
         };
         f.Loader.WireBindings(root);
         await f.Loader.WhenActionsIdleAsync();
+        Assert.True(f.Calls.Contains("domain.inspect"),
+            "CUI_INITIAL_EFFECT_NOT_DISPATCHED_AFTER_VALID_FULL_ROOT_WIRING");
         Assert.Equal(new[] { "domain.inspect", "domain.follow" }, f.Calls);
         Assert.Equal("Inspected", Find<TextBlock>(root, "outcome").Text);
         f.Loader.WireBindings(root);
