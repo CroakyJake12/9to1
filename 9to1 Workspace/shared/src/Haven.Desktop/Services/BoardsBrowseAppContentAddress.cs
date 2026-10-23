@@ -12,7 +12,7 @@ internal sealed record BoardsBrowseAppContentAddress(Guid? DocumentId)
         if (address.Namespace != AppContentNamespace.NativeApp || address.Authority != Authority)
             throw new UnauthorizedAccessException("Select the registered native Boards application.");
         var parts = address.ResourceSegments;
-        if (parts.Count == 0) return new(null);
+        if (parts.Count == 0) return new((Guid?)null);
         if (parts.Count != 2 || parts[0] != "notebooks" ||
             !Guid.TryParseExact(parts[1], "D", out var id) || id == Guid.Empty || parts[1] != id.ToString("D"))
             throw new FormatException("A Boards location requires its exact canonical notebook identity.");

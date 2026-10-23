@@ -33,6 +33,7 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
             core.PropertyChanged += OnChanged;
             Refresh();
             ControlRegistry = new CuiControlRegistry();
+            BrowserCanonicalIcons.Register(ControlRegistry);
             ControlRegistry.RegisterObjectRenderer("BoardsNotebookSurface", _ => Control);
         }
         catch (Exception primary)

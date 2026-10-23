@@ -29,6 +29,24 @@ public sealed class BoardsBrowseAppContentSessionTests
     }
 
     [AvaloniaFact]
+    public async Task Shared_registry_loads_original_CUI_and_resolves_canonical_icons_without_browser_host()
+    {
+        await using var rig = new Rig();
+        await using var core = new BoardsBrowserCore(rig.Notes);
+        using var presentation = new BoardsCuiWorkspacePresentation(core, () => true);
+        using var stream = typeof(BoardsBrowseAppContentSession).Assembly.GetManifestResourceStream(BoardsBrowseAppContentSession.CuiResourceName)
+            ?? throw new InvalidOperationException("The actual shared Boards CUI resource is unavailable.");
+        using var reader = new StreamReader(stream);
+        var document = new CuiDocumentSource(reader.ReadToEnd(), "Boards.cui").Document;
+        using var loader = new CuiControlLoader(presentation.ControlRegistry);
+        loader.SetBindingContext(core); loader.SetActionDispatcher(core);
+        var loaded = loader.TryLoad(document);
+        Assert.True(loaded.Root is not null && !loaded.Diagnostics.Any(diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error),
+            string.Join(Environment.NewLine, loaded.Diagnostics.Select(diagnostic => diagnostic.ToString())));
+        loader.WireBindings(loaded.Root!);
+    }
+
+    [AvaloniaFact]
     public async Task Real_shared_CUI_has_original_tasks_and_reversible_clean_close()
     {
         await using var rig = new Rig(); var session = rig.Create();
