@@ -279,6 +279,10 @@ public sealed class UnifiedHomeContentTests
     }
 
     [AvaloniaTheory]
+    [InlineData(360, 844, CuiAppearance.SuperBright)]
+    [InlineData(360, 844, CuiAppearance.Bright)]
+    [InlineData(360, 844, CuiAppearance.Dark)]
+    [InlineData(360, 844, CuiAppearance.SuperDark)]
     [InlineData(390, 844, CuiAppearance.SuperBright)]
     [InlineData(390, 844, CuiAppearance.Bright)]
     [InlineData(390, 844, CuiAppearance.Dark)]
@@ -297,6 +301,7 @@ public sealed class UnifiedHomeContentTests
         IBrowseNativeAppContentSession? session = null;
         Window? window = null;
         Task? initialization = null, close = null;
+        Task? searchActions = null;
         var failures = new List<Exception>();
         try
         {
@@ -330,8 +335,91 @@ public sealed class UnifiedHomeContentTests
                 Assert.InRange(origin.Value.Y, -1, height - 23);
                 Assert.True(origin.Value.X + button.Bounds.Width <= width + 1);
             }
+            if (width is 360 or 390 or 1280)
+            {
+                // Real canonical Apps controls in the original owning page, including the query-visible Clear button.
+                var home = Assert.IsType<UnifiedHomePage>(page);
+                var searchRow = Assert.Single(page.GetVisualDescendants().OfType<CuiContainerControl>(),
+                    control => control.Name == "home-apps-search-row");
+                var search = Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
+                    control => control.Name == "home-app-search");
+                var clear = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "home-apps-clear");
+                var count = Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
+                    control => control.Name == "home-apps-count");
+                Assert.Equal("Search apps", AutomationProperties.GetName(search));
+                Assert.Equal("Installed app count", AutomationProperties.GetName(count));
+                Assert.Equal("19 apps", count.Text);
+                Assert.False(clear.IsEffectivelyVisible);
+                AssertSearchGeometry();
+                Assert.True(search.Focus(), "The narrow app search must remain keyboard-focusable.");
+                search.Text = "Boards";
+                // Query/Clear projection is synchronous today. This outer Home drain is not an Apps-loader settlement proof;
+                // the original session close below joins both loaders and retains their failures.
+                searchActions = home.WhenActionsIdleAsync(); await searchActions;
+                SearchLayout();
+                Assert.Equal("Boards", search.Text);
+                Assert.True(clear.IsEffectivelyVisible);
+                Assert.Equal("19 apps", count.Text);
+                var filteredTile = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "home-app-tile" && control.IsEffectivelyVisible);
+                Assert.Equal("Boards", Assert.Single(filteredTile.GetVisualDescendants().OfType<TextBlock>()).Text);
+                AssertSearchGeometry();
+                clear.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                searchActions = home.WhenActionsIdleAsync(); await searchActions;
+                SearchLayout();
+                Assert.Equal(string.Empty, search.Text);
+                Assert.False(clear.IsEffectivelyVisible);
+                Assert.Equal("19 apps", count.Text);
+                Assert.Same(search, Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
+                    control => control.Name == "home-app-search"));
+                Assert.True(page.GetVisualDescendants().OfType<Button>()
+                    .Count(control => control.Name == "home-app-tile" && control.IsEffectivelyVisible) > 1);
+                AssertSearchGeometry();
+
+                void SearchLayout()
+                {
+                    window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+                }
+                void AssertSearchGeometry()
+                {
+                    var visible = clear.IsEffectivelyVisible
+                        ? new Control[] { search, clear, count } : new Control[] { search, count };
+                    var rowOrigin = searchRow.TranslatePoint(default, window);
+                    Assert.NotNull(rowOrigin);
+                    Assert.True(rowOrigin.Value.X >= -.5 && rowOrigin.Value.X + searchRow.Bounds.Width <= width + .5);
+                    foreach (var control in visible)
+                    {
+                        Assert.True(control.IsEffectivelyVisible);
+                        Assert.True(control.Bounds.Width > 0 && control.Bounds.Height > 0);
+                        var insideRow = control.TranslatePoint(default, searchRow);
+                        var insideWindow = control.TranslatePoint(default, window);
+                        Assert.NotNull(insideRow); Assert.NotNull(insideWindow);
+                        Assert.True(insideRow.Value.X >= -.5 && insideRow.Value.X + control.Bounds.Width <= searchRow.Bounds.Width + .5,
+                            $"{control.Name} exceeds the Apps search row: X={insideRow.Value.X}, Width={control.Bounds.Width}, RowWidth={searchRow.Bounds.Width}.");
+                        Assert.True(insideRow.Value.Y >= -.5 && insideRow.Value.Y + control.Bounds.Height <= searchRow.Bounds.Height + .5);
+                        Assert.True(insideWindow.Value.X >= -.5 && insideWindow.Value.X + control.Bounds.Width <= width + .5);
+                        Assert.True(insideWindow.Value.Y >= -.5 && insideWindow.Value.Y + control.Bounds.Height <= height + .5);
+                    }
+                    Assert.True(search.Bounds.Width >= 160 && search.Bounds.Width <= 480);
+                    Assert.True(count.DesiredSize.Width <= count.Bounds.Width + .5, "The full installed-app count must remain readable.");
+                    var searchOrigin = search.TranslatePoint(default, searchRow)!.Value;
+                    var countOrigin = count.TranslatePoint(default, searchRow)!.Value;
+                    Assert.True(searchOrigin.X <= .5, "App search must stay at the left edge on desktop as well as narrow viewports.");
+                    Assert.True(searchRow.Bounds.Width <= 520.5);
+                    Assert.True(searchOrigin.Y + search.Bounds.Height <= countOrigin.Y + .5,
+                        "The full installed-app count must occupy a separate row below search.");
+                    if (clear.IsEffectivelyVisible)
+                    {
+                        var clearOrigin = clear.TranslatePoint(default, searchRow)!.Value;
+                        Assert.True(searchOrigin.X + search.Bounds.Width <= clearOrigin.X + .5);
+                        Assert.InRange(clearOrigin.X - searchOrigin.X - search.Bounds.Width, -.5, 8.5);
+                        Assert.True(clearOrigin.Y + clear.Bounds.Height <= countOrigin.Y + .5);
+                    }
+                }
+            }
         }
-        catch (Exception cause) { Retain(cause); RetainTask(initialization); }
+        catch (Exception cause) { Retain(cause); RetainTask(initialization); RetainTask(searchActions); }
         finally
         {
             if (session is not null)

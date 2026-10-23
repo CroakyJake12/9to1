@@ -72,4 +72,224 @@ public sealed class WriteSelectionFormattingTests
         Assert.Equal(10, comment.EndOffset);
         Assert.Equal("Review", comment.Text);
     }
+
+    [Theory]
+    [InlineData(WriteCharacterFormat.Bold, false)]
+    [InlineData(WriteCharacterFormat.Bold, true)]
+    [InlineData(WriteCharacterFormat.Italic, false)]
+    [InlineData(WriteCharacterFormat.Italic, true)]
+    [InlineData(WriteCharacterFormat.Underline, false)]
+    [InlineData(WriteCharacterFormat.Underline, true)]
+    [InlineData(WriteCharacterFormat.StrikeThrough, false)]
+    [InlineData(WriteCharacterFormat.StrikeThrough, true)]
+    public void Mixed_range_enables_every_selected_character_without_changing_neighbours(
+        WriteCharacterFormat format, bool backwards)
+    {
+        var (document, block, editor) = MixedDocument(format);
+        var before = Sections(document);
+        var expected = Characters(block);
+        var originalIds = block.Runs.Select(run => run.Id).ToArray();
+        var first = System.Text.Json.JsonSerializer.Serialize(block.Runs[0]);
+        var last = System.Text.Json.JsonSerializer.Serialize(block.Runs[^1]);
+        var caret = backwards ? 4 : 9;
+        editor.SelectBlock(block.Id, caret, backwards ? 9 : 4, backwards ? 4 : 9);
+        var changes = 0;
+        editor.Changed += (_, _) => changes++;
+
+        editor.ToggleSelectionCharacter(format);
+
+        AssertCharacters(expected, block, format, 4, 9, true);
+        Assert.Equal("AAOne Two ZZ", block.PlainText);
+        Assert.Equal("e Two", editor.SelectedText);
+        Assert.Equal(caret, editor.CaretIndex);
+        Assert.Equal(4, editor.SelectionStart);
+        Assert.Equal(9, editor.SelectionEnd);
+        Assert.Equal(1, changes);
+        Assert.Equal(first, System.Text.Json.JsonSerializer.Serialize(block.Runs[0]));
+        Assert.Equal(last, System.Text.Json.JsonSerializer.Serialize(block.Runs[^1]));
+        Assert.All(originalIds, id => Assert.Single(block.Runs, run => run.Id == id));
+        Assert.Equal(block.Runs.Count, block.Runs.Select(run => run.Id).Distinct().Count());
+        var after = Sections(document);
+        Assert.True(editor.Undo());
+        Assert.Equal(before, Sections(document));
+        Assert.False(editor.CanUndo);
+        Assert.True(editor.Redo());
+        Assert.Equal(after, Sections(document));
+    }
+
+    [Theory]
+    [InlineData(WriteCharacterFormat.Bold)]
+    [InlineData(WriteCharacterFormat.Italic)]
+    [InlineData(WriteCharacterFormat.Underline)]
+    [InlineData(WriteCharacterFormat.StrikeThrough)]
+    public void Same_range_toggles_off_after_splitting_and_history_restores_exact_runs(WriteCharacterFormat format)
+    {
+        var document = NotesDocument.Create();
+        var block = document.Sections[0].Pages[0].Blocks[0];
+        block.PlainText = "Alpha beta gamma";
+        block.Runs = [new NotesTextRun { Text = block.PlainText, Link = "https://example.test/revision", Language = "en-GB" }];
+        var editor = new WriteDocumentEditor(document);
+        var before = Sections(document);
+        var expected = Characters(block);
+        editor.SelectBlock(block.Id, 10, 6, 10);
+
+        editor.ToggleSelectionCharacter(format);
+        AssertCharacters(expected, block, format, 6, 10, true);
+        Assert.True(Marked(editor.ActiveRun!, format));
+        var enabled = Sections(document);
+        editor.ToggleSelectionCharacter(format);
+        AssertCharacters(expected, block, format, 6, 10, false);
+        Assert.False(Marked(editor.ActiveRun!, format));
+        Assert.Equal("beta", editor.SelectedText);
+        var disabled = Sections(document);
+
+        Assert.True(editor.Undo());
+        Assert.Equal(enabled, Sections(document));
+        Assert.True(editor.Undo());
+        Assert.Equal(before, Sections(document));
+        Assert.True(editor.Redo());
+        Assert.Equal(enabled, Sections(document));
+        Assert.True(editor.Redo());
+        Assert.Equal(disabled, Sections(document));
+    }
+
+    [Theory]
+    [InlineData(WriteCharacterFormat.Bold)]
+    [InlineData(WriteCharacterFormat.Italic)]
+    [InlineData(WriteCharacterFormat.Underline)]
+    [InlineData(WriteCharacterFormat.StrikeThrough)]
+    public void Document_selection_takes_priority_over_a_previous_block_range(WriteCharacterFormat format)
+    {
+        var (document, block, editor) = MixedDocument(format);
+        var second = NotesBlock.CreateParagraph();
+        second.PlainText = "Tail";
+        second.Runs = [new NotesTextRun { Text = second.PlainText }];
+        second.Order = block.Order + 1;
+        document.Sections[0].Pages[0].Blocks.Add(second);
+        var firstExpected = Characters(block);
+        var secondExpected = Characters(second);
+        var before = Sections(document);
+        editor.SelectBlock(block.Id, 9, 4, 9);
+        editor.SetDocumentCaret(block.Id, 1);
+        editor.SetDocumentCaret(second.Id, 3, extendSelection: true);
+        var anchor = editor.DocumentAnchor;
+        var caret = editor.DocumentCaret;
+        var selectedText = editor.SelectedDocumentText;
+
+        editor.ToggleSelectionCharacter(format);
+
+        AssertCharacters(firstExpected, block, format, 1, block.PlainText.Length, true);
+        AssertCharacters(secondExpected, second, format, 0, 3, true);
+        Assert.Equal(anchor, editor.DocumentAnchor);
+        Assert.Equal(caret, editor.DocumentCaret);
+        Assert.Equal(selectedText, editor.SelectedDocumentText);
+        Assert.True(editor.Undo());
+        Assert.Equal(before, Sections(document));
+        Assert.False(editor.CanUndo);
+    }
+
+    [Theory]
+    [InlineData(WriteCharacterFormat.Bold)]
+    [InlineData(WriteCharacterFormat.Italic)]
+    [InlineData(WriteCharacterFormat.Underline)]
+    [InlineData(WriteCharacterFormat.StrikeThrough)]
+    public async Task Selected_marks_and_stable_ids_survive_owner_save_and_fresh_repository_reopen(WriteCharacterFormat format)
+    {
+        using var paths = new RangeTestPaths();
+        await using var diagnostics = new ProductionDiagnostics(paths);
+        var repository = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
+        var (document, block, editor) = MixedDocument(format);
+        await repository.SaveAsync(document, "Before selected formatting", CancellationToken.None);
+        var before = Sections(document);
+        var expected = Characters(block);
+        editor.SelectBlock(block.Id, 9, 4, 9);
+        editor.ToggleSelectionCharacter(format);
+        AssertCharacters(expected, block, format, 4, 9, true);
+        var formatted = Sections(document);
+        Assert.True(editor.Undo());
+        Assert.Equal(before, Sections(document));
+        Assert.True(editor.Redo());
+        Assert.Equal(formatted, Sections(document));
+        await repository.SaveAsync(document, "Selected formatting", CancellationToken.None);
+
+        var freshRepository = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
+        var reopened = await freshRepository.LoadAsync(document.Id, CancellationToken.None);
+        Assert.NotNull(reopened);
+        Assert.Equal(document.Id, reopened!.Id);
+        Assert.Equal(document.Version, reopened.Version);
+        Assert.Equal(Sections(document), Sections(reopened));
+        var reopenedBlock = reopened.Sections[0].Pages[0].Blocks.Single(item => item.Id == block.Id);
+        AssertCharacters(expected, reopenedBlock, format, 4, 9, true);
+        var versions = await freshRepository.GetVersionsAsync(document.Id, CancellationToken.None);
+        Assert.Equal(2, versions.Count);
+        var latest = versions.Single(version => version.Version == document.Version);
+        var historical = await freshRepository.LoadVersionAsync(document.Id, latest.VersionId, CancellationToken.None);
+        Assert.NotNull(historical);
+        Assert.Equal(Sections(document), Sections(historical!));
+    }
+
+    private static (NotesDocument Document, NotesBlock Block, WriteDocumentEditor Editor) MixedDocument(WriteCharacterFormat format)
+    {
+        var document = NotesDocument.Create("Mixed revision notes");
+        var block = document.Sections[0].Pages[0].Blocks[0];
+        block.PlainText = "AAOne Two ZZ";
+        block.Runs = new[] { "AA", "One ", "Two ", "ZZ" }.Select((text, index) => new NotesTextRun
+        {
+            Text = text, FontFamily = index % 2 == 0 ? "Aptos" : "Montserrat", FontSize = 12 + index,
+            Foreground = index % 2 == 0 ? "#FF112233" : "#FF445566", Background = "#FFEEDDCC",
+            Link = "https://example.test/revision/" + index, Language = index % 2 == 0 ? "en-GB" : "fr-FR"
+        }).ToList();
+        var other = (WriteCharacterFormat)(((int)format + 1) % 4);
+        SetMark(block.Runs[0], other, true);
+        SetMark(block.Runs[1], other, true);
+        SetMark(block.Runs[2], format, true);
+        SetMark(block.Runs[3], other, true);
+        return (document, block, new WriteDocumentEditor(document));
+    }
+
+    private static string Sections(NotesDocument document) => System.Text.Json.JsonSerializer.Serialize(document.Sections);
+    private sealed record Character(char Text, string Font, double Size, bool Bold, bool Italic, bool Underline,
+        bool Strike, string Foreground, string Background, string? Link, string? Language);
+    private static Character[] Characters(NotesBlock block) => block.Runs.SelectMany(run => run.Text.Select(text =>
+        new Character(text, run.FontFamily, run.FontSize, run.Bold, run.Italic, run.Underline,
+            run.StrikeThrough, run.Foreground, run.Background, run.Link, run.Language))).ToArray();
+    private static void AssertCharacters(Character[] before, NotesBlock block, WriteCharacterFormat format, int start, int end, bool value)
+    {
+        var expected = before.Select((item, index) => index < start || index >= end ? item : format switch
+        {
+            WriteCharacterFormat.Bold => item with { Bold = value },
+            WriteCharacterFormat.Italic => item with { Italic = value },
+            WriteCharacterFormat.Underline => item with { Underline = value },
+            WriteCharacterFormat.StrikeThrough => item with { Strike = value },
+            _ => throw new ArgumentOutOfRangeException(nameof(format))
+        }).ToArray();
+        Assert.Equal(expected, Characters(block));
+    }
+    private static bool Marked(NotesTextRun run, WriteCharacterFormat format) => format switch
+    {
+        WriteCharacterFormat.Bold => run.Bold, WriteCharacterFormat.Italic => run.Italic,
+        WriteCharacterFormat.Underline => run.Underline, WriteCharacterFormat.StrikeThrough => run.StrikeThrough,
+        _ => throw new ArgumentOutOfRangeException(nameof(format))
+    };
+    private static void SetMark(NotesTextRun run, WriteCharacterFormat format, bool value)
+    {
+        switch (format)
+        {
+            case WriteCharacterFormat.Bold: run.Bold = value; break;
+            case WriteCharacterFormat.Italic: run.Italic = value; break;
+            case WriteCharacterFormat.Underline: run.Underline = value; break;
+            case WriteCharacterFormat.StrikeThrough: run.StrikeThrough = value; break;
+        }
+    }
+    private sealed class RangeTestPaths : IAppPaths, IDisposable
+    {
+        public string DataDirectory { get; } = Path.Combine(Path.GetTempPath(), "write-range-tests-" + Guid.NewGuid().ToString("N"));
+        public string DatabasePath => Path.Combine(DataDirectory, "haven.db");
+        public string BrowserProfileDirectory => Path.Combine(DataDirectory, "browser");
+        public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+        public string LogsDirectory => Path.Combine(DataDirectory, "logs");
+        public string LegacyStatePath => Path.Combine(DataDirectory, "missing.json");
+        public RangeTestPaths() { Directory.CreateDirectory(DataDirectory); Directory.CreateDirectory(LogsDirectory); }
+        public void Dispose() { if (Directory.Exists(DataDirectory)) Directory.Delete(DataDirectory, recursive: true); }
+    }
 }
