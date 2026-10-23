@@ -7,9 +7,9 @@
     <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
-  <Page id="BrowseRoot" AccessibleName="9to1 Haven browser">
+  <Page id="BrowseRoot" AccessibleName="{Binding Presentation.AccessibleName}">
     <Container id="BrowseLayout" Type="Grid" RowSizes="Auto Auto 1fr Auto" ColumnSizes="1fr" CellGap="0" Background="{Resource CuiBackgroundBrush}">
-      <Container id="BrowseTabStrip" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs">
+      <Container id="BrowseTabStrip" IsVisible="{Binding Presentation.Browser}" Type="Grid" Column="0" ColumnSizes="1fr Auto" Padding="8 4 8 2" Background="{Resource CuiPanelBrush}" AccessibleName="Open tabs">
         <Container Type="Overlay" HorizontalScrolling="True" VerticalScrolling="False">
           <Repeat Source="{Binding Tabs}" As="tab" Key="{Binding tab.Key}" Panel="Horizontal Stack">
             <Container Type="Grid" ColumnSizes="1fr Auto" Width="200" MinWidth="100" MaxWidth="240" Margin="0 0 4 0" CornerRadius="8" Selected="{Binding tab.Selected}" Background="{Resource CuiTransparentBrush}">
@@ -20,7 +20,7 @@
         </Container>
           <Button id="BrowseNewTabButton" Column="1" action="9to1.Browse.NewTab" Interactive="{Binding Can.NewTab}" AccessibleName="New tab" Tooltip="New tab (Ctrl+T)" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">+</Button>
       </Container>
-      <Container id="BrowseNavigationBar" Type="Grid" Row="1" Column="0" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto" CellGap="2" Padding="4 4 4 6" Background="{Resource CuiPanelBrush}">
+      <Container id="BrowseNavigationBar" IsVisible="{Binding Presentation.Browser}" Type="Grid" Row="1" Column="0" ColumnSizes="Auto Auto Auto 1fr Auto Auto Auto" CellGap="2" Padding="4 4 4 6" Background="{Resource CuiPanelBrush}">
         <Button id="BrowseBackButton" action="9to1.Browse.Back" AccessibleName="Go back" Tooltip="Go back (Alt+Left)" Interactive="{Binding CanBack}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">←</Button>
         <Button id="BrowseForwardButton" action="9to1.Browse.Forward" Column="1" AccessibleName="Go forward" Tooltip="Go forward (Alt+Right)" Interactive="{Binding CanForward}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="17" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">→</Button>
         <Container Type="Overlay" Column="2">
@@ -47,7 +47,26 @@
           <Image Source="avares://Haven/Assets/haven-profile.svg" Width="18" Height="18" />
         </Button>
       </Container>
-      <Container id="BrowseContentViewport" Type="Grid" Row="2" Column="0" ColumnSizes="1fr" RowSizes="1fr" MinHeight="180">
+      <Container id="StandaloneAppHeader" Type="Grid" Row="1" ColumnSizes="1fr Auto Auto Auto" CellGap="4" Padding="8 4" Background="{Resource CuiPanelBrush}" IsVisible="{Binding Presentation.Standalone}" AccessibleName="Application controls">
+        <Text id="StandaloneAppTitle" Text="{Binding Presentation.AppName}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <Button id="StandaloneModelButton" Column="1" action="9to1.Haven.OpenModel" AccessibleName="{Binding Haven.ModelAccessibleName}" Tooltip="{Binding Haven.ModelTooltip}" Interactive="{Binding Haven.ModelAvailable}" Height="36" MinHeight="36" MinWidth="36" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+          <Container Type="Horizontal Stack" CellGap="4" VerticalAlignment="Center">
+            <Image Source="avares://Haven/Assets/haven-model.svg" Width="18" Height="18" />
+            <Text Text="{Binding Haven.EffortPercent}" FontSize="12" IsVisible="{Binding Haven.EffortKnown}" />
+          </Container>
+        </Button>
+        <Button id="StandaloneNotificationsButton" Column="2" action="9to1.Haven.OpenNotifications" AccessibleName="Notifications" Tooltip="Open notifications" Interactive="{Binding Haven.NotificationsAvailable}" Height="36" MinHeight="36" Width="36" MinWidth="36" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+          <Image Source="avares://Haven/Assets/haven-notifications.svg" Width="18" Height="18" />
+        </Button>
+        <Button id="StandaloneProfileButton" Column="3" action="9to1.Haven.OpenProfile" AccessibleName="Account and profile" Tooltip="Open account and profile" Interactive="{Binding Haven.ProfileAvailable}" Height="36" MinHeight="36" Width="36" MinWidth="36" Padding="8" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
+          <Image Source="avares://Haven/Assets/haven-profile.svg" Width="18" Height="18" />
+        </Button>
+      </Container>
+      <Container id="StandaloneAppLoading" Type="Vertical Stack" Row="2" Padding="24" CellGap="8" IsVisible="{Binding Presentation.Loading}" AccessibleName="Opening application">
+        <Text Text="{Binding Presentation.AppName}" FontSize="22" FontWeight="SemiBold" />
+        <Text Text="Opening your application…" TextWrapping="Wrap" />
+      </Container>
+      <Container id="BrowseContentViewport" IsVisible="{Binding Presentation.ShowContent}" Type="Grid" Row="2" Column="0" ColumnSizes="1fr" RowSizes="1fr" MinHeight="180">
         <Object Type="browse.engine" id="BrowseEngineView" MinHeight="180" AccessibleName="Original native browser engine surface" />
         <Container id="BrowseNativePagePanel" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False" IsVisible="{Binding IsNativePage}">
           <Container Type="Vertical Stack" CellGap="8" Margin="12">
@@ -105,7 +124,7 @@
           </Container>
         </Container>
       </Container>
-      <Text Row="3" Column="0" Text="{Binding Status}" FontSize="11" AccessibleName="Browse operation status" />
+      <Text Row="3" Column="0" Text="{Binding Status}" FontSize="11" AccessibleName="{Binding Presentation.StatusAccessibleName}" />
     </Container>
 
     <Container id="BrowseProfileOverlay" Type="Overlay" IsVisible="{Binding ProfileMenuOpen}" AccessibleName="Profile menu" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0 84 8 0">

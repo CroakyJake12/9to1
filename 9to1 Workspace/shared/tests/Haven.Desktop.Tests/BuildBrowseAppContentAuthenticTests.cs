@@ -236,4 +236,124 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
             foreach (var child in group.InnerExceptions)
                 foreach (var value in Flatten(child)) yield return value;
     }
+
+    // Component-only source-session enrollment over the SAME real Home/Files/Dev rig. The cached
+    // capture below isolates draft guards; it is not a Home READ grant, rendered frame, disk save
+    // or native acceptance witness. Every typed binding/action under test is the actual page.
+    private static async Task<DeveloperProjectWorkbenchPage> ManualDraftBoundaryPage(Rig rig, bool captured = true)
+    {
+        var development = rig.Provider.GetRequiredService<DeveloperTaskWorkspaceService>();
+        var reference = System.Text.Json.JsonSerializer.Deserialize<DeveloperProjectReference>(rig.ProjectReference)!;
+        var resolved = await development.ResolveAsync(reference, rig.Token);
+        Assert.True(resolved.Succeeded); Assert.NotNull(resolved.Value);
+        var page = new DeveloperProjectWorkbenchPage(development,
+            rig.Provider.GetRequiredService<TaskExecutionCoordinator>(), resolved.Value!, ReadyReadiness.Instance,
+            (_, _, _) => throw new InvalidOperationException("No Task-backed document source was requested."),
+            () => { }, CancellationToken.None, null, null,
+            rig.Provider.GetRequiredService<DeveloperManualSourceReadOwner>());
+        DraftField("_active").SetValue(page, true);
+        if (captured)
+        {
+            DraftField("_sourcePath").SetValue(page, "app.cui");
+            DraftField("_manualDraftBaseline").SetValue(page, "saved source");
+            DraftField("_manualBeforeText").SetValue(page, "saved source");
+            DraftField("_manualDraftText").SetValue(page, "saved source");
+            DraftField("_manualBeforeSha256").SetValue(page, new string('a', 64));
+        }
+        return page;
+    }
+    private static System.Reflection.FieldInfo DraftField(string name) =>
+        typeof(DeveloperProjectWorkbenchPage).GetField(name,
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+    [AvaloniaFact(SkipUnless = nameof(LinuxLibraryFixtureSupported), Skip = "Actual Linux Home/Files source-session fixture; installed Windows acceptance is separate.")]
+    public async Task Build_source_selector_echo_preserves_dirty_draft_and_refuses_switch_or_reopen()
+    {
+        await Run(async rig =>
+        {
+            var page = await ManualDraftBoundaryPage(rig);
+            try
+            {
+                Assert.True(page.TrySetValue("DraftText", "unsaved source"));
+                Assert.True(page.HasUnsavedWork);
+                Assert.True(page.TrySetValue("SourcePath", "app.cui")); // Same-path CUI echo must be harmless.
+                Assert.False(page.TrySetValue("SourcePath", "other.cui"));
+                Assert.False(page.IsActionAvailable("dev.open-source"));
+                Assert.Throws<InvalidOperationException>(() => { _ = page.DispatchAsync("dev.open-source", null); });
+                Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("unsaved source", draft);
+                Assert.True(page.TryGetValue("SourcePath", out var source)); Assert.Equal("app.cui", source);
+                Assert.True(page.HasUnsavedWork);
+            }
+            finally { await page.CloseAndDrainAsync(); }
+        });
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(LinuxLibraryFixtureSupported), Skip = "Actual Linux Home/Files source-session fixture; installed Windows acceptance is separate.")]
+    public async Task Build_explicit_discard_restores_captured_baseline_and_releases_source_selection()
+    {
+        await Run(async rig =>
+        {
+            var page = await ManualDraftBoundaryPage(rig);
+            try
+            {
+                Assert.True(page.TrySetValue("DraftText", "unsaved source"));
+                Assert.True(page.IsActionAvailable("dev.discard-draft"));
+                await page.DispatchAsync("dev.discard-draft", null, rig.Token);
+                Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("saved source", draft);
+                Assert.False(page.HasUnsavedWork);
+                Assert.False(page.IsActionAvailable("dev.discard-draft"));
+                Assert.True(page.IsActionAvailable("dev.open-source"));
+                Assert.True(page.TrySetValue("SourcePath", "other.cui"));
+                Assert.True(page.TryGetValue("DraftText", out var empty)); Assert.Equal("", empty);
+                Assert.False(page.TrySetValue("DraftText", "unopened file replacement"));
+                Assert.False(page.HasUnsavedWork);
+            }
+            finally { await page.CloseAndDrainAsync(); }
+        });
+    }
+
+    [AvaloniaTheory(SkipUnless = nameof(LinuxLibraryFixtureSupported), Skip = "Actual Linux Home/Files source-session fixture; installed Windows acceptance is separate.")]
+    [InlineData("SourcePath")]
+    [InlineData("SearchQuery")]
+    [InlineData("DraftText")]
+    [InlineData("Command")]
+    [InlineData("TestCommand")]
+    [InlineData("StageTaskId")]
+    [InlineData("StageId")]
+    [InlineData("BranchName")]
+    public async Task Build_pending_source_command_refuses_delayed_input_without_mutating_capture(string binding)
+    {
+        await Run(async rig =>
+        {
+            var page = await ManualDraftBoundaryPage(rig);
+            try
+            {
+                Assert.True(page.TryGetValue(binding, out var before));
+                DraftField("_pending").SetValue(page, true); // Component custody, not a fabricated process run.
+                Assert.False(page.TrySetValue(binding, "late input"));
+                Assert.True(page.TryGetValue(binding, out var after)); Assert.Equal(before, after);
+                Assert.True(page.TryGetValue("DraftText", out var draft)); Assert.Equal("saved source", draft);
+                DraftField("_pending").SetValue(page, false);
+                Assert.False(page.HasUnsavedWork);
+            }
+            finally { DraftField("_pending").SetValue(page, false); await page.CloseAndDrainAsync(); }
+        });
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(LinuxLibraryFixtureSupported), Skip = "Actual Linux Home/Files source-session fixture; installed Windows acceptance is separate.")]
+    public async Task Build_unopened_source_refuses_authored_draft_until_the_real_read_capture_exists()
+    {
+        await Run(async rig =>
+        {
+            var page = await ManualDraftBoundaryPage(rig, captured: false);
+            try
+            {
+                Assert.True(page.TrySetValue("SourcePath", "app.cui"));
+                Assert.False(page.TrySetValue("DraftText", "cannot replace an unread source"));
+                Assert.True(page.TryGetValue("CanEditSource", out var editable)); Assert.Equal(false, editable);
+                Assert.False(page.HasUnsavedWork);
+            }
+            finally { await page.CloseAndDrainAsync(); }
+        });
+    }
 }

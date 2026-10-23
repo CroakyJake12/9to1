@@ -477,4 +477,56 @@ public sealed partial class BrowseNativeUiTests
         await Observe(Task.WhenAll(workspace.OriginalNotifications.ToArray()), window);
         Settle(window);
     }
+    [AvaloniaTheory]
+    [InlineData(BrowseNativeHostPresentation.StandaloneBoards, "9to1://boards/notebooks/61ca8320-019a-4861-840b-f692c5098edb", "9to1://canvas")]
+    [InlineData(BrowseNativeHostPresentation.StandaloneCanvas, "9to1://canvas", "9to1://boards")]
+    public async Task Standalone_presentation_refuses_browser_commands_and_writeback_but_shared_eligibility_grants_no_readiness(
+        BrowseNativeHostPresentation presentation, string ownAddress, string foreignAddress)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var gateway = new SharedControlsFakeGateway();
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory(), cancellationToken: token);
+        await using var workspace = new BrowseNativeWorkspace(chrome, _ => true,
+            sharedContext: new SharedControlsFakeContext(gateway, embedded: false), presentation: presentation);
+        var originalTab = chrome.State.SelectedTabId; var originalAddress = chrome.State.SelectedTab.Address;
+        Assert.True(workspace.CanPresentAddress(Haven.Core.AppContentAddress.Parse(ownAddress)));
+        foreach (var hiddenAddress in new[] { foreignAddress, "browse://newtab", "cui://boards", "https://boards.example/", "9to1://boards-extra" })
+            Assert.False(workspace.CanPresentAddress(Haven.Core.AppContentAddress.Parse(hiddenAddress)));
+        foreach (var command in new[] { "9to1.Browse.NewTab", "9to1.Browse.NewPrivateTab", "9to1.Browse.Navigate",
+            "9to1.Browse.Back", "9to1.Browse.Forward", "9to1.Browse.OpenSettingsPage", "9to1.Browse.ToggleProfileMenu",
+            "9to1.Browse.OpenWebAutomations", "9to1.Browse.CloseTab", "UnknownCommand" })
+        {
+            Assert.False(workspace.IsCommandInPresentation(command));
+            Assert.False(workspace.IsActionAvailable(command) == true);
+            await workspace.DispatchAsync(command, null, token);
+        }
+        foreach (var command in new[] { "9to1.Haven.OpenModel", "9to1.Haven.OpenNotifications", "9to1.Haven.OpenProfile" })
+        {
+            Assert.True(workspace.IsCommandInPresentation(command));
+            Assert.False(workspace.IsActionAvailable(command) == true);
+            await workspace.DispatchAsync(command, null, token);
+        }
+        Assert.False(workspace.TrySetValue("Address", "https://must-not-open.example/"));
+        Assert.False(workspace.TrySetValue("FindQuery", "foreign browser state"));
+        Assert.False(workspace.TrySetValue("AllowPopups", true));
+        Assert.Equal(originalTab, chrome.State.SelectedTabId); Assert.Equal(originalAddress, chrome.State.SelectedTab.Address);
+        Assert.Single(chrome.State.Tabs); Assert.False(workspace.IsReady);
+        Assert.Equal(0, gateway.ModelOpens + gateway.NotificationOpens + gateway.ProfileOpens);
+        Assert.Null(workspace.OriginalCommand); Assert.Empty(workspace.OriginalOperations);
+    }
+
+    [AvaloniaFact]
+    public async Task Browser_presentation_preserves_command_eligibility_without_context_and_unknown_presentation_is_refused()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory(), cancellationToken: token);
+        Assert.Throws<ArgumentOutOfRangeException>(() => new BrowseNativeWorkspace(chrome, _ => true,
+            presentation: (BrowseNativeHostPresentation)999));
+        await using var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        Assert.Equal(BrowseNativeHostPresentation.Browser, workspace.HostPresentation);
+        Assert.True(workspace.IsCommandInPresentation("9to1.Browse.NewTab"));
+        Assert.True(workspace.IsCommandInPresentation("9to1.Browse.Navigate"));
+        Assert.False(workspace.IsReady); Assert.Null(workspace.OriginalCommand);
+    }
+
 }

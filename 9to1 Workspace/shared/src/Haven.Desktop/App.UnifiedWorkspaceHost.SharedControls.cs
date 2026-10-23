@@ -39,7 +39,9 @@ public sealed partial class App
         {
             private readonly UnifiedWorkspaceHost _host = host;
 
-            public bool IsEmbedded => true;
+            // Presentation is captured once by the original host. It changes chrome only;
+            // SAME Home model, account, notification and original-operation owners remain.
+            public bool IsEmbedded => !_host.IsStandaloneAppPresentation;
             public bool ModelSupported => _host._services.GetService<IModelProviderRegistry>() is not null
                 && _host._services.GetService<IPrivacyPreferenceStore>() is not null;
             public bool NotificationsSupported => _host._services.GetService<HavenNotificationService>() is not null;

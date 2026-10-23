@@ -202,8 +202,13 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     /// <summary>True while the workbench holds unsaved authored work or an in-flight Dev command,
     /// so a tab owner can veto retirement instead of silently discarding it. A manual (no-AI)
     /// draft is equally unsaved work: it must veto close until it is applied or reverted.</summary>
-    internal bool HasUnsavedWork { get { lock (_gate) return _editor is { IsDirty: true } || _pending ||
-        (_manual && _editor is null && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline)); } }
+    internal bool HasUnsavedWork { get { lock (_gate) return HasDirtySourceDraft() || _pending; } }
+    // Source-session invariant shared by CUI availability, binding admission and host retirement.
+    // Callers hold _gate; changing a selector cannot discard a captured editor draft.
+    private bool HasDirtySourceDraft() => _editor is { IsDirty: true } ||
+        (_manual && _editor is null && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline));
+    private bool HasEditableSource() => _manual ? !string.IsNullOrEmpty(_manualBeforeSha256)
+        : _editor is not null && StringComparer.Ordinal.Equals(_sourcePath, _editor.Document.RelativePath);
     public new event PropertyChangedEventHandler? PropertyChanged;
     public DeveloperActionObservation? OriginalDeveloperObservation { get; private set; }
     public DeveloperSourceChangePass? OriginalSourcePass { get; private set; }
@@ -260,12 +265,12 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             {
                 "ProjectTitle" => _project.Project.Name,
                 "ProjectSummary" => _manual
-                    ? $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nManual open — no AI task or model. Reads are enabled; edits and execution require a current authorized Build task."
+                    ? $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nManual open — no AI task or model. Source writes require Home approval; execution requires a current authorized Build task."
                     : $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nTask {_taskId:D}; run {_runId:D}",
                 "Files" => _files, "SourcePath" => _sourcePath, "SearchQuery" => _searchQuery, "SearchResults" => _searchResults,
                 "EditorTitle" => _manual
-                    ? string.IsNullOrWhiteSpace(_sourcePath) ? "Choose an existing registered source document to read it."
-                        : $"{_sourcePath}; opened for reading (manual). Edit apply requires a current authorized Build task."
+                    ? !HasEditableSource() ? "Open an existing project file to edit its source."
+                        : $"{_sourcePath}" + (HasDirtySourceDraft() ? " — unsaved draft" : " — saved source")
                     : _editor is null ? "Choose an existing registered source document." : $"{_editor.Document.RelativePath}; draft revision {_editor.DraftRevision}" + (_editor.IsDirty ? " — unsaved draft" : ""),
                 "DraftText" => _manual && _editor is null ? _manualDraftText : _editor?.DraftText ?? "",
                 "ReviewSummary" => _pass is null ? "Review before applying. Pass history is available for this open editor." : $"Pass {_pass.ChangeSetId:D}: {_pass.State}; before {_pass.BeforeSha256}; after {_pass.AfterSha256}" + (_pass.RevertsChangeSetId is { } inverse ? $"; reverts only pass {inverse:D}" : ""),
@@ -274,17 +279,20 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 "Command" => _command, "TestCommand" => _testCommand, "StageTaskId" => _stageTaskId, "StageId" => _stageId,
                 "BranchName" => _branchName, "ProcessStatus" => _processStatus, "ProcessOutput" => _processOutput, "Status" => _status,
                 "CanOpenSource" => IsActionAvailable("dev.open-source"), "CanPreview" => IsActionAvailable("dev.preview-edit"),
-                "CanApply" => IsActionAvailable("dev.apply-edit"), "CanRevert" => IsActionAvailable("dev.revert-pass"), _ => null
+                "CanApply" => IsActionAvailable("dev.apply-edit"), "CanRevert" => IsActionAvailable("dev.revert-pass"),
+                "CanDiscard" => IsActionAvailable("dev.discard-draft"), "HasDirtySourceDraft" => HasDirtySourceDraft(),
+                "CanChangeSource" => !_pending && !HasDirtySourceDraft(), "CanEditSource" => !_pending && HasEditableSource(), _ => null
             };
         }
         return path is "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
             "EditorTitle" or "DraftText" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
-            "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert";
+            "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert" or
+            "CanDiscard" or "HasDirtySourceDraft" or "CanChangeSource" or "CanEditSource";
     }
     public bool TrySetValue(string path, object? value)
     {
         if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
-        long generation; lock (_gate) generation = _generation;
+        long generation; bool accepted = false; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
         {
             original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
@@ -292,9 +300,16 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             {
                 lock (_gate)
                 {
+                    // Refuse stale/in-flight input at the typed source boundary as well as in CUI.
+                    // A delayed two-way selector echo of the SAME path is harmless and must not clear it.
+                    if (_pending || path == "SourcePath" && HasDirtySourceDraft() &&
+                        !StringComparer.Ordinal.Equals(_sourcePath, text) || path == "DraftText" && !HasEditableSource())
+                        return false;
+                    accepted = true;
                     switch (path)
                     {
                         case "SourcePath":
+                            if (StringComparer.Ordinal.Equals(_sourcePath, text)) break;
                             _sourcePath = text;
                             // A different source document invalidates any reviewed before/after pair
                             // that belonged to the previous file; never carry a stale reviewed edit
@@ -308,7 +323,12 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                             break;
                         case "SearchQuery": _searchQuery = text; break;
                         case "DraftText":
-                            if (_manual && _editor is null) { _manualDraftText = text; _manualReviewed = false; _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewRevision = -1; break; }
+                            if (_manual && _editor is null)
+                            {
+                                if (StringComparer.Ordinal.Equals(_manualDraftText, text)) break;
+                                _manualDraftText = text; _manualDraftRevision = checked(_manualDraftRevision + 1);
+                                _manualReviewed = false; _manualAfterText = ""; _manualAfterSha256 = ""; _manualReviewRevision = -1; break;
+                            }
                             if (_editor is null) throw new InvalidOperationException("Open a real complete source document first.");
                             _editor = _review!.UpdateDraft(_editor.EditorId, _editor.DraftRevision, text); break;
                         case "Command": _command = text; break; case "TestCommand": _testCommand = text; break;
@@ -317,15 +337,16 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 }
                 return true;
             });
-            NotifyOriginal(original);
+            if (accepted) NotifyOriginal(original);
         });
-        return true;
+        return accepted;
     }
     public bool? IsActionAvailable(string command)
     {
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.discard-draft") return HasDirtySourceDraft();
             if (_manual)
             {
                 // Manual (no-AI) open offers only confined read/tree/search. Every mutation and
@@ -336,8 +357,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                     "dev.refresh" => true,
                     "dev.tree" => true,
                     "dev.search" => !string.IsNullOrWhiteSpace(_searchQuery),
-                    "dev.open-source" => !string.IsNullOrWhiteSpace(_sourcePath),
-                    "dev.preview-edit" => _manualEditor is not null && !string.IsNullOrWhiteSpace(_sourcePath) &&
+                    "dev.open-source" => !string.IsNullOrWhiteSpace(_sourcePath) && !HasDirtySourceDraft(),
+                    "dev.preview-edit" => _manualEditor is not null && HasEditableSource() &&
                         !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline),
                     "dev.apply-edit" => _manualEditor is not null && _manualReviewed,
                     _ => false
@@ -346,7 +367,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             return command switch
             {
                 "dev.refresh" or "dev.tree" or "dev.git-status" or "dev.git-diff" or "dev.git-branches" => true,
-                "dev.open-source" => !string.IsNullOrWhiteSpace(_sourcePath),
+                "dev.open-source" => !string.IsNullOrWhiteSpace(_sourcePath) && !HasDirtySourceDraft(),
                 "dev.search" => !string.IsNullOrWhiteSpace(_searchQuery),
                 "dev.preview-edit" => _editor is { IsDirty: true },
                 "dev.apply-edit" => _editor?.PreparedChangeSetId is { } id && _pass?.ChangeSetId == id && _pass.State == DeveloperSourceChangeState.Reviewed,
@@ -372,6 +393,32 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         }
         try
         {
+            if (command == "dev.discard-draft")
+            {
+                // The canonical CUI command requests only an editor-local abort. It grants no IO,
+                // approval or execution authority and never replays or reverts a committed source pass.
+                _work.RunSynchronous(original =>
+                {
+                    original.BindPublicationGuard(() => IsCurrent(generation)); original.DemandPublication();
+                    cancellationToken.ThrowIfCancellationRequested();
+                    InvokeOriginalSource(() =>
+                    {
+                        lock (_gate)
+                        {
+                            if (_manual)
+                            {
+                                _manualDraftText = _manualDraftBaseline; _manualAfterText = ""; _manualAfterSha256 = "";
+                                _manualReviewed = false; _manualDraftRevision = checked(_manualDraftRevision + 1); _manualReviewRevision = -1;
+                            }
+                            else _editor = _review!.UpdateDraft(editor!.EditorId, editor.DraftRevision, editor.OriginalText);
+                            _pass = null; _status = ""; _pending = false;
+                        }
+                        return true;
+                    });
+                    NotifyOriginal(original);
+                });
+                return ValueTask.CompletedTask;
+            }
             if (_manual)
                 return DispatchManualAsync(command, path, query, manualBeforeText, manualDraftText, manualBeforeSha256,
                     manualAfterSha256, manualReviewed, manualReviewRevision, generation, cancellationToken);
@@ -381,6 +428,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 try
                 {
                     original.DemandPublication(); cancellationToken.ThrowIfCancellationRequested();
+                    await PublishAsync(original, () => { }).ConfigureAwait(false);
                     var project = await ResolveProjectAsync(original, cancellationToken).ConfigureAwait(false);
                     if (command == "dev.refresh")
                     { await PublishAsync(original, () => { _project = project; _status = "Existing project descriptors refreshed."; }).ConfigureAwait(false); return; }
@@ -399,7 +447,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         original.DemandPublication();
                         var opened = await original.AwaitAsync(InvokeOriginalSource(() => _review!.OpenAsync(project.Reference, context, document.Value, _businessToken))).ConfigureAwait(false);
                         var value = DemandValue(opened);
-                        await PublishAsync(original, () => { _project = project; _editor = value; _pass = null; _status = "Complete original source opened; edit its draft, then review."; }).ConfigureAwait(false); return;
+                        await PublishAsync(original, () => { _project = project; _editor = value; _sourcePath = value.Document.RelativePath; _pass = null; _status = "Complete original source opened; edit its draft, then review."; }).ConfigureAwait(false); return;
                     }
                     if (command is "dev.preview-edit" or "dev.apply-edit")
                     {
@@ -467,6 +515,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             try
             {
                 original.DemandPublication(); cancellationToken.ThrowIfCancellationRequested();
+                await PublishAsync(original, () => { }).ConfigureAwait(false);
                 var project = await ResolveProjectAsync(original, cancellationToken).ConfigureAwait(false);
                 if (command == "dev.refresh")
                 { await PublishAsync(original, () => { _project = project; _status = "Existing project descriptors refreshed."; }).ConfigureAwait(false); return; }

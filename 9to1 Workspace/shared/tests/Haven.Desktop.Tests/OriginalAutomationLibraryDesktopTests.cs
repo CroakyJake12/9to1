@@ -237,6 +237,74 @@ public sealed partial class CanonicalCompatibleTaskContextCompositionTests
         foreach (var row in rows) await rig.Keep(repository.UpsertAsync(row, rig.Token));
         return rows;
     }
+
+    [AvaloniaFact(SkipUnless = nameof(LinuxLibraryFixtureSupported), Skip = "Actual native Linux custody fixture; installed Windows acceptance is separate.")]
+    public Task Saved_library_CUI_search_matches_instruction_text_and_escaped_literals_without_mutating_settings() =>
+        Run(async rig =>
+        {
+            var (source, repository) = rig.CreateOriginalAutomationLibrary();
+            var rows = await SeedSavedAutomationLibrary(rig, repository, 4);
+            const string needle = "instruction%_\\only";
+            rows[0] = rows[0] with { Name = "Morning review", Instruction = "Before " + needle + " after" };
+            rows[1] = rows[1] with { Name = "Wildcard decoy", Instruction = "Before instructionXXonly after" };
+            rows[2] = rows[2] with { Name = "Evening review", Instruction = "Before " + needle + " after" };
+            rows[3] = rows[3] with { Name = needle + " in title", Instruction = "A name-only search match" };
+            // Explicit fixture setup precedes the protected READ. The CUI action below never writes.
+            foreach (var row in rows) await rig.Keep(repository.UpsertAsync(row, rig.Token));
+            var before = await rig.ReadOriginalAutomationDescriptors(source);
+            var homeBefore = await File.ReadAllBytesAsync(Path.Combine(rig.Root, "Home", "state.json"), rig.Token);
+            await WithActualSavedLibrary(rig, source, async (window, page) =>
+            {
+                var oldTarget = SavedLibraryRows(page)[0].Target;
+                Assert.True(page.Bindings.TrySetValue("Search", needle));
+                var search = page.GetVisualDescendants().OfType<Button>().Single(value => Label(value) == "Search and refresh");
+                Assert.True(search.IsEnabled); search.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await rig.Keep(page.Bindings.OriginalCommand!); await PumpSavedLibrary(window);
+                Assert.Equal(new[] { rows[0].Name, rows[2].Name, rows[3].Name }.Order(),
+                    SavedLibraryRows(page).Select(row => row.Name).Order());
+                Assert.DoesNotContain(SavedLibraryRows(page), row => row.Name == rows[1].Name);
+                Assert.Throws<InvalidOperationException>(() => { _ = page.Bindings.DispatchAsync("select", oldTarget, rig.Token); });
+                var actual = SavedLibraryRows(page).Single(row => row.Name == rows[0].Name);
+                var open = page.GetVisualDescendants().OfType<Button>().Single(value =>
+                    Label(value) == "View saved settings" && IsRowButton(value, actual.Name));
+                open.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await rig.Keep(page.Bindings.OriginalCommand!);
+                await PumpSavedLibrary(window);
+                Assert.Equal(rows[0].Instruction, BindingValue<string>(page, "Instruction"));
+                Assert.True(page.Bindings.TrySetValue("Search", "no matching saved instruction"));
+                await rig.Keep(page.Bindings.DispatchAsync("refresh", null, rig.Token).AsTask()); await PumpSavedLibrary(window);
+                Assert.Empty(SavedLibraryRows(page));
+                Assert.Equal("Select a saved automation", BindingValue<string>(page, "SelectedName"));
+                Assert.Throws<InvalidOperationException>(() => { _ = page.Bindings.DispatchAsync("select", actual.Target, rig.Token); });
+            });
+            Assert.Equal(before, await rig.ReadOriginalAutomationDescriptors(source));
+            Assert.Equal(homeBefore, await File.ReadAllBytesAsync(Path.Combine(rig.Root, "Home", "state.json"), rig.Token));
+        });
+
+    [AvaloniaFact(SkipUnless = nameof(LinuxLibraryFixtureSupported), Skip = "Actual native Linux custody fixture; installed Windows acceptance is separate.")]
+    public Task Saved_library_instruction_matches_keep_disabled_filter_and_source_issued_paging() =>
+        Run(async rig =>
+        {
+            var (source, repository) = rig.CreateOriginalAutomationLibrary();
+            var rows = await SeedSavedAutomationLibrary(rig, repository, 4);
+            const string needle = "instruction-only paging marker";
+            foreach (var row in rows)
+                await rig.Keep(repository.UpsertAsync(row with { Name = "Routine " + row.Id, Instruction = needle }, rig.Token));
+            var before = await rig.ReadOriginalAutomationDescriptors(source);
+            var query = new AutomationLibraryQuery(IncludeDisabled: false, Search: needle, Limit: 1);
+            var first = await rig.Keep(source.ReadOriginalLibraryWithinSourceAsync(rig.Actor, query, rig.Scope, rig.Retain, rig.Token));
+            Assert.True(source.IsIssuedOriginalObservation(first));
+            Assert.True(Assert.Single(first.Definitions).Value.IsEnabled);
+            Assert.NotNull(first.NextContinuation); Assert.True(source.IsIssuedOriginalContinuation(first.NextContinuation));
+            var second = await rig.Keep(source.ReadOriginalLibraryWithinSourceAsync(rig.Actor, query, rig.Scope, rig.Retain,
+                rig.Token, first.NextContinuation));
+            Assert.True(source.IsIssuedOriginalObservation(second));
+            Assert.True(Assert.Single(second.Definitions).Value.IsEnabled); Assert.Null(second.NextContinuation);
+            Assert.Equal(new[] { rows[1].Id, rows[3].Id }.Order(),
+                first.Definitions.Concat(second.Definitions).Select(row => row.Value.Id).Order());
+            await rig.Keep(source.RevalidateOriginalObservationWithinSourceAsync(second, rig.Actor, rig.Scope, rig.Retain, rig.Token));
+            Assert.Equal(before, await rig.ReadOriginalAutomationDescriptors(source));
+        });
+
     private static string Label(Button button) => button.Content is TextBlock text ? text.Text ?? "" : button.Content?.ToString() ?? "";
     private static bool IsRowButton(Button button, string name) => button.GetVisualAncestors().OfType<StackPanel>().FirstOrDefault() is { } panel &&
         panel.GetVisualDescendants().OfType<TextBlock>().Any(text => text.Text == name);

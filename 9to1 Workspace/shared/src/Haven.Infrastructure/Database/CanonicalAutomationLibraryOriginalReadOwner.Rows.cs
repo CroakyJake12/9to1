@@ -41,7 +41,7 @@ public sealed partial class CanonicalAutomationLibraryOriginalReadOwner
             if (!query.IncludeArchived && hasArchive) predicates.Add("archived_at IS NULL");
             if (query.Search.Length != 0)
             {
-                predicates.Add("name LIKE $search ESCAPE '\\'");
+                predicates.Add("(name LIKE $search ESCAPE '\\' OR instruction LIKE $search ESCAPE '\\')");
                 command.Parameters.AddWithValue("$search", "%" + query.Search.Replace("\\", "\\\\", StringComparison.Ordinal)
                     .Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal) + "%");
             }

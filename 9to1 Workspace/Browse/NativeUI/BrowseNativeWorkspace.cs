@@ -11,6 +11,10 @@ using Haven.Browser;
 
 namespace HavenOS.Apps.Browse;
 
+/// <summary>Presentation only: selects the authored host chrome, never an app registration,
+/// Home observation, permission, resource identity or readiness grant.</summary>
+public enum BrowseNativeHostPresentation { Browser, StandaloneBoards, StandaloneCanvas }
+
 /// <summary>Canonical CUI bindings consume the same Browse-owned tab/session
 /// services. The supplied availability observer does not grant permissions.</summary>
 public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, ICuiActionDispatcher,
@@ -39,6 +43,31 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private readonly BrowseChrome _chrome;
     private readonly Func<string, bool> _originalActionAvailability;
     private readonly IHavenHostContext? _hostContext;
+    private readonly BrowseNativeHostPresentation _presentation;
+    public BrowseNativeHostPresentation HostPresentation => _presentation;
+    public bool IsStandaloneAppPresentation => _presentation != BrowseNativeHostPresentation.Browser;
+    private string StandaloneAppKey => _presentation == BrowseNativeHostPresentation.StandaloneBoards ? "boards" : "canvas";
+    private string StandaloneAppName => _presentation == BrowseNativeHostPresentation.StandaloneBoards ? "Boards" : "Canvas";
+    private bool ShowMainContent => CanPresentAddress(_snapshot.SelectedTab.Address);
+
+    /// <summary>Visibility only, never app or resource authority. The original registry/session
+    /// still owns admission, initialization, errors and publication of the native view.</summary>
+    public bool CanPresentAddress(AppContentAddress address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        return !IsStandaloneAppPresentation ||
+            (address.Namespace == AppContentNamespace.NativeApp && address.Authority == StandaloneAppKey);
+    }
+
+    /// <summary>Presentation eligibility only. Actual dispatch still requires the original
+    /// live owner, real readiness and capability checks below. No browser command may escape
+    /// the app-only presentation through an authored action or keyboard alias.</summary>
+    public bool IsCommandInPresentation(string command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return !IsStandaloneAppPresentation || command is
+            "9to1.Haven.OpenModel" or "9to1.Haven.OpenNotifications" or "9to1.Haven.OpenProfile";
+    }
     private readonly object _sourceGate = new();
     private readonly List<Task> _originalCommands = [], _originalOperations = [], _originalNotifications = [], _originalUiOperations = [];
     private BrowseChromeSnapshot _snapshot;
@@ -64,8 +93,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public IReadOnlyList<Task> OriginalOperations { get { lock (_sourceGate) return _originalOperations.ToArray(); } }
     public IReadOnlyList<Task> OriginalNotifications { get { lock (_sourceGate) return _originalNotifications.Concat(_originalUiOperations).ToArray(); } }
 
-    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability, IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null, IHavenHostContext? sharedContext = null)
+    public BrowseNativeWorkspace(BrowseChrome originalChrome, Func<string, bool> originalActionAvailability, IBrowserOriginalDownloadFilesService? originalDownloadFilesService = null, IHavenHostContext? sharedContext = null,
+        BrowseNativeHostPresentation presentation = BrowseNativeHostPresentation.Browser)
     {
+        if (presentation is not (BrowseNativeHostPresentation.Browser or BrowseNativeHostPresentation.StandaloneBoards or BrowseNativeHostPresentation.StandaloneCanvas))
+            throw new ArgumentOutOfRangeException(nameof(presentation));
+        _presentation = presentation;
         _originalDownloadFilesService = originalDownloadFilesService;
         _hostContext = sharedContext;
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
@@ -102,8 +135,15 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         var model = _hostContext?.ModelInfo;
         value = path switch
         {
+            "Presentation.Browser" => !IsStandaloneAppPresentation,
+            "Presentation.Standalone" => IsStandaloneAppPresentation,
+            "Presentation.ShowContent" => ShowMainContent,
+            "Presentation.Loading" => IsStandaloneAppPresentation && !ShowMainContent,
+            "Presentation.AppName" => IsStandaloneAppPresentation ? StandaloneAppName : string.Empty,
+            "Presentation.AccessibleName" => IsStandaloneAppPresentation ? StandaloneAppName : "9to1 Haven browser",
+            "Presentation.StatusAccessibleName" => IsStandaloneAppPresentation ? "Application operation status" : "Browse operation status",
             "Tabs" => _tabRows,
-            "ToolsOpen" => _toolsOpen,
+            "ToolsOpen" => !IsStandaloneAppPresentation && _toolsOpen,
             "IsLoading" => selected.IsLoading,
             "IsNotLoading" => !selected.IsLoading,
             "IsWebPage" => selected.Address.IsWeb,
@@ -149,14 +189,14 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "Haven.MeterMarker" => model?.MeterMarker == true,
             "Haven.ModelAccessibleName" => ModelAccessibleName(model),
             "Haven.ModelTooltip" => ModelTooltip(model),
-            "ProfileMenuOpen" => _profileMenuOpen,
+            "ProfileMenuOpen" => !IsStandaloneAppPresentation && _profileMenuOpen,
             "ProfilePrincipalLabel" => profileData?.Profile is { } principal && !string.IsNullOrWhiteSpace(principal.DisplayName)
                 ? principal.DisplayName
                 : (_hostContext?.ProfileSupported == true ? "Account/User" : "Sign-in unavailable"),
             "ProfileAccountHint" => _hostContext?.ProfileSupported == true
                 ? "Click to open account and user settings."
                 : "The native account owner is unavailable in this session.",
-            "ManageUsersOpen" => _manageUsersOpen,
+            "ManageUsersOpen" => !IsStandaloneAppPresentation && _manageUsersOpen,
             "ManageUsersOtherProfilesStatus" => "Other profiles are not manageable: the user-management service is unavailable for this session.",
             "ShowManageUsersOtherProfilesStatus" => true,
             "ShowStorage" => profileData?.Storage is { } storage && storage.IsRenderable,
@@ -190,6 +230,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     public bool TrySetValue(string path, object? value)
     {
+        // These setters belong to browser chrome only. The hosted application keeps
+        // its SAME independent CUI binding/action context and original data owner.
+        if (IsStandaloneAppPresentation) return false;
         if (_busy || _retiring || _disposed || !_ready) return false;
         switch (path)
         {
@@ -219,6 +262,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     }
     public bool? IsActionAvailable(string command)
     {
+        if (!IsCommandInPresentation(command)) return false;
         if (!_ready || _busy || _retiring || _disposed || !_originalActionAvailability(command) || _retiring || _disposed) return false;
         var shared = HavenSharedActionAvailable(command);
         if (shared.HasValue) return shared;

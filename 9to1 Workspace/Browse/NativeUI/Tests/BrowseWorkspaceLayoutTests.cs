@@ -257,4 +257,122 @@ public sealed partial class BrowseNativeUiTests
     /// before TryLoad.</summary>
     private static void RegisterProductionImageResolver(CuiControlRegistry registry)
         => registry.RegisterImageSourceResolver(HavenPackagedSvgResolver.Resolve);
+    // Pure presentation controls: render the genuine authored document without issuing
+    // any Ready observation or initializing an application/Home route.
+    private sealed class StandalonePresentationUnavailable : ICuiSceneReadiness
+    {
+        public int Calls;
+        public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token)
+        {
+            Calls++;
+            return ValueTask.FromResult(new CuiSceneAvailability(CuiSceneAvailabilityState.Unavailable,
+                "PresentationOnly", "This framework projection is not application/Home admission."));
+        }
+    }
+    private static readonly List<object> RetainedStandalonePresentationOwners = [];
+
+
+    [AvaloniaTheory]
+    [InlineData(BrowseNativeHostPresentation.StandaloneBoards, 1440, "Boards")]
+    [InlineData(BrowseNativeHostPresentation.StandaloneBoards, 360, "Boards")]
+    [InlineData(BrowseNativeHostPresentation.StandaloneCanvas, 1440, "Canvas")]
+    [InlineData(BrowseNativeHostPresentation.StandaloneCanvas, 360, "Canvas")]
+    public Task Standalone_authored_chrome_hides_browser_and_prior_home_content_without_granting_readiness(
+        BrowseNativeHostPresentation presentation, int width, string app) =>
+        WithStandalonePresentationPreview(presentation, width, embedded: false, (workspace, window) =>
+        {
+            Assert.False(workspace.IsReady);
+            Assert.True(workspace.TryGetValue("Presentation.AppName", out var name)); Assert.Equal(app, name);
+            Assert.True(Named("StandaloneAppHeader").IsEffectivelyVisible);
+            Assert.True(Named("StandaloneAppLoading").IsEffectivelyVisible);
+            foreach (var id in new[] { "BrowseTabStrip", "BrowseNavigationBar", "BrowseAddressBox", "BrowseContentViewport" })
+                Assert.False(Named(id).IsEffectivelyVisible);
+            foreach (var id in new[] { "StandaloneModelButton", "StandaloneNotificationsButton", "StandaloneProfileButton" })
+            {
+                var control = Named(id); Assert.True(control.IsEffectivelyVisible);
+                var point = control.TranslatePoint(default, window)!.Value;
+                Assert.InRange(point.X, 0, width - control.Bounds.Width + .5);
+            }
+            workspace.PublishSharedRefusal("ModelCompositionUnavailable", "The actual model controls are unavailable.");
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            Assert.Contains(window.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible &&
+                text.Text == "ModelCompositionUnavailable: The actual model controls are unavailable.");
+            Assert.Null(workspace.OriginalCommand); Assert.Empty(workspace.OriginalOperations);
+            Control Named(string id) => window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == id);
+        });
+
+    [AvaloniaFact]
+    public Task A_nonembedded_context_alone_does_not_hide_browser_chrome_or_select_an_application() =>
+        WithStandalonePresentationPreview(BrowseNativeHostPresentation.Browser, 900, embedded: false, (workspace, window) =>
+        {
+            Assert.False(workspace.IsReady);
+            Assert.True(Named("BrowseTabStrip").IsEffectivelyVisible);
+            Assert.True(Named("BrowseNavigationBar").IsEffectivelyVisible);
+            Assert.False(Named("StandaloneAppHeader").IsEffectivelyVisible);
+            Assert.False(Named("StandaloneAppLoading").IsEffectivelyVisible);
+            Assert.True(Named("BrowseContentViewport").IsEffectivelyVisible);
+            Control Named(string id) => window.GetVisualDescendants().OfType<Control>().Single(control => control.Name == id);
+        });
+
+    private static async Task WithStandalonePresentationPreview(BrowseNativeHostPresentation presentation,
+        int width, bool embedded, Action<BrowseNativeWorkspace, Window> inspect)
+    {
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory(), cancellationToken: TestContext.Current.CancellationToken);
+        BrowseNativeWorkspace? workspace = null; CuiControlLoader? loader = null; Window? window = null;
+        var failures = new List<Exception>(); var retired = false;
+        void Retain(Exception cause)
+        { if (!failures.Any(prior => ReferenceEquals(prior, cause))) failures.Add(cause); }
+        async Task<bool> JoinOriginal(Task actual)
+        {
+            try { await actual; return true; }
+            catch (Exception cause)
+            {
+                if (actual.Exception is { } originalFaults)
+                    foreach (var direct in originalFaults.InnerExceptions) Retain(direct);
+                else Retain(cause);
+                return false;
+            }
+        }
+        try
+        {
+            workspace = new BrowseNativeWorkspace(chrome, _ => true,
+                sharedContext: new SharedControlsFakeContext(null, embedded), presentation: presentation);
+            var unavailable = new StandalonePresentationUnavailable();
+            var scene = BrowseNativeSurface.CreateScene(workspace, unavailable);
+            var registry = scene.ControlRegistry!; RegisterProductionImageResolver(registry);
+            loader = new CuiControlLoader(registry);
+            loader.SetBindingContext(workspace); loader.SetActionDispatcher(workspace);
+            var loaded = loader.TryLoad(BrowseNativeWorkspace.LoadDocument());
+            Assert.DoesNotContain(loaded.Diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
+            var root = Assert.IsAssignableFrom<Control>(loaded.Root); loader.WireBindings(root);
+            window = new Window { Content = root, Width = width, Height = 600 };
+            window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs(); window.UpdateLayout();
+            Assert.Equal(0, unavailable.Calls); // No scene initialization/Ready substitution occurred.
+            inspect(workspace, window);
+        }
+        catch (Exception cause) { Retain(cause); }
+        try
+        {
+            var actualDrain = workspace is not null ? workspace.DisposeAsync().AsTask() : chrome.DisposeAsync().AsTask();
+            retired = await JoinOriginal(actualDrain);
+        }
+        catch (Exception cause) { Retain(cause); }
+        // A failed original owner drain retains the entire view/loader/owner graph.
+        if (retired)
+        {
+            try { if (window is not null) { window.Content = null; window.Close(); } }
+            catch (Exception cause) { Retain(cause); }
+            try { loader?.Dispose(); }
+            catch (Exception cause) { Retain(cause); }
+            // Dispose retains its SAME terminal source. Join it even if synchronous
+            // disposal threw; preserve all original Task.Exception siblings.
+            if (loader is not null)
+                try { await JoinOriginal(loader.WhenActionsIdleAsync()); }
+                catch (Exception cause) { Retain(cause); }
+        }
+        else RetainedStandalonePresentationOwners.Add(new object?[] { chrome, workspace, loader, window });
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Presentation assertion and original cleanup failures.", failures);
+    }
+
 }

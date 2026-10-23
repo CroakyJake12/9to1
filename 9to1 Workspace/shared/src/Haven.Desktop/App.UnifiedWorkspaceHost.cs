@@ -29,7 +29,8 @@ public sealed partial class App
 
     /// <summary>The normal Windows product borrows the existing App/Home graph.
     /// Selected standalone products retain their own existing entry admission.</summary>
-    private UnifiedWorkspaceHost CreateOriginalUnifiedWorkspace(MainWindow window)
+    private UnifiedWorkspaceHost CreateOriginalUnifiedWorkspace(MainWindow window,
+        BrowseNativeHostPresentation presentation = BrowseNativeHostPresentation.Browser)
     {
         UnifiedWorkspaceHost? host = null;
         _originalAppWork.RunSynchronous(original => AcquireOriginalAppSynchronous(original, () =>
@@ -39,7 +40,7 @@ public sealed partial class App
             var home = _actualWindowsHome ?? throw new InvalidOperationException("The original Home owner is unavailable.");
             WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(services, home);
             if (_actualUnifiedWorkspace is not null) throw new InvalidOperationException("The original unified host already exists.");
-            host = _actualUnifiedWorkspace = new(this, services, home, original.Token, window.AcquireOriginalWindowLifetime());
+            host = _actualUnifiedWorkspace = new(this, services, home, original.Token, window.AcquireOriginalWindowLifetime(), presentation);
             return true;
         }));
         return host ?? throw new InvalidOperationException("No original unified host was retained.");
@@ -51,6 +52,8 @@ public sealed partial class App
         IDesktopOriginalRetirementJoinGuard, ICuiSceneReadiness
     {
         private readonly App _app;
+        private readonly BrowseNativeHostPresentation _presentation;
+        internal bool IsStandaloneAppPresentation => _presentation != BrowseNativeHostPresentation.Browser;
         private readonly IServiceProvider _services;
         private readonly HomeNativeWindowsComposition _home;
         private readonly CancellationToken _appLifetime, _windowLifetime;
@@ -72,9 +75,13 @@ public sealed partial class App
         private volatile bool _startupRetirement;
 
         internal UnifiedWorkspaceHost(App app, IServiceProvider services, HomeNativeWindowsComposition home,
-            CancellationToken appLifetime, CancellationToken windowLifetime)
+            CancellationToken appLifetime, CancellationToken windowLifetime,
+            BrowseNativeHostPresentation presentation = BrowseNativeHostPresentation.Browser)
         {
             Dispatcher.UIThread.VerifyAccess();
+            if (presentation is not (BrowseNativeHostPresentation.Browser or BrowseNativeHostPresentation.StandaloneBoards or BrowseNativeHostPresentation.StandaloneCanvas))
+                throw new ArgumentOutOfRangeException(nameof(presentation));
+            _presentation = presentation;
             _app = app; _services = services; _home = home;
             _appLifetime = appLifetime; _windowLifetime = windowLifetime;
             KeyDown += OnWorkspaceKeyDown;
@@ -341,7 +348,8 @@ public sealed partial class App
             _chrome = await _chromeCreation;
             DemandCurrent();
             _sharedGateway = new HavenGateway(this);
-            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent, sharedContext: new SharedHostContext(this));
+            _workspace = new BrowseNativeWorkspace(_chrome, _ => IsCurrent,
+                sharedContext: new SharedHostContext(this), presentation: _presentation);
             var theme = _homeTheme?.Context
                 ?? throw new InvalidOperationException("The original Home theme owner is unavailable.");
             var scene = BrowseNativeSurface.CreateScene(_workspace, this, appearance: null, theme);
@@ -637,7 +645,7 @@ public sealed partial class App
 
         private void OnWorkspaceKeyDown(object? sender, KeyEventArgs args)
         {
-            if (OriginalClose is not null || _workspace is not { IsReady: true } workspace || args.Handled) return;
+            if (IsStandaloneAppPresentation || OriginalClose is not null || _workspace is not { IsReady: true } workspace || args.Handled) return;
             using var callback = CloudflareOriginalExecutionGuard.EnterOriginal(this);
             if (args.KeyModifiers.HasFlag(KeyModifiers.Control) && args.Key == Key.L)
             {

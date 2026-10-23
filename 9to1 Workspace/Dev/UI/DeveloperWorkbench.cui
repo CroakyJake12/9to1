@@ -11,18 +11,20 @@
         <Button id="dev-git-branches" action="dev.git-branches" content="Branches" />
       </Container>
       <Text text="{Binding Files}" text-wrapping="Wrap" accessible-name="Observed project file tree" />
-      <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
+      <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" Interactive="{Binding CanChangeSource}" />
       <Button id="dev-open-source" action="dev.open-source" content="Open source" Interactive="{Binding CanOpenSource}" />
       <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
       <Button id="dev-search" action="dev.search" content="Search files" />
       <Text text="{Binding SearchResults}" text-wrapping="Wrap" accessible-name="Actual file search results" />
       <Text text="{Binding EditorTitle}" text-wrapping="Wrap" accessible-name="Selected source and draft revision" />
-      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" />
+      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
         <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
         <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />
         <Button id="dev-revert-pass" action="dev.revert-pass" content="Prepare last pass revert" Interactive="{Binding CanRevert}" />
+        <Button id="dev-discard-draft" action="dev.discard-draft" content="Discard unsaved draft" Interactive="{Binding CanDiscard}" accessible-name="Discard only this unsaved source draft; keep the saved file" />
       </Container>
+      <Text id="dev-unsaved-source" Active="{Binding HasDirtySourceDraft}" text="You have unsaved source changes. Apply the reviewed edit or discard the draft before opening another file." text-wrapping="Wrap" />
       <Text text="{Binding ReviewSummary}" text-wrapping="Wrap" accessible-name="This edit pass only" />
       <Text text="Before this pass" font-size="18" />
       <Object type="ReadOnlyText" id="dev-pass-before" text="{Binding BeforeText}" font-family="monospace" min-height="100" accessible-name="Exact source before this pass" />
