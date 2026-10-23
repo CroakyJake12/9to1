@@ -98,6 +98,76 @@ public sealed class BoardsOriginalStoreSetupTests
     }
 
     [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original Linux Notes boundary; other platform acceptance is separate.")]
+    public async Task Prepare_during_held_initial_Home_observation_settles_the_actual_following_inspection_before_freezing_admission()
+    {
+        PrivateRoot? root = null; Rig? rig = null; BoardsBrowseAppContentSession? session = null; Window? window = null;
+        var principal = new HeldActualPrincipal(); var failures = new List<Exception>();
+        System.ComponentModel.INotifyPropertyChanged? observedBindings = null;
+        System.ComponentModel.PropertyChangedEventHandler? observer = null;
+        Task<IBrowseAppContentClosePreparation?>? preparing = null;
+        try
+        {
+            root = new PrivateRoot(); rig = await Rig.CreateAsync(root.Path, principal);
+            var factory = BoardsBrowseAppContentFactory.BindOriginalSameProcess(rig.Provider, rig.Home, rig.Token, rig.HostToken, () => true);
+            session = Assert.IsType<BoardsBrowseAppContentSession>(factory.CreateSession(new(Guid.NewGuid(),
+                AppContentAddress.Parse("9to1://boards"), rig.Actor.ProfileId, BrowserTabPrivacy.Standard)));
+            var bindings = Assert.IsAssignableFrom<CakeOS.Cui.ICuiBindingContext>(typeof(BoardsBrowseAppContentSession)
+                .GetField("_bindings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(session));
+            observedBindings = Assert.IsAssignableFrom<System.ComponentModel.INotifyPropertyChanged>(bindings);
+            var armed = 0;
+            observer = (_, change) =>
+            {
+                // Observe the actual initial action's busy notification before its real Home read.
+                // This fixture delays the OS source; it never fabricates the profile or app result.
+                if (change.PropertyName == "StorageSourceBusy" && bindings.TryGetValue("StorageSourceBusy", out var busy) && busy is true &&
+                    Interlocked.CompareExchange(ref armed, 1, 0) == 0) principal.Arm();
+            };
+            observedBindings.PropertyChanged += observer;
+            await session.InitializeAsync(rig.Token);
+            await principal.Entered.Task.WaitAsync(rig.Token);
+            var heldOriginal = Assert.IsAssignableFrom<Task<string?>>(principal.HeldOriginal);
+            Assert.False(heldOriginal.IsCompleted);
+            var view = Assert.IsType<CuiSceneHost>(session.OriginalNativeView);
+            window = new Window { Content = view, Width = 1000, Height = 760 }; window.Show();
+            preparing = session.PrepareCloseAsync(rig.Token);
+            Assert.Same(preparing, session.PrepareCloseAsync(rig.Token)); Assert.False(preparing.IsCompleted);
+            Assert.False(heldOriginal.IsCompleted);
+            principal.Release.SetResult();
+            var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await preparing);
+            Assert.True(heldOriginal.IsCompletedSuccessfully); Assert.Equal(1, armed);
+            Assert.True(Find(view, "boards-storage-create") is Button,
+                "BOARDS_PREPARE_INITIAL_EFFECT_CHAIN_NOT_SETTLED: the actual inspection effect was not settled before admission froze.");
+            Assert.Null(Find(view, "boards-workspace")); Assert.False(Directory.Exists(rig.NotesDirectory));
+            Assert.Empty((await rig.Home.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).Grants);
+            await preparation.BeginClose(); Assert.True(session.CanRetireOriginalView);
+        }
+        catch (Exception error) { failures.Add(error); }
+        finally
+        {
+            principal.Release.TrySetResult();
+            if (observedBindings is not null && observer is not null) observedBindings.PropertyChanged -= observer;
+            if (window is not null)
+            {
+                try { window.Content = null; } catch (Exception error) { failures.Add(error); }
+                try { window.Close(); } catch (Exception error) { failures.Add(error); }
+            }
+            if (preparing is not null)
+                try
+                {
+                    var accepted = await preparing;
+                    if (accepted is { IsCurrent: true }) await accepted.BeginClose();
+                }
+                catch (Exception error) { failures.Add(error); }
+            if (session is not null)
+                try { await (session.OriginalClose ?? session.CloseAndDrainAsync()); } catch (Exception error) { failures.Add(error); }
+            if (rig is not null) try { await rig.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+            if (root is not null) try { root.Dispose(); } catch (Exception error) { failures.Add(error); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Actual initial-effect retirement assertion and independent cleanup failed.", failures);
+    }
+
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original Linux Notes boundary; other platform acceptance is separate.")]
     public async Task Existing_revision_material_is_not_empty_bound_and_actual_Home_decline_then_accept_retains_original_import()
     {
         using var root = new PrivateRoot(); await using var rig = await Rig.CreateAsync(root.Path);
@@ -180,6 +250,25 @@ public sealed class BoardsOriginalStoreSetupTests
         }
     }
 
+    private sealed class HeldActualPrincipal : ITrustedHostPrincipalSource
+    {
+        private int _armed;
+        internal TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task<string?>? HeldOriginal { get; private set; }
+        internal void Arm() => Interlocked.Exchange(ref _armed, 1);
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            if (Interlocked.Exchange(ref _armed, 0) == 0) return new OperatingSystemPrincipalSource().GetPrincipalAsync(token);
+            HeldOriginal = ReadHeldAsync(token); Entered.TrySetResult(); return new(HeldOriginal);
+        }
+        private async Task<string?> ReadHeldAsync(CancellationToken token)
+        {
+            var actual = await new OperatingSystemPrincipalSource().GetPrincipalAsync(token);
+            await Release.Task.WaitAsync(token); return actual;
+        }
+    }
+
     private sealed class PrivateRoot : IDisposable
     {
         internal string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "9to1-boards-real-setup-" + Guid.NewGuid().ToString("N"));
@@ -223,12 +312,12 @@ public sealed class BoardsOriginalStoreSetupTests
         internal AuthenticatedResourceActor Actor { get; private set; } = null!;
         internal string NotesDirectory { get; }
         internal string Identity => Path.Combine(NotesDirectory, ".store-identity.json");
-        private Rig(string root)
+        private Rig(string root, ITrustedHostPrincipalSource? actualPrincipal = null)
         {
             var paths = new Paths(root); NotesDirectory = Path.Combine(root, "Notes");
             _diagnostics = new(paths); Notes = new(paths, new NotesDocumentValidator(), _diagnostics);
             var evidence = new NotesLocalStoreEvidenceProvider(Notes);
-            var principal = new OperatingSystemPrincipalSource(); HomeNotesResourceAdmissionSource? admission = null;
+            var principal = actualPrincipal ?? new OperatingSystemPrincipalSource(); HomeNotesResourceAdmissionSource? admission = null;
             Home = new(new FileHomeCoreStateStore(Path.Combine(root, "Home", "state.json")), principal, paths,
                 new("9to1.home.boards.setup-component.v1"), originalResourceResolvers: [new Resolver(() => admission!)],
                 originalActionPolicies: [new HomeNotesActionPolicies()],
@@ -248,9 +337,9 @@ public sealed class BoardsOriginalStoreSetupTests
             collection.AddSingleton(admission!); collection.AddSingleton(Approvals); collection.AddSingleton(evidence); collection.AddSingleton(Backend);
             Provider = collection.BuildServiceProvider();
         }
-        internal static async Task<Rig> CreateAsync(string root)
+        internal static async Task<Rig> CreateAsync(string root, ITrustedHostPrincipalSource? actualPrincipal = null)
         {
-            var rig = new Rig(root);
+            var rig = new Rig(root, actualPrincipal);
             try
             {
                 await rig.Home.StartOriginalAsync();
