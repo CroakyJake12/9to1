@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Avalonia.Controls;
 using Haven.Browser;
+using Haven.Application;
+using Haven.Core;
 
 namespace HavenOS.Apps.Browse;
 
@@ -14,12 +16,16 @@ namespace HavenOS.Apps.Browse;
 /// the final address is safe). Popups are attributed by opener target id and
 /// routed through canonical Browse boundaries or denied — never auto-granted.
 /// </summary>
-internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOriginalPageCommitSource, IBrowseEngineRetirementGuard
+internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOriginalPageCommitSource, IBrowseEngineRetirementGuard, IBrowseOriginalDownloadContentSource, IBrowseOriginalPendingDownloadSource
 {
     private readonly Uri _initialAddress;
     private readonly ChromiumLease _lease;
     private readonly IChromiumEndpoint _connection;
     private readonly IChromiumEngineView _view;
+    private readonly BrowserDownloadTransport? _downloadTransport;
+    private readonly IBrowserNativeDownloadService? _nativeDownloads;
+    private readonly bool _private;
+    private ChromiumResponseDownloadBridge? _responseDownloads;
     private readonly object _gate = new();
     private readonly object _sourceGate = new();
     private readonly List<Task> _sourceTasks = [];
@@ -62,13 +68,17 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
         catch { /* diagnostics are best-effort and never fatal */ }
     }
 
-    public ChromiumEngineTab(BrowseEngineTabRequest request, ChromiumLease lease, IChromiumEngineView? engineView = null)
+    public ChromiumEngineTab(BrowseEngineTabRequest request, ChromiumLease lease, IChromiumEngineView? engineView = null,
+        BrowserDownloadTransport? downloadTransport = null, IBrowserNativeDownloadService? nativeDownloads = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         _initialAddress = request.InitialAddress;
         _lease = lease ?? throw new ArgumentNullException(nameof(lease));
         _connection = _lease.Connection;
         _view = engineView ?? new ChromiumEngineSurface();
+        if ((downloadTransport is null) != (nativeDownloads is null)) throw new ArgumentException("The same transport and approval owner are required together.");
+        _downloadTransport = downloadTransport; _nativeDownloads = nativeDownloads;
+        _private = request.Privacy == BrowserTabPrivacy.Private;
         _state = new BrowserSnapshot(request.InitialAddress, request.InitialAddress.Host, false, false, false, "Chromium is connecting.");
         if (_view is ChromiumEngineSurface surface)
         {
@@ -79,7 +89,11 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     }
 
     public Control OriginalNativeView => _view.View;
-    public bool CanRetireOriginalView => true;
+    public bool CanRetireOriginalView => _responseDownloads?.CanRetireOriginal ?? true;
+    public IBrowserOriginalDownloadContent? ObserveOriginalDownloadContent(BrowserDownloadRecord currentCanonicalRow) =>
+        _responseDownloads?.ObserveOriginalDownloadContent(currentCanonicalRow);
+    public bool IsOriginalPendingDownload(BrowserPendingAction samePendingAction) =>
+        !_retiring && !_disposed && _responseDownloads?.IsOriginalPendingDownload(samePendingAction) == true;
     public BrowserSnapshot State { get { lock (_gate) return _state; } }
 
     public event EventHandler<BrowserSnapshot>? StateChanged;
@@ -99,6 +113,13 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
         _stage = "attach";
         _targetId = await _connection.CreateTargetAsync("about:blank", cancellationToken).ConfigureAwait(false);
         _sessionId = await _connection.AttachAsync(_targetId, cancellationToken).ConfigureAwait(false);
+        if (_downloadTransport is not null && _nativeDownloads is not null)
+            _responseDownloads = new(_connection, _sessionId, () => _committedAddress ?? State.Address,
+                _private, _downloadTransport, _nativeDownloads, message =>
+                {
+                    if (!_retiring && !_disposed)
+                        Publish(State with { Address = _committedAddress ?? State.Address, IsLoading = false, Status = message });
+                });
         _connection.Recv += OnCdpEvent;
 
         try
@@ -117,7 +138,10 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
             // requests are assessed.
             await SendVoidAsync("Fetch.enable", new Dictionary<string, object?>
             {
-                ["patterns"] = new[] { new { urlPattern = "*", requestStage = "Request" } },
+                ["patterns"] = new object[] {
+                    new { urlPattern = "*", requestStage = "Request" },
+                    new { urlPattern = "*", resourceType = "Document", requestStage = "Response" }
+                },
                 ["handleAuthRequests"] = false
             }, cancellationToken).ConfigureAwait(false);
             // Deny downloads by default; nothing is ever auto-downloaded or auto-granted.
@@ -217,7 +241,12 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     }
 
     public Task ReloadAsync(CancellationToken cancellationToken) => SendVoidAsync("Page.reload", null, cancellationToken);
-    public Task StopAsync(CancellationToken cancellationToken) => SendVoidAsync("Page.stopLoading", null, cancellationToken);
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        ThrowIfDisposed();
+        if (_responseDownloads is not null) await _responseDownloads.WithdrawPendingAsync(cancellationToken).ConfigureAwait(false);
+        await SendVoidAsync("Page.stopLoading", null, cancellationToken).ConfigureAwait(false);
+    }
 
     public async Task<string?> ExecuteScriptAsync(string script, CancellationToken cancellationToken)
     {
@@ -377,6 +406,7 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
 
     private void HandleFetchRequestPaused(JsonElement parameters)
     {
+        if (_responseDownloads?.TryHandleResponse(parameters) == true) return;
         if (!parameters.TryGetProperty("requestId", out var requestIdEl) || requestIdEl.ValueKind != JsonValueKind.String) return;
         var requestId = requestIdEl.GetString()!;
         // Only top-level Document requests carry the navigation policy; subresources
@@ -622,13 +652,16 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
         Crashed?.Invoke(this, new BrowseEngineCrash(reason));
     }
 
-    public void DemandExternalJoin() { }
+    public void DemandExternalJoin() => _responseDownloads?.DemandExternalJoin();
 
     public ValueTask DisposeAsync()
     {
+        DemandExternalJoin();
         lock (_gate)
         {
             if (_closeTask is not null) return new(_closeTask);
+            if (!CanRetireOriginalView)
+                throw new InvalidOperationException("Complete or cancel the pending native download through Home approval before closing its Chromium tab.");
             _retiring = true;
             _closeTask = CloseCoreAsync();
         }
@@ -639,6 +672,10 @@ internal sealed class ChromiumEngineTab : IBrowseNativeEngineTab, IBrowseOrigina
     {
         var failures = new List<Exception>();
         async Task Join(Task? task) { if (task is null) return; try { await task.ConfigureAwait(false); } catch (Exception failure) { failures.Add(failure); } }
+
+        // A failed original transfer retirement keeps its real endpoint and view
+        // attached; do not destroy its source while merely retaining an exception.
+        if (_responseDownloads is not null) await _responseDownloads.DisposeAsync().ConfigureAwait(false);
 
         Task[] sources;
         lock (_sourceGate)

@@ -9,6 +9,8 @@
     <Action name="RemoveBookmark" command="9to1.Browse.RemoveBookmark" parameter="{Binding bookmark.Target}" />
     <Action name="OpenHistory" command="9to1.Browse.OpenHistory" parameter="{Binding visit.Target}" />
     <Action name="RemoveHistoryEntry" command="9to1.Browse.RemoveHistoryEntry" parameter="{Binding visit.Target}" />
+    <Action name="ApprovePendingDownload" command="9to1.Browse.ApprovePendingDownload" parameter="{Binding pending.Target}" />
+    <Action name="RejectPendingDownload" command="9to1.Browse.RejectPendingDownload" parameter="{Binding pending.Target}" />
     <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
@@ -93,6 +95,24 @@
             <Container id="BrowseDownloadsPage" Type="Vertical Stack" CellGap="6" IsVisible="{Binding IsDownloads}">
               <Button id="BrowseDownloadsButton" action="9to1.Browse.Downloads" Interactive="{Binding Can.Downloads}">Refresh downloads</Button>
               <Text Text="{Binding DownloadStatus}" TextWrapping="Wrap" />
+              <Text Text="{Binding DownloadReviewStatus}" TextWrapping="Wrap" />
+              <Text FontWeight="Bold" Margin="0 8 0 0">Waiting for approval</Text>
+              <Text Text="{Binding PendingDownloadSummary}" TextWrapping="Wrap" />
+              <Repeat Source="{Binding PendingDownloads}" As="pending" Key="{Binding pending.Key}">
+                <Container id="BrowsePendingDownloadCard" Type="Vertical Stack" CellGap="6" Padding="12" CornerRadius="16" Background="{Resource CuiInputSurfaceBrush}" BorderColor="{Resource CuiLineBrush}" BorderWidth="1">
+                  <Text Text="{Binding pending.Label}" FontWeight="Bold" TextWrapping="Wrap" />
+                  <Text Text="{Binding pending.Origin}" TextWrapping="Wrap" />
+                  <Text Text="{Binding pending.Summary}" TextWrapping="Wrap" />
+                  <Text Text="{Binding pending.Context}" FontSize="12" Color="{Resource CuiTextSoftBrush}" />
+                  <Text Text="{Binding pending.Expiry}" FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+                  <Container Type="Horizontal Stack" CellGap="8">
+                    <Button id="BrowseApprovePendingDownloadButton" action="ApprovePendingDownload" Interactive="{Binding pending.CanApprove}" AccessibleName="{Binding pending.ApproveLabel}" MinHeight="36" Padding="12 6" CornerRadius="18">Approve download</Button>
+                    <Button id="BrowseRejectPendingDownloadButton" action="RejectPendingDownload" Interactive="{Binding pending.CanReject}" AccessibleName="{Binding pending.RejectLabel}" MinHeight="36" Padding="12 6" CornerRadius="18">Reject</Button>
+                  </Container>
+                </Container>
+              </Repeat>
+              <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Approval starts this download. Keeping the completed file in Files uses its separate permissions.</Text>
+              <Text FontWeight="Bold" Margin="0 10 0 0">Completed downloads</Text>
               <Text Text="{Binding DownloadOpenStatus}" TextWrapping="Wrap" />
               <Repeat Source="{Binding Downloads}" As="download" Key="{Binding download.Key}">
                 <Container Type="Vertical Stack">

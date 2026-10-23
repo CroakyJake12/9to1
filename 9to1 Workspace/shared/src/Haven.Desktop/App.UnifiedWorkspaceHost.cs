@@ -330,7 +330,9 @@ public sealed partial class App
                 AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false);
             IBrowseEngineHostFactory? engines = null;
             if (!OperatingSystem.IsWindows())
-                engines = new ChromiumEngineFactory();
+                engines = new ChromiumEngineFactory(
+                    _services.GetRequiredService<BrowserDownloadTransport>(),
+                    _services.GetRequiredService<IBrowserNativeDownloadService>());
 #if HAVEN_WINDOWS_DESKTOP
             engines = new WindowsChromiumEngineFactory((tab, engine, origin, kind) =>
                 (_chrome ?? throw new InvalidOperationException("The original Browse owner is not published."))

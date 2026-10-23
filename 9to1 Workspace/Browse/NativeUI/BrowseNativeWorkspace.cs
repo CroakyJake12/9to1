@@ -71,7 +71,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         _chrome = originalChrome ?? throw new ArgumentNullException(nameof(originalChrome));
         _originalActionAvailability = originalActionAvailability ?? throw new ArgumentNullException(nameof(originalActionAvailability));
         _snapshot = _chrome.State; _address = _snapshot.SelectedTab.Address.ToString(); _status = _snapshot.Status;
-        IssueCurrentRows(); IssueSavedEntryRows(); _chrome.StateChanged += OnChromeStateChanged;
+        IssueCurrentRows(); IssueSavedEntryRows(); IssuePendingDownloadRows(); _chrome.StateChanged += OnChromeStateChanged;
         _chrome.RetirementStarted += OnChromeRetirementStarted;
     }
     public static CuiDocument LoadDocument()
@@ -94,6 +94,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if (path.StartsWith("Can.", StringComparison.Ordinal))
         { value = IsActionAvailable("9to1.Browse." + path[4..]) == true; return true; }
         if (TryGetDownloadFilesBinding(path, out value)) return true;
+        if (TryGetPendingDownloadBinding(path, out value)) return true;
         var profileData = _hostContext as IHavenProfileDataContext;
         var selected = _snapshot.SelectedTab;
         // Capture the host's current typed model snapshot once per query; the bindings read it
@@ -275,6 +276,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.RegisterDownloadDestination" => _originalDownloadFilesService is not null && _downloadDestinations.Length > 0,
             "9to1.Browse.RetryDownloadRegistration" => CanRetryOriginalDownloadRegistration,
             "9to1.Browse.Downloads" => _snapshot.Downloads.IsSupported,
+            "9to1.Browse.ApprovePendingDownload" => _pendingDownloadRows.Any(row => IsCurrentPendingDownloadTarget(row.Target, approving: true)),
+            "9to1.Browse.RejectPendingDownload" => _pendingDownloadRows.Any(row => IsCurrentPendingDownloadTarget(row.Target, approving: false)),
             "9to1.Browse.NewTab" or "9to1.Browse.NewPrivateTab" or "9to1.Browse.SelectTab" or
                 "9to1.Browse.ClearHistory" or "9to1.Browse.OpenHistoryPage" or "9to1.Browse.OpenBookmarksPage" or
                 "9to1.Browse.OpenDownloadsPage" or "9to1.Browse.OpenSettingsPage" or
@@ -329,6 +332,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         { _status = "The bookmark changed. Use its current row again."; Changed(); return ValueTask.CompletedTask; }
         if (command == "9to1.Browse.RemoveHistoryEntry" && !IsCurrentSavedTarget(parameter, SavedEntryKind.History))
         { _status = "The history visit changed. Use its current row again."; Changed(); return ValueTask.CompletedTask; }
+        if ((command is "9to1.Browse.ApprovePendingDownload" or "9to1.Browse.RejectPendingDownload") &&
+            !IsCurrentPendingDownloadTarget(parameter, command == "9to1.Browse.ApprovePendingDownload"))
+        { _status = "This pending download changed or expired. Refresh Downloads and review its current row."; Changed(); return ValueTask.CompletedTask; }
         if (!ValidateOriginalDownloadAdmission(command, parameter))
         { _status = "The download or Files folder changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         lock (_sourceGate) CheckAdmission(_originalCommands);
@@ -423,6 +429,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.RegisterDownloadDestination": await RegisterOriginalDownloadDestinationAsync(parameter!, token); break;
                 case "9to1.Browse.RetryDownloadRegistration": await RetryOriginalDownloadRegistrationAsync(token); break;
                 case "9to1.Browse.Downloads": await Operation(() => _chrome.RefreshDownloadsAsync(token)); break;
+                case "9to1.Browse.ApprovePendingDownload":
+                case "9to1.Browse.RejectPendingDownload":
+                    await DecideOriginalPendingDownloadAsync(parameter!, command == "9to1.Browse.ApprovePendingDownload", token); break;
                 case "9to1.Browse.OpenFind": _profileMenuOpen = true; _manageUsersOpen = false; _toolsOpen = true; break;
                 case "9to1.Browse.FindNext": await Operation(() => _chrome.FindAsync(_find, false, token)); break;
                 case "9to1.Browse.FindPrevious": await Operation(() => _chrome.FindAsync(_find, true, token)); break;
@@ -522,7 +531,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         Dispatcher.UIThread.VerifyAccess();
         if (_retiring || _disposed) return;
         if (_snapshot.SelectedTabId != snapshot.SelectedTabId || _snapshot.SelectedTab.NativePage != snapshot.SelectedTab.NativePage) _find = snapshot.FindQuery;
-        _snapshot = snapshot; IssueCurrentRows(); IssueSavedEntryRows();
+        _snapshot = snapshot; IssueCurrentRows(); IssueSavedEntryRows(); IssuePendingDownloadRows();
         if (!_addressDraft) _address = snapshot.SelectedTab.Address.ToString();
         _status = snapshot.Status; Changed();
     }
@@ -706,6 +715,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         if (TryGetDownloadDestinationItem(item, path, out value)) return true;
+        if (TryGetPendingDownloadItem(item, path, out value)) return true;
         value = null;
         if (item is TabRow row && _tabRows.Any(current => ReferenceEquals(current, row)))
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,

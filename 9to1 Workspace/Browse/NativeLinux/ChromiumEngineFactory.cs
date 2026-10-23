@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using Haven.Browser;
+using Haven.Application;
 
 namespace HavenOS.Apps.Browse;
 
@@ -17,8 +18,17 @@ public sealed class ChromiumEngineFactory : IBrowseEngineHostFactory, IBrowseEng
     private readonly ChromiumRuntimeResolver _resolver;
     private readonly ChromiumProfilePool _pool;
     private readonly Func<Func<ChromiumEngineTab>, Task<ChromiumEngineTab>> _uiMarshal;
+    private readonly BrowserDownloadTransport? _downloadTransport;
+    private readonly IBrowserNativeDownloadService? _nativeDownloads;
 
     public ChromiumEngineFactory() : this(ChromiumRuntimeResolver.Instance) { }
+
+    public ChromiumEngineFactory(BrowserDownloadTransport downloadTransport, IBrowserNativeDownloadService nativeDownloads)
+        : this(ChromiumRuntimeResolver.Instance)
+    {
+        _downloadTransport = downloadTransport ?? throw new ArgumentNullException(nameof(downloadTransport));
+        _nativeDownloads = nativeDownloads ?? throw new ArgumentNullException(nameof(nativeDownloads));
+    }
 
     internal ChromiumEngineFactory(ChromiumRuntimeResolver resolver)
         : this(resolver, new ChromiumProfilePool(resolver: resolver)) { }
@@ -82,7 +92,8 @@ public sealed class ChromiumEngineFactory : IBrowseEngineHostFactory, IBrowseEng
         try
         {
             // Construct on the UI thread; the tab's surface is a Control.
-            tab = await _uiMarshal(() => new ChromiumEngineTab(request, lease)).ConfigureAwait(false);
+            tab = await _uiMarshal(() => new ChromiumEngineTab(request, lease,
+                downloadTransport: _downloadTransport, nativeDownloads: _nativeDownloads)).ConfigureAwait(false);
             await tab.InitializeAsync(cancellationToken).ConfigureAwait(false);
             return tab;
         }

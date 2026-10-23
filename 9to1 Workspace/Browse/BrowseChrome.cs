@@ -63,7 +63,11 @@ public sealed record BrowseSecuritySnapshot(
 public sealed record BrowseDownloadSnapshot(
     bool IsSupported,
     string Status,
-    IReadOnlyList<BrowserDownloadRecord> Items);
+    IReadOnlyList<BrowserDownloadRecord> Items)
+{
+    public IReadOnlyList<BrowsePendingDownloadObservation> Pending { get; init; } = [];
+    public string ReviewStatus { get; init; } = string.Empty;
+}
 
 public sealed record BrowseChromeSnapshot(
     IReadOnlyList<BrowseTabSnapshot> Tabs,
@@ -649,18 +653,8 @@ public sealed partial class BrowseChrome : IAsyncDisposable
         return Publish();
     }
 
-    public async Task<BrowseChromeSnapshot> RefreshDownloadsAsync(CancellationToken cancellationToken = default)
-    {
-        ThrowIfCannotAccept();
-        if (_automation is null)
-        {
-            _status = "Downloads are unavailable because no approved download ledger is registered.";
-            return Publish();
-        }
-        _downloads = await _automation.GetDownloadsAsync(500, cancellationToken).ConfigureAwait(false);
-        _status = $"Loaded {_downloads.Count} completed download{(_downloads.Count == 1 ? string.Empty : "s")}.";
-        return Publish();
-    }
+    public Task<BrowseChromeSnapshot> RefreshDownloadsAsync(CancellationToken cancellationToken = default) =>
+        RetainContentTransition(() => RefreshDownloadsCoreAsync(cancellationToken), cancellationToken);
 
     public Task<BrowseChromeSnapshot> ReportCrashAsync(Guid tabId, string reason) =>
         RetainContentTransition(() => ReportCrashCoreAsync(tabId, reason), default);
@@ -952,7 +946,11 @@ public sealed partial class BrowseChrome : IAsyncDisposable
             new BrowseDownloadSnapshot(
                 _automation is not null,
                 _automation is null ? "No approved download ledger is registered." : "Only completed, policy-approved downloads are listed.",
-                _downloads),
+                _downloads)
+            {
+                Pending = ObserveCurrentPendingDownloads(),
+                ReviewStatus = CurrentDownloadReviewStatus()
+            },
             security,
             selected.FindQuery,
             selected.ZoomPercent,
