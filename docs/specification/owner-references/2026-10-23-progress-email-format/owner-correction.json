@@ -1,0 +1,24 @@
+{
+  "cadence_minutes": 30,
+  "evidence": "Keepusefulactualscreenshots withdate/source/platform andhonestfreshness; captureaspartofongoingtests withoutstalling. Reusedscreens labelled.",
+  "recorded_at": "2026-10-23T18:53:53.219285+00:00",
+  "required_sections": [
+    {
+      "heading": "\ud83d\udc40 Progress",
+      "style": "One bullet per app: App: N% Implemented | N% Accepted; show Not Started only when verified. Percentages require complete auditable applicablemanifest+explicitstage definitions; use Not yet measured until valid numerator/denominator exist. Do not copy owner illustrative90/10 values or convert testcounts into apppercentages."
+    },
+    {
+      "heading": "9\ufe0f\u20e3 9to1 Progress",
+      "style": "One bullet per app summarising changes since last successfulsentemail. Use No Changes when accurate. Show previous\u2192new implemented percentage only if both are validlymeasured on same complete scope. Summarise user-facing fixes; avoid massive implementationdetail."
+    },
+    {
+      "heading": "\ud83c\udf29 Thunder",
+      "style": "ExistingThunder section retained, add more quantitative actualprogress: completed/eligible/failedrequests, model+quantisation, repeated-run medians/ranges, TTFT/memory/hardware/software wherecaptured, before\u2192after support matrix/gates/CPUtests counts. Labelconfounds/NOTRUN/BLOCKED; no fabricatedgains or estimates asachieved."
+    }
+  ],
+  "schema": "9to1.owner-progress-email-format/v2",
+  "scope": "Applies fromnextemailonward. Preserveallactualsendreceipts/history anddo not resendpreviousmessages.",
+  "source": "Latest direct owner message in currentRoot conversation23October2026",
+  "supersedes": "Earlier9\ufe0f\u20e3Updates/\u2705\ud83d\udd52\u27a1\ufe0femailstructure; 30mincadence/recipient remain unchanged",
+  "configuration": "Existing privatehalf-hourlycadencestate andrecipientremainoutsideGit; do notcreateanewscheduler orresetlastsuccessfulsend."
+}
