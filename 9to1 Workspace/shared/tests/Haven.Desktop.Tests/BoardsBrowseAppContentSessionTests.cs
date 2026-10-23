@@ -19,6 +19,8 @@ namespace Haven.Desktop.Tests;
 /// a deterministic HOST-observation seam. These do not claim real Home grants or native acceptance.</summary>
 public sealed class BoardsBrowseAppContentSessionTests
 {
+    public static bool UsesLinuxOriginalNotesFixture => BoardsOriginalStoreSetupTests.UsesLinuxOriginalNotesFixture;
+
     [Fact]
     public void Address_requires_the_canonical_registered_notebook_identity()
     {
@@ -157,7 +159,7 @@ public sealed class BoardsBrowseAppContentSessionTests
         await retained.BeginClose();
     }
 
-    [AvaloniaFact]
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original metadata requires little-endian Linux X64/Arm64; other platform acceptance is separate.")]
     public async Task Actual_Home_actor_callback_cannot_join_its_parent_session_under_restored_pre_owner_context()
     {
         var beforeOwner = ExecutionContext.Capture() ?? throw new InvalidOperationException("Capture genuine pre-owner context.");

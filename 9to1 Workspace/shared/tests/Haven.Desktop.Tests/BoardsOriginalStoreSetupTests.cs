@@ -20,7 +20,9 @@ namespace Haven.Desktop.Tests;
 /// component fixture is not installed native/ARM or complete Boards acceptance.</summary>
 public sealed class BoardsOriginalStoreSetupTests
 {
-    public static bool UsesLinuxOriginalNotesFixture => OperatingSystem.IsLinux() && BitConverter.IsLittleEndian;
+    public static bool UsesLinuxOriginalNotesFixture => OperatingSystem.IsLinux() && BitConverter.IsLittleEndian &&
+        System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture is
+            System.Runtime.InteropServices.Architecture.X64 or System.Runtime.InteropServices.Architecture.Arm64;
 
     [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original Linux Notes boundary; other platform acceptance is separate.")]
     public async Task Shared_CUI_new_user_setup_requires_explicit_identity_and_empty_binding_then_separate_content_review()
