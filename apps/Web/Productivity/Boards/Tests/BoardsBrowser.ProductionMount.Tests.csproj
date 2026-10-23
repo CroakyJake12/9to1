@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>14.0</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Exact production Render, wrapper chain, shared Boards core/CUI/presentation. -->
+    <Compile Include="BoardsBrowserProductionMountRegression.cs" />
+    <Compile Include="../BoardsBrowserCore.cs;../BoardsBrowserCore.RichText.cs;../BoardsBrowserCore.Workspace.cs;../BoardsCuiWorkspacePresentation.cs;../BoardsBrowserSurface.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../../../BrowserApplication.cs;../../../BrowserShellActions.cs;../../../BrowserAppAccentSettings.cs;../../../BrowserCanonicalIcons.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../../../BrowserRouteCodec.cs;../../../BrowserRouteDispatcher.cs;../../../BrowserSurfaceRegistry.cs;../../../BrowserHomeContext.cs;../../../BrowserHomeContext.Dashboard.cs;../../../BrowserHomePresentation.cs;../../../BrowserHomeDashboardLayoutStore.cs;../../../BrowserActionAvailability.cs;../../../BrowserAccessibilityBridge.cs;../../../BrowserAccessibilityJsonContext.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../../../Home/HomeLocalPreferences.cs;../../../Home/BrowserHomeBriefingSources.cs;../../../Home/BrowserAppearanceSettings.cs;../../../Home/BrowserThemeCreator.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../../../Accounts/AccountSettingsFeature.cs;../../../Accounts/AccountBrowserBindings.cs;../../../Services/IAccountBrowserTransport.cs;../../../Services/BrowserAccountTransport.cs;../../../Services/BrowserTaskActorSource.cs;../../../Services/BrowserTaskIdentityReadOperation.cs" Link="Production/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../Boards.cui" LogicalName="Boards.ProductionMount.cui" />
+    <ProjectReference Include="../../../Write/Scene/Haven.WriteBrowser.Scene.csproj" />
+    <ProjectReference Include="../../../../../9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <ProjectReference Include="../../../../../9to1 Workspace/Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="../../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+  </ItemGroup>
+</Project>
