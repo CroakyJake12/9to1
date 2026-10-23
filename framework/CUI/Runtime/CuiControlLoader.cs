@@ -30,6 +30,9 @@ public sealed partial class CuiControlLoader : IDisposable
     /// synchronously reload or dispose this loader; this generation/index the stale outer attempt
     /// after any such callback so it cannot overwrite a replacement mount or resume after disposal.</summary>
     private int _loadGeneration;
+    // Separate from load attempts: a rejected preflight deliberately preserves the current
+    // operational frame. Only actual lineage retirement invalidates its awaited UI completions.
+    private object _committedActionFrame = new();
     private readonly object _actionTasksGate = new();
     private readonly HashSet<Task> _pendingActionTasks = [];
     private const int MaximumRetainedActionTasks = 128;
@@ -269,6 +272,10 @@ public sealed partial class CuiControlLoader : IDisposable
     }
 
     /// <summary>Internal diagnostic: current count of retained original action/close receipts.</summary>
+    /// <summary>Current-frame diagnostic snapshot for native infrastructure inspection. Reading
+    /// diagnostics neither clears a failure nor acknowledges an action/close outcome.</summary>
+    internal IReadOnlyList<CuiDiagnostic> RuntimeDiagnostics => _runtimeDiagnostics.ToArray();
+
     internal int PendingActionCount
     {
         get { lock (_actionTasksGate) return _pendingActionTasks.Count; }
@@ -495,7 +502,6 @@ public sealed partial class CuiControlLoader : IDisposable
         ArgumentNullException.ThrowIfNull(document);
         ObjectDisposedException.ThrowIf(_disposed, this);
         var generation = ++_loadGeneration;
-        _effectsReady = false; // effect firing is installed only after this load succeeds
         if (!CuiProjectItems.IsCuiSourceFamily(document.SourceName))
             throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR051", CuiDiagnosticSeverity.Error, "Production CUI loading rejects non-CUI/AXAML/HUI application input.", document.Span));
         document = CuiThemeCreatorComponents.Compose(CuiAppComponents.Compose(document));
@@ -557,6 +563,13 @@ public sealed partial class CuiControlLoader : IDisposable
         if (randomOncePlans.Count > 0 && !IsLoadAttemptCurrent(generation))
             throw ReentrancyError(randomOncePlans[randomOncePlans.Count - 1].Declaration);
 
+        // Preflight has accepted replacement. Retire action completion admission BEFORE native
+        // teardown callbacks can settle old work. Domain tasks/receipts remain owned and drained;
+        // only publication of their UI outcome/local transitions into this frame is withdrawn.
+        _committedActionFrame = new object();
+        var mountingFrame = _committedActionFrame;
+        _effectsReady = false; // a rejected preflight leaves prior effects operational
+        _effectRoot = null; // a failed replacement must not reactivate the retired root
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -624,6 +637,7 @@ public sealed partial class CuiControlLoader : IDisposable
 
         // The first component is the root
         var root = LoadComponent(visibleRoot);
+        EnsureCurrentMount();
 
         // Record whether the authored root owns its own composite backdrop (so a
         // rounded authored surface, not a square host fill, owns the scene).
@@ -634,13 +648,24 @@ public sealed partial class CuiControlLoader : IDisposable
         if (_bindingContext is not null)
             root.DataContext = _bindingContext;
 
-        // Install declarative auto-invocation effects for this loaded document.
+        // Renderer factories, bound getters and native observers are external callbacks. A
+        // stale outer mount must not overwrite the effects of a replacement or closed loader.
+        EnsureCurrentMount();
+        // Prepare effects without executing them against a partially wired control tree.
+        // WireBindings activates only this exact committed root after all descendants are wired.
         _effects = document.Effects ?? Array.Empty<CuiEffectDefinition>();
         _effectFired = new bool[_effects.Count];
         _effectRoot = root;
-        _effectsReady = true;
 
         return root;
+
+        void EnsureCurrentMount()
+        {
+            if (!IsLoadAttemptCurrent(generation) || !IsActionFrameCurrent(mountingFrame))
+                throw new CuiRuntimeLoadException(new CuiDiagnostic(
+                    "CUIR073", CuiDiagnosticSeverity.Error,
+                    "The CUI mount was replaced or closed during loading; its effects were not activated.", visibleRoot.Span));
+        }
     }
 
     /// <summary>Load a document without throwing runtime diagnostics to the host.</summary>
@@ -708,21 +733,31 @@ public sealed partial class CuiControlLoader : IDisposable
     /// </summary>
     public void WireBindings(Control root)
     {
+        if (_disposed) return;
+        var frame = _committedActionFrame;
         WireBindingsRecursive(root);
+        if (_effectsReady || !IsActionOriginCurrent(frame, root, frameOwned: true)) return;
+        _effectsReady = true;
+        EvaluateEffects();
     }
 
     private async Task DispatchActionAsync(Task start, Control control, ICuiActionDispatcher dispatcher,
         CuiActionInvocation invocation)
     {
+        var frame = _committedActionFrame;
         await start;
         Task? actualDispatcher = null;
         var outcome = new CuiCommandOutcome(false, false, "CUIA_FAILED", "The command did not produce an outcome.", null);
+        var failures = new List<Exception>();
         try
         {
             // Resolve live bound parameters only after this actual pipeline has
             // been retained, using the SAME configured context captured at load.
             // App row owners still validate current selection and provenance.
             var parameter = invocation.ResolveCurrentParameter();
+            // An initial effect's parameter getter can synchronously replace/close the loader.
+            // Admission retains its real pipeline, but no retired frame may start a command.
+            if (invocation.FrameOwned && !IsActionOriginCurrent(frame, control, frameOwned: true)) return;
             // Prefer a result-reporting dispatcher so CUI can branch on a typed outcome; fall back
             // to the lifetime-aware/generic contracts with an implicit success outcome.
             if (dispatcher is ICuiResultReportingDispatcher reporting)
@@ -745,34 +780,38 @@ public sealed partial class CuiControlLoader : IDisposable
                 outcome = new CuiCommandOutcome(true, false, "Succeeded", null, null);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException error)
         {
             outcome = new CuiCommandOutcome(false, true, "Cancelled", "The action was cancelled.", null);
-            var failures = new List<Exception>();
-            AddOriginalTaskFailure(failures, actualDispatcher, new OperationCanceledException());
-            RetainActionFailure(control, new OperationCanceledException(), failures);
-            ThrowRetainedFailures(failures);
+            AddOriginalTaskFailure(failures, actualDispatcher, error);
+            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
         }
         catch (Exception error)
         {
             outcome = new CuiCommandOutcome(false, false, "Failed", error.Message, null);
-            var failures = new List<Exception>();
             AddOriginalTaskFailure(failures, actualDispatcher, error);
-            RetainActionFailure(control, error, failures);
-            ThrowRetainedFailures(failures);
+            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
         }
-        finally
+        try
         {
             // Report the typed outcome to CUI and apply authored transition guards regardless of
             // success/failure, so CUI can branch into recovery/retry/local states by itself.
-            // After disposal the UI lineage is retired, so no result/mutation is written onto it.
-            if (!_disposed)
+            // A replacement/retired branch or disposal withdraws UI publication only. Preserve
+            // the actual dispatcher outcome and its original task/failure receipt for the owner.
+            if (IsActionOriginCurrent(frame, control, invocation.FrameOwned))
             {
                 if (invocation.ResultTarget is not null)
                     WriteResultTarget(invocation.ResultTarget, outcome);
-                ApplySetDirectives(invocation.Sets ?? Array.Empty<CuiSetDirective>());
+                // Outcome observers/effects may synchronously replace or dispose the scene.
+                if (IsActionOriginCurrent(frame, control, invocation.FrameOwned))
+                    ApplySetDirectives(invocation.Sets ?? Array.Empty<CuiSetDirective>(), frame, control, invocation.FrameOwned);
             }
         }
+        catch (Exception error) { AddDistinctFailure(failures, error); }
+        // Publication is independent of the original dispatcher outcome. A result observer
+        // or a declarative Set failure must not replace an already retained domain/cancellation
+        // cause. Keep every exact original cause, while retired frames receive no new UI.
+        ThrowRetainedFailures(failures);
     }
 
     /// <summary>Executes a pure-local Toggle or declarative <Set> mutation in the loader's
@@ -782,9 +821,11 @@ public sealed partial class CuiControlLoader : IDisposable
     /// authored transitions branch on typed results entirely within CUI.</summary>
     private async Task DispatchLocalSetsAsync(Task start, Control control, CuiActionInvocation invocation)
     {
+        var frame = _committedActionFrame;
         await start;
         try
         {
+            if (!IsActionOriginCurrent(frame, control, invocation.FrameOwned)) return;
             if (invocation.Command == LocalToggleCommand)
             {
                 var target = invocation.Parameter as string;
@@ -796,14 +837,14 @@ public sealed partial class CuiControlLoader : IDisposable
             }
             else
             {
-                ApplySetDirectives(invocation.Sets ?? Array.Empty<CuiSetDirective>());
+                ApplySetDirectives(invocation.Sets ?? Array.Empty<CuiSetDirective>(), frame, control, invocation.FrameOwned);
             }
         }
         catch (Exception error)
         {
             var failures = new List<Exception>();
             AddDistinctFailure(failures, error);
-            RetainActionFailure(control, error, failures);
+            RetainActionFailure(control, error, failures, frame, invocation.FrameOwned);
             ThrowRetainedFailures(failures);
         }
     }
@@ -812,26 +853,54 @@ public sealed partial class CuiControlLoader : IDisposable
     /// <see cref="CuiSetDirective.When"/> condition; only qualifying mutations are applied. Values
     /// are converted to the declared variable type and every touched variable's live bindings and
     /// conditional branches are refreshed exactly once.</summary>
-    private void ApplySetDirectives(IReadOnlyList<CuiSetDirective> sets)
+    private bool IsActionFrameCurrent(object frame) =>
+        !_disposed && ReferenceEquals(frame, _committedActionFrame);
+
+    private bool IsActionOriginCurrent(object frame, Control origin, bool frameOwned) =>
+        IsActionFrameCurrent(frame) && (frameOwned
+            ? ReferenceEquals(origin, _effectRoot)
+            : _authoredControls.ContainsKey(origin));
+
+    private void ApplySetDirectives(IReadOnlyList<CuiSetDirective> sets, object frame, Control origin, bool frameOwned)
     {
         if (sets.Count == 0) return;
         var touched = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var set in sets)
+        var failures = new List<Exception>();
+        try
         {
-            if (set.When is not null && !EvaluateCondition(set.When))
-                continue;
-            if (!_declaredVariables.TryGetValue(set.Target, out var declaration))
-                throw new InvalidOperationException($"Set target '{set.Target}' is not a declared document-root variable.");
-            if (set.Value is not CuiLiteralValue literal)
-                throw new InvalidOperationException($"Set target '{set.Target}' requires a literal Value.");
-            if (!TryConvertToDeclaredType(declaration.Type, literal.Value, out var converted))
-                throw new InvalidOperationException(
-                    $"Set target '{set.Target}' value '{literal.Value}' cannot convert to declared type '{declaration.Type}'.");
-            _localState[set.Target] = converted;
-            touched.Add(set.Target);
+            foreach (var set in sets)
+            {
+                if (!IsActionOriginCurrent(frame, origin, frameOwned)) break;
+                if (set.When is not null && !EvaluateCondition(set.When))
+                    continue;
+                // Condition getters are external callbacks and may replace/retire the origin.
+                if (!IsActionOriginCurrent(frame, origin, frameOwned)) break;
+                if (!_declaredVariables.TryGetValue(set.Target, out var declaration))
+                    throw new InvalidOperationException($"Set target '{set.Target}' is not a declared document-root variable.");
+                if (set.Value is not CuiLiteralValue literal)
+                    throw new InvalidOperationException($"Set target '{set.Target}' requires a literal Value.");
+                if (!TryConvertToDeclaredType(declaration.Type, literal.Value, out var converted))
+                    throw new InvalidOperationException(
+                        $"Set target '{set.Target}' value '{literal.Value}' cannot convert to declared type '{declaration.Type}'.");
+                _localState[set.Target] = converted;
+                touched.Add(set.Target);
+            }
         }
-        foreach (var name in touched)
-            RefreshLocalVariable(name);
+        catch (Exception error) { AddDistinctFailure(failures, error); }
+        {
+            // Preserve existing sequential Set semantics. If a later guard withdraws the origin,
+            // already committed values remain observable in this SAME frame; a replaced frame
+            // receives neither those refreshes nor the remaining writes.
+            foreach (var name in touched)
+            {
+                if (!IsActionFrameCurrent(frame)) break;
+                try { RefreshLocalVariable(name); }
+                catch (Exception error) { AddDistinctFailure(failures, error); }
+            }
+        }
+        // A guard/Set failure and a subsequent publication observer failure both belong to the
+        // original action. Never let cleanup/publication replace the first concrete cause.
+        ThrowRetainedFailures(failures);
     }
 
     /// <summary>Converts a document-root <Variable> literal initializer to its declared type.
@@ -933,30 +1002,40 @@ public sealed partial class CuiControlLoader : IDisposable
     private void EvaluateEffects()
     {
         if (_disposed || !_effectsReady || _effectRoot is null) return;
-        for (var i = 0; i < _effects.Count; i++)
+        var frame = _committedActionFrame;
+        var root = _effectRoot;
+        var effects = _effects;
+        var fired = _effectFired;
+        bool IsCurrent() => _effectsReady && IsActionOriginCurrent(frame, root, frameOwned: true);
+        for (var i = 0; i < effects.Count; i++)
         {
-            var effect = _effects[i];
+            if (!IsCurrent()) return;
+            var effect = effects[i];
             bool satisfied;
             try { satisfied = EvaluateCondition(effect.Condition); }
             catch { satisfied = false; }
+            // Condition evaluation can synchronously replace/dispose the frame. Never consult
+            // the new frame's fired array or dispatch the old declaration into its dispatcher.
+            if (!IsCurrent()) return;
 
-            if (satisfied && !_effectFired[i])
+            if (satisfied && !fired[i])
             {
                 // Validate BEFORE this effect runs: a satisfied effect must reference a declared
                 // action (the compiled-artifact codec already enforces this at admission; this is
                 // the same invariant for markup-loaded documents). Never silently drop an effect.
                 var invocation = BuildEffectInvocation(effect.ActionName);
+                if (!IsCurrent()) return;
                 if (invocation is null)
                     throw new CuiRuntimeLoadException(new CuiDiagnostic(
                         "CUIR073", CuiDiagnosticSeverity.Error,
                         $"Declarative effect '{effect.Name}' references undeclared action '{effect.ActionName}'.",
                         effect.Span));
-                _effectFired[i] = true;
+                fired[i] = true;
                 DispatchEffectAction(invocation);
             }
             else if (!satisfied)
             {
-                _effectFired[i] = false;
+                fired[i] = false;
             }
         }
     }
@@ -985,6 +1064,9 @@ public sealed partial class CuiControlLoader : IDisposable
     /// admission is closed.</summary>
     private void DispatchEffectAction(CuiActionInvocation invocation)
     {
+        // A document effect belongs to the committed frame/root. Its root can be a loader-owned
+        // conditional/scroll wrapper rather than an authored control registered in the tree.
+        invocation = invocation with { FrameOwned = true };
         var start = new TaskCompletionSource();
         lock (_actionTasksGate)
         {
@@ -1015,9 +1097,9 @@ public sealed partial class CuiControlLoader : IDisposable
         ThrowRetainedFailures(failures);
     }
 
-    private void RetainActionFailure(Control control, Exception original, List<Exception> failures)
+    private void RetainActionFailure(Control control, Exception original, List<Exception> failures, object? frame = null, bool frameOwned = false)
     {
-        if (!_disposed)
+        if (!_disposed && (frame is null || IsActionOriginCurrent(frame, control, frameOwned)))
         {
             var failure = original is OperationCanceledException
                 ? new CuiActionFailure("CUIA_CANCELLED", "The action was cancelled.", true)
@@ -1033,12 +1115,17 @@ public sealed partial class CuiControlLoader : IDisposable
 
     private Exception? ReportActionFailure(Control control, CuiActionFailure failure)
     {
+        var publicationFrame = _committedActionFrame;
         var span = _authoredControls.TryGetValue(control, out var authored) ? authored.Span : default;
         _runtimeDiagnostics.Add(new(failure.Code, failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error, failure.Message, span));
         try { ActionFailed?.Invoke(this, failure); }
         catch (Exception error)
         {
-            _runtimeDiagnostics.Add(new("CUIA_OBSERVER_FAILED", CuiDiagnosticSeverity.Error, "The action status could not be displayed.", span));
+            // The observer may synchronously replace/dispose this loader before throwing.
+            // Its exact failure still belongs to the original action receipt, but its diagnostic
+            // must never contaminate a different committed frame.
+            if (IsActionFrameCurrent(publicationFrame))
+                _runtimeDiagnostics.Add(new("CUIA_OBSERVER_FAILED", CuiDiagnosticSeverity.Error, "The action status could not be displayed.", span));
             return error;
         }
         return null;
@@ -2385,7 +2472,7 @@ public sealed partial class CuiControlLoader : IDisposable
             if (CuiPropertyPresentation.Set(control, property, value, level, "CUI authored " + level)) return;
         }
         catch (Exception error) when (error is ArgumentException or InvalidOperationException)
-        { throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {property}: {error.Message}", span)); }
+        { throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {property}: {error.Message}", span), error); }
         throw new CuiRuntimeLoadException(new("CUIR053", CuiDiagnosticSeverity.Error,
             $"CUI property '{property}' has no typed projection for this resource.", span));
     }
@@ -2665,20 +2752,22 @@ public sealed partial class CuiControlLoader : IDisposable
     /// list is snapshotted before notifications, and a reentrant toggle re-applies the new value.</summary>
     private void RefreshLocalVariable(string name)
     {
+        var frame = _committedActionFrame;
         if (_localBindings.TryGetValue(name, out var bindings))
         {
             foreach (var record in bindings.ToArray())
             {
-                if (_disposed) return;
+                if (!IsActionFrameCurrent(frame)) return;
                 ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, null!, record.Span);
             }
         }
+        if (!IsActionFrameCurrent(frame)) return;
         // Conditional branches rooted at this local variable must re-evaluate so CUI-authored
         // transition guards recompute which page is active. This runs even when the variable has
         // no live value binding but is referenced by authored conditional branches.
         RefreshLiveConditionals(name);
         // Declarative auto-invocation effects may react to the refreshed local state.
-        EvaluateEffects();
+        if (IsActionFrameCurrent(frame)) EvaluateEffects();
     }
 
     private void OnBindingPropertyChanged(string? propertyName)
@@ -2999,7 +3088,7 @@ public sealed partial class CuiControlLoader : IDisposable
             if (CuiPropertyPresentation.TrySetLiteral(control, propName, resolved, level, "CUI authored " + level, sourceSpan: sourceSpan)) return;
         }
         catch (Exception error) when (error is FormatException or ArgumentException or InvalidOperationException)
-        { throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {propName}: {error.Message}", sourceSpan)); }
+        { throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR053", CuiDiagnosticSeverity.Error, $"Invalid CUI {propName}: {error.Message}", sourceSpan), error); }
         var normalizedPropertyName = propName.Replace("-", string.Empty, StringComparison.Ordinal);
             switch (normalizedPropertyName.ToLowerInvariant())
             {
@@ -3486,7 +3575,8 @@ public sealed partial class CuiControlLoader : IDisposable
         // toggles carry no owner and are handled locally.
         ICuiActionDispatcher? Owner = null,
         IReadOnlyList<CuiSetDirective>? Sets = null,
-        string? ResultTarget = null)
+        string? ResultTarget = null,
+        bool FrameOwned = false)
     {
         internal object? ResolveCurrentParameter() => LiveParameter is not null
             ? ParameterContext is not null && ParameterContext.TryGetValue(LiveParameter.Path, out var current)
