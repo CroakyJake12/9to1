@@ -106,6 +106,21 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
     public IReadOnlyList<DeveloperSourceChangePass> GetPasses()
     { lock (_gate) { DemandAdmission(); return _passes.Values.OrderBy(value => value.CreatedAt).ThenBy(value => value.ChangeSetId).ToArray(); } }
 
+    /// <summary>Closes only a clean, settled editor. Retained pass/original evidence is not
+    /// deleted, and this operation never writes or discards source content.</summary>
+    public void CloseEditor(Guid editorId, long expectedDraftRevision)
+    {
+        lock (_gate)
+        {
+            DemandAdmission(); var entry = DemandEntry(editorId); DemandRevision(entry, expectedDraftRevision);
+            if (entry.Snapshot.IsDirty || entry.PendingApply is not null)
+                throw new InvalidOperationException("Apply or explicitly revert the unsaved draft before closing this editor.");
+            if (_opening != 0 || _originals.Values.Any(value => !value.Task.IsCompletedSuccessfully))
+                throw new InvalidOperationException("Source operations must settle before closing an editor; retained failed outcomes require inspection.");
+            _editors.Remove(editorId);
+        }
+    }
+
     public Task<DeveloperOperationResult<DeveloperEditorSnapshot>> OpenAsync(
         DeveloperProjectReference project, DeveloperCanonicalActionContext context, DeveloperCodeDocument document,
         CancellationToken businessCancellationToken = default) => AdmitAsync(context.ActionId,
@@ -119,7 +134,7 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
                         DemandSameTask(existing.Snapshot.OriginalObservation.OriginalContext, context);
                         // Even a cached editor performs a fresh genuine read below before disclosure.
                     }
-                    if (_editors.Count + _opening >= MaximumOpenDocuments)
+                    if (existing is null && _editors.Count + _opening >= MaximumOpenDocuments)
                         throw new InvalidOperationException("Source editor document custody is full. This is a local runtime limit.");
                     _opening++;
                 }

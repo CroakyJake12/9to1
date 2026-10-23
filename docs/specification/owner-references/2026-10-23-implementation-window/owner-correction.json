@@ -1,0 +1,17 @@
+{
+  "schema": "9to1.owner-implementation-window/v1",
+  "recorded_at": "2026-10-23T21:03:04.625733+00:00",
+  "owner_quote": "It seems too much focus is being placed on acceptance before implementation. So we end up with half an hour of \"accepted x\" while there are still major feature gaps. Focus only on implementation and basic smoke testing until 3am then restart acceptance",
+  "timezone": "Europe/London",
+  "effective_until_local": "2026-10-24T03:00:00+01:00",
+  "acceptance_resume_at_utc": "2026-10-24T02:00:00+00:00",
+  "during_window": [
+    "Prioritise filling real app/framework feature gaps through supported isolated Beam/Codex workstreams.",
+    "Run basic smoke checks needed to establish implemented behavior; defer broad integration/native/release acceptance and acceptance-only audits.",
+    "Preserve failures, source revisions, worker scopes and queued acceptance tasks. Implementation and smoke results never imply Accepted or ready release.",
+    "Continue Thunder implementation/profiling in the separately authorised desktop window; stop on its existing deadline or revocation."
+  ],
+  "after_window": "Resume independent acceptance from exact latest integrated candidate, subject to any newer owner instruction; all mandatory quality/platform/release gates remain.",
+  "cadence": "Existing half-hourly concise emails/screenshots/rough estimates continue. Accepted estimates stay separate from implementation and are not advanced by unaccepted code.",
+  "supersedes": "Earlier acceptance-first execution priority during this specific window; no permanent quality or scope reduction."
+}

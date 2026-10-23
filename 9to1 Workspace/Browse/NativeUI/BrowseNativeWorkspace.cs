@@ -112,6 +112,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "IsBookmarks" => selected.NativePage == BrowserNativePage.Bookmarks,
             "IsDownloads" => selected.NativePage == BrowserNativePage.Downloads,
             "IsSettings" => selected.NativePage == BrowserNativePage.Settings,
+            "RecordHistory" => _chrome.HistoryRecordingEnabled,
+            "RestoreTabs" => _chrome.TabRestoreEnabled,
             "NativeTitle" => selected.Title,
             "EmptyBookmarks" => _bookmarkRows.Length == 0,
             "EmptyHistory" => _historyRows.Length == 0,
@@ -133,6 +135,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 _chrome.QueryEngineCapability(BrowseEngineKind.Chromium),
             "ChromiumFallbackStatus" => selected.Status,
             "Bookmarks" => _bookmarkRows,
+            "IsBookmarked" => SelectedPageIsBookmarked(_snapshot),
+            "BookmarkGlyph" => SelectedPageIsBookmarked(_snapshot) ? "★" : "☆",
+            "BookmarkLabel" => SelectedPageIsBookmarked(_snapshot) ? "Remove bookmark for this page" : "Bookmark page",
             "History" => _historyRows,
             "Downloads" => _downloadRows,
             "Haven.Embedded" => _hostContext?.IsEmbedded == true,
@@ -202,6 +207,15 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 if (value is not string findText || findText.Length > 8192) return false;
                 _find = findText;
                 break;
+            case "RecordHistory":
+            case "RestoreTabs":
+                if (value is not bool enabled) return false;
+                var settingCommand = path == "RecordHistory"
+                    ? (enabled ? "9to1.Browse.EnableHistory" : "9to1.Browse.DisableHistory")
+                    : (enabled ? "9to1.Browse.EnableTabRestore" : "9to1.Browse.DisableTabRestore");
+                if (IsActionAvailable(settingCommand) != true) return false;
+                _ = DispatchAsync(settingCommand, null);
+                return true;
             case "AllowPopups":
                 // The site-popups control is a genuine boolean bound to the real effective
                 // WindowManagement permission. Toggling dispatches the real Allow/Deny command
@@ -228,7 +242,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.Back" => interactive && tab.CanGoBack,
             "9to1.Browse.Forward" => interactive && tab.CanGoForward,
             "9to1.Browse.Navigate" or "9to1.Browse.OpenBookmark" or "9to1.Browse.OpenHistory" => tab.EngineState != BrowseEngineState.Crashed,
-            "9to1.Browse.Reload" or "9to1.Browse.FindNext" or "9to1.Browse.FindPrevious" or
+            "9to1.Browse.Reload" or "9to1.Browse.OpenFind" or "9to1.Browse.FindNext" or "9to1.Browse.FindPrevious" or
                 "9to1.Browse.ZoomIn" or "9to1.Browse.ZoomOut" or "9to1.Browse.ZoomReset" or "9to1.Browse.DevTools" => interactive,
             "9to1.Browse.Stop" => interactive && tab.IsLoading,
             "9to1.Browse.Bookmark" or "9to1.Browse.AllowPopups" or "9to1.Browse.DenyPopups" or
@@ -236,6 +250,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.Recover" => tab.EngineState == BrowseEngineState.Crashed,
             "9to1.Browse.FirefoxTab" or "9to1.Browse.ChromiumTab" or "9to1.Browse.ResetTabEngine" => tab.Address.IsWeb,
             "9to1.Browse.ReopenClosedTab" => _chrome.CanReopenClosedTab,
+            "9to1.Browse.RemoveBookmark" => _snapshot.Bookmarks.Count > 0,
             "9to1.Browse.CloseTab" => tab.IsCloseable,
             "9to1.Browse.CloseTabRow" => _snapshot.Tabs.Any(item => item.IsCloseable),
             "9to1.Browse.ShowDownloadInFiles" => _originalDownloadFilesService is not null,
@@ -245,7 +260,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.NewTab" or "9to1.Browse.NewPrivateTab" or "9to1.Browse.SelectTab" or
                 "9to1.Browse.ClearHistory" or "9to1.Browse.OpenHistoryPage" or "9to1.Browse.OpenBookmarksPage" or
                 "9to1.Browse.OpenDownloadsPage" or "9to1.Browse.OpenSettingsPage" or
-                "9to1.Browse.DefaultFirefox" or "9to1.Browse.DefaultChromium" => true,
+                "9to1.Browse.DefaultFirefox" or "9to1.Browse.DefaultChromium" or
+                "9to1.Browse.EnableHistory" or "9to1.Browse.DisableHistory" or
+                "9to1.Browse.EnableTabRestore" or "9to1.Browse.DisableTabRestore" => true,
             "9to1.Browse.DiscardAddress" => _addressDraft,
             "9to1.Browse.ToggleTools" => true,
             "9to1.Browse.CloseTools" => _toolsOpen,
@@ -288,6 +305,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         if ((command == "9to1.Browse.OpenBookmark" && !IsCurrentSavedTarget(parameter, SavedEntryKind.Bookmark)) ||
             (command == "9to1.Browse.OpenHistory" && !IsCurrentSavedTarget(parameter, SavedEntryKind.History)))
         { _status = "The saved entry changed. Open its current row again."; Changed(); return ValueTask.CompletedTask; }
+        if (command == "9to1.Browse.RemoveBookmark" && !IsCurrentSavedTarget(parameter, SavedEntryKind.Bookmark))
+        { _status = "The bookmark changed. Use its current row again."; Changed(); return ValueTask.CompletedTask; }
         if (!ValidateOriginalDownloadAdmission(command, parameter))
         { _status = "The download or Files folder changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         lock (_sourceGate) CheckAdmission(_originalCommands);
@@ -353,6 +372,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     await Operation(() => entryKind == SavedEntryKind.Bookmark ? _chrome.OpenBookmarkAsync(entry.Id, token) : _chrome.OpenHistoryEntryAsync(entry.Id, token));
                     _addressDraft = false; break;
                 case "9to1.Browse.ResetTabEngine": await Operation(() => _chrome.ResetSelectedTabEngineAsync(token)); break;
+                case "9to1.Browse.RemoveBookmark":
+                    if (!IsCurrentSavedTarget(parameter, SavedEntryKind.Bookmark)) { _status = "The bookmark changed before removal; use its current row again."; break; }
+                    var removedBookmark = (SavedEntrySelection)parameter!;
+                    await Operation(() => _chrome.RemoveBookmarkAsync(removedBookmark.Id, token));
+                    break;
                 case "9to1.Browse.ResetSiteEngine": await Operation(() => _chrome.ResetSiteEngineAsync(token)); break;
                 case "9to1.Browse.Bookmark": await Operation(() => _chrome.ToggleBookmarkAsync(token)); break;
                 case "9to1.Browse.ClearHistory": await Operation(() => _chrome.ClearHistoryAsync(token)); break;
@@ -360,6 +384,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.RegisterDownloadDestination": await RegisterOriginalDownloadDestinationAsync(parameter!, token); break;
                 case "9to1.Browse.RetryDownloadRegistration": await RetryOriginalDownloadRegistrationAsync(token); break;
                 case "9to1.Browse.Downloads": await Operation(() => _chrome.RefreshDownloadsAsync(token)); break;
+                case "9to1.Browse.OpenFind": _profileMenuOpen = true; _manageUsersOpen = false; _toolsOpen = true; break;
                 case "9to1.Browse.FindNext": await Operation(() => _chrome.FindAsync(_find, false, token)); break;
                 case "9to1.Browse.FindPrevious": await Operation(() => _chrome.FindAsync(_find, true, token)); break;
                 case "9to1.Browse.ZoomIn": await Operation(() => _chrome.SetZoomAsync(_snapshot.ZoomPercent + 10, token)); break;
@@ -372,6 +397,10 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 case "9to1.Browse.ChromiumTab": await Operation(() => _chrome.SetSelectedTabEngineAsync(BrowseEngineKind.Chromium, token)); break;
                 case "9to1.Browse.FirefoxSite": await Operation(() => _chrome.SetSiteEngineAsync(BrowseEngineKind.Gecko, token)); break;
                 case "9to1.Browse.ChromiumSite": await Operation(() => _chrome.SetSiteEngineAsync(BrowseEngineKind.Chromium, token)); break;
+                case "9to1.Browse.EnableHistory": await Operation(() => _chrome.SetHistoryRecordingAsync(true, token)); break;
+                case "9to1.Browse.DisableHistory": await Operation(() => _chrome.SetHistoryRecordingAsync(false, token)); break;
+                case "9to1.Browse.EnableTabRestore": await Operation(() => _chrome.SetTabRestoreAsync(true, token)); break;
+                case "9to1.Browse.DisableTabRestore": await Operation(() => _chrome.SetTabRestoreAsync(false, token)); break;
                 case "9to1.Browse.DefaultFirefox": await Operation(() => _chrome.SetDefaultEngineAsync(BrowseEngineKind.Gecko, token)); break;
                 case "9to1.Browse.DefaultChromium": await Operation(() => _chrome.SetDefaultEngineAsync(BrowseEngineKind.Chromium, token)); break;
                 case "9to1.Browse.DevTools":
@@ -484,6 +513,16 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             AppContentNamespace.NativeApp => "9to1",
             _ => string.Empty
         }) + "://" + address.Authority;
+
+    /// <summary>Retains the real deferred focus operation with the scene's other UI sources.</summary>
+    internal Task FocusFindControlAsync(Action focus)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        lock (_sourceGate) CheckAdmission(_originalUiOperations);
+        var original = Dispatcher.UIThread.InvokeAsync(() => { if (IsReady) focus(); }).GetTask();
+        lock (_sourceGate) Retain(_originalUiOperations, original);
+        return original;
+    }
 
     private void Changed() => PropertyChanged?.Invoke(this, new(string.Empty));
     private void CheckAdmission(List<Task> sources)
@@ -622,7 +661,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             value = path switch { "Key" => row.Key, "Label" => row.Label, "Target" => row.Target, "Selected" => row.Selected,
                 "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label, _ => null };
         else if (item is SavedEntryRow saved && _bookmarkRows.Concat(_historyRows).Concat(_downloadRows).Any(current => ReferenceEquals(current, saved)))
-            value = path switch { "Key" => saved.Key, "Label" => saved.Label, "Detail" => saved.Detail, "Target" => saved.Target, _ => null };
+            value = path switch { "Key" => saved.Key, "Label" => saved.Label, "Detail" => saved.Detail, "Target" => saved.Target,
+                "RemoveLabel" => "Remove bookmark " + saved.Label, _ => null };
         return value is not null;
     }
     private enum SavedEntryKind { Bookmark, History, Download }
@@ -700,6 +740,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             string.Equals(permission.Origin, canonical, StringComparison.OrdinalIgnoreCase) &&
             permission.Decision == BrowserSitePermissionDecision.Allow);
     }
+
+    /// <summary>Uses the same canonical URL comparison as the owning bookmark store.</summary>
+    private static bool SelectedPageIsBookmarked(BrowseChromeSnapshot snapshot) =>
+        snapshot.SelectedTab.Address.WebUri is { } address && snapshot.Bookmarks.Any(bookmark =>
+            string.Equals(bookmark.Address, address.ToString(), StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The only percentage shown on the top-bar model control is the real selected
     /// reasoning-effort tier (<see cref="HavenTopBarModelInfo.EffortPercent"/>), never usage,

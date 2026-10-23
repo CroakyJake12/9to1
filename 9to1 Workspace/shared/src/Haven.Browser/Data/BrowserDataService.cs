@@ -186,7 +186,9 @@ public sealed class BrowserDataService : IDisposable
     public Task RecordVisitAsync(string title, string address, bool isPrivate, CancellationToken cancellationToken)
     {
         if (isPrivate || !_data.Settings.SaveHistory || !Uri.TryCreate(address, UriKind.Absolute, out _)) return Task.CompletedTask;
-        return MutateAndSaveAsync(data => data with
+        // Recheck under the same gate as the settings write: a visit queued before
+        // recording was disabled must not be appended after that change commits.
+        return MutateAndSaveAsync(data => !data.Settings.SaveHistory ? data : data with
         {
             History = data.History.Prepend(new BrowserHistoryEntry(Guid.NewGuid(), string.IsNullOrWhiteSpace(title) ? address : title.Trim(), address,
                 DateTimeOffset.UtcNow)).Take(2000).ToArray()
@@ -233,9 +235,15 @@ public sealed class BrowserDataService : IDisposable
     public Task ClearResearchAsync(CancellationToken cancellationToken) =>
         MutateAndSaveAsync(data => data with { Research = BrowserResearchSessionState.Empty }, cancellationToken);
 
-    /// <summary>
-    /// Performs save settings asynchronously so I/O does not block the caller's thread.
-    /// </summary>
+    /// <summary>Updates only history recording in the current settings under the store gate.</summary>
+    public Task SetHistoryRecordingAsync(bool enabled, CancellationToken cancellationToken) =>
+        MutateAndSaveAsync(data => data with { Settings = data.Settings with { SaveHistory = enabled } }, cancellationToken);
+
+    /// <summary>Updates only startup restoration; saved tabs and other preferences are retained.</summary>
+    public Task SetTabRestoreAsync(bool enabled, CancellationToken cancellationToken) =>
+        MutateAndSaveAsync(data => data with { Settings = data.Settings with { RestoreTabs = enabled } }, cancellationToken);
+
+    /// <summary>Persists a complete validated settings record for existing callers.</summary>
     public Task SaveSettingsAsync(BrowserSettings settings, CancellationToken cancellationToken)
     {
         if (!Uri.TryCreate(settings.HomePage, UriKind.Absolute, out var home) || home.Scheme is not ("http" or "https"))

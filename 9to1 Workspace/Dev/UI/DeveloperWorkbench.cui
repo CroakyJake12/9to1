@@ -1,4 +1,8 @@
 <Cui id="dev.project-workbench" version="1">
+  <Actions>
+    <Action name="dev.select-source-tab" command="dev.select-source-tab" parameter="{Binding item.SelectionKey}" />
+    <Action name="dev.close-source-tab" command="dev.close-source-tab" parameter="{Binding item.SelectionKey}" />
+  </Actions>
   <Page>
     <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
       <Text id="dev-project-title" text="{Binding ProjectTitle}" font-size="24" text-wrapping="Wrap" />
@@ -16,8 +20,18 @@
       <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
       <Button id="dev-search" action="dev.search" content="Search files" />
       <Text text="{Binding SearchResults}" text-wrapping="Wrap" accessible-name="Actual file search results" />
+      <Container Type="Wrap" CellGap="6" accessible-name="Open source documents">
+        <Repeat id="dev-source-tabs" Source="{Binding SourceTabs}" As="item" Key="{Binding item.SelectionKey}">
+          <Container Type="Horizontal Stack" CellGap="2">
+            <Button id="dev-select-source-tab" action="dev.select-source-tab" content="{Binding item.Label}" accessible-name="{Binding item.AccessibleName}" Interactive="{Binding item.CanSelect}" />
+            <Button id="dev-close-source-tab" action="dev.close-source-tab" content="×" accessible-name="{Binding item.CloseAccessibleName}" Interactive="{Binding item.CanClose}" />
+          </Container>
+        </Repeat>
+        <Button id="dev-pin-source-tab" action="dev.toggle-source-tab-pin" content="{Binding SourceTabPinLabel}" accessible-name="Pin or unpin the selected source tab" Interactive="{Binding CanPinSourceTab}" />
+      </Container>
+      <Text text="{Binding SourceTabsStatus}" foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" accessible-name="Open source document status" />
       <Text text="{Binding EditorTitle}" text-wrapping="Wrap" accessible-name="Selected source and draft revision" />
-      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" />
+      <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
         <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />
         <Button id="dev-apply-edit" action="dev.apply-edit" content="Apply reviewed edit" Interactive="{Binding CanApply}" />

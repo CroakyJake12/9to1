@@ -11,6 +11,16 @@ public sealed partial class BrowseChrome
             ?? throw new ArgumentException("The original saved bookmark is no longer present.", nameof(originalEntryId));
         return NavigateAsync(original.Address, token);
     }
+    /// <summary>Removes the identified saved bookmark without navigating or changing tabs.</summary>
+    public async Task<BrowseChromeSnapshot> RemoveBookmarkAsync(Guid originalEntryId, CancellationToken token = default)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
+        var original = _data.Bookmarks.SingleOrDefault(entry => entry.Id == originalEntryId)
+            ?? throw new ArgumentException("The original saved bookmark is no longer present.", nameof(originalEntryId));
+        await _data.RemoveBookmarkAsync(original.Id, token).ConfigureAwait(false);
+        _status = "Bookmark removed locally.";
+        return Publish();
+    }
     public Task<BrowseChromeSnapshot> OpenHistoryEntryAsync(Guid originalEntryId, CancellationToken token = default)
     {
         ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();

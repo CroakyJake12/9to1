@@ -115,4 +115,50 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
         Assert.Equal("original source", f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls);
         Assert.Equal("second draft", review.GetSnapshot(opened.EditorId).DraftText); await f.Dev.CloseAndDrainAsync();
     }
+    [Fact]
+    public async Task Source_tab_dirty_close_refuses_without_losing_draft_or_writing_source()
+    {
+        var f = await Fixture.CreateAsync(); await using var review = new DeveloperSourceReviewSession(f.Dev);
+        var editor = (await review.OpenAsync(f.Reference, f.Context(), f.Document, businessCancellationToken: OriginalTestBodyToken)).Value!;
+        var draft = review.UpdateDraft(editor.EditorId, editor.DraftRevision, "unsaved tab source");
+        Assert.Throws<InvalidOperationException>(() => review.CloseEditor(editor.EditorId, draft.DraftRevision));
+        Assert.Equal("unsaved tab source", review.GetSnapshot(editor.EditorId).DraftText);
+        Assert.Equal("original source", f.Tools.TextValue); Assert.Equal(0, f.Tools.WriteCalls);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Source_tab_clean_close_removes_only_editor_and_reopen_performs_a_fresh_authorized_read()
+    {
+        var f = await Fixture.CreateAsync(); await using var review = new DeveloperSourceReviewSession(f.Dev);
+        var editor = (await review.OpenAsync(f.Reference, f.Context(), f.Document, businessCancellationToken: OriginalTestBodyToken)).Value!;
+        review.CloseEditor(editor.EditorId, editor.DraftRevision);
+        Assert.Throws<KeyNotFoundException>(() => review.GetSnapshot(editor.EditorId));
+        var reopened = (await review.OpenAsync(f.Reference, f.Context(), f.Document, businessCancellationToken: OriginalTestBodyToken)).Value!;
+        Assert.NotEqual(editor.EditorId, reopened.EditorId); Assert.Equal(editor.Document, reopened.Document);
+        Assert.Equal("original source", reopened.DraftText); Assert.Equal(2, f.Tools.ReadCalls); Assert.Equal(0, f.Tools.WriteCalls);
+        await f.Dev.CloseAndDrainAsync();
+    }
+
+    [Fact]
+    public async Task Source_tab_existing_document_reopens_at_capacity_and_clean_close_releases_one_slot()
+    {
+        var f = await Fixture.CreateAsync(); await using var review = new DeveloperSourceReviewSession(f.Dev);
+        var opened = new List<DeveloperEditorSnapshot>();
+        for (var index = 0; index < DeveloperSourceReviewSession.MaximumOpenDocuments; index++)
+        {
+            var document = f.Document with { FileId = Guid.NewGuid(), CanonicalResourceId = "file-slot-" + index, RelativePath = "src/slot-" + index + ".cs" };
+            opened.Add((await review.OpenAsync(f.Reference, f.Context(), document, businessCancellationToken: OriginalTestBodyToken)).Value!);
+        }
+        var dirty = review.UpdateDraft(opened[0].EditorId, opened[0].DraftRevision, "retained at capacity");
+        var reopened = (await review.OpenAsync(f.Reference, f.Context(), dirty.Document, businessCancellationToken: OriginalTestBodyToken)).Value!;
+        Assert.Equal(dirty.EditorId, reopened.EditorId); Assert.Equal("retained at capacity", reopened.DraftText);
+        Assert.Equal(DeveloperSourceReviewSession.MaximumOpenDocuments + 1, f.Tools.ReadCalls);
+        review.CloseEditor(opened[1].EditorId, opened[1].DraftRevision);
+        var next = f.Document with { FileId = Guid.NewGuid(), CanonicalResourceId = "file-new-slot", RelativePath = "src/new-slot.cs" };
+        var added = (await review.OpenAsync(f.Reference, f.Context(), next, businessCancellationToken: OriginalTestBodyToken)).Value!;
+        Assert.Equal(next, added.Document); Assert.Equal("retained at capacity", review.GetSnapshot(dirty.EditorId).DraftText);
+        Assert.Equal(0, f.Tools.WriteCalls); await f.Dev.CloseAndDrainAsync();
+    }
+
 }

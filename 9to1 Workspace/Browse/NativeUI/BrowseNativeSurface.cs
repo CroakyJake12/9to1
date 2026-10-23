@@ -1,6 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Avalonia.Media;
 using Avalonia.LogicalTree;
 using CakeOS.Cui.Runtime;
@@ -172,6 +175,7 @@ public sealed class BrowseNativeWindow : Window
 internal sealed class BrowseEngineViewport : ContentControl
 {
     private readonly BrowseNativeWorkspace _workspace;
+    private CuiSceneHost? _findKeyScope;
     private readonly Grid _surfaces = new();
     private readonly Dictionary<IBrowseEngineTab, Control> _originalViews = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<IBrowseAppContentSession, Border> _originalAppViews = new(ReferenceEqualityComparer.Instance);
@@ -183,9 +187,62 @@ internal sealed class BrowseEngineViewport : ContentControl
         AttachedToVisualTree += OnAttached; DetachedFromVisualTree += OnDetached;
     }
     private void OnAttached(object? sender, VisualTreeAttachmentEventArgs args)
-    { _workspace.PropertyChanged += OnChanged; RefreshOriginalViews(); }
+    {
+        _workspace.PropertyChanged += OnChanged; RefreshOriginalViews();
+        // The same CUI scene owns standalone Browse and embedded Haven. Scope the
+        // keyboard adapter here, rather than only to the standalone window.
+        _findKeyScope = this.GetVisualAncestors().OfType<CuiSceneHost>().FirstOrDefault();
+        _findKeyScope?.AddHandler(KeyDownEvent, OnFindKeyDown, RoutingStrategies.Tunnel);
+    }
     private void OnDetached(object? sender, VisualTreeAttachmentEventArgs args)
-    { _workspace.PropertyChanged -= OnChanged; }
+    {
+        _workspace.PropertyChanged -= OnChanged;
+        _findKeyScope?.RemoveHandler(KeyDownEvent, OnFindKeyDown);
+        _findKeyScope = null;
+    }
+    private async void OnFindKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (args.Handled || !_workspace.IsReady || _findKeyScope is not { } scope) return;
+        var findBox = scope.GetLogicalDescendants().OfType<TextBox>()
+            .SingleOrDefault(control => control.Name == "BrowseFindBox");
+        var inFindBox = findBox?.IsFocused == true;
+        var closeFind = args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None && inFindBox;
+        // Native apps keep their own Ctrl+F/F3/editor shortcuts. Only a real selected
+        // web renderer with the existing find capability admits browser page search.
+        if (!closeFind && (!_workspace.State.SelectedTab.Address.IsWeb ||
+            _workspace.IsActionAvailable("9to1.Browse.FindNext") != true)) return;
+        var command = args.Key switch
+        {
+            Key.F when args.KeyModifiers == KeyModifiers.Control => "9to1.Browse.OpenFind",
+            Key.F3 when args.KeyModifiers == KeyModifiers.None => "9to1.Browse.FindNext",
+            Key.F3 when args.KeyModifiers == KeyModifiers.Shift => "9to1.Browse.FindPrevious",
+            Key.Enter when inFindBox && args.KeyModifiers == KeyModifiers.None => "9to1.Browse.FindNext",
+            Key.Enter when inFindBox && args.KeyModifiers == KeyModifiers.Shift => "9to1.Browse.FindPrevious",
+            Key.Escape when closeFind => "9to1.Browse.CloseProfileMenu",
+            _ => null
+        };
+        if (command is null || _workspace.IsActionAvailable(command) != true) return;
+        args.Handled = true;
+        var tabId = _workspace.State.SelectedTabId;
+        try
+        {
+            await _workspace.DispatchAsync(command, null);
+            if (!_workspace.IsReady || _workspace.State.SelectedTabId != tabId) return;
+            if (command == "9to1.Browse.OpenFind")
+                await _workspace.FocusFindControlAsync(() =>
+                {
+                    if (!ReferenceEquals(_findKeyScope, scope) || _workspace.State.SelectedTabId != tabId ||
+                        !_workspace.TryGetValue("ProfileMenuOpen", out var open) || open is not true) return;
+                    var current = scope.GetLogicalDescendants().OfType<TextBox>()
+                        .SingleOrDefault(control => control.Name == "BrowseFindBox");
+                    if (current?.IsEffectivelyVisible == true) { current.Focus(); current.SelectAll(); }
+                });
+            else if (closeFind && _workspace.OriginalChrome.ObserveOriginalEngine(tabId) is IBrowseNativeEngineTab native)
+                native.OriginalNativeView.Focus();
+        }
+        catch (Exception failure)
+        { System.Diagnostics.Trace.TraceError("Browse retained its original page-find task: {0}", failure); }
+    }
     private void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => RefreshOriginalViews();
     private void RefreshOriginalViews()
     {

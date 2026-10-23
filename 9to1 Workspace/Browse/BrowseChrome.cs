@@ -164,8 +164,11 @@ public sealed partial class BrowseChrome : IAsyncDisposable
                     ?? throw new InvalidOperationException("The workspace owner supplied no original session load task.");
                 chrome.RetainAppSource(originalLoad); projected = await originalLoad.ConfigureAwait(false);
             }
-            var stored = tabSessionPersistence is not null ? projected?.Tabs ?? []
-                : chrome._data.Settings.RestoreTabs ? chrome._data.Tabs : [];
+            // The same preference applies to the genuine owner-backed projection and
+            // the local store. The owner's original load above is still retained/awaited.
+            var stored = chrome._data.Settings.RestoreTabs
+                ? (tabSessionPersistence is not null ? projected?.Tabs ?? [] : chrome._data.Tabs)
+                : [];
             foreach (var tab in stored)
             {
                 // Older versions may have left private tabs in the session file; never restore them.

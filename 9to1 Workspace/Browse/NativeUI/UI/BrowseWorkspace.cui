@@ -3,6 +3,7 @@
     <Action name="SelectTab" command="9to1.Browse.SelectTab" parameter="{Binding tab.Target}" />
     <Action name="CloseTabRow" command="9to1.Browse.CloseTabRow" parameter="{Binding tab.Target}" />
     <Action name="OpenBookmark" command="9to1.Browse.OpenBookmark" parameter="{Binding bookmark.Target}" />
+    <Action name="RemoveBookmark" command="9to1.Browse.RemoveBookmark" parameter="{Binding bookmark.Target}" />
     <Action name="OpenHistory" command="9to1.Browse.OpenHistory" parameter="{Binding visit.Target}" />
     <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
@@ -42,7 +43,7 @@
             <Image Source="avares://Haven/Assets/haven-notifications.svg" Width="18" Height="18" />
           </Button>
         </Container>
-        <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="5" AccessibleName="Bookmark page" Tooltip="Bookmark page" Interactive="{Binding Can.Bookmark}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8">☆</Button>
+        <Button id="BrowseBookmarkButton" action="9to1.Browse.Bookmark" Column="5" AccessibleName="{Binding BookmarkLabel}" Tooltip="{Binding BookmarkLabel}" Text="{Binding BookmarkGlyph}" Selected="{Binding IsBookmarked}" Interactive="{Binding Can.Bookmark}" Height="32" MinHeight="32" Width="28" MinWidth="28" Padding="4" FontSize="18" Background="Transparent" Color="{Resource CuiTextBrush}" BorderWidth="0" CornerRadius="8" />
         <Button id="HavenProfileButton" action="9to1.Browse.ToggleProfileMenu" Column="6" AccessibleName="Account, profile and browser tools" Tooltip="Open the profile menu" Selected="{Binding ProfileMenuOpen}" Height="32" MinHeight="32" Width="32" MinWidth="32" Padding="4" HorizontalAlignment="Center" Background="{Resource CuiTransparentBrush}" BorderWidth="0" CornerRadius="8">
           <Image Source="avares://Haven/Assets/haven-profile.svg" Width="18" Height="18" />
         </Button>
@@ -55,7 +56,10 @@
             <Container id="BrowseBookmarksPage" Type="Vertical Stack" CellGap="6" IsVisible="{Binding IsBookmarks}">
               <Repeat Source="{Binding Bookmarks}" As="bookmark" Key="{Binding bookmark.Key}">
                 <Container Type="Vertical Stack">
-                  <Button id="BrowseBookmarkRowButton" HorizontalContentAlignment="Left" action="OpenBookmark" Text="{Binding bookmark.Label}" AccessibleName="{Binding bookmark.Label}" Interactive="{Binding Can.OpenBookmark}" />
+                  <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6">
+                    <Button id="BrowseBookmarkRowButton" Column="0" HorizontalContentAlignment="Left" action="OpenBookmark" Text="{Binding bookmark.Label}" AccessibleName="{Binding bookmark.Label}" Interactive="{Binding Can.OpenBookmark}" />
+                    <Button id="BrowseRemoveBookmarkButton" Column="1" action="RemoveBookmark" AccessibleName="{Binding bookmark.RemoveLabel}" Tooltip="{Binding bookmark.RemoveLabel}" Interactive="{Binding Can.RemoveBookmark}" MinHeight="32" Padding="8 4">Remove</Button>
+                  </Container>
                   <Text Text="{Binding bookmark.Detail}" TextWrapping="Wrap" />
                 </Container>
               </Repeat>
@@ -94,6 +98,18 @@
               <Button id="BrowseDefaultFirefoxButton" action="9to1.Browse.DefaultFirefox" Interactive="{Binding Can.DefaultFirefox}">Default Firefox</Button>
               <Button id="BrowseDefaultChromiumButton" action="9to1.Browse.DefaultChromium" Interactive="{Binding Can.DefaultChromium}">Default Chromium</Button>
               <Text TextWrapping="Wrap">Site and explicit tab engine choices take precedence. Native Browse pages do not use a web renderer.</Text>
+              <Text FontWeight="Bold" Margin="0 10 0 0">Privacy</Text>
+              <Container Type="Horizontal Stack" CellGap="8">
+                <Text Text="Record browsing history" VerticalAlignment="Center" />
+                <Input Type="Switch" id="BrowseRecordHistorySwitch" Checked="{Binding RecordHistory, Mode=TwoWay}" Interactive="{Binding Can.EnableHistory}" AccessibleName="Record browsing history" />
+              </Container>
+              <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Turning this off keeps existing history. Private tabs never record browsing history.</Text>
+              <Text FontWeight="Bold" Margin="0 10 0 0">Startup</Text>
+              <Container Type="Horizontal Stack" CellGap="8">
+                <Text Text="Restore tabs on startup" VerticalAlignment="Center" />
+                <Input Type="Switch" id="BrowseRestoreTabsSwitch" Checked="{Binding RestoreTabs, Mode=TwoWay}" Interactive="{Binding Can.EnableTabRestore}" AccessibleName="Restore tabs on startup" />
+              </Container>
+              <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Applies the next time Haven starts. Your current tabs stay open.</Text>
             </Container>
           </Container>
         </Container>

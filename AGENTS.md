@@ -1,3 +1,7 @@
+## Temporary owner priority — implementation until 03:00 BST, 24 October 2026
+
+Read [the latest implementation-window decision](docs/specification/owner-references/2026-10-23-implementation-window/owner-correction.json). Until **24 October 2026 03:00 Europe/London (02:00 UTC)**, prioritise implementation of feature gaps and basic smoke checks. Defer full acceptance and acceptance-only audits until that time; preserve their queue and evidence. Then resume independent acceptance from the exact latest candidate, unless a newer owner instruction changes the priority. This defers gates; it does not waive them or authorise an unaccepted release. Keep ordinary development, scoped Thunder work and progress reporting moving.
+
 > **Current owner override (22 October 2026):** Mercury is revoked and must never be invoked; use Beam and Codex through supported isolated interfaces. Read [the durable current owner instructions](docs/specification/owner-references/2026-10-22-development-reliability/owner-correction.json) before any provider, worker, release or handoff action. This supersedes older Mercury-only, worker-count and schedule text below. At an actually observed **10% remaining Codex allowance**, hand over to a verified Thunder development worker; if unavailable, persist the handoff, commit changes and pause. Never infer the allowance from context tokens or other provider limits. Permanent workflow implementation and independent acceptance remain mandatory.
 
 # Agent instructions — 9to1 specification v2
