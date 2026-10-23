@@ -32,6 +32,33 @@ public interface INotesOriginalStoreSource : IResourceStoreIdentitySource
         CancellationToken cancellationToken = default);
 }
 
+public enum NotesOriginalStoreSetupState { MissingIdentity, Available, Unsupported, Inaccessible, RecoveryRequired }
+
+/// <summary>Owner-issued metadata only. Missing and unavailable never grant initialisation,
+/// ownership, import, content access or an application-ready observation.</summary>
+public interface INotesOriginalStoreSetupInspection
+{
+    NotesOriginalStoreSetupState State { get; }
+    INotesOriginalStoreObservation? Observation { get; }
+    string Code { get; }
+    string Message { get; }
+}
+
+/// <summary>The SAME Notes metadata producer with nested original callback/task custody.
+/// These contracts expose no alternative persistence engine or application workflow.</summary>
+public interface INotesOriginalScopedStoreSource : INotesOriginalStoreSource
+{
+    bool IsIssuedOriginalSetupInspection(INotesOriginalStoreSetupInspection inspection);
+    ValueTask<INotesOriginalStoreSetupInspection> InspectOriginalStoreSetupWithinOriginalSourceAsync(
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default);
+    ValueTask<ResourceStoreIdentity> InitialiseOriginalStoreIdentityWithinOriginalSourceAsync(
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default);
+    ValueTask<INotesOriginalStoreObservation> ObserveOriginalStoreWithinOriginalSourceAsync(
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default);
+    ValueTask<bool> IsOriginalStoreObservationCurrentWithinOriginalSourceAsync(INotesOriginalStoreObservation observation,
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken = default);
+}
+
 /// <summary>Descriptive view of an immutable candidate issued by the original repository.
 /// Copying these fields never creates an owner intent. Preparation grants no Home consent,
 /// store ownership, content read, write execution or native Ready state.</summary>

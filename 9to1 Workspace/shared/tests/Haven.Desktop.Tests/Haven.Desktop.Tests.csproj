@@ -68,6 +68,7 @@
     <Compile Include="BuildBrowseAppContentIntegrationTests.cs;BuildBrowseAppContentAuthenticTests.cs" />
     <!-- Exact Boards controls use the maintained App/headless host and approved source fork. -->
     <Compile Include="BoardsBrowseAppContentSessionTests.cs" />
+    <Compile Include="BoardsOriginalStoreSetupTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
     <!-- Actual native home/configuration/empty conversation captures over the already linked genuine Memory rig. -->

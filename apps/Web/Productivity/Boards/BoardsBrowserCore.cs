@@ -8,12 +8,19 @@ using HavenOS.Home.Core;
 
 namespace NineToOne.Web.Productivity.Boards;
 
+/// <summary>Host/storage capability metadata only. CUI chooses its own setup/workspace
+/// composition; this does not assert artifact ownership, content consent or readiness.</summary>
+public sealed record BoardsHostStorageCapabilities(bool RequiresOriginalStoreSetup)
+{
+    public bool UsesProvidedWorkspace => !RequiresOriginalStoreSetup;
+}
+
 /// <summary>
 /// Browser lifecycle over the maintained BoardsWorkspaceService and injected real
 /// canonical Notes repository. It owns no replacement document or persistence model.
 /// The CUI workspace borrows this owner's page-scoped retained editor.
 /// </summary>
-public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IAsyncDisposable
+public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICuiResultReportingDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IAsyncDisposable
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly INotesRepository _repository;
@@ -39,6 +46,16 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     public string? ErrorCode { get; private set; }
     public NotesSaveResult? LastAcknowledgedSave { get; private set; }
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public async ValueTask<CuiCommandOutcome> DispatchWithOutcomeAsync(string command, object? parameter,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested(); ObjectDisposedException.ThrowIf(_disposed, this);
+        if (command == "boards.host.observe")
+            return new(true, false, "BoardsHostStorageCapabilities", null, new BoardsHostStorageCapabilities(false));
+        await DispatchAsync(command, parameter, cancellationToken);
+        return new(ErrorCode is null, false, ErrorCode ?? "Succeeded", Status, null);
+    }
 
     public BoardsBrowserCore(INotesRepository authorisedRepository, INotesAttachmentStore? attachments = null,
         Func<Exception, bool>? unknownOutcome = null, IBoardsNotebookSummarySource? summarySource = null,
