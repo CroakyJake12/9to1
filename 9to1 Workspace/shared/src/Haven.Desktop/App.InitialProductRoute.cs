@@ -45,7 +45,7 @@ public sealed partial class App
     private static string? OriginalInitialProduct => ResolveOriginalInitialProductDeclaration(
         typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>(), Volatile.Read(ref _originalCanvasEntry) != 0);
 
-    private static Task OpenOriginalInitialUnifiedProductRouteAsync(UnifiedWorkspaceHost workspace, CancellationToken token)
+    private static Task? OpenOriginalInitialUnifiedProductRouteAsync(UnifiedWorkspaceHost workspace, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         if (OriginalInitialProduct is null) return Task.CompletedTask;
@@ -53,7 +53,7 @@ public sealed partial class App
             throw new InvalidOperationException("This compiled product requires its original shell entry.");
         // Null is the unified owner's explicit accepted-startup-retirement result.
         // The actual source, registration and native child still belong to that owner.
-        return workspace.TryAcquireInitialCanvasRoute(token) ?? Task.CompletedTask;
+        return workspace.TryAcquireInitialCanvasRoute(token);
     }
 
     // This is the owning executable's compiled product declaration. It chooses a

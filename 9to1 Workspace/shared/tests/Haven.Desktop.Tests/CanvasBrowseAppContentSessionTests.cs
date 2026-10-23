@@ -1,5 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
+using Avalonia.VisualTree;
+using CakeOS.Cui;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Desktop.Services;
@@ -163,6 +167,89 @@ public sealed class CanvasBrowseAppContentSessionTests
         Assert.Null(rig.Home.OriginalCloseTask); // The observation did not acquire an engine or native document.
     }
 
+    [AvaloniaFact]
+    public async Task Actual_WorkOwner_action_token_cancellation_physically_guards_content_concrete_route_and_parent()
+    {
+        var before = ExecutionContext.Capture()!;
+        var principal = new Principal();
+        await using var rig = await Rig.CreateAsync(principal);
+        using var routeLifetime = new CancellationTokenSource();
+        var actor = await rig.Home.Profiles.GetCurrentAsync(default)
+            ?? throw new InvalidOperationException("Actual Home actor unavailable.");
+        var concreteRoute = new NativeCanvasDesktopRoute(rig.Home.Services, rig.Home, rig.Files, rig.Authority,
+            actor.ProfileId, rig.Process.Token, routeLifetime.Token);
+        // The existing typed route controls acquisition only. Physical source custody uses
+        // the real concrete route and its same parent; this does not attest Rnote admission.
+        rig.Route.ConcreteSource = concreteRoute;
+        var session = rig.Create();
+        await session.InitializeAsync().WaitAsync(Bound);
+        var surface = Assert.IsType<CanvasHostSurface>(session.OriginalNativeView);
+        var window = new Window { Content = surface, Width = 1200, Height = 800 };
+        window.Show();
+        var canceled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationToken dependencyToken = default;
+        CancellationTokenRegistration dependencyRegistration = default;
+        Exception? contentReentry = null, routeReentry = null, parentReentry = null;
+        var callbacks = 0;
+        Task? action = null, close = null;
+        principal.HoldNext = true;
+        principal.Held = token =>
+        {
+            dependencyToken = token;
+            dependencyRegistration = token.Register(() =>
+            {
+                ExecutionContext.Run(before.CreateCopy(), _ =>
+                {
+                    contentReentry = Record.Exception(() => { _ = surface.CloseAndDrainAsync(); });
+                    routeReentry = Record.Exception(() => { _ = concreteRoute.CloseAndDrainAsync(); });
+                    parentReentry = Record.Exception(() => { _ = session.CloseAndDrainAsync(); });
+                    Interlocked.Increment(ref callbacks);
+                }, null);
+                canceled.TrySetResult();
+            });
+        };
+        try
+        {
+            var search = Assert.IsType<Button>(Assert.Single(AuthoredTree(surface), control =>
+                CuiRuntimeIdentity.GetStableId(control) == "id:canvas-search"));
+            search.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await principal.Entered.Task.WaitAsync(Bound);
+            action = Assert.IsAssignableFrom<Task>(surface.LatestOriginalCommand);
+            var raw = Assert.IsAssignableFrom<Task>(principal.HeldOriginal);
+            Assert.True(dependencyToken.CanBeCanceled); Assert.False(dependencyToken.IsCancellationRequested);
+            Assert.False(action.IsCompleted); Assert.False(raw.IsCompleted);
+            close = session.CloseAndDrainAsync();
+            await canceled.Task.WaitAsync(Bound);
+            Assert.Equal(1, callbacks); Assert.True(dependencyToken.IsCancellationRequested);
+            Assert.IsType<InvalidOperationException>(contentReentry);
+            Assert.IsType<InvalidOperationException>(routeReentry);
+            Assert.IsType<InvalidOperationException>(parentReentry);
+            Assert.Same(close, session.OriginalClose); Assert.NotNull(surface.OriginalCloseTask);
+            Assert.False(raw.IsCompleted); Assert.False(action.IsCompleted); Assert.False(close.IsCompleted);
+        }
+        finally
+        {
+            principal.Held = null; principal.Release.TrySetResult();
+            if (action is not null) _ = await Record.ExceptionAsync(() => action.WaitAsync(Bound));
+            close ??= session.CloseAndDrainAsync();
+            _ = await Record.ExceptionAsync(() => close.WaitAsync(Bound));
+            dependencyRegistration.Dispose(); window.Close();
+        }
+        var original = Assert.IsAssignableFrom<Task>(principal.HeldOriginal);
+        Assert.True(original.IsCanceled); Assert.True(action!.IsCompleted); Assert.True(close!.IsCompleted);
+        Assert.False(close.IsCompletedSuccessfully); Assert.False(session.CanRetireOriginalView);
+        Assert.Null(rig.Home.OriginalCloseTask);
+    }
+
+    private static IEnumerable<Control> AuthoredTree(Control root)
+    {
+        yield return root;
+        var children = root is CuiContainerControl container
+            ? container.AuthoredChildren : root.GetVisualChildren().OfType<Control>();
+        foreach (var child in children)
+            foreach (var descendant in AuthoredTree(child)) yield return descendant;
+    }
+
     private static IEnumerable<Exception> Causes(Exception error)
     {
         yield return error;
@@ -174,12 +261,25 @@ public sealed class CanvasBrowseAppContentSessionTests
     {
         private readonly OperatingSystemPrincipalSource _actual = new();
         internal bool HoldNext; internal Action? Next;
+        internal Action<CancellationToken>? Held;
+        internal Task? HeldOriginal;
         internal readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public async ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            var hold = HoldNext; if (hold) HoldNext = false;
+            var actual = ReadOriginalAsync(token, hold);
+            if (hold) HeldOriginal = actual;
+            return new(actual);
+        }
+        private async Task<string?> ReadOriginalAsync(CancellationToken token, bool hold)
         {
             var actual = await _actual.GetPrincipalAsync(token);
-            if (HoldNext) { HoldNext = false; Entered.TrySetResult(); await Release.Task.ConfigureAwait(false); return actual; }
+            if (hold)
+            {
+                Held?.Invoke(token); Entered.TrySetResult();
+                await Release.Task.ConfigureAwait(false); token.ThrowIfCancellationRequested(); return actual;
+            }
             Interlocked.Exchange(ref Next, null)?.Invoke(); return actual;
         }
     }
@@ -251,11 +351,19 @@ public sealed class CanvasBrowseAppContentSessionTests
         internal Task Observation = Task.CompletedTask;
         internal readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal bool Closed; internal int Acquisitions;
+        internal NativeCanvasDesktopRoute? ConcreteSource;
         public void BindOriginalPresentationOwner(object owner)
-        { if (_parent is not null) throw new InvalidOperationException("Parent already bound."); _parent = owner; }
+        {
+            if (_parent is not null) throw new InvalidOperationException("Parent already bound.");
+            _parent = owner; ConcreteSource?.BindOriginalPresentationOwner(owner);
+        }
         public bool IsAlive => !Closed;
-        public void RunWithinOriginalSource(Action source) => CloudflareOriginalExecutionGuard.InvokeOriginal(_parent!, () =>
-            CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { source(); return true; }));
+        public void RunWithinOriginalSource(Action source)
+        {
+            void Invoke() => CloudflareOriginalExecutionGuard.InvokeOriginal(_parent!, () =>
+                CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { source(); return true; }));
+            if (ConcreteSource is { } concrete) concrete.RunWithinOriginalSource(Invoke); else Invoke();
+        }
         public Task RevalidateAsync(CancellationToken token)
         { Entered.TrySetResult(); return ObserveAsync(token); }
         private async Task ObserveAsync(CancellationToken token)
@@ -268,7 +376,10 @@ public sealed class CanvasBrowseAppContentSessionTests
         { Acquisitions++; return Surface = new(rig.Home.Services, rig.Process.Token, null, RunWithinOriginalSource, theme, rig.Presentation!.Token); }
         public void DemandPublicationCurrent() { if (Closed) throw new ObjectDisposedException(nameof(Route)); }
         public Task CloseAndDrainAsync()
-        { CloudflareOriginalExecutionGuard.DemandExternalJoin(this); Closed = true; return Task.CompletedTask; }
+        {
+            CloudflareOriginalExecutionGuard.DemandExternalJoin(this); Closed = true;
+            return ConcreteSource?.CloseAndDrainAsync() ?? Task.CompletedTask;
+        }
     }
     private sealed class Paths(string root) : IAppPaths
     {

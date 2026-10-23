@@ -286,8 +286,10 @@ public sealed partial class App : Avalonia.Application
                 if (initialization is null) return;
                 await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => initialization!));
                 if (original.Token.IsCancellationRequested || _originalAppWork.IsRetiring) return;
-                await original.AwaitAsync(AcquireOriginalAppSynchronous(original,
-                    () => OpenOriginalInitialUnifiedProductRouteAsync(workspace, original.Token)));
+                var initialRoute = AcquireOriginalAppSynchronous(original,
+                    () => OpenOriginalInitialUnifiedProductRouteAsync(workspace, original.Token));
+                if (initialRoute is null) return;
+                await original.AwaitAsync(AcquireOriginalAppSynchronous(original, () => initialRoute));
             }
 #endif
 

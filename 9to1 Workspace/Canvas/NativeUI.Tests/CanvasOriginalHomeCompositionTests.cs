@@ -134,10 +134,7 @@ public sealed class CanvasOriginalHomeCompositionTests
                     configureOriginalResolvers: ownership =>
                     {
                         rig.Authority = new(rig.Files, ownership.Identity.Profiles, ownership.Ownership);
-                        var resolver = new FilesArtifactResourceResolver(async (actor, token) =>
-                        { var current = await rig.Authority.GetCurrentAsync(token); return current?.Actor == actor ? current.Provider : null; },
-                        async (actor, app, token) =>
-                        { var current = await rig.Authority.GetCurrentAsync(token); return current?.Actor == actor && current.Configuration.AppFolders.TryGetValue(app, out var folder) ? folder : null; });
+                        var resolver = new FilesArtifactResourceResolver(rig.Authority);
                         return new([resolver], new Dictionary<Type, object> { [typeof(NativeFilesWorkspaceAuthority)] = rig.Authority });
                     });
                 await rig.Home.StartOriginalAsync();
