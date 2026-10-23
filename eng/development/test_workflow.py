@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -759,6 +760,87 @@ class WorkflowTests(unittest.TestCase):
         current = w.process_identity(identity["pid"])
         self.assertTrue(current is None or current["state"] == "Z")
 
+    def zero_exit_timeout(self, kind, with_trx=False):
+        ready, handled = self.root / "signal-ready", self.root / "signal-handled"
+        trx = self.root / "signal.trx" if with_trx else None
+        fixture = '<TestRun><Results><UnitTestResult outcome="Passed" testName="timeout-counter-fixture"/></Results><ResultSummary><Counters total="1" executed="1" passed="1" failed="0"/></ResultSummary></TestRun>'
+        code = "\n".join([
+            "import signal", "from pathlib import Path",
+            "def stop(signum, frame):",
+            "    Path(" + repr(str(handled)) + ").write_text('SIGTERM')",
+            "    raise SystemExit(0)",
+            "signal.signal(signal.SIGTERM, stop)",
+            "Path(" + repr(str(trx)) + ").write_text(" + repr(fixture) + ")" if trx else "pass",
+            "Path(" + repr(str(ready)) + ").write_text('ready')",
+            "print('real signal fixture ready', flush=True)", "while True: signal.pause()",
+        ])
+        command = [sys.executable, "-c", code]
+        real_popen, children = subprocess.Popen, []
+
+        def launch(args, *positional, **kwargs):
+            child = real_popen(args, *positional, **kwargs)
+            if args == command:
+                children.append(child)
+                # Synchronise only this actual child; Git validation remains real.
+                # Production wait/timeout/signalling and return codes are not mocked.
+                deadline = time.monotonic() + 3
+                while not ready.exists():
+                    if child.poll() is not None or time.monotonic() >= deadline:
+                        raise AssertionError("Actual signal fixture did not become ready")
+                    time.sleep(.005)
+            return child
+
+        try:
+            with patch.object(w.subprocess, "Popen", side_effect=launch):
+                receipt = w.run_check(self.repo, self.candidate, "zero-exit-timeout", 1, command,
+                                      self.root / "run", str(trx) if trx else None,
+                                      kind=kind, timeout_seconds=.2)
+        finally:
+            for child in children:
+                if child.poll() is None:
+                    w.stop_owned(child, w.process_identity(child.pid))
+        self.assertEqual("ready", ready.read_text())
+        self.assertEqual("SIGTERM", handled.read_text())
+        self.assertTrue(receipt["timed_out"])
+        self.assertEqual(0, receipt["exit_code"])
+        identity = receipt["process"]
+        self.assertEqual(identity["pid"], identity["pgid"])
+        self.assertEqual(identity["pid"], identity["session"])
+        self.assertEqual([], receipt["remaining_group"])
+        return receipt
+
+    def test_timeout_exit_zero_cannot_succeed_or_stop_an_unrelated_peer(self):
+        peer = subprocess.Popen([sys.executable, "-c", "import signal; signal.pause()"], start_new_session=True)
+        try:
+            receipt = self.zero_exit_timeout("build")
+            self.assertIsNone(peer.poll())
+            self.assertEqual("FAIL", receipt["result"])
+            self.assertEqual("FAIL", w.read(self.root / "run/receipt.json")["result"])
+        finally:
+            if peer.poll() is None:
+                w.stop_owned(peer, w.process_identity(peer.pid))
+
+    def test_timeout_retains_passing_trx_but_final_result_is_failure(self):
+        receipt = self.zero_exit_timeout("test", with_trx=True)
+        self.assertEqual("PASS", receipt["tests"]["result"])
+        self.assertEqual(1, receipt["tests"]["executed"])
+        self.assertEqual(w.file_identity(self.root / "signal.trx"),
+                         {k: v for k, v in receipt["test_artifact"].items() if k != "path"})
+        self.assertEqual("FAIL", receipt["result"])
+        self.assertEqual("FAIL", w.read(self.root / "run/receipt.json")["result"])
+
+    def test_timeout_test_without_trx_is_failure_not_unverified(self):
+        receipt = self.zero_exit_timeout("test")
+        self.assertEqual("FAIL", receipt["result"])
+
+    def test_completed_command_keeps_its_process_success(self):
+        receipt = w.run_check(self.repo, self.candidate, "completed-cpu-command", 1,
+                              [sys.executable, "-c", "print('completed CPU command fixture')"],
+                              self.root / "run", kind="build")
+        self.assertFalse(receipt.get("timed_out", False))
+        self.assertEqual(0, receipt["exit_code"])
+        self.assertEqual("PROCESS_SUCCEEDED", receipt["result"])
+
     def test_stale_trx_is_never_reused_as_new_run(self):
         old = self.root / "old.trx"
         old.write_text("old")
@@ -784,6 +866,9 @@ class WorkflowTests(unittest.TestCase):
         command = [sys.executable, "-c", code]
         receipt = w.run_check(self.repo, self.candidate, "fixture-counter-validation", 1, command, self.root / "run", str(trx), environment=str(environment))
         self.assertTrue(w.reusable(receipt, self.candidate, command, receipt["platform"]))
+        legacy_timeout = copy.deepcopy(receipt)
+        legacy_timeout["timed_out"] = True
+        self.assertFalse(w.reusable(legacy_timeout, self.candidate, command, receipt["platform"]))
         self.assertFalse(w.reusable(receipt, self.candidate, command + ["changed"], receipt["platform"]))
         tool.write_text("different-runtime")
         self.assertFalse(w.reusable(receipt, self.candidate, command, receipt["platform"]))
