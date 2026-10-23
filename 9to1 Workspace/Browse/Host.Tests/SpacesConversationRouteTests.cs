@@ -405,6 +405,96 @@ public sealed class SpacesConversationRouteTests
     }
 
     [AvaloniaFact]
+    public async Task Open_without_a_parameter_starts_a_fresh_chat_in_the_current_selection_and_keeps_prior_work()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+            await spaces.DispatchAsync("spaces.select", SpaceRegistry.StudySpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var first = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            var original = rig.Written[first.ConversationId];
+            first.SetDraft("Retained Study draft while opening the current selection");
+            var previousNavigation = session.OriginalQueuedNavigation;
+
+            await spaces.DispatchAsync("spaces.open", null).AsTask().WaitAsync(Bound);
+            Assert.NotSame(previousNavigation, session.OriginalQueuedNavigation);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var next = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            Assert.NotSame(first, next);
+            Assert.NotEqual(first.ConversationId, next.ConversationId);
+            Assert.Equal(SpaceRegistry.StudySpaceId, next.CurrentConversation.SpaceId);
+            Assert.Equal(SpaceRegistry.StudySpaceId, spaces.Controller.State.Selection?.Id);
+            Assert.Equal(SpaceRegistry.StudySpaceId, await rig.Spaces.GetCurrentSpaceIdAsync());
+            Assert.Equal(original, rig.Written[first.ConversationId]);
+            Assert.Equal("Retained Study draft while opening the current selection", RouteScene(first).Input.Text);
+            Assert.Equal(string.Empty, RouteScene(next).Input.Text);
+            Assert.Same(spaces, root.Content);
+        }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            finally { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Explicit_unavailable_Space_open_never_changes_selection_navigation_or_prior_work()
+    {
+        using var rig = new Rig(withHome: true, allowConversationWrites: true);
+        SpacesBrowseAppContentSession? session = null;
+        try
+        {
+            var archived = await rig.Spaces.CreateAsync("Archived Open target");
+            await rig.Spaces.SetArchivedAsync(archived.Id, true);
+            await rig.Home!.StartOriginalAsync().WaitAsync(Bound);
+            var actor = await rig.Home.Profiles.GetCurrentAsync(CancellationToken.None);
+            Assert.NotNull(actor);
+            session = rig.Session("9to1://spaces", profileId: actor.ProfileId);
+            await session.InitializeAsync().WaitAsync(Bound);
+            var root = Assert.IsType<ContentControl>(session.OriginalNativeView);
+            var spaces = Assert.IsType<SpacesHomePage>(root.Content);
+            await spaces.DispatchAsync("spaces.select", SpaceRegistry.StudySpaceId).AsTask().WaitAsync(Bound);
+            await session.OriginalQueuedNavigation!.WaitAsync(Bound);
+            var mounted = Assert.IsType<NewChatPage>(spaces.SpaceWorkspaceContent);
+            mounted.SetDraft("Keep this Study draft when another Space is unavailable");
+            var selection = spaces.Controller.State.Selection;
+            var previousNavigation = session.OriginalQueuedNavigation;
+            var previousAddress = session.Address.Value;
+            var previousWrites = rig.ConversationWrites;
+            var previousRows = rig.Written.OrderBy(pair => pair.Key).ToArray();
+
+            foreach (var unavailable in new[] { Guid.Empty, Guid.NewGuid(), archived.Id })
+            {
+                await spaces.DispatchAsync("spaces.open", unavailable).AsTask().WaitAsync(Bound);
+                Assert.Same(previousNavigation, session.OriginalQueuedNavigation);
+                Assert.Same(selection, spaces.Controller.State.Selection);
+                Assert.Equal(SpaceRegistry.StudySpaceId, await rig.Spaces.GetCurrentSpaceIdAsync());
+                Assert.Same(mounted, spaces.SpaceWorkspaceContent);
+                Assert.Equal(previousAddress, session.Address.Value);
+                Assert.Equal(previousWrites, rig.ConversationWrites);
+                Assert.Equal(previousRows, rig.Written.OrderBy(pair => pair.Key).ToArray());
+                Assert.Equal("Keep this Study draft when another Space is unavailable", RouteScene(mounted).Input.Text);
+                Assert.Contains("unavailable", spaces.Controller.State.StatusMessage, StringComparison.OrdinalIgnoreCase);
+                Assert.Same(spaces, root.Content);
+            }
+        }
+        finally
+        {
+            try { if (session is not null) await CloseSettledRouteAsync(session); }
+            finally { await rig.Home!.CloseAndDrainAsync().WaitAsync(Bound); }
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Saved_chat_rendered_model_recovery_is_scoped_to_the_current_page_and_keeps_prior_work()
     {
         using var rig = new Rig(withHome: true, allowConversationWrites: true);

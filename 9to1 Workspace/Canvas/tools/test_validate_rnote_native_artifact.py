@@ -301,6 +301,319 @@ class BuildPreflightTests(unittest.TestCase):
                 patch.object(check, "observe", side_effect=native or self.native_observation):
             return check.build_preflight(self.args)
 
+    def cairo_feature_fixture(self, features):
+        # cairo-sys-rs 0.21.5's real system-deps declarations from failed CI
+        # run39984463251. Only the surrounding package identity is synthetic.
+        manifest = Path(self.metadata["packages"][1]["manifest_path"])
+        manifest.write_text(manifest.read_text() + '''
+[package.metadata.system-deps.cairo]
+name="cairo"
+version="1.14"
+[package.metadata.system-deps.cairo.v1_16]
+version="1.16"
+[package.metadata.system-deps.cairo.v1_18]
+version="1.18"
+[package.metadata.system-deps.cairo-gobject]
+name="cairo-gobject"
+version="1.14"
+feature="use_glib"
+[package.metadata.system-deps.cairo-gobject.v1_16]
+version="1.16"
+[package.metadata.system-deps.cairo-gobject.v1_18]
+version="1.18"
+''')
+        self.metadata["resolve"]["nodes"][1]["features"] = features
+        self.write_metadata()
+        return manifest
+
+    def test_actual_cairo_scalar_selector_observes_all_manifests_and_highest_floor(self):
+        self.cairo_feature_fixture(["use_glib", "v1_16", "v1_18"])
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        observed = report["declared_requirements"]
+        self.assertEqual((1, 18, 0), observed["native_requirements"]["cairo-gobject"])
+        self.assertEqual((1, 18, 0), observed["native_requirements"]["cairo"])
+        self.assertEqual(3, observed["locked_packages"])
+        self.assertEqual(3, len(observed["package_manifests"]))
+        self.assertFalse(report["release_ready"])
+        self.assertTrue(report["release_blockers"])
+
+    def test_selected_scalar_feature_cannot_hide_insufficient_native_version(self):
+        self.cairo_feature_fixture(["use_glib", "v1_18"])
+
+        def old_gobject(command):
+            result = self.native_observation(command)
+            if command[-1] == "cairo-gobject":
+                result["stdout"] = "1.16.0\n"
+            return result
+
+        report, code = self.run_preflight(native=old_gobject)
+        self.assertEqual(1, code)
+        self.assertEqual((1, 18, 0), report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+        self.assertTrue(any("Native module cairo-gobject" in blocker for blocker in report["blockers"]))
+
+    def test_unselected_scalar_feature_omits_only_its_module_requirement(self):
+        self.cairo_feature_fixture(["v1_18"])
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        observed = report["declared_requirements"]
+        self.assertNotIn("cairo-gobject", observed["native_requirements"])
+        self.assertEqual((1, 18, 0), observed["native_requirements"]["cairo"])
+        self.assertEqual(3, len(observed["package_manifests"]))
+
+    def test_absent_scalar_selector_keeps_unconditional_native_requirement(self):
+        manifest = self.cairo_feature_fixture(["v1_18"])
+        manifest.write_text(manifest.read_text().replace('feature="use_glib"\n', ''))
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        self.assertEqual((1, 18, 0), report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+
+    def test_scalar_selector_uses_cargo_feature_environment_normalization(self):
+        # system-deps 7.0.8 has_feature uppercases and maps '-' to '_'.
+        self.cairo_feature_fixture(["use-glib", "v1_18"])
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        self.assertEqual((1, 18, 0), report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+
+    def test_malformed_scalar_selectors_refuse_even_without_selected_features(self):
+        manifest = self.cairo_feature_fixture([])
+        original = manifest.read_text()
+        for value in ('true', '42', '[]', '{version="1.18"}', '""', '"use glib"'):
+            with self.subTest(selector=value):
+                manifest.write_text(original.replace('feature="use_glib"', 'feature=' + value))
+                report, code = self.run_preflight()
+                self.assertEqual(1, code)
+                self.assertTrue(any("Unsupported system-deps feature selector" in blocker for blocker in report["blockers"]))
+
+    def test_unselected_scalar_selector_still_rejects_unknown_spec_shapes(self):
+        manifest = self.cairo_feature_fixture([])
+        original = manifest.read_text()
+        for change in ('feature="use_glib"\ncfg="unmodelled"',
+                       'feature="use_glib"\nv1_20={version="1.20",name="other"}'):
+            with self.subTest(change=change):
+                manifest.write_text(original.replace('feature="use_glib"', change))
+                report, code = self.run_preflight()
+                self.assertEqual(1, code)
+                self.assertTrue(any("Unsupported feature-conditioned" in blocker for blocker in report["blockers"]))
+
+    def test_unselected_scalar_selector_still_checks_other_package_msrv(self):
+        self.cairo_feature_fixture([])
+        package = self.metadata["packages"][2]
+        manifest = Path(package["manifest_path"])
+        manifest.write_text(manifest.read_text().replace('"1.89"', '"1.93"'))
+        package["rust_version"] = "1.93"
+        self.write_metadata()
+        report, code = self.run_preflight()
+        self.assertEqual(1, code)
+        self.assertIn("Locked dependency declares a Rust requirement above the selected toolchain", report["blockers"])
+        self.assertEqual(3, len(report["declared_requirements"]["package_manifests"]))
+
+    def test_selected_scalar_feature_retains_base_and_intermediate_version_floors(self):
+        self.cairo_feature_fixture(["use_glib"])
+        for selected, floor in ((["use_glib"], (1, 14, 0)),
+                                (["use_glib", "v1_16"], (1, 16, 0))):
+            with self.subTest(features=selected):
+                self.metadata["resolve"]["nodes"][1]["features"] = selected
+                self.write_metadata()
+                report, code = self.run_preflight()
+                self.assertEqual(0, code, report["blockers"])
+                self.assertEqual(floor, report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+
+    def librsvg_system_fixture(self):
+        # Exact system-deps table from locked librsvg 2.61.4 metadata in
+        # run40013291193/artifact12527018441; surrounding package is synthetic.
+        manifest = Path(self.metadata["packages"][1]["manifest_path"])
+        manifest.write_text(manifest.read_text() + '''
+[package.metadata.system-deps]
+cairo = "1.18"
+cairo-gobject = "1.18"
+cairo-png = "1.18"
+freetype2 = "20.0.14"
+harfbuzz = "2.0"
+pangocairo = "1.50"
+cairo-pdf = { optional = true, version = "1.18" }
+cairo-ps = { optional = true, version = "1.18" }
+cairo-svg = { optional = true, version = "1.18" }
+gio = { name = "gio-2.0", version = "2.24" }
+glib = { name = "glib-2.0", version = "2.50" }
+libxml2 = { fallback-names = ["libxml2"], name = "libxml-2.0", version = "2.9" }
+[package.metadata.system-deps.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))']
+fontconfig = { version = "1.7" }
+pangoft2 = { version = "1.50" }
+[package.metadata.system-deps.'cfg(any(target_os = "macos", target_os = "windows"))']
+fontconfig = { optional = true, version = "1.7" }
+pangoft2 = { optional = true, version = "1.50" }
+''')
+        return manifest
+
+    @staticmethod
+    def librsvg_native_observation(command):
+        result = BuildPreflightTests.native_observation(command)
+        if command[-1] == "freetype2":
+            result["stdout"] = "24.3.18\n"
+        return result
+
+    def test_actual_librsvg_static_forms_observe_all_floors_on_both_linux_targets(self):
+        self.librsvg_system_fixture()
+        expected = {"cairo": (1, 18, 0), "cairo-gobject": (1, 18, 0),
+                    "cairo-png": (1, 18, 0), "freetype2": (20, 0, 14),
+                    "harfbuzz": (2, 0, 0), "pangocairo": (1, 50, 0),
+                    "cairo-pdf": (1, 18, 0), "cairo-ps": (1, 18, 0),
+                    "cairo-svg": (1, 18, 0), "gio-2.0": (2, 24, 0),
+                    "glib-2.0": (2, 50, 0), "libxml-2.0": (2, 9, 0),
+                    "fontconfig": (1, 7, 0), "pangoft2": (1, 50, 0)}
+        for target in ("x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"):
+            with self.subTest(target=target):
+                self.args.target = target
+
+                def tools(path, tool):
+                    result = self.tool_observation(path, tool)
+                    if tool == "rustc":
+                        result["stdout"] = f"release: 1.92.0\nhost: {target}\n"
+                    return result
+
+                report, code = self.run_preflight(native=self.librsvg_native_observation, tools=tools)
+                self.assertEqual(0, code, report["blockers"])
+                requirements = report["declared_requirements"]
+                self.assertEqual(expected, requirements["native_requirements"])
+                self.assertEqual({"libxml-2.0": ["libxml2"]}, requirements["declared_fallback_names"])
+                self.assertEqual(3, len(requirements["package_manifests"]))
+                self.assertFalse(report["release_ready"])
+                self.assertEqual("NOT RUN", report["native_build_and_tests"])
+
+    def test_actual_librsvg_shorthand_floor_and_missing_module_still_block(self):
+        self.librsvg_system_fixture()
+        for version, exit_code in (("1.17.0\n", 0), ("", 1)):
+            with self.subTest(version=version, exit_code=exit_code):
+                def native(command):
+                    result = self.librsvg_native_observation(command)
+                    if command[-1] == "cairo-gobject":
+                        result.update(stdout=version, exit_code=exit_code)
+                    return result
+
+                report, code = self.run_preflight(native=native)
+                self.assertEqual(1, code)
+                self.assertEqual((1, 18, 0), report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+                self.assertTrue(any("Native module cairo-gobject" in item for item in report["blockers"]))
+
+    def test_cfg_groups_select_linux_without_importing_foreign_target_floor(self):
+        manifest = self.librsvg_system_fixture()
+        manifest.write_text(manifest.read_text().replace(
+            'fontconfig = { optional = true, version = "1.7" }',
+            'foreign-platform-library = { optional = true, version = "99.0" }'))
+        report, code = self.run_preflight(native=self.librsvg_native_observation)
+        self.assertEqual(0, code, report["blockers"])
+        observed = report["declared_requirements"]["native_requirements"]
+        self.assertEqual((1, 7, 0), observed["fontconfig"])
+        self.assertNotIn("foreign-platform-library", observed)
+
+    def test_inactive_cfg_group_still_rejects_invalid_dependency_declaration(self):
+        manifest = self.librsvg_system_fixture()
+        original = manifest.read_text()
+        for fields, reason in (('optional = "true", version = "1.7"', "optional"),
+                               ('version = "1.7", v1_20 = { version = true }', "numeric version"),
+                               ('version = "1.7", v1_20 = { version = "^1.20" }', "numeric version")):
+            with self.subTest(fields=fields):
+                manifest.write_text(original.replace(
+                    'fontconfig = { optional = true, version = "1.7" }',
+                    'fontconfig = { ' + fields + ' }'))
+                report, code = self.run_preflight(native=self.librsvg_native_observation)
+                self.assertEqual(1, code)
+                self.assertTrue(any(reason in item for item in report["blockers"]))
+
+    def test_default_module_names_never_replace_explicit_invalid_name(self):
+        manifest = self.librsvg_system_fixture()
+        original = manifest.read_text()
+        for value in ('false', '42', '[]', '""', '"bad module"'):
+            with self.subTest(name=value):
+                manifest.write_text(original.replace('cairo = "1.18"',
+                    'cairo = { version = "1.18", name = ' + value + ' }'))
+                report, code = self.run_preflight(native=self.librsvg_native_observation)
+                self.assertEqual(1, code)
+                self.assertTrue(any("module name" in item for item in report["blockers"]))
+
+    def test_malformed_shorthand_and_missing_version_remain_unverified(self):
+        manifest = self.librsvg_system_fixture()
+        original = manifest.read_text()
+        for value in ('false', '42', '[]', '{}', '""', '"^1.18"', '{ name = "cairo" }'):
+            with self.subTest(spec=value):
+                manifest.write_text(original.replace('cairo = "1.18"', 'cairo = ' + value))
+                report, code = self.run_preflight(native=self.librsvg_native_observation)
+                self.assertEqual(1, code)
+                self.assertTrue(any("UNVERIFIED" in item for item in report["blockers"]))
+
+    def test_fallback_names_validate_without_waiving_primary_floor(self):
+        manifest = self.librsvg_system_fixture()
+        original = manifest.read_text()
+        for value in ('"libxml2"', '[42]', '[""]', '["bad module"]'):
+            with self.subTest(fallback=value):
+                manifest.write_text(original.replace('fallback-names = ["libxml2"]', 'fallback-names = ' + value))
+                report, code = self.run_preflight(native=self.librsvg_native_observation)
+                self.assertEqual(1, code)
+                self.assertTrue(any("fallback-names" in item for item in report["blockers"]))
+        manifest.write_text(original)
+
+        def absent_primary(command):
+            result = self.librsvg_native_observation(command)
+            if command[-1] == "libxml-2.0":
+                result.update(stdout="", exit_code=1)
+            return result
+
+        report, code = self.run_preflight(native=absent_primary)
+        self.assertEqual(1, code)
+        self.assertEqual((2, 9, 0), report["declared_requirements"]["native_requirements"]["libxml-2.0"])
+        self.assertTrue(any("Native module libxml-2.0" in item for item in report["blockers"]))
+
+    def test_unknown_or_malformed_cfg_predicates_and_nested_groups_refuse(self):
+        manifest = self.librsvg_system_fixture()
+        original = manifest.read_text()
+        marker = 'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'
+        for predicate in ('cfg(target_arch = "x86_64")', 'cfg(not())',
+                          'cfg(target_os = "plan9")',
+                          'cfg(not(target_os = "macos", target_os = "windows"))',
+                          'cfg(target_os = "linux") trailing', 'cfg(all(target_os = "linux")'):
+            with self.subTest(predicate=predicate):
+                manifest.write_text(original.replace(marker, predicate))
+                report, code = self.run_preflight(native=self.librsvg_native_observation)
+                self.assertEqual(1, code)
+                self.assertTrue(any("UNVERIFIED" in item for item in report["blockers"]))
+        manifest.write_text(original + '''
+[package.metadata.system-deps.'cfg(target_os = "linux")'.'cfg(target_os = "linux")']
+bad = "1.0"
+''')
+        self.assertEqual(1, self.run_preflight(native=self.librsvg_native_observation)[1])
+        self.args.target = "x86_64-pc-windows-msvc"
+        report, code = self.run_preflight(native=self.librsvg_native_observation)
+        self.assertEqual(1, code)
+        self.assertTrue(any("Unsupported native preflight target" in item for item in report["blockers"]))
+
+    def test_linux_cfg_declared_floor_and_package_msrv_cannot_be_hidden(self):
+        manifest = self.librsvg_system_fixture()
+        manifest.write_text(manifest.read_text().replace('fontconfig = { version = "1.7" }',
+                                                       'fontconfig = { version = "99.0" }'))
+        report, code = self.run_preflight(native=self.librsvg_native_observation)
+        self.assertEqual(1, code)
+        self.assertTrue(any("Native module fontconfig" in item for item in report["blockers"]))
+        package = self.metadata["packages"][2]
+        other = Path(package["manifest_path"])
+        other.write_text(other.read_text().replace('"1.89"', '"1.93"'))
+        package["rust_version"] = "1.93"
+        self.write_metadata()
+        report, code = self.run_preflight(native=self.librsvg_native_observation)
+        self.assertEqual(1, code)
+        self.assertIn("Locked dependency declares a Rust requirement above the selected toolchain", report["blockers"])
+
+    def test_unknown_optional_fields_and_conditions_still_refuse(self):
+        manifest = self.librsvg_system_fixture()
+        original = manifest.read_text()
+        for fields in ('version="1.18", optional="yes"',
+                       'version="1.18", unknown=true',
+                       'version="1.18", cfg="unmodelled"',
+                       'version="1.18", v1_20={name="other",version="1.20"}'):
+            with self.subTest(fields=fields):
+                manifest.write_text(original.replace('cairo = "1.18"', 'cairo = {' + fields + '}'))
+                self.assertEqual(1, self.run_preflight(native=self.librsvg_native_observation)[1])
+
     def test_complete_manifest_observations_allow_engine_check_but_do_not_qualify_release(self):
         report, code = self.run_preflight()
         self.assertEqual(0, code)

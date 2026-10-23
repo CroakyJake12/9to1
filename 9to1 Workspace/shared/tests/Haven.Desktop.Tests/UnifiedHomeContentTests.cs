@@ -343,14 +343,16 @@ public sealed class UnifiedHomeContentTests
                     control => control.Name == "home-apps-search-row");
                 var search = Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
                     control => control.Name == "home-app-search");
-                var clear = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
-                    control => control.Name == "home-apps-clear");
+                // Hidden CUI children retain their controls but leave the visual tree.
+                // Resolve Clear only after the genuine query makes it visible.
+                Button? clear = null;
                 var count = Assert.Single(page.GetVisualDescendants().OfType<TextBlock>(),
                     control => control.Name == "home-apps-count");
                 Assert.Equal("Search apps", AutomationProperties.GetName(search));
                 Assert.Equal("Installed app count", AutomationProperties.GetName(count));
                 Assert.Equal("19 apps", count.Text);
-                Assert.False(clear.IsEffectivelyVisible);
+                Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "home-apps-clear");
                 AssertSearchGeometry();
                 Assert.True(search.Focus(), "The narrow app search must remain keyboard-focusable.");
                 search.Text = "Boards";
@@ -359,7 +361,12 @@ public sealed class UnifiedHomeContentTests
                 searchActions = home.WhenActionsIdleAsync(); await searchActions;
                 SearchLayout();
                 Assert.Equal("Boards", search.Text);
+                clear = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "home-apps-clear");
                 Assert.True(clear.IsEffectivelyVisible);
+                Assert.True(clear.IsEnabled);
+                Assert.Equal("Clear app search", AutomationProperties.GetName(clear));
+                Assert.True(clear.Focus(), "The query-visible Clear action must remain keyboard-focusable.");
                 Assert.Equal("19 apps", count.Text);
                 var filteredTile = Assert.Single(page.GetVisualDescendants().OfType<Button>(),
                     control => control.Name == "home-app-tile" && control.IsEffectivelyVisible);
@@ -370,6 +377,8 @@ public sealed class UnifiedHomeContentTests
                 SearchLayout();
                 Assert.Equal(string.Empty, search.Text);
                 Assert.False(clear.IsEffectivelyVisible);
+                Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(),
+                    control => control.Name == "home-apps-clear");
                 Assert.Equal("19 apps", count.Text);
                 Assert.Same(search, Assert.Single(page.GetVisualDescendants().OfType<TextBox>(),
                     control => control.Name == "home-app-search"));
@@ -383,7 +392,7 @@ public sealed class UnifiedHomeContentTests
                 }
                 void AssertSearchGeometry()
                 {
-                    var visible = clear.IsEffectivelyVisible
+                    var visible = clear is not null && clear.IsEffectivelyVisible
                         ? new Control[] { search, clear, count } : new Control[] { search, count };
                     var rowOrigin = searchRow.TranslatePoint(default, window);
                     Assert.NotNull(rowOrigin);
@@ -409,7 +418,7 @@ public sealed class UnifiedHomeContentTests
                     Assert.True(searchRow.Bounds.Width <= 520.5);
                     Assert.True(searchOrigin.Y + search.Bounds.Height <= countOrigin.Y + .5,
                         "The full installed-app count must occupy a separate row below search.");
-                    if (clear.IsEffectivelyVisible)
+                    if (clear is not null && clear.IsEffectivelyVisible)
                     {
                         var clearOrigin = clear.TranslatePoint(default, searchRow)!.Value;
                         Assert.True(searchOrigin.X + search.Bounds.Width <= clearOrigin.X + .5);

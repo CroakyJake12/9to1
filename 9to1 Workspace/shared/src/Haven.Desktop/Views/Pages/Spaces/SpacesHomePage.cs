@@ -261,6 +261,23 @@ public sealed partial class SpacesHomePage : UserControl, IActivatablePage,
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.CreateCustomSpaceAsync(token))).ConfigureAwait(false);
                 break;
             case "spaces.open":
+                if (_controller.State.Selection?.Id != id)
+                {
+                    // Explicit Open carries its own Space identity, just like the rail's Select.
+                    // Validate before selecting: a missing/archived target must not fall back to
+                    // another Space or disturb its mounted chat, draft or persisted selection.
+                    var expectedState = _controller.State;
+                    var target = await original.AwaitAsync(InvokeOriginalSource(() => _registry.ReadExistingAsync(id, token))).ConfigureAwait(false);
+                    original.DemandPublication();
+                    if (!ReferenceEquals(_controller.State, expectedState))
+                        throw new InvalidOperationException("The Space selection changed before opening.");
+                    if (target is null || target.IsArchived)
+                    {
+                        InvokeOriginalSource(() => _controller.ReportWorkspaceActionRefusal("The requested Space is unavailable."));
+                        break;
+                    }
+                    await original.AwaitAsync(InvokeOriginalSource(() => _controller.SelectSpaceAsync(id, token))).ConfigureAwait(false);
+                }
                 await original.AwaitAsync(InvokeOriginalSource(() => _controller.OpenSpaceAsync(id, token))).ConfigureAwait(false);
                 break;
             case "spaces.edit-details":

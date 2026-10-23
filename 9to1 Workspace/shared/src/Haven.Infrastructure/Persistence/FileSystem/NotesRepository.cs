@@ -192,7 +192,7 @@ public sealed partial class NotesRepository(
                 await WriteJsonDurablyAsync(PendingIntegrityPath(expectedId), new PendingNotesIntegrity(1, operationId,
                     new NotesIntegrityReceipt(1, expectedId, intended.Version, hash, intended.SizeBytes, now)), cancellationToken).ConfigureAwait(false);
             if (!prior.Absent)
-                await PreservePreviousVersionAsync(expectedId, currentPath, expectedVersion, reason, cancellationToken).ConfigureAwait(false);
+                await PreservePreviousVersionAsync(expectedId, currentPath, prior, reason, cancellationToken).ConfigureAwait(false);
             // The prepared file is an externally visible filesystem artifact.
             // Recheck its exact durable binding after journal/history work and
             // immediately before admitting the publication effect.
@@ -981,17 +981,30 @@ public sealed partial class NotesRepository(
     /// <summary>
     /// Performs preserve previous version asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    private async Task PreservePreviousVersionAsync(Guid documentId, string currentPath, long version, string reason, CancellationToken cancellationToken)
+    private async Task PreservePreviousVersionAsync(Guid documentId, string currentPath, NotesCurrentSnapshot prior, string reason, CancellationToken cancellationToken)
     {
+        var version = prior.Version;
         if (version <= 0 || !File.Exists(currentPath)) return;
-        var createdAt = File.GetLastWriteTimeUtc(currentPath);
+        // SaveCore names the committed snapshot with the persisted save timestamp.
+        // Filesystem write-time drift must not mint a second identity for that revision.
+        var createdAt = prior.Document!.UpdatedAt;
         var versionId = VersionFileName(version, createdAt);
         var path = Path.Combine(VersionsDirectory(documentId), versionId + ".haven-notes.json");
         if (!File.Exists(path)) await CopyDurablyAsync(currentPath, path, cancellationToken).ConfigureAwait(false);
         var hash = await ComputeSha256Async(path, cancellationToken).ConfigureAwait(false);
+        if (hash != prior.Sha256 || new FileInfo(path).Length != prior.SizeBytes)
+            throw new InvalidDataException("The existing Notes history snapshot does not match the previous committed revision; it was preserved.");
         var meta = Path.Combine(VersionsDirectory(documentId), versionId + ".meta.json");
         if (!File.Exists(meta))
-            await WriteJsonDurablyAsync(meta, new NotesVersionManifest(version, createdAt, NormalizeReason(reason), new FileInfo(path).Length, hash), cancellationToken).ConfigureAwait(false);
+            await WriteJsonDurablyAsync(meta, new NotesVersionManifest(version, createdAt, NormalizeReason(reason), prior.SizeBytes, hash), cancellationToken).ConfigureAwait(false);
+        else
+        {
+            await using var stream = OpenOriginalTransactionFile(meta, FileMode.Open, FileAccess.Read);
+            var manifest = await JsonSerializer.DeserializeAsync<NotesVersionManifest>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
+            if (manifest is null || manifest.Version != version || manifest.CreatedAt != createdAt ||
+                manifest.SizeBytes != prior.SizeBytes || manifest.Sha256 != hash)
+                throw new InvalidDataException("The existing Notes history metadata does not match the previous committed revision; it was preserved.");
+        }
     }
 
     /// <summary>

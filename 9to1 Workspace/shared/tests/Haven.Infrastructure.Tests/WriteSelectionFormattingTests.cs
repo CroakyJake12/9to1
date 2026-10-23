@@ -228,6 +228,93 @@ public sealed class WriteSelectionFormattingTests
         Assert.Equal(Sections(document), Sections(historical!));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task History_identity_uses_the_committed_timestamp_when_current_file_time_changes(bool previousHistoryMissing)
+    {
+        using var paths = new RangeTestPaths();
+        await using var diagnostics = new ProductionDiagnostics(paths);
+        var repository = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
+        var document = NotesDocument.Create("Before metadata-only change");
+        var first = await repository.SaveAsync(document, "First revision", CancellationToken.None);
+        var original = Assert.Single(await repository.GetVersionsAsync(document.Id, CancellationToken.None));
+        var firstBytes = await File.ReadAllBytesAsync(first.CurrentPath);
+        Assert.Equal(firstBytes, await File.ReadAllBytesAsync(first.VersionPath));
+        var metaPath = Path.Combine(Path.GetDirectoryName(first.VersionPath)!, original.VersionId + ".meta.json");
+        var metaBytes = await File.ReadAllBytesAsync(metaPath);
+        if (previousHistoryMissing)
+        {
+            File.Delete(first.VersionPath);
+            File.Delete(metaPath);
+        }
+        // Deterministically separate the filesystem timestamp from the saved revision;
+        // elapsed scheduler or disk timing must not decide whether a duplicate appears.
+        File.SetLastWriteTimeUtc(first.CurrentPath, first.SavedAt.UtcDateTime.AddDays(1));
+        Assert.NotEqual(first.SavedAt.UtcDateTime.Date, File.GetLastWriteTimeUtc(first.CurrentPath).Date);
+        document.Title = "After metadata-only change";
+        var second = await repository.SaveAsync(document, "Second revision", CancellationToken.None);
+
+        var fresh = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
+        var versions = await fresh.GetVersionsAsync(document.Id, CancellationToken.None);
+        Assert.Equal(2, versions.Count);
+        var retained = Assert.Single(versions, item => item.Version == first.Version);
+        Assert.Equal(original.VersionId, retained.VersionId);
+        Assert.Equal(original.CreatedAt, retained.CreatedAt);
+        Assert.Equal(original.SizeBytes, retained.SizeBytes);
+        Assert.Equal(original.Sha256, retained.Sha256);
+        Assert.Equal(firstBytes, await File.ReadAllBytesAsync(first.VersionPath));
+        if (!previousHistoryMissing) Assert.Equal(metaBytes, await File.ReadAllBytesAsync(metaPath));
+        var oldDocument = await fresh.LoadVersionAsync(document.Id, retained.VersionId, CancellationToken.None);
+        Assert.NotNull(oldDocument);
+        Assert.Equal(document.Id, oldDocument!.Id);
+        Assert.Equal(first.Version, oldDocument.Version);
+        Assert.Equal("Before metadata-only change", oldDocument.Title);
+        var current = await fresh.LoadAsync(document.Id, CancellationToken.None);
+        Assert.NotNull(current);
+        Assert.Equal(document.Id, current!.Id);
+        Assert.Equal(second.Version, current.Version);
+        Assert.Equal(document.Title, current.Title);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Conflicting_previous_history_is_preserved_and_blocks_the_next_publication(bool corruptMetadata)
+    {
+        using var paths = new RangeTestPaths();
+        await using var diagnostics = new ProductionDiagnostics(paths);
+        var repository = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
+        var document = NotesDocument.Create("Known-good current revision");
+        var first = await repository.SaveAsync(document, "First revision", CancellationToken.None);
+        var version = Assert.Single(await repository.GetVersionsAsync(document.Id, CancellationToken.None));
+        var currentBytes = await File.ReadAllBytesAsync(first.CurrentPath);
+        var metaPath = Path.Combine(Path.GetDirectoryName(first.VersionPath)!, version.VersionId + ".meta.json");
+        var conflictPath = corruptMetadata ? metaPath : first.VersionPath;
+        if (corruptMetadata)
+        {
+            var metadata = System.Text.Json.Nodes.JsonNode.Parse(await File.ReadAllTextAsync(metaPath))!;
+            metadata["sha256"] = new string('0', 64);
+            await File.WriteAllTextAsync(metaPath, metadata.ToJsonString());
+        }
+        else await File.WriteAllTextAsync(first.VersionPath, "{ conflicting historical bytes }");
+        var conflictingBytes = await File.ReadAllBytesAsync(conflictPath);
+        File.SetLastWriteTimeUtc(first.CurrentPath, first.SavedAt.UtcDateTime.AddDays(1));
+        document.Title = "Unpublished edit";
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => repository.SaveAsync(document, "Must refuse", CancellationToken.None));
+
+        Assert.Equal(first.Version, document.Version);
+        Assert.Equal(currentBytes, await File.ReadAllBytesAsync(first.CurrentPath));
+        Assert.Equal(conflictingBytes, await File.ReadAllBytesAsync(conflictPath));
+        var fresh = new NotesRepository(paths, new NotesDocumentValidator(), diagnostics);
+        var current = await fresh.LoadAsync(document.Id, CancellationToken.None);
+        Assert.NotNull(current);
+        Assert.Equal(document.Id, current!.Id);
+        Assert.Equal(first.Version, current.Version);
+        Assert.Equal("Known-good current revision", current.Title);
+    }
+
     private static (NotesDocument Document, NotesBlock Block, WriteDocumentEditor Editor) MixedDocument(WriteCharacterFormat format)
     {
         var document = NotesDocument.Create("Mixed revision notes");
