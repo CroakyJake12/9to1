@@ -5,6 +5,8 @@ using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Write;
 using Haven.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using HavenOS.Home.Core;
+using HavenOS.Apps.Canvas;
 
 namespace HavenOS.Apps.Write;
 
@@ -28,7 +30,16 @@ public sealed class WriteAppHost : IAsyncDisposable
     public NotesDocument? Document => Page.Document;
     public bool IsDisposed => _disposed;
 
-    public static async Task<WriteAppHost> CreateDefaultAsync(Guid? initialDocumentId = null)
+    public static Task<WriteAppHost> CreateDefaultAsync(Guid? initialDocumentId = null) =>
+        CreateDefaultCoreAsync(initialDocumentId, null);
+
+    public static Task<WriteAppHost> CreateDefaultAsync(Guid? initialDocumentId, HomeProductivityEngine sharedInkEngine)
+    {
+        ArgumentNullException.ThrowIfNull(sharedInkEngine);
+        return CreateDefaultCoreAsync(initialDocumentId, sharedInkEngine);
+    }
+
+    private static async Task<WriteAppHost> CreateDefaultCoreAsync(Guid? initialDocumentId, HomeProductivityEngine? sharedInkEngine)
     {
         var services = new ServiceCollection();
         services.AddHavenInfrastructure();
@@ -50,7 +61,7 @@ public sealed class WriteAppHost : IAsyncDisposable
                 provider.GetRequiredService<IProviderModelClient>(),
                 provider.GetRequiredService<NotesReadAloudController>(),
                 provider.GetRequiredService<IWriteNativeDocumentPackageStore>(),
-                provider);
+                provider, sharedInkEngine);
         }
         catch (Exception acquisitionFailure)
         {
@@ -77,7 +88,21 @@ public sealed class WriteAppHost : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(repository);
         ArgumentNullException.ThrowIfNull(formats);
         return CreateCore(repository, formats, attachments, initialDocumentId, ai, aiModels,
-            readAloud, nativePackageStore, ownedServices: null);
+            readAloud, nativePackageStore, ownedServices: null, sharedInkEngine: null);
+    }
+
+    /// <summary>Borrows the host's actual Home engine without replacing its registry or lifetime.</summary>
+    public static WriteAppHost Create(
+        INotesRepository repository, INotesImportExportService formats, Guid? initialDocumentId,
+        INotesAttachmentStore? attachments, INotesAiService? ai, IOllamaClient? aiModels,
+        NotesReadAloudController? readAloud, IWriteNativeDocumentPackageStore? nativePackageStore,
+        HomeProductivityEngine sharedInkEngine)
+    {
+        ArgumentNullException.ThrowIfNull(repository);
+        ArgumentNullException.ThrowIfNull(formats);
+        ArgumentNullException.ThrowIfNull(sharedInkEngine);
+        return CreateCore(repository, formats, attachments, initialDocumentId, ai, aiModels,
+            readAloud, nativePackageStore, ownedServices: null, sharedInkEngine: sharedInkEngine);
     }
 
     public Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -118,7 +143,7 @@ public sealed class WriteAppHost : IAsyncDisposable
 
         _disposed = true;
         var failures = new List<Exception>();
-        try { Page.Dispose(); }
+        try { await Page.CloseAndDrainAsync(); }
         catch (Exception error) { failures.Add(error); }
         try { _eventBus.Dispose(); }
         catch (Exception error) { failures.Add(error); }
@@ -135,12 +160,16 @@ public sealed class WriteAppHost : IAsyncDisposable
         INotesRepository repository, INotesImportExportService formats,
         INotesAttachmentStore? attachments, Guid? initialDocumentId,
         INotesAiService? ai, IOllamaClient? aiModels, NotesReadAloudController? readAloud,
-        IWriteNativeDocumentPackageStore? nativePackageStore, ServiceProvider? ownedServices)
+        IWriteNativeDocumentPackageStore? nativePackageStore, ServiceProvider? ownedServices,
+        HomeProductivityEngine? sharedInkEngine)
     {
         var eventBus = new HavenEventBus();
         try
         {
-            var page = new WritePage(eventBus, repository, formats, attachments, initialDocumentId,
+            // Same Home-authoritative implementation/handler as the embedded surface. The
+            // donor is only activated by the shared input's real capability probe.
+            var engine = sharedInkEngine ?? new HomeProductivityEngine(handlers: [new CanvasInkObjectHandler()]);
+            var page = new WritePage(engine, eventBus, repository, formats, attachments, initialDocumentId,
                 ai, aiModels, readAloud, nativePackageStore);
             return new WriteAppHost(page, eventBus, formats, ownedServices);
         }

@@ -87,7 +87,8 @@ internal sealed partial class WordWriteHavenScene : IDisposable
         DocumentHost.SetValue(HavenProperties.Gap, HavenLength.Px(0));
         DocumentSurface = new WriteDocumentSurface(OwnOriginalCallback);
         DocumentSurface.SelectionChanged += OnDocumentSelectionChanged;
-        DocumentHost.Add(DocumentSurface);
+        DrawingHost.Add(DocumentSurface);
+        DocumentHost.Add(DrawingHost);
         Scroller.Add(DocumentHost);
         Root.Add(Scroller);
 
@@ -113,7 +114,7 @@ internal sealed partial class WordWriteHavenScene : IDisposable
     public IReadOnlyDictionary<Guid, Input> BlockInputs => _blockInputs; public NotesDocument? Document => _editor?.Document;
     public Guid? SelectedBlockId => _editor?.SelectedBlockId; public string SelectedText => _editor?.SelectedText ?? string.Empty;
 
-    public void SetDocument(NotesDocument document, int index, int count) { if (_editor is not null) _editor.Changed -= OnEditorChanged; _editor = new WriteDocumentEditor(document); _editor.Changed += OnEditorChanged; _pendingAiChange = document.AiChanges.LastOrDefault(change => change.Status == NotesAiChangeStatus.Proposed); _suppress = true; try { TitleInput.Text = document.Title; TitleInput.SetValue(HavenProperties.Enabled, true); } finally { _suppress = false; } DocumentPositionText.Content = $"{index + 1} of {Math.Max(1, count)} · v{document.Version}"; RebuildAll(); }
+    public void SetDocument(NotesDocument document, int index, int count) { if (_editor is not null) _editor.Changed -= OnEditorChanged; _editor = new WriteDocumentEditor(document); _editor.InitializeSharedInkTracking(); _editor.Changed += OnEditorChanged; _pendingAiChange = document.AiChanges.LastOrDefault(change => change.Status == NotesAiChangeStatus.Proposed); _suppress = true; try { TitleInput.Text = document.Title; TitleInput.SetValue(HavenProperties.Enabled, true); } finally { _suppress = false; } DocumentPositionText.Content = $"{index + 1} of {Math.Max(1, count)} · v{document.Version}"; RebuildAll(); }
     public void SetLibrary(IReadOnlyList<NotesDocumentSummary> documents)
     {
         if (_editor is not null) _editor.Changed -= OnEditorChanged;
@@ -137,11 +138,11 @@ internal sealed partial class WordWriteHavenScene : IDisposable
     private void OnEditorChangedCore(object? sender, EventArgs e) { if (_editor is null) return; _suppress = true; try { if (TitleInput.Text != _editor.Document.Title) TitleInput.Text = _editor.Document.Title; } finally { _suppress = false; } DocumentSurface.InvalidateDocument(); // Word counts over the whole document are expensive: settle for 300ms while typing.
 if (_scheduleOriginalStats is { } schedule) schedule(UpdateStats);
 else _statsDebouncer.Schedule(() => OwnOriginalCallback(UpdateStats));
-RefreshCommands(); DocumentChanged?.Invoke(this, EventArgs.Empty); }
+RefreshCommands(); DocumentChanged?.Invoke(this, EventArgs.Empty); PresentationChanged?.Invoke(this, EventArgs.Empty); }
     private void SetTab(WordWriteRibbonTab tab) { _tab = tab; RebuildRibbon(); }
-    private void RebuildAll() { RebuildRibbon(); RebuildDocument(); UpdateStats(); RefreshCommands(); }
+    private void RebuildAll() { RebuildRibbon(); RebuildDocument(); UpdateStats(); RefreshCommands(); PresentationChanged?.Invoke(this, EventArgs.Empty); }
     private void RefreshCommands() { if (_editor is null) return; UndoButton.SetValue(HavenProperties.Enabled, _editor.CanUndo); RedoButton.SetValue(HavenProperties.Enabled, _editor.CanRedo); StyleRibbonTab(HomeTab, _tab == WordWriteRibbonTab.Home); StyleRibbonTab(InsertTab, _tab == WordWriteRibbonTab.Insert); StyleRibbonTab(LayoutTab, _tab == WordWriteRibbonTab.Layout); StyleRibbonTab(ReviewTab, _tab == WordWriteRibbonTab.Review); }
-    private void RebuildRibbon() { RibbonContent.Children.ToList().ForEach(child => child.Parent?.Remove(child)); if (_editor is null) return; switch (_tab) { case WordWriteRibbonTab.Home: HomeModern(); break; case WordWriteRibbonTab.Insert: InsertModern(); break; case WordWriteRibbonTab.Layout: LayoutModern(); break; case WordWriteRibbonTab.Review: Review(); AddReadAloudControls(); break; } BuildRibbonGroups(); RefreshCommands(); }
+    private void RebuildRibbon() { RibbonContent.Children.ToList().ForEach(child => child.Parent?.Remove(child)); if (_editor is null) return; switch (_tab) { case WordWriteRibbonTab.Home: HomeModern(); break; case WordWriteRibbonTab.Insert: InsertModern(); break; case WordWriteRibbonTab.Layout: LayoutModern(); break; case WordWriteRibbonTab.Review: Review(); AddReadAloudControls(); break; } AddSharedInkControls(); BuildRibbonGroups(); RefreshCommands(); }
 
     private void Home()
     {
@@ -239,7 +240,7 @@ RefreshCommands(); DocumentChanged?.Invoke(this, EventArgs.Empty); }
             foreach (var document in _libraryDocuments) { var card = Btn($"Write.Library.Card.{document.Id:N}", $"{document.Title} � {document.WordCount} words � v{document.Version}"); card.Invoked += (_, _) => OwnOriginalCallback(() => { DocumentOpenRequested?.Invoke(document.Id); }); DocumentHost.Add(card); } return;
         }
         var documentActions = Pill("Write.Document.Actions"); var library = Btn("Write.Pill.Library", "Library"); library.Invoked += (_, _) => OwnOriginalCallback(() => { LibraryRequested?.Invoke(this, EventArgs.Empty); }); var save = Btn("Write.Pill.Save", "Save", ButtonVariant.Primary); save.Invoked += (_, _) => OwnOriginalCallback(() => { SaveRequested?.Invoke(this, EventArgs.Empty); }); documentActions.Add(library); documentActions.Add(save); DocumentHost.Add(documentActions);
-        DocumentSurface.SetEditor(_editor); DocumentHost.Add(DocumentSurface);
+        DocumentSurface.SetEditor(_editor); DocumentHost.Add(DrawingHost);
     }
 
     private HavenElement Block(NotesBlock block)

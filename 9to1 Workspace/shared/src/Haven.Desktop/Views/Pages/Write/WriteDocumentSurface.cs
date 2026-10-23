@@ -33,6 +33,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         SetValue(HavenProperties.Background, "Transparent");
     }
 
+    internal Func<Guid, bool>? SharedInkIsMounted { get; set; }
     public event EventHandler? SelectionChanged;
     public double Zoom => _zoom;
     public string SelectedText => SelectedTableText ?? _editor?.SelectedDocumentText ?? string.Empty;
@@ -273,6 +274,10 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
                 context.Add(new HavenStrokeRoundedRectCommand(rect, new HavenPen(new HavenSolidBrush(255, 57, 110, 220), 2), 10, opacity));
                 context.Add(new HavenTextCommand(rect, new HavenTextLayout(block.VectorShape?.Name ?? "Shape", "Montserrat", 14 * _zoom, 600, rect.Width, true), new HavenSolidBrush(255, 30, 45, 65), opacity));
                 break;
+            case NotesBlockKind.Canvas when block.SharedProductivityBundles is not null:
+                context.Add(new HavenFillRoundedRectCommand(rect, new HavenSolidBrush(255, 255, 255, 255), 4, opacity));
+                if (SharedInkIsMounted?.Invoke(block.Id) != true) context.Add(new HavenTextCommand(rect, new HavenTextLayout("Shared drawing is retained. This drawing view is unavailable.", "Montserrat", 12 * _zoom, 400, rect.Width, true), new HavenSolidBrush(255, 90, 96, 106), opacity));
+                break;
             case NotesBlockKind.Equation:
                 context.Add(new HavenTextCommand(rect, new HavenTextLayout(block.Equation?.RenderedText is { Length: > 0 } rendered ? rendered : block.Equation?.Source ?? string.Empty, "Cambria Math", 18 * _zoom, 400, rect.Width, true), new HavenSolidBrush(255, 24, 28, 34), opacity));
                 break;
@@ -477,6 +482,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
             NotesBlockKind.List => Math.Max(34 * _zoom, (block.List?.Items.Count ?? 1) * 27 * _zoom + 4 * _zoom),
             NotesBlockKind.Table => table!.Height + topInset,
             NotesBlockKind.Image or NotesBlockKind.Audio or NotesBlockKind.Video => Math.Clamp((block.Media?.Height ?? 240) * _zoom, 120 * _zoom, 380 * _zoom) + (string.IsNullOrWhiteSpace(block.Media?.Caption) ? 0 : 28 * _zoom),
+            NotesBlockKind.Canvas when block.SharedProductivityBundles is not null => available * 540 / 960,
             NotesBlockKind.Shape => 180 * _zoom,
             NotesBlockKind.Equation => 70 * _zoom,
             NotesBlockKind.Divider => 18 * _zoom,

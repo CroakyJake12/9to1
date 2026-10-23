@@ -214,10 +214,14 @@ public sealed partial class WritePage
         {
             DetachOriginalCallbacks();
             _route?.RequestRetirement();
+            BeginSharedInkRetirement();
         })).GetTask().ConfigureAwait(false);
         // Borrowed speech services are stopped, never disposed by this page. Accepted
         // document storage is deliberately not canceled by presentation retirement.
         var failures = new List<Exception>();
+        Exception? sharedInkFailure = null;
+        try { await JoinSharedInkRetirementsAsync().ConfigureAwait(false); }
+        catch (Exception error) { sharedInkFailure = error; }
         var speechSources = new List<Task>();
         var speechGate = new object();
         Task ObserveClosingSpeechSource(Func<Task> source)
@@ -253,7 +257,8 @@ public sealed partial class WritePage
                 else if (!failures.Any(existing => ReferenceEquals(existing, error))) failures.Add(error);
             }
         if (failures.Count != 0) _readAloudStopUnacknowledged = true;
-        if (failures.Count != 0) throw new AggregateException("Original Write read-aloud stop failed.", failures);
+        if (sharedInkFailure is not null) failures.Add(sharedInkFailure);
+        if (failures.Count != 0) throw new AggregateException("Original Write drawing or read-aloud stop failed.", failures);
     }
 
     private async Task CleanupOriginalPresentationAsync()
@@ -265,6 +270,7 @@ public sealed partial class WritePage
                 throw new InvalidOperationException("The current Write draft has not been acknowledged by storage; its document and scene remain retained.");
             if (_readAloudStopUnacknowledged || _readAloud?.IsActive == true)
                 throw new InvalidOperationException("Original Write speech playback has not stopped; its scene remains retained.");
+            DemandSharedInkRetired();
             _route?.Dispose();
             _readAloudSessionCts.Dispose();
             if (_route is not null && ReferenceEquals(Scene?.Root, _route.Root)) Scene.Root = null;

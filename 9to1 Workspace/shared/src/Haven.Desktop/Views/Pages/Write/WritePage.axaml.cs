@@ -52,6 +52,21 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
         NotesReadAloudController? readAloud = null,
         IWriteNativeDocumentPackageStore? nativePackageStore = null,
         Action<WritePage>? captureOriginalOwner = null)
+        : this(null, bus, repository, formats, attachments, initialDocumentId, ai, aiModels, readAloud, nativePackageStore, captureOriginalOwner) { }
+
+    /// <summary>The existing live Home engine is borrowed; this page never creates a second registry.</summary>
+    public WritePage(
+        HavenOS.Home.Core.HomeProductivityEngine? sharedInkEngine,
+        HavenEventBus bus,
+        INotesRepository repository,
+        INotesImportExportService formats,
+        INotesAttachmentStore? attachments = null,
+        Guid? initialDocumentId = null,
+        INotesAiService? ai = null,
+        IOllamaClient? aiModels = null,
+        NotesReadAloudController? readAloud = null,
+        IWriteNativeDocumentPackageStore? nativePackageStore = null,
+        Action<WritePage>? captureOriginalOwner = null)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -62,6 +77,7 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
         _ai = ai;
         _aiModels = aiModels;
         _readAloud = readAloud;
+        _sharedInkEngine = sharedInkEngine;
         _work = new(StopOriginalPresentationAsync, CleanupOriginalPresentationAsync);
 
         var constructorSources = _physicalSources ??= [];
@@ -72,6 +88,9 @@ public sealed partial class WritePage : UserControl, IDisposable, IAsyncDisposab
         _work.DemandAdmission();
         InitializeComponent();
         _route = new WordWriteHavenScene(OwnOriginalSceneCallback, ScheduleOriginalStats);
+        Scene = new HavenSceneControl(new HavenDesktopImageResolver(), _sharedInkControls) { Name = "Scene" };
+        Content = Scene;
+        InitializeSharedInkMount();
         Scene.Root = _route.Root;
         _route.LibraryRequested += OnLibraryRequested;
         _route.DocumentOpenRequested += OnDocumentOpenRequested;

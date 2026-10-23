@@ -16,6 +16,7 @@ internal sealed partial class WordWriteHavenScene
         if (_editor is null) return;
         RebuildRibbon();
         RefreshCommands();
+        PresentationChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void HomeModern()
@@ -93,6 +94,7 @@ internal sealed partial class WordWriteHavenScene
         AddTableButton(2, 2); AddTableButton(3, 3); AddTableButton(4, 4);
         var image = Btn("Write.Insert.Image", "Image"); image.Invoked += (_, _) => OwnOriginalCallback(() => { ImageRequested?.Invoke(this, EventArgs.Empty); }); RibbonContent.Add(image);
         var shape = Btn("Write.Insert.CustomShape", "Shape"); shape.Invoked += (_, _) => OwnOriginalCallback(() => { _editor?.InsertCustomShape(DocumentVectorShapes.CreateEditableStarter()); DocumentSurface.InvalidateDocument(); }); RibbonContent.Add(shape);
+        AddSharedInkInsertion();
         AddInsert("Equation", NotesBlockKind.Equation);
         AddInsert("Divider", NotesBlockKind.Divider);
         var link = Field("Write.Insert.Link", "Link for selected text", "Paste link…");

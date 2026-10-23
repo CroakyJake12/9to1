@@ -30,7 +30,9 @@ public sealed partial class MainView
             ?? throw new InvalidOperationException("9to1 services are unavailable.");
         return key.ToLowerInvariant() switch
         {
-            "write" => new WritePage(_bus, services.GetRequiredService<INotesRepository>(),
+            "write" => new WritePage(
+                services.GetService<HavenOS.Home.Core.HomeNativeWindowsComposition>()?.Productivity.Engine,
+                _bus, services.GetRequiredService<INotesRepository>(),
                 services.GetRequiredService<INotesImportExportService>(), services.GetService<INotesAttachmentStore>(),
                 ai: services.GetService<INotesAiService>(), aiModels: services.GetService<IOllamaClient>(),
                 readAloud: services.GetRequiredService<NotesReadAloudController>(),

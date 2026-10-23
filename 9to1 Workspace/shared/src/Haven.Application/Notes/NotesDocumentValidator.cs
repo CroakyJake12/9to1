@@ -180,6 +180,23 @@ public sealed partial class NotesDocumentValidator : INotesDocumentValidator
                     Error($"blocks[{block.Id}].runs[{run.Id}].link", "Links must use HTTP, HTTPS or mailto.");
             }
 
+            if (block.SharedProductivityBundles is { } bundles)
+            {
+                if (block.Kind != NotesBlockKind.Canvas || block.Canvas is null)
+                    Error($"blocks[{block.Id}].sharedProductivityBundles", "Shared drawings require their native drawing block.");
+                if (block.Canvas is { } legacy && (legacy.Strokes.Count != 0 || legacy.Objects.Count != 0 || legacy.GhostLayers.Count != 0))
+                    Error($"blocks[{block.Id}].sharedProductivityBundles", "Legacy canvas data and shared drawing bundles cannot have competing ownership.");
+                long characters = 0;
+                foreach (var bundle in bundles)
+                {
+                    if (bundle.ValueKind != System.Text.Json.JsonValueKind.Object)
+                        Error($"blocks[{block.Id}].sharedProductivityBundles", "Shared drawings retain complete Home object envelopes.");
+                    else characters += bundle.GetRawText().Length;
+                }
+                if (bundles.Count > 256 || characters > 16 * 1024 * 1024)
+                    Error($"blocks[{block.Id}].sharedProductivityBundles", "The shared drawing exceeds its supported payload bound.");
+            }
+
             switch (block.Kind)
             {
                 case NotesBlockKind.List:

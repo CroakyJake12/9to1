@@ -57,6 +57,11 @@ public sealed class NotesBlock
     /// Gets or sets the canvas data.
     /// </summary>
     public NotesCanvasData? Canvas { get; set; }
+    /// <summary>Full canonical Home drawing bundles. Null retains the legacy canvas model;
+    /// an empty collection is a new blank shared drawing, never a demonstration stroke.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public List<System.Text.Json.JsonElement>? SharedProductivityBundles { get; set; }
+
     /// <summary>
     /// Gets or sets native editable vector geometry for a shape block.
     /// </summary>
