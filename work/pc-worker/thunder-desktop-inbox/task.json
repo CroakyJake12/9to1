@@ -8,17 +8,25 @@
   "source_ref": "refs/heads/codex/thunder-source-handoff-20261022",
   "expected_source_revision": "eb0da4f082b2e82512b22ffabf17a28a3057fafd",
   "handoff_path": "docs/dulche/thunder-desktop-handoff-20261022.md",
-  "sequence": 12,
-  "task_id": "THUNDER-DESKTOP-20261023-12",
-  "previous_task_id": "THUNDER-DESKTOP-20261023-11",
-  "expected_previous_inbox_revision": "5a67806ebc3e28f04146b701fde243432c78888f",
-  "expected_previous_content_sha1": "a9fc0d0e37eadea5e3fcc07843f68175fe1831b7",
+  "sequence": 13,
+  "task_id": "THUNDER-DESKTOP-20261023-13",
+  "previous_task_id": "THUNDER-DESKTOP-20261023-12",
+  "expected_previous_inbox_revision": "728c5382854068c2c4e91831d2291c461ca413dc",
+  "expected_previous_content_sha1": "9599ff0d1d7b1bee9f0c58103dad98a1309da301",
   "expires_at": "2026-10-23T10:00:00Z",
   "activation_required": false,
   "status": "PREPARED_NOT_PUBLISHED_NO_ACK",
   "operation": "edit_scoped_source",
-  "objective": "Fix the three genuinely reproduced Task11 CPU wire failures now using the already reviewed bounded producer/reader design; verify9/9withoutweakening; resolve actualmodel route and obtain a truthful existing-engine baseline ifquiet. Continue useful modelcompatibility/sourcework ifcandidate transition isblocked.",
-  "authority": "Rootreceived owner-relayed Task11 completion and explicitnative inboxwatchuntil11BSTtoday. Owner testing ends10:00UTC/11BST23Oct; earlierownerStop/nativeapproval/expiry wins. Current taskdeadline now reconciled, not a blanketproductionpromotion. Preserve originalwork/services andyesterday shutdownhistory; no replay.",
+  "objective": "OWNER PRIORITY CHANGE: devote the remaining approximately half-hour until11BST to Thunder performance profiling and a measurable, safe speed improvement. Checkpoint unfinished CPU wire work at a safe boundary; do not spend the whole remaining window on the nine-case repair unless it is genuinely required for the selected live experiment. Continue no longer than owner deadline.",
+  "authority": {
+    "received_at": "2026-10-23T09:32:00.808801+00:00",
+    "source": "Latest direct owner Root messages23October2026",
+    "quotes": [
+      "can we prioritise speed improvements over the next half hour",
+      "as in the thunder worker"
+    ],
+    "scope": "Reorders the existing desktop Thunder work; preserves all quality, service, access and safety boundaries. Does not authorise additional workers/paid providers, unrelated process interruption, automatic engine unload/restart or deadline extension."
+  },
   "source_custody": {
     "base": "eb0 isretainedanchor, notreset target. Continue ownTask11 isolatedtree preservingactualpatch/dirtywork/privateoverlay/tests. RecordactualHEAD/preposthashes locally; no reset/reclone/broadsourceupdate.",
     "write_paths": [
@@ -38,45 +46,48 @@
     },
     "admission": "Locallyverifyexactknownpreimage orboundedconflict-freeequivalentpreservingTask11improvements; mismatch/ambiguityblockswriteonly. Canonicalprivatecloudcommits4c9c45a3849e51e3450972db8cfff5c338644bef +c8cb8f5dc47f77756de87234fd1c4b5624206f76 maynotexistlocally; do notdownload/publishcode merelytofetchthem. Implement smallsemantics below, no new runtime."
   },
-  "repair_requirements": [
-    "Producer helper_send must reject body byte length above existingkLimit BEFORE narrowinglength orwritingANYprefix/body tohelper. Return theexistingrequest-scopedinvalidargumenterror, preservehelper/loadedsession, then next validrequestmustwork. Keepfixedmessagesobjectenvelope andsingle4-byteframe; neverloosenhelper or increaselimit.",
-    "Add pairedLineReader ready-read operation with explicit Line/Pending/End: exposewhether complete newlinealreadybuffered; drainthatlinewithoutwaitingforkernelreadiness. Aftercallerobservedreadiness consume atmostONErawread; retainincompletebytesandreturnPending sohostcancel/deadlinesremainserviceable. Preserve existinglegacyblockingnext()contract for othercallers, kLineLimit, CRLFandfinalpartiallineatEOF, ownedchildcleanup andalltimeouts.",
-    "wait_ready mustprocessalready-buffered INFO/READY withoutneedinganotherfd notification, handlePending/Endexplicitly, recheckdeadline/childliveness asbefore. Generationloop mustalwayspollhostinput FIRST evenwithbufferedenginelines; bufferedcompleteT/DONEmustdrain; Pendingpartialoutputmustfallthroughtounchangedstalldeadline andnext hostpoll. No busyblockingread/cancellationstarvation; no madeupDONE/READY."
+  "priority_order": [
+    "AcknowledgeTask13 and preserve actualTask11/12 patches, tests, results and activeoperation checkpoint. No reset/reclone. If Task12 alreadyrunning, finish its current atomic operation then switch priorities safely.",
+    "Immediately inspect the REAL running engine, model/quantisation/context/tokenizer, request path and supported per-request tuning knobs; establish the actual applied request configuration, current queue/counters/quiet gate and hardware. Use existing legitimate API and tools, not a new auth/bridge.",
+    "Obtain repeatable existing-engine baseline/profile, then choose ONE source-backed, supported, reversible performance knob with best evidence of a real bottleneck and feasible comparison before cutoff. Prioritise useful measurements over more inventory.",
+    "Run repeated interleaved baseline/tuned measurements with same model/quant/context/prompt/output/decoding parameters except the explicitly tested knob. Aim >=5 validruns/configuration if remaining time permits; record fewer honestly. Stop new experiments with >=5min left for owned rollback/checkpoint, and >=10min if an engine transition was genuinely admitted.",
+    "Report medians/variability and raw per-run evidence. Distinguish measured benefit from noise, client/network/cache effects and unavailable metrics. No tuning benefit is an acceptable finding; never substitute a speed claim."
   ],
-  "checks": {
-    "order": [
-      "ReadretainedTask11receipt/9testhashesandold3failures; reuseapplicableactualRED evidence, otherwise reproduceold3withoutloosening",
-      "CompileactualrepairedCPUrelayusingexistingcompiler/approvedpinnedPython andsameflags asTask11; no dependencies/enginebuild",
-      "Runall SAME9actualwirecases, capturesource/header/helper/test/compiler/binary identities; retain6oldpassesand3oldfailures; expectednew9PASS0skip, anyfailpreservedprecisely",
-      "Runexistingchild/processownership/argv controls ifapplicabletochangedLineReader; no mandatorybroadrebuild",
-      "Traceactualservingalias throughresolver/model_for toheldcheckpoint/GGUFarchitecture/quant/context/tokenizer; comparecandidate0.1.47 actualdispatch requirements, no guessedpack->GGUF mapping"
-    ],
-    "unchanged_tests": "Task11nine-case testsareREADONLY; no removing/relaxingassertions, doublingtimeouts, scriptedenginepretendingtobeGPU, orcallingSKIPpass. Fixtureengine/tokenizermapping remainexplicitlysynthetic; realC++/helper/Jinjarun. Missingprerequisite isBLOCKED notsuccess."
+  "performance_admission": {
+    "existing_engine": "A read-only configuration/current-enginebaseline throughnormalexistingAPI DOES NOT require inventing anexclusivelease, sinceitdoesnotchangeinstalledengine/services. Requiregenuinecurrentroute/owner-nativepermission and30secondszeroactive/zeroqueue/unchangedcounter first. Then atmost10boundedrequests TOTAL acrossbaseline+tunedconfigurations, sequential requested<=128outputtokens where honoured, otherwise verifiedactualadaptercap<=256outputtokens/<=90s each, existingactualcheckpoint/quant/context/settings; fixedprompt Explain how a CPU cache reduces memory access latency; identicalsupported seed42/temperature0 orrecordunsupported/defaults. Samplecurrentqueue/counter/processidentity before/during/after; discardoverlap/counterincrementsbeyondownrequests, neverblockotherclients. Labelthisendpointobservation notexclusivecontrolledcomparison; separatenativeprefill/decode fromclientTTFT/wall/cacheclass, donotinventunreportedmetrics. Record actualhardware/software; nohistoricalcachewarmversuscoldgainclaim.",
+    "parameter_truth": "Task12 token128/seed42 were Root experiment bounds/preferences, not proven adapter support or owner constraints. Existing managed candidate may hardcode256/top_p1/top_k0/seed33377335. Verify applied parameters; request<=128 where honoured; if existing legitimate adapter has fixed256, Task13 admits that actual256 cap with <=90s request timeout, atmost10totalrequests and identicalsettings bothconfigs, recordingthefact. Ifboundedactualcap cannotbeestablished or exceeds256, BLOCKthatpath. Nevercompare nominalsettingsdifferentinexecution.",
+    "profiling": "Use already available read-only timings/telemetry (engine-reported prefill, decode, first-token, GPUutil/VRAM, CPU, transfer/cache/expert counters). Do not install tools, use root, change drivers/clocks/power/firmware/security or interrupt others. Client TTFT/wall may be measured separately; unavailable native timing is NOT RUN. Separate loading, prefill and decoding.",
+    "tuning": "Prefer supported per-request settings or an existing genuinely reversible owned experiment. Do not alter production/shared defaults to create an optimisation. Preserve correctness, outputtoken counts, quantisation and context; faster shorter outputs/lower quality are not an engine gain. Prefix-cache benefit must be identified as such, not compared cold-vs-warm as an engine upgrade. No speculative optimisation or copied redundant runtime.",
+    "candidate_engine": "Still requiregenuineexclusivecustody andexistingverifiedreversibleowned-enginetransition/rollback pluscompatibleactualroute andnativeapproval. No inventingreservationAPI/localadvisorylockasgloballease, no automaticserviceunload/restart, no simultaneoustwofullmodelson16GB, no changingproviders/system/financialcontrols. Ifblocked, preservebaseline+CPUrepair andpreciseintegrationblocker; keepprofilingsource/officialmodelcompatibilityworkmoving. CandidateGPUrelaymustbeactualCUDA build, neverCPUfixture. Leave10minutes forrollback/checkpoint beforeownerdeadline.",
+    "route": "The candidate is real qwen35moe single-held-GGUF --model/--native dispatch; existing --pack serving route may differ. Trace actual resolver/heldcheckpoint instead of renaming a pack directory or pretending compatibility. If comparison blocked by route/exclusivecustody, perform safe existing-engine profile/tuning now and state the precise missing producer/transition. Do not idle on unavailable GPU candidate path.",
+    "quiet_and_overlap": "30seconds zeroactive/zeroqueue and counter unchanged before request; sequential bounded requests. Monitor before/during/after and discard runs with overlapping third-party activity or unexplained counter increments. An idle snapshot is not exclusive reservation; do not fake lease API or treat a private local lock as global. Other clients retain access."
   },
-  "baseline_and_profile": {
-    "existing_engine_only": "A read-only configuration/current-enginebaseline throughnormalexistingAPI DOES NOT require inventing anexclusivelease, sinceitdoesnotchangeinstalledengine/services. Requiregenuinecurrentroute/owner-nativepermission and30secondszeroactive/zeroqueue/unchangedcounter first. Then atmost5boundedrequests, sequential <=128outputtokens/<=90s each, existingactualcheckpoint/quant/context/settings; fixedprompt Explain how a CPU cache reduces memory access latency; identicalsupported seed42/temperature0 orrecordunsupported/defaults. Samplecurrentqueue/counter/processidentity before/during/after; discardoverlap/counterincrementsbeyondownrequests, neverblockotherclients. Labelthisendpointobservation notexclusivecontrolledcomparison; separatenativeprefill/decode fromclientTTFT/wall/cacheclass, donotinventunreportedmetrics. Record actualhardware/software; nohistoricalcachewarmversuscoldgainclaim.",
-    "candidate_comparison": "Still requiregenuineexclusivecustody andexistingverifiedreversibleowned-enginetransition/rollback pluscompatibleactualroute andnativeapproval. No inventingreservationAPI/localadvisorylockasgloballease, no automaticserviceunload/restart, no simultaneoustwofullmodelson16GB, no changingproviders/system/financialcontrols. Ifblocked, preservebaseline+CPUrepair andpreciseintegrationblocker; keepprofilingsource/officialmodelcompatibilityworkmoving. CandidateGPUrelaymustbeactualCUDA build, neverCPUfixture. Leave10minutes forrollback/checkpoint beforeownerdeadline."
-  },
-  "requested_models": {
-    "Ornith": "ornith-ai/Ornith-1.5-122B@7681ef608624e7532d8164128bcffdbdbaf1b1af; GGUF@8d5893d767c449a4f18dd08f4bb6d0d6d4426175",
-    "Sage": "InternScience/Sage-A1.5@6bc623eacb712d79d27c0913e4816ccd33d41b0a",
-    "policy": "Readretainedcards/configs/source only; noweightdownload/convert/load byassumption. Distinguishformat/architecture/quantcompatibility, explicitconfiguredcheckpointpolicycap, actualhostRAM/VRAM/expertstreamingrequirements andrealruntimeverification. Wholecheckpoint>RAMalone isnot universalproof unfit ifrealengine streams; do notwaiveactualpolicycap orassumestreamingworks. No speculativeperformance."
-  },
+  "cpu_wire_work": "Keep Task12 exact2 repair scope and unchanged nine-case test contract if a repair is essential. Preserve existing actual6PASS3FAIL and all unsuccessful runs. Correctness cannot be waived to get a faster result. Broader CPU cleanup/model compatibility inventory is next after the speed-focused window; requested Ornith/Sage context remains preserved in Task12.",
   "outputs": {
-    "destination": "Existingprivate task-ownedpatch/JSONreceipt/native thread; Rootcurrentlyreliesonowner-relaybecauseRPCunresponsive. No publicreceipt/code/prompt/hostpaths/credentials. OptionalpreviousGmailreturnremainsoptionalifgenuinelysupported; do notdelaycoreworkorcreateanotherauth/bridge.",
-    "fields": [
-      "actualACK/effectivedeadline/sourcepreimages",
-      "beforeafterminimalpatch/source/header/compiler/binary/testhashes",
-      "all9caseoutcomes+retained3oldfails",
-      "actualroute/modelcompatibilityandreasonedmismatch",
-      "actualbaseline/nativevsclientmetrics+cache/overlapclassorNOTRUN",
-      "exclusivecandidateblocker/rollbackandpreservedservices",
-      "nextconcretescopedimplementationstep"
+    "destination": "Existing private task-owned benchmark JSON/patch/native thread. No raw code, host paths, personal data, credentials or benchmark prompts published to public Git. Root raw RPC return currently unreliable; native thread concise checkpoint is useful, no new auth/inbox/channel. Old private Gmail challenge expired09:07UTC; do not reuse it.",
+    "required": [
+      "Task13 actual ACK and effective deadline",
+      "Exact hardware/model/quant/runtime/source/config/command identities",
+      "Raw baseline+tuned runs, warm/cache and overlap classification",
+      "Median/variability/native versus client timings; explicit sample counts and NOT RUN",
+      "Chosen bottleneck/knob and measured gain or no reliable gain",
+      "Rollback/config restoration and preserved services; next executable improvement"
     ]
   },
   "delivery_contract": {
     "updates": "Fixedexistingrepo/ref descendanttasks, correctsequence/source/duplicate guards, boundedwatch<=60schecks. Task11checkpointacknowledgedperownerrelay; nativeindependentlyvalidatesownreceipt.",
     "stop": "Stop10:00UTC/11BST23Oct or earlierrevocation/nativeStop; safelycheckpointownedtasks/observations. No yesterdayTask8/9shutdownreplay.",
     "forbidden": "No unrelatedwrites/processinterrupts, SDK/donorbuild/download,newdaemon/auth/shellpayload, driver/firmware/clocks/power/security/provider/financialchange, unreviewedmerge/publiccode/evidence, madeupworker/hardware/speedgain."
+  },
+  "next_testing_window": {
+    "source": "LatestownerRootmessage23Oct2026",
+    "quote": "next testing window after 11am: roughly 5pm-10pm tonight",
+    "date": "2026-10-23",
+    "timezone": "Europe/London",
+    "approximate_start": "2026-10-23T17:00:00+01:00",
+    "latest_end": "2026-10-23T22:00:00+01:00",
+    "UTC_start": "2026-10-23T16:00:00Z",
+    "UTC_end": "2026-10-23T21:00:00Z",
+    "limits": "CurrentTask13 STILL expires10UTC/11BST. Safelycheckpoint then no desktop work in gap. Eveningstart approximate: reverify actual owner-authorised access then fresh scoped task; no autonomous wake/newwatch/rebootpersistence or shutdown inferred. Earlierrevocationwins."
   }
 }
