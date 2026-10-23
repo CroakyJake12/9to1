@@ -421,7 +421,13 @@ public sealed partial class App : Avalonia.Application
             catch (Exception cause) { admissionFailure ??= cause; }
         }
         if (admissionFailure is not null)
+        {
+            // Keep genuine faulted sources (including OCE) faulted, with all
+            // privately retained siblings. Only a raw cooperative cancellation
+            // has no retained fault and reaches the original cancellation throw.
+            original.ThrowRetained();
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(admissionFailure).Throw();
+        }
         return actual is not null;
     }
 
