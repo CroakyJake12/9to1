@@ -230,7 +230,13 @@ public sealed partial class CanvasHostSurface : ContentControl
     private static IEnumerable<Control> AuthoredTree(Control root)
     {
         yield return root;
-        var children = root is CuiContainerControl container ? container.AuthoredChildren : root.GetVisualChildren().OfType<Control>();
+        // Embedded content initializes before attachment creates native visual presenters.
+        IEnumerable<Control> children = root switch
+        {
+            CuiContainerControl container => container.AuthoredChildren,
+            ContentControl { Content: Control content } => [content],
+            _ => root.GetVisualChildren().OfType<Control>()
+        };
         foreach (var child in children)
             foreach (var descendant in AuthoredTree(child)) yield return descendant;
     }
