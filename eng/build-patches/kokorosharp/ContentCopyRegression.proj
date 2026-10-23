@@ -1,0 +1,25 @@
+<Project DefaultTargets="Build">
+  <!-- Root-owned affected-target regression only: no SDK project, restore, product compilation or alternate app host. -->
+  <Import Project="$(KokoroTargets)" />
+  <Target Name="Build" />
+  <Target Name="RejectDuplicate">
+    <ItemGroup><Probe Include="$(FixtureContent)/a.bin;$(FixtureContent)/a.bin" /></ItemGroup>
+    <NineToOneKokoroHashGate Phase="Validate" SourceRoot="$(FixtureContent)" OutputRoot="$(OutputPath)" SourceFiles="@(Probe)" />
+  </Target>
+  <Target Name="RejectEscape">
+    <ItemGroup><Probe Include="$(FixtureOutside)" /></ItemGroup>
+    <NineToOneKokoroHashGate Phase="Validate" SourceRoot="$(FixtureContent)" OutputRoot="$(OutputPath)" SourceFiles="@(Probe)" />
+  </Target>
+  <Target Name="RejectMutation">
+    <ItemGroup><Probe Include="$(FixtureContent)/a.bin" /></ItemGroup>
+    <NineToOneKokoroHashGate Phase="Validate" SourceRoot="$(FixtureContent)" OutputRoot="$(OutputPath)" SourceFiles="@(Probe)">
+      <Output TaskParameter="ValidatedSources" ItemName="ValidatedProbe" />
+      <Output TaskParameter="AllDestinations" ItemName="ProbeDestinations" />
+    </NineToOneKokoroHashGate>
+    <GetFileHash Files="@(ValidatedProbe)" Algorithm="SHA256" HashEncoding="hex" MetadataName="KokoroSha256"><Output TaskParameter="Items" ItemName="Before" /></GetFileHash>
+    <WriteLinesToFile File="$(FixtureContent)/a.bin" Lines="BRAV" Overwrite="true" />
+    <GetFileHash Files="@(ValidatedProbe)" Algorithm="SHA256" HashEncoding="hex" MetadataName="KokoroSha256"><Output TaskParameter="Items" ItemName="After" /></GetFileHash>
+    <GetFileHash Files="@(ProbeDestinations)" Algorithm="SHA256" HashEncoding="hex" MetadataName="KokoroSha256"><Output TaskParameter="Items" ItemName="Destination" /></GetFileHash>
+    <NineToOneKokoroHashGate Phase="Verify" SourceRoot="$(FixtureContent)" OutputRoot="$(OutputPath)" SourceFiles="@(Before)" SourcePostHashes="@(After)" DestinationHashes="@(Destination)" />
+  </Target>
+</Project>

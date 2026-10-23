@@ -1,0 +1,163 @@
+--- a/buildTransitive/KokoroSharp.targets
++++ b/buildTransitive/KokoroSharp.targets
+@@ -1,8 +1,154 @@
+ <Project>
+-    <Target Name="CopyContent" AfterTargets="Build">
+-        <ItemGroup>
+-            <Files Include="$(MSBuildThisFileDirectory)..\content\**\*" />
+-        </ItemGroup>
+-        <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(OutputPath)\%(RecursiveDir)%(Filename)%(Extension)')" />
+-    </Target>
++  <!-- Pinned KokoroSharp 0.6.7 donor adjustment. Keep Build, every content asset and its paths.
++       Admitted source/package and output roots must remain exclusively owned during Build.
++       This detects persistent changes; it is not a transaction against concurrent writers.
++       Source removal intentionally retains old output files, matching the original non-deleting Copy. -->
++  <UsingTask TaskName="NineToOneKokoroHashGate" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
++    <ParameterGroup>
++      <Phase ParameterType="System.String" Required="true" />
++      <SourceRoot ParameterType="System.String" Required="true" />
++      <OutputRoot ParameterType="System.String" Required="true" />
++      <SourceFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
++      <DestinationHashes ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
++      <SourcePostHashes ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
++      <ValidatedSources ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
++      <AllDestinations ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
++      <ExistingDestinations ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
++      <ChangedSources ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
++      <ChangedDestinations ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
++    </ParameterGroup>
++    <Task>
++      <Using Namespace="System" /><Using Namespace="System.IO" />
++      <Using Namespace="System.Linq" /><Using Namespace="System.Collections.Generic" />
++      <Using Namespace="Microsoft.Build.Framework" /><Using Namespace="Microsoft.Build.Utilities" />
++      <Code Type="Fragment" Language="cs"><![CDATA[
++var empty = new ITaskItem[0];
++ValidatedSources = AllDestinations = ExistingDestinations = ChangedSources = ChangedDestinations = empty;
++try
++{
++    var comparer = Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
++    var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
++    string Full(string value) => Path.GetFullPath(value);
++    string Root(string value) => Full(value).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
++    void CheckPath(string path, bool requiredFile)
++    {
++        bool leaf = true;
++        for (var cursor = Full(path); !String.IsNullOrEmpty(cursor); cursor = Path.GetDirectoryName(cursor))
++        {
++            try
++            {
++                var attributes = File.GetAttributes(cursor);
++                if ((attributes & (FileAttributes.ReparsePoint | FileAttributes.Device)) != 0)
++                    throw new IOException("Kokoro copy refuses link/device path: " + cursor);
++                if (leaf && requiredFile && (attributes & FileAttributes.Directory) != 0)
++                    throw new IOException("Kokoro source/destination is a directory: " + cursor);
++            }
++            catch (FileNotFoundException) { if (leaf && requiredFile) throw; }
++            catch (DirectoryNotFoundException) { if (leaf && requiredFile) throw; }
++            leaf = false;
++        }
++    }
++    string Digest(ITaskItem item)
++    {
++        var value = item.GetMetadata("KokoroSha256");
++        if (value.Length != 64 || value.Any(ch => !Uri.IsHexDigit(ch)))
++            throw new IOException("Missing/invalid SHA256 from GetFileHash: " + item.ItemSpec);
++        return value.ToUpperInvariant();
++    }
++    var sourceRoot = Root(SourceRoot); var outputRoot = Root(OutputRoot);
++    if (!Directory.Exists(sourceRoot)) throw new DirectoryNotFoundException(sourceRoot);
++    CheckPath(sourceRoot, false); CheckPath(outputRoot, false);
++    if (sourceRoot.StartsWith(outputRoot, comparison) || outputRoot.StartsWith(sourceRoot, comparison))
++        throw new IOException("Kokoro source/output roots must not alias or overlap.");
++    var sources = new List<ITaskItem>(); var destinations = new List<ITaskItem>();
++    var existing = new List<ITaskItem>(); var expected = new Dictionary<string, ITaskItem>(comparer);
++    foreach (var source in SourceFiles)
++    {
++        var full = Full(source.ItemSpec);
++        if (!full.StartsWith(sourceRoot, comparison)) throw new IOException("Kokoro source escapes its admitted root: " + full);
++        CheckPath(full, true);
++        var destination = Full(Path.Combine(outputRoot, full.Substring(sourceRoot.Length)));
++        if (!destination.StartsWith(outputRoot, comparison) || comparer.Equals(full, destination))
++            throw new IOException("Kokoro destination escapes or aliases source: " + destination);
++        CheckPath(destination, File.Exists(destination) || Directory.Exists(destination));
++        if (expected.ContainsKey(destination)) throw new IOException("Duplicate Kokoro destination: " + destination);
++        var admitted = new TaskItem(source);
++        if (Phase == "Validate") admitted.SetMetadata("KokoroLength", new FileInfo(full).Length.ToString(System.Globalization.CultureInfo.InvariantCulture));
++        sources.Add(admitted); expected.Add(destination, admitted);
++        var output = new TaskItem(destination); destinations.Add(output);
++        if (File.Exists(destination))
++        {
++            var found = new TaskItem(destination);
++            found.SetMetadata("KokoroLength", new FileInfo(destination).Length.ToString(System.Globalization.CultureInfo.InvariantCulture));
++            existing.Add(found);
++        }
++    }
++    if (sources.Count == 0) throw new IOException("Kokoro content inventory is empty or missing.");
++    ValidatedSources = sources.ToArray(); AllDestinations = destinations.ToArray(); ExistingDestinations = existing.ToArray();
++    if (Phase != "Validate")
++    {
++        if (Phase != "Select" && Phase != "Verify") throw new IOException("Unknown Kokoro hash phase.");
++        var hashes = new Dictionary<string, ITaskItem>(comparer);
++        foreach (var item in DestinationHashes ?? empty)
++        {
++            var key = Full(item.ItemSpec);
++            if (!expected.ContainsKey(key) || hashes.ContainsKey(key)) throw new IOException("Unexpected/duplicate destination hash: " + key);
++            Digest(item); hashes.Add(key, item);
++        }
++        var currentSources = new Dictionary<string, ITaskItem>(comparer);
++        foreach (var item in SourcePostHashes ?? empty)
++        {
++            var key = Full(item.ItemSpec);
++            if (currentSources.ContainsKey(key)) throw new IOException("Duplicate source posthash: " + key);
++            Digest(item); currentSources.Add(key, item);
++        }
++        var changedSources = new List<ITaskItem>(); var changedDestinations = new List<ITaskItem>();
++        foreach (var pair in expected)
++        {
++            var original = pair.Value; var digest = Digest(original);
++            var length = Int64.Parse(original.GetMetadata("KokoroLength"), System.Globalization.CultureInfo.InvariantCulture);
++            if (new FileInfo(original.ItemSpec).Length != length) throw new IOException("Kokoro source length changed during Build: " + original.ItemSpec);
++            ITaskItem destination;
++            bool matches = hashes.TryGetValue(pair.Key, out destination) && Digest(destination) == digest && new FileInfo(pair.Key).Length == length;
++            if (Phase == "Verify")
++            {
++                ITaskItem current;
++                if (!currentSources.TryGetValue(Full(original.ItemSpec), out current) || Digest(current) != digest || !matches)
++                    throw new IOException("Kokoro copy/posthash failed or source changed during Build: " + original.ItemSpec);
++            }
++            else if (!matches) { changedSources.Add(original); changedDestinations.Add(new TaskItem(pair.Key)); }
++        }
++        if (Phase == "Verify" && currentSources.Count != sources.Count) throw new IOException("Unexpected/missing source posthash.");
++        ChangedSources = changedSources.ToArray(); ChangedDestinations = changedDestinations.ToArray();
++    }
++    Log.LogMessage(MessageImportance.High, "KOKORO_HASH_GATE phase={0} candidates={1} assets={2}", Phase, ChangedSources.Length, sources.Count);
++}
++catch (Exception error) { Log.LogErrorFromException(error, true); return false; }
++      ]]></Code>
++    </Task>
++  </UsingTask>
++  <Target Name="CopyContent" AfterTargets="Build">
++    <PropertyGroup>
++      <_KokoroSourceRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)../content'))</_KokoroSourceRoot>
++      <_KokoroOutputRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(OutputPath)'))</_KokoroOutputRoot>
++    </PropertyGroup>
++    <ItemGroup>
++      <_KokoroContent Include="$(MSBuildThisFileDirectory)..\content\**\*" />
++    </ItemGroup>
++    <NineToOneKokoroHashGate Phase="Validate" SourceRoot="$(_KokoroSourceRoot)" OutputRoot="$(_KokoroOutputRoot)" SourceFiles="@(_KokoroContent)">
++      <Output TaskParameter="ValidatedSources" ItemName="_KokoroValidated" />
++      <Output TaskParameter="AllDestinations" ItemName="_KokoroDestinations" />
++      <Output TaskParameter="ExistingDestinations" ItemName="_KokoroExisting" />
++    </NineToOneKokoroHashGate>
++    <GetFileHash Files="@(_KokoroValidated)" Algorithm="SHA256" HashEncoding="hex" MetadataName="KokoroSha256"><Output TaskParameter="Items" ItemName="_KokoroSourceHashes" /></GetFileHash>
++    <GetFileHash Files="@(_KokoroExisting)" Algorithm="SHA256" HashEncoding="hex" MetadataName="KokoroSha256" Condition="'@(_KokoroExisting)' != ''"><Output TaskParameter="Items" ItemName="_KokoroDestinationHashes" /></GetFileHash>
++    <NineToOneKokoroHashGate Phase="Select" SourceRoot="$(_KokoroSourceRoot)" OutputRoot="$(_KokoroOutputRoot)" SourceFiles="@(_KokoroSourceHashes)" DestinationHashes="@(_KokoroDestinationHashes)">
++      <Output TaskParameter="ChangedSources" ItemName="_KokoroChangedSources" />
++      <Output TaskParameter="ChangedDestinations" ItemName="_KokoroChangedDestinations" />
++    </NineToOneKokoroHashGate>
++    <Copy SourceFiles="@(_KokoroChangedSources)" DestinationFiles="@(_KokoroChangedDestinations)" SkipUnchangedFiles="false" UseHardlinksIfPossible="false" UseSymboliclinksIfPossible="false" Condition="'@(_KokoroChangedSources)' != ''" />
++    <GetFileHash Files="@(_KokoroValidated)" Algorithm="SHA256" HashEncoding="hex" MetadataName="KokoroSha256"><Output TaskParameter="Items" ItemName="_KokoroSourcePostHashes" /></GetFileHash>
++    <GetFileHash Files="@(_KokoroDestinations)" Algorithm="SHA256" HashEncoding="hex" MetadataName="KokoroSha256"><Output TaskParameter="Items" ItemName="_KokoroDestinationPostHashes" /></GetFileHash>
++    <NineToOneKokoroHashGate Phase="Verify" SourceRoot="$(_KokoroSourceRoot)" OutputRoot="$(_KokoroOutputRoot)" SourceFiles="@(_KokoroSourceHashes)" SourcePostHashes="@(_KokoroSourcePostHashes)" DestinationHashes="@(_KokoroDestinationPostHashes)" />
++  </Target>
+ </Project>
