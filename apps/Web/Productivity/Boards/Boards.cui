@@ -36,7 +36,7 @@
           <If condition="{Binding StorageSourceBusy}">
             <Text id="boards-storage-busy" text="Checking your library or waiting for its Home review…" text-wrapping="Wrap" AccessibleName="Library operation in progress" />
           </If>
-          <If condition="!{Binding StorageSourceBusy}">
+          <Container id="boards-storage-actions" Type="Vertical Stack" Active="{Binding StorageSourceIdle}" Interactive="{Binding StorageSourceIdle}">
             <If condition="{Binding BoardsStoreResult.Succeeded}">
               <Text id="boards-storage-status" text="{Binding BoardsStoreResult.Value.Message}" text-wrapping="Wrap" />
             </If>
@@ -68,7 +68,7 @@
             </If>
             <Text text="{Binding BoardsOpenResult.Message}" text-wrapping="Wrap" />
             <Button id="boards-storage-inspect" content="Check library again" action="InspectBoardsLibrary" horizontal-alignment="Left" />
-          </If>
+          </Container>
         </Container>
       </If>
       <If condition="{Binding BoardsWorkspaceVisible}">
