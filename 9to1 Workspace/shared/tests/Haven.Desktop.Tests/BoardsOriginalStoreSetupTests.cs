@@ -459,9 +459,40 @@ public sealed class BoardsOriginalStoreSetupTests
         }
         internal async Task DecideAsync(string requestId, string button)
         {
-            await Approvals.OpenOriginalAsync(requestId, Token);
-            var window = Approvals.OriginalWindow ?? throw new InvalidOperationException("Actual Home review window unavailable.");
-            Click(window, button);
+            // The operation owns presentation/observation. A fixture-created second Open can
+            // race its pending Focus with our decision and make that exact request unreviewable.
+            while (true)
+            {
+                Token.ThrowIfCancellationRequested();
+                await Dispatcher.UIThread.InvokeAsync(() => Approvals.OriginalWindow?.UpdateLayout(), DispatcherPriority.Background, Token);
+                if (Approvals.OriginalWindow is not { IsVisible: true } window || Approvals.OriginalSurface is not { } surface ||
+                    !ReferenceEquals(window.Content, surface)) continue;
+                // Read only the real producer's displayed request and already-attached original
+                // decision receipt. These observations do not open/focus, decide or grant anything.
+                const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+                var displayed = typeof(HomeApprovalCuiSurface).GetProperty("CurrentRequest", flags)!.GetValue(surface) as HomePermissionRequest;
+                if (displayed is null || displayed.RequestId != requestId) continue;
+                var waits = Assert.IsAssignableFrom<System.Collections.IEnumerable>(typeof(HomeApprovalCuiSurface)
+                    .GetField("_decisionWaits", flags)!.GetValue(surface));
+                var originals = new List<Task<HomeNativeApprovalDecisionObservation>>();
+                foreach (var wait in waits)
+                {
+                    var type = wait.GetType();
+                    if (!StringComparer.Ordinal.Equals(type.GetProperty("RequestId", flags)!.GetValue(wait) as string, requestId)) continue;
+                    var actual = Assert.IsAssignableFrom<Task<HomeNativeApprovalDecisionObservation>>(type.GetField("Original", flags)!.GetValue(wait));
+                    if (!actual.IsCompleted) originals.Add(actual);
+                }
+                if (originals.Count == 0) continue;
+                Assert.Equal(HomePermissionRequestState.PendingApproval, displayed.State);
+                Click(window, button);
+                var settlement = Task.WhenAll(originals);
+                HomeNativeApprovalDecisionObservation[] observations;
+                try { observations = await settlement.WaitAsync(Token); }
+                catch (Exception) when (settlement.IsFaulted) { throw settlement.Exception!; }
+                Assert.All(observations, observation =>
+                { Assert.Equal(requestId, observation.RequestId); Assert.True(observation.DecisionRecorded); });
+                return;
+            }
         }
         public async ValueTask DisposeAsync()
         {
