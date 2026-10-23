@@ -355,13 +355,22 @@ def metadata_requirements(path: Path, lock: dict, root_manifest: Path) -> dict:
             name, required = spec["name"], numeric_version(spec["version"])
             if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_.+-]+", name):
                 raise ValueError("Unsupported native pkg-config module name")
+            selector = spec.get("feature")
+            if "feature" in spec and (not isinstance(selector, str)
+                                      or not re.fullmatch(r"[A-Za-z0-9_.+-]+", selector)):
+                raise ValueError(f"Unsupported system-deps feature selector: {key}")
             for feature, value in spec.items():
-                if feature in ("name", "version", "optional"):
+                if feature in ("name", "version", "optional", "feature"):
                     continue
                 if not isinstance(value, dict) or set(value) != {"version"}:
                     raise ValueError(f"Unsupported feature-conditioned system-deps declaration: {key}/{feature}")
                 if feature in features[package["id"]]:
                     required = max(required, numeric_version(value["version"]))
+            # system-deps 7.0.8 gates the entire module on this Cargo feature.
+            # Validate every declaration above even when its selector is inactive.
+            enabled = {feature.upper().replace("-", "_") for feature in features[package["id"]]}
+            if selector is not None and selector.upper().replace("-", "_") not in enabled:
+                continue
             # Requiring optional declared modules is conservative: it cannot
             # approve a missing library due to unmodelled build-script toggles.
             native[name] = max(native.get(name, (0, 0, 0)), required)

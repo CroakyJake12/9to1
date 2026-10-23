@@ -301,6 +301,124 @@ class BuildPreflightTests(unittest.TestCase):
                 patch.object(check, "observe", side_effect=native or self.native_observation):
             return check.build_preflight(self.args)
 
+    def cairo_feature_fixture(self, features):
+        # cairo-sys-rs 0.21.5's real system-deps declarations from failed CI
+        # run39984463251. Only the surrounding package identity is synthetic.
+        manifest = Path(self.metadata["packages"][1]["manifest_path"])
+        manifest.write_text(manifest.read_text() + '''
+[package.metadata.system-deps.cairo]
+name="cairo"
+version="1.14"
+[package.metadata.system-deps.cairo.v1_16]
+version="1.16"
+[package.metadata.system-deps.cairo.v1_18]
+version="1.18"
+[package.metadata.system-deps.cairo-gobject]
+name="cairo-gobject"
+version="1.14"
+feature="use_glib"
+[package.metadata.system-deps.cairo-gobject.v1_16]
+version="1.16"
+[package.metadata.system-deps.cairo-gobject.v1_18]
+version="1.18"
+''')
+        self.metadata["resolve"]["nodes"][1]["features"] = features
+        self.write_metadata()
+        return manifest
+
+    def test_actual_cairo_scalar_selector_observes_all_manifests_and_highest_floor(self):
+        self.cairo_feature_fixture(["use_glib", "v1_16", "v1_18"])
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        observed = report["declared_requirements"]
+        self.assertEqual((1, 18, 0), observed["native_requirements"]["cairo-gobject"])
+        self.assertEqual((1, 18, 0), observed["native_requirements"]["cairo"])
+        self.assertEqual(3, observed["locked_packages"])
+        self.assertEqual(3, len(observed["package_manifests"]))
+        self.assertFalse(report["release_ready"])
+        self.assertTrue(report["release_blockers"])
+
+    def test_selected_scalar_feature_cannot_hide_insufficient_native_version(self):
+        self.cairo_feature_fixture(["use_glib", "v1_18"])
+
+        def old_gobject(command):
+            result = self.native_observation(command)
+            if command[-1] == "cairo-gobject":
+                result["stdout"] = "1.16.0\n"
+            return result
+
+        report, code = self.run_preflight(native=old_gobject)
+        self.assertEqual(1, code)
+        self.assertEqual((1, 18, 0), report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+        self.assertTrue(any("Native module cairo-gobject" in blocker for blocker in report["blockers"]))
+
+    def test_unselected_scalar_feature_omits_only_its_module_requirement(self):
+        self.cairo_feature_fixture(["v1_18"])
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        observed = report["declared_requirements"]
+        self.assertNotIn("cairo-gobject", observed["native_requirements"])
+        self.assertEqual((1, 18, 0), observed["native_requirements"]["cairo"])
+        self.assertEqual(3, len(observed["package_manifests"]))
+
+    def test_absent_scalar_selector_keeps_unconditional_native_requirement(self):
+        manifest = self.cairo_feature_fixture(["v1_18"])
+        manifest.write_text(manifest.read_text().replace('feature="use_glib"\n', ''))
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        self.assertEqual((1, 18, 0), report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+
+    def test_scalar_selector_uses_cargo_feature_environment_normalization(self):
+        # system-deps 7.0.8 has_feature uppercases and maps '-' to '_'.
+        self.cairo_feature_fixture(["use-glib", "v1_18"])
+        report, code = self.run_preflight()
+        self.assertEqual(0, code, report["blockers"])
+        self.assertEqual((1, 18, 0), report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+
+    def test_malformed_scalar_selectors_refuse_even_without_selected_features(self):
+        manifest = self.cairo_feature_fixture([])
+        original = manifest.read_text()
+        for value in ('true', '42', '[]', '{version="1.18"}', '""', '"use glib"'):
+            with self.subTest(selector=value):
+                manifest.write_text(original.replace('feature="use_glib"', 'feature=' + value))
+                report, code = self.run_preflight()
+                self.assertEqual(1, code)
+                self.assertTrue(any("Unsupported system-deps feature selector" in blocker for blocker in report["blockers"]))
+
+    def test_unselected_scalar_selector_still_rejects_unknown_spec_shapes(self):
+        manifest = self.cairo_feature_fixture([])
+        original = manifest.read_text()
+        for change in ('feature="use_glib"\ncfg="unmodelled"',
+                       'feature="use_glib"\nv1_20={version="1.20",name="other"}'):
+            with self.subTest(change=change):
+                manifest.write_text(original.replace('feature="use_glib"', change))
+                report, code = self.run_preflight()
+                self.assertEqual(1, code)
+                self.assertTrue(any("Unsupported feature-conditioned" in blocker for blocker in report["blockers"]))
+
+    def test_unselected_scalar_selector_still_checks_other_package_msrv(self):
+        self.cairo_feature_fixture([])
+        package = self.metadata["packages"][2]
+        manifest = Path(package["manifest_path"])
+        manifest.write_text(manifest.read_text().replace('"1.89"', '"1.93"'))
+        package["rust_version"] = "1.93"
+        self.write_metadata()
+        report, code = self.run_preflight()
+        self.assertEqual(1, code)
+        self.assertIn("Locked dependency declares a Rust requirement above the selected toolchain", report["blockers"])
+        self.assertEqual(3, len(report["declared_requirements"]["package_manifests"]))
+
+    def test_selected_scalar_feature_retains_base_and_intermediate_version_floors(self):
+        self.cairo_feature_fixture(["use_glib"])
+        for selected, floor in ((["use_glib"], (1, 14, 0)),
+                                (["use_glib", "v1_16"], (1, 16, 0))):
+            with self.subTest(features=selected):
+                self.metadata["resolve"]["nodes"][1]["features"] = selected
+                self.write_metadata()
+                report, code = self.run_preflight()
+                self.assertEqual(0, code, report["blockers"])
+                self.assertEqual(floor, report["declared_requirements"]["native_requirements"]["cairo-gobject"])
+
     def test_complete_manifest_observations_allow_engine_check_but_do_not_qualify_release(self):
         report, code = self.run_preflight()
         self.assertEqual(0, code)
