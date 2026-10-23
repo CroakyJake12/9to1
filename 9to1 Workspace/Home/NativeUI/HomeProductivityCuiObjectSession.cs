@@ -26,6 +26,14 @@ public sealed class HomeProductivityCuiObjectSession : IDisposable
     private bool _disposed;
     public Control View => _root ?? throw new ObjectDisposedException(nameof(HomeProductivityCuiObjectSession));
     public Guid ObjectId { get; }
+    public long RasterByteCount { get; }
+    /// <summary>The SAME bitmap already bound by Home's emitted CUI. The mounting owner may borrow it
+    /// for ordered scene composition only while this session is alive; it must never dispose or mutate it.</summary>
+    public IImage BorrowRasterImage()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        return _bitmap ?? throw new ObjectDisposedException(nameof(HomeProductivityCuiObjectSession));
+    }
     public IReadOnlyList<string> RetainedUnsupportedProperties { get; }
 
     public HomeProductivityCuiObjectSession(HomeProductivityObjectRenderResult rendered, Guid expectedObjectId)
@@ -46,7 +54,7 @@ public sealed class HomeProductivityCuiObjectSession : IDisposable
         var pixels = frame.CopyPixels();
         if (pixels.LongLength != (long)frame.Stride * frame.Height)
             throw new InvalidDataException("The Home raster is not a complete premultiplied BGRA frame.");
-        ObjectId = expectedObjectId;
+        ObjectId = expectedObjectId; RasterByteCount = pixels.LongLength;
         RetainedUnsupportedProperties = Array.AsReadOnly(rendered.RetainedUnsupportedProperties.ToArray());
         try
         {

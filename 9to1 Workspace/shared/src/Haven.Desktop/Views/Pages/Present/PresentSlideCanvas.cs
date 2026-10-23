@@ -20,6 +20,8 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
     internal double? ManualScale { get; set; }
     internal bool ShowEditorFrame { get; init; } = true;
     internal HavenRect PaperBounds => SlideRectLocal();
+    // Prepared resource lookup only. Home/Rnote rendering and all ownership checks happen before paint.
+    internal Func<PresentDocument, PresentElement, string?>? SharedObjectImageSource { get; set; }
     public double ViewScale
     {
         get => _viewScale;
@@ -295,6 +297,14 @@ internal sealed partial class PresentSlideCanvas : HavenElement, IHavenDrawComma
             case PresentElementKind.GenUi:
                 context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("SurfaceRaised"), 8, opacity * element.Opacity)); context.Add(new HavenStrokeRoundedRectCommand(rect, new HavenPen(new HavenTokenBrush("Accent"), 1.5), 8, opacity));
                 context.Add(new HavenTextCommand(rect, new HavenTextLayout("GenUI · " + (string.IsNullOrWhiteSpace(element.AlternativeText) ? "interactive object" : element.AlternativeText), "Segoe UI", 13, 600, rect.Width, true), new HavenTokenBrush("TextPrimary"), opacity));
+                break;
+            case PresentElementKind.SharedObject:
+                var source = _document is not null ? SharedObjectImageSource?.Invoke(_document, element) : null;
+                if (source is not null)
+                    context.Add(new HavenImageCommand(rect, new HavenImage(source), HavenImageLayout.Contain, opacity * element.Opacity));
+                else
+                    context.Add(new HavenTextCommand(rect, new HavenTextLayout("Shared drawing unavailable", "Segoe UI", 13, 500, rect.Width, true),
+                        new HavenTokenBrush("TextSecondary"), opacity * element.Opacity));
                 break;
             case PresentElementKind.Media:
                 context.Add(new HavenFillRoundedRectCommand(rect, new HavenTokenBrush("SurfaceRaised"), 8, opacity * element.Opacity)); context.Add(new HavenTextCommand(rect, new HavenTextLayout("Media", "Segoe UI", 14, 600, rect.Width, true), new HavenTokenBrush("TextSecondary"), opacity));

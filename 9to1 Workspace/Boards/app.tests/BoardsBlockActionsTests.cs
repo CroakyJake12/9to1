@@ -1,0 +1,191 @@
+using System.Text.Json;
+using CakeOS.Apps.Boards.Contract;
+using Xunit;
+
+namespace CakeOS.Apps.Boards.App.Tests;
+
+[Collection(BoardSessionTestCollection.Name)]
+public sealed class BoardsBlockActionsTests
+{
+    [Fact]
+    public async Task Canonical_commands_move_duplicate_delete_with_same_history_and_save_reopen()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-block-actions-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var path = Path.Combine(root, "owner.9to1board");
+            using var store = new JsonFileHavenBoardStore(root); await SeedAsync(store, path);
+            string copiedId;
+            var documentId = (await store.LoadDocumentAtPathAsync(path))!.DocumentId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var vm = new BoardsViewModel(adapter); vm.FocusBlock("block-b");
+                var original = adapter.Snapshot; Assert.False(adapter.CanUndo);
+                Assert.True(Flag(vm, "CanMoveBlockUp")); Assert.True(Flag(vm, "CanMoveBlockDown"));
+                await vm.DispatchAsync("BlockMoveUp", null);
+                Assert.Equal(new[] { "block-b", "block-a", "block-c" }, Blocks(adapter).Select(block => block.Id));
+                Assert.Equal("block-b", vm.SelectedBlockId); Assert.False(Flag(vm, "CanMoveBlockUp"));
+                Assert.True(await adapter.UndoAsync()); Assert.Equal(original, adapter.Snapshot); Assert.False(adapter.CanUndo);
+                vm.RefreshAfterEdit();
+                await vm.DispatchAsync("BlockMoveDown", null);
+                Assert.Equal(new[] { "block-a", "block-c", "block-b" }, Blocks(adapter).Select(block => block.Id));
+                Assert.False(Flag(vm, "CanMoveBlockDown"));
+                Assert.True(await adapter.UndoAsync()); Assert.Equal(original, adapter.Snapshot); Assert.False(adapter.CanUndo);
+                vm.RefreshAfterEdit();
+                await vm.DispatchAsync("BlockDuplicate", null);
+                copiedId = vm.SelectedBlockId;
+                Assert.NotEqual("block-b", copiedId);
+                Assert.Equal(new[] { "block-a", "block-b", copiedId, "block-c" }, Blocks(adapter).Select(block => block.Id));
+                Assert.Equal("AlphaBeta", Blocks(adapter)[2].Text);
+                Assert.Equal(new[] { false, false, false, false, false, true, true, true, true },
+                    Blocks(adapter)[2].Runs.SelectMany(run => Enumerable.Repeat(run.Bold, run.Text.Length)));
+                Assert.True(await adapter.UndoAsync()); Assert.Equal(original, adapter.Snapshot); Assert.False(adapter.CanUndo);
+                Assert.True(await adapter.RedoAsync());
+                vm.RefreshAfterEdit(); vm.FocusBlock("block-a");
+                await vm.DispatchAsync("BlockDelete", null);
+                Assert.Equal(new[] { "block-b", copiedId, "block-c" }, Blocks(adapter).Select(block => block.Id));
+                Assert.Equal("block-b", vm.SelectedBlockId);
+                await vm.DispatchAsync("SaveBoard", null);
+            }
+            await using (var fresh = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                Assert.Equal(new[] { "block-b", copiedId, "block-c" }, Blocks(fresh).Select(block => block.Id));
+                Assert.Equal("AlphaBeta", Blocks(fresh)[1].Text);
+                Assert.Equal(HavenRichBaseline.Superscript, Blocks(fresh)[1].Runs[1].Baseline);
+                Assert.Equal("Georgia", Blocks(fresh)[1].Runs[1].FontFamily);
+                Assert.Equal(documentId, (await store.LoadDocumentAtPathAsync(path))!.DocumentId);
+            }
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
+    public async Task Duplication_preserves_full_contract_payload_and_refreshes_only_owned_nested_identities()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-block-payload-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var path = Path.Combine(root, "payload.9to1board");
+            await using (var owner = await RichBoardSession.CreateNewAsync(store, "Payload owner"))
+            {
+                await owner.MutateAsync(rich =>
+                {
+                    var page = rich.Sections.Single().Pages.Single(); page.Blocks.Clear();
+                    var block = HavenRichBlock.Paragraph("original payload"); block.Id = "block-payload";
+                    block.StyleId = "quote"; block.Alignment = HavenRichAlignment.Right; block.LineSpacing = 1.7;
+                    block.SpaceBefore = 12; block.SpaceAfter = 9; block.IndentLevel = 2;
+                    block.Runs = [new() { Text = block.PlainText, Bold = true, Italic = true, Underline = true,
+                        StrikeThrough = true, Baseline = HavenRichBaseline.Subscript, FontFamily = "Georgia", FontSize = 19,
+                        Foreground = "#FF112233", Background = "#FF445566" }];
+                    // Optional contract fields are preserved even when the working
+                    // projection for this block kind does not expose their UI.
+                    block.Items = [new() { Id = "item-original", Text = "keep item", Checked = true, Level = 2, Underline = true }];
+                    block.Table = HavenRichTable.Create(1, 1); block.Table.Rows[0].Cells[0].Text = "keep cell";
+                    block.Table.Rows[0].Cells[0].Runs = [new() { Text = "keep cell", Bold = true }];
+                    block.Table.Background = "#FF112233"; block.Table.ColumnWidths = [140]; block.Table.RowHeights = [42];
+                    block.Image = new() { Id = "img-original", DisplayName = "original image", MediaType = "image/png",
+                        DataBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII=",
+                        LocalReference = "sidecar:abc123", Width = 320, AltText = "preserved alt" };
+                    block.Graph = new() { Expressions = [new() { Id = "expr-original", Text = "x*x", Color = "#FF334455" }],
+                        Points = [new() { X = 3, Y = 9, Label = "preserved point" }], XLabel = "original x" };
+                    block.Attachment = new() { Id = "att-original", DisplayName = "original.bin", MediaType = "application/octet-stream",
+                        DataBase64 = Convert.ToBase64String(Enumerable.Repeat((byte)42, 123).ToArray()),
+                        LocalReference = "sidecar:def456", SizeBytes = 123 };
+                    page.Blocks.Add(block);
+                });
+                var original = JsonSerializer.Serialize(owner.Rich.Sections.Single().Pages.Single().Blocks.Single());
+                var pageId = owner.Rich.Sections.Single().Pages.Single().Id;
+                string? copiedId = null;
+                await owner.MutateAsync(rich => copiedId = HavenRichNotesOps.DuplicateBlock(rich, pageId, "block-payload").Id);
+                var blocks = owner.Rich.Sections.Single().Pages.Single().Blocks;
+                Assert.Equal(2, blocks.Count); var source = blocks[0]; var copy = blocks[1];
+                Assert.Equal(original, JsonSerializer.Serialize(source)); Assert.NotEqual(source.Id, copiedId);
+                Assert.NotEqual(source.Items[0].Id, copy.Items[0].Id);
+                Assert.NotEqual(source.Table!.Rows[0].Cells[0].Id, copy.Table!.Rows[0].Cells[0].Id);
+                Assert.NotEqual(source.Image!.Id, copy.Image!.Id);
+                Assert.NotEqual(source.Graph!.Expressions[0].Id, copy.Graph!.Expressions[0].Id);
+                Assert.NotEqual(source.Attachment!.Id, copy.Attachment!.Id);
+                Assert.Equal("quote", copy.StyleId); Assert.Equal("sidecar:abc123", copy.Image.LocalReference);
+                Assert.Equal("sidecar:def456", copy.Attachment.LocalReference);
+                // A detached comparison restores only identities/order; every
+                // other serialized field must be exactly the original payload.
+                var comparable = JsonSerializer.Deserialize<HavenRichBlock>(JsonSerializer.Serialize(copy))!;
+                comparable.Id = source.Id; comparable.Order = source.Order;
+                comparable.Items[0].Id = source.Items[0].Id;
+                comparable.Table!.Rows[0].Cells[0].Id = source.Table.Rows[0].Cells[0].Id;
+                comparable.Image!.Id = source.Image.Id;
+                comparable.Graph!.Expressions[0].Id = source.Graph.Expressions[0].Id;
+                comparable.Attachment!.Id = source.Attachment.Id;
+                Assert.Equal(original, JsonSerializer.Serialize(comparable));
+                copy.Runs[0].Bold = false; copy.Table.Rows[0].Cells[0].Text = "copy only";
+                Assert.True(source.Runs[0].Bold); Assert.Equal("keep cell", source.Table.Rows[0].Cells[0].Text);
+                await owner.SaveAsAsync(path);
+            }
+            var saved = (await store.LoadDocumentAtPathAsync(path))!.RichNotes!;
+            var reopened = saved.Sections.Single().Pages.Single().Blocks;
+            Assert.Equal(2, reopened.Count); Assert.Equal("original payload", reopened[1].PlainText);
+            Assert.Equal("original.bin", reopened[1].Attachment!.DisplayName);
+            Assert.Equal("sidecar:def456", reopened[1].Attachment!.LocalReference);
+            Assert.Equal("preserved point", reopened[1].Graph!.Points[0].Label);
+            Assert.Equal(123, Convert.FromBase64String(reopened[1].Attachment!.DataBase64!).Length);
+            Assert.All(Convert.FromBase64String(reopened[1].Attachment!.DataBase64!), value => Assert.Equal((byte)42, value));
+            Assert.NotEmpty(Convert.FromBase64String(reopened[1].Image!.DataBase64!));
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
+    public async Task Boundary_denied_stale_and_composite_targets_create_no_action_history_or_disk_change()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "boards-block-guard-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var path = Path.Combine(root, "guard.9to1board"); using var store = new JsonFileHavenBoardStore(root);
+            await SeedAsync(store, path); await using var adapter = await ContractSessionAdapter.OpenAsync(store, path);
+            var page = adapter.Document.Sections.Single().Pages.Single(); var before = adapter.Snapshot;
+            var disk = await File.ReadAllBytesAsync(path);
+            var first = adapter.CaptureBlockAction(page.Id, "block-a")!;
+            Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(first, BoardBlockAction.MoveUp, () => true)).Code);
+            var last = adapter.CaptureBlockAction(page.Id, "block-c")!;
+            Assert.Equal("AtBoundary", (await adapter.ApplyBlockActionAsync(last, BoardBlockAction.MoveDown, () => true)).Code);
+            Assert.False((await adapter.ApplyBlockActionAsync(first, BoardBlockAction.Delete, () => true)).Applied);
+            var current = adapter.CaptureBlockAction(page.Id, "block-b")!;
+            Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => false)).Applied);
+            Assert.False((await adapter.ApplyBlockActionAsync(current, (BoardBlockAction)999, () => true)).Applied);
+            Assert.Equal(before, adapter.Snapshot); Assert.False(adapter.CanUndo); Assert.False(adapter.CanRedo);
+            Assert.Equal(disk, await File.ReadAllBytesAsync(path));
+            Assert.Null(adapter.CaptureBlockAction(page.Id, "block-b:item-pretend"));
+            Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Duplicate, () => true)).Applied);
+            current = adapter.CaptureBlockAction(page.Id, "block-b")!;
+            Assert.True((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Duplicate, () => true)).Applied);
+            Assert.True(await adapter.UndoAsync()); Assert.Equal(before, adapter.Snapshot); Assert.False(adapter.CanUndo);
+            Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => true)).Applied);
+            Assert.False(adapter.CanUndo); // equal-content undo does not revive tickets
+            current = adapter.CaptureBlockAction(page.Id, "block-b")!;
+            Blocks(adapter)[1].Text = "newer unsaved edit";
+            Assert.False((await adapter.ApplyBlockActionAsync(current, BoardBlockAction.Delete, () => true)).Applied);
+            Assert.False(adapter.CanUndo);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    private static bool Flag(BoardsViewModel model, string name) => model.TryGetValue(name, out var value) && value is true;
+    private static List<RichBoardBlock> Blocks(ContractSessionAdapter adapter) => adapter.Document.Sections.Single().Pages.Single().Blocks;
+    private static async Task SeedAsync(JsonFileHavenBoardStore store, string path)
+    {
+        await using var owner = await RichBoardSession.CreateNewAsync(store, "Same block owner");
+        await owner.MutateAsync(rich =>
+        {
+            var page = rich.Sections.Single().Pages.Single(); page.Blocks.Clear();
+            page.Blocks.Add(new() { Id = "block-a", PlainText = "first", Order = 0 });
+            page.Blocks.Add(new() { Id = "block-b", PlainText = "AlphaBeta", Order = 1, Runs =
+                [new() { Text = "Alpha" }, new() { Text = "Beta", Bold = true, Baseline = HavenRichBaseline.Superscript, FontFamily = "Georgia" }] });
+            page.Blocks.Add(new() { Id = "block-c", PlainText = "last", Order = 2 });
+        });
+        await owner.SaveAsAsync(path);
+    }
+}

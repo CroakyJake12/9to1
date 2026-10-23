@@ -46,7 +46,13 @@ public sealed class CuiFormattedTextInputTests
                 Assert.Equal(Colors.Yellow, Assert.IsAssignableFrom<ISolidColorBrush>(rich.BackgroundBrush).Color);
                 Assert.Contains(rich.TextDecorations!, d => d.Location == TextDecorationLocation.Underline);
                 Assert.Contains(rich.TextDecorations!, d => d.Location == TextDecorationLocation.Strikethrough);
-                input.SelectionForegroundBrush = Brushes.Blue; input.SelectionStart = 4; input.SelectionEnd = 1;
+                // Use the CUI value owner, whose theme projection intentionally
+                // outranks raw native LocalValue setters. First prove this fixture
+                // really requested/received Blue, then test the unchanged overlay.
+                Assert.True(CuiPropertyPresentation.Set(input, "SelectionForegroundBrush", Brushes.Blue,
+                    CuiPropertyLevel.Instance, "formatted-input selection fixture"));
+                Assert.Equal(Colors.Blue, Assert.IsAssignableFrom<ISolidColorBrush>(input.SelectionForegroundBrush).Color);
+                input.SelectionStart = 4; input.SelectionEnd = 1;
                 window.UpdateLayout();
                 var selected = At(presenter, 2);
                 Assert.Equal(FontWeight.Bold, selected.Typeface.Weight); Assert.Equal(FontStyle.Italic, selected.Typeface.Style);
@@ -109,12 +115,18 @@ public sealed class CuiFormattedTextInputTests
         await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiBundledFontTestApplication));
         await session.Dispatch(() =>
         {
-            var input = new TextBox { Text = "plain", FontWeight = FontWeight.Normal };
+            // A raw native font setter is below CUI theme authority. Author the
+            // plain fixture in canonical CUI so Normal is an actual instance value.
+            using var loader = new CuiControlLoader();
+            var loaded = loader.LoadMarkup("<Input Type='Text' Value='plain' FontWeight='Normal'/>");
+            Assert.Empty(loaded.Diagnostics);
+            var input = Assert.IsType<TextBox>(loaded.Root);
             var window = new Window { Content = input, Width = 500, Height = 180 };
             try
             {
                 window.Show(); window.UpdateLayout();
                 var presenter = Assert.Single(input.GetVisualDescendants().OfType<CuiFormattedTextPresenter>());
+                Assert.Equal(FontWeight.Normal, input.FontWeight);
                 Assert.Equal("plain", LayoutText(presenter)); Assert.Equal(FontWeight.Normal, At(presenter, 0).Typeface.Weight);
                 CuiFormattedTextInput.SetPresentation(input, new CuiFormattedText("other", [new("other", FontWeight.Bold)]));
                 window.UpdateLayout(); Assert.Equal("plain", LayoutText(presenter));

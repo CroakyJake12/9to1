@@ -802,6 +802,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("RangeItalicState", "Italic: " + (selection?.Italic.ToString() ?? (block?.Italic == true ? "On" : "Off")));
         Set("RangeUnderlineState", "Underline: " + (selection?.Underline.ToString() ?? (block?.Underline == true ? "On" : "Off")));
         Set("RangeStrikeState", "Strikethrough: " + (selection?.StrikeThrough.ToString() ?? (block?.Strike == true ? "On" : "Off")));
+        RefreshCuiBlockActions();
     }
 
     private async ValueTask<bool> DispatchTextRangeAsync(string command, CancellationToken cancellationToken)

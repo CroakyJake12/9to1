@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
@@ -24,12 +25,30 @@ public sealed class CanvasPresentInkObjectSession : IDisposable
     private readonly CancellationTokenSource _lifetime;
     private readonly ContentControl _host = new();
     private HomeProductivityCuiObjectSession? _rendered;
-    private JsonElement? _expectedBundle;
+    private JsonElement? _expectedBundle, _failedBundle;
     private int _displayedVersion, _refreshGeneration;
     private bool _disposed, _editInFlight;
     public Control View => _host;
     public CanvasPresentInkViewState State { get; private set; } = new(false, "NotRendered", "The drawing has not rendered.");
     public Exception? LastError { get; private set; }
+    public long RasterByteCount => _rendered?.RasterByteCount ?? 0;
+    public IReadOnlyList<string> RetainedUnsupportedProperties => _rendered?.RetainedUnsupportedProperties ?? [];
+    /// <summary>Borrow the actual CUI-bound image without rendering, loading or mutating in the paint loop.</summary>
+    public bool TryBorrowRasterImage(out IImage? image)
+    {
+        image = null;
+        if (!Dispatcher.UIThread.CheckAccess()) return false;
+        try
+        {
+            if (!IsCurrent() || !State.Ready || _rendered is null || _expectedBundle is not { } expected) return false;
+            var matches = _owner.Document.Slides.SelectMany(slide => slide.Elements).Where(element => element.Id == _elementId).ToArray();
+            if (matches.Length != 1 || matches[0].Kind != PresentElementKind.SharedObject ||
+                matches[0].SharedProductivityBundle is not { } current || !JsonElement.DeepEquals(current, expected)) return false;
+            image = _rendered.BorrowRasterImage();
+            return true;
+        }
+        catch (Exception error) { LastError = error; return false; }
+    }
     public bool CanRequestEdit => !_disposed && !_editInFlight && State.Ready && _editOwner is not null && IsCurrent();
     public event EventHandler? ViewChanged;
 
@@ -60,12 +79,15 @@ public sealed class CanvasPresentInkObjectSession : IDisposable
         else Dispatcher.UIThread.Post(() => { if (!_disposed) Refresh(); });
     }
 
-    public bool Refresh()
+    public bool Refresh() => Refresh(retryFailedRender: false);
+
+    public bool Refresh(bool retryFailedRender)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_disposed) return false;
         var generation = ++_refreshGeneration;
         HomeProductivityCuiObjectSession? next = null;
+        JsonElement? renderingBundle = null;
         try
         {
             if (!IsCurrent()) return Clear("OwnerUnavailable", "The original Present owner is no longer available.");
@@ -76,6 +98,8 @@ public sealed class CanvasPresentInkObjectSession : IDisposable
                 return Clear("ObjectUnavailable", "The exact drawing is no longer in this presentation.");
             var element = matches[0];
             var captured = bundle.Clone();
+            if (!retryFailedRender && _rendered is null && _failedBundle is { } failed && JsonElement.DeepEquals(failed, captured)) return false;
+            renderingBundle = captured;
             if (_rendered is not null && _expectedBundle is { } previous && JsonElement.DeepEquals(previous, captured))
             {
                 _displayedVersion = document.Version;
@@ -92,14 +116,14 @@ public sealed class CanvasPresentInkObjectSession : IDisposable
                 return Clear("PayloadConflict", "The Present owner or drawing changed while rendering.");
             var old = _rendered; _rendered = next; next = null;
             _host.Content = _rendered.View; _expectedBundle = captured; _displayedVersion = document.Version;
-            LastError = null;
+            LastError = null; _failedBundle = null;
             State = new(true, "RenderedReadOnly", "Showing the canonical Home/Rnote drawing; edits require the Present owner.");
             old?.Dispose(); ViewChanged?.Invoke(this, EventArgs.Empty);
             return true;
         }
         catch (Exception error)
         {
-            LastError = error;
+            LastError = error; _failedBundle = renderingBundle;
             return Clear("RenderUnavailable", "The actual Home/Rnote drawing could not be rendered; no substitute image is shown.");
         }
         finally { next?.Dispose(); }

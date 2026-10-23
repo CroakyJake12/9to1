@@ -17,6 +17,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
     private readonly IPresentRepository _repository;
     private readonly IPresentExportService _exporter;
     private readonly PresentHavenScene _route;
+    private readonly HavenSceneControl Scene;
     private readonly DispatcherTimer _autosaveTimer;
     private IReadOnlyList<PresentDocumentSummary> _documents = [];
     private int _deckIndex;
@@ -31,8 +32,12 @@ public sealed partial class PresentPage : UserControl, IDisposable
     private bool _dirty;
     private bool _disposed;
 
+    // Preserve the original public constructor as well as its source-call defaults.
     public PresentPage(HavenEventBus bus, IPresentRepository repository, IPresentExportService exporter, IPresentImportService? importer = null,
-        Action<PresentPage>? captureOriginalOwner = null)
+        Action<PresentPage>? captureOriginalOwner = null) : this(bus, repository, exporter, importer, captureOriginalOwner, null) { }
+
+    public PresentPage(HavenEventBus bus, IPresentRepository repository, IPresentExportService exporter, IPresentImportService? importer,
+        Action<PresentPage>? captureOriginalOwner, HavenOS.Home.Core.HomeProductivityEngine? sharedInkEngine)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -45,6 +50,10 @@ public sealed partial class PresentPage : UserControl, IDisposable
             _originalPresentWork.DemandAdmission();
             InitializeComponent();
             _route = new PresentHavenScene();
+            _sharedInkEngine = sharedInkEngine;
+            Scene = new HavenSceneControl(_sharedInkResources, _sharedInkResources) { Name = "Scene" };
+            OriginalSceneHost.Content = Scene;
+            InitializeSharedInkMount();
             Scene.Root = _route.Root;
             _route.PreviousDeckRequested += OnPreviousDeckRequested; _route.NextDeckRequested += OnNextDeckRequested; _route.NewDeckRequested += OnNewDeckRequested;
             _route.SaveRequested += OnSaveRequested; _route.ExportRequested += OnExportRequested;
@@ -348,9 +357,11 @@ public sealed partial class PresentPage : UserControl, IDisposable
     {
         if (Document is null) return; Document.Normalize(); _slideIndex = Math.Clamp(_slideIndex, 0, Document.Slides.Count - 1);
         if (_editor is null || !ReferenceEquals(_editor.Document, Document)) AttachEditor(Document);
+        RefreshSharedInkMount();
         PublishOriginalPresentSource(() => _route.SetDocument(Document, _deckIndex, _documents.Count, _slideIndex)); RenderPhase2();
         PublishOriginalPresentSource(() => _route.SetWorkspaceDocument(Document, _slideIndex));
         PublishOriginalPresentSource(() => _route.SetWorkspaceSelection(Document, _slideIndex, _editor!.Selection.ElementIds));
+        PublishSharedInkState();
     }
     private async Task RefreshDocumentsAsync(CancellationToken cancellationToken) => _documents = await AwaitOriginalPresentSource(() => _repository.ListAsync(cancellationToken));
     private int IndexOfDocument(Guid id) { for (var index = 0; index < _documents.Count; index++) if (_documents[index].Id == id) return index; return 0; }
@@ -378,7 +389,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
         _route.PreviousDeckRequested -= OnPreviousDeckRequested; _route.NextDeckRequested -= OnNextDeckRequested; _route.NewDeckRequested -= OnNewDeckRequested; _route.SaveRequested -= OnSaveRequested; _route.ExportRequested -= OnExportRequested;
         _route.PreviousSlideRequested -= OnPreviousSlideRequested; _route.NextSlideRequested -= OnNextSlideRequested; _route.AddSlideRequested -= OnAddSlideRequested; _route.DeleteSlideRequested -= OnDeleteSlideRequested;
         _route.DeckTitleChanged -= OnDeckTitleChanged; _route.SlideTitleChanged -= OnSlideTitleChanged; _route.BodyChanged -= OnBodyChanged; _route.NotesChanged -= OnNotesChanged;
-        DisposeWorkspace(); DisposePhase2(); _route.Dispose();
+        DisposeSharedInkMount(); DisposeWorkspace(); DisposePhase2(); _route.Dispose();
         if (Scene is not null) Scene.Root = null;
     }
 }

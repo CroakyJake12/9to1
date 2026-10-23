@@ -28,6 +28,16 @@ public sealed partial class BrowseChrome
             ?? throw new ArgumentException("The original saved history entry is no longer present.", nameof(originalEntryId));
         return NavigateAsync(original.Address, token);
     }
+    /// <summary>Removes an exact recorded visit without changing the current tab or document.</summary>
+    public async Task<BrowseChromeSnapshot> RemoveHistoryEntryAsync(Guid originalEntryId, CancellationToken token = default)
+    {
+        ThrowIfCannotAccept(); token.ThrowIfCancellationRequested();
+        var original = _data.History.SingleOrDefault(entry => entry.Id == originalEntryId)
+            ?? throw new ArgumentException("The original history visit is no longer present.", nameof(originalEntryId));
+        await _data.RemoveHistoryEntryAsync(original.Id, token).ConfigureAwait(false);
+        _status = "History visit removed locally.";
+        return Publish();
+    }
     public Task<BrowseChromeSnapshot> ResetSelectedTabEngineAsync(CancellationToken token = default) =>
         RetainContentTransition(() => ResetSelectedTabEngineCoreAsync(token), token);
 

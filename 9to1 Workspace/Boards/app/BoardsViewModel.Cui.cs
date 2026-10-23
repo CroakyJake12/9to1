@@ -41,6 +41,57 @@ public sealed partial class BoardsViewModel
         Set("ContextIsImage", block?.Kind == "image");
         Set("ContextIsDivider", block?.Kind == "divider");
         Set("ContextVisible", block?.Kind is "table" or "image" or "divider");
+        RefreshCuiBlockActions();
+    }
+
+    private bool _blockActionBusy;
+
+    private bool BlockActionEditingAllowed() => !_textRangeDetached &&
+        (_textRangeControl is null || _textRangeBlock != SelectedBlockId ||
+            (!_textRangeControl.IsReadOnly && _textRangeControl.IsEffectivelyEnabled));
+
+    private void RefreshCuiBlockActions()
+    {
+        var blocks = CurrentPage().Blocks;
+        var index = blocks.FindIndex(block => block.Id == SelectedBlockId);
+        var eligible = index >= 0 && !SelectedBlockId.Contains(':') &&
+            blocks[index].Kind is "paragraph" or "heading" or "table" or "image" or "divider" or "graph";
+        var available = eligible && _session is ContractSessionAdapter && !_blockActionBusy && BlockActionEditingAllowed();
+        Set("CanManageSelectedBlock", available);
+        Set("CanMoveBlockUp", available && index > 0);
+        Set("CanMoveBlockDown", available && index < blocks.Count - 1);
+        Set("BlockActionSummary", eligible ? "Selected " + blocks[index].Kind : "Select a flow block");
+    }
+
+    private async ValueTask<bool> DispatchCuiBlockActionAsync(string command, CancellationToken cancellationToken)
+    {
+        BoardBlockAction? action = command switch
+        {
+            "BlockMoveUp" => BoardBlockAction.MoveUp, "BlockMoveDown" => BoardBlockAction.MoveDown,
+            "BlockDuplicate" => BoardBlockAction.Duplicate, "BlockDelete" => BoardBlockAction.Delete, _ => null
+        };
+        if (action is null) return false;
+        if (_blockActionBusy || !BlockActionEditingAllowed() || _session is not ContractSessionAdapter adapter)
+        { Set("StatusText", "Select an editable flow block."); return true; }
+        var pageId = SelectedPageId; var blockId = SelectedBlockId;
+        var target = adapter.CaptureBlockAction(pageId, blockId);
+        if (target is null) { Set("StatusText", "Select an editable flow block."); return true; }
+        var epoch = Interlocked.Read(ref _textRangeEpoch);
+        _blockActionBusy = true; RefreshCuiBlockActions();
+        try
+        {
+            // Native read-only/enabled/selection changes advance the same range
+            // epoch. The gate callback reads no UI properties on a worker thread.
+            var result = await adapter.ApplyBlockActionAsync(target, action.Value,
+                () => !_textRangeDetached && SelectedPageId == pageId && SelectedBlockId == blockId &&
+                    Interlocked.Read(ref _textRangeEpoch) == epoch, cancellationToken);
+            if (!result.Applied) { Set("StatusText", "Block action refused: " + result.Code); return true; }
+            _selectedBlockId = result.SelectedBlockId ?? string.Empty;
+            InvalidateTextRange();
+            RefreshAfterEdit();
+            return true;
+        }
+        finally { _blockActionBusy = false; RefreshCuiBlockActions(); }
     }
 
     private static int IndexOf(string[] options, string? value) => Math.Max(0, Array.IndexOf(options, value));
@@ -97,6 +148,7 @@ public sealed partial class BoardsViewModel
 
     private async ValueTask<bool> DispatchCuiContextAsync(string command, CancellationToken cancellationToken)
     {
+        if (await DispatchCuiBlockActionAsync(command, cancellationToken)) return true;
         if (!command.StartsWith("Context", StringComparison.Ordinal)) return false;
         cancellationToken.ThrowIfCancellationRequested();
         var block = FindBlock(SelectedBlockId);

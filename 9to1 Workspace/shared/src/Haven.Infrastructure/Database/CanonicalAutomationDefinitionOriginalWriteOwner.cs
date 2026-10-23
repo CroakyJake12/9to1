@@ -11,7 +11,7 @@ namespace Haven.Infrastructure;
 /// <summary>Recover, disable or edit ONLY a SAME protected library row. Its original raw
 /// row, native store and individually accepted Home WRITE are rechecked before
 /// one atomic transaction. Scheduling and Task/provider admission remain absent.</summary>
-public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : ICanonicalAutomationDefinitionOriginalProcessSource, IAsyncDisposable
+public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : ICanonicalAutomationDefinitionOriginalProcessSource, ICanonicalAutomationDefinitionOriginalCreateSource, IAsyncDisposable
 {
     private readonly CanonicalAutomationLibraryOriginalReadOwner _library;
     private readonly CanonicalSqliteOriginalStoreOwner _store;

@@ -203,6 +203,10 @@ public sealed class BrowserDataService : IDisposable
     public Task ClearHistoryAsync(CancellationToken cancellationToken) =>
         MutateAndSaveAsync(data => data with { History = [] }, cancellationToken);
 
+    /// <summary>Removes one visit identity; other visits to the same URL remain intact.</summary>
+    public Task RemoveHistoryEntryAsync(Guid id, CancellationToken cancellationToken) =>
+        MutateAndSaveAsync(data => data with { History = data.History.Where(item => item.Id != id).ToArray() }, cancellationToken);
+
     /// <summary>
     /// Performs save tabs asynchronously so I/O does not block the caller's thread.
     /// </summary>

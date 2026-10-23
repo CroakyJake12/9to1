@@ -10,6 +10,11 @@ using CakeOS.Apps.Boards.Contract;
 
 namespace CakeOS.Apps.Boards.App;
 
+public enum BoardBlockAction { MoveUp, MoveDown, Duplicate, Delete }
+public sealed record BoardBlockActionTarget(Guid OwnerId, long Revision, string PageId, string BlockId,
+    string ViewStamp, int ViewIndex, int ViewCount);
+public sealed record BoardBlockActionResult(bool Applied, string Code, string? SelectedBlockId);
+
 public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -197,6 +202,81 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
             _issuedTextSelection = null;
             RefreshView();
             return new(true, "Applied");
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    private BoardBlockActionTarget? _issuedBlockAction;
+    private string BlockActionStamp() => Convert.ToHexString(
+        System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(_view, Json)));
+
+    /// <summary>A transient current-owner ticket, never another document/history.
+    /// Composite list-row and ink projection ids are not whole contract blocks.</summary>
+    public BoardBlockActionTarget? CaptureBlockAction(string pageId, string blockId)
+    {
+        if (_disposed) { _issuedBlockAction = null; return null; }
+        var page = _view.Sections.SelectMany(section => section.Pages).FirstOrDefault(value => value.Id == pageId);
+        var index = page?.Blocks.FindIndex(block => block.Id == blockId) ?? -1;
+        if (page is null || index < 0 || blockId.Contains(':') ||
+            page.Blocks[index].Kind is not ("paragraph" or "heading" or "table" or "image" or "divider" or "graph"))
+        { _issuedBlockAction = null; return null; }
+        var candidate = new BoardBlockActionTarget(_textOwner, DocumentVersion, pageId, blockId,
+            BlockActionStamp(), index, page.Blocks.Count);
+        if (candidate != _issuedBlockAction) _issuedBlockAction = candidate;
+        return _issuedBlockAction;
+    }
+
+    public async ValueTask<BoardBlockActionResult> ApplyBlockActionAsync(BoardBlockActionTarget target,
+        BoardBlockAction action, Func<bool> originStillEditable, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(target); ArgumentNullException.ThrowIfNull(originStillEditable);
+        if (_disposed) return new(false, "Disposed", null);
+        if (!Enum.IsDefined(action)) return new(false, "UnsupportedAction", null);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            bool CurrentView() => !_disposed && ReferenceEquals(target, _issuedBlockAction) &&
+                target.OwnerId == _textOwner && originStillEditable() && target.ViewStamp == BlockActionStamp();
+            if (!CurrentView() || target.Revision != DocumentVersion) return new(false, "StaleOrReadOnly", null);
+            if ((action == BoardBlockAction.MoveUp && target.ViewIndex == 0) ||
+                (action == BoardBlockAction.MoveDown && target.ViewIndex == target.ViewCount - 1))
+                return new(false, "AtBoundary", target.BlockId);
+            // Pending typed edits retain their existing separate transaction.
+            // Initial refusals never merge. A later refusal may leave that
+            // typed-edit transaction, but never pushes an empty block action.
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var version = DocumentVersion;
+            bool Applicable(HavenRichNotes rich)
+            {
+                if (!CurrentView() || rich.Version != version) return false;
+                var page = rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(value => value.Id == target.PageId);
+                var index = page?.Blocks.FindIndex(block => block.Id == target.BlockId) ?? -1;
+                return page is not null && index >= 0 &&
+                    (action != BoardBlockAction.MoveUp || index > 0) &&
+                    (action != BoardBlockAction.MoveDown || index < page.Blocks.Count - 1);
+            }
+            if (!Applicable(_real.Rich)) return new(false, "StaleOrBoundary", null);
+            string? selected = target.BlockId;
+            var applied = await _real.MutateIfAsync(Applicable, rich =>
+            {
+                var page = rich.Sections.SelectMany(section => section.Pages).Single(value => value.Id == target.PageId);
+                var index = page.Blocks.FindIndex(block => block.Id == target.BlockId);
+                switch (action)
+                {
+                    case BoardBlockAction.MoveUp:
+                        HavenRichNotesOps.MoveBlock(rich, page.Id, target.BlockId, index - 1); break;
+                    case BoardBlockAction.MoveDown:
+                        HavenRichNotesOps.MoveBlock(rich, page.Id, target.BlockId, index + 1); break;
+                    case BoardBlockAction.Duplicate:
+                        selected = HavenRichNotesOps.DuplicateBlock(rich, page.Id, target.BlockId).Id; break;
+                    case BoardBlockAction.Delete:
+                        HavenRichNotesOps.RemoveBlock(rich, page.Id, target.BlockId);
+                        selected = page.Blocks.ElementAtOrDefault(Math.Min(index, page.Blocks.Count - 1))?.Id; break;
+                }
+            }, cancellationToken).ConfigureAwait(false);
+            if (!applied) return new(false, "StaleOrReadOnly", null);
+            RefreshView();
+            return new(true, "Applied", selected);
         }
         finally { _mergeGate.Release(); }
     }
@@ -570,6 +650,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeS
     {
         // Undo/redo can restore equal revision/content; never revive an issued range.
         _issuedTextSelection = null;
+        _issuedBlockAction = null;
         Projector.Project(_real.Rich, _view);
         _baselineJson = JsonSerializer.Serialize(_view, Json);
     }

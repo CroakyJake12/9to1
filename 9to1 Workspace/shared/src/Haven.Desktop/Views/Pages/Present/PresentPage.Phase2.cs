@@ -66,6 +66,7 @@ public sealed partial class PresentPage
     private void AttachEditor(PresentDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
+        DetachSharedInkOwner();
         if (_editor is not null) _editor.Changed -= OnEditorChanged;
         _editor = new PresentEditor(document);
         _slideIndex = Math.Clamp(_slideIndex, 0, document.Slides.Count - 1);
@@ -80,7 +81,7 @@ public sealed partial class PresentPage
         if (_editor is null) return;
         Document = _editor.Document;
         _slideIndex = IndexOfSlide(_editor.Selection.SlideId);
-        _dirty = true;
+        ++_editGeneration; _dirty = true;
         PublishOriginalPresentSource(() => _route.SetStatus("Unsaved changes · autosave is on"));
         RenderCurrent();
     });

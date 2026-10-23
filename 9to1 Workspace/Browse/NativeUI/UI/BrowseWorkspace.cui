@@ -8,6 +8,7 @@
     <Action name="OpenBookmark" command="9to1.Browse.OpenBookmark" parameter="{Binding bookmark.Target}" />
     <Action name="RemoveBookmark" command="9to1.Browse.RemoveBookmark" parameter="{Binding bookmark.Target}" />
     <Action name="OpenHistory" command="9to1.Browse.OpenHistory" parameter="{Binding visit.Target}" />
+    <Action name="RemoveHistoryEntry" command="9to1.Browse.RemoveHistoryEntry" parameter="{Binding visit.Target}" />
     <Action name="ShowDownloadInFiles" command="9to1.Browse.ShowDownloadInFiles" parameter="{Binding download.Target}" />
     <Action name="RegisterDownloadDestination" command="9to1.Browse.RegisterDownloadDestination" parameter="{Binding folder.Target}" />
   </Actions>
@@ -69,14 +70,25 @@
               <Text IsVisible="{Binding EmptyBookmarks}">No saved bookmarks.</Text>
             </Container>
             <Container id="BrowseHistoryPage" Type="Vertical Stack" CellGap="6" IsVisible="{Binding IsHistory}">
+              <Text Text="Search history by title or address" FontWeight="Bold" />
+              <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6">
+                <Input Type="Text" id="BrowseHistorySearchBox" Column="0" Value="{Binding HistoryQuery, Mode=TwoWay}" Interactive="{Binding CanEdit}" AccessibleName="Search browsing history by title or address" />
+                <Button id="BrowseResetHistoryQueryButton" Column="1" action="9to1.Browse.ResetHistoryQuery" Interactive="{Binding Can.ResetHistoryQuery}">Clear search</Button>
+              </Container>
+              <Text id="BrowseHistoryResultSummary" Text="{Binding HistoryResultSummary}" FontSize="12" Color="{Resource CuiTextSoftBrush}" />
               <Repeat Source="{Binding History}" As="visit" Key="{Binding visit.Key}">
                 <Container Type="Vertical Stack">
-                  <Button id="BrowseHistoryRowButton" HorizontalContentAlignment="Left" action="OpenHistory" Text="{Binding visit.Label}" AccessibleName="{Binding visit.Label}" Interactive="{Binding Can.OpenHistory}" />
+                  <Container Type="Grid" ColumnSizes="1fr Auto" CellGap="6">
+                    <Button id="BrowseHistoryRowButton" Column="0" HorizontalContentAlignment="Left" action="OpenHistory" Text="{Binding visit.Label}" AccessibleName="{Binding visit.Label}" Interactive="{Binding Can.OpenHistory}" />
+                    <Button id="BrowseRemoveHistoryEntryButton" Column="1" action="RemoveHistoryEntry" AccessibleName="{Binding visit.RemoveLabel}" Tooltip="{Binding visit.RemoveLabel}" Interactive="{Binding Can.RemoveHistoryEntry}" MinHeight="32" Padding="8 4">Remove visit</Button>
+                  </Container>
                   <Text Text="{Binding visit.Detail}" TextWrapping="Wrap" />
                 </Container>
               </Repeat>
               <Text IsVisible="{Binding EmptyHistory}">No recorded web visits.</Text>
-              <Button id="BrowseClearHistoryButton" action="9to1.Browse.ClearHistory" Interactive="{Binding Can.ClearHistory}">Clear local history</Button>
+              <Text IsVisible="{Binding EmptyHistoryResults}">No visits match this search.</Text>
+              <Text FontSize="12" Color="{Resource CuiTextSoftBrush}" TextWrapping="Wrap">Removing a visit keeps other visits, bookmarks and open tabs. Clearing all history also removes visits outside this search.</Text>
+              <Button id="BrowseClearHistoryButton" action="9to1.Browse.ClearHistory" Interactive="{Binding Can.ClearHistory}">Clear all local history</Button>
             </Container>
             <Container id="BrowseDownloadsPage" Type="Vertical Stack" CellGap="6" IsVisible="{Binding IsDownloads}">
               <Button id="BrowseDownloadsButton" action="9to1.Browse.Downloads" Interactive="{Binding Can.Downloads}">Refresh downloads</Button>

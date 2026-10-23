@@ -96,6 +96,9 @@ public sealed partial class App
                     });
                 });
             original.DemandPublication();
+            // Register the canonical Canvas/Rnote contract exactly once on this newly constructed Home engine.
+            // This creates no native renderer, document/store owner, write permission or artifact action provider.
+            _actualWindowsHome.Productivity.Engine.RegisterObjectHandler(new global::HavenOS.Apps.Canvas.CanvasInkObjectHandler());
             collection.AddHavenOwnedWindowsHomeDomain(_actualWindowsHome, paths, principal);
             RegisterOriginalHomeRootOwners(collection, _actualWindowsHome, rootClient);
             collection.AddSingleton(notesAdmission

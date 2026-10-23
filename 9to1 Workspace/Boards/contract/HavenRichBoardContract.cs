@@ -414,6 +414,8 @@ public static partial class HavenRichNotesOps
             FreshSectionIds(section);
         else if (copy is HavenRichPage page)
             FreshPageIds(page);
+        else if (copy is HavenRichBlock block)
+            FreshBlockIds(block);
         return copy;
     }
 
@@ -428,23 +430,29 @@ public static partial class HavenRichNotesOps
     {
         page.Id = "page-" + Guid.NewGuid().ToString("N")[..12];
         foreach (var block in page.Blocks)
-        {
-            block.Id = "block-" + Guid.NewGuid().ToString("N")[..12];
-            foreach (var item in block.Items)
-                item.Id = "item-" + Guid.NewGuid().ToString("N")[..12];
-            if (block.Table is not null)
-                foreach (var cell in block.Table.Rows.SelectMany(r => r.Cells))
-                    cell.Id = "cell-" + Guid.NewGuid().ToString("N")[..12];
-            if (block.Image is not null)
-                block.Image.Id = "img-" + Guid.NewGuid().ToString("N")[..12];
-            if (block.Graph is not null)
-                foreach (var expression in block.Graph.Expressions)
-                    expression.Id = "expr-" + Guid.NewGuid().ToString("N")[..12];
-            if (block.Attachment is not null)
-                block.Attachment.Id = "att-" + Guid.NewGuid().ToString("N")[..12];
-        }
+            FreshBlockIds(block);
         foreach (var canvasObject in page.Canvas)
             canvasObject.Id = "canvas-" + Guid.NewGuid().ToString("N")[..12];
+    }
+
+    // Shared by existing page/section duplication and block duplication.
+    // Style IDs and content-addressed payload references are references, not new
+    // owned identities: preserve them exactly while deep-copying their metadata.
+    private static void FreshBlockIds(HavenRichBlock block)
+    {
+        block.Id = "block-" + Guid.NewGuid().ToString("N")[..12];
+        foreach (var item in block.Items)
+            item.Id = "item-" + Guid.NewGuid().ToString("N")[..12];
+        if (block.Table is not null)
+            foreach (var cell in block.Table.Rows.SelectMany(r => r.Cells))
+                cell.Id = "cell-" + Guid.NewGuid().ToString("N")[..12];
+        if (block.Image is not null)
+            block.Image.Id = "img-" + Guid.NewGuid().ToString("N")[..12];
+        if (block.Graph is not null)
+            foreach (var expression in block.Graph.Expressions)
+                expression.Id = "expr-" + Guid.NewGuid().ToString("N")[..12];
+        if (block.Attachment is not null)
+            block.Attachment.Id = "att-" + Guid.NewGuid().ToString("N")[..12];
     }
 
     public static void RenamePage(HavenRichNotes notes, string pageId, string title)
@@ -499,6 +507,19 @@ public static partial class HavenRichNotesOps
         page.Blocks.Add(block);
         Touch(notes);
         return block;
+    }
+
+    /// <summary>Deep-copy a stored block immediately after its source, assigning
+    /// fresh owned identities while preserving its full payload and references.</summary>
+    public static HavenRichBlock DuplicateBlock(HavenRichNotes notes, string pageId, string blockId)
+    {
+        var page = RequirePage(notes, pageId);
+        var source = RequireBlock(notes, pageId, blockId);
+        var copy = CloneWithFreshIds(source);
+        page.Blocks.Insert(page.Blocks.IndexOf(source) + 1, copy);
+        for (var order = 0; order < page.Blocks.Count; order++) page.Blocks[order].Order = order;
+        Touch(notes);
+        return copy;
     }
 
     public static void MoveBlock(HavenRichNotes notes, string pageId, string blockId, int targetIndex)

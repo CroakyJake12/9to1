@@ -46,7 +46,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private SavedEntryRow[] _bookmarkRows = [], _historyRows = [], _downloadRows = [];
     private long _savedEpoch;
     private long _rowEpoch;
-    private string _address, _find = string.Empty, _status;
+    private string _address, _find = string.Empty, _historyQuery = string.Empty, _status;
     private bool _addressDraft, _busy, _ready, _disposed, _toolsOpen, _profileMenuOpen, _manageUsersOpen;
     private volatile bool _retiring;
     private Task? _originalCommand, _originalClose, _originalChromeClose, _pendingCloseAttempt;
@@ -119,7 +119,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "RestoreTabs" => _chrome.TabRestoreEnabled,
             "NativeTitle" => selected.Title,
             "EmptyBookmarks" => _bookmarkRows.Length == 0,
-            "EmptyHistory" => _historyRows.Length == 0,
+            "EmptyHistory" => _snapshot.History.Count == 0,
+            "EmptyHistoryResults" => _snapshot.History.Count > 0 && _historyRows.Length == 0,
             "EmptyDownloads" => _downloadRows.Length == 0,
             "Address" => _address, "AddressDisplay" => ResolveAddressDisplay(selected), "FindQuery" => _find, "Status" => _status,
             "Security" => _snapshot.Security.Label + " · " + _snapshot.Security.Explanation,
@@ -142,6 +143,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "BookmarkGlyph" => SelectedPageIsBookmarked(_snapshot) ? "★" : "☆",
             "BookmarkLabel" => SelectedPageIsBookmarked(_snapshot) ? "Remove bookmark for this page" : "Bookmark page",
             "History" => _historyRows,
+            "HistoryQuery" => _historyQuery,
+            "HasHistoryQuery" => _historyQuery.Length > 0,
+            "HistoryResultSummary" => $"Showing {_historyRows.Length.ToString("N0", CultureInfo.CurrentCulture)} of {_snapshot.History.Count.ToString("N0", CultureInfo.CurrentCulture)} visits",
             "Downloads" => _downloadRows,
             "Haven.Embedded" => _hostContext?.IsEmbedded == true,
             "Haven.ModelAvailable" => _hostContext?.ModelSupported == true,
@@ -210,6 +214,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 if (value is not string findText || findText.Length > 8192) return false;
                 _find = findText;
                 break;
+            case "HistoryQuery":
+                if (value is not string historyText || historyText.Length > 2048) return false;
+                _historyQuery = historyText;
+                IssueSavedEntryRows();
+                break;
             case "RecordHistory":
             case "RestoreTabs":
                 if (value is not bool enabled) return false;
@@ -254,6 +263,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "9to1.Browse.FirefoxTab" or "9to1.Browse.ChromiumTab" or "9to1.Browse.ResetTabEngine" => tab.Address.IsWeb,
             "9to1.Browse.ReopenClosedTab" => _chrome.CanReopenClosedTab,
             "9to1.Browse.RemoveBookmark" => _snapshot.Bookmarks.Count > 0,
+            "9to1.Browse.RemoveHistoryEntry" => _snapshot.History.Count > 0,
+            "9to1.Browse.ResetHistoryQuery" => _historyQuery.Length > 0,
             "9to1.Browse.ToggleTabPinned" => !tab.IsHome,
             "9to1.Browse.MoveTabLeft" => _chrome.CanMoveTab(tab.Id, -1),
             "9to1.Browse.MoveTabRight" => _chrome.CanMoveTab(tab.Id, 1),
@@ -316,6 +327,8 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
         { _status = "The saved entry changed. Open its current row again."; Changed(); return ValueTask.CompletedTask; }
         if (command == "9to1.Browse.RemoveBookmark" && !IsCurrentSavedTarget(parameter, SavedEntryKind.Bookmark))
         { _status = "The bookmark changed. Use its current row again."; Changed(); return ValueTask.CompletedTask; }
+        if (command == "9to1.Browse.RemoveHistoryEntry" && !IsCurrentSavedTarget(parameter, SavedEntryKind.History))
+        { _status = "The history visit changed. Use its current row again."; Changed(); return ValueTask.CompletedTask; }
         if (!ValidateOriginalDownloadAdmission(command, parameter))
         { _status = "The download or Files folder changed. Select its current row again."; Changed(); return ValueTask.CompletedTask; }
         lock (_sourceGate) CheckAdmission(_originalCommands);
@@ -397,6 +410,12 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     var removedBookmark = (SavedEntrySelection)parameter!;
                     await Operation(() => _chrome.RemoveBookmarkAsync(removedBookmark.Id, token));
                     break;
+                case "9to1.Browse.RemoveHistoryEntry":
+                    if (!IsCurrentSavedTarget(parameter, SavedEntryKind.History)) { _status = "The history visit changed before removal; use its current row again."; break; }
+                    var removedVisit = (SavedEntrySelection)parameter!;
+                    await Operation(() => _chrome.RemoveHistoryEntryAsync(removedVisit.Id, token));
+                    break;
+                case "9to1.Browse.ResetHistoryQuery": _historyQuery = string.Empty; break;
                 case "9to1.Browse.ResetSiteEngine": await Operation(() => _chrome.ResetSiteEngineAsync(token)); break;
                 case "9to1.Browse.Bookmark": await Operation(() => _chrome.ToggleBookmarkAsync(token)); break;
                 case "9to1.Browse.ClearHistory": await Operation(() => _chrome.ClearHistoryAsync(token)); break;
@@ -693,7 +712,9 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                 "Description" => row.Description, "CanClose" => row.CanClose, "CloseLabel" => "Close " + row.Label, _ => null };
         else if (item is SavedEntryRow saved && _bookmarkRows.Concat(_historyRows).Concat(_downloadRows).Any(current => ReferenceEquals(current, saved)))
             value = path switch { "Key" => saved.Key, "Label" => saved.Label, "Detail" => saved.Detail, "Target" => saved.Target,
-                "RemoveLabel" => "Remove bookmark " + saved.Label, _ => null };
+                "RemoveLabel" => saved.Target is SavedEntrySelection { Kind: SavedEntryKind.History }
+                    ? "Remove history visit " + saved.Label + " · " + saved.Detail
+                    : "Remove bookmark " + saved.Label, _ => null };
         return value is not null;
     }
     private enum SavedEntryKind { Bookmark, History, Download }
@@ -701,7 +722,11 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
     private void IssueSavedEntryRows()
     {
         var bookmarks = _snapshot.Bookmarks.Select(entry => (entry.Id, Label: entry.Title, Detail: entry.Address)).ToArray();
-        var history = _snapshot.History.Select(entry => (entry.Id, Label: entry.Title, Detail: entry.Address)).ToArray();
+        var query = _historyQuery.Trim();
+        var history = _snapshot.History.Where(entry => query.Length == 0 ||
+                entry.Title.Contains(query, StringComparison.OrdinalIgnoreCase) || entry.Address.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Select(entry => (entry.Id, Label: entry.Title,
+                Detail: entry.VisitedAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture) + " · " + entry.Address)).ToArray();
         var downloads = _snapshot.Downloads.Items.Select(entry => (entry.Id, Label: entry.FileName,
             Detail: entry.SizeBytes.ToString("N0", CultureInfo.CurrentCulture) + " bytes · " + entry.Address)).ToArray();
         static bool Same(SavedEntryRow[] rows, (Guid Id, string Label, string Detail)[] actual) =>
