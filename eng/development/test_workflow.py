@@ -1112,6 +1112,7 @@ def load_tests(loader, tests, pattern):
     # copy-budget regression suite there; broad discovery loads it separately.
     if pattern in (None, "test_workflow.py"):
         tests.addTests(loader.loadTestsFromName("test_copy_budget"))
+        tests.addTests(loader.loadTestsFromName("test_autopatch_workflow_policy"))
     return tests
 
 
