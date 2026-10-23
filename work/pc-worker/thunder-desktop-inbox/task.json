@@ -8,24 +8,23 @@
   "source_ref": "refs/heads/codex/thunder-source-handoff-20261022",
   "expected_source_revision": "eb0da4f082b2e82512b22ffabf17a28a3057fafd",
   "handoff_path": "docs/dulche/thunder-desktop-handoff-20261022.md",
-  "sequence": 13,
-  "task_id": "THUNDER-DESKTOP-20261023-13",
-  "previous_task_id": "THUNDER-DESKTOP-20261023-12",
-  "expected_previous_inbox_revision": "728c5382854068c2c4e91831d2291c461ca413dc",
-  "expected_previous_content_sha1": "9599ff0d1d7b1bee9f0c58103dad98a1309da301",
-  "expires_at": "2026-10-23T10:00:00Z",
+  "sequence": 14,
+  "task_id": "THUNDER-DESKTOP-20261023-14",
+  "previous_task_id": "THUNDER-DESKTOP-20261023-13",
+  "expected_previous_inbox_revision": "2b17d59de64211bff090922dbe5538fd22864e66",
+  "expected_previous_content_sha1": "dbeefdcae915cea554a07dede7188d7b98899546",
+  "expires_at": "2026-10-23T21:30:00Z",
   "activation_required": false,
   "status": "PREPARED_NOT_PUBLISHED_NO_ACK",
   "operation": "edit_scoped_source",
-  "objective": "OWNER PRIORITY CHANGE: devote the remaining approximately half-hour until11BST to Thunder performance profiling and a measurable, safe speed improvement. Checkpoint unfinished CPU wire work at a safe boundary; do not spend the whole remaining window on the nine-case repair unless it is genuinely required for the selected live experiment. Continue no longer than owner deadline.",
+  "objective": "The owner has reopened Thunder testing NOW until22:30BST/21:30UTC23Oct. Resume the existing preserved Thunder workstream after reconciling actual Task13 results and source; prioritise real speed profiling, a measurable reversible optimisation and requested model compatibility. Do not redo completed work. Ordinary9to1 continues separately. This is fresh Task14; expired Task13/oldshutdown are not replayed.",
   "authority": {
-    "received_at": "2026-10-23T09:32:00.808801+00:00",
-    "source": "Latest direct owner Root messages23October2026",
+    "received_at": "2026-10-23T14:17:47.661023+00:00",
+    "source": "Direct owner Root message23October2026",
     "quotes": [
-      "can we prioritise speed improvements over the next half hour",
-      "as in the thunder worker"
+      "Surprise (to both me and you) thunder testing is available from now until 10:30pm"
     ],
-    "scope": "Reorders the existing desktop Thunder work; preserves all quality, service, access and safety boundaries. Does not authorise additional workers/paid providers, unrelated process interruption, automatic engine unload/restart or deadline extension."
+    "scope": "Supersedes the prior11BSTstop and approximate17–22BSTannouncement. Authorises existing scoped Thunder testing until21:30UTC; earlierrevocation/nativeStopwins. Preserves work/services/safety and actual native task admission. No prior shutdown replay, paidprovider or additionaldaemon/bridge authority."
   },
   "source_custody": {
     "base": "eb0 isretainedanchor, notreset target. Continue ownTask11 isolatedtree preservingactualpatch/dirtywork/privateoverlay/tests. RecordactualHEAD/preposthashes locally; no reset/reclone/broadsourceupdate.",
@@ -47,11 +46,13 @@
     "admission": "Locallyverifyexactknownpreimage orboundedconflict-freeequivalentpreservingTask11improvements; mismatch/ambiguityblockswriteonly. Canonicalprivatecloudcommits4c9c45a3849e51e3450972db8cfff5c338644bef +c8cb8f5dc47f77756de87234fd1c4b5624206f76 maynotexistlocally; do notdownload/publishcode merelytofetchthem. Implement smallsemantics below, no new runtime."
   },
   "priority_order": [
-    "AcknowledgeTask13 and preserve actualTask11/12 patches, tests, results and activeoperation checkpoint. No reset/reclone. If Task12 alreadyrunning, finish its current atomic operation then switch priorities safely.",
-    "Immediately inspect the REAL running engine, model/quantisation/context/tokenizer, request path and supported per-request tuning knobs; establish the actual applied request configuration, current queue/counters/quiet gate and hardware. Use existing legitimate API and tools, not a new auth/bridge.",
-    "Obtain repeatable existing-engine baseline/profile, then choose ONE source-backed, supported, reversible performance knob with best evidence of a real bottleneck and feasible comparison before cutoff. Prioritise useful measurements over more inventory.",
-    "Run repeated interleaved baseline/tuned measurements with same model/quant/context/prompt/output/decoding parameters except the explicitly tested knob. Aim >=5 validruns/configuration if remaining time permits; record fewer honestly. Stop new experiments with >=5min left for owned rollback/checkpoint, and >=10min if an engine transition was genuinely admitted.",
-    "Report medians/variability and raw per-run evidence. Distinguish measured benefit from noise, client/network/cache effects and unavailable metrics. No tuning benefit is an acceptable finding; never substitute a speed claim."
+    "Acknowledge Task14 and actual21:30UTCdeadline. First preserve/read Task13 receipt, actual raw baseline/tuning results and prior failures. Report already completed measurements immediately; do not infer them from ACK or request counters. Preserve own worktree HEAD/dirtywork/tokenizer overlay and all evidence; no reset/reclone.",
+    "Verify real host/GPU/current engine/model/quant/context/requestroute/appliedsettings and requestqueue. Use the existing legitimate endpoint. For existing-engine nonmutating baseline, actual30squiet/overlap gate suffices; do not spend the window waiting for a nonexistent reservation API. Record idle versus exclusive truth.",
+    "Obtain repeated baseline/profile and choose one documented supported reversible knob addressing the measured bottleneck. Interleave >=5 baseline and5tuned validruns under existing boundedrequestcontract if feasible. Record exact outputs/tokens/nativeprefill/decode/clientTTFT/VRAM/RAM/utilisation where actually available, missingmetrics NOT RUN. No cold/warmcache or shorteroutput falsegain.",
+    "Work through actual model-route and producer/helper blockers required for a latest-upstream comparison. Cloud canonical fixes already preservebounds/buffering/cancellation; inspect ownpatch and reconcile semantically before duplicating. Existing twofilewrite scope remains; frozen test contract stays unchanged. If ownedCPUbuild is needed and realtoolchain/guards available, use bounded isolated outputs and record command/results. Do not alter installed shared engine to fake a comparison.",
+    "Upstream latest verified release is Strata v0.2.3 /engine0.1.48 /commit5c8dd322528cc84f68f461ad54a506b9da8fa8d4. Integrated cloud pin remains0.1.47; runningPC earlier0.1.44.1. Reverify actual now. New q36body alone does not establishsharedkernel/modelcompatibility. CandidateGPU comparison only with actual compatible route, CUDA build, exclusiveowned transition and knownrollback/nativeapproval. Do not loadtwofullmodels concurrently on16GB or interrupt unrelatedprocesses.",
+    "Investigate Ornith-1.5-122B and Sage-A1.5 using actualinstalledmodels/modelarchitecture/upstreamdispatch/quantisation/tool/output requirements. Do not claim compatibility from card/name; do not download hugeweights blindly. Preserve exact card/source/model revisions. If realmodel uninstalled/unsupported, report specificmissingroute/loader/kernel/quantisation and prepare scopedimplementation handoff rather than fabricated inference.",
+    "Checkpoint concise actual results early and after each useful experiment through existing private receipts/native thread. Stop new existingengine experiments by21:25UTC; candidate transitions by21:20UTC for ownedrollback/checkpoint. Stop allhardwareexecution21:30UTC or earlierrevocation. Preserve services/work and issue no OSshutdown."
   ],
   "performance_admission": {
     "existing_engine": "A read-only configuration/current-enginebaseline throughnormalexistingAPI DOES NOT require inventing anexclusivelease, sinceitdoesnotchangeinstalledengine/services. Requiregenuinecurrentroute/owner-nativepermission and30secondszeroactive/zeroqueue/unchangedcounter first. Then atmost10boundedrequests TOTAL acrossbaseline+tunedconfigurations, sequential requested<=128outputtokens where honoured, otherwise verifiedactualadaptercap<=256outputtokens/<=90s each, existingactualcheckpoint/quant/context/settings; fixedprompt Explain how a CPU cache reduces memory access latency; identicalsupported seed42/temperature0 orrecordunsupported/defaults. Samplecurrentqueue/counter/processidentity before/during/after; discardoverlap/counterincrementsbeyondownrequests, neverblockotherclients. Labelthisendpointobservation notexclusivecontrolledcomparison; separatenativeprefill/decode fromclientTTFT/wall/cacheclass, donotinventunreportedmetrics. Record actualhardware/software; nohistoricalcachewarmversuscoldgainclaim.",
@@ -64,30 +65,28 @@
   },
   "cpu_wire_work": "Keep Task12 exact2 repair scope and unchanged nine-case test contract if a repair is essential. Preserve existing actual6PASS3FAIL and all unsuccessful runs. Correctness cannot be waived to get a faster result. Broader CPU cleanup/model compatibility inventory is next after the speed-focused window; requested Ornith/Sage context remains preserved in Task12.",
   "outputs": {
-    "destination": "Existing private task-owned benchmark JSON/patch/native thread. No raw code, host paths, personal data, credentials or benchmark prompts published to public Git. Root raw RPC return currently unreliable; native thread concise checkpoint is useful, no new auth/inbox/channel. Old private Gmail challenge expired09:07UTC; do not reuse it.",
+    "destination": "Existing private task-owned result JSON/patch and existing native thread. Never publish personalpaths/rawcode/credentials/modelweights or benchmarkevidence to publicGit. Root readback currently unconfirmed; concise native checkpoint is useful. No expired Gmail challenge or new channel.",
     "required": [
-      "Task13 actual ACK and effective deadline",
+      "Task14 actual ACK/effective21:30UTCdeadline; Task13 actual results or preciseabsence",
       "Exact hardware/model/quant/runtime/source/config/command identities",
       "Raw baseline+tuned runs, warm/cache and overlap classification",
       "Median/variability/native versus client timings; explicit sample counts and NOT RUN",
       "Chosen bottleneck/knob and measured gain or no reliable gain",
-      "Rollback/config restoration and preserved services; next executable improvement"
+      "Rollback/config restoration and preserved services; next executable improvement",
+      "Requestedmodel compatibility matrix: architecture/loader/quant/tool/structuredoutput/actualrun status; exact source/model revision and missing prerequisites"
     ]
   },
   "delivery_contract": {
     "updates": "Fixedexistingrepo/ref descendanttasks, correctsequence/source/duplicate guards, boundedwatch<=60schecks. Task11checkpointacknowledgedperownerrelay; nativeindependentlyvalidatesownreceipt.",
-    "stop": "Stop10:00UTC/11BST23Oct or earlierrevocation/nativeStop; safelycheckpointownedtasks/observations. No yesterdayTask8/9shutdownreplay.",
-    "forbidden": "No unrelatedwrites/processinterrupts, SDK/donorbuild/download,newdaemon/auth/shellpayload, driver/firmware/clocks/power/security/provider/financialchange, unreviewedmerge/publiccode/evidence, madeupworker/hardware/speedgain."
+    "stop": "Stop21:30UTC /22:30BST23Oct or earlierrevocation/nativeStop; preserve ownedcheckpoints and services. Earlierexpired Task13/Task8/Task9 are historical only, neverreplay.",
+    "forbidden": "No unrelatedwrites/processinterrupts, unboundeddownloads/newdaemon/auth/publicshell, driver/firmware/clocks/power/security/provider/financialchanges, unreviewedmerge/publiccode/evidence or madeupworker/hardware/speedgain. CPU build onlytask-owned with verifiedtoolchain/resources; GPUcandidate requires actualadmission."
   },
-  "next_testing_window": {
-    "source": "LatestownerRootmessage23Oct2026",
-    "quote": "next testing window after 11am: roughly 5pm-10pm tonight",
+  "current_testing_window": {
     "date": "2026-10-23",
     "timezone": "Europe/London",
-    "approximate_start": "2026-10-23T17:00:00+01:00",
-    "latest_end": "2026-10-23T22:00:00+01:00",
-    "UTC_start": "2026-10-23T16:00:00Z",
-    "UTC_end": "2026-10-23T21:00:00Z",
-    "limits": "CurrentTask13 STILL expires10UTC/11BST. Safelycheckpoint then no desktop work in gap. Eveningstart approximate: reverify actual owner-authorised access then fresh scoped task; no autonomous wake/newwatch/rebootpersistence or shutdown inferred. Earlierrevocationwins."
+    "start": "Owner reopened now; reverify actualconnection/custody",
+    "UTC_end": "2026-10-23T21:30:00Z",
+    "local_end": "2026-10-23T22:30:00+01:00",
+    "source": "Latest owner directRootmessage"
   }
 }
