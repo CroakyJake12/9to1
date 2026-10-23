@@ -319,7 +319,16 @@ def main():
         raise ValueError("Exact donor archive mismatch")
     if args.work.exists():
         raise ValueError("A new empty work path is required; existing source is never overwritten")
-    expected = {row["path"]: row for row in lock["rows"]}
+    # Match the preparation tool's one-to-one lock contract before extracting anything.
+    expected = {}
+    for row in lock["rows"]:
+        path = row["path"]
+        if path in expected:
+            raise ValueError("Duplicate source-lock path: " + path)
+        expected[path] = row
+    count = lock["blobCount"]
+    if type(count) is not int or count != len(expected):
+        raise ValueError("Invalid source-lock blobCount: expected %d unique rows" % len(expected))
     # The lock's treeCrossCheck records the EXACT 16 archive members whose git export was EOL-normalized
     # (CRLF -> LF) to match the authenticated git tree blob. For those names ONLY we accept the blob hash
     # of the LF-normalized body against the INDEPENDENTLY sourced canonical tree blob (treeBlobSha);
