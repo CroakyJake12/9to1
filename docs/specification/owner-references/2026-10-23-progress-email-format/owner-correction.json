@@ -1,24 +1,55 @@
 {
   "cadence_minutes": 30,
   "evidence": "Keepusefulactualscreenshots withdate/source/platform andhonestfreshness; captureaspartofongoingtests withoutstalling. Reusedscreens labelled.",
-  "recorded_at": "2026-10-23T18:53:53.219285+00:00",
+  "recorded_at": "2026-10-23T20:38:57.606537+00:00",
   "required_sections": [
     {
-      "heading": "\ud83d\udc40 Progress",
-      "style": "One bullet per app: App: N% Implemented | N% Accepted; show Not Started only when verified. Percentages require complete auditable applicablemanifest+explicitstage definitions; use Not yet measured until valid numerator/denominator exist. Do not copy owner illustrative90/10 values or convert testcounts into apppercentages."
+      "heading": "👀 Progress",
+      "style": "One bullet per app: App: ~N% Implemented | ~N% Accepted. Give useful rough engineering point estimates when measured values are unavailable and label them clearly as estimates, not audited completion. Implemented covers applicable specification/donor behaviour present in the current integrated candidate; Accepted estimates the portion of applicable app scope independently validated. Ground judgment in current source, actual behaviour, retained review evidence and known gaps; record source/revision, date and brief basis. Use measured values when a complete current applicable manifest supports auditable numerators/denominators and stage evidence. Do not copy illustrative values, derive app percentages from test/task pass ratios or quality-gate counts, or count private unintegrated fixes. Not Started requires verified absence. Partial/estimated Accepted percentages do not establish app readiness or waive mandatory gates."
     },
     {
-      "heading": "9\ufe0f\u20e3 9to1 Progress",
-      "style": "One bullet per app summarising changes since last successfulsentemail. Use No Changes when accurate. Show previous\u2192new implemented percentage only if both are validlymeasured on same complete scope. Summarise user-facing fixes; avoid massive implementationdetail."
+      "heading": "9️⃣ 9to1 Progress",
+      "style": "One bullet per app summarising changes since the last successfully sent email; No Changes when accurate. Show previous→new values for consistent app scope, label estimated movement and explain recalibration or scope changes. Prefer user-facing outcomes; do not invent a measured gain."
     },
     {
-      "heading": "\ud83c\udf29 Thunder",
-      "style": "ExistingThunder section retained, add more quantitative actualprogress: completed/eligible/failedrequests, model+quantisation, repeated-run medians/ranges, TTFT/memory/hardware/software wherecaptured, before\u2192after support matrix/gates/CPUtests counts. Labelconfounds/NOTRUN/BLOCKED; no fabricatedgains or estimates asachieved."
+      "heading": "🌩 Thunder",
+      "style": "ExistingThunder section retained, add more quantitative actualprogress: completed/eligible/failedrequests, model+quantisation, repeated-run medians/ranges, TTFT/memory/hardware/software wherecaptured, before→after support matrix/gates/CPUtests counts. Labelconfounds/NOTRUN/BLOCKED; no fabricatedgains or estimates asachieved."
     }
   ],
-  "schema": "9to1.owner-progress-email-format/v2",
+  "schema": "9to1.owner-progress-email-format/v3",
   "scope": "Applies fromnextemailonward. Preserveallactualsendreceipts/history anddo not resendpreviousmessages.",
-  "source": "Latest direct owner message in currentRoot conversation23October2026",
-  "supersedes": "Earlier9\ufe0f\u20e3Updates/\u2705\ud83d\udd52\u27a1\ufe0femailstructure; 30mincadence/recipient remain unchanged",
-  "configuration": "Existing privatehalf-hourlycadencestate andrecipientremainoutsideGit; do notcreateanewscheduler orresetlastsuccessfulsend."
+  "source": "Latest direct owner instruction in the current Root conversation on 23 October 2026",
+  "supersedes": "The previous v2 complete-denominator-only / Not yet measured fallback is superseded for rough progress estimates. The requested per-app sections, 30-minute cadence, recipient, actual receipts, screenshot freshness and mandatory acceptance/release gates remain.",
+  "configuration": "Existing privatehalf-hourlycadencestate andrecipientremainoutsideGit; do notcreateanewscheduler orresetlastsuccessfulsend.",
+  "latest_owner_quote": "Also actually estimate progress. Not yet measured is meaningless.",
+  "superseded_history": [
+    {
+      "status": "SUPERSEDED_FOR_ROUGH_PROGRESS_ESTIMATES_BY_LATEST_OWNER_INSTRUCTION",
+      "original_document_sha256": "7c0e83de09927d0c906a438e1f3fd162c84381680ed54f148d8426350cdcb16a",
+      "document": {
+        "cadence_minutes": 30,
+        "evidence": "Keepusefulactualscreenshots withdate/source/platform andhonestfreshness; captureaspartofongoingtests withoutstalling. Reusedscreens labelled.",
+        "recorded_at": "2026-10-23T18:53:53.219285+00:00",
+        "required_sections": [
+          {
+            "heading": "👀 Progress",
+            "style": "One bullet per app: App: N% Implemented | N% Accepted; show Not Started only when verified. Percentages require complete auditable applicablemanifest+explicitstage definitions; use Not yet measured until valid numerator/denominator exist. Do not copy owner illustrative90/10 values or convert testcounts into apppercentages."
+          },
+          {
+            "heading": "9️⃣ 9to1 Progress",
+            "style": "One bullet per app summarising changes since last successfulsentemail. Use No Changes when accurate. Show previous→new implemented percentage only if both are validlymeasured on same complete scope. Summarise user-facing fixes; avoid massive implementationdetail."
+          },
+          {
+            "heading": "🌩 Thunder",
+            "style": "ExistingThunder section retained, add more quantitative actualprogress: completed/eligible/failedrequests, model+quantisation, repeated-run medians/ranges, TTFT/memory/hardware/software wherecaptured, before→after support matrix/gates/CPUtests counts. Labelconfounds/NOTRUN/BLOCKED; no fabricatedgains or estimates asachieved."
+          }
+        ],
+        "schema": "9to1.owner-progress-email-format/v2",
+        "scope": "Applies fromnextemailonward. Preserveallactualsendreceipts/history anddo not resendpreviousmessages.",
+        "source": "Latest direct owner message in currentRoot conversation23October2026",
+        "supersedes": "Earlier9️⃣Updates/✅🕒➡️emailstructure; 30mincadence/recipient remain unchanged",
+        "configuration": "Existing privatehalf-hourlycadencestate andrecipientremainoutsideGit; do notcreateanewscheduler orresetlastsuccessfulsend."
+      }
+    }
+  ]
 }
