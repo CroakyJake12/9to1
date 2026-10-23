@@ -185,8 +185,11 @@ public static class CuiThemeScopeApplier
     /// <summary>Detects the current appearance from application resources.</summary>
     public static CuiAppearance DetectAppearance()
     {
-        var resources = Application.Current?.Resources;
-        if (resources is not null && resources["CuiAppearance"] is string appearanceStr)
+        var application = Application.Current;
+        // Bootstrap snapshots live in merged providers; direct Home-owned observations
+        // retain the dictionary's normal precedence over those providers.
+        if (application is not null && application.Resources.TryGetResource(
+            "CuiAppearance", application.ActualThemeVariant, out var value) && value is string appearanceStr)
         {
             return appearanceStr switch
             {

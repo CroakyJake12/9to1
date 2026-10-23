@@ -289,20 +289,36 @@ public sealed class UnifiedHomeContentTests
     [InlineData(1280, 900, CuiAppearance.SuperDark)]
     public async Task Shared_Home_renders_canonical_apps_and_keeps_controls_inside_the_window(int width, int height, CuiAppearance appearance)
     {
-        CuiNativeHost.InitialisePrimitiveTheme(global::Avalonia.Application.Current!, "9to1", appearance);
+        var application = global::Avalonia.Application.Current!;
+        var previousResources = application.Resources;
+        var previousVariant = application.RequestedThemeVariant;
+        var previousTheme = CuiSurfacePaletteCatalog.ActiveTheme;
         using var lifetime = new CancellationTokenSource();
-        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token).CreateSession(Request()));
-        await session.InitializeAsync();
-        var page = session.OriginalNativeView;
-        var window = new Window { Width = width, Height = height, Content = page };
+        IBrowseNativeAppContentSession? session = null;
+        Window? window = null;
+        Task? initialization = null, close = null;
+        var failures = new List<Exception>();
         try
         {
+            // Use the production primitive snapshot inside a fresh owned dictionary.
+            // Never merge mutable original brushes, publish a global palette event, or
+            // rewrite the previous custom/accessibility/accent projection.
+            var fixtureResources = new ResourceDictionary();
+            fixtureResources.MergedDictionaries.Add(CuiSceneVisualResources.Create("Home", appearance));
+            application.Resources = fixtureResources;
+            application.RequestedThemeVariant = CuiSceneVisualResources.Variant(appearance);
+            session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token).CreateSession(Request()));
+            initialization = session.InitializeAsync();
+            await initialization;
+            var page = session.OriginalNativeView;
+            window = new Window { Width = width, Height = height, Content = page };
             window.Show(); window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
             using var frame = window.CaptureRenderedFrame();
             Assert.NotNull(frame);
             Assert.Equal(width, frame.PixelSize.Width); Assert.Equal(height, frame.PixelSize.Height);
-            // Preserve the actual frame even when a later semantic/bounds assertion fails.
-            CaptureOptionalFrame(window, frame, $"home-apps-{width}-{appearance}", "UnifiedHome Apps layout fixture");
+            // Preserve the actual frame/mode before checking the requested appearance.
+            CaptureOptionalFrame(window, frame, $"home-apps-{width}-{appearance}", "UnifiedHome Apps layout fixture", appearance);
+            Assert.Equal(appearance, CuiThemeScopeApplier.DetectAppearance());
             foreach (var (id, label) in new[] { ("home-apps", "Apps"), ("home-models", "Models / Discover"), ("home-newtab", "New Tab") })
             {
                 // Owner-refined icon-only rail: Content is an Image, not its accessible label.
@@ -314,9 +330,46 @@ public sealed class UnifiedHomeContentTests
                 Assert.InRange(origin.Value.Y, -1, height - 23);
                 Assert.True(origin.Value.X + button.Bounds.Width <= width + 1);
             }
-
         }
-        finally { await session.CloseAndDrainAsync(); window.Close(); }
+        catch (Exception cause) { Retain(cause); RetainTask(initialization); }
+        finally
+        {
+            if (session is not null)
+            {
+                try { close = session.CloseAndDrainAsync(); await close; }
+                catch (Exception cause) { Retain(cause); RetainTask(close); }
+            }
+            if (window is not null && session?.CanRetireOriginalView == true)
+            {
+                try { window.Content = null; window.Close(); }
+                catch (Exception cause) { Retain(cause); }
+            }
+            // The supported Application.Resources setter restores the SAME dictionary
+            // and owner, including key absence, merged providers and mutable brush identities.
+            try { application.Resources = previousResources; }
+            catch (Exception cause) { Retain(cause); }
+            try { application.RequestedThemeVariant = previousVariant; }
+            catch (Exception cause) { Retain(cause); }
+            try
+            {
+                Assert.Same(previousResources, application.Resources);
+                Assert.Same(application, ((IResourceProvider)previousResources).Owner);
+                Assert.Equal(previousVariant, application.RequestedThemeVariant);
+                Assert.Equal(previousTheme, CuiSurfacePaletteCatalog.ActiveTheme);
+            }
+            catch (Exception cause) { Retain(cause); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Home layout assertion and independent original cleanup/theme restoration failed.", failures);
+        void Retain(Exception cause)
+        {
+            if (!failures.Any(existing => ReferenceEquals(existing, cause))) failures.Add(cause);
+        }
+        void RetainTask(Task? source)
+        {
+            if (source?.Exception is { } original)
+                foreach (var cause in original.InnerExceptions) Retain(cause);
+        }
     }
 
     [AvaloniaTheory]
@@ -366,7 +419,8 @@ public sealed class UnifiedHomeContentTests
             {
                 var origin = button.TranslatePoint(default, nav.Layout)!.Value;
                 Assert.True(origin.Y >= previousBottom, "The icon rail wrapped into a second column.");
-                Assert.True(origin.X >= 0 && origin.X + button.Bounds.Width <= nav.Bounds.Width + .5);
+                Assert.True(origin.X >= 0 && origin.X + button.Bounds.Width <= nav.Bounds.Width + .5,
+                    $"{button.Name}: X={origin.X}, Width={button.Bounds.Width}, NavigationWidth={nav.Bounds.Width}, ViewportWidth={scroll.Viewport.Width}.");
                 previousBottom = origin.Y + button.Bounds.Height;
                 Assert.False(string.IsNullOrWhiteSpace(AutomationProperties.GetName(button)));
                 var icon = Assert.Single(button.GetVisualDescendants().OfType<Image>());
@@ -490,6 +544,44 @@ public sealed class UnifiedHomeContentTests
         void Layout() { window!.UpdateLayout(); Dispatcher.UIThread.RunJobs(); }
     }
 
+    [AvaloniaTheory]
+    [InlineData(CuiAppearance.SuperBright)]
+    [InlineData(CuiAppearance.Bright)]
+    [InlineData(CuiAppearance.Dark)]
+    [InlineData(CuiAppearance.SuperDark)]
+    public void Theme_detection_reads_merged_bootstrap_and_preserves_direct_preference_precedence(CuiAppearance appearance)
+    {
+        var application = global::Avalonia.Application.Current!;
+        var resources = application.Resources;
+        var hadDirect = resources.TryGetValue("CuiAppearance", out var previousDirect);
+        var snapshot = CuiSceneVisualResources.Create("Home", appearance);
+        var failures = new List<Exception>();
+        try
+        {
+            resources.Remove("CuiAppearance");
+            resources.MergedDictionaries.Add(snapshot);
+            // Exact primitive-bootstrap provider shape, without a direct preference shadowing it.
+            Assert.Equal(appearance, CuiThemeScopeApplier.DetectAppearance());
+            var direct = appearance == CuiAppearance.Bright ? CuiAppearance.SuperDark : CuiAppearance.Bright;
+            resources["CuiAppearance"] = direct.ToString();
+            Assert.Equal(direct, CuiThemeScopeApplier.DetectAppearance());
+        }
+        catch (Exception cause) { failures.Add(cause); }
+        finally
+        {
+            try { resources.MergedDictionaries.Remove(snapshot); }
+            catch (Exception cause) { failures.Add(cause); }
+            try
+            {
+                if (hadDirect) resources["CuiAppearance"] = previousDirect;
+                else resources.Remove("CuiAppearance");
+            }
+            catch (Exception cause) { failures.Add(cause); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Theme lookup assertion and independent resource restoration failed.", failures);
+    }
+
     private static Button HomeRailButton(Control page, string id, string label)
     {
         var button = Assert.Single(page.GetVisualDescendants().OfType<Button>(), item => item.Name == id);
@@ -511,7 +603,7 @@ public sealed class UnifiedHomeContentTests
     private static readonly object CaptureGate = new();
     private static int CaptureCount;
     private static long CaptureBytes;
-    private static void CaptureOptionalFrame(Window window, Bitmap frame, string name, string fixture)
+    private static void CaptureOptionalFrame(Window window, Bitmap frame, string name, string fixture, CuiAppearance? requestedAppearance = null)
     {
         var directory = Environment.GetEnvironmentVariable("HAVEN_UNIFIED_HOME_CAPTURES");
         if (string.IsNullOrWhiteSpace(directory)) return;
@@ -535,6 +627,7 @@ public sealed class UnifiedHomeContentTests
                 {
                     captured_utc = DateTimeOffset.UtcNow, source_revision = source, build_revision = build,
                     fixture, renderer = "headless-Skia", installed_native = false,
+                    requested_appearance = requestedAppearance?.ToString(),
                     appearance = CuiThemeScopeApplier.DetectAppearance().ToString(),
                     viewport = new { window.ClientSize.Width, window.ClientSize.Height },
                     pixels = new { frame.PixelSize.Width, frame.PixelSize.Height },
