@@ -348,7 +348,12 @@ public sealed class BoardsOriginalStoreSetupTests
                 rig.Actor = await rig.Home.Profiles.GetCurrentAsync(rig.Token) ?? throw new InvalidOperationException("Actual local Home profile unavailable.");
                 return rig;
             }
-            catch { await rig.DisposeAsync(); throw; }
+            catch (Exception primary)
+            {
+                try { await rig.DisposeAsync(); }
+                catch (Exception cleanup) { throw new AggregateException("Actual setup acquisition and independent cleanup failed.", primary, cleanup); }
+                throw;
+            }
         }
         internal Task<BoardsOriginalStoreSetupBackend.Snapshot> ExecuteAsync(BoardsOriginalStoreSetupOperation operation,
             BoardsOriginalStoreSetupBackend.Snapshot? expected = null) =>
@@ -372,8 +377,9 @@ public sealed class BoardsOriginalStoreSetupTests
         }
         public async ValueTask DisposeAsync()
         {
-            _host.Cancel(); _deadline.Cancel();
             var failures = new List<Exception>();
+            try { _host.Cancel(); } catch (Exception error) { failures.Add(error); }
+            try { _deadline.Cancel(); } catch (Exception error) { failures.Add(error); }
             async Task Join(Func<Task> action)
             {
                 try { await action(); }
@@ -384,7 +390,8 @@ public sealed class BoardsOriginalStoreSetupTests
             await Join(Home.CloseAndDrainAsync);
             await Join(() => Provider.DisposeAsync().AsTask());
             await Join(() => _diagnostics.DisposeAsync().AsTask());
-            _host.Dispose(); _deadline.Dispose();
+            try { _host.Dispose(); } catch (Exception error) { failures.Add(error); }
+            try { _deadline.Dispose(); } catch (Exception error) { failures.Add(error); }
             if (failures.Count != 0) throw new AggregateException("Actual setup fixture owners did not drain cleanly.", failures);
         }
     }
