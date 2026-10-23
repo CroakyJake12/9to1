@@ -311,8 +311,19 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
                 while (true)
                 {
                     var version = _acceptedDispatchVersion;
-                    var actual = host.CaptureOriginalActionSettlement(show);
-                    await actual;
+                    Task[] accepted;
+                    lock (_gate) accepted = _actions.ToArray();
+                    var frontier = new CloudflareOriginalTaskLedger(); frontier.BindOriginalOwner(this);
+                    foreach (var action in accepted) _ = frontier.Track(action);
+                    // Direct dispatches are owned by the session and may be absent from
+                    // the loader snapshot. Retain them BEFORE capture callbacks and join
+                    // their actual originals even if loader acquisition/settlement fails.
+                    await frontier.RunToOriginalSettlementAsync(async () =>
+                    {
+                        var actual = frontier.Invoke(() => host.CaptureOriginalActionSettlement(show));
+                        await frontier.AwaitAsync(actual);
+                        foreach (var action in accepted) await frontier.AwaitAsync(action);
+                    });
                     DemandAlive(); scope.Token.ThrowIfCancellationRequested();
                     if (version == _acceptedDispatchVersion && _activeDispatches == 0) break;
                 }
