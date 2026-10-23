@@ -15,6 +15,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
+    <!-- Legacy Boards is retained as a portable data/validation codec only, never its app or store owner. -->
+    <ProjectReference Include="../../../Boards/contract/CakeOS.Apps.Boards.Contract.csproj" />
     <ProjectReference Include="../../../Home/HavenOS.Home.csproj" />
     <ProjectReference Include="../../../../9to1 Models/Dulche Alpha/Dulche.Runtime.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" />
