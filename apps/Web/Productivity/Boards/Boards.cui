@@ -39,10 +39,10 @@
           <If condition="!{Binding StorageSourceBusy}">
             <If condition="{Binding BoardsStoreResult.Succeeded}">
               <Text id="boards-storage-status" text="{Binding BoardsStoreResult.Value.Message}" text-wrapping="Wrap" />
+            </If>
             <Else>
               <Text id="boards-storage-error" text="{Binding BoardsStoreResult.Message}" text-wrapping="Wrap" />
             </Else>
-            </If>
             <If condition="{Binding BoardsStoreResult.Value.CanInitialise}">
               <Button id="boards-storage-create" content="Create local library" action="InitialiseBoardsLibrary" horizontal-alignment="Left" />
             </If>
