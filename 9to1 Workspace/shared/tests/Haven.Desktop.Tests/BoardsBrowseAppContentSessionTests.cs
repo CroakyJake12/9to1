@@ -37,7 +37,12 @@ public sealed class BoardsBrowseAppContentSessionTests
         using var stream = typeof(BoardsBrowseAppContentSession).Assembly.GetManifestResourceStream(BoardsBrowseAppContentSession.CuiResourceName)
             ?? throw new InvalidOperationException("The actual shared Boards CUI resource is unavailable.");
         using var reader = new StreamReader(stream);
-        var document = new CuiDocumentSource(reader.ReadToEnd(), "Boards.cui").Document;
+        // Parse the actual embedded app with its canonical parser before trying the renderer.
+        // CuiDocumentSource intentionally has a terse exception; retain exact source diagnostics here.
+        var parser = new CakeOS.Cui.Language.CuiRichParser();
+        var document = parser.Parse(reader.ReadToEnd(), "Boards.cui");
+        Assert.False(parser.Diagnostics.Diagnostics.Any(diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error),
+            "BOARDS_CANONICAL_CUI_PARSE: " + string.Join(Environment.NewLine, parser.Diagnostics.Diagnostics.Select(diagnostic => diagnostic.ToString())));
         using var loader = new CuiControlLoader(presentation.ControlRegistry);
         loader.SetBindingContext(core); loader.SetActionDispatcher(core);
         var loaded = loader.TryLoad(document);
