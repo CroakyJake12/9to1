@@ -75,6 +75,87 @@ public sealed class BoardsBrowseAppContentSessionTests
         Assert.True(rig.Route.Closed); Assert.Empty(await rig.Notes.ListAsync(default));
     }
 
+    [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original canonical Notes fixture requires supported Linux; other platform acceptance is separate.")]
+    public async Task Prepare_awaits_a_genuine_direct_session_action_when_the_loader_snapshot_is_empty_without_blocking_UI()
+    {
+        Rig? rig = null; BoardsBrowseAppContentSession? session = null; Window? window = null;
+        Task? direct = null, watchdog = null; Task<IBrowseAppContentClosePreparation?>? preparing = null;
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var prepareEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var uiCheckpoint = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var bound = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var prepareCancellation = new CancellationTokenSource(); using var stopWatchdog = new CancellationTokenSource();
+        var failures = new List<Exception>(); var blocked = 0; var checkpointQueued = 0;
+        try
+        {
+            rig = new Rig(); session = rig.Create(); await session.InitializeAsync();
+            var view = Assert.IsType<CuiSceneHost>(session.OriginalNativeView);
+            window = new Window { Content = view, Width = 1000, Height = 760 }; window.Show();
+            var show = session.OriginalCuiShow ?? throw new InvalidOperationException("Retain actual original Show.");
+            while (true)
+            {
+                await view.CaptureOriginalActionSettlement(show).WaitAsync(bound.Token);
+                if (view.GetVisualDescendants().OfType<Control>().Any(control => control.Name == "boards-workspace")) break;
+                bound.Token.ThrowIfCancellationRequested(); await Task.Yield();
+            }
+            rig.Route.Observation = held.Task;
+            rig.Route.Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            direct = session.DispatchAsync("Create", null, bound.Token).AsTask();
+            await rig.Route.Entered.Task.WaitAsync(bound.Token);
+            Assert.False(direct.IsCompleted);
+            Assert.True(view.CaptureOriginalActionSettlement(show).IsCompletedSuccessfully,
+                "This control requires a genuine pending direct session action outside the loader snapshot.");
+            rig.Route.OnAliveCheck = () =>
+            {
+                if (Interlocked.CompareExchange(ref checkpointQueued, 1, 0) != 0) return;
+                prepareEntered.TrySetResult();
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => uiCheckpoint.TrySetResult());
+            };
+            // An external bound makes the broken UI spin an ordinary asserted RED. It
+            // cancels only the broken preparation; production must await the actual source.
+            watchdog = Task.Run(async () =>
+            {
+                await prepareEntered.Task.WaitAsync(stopWatchdog.Token);
+                try { await uiCheckpoint.Task.WaitAsync(TimeSpan.FromSeconds(5), stopWatchdog.Token); }
+                catch (TimeoutException) { Interlocked.Exchange(ref blocked, 1); prepareCancellation.Cancel(); }
+            });
+            preparing = session.PrepareCloseAsync(prepareCancellation.Token);
+            await uiCheckpoint.Task.WaitAsync(bound.Token); await watchdog;
+            Assert.True(Volatile.Read(ref blocked) == 0,
+                "BOARDS_DIRECT_ACTION_PREPARE_BLOCKED_UI: preparation spun on an empty loader snapshot while a genuine direct source was pending.");
+            Assert.False(direct.IsCompleted); Assert.False(preparing.IsCompleted);
+            Assert.Same(preparing, session.PrepareCloseAsync(prepareCancellation.Token));
+            rig.Route.OnAliveCheck = null; held.SetResult(); await direct;
+            var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await preparing);
+            var saved = Assert.Single(await rig.Notes.ListAsync(bound.Token));
+            Assert.True((await rig.Notes.LoadAsync(saved.Id, bound.Token))!.Version > 0);
+            await preparation.BeginClose(); Assert.True(session.CanRetireOriginalView);
+        }
+        catch (Exception error) { failures.Add(error); }
+        finally
+        {
+            if (rig is not null) rig.Route.OnAliveCheck = null;
+            held.TrySetResult(); stopWatchdog.Cancel();
+            if (watchdog is not null)
+                try { await watchdog; } catch (OperationCanceledException) when (stopWatchdog.IsCancellationRequested) { }
+                catch (Exception error) { failures.Add(error); }
+            if (direct is not null) try { await direct; } catch (Exception error) { failures.Add(error); }
+            if (preparing is not null)
+                try { var accepted = await preparing; if (accepted is { IsCurrent: true }) await accepted.BeginClose(); }
+                catch (Exception error) { failures.Add(error); }
+            if (session is not null)
+                try { await (session.OriginalClose ?? session.CloseAndDrainAsync()); } catch (Exception error) { failures.Add(error); }
+            if (window is not null)
+            {
+                try { window.Content = null; } catch (Exception error) { failures.Add(error); }
+                try { window.Close(); } catch (Exception error) { failures.Add(error); }
+            }
+            if (rig is not null) try { await rig.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+        }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Direct-action retirement assertion and independent cleanup failed.", failures);
+    }
+
     [AvaloniaFact]
     public async Task Refused_actual_save_preserves_draft_view_and_version_then_real_close_commits_once()
     {
@@ -323,7 +404,8 @@ public sealed class BoardsBrowseAppContentSessionTests
         internal TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal int FailObservationNumber;
         private int _observations;
-        public bool IsAlive => !Closed;
+        internal Action? OnAliveCheck;
+        public bool IsAlive { get { OnAliveCheck?.Invoke(); return !Closed; } }
         public BoardsBrowserCore AcquireOriginalCore() => Core = new(notes);
         public Task RevalidateAsync(CancellationToken token)
         {
