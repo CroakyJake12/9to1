@@ -4,15 +4,19 @@ on:
   pull_request:
     paths:
       - 'eng/development/**'
+      - 'eng/release-delivery/**'
       - 'AGENTS.md'
       - 'docs/development/**'
       - '.github/workflows/development-infrastructure.yml'
+      - '.github/workflows/havenos-linux-package.yml'
   push:
     paths:
       - 'eng/development/**'
+      - 'eng/release-delivery/**'
       - 'AGENTS.md'
       - 'docs/development/**'
       - '.github/workflows/development-infrastructure.yml'
+      - '.github/workflows/havenos-linux-package.yml'
   workflow_dispatch:
 
 permissions:
@@ -40,17 +44,37 @@ jobs:
           print((evidence / 'invariants.log').read_text())
           raise SystemExit(result.returncode)
           PY
+      - name: Validate installer custody and all ARM publication guards
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess, time
+          evidence = pathlib.Path(os.environ['RUNNER_TEMP']) / 'infrastructure-evidence'
+          evidence.mkdir(parents=True, exist_ok=True)
+          command = ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/release-delivery', '-p', 'test_installer_delivery.py', '-v']
+          started = time.monotonic()
+          with (evidence / 'installer-delivery.log').open('wb') as log:
+              result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+          receipt = {'command': command, 'exit_code': result.returncode, 'duration_seconds': time.monotonic() - started,
+                     'scope': 'Delivery protocol and CI guard fixtures only; no provider upload, native acceptance or laptop delivery.'}
+          (evidence / 'installer-delivery-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print((evidence / 'installer-delivery.log').read_text())
+          raise SystemExit(result.returncode)
+          PY
       - name: Record exact infrastructure inputs
         if: always()
         run: |
           python3 - <<'PY'
           import hashlib, json, pathlib, platform, subprocess
-          files = sorted(pathlib.Path('eng/development').glob('*'))
+          files = {p for root in ('eng/development', 'eng/release-delivery', 'docs/development')
+                   for p in pathlib.Path(root).rglob('*') if p.is_file()}
+          files.update(pathlib.Path(p) for p in ('AGENTS.md', '.github/workflows/development-infrastructure.yml',
+                                                '.github/workflows/havenos-linux-package.yml'))
           result = {
               'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
               'python': platform.python_version(),
               'platform': platform.platform(),
-              'files': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in files if p.is_file()},
+              'files': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(files)},
               'scope': 'Infrastructure invariants only; native/product/release acceptance remains separate.'
           }
           evidence = pathlib.Path(__import__('os').environ['RUNNER_TEMP']) / 'infrastructure-evidence'

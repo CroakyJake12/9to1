@@ -7,6 +7,12 @@
       "command": ["python3", "-B", "-m", "unittest", "discover", "-s", "eng/development", "-p", "test_workflow.py", "-v"],
       "depends_on": []
     },
+    "installer-delivery": {
+      "layer": 1,
+      "paths": ["eng/release-delivery/**", "docs/development/installer-delivery.md", "eng/development/checks.json", ".github/workflows/development-infrastructure.yml", ".github/workflows/havenos-linux-package.yml"],
+      "command": ["python3", "-B", "-m", "unittest", "discover", "-s", "eng/release-delivery", "-p", "test_installer_delivery.py", "-v"],
+      "depends_on": ["workflow"]
+    },
     "cui": {
       "layer": 1,
       "paths": ["framework/**", "eng/cui/**"],
