@@ -26,7 +26,7 @@ public sealed partial class DurableDriveProvider
         if (item is null || !IsVisible(state, item))
             return Fail<HostedItemMetadata>(FilesErrorCode.ItemNotFound, "Original item is unavailable.", "GetOriginalItem", fileId);
         RequireOriginalReadItem(item.Metadata);
-        return FilesResult<HostedItemMetadata>.Success(item.Metadata);
+        return FilesResult<HostedItemMetadata>.Success(ProjectSharingMetadata(state, item.Metadata));
     }
 
     public async Task<FilesResult<HostedItemMetadata>> GetForOriginalStoreAtRevisionAsync(Guid expectedStoreId, HostedItemId fileId,
@@ -40,7 +40,7 @@ public sealed partial class DurableDriveProvider
         RequireOriginalReadItem(item.Metadata);
         if (item.Metadata.CurrentRevisionId != expectedRevision)
             return Fail<HostedItemMetadata>(FilesErrorCode.RevisionConflict, "Original item revision changed.", "GetOriginalItem", fileId);
-        return FilesResult<HostedItemMetadata>.Success(item.Metadata);
+        return FilesResult<HostedItemMetadata>.Success(ProjectSharingMetadata(state, item.Metadata));
     }
 
     public async Task<FilesResult<FilesArtifactReference>> GetArtifactForOriginalStoreAsync(Guid expectedStoreId, HostedItemId fileId,
