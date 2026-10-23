@@ -43,7 +43,8 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         IBoardsOriginalDesktopRoute route, CancellationTokenSource lifetime, Func<bool> reduceMotion,
         CuiThemePreferenceContext? theme = null)
     { _request = request; _address = address; _route = route; _lifetime = lifetime; _token = lifetime.Token;
-        _reduceMotion = reduceMotion; _theme = theme; }
+        _reduceMotion = reduceMotion; _theme = theme;
+        if (route is IBoardsOriginalPresentationOwnerRoute original) original.BindOriginalPresentationOwner(this); }
 
     public AppContentAddress Address => _request.Address;
     public string Title => "Boards";

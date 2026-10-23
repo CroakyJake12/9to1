@@ -66,8 +66,7 @@
     <Compile Include="HavenAppRoutePolicyTests.cs;NativeAssistantsSetupDesktopPageTests.cs" />
     <!-- Build native binding and same genuine Linux Home/Files rig; no alternative test host. -->
     <Compile Include="BuildBrowseAppContentIntegrationTests.cs;BuildBrowseAppContentAuthenticTests.cs" />
-    <!-- Exact shared Boards CUI/session controls run in the maintained production App
-         headless host above, with the same source-fork renderer and no alternate host. -->
+    <!-- Exact Boards controls use the maintained App/headless host and approved source fork. -->
     <Compile Include="BoardsBrowseAppContentSessionTests.cs" />
     <Compile Include="HomeDashboardCuiRenderTests.cs;HomeDiscoverCuiRenderTests.cs;DashboardWidgetCanvasTests.cs;DashboardEditPlannerTests.cs" />
     <Compile Include="ChatSpacePageAcceptanceTests.cs" />
@@ -84,6 +83,11 @@
     <Compile Include="OriginalNativeColdProjectCompositionTests.cs;OriginalNativeColdProjectCompositionTests.Execution.cs;OriginalNativeColdProjectCompositionTests.ClosedInput.cs;OriginalNativeColdProjectCompositionTests.PreparedInputValidation.cs" />
     <!-- The maintained LinuxDirectoryFact attribute is owned in this existing test source. -->
     <Compile Include="FilesDeveloperOriginalDirectorySetupProducerTests.cs" />
+    <!-- Genuine Home/Files manual source CREATE/EDIT and native publication controls. -->
+    <Compile Include="FilesDeveloperOriginalSourcePublicationTests.cs" />
+    <!-- SAME existing Task current-project native controls and their unchanged partial helper
+         closure. Their synthetic READ is kernel compatibility evidence, not Home acceptance. -->
+    <Compile Include="FilesDeveloperOriginalCurrentProjectNativeTests.cs;FilesDeveloperOriginalExecutionPinTests.cs;FilesDeveloperOriginalWorkspaceMetadataSetupProducerTests.cs;FilesDeveloperOriginalProjectRegistrationProducerTests.cs" />
     <!-- Genuine separate manual Home WRITE + protected SQLite create-only composition, including its original rig. -->
     <Compile Include="CanonicalCompatibleTaskContextCompositionTests.Rig.cs;CanonicalCompatibleTaskContextCompositionTests.Tests.cs" />
     <Compile Include="OriginalAutomationLibraryDesktopTests.cs" />

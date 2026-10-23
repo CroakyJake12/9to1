@@ -5,6 +5,9 @@ using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
+using HavenOS.Home.Core;
+using HavenOS.Home.NativeUI;
+using Microsoft.Extensions.DependencyInjection;
 using HavenOS.Apps.Browse;
 using NineToOne.Web.Productivity.Boards;
 
@@ -128,6 +131,98 @@ public sealed class BoardsBrowseAppContentSessionTests
         var retained = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
         await retained.BeginClose();
     }
+
+    [AvaloniaFact]
+    public async Task Actual_Home_actor_callback_cannot_join_its_parent_session_under_restored_pre_owner_context()
+    {
+        var beforeOwner = ExecutionContext.Capture() ?? throw new InvalidOperationException("Capture genuine pre-owner context.");
+        await using var rig = new Rig();
+        using var appLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var hostLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var principal = new ActualPrincipal();
+        var home = new HomeNativeWindowsComposition(new FileHomeCoreStateStore(Path.Combine(rig.OriginalPaths.DataDirectory, "home.json")),
+            principal, rig.OriginalPaths, new("9to1.home.boards.guard-test.v1"));
+        var registrations = new ServiceCollection();
+        registrations.AddSingleton<IAppPaths>(rig.OriginalPaths);
+        registrations.AddSingleton<IProviderSecretStore, WindowsProviderSecretStore>();
+        registrations.AddHavenOwnedWindowsHomeDomain(home, rig.OriginalPaths, principal);
+        await using var provider = registrations.BuildServiceProvider();
+        BoardsBrowseAppContentSession? session = null;
+        try
+        {
+            await home.StartOriginalAsync();
+            var actor = await home.Profiles.GetCurrentAsync(default) ?? throw new InvalidOperationException("Actual local Home profile unavailable.");
+            var admission = new HomeNotesResourceAdmissionSource(rig.Notes, home.StateStore, home.Profiles,
+                home.Ownership, home.Resources, home.Permissions, home.Broker);
+            var approvals = new HomeNativeApprovalWindowOwner(home.Runtime, home.Profiles, home.Permissions);
+            var route = new NativeBoardsDesktopRoute(provider, home, rig.Notes,
+                new VerifiedNotesRepository(rig.Notes, rig.OriginalPaths, rig.Diagnostics), admission, approvals,
+                actor.ProfileId, "actual-home-parent-guard", appLifetime.Token, hostLifetime.Token);
+            var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://boards"), actor.ProfileId, BrowserTabPrivacy.Standard);
+            session = new(request, BoardsBrowseAppContentAddress.Parse(request.Address), route,
+                CancellationTokenSource.CreateLinkedTokenSource(hostLifetime.Token), () => true);
+            var callbacks = 0; Exception? prepareRefusal = null, closeRefusal = null;
+            bool initializationWasPending = false; Task? closeDuringCallback = null;
+            principal.HoldNextObservation = true;
+            principal.NextCallback = () => ExecutionContext.Run(beforeOwner.CreateCopy(), _ =>
+            {
+                ++callbacks;
+                initializationWasPending = session.OriginalInitialization is { IsCompleted: false };
+                prepareRefusal = Record.Exception(() => { _ = session.PrepareCloseAsync(); });
+                closeRefusal = Record.Exception(() => { _ = session.CloseAndDrainAsync(); });
+                closeDuringCallback = session.OriginalClose;
+            }, null);
+            // Missing Notes ownership/identity remains an authentic admission refusal.
+            // The control targets the preceding actual Home actor callback, not a fake Ready editor.
+            var initialization = session.InitializeAsync();
+            await principal.Entered.Task.WaitAsync(appLifetime.Token);
+            Assert.False(initialization.IsCompleted); principal.Release.TrySetResult();
+            var failure = await Record.ExceptionAsync(() => initialization.WaitAsync(appLifetime.Token));
+            Assert.Equal(1, callbacks); Assert.True(initializationWasPending);
+            Assert.IsType<InvalidOperationException>(prepareRefusal); Assert.IsType<InvalidOperationException>(closeRefusal);
+            Assert.Null(closeDuringCallback);
+            if (failure is not null)
+            {
+                Assert.False(session.IsPublicationCurrent);
+                Assert.NotNull(await Record.ExceptionAsync(() => session.CloseAndDrainAsync().WaitAsync(appLifetime.Token)));
+            }
+            else
+            {
+                // A later genuine setup surface may mount without reading content.
+                // This guard control does not accept that surface or grant ownership.
+                var preparation = Assert.IsAssignableFrom<IBrowseAppContentClosePreparation>(await session.PrepareCloseAsync());
+                await preparation.BeginClose().WaitAsync(appLifetime.Token);
+            }
+            Assert.False(Directory.Exists(Path.Combine(rig.OriginalPaths.DataDirectory, "Notes")));
+            await approvals.CloseAndDrainAsync();
+        }
+        finally
+        {
+            principal.NextCallback = null;
+            await home.CloseAndDrainAsync();
+        }
+    }
+
+    private sealed class ActualPrincipal : ITrustedHostPrincipalSource
+    {
+        private readonly OperatingSystemPrincipalSource _original = new();
+        internal Action? NextCallback;
+        internal bool HoldNextObservation;
+        internal TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<string?> GetPrincipalAsync(CancellationToken token)
+        {
+            var actual = await _original.GetPrincipalAsync(token);
+            if (HoldNextObservation)
+            {
+                HoldNextObservation = false; Entered.TrySetResult();
+                await Release.Task.ConfigureAwait(false);
+                return actual; // Arm the callback for the NEXT actual scoped observation after this await.
+            }
+            Interlocked.Exchange(ref NextCallback, null)?.Invoke();
+            return actual;
+        }
+    }
     private static IEnumerable<Exception> Causes(Exception error)
     {
         yield return error;
@@ -140,12 +235,15 @@ public sealed class BoardsBrowseAppContentSessionTests
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "9to1-boards-native-" + Guid.NewGuid().ToString("N"));
         private readonly ProductionDiagnostics _diagnostics;
+        internal ProductionDiagnostics Diagnostics => _diagnostics;
+        internal IAppPaths OriginalPaths { get; }
         internal NotesRepository Notes { get; }
         internal Saves Saves { get; }
         internal Route Route { get; }
         internal Rig()
         {
             Directory.CreateDirectory(_root); var paths = new Paths(_root);
+            OriginalPaths = paths;
             _diagnostics = new(paths);
             Notes = new(paths, new NotesDocumentValidator(), _diagnostics);
             Saves = new(Notes); Route = new(Saves);

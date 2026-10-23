@@ -21,11 +21,16 @@ internal interface IBoardsOriginalDesktopRoute : ICuiSceneReadiness
     Task CloseAndDrainAsync();
 }
 
+internal interface IBoardsOriginalPresentationOwnerRoute
+{
+    void BindOriginalPresentationOwner(BoardsBrowseAppContentSession originalOwner);
+}
+
 /// <summary>The original Home observer and reviewed Notes backend for one Boards presentation.
 /// Every content read/save still uses HomeNotesResourceAdmissionSource plus the original Notes
 /// transaction/fence. A runtime observation or native approval-window observation is no grant.
 /// Store ownership/setup/import is never manufactured here, and shared owners are never closed.</summary>
-internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute
+internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IBoardsOriginalPresentationOwnerRoute
 {
     private readonly IServiceProvider _provider;
     private readonly HomeNativeWindowsComposition _home;
@@ -40,6 +45,7 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute
     private CuiSceneAvailability? _observed;
     private bool _retiring, _coreAcquired;
     private Task? _close;
+    private BoardsBrowseAppContentSession? _presentationOwner;
 
     internal NativeBoardsDesktopRoute(IServiceProvider provider, HomeNativeWindowsComposition home,
         NotesRepository notes, VerifiedNotesRepository verified, HomeNotesResourceAdmissionSource admission,
@@ -50,6 +56,17 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute
         _profile = profile; _appLifetime = actualAppLifetime; _lifetime = actualRouteLifetime;
         _repository = NotesOriginalWorkspaceRepository.BindOriginal(notes, verified, admission,
             sessionId, PresentReadAsync, PresentSaveAsync, actualRouteLifetime);
+    }
+
+    public void BindOriginalPresentationOwner(BoardsBrowseAppContentSession originalOwner)
+    {
+        ArgumentNullException.ThrowIfNull(originalOwner);
+        lock (_gate)
+        {
+            if (_operations.Count != 0 || _presentationOwner is not null || _retiring)
+                throw new InvalidOperationException("Bind the original Boards presentation before any route work begins.");
+            _presentationOwner = originalOwner;
+        }
     }
 
     public bool IsAlive { get { lock (_gate) return !_retiring && !_lifetime.IsCancellationRequested && !_appLifetime.IsCancellationRequested; } }
@@ -173,6 +190,14 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute
         await start.ConfigureAwait(false);
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+        // Every nested actor/store callback physically owns BOTH route and parent,
+        // including callbacks that restore a pre-owner ExecutionContext.
+        originals.BindOriginalCallerCallback(callback =>
+        {
+            var parent = _presentationOwner
+                ?? throw new InvalidOperationException("The original Boards presentation owner is not bound.");
+            CloudflareOriginalExecutionGuard.InvokeOriginal(parent, () => { callback(); return true; });
+        });
         return await originals.RunToOriginalSettlementAsync(() => body(originals)).ConfigureAwait(false);
     }
     public Task CloseAndDrainAsync()
