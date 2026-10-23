@@ -751,10 +751,22 @@ public sealed partial class CuiControlLoader : IDisposable
         var failures = new List<Exception>();
         try
         {
-            // Resolve live bound parameters only after this actual pipeline has
-            // been retained, using the SAME configured context captured at load.
-            // App row owners still validate current selection and provenance.
-            var parameter = invocation.ResolveCurrentParameter();
+            // Parameter namespace and local values belong to this originating frame, never a
+            // replacement loaded while the accepted pipeline was awaiting its start gate.
+            if (!IsActionFrameCurrent(frame)) return;
+            var localParameter = invocation.LiveParameter is { } bound && IsLocalPath(bound.Path);
+            object? parameter;
+            if (localParameter)
+            {
+                var binding = invocation.LiveParameter!;
+                // A declared local remains local when unset/null: an external path with the
+                // same name cannot stand in for the original typed command result.
+                parameter = TryResolveLocal(binding.Path, out var local) ? local : binding.Fallback;
+                // Reading a nested result member is external code and can replace/close the frame.
+                if (!IsActionFrameCurrent(frame)) return;
+            }
+            else
+                parameter = invocation.ResolveCurrentParameter(); // SAME captured Repeat/query/host context.
             // An initial effect's parameter getter can synchronously replace/close the loader.
             // Admission retains its real pipeline, but no retired frame may start a command.
             if (invocation.FrameOwned && !IsActionOriginCurrent(frame, control, frameOwned: true)) return;
