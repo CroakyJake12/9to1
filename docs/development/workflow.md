@@ -58,6 +58,26 @@ read it before setup or inference, rather than restoring older endpoint assumpti
    SDK/native task uses the existing coordinator allocation at a time. Other
    workers continue source work and lightweight tests.
 
+   After an execution-environment restart, a resumed worker can retain an unusable
+   environment binding while the coordinator's actual shell works. A running
+   environment status or saved worker label is not a shell-access test. Preserve
+   the affected worker's source, dirty diff, file modes and hashes, and stop its
+   source writes through the supported collaboration interface. If that interface
+   supports a fresh isolated worker, launch it with a fresh context and the exact
+   existing instructions, checkpoint, worktree and scope. Require an actual `pwd`
+   and source-read probe before transferring the old claim with `release`/`claim`
+   at the current generation. Preserve the original worktree and checkpoints;
+   never create a replacement project, guess a host, or bypass a worker limit.
+   If no supported fresh binding works, record BLOCKED and continue independent
+   work. A fresh context also needs the normal recovery procedure; access alone
+   does not establish product acceptance.
+
+   A new Git worktree created with `--no-checkout` can have an empty index. Finish
+   its initial checkout through Git and verify HEAD, sparse selection and clean
+   status before allowing writes. Do not mistake that initial empty index for
+   intentional product deletions or carry it into an integration commit. Retain
+   any failed initialization diagnostics before repairing the new worktree.
+
    OpenCode v2 can select the inherited `PWD` even when the process `cwd` was
    changed. Set both to the assigned worktree and confirm the actual supported
    server/session boot location before allowing writes. A correct PID is not
