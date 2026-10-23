@@ -77,6 +77,9 @@ read it before setup or inference, rather than restoring older endpoint assumpti
    status before allowing writes. Do not mistake that initial empty index for
    intentional product deletions or carry it into an integration commit. Retain
    any failed initialization diagnostics before repairing the new worktree.
+   `read-tree` can populate the index without materialising selected sparse files.
+   In a new owned checkout, finish with `git checkout-index --all`; verify selected
+   files on disk and clean status. Never apply this as a reset of active work.
 
    OpenCode v2 can select the inherited `PWD` even when the process `cwd` was
    changed. Set both to the assigned worktree and confirm the actual supported
@@ -292,6 +295,23 @@ is refused. This deliberately conservative first implementation reuses the same
 immutable candidate, rather than assuming that a different HEAD is unaffected.
 Platform-specific build caches remain checksum/version keyed in their owning
 pipelines. A cache hit never substitutes for mandatory release acceptance.
+
+Source capture caches are immutable artifacts, separate from mutable SDK graphs.
+A successor may share unchanged files only with a fully verified immutable source
+capture; never link worker or SDK sources into it. Materialise each changed file
+through a new temporary inode and atomic replacement. Do not write or chmod a
+shared inode. Verify the complete new path/mode/hash set, the old capture unchanged,
+and no aliases to mutable sources. Retain delta and custody receipts. For Git tar
+exports, set `git -c tar.umask=0022 archive` so original executable modes survive.
+Use Python `-B` for source validation to avoid adding bytecode to exact captures.
+Source-cache reuse proves neither build success nor native/release acceptance.
+
+Before selecting a test filter, confirm the owning project's actual target and
+Compile inputs. A source file beside a project may be excluded from that target;
+use its existing owning project rather than expanding an unrelated suite. Reject
+zero executed cases and compile/analyser errors as infrastructure failures, never
+as a passing result or evidence that a defect was reproduced. Preserve the failed
+command and outputs when correcting selection; keep valid assertions unchanged.
 
 ## Integration and immutable release candidates
 
