@@ -94,6 +94,7 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         var resolvers = Capture(originalResourceResolvers);
         var policies = Capture(originalActionPolicies);
         var coreReadPolicy = new HomeCoreServiceReadActionPolicies();
+        var localStorePolicy = new HomeLocalStoreOwnershipActionPolicies();
         Profiles = new(StateStore, originalPrincipalSource);
         Permissions = new(StateStore, ResolvePolicy);
         var identity = new HomeNativeWindowsIdentityComponents(StateStore, Profiles, Permissions);
@@ -193,7 +194,7 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
 
         HomePermissionActionPolicy? ResolvePolicy(string appId, string actionId)
         {
-            var core = coreReadPolicy.TryGet(appId, actionId);
+            var core = coreReadPolicy.TryGet(appId, actionId) ?? localStorePolicy.TryGet(appId, actionId);
             HomePermissionActionPolicy? registered = null;
             foreach (var policy in policies)
             {
