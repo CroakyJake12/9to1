@@ -216,9 +216,16 @@ public sealed partial class App : Avalonia.Application
         {
             if (_actualUnifiedWorkspace is not null)
             {
-                _actualUnifiedWorkspace.ShowStartupFailureForHost(Guid.NewGuid().ToString("N"), failure);
+                TryPublishOriginalStartupFailure(() =>
+                    _actualUnifiedWorkspace.ShowStartupFailureForHost(Guid.NewGuid().ToString("N"), failure));
             }
         }
+    }
+
+    internal bool TryPublishOriginalStartupFailure(Action actualPresentation)
+    {
+        actualPresentation();
+        return true;
     }
 #endif
 
