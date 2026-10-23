@@ -153,6 +153,13 @@ public interface IBrowserOriginalDownloadFilesService
         IBrowserOriginalDownloadContent originalContent, IBrowserOriginalDownloadFilesDestination originalDestination,
         Guid originalOperationId, Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken);
     bool IsIssuedOriginalRegistration(IBrowserOriginalDownloadFilesRegistration originalRegistration);
+    // Finite native Home presentation only. True means the existing review was
+    // opened/focused, never that consent was granted or Files content committed.
+    // Continue Register with the SAME operation after the actual user decision.
+    Task<bool> PresentOriginalRegistrationReviewWithinSourceAsync(
+        IBrowserOriginalDownloadFilesRegistration originalRegistration,
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken)
+        => Task.FromResult(false);
     Task<IBrowserOriginalDownloadFilesRegistration?> ReadOriginalRegistrationWithinSourceAsync(
         IBrowserOriginalDownloadRecordSource sameRecordSource, IBrowserOriginalDownloadRecordObservation originalRecord,
         Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken);

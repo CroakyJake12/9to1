@@ -167,7 +167,19 @@ public sealed partial class BrowseNativeWorkspace : IBrowserOriginalDownloadReco
                 ScopeOriginalFiles, RetainOriginalFiles, token));
             _downloadDestinations = []; _downloadDestinationEpoch++;
         }
-        else if (observation.State == BrowserOriginalDownloadFilesRegistrationState.AwaitingApproval) attempt.ValidatedPending = true;
+        else if (observation.State == BrowserOriginalDownloadFilesRegistrationState.AwaitingApproval)
+        {
+            attempt.ValidatedPending = true;
+            if (!IsSelectedOriginalDownloadCurrent() || !ReferenceEquals(_originalRegistrationAttempt, attempt))
+                throw new InvalidOperationException("The selected original download changed before Home review.");
+            var opened = await CaptureOriginalFiles(() => service.PresentOriginalRegistrationReviewWithinSourceAsync(result,
+                ScopeOriginalFiles, RetainOriginalFiles, token));
+            if (!IsSelectedOriginalDownloadCurrent() || !ReferenceEquals(_originalRegistrationAttempt, attempt))
+                throw new InvalidOperationException("The selected original download changed during Home review.");
+            _downloadFilesStatus = opened
+                ? "Review this download in Home, then choose Continue Files approval."
+                : WithinOriginalFiles(() => result.Detail);
+        }
         else
             throw new InvalidOperationException("Files returned an unknown registration state.");
     }

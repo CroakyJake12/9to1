@@ -2,6 +2,7 @@
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
 using HavenOS.Home.NativeUI;
+using HavenOS.Files.NativeHost;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop;
@@ -17,7 +18,8 @@ public sealed partial class App
         _originalAppWork.RunSynchronous(original => AcquireOriginalAppSynchronous(original, () =>
         {
             original.DemandPublication();
-            if (services.Any(row => row.ServiceType == typeof(HomeNativeApprovalWindowOwner)))
+            if (services.Any(row => row.ServiceType == typeof(HomeNativeApprovalWindowOwner) ||
+                row.ServiceType == typeof(IFilesOriginalBrowserDownloadReviewPresenter)))
                 throw new InvalidOperationException("The native Home review owner already exists.");
             services.AddSingleton<HomeNativeApprovalWindowOwner>(provider =>
             {
@@ -26,6 +28,10 @@ public sealed partial class App
                 // unavailable because no real native warning-presentation issuer is supplied.
                 return _actualNativeHomeApprovals = new(home.Runtime, home.Profiles, home.Permissions);
             });
+            services.AddSingleton<IFilesOriginalBrowserDownloadReviewPresenter>(provider =>
+                new OriginalBrowserDownloadHomeReviewPresenter(provider, home,
+                    provider.GetRequiredService<FilesNativeBrowserService>(),
+                    provider.GetRequiredService<HomeNativeApprovalWindowOwner>()));
             return true;
         }));
     }

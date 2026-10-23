@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Runtime.ExceptionServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Haven.Application;
@@ -272,6 +273,7 @@ internal sealed class ChromiumResponseDownloadBridge : IAsyncDisposable
             try
             {
                 lifetime.Token.ThrowIfCancellationRequested(); DemandApproval();
+                using var producerHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                 var stream = await Send("Fetch.takeResponseBodyAsStream", new { requestId = _request }, lifetime.Token).ConfigureAwait(false);
                 _stream = stream.GetProperty("stream").GetString();
                 if (string.IsNullOrWhiteSpace(_stream)) throw new InvalidDataException("The original response issued no body stream.");
@@ -290,13 +292,18 @@ internal sealed class ChromiumResponseDownloadBridge : IAsyncDisposable
                         var bytes = base64 ? Convert.FromBase64String(data) : Encoding.UTF8.GetBytes(data);
                         if (bytes.Length > 64 * 1024 || _bytes + bytes.Length > BrowserDownloadTransport.MaximumDownloadBytes)
                             throw new InvalidDataException("The original attachment stream exceeded the bounded Browser byte limit.");
-                        if (bytes.Length > 0) { await output.WriteAsync(bytes, lifetime.Token).ConfigureAwait(false); _bytes += bytes.Length; emptyReads = 0; }
+                        if (bytes.Length > 0)
+                        {
+                            await output.WriteAsync(bytes, lifetime.Token).ConfigureAwait(false);
+                            producerHash.AppendData(bytes); _bytes += bytes.Length; emptyReads = 0;
+                        }
                         else if (++emptyReads > 3) throw new InvalidDataException("The original attachment stream stopped before EOF.");
                         if (chunk.TryGetProperty("eof", out var eof) && eof.ValueKind == JsonValueKind.True) { _eof = true; break; }
                     }
                     if (_expectedLength is { } expected && expected != _bytes) throw new InvalidDataException("The original attachment ended before its declared byte count.");
                     await output.FlushAsync(lifetime.Token).ConfigureAwait(false); _flushed = true;
                 }
+                var producerDigest = Convert.ToHexString(producerHash.GetHashAndReset()).ToLowerInvariant();
                 await CloseStreamAsync().ConfigureAwait(false);
                 // Taking the stream consumes the response. Finish that exact paused
                 // navigation with no document body, leaving the original page in place.
@@ -308,11 +315,13 @@ internal sealed class ChromiumResponseDownloadBridge : IAsyncDisposable
                     var final = OriginalNativeInvocation.Acquire(this, () => _owner._transport.FinalizeOriginalNativeDownloadWithinSourceAsync(
                         _plan!, this, _completion, _contentType, Scope, Retain, lifetime.Token));
                     Retain(final); _content = await final.ConfigureAwait(false);
+                    DemandProducerBytes(_content.OriginalRecord, producerDigest);
                     _owner.NotifyStatus("Attachment bytes saved; refresh Downloads for the approved result.");
                     return _content.OriginalRecord;
                 }
                 var legacy = OriginalNativeInvocation.Acquire(this, () => _owner._transport.FinalizeNativeDownloadAsync(_plan!, _contentType, lifetime.Token));
                 Retain(legacy); var record = await legacy.ConfigureAwait(false);
+                DemandProducerBytes(record, producerDigest);
                 _owner.NotifyStatus("Attachment bytes saved; refresh Downloads for the approved result.");
                 return record;
             }
@@ -322,6 +331,14 @@ internal sealed class ChromiumResponseDownloadBridge : IAsyncDisposable
                 catch (Exception cleanup) { throw new AggregateException("Original attachment transfer and withdrawal failed.", failure, cleanup); }
                 throw;
             }
+        }
+        private void DemandProducerBytes(BrowserDownloadRecord record, string producerDigest)
+        {
+            // The physical owner first pins the partial after native EOF. Match its
+            // final bytes to the SAME original CDP chunks, before the approval owner
+            // can publish a successful ledger record or original Files content.
+            if (record.SizeBytes != _bytes || !StringComparer.Ordinal.Equals(record.Sha256, producerDigest))
+                throw new IOException("Canonical attachment bytes no longer match the original CDP stream.");
         }
         private async Task CloseStreamAsync()
         {

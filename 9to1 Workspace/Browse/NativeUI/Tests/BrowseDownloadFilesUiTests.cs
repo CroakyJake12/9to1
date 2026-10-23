@@ -35,11 +35,16 @@ public sealed partial class BrowseNativeUiTests
             var original = Assert.Single(f.Files.Registrations);
             Assert.Same(f.Content, original.Content); Assert.Same(f.Files.Destination, original.Destination);
             Assert.NotEqual(Guid.Empty, original.Operation); Assert.Empty(f.Files.Revealed);
+            Assert.Same(f.Files.PendingResult, Assert.Single(f.Files.Reviews));
+            Assert.False(f.Files.Approved); // Opening Home is never approval.
+            Assert.True(f.Workspace.TryGetValue("DownloadOpenStatus", out var pendingDetail));
+            Assert.Contains("Review this download in Home", Assert.IsType<string>(pendingDetail));
             Assert.True(Find(f.Window, "BrowseRetryDownloadRegistrationButton").IsEnabled);
             f.Files.Approved = true;
             await Click(f.Window, f.Workspace, Find(f.Window, "BrowseRetryDownloadRegistrationButton"));
             Assert.Equal(2, f.Files.Registrations.Count); Assert.Equal(original, f.Files.Registrations[1]);
-            Assert.Single(f.Files.Revealed); Assert.Empty(DownloadDestinations(f.Workspace));
+            Assert.Single(f.Files.Revealed); Assert.Single(f.Files.Reviews);
+            Assert.Empty(DownloadDestinations(f.Workspace));
             var driver = f.Workspace.OriginalCommand;
             await f.Workspace.DispatchAsync("9to1.Browse.RegisterDownloadDestination", first.Target);
             Assert.Same(driver, f.Workspace.OriginalCommand); Assert.Equal(2, f.Files.Registrations.Count);
@@ -71,6 +76,7 @@ public sealed partial class BrowseNativeUiTests
             await Assert.ThrowsAnyAsync<Exception>(() => Click(f.Window, f.Workspace, Find(f.Window, "BrowseDownloadDestinationButton")));
             var failed = f.Workspace.OriginalCommand; Assert.NotNull(failed); Assert.True(failed.IsFaulted);
             Assert.Contains(failed, f.Workspace.OriginalCommands); Assert.Empty(f.Files.Revealed);
+            Assert.Empty(f.Files.Reviews); // Never present a foreign request.
             Assert.False(Find(f.Window, "BrowseRetryDownloadRegistrationButton").IsEnabled);
             f.Window.Close(); var close = f.Window.OriginalClose; Assert.NotNull(close);
             await Assert.ThrowsAnyAsync<Exception>(() => Observe(close!, f.Window));
@@ -119,6 +125,66 @@ public sealed partial class BrowseNativeUiTests
         }
         catch (Exception failure) { RetainedFailedOwners.Add((f.Window, failure)); throw; }
     }
+    [AvaloniaFact]
+    public async Task Missing_native_Home_presenter_keeps_same_pending_registration_without_faking_approval()
+    {
+        var f = await DownloadFixture.Create();
+        try
+        {
+            f.Files.ReviewAvailable = false;
+            await f.Open(); await Click(f.Window, f.Workspace, Find(f.Window, "BrowseDownloadFilesButton"));
+            await Click(f.Window, f.Workspace, Find(f.Window, "BrowseDownloadDestinationButton"));
+            Assert.Single(f.Files.Registrations); Assert.Single(f.Files.Reviews);
+            Assert.Empty(f.Files.Revealed); Assert.False(f.Files.Approved);
+            Assert.True(Find(f.Window, "BrowseRetryDownloadRegistrationButton").IsEnabled);
+            Assert.True(f.Workspace.TryGetValue("DownloadOpenStatus", out var detail));
+            Assert.Equal("Review original Files write", detail);
+            await Retire(f.Window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((f.Window, failure)); throw; }
+    }
+    [AvaloniaFact]
+    public async Task Automatic_Home_open_awaits_same_finite_original_before_command_completes()
+    {
+        var f = await DownloadFixture.Create();
+        try
+        {
+            f.Files.ReviewGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            await f.Open(); await Click(f.Window, f.Workspace, Find(f.Window, "BrowseDownloadFilesButton"));
+            var click = Click(f.Window, f.Workspace, Find(f.Window, "BrowseDownloadDestinationButton"));
+            await Observe(f.Files.ReviewEntered.Task, f.Window);
+            Assert.False(click.IsCompleted); Assert.NotNull(f.Workspace.OriginalCommand);
+            Assert.False(f.Workspace.OriginalCommand!.IsCompleted);
+            Assert.Contains(f.Files.ReviewGate.Task, f.Workspace.OriginalOperations);
+            Assert.Empty(f.Files.Revealed); Assert.False(f.Files.Approved);
+            f.Files.ReviewGate.SetResult(true); await click;
+            Assert.True(f.Workspace.OriginalCommand!.IsCompletedSuccessfully);
+            Assert.Single(f.Files.Registrations); Assert.Single(f.Files.Reviews);
+            await Retire(f.Window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((f.Window, failure)); throw; }
+    }
+    [AvaloniaFact]
+    public async Task Failed_native_Home_open_retains_original_failure_and_never_reveals_unregistered_Files_item()
+    {
+        var f = await DownloadFixture.Create();
+        try
+        {
+            var failure = new IOException("The original Home window could not open");
+            f.Files.ReviewFailure = failure;
+            await f.Open(); await Click(f.Window, f.Workspace, Find(f.Window, "BrowseDownloadFilesButton"));
+            await Assert.ThrowsAnyAsync<Exception>(() => Click(f.Window, f.Workspace, Find(f.Window, "BrowseDownloadDestinationButton")));
+            var driver = f.Workspace.OriginalCommand; Assert.NotNull(driver); Assert.True(driver.IsFaulted);
+            Assert.Contains(failure, driver.Exception!.Flatten().InnerExceptions);
+            Assert.Single(f.Files.Registrations); Assert.Single(f.Files.Reviews);
+            Assert.Empty(f.Files.Revealed); Assert.False(f.Files.Approved);
+            Assert.True(Find(f.Window, "BrowseRetryDownloadRegistrationButton").IsEnabled);
+            f.Window.Close(); var close = f.Window.OriginalClose; Assert.NotNull(close);
+            await Assert.ThrowsAnyAsync<Exception>(() => Observe(close!, f.Window));
+            RetainedFailedOwners.Add((f.Window, failure));
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((f.Window, failure)); throw; }
+    }
     private static BrowseNativeWorkspace.DownloadDestinationRow[] DownloadDestinations(BrowseNativeWorkspace workspace)
     { Assert.True(workspace.TryGetValue("DownloadDestinations", out var value)); return Assert.IsType<BrowseNativeWorkspace.DownloadDestinationRow[]>(value); }
     private sealed record DownloadFixture(BrowseNativeWorkspace Workspace, BrowseNativeWindow Window, FilesDouble Files, ContentDouble Content)
@@ -160,7 +226,13 @@ public sealed partial class BrowseNativeUiTests
         public IBrowserOriginalNativeDownloadPhysicalOwner OriginalContentOwner { get; } = new PhysicalDouble(content);
         public DestinationDouble Destination { get; } = new("Personal Files");
         public RegistrationDouble Existing { get; } = new(Guid.NewGuid(), content.OriginalRecord, BrowserOriginalDownloadFilesRegistrationState.Registered, Guid.NewGuid(), Guid.NewGuid(), "Existing Files item");
-        public bool Approved, ReturnForeign; public int DestinationReads, RecordRevalidations;
+        public bool Approved, ReturnForeign, ReviewAvailable = true;
+        public int DestinationReads, RecordRevalidations;
+        public RegistrationDouble? PendingResult;
+        public Exception? ReviewFailure;
+        public TaskCompletionSource<bool>? ReviewGate;
+        public TaskCompletionSource ReviewEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public List<IBrowserOriginalDownloadFilesRegistration> Reviews { get; } = [];
         public Action? InsideRecordScope, AfterRecordScope; public IBrowserOriginalDownloadRecordObservation? ObservedRecord;
         public List<Task> OriginalRecordStages { get; } = [];
         public List<(IBrowserOriginalDownloadContent Content, IBrowserOriginalDownloadFilesDestination Destination, Guid Operation)> Registrations { get; } = [];
@@ -187,7 +259,23 @@ public sealed partial class BrowseNativeUiTests
             scope(() => token.ThrowIfCancellationRequested()); Registrations.Add((actual, destination, operation));
             var result = new RegistrationDouble(operation, content.OriginalRecord, Approved ? BrowserOriginalDownloadFilesRegistrationState.Registered : BrowserOriginalDownloadFilesRegistrationState.AwaitingApproval,
                 Approved ? Guid.NewGuid() : null, Approved ? Guid.NewGuid() : null, Approved ? "Saved in Files" : "Review original Files write");
-            if (!ReturnForeign) _issued.Add(result); return Task.FromResult<IBrowserOriginalDownloadFilesRegistration>(result);
+            if (!ReturnForeign) _issued.Add(result);
+            if (!Approved) PendingResult = result;
+            return Task.FromResult<IBrowserOriginalDownloadFilesRegistration>(result);
+        }
+        public Task<bool> PresentOriginalRegistrationReviewWithinSourceAsync(IBrowserOriginalDownloadFilesRegistration registration,
+            Action<Action> scope, Action<Task> retain, CancellationToken token)
+        {
+            scope(() =>
+            {
+                token.ThrowIfCancellationRequested(); Assert.True(IsIssuedOriginalRegistration(registration));
+                Assert.Same(PendingResult, registration);
+                Assert.Equal(BrowserOriginalDownloadFilesRegistrationState.AwaitingApproval, registration.State);
+                Reviews.Add(registration);
+            });
+            var actual = ReviewFailure is { } failure ? Task.FromException<bool>(failure)
+                : ReviewGate?.Task ?? Task.FromResult(ReviewAvailable);
+            retain(actual); ReviewEntered.TrySetResult(); return actual;
         }
         public Task RevealOriginalRegistrationWithinSourceAsync(IBrowserOriginalDownloadFilesRegistration registration, Action<Action> scope, Action<Task> retain, CancellationToken token)
         { Assert.True(IsIssuedOriginalRegistration(registration)); Assert.NotNull(registration.OriginalFilesItemId); scope(() => Revealed.Add(registration)); return Task.CompletedTask; }

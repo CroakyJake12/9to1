@@ -76,7 +76,11 @@ public sealed class HomeGraphCreationAssociationSource
                 result = new(false, "HOME_AUTOMATION_CREATION_ORIGIN_REQUIRED", actor.ActorId, scope.Revision, actor.OrganisationId);
             else
             {
-                await sources.ReadAsync(() => actual.RequireCurrentAsync(matches[0].Selection, matches[0].Intent, token).AsTask()).ConfigureAwait(false);
+                await sources.ReadAsync<object?>(async () =>
+                {
+                    await actual.RequireCurrentAsync(matches[0].Selection, matches[0].Intent, token).ConfigureAwait(false);
+                    return null;
+                }).ConfigureAwait(false);
                 result = new(await sources.ReadAsync(() => _profiles.GetCurrentAsync(token).AsTask()).ConfigureAwait(false) == actor,
                     "HOME_AUTOMATION_CREATION_ORIGIN_CHECKED", actor.ActorId, scope.Revision, actor.OrganisationId);
             }
@@ -206,7 +210,7 @@ public sealed class HomeAutomationCreationGraphActionPolicySource : IHomeActionP
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
         appId == "automations" && actionId == "automations.graph.save-draft"
-        ? new(HomePermissionRisk.Elevated, false, false, RequiresPerActionApproval: true) : null;
+        ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.Elevated, false, false, RequiresPerActionApproval: true) : null;
 }
 public sealed partial class HomeVersionedNodeGraphRepository
 {

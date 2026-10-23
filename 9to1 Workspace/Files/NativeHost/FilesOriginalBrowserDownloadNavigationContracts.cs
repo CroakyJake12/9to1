@@ -13,3 +13,15 @@ public interface IFilesOriginalBrowserDownloadNavigator
         AuthenticatedResourceActor originalActor, Action<Action> scope,
         Action<Task> retain, CancellationToken cancellationToken);
 }
+
+// A borrowed route to the SAME canonical Home review owner. An original request
+// identifier is display selection only, never consent, a capability or a new
+// Files operation. The issuer revalidates the actual content/destination first.
+public interface IFilesOriginalBrowserDownloadReviewPresenter
+{
+    Task OpenOriginalRegistrationReviewWithinSourceAsync(FilesNativeBrowserService sameBrowser,
+        FilesNativeBrowserService.BrowserDownloadFilesOwner sameOwner,
+        IBrowserOriginalDownloadFilesRegistration originalRegistration,
+        AuthenticatedResourceActor originalActor, string originalRequestId,
+        Action<Action> scope, Action<Task> retain, CancellationToken cancellationToken);
+}

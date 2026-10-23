@@ -32,11 +32,12 @@ public sealed partial class FilesNativeBrowserService
         IBrowserOriginalNativeDownloadPhysicalOwner actualContentOwner,
         IBrowserOriginalDownloadFilesPhysicalOwner samePhysicalFilesOwner,
         FilesArtifactResourceResolver actualReadIssuer,
-        IFilesOriginalBrowserDownloadNavigator? actualNavigator = null)
+        IFilesOriginalBrowserDownloadNavigator? actualNavigator = null,
+        IFilesOriginalBrowserDownloadReviewPresenter? actualReviewPresenter = null)
     {
         if (!ReferenceEquals(actualContentOwner, samePhysicalFilesOwner) || _mutationBroker is null)
             throw new NotSupportedException("The same physical content/destination owner and actual Home Files broker are required.");
-        return new(this, actualContentOwner, samePhysicalFilesOwner, actualReadIssuer, actualNavigator);
+        return new(this, actualContentOwner, samePhysicalFilesOwner, actualReadIssuer, actualNavigator, actualReviewPresenter);
     }
 
     public sealed partial class BrowserDownloadFilesOwner : IBrowserOriginalDownloadFilesService,
@@ -48,6 +49,7 @@ public sealed partial class FilesNativeBrowserService
         private readonly IBrowserOriginalDownloadFilesPhysicalOwner _physicalOwner;
         private readonly FilesArtifactResourceResolver _readIssuer;
         private readonly IFilesOriginalBrowserDownloadNavigator? _navigator;
+        private readonly IFilesOriginalBrowserDownloadReviewPresenter? _reviewPresenter;
         private readonly ConditionalWeakTable<IBrowserOriginalDownloadFilesDestination, Destination> _destinations = new();
         private readonly ConditionalWeakTable<IBrowserOriginalDownloadFilesRegistration, Registration> _registrations = new();
         private readonly Dictionary<Guid, Registration> _operations = [];
@@ -57,12 +59,15 @@ public sealed partial class FilesNativeBrowserService
         public IBrowserOriginalDownloadFilesPhysicalOwner OriginalPhysicalFilesOwner => _physicalOwner;
         public FilesArtifactResourceResolver OriginalReadIssuer => _readIssuer;
         public IFilesOriginalBrowserDownloadNavigator? OriginalNavigator => _navigator;
+        public IFilesOriginalBrowserDownloadReviewPresenter? OriginalReviewPresenter => _reviewPresenter;
         internal BrowserDownloadFilesOwner(FilesNativeBrowserService browser,
             IBrowserOriginalNativeDownloadPhysicalOwner content, IBrowserOriginalDownloadFilesPhysicalOwner physical,
-            FilesArtifactResourceResolver reads, IFilesOriginalBrowserDownloadNavigator? navigator)
+            FilesArtifactResourceResolver reads, IFilesOriginalBrowserDownloadNavigator? navigator,
+            IFilesOriginalBrowserDownloadReviewPresenter? reviewPresenter)
         {
             _browser = browser; OriginalContentOwner = content; _physicalOwner = physical;
             _readIssuer = reads ?? throw new ArgumentNullException(nameof(reads)); _navigator = navigator;
+            _reviewPresenter = reviewPresenter;
             physical.BindOriginalFilesDestinationSource(this);
         }
         private sealed class Destination : IBrowserOriginalDownloadFilesDestination
@@ -111,7 +116,10 @@ public sealed partial class FilesNativeBrowserService
             public Guid? OriginalFilesRevisionId => ActualResult?.IsSuccess == true ? Saved.OriginalContent.RevisionId.Value : null;
             public string Detail => ActualResult?.IsSuccess == true
                 ? AuditRecorded ? "Registered in Files." : "Registered in Files; inspect the original Home audit."
-                : "The separate Files WRITE review has not admitted this original registration. Check Home before retrying.";
+                : Approval is { State: HomePermissionRequestState.PendingApproval }
+                    ? "Review this separate Files WRITE request in Home, then continue the same registration."
+                    : Approval is { } current ? current.Message
+                    : "The separate Files WRITE review has not admitted this original registration. Check Home before retrying.";
         }
         public bool IsIssuedOriginalDestination(IBrowserOriginalDownloadFilesDestination actual) =>
             actual is Destination destination && ReferenceEquals(destination.Owner, this) &&
@@ -277,6 +285,12 @@ public sealed partial class FilesNativeBrowserService
                 null, "browse-files:" + operation.ToString("N"), token)).ConfigureAwait(false);
             await RevalidateDestination(destination, source, token).ConfigureAwait(false);
             await source.Read(() => OriginalContentOwner.RevalidateOriginalContentWithinSourceAsync(content, source.Invoke, source.Retain, token)).ConfigureAwait(false);
+            // Observe the SAME retained request. Repeated clicks never submit
+            // another authorization and denial is not described as pending.
+            var requestId = registration.Approval.RequestId;
+            var currentApproval = await source.Read(() => broker.GetAuthorizationAsync(requestId, token)).ConfigureAwait(false);
+            if (currentApproval.RequestId != requestId) throw new UnauthorizedAccessException("Home returned another registration review.");
+            registration.Approval = currentApproval;
             var capability = await source.Read(() => broker.BeginExecutionCapabilityAsync(registration.Approval.RequestId,
                 registration.Arguments, token), actual => registration.Capability = actual).ConfigureAwait(false);
             if (capability is null) return registration;
@@ -438,6 +452,48 @@ public sealed partial class FilesNativeBrowserService
                 var registration = new Registration { Owner = this, Destination = destination, Record = record, Operation = saved.OperationId,
                     Saved = saved, ActualResult = FilesResult<FilesRevision>.Success(originalContent.Value.Revision), AuditRecorded = false };
                 source.Invoke(() => _registrations.Add(registration, registration)); return registration;
+            });
+        // Pure exact-source pairing for the trusted native presenter. It does
+        // not authorize metadata, issue consent or replace fresh owner reads.
+        public bool IsOriginalPendingRegistrationReview(IBrowserOriginalDownloadFilesRegistration actual,
+            AuthenticatedResourceActor originalActor, string requestId)
+        {
+            lock (_gate)
+                return !_retiring && actual is Registration registration &&
+                    ReferenceEquals(registration.Owner, this) &&
+                    _registrations.TryGetValue(actual, out var issued) && ReferenceEquals(issued, registration) &&
+                    _operations.TryGetValue(registration.Operation, out var operation) && ReferenceEquals(operation, registration) &&
+                    registration.Destination.Actor == originalActor && registration.Content is not null &&
+                    registration.Approval is { State: HomePermissionRequestState.PendingApproval } approval &&
+                    approval.RequestId == requestId && registration.Capability is null && !registration.Claimed &&
+                    registration.ActualResult is null;
+        }
+        public Task<bool> PresentOriginalRegistrationReviewWithinSourceAsync(
+            IBrowserOriginalDownloadFilesRegistration actual, Action<Action> scope, Action<Task> retain,
+            CancellationToken token) => Run(scope, retain, async source =>
+            {
+                var registration = source.Invoke(() => RequireRegistration(actual));
+                if (registration.ActualResult?.IsSuccess == true) return false;
+                var content = registration.Content ?? throw new UnauthorizedAccessException("No original native transfer owns this Files review.");
+                var approval = registration.Approval ?? throw new UnauthorizedAccessException("No original Home request owns this Files registration.");
+                await RevalidateDestination(registration.Destination, source, token).ConfigureAwait(false);
+                await source.Read(() => OriginalContentOwner.RevalidateOriginalContentWithinSourceAsync(
+                    content, source.Invoke, source.Retain, token)).ConfigureAwait(false);
+                var current = await source.Read(() => _browser._mutationBroker!.GetAuthorizationAsync(approval.RequestId, token)).ConfigureAwait(false);
+                if (current.RequestId != approval.RequestId) throw new UnauthorizedAccessException("Home returned another registration review.");
+                registration.Approval = current;
+                if (current.State != HomePermissionRequestState.PendingApproval || _reviewPresenter is not { } presenter) return false;
+                var actor = registration.Destination.Actor;
+                if (!source.Invoke(() => IsOriginalPendingRegistrationReview(actual, actor, current.RequestId)))
+                    throw new UnauthorizedAccessException("The same pending Files registration is no longer current.");
+                // Finite opening/focus only. Do not wait for a human decision
+                // under this serialized Files source, nor begin/consume consent.
+                await source.Read(() => presenter.OpenOriginalRegistrationReviewWithinSourceAsync(_browser, this,
+                    actual, actor, current.RequestId, source.Invoke, source.Retain, token)).ConfigureAwait(false);
+                await RevalidateDestination(registration.Destination, source, token).ConfigureAwait(false);
+                await source.Read(() => OriginalContentOwner.RevalidateOriginalContentWithinSourceAsync(
+                    content, source.Invoke, source.Retain, token)).ConfigureAwait(false);
+                return true;
             });
         public Task RevealOriginalRegistrationWithinSourceAsync(IBrowserOriginalDownloadFilesRegistration actual,
             Action<Action> scope, Action<Task> retain, CancellationToken token) => Run<object?>(scope, retain, async source =>
