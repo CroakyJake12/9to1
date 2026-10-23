@@ -67,13 +67,23 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
             "SelectedName" => _selectedName, "Instruction" => _instruction,
             "SelectedSchedule" => _selectedSchedule, "SelectedState" => _selectedState,
             "Review" => _review, "CanRecover" => IsActionAvailable("recover") == true,
-            "CanDisable" => IsActionAvailable("disable") == true, "ChangeStatus" => _changeStatus, _ => null
+            "CanDisable" => IsActionAvailable("disable") == true, "ChangeStatus" => _changeStatus,
+            "EditName" => _editName, "EditInstruction" => _editInstruction,
+            "EditScheduleValue" => _editScheduleValue, "EditDay" => _editDay,
+            "EditScheduleHint" => _editScheduleHint, "EditScheduleKind" => _editScheduleKind,
+            "HasEditSelection" => _selectedTarget is not null && _writer?.SupportsOriginalDisabledEdit == true,
+            "CanEditName" => CanEditDraft, "CanEditContent" => CanEditDraft && !_editGraph,
+            "HasEditDay" => _selectedTarget?.Row.Value.ScheduleKind == AutomationScheduleKind.Weekly,
+            "CanSaveEdits" => IsActionAvailable("save-edits") == true,
+            "CanDiscardEdits" => IsActionAvailable("discard-edits") == true, _ => null
         };
         return value is not null;
     }
     public bool TrySetValue(string path, object? value)
     {
-        if (_retiring || _busy || path != "Search" || value is not string text || text.Length > 256) return false;
+        if (_retiring || _busy || value is not string text) return false;
+        if (path != "Search") return SetEditValue(path, text);
+        if (HasUnsubmittedEdits || text.Length > 256) return false;
         if (_search == text) return true;
         _work.RunSynchronous(original => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
         {
@@ -84,17 +94,29 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
     }
     public bool? IsActionAvailable(string command) => !_retiring && !_busy && _source is not null && (command switch
     {
-        "refresh" or "archives" => true,
-        "older" => _next is not null,
-        "select" => _rows.Count != 0,
-        "recover" or "disable" => _writer is not null && _selectedTarget is { } current &&
-            current.Epoch == _epoch && _issued.Contains(current),
+        "refresh" or "archives" => !HasUnsubmittedEdits,
+        "older" => !HasUnsubmittedEdits && _next is not null,
+        "select" => !HasUnsubmittedEdits && _rows.Count != 0,
+        "recover" or "disable" => !HasUnsubmittedEdits && _writer is not null && IsCurrentSelection,
+        "save-edits" => CanEditDraft && EditValuesChanged,
+        "discard-edits" => HasUnsubmittedEdits,
         _ => false
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(command is "recover" or "disable" ? StartChange(command, parameter) : Start(command, parameter));
+        if (command == "discard-edits")
+        {
+            if (parameter is not null || IsActionAvailable(command) != true)
+                throw new InvalidOperationException("There are no editable changes to discard.");
+            _work.RunSynchronous(original => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+            {
+                LoadEditDraft(DemandRow(_selectedTarget).Row.Value);
+                _changeStatus = "Your unsaved edits were discarded. Saved settings were kept."; Changed(); return true;
+            }));
+            return ValueTask.CompletedTask;
+        }
+        return new(command is "recover" or "disable" or "save-edits" ? StartChange(command, parameter) : Start(command, parameter));
     }
     private Task Start(string action, object? parameter)
     {
@@ -138,10 +160,10 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
                             var saved = target.Row.Value;
                             _selectedTarget = target; _selectedName = saved.Name; _instruction = saved.Instruction;
                             _selectedSchedule = saved.ScheduleKind + " · " + saved.ScheduleJson;
-                            _selectedState = DescribeState(saved);
+                            _selectedState = DescribeState(saved); _changeStatus = ""; LoadEditDraft(saved);
                             _review = target.Row.RequiresRecovery
-                                ? "Review is needed before this saved automation can be edited or run here. Its saved settings are preserved."
-                                : "This view shows saved settings. Editing and running require their own approval.";
+                                ? "Recover legacy settings with Home review before saving edits. Each edit is checked against the current protected saved row."
+                                : "Saving edits requires its own Home review and keeps this automation disabled.";
                             _status = "Saved automation opened.";
                         }
                     }
@@ -210,14 +232,14 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
     private static string DescribeState(AutomationDefinition definition) => definition.ArchivedAt is not null
         ? "Archived" : definition.IsEnabled ? "Enabled in saved settings" : "Disabled in saved settings";
     private void ClearSelection()
-    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; }
+    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; ClearEditDraft(); }
     private void Changed() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
     { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); return true; });
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         value = item is LibraryRow row && _rows.Any(current => ReferenceEquals(current, row)) ? path switch
         { "Key" => row.Key, "Name" => row.Name, "Status" => row.Status, "Schedule" => row.Schedule, "Target" => row.Target,
-          "CanOpen" => !_retiring && !_busy && row.Target is RowTarget target &&
+          "CanOpen" => !_retiring && !_busy && !HasUnsubmittedEdits && row.Target is RowTarget target &&
               target.Epoch == _epoch && _issued.Contains(target), _ => null } : null;
         return value is not null;
     }

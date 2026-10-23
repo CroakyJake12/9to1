@@ -16,7 +16,8 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
 {
     public const string RecoveryAction = "automations.recover";
     public const string DisableAction = "automations.disable";
-    public static bool IsSupportedAction(string action) => action is RecoveryAction or DisableAction;
+    public const string EditAction = "automations.update";
+    public static bool IsSupportedAction(string action) => action is RecoveryAction or DisableAction or EditAction;
     public string ResourceKind => "automation.definition";
     private readonly FileHomeCoreStateStore _store;
     private readonly HomeLocalProfileIdentity _profiles;
@@ -226,6 +227,12 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
                     OriginalIntentDigest = owner._creator.GetOriginalChangeIntentDigest(intent),
                     Store = intent.OriginalStoreIdentity, intent.OriginalDefinition, intent.ChangeKind, intent.ExpectedRevision, intent.OriginalRowSha256,
                     Ownership = new { _ownership.ResourceKind, _ownership.StoreId, _ownership.ProfileId, _ownership.ObservedStoreRevision } });
+                if (_reviewChangeKind == CanonicalAutomationOriginalChangeKind.EditDisabled)
+                    _arguments = JsonSerializer.SerializeToElement(new { intent.OperationId, intent.Actor,
+                        OriginalIntentDigest = owner._creator.GetOriginalChangeIntentDigest(intent),
+                        Store = intent.OriginalStoreIdentity, intent.OriginalDefinition, intent.ProposedDefinition,
+                        intent.ChangeKind, intent.ExpectedRevision, intent.OriginalRowSha256,
+                        Ownership = new { _ownership.ResourceKind, _ownership.StoreId, _ownership.ProfileId, _ownership.ObservedStoreRevision } });
                 var bytes = JsonSerializer.SerializeToUtf8Bytes(_arguments);
                 if (bytes.Length > 256 * 1024) throw new InvalidDataException("The immutable automation recovery/disable intent exceeds its bound.");
                 Scope = new(owner.ResourceKind, _ownership.StoreId + ":" + intent.OriginalDefinition.Id.ToString("N") + ":" + intent.OperationId.ToString("N"),
@@ -233,9 +240,12 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource : ICano
             });
             await ValidateIntent(sources, token).ConfigureAwait(false);
             _review = sources.Invoke(() => owner._broker.PrepareReviewForActor(Actor!, "automations", intent.ActionId, [Scope!], _arguments,
-                _reviewChangeKind == CanonicalAutomationOriginalChangeKind.RecoverLegacy
-                    ? "Recover this exact stored automation as disabled and needing review, preserving its other values and history; execution remains unavailable"
-                    : "Disable this exact stored automation while preserving its other values and history; execution remains unavailable",
+                _reviewChangeKind switch
+                {
+                    CanonicalAutomationOriginalChangeKind.RecoverLegacy => "Recover this exact stored automation as disabled and needing review, preserving its other values and history; execution remains unavailable",
+                    CanonicalAutomationOriginalChangeKind.EditDisabled => "Save the reviewed name, instructions and schedule to this disabled automation; preserve its identity, graph and history, clear its pending next time and keep execution disabled",
+                    _ => "Disable this exact stored automation while preserving its other values and history; execution remains unavailable"
+                },
                 null, "automation-definition:" + intent.OperationId.ToString("N")));
             HomePreparedReviewObservation observed;
             try

@@ -5,7 +5,7 @@
   <Page id="saved-automation-library" AccessibleName="Saved automation library">
     <Container Type="Vertical Stack" Margin="24" VerticalScrolling="True" CellGap="16">
       <Text Text="Saved automation library" FontSize="28" FontWeight="Bold" />
-      <Text Text="Browse the saved settings for your automations. The automation dashboard remains available for creating and managing workflows." TextWrapping="Wrap" />
+      <Text Text="Browse saved settings, review legacy automations, and edit disabled automations with individual Home approval." TextWrapping="Wrap" />
       <Input id="automation-library-search" Type="Text" PlaceholderText="Search names and instructions" AccessibleName="Search saved automations" Value="{Binding Search, Mode=TwoWay}" Interactive="{Binding CanRefresh}" />
       <Container Type="Vertical Stack" CellGap="8">
         <Button id="automation-library-refresh" action="refresh" Interactive="{Binding CanRefresh}">Search and refresh</Button>
@@ -28,9 +28,26 @@
         <Text Text="{Binding SelectedSchedule}" TextWrapping="Wrap" />
         <Text Text="{Binding Instruction}" TextWrapping="Wrap" />
         <Text Text="{Binding Review}" TextWrapping="Wrap" />
-        <Text Text="Approving a review disables the saved automation and marks it for attention. Both changes require individual approval in Home. Running requires separate setup and approval." TextWrapping="Wrap" />
+        <Text Text="Recovering legacy settings marks them for attention and disables execution. Saving edits or disabling also requires individual Home approval. Running requires separate setup and approval." TextWrapping="Wrap" />
         <Button id="automation-library-recover" action="recover" Interactive="{Binding CanRecover}">Review saved settings</Button>
         <Button id="automation-library-disable" action="disable" Interactive="{Binding CanDisable}">Disable saved automation</Button>
+        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasEditSelection}">
+          <Text Text="Edit saved settings" FontSize="20" FontWeight="SemiBold" />
+          <Text Text="Edit a recovered, disabled automation. Save sends these exact changes to Home for review and keeps execution disabled. Discard unsaved edits before switching rows or refreshing." TextWrapping="Wrap" />
+          <Text Text="Name" />
+          <Input id="automation-library-edit-name" Type="Text" Value="{Binding EditName, Mode=TwoWay}" Interactive="{Binding CanEditName}" AccessibleName="Automation name" />
+          <Text Text="Instructions" />
+          <Input id="automation-library-edit-instruction" Type="Text" Value="{Binding EditInstruction, Mode=TwoWay}" Interactive="{Binding CanEditContent}" Multiline="True" MinHeight="140" TextWrapping="Wrap" AccessibleName="Automation instructions" />
+          <Text Text="{Binding EditScheduleKind}" FontWeight="SemiBold" />
+          <Text Text="{Binding EditScheduleHint}" TextWrapping="Wrap" />
+          <Input id="automation-library-edit-schedule" Type="Text" Value="{Binding EditScheduleValue, Mode=TwoWay}" Interactive="{Binding CanEditContent}" AccessibleName="Saved schedule time or interval" />
+          <Container Type="Vertical Stack" CellGap="4" IsVisible="{Binding HasEditDay}">
+            <Text Text="Day of week" />
+            <Input id="automation-library-edit-day" Type="Text" Value="{Binding EditDay, Mode=TwoWay}" Interactive="{Binding CanEditContent}" AccessibleName="Schedule day of week, Monday to Sunday" />
+          </Container>
+          <Button id="automation-library-save-edits" action="save-edits" Interactive="{Binding CanSaveEdits}">Save edits for Home review</Button>
+          <Button id="automation-library-discard-edits" action="discard-edits" Interactive="{Binding CanDiscardEdits}">Discard unsaved edits</Button>
+        </Container>
         <Text id="automation-library-change-status" Text="{Binding ChangeStatus}" TextWrapping="Wrap" AccessibleName="Saved automation change status" />
       </Container>
     </Container>

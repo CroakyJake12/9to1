@@ -143,6 +143,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         if (Hash(snapshot) != Hash(intent.Snapshot))
             throw new UnauthorizedAccessException("The full raw row/descriptor/receipt changed before atomic CAS.");
         DemandNoLegacyLease(snapshot.Row); DemandDescriptor(snapshot, intent.Actor, intent.OriginalStoreIdentity, intent.OriginalDefinition.Id);
+        if (intent.Edit is not null) DemandEditableSnapshot(snapshot);
         DurableOperation operation;
         if (snapshot.Operation is { } durable)
         {
@@ -152,9 +153,12 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         }
         else
         {
-            await DisableRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), Demand, token).ConfigureAwait(false);
+            if (intent.Edit is not null)
+                await EditRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), intent.ProposedDefinition, Demand, token).ConfigureAwait(false);
+            else
+                await DisableRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), Demand, token).ConfigureAwait(false);
             var after = await ReadRowWithinLeaseAsync(pin, RawText(snapshot.Row, "id"), token).ConfigureAwait(false);
-            if (!SameExceptDisabled(snapshot.Row, after))
+            if (!(intent.Edit is null ? SameExceptDisabled(snapshot.Row, after) : SameExceptEdited(snapshot.Row, after, intent.ProposedDefinition)))
                 throw new InvalidDataException("The atomic change did not preserve every other observed row value/storage class.");
             var beforeHash = snapshot.RowSha256;
             var afterHash = AutomationDefinitionChange.ComputeRawRowSHA256(after);

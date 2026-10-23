@@ -110,6 +110,17 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         if (token is not null || until is not null)
             throw new InvalidOperationException("An actual legacy run lease remains stored; recovery/disable cannot interrupt or adopt it.");
     }
+    private static bool IsEditableSnapshot(Snapshot snapshot) =>
+        snapshot.Descriptor is { State: AutomationOperationalState.Disabled or AutomationOperationalState.NeedsAttention } &&
+        snapshot.Row.TryGetValue("is_enabled", out var enabled) &&
+        enabled == JsonSerializer.Serialize(new { storageClass = "integer", value = 0L }) &&
+        (!snapshot.Row.TryGetValue("archived_at", out var archived) || archived is null);
+    private static void DemandEditableSnapshot(Snapshot snapshot)
+    {
+        DemandNoLegacyLease(snapshot.Row);
+        if (!IsEditableSnapshot(snapshot))
+            throw new InvalidOperationException("Recover and disable this saved automation before editing; active, archived or unowned rows cannot be adopted.");
+    }
     // AuthenticationRevision in an old descriptor is historical evidence. Fresh
     // current READ + a separately accepted exact current-actor WRITE permits the
     // SAME stable principal to append a new revision; it never lends old authority.
@@ -179,6 +190,31 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
         before.Count == after.Count && after.TryGetValue("is_enabled", out var enabled) &&
         enabled == JsonSerializer.Serialize(new { storageClass = "integer", value = 0L }) &&
         before.All(pair => pair.Key == "is_enabled" || after.TryGetValue(pair.Key, out var value) && value == pair.Value);
+    private static bool SameExceptEdited(IReadOnlyDictionary<string, string?> before,
+        IReadOnlyDictionary<string, string?> after, AutomationDefinition proposed)
+    {
+        string TextValue(string value) => JsonSerializer.Serialize(new { storageClass = "text", value });
+        var changed = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["name"] = TextValue(proposed.Name), ["instruction"] = TextValue(proposed.Instruction),
+            ["schedule_json"] = TextValue(proposed.ScheduleJson),
+            ["updated_at"] = TextValue(proposed.UpdatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture)),
+            ["is_enabled"] = JsonSerializer.Serialize(new { storageClass = "integer", value = 0L }),
+            ["next_run_at"] = null
+        };
+        return before.Count == after.Count && changed.All(pair => after.TryGetValue(pair.Key, out var value) && value == pair.Value) &&
+            before.All(pair => changed.ContainsKey(pair.Key) || after.TryGetValue(pair.Key, out var value) && value == pair.Value);
+    }
+    private static Task EditRowWithinLeaseAsync(CanonicalSqliteOriginalStoreLease lease, string rawId,
+        AutomationDefinition proposed, Action demand, CancellationToken token) => Execute(lease, command =>
+        {
+            demand(); command.CommandText = "UPDATE automations SET name=$name,instruction=$instruction,schedule_json=$schedule,updated_at=$updated,is_enabled=0,next_run_at=NULL WHERE id=$id COLLATE BINARY AND is_enabled=0 AND lease_token IS NULL AND lease_until IS NULL;";
+            command.Parameters.AddWithValue("$id", rawId);
+            command.Parameters.AddWithValue("$name", proposed.Name);
+            command.Parameters.AddWithValue("$instruction", proposed.Instruction);
+            command.Parameters.AddWithValue("$schedule", proposed.ScheduleJson);
+            command.Parameters.AddWithValue("$updated", proposed.UpdatedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        }, token);
     private static Task DisableRowWithinLeaseAsync(CanonicalSqliteOriginalStoreLease lease, string rawId,
         Action demand, CancellationToken token) => Execute(lease, command =>
         {

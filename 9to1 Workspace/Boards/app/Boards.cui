@@ -51,7 +51,20 @@
       </Container>
       <!-- Editor column: contextual toolbar, context panel, document canvas -->
       <Container Type="Grid" Row="1" Column="1" RowSizes="Auto Auto 1fr">
-        <Container Type="Vertical Stack" ID="ToolbarHost" Row="0" />
+        <Container Type="Vertical Stack" Row="0">
+          <Container Type="Wrap" CellGap="6" Padding="12 6" AccessibleName="Text formatting">
+            <Button ID="RangeBold" Content="B" FontWeight="Bold" Action="ToggleBold" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeBoldState}" />
+            <Button ID="RangeItalic" Content="I" FontStyle="Italic" Action="ToggleItalic" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeItalicState}" />
+            <Button ID="RangeUnderline" Content="U" Action="ToggleUnderline" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeUnderlineState}" />
+            <Button ID="RangeStrike" Content="S" Action="ToggleStrike" Interactive="{Binding CanFormatTextRange}" AccessibleName="{Binding RangeStrikeState}" />
+            <Text Text="{Binding TextRangeSummary}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="{Binding RangeBoldState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="{Binding RangeItalicState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="{Binding RangeUnderlineState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+            <Text Text="{Binding RangeStrikeState}" VerticalAlignment="Center" Foreground="{Resource CuiTextSoftBrush}" />
+          </Container>
+          <Container Type="Vertical Stack" ID="ToolbarHost" />
+        </Container>
         <Container Type="Vertical Stack" ID="ContextHost" Row="1" Active="{Binding ContextVisible}" Padding="12 6" Background="{Resource CuiPanelBrush}">
           <If Condition="{Binding ContextIsTable}">
             <Container Type="Wrap" CellGap="4">

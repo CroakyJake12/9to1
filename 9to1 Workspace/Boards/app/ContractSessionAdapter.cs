@@ -10,7 +10,7 @@ using CakeOS.Apps.Boards.Contract;
 
 namespace CakeOS.Apps.Boards.App;
 
-public sealed class ContractSessionAdapter : IRichBoardSession
+public sealed class ContractSessionAdapter : IRichBoardSession, IBoardTextRangeSession
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -21,6 +21,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     private string _baselineJson = "{}";
     private string? _lastError;
     private bool _disposed;
+    private readonly Guid _textOwner = Guid.NewGuid();
+    private BoardTextSelection? _issuedTextSelection;
 
     private ContractSessionAdapter(JsonFileHavenBoardStore store, RichBoardSession real)
     {
@@ -139,6 +141,65 @@ public sealed class ContractSessionAdapter : IRichBoardSession
                     Alignment = s.Alignment.ToString().ToLowerInvariant()
                 }).ToArray()
             : [];
+
+    private static string TextViewStamp(RichBoardBlock block) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(block, Json)));
+
+    public BoardTextSelection? CaptureTextSelection(string pageId, string blockId, int anchor, int caret)
+    {
+        if (_disposed) { _issuedTextSelection = null; return null; }
+        var block = _view.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == pageId)?
+            .Blocks.FirstOrDefault(value => value.Id == blockId);
+        if (block is null || block.Kind is not ("paragraph" or "heading") || !BoardTextRanges.Matches(block) ||
+            anchor == caret || anchor < 0 || caret < 0 || anchor > block.Text.Length || caret > block.Text.Length)
+        { _issuedTextSelection = null; return null; }
+        var runs = BoardTextRanges.Selected(block, Math.Min(anchor, caret), Math.Max(anchor, caret));
+        var candidate = new BoardTextSelection(_textOwner, DocumentVersion, pageId, blockId, block.Text,
+            TextViewStamp(block), anchor, caret, BoardTextRanges.Mark(runs, BoardTextFormat.Bold),
+            BoardTextRanges.Mark(runs, BoardTextFormat.Italic), BoardTextRanges.Mark(runs, BoardTextFormat.Underline),
+            BoardTextRanges.Mark(runs, BoardTextFormat.StrikeThrough));
+        if (candidate != _issuedTextSelection) _issuedTextSelection = candidate;
+        return _issuedTextSelection;
+    }
+
+    public async ValueTask<BoardTextActionResult> ToggleTextSelectionAsync(BoardTextSelection selection,
+        BoardTextFormat format, Func<bool> originStillCurrent, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(selection); ArgumentNullException.ThrowIfNull(originStillCurrent);
+        if (_disposed) return new(false, "Disposed");
+        if (!Enum.IsDefined(format)) return new(false, "UnsupportedFormat");
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            bool CurrentView()
+            {
+                if (_disposed || !ReferenceEquals(selection, _issuedTextSelection) || selection.OwnerId != _textOwner || !originStillCurrent()) return false;
+                var current = _view.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == selection.PageId)?
+                    .Blocks.FirstOrDefault(block => block.Id == selection.BlockId);
+                return current is not null && current.Text == selection.Text && TextViewStamp(current) == selection.ViewStamp;
+            }
+            if (!CurrentView() || DocumentVersion != selection.Revision) return new(false, "StaleOrReadOnly");
+            // Already-typed changes keep their existing separate history entry.
+            // Formatting itself remains one transaction of this same owner.
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var version = DocumentVersion;
+            var actualBlock = _real.Rich.Sections.SelectMany(section => section.Pages).Single(page => page.Id == selection.PageId)
+                .Blocks.Single(value => value.Id == selection.BlockId);
+            if (actualBlock.PlainText != selection.Text) return new(false, "StaleText");
+            var block = new RichBoardBlock { Text = actualBlock.PlainText, Runs = BoardTextRanges.Copy(actualBlock.Runs) };
+            if (!BoardTextRanges.Matches(block)) return new(false, "InconsistentRuns");
+            var changed = BoardTextRanges.Toggle(block, Math.Min(selection.Anchor, selection.Caret), Math.Max(selection.Anchor, selection.Caret), format);
+            var applied = await _real.MutateIfAsync(rich => CurrentView() && rich.Version == version &&
+                rich.Sections.SelectMany(section => section.Pages).FirstOrDefault(page => page.Id == selection.PageId)?
+                    .Blocks.FirstOrDefault(value => value.Id == selection.BlockId) is { } actual && actual.PlainText == selection.Text,
+                rich => HavenRichNotesOps.SetBlockRuns(rich, selection.PageId, selection.BlockId, changed), cancellationToken).ConfigureAwait(false);
+            if (!applied) return new(false, "StaleOrReadOnly");
+            _issuedTextSelection = null;
+            RefreshView();
+            return new(true, "Applied");
+        }
+        finally { _mergeGate.Release(); }
+    }
 
     public bool CanUndo => _real.CanUndo;
     public bool CanRedo => _real.CanRedo;
@@ -507,6 +568,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession
 
     private void RefreshView()
     {
+        // Undo/redo can restore equal revision/content; never revive an issued range.
+        _issuedTextSelection = null;
         Projector.Project(_real.Rich, _view);
         _baselineJson = JsonSerializer.Serialize(_view, Json);
     }

@@ -277,6 +277,7 @@ public sealed partial class PresentEditor
     public PresentSlide DuplicateSlide(Guid slideId)
     {
         var source = RequireSlide(slideId);
+        DemandLegacySharedObjectCloneSupported(source.Elements);
         PresentSlide? duplicate = null;
         Mutate(() =>
         {
@@ -599,6 +600,7 @@ public sealed partial class PresentEditor
         if (string.IsNullOrWhiteSpace(clipboardJson)) return [];
         var source = JsonSerializer.Deserialize<List<PresentElement>>(clipboardJson, SnapshotOptions) ?? [];
         if (source.Count == 0) return [];
+        DemandLegacySharedObjectCloneSupported(source);
         var target = slideId is { } id ? RequireSlide(id) : SelectedSlide;
         var pastedIds = new List<Guid>();
         Mutate(() =>

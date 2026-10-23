@@ -37,6 +37,12 @@ public interface ICanonicalAutomationDefinitionOriginalProcessPreparation
 /// atomic settlement and unknown failures, independently of presentation retirement.</summary>
 public interface ICanonicalAutomationDefinitionOriginalProcessSource : ICanonicalAutomationDefinitionOriginalWriteSource
 {
+    bool SupportsOriginalDisabledEdit => false;
+    Task<ICanonicalAutomationDefinitionOriginalProcessPreparation> PrepareOriginalEditProcessWithinSourceAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation,
+        AutomationOwnerRead<global::Haven.Core.AutomationDefinition> sameRow, CanonicalAutomationOriginalEdit edit,
+        Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        throw new NotSupportedException("This protected writer does not support editing disabled definitions.");
     Task<ICanonicalAutomationDefinitionOriginalChangeObservation> StartOriginalChangeProcessWithinSourceAsync(
         ICanonicalAutomationDefinitionOriginalChangeIntent sameIntent, Action<Action> scope,
         Action<Task> retain, CancellationToken token);

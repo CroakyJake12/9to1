@@ -1,4 +1,7 @@
 <Cui id="9to1.Files.NativeBrowser" version="1">
+  <Actions>
+    <Action name="RevokeDisplayedGrant" command="9to1.Files.Share.Revoke" parameter="{Binding share}" />
+  </Actions>
   <Page>
     <Container id="files-browser-shell" accessible-name="Files browser" Type="Grid" RowSizes="Auto Auto Auto 1fr Auto Auto">
       <Container orientation="Horizontal" Type="Wrap">
@@ -36,6 +39,29 @@
       <Container Type="Vertical Stack" Row="4">
         <Button id="files-technical-details" content="{Binding TechnicalDetailsLabel}" action="9to1.Files.TechnicalDetails" accessible-name="Show or hide stable identity and technical details for the selected item" Interactive="{Binding CanShowDetails}" />
         <Text id="files-selected-details" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
+        <Button id="files-review-access" content="Manage access" action="9to1.Files.Share.Get" accessible-name="Review direct access grants on the selected owned item" Interactive="{Binding CanReviewAccess}" />
+        <If Condition="{Binding SharingVisible}">
+          <Container id="files-sharing" Type="Vertical Stack" CellGap="6" MaxHeight="260" VerticalScrolling="True" HorizontalScrolling="False" accessible-name="Direct access grants">
+            <Text text="{Binding SharingTitle}" />
+            <Text text="These are direct grants. Parent folder access may also apply. Revocation stops future access through this grant; copies already made cannot be recalled." />
+            <If Condition="{Binding SharingEmpty}"><Text text="No direct grants on this item." /></If>
+            <Repeat Source="{Binding SharingGrants}" As="share" Key="{Binding share.id}" Type="Vertical Stack">
+              <Container Type="Wrap" CellGap="8">
+                <Text text="{Binding share.email}" accessible-name="Recipient email recorded with the grant" />
+                <Text text="{Binding share.role}" accessible-name="Granted role" />
+                <Text text="{Binding share.expiry}" accessible-name="Grant expiry" />
+                <Text text="{Binding share.state}" accessible-name="Grant status" />
+                <Button content="Revoke access…" action="RevokeDisplayedGrant" Interactive="{Binding share.CanRevoke}" accessible-name="Review revoking this direct access grant in Home" />
+              </Container>
+            </Repeat>
+            <Container Type="Wrap" CellGap="8">
+              <Button id="files-more-access" content="More grants" action="9to1.Files.Share.More" Interactive="{Binding CanReadMoreGrants}" />
+              <Button id="files-close-access" content="Close access" action="9to1.Files.Share.Close" Interactive="{Binding CanCloseAccess}" />
+              <Button id="files-add-recipient" content="Add recipient" Interactive="False" accessible-name="Adding recipients is not available with this profile yet" />
+            </Container>
+            <Text text="Adding recipients is not available with this profile yet. Existing access can be reviewed and revoked here. No invitation will be sent." />
+          </Container>
+        </If>
       </Container>
       <Text id="files-status" text="{Binding Status}" accessible-name="Files operation status" Row="5" />
     </Container>

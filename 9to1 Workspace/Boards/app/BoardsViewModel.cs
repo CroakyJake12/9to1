@@ -27,6 +27,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     private string _selectedPageId = "page-1";
     private string _selectedBlockId = "block-para";
     private bool _syncing;
+    private readonly Dictionary<TextBox, Action> _textRangeBindings = [];
+    private TextBox? _textRangeControl;
+    private string? _textRangeBlock, _textRangePage;
+    private long _textRangeEpoch;
+    private bool _textRangeDetached, _textRangeBusy;
     private readonly List<Action> _detachers = [];
 
     public BoardsViewModel(IRichBoardSession session)
@@ -129,6 +134,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (await DispatchCuiContextAsync(command, cancellationToken)) return;
+        if (await DispatchTextRangeAsync(command, cancellationToken)) return;
         switch (command)
         {
             case "NewBoard":
@@ -344,6 +350,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// </summary>
     public void Attach(Control root)
     {
+        _textRangeDetached = false;
         foreach (var textBox in FindControls<TextBox>(root))
         {
             var name = textBox.Name ?? string.Empty;
@@ -385,6 +392,12 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
     /// <summary>Unsubscribe all Attach handlers (used when switching boards).</summary>
     public void Detach()
     {
+        _textRangeDetached = true;
+        Interlocked.Increment(ref _textRangeEpoch);
+        foreach (var removeRange in _textRangeBindings.Values.ToArray()) removeRange();
+        _textRangeBindings.Clear();
+        _textRangeControl = null;
+
         foreach (var remove in _detachers)
         {
             try { remove(); }
@@ -495,11 +508,11 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
                 SearchText = text;
                 return;
             case "HeadingBox":
-                FindOrCreateBlock("heading").Text = text;
+                BoardTextRanges.ReplaceText(FindOrCreateBlock("heading"), text);
                 Set("HeadingText", text);
                 break;
             case "ParaBox":
-                FindOrCreateBlock("paragraph").Text = text;
+                BoardTextRanges.ReplaceText(FindOrCreateBlock("paragraph"), text);
                 Set("ParaText", text);
                 _selectedBlockId = FindOrCreateBlock("paragraph").Id;
                 break;
@@ -531,7 +544,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
             var block = FindBlock(controlName["t_".Length..]);
             if (block is null)
                 return false;
-            block.Text = text;
+            BoardTextRanges.ReplaceText(block, text);
             _selectedBlockId = block.Id;
             PushSelectedInfo();
             return true;
@@ -709,9 +722,105 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         if (_selectedBlockId == blockId)
             return;
         _selectedBlockId = blockId;
+        InvalidateTextRange();
         PushSelectedInfo();
         RefreshCuiContext();
         SelectionChanged?.Invoke();
+    }
+
+    private void InvalidateTextRange()
+    {
+        Interlocked.Increment(ref _textRangeEpoch);
+        _textRangeControl = null; _textRangeBlock = null; _textRangePage = null;
+    }
+
+    /// <summary>Selection/focus mechanics for the existing text input. Formatting
+    /// buttons, labels and commands remain authored in Boards.cui.</summary>
+    public void BindTextSelection(TextBox box, string blockId)
+    {
+        ArgumentNullException.ThrowIfNull(box);
+        void Observe()
+        {
+            if (!box.IsKeyboardFocusWithin && !ReferenceEquals(_textRangeControl, box)) return;
+            Interlocked.Increment(ref _textRangeEpoch);
+            _textRangeControl = box; _textRangeBlock = blockId; _textRangePage = SelectedPageId;
+            RefreshTextRangeBindings();
+        }
+        void Changed(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs args)
+        {
+            if (args.Property.Name is "SelectionStart" or "SelectionEnd" or "CaretIndex" or "Text" or
+                "IsReadOnly" or "IsEnabled" or "IsEffectivelyEnabled") Observe();
+        }
+        void Focused(object? sender, Avalonia.Input.FocusChangedEventArgs args) => Observe();
+        void Remove()
+        {
+            box.PropertyChanged -= Changed; box.GotFocus -= Focused; box.DetachedFromVisualTree -= Detached;
+            _textRangeBindings.Remove(box);
+            if (ReferenceEquals(_textRangeControl, box)) { InvalidateTextRange(); RefreshTextRangeBindings(); }
+        }
+        void Detached(object? sender, Avalonia.VisualTreeAttachmentEventArgs args) => Remove();
+        box.PropertyChanged += Changed; box.GotFocus += Focused; box.DetachedFromVisualTree += Detached;
+        _textRangeBindings.Add(box, Remove);
+    }
+
+    private BoardTextSelection? CurrentTextRange()
+    {
+        var control = _textRangeControl;
+        if (_textRangeDetached || control is null || control.IsReadOnly || !control.IsEffectivelyEnabled ||
+            TopLevel.GetTopLevel(control) is null || _textRangePage != SelectedPageId || _textRangeBlock != SelectedBlockId ||
+            _session is not IBoardTextRangeSession ranges) return null;
+        return ranges.CaptureTextSelection(SelectedPageId, SelectedBlockId, control.SelectionStart, control.SelectionEnd);
+    }
+
+    private void RefreshTextRangeBindings()
+    {
+        var block = FindBlock(SelectedBlockId);
+        if (_textRangeControl is not null && (_textRangePage != SelectedPageId || _textRangeBlock != SelectedBlockId)) InvalidateTextRange();
+        var selection = CurrentTextRange();
+        var blockMode = _textRangeControl is null && !_textRangeDetached;
+        var allowed = !_textRangeBusy && (selection is not null || blockMode);
+        Set("CanFormatTextRange", allowed);
+        Set("TextRangeSummary", selection is not null ? $"Selected text: {Math.Abs(selection.Caret - selection.Anchor)} characters"
+            : _textRangeControl is not null ? "Select text to format" : block is not null ? "Selected block" : "No text selection");
+        Set("RangeBoldState", "Bold: " + (selection?.Bold.ToString() ?? (block?.Bold == true ? "On" : "Off")));
+        Set("RangeItalicState", "Italic: " + (selection?.Italic.ToString() ?? (block?.Italic == true ? "On" : "Off")));
+        Set("RangeUnderlineState", "Underline: " + (selection?.Underline.ToString() ?? (block?.Underline == true ? "On" : "Off")));
+        Set("RangeStrikeState", "Strikethrough: " + (selection?.StrikeThrough.ToString() ?? (block?.Strike == true ? "On" : "Off")));
+    }
+
+    private async ValueTask<bool> DispatchTextRangeAsync(string command, CancellationToken cancellationToken)
+    {
+        BoardTextFormat? format = command switch
+        {
+            "ToggleBold" => BoardTextFormat.Bold, "ToggleItalic" => BoardTextFormat.Italic,
+            "ToggleUnderline" => BoardTextFormat.Underline, "ToggleStrike" => BoardTextFormat.StrikeThrough, _ => null
+        };
+        if (format is null || _textRangeControl is null) return false; // existing explicit block formatting remains
+        var selection = CurrentTextRange();
+        if (selection is null || _session is not IBoardTextRangeSession ranges || _textRangeBusy)
+        { Set("StatusText", "Select editable text to format."); return true; }
+        var control = _textRangeControl!;
+        var epoch = Interlocked.Read(ref _textRangeEpoch);
+        var focused = TopLevel.GetTopLevel(control)?.FocusManager?.GetFocusedElement() as Control;
+        var focusId = focused is null ? null : Avalonia.Automation.AutomationProperties.GetAutomationId(focused);
+        var restoreFocus = control.IsKeyboardFocusWithin || focusId is "RangeBold" or "RangeItalic" or "RangeUnderline" or "RangeStrike";
+        _textRangeBusy = true; RefreshTextRangeBindings();
+        try
+        {
+            var result = await ranges.ToggleTextSelectionAsync(selection, format.Value,
+                () => !_textRangeDetached && Interlocked.Read(ref _textRangeEpoch) == epoch, cancellationToken);
+            if (!result.Applied) { Set("StatusText", "Text formatting refused: " + result.Code); return true; }
+            PushDocumentToBindings();
+            // Do not rebuild the input or reset its anchor/caret. Toolbar focus
+            // returns only while this same selection/lifetime remains current.
+            if (restoreFocus && !_textRangeDetached && Interlocked.Read(ref _textRangeEpoch) == epoch &&
+                ReferenceEquals(control, _textRangeControl) && !control.IsReadOnly && control.IsEffectivelyEnabled &&
+                TopLevel.GetTopLevel(control) is { } currentTop &&
+                (control.IsKeyboardFocusWithin || ReferenceEquals(currentTop.FocusManager?.GetFocusedElement(), focused)))
+                control.Focus();
+            return true;
+        }
+        finally { _textRangeBusy = false; if (!_textRangeDetached) RefreshTextRangeBindings(); }
     }
 
     // ----- Product navigation / selection / menus (visual pass) -----
@@ -2097,6 +2206,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         Set("BoldState", selected.Bold ? "On" : "Off");
         Set("ItalicState", selected.Italic ? "On" : "Off");
         Set("UnderlineState", selected.Underline ? "On" : "Off");
+        RefreshTextRangeBindings();
     }
 
     private void PushDocumentToBindings()
@@ -2147,6 +2257,7 @@ public sealed partial class BoardsViewModel : ICuiWritableBindingContext, ICuiAc
         {
             _syncing = false;
         }
+        RefreshTextRangeBindings();
     }
 
     private RichBoardSection CurrentSection() =>

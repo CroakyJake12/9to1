@@ -8,7 +8,7 @@ using HavenOS.Home.Core;
 
 namespace Haven.Infrastructure;
 
-/// <summary>Recover/disable ONLY a SAME protected library row. Its original raw
+/// <summary>Recover, disable or edit ONLY a SAME protected library row. Its original raw
 /// row, native store and individually accepted Home WRITE are rechecked before
 /// one atomic transaction. Scheduling and Task/provider admission remain absent.</summary>
 public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : ICanonicalAutomationDefinitionOriginalProcessSource, IAsyncDisposable
@@ -69,17 +69,22 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
         string AfterRowSha256, Descriptor Descriptor);
     private sealed class Intent(CanonicalAutomationDefinitionOriginalWriteOwner owner,
         CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection selection,
-        CanonicalAutomationOriginalChangeKind kind, Guid operationId, Snapshot snapshot) : ICanonicalAutomationDefinitionOriginalChangeIntent
+        CanonicalAutomationOriginalChangeKind kind, Guid operationId, Snapshot snapshot,
+        CanonicalAutomationOriginalEdit? edit = null, AutomationDefinition? proposed = null) : ICanonicalAutomationDefinitionOriginalChangeIntent
     {
         internal readonly CanonicalAutomationDefinitionOriginalWriteOwner Owner = owner;
         internal readonly CanonicalAutomationLibraryOriginalReadOwner.OriginalWriteSelection Selection = selection;
         internal readonly Snapshot Snapshot = snapshot;
+        internal readonly CanonicalAutomationOriginalEdit? Edit = edit;
         public AuthenticatedResourceActor Actor => Selection.Observation.Actor;
         public ResourceStoreIdentity OriginalStoreIdentity => Selection.Observation.OriginalStoreIdentity!;
         public VerifiedResourceStoreOwnership OriginalStoreOwnership => Selection.Ownership;
         public AutomationDefinition OriginalDefinition => Selection.Row.Value;
+        public AutomationDefinition ProposedDefinition => proposed ?? OriginalDefinition;
         public CanonicalAutomationOriginalChangeKind ChangeKind { get; } = kind;
-        public string ActionId => ChangeKind == CanonicalAutomationOriginalChangeKind.RecoverLegacy ? "automations.recover" : "automations.disable";
+        public string ActionId => ChangeKind switch
+        { CanonicalAutomationOriginalChangeKind.RecoverLegacy => "automations.recover",
+          CanonicalAutomationOriginalChangeKind.EditDisabled => "automations.update", _ => "automations.disable" };
         public Guid OperationId { get; } = operationId;
         public long ExpectedRevision => Snapshot.Descriptor?.Revision ?? 0;
         public string OriginalRowSha256 => Snapshot.RowSha256;
@@ -92,7 +97,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
         public ICanonicalAutomationDefinitionOriginalChangeIntent OriginalIntent => _intent;
         public Guid OperationId => Durable.OperationId;
         public AutomationOwnerCommitReceipt OriginalReceipt => Durable.Descriptor.Receipt;
-        public AutomationDefinition Definition => _intent.OriginalDefinition with
+        public AutomationDefinition Definition => _intent.ProposedDefinition with
         { IsEnabled = false, Revision = Durable.Descriptor.Revision, OwnerBinding = Durable.Descriptor.Owner,
             OperationalState = Durable.Descriptor.State, LastOwnerCommit = Durable.Descriptor.Receipt };
         public bool IsRecoveredOperation => _intent.IsRecoveredOperation;
@@ -177,21 +182,34 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
     {
         var actual = RequireIntent(value);
         return ReviewDigest(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalDefinition.Id,
-            actual.OperationId, actual.ChangeKind, actual.Snapshot);
+            actual.OperationId, actual.ChangeKind, actual.Snapshot, actual.Edit);
     }
     private static string ReviewDigest(AuthenticatedResourceActor actor, ResourceStoreIdentity identity,
-        Guid entity, Guid operation, CanonicalAutomationOriginalChangeKind kind, Snapshot snapshot) =>
-        Hash(new { actor, identity, entity, operation, kind, OriginalRow = snapshot.Operation?.BeforeRowSha256 ?? snapshot.RowSha256,
+        Guid entity, Guid operation, CanonicalAutomationOriginalChangeKind kind, Snapshot snapshot, CanonicalAutomationOriginalEdit? edit = null)
+    {
+        var original = Hash(new { actor, identity, entity, operation, kind, OriginalRow = snapshot.Operation?.BeforeRowSha256 ?? snapshot.RowSha256,
             ExpectedRevision = snapshot.Operation?.Descriptor.Receipt.ExpectedRevision ?? snapshot.Descriptor?.Revision ?? 0,
             PreviousDescriptorSha256 = snapshot.Operation is { } operationReceipt ? operationReceipt.Descriptor.PreviousDescriptorSha256 : (snapshot.DescriptorJson is null ? null : RawJsonDigest(snapshot.DescriptorJson)) });
+        // Keep existing recovery/disable receipt digests byte-compatible. Edited
+        // values become part of the new action's exact operation identity.
+        return edit is null ? original : Hash(new { Original = original, Edit = edit });
+    }
+    public bool SupportsOriginalDisabledEdit => true;
     public Task<ICanonicalAutomationDefinitionOriginalChangeIntent> PrepareOriginalChangeWithinSourceAsync(
         ICanonicalAutomationLibraryOriginalObservation sameObservation, AutomationOwnerRead<AutomationDefinition> sameRow,
-        CanonicalAutomationOriginalChangeKind kind, Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token)
+        CanonicalAutomationOriginalChangeKind kind, Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        PrepareOriginalChangeCoreAsync(sameObservation, sameRow, kind, null, operationId, scope, retain, token);
+
+    private Task<ICanonicalAutomationDefinitionOriginalChangeIntent> PrepareOriginalChangeCoreAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation, AutomationOwnerRead<AutomationDefinition> sameRow,
+        CanonicalAutomationOriginalChangeKind kind, CanonicalAutomationOriginalEdit? edit, Guid operationId,
+        Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
         var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
         return Admit(source, () => _store.RetainOriginalReader<ICanonicalAutomationDefinitionOriginalChangeIntent>(source, async () =>
         {
-            if (operationId == Guid.Empty || kind is not (CanonicalAutomationOriginalChangeKind.RecoverLegacy or CanonicalAutomationOriginalChangeKind.Disable))
+            if (operationId == Guid.Empty || kind is not (CanonicalAutomationOriginalChangeKind.RecoverLegacy or CanonicalAutomationOriginalChangeKind.Disable or CanonicalAutomationOriginalChangeKind.EditDisabled) ||
+                (kind == CanonicalAutomationOriginalChangeKind.EditDisabled) != (edit is not null))
                 throw new ArgumentException("A supported exact change and stable original operation ID are required.");
             var selected = source.Invoke(() => _library.ObserveOriginalWriteSelection(sameObservation, sameRow));
             await source.Read(() => _library.RevalidateOriginalObservationWithinSourceAsync(selected.Observation,
@@ -211,12 +229,28 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             }
             DemandNoLegacyLease(snapshot.Row);
             DemandDescriptor(snapshot, selected.Observation.Actor, identity, selected.Row.Value.Id);
+            AutomationDefinition? proposed = null;
+            if (edit is not null)
+            {
+                // READ flags and stored IDs do not issue edit eligibility. Require
+                // this producer's actual recovered descriptor and a disabled row.
+                if (!IsEditableSnapshot(snapshot))
+                {
+                    await source.JoinAllAsync().ConfigureAwait(false);
+                    var refusal = new InvalidOperationException("Recover and disable this saved automation before editing; active, archived or unowned rows cannot be adopted.");
+                    source.RegisterOriginalPreEffectRefusal(refusal); throw refusal;
+                }
+                DemandEditableSnapshot(snapshot);
+                var at = snapshot.Operation is null ? DateTimeOffset.UtcNow : DateTimeOffset.Parse(
+                    RawText(snapshot.Row, "updated_at"), System.Globalization.CultureInfo.InvariantCulture);
+                proposed = edit.PrepareDisabledProposal(selected.Row.Value, at);
+            }
             if (snapshot.Operation is { } old)
                 DemandDurableOperation(old, snapshot, selected.Observation.Actor, identity, selected.Row.Value.Id,
-                    operationId, kind, ReviewDigest(selected.Observation.Actor, identity, selected.Row.Value.Id, operationId, kind, snapshot));
+                    operationId, kind, ReviewDigest(selected.Observation.Actor, identity, selected.Row.Value.Id, operationId, kind, snapshot, edit));
             await DemandCurrentAsync(selected.Observation.Actor, identity, selected.Ownership, source, token).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false);
-            var intent = new Intent(this, selected, kind, operationId, snapshot);
+            var intent = new Intent(this, selected, kind, operationId, snapshot, edit, proposed);
             source.Run(() => _intents.Add(intent, intent)); return intent;
         }));
     }
@@ -233,6 +267,7 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner : IC
             if (Hash(snapshot) != Hash(actual.Snapshot))
                 throw new UnauthorizedAccessException("The full reviewed row/owner descriptor/operation changed; obtain a fresh observation and approval.");
             DemandNoLegacyLease(snapshot.Row);
+            if (actual.Edit is not null) DemandEditableSnapshot(snapshot);
             await DemandCurrentAsync(actual.Actor, actual.OriginalStoreIdentity, actual.OriginalStoreOwnership, source, token).ConfigureAwait(false);
             await source.JoinAllAsync().ConfigureAwait(false); return 0;
         }), actual);

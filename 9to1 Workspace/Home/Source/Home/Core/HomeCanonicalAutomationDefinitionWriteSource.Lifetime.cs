@@ -99,8 +99,12 @@ public sealed partial class HomeCanonicalAutomationDefinitionWriteSource
                         ? owner._broker.CompleteSetupExecutionWithinOriginalSourceAsync(capability,
                             new(acknowledged && released ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
                                 acknowledged && released
-                                    ? _reviewChangeKind == CanonicalAutomationOriginalChangeKind.RecoverLegacy
-                                        ? "HOME_AUTOMATION_DEFINITION_RECOVERED_NEEDS_REVIEW" : "HOME_AUTOMATION_DEFINITION_DISABLED"
+                                    ? _reviewChangeKind switch
+                                    {
+                                        CanonicalAutomationOriginalChangeKind.RecoverLegacy => "HOME_AUTOMATION_DEFINITION_RECOVERED_NEEDS_REVIEW",
+                                        CanonicalAutomationOriginalChangeKind.EditDisabled => "HOME_AUTOMATION_DEFINITION_EDITED_DISABLED",
+                                        _ => "HOME_AUTOMATION_DEFINITION_DISABLED"
+                                    }
                                     : sql is null ? "HOME_AUTOMATION_WRITE_NOT_DISPATCHED" : "HOME_AUTOMATION_WRITE_OUTCOME_UNCONFIRMED",
                                 acknowledged ? "The exact atomic maintained-definition acknowledgment was observed; original cleanup and audit are retained independently."
                                     : "The requested automation transition was not acknowledged as successful. Existing definition values, history and any uncertain receipt remain available for recovery.", []), sources.Scope, sources.Retain, CancellationToken.None)

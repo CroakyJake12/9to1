@@ -19,7 +19,20 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
     public Task<ICanonicalAutomationDefinitionOriginalProcessPreparation> PrepareOriginalChangeProcessWithinSourceAsync(
         ICanonicalAutomationLibraryOriginalObservation sameObservation,
         AutomationOwnerRead<Haven.Core.AutomationDefinition> sameRow, CanonicalAutomationOriginalChangeKind kind,
-        Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token)
+        Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        PrepareOriginalChangeProcessCoreAsync(sameObservation, sameRow, kind, null, operationId, scope, retain, token);
+
+    public Task<ICanonicalAutomationDefinitionOriginalProcessPreparation> PrepareOriginalEditProcessWithinSourceAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation,
+        AutomationOwnerRead<Haven.Core.AutomationDefinition> sameRow, CanonicalAutomationOriginalEdit edit,
+        Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token) =>
+        PrepareOriginalChangeProcessCoreAsync(sameObservation, sameRow, CanonicalAutomationOriginalChangeKind.EditDisabled,
+            edit ?? throw new ArgumentNullException(nameof(edit)), operationId, scope, retain, token);
+
+    private Task<ICanonicalAutomationDefinitionOriginalProcessPreparation> PrepareOriginalChangeProcessCoreAsync(
+        ICanonicalAutomationLibraryOriginalObservation sameObservation,
+        AutomationOwnerRead<Haven.Core.AutomationDefinition> sameRow, CanonicalAutomationOriginalChangeKind kind,
+        CanonicalAutomationOriginalEdit? edit, Guid operationId, Action<Action> scope, Action<Task> retain, CancellationToken token)
     {
         var source = new CanonicalSqliteOriginalSourceScope(_store.OriginalSourceOwner, Scope(scope), retain);
         return Admit(source, async () =>
@@ -30,8 +43,8 @@ public sealed partial class CanonicalAutomationDefinitionOriginalWriteOwner
             Task<ICanonicalAutomationDefinitionOriginalChangeIntent>? preparation = null;
             ICanonicalAutomationDefinitionOriginalChangeIntent? intent = null;
             var errors = new List<Exception>(); var declined = false;
-            try { source.Run(() => preparation = PrepareOriginalChangeWithinSourceAsync(sameObservation,
-                sameRow, kind, operationId, body => body(), _ => { }, token)); }
+            try { source.Run(() => preparation = PrepareOriginalChangeCoreAsync(sameObservation,
+                sameRow, kind, edit, operationId, body => body(), _ => { }, token)); }
             catch (Exception cause) { errors.Add(cause); }
             if (preparation is not null)
                 try { intent = await preparation.ConfigureAwait(false); }

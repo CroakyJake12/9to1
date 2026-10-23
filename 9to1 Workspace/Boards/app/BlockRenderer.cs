@@ -185,6 +185,7 @@ public static class BlockRenderer
         var captured = block.Id;
         box.TextChanged += (_, _) => vm.EditText("t_" + captured, box.Text ?? string.Empty);
         box.GotFocus += (_, _) => vm.FocusBlock(captured);
+        vm.BindTextSelection(box, captured);
         shell.Children.Add(box);
         // Extended flags that plain text cannot show stay as a whisper, not chrome.
         var quiet = new List<string>();

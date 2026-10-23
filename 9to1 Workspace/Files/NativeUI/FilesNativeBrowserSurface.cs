@@ -70,7 +70,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         _items.SelectionChanged += (_, _) =>
         {
             if (!OriginalAlive()) { Changed(); return; }
-            RunOriginalNativeMutation(Changed);
+            RunOriginalNativeMutation(() => { SharingSelectionChanged(); Changed(); });
         };
         _sort.SelectionChanged += (_, _) =>
         {
@@ -193,6 +193,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
 
     public bool TryGetValue(string path, out object? value)
     {
+        if (TryGetSharingValue(path, out value)) return true;
         value = path switch
         {
             "FolderTitle" => _page?.FolderTitle ?? "Files",
@@ -244,7 +245,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     private bool CanOpenSelection => _page is { IsTrash: false } && _items.SelectedItem is HostedItemMetadata selected &&
         (selected.Kind == HostedItemKind.Folder || selected.Kind == HostedItemKind.File && _packages is not null &&
          Path.GetExtension(selected.Name).ToLowerInvariant() is ".exe" or ".msi" or ".apk");
-    public bool? IsActionAvailable(string command) => command switch
+    public bool? IsActionAvailable(string command) => IsSharingCommand(command) ? SharingActionAvailable(command) : command switch
     {
         "9to1.Files.Home" or "9to1.Files.Trash" or "9to1.Files.Refresh" or "9to1.Files.Search" => Available && _pendingMutation is null,
         "9to1.Files.Up" => Available && _pendingMutation is null && _page?.ParentID is not null,
@@ -275,6 +276,12 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     };
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (IsSharingCommand(command) || command == "9to1.Files.Apply" && IsPendingShareReview)
+        {
+            if (command != "9to1.Files.Share.Revoke" && parameter is not null)
+                throw new ArgumentException("Access commands retain the original canonical selection.");
+            return new(TrackOriginalAsync(() => InvokeSharingOriginalAsync(command, parameter, cancellationToken)));
+        }
         if (parameter is not null) throw new ArgumentException("Files commands use the owning canonical selection, not caller paths or identity.");
         return new(InvokeAsync(command, cancellationToken));
     }
@@ -526,6 +533,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
     { if ((await _readiness.CheckAsync(token)).State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException("Home cannot authorise this Files view."); }
     private void ClearSources()
     {
+        Interlocked.Increment(ref _sharingSelectionVersion);
+        _sharingPage = null;
         _page = null; _originalPageCurrent = null; _items.SelectedItem = null; _items.ItemsSource = null;
         _query = ""; _search.Text = ""; _editName.Text = "";
         _moveSource = null; _showTechnicalDetails = false;
@@ -554,7 +563,8 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
         // Refused-state withdrawal remains observable after retirement. A live publication
         // rechecks its original lifetime after each synchronous native notification.
         var publishing = OriginalAlive();
-        _sort.IsEnabled = Available && _page is not null;
+        _sort.IsEnabled = Available && _page is not null && !IsPendingShareReview;
+        _items.IsEnabled = !_busy && !IsPendingShareReview && OriginalAlive();
         _editName.IsEnabled = Available && _pendingMutation is null;
         if (publishing) RequireOriginalAlive(CancellationToken.None);
         PropertyChanged?.Invoke(this, new(null));

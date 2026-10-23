@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Haven.Core;
 
@@ -11,12 +13,14 @@ public enum PresentElementKind
     Media = 4,
     Group = 5,
     Table = 6,
-    Chart = 7
+    Chart = 7,
+    SharedObject = 8
 }
 
 public sealed class PresentDocument
 {
-    public const int CurrentSchemaVersion = 3;
+    // Schema 4 adds required Home-owned shared object payloads. Older readers must reject it.
+    public const int CurrentSchemaVersion = 4;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -49,6 +53,8 @@ public sealed class PresentDocument
 
     public void Normalize()
     {
+        if (SchemaVersion > CurrentSchemaVersion)
+            throw new InvalidDataException("This Present build cannot read the required document schema.");
         SchemaVersion = CurrentSchemaVersion;
         if (Id == Guid.Empty) Id = Guid.NewGuid();
         Title = string.IsNullOrWhiteSpace(Title) ? "Untitled presentation" : Title.Trim();
@@ -224,6 +230,10 @@ public sealed class PresentElement
     public string AlternativeText { get; set; } = string.Empty;
     public string ShapeType { get; set; } = string.Empty;
     public DocumentVectorShape? VectorShape { get; set; }
+    // The complete canonical Home ProductivityObjectBundle, never a second ink model.
+    // Opaque JSON retains optional properties independently of the app's presentation state.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public JsonElement? SharedProductivityBundle { get; set; }
     public string GenUiMarkup { get; set; } = string.Empty;
     public PresentElementStyle Style { get; set; } = new();
     public PresentTextStyle TextStyle { get; set; } = new();
@@ -267,6 +277,10 @@ public sealed class PresentElement
         AlternativeText ??= string.Empty;
         ShapeType ??= string.Empty;
         VectorShape?.Normalize();
+        if (Kind == PresentElementKind.SharedObject &&
+            SharedProductivityBundle is not { ValueKind: JsonValueKind.Object })
+            throw new InvalidDataException("A shared Present object requires its canonical Home bundle.");
+        if (SharedProductivityBundle is { } bundle) SharedProductivityBundle = bundle.Clone();
         GenUiMarkup ??= string.Empty;
         Style ??= new PresentElementStyle();
         TextStyle ??= new PresentTextStyle();

@@ -49,14 +49,7 @@ public static class ToolbarBuilder
         bar.Children.Add(BuildStyleGallery(vm));
         bar.Children.Add(Separator());
         var selected = vm.FindBlock(vm.SelectedBlockId);
-        bar.Children.Add(Toggle(vm, BoardsIcons.Bold, "Bold", "Toggle bold (Ctrl+B)",
-            selected?.Bold == true, async () => await vm.DispatchAsync("ToggleBold", null)));
-        bar.Children.Add(Toggle(vm, BoardsIcons.Italic, "Italic", "Toggle italic (Ctrl+I)",
-            selected?.Italic == true, async () => await vm.DispatchAsync("ToggleItalic", null)));
-        bar.Children.Add(Toggle(vm, BoardsIcons.Underline, "Underline", "Toggle underline (Ctrl+U)",
-            selected?.Underline == true, async () => await vm.DispatchAsync("ToggleUnderline", null)));
-        bar.Children.Add(Toggle(vm, "S", "Strikethrough", "Toggle strikethrough",
-            selected?.Strike == true, async () => await vm.DispatchAsync("ToggleStrike", null), textFallback: true));
+        // B/I/U/S range commands and mixed-state labels are authored in Boards.cui.
         bar.Children.Add(Toggle(vm, BoardsIcons.Subscript, "Subscript", "Toggle subscript",
             selected?.Baseline == "subscript", async () => await vm.DispatchAsync("ToggleSub", null)));
         bar.Children.Add(Toggle(vm, BoardsIcons.Superscript, "Superscript", "Toggle superscript",

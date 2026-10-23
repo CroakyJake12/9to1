@@ -1,3 +1,5 @@
+using CakeOS.Apps.Boards.Contract;
+
 // Minimal rich-notes session contract for the Boards CUI app.
 // The persistence worker owns the real `RichBoardSession` (schema v2 `.9to1board`).
 // This interface keeps all persistence access behind a one-line swap:
@@ -37,6 +39,7 @@ public sealed class RichBoardBlock
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Kind { get; set; } = "paragraph";
     public string Text { get; set; } = string.Empty;
+    public List<HavenRichTextRun> Runs { get; set; } = [];
     public string StyleId { get; set; } = "normal";
     public bool IsChecked { get; set; }
     public int Level { get; set; }
@@ -205,4 +208,25 @@ public interface IRichBoardSession : IAsyncDisposable
     bool CanRedo { get; }
     ValueTask<bool> UndoAsync(CancellationToken cancellationToken = default);
     ValueTask<bool> RedoAsync(CancellationToken cancellationToken = default);
+}
+
+
+public enum BoardTextMark { Unavailable, Off, On, Mixed }
+public enum BoardTextFormat { Bold, Italic, Underline, StrikeThrough }
+
+/// <summary>Transient, same-owner range observation. It is never saved as board
+/// content or treated as Home authority. Only its issuing session can apply it.</summary>
+public sealed record BoardTextSelection(Guid OwnerId, long Revision, string PageId,
+    string BlockId, string Text, string ViewStamp, int Anchor, int Caret,
+    BoardTextMark Bold, BoardTextMark Italic, BoardTextMark Underline, BoardTextMark StrikeThrough);
+
+public sealed record BoardTextActionResult(bool Applied, string Code);
+
+/// <summary>Optional capability of the genuine current rich-board owner, not a
+/// shadow Notes editor. The deny-only predicate fences the originating UI lifetime.</summary>
+public interface IBoardTextRangeSession
+{
+    BoardTextSelection? CaptureTextSelection(string pageId, string blockId, int anchor, int caret);
+    ValueTask<BoardTextActionResult> ToggleTextSelectionAsync(BoardTextSelection selection,
+        BoardTextFormat format, Func<bool> originStillCurrent, CancellationToken cancellationToken = default);
 }

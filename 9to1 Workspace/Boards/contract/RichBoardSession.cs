@@ -118,6 +118,30 @@ public sealed class RichBoardSession : IAsyncDisposable
         }
     }
 
+    /// <summary>The same mutation owner/history, with a deny-only precondition
+    /// checked under its gate BEFORE history or content changes. A refusal is not
+    /// an empty undo transaction. Exceptions/cancellation retain their normal cause.</summary>
+    public async Task<bool> MutateIfAsync(Func<HavenRichNotes, bool> condition,
+        Action<HavenRichNotes> mutation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(condition);
+        ArgumentNullException.ThrowIfNull(mutation);
+        ThrowIfDisposed();
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!condition(Rich)) return false;
+            PushHistory();
+            mutation(Rich);
+            HavenRichNotesValidator.Validate(Rich);
+            HasUnsavedChanges = true;
+            UpdateStatus("Editing…", hasUnsavedChanges: true);
+            _autosaveTimer.Change(_autosaveDelay, Timeout.InfiniteTimeSpan);
+            return true;
+        }
+        finally { _gate.Release(); }
+    }
+
     public bool CanUndo
     {
         get

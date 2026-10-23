@@ -47,6 +47,7 @@ internal static class Projector
                         Id = block.Id,
                         Kind = block.Kind == HavenRichBlockKind.Heading ? "heading" : "paragraph",
                         Text = block.PlainText,
+                        Runs = BoardTextRanges.Copy(block.Runs),
                         StyleId = block.StyleId,
                         Bold = AllStyled(block, r => r.Bold),
                         Italic = AllStyled(block, r => r.Italic),
@@ -394,23 +395,35 @@ internal static class MergeDeltas
         HavenRichNotes rich, HavenRichPage page, HavenRichBlock contractBlock,
         RichBoardBlock viewBlock, RichBoardBlock? baselineBlock)
     {
-        if (baselineBlock is null || viewBlock.Text != baselineBlock.Text)
-            HavenRichNotesOps.UpdateParagraphText(rich, page.Id, contractBlock.Id, viewBlock.Text);
+        if (baselineBlock is null || viewBlock.Text != baselineBlock.Text ||
+            !System.Text.Json.JsonSerializer.Serialize(viewBlock.Runs).Equals(
+                System.Text.Json.JsonSerializer.Serialize(baselineBlock.Runs), StringComparison.Ordinal))
+        {
+            if (viewBlock.Runs.Count > 0 && BoardTextRanges.Matches(viewBlock))
+                HavenRichNotesOps.SetBlockRuns(rich, page.Id, contractBlock.Id, BoardTextRanges.Copy(viewBlock.Runs));
+            else
+                HavenRichNotesOps.UpdateParagraphText(rich, page.Id, contractBlock.Id, viewBlock.Text);
+        }
         if (baselineBlock is null || FormatChanged(viewBlock, baselineBlock))
-            HavenRichNotesOps.SetBlockRuns(rich, page.Id, contractBlock.Id,
-                [new HavenRichTextRun
-                {
-                    Text = viewBlock.Text,
-                    Bold = viewBlock.Bold,
-                    Italic = viewBlock.Italic,
-                    Underline = viewBlock.Underline,
-                    StrikeThrough = viewBlock.Strike,
-                    Baseline = ParseBaseline(viewBlock.Baseline),
-                    FontFamily = viewBlock.FontFamily,
-                    FontSize = viewBlock.FontSize,
-                    Foreground = viewBlock.Foreground,
-                    Background = viewBlock.Background
-                }]);
+        {
+            // A later font, colour or baseline edit must not flatten a previously
+            // selected character range or overwrite its unrelated run properties.
+            var runs = contractBlock.Runs.Count > 0 ? BoardTextRanges.Copy(contractBlock.Runs)
+                : new List<HavenRichTextRun> { new() { Text = viewBlock.Text } };
+            foreach (var run in runs)
+            {
+                if (baselineBlock is null || viewBlock.Bold != baselineBlock.Bold) run.Bold = viewBlock.Bold;
+                if (baselineBlock is null || viewBlock.Italic != baselineBlock.Italic) run.Italic = viewBlock.Italic;
+                if (baselineBlock is null || viewBlock.Underline != baselineBlock.Underline) run.Underline = viewBlock.Underline;
+                if (baselineBlock is null || viewBlock.Strike != baselineBlock.Strike) run.StrikeThrough = viewBlock.Strike;
+                if (baselineBlock is null || viewBlock.Baseline != baselineBlock.Baseline) run.Baseline = ParseBaseline(viewBlock.Baseline);
+                if (baselineBlock is null || viewBlock.FontFamily != baselineBlock.FontFamily) run.FontFamily = viewBlock.FontFamily;
+                if (baselineBlock is null || viewBlock.FontSize != baselineBlock.FontSize) run.FontSize = viewBlock.FontSize;
+                if (baselineBlock is null || viewBlock.Foreground != baselineBlock.Foreground) run.Foreground = viewBlock.Foreground;
+                if (baselineBlock is null || viewBlock.Background != baselineBlock.Background) run.Background = viewBlock.Background;
+            }
+            HavenRichNotesOps.SetBlockRuns(rich, page.Id, contractBlock.Id, runs);
+        }
         if (baselineBlock is null || ParagraphChanged(viewBlock, baselineBlock))
             HavenRichNotesOps.SetBlockParagraph(rich, page.Id, contractBlock.Id,
                 ParseAlignment(viewBlock.Alignment), viewBlock.LineSpacing,
@@ -643,6 +656,8 @@ internal static class MergeDeltas
                         Foreground = viewBlock.Foreground,
                         Background = viewBlock.Background
                     }];
+                if (viewBlock.Runs.Count > 0 && BoardTextRanges.Matches(viewBlock))
+                    block.Runs = BoardTextRanges.Copy(viewBlock.Runs);
                 break;
             }
             case "checklist":
@@ -1040,4 +1055,99 @@ internal static class MergeDeltas
     private static string WorkerJson(RichBoardDocument document) =>
         System.Text.Json.JsonSerializer.Serialize(document, new System.Text.Json.JsonSerializerOptions(
             System.Text.Json.JsonSerializerDefaults.Web));
+}
+
+
+/// <summary>Pure operations over the EXISTING persisted rich-run fields. No
+/// document, store, history, layout or input engine lives here.</summary>
+internal static class BoardTextRanges
+{
+    internal static HavenRichTextRun Copy(HavenRichTextRun run, string? text = null) => new()
+    {
+        Text = text ?? run.Text, Bold = run.Bold, Italic = run.Italic,
+        Underline = run.Underline, StrikeThrough = run.StrikeThrough, Baseline = run.Baseline,
+        FontFamily = run.FontFamily, FontSize = run.FontSize,
+        Foreground = run.Foreground, Background = run.Background
+    };
+    internal static List<HavenRichTextRun> Copy(IEnumerable<HavenRichTextRun> runs) => runs.Select(run => Copy(run)).ToList();
+    internal static bool Matches(RichBoardBlock block) => block.Runs.Count == 0 ||
+        string.Concat(block.Runs.Select(run => run.Text)) == block.Text;
+    internal static bool Enabled(HavenRichTextRun run, BoardTextFormat format) => format switch
+    {
+        BoardTextFormat.Bold => run.Bold, BoardTextFormat.Italic => run.Italic,
+        BoardTextFormat.Underline => run.Underline, BoardTextFormat.StrikeThrough => run.StrikeThrough,
+        _ => throw new ArgumentOutOfRangeException(nameof(format))
+    };
+    internal static void Set(HavenRichTextRun run, BoardTextFormat format, bool value)
+    {
+        switch (format)
+        {
+            case BoardTextFormat.Bold: run.Bold = value; break;
+            case BoardTextFormat.Italic: run.Italic = value; break;
+            case BoardTextFormat.Underline: run.Underline = value; break;
+            case BoardTextFormat.StrikeThrough: run.StrikeThrough = value; break;
+            default: throw new ArgumentOutOfRangeException(nameof(format));
+        }
+    }
+    internal static List<HavenRichTextRun> Selected(RichBoardBlock block, int start, int end)
+    {
+        var result = new List<HavenRichTextRun>();
+        var runs = block.Runs.Count == 0 ? new List<HavenRichTextRun> { new() { Text = block.Text } } : block.Runs;
+        var offset = 0;
+        foreach (var run in runs)
+        {
+            if (offset < end && offset + run.Text.Length > start) result.Add(run);
+            offset += run.Text.Length;
+        }
+        return result;
+    }
+    internal static BoardTextMark Mark(IReadOnlyList<HavenRichTextRun> runs, BoardTextFormat format) =>
+        runs.Count == 0 ? BoardTextMark.Unavailable : runs.All(run => Enabled(run, format)) ? BoardTextMark.On
+            : runs.Any(run => Enabled(run, format)) ? BoardTextMark.Mixed : BoardTextMark.Off;
+
+    internal static List<HavenRichTextRun> Toggle(RichBoardBlock block, int start, int end, BoardTextFormat format)
+    {
+        var selected = Selected(block, start, end);
+        if (selected.Count == 0) throw new InvalidOperationException("No actual text range is selected.");
+        var enable = selected.Any(run => !Enabled(run, format));
+        var runs = block.Runs.Count == 0 ? new List<HavenRichTextRun> { new() { Text = block.Text } } : block.Runs;
+        var result = new List<HavenRichTextRun>(); var offset = 0;
+        foreach (var run in runs)
+        {
+            var from = Math.Clamp(start - offset, 0, run.Text.Length);
+            var to = Math.Clamp(end - offset, 0, run.Text.Length);
+            if (to <= from) result.Add(Copy(run));
+            else
+            {
+                if (from > 0) result.Add(Copy(run, run.Text[..from]));
+                var middle = Copy(run, run.Text[from..to]); Set(middle, format, enable); result.Add(middle);
+                if (to < run.Text.Length) result.Add(Copy(run, run.Text[to..]));
+            }
+            offset += run.Text.Length;
+        }
+        return result;
+    }
+
+    // Match the existing shared Write editor's prefix/suffix edit policy, but
+    // retain this owner's complete rich-run fields (including Baseline).
+    internal static void ReplaceText(RichBoardBlock block, string next)
+    {
+        if (block.Runs.Count == 0 || !Matches(block)) { block.Text = next; return; }
+        var old = block.Text; var prefix = 0; var suffix = 0;
+        while (prefix < Math.Min(old.Length, next.Length) && old[prefix] == next[prefix]) ++prefix;
+        while (suffix < Math.Min(old.Length, next.Length) - prefix && old[^(suffix + 1)] == next[^(suffix + 1)]) ++suffix;
+        var removedEnd = old.Length - suffix;
+        var inserted = next.Substring(prefix, next.Length - prefix - suffix);
+        var runs = Copy(block.Runs); var offset = 0; var target = runs.Count - 1; var local = 0; var found = false;
+        for (var i = 0; i < runs.Count; ++i)
+        {
+            var run = runs[i]; var length = run.Text.Length;
+            if (!found && prefix <= offset + length) { target = i; local = Math.Clamp(prefix - offset, 0, length); found = true; }
+            var from = Math.Max(prefix, offset); var to = Math.Min(removedEnd, offset + length);
+            if (to > from) run.Text = run.Text.Remove(from - offset, to - from);
+            offset += length;
+        }
+        if (inserted.Length > 0) runs[target].Text = runs[target].Text.Insert(Math.Min(local, runs[target].Text.Length), inserted);
+        block.Text = next; block.Runs = runs;
+    }
 }
