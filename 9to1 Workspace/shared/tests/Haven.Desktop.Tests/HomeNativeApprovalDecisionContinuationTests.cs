@@ -406,7 +406,7 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
             if (decisionStillInFlight)
             {
                 Assert.False(first.IsCompleted); Assert.False(second.IsCompleted);
-                var captured = await CaptureActualDispatchWaitAsync(surface, request.RequestId, rig.Token);
+                var captured = await CaptureActualDispatchWaitAsync(rig.Owner, second, surface, request.RequestId, rig.Token);
                 Assert.False(captured.Wait.IsCompleted); Assert.False(captured.Settlement.IsCompleted);
                 if (cancelLateObserver)
                 {
@@ -461,7 +461,9 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
                 if (pair.Original is { } original)
                 {
                     var error = await Record.ExceptionAsync(() => original.WaitAsync(rig.Token));
-                    if (error is not null && !ReferenceEquals(error, pair.Expected)) errors.Add(error);
+                    if (error is not null && !ReferenceEquals(error, pair.Expected) &&
+                        !(pair.Original.IsCanceled && pair.Expected is OperationCanceledException && error is OperationCanceledException))
+                        errors.Add(error);
                 }
             var closeError = await rig.RecordOriginalCloseAsync();
             if (closeError is not null && !ReferenceEquals(closeError, expectedClose)) errors.Add(closeError);
@@ -489,13 +491,25 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
     }
 
     private static async Task<(Task Wait, Task Settlement)> CaptureActualDispatchWaitAsync(
+        HomeNativeApprovalWindowOwner owner, Task<HomeNativeApprovalDecisionObservation> observation,
         HomeApprovalCuiSurface surface, string requestId, CancellationToken token)
     {
         const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+        var ownerGate = typeof(HomeNativeApprovalWindowOwner).GetField("_sync", flags)!.GetValue(owner)!;
         var gate = typeof(HomeApprovalCuiSurface).GetField("_originalSync", flags)!.GetValue(surface)!;
         while (true)
         {
             token.ThrowIfCancellationRequested();
+            Task? originalSource = null;
+            lock (ownerGate)
+            {
+                var review = typeof(HomeNativeApprovalWindowOwner).GetField("_current", flags)!.GetValue(owner)!;
+                var decisions = Assert.IsAssignableFrom<System.Collections.IEnumerable>(review.GetType()
+                    .GetProperty("Decisions", flags)!.GetValue(review));
+                foreach (var decision in decisions)
+                    if (ReferenceEquals(decision!.GetType().GetField("Original", flags)!.GetValue(decision), observation))
+                        originalSource = decision.GetType().GetField("Source", flags)!.GetValue(decision) as Task;
+            }
             lock (gate)
             {
                 var waits = Assert.IsAssignableFrom<System.Collections.IEnumerable>(typeof(HomeApprovalCuiSurface)
@@ -503,7 +517,8 @@ public sealed class HomeNativeApprovalDecisionContinuationTests
                 foreach (var wait in waits)
                 {
                     var type = wait!.GetType();
-                    if (!Equals(type.GetProperty("RequestId", flags)!.GetValue(wait), requestId) ||
+                    if (!ReferenceEquals(type.GetField("Original", flags)!.GetValue(wait), originalSource) ||
+                        !Equals(type.GetProperty("RequestId", flags)!.GetValue(wait), requestId) ||
                         type.GetField("OriginalDispatch", flags)?.GetValue(wait) is not { } actual) continue;
                     return (Assert.IsAssignableFrom<Task>(type.GetField("Original", flags)!.GetValue(wait)),
                         Assert.IsAssignableFrom<Task>(actual.GetType().GetField("Settlement", flags)!.GetValue(actual)));
