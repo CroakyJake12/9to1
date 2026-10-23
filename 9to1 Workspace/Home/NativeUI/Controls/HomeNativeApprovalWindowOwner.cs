@@ -5,8 +5,24 @@ using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using HavenOS.Home.Core;
 using HomePermissionTrustService = HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService;
+using HomePermissionRequestState = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState;
 
 namespace HavenOS.Home.NativeUI;
+
+/// <summary>Information from an actual settled Home CUI decision. This is not a grant,
+/// execution capability, permission receipt or substitute for the original broker's Begin.</summary>
+public sealed class HomeNativeApprovalDecisionObservation
+{
+    internal HomeNativeApprovalDecisionObservation(string requestId, AuthenticatedResourceActor actor,
+        HomePermissionRequestState state, bool decisionRecorded, string code, string message)
+    { RequestId = requestId; Actor = actor; State = state; DecisionRecorded = decisionRecorded; Code = code; Message = message; }
+    internal AuthenticatedResourceActor Actor { get; }
+    public string RequestId { get; }
+    public HomePermissionRequestState State { get; }
+    public bool DecisionRecorded { get; }
+    public string Code { get; }
+    public string Message { get; }
+}
 
 /// <summary>HOME-process-only native review windows over the original owner components.
 /// This creates no Home graph, app identity, permission policy or presentation receipt.</summary>
@@ -28,6 +44,14 @@ public sealed class HomeNativeApprovalWindowOwner(
         internal EventHandler<WindowClosingEventArgs>? Closing;
         internal bool Released;
         internal List<Task> Focuses { get; } = [];
+        internal List<DecisionObservation> Decisions { get; } = [];
+    }
+
+    private sealed class DecisionObservation
+    {
+        internal Task<HomeNativeApprovalDecisionObservation> Original = null!;
+        internal Task? Source;
+        internal bool ExpectedWaitCancellation;
     }
 
     private readonly HomeCoreRuntime _runtime = originalRuntime ?? throw new ArgumentNullException(nameof(originalRuntime));
@@ -50,7 +74,8 @@ public sealed class HomeNativeApprovalWindowOwner(
         {
             lock (_sync) return _close?.IsCompleted == true && _work.All(task => task.IsCompleted) &&
                 _reviews.All(review => review.Close?.IsCompleted == true &&
-                    (review.Surface is null || review.SurfaceClose?.IsCompleted == true));
+                    (review.Surface is null || review.SurfaceClose?.IsCompleted == true) &&
+                    review.Decisions.All(decision => decision.Original.IsCompleted));
         }
     }
 
@@ -89,6 +114,112 @@ public sealed class HomeNativeApprovalWindowOwner(
         }
         start.SetResult();
         return review.Open;
+    }
+
+    /// <summary>Opens/focuses canonical Home and awaits only its actual request-specific CUI
+    /// decision. The returned information does NOT authorise a target operation. The caller
+    /// must use its same opaque review's original Begin and final owner fence afterwards.</summary>
+    public Task<HomeNativeApprovalDecisionObservation> OpenAndObserveDecisionOriginalAsync(string requestId,
+        CancellationToken cancellationToken = default)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ArgumentException.ThrowIfNullOrWhiteSpace(requestId);
+        cancellationToken.ThrowIfCancellationRequested();
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        DecisionObservation decision;
+        lock (_sync)
+        {
+            ObjectDisposedException.ThrowIf(_retiring || _close is not null, this);
+            _work.RemoveAll(task => task.IsCompletedSuccessfully ||
+                _reviews.Any(review => review.Decisions.Any(item => ReferenceEquals(item.Original, task) &&
+                    item.ExpectedWaitCancellation && task.IsCanceled)));
+            if (_work.Count >= MaximumOriginalReviews)
+                throw new InvalidOperationException("Join original Home observation failures before another request.");
+            // A decision can settle between real window publication and an observer attaching.
+            // Only this same still-owned window's actual receipt can answer that race.
+            var open = _current is { Close: null, Surface: { } surface } && surface.HasOriginalSettledDecision(requestId)
+                ? Task.CompletedTask : OpenOriginalAsync(requestId);
+            // The global Home window belongs to this owner. Canceling one route's observation
+            // must not poison the shared window's lifetime or another caller's pending review.
+            var review = _current ?? throw new InvalidOperationException("The original Home review owner was not retained.");
+            review.Decisions.RemoveAll(item => item.Original.IsCompletedSuccessfully || item.ExpectedWaitCancellation && item.Original.IsCanceled);
+            if (review.Decisions.Count >= MaximumOriginalReviews)
+                throw new InvalidOperationException("Join original decision observations before another request.");
+            decision = new();
+            decision.Original = ObserveDecisionCoreAsync(start.Task, review, decision, open, requestId, cancellationToken);
+            review.Decisions.Add(decision);
+            _work.Add(decision.Original);
+        }
+        start.SetResult();
+        return decision.Original;
+    }
+
+    private async Task<HomeNativeApprovalDecisionObservation> ObserveDecisionCoreAsync(Task start, Review review,
+        DecisionObservation decision, Task open, string requestId, CancellationToken caller)
+    {
+        await start.ConfigureAwait(false);
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(caller, review.Lifetime.Token);
+        void DemandObservationOpen()
+        {
+            try { DemandOpen(review, caller); }
+            catch (OperationCanceledException error)
+            {
+                if (!(error.CancellationToken == caller && caller.IsCancellationRequested) &&
+                    !(error.CancellationToken == review.Lifetime.Token && review.Lifetime.IsCancellationRequested))
+                    throw new AggregateException("The original Home window guard faulted outside its observer lifetime.", error);
+                decision.ExpectedWaitCancellation = true; throw;
+            }
+        }
+        try
+        {
+            var publicationWait = open.WaitAsync(linked.Token);
+            decision.Source = publicationWait;
+            try { await publicationWait.ConfigureAwait(false); }
+            catch (Exception) when (publicationWait.IsCanceled && !open.IsCanceled && !open.IsFaulted)
+            { decision.ExpectedWaitCancellation = true; throw; }
+            Task<HomeNativeApprovalDecisionObservation>? actual = null;
+            var dispatch = Dispatcher.UIThread.InvokeAsync<Task<HomeNativeApprovalDecisionObservation>>(() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+            {
+                DemandObservationOpen();
+                if (!ReferenceEquals(_current, review) || review.Window is not { IsVisible: true } || review.Surface is null ||
+                    !ReferenceEquals(review.Window.Content, review.Surface))
+                    throw new ObjectDisposedException(nameof(HomeNativeApprovalWindowOwner), "The original Home review window was closed or replaced.");
+                return actual = review.Surface.ObserveOriginalDecisionAsync(requestId, linked.Token);
+            })).GetTask();
+            decision.Source = dispatch;
+            var observedSource = await dispatch.ConfigureAwait(false);
+            if (!ReferenceEquals(actual, observedSource)) throw new InvalidOperationException("Retain the same original Home decision task.");
+            decision.Source = observedSource;
+            HomeNativeApprovalDecisionObservation observation;
+            try { observation = await observedSource.ConfigureAwait(false); }
+            catch (Exception) when (observedSource.IsCanceled)
+            { decision.ExpectedWaitCancellation = true; throw; }
+            await Dispatcher.UIThread.InvokeAsync(() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+            {
+                DemandObservationOpen();
+                if (!ReferenceEquals(_current, review) || review.Window is not { IsVisible: true } || review.Surface is null ||
+                    !ReferenceEquals(review.Window.Content, review.Surface))
+                    throw new ObjectDisposedException(nameof(HomeNativeApprovalWindowOwner), "The original Home decision window changed before observation.");
+                return true;
+            }));
+            if (observation.RequestId != requestId) throw new UnauthorizedAccessException("The observed Home decision belongs to another request.");
+            return observation;
+        }
+        catch (Exception error)
+        {
+            if (decision.ExpectedWaitCancellation && error is OperationCanceledException)
+                throw;
+            if (decision.Source?.Exception is { } failures)
+            {
+                var original = failures.InnerExceptions.Select(cause => cause is OperationCanceledException
+                    ? new AggregateException("The actual Home observation source faulted with a cancellation exception.", cause) : cause).ToArray();
+                if (original.Length == 1) ExceptionDispatchInfo.Capture(original[0]).Throw();
+                throw new AggregateException("The original Home decision observation failed.", original);
+            }
+            ExceptionDispatchInfo.Capture(error).Throw();
+            throw;
+        }
     }
 
     private async Task OpenCoreAsync(Task start, Review review, string? requestId, CancellationToken caller)
@@ -278,6 +409,21 @@ public sealed class HomeNativeApprovalWindowOwner(
         foreach (var originalFocus in focuses) await Collect(originalFocus, errors).ConfigureAwait(false);
         if (review.Initialization is { } initialization) await Collect(initialization, errors).ConfigureAwait(false);
         if (review.Focus is { } focus) await Collect(focus, errors).ConfigureAwait(false);
+        DecisionObservation[] decisions;
+        lock (_sync) decisions = review.Decisions.ToArray();
+        foreach (var decision in decisions)
+        {
+            try { await decision.Original.ConfigureAwait(false); }
+            catch (Exception error)
+            {
+                if (!(decision.ExpectedWaitCancellation && decision.Original.IsCanceled))
+                {
+                    if (decision.Original.Exception is { } failures)
+                        foreach (var failure in failures.InnerExceptions) Add(errors, failure);
+                    else Add(errors, error);
+                }
+            }
+        }
         if (review.SurfaceClose is { } close) await Collect(close, errors).ConfigureAwait(false);
         if (review.Surface is not null && review.SurfaceClose is null)
             Add(errors, new InvalidOperationException("The original native review close was not captured."));
@@ -345,7 +491,9 @@ public sealed class HomeNativeApprovalWindowOwner(
         {
             var faults = original.Exception;
             if (faults is null) Add(errors, observed);
-            else foreach (var error in faults.InnerExceptions) Add(errors, error);
+            else foreach (var error in faults.InnerExceptions)
+                Add(errors, error is OperationCanceledException
+                    ? new AggregateException("The original native Home task faulted with a cancellation exception.", error) : error);
         }
     }
 
