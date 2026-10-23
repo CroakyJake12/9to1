@@ -41,6 +41,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     private Preparation? _prepared;
     private volatile bool _published, _closing, _preparing;
     private int _activeDispatches;
+    private long _acceptedDispatchVersion; // UI-thread admission sequence, never an app state or authority receipt.
 
     internal BoardsBrowseAppContentSession(BrowseAppContentRequest request, BoardsBrowseAppContentAddress address,
         IBoardsOriginalDesktopRoute route, CancellationTokenSource lifetime, Func<bool> reduceMotion,
@@ -196,6 +197,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             if (_actions.Count >= 128) throw new InvalidOperationException("Settle retained Boards action failures before admitting more work.");
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             ++_activeDispatches; // Reserve the accepted source before its asynchronous driver can run.
+            ++_acceptedDispatchVersion;
             var original = DispatchOriginalAsync(start.Task, command, parameter, cancellationToken);
             _actions.Add(original); start.SetResult(); return new(original);
         }
@@ -271,7 +273,8 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             if (_prepared is { IsCurrent: true } prepared) return Task.FromResult<IBrowseAppContentClosePreparation?>(prepared);
             if (_preparationTask is { IsCompleted: false }) return _preparationTask;
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _preparing = true;
+            // Reserve the SAME preparation task now. Freeze admission only after already
+            // accepted CUI pipelines and the causal effects they publish have settled.
             _preparationTask = PrepareDriverAsync(start.Task, cancellationToken); _preparations.Add(_preparationTask);
             start.SetResult(); return _preparationTask;
         }
@@ -298,8 +301,23 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             if (initialization is null) return null;
             await initialization;
             DemandAlive(); scope.Token.ThrowIfCancellationRequested();
-            // External preparation: exact loader actions, never an action joining itself.
-            if (_host is { } host && _show is { } show) await host.CaptureOriginalActionSettlement(show);
+            // External preparation: each capture covers a finite set of accepted loader
+            // pipelines. A parent publishes its result and admits its next CUI effect before
+            // completing. Join a new capture whenever such admission changed this sequence.
+            // UI-thread stable sequence + no active source permits the atomic freeze below;
+            // future user actions cannot slip between that check and the freeze.
+            if (_host is { } host && _show is { } show)
+            {
+                while (true)
+                {
+                    var version = _acceptedDispatchVersion;
+                    var actual = host.CaptureOriginalActionSettlement(show);
+                    await actual;
+                    DemandAlive(); scope.Token.ThrowIfCancellationRequested();
+                    if (version == _acceptedDispatchVersion && _activeDispatches == 0) break;
+                }
+            }
+            _preparing = true;
             await RevalidateOriginalAsync(scope.Token);
             var core = _core; var restore = core?.IsPresentationAdmitted == true;
             if (restore)
