@@ -1,8 +1,9 @@
 using Avalonia.Threading;
+using Haven.Application;
 
 namespace HavenOS.Apps.Canvas;
 
-public sealed partial class CanvasHostWindow
+public sealed partial class CanvasHostSurface
 {
     private sealed class NoEffectReadProof
     {
@@ -140,34 +141,50 @@ public sealed partial class CanvasHostWindow
         // Deeper aggregates belong to the source. Even an empty group is a fault.
         if (!errors.Any(previous => ReferenceEquals(previous, error))) errors.Add(error);
     }
-    public Task? OriginalCloseTask => _originalWork.OriginalCloseTask;
+    private Task? _surfaceClose, _workOwnerClose;
+    public Task? OriginalCloseTask => _surfaceClose;
     public Task CloseAndDrainAsync()
     {
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         if (!Dispatcher.UIThread.CheckAccess()) return Dispatcher.UIThread.InvokeAsync(CloseAndDrainAsync);
+        if (_surfaceClose is not null) return _surfaceClose;
         _closed = true;
-        return _originalWork.CloseAndDrainAsync(() => _originalChildrenClose = CloseOriginalChildrenAsync());
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _surfaceClose = CloseOriginalSurfaceAsync(start.Task); start.SetResult(); return _surfaceClose;
+    }
+    private async Task CloseOriginalSurfaceAsync(Task start)
+    {
+        await start;
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        _workOwnerClose = Original(() => _originalWork.CloseAndDrainAsync(
+            () => _originalChildrenClose = CloseOriginalChildrenAsync(), RunOriginalHostSource));
+        await _workOwnerClose;
     }
     private async Task CloseOriginalChildrenAsync()
     {
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
         // WorkOwner invokes this only after all exact issued callbacks have settled.
         // Freeze UI eligibility before child retirement enters worker-thread joins.
         var snapshot = CaptureNoEffectCloseSnapshot();
         lock (_noEffectGate) _noEffectCloseSnapshot = snapshot;
         var errors = new List<Exception>();
-        try { _lifetime.Cancel(); } catch (Exception error) { errors.Add(error); }
+        try { Original(() => { _lifetime.Cancel(); return true; }); } catch (Exception error) { errors.Add(error); }
+        Task[] sources; lock (_sourceGate) sources = _sourceTasks.ToArray();
+        foreach (var actual in sources)
+            try { await actual; } catch (Exception error) { CaptureOriginalFailure(errors, actual, error); }
         Task? view = null;
         try
         {
-            if (_view is CanvasNativeCuiSurface native) { view = native.CloseAndDrainAsync(); await view; }
+            if (_view is CanvasNativeCuiSurface native) { view = Original(native.CloseAndDrainAsync); await view; }
             else _view?.Dispose();
         }
         catch (Exception error) { errors.Add((Exception?)view?.Exception ?? error); }
         // Local native/presentation owners retire independently; Home/Files remain borrowed.
         try { _pendingDisposable?.Dispose(); } catch (Exception error) { errors.Add(error); }
         Task? approvals = null; Task? shell = null;
-        try { approvals = _approvals.CloseAndDrainAsync(); }
+        try { approvals = Original(_approvals.CloseAndDrainAsync); }
         catch (Exception error) { errors.Add(error); }
-        try { shell = _shell.CloseOriginalAsync(); }
+        try { shell = Original(_shell.CloseOriginalAsync); }
         catch (Exception error) { errors.Add(error); }
         foreach (var actual in new[] { approvals, shell }.OfType<Task>())
             try { await actual; } catch (Exception error) { errors.Add((Exception?)actual.Exception ?? error); }
@@ -182,19 +199,5 @@ public sealed partial class CanvasHostWindow
             if (_closed) return;
             _ready = false; SetStatus(((Exception?)actual.Exception ?? error).Message); RefreshBindings();
         }
-    }
-    private async Task CloseFromWindowAsync()
-    {
-        var actual = CloseAndDrainAsync();
-        try { await actual; }
-        catch (Exception error)
-        {
-            if (!CanCompleteKnownNoEffectClose(actual, error))
-            { SetStatus("Canvas close needs recovery: " + ((Exception?)actual.Exception ?? error).Message); return; }
-            // Keep the SAME failed original close and exact source cause inspectable.
-            // Only the user's native window close may complete after actual drainage.
-            RecoveredNoEffectCloseFailure = error;
-        }
-        await Dispatcher.UIThread.InvokeAsync(() => { _closeAccepted = true; Close(); });
     }
 }

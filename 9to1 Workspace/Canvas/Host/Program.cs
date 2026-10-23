@@ -1,12 +1,7 @@
-using Avalonia;
-using CakeOS.Cui.Runtime;
-
 namespace HavenOS.Apps.Canvas;
 
 internal static class Program
 {
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-    public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(AppBuilder.Configure<CanvasHostApp>())
-        .UsePlatformDetect().LogToTrace();
+    public static void Main(string[] args) => CanvasHostApp.RunOriginal(args);
 }

@@ -3,13 +3,18 @@
     <!-- Keep the original Windows producer and declare the same host for Linux/ARM64.
          Clear the single target inherited from the workspace before multi-targeting. -->
     <TargetFramework />
-    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0;net10.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <AssemblyName>HavenOS.Canvas.Host</AssemblyName>
     <RootNamespace>HavenOS.Apps.Canvas</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Shared native types compile once in Canvas.NativeUI, never again in this entry executable. -->
+    <Compile Remove="CanvasHomeWindowFactory.cs;CanvasHostWindow.cs;CanvasHostWindow.Eraser.cs;CanvasHostWindow.OriginalLifetime.cs;CanvasOriginalResourceReadiness.cs" />
     <ProjectReference Include="../NativeUI/HavenOS.Canvas.NativeUI.csproj" />
+    <!-- The original Home executable supplies the real process/bootstrap/lifetime.
+         Desktop references Canvas.NativeUI only, so the shared content has no host cycle. -->
+    <ProjectReference Include="../../shared/src/Haven.Desktop/Haven.Desktop.csproj" />
     <ProjectReference Include="../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
     <ProjectReference Include="../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />

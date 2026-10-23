@@ -18,6 +18,35 @@ public sealed class NativeAppContentRegistryTests
         new(source, [new(Files.Id, Files.Key, HavenAppRouteKind.Files, factory)], current ?? (() => true));
 
     [AvaloniaFact]
+    public async Task Production_Canvas_binding_uses_the_canonical_app_registration_and_never_an_unregistered_fallback()
+    {
+        var canvas = BuiltInModeSeed.Modes.Single(app => app.Key == "canvas");
+        var source = new RegistrySource { App = canvas };
+        var other = new Factory(_ => throw new InvalidOperationException("Another app cannot acquire Canvas."));
+        var owner = new NativeOwner(AppContentAddress.Parse("9to1://canvas"));
+        var factory = new Factory(_ => owner);
+        var bindings = NativeAppContentRegistry.NativeAppContentRegistrations.Build(other, other, other, null, factory).ToArray();
+        var binding = Assert.Single(bindings, item => item.AppKey == "canvas");
+        Assert.Equal(canvas.Id, binding.AppId); Assert.Equal(HavenAppRouteKind.ModeWorkspace, binding.RouteKind);
+        var registry = new NativeAppContentRegistry(source, bindings, () => true);
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(registry.CreateSession(Request("9to1://canvas")));
+        Assert.Equal(0, factory.Calls);
+        await session.InitializeAsync(); Assert.Same(owner.View, session.OriginalNativeView);
+        Assert.Equal(1, factory.Calls); Assert.Equal(0, other.Calls);
+        await session.CloseAndDrainAsync();
+
+        source.App = canvas with { IsEnabled = false };
+        var disabled = registry.CreateSession(Request("9to1://canvas"));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => disabled.InitializeAsync());
+        await Assert.ThrowsAsync<AggregateException>(() => disabled.CloseAndDrainAsync());
+        Assert.Equal(1, factory.Calls);
+        var unbound = new NativeAppContentRegistry(source,
+            NativeAppContentRegistry.NativeAppContentRegistrations.Build(other, other, other), () => true);
+        Assert.Throws<NativeAppContentRegistry.NativeAppContentAdmissionRefusal>(() => unbound.CreateSession(Request("9to1://canvas")));
+        Assert.Equal(0, other.Calls);
+    }
+
+    [AvaloniaFact]
     public async Task Native_owner_is_initialized_once_and_its_exact_view_and_close_are_retained()
     {
         var request = Request(); var owner = new NativeOwner(request.Address);

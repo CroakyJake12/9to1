@@ -395,8 +395,9 @@ class TokenzierDirLoadTests(unittest.TestCase):
     The candidate text path reads the pack's extracted `tokenizer/` directory (vocab.json,
     merges.txt, token_type.json, tokenizer.json, chat_template.jinja). This test builds a minimal
     synthetic pack fixture and drives the ACTUAL helper entrypoint. Because the donor `regex` module
-    is not installed in this cloud, the load fails closed with exit 3; when the donor IS available
-    the same fixture must load and answer IDENTITY. Both arms are asserted and deterministic.
+    is not installed in this cloud, the load fails closed with exit 3; successful startup also
+    requires the sibling dependency lock and exact importable distribution pins. Synthetic startup
+    controls below separately exercise successful IDENTITY without requiring installed dependencies.
     """
 
     def _make_fixture(self, tmp):
@@ -413,19 +414,23 @@ class TokenzierDirLoadTests(unittest.TestCase):
 
     def test_extracted_pack_loading(self):
         import tempfile
+        import types
+        from unittest.mock import patch
         mod = load_helper()
         with tempfile.TemporaryDirectory() as tmp:
             d = self._make_fixture(tmp)
             old_argv = sys.argv
             try:
                 sys.argv = ["strata_tokenizer_helper.py", "--tokenizer-dir", str(d)]
-                if mod._BUNDLED_DONOR_AVAILABLE:
-                    # donor+regex present: the helper loads and answers IDENTITY
-                    code = mod.main()
-                    self.assertEqual(code, 0)
-                else:
-                    # deterministic fail-closed (regex / donor module absent)
-                    self.assertEqual(mod.main(), 3)
+                try:
+                    mod.verify_runtime_dependency_versions()
+                    dependencies_available = True
+                except ValueError:
+                    dependencies_available = False
+                # Empty bounded stdio prevents a donor-present host from waiting on real stdin.
+                with patch.object(sys, "stdin", types.SimpleNamespace(buffer=io.BytesIO())):
+                    expected = 0 if mod._BUNDLED_DONOR_AVAILABLE and dependencies_available else 3
+                    self.assertEqual(mod.main(), expected)
             finally:
                 sys.argv = old_argv
 
@@ -437,6 +442,179 @@ class TokenzierDirLoadTests(unittest.TestCase):
         self.assertIn("tokenizer.chat_template", src)
         self.assertIn("tok.chat_template", src)
         self.assertIn("from gguf_reader import GGUFFile", src)
+
+
+class RuntimeDependencyAdmissionTests(unittest.TestCase):
+    """Synthetic distribution metadata controls around the actual main/stdio boundary.
+
+    No installed dependency, real donor implementation, native worker or model is used. Matching
+    versions establish admission only; these controls do not authenticate distribution bytes.
+    """
+
+    @staticmethod
+    def _lock():
+        return {"schema": "strata-runtime-dependencies/v1", "runtimeModules": {
+            "regex": {"pin": "2026.9.29"}, "jinja2": {"pin": "3.1.6"}}}
+
+    def _run_main(self, lock_bytes=None, versions=None, lock_writer=None, helper_root=None,
+                  unavailable_import=None, missing_sandbox=False):
+        import contextlib
+        import importlib.metadata
+        import tempfile
+        import types
+        from unittest.mock import patch
+
+        mod = load_helper()
+        observed = versions if versions is not None else {"regex": "2026.9.29", "jinja2": "3.1.6"}
+        loads, version_requests = [], []
+
+        def version(name):
+            version_requests.append(name)
+            if name not in observed:
+                raise importlib.metadata.PackageNotFoundError(name)
+            return observed[name]
+
+        def runtime_import(name):
+            if name == unavailable_import:
+                raise ImportError("synthetic missing runtime implementation: " + name)
+            if name == "jinja2.sandbox":
+                return types.SimpleNamespace() if missing_sandbox else types.SimpleNamespace(
+                    ImmutableSandboxedEnvironment=object)
+            return types.ModuleType(name)
+
+        class SyntheticTokenizer(ServeProtocolTests.FakeTok):
+            def __init__(self, *args):
+                loads.append(args)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            tokenizer = TokenzierDirLoadTests()._make_fixture(root)
+            bundled = root / "held-helper"
+            bundled.mkdir()
+            lock_path = bundled / "strata-runtime-dependencies.json"
+            if lock_writer is not None:
+                lock_writer(lock_path)
+            elif helper_root is None:
+                lock_path.write_bytes(lock_bytes if lock_bytes is not None else
+                                      json.dumps(self._lock()).encode("utf-8"))
+            incoming, outgoing, diagnostic = io.BytesIO(), io.BytesIO(), io.StringIO()
+            for body in (b"IDENTITY", b'ENC {"text":"abc"}'):
+                mod.write_frame(incoming, body)
+            incoming.seek(0)
+            with patch.object(mod, "_helper_dir", pathlib.Path(helper_root) if helper_root else bundled), \
+                    patch.object(mod, "_BUNDLED_DONOR_AVAILABLE", True), \
+                    patch.object(mod, "Tokenizer", SyntheticTokenizer), \
+                    patch.object(mod, "PromptEncoder", lambda tok: object()), \
+                    patch.object(mod, "import_module", side_effect=runtime_import, create=True), \
+                    patch.object(importlib.metadata, "version", side_effect=version), \
+                    patch.object(sys, "argv", ["strata_tokenizer_helper.py", "--tokenizer-dir", str(tokenizer)]), \
+                    patch.object(sys, "stdin", types.SimpleNamespace(buffer=incoming)), \
+                    patch.object(sys, "stdout", types.SimpleNamespace(buffer=outgoing)), \
+                    contextlib.redirect_stderr(diagnostic):
+                code = mod.main()
+            return code, outgoing.getvalue(), diagnostic.getvalue(), loads, version_requests
+
+    def _assert_refused(self, result, cause):
+        code, output, diagnostic, loads, _ = result
+        self.assertEqual(code, 3, "LOCK_PIN_ADMISSION_REQUIRED: incompatible startup reached the protocol")
+        self.assertEqual(output, b"", "refusal must precede IDENTITY and token output")
+        self.assertEqual(loads, [], "refusal must precede model-tokenizer construction")
+        self.assertIn("dependency:", diagnostic)
+        self.assertIn(cause, diagnostic)
+
+    def test_exact_locked_versions_preserve_identity_and_encode_protocol(self):
+        code, output, diagnostic, loads, requests = self._run_main()
+        self.assertEqual((code, diagnostic), (0, ""))
+        stream = io.BytesIO(output)
+        mod = load_helper()
+        self.assertTrue(mod.read_frame(stream)[0].startswith(b"IDENT "))
+        self.assertEqual(mod.read_frame(stream)[0], b"TON 0,1,2")
+        self.assertEqual(mod.read_frame(stream), (b"", -1))
+        self.assertEqual(len(loads), 1)
+        self.assertEqual(requests, ["regex", "jinja2"])
+
+    def test_historical_regex_mismatch_refuses_before_identity(self):
+        self._assert_refused(self._run_main(versions={"regex": "2026.9.10", "jinja2": "3.1.6"}),
+                             "regex version mismatch: required 2026.9.29; observed 2026.9.10")
+
+    def test_jinja2_mismatch_refuses_before_identity(self):
+        self._assert_refused(self._run_main(versions={"regex": "2026.9.29", "jinja2": "3.1.2"}),
+                             "jinja2 version mismatch: required 3.1.6; observed 3.1.2")
+
+    def test_missing_distribution_is_precise_and_refuses_before_identity(self):
+        for missing in ("regex", "jinja2"):
+            with self.subTest(missing=missing):
+                versions = {"regex": "2026.9.29", "jinja2": "3.1.6"}
+                del versions[missing]
+                self._assert_refused(self._run_main(versions=versions),
+                                     "runtime dependency " + missing + " distribution is unavailable")
+
+    def test_matching_metadata_without_importable_implementations_refuses(self):
+        for name in ("regex", "jinja2", "jinja2.sandbox"):
+            with self.subTest(module=name):
+                result = self._run_main(unavailable_import=name)
+                self._assert_refused(result, "synthetic missing runtime implementation: " + name)
+                cause = "jinja2 sandbox" if name == "jinja2.sandbox" else name + " import"
+                self.assertIn("runtime dependency " + cause + " is unavailable", result[2])
+        self._assert_refused(self._run_main(missing_sandbox=True),
+                             "ImmutableSandboxedEnvironment is unavailable")
+
+    def test_missing_lock_refuses_before_identity(self):
+        self._assert_refused(self._run_main(lock_writer=lambda path: None),
+                             "runtime dependency lock is unavailable")
+
+    def test_invalid_lock_json_duplicate_keys_and_schema_refuse(self):
+        cases = [(b"{", "invalid JSON"), (b"\xff", "invalid JSON"),
+                 (b'{"schema":"strata-runtime-dependencies/v1","schema":"strata-runtime-dependencies/v1"}',
+                  "duplicate JSON key"),
+                 (json.dumps({**self._lock(), "schema": "strata-runtime-dependencies/v2"}).encode(),
+                  "unsupported schema"),
+                 (b"[]", "unsupported schema")]
+        for blob, cause in cases:
+            with self.subTest(blob=blob):
+                self._assert_refused(self._run_main(lock_bytes=blob), cause)
+
+    def test_lock_requires_exact_known_modules_and_nonempty_bounded_pins(self):
+        cases = []
+        for name in ("regex", "jinja2"):
+            lock = self._lock()
+            del lock["runtimeModules"][name]
+            cases.append((lock, "must name exactly regex and jinja2"))
+        lock = self._lock()
+        lock["runtimeModules"]["unknown"] = {"pin": "1.0"}
+        cases.append((lock, "must name exactly regex and jinja2"))
+        for pin in (None, "", " 3.1.6", "3.1.6\n", "x" * 129):
+            lock = self._lock()
+            lock["runtimeModules"]["jinja2"]["pin"] = pin
+            cases.append((lock, "jinja2 has an invalid version pin"))
+        for lock, cause in cases:
+            with self.subTest(lock=lock):
+                self._assert_refused(self._run_main(lock_bytes=json.dumps(lock).encode()), cause)
+
+    def test_oversized_and_nonregular_lock_refuse(self):
+        self._assert_refused(self._run_main(lock_bytes=b" " * (16 * 1024 + 1)),
+                             "runtime dependency lock exceeds 16384 bytes")
+        self._assert_refused(self._run_main(lock_writer=lambda path: path.mkdir()),
+                             "runtime dependency lock is not a regular file")
+
+    @unittest.skipUnless(sys.platform == "linux", "Linux held-directory descriptor contract")
+    def test_lexical_held_directory_lock_survives_original_path_replacement(self):
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            original = pathlib.Path(tmp) / "original"
+            original.mkdir()
+            (original / "strata-runtime-dependencies.json").write_text(json.dumps(self._lock()))
+            fd = os.open(original, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                original.rename(pathlib.Path(tmp) / "held")
+                original.mkdir()
+                (original / "strata-runtime-dependencies.json").write_text("invalid replacement")
+                code, output, diagnostic, loads, requests = self._run_main(helper_root=f"/proc/{os.getpid()}/fd/{fd}")
+                self.assertEqual((code, diagnostic, len(loads), requests), (0, "", 1, ["regex", "jinja2"]))
+                self.assertTrue(output[4:].startswith(b"IDENT "))
+            finally:
+                os.close(fd)
 
 
 if __name__ == "__main__":
