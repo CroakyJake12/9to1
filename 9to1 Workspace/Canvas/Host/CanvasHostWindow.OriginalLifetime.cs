@@ -156,7 +156,8 @@ public sealed partial class CanvasHostSurface
     {
         await start;
         using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
-        _workOwnerClose = Original(() => _originalWork.CloseAndDrainAsync(() => _originalChildrenClose = CloseOriginalChildrenAsync()));
+        _workOwnerClose = Original(() => _originalWork.CloseAndDrainAsync(
+            () => _originalChildrenClose = CloseOriginalChildrenAsync(), RunOriginalHostSource));
         await _workOwnerClose;
     }
     private async Task CloseOriginalChildrenAsync()
