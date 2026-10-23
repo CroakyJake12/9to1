@@ -110,7 +110,8 @@ internal static class ScopedEmailSharingTests
         var calls = 0;
         var retiredOwner = new FilesCommitAuthorityGuard(f.Owner, _ => ValueTask.FromResult(++calls < 2));
         Denied(await f.Provider.GrantEmailAccessAsync(request, retiredOwner), "Home withdrawal at final publication denies the grant");
-        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "retired-owner grant leaves canonical state bytes unchanged");
+        byte[] afterRetiredGrant = await File.ReadAllBytesAsync(f.Path);
+        Require(before.SequenceEqual(afterRetiredGrant), "retired-owner grant leaves canonical state bytes unchanged");
         var grant = (await f.Provider.GrantEmailAccessAsync(request, f.OwnerGuard)).Value!;
         var recipientCalls = 0; var armed = false;
         var crossesExpiry = new FilesCommitAuthorityGuard(f.Recipient, _ =>
@@ -127,11 +128,13 @@ internal static class ScopedEmailSharingTests
         recipientCalls = 0;
         before = await File.ReadAllBytesAsync(f.Path);
         Denied(await guardedView.MutateAsync(f.Rename(f.Child), "expires during commit", default), "expiry at the last commit check prevents publication");
-        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "expiry during serialization preserves canonical state bytes");
+        byte[] afterExpiringMutation = await File.ReadAllBytesAsync(f.Path);
+        Require(before.SequenceEqual(afterExpiringMutation), "expiry during serialization preserves canonical state bytes");
         Denied(await f.Restart().OpenSharedViewAsync(grant.Share.Id, f.RecipientGuard), "expiry survives restart");
         using var canceled = new CancellationTokenSource(); canceled.Cancel();
         await Throws<OperationCanceledException>(() => f.Provider.GrantEmailAccessAsync(awaitableRequest(), f.OwnerGuard, canceled.Token));
-        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "cancellation cannot create another grant");
+        byte[] afterCanceledGrant = await File.ReadAllBytesAsync(f.Path);
+        Require(before.SequenceEqual(afterCanceledGrant), "cancellation cannot create another grant");
         FilesEmailShareRequest awaitableRequest() => request with { OperationId = new(Guid.NewGuid()) };
     }
 
@@ -145,19 +148,22 @@ internal static class ScopedEmailSharingTests
         var legacy = f.Restart();
         Require((await legacy.GetAsync(f.Root.Id, default)).IsSuccess, "legacy canonical items remain readable");
         Require((await legacy.GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard)).Value!.Items.Count == 0, "legacy state adds no implicit grants");
-        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "shared read does not adopt, migrate or rewrite legacy state");
+        byte[] afterLegacyRead = await File.ReadAllBytesAsync(f.Path);
+        Require(before.SequenceEqual(afterLegacyRead), "shared read does not adopt, migrate or rewrite legacy state");
         var request = await f.Request(FilesAccessRole.Viewer);
         state["items"]![0]!["metadata"]!["isShared"] = true;
         await File.WriteAllTextAsync(f.Path, document.ToJsonString());
         before = await File.ReadAllBytesAsync(f.Path);
         Require((await f.Provider.GetAsync(f.Child.Id, default)).Value!.IsShared, "untracked ancestor sharing remains effective");
         Require((await f.Provider.GrantEmailAccessAsync(request, f.OwnerGuard)).Error?.Code == FilesErrorCode.PermissionDenied, "unknown prior sharing cannot be overwritten");
-        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "unknown sharing remains intact");
+        byte[] afterUnknownSharing = await File.ReadAllBytesAsync(f.Path);
+        Require(before.SequenceEqual(afterUnknownSharing), "unknown sharing remains intact");
         state["shares"] = null;
         await File.WriteAllTextAsync(f.Path, document.ToJsonString());
         before = await File.ReadAllBytesAsync(f.Path);
         await Throws<InvalidDataException>(() => f.Restart().OpenSharedViewAsync(new(Guid.NewGuid()), f.RecipientGuard));
-        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "corrupt sharing state is preserved and fails closed");
+        byte[] afterCorruptRead = await File.ReadAllBytesAsync(f.Path);
+        Require(before.SequenceEqual(afterCorruptRead), "corrupt sharing state is preserved and fails closed");
     }
 
     private static async Task MissingOrReplacedStoreCannotBeRecreated()
@@ -172,7 +178,8 @@ internal static class ScopedEmailSharingTests
         var before = await File.ReadAllBytesAsync(f.Path);
         Denied(await view.GetAsync(f.Child.Id, default), "existing view is bound to its original store UUID");
         Denied(await view.MutateAsync(f.Rename(f.Child), "replacement", default), "store replacement cannot redirect an old scoped commit");
-        Require(before.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "replacement-store refusal changes no state");
+        byte[] afterReplacementRefusal = await File.ReadAllBytesAsync(f.Path);
+        Require(before.SequenceEqual(afterReplacementRefusal), "replacement-store refusal changes no state");
         File.Delete(f.Path);
         Require((await f.Provider.OpenSharedViewAsync(grant.Share.Id, f.RecipientGuard)).Error?.Code == FilesErrorCode.StorageUnavailable, "missing state is explicitly unavailable");
         Require((await f.Provider.GrantEmailAccessAsync(request, f.OwnerGuard)).Error?.Code == FilesErrorCode.StorageUnavailable, "grant never creates a replacement empty canonical store");
@@ -200,7 +207,8 @@ internal static class ScopedEmailSharingTests
         var bytes = await File.ReadAllBytesAsync(f.Path);
         f.Clock.Now = request.ExpiresAt!.Value;
         await Observe(false);
-        Require(bytes.SequenceEqual(await File.ReadAllBytesAsync(f.Path)), "expiry projection does not rewrite canonical state");
+        byte[] afterExpiryProjection = await File.ReadAllBytesAsync(f.Path);
+        Require(bytes.SequenceEqual(afterExpiryProjection), "expiry projection does not rewrite canonical state");
         var parent = (await f.Provider.GrantEmailAccessAsync(await f.Request(FilesAccessRole.Viewer), f.OwnerGuard)).Value!;
         var childRequest = (await f.Request(FilesAccessRole.Viewer)) with { ItemId = f.Child.Id,
             ExpectedRevision = (await f.Provider.GetAsync(f.Child.Id, default)).Value!.CurrentRevisionId!.Value };
