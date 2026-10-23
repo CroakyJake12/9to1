@@ -1115,13 +1115,17 @@ int main(int argc, char** argv) {
                 const auto effort = command.read_text();
                 command.end();
 
+                // A nondefault effort has no native budget or template mapping. Validate this
+                // declared capability before availability, so it cannot be silently accepted by
+                // the wire ABI even when a direct caller bypasses the managed Medium-only guard.
+                if (!effort.empty() && effort != "medium")
+                    throw std::invalid_argument("candidate: unsupported reasoning effort " + effort +
+                        "; a nondefault effort requires a genuine native budget mapping.");
                 if (!session.loaded) throw std::invalid_argument("Native generation requires a loaded engine.");
                 if (req.max_new == 0 || req.max_new > 1U << 20) throw std::invalid_argument("Bounded native max_new is invalid.");
                 if (stop_count > 0) throw std::invalid_argument(
                     "candidate: explicit stop lists are not yet supported by the relay; refusing this option "
                     "rather than silently dropping it.");
-                if (!effort.empty() && effort != "medium" && effort != "none")
-                    throw std::invalid_argument("candidate: unsupported reasoning effort " + effort + "; only medium/none are mapped.");
 
                 if (req.structured) {
                     // Structured tools remain unavailable until real loaded-model reasoning metadata and a

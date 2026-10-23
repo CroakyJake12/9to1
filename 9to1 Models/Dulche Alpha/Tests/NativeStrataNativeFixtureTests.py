@@ -4,7 +4,7 @@ These tests drive the REAL compiled candidate relay worker
 (`dulche_strata_candidate_worker.cpp` + `dulche_child_process.h` + `strata_tokenizer_helper.py`)
 over its wire protocol. They do NOT use a mirror or a stub of the parser/child-owner code. They are
 run only with an explicitly supplied, digest-pinned worker. Optional source-only execution reports
-the five wire cases as NOT RUN; required execution fails closed on missing or invalid inputs.
+the native wire cases as NOT RUN; required execution fails closed on missing or invalid inputs.
 
 Coverage (non-GPU, no engine/model/GPU required for the cases that run):
   * hello frame (type 0) is emitted with ABI version 2
@@ -13,6 +13,8 @@ Coverage (non-GPU, no engine/model/GPU required for the cases that run):
   * a load whose engine dependency is missing fails CLOSED with the exact cause and the process
     exits cleanly with no leaked children (validates the exception-safe child-owner teardown)
   * clean STDIN EOF exits 0 (normal stop path)
+  * explicit nondefault reasoning effort is refused before model/engine availability, while
+    empty/default and Medium still require a loaded session (no engine/helper/model is supplied)
 
 NOT RUN without the full build slot (require a real engine + donor tokenizer):
   * actual spawn -> READY success and READY-failure handling
@@ -232,6 +234,41 @@ class NativeFixtureTests(unittest.TestCase):
             self.assertIn("engine", msg.lower())
             self.assertEqual(proc.wait(timeout=15), 72)
             self.assertEqual(proc.stderr.read().decode("utf-8", "replace"), "")
+
+    def _assert_generation_preflight_failure(self, effort, expected_message):
+        with self._spawn() as proc:
+            self._read_frame_or_fail(proc)  # hello; no load, engine, helper or model
+            # Complete ABI2 text request: one user message, no images, bounded output,
+            # deterministic sampling, no stops, and the exact explicit effort under test.
+            message = struct.pack("<II", 1, 1) + _text("fixture") + _text("") + struct.pack("<I", 0)
+            options = struct.pack("<IddIQI", 1, 0.0, 1.0, 0, 33377335, 0)
+            proc.stdin.write(_command(2, message + options + _text(effort)))
+            proc.stdin.flush()
+            ptype, payload = self._read_frame_or_fail(proc)
+            self.assertEqual(ptype, 5)  # no token or success frame may precede refusal
+            self.assertGreaterEqual(len(payload), 12)
+            code, count, length = struct.unpack("<III", payload[:12])
+            self.assertEqual((code, count), (3, 1))
+            self.assertEqual(len(payload), 12 + length)
+            self.assertEqual(payload[12:].decode("utf-8"), expected_message)
+            self.assertEqual(proc.wait(timeout=15), 72)
+            self.assertEqual(proc.stdout.read(), b"")
+            self.assertEqual(proc.stderr.read(), b"")
+
+    def test_nondefault_effort_is_refused_before_availability(self):
+        # The old worker accepted/discarded 'none' after load. This complete request
+        # must fail on the unsupported option before consulting model availability.
+        for effort in ("none", "low"):
+            with self.subTest(effort=effort):
+                self._assert_generation_preflight_failure(effort,
+                    "candidate: unsupported reasoning effort " + effort +
+                    "; a nondefault effort requires a genuine native budget mapping.")
+
+    def test_default_effort_preserves_loaded_session_requirement(self):
+        for effort in ("", "medium"):
+            with self.subTest(effort=effort):
+                self._assert_generation_preflight_failure(effort,
+                    "Native generation requires a loaded engine.")
 
     def _stop_clean(self, proc):
         # op 3 (stop) -> ack type 3 + exit 0, then EOF.
