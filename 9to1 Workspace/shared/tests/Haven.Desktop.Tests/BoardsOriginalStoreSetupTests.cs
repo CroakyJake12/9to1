@@ -25,18 +25,21 @@ public sealed class BoardsOriginalStoreSetupTests
     [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original Linux Notes boundary; other platform acceptance is separate.")]
     public async Task Shared_CUI_new_user_setup_requires_explicit_identity_and_empty_binding_then_separate_content_review()
     {
-        using var root = new PrivateRoot(); await using var rig = await Rig.CreateAsync(root.Path);
+        PrivateRoot? root = null; Rig? rig = null;
+        BoardsBrowseAppContentSession? session = null; Window? window = null;
+        var failures = new List<Exception>();
+        try
+        {
+        root = new PrivateRoot(); rig = await Rig.CreateAsync(root.Path);
         var request = new BrowseAppContentRequest(Guid.NewGuid(), AppContentAddress.Parse("9to1://boards"),
             rig.Actor.ProfileId, BrowserTabPrivacy.Standard);
         var factory = BoardsBrowseAppContentFactory.BindOriginalSameProcess(rig.Provider, rig.Home,
             rig.Token, rig.HostToken, () => true);
-        var session = Assert.IsType<BoardsBrowseAppContentSession>(factory.CreateSession(request));
+        session = Assert.IsType<BoardsBrowseAppContentSession>(factory.CreateSession(request));
         await session.InitializeAsync(rig.Token);
         var view = Assert.IsType<CuiSceneHost>(session.OriginalNativeView);
-        var window = new Window { Content = view, Width = 1000, Height = 760 };
+        window = new Window { Content = view, Width = 1000, Height = 760 };
         window.Show();
-        try
-        {
             await IdleAsync(session, view);
             Assert.NotNull(Find(view, "boards-storage-setup"));
             Assert.Null(Find(view, "boards-workspace"));
@@ -72,11 +75,26 @@ public sealed class BoardsOriginalStoreSetupTests
             await preparation.BeginClose();
             Assert.True(session.CanRetireOriginalView);
         }
+        catch (Exception error) { failures.Add(error); }
         finally
         {
-            window.Content = null; window.Close();
-            if (session.OriginalClose is null) await session.CloseAndDrainAsync();
+            // Preserve the body failure before independently attempting every acquired owner.
+            // A refused retirement remains a cleanup failure; it cannot erase the original assertion.
+            if (window is not null)
+            {
+                try { window.Content = null; } catch (Exception error) { failures.Add(error); }
+                try { window.Close(); } catch (Exception error) { failures.Add(error); }
+            }
+            if (session is not null)
+                try { await (session.OriginalClose ?? session.CloseAndDrainAsync()); }
+                catch (Exception error) { failures.Add(error); }
+            if (rig is not null)
+                try { await rig.DisposeAsync(); } catch (Exception error) { failures.Add(error); }
+            if (root is not null)
+                try { root.Dispose(); } catch (Exception error) { failures.Add(error); }
         }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("Actual first-use assertion and independent cleanup failed.", failures);
     }
 
     [AvaloniaFact(SkipUnless = nameof(UsesLinuxOriginalNotesFixture), Skip = "Original Linux Notes boundary; other platform acceptance is separate.")]
