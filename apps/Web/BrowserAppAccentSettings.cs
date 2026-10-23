@@ -8,7 +8,7 @@ namespace NineToOne.Web;
 
 /// <summary>Borrowed app-header presentation of Home-owned accent preferences.</summary>
 internal sealed class BrowserAppAccentSettings : ICuiWritableBindingContext, ICuiLifetimeAwareActionDispatcher,
-    ICuiActionAvailability, INotifyPropertyChanged, IDisposable
+    ICuiActionAvailability, ICuiResultReportingDispatcher, INotifyPropertyChanged, IDisposable
 {
     // Persist stable canonical anchors; a later appearance change must not silently
     // turn an explicitly chosen colour into a different stored preference.
@@ -66,6 +66,25 @@ internal sealed class BrowserAppAccentSettings : ICuiWritableBindingContext, ICu
         : Colours.ContainsKey(command[9..]) && CanChange;
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
         DispatchWithLifetimeAsync(command, parameter, new(default, cancellationToken));
+    public ValueTask<CuiCommandOutcome> DispatchWithOutcomeAsync(string command, object? parameter,
+        CancellationToken cancellationToken = default)
+    {
+        // Borrowed app outcomes cross this header unchanged, including opaque Value,
+        // failure/cancellation fields and the actual faulted/canceled original Task.
+        if (!_disposed && !Owns(command) && _actions is ICuiResultReportingDispatcher reporting)
+            return reporting.DispatchWithOutcomeAsync(command, parameter, cancellationToken);
+        // This CUI result entry receives the loader's VIEW lifetime. Keep the existing
+        // Home-owned accent write alive after admission exactly as the prior lifetime route.
+        return ObserveImplicitOutcomeAsync(DispatchWithLifetimeAsync(command, parameter, new(cancellationToken, CancellationToken.None)));
+    }
+    private static async ValueTask<CuiCommandOutcome> ObserveImplicitOutcomeAsync(ValueTask operation)
+    {
+        var actual = operation.AsTask();
+        try { await actual.ConfigureAwait(false); }
+        catch (Exception) when (actual.IsFaulted) { throw new AggregateException(actual.Exception!.InnerExceptions); }
+        return new(true, false, "Succeeded", null, null); // Existing fallback; actual accent status still comes from its Home receipt.
+    }
+
     public async ValueTask DispatchWithLifetimeAsync(string command, object? parameter, CuiActionDispatchLifetime lifetime)
     {
         if (_disposed) return;
