@@ -146,7 +146,8 @@ public sealed class CanvasNativeSelectionInput : ICanvasSelectionInput, IDisposa
             if (!CanMove || _viewport.ToDocumentPoint(args.GetPosition(_viewport)) is not { } point)
             { CancelMove("The selection move context changed. No move was submitted."); return; }
             var end = args.GetPosition(_viewport);
-            if ((end - _pressViewport).Length < 3) { _deltaX = _deltaY = 0; Status = TargetSummary; Notify(); }
+            Vector movement = end - _pressViewport;
+            if (movement.Length < 3) { _deltaX = _deltaY = 0; Status = TargetSummary; Notify(); }
             else SetMove(point.X - _pressDocument.X, point.Y - _pressDocument.Y);
         }
         finally { CancelGesture(); args.Handled = true; }
