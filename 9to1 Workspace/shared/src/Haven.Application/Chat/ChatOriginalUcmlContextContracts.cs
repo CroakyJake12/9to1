@@ -41,6 +41,7 @@ public static class OriginalPrivateContextDispatch
     /// source is still revalidated separately immediately before actual provider dispatch.</summary>
     public static void ValidateProviderRoute(GenerationOptions? options, IModelProvider? actualProvider)
     {
+        OriginalSpacePolicyDispatch.ValidateRoute(options);
         if (!RequiresGuard(options)) return;
         if (options?.RequestedRoutingConstraints?.AllowCloud != false ||
             actualProvider is not IOriginalPrivateContextModelProvider { IsLocal: true } ||
@@ -48,10 +49,19 @@ public static class OriginalPrivateContextDispatch
             throw new UnauthorizedAccessException("Private UCML context requires its live source guard and an actual local-only provider route.");
     }
 
-    public static Task ValidateProviderAsync(GenerationOptions? options, IModelProvider? actualProvider, CancellationToken token) =>
-        ValidateAsync(options, actualProvider is IOriginalPrivateContextModelProvider { IsLocal: true }, token);
+    public static async Task ValidateProviderAsync(GenerationOptions? options, IModelProvider? actualProvider, CancellationToken token)
+    {
+        await ValidatePrivateContextAsync(options, actualProvider is IOriginalPrivateContextModelProvider { IsLocal: true }, token).ConfigureAwait(false);
+        await OriginalSpacePolicyDispatch.ValidateAsync(options, actualProvider, token).ConfigureAwait(false);
+    }
 
     public static async Task ValidateAsync(GenerationOptions? options, bool actualProviderIsLocal, CancellationToken token)
+    {
+        await ValidatePrivateContextAsync(options, actualProviderIsLocal, token).ConfigureAwait(false);
+        await OriginalSpacePolicyDispatch.ValidateAsync(options, null, token).ConfigureAwait(false);
+    }
+
+    private static async Task ValidatePrivateContextAsync(GenerationOptions? options, bool actualProviderIsLocal, CancellationToken token)
     {
         if (!RequiresGuard(options)) return;
         if (options?.RequestedRoutingConstraints?.AllowCloud != false || !actualProviderIsLocal ||

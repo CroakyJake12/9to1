@@ -1,3 +1,9 @@
+## Current execution priority and fresh basic builds
+
+Acceptance remains PAUSED until ALL canonical apps are fully implemented or the owner explicitly resumes it. The latest24October owner override below supersedes the historical timed03:00 resumption. Continue implementation and genuine basic checks.
+
+For a fresh normal Layer1 compiler run, keep the existing exact-source/current-SDK-host/command, normal dependencies/copies, private-writer, memory/disk, time, process and coordinator admission guards. Do not delay it for the complete toolchain closure that `reusable()` requires. Record incomplete dependency coverage explicitly as PARTIAL and NOT REUSABLE; never promote it into an accepted or reusable result. Rebuild affected producers before describing a UI as current. Full seven-criteria/native/install/release acceptance and immutable evidence reuse requirements remain unchanged. See docs/development/workflow.md.
+
 ## Temporary owner priority — implementation until 03:00 BST, 24 October 2026
 
 Read [the latest implementation-window decision](docs/specification/owner-references/2026-10-23-implementation-window/owner-correction.json). Until **24 October 2026 03:00 Europe/London (02:00 UTC)**, prioritise implementation of feature gaps and basic smoke checks. Defer full acceptance and acceptance-only audits until that time; preserve their queue and evidence. Then resume independent acceptance from the exact latest candidate, unless a newer owner instruction changes the priority. This defers gates; it does not waive them or authorise an unaccepted release. Keep ordinary development, scoped Thunder work and progress reporting moving.

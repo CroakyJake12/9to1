@@ -15,7 +15,8 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
         if (services.Any(item => item.ServiceType == typeof(Registration))) return services;
         Type[] owners = [typeof(ChatSessionService), typeof(AgentTaskRuntimeService),
             typeof(WorkspaceToolRuntime), typeof(ComputerToolRuntime), typeof(BrowserToolRuntime),
-            typeof(AutomationToolRuntime), typeof(BrowserSessionService)];
+            typeof(AutomationToolRuntime), typeof(BrowserSessionService), typeof(OriginalSpaceRequestPolicySource),
+            typeof(IOriginalSpaceRequestPolicySource)];
         if (services.Any(item => owners.Contains(item.ServiceType)))
             throw new InvalidOperationException("The original Task execution services must be configured once before building their provider.");
         services.AddSingleton<BrowserSessionService>();
@@ -86,7 +87,11 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
             provider.GetRequiredService<IComputerUseAdmission>()));
         services.AddSingleton(provider => new DualModelService(provider.GetRequiredService<IOllamaClient>(), provider.GetRequiredService<IExecutionEventSink>()));
         services.AddSingleton(provider => new JudgeService(new TrainingJudgeAdapter(provider.GetRequiredService<IOllamaClient>()), provider.GetRequiredService<IExecutionEventSink>()));
-        services.AddSingleton<ChatSessionService>(provider => new ChatSessionService(
+        services.AddSingleton<OriginalSpaceRequestPolicySource>(provider => new(provider));
+        services.AddSingleton<IOriginalSpaceRequestPolicySource>(provider => provider.GetRequiredService<OriginalSpaceRequestPolicySource>());
+        services.AddSingleton<ChatSessionService>(provider =>
+        {
+            var actualChat = new ChatSessionService(
             provider.GetRequiredService<IConversationRepository>(),
             provider.GetRequiredService<IProviderModelClient>(),
             provider.GetRequiredService<CapabilityPreflightService>(),
@@ -111,7 +116,10 @@ public static class OriginalTaskExecutionServiceCollectionExtensions
             taskToolOwner: provider.GetRequiredService<ITaskRunToolActionOwner>(),
             taskProviderContextCapture: provider.GetRequiredService<ITaskRunProviderContextCapture>(),
             taskCloudPermissionRemediation: provider.GetRequiredService<TaskRunCloudPermissionRemediationOwner>(),
-            reasoningSelection: provider.GetService<IChatReasoningSelectionReader>()));
+            reasoningSelection: provider.GetService<IChatReasoningSelectionReader>());
+            actualChat.BindOriginalSpacePolicySource(provider.GetRequiredService<IOriginalSpaceRequestPolicySource>());
+            return actualChat;
+        });
         services.AddSingleton<AgentTaskRuntimeService>();
         services.AddSingleton(new Registration());
         return services;

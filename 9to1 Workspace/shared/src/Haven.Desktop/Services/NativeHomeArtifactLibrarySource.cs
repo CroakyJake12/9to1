@@ -7,10 +7,20 @@ using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace Haven.Desktop.Services;
 
+/// <summary>Page-owned metadata publication over existing canonical owners, never a store.</summary>
+internal interface IHomeOriginalLibrarySource : IHomeArtifactSearchIndex, IHomeArtifactAuthorization, IAsyncDisposable
+{
+    HomeLibraryService CreateService(IHomeDeepLinkRouter router);
+    Task RevalidateAsync(CancellationToken token);
+    bool IsExpectedRefusal(Exception error);
+    void DemandExternalOriginalJoin();
+    string? AvailabilityNotice { get; }
+}
+
 /// <summary>The existing shared Library index contract over a real reviewed Notes snapshot.
 /// Notes owns every document, UUID, revision, read witness and one-use Home admission. This
 /// adapter publishes Boards metadata only; it creates no index file, document copy or grant.</summary>
-internal sealed class NativeHomeArtifactLibrarySource : IHomeArtifactSearchIndex, IHomeArtifactAuthorization, IAsyncDisposable
+internal sealed class NativeHomeArtifactLibrarySource : IHomeOriginalLibrarySource
 {
     private sealed record Entry(HomeArtifactReference View, NotesDocumentSummary Summary);
     private sealed record Read(INotesOriginalLibraryReadRequest Request, HomeNotesLibraryReadAdmission Admission);
@@ -53,9 +63,12 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeArtifactSearchIndex
             throw new UnauthorizedAccessException("Library must borrow the SAME original Home, Notes and read-admission owners.");
     }
 
-    internal HomeLibraryService CreateService(IHomeDeepLinkRouter router) =>
+    public HomeLibraryService CreateService(IHomeDeepLinkRouter router) =>
         new(this, this, router, new HomeCoreLibraryPreferences(_home.StateStore));
     internal Task? OriginalClose { get { lock (_sync) return _close; } }
+    public string? AvailabilityNotice => null;
+    public void DemandExternalOriginalJoin() => CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+
 
     public Task<IReadOnlyList<HomeArtifactReference>> SearchAsync(HomeLibraryQuery query, CancellationToken cancellationToken) =>
         RunAsync<IReadOnlyList<HomeArtifactReference>>(async (originals, token) =>
@@ -289,9 +302,9 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeArtifactSearchIndex
     }
     private void RetainCurrentSource(Task actual) { _ = CurrentOriginal().Track(actual); }
 
-    internal Task RevalidateAsync(CancellationToken token) => RunAsync(async (originals, caller) =>
+    public Task RevalidateAsync(CancellationToken token) => RunAsync(async (originals, caller) =>
     { await DemandCurrentAsync(originals, caller).ConfigureAwait(false); return true; }, token);
-    internal bool IsExpectedRefusal(Exception error) { lock (_sync) return IsExpected(error); }
+    public bool IsExpectedRefusal(Exception error) { lock (_sync) return IsExpected(error); }
     private async Task<T> ExposeExpectedRefusal<T>(Task<T> actual)
     {
         try { return await actual.ConfigureAwait(false); }
@@ -344,5 +357,94 @@ internal sealed class NativeHomeArtifactLibrarySource : IHomeArtifactSearchIndex
         _entries.Clear(); _metadata = null; _gate.Dispose();
         if (failures.Count != 0) throw new AggregateException("Original Library sources settled with failures.", failures);
         // The Notes store, Home process, review windows and documents are borrowed, never closed here.
+    }
+}
+
+/// <summary>Thin multi-source publication into the EXISTING shared Library service.
+/// Sources retain their own canonical data, permissions and exact private metadata witnesses.</summary>
+internal sealed class NativeCompositeHomeLibrarySource : IHomeOriginalLibrarySource
+{
+    internal sealed record Member(string OwnerApp, string DisplayName, IHomeOriginalLibrarySource Source);
+    private readonly IHomeCoreStateStore _home;
+    private readonly Member[] _members;
+    private readonly Dictionary<string, Member> _owners;
+    private readonly object _sync = new();
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Exception, object> _refusals = new();
+    private bool _retiring;
+    private Task? _close;
+    private string? _notice;
+    internal NativeCompositeHomeLibrarySource(IHomeCoreStateStore home, params Member[] members)
+    {
+        if (members.Length == 0 || members.Any(member => string.IsNullOrWhiteSpace(member.OwnerApp) || member.Source is null) ||
+            members.Select(member => member.OwnerApp).Distinct(StringComparer.Ordinal).Count() != members.Length)
+            throw new ArgumentException("Each canonical Library app must have one original source.");
+        _home = home; _members = members.ToArray(); _owners = _members.ToDictionary(member => member.OwnerApp, StringComparer.Ordinal);
+    }
+    public string? AvailabilityNotice { get { lock (_sync) return _notice; } }
+    public HomeLibraryService CreateService(IHomeDeepLinkRouter router) => new(this, this, router, new HomeCoreLibraryPreferences(_home));
+    private void Demand() { lock (_sync) ObjectDisposedException.ThrowIf(_retiring, this); }
+    public async Task<IReadOnlyList<HomeArtifactReference>> SearchAsync(HomeLibraryQuery query, CancellationToken token)
+    {
+        Demand(); using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        var result = new List<HomeArtifactReference>(); var notices = new List<string>(); var succeeded = false;
+        foreach (var member in _members.Where(member => query.OwnerApp is null || member.OwnerApp == query.OwnerApp))
+        {
+            try
+            {
+                var rows = await member.Source.SearchAsync(query, token).ConfigureAwait(false);
+                if (rows.Any(row => row.OwnerApp != member.OwnerApp))
+                    throw new InvalidDataException("A canonical Library source published rows for another owner.");
+                result.AddRange(rows); succeeded = true;
+                if (!string.IsNullOrWhiteSpace(member.Source.AvailabilityNotice)) notices.Add(member.Source.AvailabilityNotice!);
+            }
+            catch (Exception cause) when (member.Source.IsExpectedRefusal(cause))
+            { notices.Add(member.DisplayName + ": " + cause.Message); }
+        }
+        token.ThrowIfCancellationRequested(); Demand();
+        lock (_sync) _notice = notices.Count == 0 ? null : string.Join(" ", notices);
+        if (!succeeded && notices.Count > 0)
+        {
+            var refusal = new HomeFeatureProviderException("LibrarySourcesUnavailable", string.Join(" ", notices));
+            _refusals.Add(refusal, new()); throw refusal;
+        }
+        return result;
+    }
+    public Task<HomeArtifactReference?> GetByIdAsync(string app, string id, CancellationToken token)
+    { Demand(); return _owners.TryGetValue(app, out var owner) ? owner.Source.GetByIdAsync(app, id, token) : Task.FromResult<HomeArtifactReference?>(null); }
+    public Task<bool> CanReadAsync(string app, string id, CancellationToken token)
+    { Demand(); return _owners.TryGetValue(app, out var owner) ? owner.Source.CanReadAsync(app, id, token) : Task.FromResult(false); }
+    public Task<bool> CanOpenAsync(HomeDeepLink link, CancellationToken token)
+    { Demand(); return _owners.TryGetValue(link.OwnerApp, out var owner) ? owner.Source.CanOpenAsync(link, token) : Task.FromResult(false); }
+    public async Task RevalidateAsync(CancellationToken token)
+    { Demand(); foreach (var member in _members) await member.Source.RevalidateAsync(token).ConfigureAwait(false); Demand(); }
+    public bool IsExpectedRefusal(Exception error) => error is AggregateException group
+        ? group.InnerExceptions.Count > 0 && group.InnerExceptions.All(IsExpectedRefusal)
+        : _refusals.TryGetValue(error, out _) || _members.Any(member => member.Source.IsExpectedRefusal(error));
+    public void DemandExternalOriginalJoin()
+    {
+        CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        // Check ALL actual children before mutating any sibling's retirement state.
+        foreach (var member in _members) member.Source.DemandExternalOriginalJoin();
+    }
+    public ValueTask DisposeAsync()
+    {
+        DemandExternalOriginalJoin();
+        lock (_sync)
+        {
+            if (_close is not null) return new(_close);
+            _retiring = true; var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _close = CloseAsync(start.Task); start.SetResult(); return new(_close);
+        }
+    }
+    private async Task CloseAsync(Task start)
+    {
+        await start.ConfigureAwait(false); var originals = new List<Task>(); var failures = new List<Exception>();
+        foreach (var member in _members)
+            try { originals.Add(member.Source.DisposeAsync().AsTask()); }
+            catch (Exception cause) { failures.Add(cause); }
+        foreach (var actual in originals)
+            try { await actual.ConfigureAwait(false); }
+            catch (Exception cause) { failures.Add(actual.Exception ?? cause); }
+        if (failures.Count != 0) throw new AggregateException("Original canonical Library sources failed while closing.", failures);
     }
 }

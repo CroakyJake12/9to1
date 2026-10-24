@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Runtime.ExceptionServices;
 using Haven.Application;
+using Haven.Desktop.Services;
+using HavenOS.Home;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
@@ -73,6 +75,67 @@ public sealed class FilesOriginalRegisteredDownloadSelectionTests
             Assert.Equal(target.RevisionId, current.Row.CurrentRevisionId);
             Assert.Equal(before.Home, (await rig.BytesAsync()).Home);
             Assert.Equal(before.Drive, (await rig.BytesAsync()).Drive);
+        });
+
+    [Fact]
+    public Task Home_Library_publishes_actual_Files_folder_references_and_rechecks_the_exact_original_target_without_writes()
+        => Run(async rig =>
+        {
+            var before = await rig.BytesAsync();
+            var profiles = rig.Graph!.GetRequiredService<IAuthenticatedResourceActorSource>();
+            async Task<bool> Current(CancellationToken token) =>
+                await profiles.GetCurrentAsync(token) == rig.Workspace.Actor;
+            var source = new NativeHomeFilesLibrarySource(rig.Browser, rig.Workspace.Actor,
+                rig.Graph.GetRequiredService<IHomeCoreStateStore>(), Current, body => body(), () => true);
+            try
+            {
+                var rows = await rig.Keep(source.SearchAsync(new HomeLibraryQuery(), rig.Token));
+                var id = rig.Workspace.Configuration.StoreId.ToString("D") + "/" + rig.Folder.Value.ToString("D");
+                var actual = Assert.Single(rows, item => item.ArtifactId == id);
+                Assert.Equal("files", actual.OwnerApp); Assert.Equal("Files folder", actual.ArtifactType);
+                var canonical = (await rig.Keep(rig.Workspace.Provider.GetAsync(rig.Folder, rig.Token))).Value!;
+                Assert.Equal(canonical.Name, actual.DisplayName); Assert.Equal(canonical.ModifiedAt, actual.LastModified);
+                Assert.Equal(canonical.OwnerPrincipalId, actual.Owner); Assert.Equal(canonical.IsShared, actual.IsShared);
+                Assert.Same(actual, await rig.Keep(source.GetByIdAsync("files", id, rig.Token)));
+                Assert.True(await rig.Keep(source.CanOpenAsync(actual.OpenLink, rig.Token)));
+                Assert.False(await rig.Keep(source.CanOpenAsync(actual.OpenLink with { }, rig.Token)));
+                Assert.False(await rig.Keep(source.CanReadAsync("boards", id, rig.Token)));
+                var after = await rig.BytesAsync();
+                Assert.Equal(before.Home, after.Home); Assert.Equal(before.Drive, after.Drive);
+            }
+            finally { await rig.Keep(source.DisposeAsync().AsTask()); }
+        });
+
+    [Fact]
+    public Task Home_Library_bridge_requires_its_actual_issued_page_and_full_actor_and_reports_retirement_before_reading()
+        => Run(async rig =>
+        {
+            var before = await rig.BytesAsync();
+            var available = await rig.Keep(rig.Browser.ObserveOriginalHomeLibraryAvailabilityWithinSourceAsync(
+                rig.Workspace.Actor, () => true, body => body(), rig.Retain, rig.Token));
+            Assert.True(available.IsAvailable); Assert.Equal(rig.Workspace.Configuration.StoreId, available.StoreId);
+            Assert.True(rig.Browser.IsIssuedOriginalHomeLibraryAvailability(available, rig.Workspace.Actor));
+            var foreign = rig.Workspace.Actor with { AuthenticationRevision = rig.Workspace.Actor.AuthenticationRevision + ":retired" };
+            Assert.False(rig.Browser.IsIssuedOriginalHomeLibraryAvailability(available, foreign));
+            var changed = await rig.Keep(rig.Browser.ObserveOriginalHomeLibraryAvailabilityWithinSourceAsync(
+                foreign, () => true, body => body(), rig.Retain, rig.Token));
+            Assert.False(changed.IsAvailable); Assert.Equal("LibraryProfileChanged", changed.Code);
+            var page = await rig.Keep(rig.Browser.ListOriginalHomeLibraryPageWithinSourceAsync(rig.Workspace.Actor,
+                available.StoreId!.Value, "", null, () => true, body => body(), rig.Retain, rig.Token));
+            Assert.Contains(page.Items, row => row.Id == rig.Folder && row.Kind == HostedItemKind.Folder);
+            await rig.Keep(rig.Browser.RevalidateOriginalHomeLibraryPageWithinSourceAsync(page, rig.Workspace.Actor,
+                () => true, body => body(), rig.Retain, rig.Token));
+            var copied = rig.Keep(rig.Browser.RevalidateOriginalHomeLibraryPageWithinSourceAsync(page with { }, rig.Workspace.Actor,
+                () => true, body => body(), rig.Retain, rig.Token));
+            await rig.ObserveExpectedFailureAsync(copied, typeof(UnauthorizedAccessException),
+                "Retain the SAME privately issued original Files Library page.");
+            var rawBefore = rig.RawCount;
+            var retired = rig.Browser.ObserveOriginalHomeLibraryAvailabilityWithinSourceAsync(
+                rig.Workspace.Actor, () => false, body => body(), rig.Retain, rig.Token);
+            Assert.Equal(rawBefore, rig.RawCount);
+            var unavailable = await rig.Keep(retired);
+            Assert.False(unavailable.IsAvailable); Assert.Null(unavailable.StoreId); Assert.Equal("LibraryRetired", unavailable.Code);
+            var after = await rig.BytesAsync(); Assert.Equal(before.Home, after.Home); Assert.Equal(before.Drive, after.Drive);
         });
 
     private sealed class Rig

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using Haven.Application;
 
 namespace HavenOS.Apps.Dev;
 
@@ -17,7 +18,7 @@ public sealed record DeveloperDraftRecoveryPayload(IReadOnlyList<DeveloperDraftR
 /// in plaintext. A successful storage result does not prove that its task/actor is still current.</summary>
 public sealed record DeveloperDraftRecoverySnapshot(int FormatVersion, DeveloperDraftRecoveryScope Scope,
     DeveloperProjectReference ProjectReference, string ProjectStamp, long Generation,
-    DateTimeOffset SavedAtUtc, string ProtectedPayload);
+    DateTimeOffset SavedAtUtc, string ProtectedPayload) : IDeveloperProjectOriginalMetadataCommitValue;
 
 public sealed partial class FileDeveloperWorkspaceStore
 {
@@ -201,7 +202,16 @@ public sealed partial class FileDeveloperWorkspaceStore
             if (JsonSerializer.SerializeToUtf8Bytes(next, JsonOptions).Length > 1024 * 1024)
                 return EditorFailure<DeveloperDraftRecoverySnapshot>(DeveloperOperationErrorCode.CapabilityUnavailable,
                     "The protected draft would exceed the native workspace document limit. The prior state was preserved.", project.Reference.WorkspaceId);
-            await WriteEditorDocumentAsync(GetWorkspacePath(project.Reference.WorkspaceId), next, cancellationToken).ConfigureAwait(false);
+            // Retain exact raw before bytes/projection under this SAME canonical CAS lock.
+            // The receipt is issued only after the actual atomic writer completes successfully;
+            // it is metadata provenance, never a replacement native/Home/task admission.
+            var transitionBasis = await CaptureOriginalMetadataTransitionBasisAsync(document, cancellationToken).ConfigureAwait(false);
+            string? exactAfterSha256 = null;
+            var originalAtomicWrite = WriteEditorDocumentAsync(GetWorkspacePath(project.Reference.WorkspaceId), next, cancellationToken,
+                bytes => exactAfterSha256 = ObserveOriginalMetadataTransitionAfter(transitionBasis, bytes));
+            await originalAtomicWrite.ConfigureAwait(false);
+            IssueOriginalMetadataTransition(snapshot, transitionBasis, exactAfterSha256
+                ?? throw new InvalidOperationException("The original canonical writer did not observe its actual serialized bytes."), originalAtomicWrite);
             return DeveloperOperationResult<DeveloperDraftRecoverySnapshot>.Success(snapshot);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }

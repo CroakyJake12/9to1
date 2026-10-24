@@ -165,6 +165,15 @@ public sealed partial class ChatSessionService
                 ? coordinator.BindOriginalToolCheckpointBodyAsync(live, this, conversation.Id, token)
                 : coordinator.BindOriginalColdToolBodyAsync(binding.Cold!, this, conversation.Id, token)).ConfigureAwait(false);
         CurrentCanonicalTask = current;
+        var continuedSpaceOptions = boundary.OriginalRequest.Options;
+        if (conversation.SpaceId is not null && (continuedSpaceOptions?.RequireOriginalSpacePolicy != true ||
+            continuedSpaceOptions.RequestedSpacePolicyLineage is null || continuedSpaceOptions.RequestedToolSelectionConstraints is null))
+            throw new SpaceRequestPolicyBlockedException("SPACE_CHECKPOINT_POLICY_UNQUALIFIED", "This older Space tool checkpoint has no qualified policy lineage and exact tool selection; start a new request after reviewing it.");
+        var continuedSpacePolicy = await CaptureOriginalSpacePolicyAsync(conversation, continuedSpaceOptions,
+            null, original, token).ConfigureAwait(false);
+        if (continuedSpacePolicy is not null)
+            continuedSpaceOptions = SpaceRequestPolicyConstraints.BindContext(continuedSpaceOptions, continuedSpacePolicy.Snapshot)
+                with { OriginalSpacePolicy = continuedSpacePolicy.DispatchGuard };
         var tracker = new ChatExecutionTracker(ChatExecutionStage.Recovering, null, current.ExecutionId);
         original.OriginalTracker = tracker;
         void Publish(ChatExecutionSnapshot value)
@@ -193,6 +202,8 @@ public sealed partial class ChatSessionService
         var requestModel = descriptor.ProviderId.Equals("ollama", StringComparison.OrdinalIgnoreCase)
             ? descriptor.Name : descriptor.Key;
         var tools = boundary.OriginalRequest.Tools;
+        if (continuedSpacePolicy is not null && tools.Any(tool => continuedSpaceOptions?.RequestedToolSelectionConstraints?.Allows(tool.Name) != true))
+            throw new SpaceRequestPolicyBlockedException("SPACE_CHECKPOINT_TOOL_SELECTION_MISMATCH", "The retained checkpoint tools do not match the original Space request selection.");
         var previousIds = boundary.OriginalRequest.Messages.SelectMany(turn => turn.ToolCalls ?? [])
             .Where(call => !string.IsNullOrWhiteSpace(call.Id)).Select(call => call.Id!).ToHashSet(StringComparer.Ordinal);
         var runtimeByName = boundary.RuntimeByName;
@@ -213,7 +224,10 @@ public sealed partial class ChatSessionService
 
         async Task<WorkspaceToolResult> ExecuteTool(OllamaToolCall proposed)
         {
+            if (continuedSpacePolicy is not null) await continuedSpacePolicy.ValidateAsync(token).ConfigureAwait(false);
             var call = DetachOriginalToolCall(proposed);
+            if (continuedSpacePolicy is not null && continuedSpaceOptions?.RequestedToolSelectionConstraints?.Allows(call.Name) != true)
+                throw new SpaceRequestPolicyBlockedException("SPACE_TOOL_NOT_SELECTED", "The resumed original Space request did not select this returned tool.");
             if (string.IsNullOrWhiteSpace(call.Id) || !previousIds.Add(call.Id)
                 || !runtimeByName.TryGetValue(call.Name, out var runtime)
                 || !tools.Any(tool => tool.Name.Equals(call.Name, StringComparison.Ordinal))
@@ -266,6 +280,7 @@ public sealed partial class ChatSessionService
             current = await AwaitOriginalCheckpointStage(original, "checkpoint.tool-intent", () =>
                 coordinator.RegisterOriginalToolActionAsync(preparation, current.LastCheckpointActionId,
                     StatusForTool(call.Name), token)).ConfigureAwait(false);
+            if (continuedSpacePolicy is not null) await continuedSpacePolicy.ValidateAsync(token).ConfigureAwait(false);
             var result = await AwaitOriginalCheckpointStage(original, "checkpoint.tool-execute", () =>
                 owner.ExecuteOriginalAsync(preparation, async bodyToken =>
                 {
@@ -317,7 +332,7 @@ public sealed partial class ChatSessionService
             firstOriginalResponse = false;
             var request = boundary.OriginalRequest with
             {
-                Model = requestModel, Messages = Array.AsReadOnly(turns.ToArray()),
+                Model = requestModel, Messages = Array.AsReadOnly(turns.ToArray()), Options = continuedSpaceOptions,
                 ExecutionContext = new(current.TaskId, current.ContextId, current.ExecutionId, issued.AttemptId,
                     current.PersistenceRevision, responseOriginal.ActionId)
                 { RequestedCandidate = binding.Candidate, SelectedCandidate = binding.Candidate }

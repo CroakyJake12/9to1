@@ -15,6 +15,7 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
     private readonly Func<CanvasWorkspaceCommandKind, bool> _isAvailable;
     private readonly CanvasToolState? _tools;
     private readonly ICanvasEraserInput? _eraser;
+    private readonly ICanvasSelectionInput? _selectionInput;
     private CanvasArtifact? _snapshot;
     private string _persistence = "No Canvas artifact is open";
     private string _compatibility = "";
@@ -22,11 +23,12 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public CanvasCuiWorkspace(Func<CanvasWorkspaceCommand, CancellationToken, ValueTask> dispatch,
-        Func<CanvasWorkspaceCommandKind, bool> isAvailable, CanvasToolState? tools = null,ICanvasEraserInput? eraser = null)
+        Func<CanvasWorkspaceCommandKind, bool> isAvailable, CanvasToolState? tools = null,ICanvasEraserInput? eraser = null, ICanvasSelectionInput? selection = null)
     {
         _dispatch = dispatch ?? throw new ArgumentNullException(nameof(dispatch));
         _isAvailable = isAvailable ?? throw new ArgumentNullException(nameof(isAvailable));
-        _tools = tools;_eraser=eraser;
+        _tools = tools;_eraser=eraser;_selectionInput=selection;
+        if (_selectionInput is not null) _selectionInput.Changed += ToolsChanged;
         if(_eraser is not null)_eraser.Changed+=ToolsChanged;
         if (_tools is not null) _tools.Changed += ToolsChanged;
     }
@@ -78,7 +80,17 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
             "DisplayName" => _snapshot?.DisplayName ?? "Canvas",
             "PersistenceStatus" => _persistence,
             "CompatibilityStatus" => _compatibility,
-            "SelectionSummary" => _selection,
+            "SelectionSummary" => _selectionInput?.TargetSummary ?? _selection,
+            "SelectionOptionsVisible" => _tools?.Selected == CanvasPrimaryTool.Select,
+            "CanChooseSelection" => SelectionActionAvailable("9to1.Canvas.Selection.Next"),
+            "CanClearSelection" => SelectionActionAvailable("9to1.Canvas.Selection.Clear"),
+            "CanNudgeSelection" => SelectionActionAvailable("9to1.Canvas.Selection.Right"),
+            "CanReviewSelectionMove" => SelectionActionAvailable("9to1.Canvas.Selection.Move"),
+            "CanDeleteSelection" => SelectionActionAvailable("9to1.Canvas.Selection.Delete"),
+            "SelectedStrokeSummary" => _selectionInput?.TargetSummary ?? "No stroke selected",
+            "SelectionMoveSummary" => _selectionInput?.MoveSummary ?? "No move preview",
+            "SelectionInputStatus" => _selectionInput?.Status ?? "The native selection port is unavailable",
+            "SelectionFeedbackStatus" => _selectionInput?.FeedbackStatus ?? "Selection feedback is unavailable",
             "ArtifactId" => _snapshot?.ArtifactId,
             "RevisionId" => _snapshot?.RevisionId,
             "CanOpen" => IsActionAvailable("9to1.Canvas.Artifact.Open") == true,
@@ -114,6 +126,8 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
             or "CanOpen" or "CanImport" or "CanFlush" or "CanUndo" or "CanRedo" or "CanEditInk"
             or "CanFitView" or "CanZoomIn" or "CanZoomOut"
             or "CanNaturalErase" or "CanQuickErase" or "CanWholeErase" or "CanPartialErase" or "CanEditEraser" or "CanChooseEraseTarget" or "CanEraseChosenTarget" or "EraseTargetSummary" or "EraseInputStatus" or "EraserOptionsVisible" or "PenOptionsVisible"
+            or "SelectionOptionsVisible" or "CanChooseSelection" or "CanClearSelection" or "CanNudgeSelection" or "CanReviewSelectionMove" or "CanDeleteSelection"
+            or "SelectedStrokeSummary" or "SelectionMoveSummary" or "SelectionInputStatus" or "SelectionFeedbackStatus"
             or "SelectedToolName" or "ToolOptionsVisible" or "ToolOptionsSummary" or "ToolCapabilityStatus" or "AiSurfaceVisible" or "AiIndicatorVisible" or "AiIndicatorLabel";
     }
 
@@ -122,6 +136,7 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
 
     public bool? IsActionAvailable(string command)
     {
+        if (command.StartsWith("9to1.Canvas.Selection.", StringComparison.Ordinal)) return SelectionActionAvailable(command);
         if(command.StartsWith("9to1.Canvas.Erase.",StringComparison.Ordinal))return EraserOptionAvailable(command);
         if (IsInkOption(command)) return _snapshot is not null && _tools?.Selected == CanvasPrimaryTool.Pen && _tools.Capability(CanvasPrimaryTool.Pen).Available;
         if (TryTool(command, out var tool)) return _snapshot is not null && _tools?.Capability(tool).Available == true;
@@ -133,6 +148,23 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
     {
         if (parameter is not null) throw new ArgumentException("Canvas document commands do not accept raw paths or caller identity arguments.", nameof(parameter));
         cancellationToken.ThrowIfCancellationRequested();
+        if (command.StartsWith("9to1.Canvas.Selection.", StringComparison.Ordinal))
+        {
+            if (!SelectionActionAvailable(command)) throw new NotSupportedException("This selection action is unavailable in the current original revision.");
+            switch (command)
+            {
+                case "9to1.Canvas.Selection.Previous": _selectionInput!.ChooseTarget(-1); break;
+                case "9to1.Canvas.Selection.Next": _selectionInput!.ChooseTarget(1); break;
+                case "9to1.Canvas.Selection.Clear": _selectionInput!.ClearTarget(); break;
+                case "9to1.Canvas.Selection.Left": _selectionInput!.AdjustMove(-10, 0); break;
+                case "9to1.Canvas.Selection.Right": _selectionInput!.AdjustMove(10, 0); break;
+                case "9to1.Canvas.Selection.Up": _selectionInput!.AdjustMove(0, -10); break;
+                case "9to1.Canvas.Selection.Down": _selectionInput!.AdjustMove(0, 10); break;
+                case "9to1.Canvas.Selection.Move": return new(_selectionInput!.RequestMoveAsync(cancellationToken));
+                case "9to1.Canvas.Selection.Delete": return new(_selectionInput!.RequestDeleteAsync(cancellationToken));
+            }
+            return ValueTask.CompletedTask;
+        }
         if(command.StartsWith("9to1.Canvas.Erase.",StringComparison.Ordinal))
         {
             if(!EraserOptionAvailable(command))throw new NotSupportedException("This eraser action is unavailable in the current document.");
@@ -225,12 +257,26 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
         if((command is "9to1.Canvas.Erase.Narrower" or "9to1.Canvas.Erase.Wider") && _tools.EraserOptions.Mode!=CanvasEraserMode.Natural)return false;
         return _tools.EraserCapability(ProposedEraserOptions(command)).Available;
     }
+    private bool SelectionActionAvailable(string command)
+    {
+        if (_snapshot is null || _tools?.Selected != CanvasPrimaryTool.Select || _selectionInput?.CanCapture != true) return false;
+        return command switch
+        {
+            "9to1.Canvas.Selection.Previous" or "9to1.Canvas.Selection.Next" => true,
+            "9to1.Canvas.Selection.Clear" => _selectionInput.HasTarget,
+            "9to1.Canvas.Selection.Left" or "9to1.Canvas.Selection.Right" or "9to1.Canvas.Selection.Up" or "9to1.Canvas.Selection.Down" => _selectionInput.CanMove,
+            "9to1.Canvas.Selection.Move" => _selectionInput.CanMove && _selectionInput.HasMovePreview,
+            "9to1.Canvas.Selection.Delete" => _selectionInput.CanDelete,
+            _ => false
+        };
+    }
     private string OptionsSummary() => _tools?.Selected switch
     {
+        CanvasPrimaryTool.Select => _selectionInput?.TargetSummary ?? "No stroke selected",
         CanvasPrimaryTool.Pen => $"{_tools.InkStyle.Kind}; colour {_tools.InkStyle.Color}; width {_tools.InkStyle.BaseWidth}; opacity {_tools.InkStyle.Opacity}",
         CanvasPrimaryTool.Eraser => $"{_tools.EraserOptions.Mode}; {_tools.EraserOptions.NaturalStyle}; width {_tools.EraserOptions.Width}",
         _ => "",
     };
     private void ToolsChanged(object? sender, EventArgs args) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-    public void Dispose() { if (_tools is not null) _tools.Changed -= ToolsChanged; if(_eraser is not null)_eraser.Changed-=ToolsChanged; }
+    public void Dispose() { if (_tools is not null) _tools.Changed -= ToolsChanged; if(_eraser is not null)_eraser.Changed-=ToolsChanged; if (_selectionInput is not null) _selectionInput.Changed -= ToolsChanged; }
 }

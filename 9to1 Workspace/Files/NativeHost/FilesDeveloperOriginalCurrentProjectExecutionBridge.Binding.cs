@@ -17,6 +17,7 @@ public sealed partial class FilesDeveloperOriginalCurrentProjectExecutionBridge
         internal DeveloperResolvedProject Project => project;
         internal string DocumentSha => documentSha;
         internal string RootFingerprint => rootFingerprint;
+        internal bool MetadataSuperseded; // Only this binding's effect eligibility; never closes its READ/lease.
         internal string Receipt { get; } = "dev-current-execution:" + Guid.NewGuid().ToString("D");
         public Guid WorkspaceId => frame.Project.WorkspaceId;
         public Guid ProjectId => frame.Project.ProjectId;
@@ -31,7 +32,7 @@ public sealed partial class FilesDeveloperOriginalCurrentProjectExecutionBridge
         lock (_gate)
         {
             if (_retiring || value is not Binding actual || !ReferenceEquals(actual.Owner, this) ||
-                !_bindings.Contains(actual) || !actual.Original.Driver.IsCompletedSuccessfully)
+                !_bindings.Contains(actual) || actual.MetadataSuperseded || !actual.Original.Driver.IsCompletedSuccessfully)
                 throw new UnauthorizedAccessException("No SAME successful live private current-project binding exists.");
             binding = actual;
         }
@@ -94,7 +95,7 @@ public sealed partial class FilesDeveloperOriginalCurrentProjectExecutionBridge
                 token.ThrowIfCancellationRequested(); DemandFrame(frame, sameProject);
                 lock (_gate)
                 {
-                    if (_retiring || _bindings.Count >= 128 || binding is null)
+                    if (_retiring || _editorSessionUpdates.ContainsKey(sameProject.Reference.WorkspaceId) || _bindings.Count >= 128 || binding is null)
                         throw new InvalidOperationException("Fresh execution binding custody is sealed or full.");
                     _bindings.Add(binding);
                 }

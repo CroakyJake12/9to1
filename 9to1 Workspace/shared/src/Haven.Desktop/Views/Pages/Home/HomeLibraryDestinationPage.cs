@@ -15,7 +15,7 @@ namespace Haven.Desktop.Views.Pages.Home;
 internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispatcher, ICuiActionAvailability
 {
     private readonly HomeLibraryService _library;
-    private readonly NativeHomeArtifactLibrarySource? _source;
+    private readonly IHomeOriginalLibrarySource? _source;
     private readonly Func<CancellationToken, Task> _admit;
     private readonly Func<HomeDeepLink, Task, bool> _queue;
     private readonly CuiControlLoader _loader = new();
@@ -33,7 +33,7 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
 
     internal HomeLibraryDestinationPage(Func<IHomeDeepLinkRouter, HomeLibraryService> create,
         Func<CancellationToken, Task> admit, Func<HomeDeepLink, Task, bool> queue,
-        NativeHomeArtifactLibrarySource? ownedSource = null, CuiThemePreferenceContext? theme = null)
+        IHomeOriginalLibrarySource? ownedSource = null, CuiThemePreferenceContext? theme = null)
     {
         Dispatcher.UIThread.VerifyAccess(); _admit = admit; _queue = queue; _source = ownedSource;
         _work = new(StopAsync, CleanupAsync); _library = create(new Router(this));
@@ -100,7 +100,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
                     original.RunAcceptedPublicationCallback(() =>
                     {
                         if (!opened.Succeeded) _page = null;
-                        _status = opened.Succeeded ? "Opening the canonical notebook in Boards." : opened.Message;
+                        _status = opened.Succeeded ? selected.OwnerApp == "files"
+                            ? "Opening the canonical folder in Files." : "Opening the canonical notebook in Boards." : opened.Message;
                     });
             }
             catch (Exception cause) when (_source?.IsExpectedRefusal(cause) == true)
@@ -143,7 +144,8 @@ internal sealed class HomeLibraryDestinationPage : UserControl, ICuiActionDispat
     {
         var available = _active && IsAlive && !_busy;
         _bindings.Set("LibraryRows", NativeHomeArtifactLibrarySource.ProjectRows(_page));
-        _bindings.Set("LibrarySummary", _status);
+        var notice = _page?.Succeeded == true ? _source?.AvailabilityNotice : null;
+        _bindings.Set("LibrarySummary", string.IsNullOrWhiteSpace(notice) ? _status : _status + " " + notice);
         _bindings.Set("CanSearchLibrary", available);
         _bindings.Set("CanOpenHomeLibraryArtifact", available && _page?.Succeeded == true);
         _bindings.Set("CanNextLibraryPage", available && _page?.HasMore == true);

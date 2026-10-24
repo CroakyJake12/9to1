@@ -18,6 +18,8 @@ using Haven.CUI.DevTools;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using Haven.Application;
+using HavenOS.Files.NativeHost;
+using HavenOS.Files.NativeUI;
 using Xunit;
 
 namespace AvaloniaHome.Tests;
@@ -37,10 +39,25 @@ public sealed class HomeHostRenderTests
         var failures = new List<Exception>();
         try
         {
+            NativeFilesWorkspaceService? originalFiles = null;
             originalComposition = new HomeNativeWindowsComposition(
                 new FileHomeCoreStateStore(Path.Combine(dataDirectory, "home-core-state.json")),
                 new OperatingSystemPrincipalSource(), new TestPaths(dataDirectory),
-                new HomeNativeWindowsEndpoint("9to1.home.render." + Guid.NewGuid().ToString("N")));
+                new HomeNativeWindowsEndpoint("9to1.home.render." + Guid.NewGuid().ToString("N")),
+                originalActionPolicies: [new FilesNativeBrowserActionPolicySource()],
+                configureOriginalStores: identity =>
+                {
+                    originalFiles = new(identity.StateStore, identity.Profiles);
+                    return new([originalFiles], new Dictionary<Type, object>
+                    { [typeof(NativeFilesWorkspaceService)] = originalFiles });
+                },
+                configureOriginalResolvers: ownership =>
+                {
+                    var authority = new NativeFilesWorkspaceAuthority(originalFiles!, ownership.Identity.Profiles, ownership.Ownership);
+                    var resolver = new FilesArtifactResourceResolver(authority);
+                    return new([resolver], new Dictionary<Type, object>
+                    { [typeof(NativeFilesWorkspaceAuthority)] = authority, [typeof(FilesArtifactResourceResolver)] = resolver });
+                });
             AppBuilder.Configure(() =>
                 {
                     var app = new HomeApp(originalComposition);
@@ -252,6 +269,54 @@ public sealed class HomeHostRenderTests
                 var appearanceTrace = Assert.IsType<CuiAuthoredControlTrace>(appearanceInspection.GetSource(appearance.ElementId));
                 Assert.EndsWith("Home.cui", appearanceTrace.Source.FilePath, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal("home-appearance-settings", appearanceTrace.AuthoredId);
+
+                // Same canonical standalone Library, real owning Files setup and existing native
+                // Files CUI. Missing configuration is never replaced with a fabricated index/store.
+                Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "nav-library")
+                    .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => reopened.GetVisualDescendants().OfType<TextBlock>().Any(control =>
+                    control.Name == "library-status" && control.Text?.Contains("Files", StringComparison.Ordinal) == true),
+                    "The actual unconfigured Files Library result did not settle.");
+                Assert.DoesNotContain(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "home-library-item");
+                var missingConfiguration = originalFiles!.GetConfigurationAsync();
+                WaitFor(() => missingConfiguration.IsCompleted, "The genuine Files setup observation did not settle.");
+                Assert.Null(missingConfiguration.GetAwaiter().GetResult());
+                var chosenFilesRoot = Path.Combine(dataDirectory, "chosen-files");
+                Directory.CreateDirectory(chosenFilesRoot); // Explicit test setup, not production automatic import.
+                var configure = originalFiles.ConfigureNewAsync(chosenFilesRoot, originalComposition.LocalStoreOwnership, CancellationToken.None);
+                WaitFor(() => configure.IsCompleted, "The actual Files workspace setup did not settle.");
+                var configured = configure.GetAwaiter().GetResult();
+                var folderId = configured.Configuration.AppFolders["picture"].Value;
+                var metadataTask = configured.Provider.GetAsync(new(folderId), CancellationToken.None);
+                WaitFor(() => metadataTask.IsCompleted, "The original configured folder metadata did not settle.");
+                var metadata = metadataTask.GetAwaiter().GetResult(); Assert.True(metadata.IsSuccess);
+                var folderName = metadata.Value!.Name;
+                Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control => control.Name == "library-refresh")
+                    .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => reopened.GetVisualDescendants().OfType<Button>().Any(control =>
+                    control.Name == "home-library-item" && control.GetVisualDescendants().OfType<TextBlock>()
+                        .Any(text => text.Text == folderName)), "The genuine Files folder did not appear in canonical Library rows.");
+                var fileRow = Assert.Single(reopened.GetVisualDescendants().OfType<Button>(), control =>
+                    control.Name == "home-library-item" && control.GetVisualDescendants().OfType<TextBlock>()
+                        .Any(text => text.Text == folderName));
+                Assert.True(fileRow.IsEnabled);
+                fileRow.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                WaitFor(() => originalApp.OriginalLibraryFilesWindows.Any(actual => actual.IsVisible) &&
+                    reopened.GetVisualDescendants().OfType<TextBlock>().Any(control => control.Name == "library-status" &&
+                        control.Text?.Contains("Opened", StringComparison.Ordinal) == true),
+                    "The actual Library folder action did not open its original Files surface.");
+                var filesWindow = Assert.Single(originalApp.OriginalLibraryFilesWindows, actual => actual.IsVisible);
+                var filesView = Assert.IsType<FilesNativeBrowserSurface>(filesWindow.Content);
+                Assert.True(filesView.TryGetOriginalLocation(out var actualStore, out var actualFolder, out _));
+                Assert.Equal(configured.Configuration.StoreId, actualStore); Assert.Equal(folderId, actualFolder);
+                Assert.True(filesView.OriginalPublicationIsAlive);
+                Assert.Contains(filesWindow.GetVisualDescendants(), control => control.Name == "files-browser-shell");
+                filesWindow.Close();
+                WaitFor(() => !filesWindow.IsVisible && !filesView.OriginalPublicationIsAlive,
+                    "The actual owning Files window did not retire and join its surface.");
+                Assert.Null(originalComposition.OriginalCloseTask); // A Files window borrows Home; it cannot stop it.
+                Assert.Contains(originalComposition.Runtime.Current.Services, service => service.ServiceId == "home.core" &&
+                    service.IsAvailable && service.State == HomeServiceLifecycleState.Ready);
             }
             finally
             {

@@ -12,6 +12,9 @@ public sealed partial class SpaceRegistry
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Func<CancellationToken, ValueTask<ISettingsCommitAdmission>>? _captureAdmission;
 
+    /// <summary>Original object association only; this does not grant store access or ownership.</summary>
+    public bool HasOriginalSettingsStore(IVersionedSettingsStore actualStore) => ReferenceEquals(_settings, actualStore);
+
     public static Guid ChatSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000005");
     public static Guid StudySpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000001");
     public static Guid ShoppingSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000002");

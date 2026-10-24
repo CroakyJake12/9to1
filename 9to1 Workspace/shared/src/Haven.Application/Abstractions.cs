@@ -279,6 +279,15 @@ public sealed record ChatDelta(string? Content = null, string? Thinking = null);
 /// </summary>
 public sealed record GenerationOptions(double Temperature = 0.7, int ContextLimit = 32768, int ActionLimit = 24)
 {
+    /// <summary>Original current Home/Space policy guard; never serialized as authority.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IOriginalSpacePolicyDispatchGuard? OriginalSpacePolicy { get; init; }
+    /// <summary>Cold requests cannot silently lose a required live Space policy capture.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool RequireOriginalSpacePolicy { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public OriginalSpacePolicyLineage? RequestedSpacePolicyLineage { get; init; }
+
     [System.Text.Json.Serialization.JsonIgnore]
     public IOriginalPrivateContextDispatchGuard? OriginalPrivateContext { get; init; }
     /// <summary>Cold serialized requests cannot silently lose their private context guard.</summary>

@@ -279,13 +279,17 @@ public sealed partial class FileDeveloperWorkspaceStore : IDeveloperWorkspaceSto
         IReadOnlyList<DeveloperDraftRecoverySnapshot>? draftRecoveries = null) =>
         WriteEditorDocumentAsync(path, new WorkspaceDocument(CurrentSchemaVersion, workspace, editorSessions, draftRecoveries), cancellationToken);
 
-    private static async Task WriteEditorDocumentAsync(string path, WorkspaceDocument document, CancellationToken cancellationToken)
+    private static async Task WriteEditorDocumentAsync(string path, WorkspaceDocument document, CancellationToken cancellationToken,
+        Action<ReadOnlyMemory<byte>>? observeOriginalSerializedDocument = null)
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(document, JsonOptions);
         // All writers share the genuine native reader's one-MiB bound, including ordinary
         // workspace saves that now preserve protected recovery alongside clean metadata.
         if (bytes.Length > 1024 * 1024)
             throw new IOException("The canonical workspace document exceeds its native reader limit; prior state was preserved.");
+        // Original metadata provenance observes THESE exact bytes before any write. This is
+        // an internal finite validation callback, not a grant or a second physical writer.
+        observeOriginalSerializedDocument?.Invoke(bytes.AsMemory());
         var temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {

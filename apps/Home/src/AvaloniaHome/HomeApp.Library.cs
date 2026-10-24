@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
+using HavenOS.Files.NativeHost;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Infrastructure;
@@ -16,7 +17,7 @@ internal sealed partial class HomeApp
 {
     private sealed record StandaloneLibraryComposition(HomeNativeWindowsComposition Home, ProductionDiagnostics Diagnostics);
     private ProductionDiagnostics? _ownedLibraryDiagnostics;
-    private NativeHomeArtifactLibrarySource? _originalLibrarySource;
+    private IHomeOriginalLibrarySource? _originalLibrarySource;
     private HomeLibraryService? _homeLibrary;
     private HomeNativeApprovalWindowOwner? _libraryApprovals;
     private IHomeDeepLinkRouter? _originalLibraryRouter;
@@ -40,16 +41,35 @@ internal sealed partial class HomeApp
             var verified = new VerifiedNotesRepository(notes, notesPaths, diagnostics);
             var evidence = new NotesLocalStoreEvidenceProvider(notes);
             HomeNotesResourceAdmissionSource? admission = null;
+            NativeFilesWorkspaceService? files = null;
+            NativeFilesWorkspaceAuthority? filesAuthority = null;
+            FilesArtifactResourceResolver? filesResolver = null;
             var resolver = new OriginalLibraryNotesResolver(() => admission ??
                 throw new InvalidOperationException("The original standalone Notes admission is not captured."));
             var home = new HomeNativeWindowsComposition(FileHomeCoreStateStore.CreateDefault(),
                 new OperatingSystemPrincipalSource(), homePaths, new("9to1.home.candidate.v1"),
-                originalResourceResolvers: [resolver], originalActionPolicies: [new HomeNotesActionPolicies()],
-                configureOriginalStores: _ => new([evidence], new Dictionary<Type, object>
+                originalResourceResolvers: [resolver],
+                originalActionPolicies: [new HomeNotesActionPolicies(), new FilesNativeBrowserActionPolicySource()],
+                configureOriginalStores: identity =>
                 {
-                    [typeof(NotesRepository)] = notes, [typeof(VerifiedNotesRepository)] = verified,
-                    [typeof(NotesLocalStoreEvidenceProvider)] = evidence
-                }),
+                    files = new(identity.StateStore, identity.Profiles);
+                    return new([evidence, files], new Dictionary<Type, object>
+                    {
+                        [typeof(NotesRepository)] = notes, [typeof(VerifiedNotesRepository)] = verified,
+                        [typeof(NotesLocalStoreEvidenceProvider)] = evidence,
+                        [typeof(NativeFilesWorkspaceService)] = files
+                    });
+                },
+                configureOriginalResolvers: ownership =>
+                {
+                    filesAuthority = new(files!, ownership.Identity.Profiles, ownership.Ownership);
+                    filesResolver = new(filesAuthority);
+                    return new([filesResolver], new Dictionary<Type, object>
+                    {
+                        [typeof(NativeFilesWorkspaceAuthority)] = filesAuthority,
+                        [typeof(FilesArtifactResourceResolver)] = filesResolver
+                    });
+                },
                 configureOriginalOwners: owners =>
                 {
                     admission = new(notes, owners.StateStore, owners.Profiles, owners.Ownership,
@@ -93,23 +113,35 @@ internal sealed partial class HomeApp
     }
     private void InitializeOriginalLibrary(AuthenticatedResourceActor actor)
     {
+        _originalLibraryActor = actor; // Full original principal/profile/authentication revision.
+        var members = new List<NativeCompositeHomeLibrarySource.Member>();
         var notes = _nativeComposition.Services.GetService(typeof(NotesRepository)) as NotesRepository;
         var verified = _nativeComposition.Services.GetService(typeof(VerifiedNotesRepository)) as VerifiedNotesRepository;
         var admission = _nativeComposition.Services.GetService(typeof(HomeNotesResourceAdmissionSource)) as HomeNotesResourceAdmissionSource;
-        if (notes is null || verified is null || admission is null)
+        if (notes is not null && verified is not null && admission is not null)
         {
-            _libraryStatus = "The original local Library owner is unavailable in this Home composition.";
+            _libraryApprovals = new(_homeCore, _nativeComposition.Profiles, _nativeComposition.Permissions);
+            members.Add(new("boards", "Boards", new NativeHomeArtifactLibrarySource(_nativeComposition,
+                notes, verified, admission, actor, "standalone-home-library:" + Guid.NewGuid().ToString("D"),
+                PresentOriginalLibraryReviewAsync,
+                token => { token.ThrowIfCancellationRequested(); return Task.CompletedTask; },
+                body => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; }),
+                OriginalLibraryHomeIsAlive)));
+        }
+        if (BindOriginalLibraryFiles())
+            members.Add(new("files", "Files", new NativeHomeFilesLibrarySource(_originalLibraryFilesBrowser!, actor,
+                _nativeComposition.StateStore, ObserveOriginalLibraryOwnerAsync,
+                body => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; }),
+                OriginalLibraryHomeIsAlive)));
+        if (members.Count == 0)
+        {
+            _libraryStatus = "The original local Library owners are unavailable in this Home composition.";
             return;
         }
-        _libraryApprovals = new(_homeCore, _nativeComposition.Profiles, _nativeComposition.Permissions);
-        // Only an actually composed owning-app router can dispatch a notebook. The default
-        // standalone authoring host has no such connection; it must not invent a successful launch.
-        _originalLibraryRouter = _nativeComposition.Services.GetService(typeof(IHomeDeepLinkRouter)) as IHomeDeepLinkRouter;
-        _originalLibrarySource = new(_nativeComposition, notes, verified, admission, actor,
-            "standalone-home-library:" + Guid.NewGuid().ToString("D"), PresentOriginalLibraryReviewAsync,
-            token => { token.ThrowIfCancellationRequested(); return Task.CompletedTask; },
-            body => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () => { body(); return true; }),
-            () => _nativeComposition.OriginalCloseTask is null && _nativeComposition.OriginalProcessRetirementRequestTask is null);
+        var borrowedRouter = _nativeComposition.Services.GetService(typeof(IHomeDeepLinkRouter)) as IHomeDeepLinkRouter;
+        _originalLibraryRouter = _originalLibraryFilesBrowser is not null || borrowedRouter is not null
+            ? new StandaloneLibraryAppRouter(this, borrowedRouter) : null;
+        _originalLibrarySource = new NativeCompositeHomeLibrarySource(_nativeComposition.StateStore, members.ToArray());
         _homeLibrary = _originalLibrarySource.CreateService(new OriginalLibraryRouter(this));
     }
     private async Task PresentOriginalLibraryReviewAsync(HomePermissionAuthorization authorization, CancellationToken token)
@@ -160,6 +192,8 @@ internal sealed partial class HomeApp
             _originalLibraryQuery = query;
             _controller.Surface.ApplyLibraryPage(page);
             _libraryStatus = page.Message;
+            if (page.Succeeded && !string.IsNullOrWhiteSpace(_originalLibrarySource.AvailabilityNotice))
+                _libraryStatus += " " + _originalLibrarySource.AvailabilityNotice;
             if (_originalLibraryRouter is null && page.Succeeded)
                 _libraryStatus += " Owning-app opening is unavailable until this standalone host has its real app router.";
         }
@@ -209,6 +243,8 @@ internal sealed partial class HomeApp
     private async Task CloseLibraryCoreAsync()
     {
         var failures = new List<Exception>();
+        try { await CloseOriginalLibraryFilesAsync().ConfigureAwait(false); }
+        catch (Exception cause) { failures.Add(cause); }
         try { if (_originalLibrarySource is not null) await _originalLibrarySource.DisposeAsync().ConfigureAwait(false); }
         catch (Exception cause) { failures.Add(cause); }
         try { if (_libraryApprovalClose is not null) await _libraryApprovalClose.ConfigureAwait(false); }

@@ -20,7 +20,8 @@ public sealed class CanvasToolState : IDisposable
 {
     public static ImmutableArray<CanvasToolDefinition> Definitions { get; } =
     [
-        Define(CanvasPrimaryTool.Select, "select", "Select", "cursor", "V", "default", [], "canvas.selection"),
+        Define(CanvasPrimaryTool.Select, "select", "Select", "cursor", "V", "default",
+        [new("selection.move", "Move preview", CanvasToolOptionKind.Number, Minimum: -1_000_000, Maximum: 1_000_000)], "canvas.selection"),
         Define(CanvasPrimaryTool.Pan, "pan", "Pan", "hand", "H", "grab", [], "canvas.viewport.pan"),
         Define(CanvasPrimaryTool.Pen, "pen", "Pen", "pen", "P", "crosshair",
         [new("ink.kind", "Ink engine", CanvasToolOptionKind.Choice, ["solid", "marker"]),

@@ -517,6 +517,13 @@ public sealed partial class ChatSessionService(
         CurrentCanonicalTask = null;
         await (ordinaryOriginal is null ? safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken)
                     : ordinaryOriginal.Read(() => safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken), cancellationToken)).ConfigureAwait(false);
+        var originalSpacePolicy = await CaptureOriginalSpacePolicyAsync(conversation, generationOptions,
+            ordinaryOriginal, originalCustody, cancellationToken).ConfigureAwait(false);
+        if (originalSpacePolicy is not null)
+        {
+            generationOptions = SpaceRequestPolicyConstraints.BindContext(generationOptions, originalSpacePolicy.Snapshot)
+                with { OriginalSpacePolicy = originalSpacePolicy.DispatchGuard };
+        }
         ModelDescriptor etaModel = model;
 
         async Task<string?> EstimateEtaAsync(
@@ -547,7 +554,7 @@ public sealed partial class ChatSessionService(
             // auxiliary ETA would reuse the captured guard, compete with a local reply,
             // and leave a canceled provider original when that reply completes. Include
             // pending source lineage before selection installs the live dispatch guard.
-            canonicalIntent || generationOptions?.RequireOriginalPrivateContext == true ||
+            originalSpacePolicy is not null || canonicalIntent || generationOptions?.RequireOriginalPrivateContext == true ||
                 generationOptions?.OriginalPrivateContext is not null ||
                 (ordinaryOriginal is not null && !conversation.IsTemporary && !conversation.IsArchived &&
                     generationOptions?.RequestedContextConstraints?.AllowPersistentMemoryRead == true &&
@@ -836,6 +843,8 @@ public sealed partial class ChatSessionService(
         var turnModel = constrainedSelection
             ? model
             : ChatModelFallbackSelector.Select(model, installed, requiredCapabilities) ?? model;
+        if (originalSpacePolicy is not null)
+            SpaceRequestPolicyConstraints.ValidateModel(originalSpacePolicy.Snapshot, turnModel);
         etaModel = turnModel;
         ProviderModelDescriptor? effectivePermissionModel = null;
 
@@ -1011,6 +1020,14 @@ public sealed partial class ChatSessionService(
                 .ToArray()
             : [], generationOptions);
 
+        if (originalSpacePolicy is not null)
+        {
+            var selectedSpaceTools = SpaceRequestPolicyConstraints.IntersectTools(originalSpacePolicy.Snapshot,
+                modelPlan, toolDefinitions, selectedRegisteredCapabilities, pluginBindings, generationOptions?.RequestedToolSelectionConstraints);
+            generationOptions = generationOptions! with { RequestedToolSelectionConstraints = selectedSpaceTools };
+            toolDefinitions = toolDefinitions.Where(definition => selectedSpaceTools.Allows(definition.Name)).ToArray();
+        }
+
         var computerPass = toolDefinitions.Any(definition =>
                 modelPlan.TryGetRuntime(definition.Name, out var runtime) &&
                 runtime == ToolRuntimeKind.Computer)
@@ -1071,6 +1088,7 @@ public sealed partial class ChatSessionService(
         }
         async ValueTask CaptureOriginalChatAsync(OllamaChatRequest request, TaskRunContextInventory? inventory, CancellationToken token)
         {
+            if (originalSpacePolicy is not null) await originalSpacePolicy.ValidateAsync(token).ConfigureAwait(false);
             await ValidateOriginalPersistentMemoryAsync(generationOptions, conversation, request.ExecutionContext,
                 ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
             await ValidateOriginalAttachmentInputAsync(generationOptions, originalAttachmentRequest, request.ExecutionContext,
@@ -1099,6 +1117,7 @@ public sealed partial class ChatSessionService(
         }
         async ValueTask CaptureOriginalToolsAsync(OllamaToolRequest request, TaskRunContextInventory? inventory, CancellationToken token)
         {
+            if (originalSpacePolicy is not null) await originalSpacePolicy.ValidateAsync(token).ConfigureAwait(false);
             await ValidateOriginalPersistentMemoryAsync(generationOptions, conversation, request.ExecutionContext,
                 ordinaryOriginal, originalCustody, token).ConfigureAwait(false);
             await ValidateOriginalAttachmentInputAsync(generationOptions, originalAttachmentRequest, request.ExecutionContext,
@@ -1241,6 +1260,7 @@ public sealed partial class ChatSessionService(
 
             async Task<WorkspaceToolResult> ExecuteToolAsync(OllamaToolCall call)
             {
+                if (originalSpacePolicy is not null) await originalSpacePolicy.ValidateAsync(cancellationToken).ConfigureAwait(false);
                 // A constrained request offers only its fresh maintained intersection.
                 // A provider-returned name cannot bypass that selection through the
                 // broader runtime plan, including bridges/bootstrap/recovery paths.
@@ -1282,6 +1302,13 @@ public sealed partial class ChatSessionService(
                     var startedAt = DateTimeOffset.UtcNow;
                     WorkspaceToolResult observed;
                     var currentProviderContext = await ProviderContextAsync(invocationId).ConfigureAwait(false);
+                    if (originalSpacePolicy is not null)
+                    {
+                        await originalSpacePolicy.ValidateAsync(token).ConfigureAwait(false);
+                        if (generationOptions?.RequestedToolSelectionConstraints?.Allows(call.Name) != true ||
+                            !toolDefinitions.Any(definition => definition.Name.Equals(call.Name, StringComparison.Ordinal)))
+                            throw new SpaceRequestPolicyBlockedException("SPACE_TOOL_NOT_SELECTED", "The effective original Space request did not select this tool.");
+                    }
                     if (available && canonicalTask?.OwnerBinding is not null)
                     {
                         var owner = taskToolOwner ?? throw new InvalidOperationException("The actual canonical tool-action owner is unavailable before dispatch.");
@@ -1307,6 +1334,7 @@ public sealed partial class ChatSessionService(
                             throw new InvalidOperationException("The tool owner did not retain the exact original attempt and action.");
                         canonicalTask = await coordinator.RegisterOriginalToolActionAsync(preparation,
                             retryOf ?? actionParentId, StatusForTool(call.Name), token).ConfigureAwait(false);
+                        if (originalSpacePolicy is not null) await originalSpacePolicy.ValidateAsync(token).ConfigureAwait(false);
                         var ownedResult = await owner.ExecuteOriginalAsync(preparation,
                             originalToken => ExecuteRuntimeAsync(call, selectedRuntime, toolPermissionIntent,
                                 originalToken, preparation), token).ConfigureAwait(false);
@@ -1581,7 +1609,9 @@ public sealed partial class ChatSessionService(
                         {
                             Name = actualModel.ProviderId.Equals("ollama", StringComparison.OrdinalIgnoreCase) ? actualModel.Name : actualModel.Key
                         };
-                        etaModel = turnModel;
+                        if (originalSpacePolicy is not null)
+            SpaceRequestPolicyConstraints.ValidateModel(originalSpacePolicy.Snapshot, turnModel);
+        etaModel = turnModel;
                         modelPlan = availabilityPlan.RestrictToModel(turnModel);
                     }
                 }

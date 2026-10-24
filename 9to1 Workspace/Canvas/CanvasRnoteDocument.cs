@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.IO.Compression;
 using System.Text.Json;
 using Haven.Application;
+using Haven.Application.Canvas;
 
 namespace HavenOS.Apps.Canvas;
 
@@ -209,33 +210,134 @@ public sealed class CanvasRnoteDocument : IDisposable
         }
     }
 
-    /// <summary>Resolve one genuine topmost hit, without changing history or native bytes.
-    /// Unsupported/unbound/locked top hits refuse; they never expose a lower neighbor.</summary>
+    /// <summary>Read-only semantic selection metadata for the exact displayed revision.
+    /// Canonical/native ordering must agree; unknown or hidden mappings cannot select a lower
+    /// neighbour. Captured metadata is not a Files grant and never changes history.</summary>
+    public CanvasStrokeSelectionSnapshot CaptureStrokeSelection(Guid expectedRevision)
+    {
+        lock (_gate)
+        {
+            EnsureOpen(); var artifact = CaptureSelectionArtifact(expectedRevision); var page = artifact.Pages[0];
+            var byId = page.Strokes.ToDictionary(value => value.StrokeId);
+            var mutable = _engine.SupportsStructuredStrokeMutation;
+            return new(artifact.ArtifactId, artifact.RevisionId, Array.AsReadOnly(page.StrokeOrder.Select((id, index) =>
+            {
+                var stroke = byId[id]; var layer = page.Layers.Single(value => value.LayerId == stroke.LayerId);
+                var colour = stroke.ResolvedBrushProperties.Color.ToUpperInvariant() switch
+                { "#FF000000" => "black", "#FFFF0000" => "red", "#FF0000FF" => "blue", var other => other };
+                return new CanvasStrokeSelectionEntry(id, index + 1, page.StrokeOrder.Count, colour,
+                    stroke.ResolvedBrushProperties.BaseWidth, layer.Name, layer.IsLocked,
+                    mutable && !layer.IsLocked, mutable && !layer.IsLocked && stroke.PathGeometry is null);
+            }).ToArray()));
+        }
+    }
+
+    /// <summary>Read the exact committed donor penpath for selection feedback. Opening an
+    /// already retained snapshot uses the SAME Rnote adapter as Render; it creates neither a
+    /// Canvas artifact nor a second runtime. Input samples are provenance, never a guessed curve.</summary>
+    public CanvasSelectionPath CaptureSelectionPath(Guid strokeId, Guid expectedRevision)
+    {
+        lock (_gate)
+        {
+            EnsureOpen(); var artifact = CaptureSelectionArtifact(expectedRevision);
+            if (strokeId == Guid.Empty || artifact.Pages[0].Strokes.All(value => value.StrokeId != strokeId))
+                throw new ArgumentException("Choose a retained mapped stroke in this exact revision.", nameof(strokeId));
+            var state = ReadPersistedState(artifact);
+            if (state.NativeStrokeKeys is null || !state.NativeStrokeKeys.TryGetValue(strokeId, out var key))
+                throw new NotSupportedException("This stroke has no original donor path identity.");
+            // Match the persisted, rounded representation painted by Render, not a live
+            // higher-precision working engine which could otherwise shift the selection line.
+            using var committed = RnoteCanvasEngine.Open(Convert.FromBase64String(state.PayloadBase64));
+            var selected = committed.ExportSelectedStrokes([key]);
+            using var compressed = new MemoryStream(selected, writable: false);
+            using var gzip = new GZipStream(compressed, CompressionMode.Decompress);
+            using var expanded = new MemoryStream();
+            var buffer = new byte[81920]; int read;
+            while ((read = gzip.Read(buffer)) != 0)
+            {
+                if (expanded.Length + read > 8 * 1024 * 1024)
+                    throw new NotSupportedException("Selection path feedback exceeds its bounded geometry payload; the original ink is retained.");
+                expanded.Write(buffer, 0, read);
+            }
+            expanded.Position = 0;
+            using var json = JsonDocument.Parse(expanded);
+            if (json.RootElement.ValueKind != JsonValueKind.Object || !json.RootElement.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Object || !data.TryGetProperty("engine_snapshot", out var snapshot) ||
+                snapshot.ValueKind != JsonValueKind.Object || !snapshot.TryGetProperty("stroke_components", out var components) ||
+                components.ValueKind != JsonValueKind.Array)
+                throw new NotSupportedException("The selected native payload has no supported retained path schema.");
+            var values = new List<JsonElement>();
+            foreach (var slot in components.EnumerateArray())
+            {
+                if (slot.ValueKind != JsonValueKind.Object || !slot.TryGetProperty("value", out var value))
+                    throw new InvalidDataException("The selected native entity slot is invalid.");
+                if (value.ValueKind != JsonValueKind.Null) values.Add(value);
+                if (values.Count > 1) throw new InvalidDataException("The native selection unexpectedly contains other entities.");
+            }
+            var entities = values.ToArray();
+            if (entities.Length != 1 || entities[0].ValueKind != JsonValueKind.Object ||
+                !entities[0].TryGetProperty("brushstroke", out var brush) || !brush.TryGetProperty("path", out var path))
+                throw new NotSupportedException("The selected donor entity has no single authoritative brush penpath for this renderer.");
+            long budget = CanvasStructuredStrokeTransactionLimits.MaximumSegmentsPerPath;
+            var geometry = CanvasRnoteSplitMaterializer.DecodePath(path, ref budget);
+            return new(artifact.ArtifactId, artifact.RevisionId, strokeId, geometry);
+        }
+    }
+
+    /// <summary>Resolve the genuine topmost mapped stroke for selection. Locked strokes may
+    /// be inspected; mutation remains subject to the original Home edit owner and layer lock.</summary>
+    public Guid? PreviewSelectionTarget(double x, double y, Guid expectedRevision)
+    {
+        lock (_gate) { EnsureOpen(); return ResolveMappedStrokeTarget(x, y, CaptureSelectionArtifact(expectedRevision)); }
+    }
+
+    /// <summary>Quick erase uses the SAME deterministic donor hit/identity mapping as selection;
+    /// its locked top target refuses rather than falling through to a lower neighbour.</summary>
     public Guid? PreviewQuickErase(double x, double y, Guid expectedRevision)
     {
         lock (_gate)
         {
-            EnsureOpen();
-            var artifact = _session.GetArtifactSnapshot();
-            if (artifact.RevisionId != expectedRevision) throw new InvalidOperationException("Canvas changed before Quick erase targeting.");
-            if (artifact.Pages.Count != 1 || artifact.Pages[0].Layers.Count != 1 ||
-                artifact.SharedResources.Count != 0 || artifact.Pages[0].Objects.Count != 0)
-                throw new NotSupportedException("Quick eraser needs an ink-only single-layer native mapping; broader layer/object parity is not established.");
-            var bindings = ReadPersistedState(artifact).NativeStrokeKeys;
-            var page = artifact.Pages[0];
-            if (bindings is null || page.StrokeOrder.Any(id => !bindings.ContainsKey(id)) ||
-                !_engine.ReadRenderedStrokeKeys().SequenceEqual(page.StrokeOrder.Select(id => bindings[id])))
-                throw new NotSupportedException("Canonical stroke order and retained donor render order need explicit reconciliation before Quick erasing.");
-            var key = _engine.FindQuickEraseTarget(x, y);
-            if (key is null) return null;
-            var matches = bindings?.Where(pair => pair.Value == key.Value).Select(pair => pair.Key).ToArray() ?? [];
-            if (matches.Length != 1) throw new NotSupportedException("The topmost donor entity has no unique canonical stroke identity.");
-            var stroke = page.Strokes.SingleOrDefault(value => value.StrokeId == matches[0])
-                ?? throw new InvalidDataException("The topmost donor identity has no canonical stroke.");
+            EnsureOpen(); var artifact = CaptureSelectionArtifact(expectedRevision);
+            var id = ResolveMappedStrokeTarget(x, y, artifact);
+            if (id is null) return null;
+            var page = artifact.Pages[0]; var stroke = page.Strokes.Single(value => value.StrokeId == id);
             if (page.Layers.Single(value => value.LayerId == stroke.LayerId).IsLocked)
                 throw new InvalidOperationException("The topmost Quick erase target is locked.");
-            return stroke.StrokeId;
+            return id;
         }
+    }
+    private CanvasArtifact CaptureSelectionArtifact(Guid expectedRevision)
+    {
+        var artifact = _session.GetArtifactSnapshot();
+        if (expectedRevision == Guid.Empty || artifact.RevisionId != expectedRevision)
+            throw new InvalidOperationException("Canvas changed before stroke targeting.");
+        if (artifact.Pages.Count != 1 || artifact.Pages[0].Layers.Count != 1 ||
+            artifact.SharedResources.Count != 0 || artifact.Pages[0].Objects.Count != 0)
+            throw new NotSupportedException("Stroke targeting requires one mapped ink layer; object and multi-layer selection remain unavailable.");
+        var page = artifact.Pages[0];
+        if (!page.Layers[0].IsVisible) throw new NotSupportedException("Show the ink layer before selecting its strokes.");
+        if (!_engine.SupportsQuickEraseTarget) throw new NotSupportedException("This drawing engine has no genuine stroke hit-target API.");
+        if (page.Strokes.Any(value => value.Transform != new CanvasTransform()))
+            throw new NotSupportedException("Transformed canonical ink needs an exact native transform mapping before selection.");
+        var bindings = ReadPersistedState(artifact).NativeStrokeKeys;
+        var rendered = _engine.ReadRenderedStrokeKeys();
+        // A genuinely empty native/canonical view has no target to map. It still
+        // supports Select; imported/unmapped visible ink must never take this path.
+        if (bindings is null && page.Strokes.Count == 0 && rendered.IsEmpty) return artifact;
+        if (bindings is null || bindings.Count != page.Strokes.Count || page.StrokeOrder.Any(id => !bindings.ContainsKey(id)) ||
+            !rendered.SequenceEqual(page.StrokeOrder.Select(id => bindings[id])))
+            throw new NotSupportedException("Canonical stroke order and retained donor identities need recovery before targeting.");
+        return artifact;
+    }
+    private Guid? ResolveMappedStrokeTarget(double x, double y, CanvasArtifact artifact)
+    {
+        if (!double.IsFinite(x) || !double.IsFinite(y)) throw new ArgumentException("Selection coordinates must be finite.");
+        var key = _engine.FindQuickEraseTarget(x, y); if (key is null) return null;
+        var bindings = ReadPersistedState(artifact).NativeStrokeKeys!;
+        var matches = bindings.Where(pair => pair.Value == key.Value).Select(pair => pair.Key).ToArray();
+        if (matches.Length != 1 || artifact.Pages[0].Strokes.All(value => value.StrokeId != matches[0]))
+            throw new NotSupportedException("The topmost donor entity has no unique canonical stroke identity.");
+        return matches[0];
     }
 
     /// <summary>Read-only preview on a detached genuine donor candidate. No document/history mutation.</summary>

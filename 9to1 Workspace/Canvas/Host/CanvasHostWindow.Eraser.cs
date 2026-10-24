@@ -31,7 +31,7 @@ public sealed partial class CanvasHostSurface
         async Task Request(IReadOnlyList<ResourceScope> scopes,JsonElement args,string preview,
             Func<HomeResourceExecutionCapability,CancellationToken,Task<OwnerCommit>> execute,CancellationToken token)
         {
-            if(!Available())throw new UnauthorizedAccessException("Finish the current Home request before erasing.");
+            if(!Available())throw new UnauthorizedAccessException("Finish the current Home request before editing Canvas ink.");
             await RequireOriginalOwnerAsync(original,storeId,token);
             if(!Available())throw new UnauthorizedAccessException("This native Canvas view is no longer active.");
             _busy=true;RefreshBindings();
@@ -45,7 +45,8 @@ public sealed partial class CanvasHostSurface
             {var commit=await Original(() => partial.ExecuteAsync(intent,cap,cancel));return await Reopen(commit.FileId,commit.Artifact.ArtifactId,commit.Artifact.RevisionId,cancel);},token),
             (intent,token)=>Request(intent.Scopes,intent.Arguments,"Erase this exact resolved stroke",async(cap,cancel)=>
             {var commit=await Original(() => quick.ExecuteAsync(intent,cap,cancel));return await Reopen(commit.FileId,commit.Artifact.ArtifactId,commit.Artifact.RevisionId,cancel);},token),
-            (intent,token)=>Request(intent.Scopes,intent.Arguments,"Erase this chosen stroke",async(cap,cancel)=>
+            (intent,token)=>Request(intent.Scopes,intent.Arguments,intent.Kind==CanvasStrokeEditKind.Translate
+                ? $"Move this selected stroke by X {intent.DeltaX:0.##}, Y {intent.DeltaY:0.##}" : "Delete this selected stroke",async(cap,cancel)=>
             {var commit=await Original(() => keyed.ExecuteAsync(intent,cap,cancel));return await Reopen(commit.FileId,commit.Artifact.ArtifactId,commit.Artifact.RevisionId,cancel);},token),
             (intent,token)=>Request(intent.Scopes,intent.Arguments,intent.Kind==CanvasHistoryKind.Undo ? "Undo this exact Canvas revision" : "Redo this exact Canvas revision",async(cap,cancel)=>
             {var commit=await Original(() => history.ExecuteAsync(intent,cap,cancel));return await Reopen(commit.FileId,commit.Artifact.ArtifactId,commit.Artifact.RevisionId,cancel);},token));

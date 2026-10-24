@@ -19,6 +19,25 @@
           <Container Type="Vertical Stack" CellGap="4">
             <Text text="{Binding SelectedToolName}" accessible-name="Selected Canvas tool" />
             <Text text="{Binding ToolOptionsSummary}" text-wrapping="Wrap" accessible-name="Current tool options" />
+            <Container Type="Vertical Stack" CellGap="6" Active="{Binding SelectionOptionsVisible}">
+              <Container Type="Wrap" CellGap="6">
+                <Button action="9to1.Canvas.Selection.Previous" content="Previous selection" accessible-name="Select previous visible stroke" Interactive="{Binding CanChooseSelection}" />
+                <Button action="9to1.Canvas.Selection.Next" content="Next selection" accessible-name="Select next visible stroke" Interactive="{Binding CanChooseSelection}" />
+                <Button action="9to1.Canvas.Selection.Clear" content="Clear selection" accessible-name="Clear Canvas selection without changing ink" Interactive="{Binding CanClearSelection}" />
+              </Container>
+              <Text text="{Binding SelectedStrokeSummary}" text-wrapping="Wrap" accessible-name="Selected stroke information" />
+              <Container Type="Wrap" CellGap="6">
+                <Button action="9to1.Canvas.Selection.Left" content="←" accessible-name="Preview selected stroke ten units left" Interactive="{Binding CanNudgeSelection}" />
+                <Button action="9to1.Canvas.Selection.Right" content="→" accessible-name="Preview selected stroke ten units right" Interactive="{Binding CanNudgeSelection}" />
+                <Button action="9to1.Canvas.Selection.Up" content="↑" accessible-name="Preview selected stroke ten units up" Interactive="{Binding CanNudgeSelection}" />
+                <Button action="9to1.Canvas.Selection.Down" content="↓" accessible-name="Preview selected stroke ten units down" Interactive="{Binding CanNudgeSelection}" />
+                <Button action="9to1.Canvas.Selection.Move" content="Review move" accessible-name="Review the exact selected stroke move in Home" Interactive="{Binding CanReviewSelectionMove}" />
+                <Button action="9to1.Canvas.Selection.Delete" content="Review delete" accessible-name="Review deletion of the exact selected stroke in Home" Interactive="{Binding CanDeleteSelection}" />
+              </Container>
+              <Text text="{Binding SelectionMoveSummary}" text-wrapping="Wrap" accessible-name="Selected stroke move preview" />
+              <Text text="{Binding SelectionFeedbackStatus}" text-wrapping="Wrap" accessible-name="Canvas selection contour and move-preview status" />
+              <Text text="{Binding SelectionInputStatus}" text-wrapping="Wrap" accessible-name="Selection input status" />
+            </Container>
             <Container orientation="Horizontal" Type="Wrap" Active="{Binding EraserOptionsVisible}">
               <Button action="9to1.Canvas.Erase.Natural" content="Natural" accessible-name="Natural eraser mode" Interactive="{Binding CanNaturalErase}" />
               <Button action="9to1.Canvas.Erase.Quick" content="Quick" accessible-name="Quick eraser mode" Interactive="{Binding CanQuickErase}" />

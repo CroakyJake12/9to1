@@ -8,6 +8,7 @@ using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.Application;
+using Haven.Application.Compatibility;
 using Haven.Browser;
 using Haven.Core;
 using Haven.Desktop.Events;
@@ -680,23 +681,44 @@ public sealed partial class App
             if (!approvals.IsBoundToOriginalComposition(_home))
                 throw new UnauthorizedAccessException("Retain the original Home review-window owner.");
             HomeLibraryDestinationPage? page = null;
+            NativeCompositeHomeLibrarySource? source = null;
             Task Admit(CancellationToken token)
             { token.ThrowIfCancellationRequested(); DemandAppearanceOwner(); return Task.CompletedTask; }
-            var source = new NativeHomeArtifactLibrarySource(_home,
+            bool Alive() => !_closed && !_appLifetime.IsCancellationRequested && !_windowLifetime.IsCancellationRequested;
+            void Parent(Action body) => (page ?? throw new InvalidOperationException("Retain the original Library page before source work."))
+                .InvokeOriginalSource(() => CloudflareOriginalExecutionGuard.InvokeOriginal(
+                    source ?? throw new InvalidOperationException("Retain the original source composition before source work."),
+                    () => { body(); return true; }));
+            var boardsSource = new NativeHomeArtifactLibrarySource(_home,
                 _services.GetRequiredService<Haven.Infrastructure.NotesRepository>(),
                 _services.GetRequiredService<Haven.Infrastructure.VerifiedNotesRepository>(),
                 _services.GetRequiredService<HomeNotesResourceAdmissionSource>(), actor,
                 "home-library:" + request.TabId.ToString("D"),
-                (authorization, token) => PresentHomeLibraryReviewAsync(approvals, authorization, token), Admit,
-                body => (page ?? throw new InvalidOperationException("Retain the actual Library page before source work.")).InvokeOriginalSource(body),
-                () => !_closed && !_appLifetime.IsCancellationRequested && !_windowLifetime.IsCancellationRequested);
+                (authorization, token) => PresentHomeLibraryReviewAsync(approvals, authorization, token), Admit, Parent, Alive);
+            var browser = _services.GetRequiredService<HavenOS.Files.NativeHost.FilesNativeBrowserService>();
+            if (!browser.IsBoundToOriginalComposition(
+                _services.GetRequiredService<HavenOS.Files.NativeHost.NativeFilesWorkspaceAuthority>(),
+                _home.Profiles, _home.Resources, _services.GetRequiredService<ICompatibilityPackageContentSource>()))
+                throw new UnauthorizedAccessException("Library must borrow the actual Files/Home metadata owner tuple.");
+            var filesSource = new NativeHomeFilesLibrarySource(browser, actor, _home.StateStore,
+                ObserveAppearanceAuthorityAsync, Parent, Alive);
+            source = new(_home.StateStore, new("boards", "Boards", boardsSource), new("files", "Files", filesSource));
             page = new(source.CreateService, source.RevalidateAsync, (link, settlement) =>
             {
-                if (link.OwnerApp != "boards" || link.TargetRouteId != "boards.notebook" ||
-                    !Guid.TryParseExact(link.ObjectId, "D", out var id) || id == Guid.Empty || link.ObjectId != id.ToString("D"))
-                    return false;
+                AppContentAddress address;
+                if (link.OwnerApp == "boards" && link.TargetRouteId == "boards.notebook" &&
+                    Guid.TryParseExact(link.ObjectId, "D", out var id) && id != Guid.Empty && link.ObjectId == id.ToString("D"))
+                    address = AppContentAddress.Parse("9to1://boards/notebooks/" + id.ToString("D"));
+                else if (link.OwnerApp == "files" && link.TargetRouteId == "files.folder")
+                {
+                    var ids = link.ObjectId.Split('/');
+                    if (ids.Length != 2 || !Guid.TryParseExact(ids[0], "D", out var store) || store == Guid.Empty || ids[0] != store.ToString("D") ||
+                        !Guid.TryParseExact(ids[1], "D", out var folder) || folder == Guid.Empty || ids[1] != folder.ToString("D")) return false;
+                    address = FilesBrowseAppContentAddress.For(store, folder);
+                }
+                else return false;
                 return IsCurrent && _workspace is { } workspace && workspace.QueueNavigation(
-                    new(request.TabId, AppContentAddress.Parse("9to1://boards/notebooks/" + id.ToString("D")), true), settlement);
+                    new(request.TabId, address, true), settlement);
             }, source, theme);
             return page;
         }

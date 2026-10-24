@@ -373,11 +373,12 @@ internal sealed partial class HomeApp : Application
     private Task RequestOriginalHostShutdownAsync()
     {
         Haven.Application.CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
+        PrepareOriginalLibraryFilesRetirement(); // Seal/cancel real Files windows before joining parent native actions.
         // The account owner publishes/seals its close and stops actual auth/helper sources
         // BEFORE the parent waits for admitted native actions. A self-join refuses first.
         _ = PrepareOriginalNativeAccountClose(); // SAME task remains retained by its owning field.
         _ = PrepareOriginalHomeAppearanceClose(); // Seal/cancel source before joining admitted native actions.
-        PrepareOriginalLibraryRetirement(); // Seal new Library actions; actual sources join after admitted work.
+        PrepareOriginalLibraryRetirement(); // Seal Library/window admission and cancel actual Files views before joining native actions.
         return _originalLifetime.RequestShutdownAsync();
     }
 

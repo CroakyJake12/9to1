@@ -99,12 +99,23 @@ public sealed class CanvasNativeEraserContext
     public bool CanHistory(CanvasRnoteDocument document,CanvasHistoryKind kind)=>RequestHistory is not null && IsAvailable() && document.Identity==Identity &&
         (kind==CanvasHistoryKind.Undo ? _opened.Artifact.SemanticHistory?.Undo.Count>0 : _opened.Artifact.SemanticHistory?.Redo.Count>0);
     public CanvasHistoryIntent CaptureHistory(CanvasHistoryKind kind)=>CanvasHistoryIntent.Capture(FileId,FilesRevision,Identity.ArtifactId,Identity.RevisionId,Guid.NewGuid(),kind,StoreId);
-    public CanvasStrokeEditIntent CaptureTarget(Guid id)
+    public CanvasStrokeEditIntent CaptureTarget(Guid id) => CaptureEdit(id, CanvasStrokeEditKind.Delete);
+
+    /// <summary>Reuse this original exact owner/edit request port for Select as well as Eraser.
+    /// Copied stroke IDs never issue permission; the existing Home+Files transaction owns commit.</summary>
+    public CanvasStrokeEditIntent CaptureEdit(Guid id, CanvasStrokeEditKind kind, double deltaX = 0, double deltaY = 0)
     {
-        var page=_opened.Artifact.Pages[0];
-        var stroke=page.Strokes.Single(value=>value.StrokeId==id);
-        if(page.Layers.Single(layer=>layer.LayerId==stroke.LayerId).IsLocked)
-            throw new InvalidOperationException("The chosen stroke is locked.");
-        return CanvasStrokeEditIntent.Capture(FileId,FilesRevision,Identity.ArtifactId,Identity.RevisionId,Guid.NewGuid(),id,CanvasStrokeEditKind.Delete,StoreId);
+        if (!IsAvailable()) throw new UnauthorizedAccessException("The original Canvas edit owner is no longer available.");
+        if (_opened.Artifact.Pages.Count != 1) throw new NotSupportedException("Choose a stroke from the current mapped page.");
+        var page = _opened.Artifact.Pages[0];
+        var stroke = page.Strokes.Single(value => value.StrokeId == id);
+        var layer = page.Layers.Single(value => value.LayerId == stroke.LayerId);
+        if (layer.IsLocked || !layer.IsVisible) throw new InvalidOperationException("The chosen stroke is locked or hidden.");
+        if (kind == CanvasStrokeEditKind.Translate && stroke.PathGeometry is not null)
+            throw new NotSupportedException("Exact split-path translation needs its authoritative donor transform support.");
+        if (kind == CanvasStrokeEditKind.Translate && deltaX == 0 && deltaY == 0)
+            throw new ArgumentException("A move preview must have a nonzero offset.");
+        return CanvasStrokeEditIntent.Capture(FileId, FilesRevision, Identity.ArtifactId, Identity.RevisionId,
+            Guid.NewGuid(), id, kind, StoreId, deltaX, deltaY);
     }
 }

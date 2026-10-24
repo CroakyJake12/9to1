@@ -19,6 +19,7 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
     private CanvasToolState? _tools;
     private CanvasNativeInkInput? _ink;
     private CanvasNativeEraserInput? _eraser;
+    private CanvasNativeSelectionInput? _selection;
     private bool _available;
     private bool _disposed;
     private bool _initialized;
@@ -55,25 +56,30 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
                     throw new InvalidDataException("The pen context differs from the exact displayed Canvas identity/revision.");
             }
             _tools = new CanvasToolState(tool =>
-                tool == CanvasPrimaryTool.Pan && _available
+                tool == CanvasPrimaryTool.Select && _available && _selection?.IsAvailable == true
+                    ? new(true, _selection.CapabilityReason)
+                    : tool == CanvasPrimaryTool.Pan && _available
                     ? new(true, "Pan this view with the pointer; wheel zooms around its position. The document is unchanged.")
                     : tool == CanvasPrimaryTool.Pen && _available && ink is not null &&
-                      ink.IsAvailable() && _ink?.HasSubmittedStroke != true && _eraser?.HasSubmittedOperation!=true
+                      ink.IsAvailable() && _ink?.HasSubmittedStroke != true && _eraser?.HasSubmittedOperation!=true && _selection?.HasSubmittedOperation!=true
                         ? new(true, "Capture native pen input, then review the exact stroke in Home.")
-                        : tool==CanvasPrimaryTool.Eraser && _available && eraser is not null && _ink?.HasSubmittedStroke!=true && _eraser?.HasSubmittedOperation!=true
+                        : tool==CanvasPrimaryTool.Eraser && _available && eraser is not null && _ink?.HasSubmittedStroke!=true && _eraser?.HasSubmittedOperation!=true && _selection?.HasSubmittedOperation!=true
                             ? eraser.Capability(_document,_tools?.EraserOptions ?? new())
                         : CanvasToolCapability.Unavailable(_eraser?.Status ?? _ink?.Status ?? "This native tool has no current owning input operation."),
                 selection => _viewport.PanWithPrimaryButton = selection.Tool == CanvasPrimaryTool.Pan,
-                eraserCapability: options => _available && eraser is not null && _ink?.HasSubmittedStroke!=true && _eraser?.HasSubmittedOperation!=true
+                eraserCapability: options => _available && eraser is not null && _ink?.HasSubmittedStroke!=true && _eraser?.HasSubmittedOperation!=true && _selection?.HasSubmittedOperation!=true
                     ? eraser.Capability(_document,options) : CanvasToolCapability.Unavailable("Finish the current request or reopen this Canvas."));
             if(eraser is not null)
             {
                 _eraser=new(_viewport,_document,_tools,eraser);
                 _eraser.Changed+=InkChanged;
             }
+            _selection = new CanvasNativeSelectionInput(_viewport, _document, _tools, eraser,
+                () => _available && !_disposed && _ink?.HasSubmittedStroke != true && _eraser?.HasSubmittedOperation != true);
+            _selection.Changed += InkChanged;
             _bindings = new CanvasCuiWorkspace(DispatchView,
                 kind => _available && (kind is CanvasWorkspaceCommandKind.FitView or CanvasWorkspaceCommandKind.ZoomIn or CanvasWorkspaceCommandKind.ZoomOut ||
-                    _ink?.HasSubmittedStroke!=true && (kind==CanvasWorkspaceCommandKind.Undo ? _eraser?.CanHistory(CanvasHistoryKind.Undo)==true : kind==CanvasWorkspaceCommandKind.Redo && _eraser?.CanHistory(CanvasHistoryKind.Redo)==true)), _tools,_eraser);
+                    _ink?.HasSubmittedStroke!=true && _selection.HasSubmittedOperation!=true && (kind==CanvasWorkspaceCommandKind.Undo ? _eraser?.CanHistory(CanvasHistoryKind.Undo)==true : kind==CanvasWorkspaceCommandKind.Redo && _eraser?.CanHistory(CanvasHistoryKind.Redo)==true)), _tools,_eraser,_selection);
             _bindings.Refresh(_document.Snapshot, ink is null ? "Opened canonical Files revision · read-only view" : "Opened canonical Files revision · native pen input requires Home approval");
             var availability = await _originalWork.ObserveOriginalAsync(_scene.ShowAsync(new("canvas", "Canvas", "Canvas", CanvasCuiWorkspace.LoadDocument(),
                 _bindings, _bindings, readiness)
@@ -135,7 +141,7 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
             throw new InvalidOperationException("The displayed Canvas view is no longer available.");
         if(command.Kind is CanvasWorkspaceCommandKind.Undo or CanvasWorkspaceCommandKind.Redo)
         {
-            if(_eraser is null || _ink?.HasSubmittedStroke==true)throw new NotSupportedException("History has no current owning operation.");
+            if(_eraser is null || _ink?.HasSubmittedStroke==true || _selection?.HasSubmittedOperation==true)throw new NotSupportedException("History has no current owning operation.");
             await _eraser.RequestHistoryAsync(command.Kind==CanvasWorkspaceCommandKind.Undo ? CanvasHistoryKind.Undo : CanvasHistoryKind.Redo,cancellationToken);
             return;
         }
@@ -166,6 +172,8 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
         var errors = new List<Exception>();
         try { _lifetime.Cancel(); } catch (Exception error) { errors.Add(error); }
         var children = new List<Task>();
+        try { if (_selection is not null) { _selection.Changed -= InkChanged; children.Add(_selection.CloseAndDrainAsync()); } }
+        catch (Exception error) { errors.Add(error); }
         try { if (_ink is not null) { _ink.Changed -= InkChanged; children.Add(_ink.CloseAndDrainAsync()); } }
         catch (Exception error) { errors.Add(error); }
         try { if (_eraser is not null) { _eraser.Changed -= InkChanged; children.Add(_eraser.CloseAndDrainAsync()); } }

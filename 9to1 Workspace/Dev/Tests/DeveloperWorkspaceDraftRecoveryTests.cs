@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
+using System.Text.Json;
+using Haven.Application;
 using HavenOS.Apps.Dev;
 using Xunit;
 
@@ -198,6 +200,119 @@ public sealed class DeveloperWorkspaceDraftRecoveryTests : IDisposable
         Assert.Throws<ArgumentException>(() => FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2,
             new([new("../escape.cui", new string('a', 64), "must not leave project", true)], "../escape.cui"), _key));
         Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project)));
+    }
+
+    [Fact]
+    public async Task OriginalMetadataReceipt_UsesExactRawBeforeAndActualWriterAfterWithoutAuthorityChange()
+    {
+        var (store, project) = await CreateAsync(); var scope = Scope();
+        // Different valid formatting must affect the raw native document identity. Hashing a
+        // reserialised old model instead would fail this control despite identical authority.
+        var compact = JsonNode.Parse(await File.ReadAllTextAsync(PathFor(project)))!.ToJsonString() + "\n";
+        await File.WriteAllTextAsync(PathFor(project), compact);
+        var before = await File.ReadAllBytesAsync(PathFor(project));
+        var snapshot = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
+        var saved = await store.SaveDraftRecoveryAsync(project, snapshot, 0);
+        Assert.True(saved.Succeeded, saved.Error?.Message);
+        var source = (IDeveloperProjectOriginalMetadataTransitionStore)store;
+        var receipt = source.GetOriginalMetadataTransition(saved.Value!);
+        Assert.NotNull(receipt);
+        Assert.True(source.IsIssuedOriginalMetadataTransition(receipt, saved.Value!));
+        Assert.Same(store, receipt.OriginalStore); Assert.Same(saved.Value, receipt.OriginalCommittedValue);
+        Assert.True(receipt.OriginalAtomicWriteTask.IsCompletedSuccessfully);
+        Assert.Equal(project.Reference.WorkspaceId, receipt.WorkspaceId);
+        Assert.Equal(Convert.ToHexString(SHA256.HashData(before)).ToLowerInvariant(), receipt.BeforeDocumentSha256);
+        Assert.Equal(Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(PathFor(project)))).ToLowerInvariant(), receipt.AfterDocumentSha256);
+        Assert.Equal(64, receipt.WorkspaceAuthoritySha256.Length);
+        var after = (await store.GetAsync(project.Reference.WorkspaceId)).Value!;
+        Assert.Equal(project.Workspace.Revision, after.Revision);
+        Assert.Equal(project.Workspace.ModifiedAt, after.ModifiedAt);
+        Assert.Equal(JsonSerializer.Serialize(project.Workspace), JsonSerializer.Serialize(after));
+    }
+
+    [Fact]
+    public async Task CopiedValueForeignStoreAndImpostorReceipt_DoNotGainOriginalMetadataProvenance()
+    {
+        var (store, project) = await CreateAsync(); var scope = Scope();
+        var snapshot = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, snapshot, 0)).Succeeded);
+        var source = (IDeveloperProjectOriginalMetadataTransitionStore)store;
+        var receipt = source.GetOriginalMetadataTransition(snapshot)!;
+        var copy = snapshot with { };
+        Assert.Equal(snapshot, copy); Assert.NotSame(snapshot, copy);
+        Assert.Null(source.GetOriginalMetadataTransition(copy));
+        Assert.False(source.IsIssuedOriginalMetadataTransition(receipt, copy));
+        var foreign = (IDeveloperProjectOriginalMetadataTransitionStore)new FileDeveloperWorkspaceStore(_root);
+        Assert.Null(foreign.GetOriginalMetadataTransition(snapshot));
+        Assert.False(foreign.IsIssuedOriginalMetadataTransition(receipt, snapshot));
+        // Even reading an impostor's self-asserted observations would be a protocol error.
+        Assert.False(source.IsIssuedOriginalMetadataTransition(new ImpostorMetadataTransition(), snapshot));
+    }
+
+    [Fact]
+    public async Task StaleOrCancelledRecoveryWriter_NeverIssuesANewMetadataReceipt()
+    {
+        var (store, project) = await CreateAsync(); var scope = Scope();
+        var first = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, first, 0)).Succeeded);
+        var source = (IDeveloperProjectOriginalMetadataTransitionStore)store;
+        var before = await File.ReadAllBytesAsync(PathFor(project));
+        var stale = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload("stale complete draft"), _key);
+        Assert.Equal(DeveloperOperationErrorCode.RevisionConflict, (await store.SaveDraftRecoveryAsync(project, stale, 0)).Error!.Code);
+        Assert.Null(source.GetOriginalMetadataTransition(stale));
+        using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
+        var cancelled = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2, Payload("cancelled complete draft"), _key);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.SaveDraftRecoveryAsync(project, cancelled, 1, cancellation.Token));
+        Assert.Null(source.GetOriginalMetadataTransition(cancelled));
+        Assert.Equal(before, await File.ReadAllBytesAsync(PathFor(project)));
+        Assert.True(source.IsIssuedOriginalMetadataTransition(source.GetOriginalMetadataTransition(first)!, first));
+    }
+
+    [Fact]
+    public async Task OriginalDocumentPair_RequiresSameReceiptValueAndExactBeforeAfterBytes()
+    {
+        var (store, project) = await CreateAsync(); var scope = Scope();
+        var before = await File.ReadAllTextAsync(PathFor(project));
+        var snapshot = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, snapshot, 0)).Succeeded);
+        var after = await File.ReadAllTextAsync(PathFor(project));
+        var source = (IDeveloperProjectOriginalMetadataTransitionStore)store;
+        var receipt = source.GetOriginalMetadataTransition(snapshot)!;
+        Assert.True(source.VerifyOriginalMetadataTransitionDocuments(receipt, snapshot, before, after));
+        Assert.False(source.VerifyOriginalMetadataTransitionDocuments(receipt, snapshot with { }, before, after));
+        Assert.False(source.VerifyOriginalMetadataTransitionDocuments(new ImpostorMetadataTransition(), snapshot, before, after));
+        Assert.False(source.VerifyOriginalMetadataTransitionDocuments(receipt, snapshot, before + "\n", after));
+        Assert.False(source.VerifyOriginalMetadataTransitionDocuments(receipt, snapshot, before, after + "\n"));
+        Assert.False(((IDeveloperProjectOriginalMetadataTransitionStore)new FileDeveloperWorkspaceStore(_root))
+            .VerifyOriginalMetadataTransitionDocuments(receipt, snapshot, before, after));
+    }
+
+    [Fact]
+    public async Task DocumentPair_RejectsAuthorityChangeAndLaterGenerationWithoutRewritingEvidence()
+    {
+        var (store, project) = await CreateAsync(); var scope = Scope(); var before = await File.ReadAllTextAsync(PathFor(project));
+        var first = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 1, Payload(), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, first, 0)).Succeeded);
+        var firstAfter = await File.ReadAllTextAsync(PathFor(project));
+        var source = (IDeveloperProjectOriginalMetadataTransitionStore)store; var firstReceipt = source.GetOriginalMetadataTransition(first)!;
+        var altered = JsonNode.Parse(firstAfter)!; altered["workspace"]!["revision"] = project.Workspace.Revision + 1;
+        Assert.False(source.VerifyOriginalMetadataTransitionDocuments(firstReceipt, first, before, altered.ToJsonString()));
+        var next = FileDeveloperWorkspaceStore.ProtectDraftRecovery(project, scope, 2, Payload("later draft"), _key);
+        Assert.True((await store.SaveDraftRecoveryAsync(project, next, 1)).Succeeded);
+        var later = await File.ReadAllTextAsync(PathFor(project));
+        Assert.False(source.VerifyOriginalMetadataTransitionDocuments(firstReceipt, first, before, later));
+        Assert.Equal(later, await File.ReadAllTextAsync(PathFor(project))); // Pure validator never rewrites evidence.
+    }
+
+    private sealed class ImpostorMetadataTransition : IDeveloperProjectOriginalMetadataTransition
+    {
+        public IDeveloperProjectOriginalWorkspaceMetadataStore OriginalStore => throw new InvalidOperationException("Copied observation must not be consulted.");
+        public IDeveloperProjectOriginalMetadataCommitValue OriginalCommittedValue => throw new InvalidOperationException("Copied observation must not be consulted.");
+        public Guid WorkspaceId => throw new InvalidOperationException("Copied observation must not be consulted.");
+        public string BeforeDocumentSha256 => throw new InvalidOperationException("Copied observation must not be consulted.");
+        public string AfterDocumentSha256 => throw new InvalidOperationException("Copied observation must not be consulted.");
+        public string WorkspaceAuthoritySha256 => throw new InvalidOperationException("Copied observation must not be consulted.");
+        public Task OriginalAtomicWriteTask => throw new InvalidOperationException("Copied observation must not be consulted.");
     }
 
     private string PathFor(DeveloperResolvedProject project) => Path.Combine(_root, "workspaces", project.Reference.WorkspaceId.ToString("N") + ".json");

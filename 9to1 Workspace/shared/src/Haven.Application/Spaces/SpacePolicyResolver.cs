@@ -40,6 +40,46 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
         }
 
         chain.Reverse();
+        return ResolveKnownChain(chain, spaceId);
+    }
+
+    /// <summary>Read-only original request policy capture. Reads only existing canonical
+    /// records, never GetAll reconciliation/seeding; every actual child is retained by its caller.
+    /// The complete bounded ancestry is re-read by the live source before dispatch.</summary>
+    public async Task<OriginalSpacePolicySnapshot> ResolveExistingAsync(Guid spaceId,
+        Action<Action> acquireOriginal, Action<Task> retainOriginal, CancellationToken token = default)
+    {
+        if (spaceId == Guid.Empty) throw new ArgumentException("A Space identity is required.", nameof(spaceId));
+        ArgumentNullException.ThrowIfNull(acquireOriginal); ArgumentNullException.ThrowIfNull(retainOriginal);
+        var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalCallerCallback(acquireOriginal);
+        return await originals.RunToOriginalSettlementAsync(async () =>
+        {
+            var chain = new List<SpaceDefinition>(); var seen = new HashSet<Guid>(); var id = spaceId;
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+                if (chain.Count >= 128 || !seen.Add(id))
+                    throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_ANCESTRY_INVALID", "The Space ancestry is cyclic or exceeds this request's explicit bound.");
+                var actual = originals.Invoke(() =>
+                {
+                    var read = registry.ReadExistingAsync(id, token);
+                    retainOriginal(read); return read;
+                });
+                var space = await originals.AwaitAsync(actual).ConfigureAwait(false);
+                if (space is null || space.IsArchived || space.Id != id)
+                    throw new SpaceRequestPolicyBlockedException("SPACE_POLICY_UNAVAILABLE", "The existing Space or a parent is unavailable.");
+                chain.Add(space);
+                if (space.ParentSpaceId is not { } parent) break;
+                id = parent;
+            }
+            chain.Reverse();
+            return new OriginalSpacePolicySnapshot(ResolveKnownChain(chain, spaceId),
+                new OriginalSpacePolicyLineage(spaceId, chain.Select(row => new OriginalSpacePolicyRevision(row.Id, row.Revision)).ToArray()));
+        }).ConfigureAwait(false);
+    }
+
+    private static EffectiveSpacePolicy ResolveKnownChain(IReadOnlyList<SpaceDefinition> chain, Guid spaceId)
+    {
         var root = chain[0];
         var rootDisabled = DisabledKinds(root.CapabilityCategoryPolicy);
         var rootCapabilities = ApplyCategoryPolicy(root.CapabilityBindings?.ToArray() ?? [], root.CapabilityCategoryPolicy, rootDisabled);
