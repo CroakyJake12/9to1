@@ -1,3 +1,24 @@
+## Cloud stop and local-team takeover — owner decision, 24 October 2026
+
+The owner requests the cloud worker checkpoint and STOP to avoid conflicts with
+new local teams, and requests branches converge into `main`. The existing native
+coordinator “Prepare local 9to1 teams” owns future source assignments and integration.
+Read [the current takeover grant](work/coordination/local-teams/BOOTSTRAP-GRANT.json)
+before resuming. Do not automatically revive cloud authoring, SDK work or a second
+cadence process. Preserve existing native sessions, local repairs, worktrees,
+private evidence and all original source history.
+
+This main checkpoint consolidates the current composed source plus the frozen
+Automations WIP by owner request. It is UNVERIFIED development source: combined
+compilation, native runtime, ARM packaging and release acceptance remain NOT RUN.
+It supersedes the earlier policy requiring source-only WIP remain off main for
+this explicit consolidation handoff; it does not waive tests or acceptance gates.
+Older branches remain preserved under the archive ref named in the grant, with
+an exact inventory and real conflict evidence. They require individual content
+reconciliation. NEVER merge the metadata-only archive tree or use an `ours` merge
+to pretend that application work was combined. Full independent acceptance stays
+PAUSED per the owner's latest implementation-first instruction.
+
 ## Local OpenCode teams — owner decision, 24 October 2026
 
 Read [the team runtime procedure](docs/development/opencode-teams.md) and

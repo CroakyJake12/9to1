@@ -1,0 +1,505 @@
+{
+  "acceptance": {
+    "accepted_percentages_frozen": true,
+    "full_acceptance_paused": true,
+    "mode": "IMPLEMENTATION_AND_BASIC_SMOKE_ONLY",
+    "resume": "All canonical implementation complete or later explicit owner resume; preserve seven criteria and all release gates."
+  },
+  "adoption": {
+    "creation": "Resume only the authorised bootstrap admission after proof validation. Create/bind nine genuine idle root sessions with the report-only scopes; no cadence/job delivery or product edits before their exact IDs are returned. Validate actual native permission requests normally.",
+    "if_private_projection_absent": [
+      "python3",
+      "-B",
+      "eng/development/workflow.py",
+      "--state",
+      "ABSENT_PRIVATE_LOCAL_STATE",
+      "init",
+      "--repo",
+      "ACTUAL_SOURCE78_WORKTREE",
+      "--root-checkpoint",
+      "EXACT_PRIVATE_COPY_OF_THIS_GRANT"
+    ],
+    "return": "Push credential-free ACK.json on this control branch with actual IDs/worktrees/models/projection path and blockers. Also reply through this authorised delegation channel. Root retains cloud integration and will reconcile product assignments.",
+    "then": "Use existing transaction/claim/checkpoint APIs to retain this continuity snapshot, catalogue and actual local candidate/workspace evidence. Configure the existing opencode_teams adjunct. The actual native coordinator may construct these records from successful Git/API/process observations; do not treat unavailable cloud filesystem locators as local requirements."
+  },
+  "allocation": {
+    "maximum_concurrent_model_calls": 6,
+    "model_availability_probe_concurrency": 1,
+    "no_gpu_or_thunder_requests_for_bootstrap": true,
+    "observed_native_concurrent_model_calls": 1,
+    "observed_native_reason": "Native coordinator reports approximately2.5GB RAM headroom and nearly full swap. Serial model calls until fresh observed resources justify a higher safe limit, still no greater than6.",
+    "required_additional_checks": "Observe real local RAM/disk/processes and actual provider limits. Apply any stricter limit; six is a coordinator upper bound, not a claim of provider entitlement or rate quota. Keep all existing guards and Thunder reserves.",
+    "sdk_build_concurrency": 1,
+    "sdk_process_tree_memory_max_bytes": 15032385536,
+    "sdk_transfer": "Cloud SDK allocation released/closed. No SDK activation claimed. Native must obtain actual resource admission and exact guarded plan; one SDK process tree<=14GiB upper bound, stricter actual machine limits control.",
+    "session_object_maximum": 21
+  },
+  "authority": {
+    "application_source_editing": "Owner now stops cloud authoring and delegates exact application file allocation/integration to the existing native coordinator after its fresh source/worktree/ownership checks. Record disjoint scopes and original approvals in the existing local host projection; no further cloud ACK is required. Existing per-model native permissions remain binding.",
+    "bootstrap_source_edit_paths": [
+      "eng/development/opencode_teams.py",
+      "eng/development/test_opencode_teams.py",
+      "eng/development/test_opencode_service_auth.py",
+      "docs/development/opencode-teams.md"
+    ],
+    "cloud_authoring": "STOPPED_BY_OWNER after final Git handoff; no cloud SDK/source/session/cadence work is to resume automatically.",
+    "existing_programme_host_projection_initialisation": true,
+    "integration_owner": "native:local:01a16df8-1971-7d63-be3a-b8548a888274",
+    "native_session_reuse": "Reuse the nine real server-issued sessions and their existing disjoint .opencode/team-coordination report scopes. Do not recreate sessions or overwrite reports merely to match v2 suggested report paths.",
+    "permissions": "No blanket native auto-approval, no weakened auth or public shell; honour current model/server/tool permissions.",
+    "private_state": "Use existing workflow state schema and locking; inspect any existing state first. If absent, initialise a host projection using this exact retained grant; do not overwrite a legacy coordinator database. Record cloud-origin identities and native custody.",
+    "provider": "Existing authenticated openai ChatGPT subscription only, as directly confirmed in native owner context; verify actual OAuth routing. No paid API-credit route, opencode metered fallback or Mercury.",
+    "recipient_may_allocate_scoped_session_worktrees": true
+  },
+  "bootstrap_session_scopes": {
+    "astra-supervisor": [
+      "work/coordination/local-teams/reports/astra-supervisor/**"
+    ],
+    "data-services-leader": [
+      "work/coordination/local-teams/reports/data-services-leader/**"
+    ],
+    "data-services-luna": [
+      "work/coordination/local-teams/reports/data-services-luna/**"
+    ],
+    "platform-leader": [
+      "work/coordination/local-teams/reports/platform-leader/**"
+    ],
+    "platform-luna": [
+      "work/coordination/local-teams/reports/platform-luna/**"
+    ],
+    "productivity-leader": [
+      "work/coordination/local-teams/reports/productivity-leader/**"
+    ],
+    "productivity-luna": [
+      "work/coordination/local-teams/reports/productivity-luna/**"
+    ],
+    "workspaces-leader": [
+      "work/coordination/local-teams/reports/workspaces-leader/**"
+    ],
+    "workspaces-luna": [
+      "work/coordination/local-teams/reports/workspaces-luna/**"
+    ]
+  },
+  "cadence": {
+    "leader_seconds": 300,
+    "supervisor_cooperative_budget_seconds": 300,
+    "supervisor_seconds": 1800
+  },
+  "continuity_snapshot": {
+    "active_development_revision": "be3a970f077608e4aa1992adaa078d8fda495e22",
+    "current_app_estimates": "Unchanged Source78 source estimates; full acceptance paused, Accepted frozen. Read checked-in local-handoff.json for retained app values.",
+    "current_verified_repository_revision": null,
+    "history": "Preserve existing private local state if present; create a host projection only if absent, using this exact Root grant as origin. Do not invent native/accepted progress or overwrite the retained cloud/laptop ledgers. The final main checkpoint includes uncompiled Automations WIP and is not release accepted.",
+    "latest_successful_build_artifacts": "No current Source78 application/ARM artefact. Source76 App/Den/Runtime passes are historical partial/not reusable; originals retained in cloud.",
+    "outstanding_acceptance": [
+      "cui-conformance",
+      "donor-licences",
+      "visual-category",
+      "packaged-workflows",
+      "privacy-security-accessibility",
+      "platform-performance",
+      "cross-app",
+      "independent-acceptance"
+    ],
+    "pending_change_ids": [
+      "Build-clean-session",
+      "automation-create-origin",
+      "automations-local-handoff-WIP",
+      "browser-history",
+      "browser-tab-placement",
+      "build-source-explorer",
+      "local-opencode-team-architecture",
+      "local-worker-bootstrap",
+      "recovery-action-lineage",
+      "sunday-product-source23",
+      "workflow"
+    ],
+    "programme": "CroakyJake12/9to1",
+    "release_candidate": null,
+    "verified_tests": [
+      {
+        "count": 33,
+        "native_or_product_acceptance": false,
+        "revision": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
+        "scope": "team+recovery offline logic"
+      }
+    ],
+    "worker_assignments": {
+      "cloud": "All cloud application authors and Root are parked by owner; existing native coordinator owns future disjoint assignments and integration.",
+      "local_bootstrap": {
+        "host": "local",
+        "observed_active": true,
+        "source_head_observed_in_native_git_output": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
+        "thread_id": "01a16df8-1971-7d63-be3a-b8548a888274",
+        "title": "Prepare local 9to1 teams"
+      }
+    }
+  },
+  "donor_acquisition": {
+    "arguments": [
+      "git",
+      "-C",
+      "ACTUAL_LOCAL_WORKTREE",
+      "submodule",
+      "update",
+      "--init",
+      "--checkout",
+      "--recursive",
+      "--",
+      "framework/CUI/vendor/Avalonia/external/XamlX",
+      "framework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+    ],
+    "pins": {
+      "Avalonia.DBus": "864a05282841bf04006890f04d11d60d1a046aa9",
+      "XamlX": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52"
+    },
+    "scope": "Both .gitmodules URLs andgitlinks verified at exact4d6a16e; no registry change or weakened preflight. Local worker may already have completed this; verify before repeating.",
+    "worktree": "Use actual local Git worktree path, not the cloud source export path."
+  },
+  "grant_id": "9to1-local-team-takeover-20261024-v3",
+  "issued_at": "2026-10-24T14:13:16.122763+00:00",
+  "issuer": {
+    "host": "durable",
+    "role": "existing9to1 Root coordinator",
+    "thread_id": "01a1585a-ee91-7618-863d-ed23a78d705c"
+  },
+  "local_auth_repair": {
+    "additional_local_commits": [
+      "dc74206a",
+      "1039612f"
+    ],
+    "instruction": "Preserve and push the local auth/variant/capacity/receipt-reconciliation fixes on a feature ref, independently review and integrate into main locally. Do not apply the held duplicate cloud auth proposal or retry ambiguous prompts.",
+    "revision": "d23a9b58c668039f54454a84105d9e88c85a1d3f",
+    "status": "NATIVE_REPORTED_45_FOCUSED_TESTS_PASS_AND_REAL_API_CALLS; NOT YET_FETCHED_OR_INDEPENDENTLY_REVIEWED_BY_CLOUD",
+    "tree": "8f31a59bb63d7ebe530b3e48cc5cd877c68799a9"
+  },
+  "model_proof_renewal": {
+    "issuer": "existing-coordinator",
+    "no_owner_reconfirmation_needed_for_unchanged_authorised_mapping": true,
+    "requirements": [
+      "Keep original direct owner confirmation and its original timestamp/provenance unchanged.",
+      "Fresh verified_at records a real new authenticated OAuth/provider/model observation by the existing coordinator, not a fabricated new owner confirmation. Retain credential-free observation hashes and real completed exact-role/model response identity where available.",
+      "Do not copy forward VERIFIED merely because time passed. If fresh observation cannot be obtained, pause new calls and record the blocker.",
+      "Use real openai ChatGPT subscription routing only; no Mercury/paid fallback. Existing native permission and account/provider limits remain."
+    ],
+    "schema": "9to1.native-model-entitlement/v1",
+    "ttl_max_seconds": 1800
+  },
+  "models": {
+    "actual_ids": "Resolve exact openai model IDs from fresh native API; label alone is not proof.",
+    "leader": "GPT-6.1 Sol",
+    "supervisor": "GPT-6 Astra",
+    "worker": "GPT-6 Luna"
+  },
+  "native_sessions": {
+    "completed_startup_acks": "Sol actual completion ACK retained; latest native thread also reports Luna/Astra startup completion. Remaining ACKs must be reconciled from real receipts, not inferred.",
+    "ids": {
+      "astra": "ses_0810416c20bd4878a0743ba232b082c3",
+      "data-services": "ses_e029ec0a14964f6e9185f273be49e368",
+      "data-services-luna": "ses_11ba7cd2f5c64c6c8fb8268538b09e7c",
+      "platform": "ses_c3346fc9819b467383cf86785c76e708",
+      "platform-luna": "ses_eeb281f0889e450ca600be784016710a",
+      "productivity": "ses_66348b257f6f4544b87ee71f8c51ae75",
+      "productivity-luna": "ses_be26aaa01a384f9baa6679f8472f18cf",
+      "workspaces": "ses_d91d914b92104e79825085a626a5b188",
+      "workspaces-luna": "ses_a4d620c07c2344efb414851e040c7118"
+    },
+    "project_id": "b588a1a7fbf07b51b0c4bb6cc4d51493cbd2e223",
+    "source_revision": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
+    "source_tree": "f9e536c8665d1cb99ef480d981b5fe39f600c7db",
+    "status": "NATIVE_REPORTED_REAL_SERVER_IDS_AND_BOUND_WORKTREES"
+  },
+  "next_actions": [
+    "Fetch/read the exact final main and this v3 grant; preserve all existing worktrees, local runtime fixes, private state and native session IDs.",
+    "Reconcile completed model reservations from actual retained POST and scoped GET identities; never blindly retry UNKNOWN work. Continue remaining startup ACKs serially.",
+    "Integrate the local tested auth/variant/capacity/receipt fixes into main after independent review; cloud duplicate remains held.",
+    "Safely reconcile team branches with main at boundaries, allocate explicit disjoint application files through the existing ledger, then run one cadence invoker (Sol300s; Astra1800s/budget300s). Preserve acceptance pause and genuine basic checks.",
+    "Continue priority product implementation and Thunder in authorised windows. Preserve the actual source78 blockers and unfinished Automations graph/run/cold-recovery work.",
+    "Audit archived historical branches into main individually; record content already represented, remaining useful changes, conflicts and test requirements. All-branches consolidation is not yet complete.",
+    "Take over progress reporting only through actual supported authenticated email capability; keep standing half-hourly format and private existing recipient/history, avoid duplicate writers. Cloud reporter stops; no background reporting is implied."
+  ],
+  "origin": {
+    "canonical_main": {
+      "actual_ci": {
+        "bytes": 1559,
+        "kind": "file",
+        "mode": 384,
+        "path": "/workspace/shared/9to1-context/MAIN-INDEX-FIXTURE-REPAIR-20261024-v1/ACTUAL-FIXED-GITHUB-CI.json",
+        "sha256": "e0c78fd22469e125414ff1bfe90e88d709387ca94ecf79d18b3555da858ad435"
+      },
+      "evidence": {
+        "bytes": 1972,
+        "kind": "file",
+        "mode": 384,
+        "path": "/workspace/shared/9to1-context/ROOT-MAIN-AND-SCREENSHOT-DOCS-20261023-v2/MAIN-CREATED.json",
+        "sha256": "808bd6069fe04cb9e7b8f9a0975beeb473be5ec0264fd8021260dd352cb6e2d0"
+      },
+      "independent_doc_policy_review": {
+        "bytes": 6423,
+        "kind": "file",
+        "mode": 384,
+        "path": "/workspace/shared/9to1-context/MAIN-CONSOLIDATION-INDEPENDENT-SOURCE-QA-20261023-v2/VERDICT.json",
+        "sha256": "5cbb5409ec868b755545d316a8d2c68f3e40885a28ca5a0a26dae0534c506ade"
+      },
+      "independent_tooling_review": {
+        "bytes": 4573,
+        "kind": "file",
+        "mode": 384,
+        "path": "/workspace/shared/9to1-context/MAIN-TOOLING-CONSOLIDATION-20261024-v1/INDEPENDENT-FINAL-ACCEPTANCE.json",
+        "sha256": "63ed3abd6cb99b79407c04e383ad4e46ef75960ef98621c96ace866a3f151886"
+      },
+      "latest_independent_component_review": {
+        "bytes": 2461,
+        "kind": "file",
+        "mode": 384,
+        "path": "/workspace/shared/9to1-context/ROOT-COMPOSED41-OWNING-20261023-retry2/CANVAS-SHAPES-INDEPENDENT-52-QA.json",
+        "sha256": "6c44bb763e531f038f489cf7c048ead0efdd5dfebe082450d7c8633998944472"
+      },
+      "latest_integration": {
+        "bytes": 581,
+        "kind": "file",
+        "mode": 384,
+        "path": "/workspace/shared/9to1-context/MAIN-INDEX-FIXTURE-REPAIR-20261024-v1/ACTUAL-FIXED-MAIN-PUBLICATION.json",
+        "sha256": "263b33fba455eb7181a303c1ce8a4f2ece5a84739306d21827d4dcf68a1f02b2"
+      },
+      "parent_verified_integration": "b912b2f81c6259386039ffea8c2c3f14dc600435",
+      "policy": "Completedreviewedcompatiblechangesconvergemain; activeuntestedworkremainsisolated. Useexistingrepoaccess/publicationrules, NOnewapprovalbarrier. V1blanketmainpushbanwasHELD/correctedbeforeintegration. Preservekeys/privateevidence.",
+      "previous_revision": "d9a3091b6962a49e44c3f42ba0b43620dd0180f9",
+      "publication": {
+        "bytes": 581,
+        "kind": "file",
+        "mode": 384,
+        "path": "/workspace/shared/9to1-context/MAIN-INDEX-FIXTURE-REPAIR-20261024-v1/ACTUAL-FIXED-MAIN-PUBLICATION.json",
+        "sha256": "263b33fba455eb7181a303c1ce8a4f2ece5a84739306d21827d4dcf68a1f02b2"
+      },
+      "read_instructions": "git -C /workspace/9to1-chat-cui show main:AGENTS.md andmain:docs/development/workflow.md; useprojectcurrentownerRootinstructions, preserveactivebranches",
+      "revision": "348131d66e26aaa8fb30a2c9e7cf7f52ccb181fd",
+      "scope": "Prior10maintenancepaths+fixturepermissiondeterminism; actualGitHubCIallstepsPASS. No app/SDK/native/ARM/releaseacceptance. ActiveSource66includesmainasrealparent.",
+      "status": "ACTUAL_VERIFIED_SCOPED_ENGINEERING_MAIN_AND_REMOTE_NOT_RELEASE",
+      "tree": "0f6de1c0414dd1cc3e3b0f77274873f7e25b68fb"
+    },
+    "cloud_projection_generation": 460,
+    "history": "Original cloud ledger, all branches, uncommitted historical source, failures and private evidence remain retained. This grant adds local bootstrap authority and does not erase or replace history.",
+    "root_checkpoint": {
+      "bytes": 2079,
+      "kind": "file",
+      "mode": 384,
+      "path": "/workspace/shared/9to1-context/ROOT-COMPOSED78-RECOVERY-FIX-20261024-v1/ROOT-LIVE-SOURCE78-REAL-LOCAL-BOOTSTRAP-GRANT-ISSUED.json",
+      "sha256": "d51056d407d5929be89e02d1055b8ae6fe27247674bd5f460ab4dfd6d27296bd"
+    },
+    "verified_revision": null
+  },
+  "pending_changes": {
+    "automations": {
+      "branch": "codex/automations-local-handoff-wip-20261024",
+      "revision": "be3a970f077608e4aa1992adaa078d8fda495e22",
+      "scope": "28packet rows/20unique product paths, original graph editing/publication and Save/Activate callers; cold recovery, declined session re-review, Run/runtime/triggers, broader catalogue/profile migration/advanced UI remain open. Cloud author parked.",
+      "status": "CHECKPOINT_SOURCE_WIP_UNCOMPILED",
+      "tree": "3f2668546294ad899fedc92753185821e8a4b2c2"
+    }
+  },
+  "programme": "CroakyJake12/9to1",
+  "recipient": {
+    "host": "local",
+    "observed_active": true,
+    "source_head_observed_in_native_git_output": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
+    "thread_id": "01a16df8-1971-7d63-be3a-b8548a888274",
+    "title": "Prepare local 9to1 teams"
+  },
+  "remaining_branch_integration": {
+    "archive_commit": "9a227f79874ef2532cf048a22e09b633f2db27f1",
+    "archive_ref": "refs/heads/archive/cloud-branch-heads-20261024",
+    "example_conflicts": [
+      "CONFLICT (content): Merge conflict in .github/workflows/development-infrastructure.yml",
+      "CONFLICT (content): Merge conflict in 9to1 Models/Dulche Alpha/Tests/NativeStrataUpdateToolTests.py",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Browse/Host.Tests/SpacesConversationRouteTests.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Browse/NativeUI/BrowseNativeWorkspace.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Canvas/CanvasInkObjectHandler.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/Dev/UI/DeveloperWorkbench.cui",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/shared/src/Haven.Desktop/App.UnifiedWorkspaceHost.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Development/DeveloperProjectWorkbenchPage.cs",
+      "CONFLICT (content): Merge conflict in 9to1 Workspace/shared/tests/Haven.Desktop.Tests/UnifiedHomeContentTests.cs",
+      "CONFLICT (content): Merge conflict in AGENTS.md"
+    ],
+    "instruction": "Owner requests all branches into main. This handoff integrates current composed development checkpoint only. Audit/reconcile historical content and unpublished local repair branches; do not use an ours merge or merge the metadata-only archive tree to manufacture completion.",
+    "inventory_path": "BRANCH-INVENTORY.json",
+    "maximal_historical_heads": 67,
+    "not_ancestors_of_product_checkpoint": 196,
+    "preserved_branches": 266,
+    "status": "INCOMPLETE_REQUIRES_CONTENT_RECONCILIATION"
+  },
+  "schema": "9to1.local-team-bootstrap-grant/v1",
+  "source": {
+    "branch": "codex/local-team-handoff78-20261024",
+    "canonical_fetch_ref": "refs/heads/main",
+    "canonical_tree_rule": "Use the exact published main commit and tree in Root final publication receipt. The old4d6 source anchor remains valid history; do not reset busy/dirty role worktrees.",
+    "latest_product_checkpoint": "be3a970f077608e4aa1992adaa078d8fda495e22",
+    "main_acceptance": "UNVERIFIED_DEVELOPMENT_CHECKPOINT_NOT_RELEASE. Source review/offline tests do not establish current app compilation or native acceptance.",
+    "revision": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
+    "specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+    "tree": "f9e536c8665d1cb99ef480d981b5fe39f600c7db"
+  },
+  "source_custody_ack": {
+    "native_delegation_source_thread": "01a16df8-1971-7d63-be3a-b8548a888274",
+    "runtime_worktrees": "Nine role worktrees reported by local coordinator; revalidate each HEAD/tree/directory before minting its retained workspace proof. Root authorises the actual coordinator to attest those observations.",
+    "scope": "Exact4d6 native source ACK and real nine IDs accepted for takeover. New main adoption remains a fresh local Git operation; record actual main/tree and safe branch integration before app edits on updated source.",
+    "source_commit": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
+    "source_tree": "f9e536c8665d1cb99ef480d981b5fe39f600c7db",
+    "source_worktree": "/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/9to1-local-teams-4d6a16e0",
+    "status": "ACCEPTED_FOR_BOOTSTRAP"
+  },
+  "status": "CLOUD_PARKED_NATIVE_COORDINATOR_TAKEOVER",
+  "supersedes": "Bootstrap-only restrictions in v1/v2; preserve existing native sessions, source anchors, private state and history.",
+  "team_policy": {
+    "capacity": 21,
+    "phases": [
+      {
+        "id": 1,
+        "requirements": [],
+        "surfaces": [
+          "Haven/Home Shell",
+          "CUI/nodes/Action Graphs/settings/Home Core/Dulche/shared runtime/permissions/package lifecycle/model routing"
+        ]
+      },
+      {
+        "id": 2,
+        "requirements": [],
+        "surfaces": [
+          "Spaces including Study/Tasks/Assistants/Research/Shopping/Translate/Space Builder",
+          "Voice & Vision"
+        ]
+      },
+      {
+        "id": 3,
+        "requirements": [],
+        "surfaces": [
+          "Build including Dev/Sites/Stacks workspaces"
+        ]
+      },
+      {
+        "id": 4,
+        "requirements": [],
+        "surfaces": [
+          "Automations"
+        ]
+      },
+      {
+        "id": 5,
+        "requirements": [],
+        "surfaces": [
+          "Write",
+          "Present",
+          "Boards",
+          "Canvas",
+          "Data/shared productivity engine"
+        ]
+      },
+      {
+        "id": 6,
+        "requirements": [],
+        "surfaces": [
+          "Files",
+          "web services/accounts/cloud storage"
+        ]
+      },
+      {
+        "id": 7,
+        "requirements": [],
+        "surfaces": [
+          "Planner",
+          "Connect including Mail"
+        ]
+      },
+      {
+        "id": 8,
+        "requirements": [],
+        "surfaces": [
+          "Cards"
+        ]
+      },
+      {
+        "id": 9,
+        "requirements": [],
+        "surfaces": [
+          "Forms"
+        ]
+      },
+      {
+        "id": 10,
+        "requirements": [],
+        "surfaces": [
+          "AI Studio"
+        ]
+      },
+      {
+        "id": 11,
+        "requirements": [],
+        "surfaces": [
+          "Picture",
+          "Wave",
+          "Motion"
+        ]
+      },
+      {
+        "id": 12,
+        "requirements": [],
+        "surfaces": [
+          "Games",
+          "Play"
+        ]
+      },
+      {
+        "id": 13,
+        "requirements": [],
+        "surfaces": [
+          "Mini Computer"
+        ]
+      },
+      {
+        "id": 14,
+        "requirements": [],
+        "surfaces": [
+          "Link",
+          "Prototype",
+          "Paths",
+          "Replay",
+          "all other independently specified retained products"
+        ]
+      }
+    ],
+    "teams": {
+      "data-services": [
+        "Data",
+        "Files",
+        "Planner",
+        "Connect Mail"
+      ],
+      "platform": [
+        "Home/Haven",
+        "CUI/frameworks",
+        "Accounts",
+        "Build delivery"
+      ],
+      "productivity": [
+        "Write",
+        "Present",
+        "Boards",
+        "Canvas"
+      ],
+      "workspaces": [
+        "Spaces including Assistants",
+        "Voice & Vision",
+        "Build",
+        "Automations"
+      ]
+    }
+  },
+  "usage_policy": {
+    "action": "handover to verified Thunder worker; if unavailable checkpoint,commit,pause",
+    "last_owner_reported_percent": 99,
+    "observability": "owner reading only; no inferred token/context/provider percentage",
+    "resource": "Codex allowance",
+    "source": "latest owner correction JSON; earlier15%rule superseded",
+    "threshold_remaining_percent": 10
+  }
+}
