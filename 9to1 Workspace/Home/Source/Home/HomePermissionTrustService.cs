@@ -25,6 +25,8 @@ public sealed partial class HomePermissionTrustService
     private readonly TimeProvider _timeProvider;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly List<SessionApproval> _sessionApprovals = [];
+    private readonly Dictionary<string, string> _sessionApprovedConsentIds = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _oneShotApprovedRequestIds = new(StringComparer.Ordinal);
 
     public HomePermissionTrustService(
         IHomeCoreStateStore stateStore,
@@ -61,7 +63,16 @@ public sealed partial class HomePermissionTrustService
 
         HomePermissionActionPolicy? policy;
         var policyResolutionFailed = false;
-        if (originalSource is not null) policy = originalSource.Invoke(() => _resolvePolicy(scope.TargetAppId, scope.ActionName));
+        if (originalSource is not null)
+        {
+            var resolution = originalSource.Invoke(() =>
+            {
+                try { return (Policy: _resolvePolicy(scope.TargetAppId, scope.ActionName), Failed: false); }
+                catch { return (Policy: (HomePermissionActionPolicy?)null, Failed: true); }
+            });
+            policy = resolution.Policy;
+            policyResolutionFailed = resolution.Failed;
+        }
         else
         {
             try { policy = _resolvePolicy(scope.TargetAppId, scope.ActionName); }
@@ -128,13 +139,9 @@ public sealed partial class HomePermissionTrustService
                 return Authorization(request);
             }
 
-            if (policy.RequiresPerActionApproval || policy.Risk != HomePermissionRisk.Routine)
-            {
-                _sessionApprovals.RemoveAll(item => item.CallerId == caller.CallerId &&
-                    ScopeEquals(item.Scope, scope) && item.SessionId == submission.SessionId);
-            }
-            else if (_sessionApprovals.Any(item => item.CallerId == caller.CallerId &&
-                item.SessionId == submission.SessionId.Trim() && ScopeEquals(item.Scope, scope)))
+            if (!policy.RequiresPerActionApproval && policy.Risk == HomePermissionRisk.Routine &&
+                _sessionApprovals.FirstOrDefault(item => SamePermissionCallerIdentity(item.Caller, caller) &&
+                item.SessionId == submission.SessionId.Trim() && ScopeEquals(item.Scope, scope)) is { } sessionApproval)
             {
                 request = request with
                 {
@@ -145,6 +152,7 @@ public sealed partial class HomePermissionTrustService
                 };
                 ReplaceRequest(state, request);
                 await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
+                _sessionApprovedConsentIds[request.RequestId] = sessionApproval.ConsentId;
                 return Authorization(request);
             }
 
@@ -177,10 +185,32 @@ public sealed partial class HomePermissionTrustService
             var request = state.Requests.SingleOrDefault(item => item.RequestId == requestId);
             if (request is null || request.State != HomePermissionRequestState.Executing ||
                 state.BlockedCallerIds.Contains(request.Caller.CallerId, StringComparer.Ordinal)) return false;
-            if (request.AppliedGrantId is not { } grantId) return true;
+            if (!TryGetTrustedRequestReceivedIndex(state, request, out var requestReceivedIndex) ||
+                CallerWasBlockedAfterRequest(state, request, requestReceivedIndex)) return false;
+            HomePermissionActionPolicy? currentPolicy;
+            try
+            {
+                currentPolicy = originalSource is null
+                    ? _resolvePolicy(request.Scope.TargetAppId, request.Scope.ActionName)
+                    : originalSource.Invoke(() => _resolvePolicy(request.Scope.TargetAppId, request.Scope.ActionName));
+            }
+            catch
+            {
+                RemoveSessionApproval(request);
+                return false;
+            }
+            if (currentPolicy is null || currentPolicy != request.Policy)
+            {
+                RemoveSessionApproval(request);
+                return false;
+            }
+            if (request.AppliedTrustLevel == HomeTrustLevel.Session)
+                return HasRequestSessionAuthority(request);
+            if (request.AppliedGrantId is not { } grantId) return false;
             return state.Grants.Any(grant => grant.GrantId == grantId && !grant.IsRevoked &&
-                grant.Caller.CallerId == request.Caller.CallerId && grant.Caller.IdentityVersion == request.Caller.IdentityVersion &&
-                ScopeEquals(grant.Scope, request.Scope) &&
+                SamePermissionCallerIdentity(grant.Caller, request.Caller) &&
+                ScopeEquals(grant.Scope, request.Scope) && grant.TrustLevel == request.AppliedTrustLevel &&
+                GrantCoversRisk(state, grant, request.Policy) &&
                 (grant.ExpiresAt is null || grant.ExpiresAt > _timeProvider.GetUtcNow()));
         }
         finally { if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release()); }
@@ -297,8 +327,48 @@ public sealed partial class HomePermissionTrustService
         {
             var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
             var request = FindPending(state, requestId);
-            if (request is null) return Failure("HOME_REQUEST_NOT_PENDING", "The permission request is no longer awaiting approval.");
+            if (request is null)
+            {
+                var existing = state.Requests.LastOrDefault(item => item.RequestId == requestId);
+                return existing?.State == HomePermissionRequestState.Blocked
+                    ? Failure("HOME_CALLER_BLOCKED", "A caller block invalidated this request; submit a new request after unblocking.")
+                    : Failure("HOME_REQUEST_NOT_PENDING", "The permission request is no longer awaiting approval.");
+            }
 
+            if (state.BlockedCallerIds.Contains(request.Caller.CallerId, StringComparer.Ordinal) ||
+                TryGetTrustedRequestReceivedIndex(state, request, out var requestReceivedIndex) &&
+                CallerWasBlockedAfterRequest(state, request, requestReceivedIndex))
+            {
+                request = request with { State = HomePermissionRequestState.Blocked,
+                    AppliedTrustLevel = null, AppliedGrantId = null,
+                    ResultCode = "HOME_CALLER_BLOCKED",
+                    ResultMessage = "A caller block invalidated this earlier request; submit a new request after unblocking." };
+                ReplaceRequest(state, request);
+                AddAudit(state, request, HomePermissionAuditKind.DecisionMade, request.State,
+                    request.ResultCode, request.ResultMessage, now);
+                await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+                return Failure(request.ResultCode, request.ResultMessage);
+            }
+            if (!TryGetTrustedRequestReceivedIndex(state, request, out _))
+            {
+                request = request with { State = HomePermissionRequestState.Denied,
+                    AppliedTrustLevel = null, AppliedGrantId = null,
+                    ResultCode = "HOME_PERMISSION_NOT_AUTHORIZED",
+                    ResultMessage = "Home could not verify the original request audit; no approval or trust was granted." };
+                ReplaceRequest(state, request);
+                AddAudit(state, request, HomePermissionAuditKind.DecisionMade, request.State,
+                    request.ResultCode, request.ResultMessage, now);
+                await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+                return Failure(request.ResultCode, request.ResultMessage);
+            }
+
+            if (request.Policy.RequiresPerActionApproval &&
+                (choice is HomeApprovalChoice.AcceptAndTrust or HomeApprovalChoice.AcceptAndAlwaysTrust or HomeApprovalChoice.GrantTemporaryTrustedAccess))
+                return Failure("HOME_TRUST_SCOPE_REQUIRES_EXPLICIT_APPROVAL",
+                    "This target policy requires approval for each action and does not allow reusable trusted access.");
+
+            var addSessionApprovalAfterCommit = false;
+            var addOneShotApprovalAfterCommit = false;
             if (choice == HomeApprovalChoice.AcceptAndAlwaysTrust &&
                 (!request.AlwaysTrustWarningShown || !userConfirmedAlwaysTrustWarning))
                 return Failure("HOME_ALWAYS_TRUST_WARNING_REQUIRED", "Always Trust requires the warning step and explicit confirmation.");
@@ -322,11 +392,16 @@ public sealed partial class HomePermissionTrustService
                         state.BlockedCallerIds.Add(request.Caller.CallerId);
                     AddAudit(state, request, HomePermissionAuditKind.CallerBlocked, HomePermissionRequestState.Blocked,
                         "HOME_CALLER_BLOCKED", "The user blocked this caller.", now);
+                    RemoveSessionApprovalsForCaller(state, request.Caller.CallerId);
+                    InvalidateCallerRequestsOnBlock(state, request.Caller.CallerId, now, request.RequestId);
                     request = FinishDecision(request, HomePermissionRequestState.Blocked,
                         "HOME_CALLER_BLOCKED", "The request was declined and the caller was blocked.", null);
                     break;
                 case HomeApprovalChoice.Accept:
-                    _sessionApprovals.Add(new SessionApproval(request.Caller.CallerId, request.SessionId, request.Scope));
+                    if (request.Policy.RequiresPerActionApproval || request.Policy.Risk != HomePermissionRisk.Routine)
+                        addOneShotApprovalAfterCommit = true;
+                    else
+                        addSessionApprovalAfterCommit = true;
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
                         "HOME_PERMISSION_ACCEPTED", "This exact action and scope was approved for the current session.", HomeTrustLevel.Session);
                     break;
@@ -340,7 +415,7 @@ public sealed partial class HomePermissionTrustService
                     state.Grants.Add(trustedGrant);
                     AddAudit(state, request, HomePermissionAuditKind.TrustGranted, HomePermissionRequestState.Approved,
                         "HOME_ACCEPT_AND_TRUST_GRANTED", "A 30-day trust grant was created for the requested scope.", now,
-                        HomeTrustLevel.AcceptAndTrust);
+                        HomeTrustLevel.AcceptAndTrust, relatedGrantId: trustedGrant.GrantId);
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
                         "HOME_ACCEPT_AND_TRUST_GRANTED", "The requested ordinary scope was approved and trusted for 30 days.", HomeTrustLevel.AcceptAndTrust)
                         with { AppliedGrantId = trustedGrant.GrantId };
@@ -352,7 +427,7 @@ public sealed partial class HomePermissionTrustService
                     state.Grants.Add(alwaysGrant);
                     AddAudit(state, request, HomePermissionAuditKind.TrustGranted, HomePermissionRequestState.Approved,
                         "HOME_ALWAYS_TRUST_GRANTED", "The user explicitly granted persistent trust for the requested scope.", now,
-                        HomeTrustLevel.AlwaysTrust);
+                        HomeTrustLevel.AlwaysTrust, relatedGrantId: alwaysGrant.GrantId);
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
                         "HOME_ALWAYS_TRUST_GRANTED", "The requested scope was approved with persistent trust.", HomeTrustLevel.AlwaysTrust)
                         with { AppliedGrantId = alwaysGrant.GrantId };
@@ -366,7 +441,7 @@ public sealed partial class HomePermissionTrustService
                     state.Grants.Add(temporaryGrant);
                     AddAudit(state, request, HomePermissionAuditKind.TemporaryTrustGranted, HomePermissionRequestState.Approved,
                         "HOME_TEMPORARY_TRUST_GRANTED", "The user granted limited temporary trusted access.", now,
-                        HomeTrustLevel.TemporaryAlwaysTrust);
+                        HomeTrustLevel.TemporaryAlwaysTrust, relatedGrantId: temporaryGrant.GrantId);
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
                         "HOME_TEMPORARY_TRUST_GRANTED", "The requested scope was approved within the selected temporary limit.", HomeTrustLevel.TemporaryAlwaysTrust)
                         with { AppliedGrantId = temporaryGrant.GrantId };
@@ -379,6 +454,14 @@ public sealed partial class HomePermissionTrustService
             AddAudit(state, request, HomePermissionAuditKind.DecisionMade, request.State,
                 request.ResultCode, request.ResultMessage, now, request.AppliedTrustLevel);
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
+            if (addSessionApprovalAfterCommit)
+            {
+                var consentId = NewId();
+                _sessionApprovals.Add(new SessionApproval(request.Caller, request.SessionId, request.Scope, consentId));
+                _sessionApprovedConsentIds[request.RequestId] = consentId;
+            }
+            if (addOneShotApprovalAfterCommit)
+                _oneShotApprovedRequestIds.Add(request.RequestId);
             return Success(request.ResultCode!, request.ResultMessage!);
         }
         finally { _gate.Release(); }
@@ -402,7 +485,7 @@ public sealed partial class HomePermissionTrustService
             var index = state.Requests.FindIndex(request => request.RequestId == requestId);
             if (index < 0) return Failure("HOME_PERMISSION_REQUEST_NOT_FOUND", "The audited permission request was not found.");
             var request = state.Requests[index];
-            if (request.State is not (HomePermissionRequestState.Approved or HomePermissionRequestState.Executing))
+            if (request.State != HomePermissionRequestState.Executing)
             {
                 var recorded = state.Audit.LastOrDefault(item => item.RequestId == requestId && item.Kind == HomePermissionAuditKind.ExecutionCompleted);
                 if (request.State == outcome.State && request.ResultCode == outcome.Code && request.ResultMessage == outcome.Message &&
@@ -437,6 +520,8 @@ public sealed partial class HomePermissionTrustService
                     await ExpireTemporaryGrantAsync(state, exhaustedGrant, now, cancellationToken).ConfigureAwait(false);
             }
             await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
+            _sessionApprovedConsentIds.Remove(requestId);
+            _oneShotApprovedRequestIds.Remove(requestId);
             return Success("HOME_EXECUTION_AUDITED", "The target execution state was added to the Home audit trail.");
         }
         finally { if (originalSource is null) _gate.Release(); else originalSource.Run(() => _gate.Release()); }
@@ -463,18 +548,93 @@ public sealed partial class HomePermissionTrustService
                 return new HomePermissionAuthorization(HomePermissionRequestState.Denied,
                     "HOME_PERMISSION_REQUEST_NOT_FOUND", "The permission request was not found.", requestId, null);
             var request = state.Requests[requestIndex];
+            if (request.State == HomePermissionRequestState.Blocked)
+                return new HomePermissionAuthorization(HomePermissionRequestState.Blocked, "HOME_CALLER_BLOCKED",
+                    "A caller block invalidated this request before target dispatch.", requestId, null);
             if (request.State != HomePermissionRequestState.Approved)
                 return new HomePermissionAuthorization(request.State, "HOME_PERMISSION_NOT_AUTHORIZED",
                     "Only an approved request may be dispatched.", requestId, request.AppliedTrustLevel);
+            HomePermissionActionPolicy? currentPolicy;
+            try
+            {
+                currentPolicy = originalSource is null
+                    ? _resolvePolicy(request.Scope.TargetAppId, request.Scope.ActionName)
+                    : originalSource.Invoke(() => _resolvePolicy(request.Scope.TargetAppId, request.Scope.ActionName));
+            }
+            catch { currentPolicy = null; }
+            if (currentPolicy is null)
+            {
+                RemoveSessionApproval(request);
+                var denied = request with { State = HomePermissionRequestState.Denied,
+                    Impact = ImpactUnknownForPolicyChange(request.Impact),
+                    AppliedTrustLevel = null, AppliedGrantId = null,
+                    ResultCode = "HOME_ACTION_POLICY_UNAVAILABLE",
+                    ResultMessage = "Home could not revalidate this action's trusted policy at dispatch; the action remains blocked." };
+                ReplaceRequest(state, denied);
+                AddAudit(state, denied, HomePermissionAuditKind.DecisionMade, denied.State,
+                    denied.ResultCode, denied.ResultMessage, now);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
+                return Authorization(denied);
+            }
+            if (currentPolicy != request.Policy)
+            {
+                RemoveSessionApproval(request);
+                var pending = request with { State = HomePermissionRequestState.PendingApproval,
+                    Policy = currentPolicy, Impact = ImpactUnknownForPolicyChange(request.Impact),
+                    AppliedTrustLevel = null, AppliedGrantId = null,
+                    ResultCode = "HOME_ACTION_POLICY_CHANGED",
+                    ResultMessage = "The trusted action policy changed after approval. Review the updated request before execution." };
+                ReplaceRequest(state, pending);
+                AddAudit(state, pending, HomePermissionAuditKind.DecisionMade, pending.State,
+                    pending.ResultCode, pending.ResultMessage, now);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
+                return Authorization(pending);
+            }
             if (state.BlockedCallerIds.Contains(request.Caller.CallerId, StringComparer.Ordinal))
                 return new HomePermissionAuthorization(HomePermissionRequestState.Blocked, "HOME_CALLER_BLOCKED",
                     "The caller was blocked before target dispatch.", requestId, null);
+            if (!TryGetTrustedRequestReceivedIndex(state, request, out var requestReceivedIndex))
+            {
+                var denied = request with { State = HomePermissionRequestState.Denied,
+                    AppliedTrustLevel = null, AppliedGrantId = null,
+                    ResultCode = "HOME_PERMISSION_NOT_AUTHORIZED",
+                    ResultMessage = "Home could not verify the original request audit; the action remains blocked." };
+                ReplaceRequest(state, denied);
+                AddAudit(state, denied, HomePermissionAuditKind.DecisionMade, denied.State,
+                    denied.ResultCode, denied.ResultMessage, now);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
+                return Authorization(denied);
+            }
+            if (CallerWasBlockedAfterRequest(state, request, requestReceivedIndex))
+            {
+                var invalidated = request with { State = HomePermissionRequestState.Blocked,
+                    AppliedTrustLevel = null, AppliedGrantId = null,
+                    ResultCode = "HOME_CALLER_BLOCKED",
+                    ResultMessage = "A caller block invalidated this earlier approval; submit a new request after unblocking." };
+                ReplaceRequest(state, invalidated);
+                AddAudit(state, invalidated, HomePermissionAuditKind.DecisionMade, invalidated.State,
+                    invalidated.ResultCode, invalidated.ResultMessage, now);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
+                return Authorization(invalidated);
+            }
+            if (request.AppliedTrustLevel == HomeTrustLevel.Session && !HasRequestSessionAuthority(request))
+            {
+                var pending = request with { State = HomePermissionRequestState.PendingApproval,
+                    AppliedTrustLevel = null, AppliedGrantId = null,
+                    ResultCode = "HOME_PERMISSION_REQUIRED",
+                    ResultMessage = "The session approval is no longer current; review this request again." };
+                ReplaceRequest(state, pending);
+                AddAudit(state, pending, HomePermissionAuditKind.DecisionMade, pending.State,
+                    pending.ResultCode, pending.ResultMessage, now);
+                await SaveAsync(state, cancellationToken, originalSource).ConfigureAwait(false);
+                return Authorization(pending);
+            }
             if (request.AppliedTrustLevel is HomeTrustLevel.AcceptAndTrust or HomeTrustLevel.AlwaysTrust or HomeTrustLevel.TemporaryAlwaysTrust)
             {
                 var activeGrant = state.Grants.Any(grant => !grant.IsRevoked &&
-                    grant.Caller.CallerId == request.Caller.CallerId &&
-                    grant.Caller.IdentityVersion == request.Caller.IdentityVersion && grant.GrantId == request.AppliedGrantId &&
+                    SamePermissionCallerIdentity(grant.Caller, request.Caller) && grant.GrantId == request.AppliedGrantId &&
                     ScopeEquals(grant.Scope, request.Scope) && grant.TrustLevel == request.AppliedTrustLevel &&
+                    GrantCoversRisk(state, grant, request.Policy) &&
                     (grant.ExpiresAt is null || grant.ExpiresAt > now) &&
                     (grant.RemainingActions is null || grant.RemainingActions > 0 ||
                         grant.TrustLevel == HomeTrustLevel.TemporaryAlwaysTrust && grant.RemainingActions == 0));
@@ -589,7 +749,9 @@ public sealed partial class HomePermissionTrustService
             return new HomePermissionManagementSnapshot(
                 state.Requests.Where(request => request.State == HomePermissionRequestState.PendingApproval)
                     .OrderBy(request => request.RequestedAt).ToArray(),
-                state.Grants.OrderBy(grant => grant.Caller.DisplayName, StringComparer.OrdinalIgnoreCase)
+                state.Grants.Select(grant => grant.MaximumRisk is not null ? grant : grant with
+                    { MaximumRisk = HistoricalMaximumRisk(state, grant) ?? HomePermissionRisk.Routine })
+                    .OrderBy(grant => grant.Caller.DisplayName, StringComparer.OrdinalIgnoreCase)
                     .ThenBy(grant => grant.CreatedAt).ToArray(),
                 state.BlockedCallerIds.Order(StringComparer.Ordinal).ToArray(),
                 audit.Take(auditPageSize).ToArray(),
@@ -621,6 +783,11 @@ public sealed partial class HomePermissionTrustService
             AddCallerAudit(state, caller, blocked ? HomePermissionAuditKind.CallerBlocked : HomePermissionAuditKind.CallerUnblocked,
                 blocked ? "HOME_CALLER_BLOCKED" : "HOME_CALLER_UNBLOCKED",
                 blocked ? "The user blocked this caller." : "The user unblocked this caller.", now);
+            if (blocked)
+            {
+                RemoveSessionApprovalsForCaller(state, callerId);
+                InvalidateCallerRequestsOnBlock(state, callerId, now);
+            }
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
             return Success(blocked ? "HOME_CALLER_BLOCKED" : "HOME_CALLER_UNBLOCKED",
                 blocked ? "The caller is blocked from future API permission requests." : "The caller may request permissions again.");
@@ -653,7 +820,8 @@ public sealed partial class HomePermissionTrustService
         {
             var fallback = new HomePermissionGrant(
                 NewId(), grant.Caller, grant.Scope, HomeTrustLevel.AcceptAndTrust,
-                now, now + AcceptAndTrustLifetime, null, null, grant.LastUsedAt, false);
+                now, now + AcceptAndTrustLifetime, null, null, grant.LastUsedAt, false,
+                HomePermissionRisk.Routine, grant.OriginatingRequestId);
             state.Grants.Add(fallback);
             AddGrantAudit(state, fallback, HomePermissionAuditKind.TrustGranted,
                 "HOME_TEMPORARY_TRUST_ROLLED_DOWN", "Temporary trust ended and rolled down to a 30-day ordinary trust grant.", now);
@@ -665,11 +833,10 @@ public sealed partial class HomePermissionTrustService
     {
         if (request.Policy.RequiresPerActionApproval) return null;
         return state.Grants
-            .Where(grant => !grant.IsRevoked && grant.Caller.CallerId == request.Caller.CallerId &&
-                grant.Caller.IdentityVersion == request.Caller.IdentityVersion &&
+            .Where(grant => !grant.IsRevoked && SamePermissionCallerIdentity(grant.Caller, request.Caller) &&
                 ScopeEquals(grant.Scope, request.Scope) && (grant.ExpiresAt is null || grant.ExpiresAt > now) &&
                 (grant.RemainingActions is null || grant.RemainingActions > 0))
-            .Where(grant => request.Policy.Risk == HomePermissionRisk.Routine || grant.TrustLevel is HomeTrustLevel.AlwaysTrust or HomeTrustLevel.TemporaryAlwaysTrust)
+            .Where(grant => GrantCoversRisk(state, grant, request.Policy))
             .OrderByDescending(grant => grant.TrustLevel)
             .ThenByDescending(grant => grant.CreatedAt)
             .FirstOrDefault();
@@ -693,6 +860,95 @@ public sealed partial class HomePermissionTrustService
     private static HomePermissionRequest? FindPending(PersistedState state, string requestId) =>
         state.Requests.LastOrDefault(request => request.RequestId == requestId && request.State == HomePermissionRequestState.PendingApproval);
 
+    private static HomePermissionImpactPreview ImpactUnknownForPolicyChange(HomePermissionImpactPreview impact) =>
+        HomePermissionImpactPreview.Unknown with { ResourceBinding = impact.ResourceBinding };
+
+    private void RemoveSessionApproval(HomePermissionRequest request)
+    {
+        _oneShotApprovedRequestIds.Remove(request.RequestId);
+        if (!_sessionApprovedConsentIds.TryGetValue(request.RequestId, out var consentId)) return;
+        _sessionApprovals.RemoveAll(item => item.ConsentId == consentId);
+        foreach (var requestId in _sessionApprovedConsentIds.Where(item => item.Value == consentId)
+            .Select(item => item.Key).ToArray())
+            _sessionApprovedConsentIds.Remove(requestId);
+    }
+
+    private bool HasSessionApproval(HomePermissionRequest request) =>
+        _sessionApprovedConsentIds.TryGetValue(request.RequestId, out var consentId) &&
+        _sessionApprovals.Any(item => item.ConsentId == consentId &&
+            SamePermissionCallerIdentity(item.Caller, request.Caller) &&
+            item.SessionId == request.SessionId && ScopeEquals(item.Scope, request.Scope));
+
+    private void RemoveSessionApprovalsForCaller(PersistedState state, string callerId)
+    {
+        var consentIds = _sessionApprovals.Where(item => StringComparer.Ordinal.Equals(item.Caller.CallerId, callerId))
+            .Select(item => item.ConsentId).ToHashSet(StringComparer.Ordinal);
+        _sessionApprovals.RemoveAll(item => consentIds.Contains(item.ConsentId));
+        foreach (var requestId in _sessionApprovedConsentIds.Where(item => consentIds.Contains(item.Value))
+            .Select(item => item.Key).ToArray())
+            _sessionApprovedConsentIds.Remove(requestId);
+
+        foreach (var request in state.Requests.Where(item => item.Caller.CallerId == callerId))
+        {
+            _sessionApprovedConsentIds.Remove(request.RequestId);
+            _oneShotApprovedRequestIds.Remove(request.RequestId);
+        }
+    }
+
+    private bool HasRequestSessionAuthority(HomePermissionRequest request) =>
+        request.Policy.RequiresPerActionApproval || request.Policy.Risk != HomePermissionRisk.Routine
+            ? _oneShotApprovedRequestIds.Contains(request.RequestId)
+            : HasSessionApproval(request);
+
+    private static void InvalidateCallerRequestsOnBlock(PersistedState state, string callerId, DateTimeOffset now,
+        string? exceptRequestId = null)
+    {
+        foreach (var request in state.Requests.Where(item => item.Caller.CallerId == callerId &&
+            item.RequestId != exceptRequestId &&
+            item.State is HomePermissionRequestState.PendingApproval or HomePermissionRequestState.Approved).ToArray())
+        {
+            var invalidated = request with { State = HomePermissionRequestState.Blocked,
+                AppliedTrustLevel = null, AppliedGrantId = null,
+                ResultCode = "HOME_CALLER_BLOCKED",
+                ResultMessage = "A caller block invalidated this earlier request; submit a new request after unblocking." };
+            ReplaceRequest(state, invalidated);
+            AddAudit(state, invalidated, HomePermissionAuditKind.DecisionMade, invalidated.State,
+                invalidated.ResultCode, invalidated.ResultMessage, now);
+        }
+    }
+
+    // Compare every stable/tamper-evident component; display names are mutable presentation only.
+    private static bool SamePermissionCallerIdentity(HomePermissionCallerIdentity left, HomePermissionCallerIdentity right) =>
+        StringComparer.Ordinal.Equals(left.CallerId, right.CallerId) &&
+        StringComparer.Ordinal.Equals(left.IdentityVersion, right.IdentityVersion) &&
+        StringComparer.Ordinal.Equals(left.Origin, right.Origin) && left.IsVerified == right.IsVerified;
+
+    private static bool TryGetTrustedRequestReceivedIndex(PersistedState state, HomePermissionRequest request, out int index)
+    {
+        index = -1;
+        for (var candidate = 0; candidate < state.Audit.Count; candidate++)
+        {
+            var item = state.Audit[candidate];
+            if (item.RequestId != request.RequestId || item.Kind != HomePermissionAuditKind.RequestReceived) continue;
+            if (index >= 0 || item.CallerId != request.Caller.CallerId ||
+                item.TargetAppId != request.Scope.TargetAppId || item.ActionName != request.Scope.ActionName ||
+                item.Scope is null || !ScopeEquals(item.Scope, request.Scope) ||
+                item.Timestamp != request.RequestedAt || item.RequestState is not null)
+                return false;
+            index = candidate;
+        }
+        return index >= 0;
+    }
+
+    private static bool CallerWasBlockedAfterRequest(PersistedState state, HomePermissionRequest request, int requestReceivedIndex)
+    {
+        // Persisted audit order establishes sequence; timestamps are permitted to be identical.
+        for (var index = requestReceivedIndex + 1; index < state.Audit.Count; index++)
+            if (state.Audit[index].Kind == HomePermissionAuditKind.CallerBlocked &&
+                StringComparer.Ordinal.Equals(state.Audit[index].CallerId, request.Caller.CallerId)) return true;
+        return false;
+    }
+
     private static HomePermissionRequest FinishDecision(
         HomePermissionRequest request,
         HomePermissionRequestState state,
@@ -713,9 +969,52 @@ public sealed partial class HomePermissionTrustService
         DateTimeOffset? expiresAt,
         int? remainingActions,
         HomeTemporaryGrantFallback? fallback) => new(
-            NewId(), request.Caller, request.Scope, trustLevel, now, expiresAt, remainingActions, fallback, null, false);
+        NewId(), request.Caller, request.Scope, trustLevel, now, expiresAt, remainingActions, fallback, null, false,
+            trustLevel == HomeTrustLevel.AcceptAndTrust ? HomePermissionRisk.Routine : request.Policy.Risk,
+            request.RequestId);
 
-    private static bool IsNarrowerOrEqual(HomePermissionScope oldScope, HomePermissionScope newScope)
+    private static bool GrantCoversRisk(PersistedState state, HomePermissionGrant grant, HomePermissionActionPolicy policy)
+    {
+        if (policy.RequiresPerActionApproval) return false;
+        if (grant.TrustLevel == HomeTrustLevel.AcceptAndTrust) return policy.Risk == HomePermissionRisk.Routine;
+        if (grant.TrustLevel is not (HomeTrustLevel.AlwaysTrust or HomeTrustLevel.TemporaryAlwaysTrust)) return false;
+        var ceiling = grant.MaximumRisk ?? HistoricalMaximumRisk(state, grant) ?? HomePermissionRisk.Routine;
+        return ceiling switch
+        {
+            HomePermissionRisk.Routine => policy.Risk == HomePermissionRisk.Routine,
+            HomePermissionRisk.Elevated => policy.Risk is HomePermissionRisk.Routine or HomePermissionRisk.Elevated,
+            HomePermissionRisk.High => policy.Risk is HomePermissionRisk.Routine or HomePermissionRisk.Elevated or HomePermissionRisk.High,
+            _ => false,
+        };
+    }
+
+    private static HomePermissionRisk? HistoricalMaximumRisk(PersistedState state, HomePermissionGrant grant)
+    {
+        var evidence = state.Audit
+            .Where(item => (item.Kind is HomePermissionAuditKind.TrustGranted or HomePermissionAuditKind.TemporaryTrustGranted) &&
+                item.TrustLevel == grant.TrustLevel && item.CallerId == grant.Caller.CallerId &&
+                item.TargetAppId == grant.Scope.TargetAppId && item.ActionName == grant.Scope.ActionName &&
+                item.Scope is not null && ScopeEquals(item.Scope, grant.Scope) && item.Timestamp == grant.CreatedAt &&
+                IsUniqueGrantRequestEvidence(state, item, grant))
+            .Select(item => item.Risk)
+            .ToArray();
+        // A legacy grant gets a wider risk ceiling only from one exact retained request/grant link.
+        return evidence.Length == 1 ? evidence[0] : null;
+    }
+
+    private static bool IsUniqueGrantRequestEvidence(PersistedState state, HomePermissionAuditEvent audit,
+        HomePermissionGrant grant)
+    {
+        if (audit.RequestId is not { } requestId ||
+            state.Requests.Count(request => request.RequestId == requestId) != 1) return false;
+        var request = state.Requests.Single(item => item.RequestId == requestId);
+        return audit.Risk == request.Policy.Risk &&
+            request.AppliedGrantId == grant.GrantId && request.AppliedTrustLevel == grant.TrustLevel &&
+            request.Caller == grant.Caller && ScopeEquals(request.Scope, grant.Scope) &&
+            request.RequestedAt <= grant.CreatedAt;
+    }
+
+    internal static bool IsNarrowerOrEqual(HomePermissionScope oldScope, HomePermissionScope newScope)
     {
         if (oldScope.TargetAppId != newScope.TargetAppId || oldScope.ActionName != newScope.ActionName)
             return false;
@@ -735,10 +1034,12 @@ public sealed partial class HomePermissionTrustService
         string? message,
         DateTimeOffset now,
         HomeTrustLevel? trust = null,
-        IReadOnlyList<HomeObjectReference>? affectedObjects = null) => state.Audit.Add(new HomePermissionAuditEvent(
+        IReadOnlyList<HomeObjectReference>? affectedObjects = null,
+        string? relatedGrantId = null) => state.Audit.Add(new HomePermissionAuditEvent(
             NewId(), request.RequestId, request.Caller.CallerId, request.Scope.TargetAppId, request.Scope.ActionName,
             request.Scope, request.Policy.Risk, trust ?? request.AppliedTrustLevel, kind, requestState, now,
-            affectedObjects ?? request.Impact.KnownObjects, code, message));
+            affectedObjects ?? request.Impact.KnownObjects, code, message,
+            relatedGrantId is null ? null : request.RequestId, relatedGrantId));
 
     private static void AddGrantAudit(
         PersistedState state,
@@ -748,7 +1049,8 @@ public sealed partial class HomePermissionTrustService
         string message,
         DateTimeOffset now) => state.Audit.Add(new HomePermissionAuditEvent(
             NewId(), null, grant.Caller.CallerId, grant.Scope.TargetAppId, grant.Scope.ActionName, grant.Scope,
-            null, grant.TrustLevel, kind, null, now, grant.Scope.Objects, code, message));
+            null, grant.TrustLevel, kind, null, now, grant.Scope.Objects, code, message,
+            grant.OriginatingRequestId, grant.GrantId);
 
     private static void AddCallerAudit(
         PersistedState state,
@@ -829,7 +1131,8 @@ public sealed partial class HomePermissionTrustService
         left.IncludesAllObjects == right.IncludesAllObjects && left.Objects.Count == right.Objects.Count &&
         left.Objects.All(right.Objects.Contains);
 
-    private sealed record SessionApproval(string CallerId, string SessionId, HomePermissionScope Scope);
+    private sealed record SessionApproval(HomePermissionCallerIdentity Caller, string SessionId, HomePermissionScope Scope,
+        string ConsentId);
 
     private sealed class PersistedState
     {

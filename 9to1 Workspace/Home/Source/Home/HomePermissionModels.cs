@@ -166,7 +166,9 @@ public sealed record HomePermissionGrant(
     int? RemainingActions,
     HomeTemporaryGrantFallback? TemporaryFallback,
     DateTimeOffset? LastUsedAt,
-    bool IsRevoked);
+    bool IsRevoked,
+    HomePermissionRisk? MaximumRisk = null,
+    string? OriginatingRequestId = null);
 
 public sealed record HomePermissionAuditEvent(
     string AuditId,
@@ -182,7 +184,9 @@ public sealed record HomePermissionAuditEvent(
     DateTimeOffset Timestamp,
     IReadOnlyList<HomeObjectReference> AffectedObjects,
     string? ResultCode,
-    string? ResultMessage);
+    string? ResultMessage,
+    string? RelatedRequestId = null,
+    string? RelatedGrantId = null);
 
 public sealed record HomePermissionAuthorization(
     HomePermissionRequestState State,

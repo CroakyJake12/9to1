@@ -30,10 +30,21 @@ public sealed class HomePermissionActivitySource(HomePermissionTrustService perm
             var snapshot = await permissions.GetSnapshotAsync(offset, 500, cancellationToken).ConfigureAwait(false);
             foreach (var entry in snapshot.RecentAuditEvents)
             {
-                if (entry.RequestId is not { } requestId || query.From is { } from && entry.Timestamp < from ||
+                if (query.From is { } from && entry.Timestamp < from ||
                     query.To is { } to && entry.Timestamp > to) continue;
+                var requestId = entry.RequestId ??
+                    (entry.Kind == HomePermissionAuditKind.TrustRevoked ? entry.RelatedRequestId : null);
+                if (requestId is null) continue;
                 var request = await permissions.ReadRequestObservationAsync(requestId, cancellationToken).ConfigureAwait(false);
-                if (request?.Impact.ResourceBinding?.OriginalActor != originalActor || entry.CallerId != request.Caller.CallerId)
+                if (request is null || request.Impact.ResourceBinding?.OriginalActor != originalActor)
+                    continue;
+                if (entry.RequestId is null)
+                {
+                    var grant = snapshot.Grants.SingleOrDefault(item => item.GrantId == entry.RelatedGrantId);
+                    if (!IsGrantRevocationBinding(entry, request, grant))
+                        continue;
+                }
+                else if (entry.CallerId != request.Caller.CallerId)
                     continue;
                 var severity = entry.RequestState is HomePermissionRequestState.Failed or HomePermissionRequestState.PartiallyCompleted
                     ? "error" : entry.RequestState is HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked ? "warning" : "info";
@@ -61,6 +72,47 @@ public sealed class HomePermissionActivitySource(HomePermissionTrustService perm
         if (activity.SourceApp != SourceId || activity.RequestId is not { } requestId) return false;
         var request = await permissions.ReadRequestObservationAsync(requestId, cancellationToken).ConfigureAwait(false);
         await RequireActorAsync(cancellationToken).ConfigureAwait(false);
-        return request?.Impact.ResourceBinding?.OriginalActor == originalActor && request.Caller.CallerId == activity.ActorIdentity;
+        if (request?.Impact.ResourceBinding?.OriginalActor != originalActor ||
+            request.Caller.CallerId != activity.ActorIdentity) return false;
+        if (activity.EventType != HomePermissionAuditKind.TrustRevoked.ToString()) return true;
+
+        var offset = 0;
+        do
+        {
+            var snapshot = await permissions.GetSnapshotAsync(offset, 500, cancellationToken).ConfigureAwait(false);
+            var entry = snapshot.RecentAuditEvents.SingleOrDefault(item => item.AuditId == activity.EventId);
+            if (entry is not null)
+            {
+                var grant = snapshot.Grants.SingleOrDefault(item => item.GrantId == entry.RelatedGrantId);
+                await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+                return IsGrantRevocationBinding(entry, request, grant) &&
+                    entry.RelatedRequestId == requestId && entry.CallerId == activity.ActorIdentity;
+            }
+            if (snapshot.ContinuationToken is null) return false;
+            if (!int.TryParse(snapshot.ContinuationToken, NumberStyles.None, CultureInfo.InvariantCulture, out var next) || next <= offset)
+                throw new HomeFeatureProviderException("ActivityPaginationInvalid", "Permission activity could not be authorized completely.");
+            offset = next;
+        } while (true);
     }
+
+    private static bool IsGrantRevocationBinding(HomePermissionAuditEvent entry, HomePermissionRequest request,
+        HomePermissionGrant? grant) =>
+        entry.Kind == HomePermissionAuditKind.TrustRevoked && entry.RequestId is null &&
+        !string.IsNullOrWhiteSpace(entry.RelatedRequestId) && !string.IsNullOrWhiteSpace(entry.RelatedGrantId) &&
+        grant is { IsRevoked: true } && grant.GrantId == entry.RelatedGrantId &&
+        grant.OriginatingRequestId == entry.RelatedRequestId && request.RequestId == entry.RelatedRequestId &&
+        request.AppliedGrantId == grant.GrantId && request.AppliedTrustLevel == grant.TrustLevel &&
+        SamePermissionCallerIdentity(request.Caller, grant.Caller) && entry.CallerId == grant.Caller.CallerId &&
+        entry.TrustLevel == grant.TrustLevel && entry.Scope is not null && ScopeEquals(entry.Scope, grant.Scope) &&
+        HomePermissionTrustService.IsNarrowerOrEqual(request.Scope, grant.Scope);
+
+    private static bool SamePermissionCallerIdentity(HomePermissionCallerIdentity left, HomePermissionCallerIdentity right) =>
+        StringComparer.Ordinal.Equals(left.CallerId, right.CallerId) &&
+        StringComparer.Ordinal.Equals(left.IdentityVersion, right.IdentityVersion) &&
+        StringComparer.Ordinal.Equals(left.Origin, right.Origin) && left.IsVerified == right.IsVerified;
+
+    private static bool ScopeEquals(HomePermissionScope left, HomePermissionScope right) =>
+        left.TargetAppId == right.TargetAppId && left.ActionName == right.ActionName &&
+        left.IncludesAllObjects == right.IncludesAllObjects && left.Objects.Count == right.Objects.Count &&
+        left.Objects.All(right.Objects.Contains);
 }
