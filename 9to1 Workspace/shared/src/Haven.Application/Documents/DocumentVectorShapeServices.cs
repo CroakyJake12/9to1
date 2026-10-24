@@ -24,6 +24,8 @@ public static class DocumentVectorShapeValidator
         if (shape.SchemaVersion <= 0 || shape.SchemaVersion > DocumentVectorShape.CurrentSchemaVersion)
             Error(issues, "shape.schema", "The vector shape schema version is not supported.");
         if (shape.Id == Guid.Empty) Error(issues, "shape.id", "The vector shape needs a stable identifier.");
+        if (!Enum.IsDefined(shape.SourceKind))
+            Error(issues, "shape.source", "The vector shape source kind is not supported.");
         if (shape.ViewBox is null || !FinitePositive(shape.ViewBox.Width) || !FinitePositive(shape.ViewBox.Height)
             || !double.IsFinite(shape.ViewBox.X) || !double.IsFinite(shape.ViewBox.Y))
             Error(issues, "shape.viewBox", "The vector shape view box must contain finite coordinates and positive dimensions.");
@@ -32,7 +34,10 @@ public static class DocumentVectorShapeValidator
         if (shape.Paths is null || shape.Paths.Count == 0)
             Error(issues, "shape.paths.empty", "An editable vector shape needs at least one path.");
         else if (shape.Paths.Count > MaximumPaths)
+        {
             Error(issues, "shape.paths.limit", $"A vector shape may contain at most {MaximumPaths} paths.");
+            return new DocumentVectorValidationResult(issues);
+        }
 
         var subpathCount = 0;
         var nodeCount = 0;
@@ -41,6 +46,7 @@ public static class DocumentVectorShapeValidator
         {
             if (path is null) { Error(issues, "path.null", "A vector path is missing."); continue; }
             if (path.Id == Guid.Empty || !pathIds.Add(path.Id)) Error(issues, "path.id", "Vector path identifiers must be non-empty and unique.");
+            if (!Enum.IsDefined(path.FillRule)) Error(issues, "path.fillRule", "The vector path fill rule is not supported.");
             if (!double.IsFinite(path.Opacity) || path.Opacity is < 0 or > 1) Error(issues, "path.opacity", "Path opacity must be between 0 and 1.");
             ValidatePaint(path, issues);
             if (path.Subpaths is null || path.Subpaths.Count == 0)
@@ -49,6 +55,11 @@ public static class DocumentVectorShapeValidator
                 continue;
             }
 
+            if (path.Subpaths.Count > MaximumSubpaths - subpathCount)
+            {
+                Error(issues, "shape.subpaths.limit", $"A vector shape may contain at most {MaximumSubpaths} subpaths.");
+                return new DocumentVectorValidationResult(issues);
+            }
             subpathCount += path.Subpaths.Count;
             var subpathIds = new HashSet<Guid>();
             foreach (var subpath in path.Subpaths)
@@ -58,7 +69,12 @@ public static class DocumentVectorShapeValidator
                 if (subpath.Nodes is null || subpath.Nodes.Count < 2)
                 {
                     if (requireEditableGeometry) Error(issues, "subpath.nodes", "An editable subpath needs at least two nodes.");
-                    continue;
+                    if (subpath.Nodes is null) continue;
+                }
+                if (subpath.Nodes.Count > MaximumNodes - nodeCount)
+                {
+                    Error(issues, "shape.nodes.limit", $"A vector shape may contain at most {MaximumNodes} nodes.");
+                    return new DocumentVectorValidationResult(issues);
                 }
                 nodeCount += subpath.Nodes.Count;
                 var nodeIds = new HashSet<Guid>();
@@ -67,6 +83,8 @@ public static class DocumentVectorShapeValidator
                     var node = subpath.Nodes[index];
                     if (node is null) { Error(issues, "node.null", "A vector node is missing."); continue; }
                     if (node.Id == Guid.Empty || !nodeIds.Add(node.Id)) Error(issues, "node.id", "Node identifiers must be non-empty and unique within a subpath.");
+                    if (!Enum.IsDefined(node.Kind)) Error(issues, "node.kind", "The vector node kind is not supported.");
+                    if (!Enum.IsDefined(node.IncomingSegment)) Error(issues, "node.segment", "The vector segment kind is not supported.");
                     if (!double.IsFinite(node.X) || !double.IsFinite(node.Y)) Error(issues, "node.point", "Vector node coordinates must be finite.");
                     if (index == 0) continue;
                     if (node.IncomingSegment == DocumentVectorSegmentKind.Quadratic && !Finite(node.Control1))
@@ -76,22 +94,31 @@ public static class DocumentVectorShapeValidator
                 }
             }
         }
-        if (subpathCount > MaximumSubpaths) Error(issues, "shape.subpaths.limit", $"A vector shape may contain at most {MaximumSubpaths} subpaths.");
-        if (nodeCount > MaximumNodes) Error(issues, "shape.nodes.limit", $"A vector shape may contain at most {MaximumNodes} nodes.");
         if (shape.ClippingPathId is { } clipping && !pathIds.Contains(clipping)) Error(issues, "shape.clip", "The clipping path must refer to a path in the same shape.");
+        var connectorIds = new HashSet<Guid>();
         foreach (var connector in shape.ConnectorPoints ?? [])
-            if (connector is null || !double.IsFinite(connector.X) || !double.IsFinite(connector.Y) || !double.IsFinite(connector.DirectionDegrees))
-                Error(issues, "shape.connector", "Connector points must contain finite coordinates and directions.");
+            if (connector is null || connector.Id == Guid.Empty || !connectorIds.Add(connector.Id) ||
+                !double.IsFinite(connector.X) || !double.IsFinite(connector.Y) || !double.IsFinite(connector.DirectionDegrees))
+                Error(issues, "shape.connector", "Connector points need unique stable identifiers and finite coordinates and directions.");
         return new DocumentVectorValidationResult(issues);
     }
 
     private static void ValidatePaint(DocumentVectorPath path, List<DocumentVectorValidationIssue> issues)
     {
         if (path.Fill is null) Error(issues, "path.fill", "Path fill settings are missing.");
-        else if (!double.IsFinite(path.Fill.Opacity) || path.Fill.Opacity is < 0 or > 1) Error(issues, "path.fill.opacity", "Fill opacity must be between 0 and 1.");
+        else
+        {
+            if (!Enum.IsDefined(path.Fill.Kind)) Error(issues, "path.fill.kind", "The vector fill kind is not supported.");
+            if (!double.IsFinite(path.Fill.Opacity) || path.Fill.Opacity is < 0 or > 1) Error(issues, "path.fill.opacity", "Fill opacity must be between 0 and 1.");
+        }
         if (path.Stroke is null) Error(issues, "path.stroke", "Path stroke settings are missing.");
-        else if (!double.IsFinite(path.Stroke.Width) || path.Stroke.Width < 0 || !double.IsFinite(path.Stroke.Opacity) || path.Stroke.Opacity is < 0 or > 1)
-            Error(issues, "path.stroke.values", "Stroke width and opacity must be finite and non-negative.");
+        else
+        {
+            if (!Enum.IsDefined(path.Stroke.Join) || !Enum.IsDefined(path.Stroke.Cap))
+                Error(issues, "path.stroke.style", "The vector stroke join or cap is not supported.");
+            if (!double.IsFinite(path.Stroke.Width) || path.Stroke.Width < 0 || !double.IsFinite(path.Stroke.Opacity) || path.Stroke.Opacity is < 0 or > 1)
+                Error(issues, "path.stroke.values", "Stroke width and opacity must be finite and non-negative.");
+        }
     }
 
     private static bool TransformIsFinite(DocumentVectorTransform value) =>
@@ -420,6 +447,7 @@ public sealed partial class DocumentVectorShapeEditor
 
     private void Edit(string name, DocumentOperationOrigin origin, Action<DocumentVectorShape> mutation)
     {
+        if (!Enum.IsDefined(origin)) throw new ArgumentOutOfRangeException(nameof(origin));
         _history.Apply(name, origin, shape => { mutation(shape); shape.Normalize(); var validation = DocumentVectorShapeValidator.Validate(shape); if (!validation.IsValid) throw new InvalidDataException("The vector edit would create invalid geometry."); });
     }
 

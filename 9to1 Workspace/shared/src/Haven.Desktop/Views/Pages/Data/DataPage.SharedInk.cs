@@ -89,6 +89,57 @@ public sealed partial class DataPage
         return new(context, sheet.Id, _sharedInkEditGeneration.ToString(CultureInfo.InvariantCulture) + ":" + workbook.RevisionId.ToString("D"), bundles);
     }
 
+    private bool CanStyleSelectedShape()
+    {
+        var selected = DrawingEditorForCurrent()?.SelectedDrawing;
+        return selected is not null && selected.Kind == DataDrawingKind.CustomShape && !selected.Locked &&
+            selected.VectorShape is { } shape && shape.Paths.Count > 0;
+    }
+
+    private void ApplySelectedShapeFillPreset()
+    {
+        // Reuse the built-in editable shape palette's fill rather than inventing a Data-only style.
+        var fill = DocumentShapePresets.Create("rect").Paths[0].Fill;
+        ApplySelectedShapeEdit(editor => editor.SetShapeFill(fill));
+    }
+
+    private void ApplySelectedShapeStrokePreset()
+    {
+        // The shape palette's built-in stroke stays the single source for this Data preset.
+        var stroke = DocumentShapePresets.Create("rect").Paths[0].Stroke;
+        ApplySelectedShapeEdit(editor => editor.SetShapeStroke(stroke));
+    }
+
+    private void ApplySelectedShapeStrokeWidth(string? text)
+    {
+        if (!TryParseStrokeWidth(text, out var width)) return;
+        ApplySelectedShapeEdit(editor => editor.SetShapeStrokeWidth(width));
+    }
+
+    private static bool TryParseStrokeWidth(string? text, out double width) =>
+        double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out width) &&
+        double.IsFinite(width) && width is >= 0 and <= 10000;
+
+    private void ApplySelectedShapeEdit(Action<DocumentVectorShapeEditor> edit)
+    {
+        var editor = DrawingEditorForCurrent();
+        var selected = editor?.SelectedDrawing;
+        var shape = selected?.VectorShape;
+        if (editor is null || selected is null || selected.Kind != DataDrawingKind.CustomShape || selected.Locked ||
+            shape is null || shape.Paths.Count == 0) return;
+
+        // Stage against an isolated copy first: a malformed imported shape must not create an
+        // empty workbook-history step or clear a valid redo branch. Identical styles are true no-ops.
+        var staged = new DocumentVectorShapeEditor(DocumentVectorShapes.Clone(shape));
+        edit(staged);
+        if (JsonElement.DeepEquals(JsonSerializer.SerializeToElement(shape),
+                JsonSerializer.SerializeToElement(staged.Shape))) return;
+
+        CaptureSpreadsheetUndo();
+        if (!editor.UpdateSelectedCustomShape(edit)) return;
+        MarkDirty(); RenderCurrent(); _bus.Fire("Data.Drawing.Changed");
+    }
+
     internal ValueTask<CanvasSharedInkCommitResult> CommitSharedInkStroke(CanvasSharedInkStrokeRequest request, CancellationToken token)
     {
         Dispatcher.UIThread.VerifyAccess(); token.ThrowIfCancellationRequested();
@@ -207,24 +258,57 @@ public sealed partial class DataPage
             control = owner._sharedInkCuiRoot; return control is not null;
         }
     }
-    private sealed class DataSharedInkBindings(DataPage owner) : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
+    private sealed class DataSharedInkBindings(DataPage owner) : ICuiBindingContext, ICuiWritableBindingContext,
+        ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
     {
+        private const int MaximumStrokeWidthTextLength = 32;
+        private string? _strokeWidthDraft;
         public event PropertyChangedEventHandler? PropertyChanged;
-        internal void Notify() => PropertyChanged?.Invoke(this, new(null));
+        internal void Notify()
+        {
+            _strokeWidthDraft = null;
+            PropertyChanged?.Invoke(this, new(null));
+        }
+        private void NotifyStrokeWidthDraft()
+        {
+            PropertyChanged?.Invoke(this, new(nameof(StrokeWidthDraft)));
+            PropertyChanged?.Invoke(this, new("CanApplyStrokeWidth"));
+        }
         public bool TryGetValue(string path, out object? value)
         {
             value = path switch
             {
                 "CanDraw" => owner._sharedInkInput?.CanDraw == true,
                 "CanDelete" => IsActionAvailable("data.ink.delete") == true,
+                "CanStyleShape" => IsActionAvailable("data.ink.shape.fillPreset") == true,
+                "CanStyleStroke" => IsActionAvailable("data.ink.shape.strokePreset") == true,
+                "CanApplyStrokeWidth" => IsActionAvailable("data.ink.shape.strokeWidth.apply") == true,
+                "StrokeWidthDraft" => StrokeWidthDraft,
+                "StrokeWidthSummary" => owner.SelectedShapeStrokeWidthSummary(),
                 "CanUndo" => IsActionAvailable("data.ink.undo") == true,
                 "CanRedo" => IsActionAvailable("data.ink.redo") == true,
                 "Status" => owner._sharedInkInput?.Status ?? "Drawing is unavailable because the Home shared ink owner is not connected.",
                 "DrawingContext" => owner.CurrentSheet is { } sheet ? sheet.Name + " · " + (owner._sharedInkInput?.EraseMode == true ? "Eraser · whole strokes" : owner._sharedInkInput?.Style.Kind == CanvasRnoteInkKind.Marker ? "Highlighter" : "Pen") : "Open a workbook to draw.",
                 _ => null
             };
-            return path is "CanDraw" or "CanDelete" or "CanUndo" or "CanRedo" or "Status" or "DrawingContext";
+            return path is "CanDraw" or "CanDelete" or "CanStyleShape" or "CanStyleStroke" or "CanApplyStrokeWidth" or
+                "StrokeWidthDraft" or "StrokeWidthSummary" or "CanUndo" or "CanRedo" or "Status" or "DrawingContext";
         }
+        public bool TrySetValue(string path, object? value)
+        {
+            if (path != "StrokeWidthDraft")
+                return false;
+            if (value is not string text || text.Length > MaximumStrokeWidthTextLength)
+            {
+                _strokeWidthDraft = null;
+                NotifyStrokeWidthDraft();
+                return false;
+            }
+            _strokeWidthDraft = text;
+            NotifyStrokeWidthDraft();
+            return true;
+        }
+        private string StrokeWidthDraft => _strokeWidthDraft ?? string.Empty;
         public bool? IsActionAvailable(string command)
         {
             var alive = !owner._disposed && !owner._busy && owner._saveRunning == 0 && owner.IsEnabled && owner.Workbook is not null;
@@ -232,6 +316,9 @@ public sealed partial class DataPage
             {
                 "data.ink.pen" or "data.ink.marker" or "data.ink.erase" => owner._sharedInkInput?.CanDraw == true,
                 "data.ink.delete" => owner.DrawingEditorForCurrent()?.SelectedDrawing is { Kind: DataDrawingKind.SharedInk, Locked: false },
+                "data.ink.shape.fillPreset" => owner.CanStyleSelectedShape(),
+                "data.ink.shape.strokePreset" => owner.CanStyleSelectedShape(),
+                "data.ink.shape.strokeWidth.apply" => owner.CanStyleSelectedShape() && DataPage.TryParseStrokeWidth(_strokeWidthDraft, out _),
                 "data.ink.undo" => owner._spreadsheetUndo.Count > 0,
                 "data.ink.redo" => owner._spreadsheetRedo.Count > 0,
                 "data.ink.refresh" => true,
@@ -249,11 +336,27 @@ public sealed partial class DataPage
                 case "data.ink.marker": owner._sharedInkInput!.EraseMode = false; owner._sharedInkInput.Style = new(CanvasRnoteInkKind.Marker, "#FFFFFF00", 12, .4); break;
                 case "data.ink.erase": owner._sharedInkInput!.EraseMode = true; break;
                 case "data.ink.delete": owner.OnDeleteDrawingRequested(this, EventArgs.Empty); break;
+                case "data.ink.shape.fillPreset": owner.ApplySelectedShapeFillPreset(); break;
+                case "data.ink.shape.strokePreset": owner.ApplySelectedShapeStrokePreset(); break;
+                case "data.ink.shape.strokeWidth.apply": owner.ApplySelectedShapeStrokeWidth(_strokeWidthDraft); break;
                 case "data.ink.undo": owner.UndoSpreadsheetEdit(); break;
                 case "data.ink.redo": owner.RedoSpreadsheetEdit(); break;
                 case "data.ink.refresh": owner._sharedInkInput?.Refresh(retryFailedRender: true); owner._sharedInkBindings?.Notify(); break;
             }
             Notify(); return ValueTask.CompletedTask;
         }
+    }
+
+    private string SelectedShapeStrokeWidthSummary()
+    {
+        var selected = DrawingEditorForCurrent()?.SelectedDrawing;
+        if (selected is null || selected.Kind != DataDrawingKind.CustomShape || selected.Locked)
+            return "Select an unlocked custom shape to inspect stroke width.";
+        var shape = selected.VectorShape;
+        if (shape is null || shape.Paths.Count == 0) return "Select an unlocked custom shape to inspect stroke width.";
+        var widths = shape.Paths.Select(path => path.Stroke.Width).Distinct().ToArray();
+        return widths.Length == 1
+            ? "Stroke width · " + widths[0].ToString("G", CultureInfo.InvariantCulture)
+            : "Mixed stroke widths · " + widths.Length.ToString(CultureInfo.InvariantCulture) + " values";
     }
 }

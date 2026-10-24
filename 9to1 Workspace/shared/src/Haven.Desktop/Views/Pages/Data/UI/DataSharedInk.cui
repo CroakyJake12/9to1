@@ -7,6 +7,11 @@
         <Button content="Highlighter" action="data.ink.marker" Interactive="{Binding CanDraw}" />
         <Button id="data-ink-erase" content="Eraser" action="data.ink.erase" Interactive="{Binding CanDraw}" accessible-name="Erase whole strokes" />
         <Button content="Delete selected stroke" action="data.ink.delete" Interactive="{Binding CanDelete}" />
+        <Button id="data-ink-shape-fill" content="Apply shape fill preset" action="data.ink.shape.fillPreset" Interactive="{Binding CanStyleShape}" accessible-name="Apply the built-in blue fill to the selected custom shape" />
+        <Button id="data-ink-shape-stroke" content="Apply shape stroke preset" action="data.ink.shape.strokePreset" Interactive="{Binding CanStyleStroke}" accessible-name="Apply the built-in blue stroke to the selected custom shape" />
+        <Input id="data-ink-shape-stroke-width" Type="Text" Value="{Binding StrokeWidthDraft, Mode=TwoWay}" PlaceholderText="Width" MinWidth="96" Interactive="{Binding CanStyleStroke}" AccessibleName="New stroke width in shape units" />
+        <Text text="{Binding StrokeWidthSummary}" accessible-name="Current stroke width of the selected custom shape" />
+        <Button id="data-ink-shape-stroke-width-apply" content="Apply width" action="data.ink.shape.strokeWidth.apply" Interactive="{Binding CanApplyStrokeWidth}" accessible-name="Apply stroke width to the selected custom shape" />
         <Button content="Undo" action="data.ink.undo" Interactive="{Binding CanUndo}" />
         <Button content="Redo" action="data.ink.redo" Interactive="{Binding CanRedo}" />
         <Button content="Retry drawing" action="data.ink.refresh" />
