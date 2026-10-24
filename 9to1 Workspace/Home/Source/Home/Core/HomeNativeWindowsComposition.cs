@@ -58,6 +58,7 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
     private Task? _originalRuntimeClose;
 
     public FileHomeCoreStateStore StateStore { get; }
+    public HomeNativePreferenceBinding NativePreferences { get; }
     public HomeLocalProfileIdentity Profiles { get; }
     public HomePermissionTrustService Permissions { get; }
     public ResourceAuthorizationService Resources { get; }
@@ -84,11 +85,17 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
         Func<HomeNativeWindowsIdentityComponents, HomeNativeWindowsStoreRegistrations>? configureOriginalStores = null,
         Func<HomeNativeWindowsOwnershipComponents, HomeNativeWindowsResolverRegistrations>? configureOriginalResolvers = null,
         string? linuxDulcheExecutableSha256 = null,
-        HomeDulcheCapabilityObservation? dulcheCapabilityObservation = null)
+        HomeDulcheCapabilityObservation? dulcheCapabilityObservation = null,
+        HomeNativePreferenceBinding? configuredNativePreferences = null)
     {
         StateStore = originalStateStore ?? throw new ArgumentNullException(nameof(originalStateStore));
         ArgumentNullException.ThrowIfNull(originalPrincipalSource);
         _paths = CapturedPaths.Capture(trustedHomePaths);
+        var preferences = configuredNativePreferences ?? new HomeNativePreferenceBinding(
+            Path.Combine(_paths.DataDirectory, "preferences.json"), true);
+        if (!Path.IsPathFullyQualified(preferences.Path))
+            throw new ArgumentException("The original native preference path must be captured before Home opens.");
+        NativePreferences = preferences with { Path = Path.GetFullPath(preferences.Path) };
         _endpoint = (configuredEndpoint ?? throw new ArgumentNullException(nameof(configuredEndpoint))).Capture();
         var evidence = Capture(originalStoreEvidence);
         var resolvers = Capture(originalResourceResolvers);
@@ -183,6 +190,7 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
             [typeof(IHomeCoreApi)] = Api,
             [typeof(HomeDulcheRuntimeService)] = dulcheRuntime,
             [typeof(IHomeDulcheRuntimeObservationSource)] = dulcheSource,
+            [typeof(HomeNativePreferenceBinding)] = NativePreferences,
             [typeof(IAppPaths)] = _paths
         };
         AddRegistrations(components, stageServices);
@@ -209,9 +217,15 @@ public sealed partial class HomeNativeWindowsComposition : IAsyncDisposable
 
     /// <summary>Authoring candidate routing only. Actual OS-local state and principal are used;
     /// protected installed-peer admission remains unavailable until the host supplies its verifier.</summary>
-    public static HomeNativeWindowsComposition CreateCandidate() =>
-        new(FileHomeCoreStateStore.CreateDefault(), new OperatingSystemPrincipalSource(),
-            CapturedPaths.CreateCandidate(), new("9to1.home.candidate.v1"));
+    public static HomeNativeWindowsComposition CreateCandidate()
+    {
+        var paths = CapturedPaths.CreateCandidate();
+        // Keep candidate artifact/database custody intact. Appearance continues to use the
+        // SAME native file the existing standalone startup reader already observes.
+        return new(FileHomeCoreStateStore.CreateDefault(), new OperatingSystemPrincipalSource(),
+            paths, new("9to1.home.candidate.v1"),
+            configuredNativePreferences: HomeNativePreferenceFile.CaptureExistingReaderBinding(paths.DataDirectory));
+    }
 
     public Task StartOriginalAsync()
     {

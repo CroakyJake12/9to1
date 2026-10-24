@@ -284,7 +284,7 @@ public sealed partial class FilesNativeBrowserSurface : UserControl, IDisposable
             return new(TrackOriginalAsync(() => InvokeFolderTabOriginalAsync(command, parameter, cancellationToken)));
         if (IsSharingCommand(command) || command == "9to1.Files.Apply" && IsPendingShareReview)
         {
-            if (command != "9to1.Files.Share.Revoke" && parameter is not null)
+            if (command is not ("9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole") && parameter is not null)
                 throw new ArgumentException("Access commands retain the original canonical selection.");
             return new(TrackOriginalAsync(() => InvokeSharingOriginalAsync(command, parameter, cancellationToken)));
         }

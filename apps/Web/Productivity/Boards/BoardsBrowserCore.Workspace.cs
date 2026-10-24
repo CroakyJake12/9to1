@@ -10,7 +10,9 @@ namespace NineToOne.Web.Productivity.Boards;
 public sealed partial class BoardsBrowserCore
 {
     private bool _showPicker, _showTrash, _showDetails;
-    private bool _compact, _drawerOpen;
+    private bool _compact, _drawerOpen, _pageInkCanvasActive;
+    internal void ConfigurePageInkCanvas(bool active)
+    { if (_pageInkCanvasActive == active) return; _pageInkCanvasActive = active; Notify(); }
     private string _boardSearch = string.Empty;
     public Guid? ActivePageId { get; private set; }
     private IEnumerable<NotesPage> VisiblePages => _document?.Sections.SelectMany(section =>
@@ -38,6 +40,8 @@ public sealed partial class BoardsBrowserCore
 
     private bool TryGetWorkspaceValue(string path, out object? value)
     {
+        var mountedPageLayer = (path is "PageInkCanvas" or "HasUnsupportedPageContent") && SharedInkAvailable
+            ? CapturePageSharedDrawing()?.Content.Layer : null;
         value = path switch
         {
             "HasBoard" => _document is not null,
@@ -71,13 +75,14 @@ public sealed partial class BoardsBrowserCore
             "PagePosition" => ActivePage is null ? string.Empty : $"{VisiblePages.Count()} pages · {ActivePage.Blocks.Count} blocks",
             "SelectionLabel" => _richEditor?.SelectedBlock is { } block ? block.Kind.ToString() : "Page",
             "IsChecklistSelected" => _richEditor?.SelectedBlock?.List is { Kind: NotesListKind.Checklist },
+            "PageInkCanvas" => SharedInkAvailable && (_pageInkCanvasActive || mountedPageLayer is not null),
             "SharedInkAvailable" => SharedInkAvailable,
             "SharedInkUnavailable" => !SharedInkAvailable,
             "HasSharedDrawings" => ActivePage?.Blocks.Any(block => block.SharedProductivityBundles is not null) == true,
             "HasSelectedSharedDrawing" => CaptureSharedDrawing() is not null,
             "SharedDrawingRows" => ActivePage?.Blocks.Where(block => block.SharedProductivityBundles is not null)
                 .Select((block, index) => new BoardsDrawingRow(block.Id, $"Drawing {index + 1}")).ToArray() ?? [],
-            "HasUnsupportedPageContent" => ActivePage is { } current && (current.CanvasObjects.Count > 0 || current.Blocks.Any(block =>
+            "HasUnsupportedPageContent" => ActivePage is { } current && (current.CanvasObjects.Any(item => !SharedInkAvailable || !ReferenceEquals(item, mountedPageLayer)) || current.Blocks.Any(block =>
                 block.Kind == NotesBlockKind.HtmlWidget || block.Kind == NotesBlockKind.Canvas && block.SharedProductivityBundles is null)),
             "ChecklistItems" => _richEditor?.SelectedBlock is { List: { } list } checklist && ActivePageId is { } checklistPage
                 ? list.Items.Select(item => new BoardsChecklistRow(this, checklistPage, checklist.Id, item.Id, item.Text, item.Checked)).ToArray() : [],
@@ -87,7 +92,7 @@ public sealed partial class BoardsBrowserCore
             "DetailsLabel" => _showDetails ? "Hide details" : "Storage and capabilities",
             "StorageLabel" => "Saved in this browser",
             "StorageDetail" => "Boards on this device use local storage. Account sign-in does not sync them. Keep browser data to retain these copies.",
-            "CapabilitiesDetail" => "Native text, headings, tables, checklists and page recovery use the shared editor. Compatible native hosts also support shared inline drawing. Page-wide ink layers, nested pages, shared Data views and Chat pages are not connected here yet. Existing unsupported content is preserved.",
+            "CapabilitiesDetail" => "Native text, headings, tables, checklists and page recovery use the shared editor. Compatible native hosts also support shared inline and page drawing with whole-stroke erasing. Split erasing, nested pages, shared Data views and Chat pages are not connected here yet. Existing unsupported content is preserved.",
             "CanRestorePage" => CanChangeBoard,
             "IsViewMode" => ActivePageId is { } viewId && _document is not null && (IsReadOnly || _boards.GetEditMode(_document, viewId) == BoardsPageEditMode.View),
             _ => null
@@ -96,7 +101,7 @@ public sealed partial class BoardsBrowserCore
             or "BoardSearch" or "ShowBoardPicker" or "ShowPageTree" or "ShowTrash" or "ShowDetails" or "CanChangeBoard"
             or "CanEditPage" or "IsEditMode" or "LayoutUnlocked" or "EditModeLabel" or "PageRows" or "DeletedPages"
             or "HasDeletedPages" or "PagePosition" or "SelectionLabel" or "IsChecklistSelected" or "HasUnsupportedPageContent" or "ChecklistItems" or "CanMovePageUp" or "CanMovePageDown" or "CanDeletePage"
-            or "SharedInkAvailable" or "SharedInkUnavailable" or "HasSharedDrawings" or "HasSelectedSharedDrawing" or "SharedDrawingRows"
+            or "PageInkCanvas" or "SharedInkAvailable" or "SharedInkUnavailable" or "HasSharedDrawings" or "HasSelectedSharedDrawing" or "SharedDrawingRows"
             or "DetailsLabel" or "StorageLabel" or "StorageDetail" or "CapabilitiesDetail" or "CanRestorePage" or "IsViewMode";
     }
 
@@ -231,6 +236,52 @@ public sealed partial class BoardsBrowserCore
             default: return false;
         }
     }
+    internal string? PageInkDiagnostic { get; private set; }
+    public BoardsPageSharedInkSnapshot? CapturePageSharedDrawing()
+    {
+        PageInkDiagnostic = null;
+        if (_disposed || _presentationPending || IsHistoryPreview || _pending is not null || _richEditor is null || ActivePageId is not { } page) return null;
+        try
+        {
+            var content = _richEditor.CapturePageSharedInk(page);
+            return content is null ? null : new(content, _generation, _sharedInkBindingEpoch, _sharedInkSelectionEpoch);
+        }
+        catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or NotSupportedException)
+        {
+            PageInkDiagnostic = error.Message;
+            return null; // Preserve incompatible original data and keep unrelated page editing available.
+        }
+    }
+    private bool IsPageDrawingCurrent(BoardsPageSharedInkSnapshot expected) =>
+        RichEditingPermitted && _sharedInkAvailable && _richEditor is { } editor && ActivePageId == expected.Content.Page.Id &&
+        _generation == expected.Generation && _sharedInkBindingEpoch == expected.BindingEpoch &&
+        _sharedInkSelectionEpoch == expected.SelectionEpoch && editor.IsPageSharedInkCurrent(expected.Content);
+
+    public Task<HomeCoreOperationResult<bool>> ReplacePageSharedDrawingAsync(BoardsPageSharedInkSnapshot expected,
+        IReadOnlyList<System.Text.Json.JsonElement> proposed,
+        Func<IReadOnlyList<System.Text.Json.JsonElement>, IReadOnlyList<System.Text.Json.JsonElement>> captureCanonical,
+        CancellationToken token = default, double? width = null, double? height = null) => Operate(async ct =>
+    {
+        ArgumentNullException.ThrowIfNull(expected); ArgumentNullException.ThrowIfNull(captureCanonical);
+        ct.ThrowIfCancellationRequested();
+        if (!IsPageDrawingCurrent(expected)) return Failure<bool>("StaleDrawing", "The page, drawing or authoring context changed.");
+        IReadOnlyList<System.Text.Json.JsonElement> Capture(IReadOnlyList<System.Text.Json.JsonElement> source)
+        {
+            var captured = captureCanonical(source); ct.ThrowIfCancellationRequested();
+            if (!IsPageDrawingCurrent(expected)) throw new SharedDrawingStaleException();
+            return captured;
+        }
+        try
+        {
+            if (!_richEditor!.ReplacePageSharedInk(expected.Content, proposed, Capture, width, height))
+                return Failure<bool>("StaleDrawing", "The original page drawing changed before insertion.");
+        }
+        catch (SharedDrawingStaleException) { return Failure<bool>("StaleDrawing", "The page changed during drawing validation."); }
+        catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or NotSupportedException)
+        { return Failure<bool>("SharedEngineIncompatible", error.Message); }
+        return await SaveCore(ct); // Failed/unknown acknowledgement retains the same undoable draft and CAS fences.
+    }, token);
+
 }
 
 public sealed record BoardsChecklistRow(BoardsBrowserCore Owner, Guid PageId, Guid BlockId, Guid Id, string Text, bool Checked) : ICuiWritableBindingContext
@@ -243,6 +294,7 @@ public sealed record BoardsChecklistRow(BoardsBrowserCore Owner, Guid PageId, Gu
         "Checked" when value is bool check => Owner.UpdateChecklist(PageId, BlockId, Id, check: check),
         _ => false
     };
+
 }
 
 public sealed record BoardsPageRow(Guid Id, string Title, string Section, bool Selected) : ICuiBindingContext
@@ -260,3 +312,6 @@ public sealed record BoardsDrawingRow(Guid Id, string Label) : ICuiBindingContex
     public bool TryGetValue(string path, out object? value)
     { value = path switch { "Id" => Id, "Label" => Label, _ => null }; return path is "Id" or "Label"; }
 }
+
+public sealed record BoardsPageSharedInkSnapshot(WritePageSharedInkSnapshot Content, long Generation,
+    long BindingEpoch, long SelectionEpoch);

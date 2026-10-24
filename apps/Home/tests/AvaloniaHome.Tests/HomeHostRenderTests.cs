@@ -83,7 +83,12 @@ public sealed class HomeHostRenderTests
                 Assert.Equal("True", accessibility.States["Enabled"]);
                 var source = Assert.IsType<CuiAuthoredControlTrace>(inspection.GetSource(inspectedSettings.ElementId));
                 Assert.EndsWith("Home.cui", source.Source.FilePath, StringComparison.OrdinalIgnoreCase);
-                Assert.Equal(19, source.Source.Span.StartLine);
+                var authoredSettings = Assert.Single(
+                    System.Xml.Linq.XDocument.Load(path!, System.Xml.Linq.LoadOptions.SetLineInfo)
+                        .Descendants().Where(element => (string?)element.Attribute("id") == "nav-settings"));
+                var authoredLine = Assert.IsAssignableFrom<System.Xml.IXmlLineInfo>(authoredSettings);
+                Assert.True(authoredLine.HasLineInfo());
+                Assert.Equal(authoredLine.LineNumber, source.Source.Span.StartLine);
                 Assert.Equal("Button", source.ComponentType);
                 Assert.Equal("nav-settings", source.AuthoredId);
                 var action = Assert.Single(inspection.GetActions(inspectedSettings.ElementId));

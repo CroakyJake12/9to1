@@ -461,3 +461,40 @@ The helper re-reads relevant current ledger pins before returning and checks onl
 Use `python3 -B eng/development/native_source_identity.py --repo /actual/existing/repository --revision EXACT_COMMIT --out /fresh/private/identity.json` against an actual immutable committed input. It reads committed objects, preserves the original minimum base and prior pins, includes changed regular inputs, records gitlinks/deletions, and excludes `.github` from the product diff to avoid circular identity. Review and compose the resulting metadata through the existing Root workflow; never replace it from a dirty checkout or treat source hashes as build/native acceptance. The output path must be fresh and outside Git/worktrees. Run `python3 -B -m unittest discover -s eng/development -p test_native_source_identity.py` for its real tiny-Git controls. Historical acceptance stays provenance; the new candidate must retain NOT RUN until its own mandatory gates pass.
 
 After a Root composition has successfully created its commit/ref and persisted `COMPOSITION.json`, prepare its explicitly closed alternative index with `eng/development/closed_root_index.py --closed` and the exact repository, index SHA, committed revision/tree, fresh archive and receipt paths. The tool is bounded and prepare-only; it never unlinks, grants execution or updates the ledger. Root must adopt the verified archive/receipt at the current generation, recheck exact closed-index custody, and only then explicitly reclaim that raw cache. Keep the full binary index recoverable, including stat/cache bytes; a reconstructed tree is not a byte-identical backup. Never run cleanup in error/finally paths or target a repository/worktree index. Source/native acceptance remains separate.
+
+## Python maintenance tools
+
+Generate native-input metadata from a real immutable commit, never a dirty checkout or export:
+
+```sh
+python3 -B eng/development/native_source_identity.py --repo /actual/existing/repository --revision EXACT_COMMIT --out /fresh/private/identity.json
+```
+
+The generator preserves the original minimum `source_commit`, all prior pins and historical acceptance, includes changed regular inputs and records gitlinks/deletions. Missing/nonregular prior pins or a base that is not an ancestor refuse generation. The product diff excludes `.github` to avoid circular metadata hashes. Root reviews and composes the output through the existing workflow after the real input commit exists. Keep output fresh and outside repositories/worktrees; never narrow the pin list to bypass missing inputs. Regenerated metadata grants no current native/package/release acceptance.
+
+Only after a successful Root composition commit/ref and persisted `COMPOSITION.json`, prepare an explicitly closed alternative-index backup:
+
+```sh
+python3 -B eng/development/closed_root_index.py --closed \
+  --repo /actual/existing/repository --index /private/9to1-root-composeNN.index \
+  --expected-sha256 EXACT_INDEX_SHA256 --revision EXACT_COMMIT --tree EXACT_TREE \
+  --archive /fresh/private/closed.index.gz --receipt /fresh/private/closed-index.json
+```
+
+The bounded prepare-only tool preserves the raw index, refs, worktrees and ledger. Root separately reviews/adopts the exact archive and receipt, rechecks closed-index custody, then explicitly reclaims the duplicate. Never target an active/repository/worktree index or put cleanup in error/finally paths. `read-tree` cannot reproduce the original binary stat/cache bytes.
+
+The llama.cpp benchmark requires a completed choice and terminal `[DONE]`; incomplete/error streams refuse a successful measurement. `requestCompletionTokensPerSecond` measures the whole request interval. The legacy `completionTokensPerSecond` keeps its labelled post-first-visible-content interval; neither is native decode speed. Missing usage remains null.
+
+Run the focused suites against the intended candidate and its existing `workflow.py`:
+
+```sh
+python3 -B -m unittest discover -s eng/development -p test_native_source_identity.py -v
+python3 -B -m unittest discover -s eng/development -p test_closed_root_index.py -v
+python3 -B -m unittest discover -s '9to1 Workspace/Home/Source/Dulche/llamacpp/tests' -p test_benchmark.py -v
+```
+
+These disposable Git-fixture and mocked stream controls do not contact a model/socket or establish SDK, hardware, native, app or release acceptance. Keep existing runtime/model admission, ownership and quality gates.
+
+The existing development-infrastructure CI workflow registers these three suites, requires their current 17/36/22 tests with zero skips, and retains logs, receipts and exact inputs even on failure. Its pull-request and push path filters include the benchmark and its test module. This registration is not evidence that a particular CI run passed.
+
+Historical evidence assets must point to immutable revision-bound snapshots, never a mutable source-export leaf. Before the next composition changes a pinned historical file, retain its exact committed bytes at an exclusive private recovery path, record its revision/bytes/SHA/mode, and atomically update the existing ledger asset/relocation. Keep the current source separate; changing a current file must not invalidate earlier evidence.

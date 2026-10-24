@@ -3,6 +3,7 @@ using Avalonia.Automation;
 using Avalonia.Threading;
 using CakeOS.Cui;
 using Haven.Application;
+using Haven.Core;
 using HavenOS.Apps.Canvas;
 using HavenOS.Home.Core;
 using NineToOne.Web.Productivity.Boards;
@@ -15,7 +16,10 @@ namespace Haven.Desktop.Services;
 internal sealed partial class BoardsBrowseAppContentSession
 {
     private HomeProductivityEngine? _sharedInkEngine;
-    private CanvasSharedInkInput? _sharedInkInput;
+    private CanvasSharedInkInput? _sharedInkInput, _pageInkInput;
+    private bool _pageInkMode;
+    private double _pageInkWidth = 1200, _pageInkHeight = 900;
+    internal CanvasSharedInkInput? OriginalPageInkInput => _pageInkInput;
     private bool _sharedInkInitialized, _refreshingSharedInk;
     private string _sharedInkStatus = "Shared drawing is unavailable in this host.";
     private CanvasRnoteInkStyle _sharedInkStyle = CanvasRnoteInkStyle.Default;
@@ -34,6 +38,13 @@ internal sealed partial class BoardsBrowseAppContentSession
         AutomationProperties.SetName(_sharedInkInput, "Shared drawing. Pen, mouse or touch. Use Undo to remove a stroke.");
         _sharedInkInput.Changed += OnSharedInkChanged;
         _presentation.SharedInkControl.Children.Add(_sharedInkInput);
+        // Specialized NotebookSurface composition only: the SAME retained editor
+        // supplies page origin. CUI owns all surrounding app/tool presentation.
+        _pageInkInput = new(engine, CaptureNativePageInkOwner, QueuePageInkCommit, _token)
+            { DocumentCoordinates = true, EraserEnabled = true, IsHitTestVisible = false };
+        AutomationProperties.SetName(_pageInkInput, "Page drawing. Choose Page pen or Page eraser; Text returns to ordinary editing.");
+        _pageInkInput.Changed += OnSharedInkChanged;
+        _presentation.Control.Children.Add(_pageInkInput);
         _core.ConfigureSharedInk(true);
     }
 
@@ -75,8 +86,8 @@ internal sealed partial class BoardsBrowseAppContentSession
     private void OnSharedInkChanged(object? sender, EventArgs args) =>
         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
         {
-            if (ReferenceEquals(sender, _sharedInkInput))
-            { _sharedInkStatus = _sharedInkInput!.Status; _bindings.DrawingChanged(); }
+            if (sender is CanvasSharedInkInput input && (ReferenceEquals(input, _sharedInkInput) || ReferenceEquals(input, _pageInkInput)))
+            { _sharedInkStatus = input.Status; _bindings.DrawingChanged(); }
             return true;
         });
 
@@ -91,26 +102,47 @@ internal sealed partial class BoardsBrowseAppContentSession
             if (_sharedInkInput.Style != _sharedInkStyle) _sharedInkInput.Style = _sharedInkStyle;
             _sharedInkInput.Refresh(retry);
             _sharedInkStatus = _sharedInkInput.Status;
+            if (_pageInkInput is { } pageInput)
+            {
+                pageInput.IsEnabled = CanEditNativeSharedInk;
+                pageInput.IsHitTestVisible = _pageInkMode && CanEditNativeSharedInk;
+                if (pageInput.Style != _sharedInkStyle) pageInput.Style = _sharedInkStyle;
+                pageInput.EraserWidth = Math.Clamp(_sharedInkStyle.BaseWidth * 4, 1, 500);
+                if (pageInput.Refresh(retry) && _core is { } pageCore && pageCore.TryGetValue("PageInkCanvas", out var canvasActive) && canvasActive is true)
+                { pageInput.MinWidth = _pageInkWidth; pageInput.MinHeight = _pageInkHeight; }
+                else { pageInput.MinWidth = 0; pageInput.MinHeight = 0; }
+                pageInput.IsHitTestVisible = _pageInkMode && CanEditNativeSharedInk && pageInput.CanDraw;
+                _sharedInkStatus = _core?.PageInkDiagnostic ?? ((_pageInkMode ? "Page drawing · " : "Text editing · ") + pageInput.Status);
+            }
         }
         finally { _refreshingSharedInk = false; }
     }
 
     private static bool IsSharedInkCommand(string command) => command.StartsWith("boards.ink.", StringComparison.Ordinal);
-    private bool IsSharedInkActionAvailable(string command) => _sharedInkInput is not null &&
-        _core?.CaptureSharedDrawing() is not null && (command == "boards.ink.refresh" ||
+    private bool IsSharedInkActionAvailable(string command) =>
+        command == "boards.ink.page.text" ? _pageInkInput is not null && _core?.AllowRetainedSelection == true :
+        command is "boards.ink.page.pen" or "boards.ink.page.marker" or "boards.ink.page.erase" or "boards.ink.page.thin" or "boards.ink.page.thick"
+            ? _pageInkInput is not null && _core?.CanEditSharedDrawing == true && _core.CapturePageSharedDrawing() is not null :
+        _sharedInkInput is not null && _core?.CaptureSharedDrawing() is not null && (command == "boards.ink.refresh" ||
         _core.CanEditSharedDrawing && command is "boards.ink.pen" or "boards.ink.marker" or
             "boards.ink.black" or "boards.ink.blue" or "boards.ink.thin" or "boards.ink.thick");
 
     private CuiCommandOutcome ExecuteSharedInkCommand(string command)
     {
+        if (command is "boards.ink.page.pen" or "boards.ink.page.marker" or "boards.ink.page.erase" or "boards.ink.page.text")
+        {
+            _pageInkMode = command != "boards.ink.page.text";
+            _core?.ConfigurePageInkCanvas(_pageInkMode);
+            if (_pageInkInput is not null) _pageInkInput.EraseMode = command == "boards.ink.page.erase";
+        }
         _sharedInkStyle = command switch
         {
-            "boards.ink.pen" => _sharedInkStyle with { Kind = CanvasRnoteInkKind.Solid, Opacity = 1 },
-            "boards.ink.marker" => _sharedInkStyle with { Kind = CanvasRnoteInkKind.Marker, Opacity = .45 },
+            "boards.ink.pen" or "boards.ink.page.pen" => _sharedInkStyle with { Kind = CanvasRnoteInkKind.Solid, Opacity = 1 },
+            "boards.ink.marker" or "boards.ink.page.marker" => _sharedInkStyle with { Kind = CanvasRnoteInkKind.Marker, Opacity = .45 },
             "boards.ink.black" => _sharedInkStyle with { Color = "#FF000000" },
             "boards.ink.blue" => _sharedInkStyle with { Color = "#FF246BCE" },
-            "boards.ink.thin" => _sharedInkStyle with { BaseWidth = 1 },
-            "boards.ink.thick" => _sharedInkStyle with { BaseWidth = 6 },
+            "boards.ink.thin" or "boards.ink.page.thin" => _sharedInkStyle with { BaseWidth = 1 },
+            "boards.ink.thick" or "boards.ink.page.thick" => _sharedInkStyle with { BaseWidth = 6 },
             _ => _sharedInkStyle
         };
         RefreshSharedInk(command == "boards.ink.refresh"); _bindings.DrawingChanged();
@@ -155,6 +187,7 @@ internal sealed partial class BoardsBrowseAppContentSession
                 if (incoming.Count != 1) throw new InvalidDataException("One canonical stroke is required.");
                 var all = expected.Content.Document.Sections.SelectMany(section => section.Pages).SelectMany(page => page.Blocks)
                     .Where(block => block.SharedProductivityBundles is not null).SelectMany(block => block.SharedProductivityBundles!)
+                    .Concat(NotesSharedInkLayer.ReadAll(expected.Content.Document).SelectMany(layer => layer.Bundles))
                     .SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).Concat(incoming).ToArray();
                 if (all.Select(value => value.ObjectId).Distinct().Count() != all.Length)
                     throw new InvalidDataException("This stroke identity already exists in the original document.");
@@ -184,13 +217,108 @@ internal sealed partial class BoardsBrowseAppContentSession
         }
     }
 
-    private Task[] CaptureSharedInkSubmissions() => _sharedInkInput?.OriginalSubmissions.ToArray() ?? [];
+    private CanvasSharedInkOwnerSnapshot? CaptureNativePageInkOwner()
+    {
+        if (_closing || _preparing || _prepared is not null || _token.IsCancellationRequested || !_route.IsAlive ||
+            _sharedInkClose is not null || _core?.CapturePageSharedDrawing() is not { } snapshot) return null;
+        var content = snapshot.Content;
+        _pageInkWidth = content.Width; _pageInkHeight = content.Height;
+        var context = new HomeProductivityContext("boards", content.Document.Id.ToString("D"), content.Document.Version, [],
+            new HashSet<string>(StringComparer.Ordinal) { "drawing.ink" });
+        var bounds = _presentation?.Control.Bounds;
+        return new(context, content.LayerId,
+            $"page:{snapshot.Generation}:{snapshot.BindingEpoch}:{snapshot.SelectionEpoch}:{content.Epoch}:{content.MetadataEpoch}:{content.Selection}", content.Bundles)
+        {
+            LogicalWidth = Math.Clamp(Math.Max(content.Width, bounds?.Width ?? 0), 100, 100_000),
+            LogicalHeight = Math.Clamp(Math.Max(content.Height, bounds?.Height ?? 0), 100, 100_000)
+        };
+    }
+
+    private ValueTask<CanvasSharedInkCommitResult> QueuePageInkCommit(CanvasSharedInkStrokeRequest request, CancellationToken caller)
+    {
+        Dispatcher.UIThread.VerifyAccess(); DemandAlive();
+        if (!CanEditNativeSharedInk) return ValueTask.FromResult(new CanvasSharedInkCommitResult(false, "OperationDenied", "The page cannot be edited now."));
+        lock (_gate)
+        {
+            _actions.RemoveAll(task => task.IsCompletedSuccessfully);
+            if (_actions.Count >= 128) throw new InvalidOperationException("Settle original Boards actions before drawing again.");
+            var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            ++_activeDispatches; ++_acceptedDispatchVersion;
+            var original = CommitPageInkOriginalAsync(start.Task, request, caller);
+            _actions.Add(original); start.SetResult(); return new(original);
+        }
+    }
+
+    private async Task<CanvasSharedInkCommitResult> CommitPageInkOriginalAsync(Task start, CanvasSharedInkStrokeRequest request, CancellationToken caller)
+    {
+        await start;
+        using var phase = CloudflareOriginalExecutionGuard.EnterOriginal(this);
+        using var scope = CancellationTokenSource.CreateLinkedTokenSource(caller, _token);
+        var originals = new CloudflareOriginalTaskLedger();
+        try
+        {
+            _bindings.SourcesChanged();
+            await RevalidateOriginalAsync(scope.Token); DemandAlive(); _route.DemandPublicationCurrent();
+            if (_sharedInkEngine is not { } engine || _core?.CapturePageSharedDrawing() is not { } expected ||
+                CaptureNativePageInkOwner() is not { } current || !CanvasSharedInkStrokeFactory.SameOwner(current, request.Expected))
+                return new(false, "StaleDrawing", "The original page or drawing changed; nothing was submitted.");
+            var proposed = request.ReplacementBundles ?? [.. current.Bundles, request.Bundle];
+            IReadOnlyList<JsonElement> Capture(IReadOnlyList<JsonElement> source)
+            {
+                var captured = source.Select(bundle => CanvasSharedInkStrokeFactory.CaptureBundle(engine, current.Context, bundle)).ToArray();
+                if (request.Erasure is { } erase)
+                {
+                    var verified = CanvasSharedInkStrokeFactory.CaptureWholeErase(engine, current, erase.Samples, erase.Width).ReplacementBundles!;
+                    if (verified.Count != captured.Length || !verified.Zip(captured).All(pair => JsonElement.DeepEquals(pair.First, pair.Second)))
+                        throw new InvalidDataException("The exact donor erasure changed before the owning commit.");
+                }
+                else if (request.ReplacementBundles is not null || captured.Length != current.Bundles.Count + 1 ||
+                    !current.Bundles.Zip(captured).All(pair => JsonElement.DeepEquals(pair.First, pair.Second)))
+                    throw new InvalidDataException("A page stroke may only append to its exact current layer.");
+                var allPages = expected.Content.Document.Sections.SelectMany(section => section.Pages).ToArray();
+                var otherBundles = allPages.SelectMany(page => page.Blocks).Where(block => block.SharedProductivityBundles is not null)
+                    .SelectMany(block => block.SharedProductivityBundles!)
+                    .Concat(NotesSharedInkLayer.ReadAll(expected.Content.Document).Where(layer => layer.PageId != expected.Content.Page.Id).SelectMany(layer => layer.Bundles));
+                var objects = otherBundles.Concat(captured).SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).ToArray();
+                var containerIds = allPages.Select(page => page.Id).Concat(allPages.SelectMany(page => page.Blocks).Select(block => block.Id))
+                    .Concat(allPages.SelectMany(page => page.CanvasObjects).Select(item => item.Id))
+                    .Concat(expected.Content.Document.Sections.Select(section => section.Id)).Append(current.LayerId).Append(expected.Content.Document.Id).ToHashSet();
+                if (objects.Select(value => value.ObjectId).Distinct().Count() != objects.Length || objects.Any(value => containerIds.Contains(value.ObjectId)))
+                    throw new InvalidDataException("A canonical page stroke identity already exists in the original document.");
+                _ = CanvasSharedInkStrokeFactory.RenderScene(engine, current.Context, current.LayerId, captured);
+                scope.Token.ThrowIfCancellationRequested(); DemandAlive(); _route.DemandPublicationCurrent();
+                if (CaptureNativePageInkOwner() is not { } final || !CanvasSharedInkStrokeFactory.SameOwner(final, request.Expected))
+                    throw new InvalidOperationException("The original page context changed during preparation.");
+                return captured;
+            }
+            var result = await _core.ReplacePageSharedDrawingAsync(expected, proposed, Capture, scope.Token,
+                request.Erasure is null ? current.LogicalWidth : null, request.Erasure is null ? current.LogicalHeight : null);
+            await RevalidateOriginalAsync(scope.Token); DemandAlive(); _route.DemandPublicationCurrent();
+            return new(result.Succeeded, result.Code, result.Succeeded ? "Page drawing saved." : result.Message);
+        }
+        catch (Exception error) { originals.Retain(error); throw; }
+        finally
+        {
+            --_activeDispatches;
+            try { _bindings.SourcesChanged(); }
+            catch (Exception error)
+            { originals.Retain(error); throw new AggregateException("Original page drawing and publication failed.", originals.OriginalErrors); }
+        }
+    }
+
+    private Task[] CaptureSharedInkSubmissions() => (_sharedInkInput?.OriginalSubmissions ?? []).Concat(_pageInkInput?.OriginalSubmissions ?? []).ToArray();
     private void BeginSharedInkRetirement()
     {
-        if (_sharedInkInput is null || _sharedInkClose is not null) return;
-        _sharedInkInput.IsEnabled = false;
-        _sharedInkClose = _sharedInkInput.CloseAndDrainAsync();
-        // Keep the input, exact original tasks and any failure until session retirement.
-        // Borrowed Home engine and Notes owners are never disposed here.
+        if (_sharedInkClose is not null) return;
+        var originals = new List<Task>();
+        foreach (var input in new[] { _sharedInkInput, _pageInkInput }.OfType<CanvasSharedInkInput>())
+        {
+            input.IsEnabled = false; input.IsHitTestVisible = false;
+            try { originals.Add(input.CloseAndDrainAsync()); }
+            catch (Exception error) { originals.Add(Task.FromException(error)); }
+        }
+        _sharedInkClose = Task.WhenAll(originals);
+        // Join both exact submission ledgers before disposing only local input views.
+        // Original Home/Notes/global engine ownership is never transferred here.
     }
 }

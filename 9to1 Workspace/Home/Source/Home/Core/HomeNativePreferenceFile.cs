@@ -3,6 +3,10 @@ using System.Text.Json.Nodes;
 
 namespace HavenOS.Home.Core;
 
+/// <summary>A path observation captured by the trusted original Home producer. This is not
+/// profile authority or a settings-write grant; the native owner still checks its actual actor.</summary>
+public sealed record HomeNativePreferenceBinding(string Path, bool CanWrite, string? Diagnostic = null);
+
 /// <summary>Atomic adapter for the existing native preferences.json owner. No second preference store or account replica.</summary>
 public static class HomeNativePreferenceFile
 {
@@ -10,6 +14,40 @@ public static class HomeNativePreferenceFile
     private const string RevisionKey = "homeThemePreferenceRevision";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private static readonly string[] ThemeFields = ["havenUiThemeName", "havenUiAppearance", "fontFamilyName", "overrideAccentColour", "accentColourName"];
+
+    /// <summary>Preserve the existing standalone startup reader's native preference location,
+    /// independently of Home's candidate artifact/database roots. Never migrate competing files.</summary>
+    public static HomeNativePreferenceBinding CaptureExistingReaderBinding(string artifactDataDirectory, string? capturedReaderDataDirectory = null)
+    {
+        var configured = capturedReaderDataDirectory ?? Environment.GetEnvironmentVariable("HAVEN_DATA_DIR");
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var directory = string.IsNullOrWhiteSpace(configured) ? System.IO.Path.Combine(appData, "Haven") : configured;
+        var reader = System.IO.Path.GetFullPath(System.IO.Path.Combine(directory, "preferences.json"));
+        var candidate = System.IO.Path.GetFullPath(System.IO.Path.Combine(artifactDataDirectory, "preferences.json"));
+        if (string.IsNullOrWhiteSpace(configured) && string.IsNullOrWhiteSpace(appData))
+            return new(reader, false, "The operating system did not supply a native preference location. Your current appearance is preserved; changes are unavailable.");
+        var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        if (!comparer.Equals(reader, candidate) && File.Exists(candidate))
+            return new(reader, false, "Home has saved appearance settings in another location. Both files have been preserved; appearance changes are unavailable.");
+        return new(reader, true);
+    }
+
+    /// <summary>Faithful legacy projection shared by native hosts. Colour resolution is supplied
+    /// by the existing native palette catalogue; unknown values are preserved through refusal.</summary>
+    public static HomeThemePreference ProjectLegacyTheme(JsonObject document, HomeThemeScope scope,
+        Func<string?, int, string> resolveAccent)
+    {
+        var name = document["havenUiThemeName"]?.GetValue<string>() ?? "Professional";
+        var appearance = document["havenUiAppearance"]?.GetValue<int>() ?? 3;
+        var appearanceName = appearance switch
+        { 0 => "SuperBright", 1 => "Bright", 2 => "Dark", 3 => "SuperDark", _ => throw new InvalidDataException("The saved native appearance is unsupported and was preserved.") };
+        var accent = HomeThemeAccentPreference.Default;
+        if (document["overrideAccentColour"]?.GetValue<bool>() == true)
+            accent = new(HomeThemeAccentOverrideMode.AllApps, resolveAccent(document["accentColourName"]?.GetValue<string>(), appearance));
+        return new(HomeThemePreference.CurrentSchemaVersion, scope, name, 0,
+            new(InterfaceFontFamily: document["fontFamilyName"]?.GetValue<string>()))
+        { Appearance = appearanceName, Accent = accent };
+    }
 
     public static JsonObject Read(string path)
     {

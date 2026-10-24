@@ -10,11 +10,11 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
 {
     private FilesNativeBrowserSharePage? _sharingPage;
     private long _sharingSelectionVersion;
-    private bool IsPendingShareReview => _pendingMutation is { } pending && _browser.IsNativeShareRevocation(pending);
+    private bool IsPendingShareReview => _pendingMutation is { } pending && _browser.IsNativeShareMutation(pending);
     private bool SharingVisible => _sharingPage is { } shares && ReferenceEquals(_page, shares.Page)
         && ReferenceEquals(_items.SelectedItem, shares.Item) && OriginalAlive();
     private static bool IsSharingCommand(string command) => command is "9to1.Files.Share.Get"
-        or "9to1.Files.Share.More" or "9to1.Files.Share.Close" or "9to1.Files.Share.Revoke";
+        or "9to1.Files.Share.More" or "9to1.Files.Share.Close" or "9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole";
 
     private bool TryGetSharingValue(string path, out object? value)
     {
@@ -27,7 +27,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             "SharingEmpty" => SharingVisible && _sharingPage!.Grants.Count == 0,
             "CanReadMoreGrants" => SharingActionAvailable("9to1.Files.Share.More"),
             "CanCloseAccess" => SharingActionAvailable("9to1.Files.Share.Close"),
-            "PendingChange" when IsPendingShareReview => _browser.DescribeNativeShareRevocation(_pendingMutation!),
+            "PendingChange" when IsPendingShareReview => _browser.DescribeNativeShareMutation(_pendingMutation!),
             _ => null
         };
         return path is "CanReviewAccess" or "SharingVisible" or "SharingTitle" or "SharingGrants"
@@ -50,9 +50,13 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
                 ? "Expired" : "Active",
             "CanRevoke" => SharingActionAvailable("9to1.Files.Share.Revoke") && !grant.Share.IsRevoked
                 && grant.Share.Role is FilesAccessRole.Viewer or FilesAccessRole.Editor,
+            "CanChangeRole" => SharingActionAvailable("9to1.Files.Share.ChangeRole") && !grant.Share.IsRevoked
+                && grant.Share.Role is FilesAccessRole.Viewer or FilesAccessRole.Editor
+                && (grant.Share.ExpiresAt is null || grant.Share.ExpiresAt.Value > DateTimeOffset.UtcNow),
+            "changeRoleLabel" => grant.Share.Role == FilesAccessRole.Viewer ? "Make editor…" : "Make viewer…",
             _ => null
         };
-        return path is "id" or "email" or "role" or "expiry" or "state" or "CanRevoke";
+        return path is "id" or "email" or "role" or "expiry" or "state" or "CanRevoke" or "CanChangeRole" or "changeRoleLabel";
     }
     public bool TrySetItemValue(object item, string path, object? value) => false;
 
@@ -62,7 +66,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             && _items.SelectedItem is HostedItemMetadata item && _browser.CanReviewNativeShares(page, item),
         "9to1.Files.Share.More" => Available && _pendingMutation is null && SharingVisible && _sharingPage!.Next is not null,
         "9to1.Files.Share.Close" => Available && _pendingMutation is null && SharingVisible,
-        "9to1.Files.Share.Revoke" => Available && _pendingMutation is null && SharingVisible && _browser.HasNativeMutationOwner,
+        "9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole" => Available && _pendingMutation is null && SharingVisible && _browser.HasNativeMutationOwner,
         _ => false
     };
 
@@ -83,7 +87,7 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
         var originalReview = _pendingMutation;
         var originalSelectionVersion = Volatile.Read(ref _sharingSelectionVersion);
         var grant = parameter as FilesEmailShare;
-        if (command == "9to1.Files.Share.Revoke" && (grant is null || originalShares is null
+        if ((command is "9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole") && (grant is null || originalShares is null
             || !originalShares.Grants.Any(row => ReferenceEquals(row, grant))))
             throw new ArgumentException("Choose a grant from the original displayed access page.");
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
@@ -108,26 +112,36 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             await RequireReadyAsync(linked.Token);
             RequireOriginalSelection();
             if (command == "9to1.Files.Share.Close") { _sharingPage = null; return; }
-            if (command == "9to1.Files.Share.Revoke")
+            if (command is "9to1.Files.Share.Revoke" or "9to1.Files.Share.ChangeRole")
             {
-                var prepared = await _browser.PrepareNativeShareRevocationAsync(originalShares!, grant!, _originalActor,
-                    OwnerCurrent, _mutationSession, linked.Token);
+                var prepared = command == "9to1.Files.Share.Revoke"
+                    ? await _browser.PrepareNativeShareRevocationAsync(originalShares!, grant!, _originalActor,
+                        OwnerCurrent, _mutationSession, linked.Token)
+                    : await _browser.PrepareNativeShareRoleChangeAsync(originalShares!, grant!,
+                        grant!.Share.Role == FilesAccessRole.Viewer ? FilesAccessRole.Editor : FilesAccessRole.Viewer,
+                        _originalActor, OwnerCurrent, _mutationSession, linked.Token);
                 RequireOriginalSelection();
                 _pendingMutation = prepared;
-                _status = prepared.Approval.IsAllowed ? "Ready to revoke this access grant. Choose Apply."
+                _status = prepared.Approval.IsAllowed ? command == "9to1.Files.Share.Revoke"
+                    ? "Ready to revoke this access grant. Choose Apply." : "Ready to change this recipient’s role. Choose Apply."
                     : prepared.Approval.State == HomePermissionRequestState.PendingApproval
                         ? "Review this access change in Home, then choose Apply." : prepared.Approval.Message;
                 return;
             }
             if (command == "9to1.Files.Apply")
             {
-                var outcome = await _browser.ApplyNativeShareRevocationAsync(originalReview!, linked.Token);
+                var outcome = await _browser.ApplyNativeShareMutationAsync(originalReview!, linked.Token);
+                // A provider ACK is not permission to publish into a replaced Home/profile.
+                // This retained callback checks Home/configuration only, not the now-advanced Files revision.
+                await RequireReadyAsync(linked.Token);
+                var publicationOwner = _originalPageCurrent ?? throw new UnauthorizedAccessException("The original Files owner observation retired.");
+                await RequireOriginalOwnerAsync(publicationOwner, linked.Token);
                 RequireOriginalSelection();
                 _status = outcome.Message;
                 if (outcome.AwaitingHomeReview) return;
                 if (outcome.AuditRecorded) _pendingMutation = null;
                 // Permission publication advances the item revision. Withdraw the old grant rows,
-                // then reload canonical metadata; never keep a stale revocation button enabled.
+                // then reload canonical metadata; never keep stale permission-change buttons enabled.
                 _sharingPage = null;
                 var destination = _history[_historyIndex];
                 var page = await _browser.ListAsync(_originalActor, destination.ID, _query, token: linked.Token,
@@ -163,9 +177,12 @@ public sealed partial class FilesNativeBrowserSurface : ICuiRepeatItemBindingCon
             try
             {
                 ClearSources();
-                var observed = IsPendingShareReview ? _browser.ReadObservedNativeShareRevocation(_pendingMutation!) : null;
-                _status = !OriginalAlive() ? "Files view closed" : observed is { IsSuccess: true, Value.Share.IsRevoked: true }
-                    ? "Access was revoked. Its original Home audit or cleanup needs attention; the revoke will not repeat."
+                var observed = IsPendingShareReview ? _browser.ReadObservedNativeShareMutation(_pendingMutation!) : null;
+                var committed = IsPendingShareReview && _browser.WasNativeShareMutationCommitted(_pendingMutation!);
+                _status = !OriginalAlive() ? "Files view closed" : committed
+                    ? observed!.Value!.Share.IsRevoked
+                        ? "Access was revoked. Its original Home audit or cleanup needs attention; the revoke will not repeat."
+                        : "The access role changed. Its original Home audit or cleanup needs attention; the grant will not repeat."
                     : error.Message;
             }
             catch (Exception cleanup)

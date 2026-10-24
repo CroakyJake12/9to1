@@ -646,3 +646,105 @@ public sealed class NotesCanvasObject
     /// <summary>Native editable vector geometry when this object is a custom shape.</summary>
     public DocumentVectorShape? VectorShape { get; set; }
 }
+
+/// <summary>Versioned Boards page extension stored in the EXISTING Notes metadata
+/// dictionary, which older schema1 writers preserve opaquely. The stable Ink
+/// CanvasObject owns placement; Home owns all drawing bundles. No DTO field or
+/// private document store is introduced. Unknown raw envelope fields round-trip.</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(NotesSharedInkLayer.Converter))]
+public sealed class NotesSharedInkLayer
+{
+    private readonly System.Text.Json.JsonElement _raw;
+    public const int CurrentVersion = 1;
+    public Guid PageId { get; }
+    public Guid LayerId { get; }
+    public IReadOnlyList<System.Text.Json.JsonElement> Bundles { get; }
+    private NotesSharedInkLayer(System.Text.Json.JsonElement source)
+    {
+        if (source.ValueKind != System.Text.Json.JsonValueKind.Object || source.GetRawText().Length > 16 * 1024 * 1024 ||
+            source.EnumerateObject().GroupBy(field => field.Name, StringComparer.Ordinal).Any(group => group.Count() != 1) ||
+            !source.TryGetProperty("version", out var version) || version.ValueKind != System.Text.Json.JsonValueKind.Number || !version.TryGetInt32(out var number) || number != CurrentVersion ||
+            !source.TryGetProperty("pageId", out var page) || page.ValueKind != System.Text.Json.JsonValueKind.String || !page.TryGetGuid(out var pageId) || pageId == Guid.Empty ||
+            !source.TryGetProperty("layerId", out var layer) || layer.ValueKind != System.Text.Json.JsonValueKind.String || !layer.TryGetGuid(out var layerId) || layerId == Guid.Empty ||
+            !source.TryGetProperty("bundles", out var bundles) || bundles.ValueKind != System.Text.Json.JsonValueKind.Array || bundles.GetArrayLength() > 256)
+            throw new InvalidDataException("Unsupported or malformed page drawing layer; preserve its original document.");
+        var captured = bundles.EnumerateArray().Select(value => value.ValueKind == System.Text.Json.JsonValueKind.Object
+            ? value.Clone() : throw new InvalidDataException("A page drawing requires complete Home object bundles.")).ToArray();
+        PageId = pageId; LayerId = layerId; Bundles = Array.AsReadOnly(captured); _raw = source.Clone();
+    }
+    public const string MetadataPrefix = "boards.page-ink.";
+    public static string MetadataKey(Guid pageId) => pageId != Guid.Empty ? MetadataPrefix + pageId.ToString("D") : throw new ArgumentException("A stable page ID is required.");
+    public static string? ReadMetadataKey(NotesDocument document, Guid pageId)
+    {
+        var key = MetadataKey(pageId);
+        var keys = document.Metadata.Keys.Where(value => string.Equals(value, key, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
+        if (keys.Length == 0) return null;
+        if (keys.Length != 1) throw new InvalidDataException("The retained page ink metadata key is ambiguous; no keys were changed.");
+        return keys[0];
+    }
+    public static string? ReadMetadata(NotesDocument document, Guid pageId)
+    {
+        var key = ReadMetadataKey(document, pageId);
+        if (key is null) return null;
+        var raw = document.Metadata[key];
+        if (raw is null || raw.Length > 16 * 1024 * 1024)
+            throw new InvalidDataException("The retained page ink extension exceeds its supported bound.");
+        return raw;
+    }
+    public static IReadOnlyList<NotesSharedInkLayer> ReadAll(NotesDocument document)
+    {
+        var result = new List<NotesSharedInkLayer>(); var pages = new HashSet<Guid>();
+        var knownPages = document.Sections.SelectMany(section => section.Pages).Select(page => page.Id).ToHashSet();
+        foreach (var key in document.Metadata.Keys.Where(value => value.StartsWith(MetadataPrefix, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (!Guid.TryParseExact(key[MetadataPrefix.Length..], "D", out var pageId) || pageId == Guid.Empty || !pages.Add(pageId) ||
+                !knownPages.Contains(pageId))
+                throw new InvalidDataException("A retained page ink extension has an invalid, duplicate or absent page binding. Repair explicitly; its original payload is preserved.");
+            var raw = document.Metadata[key];
+            if (raw is null || raw.Length > 16 * 1024 * 1024) throw new InvalidDataException("The retained page ink extension exceeds its supported bound.");
+            using var parsed = System.Text.Json.JsonDocument.Parse(raw);
+            var value = Capture(parsed.RootElement);
+            if (value.PageId != pageId) throw new InvalidDataException("The retained page ink key and envelope identify different pages.");
+            result.Add(value);
+        }
+        return result.AsReadOnly();
+    }
+    public static NotesSharedInkLayer? Read(NotesDocument document, Guid pageId)
+    {
+        var raw = ReadMetadata(document, pageId);
+        if (raw is null) return null;
+        using var parsed = System.Text.Json.JsonDocument.Parse(raw);
+        var value = Capture(parsed.RootElement);
+        if (value.PageId != pageId) throw new InvalidDataException("The page ink extension belongs to another page; no automatic rebinding is allowed.");
+        return value;
+    }
+    public static NotesSharedInkLayer Capture(System.Text.Json.JsonElement source) => new(source);
+    public System.Text.Json.JsonElement ToJson() => _raw.Clone();
+    public static NotesSharedInkLayer Create(Guid pageId, Guid layerId, IReadOnlyList<System.Text.Json.JsonElement> bundles) =>
+        new(System.Text.Json.JsonSerializer.SerializeToElement(new { version = CurrentVersion, pageId, layerId, bundles = CaptureBundles(bundles) }));
+    public NotesSharedInkLayer WithBundles(IReadOnlyList<System.Text.Json.JsonElement> bundles)
+    {
+        var copy = System.Text.Json.Nodes.JsonNode.Parse(_raw.GetRawText())!.AsObject();
+        copy["bundles"] = System.Text.Json.JsonSerializer.SerializeToNode(CaptureBundles(bundles));
+        return new(System.Text.Json.JsonSerializer.SerializeToElement(copy));
+    }
+    private static IReadOnlyList<System.Text.Json.JsonElement> CaptureBundles(IReadOnlyList<System.Text.Json.JsonElement> source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        var captured = new List<System.Text.Json.JsonElement>(); var characters = 0L;
+        foreach (var value in source)
+        {
+            if (captured.Count == 256 || value.ValueKind != System.Text.Json.JsonValueKind.Object ||
+                (characters += value.GetRawText().Length) > 16 * 1024 * 1024)
+                throw new InvalidDataException("The page drawing exceeds its supported Home bundle bound.");
+            captured.Add(value.Clone());
+        }
+        return captured.AsReadOnly();
+    }
+    public sealed class Converter : System.Text.Json.Serialization.JsonConverter<NotesSharedInkLayer>
+    {
+        public override NotesSharedInkLayer Read(ref System.Text.Json.Utf8JsonReader reader, Type type, System.Text.Json.JsonSerializerOptions options)
+        { using var document = System.Text.Json.JsonDocument.ParseValue(ref reader); return Capture(document.RootElement); }
+        public override void Write(System.Text.Json.Utf8JsonWriter writer, NotesSharedInkLayer value, System.Text.Json.JsonSerializerOptions options) => value._raw.WriteTo(writer);
+    }
+}

@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using HavenOS.Home.Core;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -41,6 +43,402 @@ public sealed class UnifiedHomeContentTests
             navigation ?? ((_, _) => true),
             (_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI."),
             admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events);
+
+    [AvaloniaFact]
+    public async Task Home_appearance_targets_save_the_real_native_file_preserve_other_settings_and_reopen_live_contexts()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-real-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Glow\",\"havenUiAppearance\":3,\"overrideAccentColour\":true,\"accentColourName\":\"Blue\",\"fontFamilyName\":\"Existing font\",\"defaultModel\":\"retained-model\",\"futureSetting\":{\"keep\":true}}");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "actual-settings-profile");
+        var source = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        try
+        {
+            var initial = await File.ReadAllBytesAsync(file);
+            await source.RefreshAsync();
+            Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+            var stale = ThemeTarget(source, "Glow");
+            var target = ThemeTarget(source, "Professional");
+            using var secondContext = new CuiThemePreferenceContext(source);
+            var receipt = await source.ApplySettingsAsync(target);
+            Assert.True(receipt.Succeeded);
+            Assert.Equal(scope, receipt.Value!.Preference.Scope);
+            Assert.Equal(1, receipt.Value.Preference.Revision);
+            await source.RefreshAsync();
+            Assert.Equal("Professional", source.Context.Current.Theme.Name);
+            Assert.Equal("Professional", secondContext.Current.Theme.Name);
+            var saved = HomeNativePreferenceFile.Read(file);
+            Assert.Equal("retained-model", saved["defaultModel"]!.GetValue<string>());
+            Assert.True(saved["futureSetting"]!["keep"]!.GetValue<bool>());
+            var preference = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
+            Assert.Equal("#4E86FF", preference.Accent!.AllAppsColour);
+            Assert.Equal("Existing font", preference.Accessibility.InterfaceFontFamily);
+            Assert.Equal("SuperDark", preference.Appearance);
+            Assert.True((await source.ApplySettingsAsync(AppearanceTarget(source, "HomeAccessibilityChoices", "Reduce motion"))).Succeeded);
+            await source.RefreshAsync();
+            Assert.True(source.Current.Accessibility.ReduceMotion);
+            Assert.True((await source.ApplySettingsAsync(AppearanceTarget(source, "HomeAccessibilityChoices", "High contrast"))).Succeeded);
+            await source.RefreshAsync();
+            Assert.True(source.Current.Accessibility.HighContrast);
+            Assert.True((await source.ApplySettingsAsync(AppearanceTarget(source, "HomeAppearanceChoices", "Bright"))).Succeeded);
+            await source.RefreshAsync();
+            Assert.Equal(CuiAppearance.Bright, source.Current.Appearance);
+            var committed = await File.ReadAllBytesAsync(file);
+            Assert.Equal("SettingsIntentRetired", (await source.ApplySettingsAsync(stale)).Code);
+            Assert.Equal(committed, await File.ReadAllBytesAsync(file));
+        }
+        finally { await source.DisposeAsync(); }
+        await using (var reopened = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback)))
+        {
+            await reopened.RefreshAsync();
+            Assert.Equal("Professional", reopened.Current.Name);
+            Assert.Equal(4, reopened.Current.Revision);
+            Assert.True(reopened.Current.Accessibility.ReduceMotion);
+            Assert.True(reopened.Current.Accessibility.HighContrast);
+            Assert.Equal(CuiAppearance.Bright, reopened.Current.Appearance);
+        }
+        Directory.Delete(root, true);
+    }
+
+    [AvaloniaFact]
+    public async Task Home_appearance_changes_preserve_custom_library_per_app_accents_and_additive_saved_fields()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-additive-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"unchanged-model\"}");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "additive-settings-profile");
+        var seed = HomeThemePreference.Default(scope) with
+        {
+            Revision = 1, Appearance = "Bright", CustomThemesJson = "[]",
+            Accessibility = new(DisplayScale: 1.25, InterfaceFontFamily: "Existing interface font", CodeFontFamily: "Existing code font"),
+            Accent = new(HomeThemeAccentOverrideMode.IndividualApps, individualApps: new Dictionary<string, string> { ["app.boards"] = "#123456" })
+        };
+        Assert.True((await HomeNativePreferenceFile.CompareExchangeAsync(file, scope, 0, seed,
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true), CancellationToken.None)).Succeeded);
+        var document = HomeNativePreferenceFile.Read(file);
+        document[HomeNativePreferenceFile.ThemeKey]!["futureThemeField"] = new JsonObject { ["keep"] = true };
+        document[HomeNativePreferenceFile.ThemeKey]!["accessibility"]!["futureAccessibilityField"] = "preserved";
+        document[HomeNativePreferenceFile.ThemeKey]!["accent"]!["futureAccentField"] = "preserved";
+        await File.WriteAllTextAsync(file, document.ToJsonString());
+        await using (var source = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback)))
+        {
+            await source.RefreshAsync();
+            Assert.True((await source.ApplySettingsAsync(ThemeTarget(source, "Glow"))).Succeeded);
+            var saved = HomeNativePreferenceFile.Read(file);
+            var preference = HomeNativePreferenceFile.Resolve(saved, scope, UserPreferencesService.ProjectLegacyHomeTheme);
+            Assert.Equal("[]", preference.CustomThemesJson);
+            Assert.Equal(HomeThemeAccentOverrideMode.IndividualApps, preference.Accent!.Mode);
+            Assert.Equal("#123456", preference.Accent.IndividualApps["app.boards"]);
+            Assert.Equal(seed.Accessibility, preference.Accessibility);
+            Assert.Equal("Bright", preference.Appearance);
+            Assert.Equal("unchanged-model", saved["defaultModel"]!.GetValue<string>());
+            Assert.True(saved[HomeNativePreferenceFile.ThemeKey]!["futureThemeField"]!["keep"]!.GetValue<bool>());
+            Assert.Equal("preserved", saved[HomeNativePreferenceFile.ThemeKey]!["accessibility"]!["futureAccessibilityField"]!.GetValue<string>());
+            Assert.Equal("preserved", saved[HomeNativePreferenceFile.ThemeKey]!["accent"]!["futureAccentField"]!.GetValue<string>());
+        }
+        Directory.Delete(root, true);
+    }
+
+    [AvaloniaFact]
+    public async Task Home_appearance_refuses_foreign_issued_targets_current_actor_denial_and_unknown_saved_schema_without_overwrite()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-authority-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"retained\"}");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "original-settings-profile");
+        var allowed = true;
+        await using var original = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(allowed), callback => Dispatcher.UIThread.Post(callback));
+        await using var other = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        try
+        {
+            await original.RefreshAsync(); await other.RefreshAsync();
+            var target = ThemeTarget(original, "Glow");
+            var initial = await File.ReadAllBytesAsync(file);
+            Assert.Equal("SettingsIntentRetired", (await other.ApplySettingsAsync(target)).Code);
+            allowed = false;
+            Assert.Equal("PermissionDenied", (await original.ApplySettingsAsync(target)).Code);
+            Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+            allowed = true;
+            Assert.True((await original.ApplySettingsAsync(target)).Succeeded);
+            await original.RefreshAsync();
+            var envelope = HomeNativePreferenceFile.Read(file);
+            envelope[HomeNativePreferenceFile.ThemeKey]!["schemaVersion"] = 999;
+            await File.WriteAllTextAsync(file, envelope.ToJsonString());
+            var incompatible = await File.ReadAllBytesAsync(file);
+            Assert.False((await original.ApplySettingsAsync(ThemeTarget(original, "Bubble"))).Succeeded);
+            Assert.Equal(incompatible, await File.ReadAllBytesAsync(file));
+        }
+        finally
+        {
+            await other.DisposeAsync(); await original.DisposeAsync();
+            Directory.Delete(root, true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Home_appearance_close_retains_its_actual_pending_authorization_and_joins_before_service_disposal()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-close-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "original-settings-close-profile");
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var hold = false;
+        async ValueTask<bool> Authorize(CancellationToken token)
+        {
+            if (hold) { entered.TrySetResult(); await release.Task; }
+            token.ThrowIfCancellationRequested(); return true;
+        }
+        var source = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            Authorize, callback => Dispatcher.UIThread.Post(callback));
+        await source.RefreshAsync();
+        var initial = await File.ReadAllBytesAsync(file);
+        hold = true;
+        var actual = source.ApplySettingsAsync(ThemeTarget(source, "Glow"));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(20));
+        var close = source.DisposeAsync().AsTask();
+        Assert.Same(close, source.DisposeAsync().AsTask());
+        Assert.False(close.IsCompleted);
+        release.SetResult();
+        var retired = await actual.WaitAsync(TimeSpan.FromSeconds(20));
+        Assert.Equal("SettingsRetired", retired.Code);
+        Assert.Contains(source.AuthorityObservations, observation => observation.Source?.IsCanceled == true &&
+            observation.Cause is OperationCanceledException error && error.CancellationToken == observation.RequestedToken &&
+            observation.RequestedToken.IsCancellationRequested);
+        await close.WaitAsync(TimeSpan.FromSeconds(20));
+        Assert.Same(close, source.OriginalClose);
+        Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+        Directory.Delete(root, true);
+    }
+
+    [AvaloniaFact]
+    public async Task Home_appearance_foreign_cancellation_remains_a_failed_original_when_the_owner_closes()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-foreign-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        using var foreign = new CancellationTokenSource(); foreign.Cancel();
+        var refuse = false;
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "foreign-token-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => refuse ? ValueTask.FromCanceled<bool>(foreign.Token) : ValueTask.FromResult(true),
+            callback => Dispatcher.UIThread.Post(callback));
+        await source.RefreshAsync();
+        var initial = await File.ReadAllBytesAsync(file);
+        var target = ThemeTarget(source, "Glow"); refuse = true;
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => source.ApplySettingsAsync(target));
+        await Assert.ThrowsAnyAsync<Exception>(() => source.DisposeAsync().AsTask());
+        Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+        Directory.Delete(root, true);
+    }
+
+    [AvaloniaFact]
+    public async Task Home_appearance_does_not_waive_failed_explicit_caller_cancellation_during_later_owner_close()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-caller-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "cancelled-caller-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, _ => ValueTask.FromResult(true),
+            callback => Dispatcher.UIThread.Post(callback));
+        await source.RefreshAsync();
+        var initial = await File.ReadAllBytesAsync(file);
+        var target = ThemeTarget(source, "Glow");
+        using var caller = new CancellationTokenSource(); caller.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => source.ApplySettingsAsync(target, caller.Token));
+        await Assert.ThrowsAnyAsync<Exception>(() => source.DisposeAsync().AsTask());
+        Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+        Directory.Delete(root, true);
+    }
+
+    [AvaloniaFact]
+    public async Task Home_appearance_faulted_authority_source_reusing_owner_token_cancellation_remains_a_real_close_failure()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-faulted-owner-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\"}");
+        var entered = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var actualAuthority = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var hold = false;
+        ValueTask<bool> Authorize(CancellationToken token)
+        {
+            if (!hold) return ValueTask.FromResult(true);
+            entered.TrySetResult(token); return new(actualAuthority.Task);
+        }
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "faulted-owner-source-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme, Authorize, callback => Dispatcher.UIThread.Post(callback));
+        await source.RefreshAsync();
+        var initial = await File.ReadAllBytesAsync(file);
+        var target = ThemeTarget(source, "Glow"); hold = true;
+        var operation = source.ApplySettingsAsync(target);
+        var issued = await entered.Task.WaitAsync(TimeSpan.FromSeconds(20));
+        var close = source.DisposeAsync().AsTask();
+        Assert.False(close.IsCompleted);
+        Assert.True(issued.IsCancellationRequested);
+        var fault = new OperationCanceledException("faulted source, not a cancelled task", issued);
+        actualAuthority.SetException(fault);
+        var failure = await Assert.ThrowsAnyAsync<Exception>(() => operation);
+        Assert.Contains(fault, Assert.IsType<AggregateException>(failure).Flatten().InnerExceptions);
+        await Assert.ThrowsAnyAsync<Exception>(() => close);
+        Assert.True(actualAuthority.Task.IsFaulted);
+        var observation = Assert.Single(source.AuthorityObservations);
+        Assert.Same(actualAuthority.Task, observation.Source);
+        Assert.Same(fault, observation.Cause);
+        Assert.Equal(issued, observation.RequestedToken);
+        Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+        Directory.Delete(root, true);
+    }
+
+    [Fact]
+    public void Captured_native_preference_binding_preserves_reader_and_candidate_files_and_refuses_competing_store_writes()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-binding-" + Guid.NewGuid().ToString("N"));
+        var reader = Path.Combine(root, "reader"); var artifacts = Path.Combine(root, "artifacts");
+        Directory.CreateDirectory(reader); Directory.CreateDirectory(artifacts);
+        var canonical = Path.Combine(reader, "preferences.json");
+        var competing = Path.Combine(artifacts, "preferences.json");
+        File.WriteAllText(canonical, "{\"havenUiThemeName\":\"Glow\",\"defaultModel\":\"existing-model\"}");
+        try
+        {
+            var initial = File.ReadAllBytes(canonical);
+            var binding = HomeNativePreferenceFile.CaptureExistingReaderBinding(artifacts, reader);
+            Assert.True(binding.CanWrite);
+            Assert.Equal(canonical, binding.Path);
+            Assert.False(File.Exists(competing));
+            Assert.Equal(initial, File.ReadAllBytes(canonical));
+            File.WriteAllText(competing, "{\"havenUiThemeName\":\"Retro\",\"otherProfileData\":true}");
+            var candidateBytes = File.ReadAllBytes(competing);
+            var conflict = HomeNativePreferenceFile.CaptureExistingReaderBinding(artifacts, reader);
+            Assert.False(conflict.CanWrite);
+            Assert.Equal(canonical, conflict.Path);
+            Assert.NotNull(conflict.Diagnostic);
+            Assert.Equal(initial, File.ReadAllBytes(canonical));
+            Assert.Equal(candidateBytes, File.ReadAllBytes(competing));
+            Assert.True(HomeNativePreferenceFile.CaptureExistingReaderBinding(reader, reader).CanWrite);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("actor")]
+    [InlineData("presentation")]
+    [InlineData("foreign-cancellation")]
+    public async Task Confirmed_appearance_write_keeps_its_exact_receipt_after_late_observation_failures_without_replay(string failureKind)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-postcommit-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"preserved-model\"}");
+        var scope = new HomeThemeScope(HomeDataScope.DeviceLocal, "postcommit-observation-profile");
+        var source = new NativeHomeThemePreferences(file, scope, UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        using var foreign = new CancellationTokenSource();
+        try
+        {
+            await source.RefreshAsync();
+            var target = ThemeTarget(source, "Glow");
+            var write = source.CreateSettingsWriteOutcome();
+            var receipt = await write.ApplyAsync(target);
+            Assert.True(receipt.Succeeded);
+            Assert.Same(receipt, write.ConfirmedWrite);
+            Assert.Equal(1, receipt.Value!.Preference.Revision);
+            var committed = await File.ReadAllBytesAsync(file);
+            var observerCalls = 0;
+            Task? actualObserver = null;
+            Exception? originalCause = failureKind == "actor"
+                ? new UnauthorizedAccessException("Original current-profile observation failed AFTER the confirmed save")
+                : failureKind == "presentation" ? new InvalidOperationException("Original presentation callback failed AFTER the confirmed save") : null;
+            await write.ObserveAfterWriteAsync(() =>
+            {
+                observerCalls++;
+                if (failureKind == "presentation") throw originalCause!;
+                if (failureKind == "actor") return actualObserver = Task.FromException(originalCause!);
+                foreign.Cancel();
+                return actualObserver = Task.FromCanceled(foreign.Token);
+            });
+            Assert.Equal(1, observerCalls);
+            var observation = Assert.Single(write.PostCommitObservations);
+            Assert.Same(actualObserver, observation.Source);
+            if (originalCause is not null) Assert.Same(originalCause, observation.Cause);
+            else
+            {
+                Assert.True(actualObserver!.IsCanceled);
+                Assert.Equal(foreign.Token, Assert.IsAssignableFrom<OperationCanceledException>(observation.Cause).CancellationToken);
+            }
+            Assert.Same(receipt, write.ConfirmedWrite);
+            Assert.True(write.ConfirmedWrite!.Succeeded);
+            Assert.Equal(committed, await File.ReadAllBytesAsync(file));
+            var saved = HomeNativePreferenceFile.Resolve(HomeNativePreferenceFile.Read(file), scope, UserPreferencesService.ProjectLegacyHomeTheme);
+            Assert.Equal(1, saved.Revision); Assert.Equal("Glow", saved.ThemeName);
+            Assert.Equal("preserved-model", HomeNativePreferenceFile.Read(file)["defaultModel"]!.GetValue<string>());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => write.ApplyAsync(target));
+            Assert.Equal(committed, await File.ReadAllBytesAsync(file)); // Same outcome never replays Set/CAS.
+        }
+        finally { await source.DisposeAsync(); Directory.Delete(root, true); }
+    }
+
+    [AvaloniaFact]
+    public async Task Unconfirmed_appearance_write_preserves_original_precommit_failure_and_cannot_waive_observer_errors()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "home-settings-precommit-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "preferences.json");
+        await File.WriteAllTextAsync(file, "{\"havenUiThemeName\":\"Professional\",\"defaultModel\":\"preserved-model\"}");
+        var cause = new IOException("Original authority source failed BEFORE any preference commit");
+        var actualAuthority = Task.FromException<bool>(cause);
+        var fail = false;
+        var source = new NativeHomeThemePreferences(file, new(HomeDataScope.DeviceLocal, "precommit-failure-profile"),
+            UserPreferencesService.ProjectLegacyHomeTheme,
+            _ => fail ? new ValueTask<bool>(actualAuthority) : ValueTask.FromResult(true), callback => Dispatcher.UIThread.Post(callback));
+        try
+        {
+            await source.RefreshAsync();
+            var initial = await File.ReadAllBytesAsync(file);
+            var write = source.CreateSettingsWriteOutcome();
+            var target = ThemeTarget(source, "Glow");
+            fail = true;
+            var error = await Assert.ThrowsAsync<IOException>(() => write.ApplyAsync(target));
+            Assert.Same(cause, error); Assert.Null(write.ConfirmedWrite);
+            Assert.Empty(write.PostCommitObservations);
+            var called = false;
+            await Assert.ThrowsAsync<InvalidOperationException>(() => write.ObserveAfterWriteAsync(() =>
+            { called = true; return Task.CompletedTask; }));
+            Assert.False(called);
+            Assert.False(write.RetainPostCommitFailure(null, new InvalidOperationException("No receipt exists")));
+            Assert.Equal(initial, await File.ReadAllBytesAsync(file));
+            var retained = Assert.Single(source.AuthorityObservations);
+            Assert.Same(actualAuthority, retained.Source); Assert.Same(cause, retained.Cause);
+            var close = await Assert.ThrowsAnyAsync<Exception>(() => source.DisposeAsync().AsTask());
+            Assert.True(ReferenceEquals(close, cause) || close is AggregateException group &&
+                group.Flatten().InnerExceptions.Any(retainedCause => ReferenceEquals(retainedCause, cause)));
+        }
+        finally
+        {
+            try { await source.DisposeAsync(); }
+            catch (Exception close) when (ReferenceEquals(close, cause) || close is AggregateException group &&
+                group.Flatten().InnerExceptions.Any(retainedCause => ReferenceEquals(retainedCause, cause))) { }
+            Directory.Delete(root, true);
+        }
+    }
+
+    private static object ThemeTarget(NativeHomeThemePreferences source, string name) =>
+        AppearanceTarget(source, "HomeThemeChoices", name);
+    private static object AppearanceTarget(NativeHomeThemePreferences source, string collection, string name) =>
+        Assert.Single(Assert.IsAssignableFrom<IEnumerable<Dictionary<string, object?>>>(source.SettingsBindings()[collection]),
+            choice => Equals(choice["Name"], name))["Target"]!;
 
     [AvaloniaFact]
     public async Task Authored_Events_rail_uses_canonical_source_and_retains_its_destination_between_sections()

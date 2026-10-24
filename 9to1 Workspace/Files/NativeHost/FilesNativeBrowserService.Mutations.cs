@@ -108,6 +108,7 @@ public sealed partial class FilesNativeBrowserService
             "Delete" => $"Move to Trash: {Name}. Contents remain recoverable.",
             "Restore" => $"Restore to original folder: {Name}",
             "Move" => $"Move ‘{Name}’ to ‘{DestinationName}’",
+            "Share.Revoke" or "Share.Grant" => Issuer.DescribeNativeShareMutation(this),
             _ => $"Rename to: {Name}"
         };
         public bool HasObservedOutcome { get { lock (Gate) return OriginalOutcome is not null; } }

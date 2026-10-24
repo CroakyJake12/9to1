@@ -1,5 +1,7 @@
 using System.Reflection;
 using Avalonia.Controls;
+using Avalonia.Automation;
+using Avalonia.Interactivity;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
@@ -490,6 +492,273 @@ public sealed class FilesNativeBrowserMutationTests
             Assert.Equal(before, (await h.Workspace.Provider.GetAsync(file, token)).Value);
         }
         finally { Assert.NotNull(await Record.ExceptionAsync(() => view.CloseAndDrainAsync())); window.Close(); }
+    }
+
+    [Theory]
+    [InlineData(FilesAccessRole.Viewer, FilesAccessRole.Editor)]
+    [InlineData(FilesAccessRole.Editor, FilesAccessRole.Viewer)]
+    public async Task Existing_recipient_role_changes_require_Home_and_keep_original_identity_expiry_and_one_shot_ACK(
+        FilesAccessRole beforeRole, FilesAccessRole afterRole)
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, beforeRole, token);
+        var prepared = await h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares, seed.Grant, afterRole,
+            h.Workspace.Actor, () => true, "files-role-control", token);
+        Assert.Equal(HomePermissionRequestState.PendingApproval, prepared.Approval.State);
+        Assert.True(h.Browser.IsNativeShareMutation(prepared)); Assert.False(h.Browser.IsNativeShareRevocation(prepared));
+        Assert.Contains(afterRole.ToString(), h.Browser.DescribeNativeShareMutation(prepared));
+        Assert.Equal(h.Browser.DescribeNativeShareMutation(prepared), prepared.Description);
+        Assert.Throws<UnauthorizedAccessException>(() => h.Browser.DescribeNativeShareRevocation(prepared));
+        Assert.Throws<UnauthorizedAccessException>(() => h.Browser.ReadObservedNativeShareRevocation(prepared));
+        var evidence = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        Assert.True((await h.Browser.ApplyNativeShareMutationAsync(prepared, token)).AwaitingHomeReview);
+        Assert.Equal(evidence, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+        Assert.Null(h.Browser.ReadObservedNativeShareMutation(prepared));
+        Assert.False(h.Browser.WasNativeShareMutationCommitted(prepared));
+        Assert.True((await h.Permissions.DecideAsync(prepared.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+        var actual = h.Browser.ApplyNativeShareMutationAsync(prepared, token);
+        Assert.Same(actual, h.Browser.ApplyNativeShareMutationAsync(prepared, token));
+        var outcome = await actual;
+        Assert.True(outcome.AuditRecorded); Assert.False(outcome.AwaitingHomeReview);
+        var ack = h.Browser.ReadObservedNativeShareMutation(prepared)!;
+        Assert.True(ack.IsSuccess); Assert.True(h.Browser.WasNativeShareMutationCommitted(prepared));
+        Assert.Equal(afterRole, ack.Value!.Share.Role); Assert.False(ack.Value.Share.IsRevoked);
+        Assert.NotEqual(seed.Grant.Share.Id, ack.Value.Share.Id);
+        Assert.Equal(seed.Grant.Share.ItemId, ack.Value.Share.ItemId);
+        Assert.Equal(seed.Grant.Share.PrincipalId, ack.Value.Share.PrincipalId);
+        Assert.Equal(seed.Grant.RecipientEmail, ack.Value.RecipientEmail);
+        Assert.Equal(seed.Grant.Share.ExpiresAt, ack.Value.Share.ExpiresAt);
+        Assert.Equal(h.Workspace.Actor.ActorId, ack.Value.GrantedByPrincipalId);
+        var authorization = await h.Permissions.GetAuthorizationAsync(prepared.Approval.RequestId, token);
+        Assert.Equal(HomePermissionRequestState.Succeeded, authorization.State);
+        var page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var row = page.Items.Single(item => item.Id == seed.Item.Id);
+        var reopened = await h.Browser.ReadNativeSharesAsync(page, row, h.Workspace.Actor, () => true, token: token);
+        Assert.True(reopened.Grants.Single(item => item.Share.Id == seed.Grant.Share.Id).Share.IsRevoked);
+        Assert.Equal(ack.Value, reopened.Grants.Single(item => item.Share.Id == ack.Value.Share.Id));
+        var after = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        Assert.Same(actual, h.Browser.ApplyNativeShareMutationAsync(prepared, token));
+        Assert.True((await h.Browser.RetryNativeMutationAuditAsync(prepared, token)).Succeeded);
+        Assert.Equal(after, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+    }
+
+    [Fact]
+    public async Task Declined_role_change_never_creates_a_replacement_grant()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        var request = await h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares, seed.Grant, FilesAccessRole.Editor,
+            h.Workspace.Actor, () => true, "files-role-decline", token);
+        var before = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        Assert.True((await h.Permissions.DecideAsync(request.Approval.RequestId, HomeApprovalChoice.Decline,
+            cancellationToken: token)).Succeeded);
+        Assert.True((await h.Browser.ApplyNativeShareMutationAsync(request, token)).AwaitingHomeReview);
+        Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+        Assert.Null(h.Browser.ReadObservedNativeShareMutation(request));
+        h.Browser.RetireNativeMutationReview(request);
+        Assert.Throws<InvalidOperationException>(() => { _ = h.Browser.ApplyNativeShareMutationAsync(request, token); });
+    }
+
+    [Fact]
+    public async Task Role_changes_reject_copied_grants_noop_and_owner_scope_without_requesting_permission()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        var before = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares,
+            seed.Grant with { }, FilesAccessRole.Editor, h.Workspace.Actor, () => true, "files-role-copy", token));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares,
+            seed.Grant, FilesAccessRole.Viewer, h.Workspace.Actor, () => true, "files-role-noop", token));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares,
+            seed.Grant, FilesAccessRole.Owner, h.Workspace.Actor, () => true, "files-role-owner", token));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => h.Browser.ReadNativeSharesAsync(seed.Page with { },
+            seed.Item, h.Workspace.Actor, () => true, token: token));
+        Assert.Empty((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+        Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+    }
+
+    [Fact]
+    public async Task Original_role_review_cannot_commit_after_lifetime_or_selected_item_revision_changes()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        var alive = true;
+        var retired = await h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares, seed.Grant, FilesAccessRole.Editor,
+            h.Workspace.Actor, () => alive, "files-role-retired", token);
+        Assert.True((await h.Permissions.DecideAsync(retired.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+        var before = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        alive = false;
+        var denied = h.Browser.ApplyNativeShareMutationAsync(retired, token);
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => denied);
+        Assert.Same(denied, h.Browser.ApplyNativeShareMutationAsync(retired, token));
+        Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+        var stale = await h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares, seed.Grant, FilesAccessRole.Editor,
+            h.Workspace.Actor, () => true, "files-role-stale", token);
+        Assert.True((await h.Permissions.DecideAsync(stale.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+        var rename = await h.Browser.PrepareNativeMutationAsync(seed.Page, seed.Item, h.Workspace.Actor,
+            "Rename", "Changed before role commit", () => true, "files-role-intervening-rename", token);
+        Assert.True((await h.Permissions.DecideAsync(rename.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+        Assert.True((await h.Browser.ApplyNativeMutationAsync(rename, token)).Operation!.IsSuccess);
+        var afterRename = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        var staleError = await Assert.ThrowsAsync<InvalidOperationException>(() => h.Browser.ApplyNativeShareMutationAsync(stale, token));
+        Assert.Equal("The displayed Files folder changed.", staleError.Message);
+        Assert.Equal(afterRename, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+        Assert.Null(h.Browser.ReadObservedNativeShareMutation(stale));
+    }
+
+    [Fact]
+    public async Task Saved_role_ACK_survives_Home_audit_fault_and_retry_cannot_grant_again()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var observer = new PersistedObserver();
+        await using var h = await Harness.CreateAsync(token, observer);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        var prepared = await h.Browser.PrepareNativeShareRoleChangeAsync(seed.Shares, seed.Grant, FilesAccessRole.Editor,
+            h.Workspace.Actor, () => true, "files-role-audit", token);
+        Assert.True((await h.Permissions.DecideAsync(prepared.Approval.RequestId, HomeApprovalChoice.Accept,
+            cancellationToken: token)).Succeeded);
+        var fault = new IOException("Original sharing audit acknowledgement failed after persistence.");
+        var companion = new InvalidOperationException("Retain the original sharing audit companion.");
+        var faults = 0;
+        observer.BeforeAcknowledgement = async (id, revision, ct) =>
+        {
+            if (id != "home.permissions-trust") return;
+            var home = await h.Home.ReadAsync(ct); Assert.True(home.IsSuccess);
+            var record = home.State!.Records.Single(item => item.RecordId == id); Assert.Equal(revision, record.Revision);
+            var request = record.Payload.GetProperty("Requests").EnumerateArray()
+                .Single(item => item.GetProperty("RequestId").GetString() == prepared.Approval.RequestId);
+            if (request.GetProperty("State").GetInt32() == (int)HomePermissionRequestState.Succeeded
+                && Interlocked.Increment(ref faults) == 1)
+            {
+                Assert.True(h.Browser.WasNativeShareMutationCommitted(prepared));
+                throw new AggregateException(fault, companion);
+            }
+        };
+        var actual = h.Browser.ApplyNativeShareMutationAsync(prepared, token);
+        var error = await Assert.ThrowsAsync<AggregateException>(() => actual);
+        Assert.Contains(error.Flatten().InnerExceptions, item => ReferenceEquals(item, fault));
+        Assert.Contains(error.Flatten().InnerExceptions, item => ReferenceEquals(item, companion));
+        var ack = h.Browser.ReadObservedNativeShareMutation(prepared)!;
+        Assert.True(ack.IsSuccess); Assert.Equal(FilesAccessRole.Editor, ack.Value!.Share.Role);
+        Assert.True(prepared.HasObservedOutcome); Assert.True(h.Browser.WasNativeShareMutationCommitted(prepared));
+        Assert.Same(actual, h.Browser.ApplyNativeShareMutationAsync(prepared, token));
+        var beforeRetry = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+        observer.BeforeAcknowledgement = null;
+        Assert.True((await h.Browser.RetryNativeMutationAuditAsync(prepared, token)).Succeeded);
+        Assert.Same(ack, h.Browser.ReadObservedNativeShareMutation(prepared));
+        Assert.Equal(beforeRetry, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+        Assert.Same(actual, h.Browser.ApplyNativeShareMutationAsync(prepared, token));
+        Assert.Equal(1, faults);
+    }
+
+    [AvaloniaFact]
+    public async Task Canonical_role_button_stages_decline_and_apply_without_new_recipient_or_duplicate_effect()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using var h = await Harness.CreateAsync(token);
+        var seed = await SeedOriginalNativeShareAsync(h, FilesAccessRole.Viewer, token);
+        await using var view = new FilesNativeBrowserSurface(h.Browser, null, h.Workspace.Actor,
+            new Readiness(), CancellationToken.None);
+        var window = new Window { Content = view, Width = 920, Height = 760 }; window.Show();
+        try
+        {
+            await view.InitializeAsync(token);
+            await view.OpenOriginalLocationAsync(seed.Page.StoreID, h.Parent.Value, token);
+            window.UpdateLayout();
+            var list = Assert.Single(view.GetVisualDescendants().OfType<ListBox>());
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            var change = NativeRoleButton(view); Assert.Equal("Make editor…", change.Content);
+            var add = Assert.Single(view.GetVisualDescendants().OfType<Button>(),
+                button => Equals(button.Content, "Add recipient")); Assert.False(add.IsEnabled);
+            var before = await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token);
+            change.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Apply") == true, token);
+            Assert.False(view.CanPrepareOriginalClose());
+            Assert.False(view.IsActionAvailable("9to1.Files.Share.ChangeRole"));
+            Assert.False(view.IsActionAvailable("9to1.Files.Refresh"));
+            var declined = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.Equal("9to1.Files.Share.Grant", declined.Scope.ActionName);
+            Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+            Assert.True((await h.Permissions.DecideAsync(declined.RequestId, HomeApprovalChoice.Decline,
+                cancellationToken: token)).Succeeded);
+            await view.DispatchAsync("9to1.Files.CancelReview", null, token);
+            Assert.True(view.CanPrepareOriginalClose());
+            Assert.Equal(before, await h.Workspace.Provider.GetStoreEvidenceAsync(seed.Page.StoreID, token));
+            NativeRoleButton(view).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Apply") == true, token);
+            var accepted = Assert.Single((await h.Permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+            Assert.True((await h.Permissions.DecideAsync(accepted.RequestId, HomeApprovalChoice.Accept,
+                cancellationToken: token)).Succeeded);
+            await CaptureComponentSceneAsync(window, "files-existing-recipient-role-review");
+            var apply = Assert.Single(view.GetVisualDescendants().OfType<Button>(),
+                button => AutomationProperties.GetName(button) == "Apply the original Home-reviewed Files change");
+            apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await AwaitNativeRoleStateAsync(window, () => view.IsActionAvailable("9to1.Files.Apply") == false
+                && view.IsActionAvailable("9to1.Files.Refresh") == true, token);
+            Assert.True(view.TryGetValue("SharingVisible", out var visible)); Assert.False(Assert.IsType<bool>(visible));
+            list.SelectedItem = list.Items.Cast<HostedItemMetadata>().Single(item => item.Id == seed.Item.Id);
+            await view.DispatchAsync("9to1.Files.Share.Get", null, token); window.UpdateLayout();
+            Assert.Equal("Make viewer…", NativeRoleButton(view).Content);
+            var grants = Assert.IsAssignableFrom<IEnumerable<FilesEmailShare>>(ReadNativeValue(view, "SharingGrants")).ToArray();
+            Assert.Equal(2, grants.Length);
+            var active = Assert.Single(grants, item => !item.Share.IsRevoked);
+            Assert.Equal(FilesAccessRole.Editor, active.Share.Role); Assert.NotEqual(seed.Grant.Share.Id, active.Share.Id);
+            Assert.Equal(seed.Grant.Share.PrincipalId, active.Share.PrincipalId);
+            Assert.Equal(seed.Grant.Share.ExpiresAt, active.Share.ExpiresAt);
+            Assert.True(grants.Single(item => item.Share.Id == seed.Grant.Share.Id).Share.IsRevoked);
+            Assert.True(view.CanPrepareOriginalClose());
+            await CaptureComponentSceneAsync(window, "files-existing-recipient-role-applied");
+        }
+        finally { await view.CloseAndDrainAsync(); window.Close(); }
+    }
+
+    private static object? ReadNativeValue(FilesNativeBrowserSurface view, string name)
+    { Assert.True(view.TryGetValue(name, out var value)); return value; }
+
+    private static Button NativeRoleButton(FilesNativeBrowserSurface view) =>
+        Assert.Single(view.GetVisualDescendants().OfType<Button>(), button => button.IsEnabled
+            && AutomationProperties.GetName(button) == "Review changing this existing recipient’s access role in Home");
+
+    private static async Task AwaitNativeRoleStateAsync(Window window, Func<bool> ready, CancellationToken token)
+    {
+        for (var i = 0; i < 1000; i++)
+        {
+            window.UpdateLayout(); Dispatcher.UIThread.RunJobs();
+            if (ready()) return;
+            await Task.Delay(5, token);
+        }
+        Assert.True(ready(), "The actual canonical CUI action did not settle within the bounded UI pump.");
+    }
+
+    /// <summary>The initial recipient is an explicitly synthetic trusted fixture seed, not account resolution.
+    /// All subsequent role review/claim/commit/audit runs the maintained genuine Home/Files graph.</summary>
+    private static async Task<(FilesNativeBrowserPage Page, HostedItemMetadata Item,
+        FilesNativeBrowserSharePage Shares, FilesEmailShare Grant)> SeedOriginalNativeShareAsync(
+        Harness h, FilesAccessRole role, CancellationToken token)
+    {
+        var id = await CreateReviewedFolder(h, h.Parent.Value, "Existing shared folder", token);
+        var page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        var item = page.Items.Single(row => row.Id == id);
+        var check = await h.Browser.CaptureOriginalPageReadCheckAsync(page, h.Workspace.Actor, () => true, token);
+        var seed = new FilesEmailShareRequest(page.StoreID, item.Id, item.CurrentRevisionId!.Value,
+            "fixture-recipient-" + Guid.NewGuid().ToString("N"), "existing-recipient@example.test", role,
+            DateTimeOffset.UtcNow.AddDays(1), new(Guid.NewGuid()));
+        var granted = await h.Workspace.Provider.GrantEmailAccessAsync(seed,
+            new FilesCommitAuthorityGuard(h.Workspace.Actor.ActorId, check), token);
+        Assert.True(granted.IsSuccess);
+        page = await h.Browser.ListAsync(h.Workspace.Actor, h.Parent.Value, token: token);
+        item = page.Items.Single(row => row.Id == id);
+        var shares = await h.Browser.ReadNativeSharesAsync(page, item, h.Workspace.Actor, () => true, token: token);
+        return (page, item, shares, Assert.Single(shares.Grants));
     }
 
     private static async Task CaptureComponentSceneAsync(Window window, string name)

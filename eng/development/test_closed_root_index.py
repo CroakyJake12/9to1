@@ -53,8 +53,10 @@ class ClosedRootIndexTests(unittest.TestCase):
                    GIT_COMMITTER_DATE="2026-10-24T00:00:00+0000")
         if index is not None:
             env["GIT_INDEX_FILE"] = str(index)
+        # Git replaces indexes via lock files using the child process umask.
+        # Keep private fixture indexes private under the CI runner's usual 022.
         return subprocess.check_output(["git", "--no-optional-locks", "-C", str(repo or self.repo), *args],
-                                       input=input, stderr=subprocess.PIPE, env=env)
+                                       input=input, stderr=subprocess.PIPE, env=env, umask=0o077)
 
     def prepare(self, **overrides):
         values = dict(repo=self.repo, index=self.index, expected_sha256=sha(self.index),

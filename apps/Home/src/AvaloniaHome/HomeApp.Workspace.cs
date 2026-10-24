@@ -9,7 +9,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
+using Haven.Core;
+using Haven.Desktop.Services;
+using Haven.Desktop.HavenUI.Tokens;
+using System.Text.Json.Nodes;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
@@ -23,6 +28,13 @@ internal sealed partial class HomeApp
     private ListBox _workspaceRequests = new();
     private AuthenticatedResourceActor? _workspaceActor;
     private Window? _workspaceWindow;
+    private NativeHomeThemePreferences? _homeTheme;
+    private Task? _homeAppearanceClose;
+    private bool _homeAppearanceClosing;
+    private string? _homeAppearanceStatus;
+    private bool _homeAppearanceProjectionUnavailable;
+    private HomeThemeOperationResult? _lastConfirmedAppearanceWrite;
+    private readonly List<NativeHomeThemePreferences.SettingsWriteOutcome> _homeAppearanceWriteObservations = [];
     private bool _workspaceBusy;
     private bool _workspaceInitialized;
     private IReadOnlyList<HomePermissionRequest> _displayedRequests = [];
@@ -50,6 +62,7 @@ internal sealed partial class HomeApp
         _controller = new HomeCuiController(_dashboard, layoutService: layouts,
             eventsService: new HomeEventsService([activity], activity), featureNavigation: _featureNavigation);
         _workspaceActor = actor;
+        await InitializeHomeAppearanceAsync(actor).ConfigureAwait(false);
         foreach (var route in new[] { HomeRoute.Dashboard, HomeRoute.Events, HomeRoute.Settings, HomeRoute.Permissions })
         {
             var registered = _featureNavigation.Register(new OwnedRoute(this, HomeRouteIds.For(route)));
@@ -59,6 +72,115 @@ internal sealed partial class HomeApp
         foreach (var tile in _controller.Surface.Layout!.Tiles.Where(tile => tile.Visibility == HomeTileVisibility.Visible))
             await _controller.RefreshTileAsync(tile.TileInstanceId).ConfigureAwait(false);
         _workspaceInitialized = true;
+    }
+
+    private async Task InitializeHomeAppearanceAsync(AuthenticatedResourceActor actor)
+    {
+        // Only the SAME trusted producer's captured binding selects a write path. The startup
+        // reader remains intact when a default candidate has not supplied genuine path custody.
+        var binding = _nativeComposition.Services.GetService(typeof(HomeNativePreferenceBinding)) as HomeNativePreferenceBinding;
+        if (binding is null || !binding.CanWrite)
+        {
+            _homeAppearanceStatus = binding?.Diagnostic ?? "Appearance changes require the installed Home settings owner. Your saved appearance is preserved.";
+            return;
+        }
+        HomeThemePreference Project(JsonObject document, HomeThemeScope scope) =>
+            HomeNativePreferenceFile.ProjectLegacyTheme(document, scope, (name, appearance) =>
+            {
+                var colour = AccentColourCatalog.Parse(name)
+                    ?? throw new InvalidDataException("The saved native accent is unsupported and was preserved.");
+                return "#" + AccentColourCatalog.Resolve(colour, (HavenUiAppearance)appearance).Primary[^6..];
+            });
+        _homeTheme = new NativeHomeThemePreferences(binding.Path,
+            new HomeThemeScope(HomeDataScope.DeviceLocal, actor.ProfileId), Project,
+            async token =>
+            {
+                if (!HomeAppearanceServicesCurrent()) return false;
+                var current = await _nativeComposition.Profiles.GetCurrentAsync(token).ConfigureAwait(false);
+                return current == actor && HomeAppearanceServicesCurrent();
+            },
+            action => Dispatcher.UIThread.Post(action));
+        await _homeTheme.RefreshAsync().ConfigureAwait(false);
+        _homeTheme.Changed += OnHomeAppearanceChanged;
+    }
+
+    private bool HomeAppearanceServicesCurrent() => !_homeAppearanceClosing &&
+        _nativeComposition.OriginalCloseTask is null && _nativeComposition.OriginalProcessRetirementRequestTask is null &&
+        _nativeComposition.OriginalStartTask is { IsCompletedSuccessfully: true } &&
+        new[] { "home.core", "home.state", "permissions.trust" }.All(id =>
+            _nativeComposition.Runtime.Current.Services.Any(service => service.ServiceId == id &&
+                new HomeServiceRequirement(id, 1).Accepts(service.ContractVersion) && service.IsAvailable && service.State == HomeServiceLifecycleState.Ready));
+
+    private void OnHomeAppearanceChanged(object? sender, EventArgs args) => _ = RunOriginalNativeWork(() =>
+    {
+        if (_homeAppearanceClosing || _homeAppearanceProjectionUnavailable || _originalLifetime.OriginalShutdown is not null)
+            return Task.CompletedTask;
+        try
+        {
+            ApplyHomeAppearanceToHost(); ApplyWorkspaceBindings(); _loader?.RefreshBindings();
+            return Task.CompletedTask;
+        }
+        catch (Exception cause)
+        {
+            // This independent Changed notification is admitted original host work, never an
+            // untracked dispatcher callback and never another attempt at the saved write.
+            _homeAppearanceProjectionUnavailable = true;
+            var saved = _lastConfirmedAppearanceWrite?.Value?.Preference;
+            var sameSavedObservation = saved is not null && _homeTheme is { } source &&
+                saved.Revision == source.Current.Revision && saved.ThemeName == source.Current.Name &&
+                source.Current.ScopeId == "device:" + saved.Scope.OwnerId;
+            _homeAppearanceStatus = sameSavedObservation
+                ? NativeHomeThemePreferences.SettingsWriteOutcome.SavedObservationDiagnostic
+                : "Appearance could not be displayed. Reopen Home to refresh the current profile or view.";
+            var failures = new List<Exception> { cause };
+            try { _controller.Surface.SetNavigationStatus(_homeAppearanceStatus); } catch (Exception error) { failures.Add(error); }
+            try { ApplyWorkspaceBindings(); } catch (Exception error) { failures.Add(error); }
+            try { _loader?.RefreshBindings(); } catch (Exception error) { failures.Add(error); }
+            // Preserve a synchronous presentation fault as a faulted callback Task, including
+            // a raw OCE. The existing host lifetime joins this exact callback before Core close.
+            return Task.FromException(failures.Count == 1 ? cause :
+                new AggregateException("Original Home appearance notification and presentation failures.", failures));
+        }
+    });
+
+    private void ApplyHomeAppearanceToHost()
+    {
+        if (_homeTheme is not { } source) return;
+        var resolved = source.Context.Current;
+        CuiThemeScopeApplier.ApplyGlobalTheme(resolved.Theme.BaseTheme, "Home", resolved.Accessibility,
+            appearanceOverride: resolved.Appearance, accentPreference: resolved.EffectiveAccent,
+            customTheme: resolved.Theme.CustomTheme);
+    }
+
+    private Task PrepareOriginalHomeAppearanceClose()
+    {
+        if (_homeAppearanceClose is not null) return _homeAppearanceClose;
+        _homeAppearanceClosing = true;
+        if (_homeTheme is { } source) source.Changed -= OnHomeAppearanceChanged;
+        return _homeAppearanceClose = _homeTheme?.DisposeAsync().AsTask() ?? Task.CompletedTask;
+    }
+
+    private Task RunHomeAppearanceActionAsync(object? target)
+    {
+        var write = _homeTheme?.CreateSettingsWriteOutcome();
+        return RunWorkspaceActionAsync(() => ApplyHomeAppearanceAsync(target, write), write);
+    }
+
+    private async Task ApplyHomeAppearanceAsync(object? target, NativeHomeThemePreferences.SettingsWriteOutcome? write)
+    {
+        if (_homeTheme is null || write is null || _homeAppearanceClosing || _homeAppearanceProjectionUnavailable)
+        { _homeAppearanceStatus ??= "Appearance changes are unavailable. Your saved settings have been preserved."; return; }
+        var result = await write.ApplyAsync(target);
+        if (result.Succeeded) _lastConfirmedAppearanceWrite = result;
+        _homeAppearanceStatus = result.Succeeded
+            ? (_homeAppearanceProjectionUnavailable ? NativeHomeThemePreferences.SettingsWriteOutcome.SavedObservationDiagnostic : "Appearance saved.")
+            : result.Diagnostic ?? (result.Code == "SettingsRetired" ? "Appearance closed." : "Appearance changed. Refresh before choosing again.");
+    }
+
+    private async Task RefreshHomeAppearanceAsync()
+    {
+        if (_homeTheme is not { } source || _homeAppearanceClosing) return;
+        await source.RefreshAsync(); _homeAppearanceStatus = null;
     }
 
     private async Task RequireWorkspaceActorAsync()
@@ -75,6 +197,9 @@ internal sealed partial class HomeApp
         foreach (var command in LayoutActions)
             RegisterWorkspaceAction(command, () => DispatchWorkspaceAsync(command));
         RegisterWorkspaceAction("RefreshHomePermissions", RefreshWorkspacePermissionsAsync);
+        RegisterWorkspaceAction("RefreshHomeAppearance", RefreshHomeAppearanceAsync);
+        _viewModel.On("ApplyHomeAppearance", parameter => _ = RunOriginalNativeWork(() =>
+            RunHomeAppearanceActionAsync(parameter)));
         RegisterWorkspaceAction("RefreshHomeWorkspace", RefreshWorkspaceAsync);
         RegisterWorkspaceAction("RefreshEvents", RefreshWorkspaceEventsAsync);
         RegisterWorkspaceAction("OpenEventObject", OpenWorkspaceEventAsync);
@@ -100,7 +225,8 @@ internal sealed partial class HomeApp
         _viewModel.SetActionAvailability(command, _workspaceInitialized);
     }
 
-    private async Task RunWorkspaceActionAsync(Func<Task> callback)
+    private async Task RunWorkspaceActionAsync(Func<Task> callback,
+        NativeHomeThemePreferences.SettingsWriteOutcome? appearanceWrite = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_workspaceBusy)
@@ -117,24 +243,60 @@ internal sealed partial class HomeApp
             ApplyWorkspaceBindings();
             await RequireWorkspaceActorAsync();
             await callback();
-            await RequireWorkspaceActorAsync();
+            if (appearanceWrite?.ConfirmedWrite is not null)
+            {
+                await appearanceWrite.ObserveAfterWriteAsync(RequireWorkspaceActorAsync);
+                if (appearanceWrite.PostCommitObservations.Count != 0) RetireAppearanceProjection();
+            }
+            else await RequireWorkspaceActorAsync();
         }
         catch (Exception cause)
         {
-            failures.Add(cause);
-            try { _controller.Surface.SetNavigationStatus($"Home operation failed: {cause.Message}"); }
-            catch (Exception projection) { failures.Add(projection); }
+            if (appearanceWrite?.RetainPostCommitFailure(null, cause) == true) RetireAppearanceProjection();
+            else
+            {
+                failures.Add(cause);
+                try { _controller.Surface.SetNavigationStatus($"Home operation failed: {cause.Message}"); }
+                catch (Exception projection) { failures.Add(projection); }
+            }
         }
         finally
         {
             _workspaceBusy = false;
-            try { ApplyWorkspaceBindings(); } catch (Exception projection) { failures.Add(projection); }
-            try { _loader?.RefreshBindings(); } catch (Exception projection) { failures.Add(projection); }
+            if (appearanceWrite?.ConfirmedWrite is not null)
+            {
+                await appearanceWrite.ObserveAfterWriteAsync(() => { ApplyWorkspaceBindings(); return Task.CompletedTask; });
+                await appearanceWrite.ObserveAfterWriteAsync(() => { _loader?.RefreshBindings(); return Task.CompletedTask; });
+                if (appearanceWrite.PostCommitObservations.Count != 0)
+                {
+                    RetireAppearanceProjection();
+                    // Best-effort scoped redaction/diagnostic only. This never repeats Set/CAS.
+                    await appearanceWrite.ObserveAfterWriteAsync(() =>
+                    {
+                        _controller.Surface.SetNavigationStatus(_homeAppearanceStatus!);
+                        ApplyWorkspaceBindings(); _loader?.RefreshBindings(); return Task.CompletedTask;
+                    });
+                    // The existing native-host lifetime joins this action before Core close,
+                    // which retains these SAME failures independently of the saved-write result.
+                    _homeAppearanceWriteObservations.Add(appearanceWrite);
+                }
+            }
+            else
+            {
+                try { ApplyWorkspaceBindings(); } catch (Exception projection) { failures.Add(projection); }
+                try { _loader?.RefreshBindings(); } catch (Exception projection) { failures.Add(projection); }
+            }
         }
         if (failures.Count == 1)
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures.Count > 1)
             throw new AggregateException("Original Home operation and presentation failures.", failures);
+    }
+
+    private void RetireAppearanceProjection()
+    {
+        _homeAppearanceProjectionUnavailable = true;
+        _homeAppearanceStatus = NativeHomeThemePreferences.SettingsWriteOutcome.SavedObservationDiagnostic;
     }
 
     private async Task DispatchWorkspaceAsync(string command)
@@ -403,6 +565,21 @@ internal sealed partial class HomeApp
         _viewModel.SetActionAvailability("OpenEventObject", canOpen);
         _viewModel.SetActionAvailability("RefreshEvents", _workspaceInitialized && !_workspaceBusy);
         _viewModel.SetActionAvailability("SelectEventObject", _workspaceInitialized && !_workspaceBusy);
+        if (_homeTheme is { } appearance && !_homeAppearanceProjectionUnavailable)
+            foreach (var (key, value) in appearance.SettingsBindings()) _viewModel.Set(key, value);
+        else
+        {
+            _viewModel.Set("HomeAppearanceScope", "Applies to this device profile.");
+            _viewModel.Set("HomeThemeChoices", Array.Empty<object>());
+            _viewModel.Set("HomeAppearanceChoices", Array.Empty<object>());
+            _viewModel.Set("HomeAccessibilityChoices", Array.Empty<object>());
+        }
+        var canEditAppearance = _homeTheme is not null && _workspaceInitialized && !_workspaceBusy && !_homeAppearanceClosing && !_homeAppearanceProjectionUnavailable;
+        _viewModel.Set("HomeAppearanceAvailable", canEditAppearance);
+        _viewModel.Set("HomeAppearanceCanRefresh", canEditAppearance);
+        if (_homeAppearanceStatus is not null) _viewModel.Set("HomeAppearanceStatus", _homeAppearanceStatus);
+        _viewModel.SetActionAvailability("ApplyHomeAppearance", canEditAppearance);
+        _viewModel.SetActionAvailability("RefreshHomeAppearance", canEditAppearance);
         _viewModel.Set("HomeProfileSummary", _workspaceActor is null ? "Local profile is unavailable." :
             $"Device profile {_workspaceActor.ProfileId}. CAKE ID sign-in is separate from Home permissions. Open CAKE ID account to connect your session.");
         _viewModel.Set("HomeLayoutSummary", surface.Layout is null ? "Dashboard preferences have not loaded." :

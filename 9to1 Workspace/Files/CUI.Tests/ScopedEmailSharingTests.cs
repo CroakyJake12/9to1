@@ -10,6 +10,7 @@ internal static class ScopedEmailSharingTests
     {
         await ViewerScopeSurvivesRestart();
         await EditorScopeRevocationAndReplay();
+        await ExistingRecipientRoleReplacementSurvivesRestart();
         await ExpiryAndLastPublicationFence();
         await LegacyAndCorruptStateArePreserved();
         await MissingOrReplacedStoreCannotBeRecreated();
@@ -97,6 +98,52 @@ internal static class ScopedEmailSharingTests
         var oldGrantReplay = await f.Provider.GrantEmailAccessAsync(request, f.OwnerGuard);
         Require(oldGrantReplay.Value!.Share.IsRevoked, "replaying the original grant cannot revive it or report it currently active");
         Require((await f.Provider.GetAsync(f.Sibling.Id, default)).Value!.Name == f.Sibling.Name, "unrelated canonical data remains unchanged");
+    }
+
+    private static async Task ExistingRecipientRoleReplacementSurvivesRestart()
+    {
+        using var f = new Fixture(); await f.Initialize();
+        var initial = (await f.Request(FilesAccessRole.Viewer)) with { ExpiresAt = f.Clock.Now.AddHours(1) };
+        var viewer = (await f.Provider.GrantEmailAccessAsync(initial, f.OwnerGuard)).Value!;
+        var oldViewer = (await f.Provider.OpenSharedViewAsync(viewer.Share.Id, f.RecipientGuard)).Value!;
+        var root = (await f.Provider.GetAsync(f.Root.Id, default)).Value!;
+        var upgrade = initial with { ExpectedRevision = root.CurrentRevisionId!.Value,
+            Role = FilesAccessRole.Editor, OperationId = new(Guid.NewGuid()) };
+        var editorResult = await f.Restart().GrantEmailAccessAsync(upgrade, f.OwnerGuard);
+        Require(editorResult.IsSuccess, "an explicit role decision replaces the existing recipient grant");
+        var editor = editorResult.Value!;
+        Require(editor.Share.Id != viewer.Share.Id && editor.Share.Role == FilesAccessRole.Editor && !editor.Share.IsRevoked,
+            "replacement has a new active ShareID and the reviewed Editor role");
+        Require(editor.Share.PrincipalId == viewer.Share.PrincipalId && editor.RecipientEmail == viewer.RecipientEmail
+            && editor.Share.ExpiresAt == viewer.Share.ExpiresAt, "role changes retain principal, address and expiry");
+        Denied(await oldViewer.GetAsync(f.Child.Id, default), "a retained Viewer grant does not become an Editor capability");
+        var restarted = f.Restart();
+        var grants = (await restarted.GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard)).Value!.Items;
+        Require(grants.Single(item => item.Share.Id == viewer.Share.Id).Share.IsRevoked, "old grant revocation survives restart");
+        Require(grants.Single(item => item.Share.Id == editor.Share.Id).Share.Role == FilesAccessRole.Editor,
+            "the replacement role survives restart on the same canonical item");
+        var editorView = (await restarted.OpenSharedViewAsync(editor.Share.Id, f.RecipientGuard)).Value!;
+        Require((await editorView.MutateAsync(f.Rename(f.Child), "Shared metadata edit", default)).IsSuccess,
+            "the accepted Editor scope permits its implemented metadata rename");
+        var before = (await restarted.GetChangesAsync(null, 100, default)).Items.Count;
+        var replay = await restarted.GrantEmailAccessAsync(upgrade, f.OwnerGuard);
+        Require(replay.Value!.Share.Id == editor.Share.Id && (await restarted.GetChangesAsync(null, 100, default)).Items.Count == before,
+            "repeating the exact role-change operation cannot append a second grant or event");
+        root = (await restarted.GetAsync(f.Root.Id, default)).Value!;
+        var downgrade = upgrade with { ExpectedRevision = root.CurrentRevisionId!.Value,
+            Role = FilesAccessRole.Viewer, OperationId = new(Guid.NewGuid()) };
+        var currentViewer = (await restarted.GrantEmailAccessAsync(downgrade, f.OwnerGuard)).Value!;
+        Require(currentViewer.Share.Id != editor.Share.Id && currentViewer.Share.Role == FilesAccessRole.Viewer,
+            "downgrade records an independent reviewed Viewer grant");
+        Denied(await editorView.GetAsync(f.Child.Id, default), "retained Editor views lose future access after replacement");
+        Denied(await editorView.MutateAsync(f.Rename(f.Child), "must not write", default), "old Editor cannot keep mutation capability");
+        var activeViewer = (await f.Restart().OpenSharedViewAsync(currentViewer.Share.Id, f.RecipientGuard)).Value!;
+        Require(!activeViewer.Location.Capabilities.Supports(FilesProviderCapabilities.Rename), "reopened Viewer advertises no rename capability");
+        var oldReplay = await restarted.GrantEmailAccessAsync(upgrade, f.OwnerGuard);
+        Require(oldReplay.Value!.Share.IsRevoked, "replaying an obsolete upgrade cannot revive Editor access");
+        var active = (await restarted.GetEmailSharesAsync(f.Root.Id, null, f.OwnerGuard)).Value!.Items.Where(item => !item.Share.IsRevoked).ToArray();
+        Require(active.Length == 1 && active[0].Share.Id == currentViewer.Share.Id,
+            "only the latest explicit direct scope remains active, without union or cloned files");
     }
 
     private static async Task ExpiryAndLastPublicationFence()

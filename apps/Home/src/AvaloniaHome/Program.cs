@@ -206,7 +206,10 @@ internal sealed partial class HomeApp : Application
         if (_workspaceWindow?.IsVisible == true)
             throw new InvalidOperationException("The original Home shell is already open.");
         _loader?.Dispose();
-        CuiThemeScopeApplier.ApplyGlobalTheme(CuiThemePreferenceReader.Read());
+        // Preserve the old saved startup appearance until the genuine captured native preference
+        // owner exists. Configured hosts additionally subscribe through its exact live context.
+        if (_homeTheme is not null) ApplyHomeAppearanceToHost();
+        else CuiThemeScopeApplier.ApplyGlobalTheme(CuiThemePreferenceReader.Read());
         var window = new Window
         {
             Title = "9-1 Home",
@@ -230,6 +233,7 @@ internal sealed partial class HomeApp : Application
         {
             Console.WriteLine($"[9-1 Home] Loading canonical .cui: {cuiPath}");
             _loader = new CuiControlLoader();
+            if (_homeTheme is { } appearance) _loader.SetThemePreferenceContext(appearance.Context);
             RegisterWorkspaceControls(_loader, window);
             _loader.SetBindingContext(_viewModel);
             _loader.SetActionDispatcher(_viewModel);
@@ -368,6 +372,7 @@ internal sealed partial class HomeApp : Application
         // The account owner publishes/seals its close and stops actual auth/helper sources
         // BEFORE the parent waits for admitted native actions. A self-join refuses first.
         _ = PrepareOriginalNativeAccountClose(); // SAME task remains retained by its owning field.
+        _ = PrepareOriginalHomeAppearanceClose(); // Seal/cancel source before joining admitted native actions.
         return _originalLifetime.RequestShutdownAsync();
     }
 
@@ -379,6 +384,16 @@ internal sealed partial class HomeApp : Application
         finally { _homeCoreSubscription = null; }
 
         Task? accountClose = null, coreClose = null;
+        Task? appearanceClose = null;
+        try { appearanceClose = PrepareOriginalHomeAppearanceClose(); }
+        catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
+        if (appearanceClose is not null) await HomeNativeCakeCauses.JoinAsync(appearanceClose, failures).ConfigureAwait(false);
+        // HomeHostOriginalLifetime already joined admitted native actions. Their post-save
+        // observations cannot alter the confirmed write, but all original causes survive close.
+        foreach (var write in _homeAppearanceWriteObservations)
+            foreach (var observation in write.PostCommitObservations)
+                if (observation.Source is { } source) HomeNativeCakeCauses.AddTask(failures, source, observation.Cause);
+                else HomeNativeCakeCauses.Add(failures, observation.Cause);
         try { accountClose = _nativeCakeAccount.CloseAndDrainAsync(); }
         catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
         try { coreClose = _nativeComposition.CloseAndDrainAsync(); }

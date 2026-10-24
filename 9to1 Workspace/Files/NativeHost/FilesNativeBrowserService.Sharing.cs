@@ -22,10 +22,14 @@ public sealed partial class FilesNativeBrowserService
 {
     private sealed record OriginalShares(NativeFilesWorkspace Workspace, AuthenticatedResourceActor Actor,
         Func<bool> Lifetime);
-    private sealed class ShareRevocation(FilesNativeBrowserSharePage page, FilesEmailShare grant)
+    private sealed class ShareMutation(FilesNativeBrowserSharePage page, FilesEmailShare grant,
+        FilesEmailShareRequest? request)
     {
         internal readonly FilesNativeBrowserSharePage Page = page;
         internal readonly FilesEmailShare Grant = grant;
+        internal readonly FilesEmailShareRequest? Request = request;
+        internal bool IsRevocation => Request is null;
+        internal string ActionId => IsRevocation ? "9to1.Files.Share.Revoke" : "9to1.Files.Share.Grant";
         private FilesResult<FilesEmailShare>? _actual;
         internal FilesResult<FilesEmailShare>? Read() => Volatile.Read(ref _actual);
         internal void Capture(FilesResult<FilesEmailShare> actual)
@@ -35,7 +39,7 @@ public sealed partial class FilesNativeBrowserService
         }
     }
     private readonly ConditionalWeakTable<FilesNativeBrowserSharePage, OriginalShares> _issuedSharePages = new();
-    private readonly ConditionalWeakTable<PreparedMutation, ShareRevocation> _issuedShareRevocations = new();
+    private readonly ConditionalWeakTable<PreparedMutation, ShareMutation> _issuedShareMutations = new();
 
     public bool CanReviewNativeShares(FilesNativeBrowserPage page, HostedItemMetadata item) =>
         !page.IsTrash && _originalPages.TryGetValue(page, out var original)
@@ -86,9 +90,21 @@ public sealed partial class FilesNativeBrowserService
         return original;
     }
 
-    public async Task<PreparedMutation> PrepareNativeShareRevocationAsync(FilesNativeBrowserSharePage page,
+    public Task<PreparedMutation> PrepareNativeShareRevocationAsync(FilesNativeBrowserSharePage page,
         FilesEmailShare grant, AuthenticatedResourceActor actor, Func<bool> lifetime,
-        string sessionId, CancellationToken token = default)
+        string sessionId, CancellationToken token = default) =>
+        PrepareNativeShareMutationAsync(page, grant, null, actor, lifetime, sessionId, token);
+
+    /// <summary>Changes only an existing source-issued recipient's Viewer/Editor role.
+    /// Its canonical principal, address and expiry are retained; this never resolves a new recipient or sends mail.</summary>
+    public Task<PreparedMutation> PrepareNativeShareRoleChangeAsync(FilesNativeBrowserSharePage page,
+        FilesEmailShare grant, FilesAccessRole role, AuthenticatedResourceActor actor, Func<bool> lifetime,
+        string sessionId, CancellationToken token = default) =>
+        PrepareNativeShareMutationAsync(page, grant, role, actor, lifetime, sessionId, token);
+
+    private async Task<PreparedMutation> PrepareNativeShareMutationAsync(FilesNativeBrowserSharePage page,
+        FilesEmailShare grant, FilesAccessRole? requestedRole, AuthenticatedResourceActor actor, Func<bool> lifetime,
+        string sessionId, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(lifetime);
         var original = DemandSharePage(page, actor);
@@ -97,57 +113,124 @@ public sealed partial class FilesNativeBrowserService
             || !page.Grants.Any(row => ReferenceEquals(row, grant)) || grant.Share.IsRevoked
             || grant.Share.ItemId != page.Item.Id || grant.Share.Role is not (FilesAccessRole.Viewer or FilesAccessRole.Editor))
             throw new InvalidOperationException("Choose an existing direct viewer or editor grant from this access page.");
+        if (requestedRole is { } role && (role is not (FilesAccessRole.Viewer or FilesAccessRole.Editor)
+            || role == grant.Share.Role || grant.Share.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow))
+            throw new InvalidOperationException("Choose a different Viewer or Editor role on an active direct grant.");
         await RevalidateAsync(page.Page, actor, token).ConfigureAwait(false);
         bool Alive() => lifetime() && original.Lifetime();
         var now = DateTimeOffset.UtcNow;
+        var operation = requestedRole is null ? "Share.Revoke" : "Share.Grant";
         var intent = new FilesOperation(new(Guid.NewGuid()), actor.ActorId, page.Item.Id, page.Item.ParentId,
-            null, "Share.Revoke", page.Item.CurrentRevisionId, null, FilesOperationState.Pending, now, now, null, null);
+            null, operation, page.Item.CurrentRevisionId, null, FilesOperationState.Pending, now, now, null, null);
+        var request = requestedRole is { } replacementRole ? new FilesEmailShareRequest(page.Page.StoreID,
+            page.Item.Id, page.Item.CurrentRevisionId!.Value, grant.Share.PrincipalId, grant.RecipientEmail,
+            replacementRole, grant.Share.ExpiresAt, intent.Id) : null;
+        var issued = new ShareMutation(page, grant, request);
         var scopes = Array.AsReadOnly(new[] { new ResourceScope("files.item", page.Item.Id.ToString(),
             page.Item.CurrentRevisionId!.Value.ToString(), ResourceAccess.Write) });
-        var arguments = JsonSerializer.SerializeToElement(new { operationID = intent.Id.Value,
-            storeID = page.Page.StoreID, expectedStoreRevision = page.Page.StoreRevision, itemID = page.Item.Id.Value,
-            expectedRevision = page.Item.CurrentRevisionId.Value.ToString(), shareID = grant.Share.Id.Value,
-            principalID = grant.Share.PrincipalId, recipientEmail = grant.RecipientEmail,
-            role = grant.Share.Role.ToString(), expiresAt = grant.Share.ExpiresAt, operation = "Share.Revoke" });
-        var description = $"Revoke {grant.Share.Role.ToString().ToLowerInvariant()} access for {grant.RecipientEmail} on ‘{page.Item.Name}’. "
-            + "Future access through this grant will stop; previously copied content cannot be recalled.";
-        var approval = await ObserveOriginalAsync(broker.AuthorizeForActorAsync(actor, "files", "9to1.Files.Share.Revoke",
+        var arguments = request is null
+            ? JsonSerializer.SerializeToElement(new { operationID = intent.Id.Value,
+                storeID = page.Page.StoreID, expectedStoreRevision = page.Page.StoreRevision, itemID = page.Item.Id.Value,
+                expectedRevision = page.Item.CurrentRevisionId.Value.ToString(), shareID = grant.Share.Id.Value,
+                principalID = grant.Share.PrincipalId, recipientEmail = grant.RecipientEmail,
+                role = grant.Share.Role.ToString(), expiresAt = grant.Share.ExpiresAt, operation })
+            : JsonSerializer.SerializeToElement(new { operationID = intent.Id.Value,
+                storeID = page.Page.StoreID, expectedStoreRevision = page.Page.StoreRevision, itemID = page.Item.Id.Value,
+                expectedRevision = page.Item.CurrentRevisionId.Value.ToString(), shareID = grant.Share.Id.Value,
+                principalID = grant.Share.PrincipalId, recipientEmail = grant.RecipientEmail,
+                previousRole = grant.Share.Role.ToString(), role = request.Role.ToString(),
+                expiresAt = grant.Share.ExpiresAt, operation });
+        var description = issued.IsRevocation
+            ? $"Revoke {grant.Share.Role.ToString().ToLowerInvariant()} access for {grant.RecipientEmail} on ‘{page.Item.Name}’. "
+                + "Future access through this grant will stop; previously copied content cannot be recalled."
+            : $"Change {grant.RecipientEmail} from {grant.Share.Role} to {request!.Role} on ‘{page.Item.Name}’. "
+                + "This replaces this recipient’s previous direct grants on this item. The recorded recipient and selected expiry stay the same. "
+                + "Inherited folder access may still apply. Viewer permits metadata browsing; Editor also permits scoped renaming. "
+                + "Document and content edits require their separate owning-app permissions. No invitation will be sent.";
+        var approval = await ObserveOriginalAsync(broker.AuthorizeForActorAsync(actor, "files", issued.ActionId,
             scopes, arguments, description, null, sessionId, token)).ConfigureAwait(false);
         await RevalidateAsync(page.Page, actor, token).ConfigureAwait(false);
         DemandSharePage(page, actor);
         if (!Alive()) throw new ObjectDisposedException("Original Files access review");
         var prepared = new PreparedMutation(this, original.Workspace, page.Page, actor, intent,
             grant.RecipientEmail, scopes, Array.Empty<FilesItemRevisionPrecondition>(), arguments, Alive, approval);
-        // Reuse the existing original review, task, retirement and audit custody; no structural action is dispatched.
+        // Same original review/task/retirement/audit custody; neither sharing action dispatches a structural mutation.
         _issuedNativeMutations.Add(prepared, new ActualOperationObservation());
-        _issuedShareRevocations.Add(prepared, new(page, grant));
+        _issuedShareMutations.Add(prepared, issued);
         return prepared;
     }
 
-    public bool IsNativeShareRevocation(PreparedMutation original) =>
-        ReferenceEquals(original.Issuer, this) && _issuedShareRevocations.TryGetValue(original, out _);
+    public bool IsNativeShareMutation(PreparedMutation original) =>
+        ReferenceEquals(original.Issuer, this) && _issuedShareMutations.TryGetValue(original, out _);
 
-    public string DescribeNativeShareRevocation(PreparedMutation original)
+    public bool IsNativeShareRevocation(PreparedMutation original) =>
+        ReferenceEquals(original.Issuer, this) && _issuedShareMutations.TryGetValue(original, out var issued) && issued.IsRevocation;
+
+    private ShareMutation DemandIssuedShareMutation(PreparedMutation original)
     {
         DemandNativeMutation(original);
-        return _issuedShareRevocations.TryGetValue(original, out var issued)
-            ? $"Revoke direct access for {issued.Grant.RecipientEmail} on ‘{issued.Page.Item.Name}’"
+        return _issuedShareMutations.TryGetValue(original, out var issued) ? issued
             : throw new UnauthorizedAccessException("Retain the original access change.");
     }
 
-    public FilesResult<FilesEmailShare>? ReadObservedNativeShareRevocation(PreparedMutation original)
+    private ShareMutation DemandIssuedShareRevocation(PreparedMutation original)
     {
-        DemandNativeMutation(original);
-        return _issuedShareRevocations.TryGetValue(original, out var issued) ? issued.Read()
-            : throw new UnauthorizedAccessException("Retain the original access change.");
+        var issued = DemandIssuedShareMutation(original);
+        return issued.IsRevocation ? issued
+            : throw new UnauthorizedAccessException("The original access change is not a revocation.");
+    }
+
+    public string DescribeNativeShareMutation(PreparedMutation original)
+    {
+        var issued = DemandIssuedShareMutation(original);
+        return issued.IsRevocation
+            ? $"Revoke direct access for {issued.Grant.RecipientEmail} on ‘{issued.Page.Item.Name}’"
+            : $"Change {issued.Grant.RecipientEmail} from {issued.Grant.Share.Role} to {issued.Request!.Role} on ‘{issued.Page.Item.Name}’";
+    }
+
+    public string DescribeNativeShareRevocation(PreparedMutation original)
+    {
+        DemandIssuedShareRevocation(original);
+        return DescribeNativeShareMutation(original);
+    }
+
+    public FilesResult<FilesEmailShare>? ReadObservedNativeShareMutation(PreparedMutation original) =>
+        DemandIssuedShareMutation(original).Read();
+
+    public FilesResult<FilesEmailShare>? ReadObservedNativeShareRevocation(PreparedMutation original) =>
+        DemandIssuedShareRevocation(original).Read();
+
+    private static bool ShareMutationCommitted(ShareMutation issued, string actorId, FilesResult<FilesEmailShare>? result)
+    {
+        var returned = result?.Value;
+        return result?.IsSuccess == true && returned is not null
+            && returned.Share.ItemId == issued.Grant.Share.ItemId && returned.Share.PrincipalId == issued.Grant.Share.PrincipalId
+            && (issued.IsRevocation
+                ? returned.Share.IsRevoked && returned.Share.Id == issued.Grant.Share.Id
+                : !returned.Share.IsRevoked && returned.Share.Id.Value != Guid.Empty && returned.Share.Id != issued.Grant.Share.Id
+                    && returned.Share.Role == issued.Request!.Role && returned.RecipientEmail == issued.Request.RecipientEmail
+                    && returned.Share.ExpiresAt == issued.Request.ExpiresAt && returned.GrantedByPrincipalId == actorId);
+    }
+
+    /// <summary>Validates the exact captured provider ACK against the issued access decision.
+    /// It conveys no replay authority and does not claim that Home recorded the audit.</summary>
+    public bool WasNativeShareMutationCommitted(PreparedMutation original)
+    {
+        var issued = DemandIssuedShareMutation(original);
+        return ShareMutationCommitted(issued, original.Actor.ActorId, issued.Read());
     }
 
     public Task<FilesNativeBrowserMutationOutcome> ApplyNativeShareRevocationAsync(PreparedMutation original,
         CancellationToken token = default)
     {
-        DemandNativeMutation(original);
-        if (!_issuedShareRevocations.TryGetValue(original, out var issued))
-            throw new UnauthorizedAccessException("Retain the original access change.");
+        DemandIssuedShareRevocation(original);
+        return ApplyNativeShareMutationAsync(original, token);
+    }
+
+    public Task<FilesNativeBrowserMutationOutcome> ApplyNativeShareMutationAsync(PreparedMutation original,
+        CancellationToken token = default)
+    {
+        var issued = DemandIssuedShareMutation(original);
         lock (original.Gate)
         {
             if (original.ActualApply is { } prior && !(prior.IsCompletedSuccessfully && prior.Result.AwaitingHomeReview)) return prior;
@@ -160,7 +243,7 @@ public sealed partial class FilesNativeBrowserService
     }
 
     private async Task<FilesNativeBrowserMutationOutcome> ApplyShareAfterPublicationAsync(Task start,
-        PreparedMutation original, ShareRevocation issued, CancellationToken token)
+        PreparedMutation original, ShareMutation issued, CancellationToken token)
     {
         await start.ConfigureAwait(false);
         var broker = _mutationBroker!;
@@ -182,17 +265,19 @@ public sealed partial class FilesNativeBrowserService
             DemandSharePage(issued.Page, original.Actor);
             await RevalidateAsync(original.Page, original.Actor, token).ConfigureAwait(false);
             var claim = await ObserveOriginalAsync(broker.ClaimExecutionObservedAsync(capability, "files",
-                "9to1.Files.Share.Revoke", original.Scopes, original.Arguments, token)).ConfigureAwait(false);
+                issued.ActionId, original.Scopes, original.Arguments, token)).ConfigureAwait(false);
             if (claim.Disposition != HomeResourceClaimDisposition.Claimed || claim.Actor != original.Actor)
                 throw new UnauthorizedAccessException("Home did not claim the same original access change.");
             claimed = true;
             fence = await ObserveOriginalAsync(workspaces.CaptureBrowserCommitFenceAsync(original.Workspace, broker,
                 capability, Alive, token).AsTask()).ConfigureAwait(false);
-            var actual = original.Workspace.Provider.RevokeEmailAccessAsync(issued.Grant.Share.Id,
-                original.OriginalOperation.BaseRevisionId!.Value, original.OriginalOperation.Id,
-                new FilesCommitAuthorityGuard(original.Actor.ActorId, fence.ValidateAsync), token);
+            var guard = new FilesCommitAuthorityGuard(original.Actor.ActorId, fence.ValidateAsync);
+            var actual = issued.Request is { } grantRequest
+                ? original.Workspace.Provider.GrantEmailAccessAsync(grantRequest, guard, token)
+                : original.Workspace.Provider.RevokeEmailAccessAsync(issued.Grant.Share.Id,
+                    original.OriginalOperation.BaseRevisionId!.Value, original.OriginalOperation.Id, guard, token);
             result = await ObserveOriginalAsync(actual).ConfigureAwait(false);
-            issued.Capture(result); // Capture the actual provider ACK before fence cleanup or Home audit.
+            issued.Capture(result); // Retain actual provider ACK before fence cleanup or Home audit.
         }
         catch (Exception error) { failures.Add(error); }
         finally
@@ -211,14 +296,14 @@ public sealed partial class FilesNativeBrowserService
             catch (Exception error) { failures.Add(error); }
             throw new AggregateException("Original access admission refused; no replacement effect is available.", failures);
         }
-        var returned = result?.Value;
-        var committed = result?.IsSuccess == true && returned is not null && returned.Share.IsRevoked
-            && returned.Share.Id == issued.Grant.Share.Id && returned.Share.ItemId == issued.Grant.Share.ItemId
-            && returned.Share.PrincipalId == issued.Grant.Share.PrincipalId;
+        var committed = ShareMutationCommitted(issued, original.Actor.ActorId, result);
+        var completedCode = issued.IsRevocation ? "FILES_SHARE_REVOKED" : "FILES_SHARE_ROLE_CHANGED";
+        var completedMessage = issued.IsRevocation ? "The original direct access grant was revoked."
+            : "The existing recipient's role was changed; recipient and expiry were retained.";
         var outcome = new HomeExecutionOutcome(committed ? HomePermissionRequestState.Succeeded
             : result is { IsSuccess: false } ? HomePermissionRequestState.Failed : HomePermissionRequestState.PartiallyCompleted,
-            committed ? "FILES_SHARE_REVOKED" : result?.Error?.Code.ToString() ?? "FILES_SHARE_OUTCOME_UNKNOWN",
-            committed ? "The original direct access grant was revoked." : result?.Error?.Message
+            committed ? completedCode : result?.Error?.Code.ToString() ?? "FILES_SHARE_OUTCOME_UNKNOWN",
+            committed ? completedMessage : result?.Error?.Message
                 ?? "The original access commit or cleanup failed; inspect its retained outcome before further work.",
             committed ? [new("files.item", original.OriginalOperation.ItemId.ToString())] : []);
         lock (original.Gate) original.OriginalOutcome = outcome;
@@ -226,9 +311,12 @@ public sealed partial class FilesNativeBrowserService
         try { recorded = await ObserveOriginalAsync(broker.CompleteExecutionAsync(capability, outcome, CancellationToken.None)).ConfigureAwait(false); }
         catch (Exception error) { failures.Add(error); }
         if (failures.Count != 0) throw new AggregateException("Original access commit/audit/cleanup failed; it cannot replay.", failures);
-        return new(null, false, recorded?.Succeeded == true, committed
+        var message = issued.IsRevocation
             ? recorded?.Succeeded == true ? "Access revoked. Other direct or inherited grants may still allow access."
                 : "Access revoked; choose Retry audit to record the Home outcome without revoking again."
+            : recorded?.Succeeded == true ? "Direct access role changed. Recipient and selected expiry are unchanged; inherited access may still apply."
+                : "Access role changed; choose Retry audit to record the Home outcome without granting again.";
+        return new(null, false, recorded?.Succeeded == true, committed ? message
             : result?.Error?.Message ?? "Inspect the original access outcome.");
     }
 }

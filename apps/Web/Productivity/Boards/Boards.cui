@@ -176,6 +176,14 @@
                       <Button content="U" accessible-name="Underline selection" action="Underline" />
                       <Button content="Undo" action="Undo" margin="12,0,0,0" />
                       <Button content="Redo" action="Redo" />
+                      <If condition="{Binding SharedInkAvailable}">
+                        <Button content="Page pen" action="boards.ink.page.pen" accessible-name="Draw directly over this page" />
+                        <Button content="Highlighter" action="boards.ink.page.marker" />
+                        <Button content="Page eraser" action="boards.ink.page.erase" accessible-name="Erase whole strokes on this page" />
+                        <Button content="Text" action="boards.ink.page.text" accessible-name="Return to ordinary text selection and editing" />
+                        <Button content="Fine ink" action="boards.ink.page.thin" />
+                        <Button content="Broad ink" action="boards.ink.page.thick" />
+                      </If>
                       <Input content="Unlock layout" margin="14,0,6,0" Type="Checkbox" Checked="{Binding LayoutUnlocked, mode=TwoWay}" Interactive="{Binding CanEditPage}" />
                     </Container>
                   </Container>
@@ -192,6 +200,9 @@
                     <Button content="Add item" action="AddChecklistItem" horizontal-alignment="Left" />
                   </Container>
                 </If>
+                <If condition="{Binding SharedInkAvailable}">
+                  <Text text="{Binding SharedInkStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                </If>
                 <If condition="{Binding IsViewMode}">
                   <Text text="Viewing · content is protected. Turn Edit on to make changes." text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
                 </If>
@@ -201,7 +212,7 @@
                 </If>
               </Container>
             </If>
-            <Container Type="Overlay" Row="1" HorizontalScrolling="False" VerticalScrolling="True">
+            <Container Type="Overlay" Row="1" HorizontalScrolling="{Binding PageInkCanvas}" VerticalScrolling="True">
               <Container Type="Vertical Stack">
                 <If condition="{Binding HasNoBoard}">
                   <Container margin="32" max-width="960" horizontal-alignment="Stretch" Type="Vertical Stack" CellGap="16">

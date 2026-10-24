@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using HavenOS.Home.Core;
 using HavenOS.Home.NativeUI;
 
@@ -23,6 +24,54 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
     private IPointer? _pointer;
     private CanvasRnoteInkStyle _style = CanvasRnoteInkStyle.Default;
     private CanvasRnoteInkStyle? _capturedStyle;
+    private bool _documentCoordinates, _eraseMode, _capturedErase;
+    private double _eraserWidth = 12;
+    private sealed record ViewStamp(Size Bounds, Point? Origin, Point? BasisX, Point? BasisY, double Scale, Size? Viewport, IReadOnlyList<ClipStamp> Clips);
+    private sealed record ClipStamp(Size Bounds, Point? Origin, Point? BasisX, Point? BasisY, bool ClipsBounds, Rect? GeometryBounds);
+    private ViewStamp? _capturedView;
+    /// <summary>Explicit page transform: one saved document unit is one local DIP.
+    /// Bounds/scroll/DPI changes cancel capture, never rescale canonical coordinates.</summary>
+    public bool DocumentCoordinates
+    {
+        get => _documentCoordinates;
+        set { Dispatcher.UIThread.VerifyAccess(); if (_documentCoordinates == value) return; CancelCapture(); _documentCoordinates = value; InvalidateVisual(); }
+    }
+    public bool EraserEnabled { get; set; }
+    public bool EraseMode
+    {
+        get => _eraseMode;
+        set { Dispatcher.UIThread.VerifyAccess(); if (_eraseMode == value) return; CancelCapture(); _eraseMode = value; }
+    }
+    public double EraserWidth
+    {
+        get => _eraserWidth;
+        set
+        {
+            Dispatcher.UIThread.VerifyAccess();
+            if (!double.IsFinite(value) || value is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(value));
+            if (_eraserWidth == value) return; CancelCapture(); _eraserWidth = value;
+        }
+    }
+    private ViewStamp CurrentView()
+    {
+        var root = TopLevel.GetTopLevel(this);
+        var clips = new List<ClipStamp>();
+        foreach (var control in this.GetVisualAncestors().OfType<Control>().Prepend(this))
+        {
+            if (DocumentCoordinates && control.Clip is not null && control.Clip is not RectangleGeometry)
+                throw new NotSupportedException("Page ink capture requires a supported rectangular clip; original ink is retained.");
+            if (control.ClipToBounds || control.Clip is not null)
+                clips.Add(new(control.Bounds.Size, root is null ? null : control.TranslatePoint(default, root),
+                    root is null ? null : control.TranslatePoint(new(1, 0), root), root is null ? null : control.TranslatePoint(new(0, 1), root),
+                    control.ClipToBounds, control.Clip?.Bounds));
+        }
+        return new(Bounds.Size, root is null ? null : this.TranslatePoint(default, root),
+            root is null ? null : this.TranslatePoint(new(1, 0), root), root is null ? null : this.TranslatePoint(new(0, 1), root),
+            root?.RenderScaling ?? 1, root?.ClientSize, clips);
+    }
+    private static bool SameView(ViewStamp left, ViewStamp right) => left.Bounds == right.Bounds && left.Origin == right.Origin &&
+        left.BasisX == right.BasisX && left.BasisY == right.BasisY && left.Scale == right.Scale && left.Viewport == right.Viewport && left.Clips.SequenceEqual(right.Clips);
+
     private Task? _submission, _close;
     private readonly CanvasSharedInkSubmissionLedger _originalSubmissions = new();
     private bool _paintPreparedScene = true;
@@ -111,20 +160,19 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         // Only already prepared native output is painted. No parsing, loading or engine work occurs here.
         if (!PaintPreparedScene || _rendered is null || _shown is null || _scene is not { IsEmpty: false } scene) return;
         var image = _rendered.BorrowRasterImage();
-        var destination = new Rect(scene.X / _shown.LogicalWidth * Bounds.Width,
-            scene.Y / _shown.LogicalHeight * Bounds.Height,
-            scene.Width / _shown.LogicalWidth * Bounds.Width,
-            scene.Height / _shown.LogicalHeight * Bounds.Height);
+        var destination = DocumentCoordinates ? new Rect(scene.X, scene.Y, scene.Width, scene.Height) :
+            new Rect(scene.X / _shown.LogicalWidth * Bounds.Width, scene.Y / _shown.LogicalHeight * Bounds.Height,
+                scene.Width / _shown.LogicalWidth * Bounds.Width, scene.Height / _shown.LogicalHeight * Bounds.Height);
         context.DrawImage(image, new Rect(image.Size), destination);
     }
 
-    protected override Size MeasureOverride(Size availableSize) => new(
+    protected override Size MeasureOverride(Size availableSize) => DocumentCoordinates ? default : new(
         double.IsFinite(availableSize.Width) ? availableSize.Width : CanvasSharedInkStrokeFactory.LogicalWidth,
         double.IsFinite(availableSize.Height) ? availableSize.Height : CanvasSharedInkStrokeFactory.LogicalHeight);
 
     private bool Current(CanvasSharedInkOwnerSnapshot expected)
     {
-        if (_disposed || _retiring || _lifetime.IsCancellationRequested) return false;
+        if (_disposed || _retiring || _lifetime.IsCancellationRequested || _capturedView is { } view && !SameView(view, CurrentView())) return false;
         var current = _captureOwner();
         return current is not null && CanvasSharedInkStrokeFactory.SameOwner(expected, current);
     }
@@ -137,8 +185,17 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         var pen = type == PointerType.Pen;
         var logicalWidth = _captured?.LogicalWidth ?? _shown?.LogicalWidth ?? CanvasSharedInkStrokeFactory.LogicalWidth;
         var logicalHeight = _captured?.LogicalHeight ?? _shown?.LogicalHeight ?? CanvasSharedInkStrokeFactory.LogicalHeight;
-        var sample = new RnotePointerSample(position.X / Bounds.Width * logicalWidth,
-            position.Y / Bounds.Height * logicalHeight,
+        foreach (var ancestor in this.GetVisualAncestors().OfType<Control>().Where(control => control.ClipToBounds || control.Clip is not null))
+        {
+            if (this.TranslatePoint(position, ancestor) is not { } local ||
+                ancestor.ClipToBounds && (local.X < 0 || local.Y < 0 || local.X > ancestor.Bounds.Width || local.Y > ancestor.Bounds.Height) ||
+                ancestor.Clip?.FillContains(local) == false)
+            { CancelCapture(); Status = "The gesture left the visible page; no partial operation was submitted."; return false; }
+        }
+        var x = DocumentCoordinates ? position.X : position.X / Bounds.Width * logicalWidth;
+        var y = DocumentCoordinates ? position.Y : position.Y / Bounds.Height * logicalHeight;
+        if (x > logicalWidth || y > logicalHeight) { CancelCapture(); Status = "The gesture left the saved page extent."; return false; }
+        var sample = new RnotePointerSample(x, y,
             pen ? properties.Pressure : .5, pen ? properties.XTilt : 0, pen ? properties.YTilt : 0);
         if (!sample.IsValid) { CancelCapture(); Status = "The input device returned invalid pen data."; return false; }
         _samples.Add(sample); return true;
@@ -151,8 +208,9 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         {
             if (!Current(_shown)) { Refresh(); return; }
             var point = args.GetCurrentPoint(this);
-            if (!point.Properties.IsLeftButtonPressed || point.Properties.IsEraser) return;
-            _captured = _shown; _capturedStyle = _style; _pointer = args.Pointer; _samples.Clear();
+            if ((!point.Properties.IsLeftButtonPressed && !point.Properties.IsEraser) || point.Properties.IsEraser && !EraserEnabled) return;
+            _captured = _shown; _capturedStyle = _style; _capturedErase = EraserEnabled && (EraseMode || point.Properties.IsEraser);
+            _capturedView = CurrentView(); _pointer = args.Pointer; _samples.Clear();
             if (!Add(point.Position, point.Properties, args.Pointer.Type)) return;
             Focus(); args.Pointer.Capture(this); args.PreventGestureRecognition(); args.Handled = true;
         }
@@ -186,25 +244,47 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         await start;
         Exception? submissionFailure = null;
         string? submissionNotice = null;
+        var ownerInvoked = false;
         try
         {
             var expected = _captured; var style = _capturedStyle;
             if (expected is null || style is null || !Current(expected) || !IsEffectivelyEnabled) return;
             var point = args.GetCurrentPoint(this);
             if (!Add(point.Position, point.Properties, args.Pointer.Type)) return;
-            var bundle = CanvasSharedInkStrokeFactory.Capture(_engine, expected.Context, expected.LayerId, _samples, style, expected.LogicalWidth, expected.LogicalHeight);
+            CanvasSharedInkStrokeRequest request;
+            IReadOnlyList<System.Text.Json.JsonElement> proposed;
+            if (_capturedErase)
+            {
+                request = CanvasSharedInkStrokeFactory.CaptureWholeErase(_engine, expected, _samples, EraserWidth);
+                proposed = request.ReplacementBundles!;
+                if (proposed.Count == expected.Bundles.Count && proposed.Zip(expected.Bundles).All(pair => System.Text.Json.JsonElement.DeepEquals(pair.First, pair.Second)))
+                { submissionNotice = "No stroke intersects this eraser gesture."; return; }
+            }
+            else
+            {
+                var bundle = CanvasSharedInkStrokeFactory.Capture(_engine, expected.Context, expected.LayerId, _samples, style, expected.LogicalWidth, expected.LogicalHeight);
+                request = new(expected, bundle); proposed = [.. expected.Bundles, bundle];
+            }
             // Actual donor render/raster validation precedes owner insertion. Failure leaves canonical state intact.
-            _ = CanvasSharedInkStrokeFactory.RenderScene(_engine, expected.Context, expected.LayerId, [.. expected.Bundles, bundle]);
+            _ = CanvasSharedInkStrokeFactory.RenderScene(_engine, expected.Context, expected.LayerId, proposed);
             if (!Current(expected)) { submissionNotice = "The owning drawing changed; this stroke was not added."; return; }
             ReleasePointer(); _samples.Clear(); _captured = null; _capturedStyle = null;
             _submitting = true; CanDraw = false; Changed?.Invoke(this, EventArgs.Empty);
             _lifetime.Token.ThrowIfCancellationRequested();
-            var result = await _commitOwner(new(expected, bundle), _lifetime.Token);
+            ownerInvoked = true;
+            var result = await _commitOwner(request, _lifetime.Token);
             // An owner result is not reclassified as rollback if disposal follows the actual mutation.
             submissionNotice = result.Message;
             if (!result.Succeeded) submissionFailure = new InvalidOperationException(result.Code + ": " + result.Message);
         }
-        catch (Exception error) { submissionFailure = error; submissionNotice = "The stroke could not be added. " + error.Message; throw; }
+        catch (Exception error)
+        {
+            submissionFailure = error;
+            submissionNotice = (ownerInvoked
+                ? "The owner did not finish reporting this drawing operation. Inspect saved state before retrying. "
+                : "The drawing operation was not submitted. ") + error.Message;
+            throw;
+        }
         finally
         {
             CancelCapture(); _submitting = false;
@@ -225,7 +305,7 @@ public sealed class CanvasSharedInkInput : Control, IDisposable
         var pointer = _pointer; _pointer = null; _releasing = true;
         try { pointer?.Capture(null); } finally { _releasing = false; }
     }
-    private void CancelCapture() { ReleasePointer(); _samples.Clear(); _captured = null; _capturedStyle = null; }
+    private void CancelCapture() { ReleasePointer(); _samples.Clear(); _captured = null; _capturedStyle = null; _capturedView = null; _capturedErase = false; }
     private void CaptureLost(object? sender, PointerCaptureLostEventArgs args) { if (!_releasing) CancelCapture(); }
     private void Detached(object? sender, VisualTreeAttachmentEventArgs args) { CancelCapture(); }
     private void Clear(string status)

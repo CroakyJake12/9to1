@@ -10,7 +10,12 @@ public sealed record CanvasSharedInkOwnerSnapshot(HomeProductivityContext Contex
     public double LogicalWidth { get; init; } = CanvasSharedInkStrokeFactory.LogicalWidth;
     public double LogicalHeight { get; init; } = CanvasSharedInkStrokeFactory.LogicalHeight;
 }
-public sealed record CanvasSharedInkStrokeRequest(CanvasSharedInkOwnerSnapshot Expected, JsonElement Bundle);
+public sealed record CanvasSharedInkEraseGesture(IReadOnlyList<RnotePointerSample> Samples, double Width);
+public sealed record CanvasSharedInkStrokeRequest(CanvasSharedInkOwnerSnapshot Expected, JsonElement Bundle)
+{
+    public CanvasSharedInkEraseGesture? Erasure { get; init; }
+    public IReadOnlyList<JsonElement>? ReplacementBundles { get; init; }
+}
 public sealed record CanvasSharedInkCommitResult(bool Succeeded, string Code, string Message);
 public sealed record CanvasSharedInkScene(HomeProductivityObjectRenderResult Rendered,
     double X, double Y, double Width, double Height, bool IsEmpty);
@@ -140,6 +145,67 @@ public static class CanvasSharedInkStrokeFactory
         var rendered = new HomeProductivityObjectRenderResult($"<Cui><Object Type=\"spe.raster\" id=\"{id}\" /></Cui>", unsupported)
         { RasterBindings = [new(id, layerId, new(pixels.Width, pixels.Height, pixels.Stride, pixels.PremultipliedBgra))] };
         return new(rendered, vector.X, vector.Y, vector.Width, vector.Height, objects.Length == 0);
+    }
+
+    /// <summary>Owner-neutral preparation using the SAME real Rnote whole-stroke
+    /// eraser. Canonical IDs are mapped to actual donor keys, never inferred from
+    /// sample distance. The owning app must revalidate this gesture before commit.</summary>
+    public static CanvasSharedInkStrokeRequest CaptureWholeErase(HomeProductivityEngine engine,
+        CanvasSharedInkOwnerSnapshot owner, IReadOnlyList<RnotePointerSample> samples, double width)
+    {
+        var captured = Snapshot(engine, owner);
+        var gesture = RnoteCanvasEngine.CaptureSamples(samples);
+        if (gesture.Length > MaximumSamples || !double.IsFinite(width) || width is < 1 or > 500 ||
+            gesture.Any(point => point.X < 0 || point.Y < 0 || point.X > captured.LogicalWidth || point.Y > captured.LogicalHeight))
+            throw new InvalidDataException("The eraser gesture exceeds the current drawing bounds.");
+        var objects = captured.Bundles.SelectMany(bundle => engine.ParseBundle(bundle.GetRawText()).Objects).ToArray();
+        if (objects.Length > MaximumObjects || objects.Select(value => value.ObjectId).Distinct().Count() != objects.Length)
+            throw new InvalidDataException("The original drawing repeats an identity or exceeds its supported bound.");
+        using var native = RnoteCanvasEngine.Create();
+        var keys = new Dictionary<ulong, Guid>();
+        var totalSamples = 0;
+        foreach (var value in objects)
+        {
+            var prior = native.ReadStrokeKeys().ToHashSet();
+            var stroke = Handler.ReadStroke(value);
+            totalSamples = checked(totalSamples + stroke.Samples.Count);
+            if (totalSamples > MaximumSamples) throw new InvalidDataException("The eraser scene exceeds its supported sample bound.");
+            native.DrawStroke(stroke.Samples.Select(point => new RnotePointerSample(point.X, point.Y, point.Pressure, point.TiltX, point.TiltY)).ToArray(),
+                CanvasInkObjectHandler.ResolveStyle(stroke));
+            var after = native.ReadStrokeKeys().ToHashSet();
+            var added = after.Except(prior).ToArray();
+            if (added.Length != 1 || prior.Except(after).Any() || !keys.TryAdd(added[0], value.ObjectId))
+                throw new NotSupportedException("The donor cannot map this shared stroke to one exact eraser identity.");
+        }
+        // Match the same save/reopened donor geometry used by RenderScene, so
+        // edge hits agree with the actual displayed/reopened precision.
+        using var durable = RnoteCanvasEngine.Open(native.Save());
+        var beforeErase = durable.ReadStrokeKeys().ToHashSet();
+        if (!beforeErase.SetEquals(keys.Keys)) throw new InvalidDataException("The donor changed canonical key mapping during reopen.");
+        durable.EraseWholeStrokes(gesture, width);
+        var surviving = durable.ReadStrokeKeys().ToHashSet();
+        if (surviving.Except(beforeErase).Any())
+            throw new NotSupportedException("Partial/split erasure requires exact shared path support; original ink is retained.");
+        var removed = beforeErase.Except(surviving).Select(key => keys.TryGetValue(key, out var id) ? id
+            : throw new InvalidDataException("The donor erased an unmapped shared stroke.")).ToHashSet();
+        var retained = new List<JsonElement>();
+        foreach (var source in captured.Bundles)
+        {
+            var bundle = engine.ParseBundle(source.GetRawText());
+            var remaining = bundle.Objects.Where(value => !removed.Contains(value.ObjectId)).ToArray();
+            if (remaining.Length == bundle.Objects.Count) { retained.Add(source.Clone()); continue; }
+            if (remaining.Length == 0) continue;
+            // Preserve styles, assets, accessibility and all unknown fields. Only
+            // the known portable fallback is regenerated for the exact survivors.
+            var fallback = engine.SerializeSelection(captured.Context with { SelectedObjectIds = remaining.Select(value => value.ObjectId).ToArray() }, remaining).PortableFallback;
+            using var document = JsonDocument.Parse(engine.SerializeBundle(bundle with { Objects = remaining, PortableFallback = fallback }));
+            retained.Add(CaptureBundle(engine, captured.Context, document.RootElement));
+        }
+        return new(captured, default)
+        {
+            Erasure = new(Array.AsReadOnly(gesture.ToArray()), width),
+            ReplacementBundles = Array.AsReadOnly(retained.ToArray())
+        };
     }
 
     private static void DemandDimensions(double width, double height)
