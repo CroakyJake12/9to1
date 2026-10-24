@@ -44,7 +44,8 @@ public sealed partial class FileHomeCoreStateStore
             if (issuerGuard is not null && !await issuerGuard.CheckAsync(read.State!, originalActor,
                     HomeStateCommitPhase.Admission, cancellationToken).ConfigureAwait(false)) return null;
             cancellationToken.ThrowIfCancellationRequested();
-            var lease = new LocalOperationLease(_gate, processLock, read.State!, ReadUnlockedAsync, profiles, originalActor, issuerGuard);
+            var lease = new LocalOperationLease(_gate, processLock, read.State!, ReadUnlockedAsync, profiles,
+                originalActor, issuerGuard, _releaseLocalLeaseStoreGate, _disposeLocalOperationProcessLock);
             transferred = true;
             processLock = null; // Ownership transferred only after successful actual guard.
             return lease;
@@ -58,18 +59,21 @@ public sealed partial class FileHomeCoreStateStore
 
     private sealed class LocalOperationLease(SemaphoreSlim storeGate, FileStream processLock,
         HomeCoreStoredState lockedState, Func<CancellationToken, Task<HomeStateReadResult>> readUnlocked,
-        HomeLocalProfileIdentity profiles, AuthenticatedResourceActor originalActor, IHomeStateCommitActorGuard? issuerGuard)
+        HomeLocalProfileIdentity profiles, AuthenticatedResourceActor originalActor, IHomeStateCommitActorGuard? issuerGuard,
+        Action<SemaphoreSlim>? releaseStoreGate, Func<FileStream, ValueTask>? disposeProcessLock)
         : IHomeOriginalScopedLocalOperationLeaseCleanup
     {
         private readonly byte[] _originalStateDigest = Fingerprint(lockedState);
         private readonly SemaphoreSlim _checks = new(1, 1);
         private static byte[] Fingerprint(HomeCoreStoredState state) => SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(state, JsonOptions));
         private bool Matches(HomeStateReadResult read) => read.IsSuccess && CryptographicOperations.FixedTimeEquals(_originalStateDigest, Fingerprint(read.State!));
-        private readonly TaskCompletionSource _released = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _legacyCloseSettled = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly object _originalReleaseGate = new();
         private Task? _originalRelease;
         private HomeOwnershipOriginalSourceCallbacks? _originalReleaseSources;
         private int _revoked;
+        private ValueTask CloseProcessLockAsync() => disposeProcessLock is null
+            ? processLock.DisposeAsync() : disposeProcessLock(processLock);
         public async ValueTask<bool> IsCurrentAsync(CancellationToken cancellationToken = default)
         {
             using var executing = CloudflareOriginalExecutionGuard.EnterOriginal(this);
@@ -131,10 +135,47 @@ public sealed partial class FileHomeCoreStateStore
         }
         private async ValueTask DisposeLegacyAsync()
         {
-            if (Interlocked.Exchange(ref _revoked, 1) != 0) { await _released.Task.ConfigureAwait(false); return; }
-            await _checks.WaitAsync().ConfigureAwait(false);
-            try { await processLock.DisposeAsync().ConfigureAwait(false); }
-            finally { storeGate.Release(); _checks.Release(); _released.TrySetResult(); }
+            if (Interlocked.Exchange(ref _revoked, 1) != 0)
+            {
+                await _legacyCloseSettled.Task.ConfigureAwait(false);
+                return;
+            }
+            List<Exception> failures = [];
+            var checksHeld = false;
+            var nativeClosed = false;
+            try
+            {
+                await _checks.WaitAsync().ConfigureAwait(false);
+                checksHeld = true;
+                await CloseProcessLockAsync().ConfigureAwait(false);
+                nativeClosed = true;
+            }
+            catch (Exception cause) { failures.Add(cause); }
+            finally
+            {
+                // Unknown/failed native close retains store custody and the actual handle.
+                // Gate releases are independent best-effort cleanups; either may fail, but
+                // neither failure may suppress the terminal result awaited by duplicate closers.
+                if (nativeClosed)
+                {
+                    try
+                    {
+                        if (releaseStoreGate is null) storeGate.Release();
+                        else releaseStoreGate(storeGate);
+                    }
+                    catch (Exception cause) { failures.Add(cause); }
+                }
+                if (checksHeld)
+                {
+                    try { _checks.Release(); }
+                    catch (Exception cause) { failures.Add(cause); }
+                }
+
+                if (failures.Count == 0) _legacyCloseSettled.TrySetResult();
+                else _legacyCloseSettled.TrySetException(new AggregateException(
+                    "Legacy Home process-lease retirement failed; unresolved custody remains retained.", failures));
+            }
+            await _legacyCloseSettled.Task.ConfigureAwait(false);
         }
         public ValueTask DisposeWithinOriginalSourceAsync(Action<Action> scope, Action<Task> retain)
         {
@@ -174,8 +215,8 @@ public sealed partial class FileHomeCoreStateStore
             {
                 try
                 {
-                    if (source is null) { await processLock.DisposeAsync().ConfigureAwait(false); nativeClosed = true; }
-                    else await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => processLock.DisposeAsync().AsTask(),
+                    if (source is null) { await CloseProcessLockAsync().ConfigureAwait(false); nativeClosed = true; }
+                    else await HomeOriginalScopedSourceCallbacks.AwaitAsync(() => CloseProcessLockAsync().AsTask(),
                         Run, source.Retain, () => nativeClosed = true).ConfigureAwait(false);
                 }
                 catch (Exception cause) { primary = primary is null ? cause : new AggregateException(primary, cause); }
@@ -183,8 +224,31 @@ public sealed partial class FileHomeCoreStateStore
                 {
                     // A healthy raw close may release Home even if its callback failed.
                     // Unknown/failed native close retains the store gate and actual handle.
-                    CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
-                    { if (nativeClosed) storeGate.Release(); _checks.Release(); return true; });
+                    List<Exception> releaseFailures = [];
+                    try
+                    {
+                        CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
+                        {
+                            if (nativeClosed)
+                            {
+                                try
+                                {
+                                    if (releaseStoreGate is null) storeGate.Release();
+                                    else releaseStoreGate(storeGate);
+                                }
+                                catch (Exception cause) { releaseFailures.Add(cause); }
+                            }
+                            try { _checks.Release(); }
+                            catch (Exception cause) { releaseFailures.Add(cause); }
+                            return true;
+                        });
+                    }
+                    catch (Exception cause) { releaseFailures.Add(cause); }
+                    if (releaseFailures.Count != 0)
+                    {
+                        var releaseFailure = new AggregateException("The SAME Home lease gate releases failed.", releaseFailures);
+                        primary = primary is null ? releaseFailure : new AggregateException(primary, releaseFailure);
+                    }
                 }
             }
             if (primary is not null) throw new AggregateException("The SAME Home process lease cleanup failed.", primary);

@@ -31,9 +31,7 @@ public sealed partial class FileHomeCoreStateStore
                 throw new InvalidDataException("The original Home current-read state exceeds its finite observation bound.");
             var state = JsonSerializer.Deserialize<HomeCoreStoredState>(stream, JsonOptions)
                 ?? throw new InvalidDataException("The original Home current-read state is absent.");
-            if (state.SchemaVersion != CurrentSchemaVersion || state.Revision < 0 || state.Records is null ||
-                state.Records.Any(record => record is null || ValidateRecord(record) is not null) ||
-                state.Records.Select(record => record.RecordId).Distinct(StringComparer.Ordinal).Count() != state.Records.Count)
+            if (!IsOriginalProtectedStateValid(state))
                 throw new InvalidDataException("The original Home current-read state is incompatible or invalid.");
             var check = sameProfiles.CheckAsync(state, sameActor, HomeStateCommitPhase.Publication, originalSynchronousScope, retainOriginalTask, CancellationToken.None).AsTask();
             retainOriginalTask(check); // Own an incomplete/faulted original before refusing; never block on it.

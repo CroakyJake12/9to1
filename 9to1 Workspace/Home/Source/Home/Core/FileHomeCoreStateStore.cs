@@ -1,7 +1,8 @@
-using System.Text.Json;
-using Haven.Application;
-using System.Text.Json.Serialization;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Haven.Application;
 
 namespace HavenOS.Home.Core;
 
@@ -23,6 +24,8 @@ public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeL
     private readonly string _path;
     private readonly SemaphoreSlim _gate;
     private readonly IHomePersistedWriteObserver? _persistedWriteObserver;
+    private readonly Action<SemaphoreSlim>? _releaseLocalLeaseStoreGate;
+    private readonly Func<FileStream, ValueTask>? _disposeLocalOperationProcessLock;
 
     public FileHomeCoreStateStore(string path)
     {
@@ -35,6 +38,20 @@ public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeL
     internal FileHomeCoreStateStore(string path, IHomePersistedWriteObserver persistedWriteObserver) : this(path)
     {
         _persistedWriteObserver = persistedWriteObserver ?? throw new ArgumentNullException(nameof(persistedWriteObserver));
+    }
+
+    // Owning fixture seam for deterministic legacy lease gate-release failure coverage only.
+    internal FileHomeCoreStateStore(string path, Action<SemaphoreSlim> releaseLocalLeaseStoreGate) : this(path)
+    {
+        _releaseLocalLeaseStoreGate = releaseLocalLeaseStoreGate ?? throw new ArgumentNullException(nameof(releaseLocalLeaseStoreGate));
+    }
+
+    // Owning fixture seam for deterministic ambiguous native-close outcome coverage only.
+    internal FileHomeCoreStateStore(string path, Action<SemaphoreSlim> releaseLocalLeaseStoreGate,
+        Func<FileStream, ValueTask> disposeLocalOperationProcessLock) : this(path, releaseLocalLeaseStoreGate)
+    {
+        _disposeLocalOperationProcessLock = disposeLocalOperationProcessLock
+            ?? throw new ArgumentNullException(nameof(disposeLocalOperationProcessLock));
     }
 
     public static FileHomeCoreStateStore CreateDefault()
@@ -138,8 +155,9 @@ public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeL
 
     private async Task<HomeStateReadResult> ReadUnlockedAsync(CancellationToken cancellationToken)
     {
-        if (!File.Exists(_path))
-            return HomeStateReadResult.Success(new HomeCoreStoredState(CurrentSchemaVersion, 0, []));
+        cancellationToken.ThrowIfCancellationRequested();
+        if (Directory.Exists(_path))
+            return Corrupt("The Home state path names a directory instead of a state document.");
 
         try
         {
@@ -158,6 +176,8 @@ public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeL
                     "Use the matching Home version or an explicit state migration."));
             if (state.Revision < 0 || state.Records is null)
                 return Corrupt("The Home state document has invalid revision or records.");
+            if (state.Records.Any(record => record is not null && record.Revision > state.Revision))
+                return Corrupt("A Home state record revision exceeds the containing state revision.");
 
             var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (var record in state.Records)
@@ -170,6 +190,25 @@ public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeL
         catch (OperationCanceledException)
         {
             throw;
+        }
+        catch (FileNotFoundException)
+        {
+            string? linkTarget;
+            try { linkTarget = new FileInfo(_path).LinkTarget; }
+            catch (UnauthorizedAccessException)
+            {
+                return HomeStateReadResult.Failed(new HomeCoreFailure(HomeCoreErrorCode.PermissionDenied,
+                    "Home cannot inspect the missing state path safely.", "9to1.Home.State", false));
+            }
+            catch (IOException exception)
+            {
+                return HomeStateReadResult.Failed(new HomeCoreFailure(HomeCoreErrorCode.HomeServiceUnavailable,
+                    $"Home state path identity could not be inspected ({exception.GetType().Name}).",
+                    "9to1.Home.State", true, "Check local storage access and retry."));
+            }
+            if (linkTarget is not null)
+                return Corrupt("The Home state path is a dangling symbolic link; preserve it and repair the target.");
+            return HomeStateReadResult.Success(new HomeCoreStoredState(CurrentSchemaVersion, 0, []));
         }
         catch (JsonException exception)
         {
@@ -200,7 +239,8 @@ public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeL
         var directory = Path.GetDirectoryName(_path)!;
         CreatePrivateDirectory(directory);
         var lockPath = _path + ".lock";
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        var started = Stopwatch.GetTimestamp();
+        var timeoutTicks = Stopwatch.Frequency * 5L;
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -208,7 +248,7 @@ public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeL
             {
                 return new FileStream(lockPath, PrivateFileOptions(FileMode.OpenOrCreate, FileAccess.ReadWrite, 1, FileOptions.Asynchronous));
             }
-            catch (IOException) when (DateTime.UtcNow < deadline)
+            catch (IOException) when (Stopwatch.GetTimestamp() - started < timeoutTicks)
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(40), cancellationToken).ConfigureAwait(false);
             }

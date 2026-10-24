@@ -19,6 +19,8 @@ public sealed partial class HomeClaimedResourceCommitFence : IAsyncDisposable
     private readonly VerifiedResourceStoreOwnership _ownership;
     private readonly (string Id, byte[] Fingerprint)[] _records;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly object _legacyCloseGate = new();
+    private Task? _legacyClose;
     private IHomeLocalOperationLease? _lease;
     private IAsyncDisposable? _completionLease;
     private bool _attempted;
@@ -267,17 +269,34 @@ public sealed partial class HomeClaimedResourceCommitFence : IAsyncDisposable
             ? DisposeWithinOriginalSourceAsync(body => body(), _ => { }) : DisposeLegacyAsync();
     }
 
-    private async ValueTask DisposeLegacyAsync()
+    private ValueTask DisposeLegacyAsync()
+    {
+        // Repeated disposal observes the SAME terminal cleanup task; never synthesize a new
+        // fence close around an unresolved lease after native retirement failed.
+        lock (_legacyCloseGate)
+            return new(_legacyClose ??= DisposeLegacyCoreAsync());
+    }
+
+    private async Task DisposeLegacyCoreAsync()
     {
         await _gate.WaitAsync().ConfigureAwait(false);
         try
         {
-            if (_disposed) return;
+            if (_disposed && _lease is null && _completionLease is null) return;
             _disposed = true;
-            var lease = _lease; _lease = null;
-            var completionLease = _completionLease; _completionLease = null;
-            try { if (lease is not null) await lease.DisposeAsync().ConfigureAwait(false); }
-            finally { if (completionLease is not null) await completionLease.DisposeAsync().ConfigureAwait(false); }
+            List<Exception> failures = [];
+            if (_lease is { } lease)
+            {
+                try { await lease.DisposeAsync().ConfigureAwait(false); _lease = null; }
+                catch (Exception cause) { failures.Add(cause); }
+            }
+            if (_completionLease is { } completionLease)
+            {
+                try { await completionLease.DisposeAsync().ConfigureAwait(false); _completionLease = null; }
+                catch (Exception cause) { failures.Add(cause); }
+            }
+            if (failures.Count != 0)
+                throw new AggregateException("The claimed-resource fence cleanup failed; unresolved leases remain retained.", failures);
         }
         finally { _gate.Release(); }
     }

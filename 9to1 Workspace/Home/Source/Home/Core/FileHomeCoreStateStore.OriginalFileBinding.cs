@@ -5,6 +5,7 @@ public sealed partial class FileHomeCoreStateStore
     public static bool IsOriginalProtectedStateValid(HomeCoreStoredState observed) =>
         observed.SchemaVersion == CurrentSchemaVersion && observed.Revision >= 0 && observed.Records is not null &&
         observed.Records.All(record => record is not null && ValidateRecord(record) is null) &&
+        observed.Records.All(record => record.Revision <= observed.Revision) &&
         observed.Records.Select(record => record.RecordId).Distinct(System.StringComparer.Ordinal).Count() == observed.Records.Count;
     // Pure configured identity only; kernel path/ACL/file custody remains required.
     public bool IsOriginalConfiguredFile(string actualPath) =>
