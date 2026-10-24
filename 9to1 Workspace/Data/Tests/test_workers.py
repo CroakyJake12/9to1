@@ -109,9 +109,20 @@ def test_duckdb() -> None:
             runtime = worker.call("runtimeInfo")
             require(runtime == {"engine": "duckdb", "version": "1.5.5"}, "DuckDB runtime version is not the proven dependency.")
             worker.call("open", {"databasePath": database})
+            worker.call("replaceTable", {"table": {"name": "identity_marker", "columns": ["value"], "rows": [["first"]]}})
+            second_database = str(Path(directory) / "second.duckdb")
+            reopen_error = worker.expect_error("open", {"databasePath": second_database})
+            require("already open" in reopen_error.lower(), "DuckDB worker replaced the active database identity without an explicit close.")
+            preserved = worker.call("query", {"sql": "SELECT value FROM identity_marker", "maxRows": 20})
+            require(preserved["rows"] == [["first"]], "Rejected open discarded data from the current database identity.")
             result = worker.call("query", {"sql": "SELECT 42 AS answer", "maxRows": 20})
             require(result["columns"] == ["answer"], "DuckDB column metadata mismatch.")
             require(result["rows"] == [["42"]], "DuckDB SELECT result mismatch.")
+            require(not Path(second_database).exists(), "Rejected second open created a second database file.")
+
+            worker.call("replaceTable", {"table": {"name": "identity_marker", "columns": ["value"], "rows": [["replacement"]]}})
+            duplicate = worker.call("query", {"sql": "SELECT value FROM identity_marker", "maxRows": 20})
+            require(duplicate["rows"] == [["replacement"]], "Replacing a published table left conflicting/stale rows.")
 
             limited = worker.call("query", {"sql": "SELECT * FROM range(5)", "maxRows": 2})
             require(len(limited["rows"]) == 2 and limited["truncated"], "DuckDB result cap was not enforced.")
@@ -120,9 +131,37 @@ def test_duckdb() -> None:
             require("Multiple SQL statements" in worker.expect_error("query", {"sql": "SELECT 1; SELECT 2", "maxRows": 20}), "Multiple statements were not rejected.")
             external_error = worker.expect_error("query", {"sql": "SELECT * FROM read_csv('/etc/passwd')", "maxRows": 20})
             require("external" in external_error.lower() or "permission" in external_error.lower(), "External filesystem access was not rejected.")
+            for sequence_sql in (
+                "SELECT nextval /* comment gap */ ('missing_sequence')",
+                "SELECT currval -- comment gap\n ('missing_sequence')",
+                "SELECT setval /* outer /* nested */ comment */ ('missing_sequence', 1)",
+            ):
+                sequence_error = worker.expect_error("query", {"sql": sequence_sql, "maxRows": 20})
+                require("mutating or dynamically executing" in sequence_error,
+                        "A sequence-mutating function was not rejected when SQL comments separated its tokens.")
+            literal = worker.call("query", {"sql": "SELECT 'NEXTVAL(' AS note", "maxRows": 20})
+            require(literal["rows"] == [["NEXTVAL("]], "Read-only function guard rejected function-like text inside a string literal.")
+            worker.call("close")
+            worker.call("open", {"databasePath": second_database})
+            stale_error = worker.expect_error("query", {"sql": "SELECT value FROM identity_marker", "maxRows": 20})
+            require("identity_marker" in stale_error.lower(), "A table from the previous database identity leaked into the reopened database.")
+            reopened = worker.call("query", {"sql": "SELECT 7 AS replacement", "maxRows": 20})
+            require(reopened["columns"] == ["replacement"] and reopened["rows"] == [["7"]], "Explicit close/open did not switch to the requested database.")
             worker.call("close")
 
         require(Path(database).exists(), "DuckDB database file was not created.")
+        require(Path(second_database).exists(), "Explicitly opened replacement database file was not created.")
+
+        for setting, invalid_value, error_text in (
+            ("HAVEN_DATA_DUCKDB_THREADS", "0", "threads"),
+            ("HAVEN_DATA_DUCKDB_MEMORY_LIMIT", "0MB", "memory_limit"),
+        ):
+            invalid_config_directory = Path(directory) / f"invalid-{setting.lower()}"
+            invalid_config_database = invalid_config_directory / "database.duckdb"
+            with Worker(DUCKDB_WORKER, {setting: invalid_value}) as worker:
+                invalid_config_error = worker.expect_error("open", {"databasePath": str(invalid_config_database)})
+                require(error_text in invalid_config_error.lower(), f"Invalid DuckDB {setting} configuration was not rejected clearly.")
+            require(not invalid_config_directory.exists(), "Rejected DuckDB configuration created its target directory before validation.")
 
 
 def make_fixture_ods(directory: Path) -> Path:

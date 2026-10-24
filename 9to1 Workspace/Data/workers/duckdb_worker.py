@@ -59,6 +59,79 @@ def _quote_identifier(value: str) -> str:
     return '"' + value.replace('"', '""') + '"'
 
 
+def _mask_sql_comments_and_quoted_text(sql: str) -> str:
+    """Mask non-code while preserving whitespace so token checks cross SQL comments safely."""
+    masked = list(sql)
+    index = 0
+
+    def blank(start: int, end: int) -> None:
+        for offset in range(start, end):
+            if masked[offset] not in "\r\n":
+                masked[offset] = " "
+
+    while index < len(sql):
+        if sql.startswith("--", index):
+            end = index + 2
+            while end < len(sql) and sql[end] not in "\r\n":
+                end += 1
+            blank(index, end)
+            index = end
+            continue
+
+        if sql.startswith("/*", index):
+            start = index
+            depth = 1
+            index += 2
+            while index < len(sql) and depth:
+                if sql.startswith("/*", index):
+                    depth += 1
+                    index += 2
+                elif sql.startswith("*/", index):
+                    depth -= 1
+                    index += 2
+                else:
+                    index += 1
+            blank(start, index)
+            continue
+
+        if sql[index] in "'\"":
+            quote = sql[index]
+            escape_backslash = (
+                quote == "'"
+                and index > 0
+                and sql[index - 1] in "eE"
+                and (index < 2 or not (sql[index - 2].isalnum() or sql[index - 2] in "_$"))
+            )
+            start = index - 1 if escape_backslash else index
+            index += 1
+            while index < len(sql):
+                if escape_backslash and sql[index] == "\\" and index + 1 < len(sql):
+                    index += 2
+                elif sql[index] == quote:
+                    if index + 1 < len(sql) and sql[index + 1] == quote:
+                        index += 2
+                    else:
+                        index += 1
+                        break
+                else:
+                    index += 1
+            blank(start, index)
+            continue
+
+        if sql[index] == "$":
+            delimiter = re.match(r"\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$", sql[index:])
+            if delimiter is not None:
+                marker = delimiter.group(0)
+                start = index
+                close = sql.find(marker, index + len(marker))
+                index = len(sql) if close < 0 else close + len(marker)
+                blank(start, index)
+                continue
+        index += 1
+
+    return "".join(masked)
+
+
 class DuckDbRuntime:
     def __init__(self) -> None:
         self.connection = None
@@ -66,21 +139,24 @@ class DuckDbRuntime:
 
     def open(self, database_path: str) -> dict:
         if self.connection is not None:
-            self.close()
+            # Match DataQuerySession's one-database identity contract. Replacing
+            # the connection implicitly here would discard the active database
+            # before the caller can validate/open its intended replacement.
+            raise RuntimeError("A database is already open; close it before opening another database.")
         if not database_path or not database_path.strip():
             raise ValueError("databasePath is required.")
+
+        memory_limit = os.environ.get("HAVEN_DATA_DUCKDB_MEMORY_LIMIT", "512MB").strip()
+        if not MEMORY_LIMIT.fullmatch(memory_limit):
+            raise ValueError("HAVEN_DATA_DUCKDB_MEMORY_LIMIT must be a positive KB/MB/GB value.")
+        threads = int(os.environ.get("HAVEN_DATA_DUCKDB_THREADS", "2"))
+        if threads < 1 or threads > 8:
+            raise ValueError("HAVEN_DATA_DUCKDB_THREADS must be between 1 and 8.")
 
         full = str(Path(database_path).expanduser().resolve())
         Path(full).parent.mkdir(parents=True, exist_ok=True)
         connection = duckdb.connect(full)
         try:
-            memory_limit = os.environ.get("HAVEN_DATA_DUCKDB_MEMORY_LIMIT", "512MB").strip()
-            if not MEMORY_LIMIT.fullmatch(memory_limit):
-                raise ValueError("HAVEN_DATA_DUCKDB_MEMORY_LIMIT must be a positive KB/MB/GB value.")
-            threads = int(os.environ.get("HAVEN_DATA_DUCKDB_THREADS", "2"))
-            if threads < 1 or threads > 8:
-                raise ValueError("HAVEN_DATA_DUCKDB_THREADS must be between 1 and 8.")
-
             # Configure every capability before locking configuration. These settings are
             # defense in depth; the worker must still run inside an OS sandbox before ship.
             connection.execute("SET enable_external_access = false")
@@ -164,7 +240,7 @@ class DuckDbRuntime:
         statement_type = str(statements[0].type).rsplit(".", 1)[-1].upper()
         if statement_type not in READ_ONLY_STATEMENT_TYPES:
             raise PermissionError("Only parsed SELECT and EXPLAIN statements are allowed in the first slice.")
-        if MUTATING_OR_DYNAMIC_FUNCTIONS.search(text):
+        if MUTATING_OR_DYNAMIC_FUNCTIONS.search(_mask_sql_comments_and_quoted_text(text)):
             raise PermissionError("SQL uses a mutating or dynamically executing function disabled by Haven Data.")
 
     def query(self, sql: str, max_rows: int) -> dict:

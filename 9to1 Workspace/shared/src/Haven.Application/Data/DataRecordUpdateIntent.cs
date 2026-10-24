@@ -21,7 +21,8 @@ public sealed class DataRecordUpdateIntent
         if (storeID == Guid.Empty || workbookID == Guid.Empty || revisionID == Guid.Empty || tableID == Guid.Empty
             || recordID == Guid.Empty || version < 1 || values is null || values.Count is < 1 or > 256)
             throw new ArgumentException("An exact canonical record target, persisted revision and scalar fields are required.");
-        var captured = values.OrderBy(pair => pair.Key).ToDictionary(pair => pair.Key, pair => DataRecordEdits.Capture(pair.Value));
+        var captured = DataRecordEdits.CaptureValues(values).OrderBy(pair => pair.Key)
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
         if (captured.ContainsKey(Guid.Empty)) throw new ArgumentException("A canonical FieldID is required.");
         OperationID = operationID; Origin = origin;
         StoreID = storeID; WorkbookID = workbookID; Version = version; RevisionID = revisionID; TableID = tableID; RecordID = recordID;

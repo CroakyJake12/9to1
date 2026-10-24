@@ -9,6 +9,22 @@ public sealed record DataScalarRecordValue(DataCellKind Kind, JsonElement Value)
 /// require their owning capabilities; they are never silently converted into display strings.</summary>
 public static class DataRecordEdits
 {
+    /// <summary>Detaches a bounded update proposal before validating or applying any field.</summary>
+    public static Dictionary<Guid, DataScalarRecordValue> CaptureValues(IReadOnlyDictionary<Guid, DataScalarRecordValue> values)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        if (values.Count is < 1 or > 256) throw new ArgumentException("Update one to 256 canonical fields.", nameof(values));
+        var captured = new Dictionary<Guid, DataScalarRecordValue>(Math.Min(values.Count, 256));
+        foreach (var pair in values)
+        {
+            if (captured.Count == 256) throw new ArgumentException("Update one to 256 canonical fields.", nameof(values));
+            if (captured.ContainsKey(pair.Key)) throw new ArgumentException("Duplicate canonical scalar field.", nameof(values));
+            captured.Add(pair.Key, Capture(pair.Value));
+        }
+        if (captured.Count != values.Count) throw new ArgumentException("Record field collection changed while being captured.", nameof(values));
+        return captured;
+    }
+
     public static DataScalarRecordValue Capture(DataScalarRecordValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -30,18 +46,20 @@ public static class DataRecordEdits
     public static void UpdateRecord(DataWorkbook workbook, Guid tableID, Guid recordID,
         IReadOnlyDictionary<Guid, DataScalarRecordValue> values)
     {
-        ArgumentNullException.ThrowIfNull(workbook); ArgumentNullException.ThrowIfNull(values);
+        ArgumentNullException.ThrowIfNull(workbook);
+        ArgumentNullException.ThrowIfNull(values);
         if (values.Count is < 1 or > 256) throw new ArgumentException("Update one to 256 canonical fields.");
         var table = workbook.Tables.SingleOrDefault(table => table.Id == tableID) ?? throw new KeyNotFoundException("TableNotFound");
         DataTableIdentity.ValidateTable(table);
         var row = table.Records.SingleOrDefault(row => row.RecordID == recordID) ?? throw new KeyNotFoundException("RecordNotFound");
         var sheet = workbook.Sheets.SingleOrDefault(sheet => sheet.Id == table.SheetId) ?? throw new InvalidDataException("Table sheet is missing.");
+        var captured = CaptureValues(values);
         var fields = table.Fields.ToDictionary(field => field.FieldID);
         var prepared = new List<(int Column, DataCellKind Kind, string Text)>();
-        foreach (var pair in values)
+        foreach (var pair in captured)
         {
             if (!fields.TryGetValue(pair.Key, out var field)) throw new KeyNotFoundException("FieldNotFound");
-            var value = Capture(pair.Value);
+            var value = pair.Value;
             var existing = sheet.GetCell(row.SheetRow, field.SheetColumn);
             if (existing?.Kind == DataCellKind.Formula || !string.IsNullOrWhiteSpace(existing?.Formula))
                 throw new InvalidOperationException("CalculatedFieldReadOnly");
