@@ -161,8 +161,8 @@ public sealed class StrataLoopbackModelProvider(
         catch (JsonException) { return false; }
     }
 
-    private sealed record Status(string Model, bool Loaded, long Started, int? Context, int? InFlight)
-    { public string? Fingerprint => Started > 0 ? Started + ":" + Model : null; }
+    private sealed record Status(string Endpoint, string Model, bool Loaded, long Started, int? Context, int? InFlight)
+    { public string? Fingerprint => Started > 0 ? Endpoint + "|" + Started + ":" + Model : null; }
     private static async Task<Status> ReadStatusAsync(HttpClient client, CancellationToken token)
     {
         using var response = await client.GetAsync("status", token).ConfigureAwait(false);
@@ -174,7 +174,7 @@ public sealed class StrataLoopbackModelProvider(
         long started = root.TryGetProperty("started", out var start) && start.ValueKind == JsonValueKind.Number && start.TryGetInt64(out var time) ? time : 0;
         int? context = root.TryGetProperty("context", out var ctx) && ctx.TryGetProperty("native", out var native) && native.ValueKind == JsonValueKind.Number && native.TryGetInt32(out var count) && count > 0 ? count : null;
         int? inFlight = root.TryGetProperty("activity", out var activity) && activity.TryGetProperty("in_flight", out var flight) && flight.ValueKind == JsonValueKind.Number && flight.TryGetInt32(out var requests) && requests >= 0 ? requests : null;
-        return new(model, loaded.GetBoolean(), started, context, inFlight);
+        return new(client.BaseAddress!.AbsoluteUri, model, loaded.GetBoolean(), started, context, inFlight);
     }
     private static string? Text(JsonElement element, string property) => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 }
