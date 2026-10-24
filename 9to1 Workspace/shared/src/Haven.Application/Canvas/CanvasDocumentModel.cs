@@ -235,8 +235,14 @@ public sealed partial class CanvasInteractionController
         _activeStroke = null;
         _dragObjectId = null;
         _gestureCaptured = false;
-        if (SelectedObjectId is { } selected && Board.Objects.All(value => value.Id != selected))
-            SelectedObjectId = null;
+        var objectIds = Board.Objects.Select(value => value.Id).ToHashSet();
+        var selectableIds = Board.Objects.Where(value => value.Kind != NotesCanvasObjectKind.Connector)
+            .Select(value => value.Id).ToHashSet();
+        _selectedObjectIds.RemoveWhere(id => !selectableIds.Contains(id));
+        if (SelectedObjectId is not { } selected || !objectIds.Contains(selected))
+            SelectedObjectId = _selectedObjectIds.LastOrDefault();
+        if (SelectedObjectId == Guid.Empty) SelectedObjectId = null;
+        if (SelectedObjectId is { } primary && selectableIds.Contains(primary)) _selectedObjectIds.Add(primary);
         if (clearHistory) History.Clear();
     }
 
@@ -385,7 +391,7 @@ public sealed partial class CanvasInteractionController
             ZIndex = Board.Objects.Count == 0 ? 0 : Board.Objects.Max(candidate => candidate.ZIndex) + 1
         };
         Board.Objects.Add(value);
-        SelectedObjectId = value.Id;
+        SelectObject(value.Id);
         return value;
     }
 
@@ -407,7 +413,7 @@ public sealed partial class CanvasInteractionController
             ZIndex = Board.Objects.Count == 0 ? 0 : Board.Objects.Max(candidate => candidate.ZIndex) + 1
         };
         Board.Objects.Add(value);
-        SelectedObjectId = value.Id;
+        SelectObject(value.Id);
         return value;
     }
 
@@ -427,11 +433,17 @@ public sealed partial class CanvasInteractionController
     {
         if (SelectedObject is not { Locked: false } selected) return false;
         History.Capture(Board);
-        Board.Objects.RemoveAll(value =>
+        var removedIds = Board.Objects.Where(value =>
             value.Id == selected.Id
             || value.FromObjectId == selected.Id
-            || value.ToObjectId == selected.Id);
-        SelectedObjectId = null;
+            || value.ToObjectId == selected.Id).Select(value => value.Id).ToHashSet();
+        Board.Objects.RemoveAll(value => removedIds.Contains(value.Id));
+        _selectedObjectIds.ExceptWith(removedIds);
+        var selectableIds = Board.Objects.Where(value => value.Kind != NotesCanvasObjectKind.Connector)
+            .Select(value => value.Id).ToHashSet();
+        _selectedObjectIds.RemoveWhere(id => !selectableIds.Contains(id));
+        SelectedObjectId = _selectedObjectIds.LastOrDefault();
+        if (SelectedObjectId == Guid.Empty) SelectedObjectId = null;
         return true;
     }
 
@@ -515,7 +527,7 @@ public sealed partial class CanvasInteractionController
         var connector = CanvasDocumentModel.CreateConnector(source, target, label);
         connector.ZIndex = Board.Objects.Count == 0 ? 0 : Board.Objects.Max(value => value.ZIndex) + 1;
         Board.Objects.Add(connector);
-        SelectedObjectId = connector.Id;
+        SelectObject(connector.Id);
         return connector;
     }
 
@@ -525,7 +537,7 @@ public sealed partial class CanvasInteractionController
         if (values.Length != 2 || values.Any(value => value.Locked)) return null;
         History.Capture(Board);
         var group = NotesCanvasOperations.Group(values);
-        SelectedObjectId = secondId;
+        SelectObject(secondId);
         return group;
     }
 

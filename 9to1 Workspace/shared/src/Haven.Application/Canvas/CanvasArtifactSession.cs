@@ -54,6 +54,63 @@ public sealed record CanvasPageListResult(
     int? NextOffset,
     int TotalCount);
 
+public sealed record CanvasObjectListResult(
+    IReadOnlyList<CanvasObject> Items,
+    int? NextOffset,
+    int TotalCount);
+
+public sealed record CanvasStrokeListResult(
+    IReadOnlyList<CanvasInkStroke> Items,
+    int? NextOffset,
+    int TotalCount);
+
+public sealed record CanvasLayerListResult(
+    IReadOnlyList<CanvasLayer> Items,
+    int? NextOffset,
+    int TotalCount);
+
+public enum CanvasObjectSearchCoverage
+{
+    AccessibilityAndReferenceMetadataOnly
+}
+
+public sealed record CanvasObjectSearchQuery(
+    Guid PageId,
+    string? Text = null,
+    string? ObjectTypeId = null,
+    Guid? LayerId = null,
+    int Offset = 0,
+    int PageSize = 100);
+
+public sealed record CanvasObjectSearchHit(
+    Guid ObjectId,
+    string ObjectTypeId,
+    Guid LayerId,
+    bool LayerVisible,
+    bool LayerLocked,
+    CanvasRect Geometry,
+    string? AccessibleName,
+    string? AccessibleDescription,
+    string? AccessibleAltText,
+    CanvasSharedObjectReference? SharedObjectRef,
+    Guid RevisionId);
+
+/// <summary>Canvas searches typed metadata only. Opaque shared payload text is not
+/// scanned; Coverage and UnsearchedPayloadObjectCount make that limitation explicit.</summary>
+public sealed record CanvasObjectSearchResult(
+    IReadOnlyList<CanvasObjectSearchHit> Items,
+    int? NextOffset,
+    int TotalCount,
+    CanvasObjectSearchCoverage Coverage,
+    int UnsearchedPayloadObjectCount);
+
+public sealed record CanvasSelectedSetTranslationResult(
+    Guid RevisionId,
+    IReadOnlyList<Guid> ChangedObjectIds,
+    double DeltaX,
+    double DeltaY,
+    IReadOnlyList<string> Warnings);
+
 public sealed record CanvasPageSummary(
     Guid PageId,
     int Order,
@@ -204,6 +261,25 @@ public sealed partial class CanvasArtifactSession
         }
     }
 
+    public CanvasApiResult<CanvasLayerListResult> ListLayers(Guid pageId, int offset = 0, int pageSize = 100)
+    {
+        lock (_gate)
+        {
+            if (offset < 0 || pageSize is < 1 or > MaximumPageSize)
+                return Failure<CanvasLayerListResult>(CanvasApiErrorCode.InvalidArgument, "Layers.List", "Offset and page size are outside the supported range.", pageId);
+            var page = _artifact.Pages.FirstOrDefault(candidate => candidate.PageId == pageId);
+            if (page is null)
+                return Failure<CanvasLayerListResult>(CanvasApiErrorCode.NotFound, "Layers.List", "Canvas page was not found.", pageId);
+
+            var items = page.LayerOrder.Skip(offset).Take(pageSize)
+                .Select(id => page.Layers.First(layer => layer.LayerId == id))
+                .Select(CloneLayerForRead).ToArray();
+            var nextOffset = offset + items.Length;
+            return CanvasApiResult<CanvasLayerListResult>.Success(new CanvasLayerListResult(
+                items, nextOffset < page.LayerOrder.Count ? nextOffset : null, page.LayerOrder.Count));
+        }
+    }
+
     public CanvasApiResult<CanvasPage> GetPage(Guid pageId)
     {
         lock (_gate)
@@ -212,6 +288,133 @@ public sealed partial class CanvasArtifactSession
             return page is null
                 ? Failure<CanvasPage>(CanvasApiErrorCode.NotFound, "Pages.Get", "Canvas page was not found.", pageId)
                 : CanvasApiResult<CanvasPage>.Success(ClonePage(page));
+        }
+    }
+
+    public CanvasApiResult<CanvasObject> GetObject(Guid pageId, Guid objectId)
+    {
+        lock (_gate)
+        {
+            var page = _artifact.Pages.FirstOrDefault(candidate => candidate.PageId == pageId);
+            if (page is null)
+                return Failure<CanvasObject>(CanvasApiErrorCode.NotFound, "Objects.Get", "Canvas page was not found.", pageId);
+            var item = page.Objects.FirstOrDefault(candidate => candidate.ObjectId == objectId);
+            return item is null
+                ? Failure<CanvasObject>(CanvasApiErrorCode.NotFound, "Objects.Get", "Canvas object was not found.", objectId)
+                : CanvasApiResult<CanvasObject>.Success(CloneObject(item));
+        }
+    }
+
+    public CanvasApiResult<CanvasObjectListResult> ListObjects(Guid pageId, int offset = 0, int pageSize = 100)
+    {
+        lock (_gate)
+        {
+            if (offset < 0 || pageSize is < 1 or > MaximumPageSize)
+                return Failure<CanvasObjectListResult>(CanvasApiErrorCode.InvalidArgument, "Objects.List", "Offset and page size are outside the supported range.", pageId);
+            var page = _artifact.Pages.FirstOrDefault(candidate => candidate.PageId == pageId);
+            if (page is null)
+                return Failure<CanvasObjectListResult>(CanvasApiErrorCode.NotFound, "Objects.List", "Canvas page was not found.", pageId);
+
+            var items = page.ObjectOrder.Skip(offset).Take(pageSize)
+                .Select(id => page.Objects.First(item => item.ObjectId == id))
+                .Select(CloneObject).ToArray();
+            var nextOffset = offset + items.Length;
+            return CanvasApiResult<CanvasObjectListResult>.Success(new CanvasObjectListResult(
+                items, nextOffset < page.ObjectOrder.Count ? nextOffset : null, page.ObjectOrder.Count));
+        }
+    }
+
+    /// <summary>Searches typed object/accessibility/reference metadata within one page.
+    /// SharedPayload is never inspected; the result explicitly reports metadata-only coverage.</summary>
+    public CanvasApiResult<CanvasObjectSearchResult> SearchObjects(CanvasObjectSearchQuery query)
+    {
+        const string action = "Objects.Search";
+        if (query is null || query.PageId == Guid.Empty || query.Offset < 0
+            || query.PageSize is < 1 or > MaximumPageSize
+            || query.Text is not null && string.IsNullOrWhiteSpace(query.Text)
+            || query.ObjectTypeId is not null && string.IsNullOrWhiteSpace(query.ObjectTypeId)
+            || query.Text is null && query.ObjectTypeId is null && query.LayerId is null)
+            return Failure<CanvasObjectSearchResult>(CanvasApiErrorCode.InvalidArgument, action,
+                "Search requires a page, a bounded page size, and text or a typed object/layer filter.", query?.PageId);
+
+        lock (_gate)
+        {
+            var page = _artifact.Pages.FirstOrDefault(candidate => candidate.PageId == query.PageId);
+            if (page is null)
+                return Failure<CanvasObjectSearchResult>(CanvasApiErrorCode.NotFound, action, "Canvas page was not found.", query.PageId);
+
+            var text = query.Text?.Trim();
+            bool Contains(string? candidate) => text is not null
+                && candidate?.Contains(text, StringComparison.OrdinalIgnoreCase) == true;
+            var objectsById = page.Objects.ToDictionary(item => item.ObjectId);
+            var items = new List<CanvasObjectSearchHit>(query.PageSize);
+            var totalCount = 0;
+            foreach (var objectId in page.ObjectOrder)
+            {
+                var item = objectsById[objectId];
+                if (query.ObjectTypeId is not null && !string.Equals(item.ObjectTypeId, query.ObjectTypeId, StringComparison.Ordinal)
+                    || query.LayerId is { } layerId && item.LayerId != layerId)
+                    continue;
+                if (text is not null
+                    && !Contains(item.ObjectTypeId)
+                    && !Contains(item.Accessibility.Name)
+                    && !Contains(item.Accessibility.Description)
+                    && !Contains(item.Accessibility.AltText)
+                    && !Contains(item.SharedObjectRef?.OwnerAppId)
+                    && !Contains(item.SharedObjectRef?.ObjectTypeId))
+                    continue;
+
+                if (totalCount >= query.Offset && items.Count < query.PageSize)
+                {
+                    var detached = CloneObject(item);
+                    var layer = page.Layers.First(candidate => candidate.LayerId == item.LayerId);
+                    items.Add(new CanvasObjectSearchHit(detached.ObjectId, detached.ObjectTypeId,
+                        detached.LayerId, layer.IsVisible, layer.IsLocked, detached.Geometry,
+                        detached.Accessibility.Name, detached.Accessibility.Description,
+                        detached.Accessibility.AltText, detached.SharedObjectRef, detached.RevisionId));
+                }
+                totalCount++;
+            }
+
+            var nextOffset = query.Offset + items.Count;
+            var unsearchedPayloadObjectCount = page.Objects.Count(item => item.SharedPayload is not null);
+            return CanvasApiResult<CanvasObjectSearchResult>.Success(new CanvasObjectSearchResult(
+                items, nextOffset < totalCount ? nextOffset : null, totalCount,
+                CanvasObjectSearchCoverage.AccessibilityAndReferenceMetadataOnly,
+                unsearchedPayloadObjectCount));
+        }
+    }
+
+    public CanvasApiResult<CanvasStrokeListResult> ListStrokes(Guid pageId, int offset = 0, int pageSize = 100)
+    {
+        lock (_gate)
+        {
+            if (offset < 0 || pageSize is < 1 or > MaximumPageSize)
+                return Failure<CanvasStrokeListResult>(CanvasApiErrorCode.InvalidArgument, "Ink.List", "Offset and page size are outside the supported range.", pageId);
+            var page = _artifact.Pages.FirstOrDefault(candidate => candidate.PageId == pageId);
+            if (page is null)
+                return Failure<CanvasStrokeListResult>(CanvasApiErrorCode.NotFound, "Ink.List", "Canvas page was not found.", pageId);
+
+            var items = page.StrokeOrder.Skip(offset).Take(pageSize)
+                .Select(id => page.Strokes.First(stroke => stroke.StrokeId == id))
+                .Select(CloneStrokeForRead).ToArray();
+            var nextOffset = offset + items.Length;
+            return CanvasApiResult<CanvasStrokeListResult>.Success(new CanvasStrokeListResult(
+                items, nextOffset < page.StrokeOrder.Count ? nextOffset : null, page.StrokeOrder.Count));
+        }
+    }
+
+    public CanvasApiResult<CanvasInkStroke> GetStroke(Guid pageId, Guid strokeId)
+    {
+        lock (_gate)
+        {
+            var page = _artifact.Pages.FirstOrDefault(candidate => candidate.PageId == pageId);
+            if (page is null)
+                return Failure<CanvasInkStroke>(CanvasApiErrorCode.NotFound, "Ink.Get", "Canvas page was not found.", pageId);
+            var stroke = page.Strokes.FirstOrDefault(candidate => candidate.StrokeId == strokeId);
+            return stroke is null
+                ? Failure<CanvasInkStroke>(CanvasApiErrorCode.NotFound, "Ink.Get", "Canvas stroke was not found.", strokeId)
+                : CanvasApiResult<CanvasInkStroke>.Success(CloneStrokeForRead(stroke));
         }
     }
 
@@ -272,7 +475,10 @@ public sealed partial class CanvasArtifactSession
             if (index < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas page was not found.");
             if (artifact.CanvasMode != CanvasDocumentMode.Paged)
                 return MutationFailure(CanvasApiErrorCode.UnsupportedFeature, "Infinite Canvas pages do not have artificial bounds.");
+            if (bounds is null || !ValidBounds(bounds))
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Page bounds must contain a positive finite size and orientation.");
             var page = artifact.Pages[index];
+            if (page.Bounds == bounds) return MutationNoChange();
             artifact.Pages[index] = page with { Bounds = bounds, RevisionId = Guid.NewGuid() };
             return MutationChanged(page.PageId);
         });
@@ -280,16 +486,30 @@ public sealed partial class CanvasArtifactSession
     public CanvasApiResult<CanvasMutationResult> SetPageBackground(
         CanvasMutationRequest request,
         Guid pageId,
-        CanvasBackgroundDefinition background) =>
-        Mutate(request, "Pages.SetBackground", pageId, background, artifact =>
+        CanvasBackgroundDefinition background)
+    {
+        if (background is null)
+            return Failure<CanvasMutationResult>(CanvasApiErrorCode.InvalidArgument, "Pages.SetBackground", "Page background is required.", pageId);
+        CanvasBackgroundDefinition detached;
+        try
+        {
+            detached = JsonSerializer.Deserialize<CanvasBackgroundDefinition>(JsonSerializer.SerializeToUtf8Bytes(background))
+                ?? throw new JsonException("Page background could not be detached.");
+        }
+        catch (JsonException)
+        { return Failure<CanvasMutationResult>(CanvasApiErrorCode.InvalidArgument, "Pages.SetBackground", "Page background could not be detached.", pageId); }
+
+        return Mutate(request, "Pages.SetBackground", pageId, detached, artifact =>
         {
             var index = artifact.Pages.FindIndex(page => page.PageId == pageId);
             if (index < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas page was not found.");
-            if (background is null) return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Page background is required.");
             var page = artifact.Pages[index];
-            artifact.Pages[index] = page with { Background = background, RevisionId = Guid.NewGuid() };
+            if (JsonSerializer.Serialize(page.Background) == JsonSerializer.Serialize(detached))
+                return MutationNoChange();
+            artifact.Pages[index] = page with { Background = detached, RevisionId = Guid.NewGuid() };
             return MutationChanged(page.PageId);
         });
+    }
 
     public CanvasApiResult<CanvasMutationResult> CreateLayer(
         CanvasMutationRequest request,
@@ -407,13 +627,15 @@ public sealed partial class CanvasArtifactSession
             if (objectIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas object was not found.");
             if (geometry is null) return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Object geometry is required.");
             var item = page.Objects[objectIndex];
-            if (page.Layers.First(layer => layer.LayerId == item.LayerId).IsLocked)
-                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Objects on a locked layer cannot be moved.");
+            if (!LayerAllowsEditing(page.Layers.First(layer => layer.LayerId == item.LayerId)))
+                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Objects on hidden or locked layers cannot be moved.");
+            var nextTransform = transform ?? item.Transform;
+            if (item.Geometry == geometry && item.Transform == nextTransform) return MutationNoChange();
             var objects = page.Objects.ToList();
             objects[objectIndex] = item with
             {
                 Geometry = geometry,
-                Transform = transform ?? item.Transform,
+                Transform = nextTransform,
                 RevisionId = Guid.NewGuid()
             };
             artifact.Pages[pageIndex] = page with { Objects = objects, RevisionId = Guid.NewGuid() };
@@ -435,8 +657,9 @@ public sealed partial class CanvasArtifactSession
             var destination = page.Layers.FirstOrDefault(layer => layer.LayerId == destinationLayerId);
             if (destination is null) return MutationFailure(CanvasApiErrorCode.NotFound, "Destination layer was not found.");
             var item = page.Objects[objectIndex];
-            if (page.Layers.First(layer => layer.LayerId == item.LayerId).IsLocked || destination.IsLocked)
-                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Objects cannot be moved from or into a locked layer.");
+            if (!LayerAllowsEditing(page.Layers.First(layer => layer.LayerId == item.LayerId))
+                || !LayerAllowsEditing(destination))
+                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Objects cannot be moved from hidden or locked layers or into hidden or locked layers.");
             if (item.LayerId == destinationLayerId) return MutationNoChange();
             var objects = page.Objects.ToList();
             objects[objectIndex] = item with { LayerId = destinationLayerId, RevisionId = Guid.NewGuid() };
@@ -457,8 +680,8 @@ public sealed partial class CanvasArtifactSession
             var page = artifact.Pages[pageIndex];
             if (!page.Layers.Any(layer => layer.LayerId == stroke.LayerId))
                 return MutationFailure(CanvasApiErrorCode.NotFound, "Stroke layer was not found on the target page.");
-            if (page.Layers.First(layer => layer.LayerId == stroke.LayerId).IsLocked)
-                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink cannot be added to a locked layer.");
+            if (!LayerAllowsEditing(page.Layers.First(layer => layer.LayerId == stroke.LayerId)))
+                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink cannot be added to a hidden or locked layer.");
             if (page.Strokes.Any(item => item.StrokeId == stroke.StrokeId))
                 return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Stroke ID already exists on the page.");
             CanvasInkStroke clonedStroke;
@@ -521,8 +744,8 @@ public sealed partial class CanvasArtifactSession
             var strokeIndex = page.Strokes.FindIndex(stroke => stroke.StrokeId == strokeId);
             if (strokeIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas stroke was not found.");
             var stroke = page.Strokes[strokeIndex];
-            if (page.Layers.First(layer => layer.LayerId == stroke.LayerId).IsLocked)
-                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on a locked layer cannot be edited.");
+            if (!LayerAllowsEditing(page.Layers.First(layer => layer.LayerId == stroke.LayerId)))
+                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on a hidden or locked layer cannot be edited.");
             if (noChange) return MutationNoChange();
             if (action == "Ink.Translate" && stroke.PathGeometry is not null)
                 return MutationFailure(CanvasApiErrorCode.UnsupportedFeature, "Authoritative donor paths require an exact owner path replacement; original Samples are provenance.");
@@ -559,7 +782,10 @@ public sealed partial class CanvasArtifactSession
         {
             if (settings is null || settings.Properties is null)
                 return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Document settings are required.");
-            artifact.DocumentSettings = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            var detached = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            if (JsonSerializer.Serialize(artifact.DocumentSettings) == JsonSerializer.Serialize(detached))
+                return MutationNoChange();
+            artifact.DocumentSettings = detached;
             return MutationChanged(artifact.ArtifactId);
         });
 
@@ -758,6 +984,7 @@ public sealed partial class CanvasArtifactSession
             if (source.Count == 0)
                 return Failure<CanvasMutationResult>(CanvasApiErrorCode.HistoryUnavailable, action, undo ? "No Canvas change can be undone." : "No Canvas change can be redone.", _artifact.ArtifactId);
 
+            var currentEntityIds = EnumerateEntityIds(_artifact).ToHashSet();
             var restored = CanvasArtifactCodec.Deserialize(source[^1]);
             restored.RevisionId = Guid.NewGuid();
             try
@@ -770,7 +997,10 @@ public sealed partial class CanvasArtifactSession
             source.RemoveAt(source.Count - 1);
             TrimHistory();
             _artifact = restored;
-            var changedIds = EnumerateEntityIds(_artifact).Distinct().ToArray();
+            // History changes can remove entities as well as restore them. Report the
+            // union so live selections/consumers can reconcile exact canonical IDs.
+            var changedIds = currentEntityIds.Concat(EnumerateEntityIds(_artifact))
+                .Distinct().ToArray();
             var mutation = new CanvasMutationResult(_artifact.RevisionId, changedIds, []);
             CacheOperation(request.OperationId, fingerprint, mutation);
             AddEvent(request, action, mutation);
@@ -814,6 +1044,21 @@ public sealed partial class CanvasArtifactSession
     }
 
     private static CanvasArtifact Clone(CanvasArtifact artifact) => CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(artifact));
+
+    private static CanvasObject CloneObject(CanvasObject item) =>
+        JsonSerializer.Deserialize<CanvasObject>(JsonSerializer.Serialize(item))
+        ?? throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.InvalidDocument,
+            "Canvas object could not be cloned for a bounded read.");
+
+    private static CanvasLayer CloneLayerForRead(CanvasLayer layer) =>
+        JsonSerializer.Deserialize<CanvasLayer>(JsonSerializer.Serialize(layer))
+        ?? throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.InvalidDocument,
+            "Canvas layer could not be cloned for a bounded read.");
+
+    private static CanvasInkStroke CloneStrokeForRead(CanvasInkStroke stroke) =>
+        JsonSerializer.Deserialize<CanvasInkStroke>(JsonSerializer.Serialize(stroke))
+        ?? throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.InvalidDocument,
+            "Canvas stroke could not be cloned for a bounded read.");
 
     private static CanvasPage ClonePage(CanvasPage page)
     {
@@ -887,6 +1132,8 @@ public sealed partial class CanvasArtifactSession
             foreach (var stroke in page.Strokes) yield return stroke.StrokeId;
         }
     }
+
+    private static bool LayerAllowsEditing(CanvasLayer layer) => layer.IsVisible && !layer.IsLocked;
 
     private static MutationPlan MutationChanged(params Guid[] ids) => new(ids, [], null);
     private static MutationPlan MutationNoChange() => new([], [], null);

@@ -70,30 +70,73 @@ public sealed partial class CanvasArtifactSession
                 var index = artifact.Pages.FindIndex(p => p.PageId == pageId);
                 if (index < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas page was not found.");
                 var page = artifact.Pages[index];
-                var strokes = page.Strokes.ToDictionary(s => s.StrokeId);
+                var originalStrokes = page.Strokes.ToDictionary(s => s.StrokeId);
+                var strokes = new Dictionary<Guid, CanvasInkStroke>(originalStrokes);
+                var changedStrokeIds = new HashSet<Guid>();
                 foreach (var id in removed)
                 {
                     if (!strokes.TryGetValue(id, out var stroke)) return MutationFailure(CanvasApiErrorCode.NotFound, "Removed stroke was not found.");
-                    if (page.Layers.First(l => l.LayerId == stroke.LayerId).IsLocked)
-                        return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on locked layers cannot be replaced.");
+                    if (!LayerAllowsEditing(page.Layers.First(l => l.LayerId == stroke.LayerId)))
+                        return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on hidden or locked layers cannot be replaced.");
                     strokes.Remove(id);
+                    changedStrokeIds.Add(id);
                 }
                 foreach (var proposal in detached)
                 {
                     var layer = page.Layers.FirstOrDefault(l => l.LayerId == proposal.LayerId);
                     if (layer is null) return MutationFailure(CanvasApiErrorCode.NotFound, "Replacement stroke layer was not found.");
-                    if (layer.IsLocked) return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on locked layers cannot be replaced.");
                     if (strokes.TryGetValue(proposal.StrokeId, out var old))
                     {
                         if (old.LayerId != proposal.LayerId) return MutationFailure(CanvasApiErrorCode.UnsupportedFeature, "Stroke replacement cannot reassign layers.");
                         if (SameStrokeContent(old, proposal)) continue; // Preserve unchanged stroke revision and object.
+                        if (!LayerAllowsEditing(layer)) return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on hidden or locked layers cannot be replaced.");
                         if (old.RevisionId == proposal.RevisionId)
                             return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Changed existing strokes require a fresh revision identity.");
                     }
+                    else if (!LayerAllowsEditing(layer))
+                        return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink cannot be inserted on a hidden or locked layer.");
                     strokes[proposal.StrokeId] = proposal;
+                    changedStrokeIds.Add(proposal.StrokeId);
                 }
                 if (order.Distinct().Count() != order.Count || !strokes.Keys.ToHashSet().SetEquals(order))
                     return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Full stroke order must contain every resulting stroke exactly once.");
+                var originalOrderPositions = page.StrokeOrder.Select((id, position) => (id, position))
+                    .ToDictionary(item => item.id, item => item.position);
+                for (var position = 0; position < order.Count; position++)
+                    if (!originalOrderPositions.TryGetValue(order[position], out var originalPosition)
+                        || originalPosition != position)
+                        changedStrokeIds.Add(order[position]);
+                // The full order includes untouched strokes. Prevent a protected
+                // stroke from crossing any surviving pre-existing stroke, while
+                // insertions/removals alone do not count as reordering it.
+                var editableLayers = page.Layers.ToDictionary(layer => layer.LayerId, layer => LayerAllowsEditing(layer));
+                var hasProtectedStroke = page.Strokes.Any(stroke => strokes.ContainsKey(stroke.StrokeId)
+                    && !editableLayers[stroke.LayerId]);
+                if (hasProtectedStroke)
+                {
+                    var survivingOriginalOrder = page.StrokeOrder.Where(id => strokes.ContainsKey(id)).ToArray();
+                    var proposedPositions = new Dictionary<Guid, int>(survivingOriginalOrder.Length);
+                    var proposedPosition = 0;
+                    foreach (var id in order)
+                        if (originalStrokes.ContainsKey(id)) proposedPositions.Add(id, proposedPosition++);
+                    var suffixMinimum = new int[survivingOriginalOrder.Length];
+                    var minimumPosition = proposedPosition;
+                    for (var position = survivingOriginalOrder.Length - 1; position >= 0; position--)
+                    {
+                        suffixMinimum[position] = minimumPosition;
+                        minimumPosition = Math.Min(minimumPosition, proposedPositions[survivingOriginalOrder[position]]);
+                    }
+                    var maximumPosition = -1;
+                    for (var position = 0; position < survivingOriginalOrder.Length; position++)
+                    {
+                        var id = survivingOriginalOrder[position];
+                        var newPosition = proposedPositions[id];
+                        if (!editableLayers[originalStrokes[id].LayerId]
+                            && (maximumPosition >= newPosition || suffixMinimum[position] <= newPosition))
+                            return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Stroke order cannot change relative to strokes on hidden or locked layers.");
+                        maximumPosition = Math.Max(maximumPosition, newPosition);
+                    }
+                }
                 if (removed.Count == 0 && strokes.Count == page.Strokes.Count && order.SequenceEqual(page.StrokeOrder)
                     && page.Strokes.All(s => strokes.TryGetValue(s.StrokeId, out var proposed) && SameStrokeContent(s, proposed)))
                     return MutationNoChange();
@@ -113,7 +156,7 @@ public sealed partial class CanvasArtifactSession
                 artifact.SchemaVersion = candidate.SchemaVersion;
                 artifact.Pages[index] = candidate.Pages[index];
                 artifact.DocumentSettings = candidate.DocumentSettings;
-                return MutationChanged([pageId, .. detached.Select(s => s.StrokeId), .. removed]);
+                return MutationChanged([pageId, .. changedStrokeIds.Order()]);
             });
             if (result.IsSuccess && _idempotency.TryGetValue(request.OperationId, out var issued))
                 _idempotency[request.OperationId] = issued with { StructuredStrokeOrderCount = order.Count };
@@ -155,8 +198,8 @@ public sealed partial class CanvasArtifactSession
             {
                 var stroke = page.Strokes.FirstOrDefault(s => s.StrokeId == id);
                 if (stroke is null) return MutationFailure(CanvasApiErrorCode.NotFound, "A batch stroke was not found on the page.");
-                if (page.Layers.First(l => l.LayerId == stroke.LayerId).IsLocked)
-                    return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on locked layers cannot be deleted.");
+                if (!LayerAllowsEditing(page.Layers.First(l => l.LayerId == stroke.LayerId)))
+                    return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on hidden or locked layers cannot be deleted.");
             }
             var removed = detached.ToHashSet();
             var candidate = CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.SerializeSnapshot(artifact));
