@@ -124,6 +124,12 @@ public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsync
                 original.PermissionRequestId, value.RegistryRevision), caller);
         }
         }
+        catch (Exception error) when (IsRecoverableHomeRetirement(error, caller))
+        {
+            lock (_sync) _closing = true; // Reconnect requires a fresh client; this pipe cannot be revived.
+            return new(HomeNativeStartupState.Unready, "HomeStartupRepairRequired",
+                "The original Home connection or provider retired. Reconnect through the trusted Home startup/bootstrap path before opening an artifact.");
+        }
         catch
         {
             lock (_sync) _closing = true; // Retain this SAME failed attempt; later calls cannot replace it.
@@ -171,6 +177,10 @@ public sealed class HomeNativeStartupSession : IHomeNativeStartupSession, IAsync
     }
     private static void Add(List<Exception> errors, Exception error)
     { if (!errors.Any(row => ReferenceEquals(row, error))) errors.Add(error); }
+
+    private bool IsRecoverableHomeRetirement(Exception error, CancellationToken caller) =>
+        !caller.IsCancellationRequested && !_originalConnectionLifetime.IsCancellationRequested &&
+        (error is UnauthorizedAccessException or IOException or SocketException or ObjectDisposedException or OperationCanceledException);
 
     private static HomeCompatibilityRequest Capture(HomeCompatibilityRequest request)
     {

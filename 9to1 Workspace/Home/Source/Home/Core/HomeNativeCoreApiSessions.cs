@@ -207,6 +207,26 @@ public sealed partial class HomeNativeCoreApiSessions : IHomeCoreAuthorization, 
                 }
                 catch (Exception error) { Add(cleanup, error, primary); }
             }
+            // Audit finalization is deliberately drained independently of caller
+            // cancellation. Re-attest with the request/session-linked token so caller
+            // cancellation or retirement interrupts typed actor/verifier awaits;
+            // retirement also fails the synchronous fence before any verifier await.
+            // The transport has its own later wire fence too.
+            if (result is { Operation.Succeeded: true })
+            {
+                var currentAfterAudit = false;
+                try { currentAfterAudit = await CurrentAsync(context, linked.Token).ConfigureAwait(false); }
+                catch (OperationCanceledException) when (linked.IsCancellationRequested) { }
+                catch (Exception error) { Add(cleanup, error, primary); }
+                if (!currentAfterAudit)
+                    result = new(new(false, "CallerIdentityUnverified",
+                        "The original Home peer, actor, installation or lease retired before read completion.",
+                        default, false), result.PermissionRequestId);
+            }
+            // The audit itself is intentionally not caller-cancellable, but cancellation
+            // during that drain still prevents a successful Task result from escaping.
+            if (primary is null && cancellationToken.IsCancellationRequested)
+                primary = new OperationCanceledException(cancellationToken);
             try { context.Gate.Release(); } catch (Exception error) { Add(cleanup, error, primary); }
         }
         Throw(primary, cleanup);

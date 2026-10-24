@@ -81,6 +81,9 @@ public sealed class HomeWindowsCoreTransportTests
         WithRigAsync(async rig =>
         {
             await rig.AttachStartupAsync();
+            var originalHost = rig.Host;
+            var originalRuntime = rig.Runtime;
+            var originalSessions = rig.Sessions;
             var pending = await rig.Startup!.CheckAsync(rig.Token);
             Assert.Equal(HomeNativeStartupState.AwaitingApproval, pending.State);
             Assert.False(pending.CanStartNormally);
@@ -94,12 +97,135 @@ public sealed class HomeWindowsCoreTransportTests
                 rig.Verifier!.HostRevision = "retired-after-reply";
                 return Task.CompletedTask;
             };
-            var original = rig.Startup.CheckAsync(rig.Token);
-            var failure = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => original);
-            rig.Observe(failure);
+            var retired = await rig.Startup.CheckAsync(rig.Token);
+            Assert.Equal(HomeNativeStartupState.Unready, retired.State);
+            Assert.Equal("HomeStartupRepairRequired", retired.Code);
+            Assert.False(retired.CanStartNormally);
+            Assert.Contains("Reconnect", retired.Message, StringComparison.OrdinalIgnoreCase);
             var close = rig.Startup.CloseAndDrainAsync();
             Assert.Same(close, rig.Startup.CloseAndDrainAsync());
             var closeFailure = await Record.ExceptionAsync(() => close);
+            if (closeFailure is not null) rig.Observe(closeFailure);
+            await rig.Pipe!.DisposeAsync();
+
+            // Reconnect through the same owning Home host/provider/issuer. The replacement
+            // connection gets a fresh session-scoped approval before the original caller opens.
+            rig.Verifier.HostRevision = "host-fixture-v1";
+            rig.AppConnection = await HomeNativeWindowsAppConnection.ConnectAsync(new(rig.PipeName), rig.Verifier,
+                Host(), Requirements(), rig.Lifetime!.Token, rig.Token);
+            Assert.Same(originalHost, rig.Host);
+            Assert.Same(originalRuntime, rig.Runtime);
+            Assert.Same(originalSessions, rig.Sessions);
+            var reconnectPending = await rig.AppConnection.Startup.CheckAsync(rig.Token);
+            Assert.Equal(HomeNativeStartupState.AwaitingApproval, reconnectPending.State);
+            Assert.False(reconnectPending.CanStartNormally);
+            Assert.NotEqual(pending.PermissionRequestId, reconnectPending.PermissionRequestId);
+            Assert.True((await rig.Permissions!.DecideAsync(reconnectPending.PermissionRequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+            var opened = 0;
+            await rig.AppConnection.InitializeOriginalAsync(token =>
+            {
+                token.ThrowIfCancellationRequested();
+                opened++;
+                return Task.CompletedTask;
+            }, rig.Token);
+            Assert.Equal(1, opened);
+            Assert.True((await rig.AppConnection.Startup.CheckAsync(rig.Token)).CanStartNormally);
+        });
+
+    [WindowsFact]
+    public Task Overlapping_startup_checks_share_original_task_and_close_drains_held_response() =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachStartupAsync();
+            var startup = rig.Startup!;
+            using var firstCaller = new CancellationTokenSource();
+            var responseEntered = Signal();
+            var releaseResponse = Signal();
+            startup.AfterOriginalClientResponse = async () =>
+            {
+                responseEntered.TrySetResult();
+                await releaseResponse.Task;
+            };
+            var originalCheck = startup.CheckAsync(firstCaller.Token);
+            Task? close = null;
+            try
+            {
+                await responseEntered.Task.WaitAsync(rig.Token);
+                Assert.Same(originalCheck, startup.CheckAsync(rig.Token));
+                close = startup.CloseAndDrainAsync();
+                Assert.Same(close, startup.CloseAndDrainAsync());
+                Assert.False(originalCheck.IsCompleted);
+                Assert.False(close.IsCompleted);
+            }
+            finally { releaseResponse.TrySetResult(); }
+            var checkFailure = await Record.ExceptionAsync(() => originalCheck);
+            Assert.NotNull(checkFailure);
+            rig.Observe(checkFailure!);
+            var closeFailure = await Record.ExceptionAsync(() => close ?? startup.CloseAndDrainAsync());
+            Assert.NotNull(closeFailure);
+            rig.Observe(closeFailure!);
+            Assert.True(originalCheck.IsCompleted);
+            Assert.True((close ?? startup.CloseAndDrainAsync()).IsCompleted);
+        });
+
+    [WindowsFact]
+    public Task Later_startup_waiter_cancellation_does_not_cancel_the_original_check() =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachStartupAsync();
+            var startup = rig.Startup!;
+            using var originalCaller = new CancellationTokenSource();
+            using var laterCaller = new CancellationTokenSource();
+            var responseEntered = Signal();
+            var releaseResponse = Signal();
+            startup.AfterOriginalClientResponse = async () =>
+            {
+                responseEntered.TrySetResult();
+                await releaseResponse.Task;
+            };
+            var originalCheck = startup.CheckAsync(originalCaller.Token);
+            try
+            {
+                await responseEntered.Task.WaitAsync(rig.Token);
+                Assert.Same(originalCheck, startup.CheckAsync(laterCaller.Token));
+                laterCaller.Cancel();
+                Assert.False(originalCheck.IsCompleted);
+            }
+            finally { releaseResponse.TrySetResult(); }
+            var observation = await originalCheck;
+            Assert.Equal(HomeNativeStartupState.AwaitingApproval, observation.State);
+            await startup.CloseAndDrainAsync();
+        });
+
+    [WindowsFact]
+    public Task Original_startup_caller_cancellation_is_retained_for_coalesced_waiters() =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachStartupAsync();
+            var startup = rig.Startup!;
+            using var originalCaller = new CancellationTokenSource();
+            var responseEntered = Signal();
+            var releaseResponse = Signal();
+            startup.AfterOriginalClientResponse = async () =>
+            {
+                responseEntered.TrySetResult();
+                await releaseResponse.Task;
+            };
+            var originalCheck = startup.CheckAsync(originalCaller.Token);
+            try
+            {
+                await responseEntered.Task.WaitAsync(rig.Token);
+                Assert.Same(originalCheck, startup.CheckAsync(rig.Token));
+                originalCaller.Cancel();
+                Assert.False(originalCheck.IsCompleted);
+            }
+            finally { releaseResponse.TrySetResult(); }
+            var failure = await Record.ExceptionAsync(() => originalCheck);
+            Assert.NotNull(failure);
+            rig.Observe(failure!);
+            Assert.IsAssignableFrom<OperationCanceledException>(failure);
+            var closeFailure = await Record.ExceptionAsync(startup.CloseAndDrainAsync);
             Assert.NotNull(closeFailure);
             rig.Observe(closeFailure!);
         });
@@ -245,6 +371,372 @@ public sealed class HomeWindowsCoreTransportTests
             finally { release.TrySetResult(); }
         }, startHost: false);
 
+    [WindowsTheory]
+    [InlineData("session")]
+    [InlineData("issuer")]
+    [InlineData("actor")]
+    [InlineData("installation")]
+    [InlineData("lease")]
+    [InlineData("caller")]
+    public Task Original_read_rechecks_retirement_after_audit_finalization(string change) =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachDirectSessionAsync();
+            var session = rig.OriginalSession!;
+            var pending = await session.GetServicesAsync(rig.Token);
+            Assert.Equal("PermissionRequired", pending.Operation.Code);
+            Assert.True((await rig.Permissions!.DecideAsync(pending.PermissionRequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+            using var callerCancellation = new CancellationTokenSource();
+            var audit = new BlockingPermissionStore.WriteGate();
+            audit.OnEntered = () =>
+            {
+                if (change == "actor") rig.Actors.Current = rig.Actors.Current with { AuthenticationRevision = "retired-during-audit" };
+                else if (change == "installation") rig.Verifier!.Peer = rig.Verifier.Peer with { InstallationRevision = "retired-during-audit" };
+                else if (change == "lease") rig.Lease!.Dispose();
+                else if (change == "caller") callerCancellation.Cancel();
+            };
+            rig.Api!.AfterRead = (_, _) =>
+            {
+                rig.PermissionStore!.ArmNextWrite(audit);
+                return Task.CompletedTask;
+            };
+            var read = rig.OriginalDirectRead = session.GetServicesAsync(change == "caller" ? callerCancellation.Token : rig.Token);
+            Task? close = null;
+            try
+            {
+                await audit.Entered.Task.WaitAsync(rig.Token);
+                Assert.False(read.IsCompleted);
+                if (change == "session") close = session.DisposeAsync().AsTask();
+                else if (change == "issuer") close = rig.Sessions!.DisposeAsync().AsTask();
+                if (close is not null)
+                {
+                    var repeated = change == "issuer" ? rig.Sessions!.DisposeAsync().AsTask() : session.DisposeAsync().AsTask();
+                    Assert.Same(close, repeated);
+                    Assert.False(close.IsCompleted);
+                }
+            }
+            finally { audit.Release.TrySetResult(); }
+            if (change == "caller")
+            {
+                var cancellation = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => read);
+                rig.Observe(cancellation);
+            }
+            else
+            {
+                var result = await read;
+                Assert.False(result.Operation.Succeeded);
+                Assert.Equal("CallerIdentityUnverified", result.Operation.Code);
+                Assert.Null(result.Operation.Value);
+            }
+            Assert.Equal(HomePermissionRequestState.Succeeded,
+                (await rig.Permissions!.ReadRequestObservationAsync(pending.PermissionRequestId!, rig.Token))!.State);
+            close ??= session.DisposeAsync().AsTask();
+            await close;
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+                session.DemandOriginalCurrentAsync(rig.Token).AsTask());
+            var retired = await session.GetServicesAsync(rig.Token);
+            Assert.False(retired.Operation.Succeeded);
+            Assert.Equal("CallerIdentityUnverified", retired.Operation.Code);
+        }, startHost: false);
+
+    [WindowsFact]
+    public Task Original_read_keeps_payload_when_session_remains_current_through_audit_finalization() =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachDirectSessionAsync();
+            var session = rig.OriginalSession!;
+            var pending = await session.GetServicesAsync(rig.Token);
+            Assert.Equal("PermissionRequired", pending.Operation.Code);
+            Assert.True((await rig.Permissions!.DecideAsync(pending.PermissionRequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+            var audit = new BlockingPermissionStore.WriteGate();
+            rig.Api!.AfterRead = (_, _) =>
+            {
+                rig.PermissionStore!.ArmNextWrite(audit);
+                return Task.CompletedTask;
+            };
+            var read = rig.OriginalDirectRead = session.GetServicesAsync(rig.Token);
+            try
+            {
+                await audit.Entered.Task.WaitAsync(rig.Token);
+                Assert.False(read.IsCompleted);
+            }
+            finally { audit.Release.TrySetResult(); }
+
+            var result = await read;
+            Assert.True(result.Operation.Succeeded);
+            Assert.Equal(pending.PermissionRequestId, result.PermissionRequestId);
+            var services = result.Operation.Value ?? throw new InvalidOperationException("Current original read lost its payload.");
+            Assert.Contains(services, service => service.ServiceId == "home.core");
+            Assert.Equal(HomePermissionRequestState.Succeeded,
+                (await rig.Permissions!.ReadRequestObservationAsync(pending.PermissionRequestId!, rig.Token))!.State);
+            var close = session.DisposeAsync().AsTask();
+            Assert.Same(close, session.DisposeAsync().AsTask());
+            await close;
+        }, startHost: false);
+
+    [WindowsTheory]
+    [InlineData("actor")]
+    [InlineData("verifier")]
+    [InlineData("caller-verifier")]
+    [InlineData("audit-verifier")]
+    public Task PostAudit_currentness_and_independent_cleanup_failures_are_retained(string failureMode) =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachDirectSessionAsync();
+            var session = rig.OriginalSession!;
+            var pending = await session.GetServicesAsync(rig.Token);
+            Assert.Equal("PermissionRequired", pending.Operation.Code);
+            Assert.True((await rig.Permissions!.DecideAsync(pending.PermissionRequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+            using var callerCancellation = new CancellationTokenSource();
+            var actorFailure = new IOException("POST_AUDIT_ACTOR_RECHECK_FAILURE");
+            var verifierFailure = new IOException("POST_AUDIT_VERIFIER_RECHECK_FAILURE");
+            var auditFailure = new IOException("POST_AUDIT_RECORD_EXECUTION_FAILURE");
+            var audit = new BlockingPermissionStore.WriteGate();
+            audit.OnEntered = () =>
+            {
+                if (failureMode == "actor") rig.Actors.GetCurrentFailure = actorFailure;
+                if (failureMode is "verifier" or "caller-verifier" or "audit-verifier") rig.Verifier!.Failure = verifierFailure;
+                if (failureMode == "caller-verifier") callerCancellation.Cancel();
+                if (failureMode == "audit-verifier") audit.Failure = auditFailure;
+            };
+            rig.Api!.AfterRead = (_, _) =>
+            {
+                rig.PermissionStore!.ArmNextWrite(audit);
+                return Task.CompletedTask;
+            };
+            var read = rig.OriginalDirectRead = session.GetServicesAsync(
+                failureMode == "caller-verifier" ? callerCancellation.Token : rig.Token);
+            try
+            {
+                await audit.Entered.Task.WaitAsync(rig.Token);
+                Assert.False(read.IsCompleted);
+            }
+            finally { audit.Release.TrySetResult(); }
+
+            var failure = await Record.ExceptionAsync(() => read);
+            Assert.NotNull(failure);
+            rig.Observe(failure!);
+            var leaves = Flatten(failure!).ToArray();
+            if (failureMode == "actor") Assert.Contains(leaves, error => ReferenceEquals(error, actorFailure));
+            else Assert.Contains(leaves, error => ReferenceEquals(error, verifierFailure));
+            if (failureMode == "caller-verifier")
+                Assert.Contains(leaves, error => error is OperationCanceledException cancelled &&
+                    cancelled.CancellationToken == callerCancellation.Token);
+            if (failureMode == "audit-verifier")
+                Assert.Contains(leaves, error => ReferenceEquals(error, auditFailure));
+            else
+                Assert.Equal(HomePermissionRequestState.Succeeded,
+                    (await rig.Permissions!.ReadRequestObservationAsync(pending.PermissionRequestId!, rig.Token))!.State);
+
+            var close = session.DisposeAsync().AsTask();
+            Assert.Same(close, session.DisposeAsync().AsTask());
+            await close;
+        }, startHost: false);
+
+    [WindowsTheory]
+    [InlineData("caller")]
+    [InlineData("session")]
+    [InlineData("connection")]
+    public Task Request_or_session_retirement_interrupts_post_audit_verification_and_releases_drain(string retirement) =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachDirectSessionAsync();
+            var session = rig.OriginalSession!;
+            var pending = await session.GetServicesAsync(rig.Token);
+            Assert.Equal("PermissionRequired", pending.Operation.Code);
+            Assert.True((await rig.Permissions!.DecideAsync(pending.PermissionRequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+            using var callerCancellation = new CancellationTokenSource();
+            var verificationEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var verificationCancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var audit = new BlockingPermissionStore.WriteGate
+            {
+                OnEntered = () => rig.Verifier!.VerifyForActorOverride = async token =>
+                {
+                    verificationEntered.TrySetResult();
+                    try
+                    {
+                        await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                        return null;
+                    }
+                    catch (OperationCanceledException) when (token.IsCancellationRequested)
+                    {
+                        verificationCancelled.TrySetResult();
+                        throw;
+                    }
+                }
+            };
+            rig.Api!.AfterRead = (_, _) =>
+            {
+                rig.PermissionStore!.ArmNextWrite(audit);
+                return Task.CompletedTask;
+            };
+            var read = rig.OriginalDirectRead = session.GetServicesAsync(
+                retirement == "caller" ? callerCancellation.Token : rig.Token);
+            Task? close = null;
+            try
+            {
+                await audit.Entered.Task.WaitAsync(rig.Token);
+                audit.Release.TrySetResult();
+                await verificationEntered.Task.WaitAsync(rig.Token);
+                Assert.False(read.IsCompleted);
+                if (retirement == "caller") callerCancellation.Cancel();
+                else if (retirement == "connection") rig.Lifetime!.Cancel();
+                else
+                {
+                    close = session.DisposeAsync().AsTask();
+                    Assert.Same(close, session.DisposeAsync().AsTask());
+                    Assert.False(close.IsCompleted);
+                }
+                await verificationCancelled.Task.WaitAsync(rig.Token);
+            }
+            finally
+            {
+                audit.Release.TrySetResult();
+                if (retirement == "caller") callerCancellation.Cancel();
+                if (retirement != "caller" && close is null) close = session.DisposeAsync().AsTask();
+            }
+            if (retirement == "caller")
+            {
+                var failure = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => read);
+                rig.Observe(failure);
+                Assert.Equal(callerCancellation.Token, failure.CancellationToken);
+            }
+            else
+            {
+                var result = await read;
+                Assert.False(result.Operation.Succeeded);
+                Assert.Null(result.Operation.Value);
+                Assert.Equal("CallerIdentityUnverified", result.Operation.Code);
+            }
+            Assert.Equal(HomePermissionRequestState.Succeeded,
+                (await rig.Permissions!.ReadRequestObservationAsync(pending.PermissionRequestId!, rig.Token))!.State);
+            close ??= session.DisposeAsync().AsTask();
+            Assert.Same(close, session.DisposeAsync().AsTask());
+            await close;
+        }, startHost: false);
+
+    [WindowsFact]
+    public Task Original_read_and_audit_failures_are_both_retained() =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachDirectSessionAsync();
+            var session = rig.OriginalSession!;
+            var pending = await session.GetServicesAsync(rig.Token);
+            Assert.Equal("PermissionRequired", pending.Operation.Code);
+            Assert.True((await rig.Permissions!.DecideAsync(pending.PermissionRequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+            var primaryFailure = new InvalidOperationException("ORIGINAL_HOME_READ_FAILURE");
+            var auditFailure = new IOException("ORIGINAL_HOME_AUDIT_FAILURE");
+            var audit = new BlockingPermissionStore.WriteGate { Failure = auditFailure };
+            audit.Release.TrySetResult();
+            rig.Api!.AfterRead = (_, _) =>
+            {
+                rig.PermissionStore!.ArmNextWrite(audit);
+                return Task.FromException(primaryFailure);
+            };
+
+            var read = rig.OriginalDirectRead = session.GetServicesAsync(rig.Token);
+            var failure = await Record.ExceptionAsync(() => read);
+            Assert.NotNull(failure);
+            rig.Observe(failure!);
+            Assert.Contains(Flatten(failure!), error => ReferenceEquals(error, primaryFailure));
+            Assert.Contains(Flatten(failure!), error => ReferenceEquals(error, auditFailure));
+            await session.DisposeAsync();
+        }, startHost: false);
+
+    [WindowsTheory]
+    [InlineData("state")]
+    [InlineData("service")]
+    [InlineData("compatibility")]
+    public Task Other_original_read_facades_return_payload_and_exact_request_after_audit(string facade) =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachDirectSessionAsync();
+            var session = rig.OriginalSession!;
+            var pending = await ReadFacadeAsync(session, facade, rig.Token);
+            Assert.False(pending.Succeeded);
+            Assert.Equal("PermissionRequired", pending.Code);
+            Assert.False(pending.HasPayload);
+            Assert.NotNull(pending.RequestId);
+            Assert.True((await rig.Permissions!.DecideAsync(pending.RequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+
+            var audit = new BlockingPermissionStore.WriteGate();
+            rig.Api!.AfterTypedRead = (operation, _, _) =>
+            {
+                if (operation == facade) rig.PermissionStore!.ArmNextWrite(audit);
+                return Task.CompletedTask;
+            };
+            var read = ReadFacadeAsync(session, facade, rig.Token, rig.RetainFacadeRead);
+            rig.OriginalFacadeObservation = read;
+            try
+            {
+                await audit.Entered.Task.WaitAsync(rig.Token);
+                Assert.False(read.IsCompleted);
+            }
+            finally { audit.Release.TrySetResult(); }
+
+            var result = await read;
+            Assert.True(result.Succeeded);
+            Assert.Equal(pending.RequestId, result.RequestId);
+            Assert.True(result.HasPayload);
+            Assert.True(result.HasHomeCore);
+            Assert.Equal(HomePermissionRequestState.Succeeded,
+                (await rig.Permissions.ReadRequestObservationAsync(pending.RequestId!, rig.Token))!.State);
+            var close = session.DisposeAsync().AsTask();
+            Assert.Same(close, session.DisposeAsync().AsTask());
+            await close;
+        }, startHost: false);
+
+    [WindowsTheory]
+    [InlineData("state")]
+    [InlineData("service")]
+    [InlineData("compatibility")]
+    public Task Other_original_read_facades_suppress_payload_after_session_retirement_during_audit(string facade) =>
+        WithRigAsync(async rig =>
+        {
+            await rig.AttachDirectSessionAsync();
+            var session = rig.OriginalSession!;
+            var pending = await ReadFacadeAsync(session, facade, rig.Token);
+            Assert.Equal("PermissionRequired", pending.Code);
+            Assert.False(pending.HasPayload);
+            Assert.NotNull(pending.RequestId);
+            Assert.True((await rig.Permissions!.DecideAsync(pending.RequestId!, HomeApprovalChoice.Accept,
+                cancellationToken: rig.Token)).Succeeded);
+            var audit = new BlockingPermissionStore.WriteGate();
+            rig.Api!.AfterTypedRead = (operation, _, _) =>
+            {
+                if (operation == facade) rig.PermissionStore!.ArmNextWrite(audit);
+                return Task.CompletedTask;
+            };
+            var read = ReadFacadeAsync(session, facade, rig.Token, rig.RetainFacadeRead);
+            rig.OriginalFacadeObservation = read;
+            Task? close = null;
+            try
+            {
+                await audit.Entered.Task.WaitAsync(rig.Token);
+                Assert.False(read.IsCompleted);
+                close = session.DisposeAsync().AsTask();
+                Assert.Same(close, session.DisposeAsync().AsTask());
+                Assert.False(close.IsCompleted);
+            }
+            finally { audit.Release.TrySetResult(); }
+
+            var result = await read;
+            Assert.False(result.Succeeded);
+            Assert.Equal("CallerIdentityUnverified", result.Code);
+            Assert.False(result.HasPayload);
+            Assert.False(result.HasHomeCore);
+            Assert.Equal(pending.RequestId, result.RequestId);
+            Assert.Equal(HomePermissionRequestState.Succeeded,
+                (await rig.Permissions!.ReadRequestObservationAsync(pending.RequestId!, rig.Token))!.State);
+            await close;
+        }, startHost: false);
+
     [WindowsFact]
     public Task App_connect_captures_original_requirements_before_actual_pipe_connect_await() =>
         WithRigAsync(async rig =>
@@ -275,6 +767,44 @@ public sealed class HomeWindowsCoreTransportTests
     private static HomeNativeSessionHostRequirement Host() => new("synthetic-home", "SYNTHETIC_WINDOWS_FIXTURE_ONLY");
     private static HomeCompatibilityRequest Requirements() => new("synthetic-native", "candidate-test-only",
         [new("home.core", 1), new("home.state", 1)]);
+    private sealed record FacadeObservation(bool Succeeded, string Code, string? RequestId,
+        bool HasPayload, bool HasHomeCore);
+    private static async Task<FacadeObservation> ReadFacadeAsync(HomeNativeCoreApiSessions.Session session,
+        string facade, CancellationToken token, Action<Task>? retainOriginal = null)
+    {
+        switch (facade)
+        {
+            case "state":
+            {
+                var original = session.GetStateAsync(token);
+                retainOriginal?.Invoke(original);
+                var result = await original;
+                return new(result.Operation.Succeeded, result.Operation.Code, result.PermissionRequestId,
+                    result.Operation.Value is not null,
+                    result.Operation.Value?.Services.Any(service => service.ServiceId == "home.core") == true);
+            }
+            case "service":
+            {
+                var original = session.GetServiceAsync("home.core", token);
+                retainOriginal?.Invoke(original);
+                var result = await original;
+                return new(result.Operation.Succeeded, result.Operation.Code, result.PermissionRequestId,
+                    result.Operation.Value is not null, result.Operation.Value?.ServiceId == "home.core");
+            }
+            case "compatibility":
+            {
+                var request = new HomeCompatibilityRequest("synthetic-native", "candidate-test-only",
+                    [new("home.core", 1), new("home.state", 1)]);
+                var original = session.GetCompatibilityAsync(request, token);
+                retainOriginal?.Invoke(original);
+                var result = await original;
+                return new(result.Operation.Succeeded, result.Operation.Code, result.PermissionRequestId,
+                    result.Operation.Value is not null,
+                    result.Operation.Value?.AcceptedServices.Any(service => service.ServiceId == "home.core") == true);
+            }
+            default: throw new ArgumentOutOfRangeException(nameof(facade), facade, "Unknown original Home read facade.");
+        }
+    }
     private static TaskCompletionSource Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private static IEnumerable<Exception> Flatten(Exception error)
     {
@@ -307,6 +837,7 @@ public sealed class HomeWindowsCoreTransportTests
         private readonly string _pipeName = "home.windows.fixture." + Guid.NewGuid().ToString("N");
         private readonly List<Exception> _observed = [];
         internal readonly Actors Actors = new();
+        internal BlockingPermissionStore? PermissionStore;
         internal CancellationTokenSource? Bound;
         internal CancellationTokenSource? Lifetime;
         internal HomePermissionTrustService? Permissions;
@@ -326,6 +857,8 @@ public sealed class HomeWindowsCoreTransportTests
         internal Task<HomeNativeCoreApiSessions.Session?>? OriginalDirectAdmission;
         internal HomeNativeCoreApiSessions.Session? OriginalSession;
         internal Task<HomeNativeCoreApiResult<IReadOnlyList<HomeServiceDescriptor>>>? OriginalDirectRead;
+        internal readonly List<Task> OriginalFacadeReads = [];
+        internal Task<FacadeObservation>? OriginalFacadeObservation;
         internal Task? OriginalDirectClose;
         internal string Root => _root;
         internal string PipeName => _pipeName;
@@ -348,7 +881,9 @@ public sealed class HomeWindowsCoreTransportTests
             Principal = "windows-sid:" + (identity.User?.Value ?? throw new InvalidOperationException("Actual Windows SID unavailable."));
             Verifier = new(Actors, Principal);
             var policy = new HomeCoreServiceReadActionPolicies();
-            Permissions = new(new FileHomeCoreStateStore(Path.Combine(_root, "permissions.json")), policy.TryGet);
+            var permissionStore = PermissionStore = new BlockingPermissionStore(
+                new FileHomeCoreStateStore(Path.Combine(_root, "permissions.json")));
+            Permissions = new(permissionStore, policy.TryGet);
             IHomeCoreApi? actual = null;
             Sessions = new(Permissions, Actors, Verifier, () => actual ?? throw new InvalidOperationException("Actual API not ready."));
             Runtime = new([new HomeCoreStateService(new FileHomeCoreStateStore(Path.Combine(_root, "core.json")))],
@@ -389,6 +924,7 @@ public sealed class HomeWindowsCoreTransportTests
             HostRequirement(), Requirements(), Lifetime!.Token, Token)
             ?? throw new UnauthorizedAccessException("Real original startup attachment was refused.");
         internal void Observe(Exception error) { foreach (var same in Flatten(error)) Add(_observed, same); }
+        internal void RetainFacadeRead(Task original) => OriginalFacadeReads.Add(original);
         internal bool IsObserved(Exception error) => Flatten(error).All(same => _observed.Any(value => ReferenceEquals(value, same)));
         internal async Task CloseAsync()
         {
@@ -403,6 +939,8 @@ public sealed class HomeWindowsCoreTransportTests
             if (AppConnection is not null) await Settle(AppConnection.CloseAndDrainAsync);
             if (OriginalSession is not null) await Settle(() => OriginalSession.DisposeAsync().AsTask());
             if (OriginalDirectRead is not null) await Settle(() => OriginalDirectRead);
+            foreach (var original in OriginalFacadeReads) await Settle(() => original);
+            if (OriginalFacadeObservation is not null) await Settle(() => OriginalFacadeObservation);
             if (OriginalDirectClose is not null) await Settle(() => OriginalDirectClose);
             if (OriginalDirectAdmission is not null) await Settle(async () => { await OriginalDirectAdmission; });
             if (OriginalDirectConnect is not null) await Settle(() => OriginalDirectConnect);
@@ -427,6 +965,37 @@ public sealed class HomeWindowsCoreTransportTests
             Throw(null, failures);
         }
     }
+    private sealed class BlockingPermissionStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        private WriteGate? _next;
+        internal sealed class WriteGate
+        {
+            internal readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            internal Action? OnEntered;
+            internal Exception? Failure;
+        }
+        internal void ArmNextWrite(WriteGate gate) => Volatile.Write(ref _next, gate);
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken cancellationToken = default) => inner.ReadAsync(cancellationToken);
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+            CancellationToken cancellationToken = default)
+        {
+            var gate = Interlocked.Exchange(ref _next, null);
+            if (gate is not null)
+            {
+                gate.OnEntered?.Invoke();
+                gate.Entered.TrySetResult();
+                await gate.Release.Task.WaitAsync(cancellationToken);
+                if (gate.Failure is { } failure) throw failure;
+            }
+            return await inner.WriteAsync(record, expectedRecordRevision, cancellationToken);
+        }
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+            AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard,
+            CancellationToken cancellationToken = default) =>
+            inner.WriteGuardedAsync(record, expectedRecordRevision, expectedActor, guard, cancellationToken);
+    }
+
     private sealed class OriginalProvider(Rig original) : IServiceProvider
     {
         public object? GetService(Type serviceType) =>
@@ -437,8 +1006,13 @@ public sealed class HomeWindowsCoreTransportTests
     private sealed class Actors : IAuthenticatedResourceActorSource
     {
         internal AuthenticatedResourceActor Current = new("windows-wire-fixture", "isolated-profile", null, null, "v1");
+        internal Exception? GetCurrentFailure;
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token)
-        { token.ThrowIfCancellationRequested(); return ValueTask.FromResult<AuthenticatedResourceActor?>(Current); }
+        {
+            token.ThrowIfCancellationRequested();
+            if (GetCurrentFailure is { } failure) throw failure;
+            return ValueTask.FromResult<AuthenticatedResourceActor?>(Current);
+        }
     }
     private sealed class Verifier(Actors actors, string principal) :
         IHomeNativeInstalledPeerOriginalActorVerifier, IHomeNativeSessionHostVerifier
@@ -447,6 +1021,8 @@ public sealed class HomeWindowsCoreTransportTests
             "EXPLICIT_SYNTHETIC_RECEIPT_NO_PROTECTED_INSTALLATION", new HashSet<string> { "home.core", "home.state" });
         private readonly Guid _host = Guid.NewGuid();
         internal string HostRevision = "host-fixture-v1";
+        internal Exception? Failure;
+        internal Func<CancellationToken, ValueTask<HomeNativeInstalledPeer?>>? VerifyForActorOverride;
         internal HomeNativeObservedPeer? LastClient;
         internal HomeNativeObservedPeer? LastHost;
         private bool Actual(HomeNativeObservedPeer observed) => observed.ProcessId == Environment.ProcessId &&
@@ -457,6 +1033,8 @@ public sealed class HomeWindowsCoreTransportTests
             AuthenticatedResourceActor expected, CancellationToken token)
         {
             token.ThrowIfCancellationRequested(); LastClient = observed;
+            if (Failure is { } failure) throw failure;
+            if (VerifyForActorOverride is { } verification) return verification(token);
             return ValueTask.FromResult<HomeNativeInstalledPeer?>(Actual(observed) && expected == actors.Current ? Peer : null);
         }
         public ValueTask<HomeNativeInstalledPeer?> VerifyHostAsync(HomeNativeObservedPeer observed,
@@ -482,18 +1060,34 @@ public sealed class HomeWindowsCoreTransportTests
     {
         internal int Reads;
         internal Func<HomeCallerIdentity, CancellationToken, Task>? AfterRead;
-        public Task<HomeCoreOperationResult<HomeCoreStateSnapshot>> GetStateAsync(HomeCallerIdentity caller, CancellationToken token = default) =>
-            actual.GetStateAsync(caller, token);
+        internal Func<string, HomeCallerIdentity, CancellationToken, Task>? AfterTypedRead;
+        public async Task<HomeCoreOperationResult<HomeCoreStateSnapshot>> GetStateAsync(HomeCallerIdentity caller, CancellationToken token = default)
+        {
+            var result = await actual.GetStateAsync(caller, token);
+            if (AfterTypedRead is { } after) await after("state", caller, token);
+            return result;
+        }
         public async Task<HomeCoreOperationResult<IReadOnlyList<HomeServiceDescriptor>>> GetServicesAsync(
             HomeCallerIdentity caller, CancellationToken token = default)
         {
             Reads++; var result = await actual.GetServicesAsync(caller, token);
             if (AfterRead is { } after) await after(caller, token);
+            if (AfterTypedRead is { } typed) await typed("services", caller, token);
             return result;
         }
-        public Task<HomeCoreOperationResult<HomeServiceDescriptor>> GetServiceAsync(HomeCallerIdentity caller,
-            string serviceId, CancellationToken token = default) => actual.GetServiceAsync(caller, serviceId, token);
-        public Task<HomeCompatibilityResult> GetCompatibilityAsync(HomeCallerIdentity caller,
-            HomeCompatibilityRequest request, CancellationToken token = default) => actual.GetCompatibilityAsync(caller, request, token);
+        public async Task<HomeCoreOperationResult<HomeServiceDescriptor>> GetServiceAsync(HomeCallerIdentity caller,
+            string serviceId, CancellationToken token = default)
+        {
+            var result = await actual.GetServiceAsync(caller, serviceId, token);
+            if (AfterTypedRead is { } after) await after("service", caller, token);
+            return result;
+        }
+        public async Task<HomeCompatibilityResult> GetCompatibilityAsync(HomeCallerIdentity caller,
+            HomeCompatibilityRequest request, CancellationToken token = default)
+        {
+            var result = await actual.GetCompatibilityAsync(caller, request, token);
+            if (AfterTypedRead is { } after) await after("compatibility", caller, token);
+            return result;
+        }
     }
 }
