@@ -1,0 +1,11 @@
+<Project>
+  <!-- These three owning fixtures share a directory but have different dependency
+       graphs. Load before SDK props: no project may consume another's restore
+       assets or replace its compiled output. Target frameworks and references
+       remain declared by each actual fixture project. -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)bin/$(MSBuildProjectName)/</BaseOutputPath>
+  </PropertyGroup>
+</Project>
