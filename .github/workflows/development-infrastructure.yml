@@ -5,6 +5,8 @@ on:
     paths:
       - 'eng/development/**'
       - 'eng/release-delivery/**'
+      - '9to1 Workspace/Home/Source/Dulche/llamacpp/benchmark.py'
+      - '9to1 Workspace/Home/Source/Dulche/llamacpp/tests/test_benchmark.py'
       - 'AGENTS.md'
       - 'docs/development/**'
       - '.github/workflows/development-infrastructure.yml'
@@ -14,6 +16,8 @@ on:
     paths:
       - 'eng/development/**'
       - 'eng/release-delivery/**'
+      - '9to1 Workspace/Home/Source/Dulche/llamacpp/benchmark.py'
+      - '9to1 Workspace/Home/Source/Dulche/llamacpp/tests/test_benchmark.py'
       - 'AGENTS.md'
       - 'docs/development/**'
       - '.github/workflows/development-infrastructure.yml'
@@ -63,6 +67,42 @@ jobs:
           print((evidence / 'installer-delivery.log').read_text())
           raise SystemExit(result.returncode)
           PY
+      - name: Validate committed identity, closed-index recovery and benchmark streams
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, re, subprocess, time
+          evidence = pathlib.Path(os.environ['RUNNER_TEMP']) / 'infrastructure-evidence'
+          evidence.mkdir(parents=True, exist_ok=True)
+          suites = [
+              ('native-source-identity', 17, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_native_source_identity.py', '-v']),
+              ('closed-root-index', 36, ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'eng/development', '-p', 'test_closed_root_index.py', '-v']),
+              ('benchmark-streams', 22, ['python3', '-B', '-m', 'unittest', 'discover', '-s', '9to1 Workspace/Home/Source/Dulche/llamacpp/tests', '-p', 'test_benchmark.py', '-v']),
+          ]
+          failed = False
+          for name, expected_tests, command in suites:
+              started = time.monotonic()
+              log_path = evidence / (name + '.log')
+              with log_path.open('wb') as log:
+                  result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+              raw = log_path.read_bytes()
+              match = re.search(rb'(?m)^Ran (\d+) tests? in [0-9.]+s$', raw)
+              tests_run = int(match.group(1)) if match else None
+              skip_match = re.search(rb'\bskipped=(\d+)\b', raw)
+              skipped = int(skip_match.group(1)) if skip_match else 0
+              verified = result.returncode == 0 and tests_run == expected_tests and skipped == 0
+              receipt = {'command': command, 'exit_code': result.returncode,
+                         'duration_seconds': time.monotonic() - started,
+                         'expected_tests': expected_tests, 'tests_run': tests_run, 'skipped': skipped,
+                         'verified': verified,
+                         'scope': 'Committed identity/closed-index Git fixtures and mocked benchmark streams only; no model, SDK, native or product acceptance.'}
+              (evidence / (name + '-receipt.json')).write_text(json.dumps(receipt, indent=2) + '\n')
+              print(raw.decode('utf-8', errors='replace'))
+              if not verified:
+                  print(f'{name}: expected {expected_tests} tests, zero skips and exit 0; actual tests={tests_run}, skipped={skipped}, exit={result.returncode}')
+                  failed = True
+          raise SystemExit(1 if failed else 0)
+          PY
       - name: Record exact infrastructure inputs
         if: always()
         run: |
@@ -71,10 +111,13 @@ jobs:
           files = {p for root in ('eng/development', 'eng/release-delivery', 'docs/development')
                    for p in pathlib.Path(root).rglob('*') if p.is_file()}
           files.update(pathlib.Path(p) for p in ('AGENTS.md', '.github/workflows/development-infrastructure.yml',
-                                                '.github/workflows/havenos-linux-package.yml', '.github/workflows/canvas-rnote-poc.yml'))
+                                                '.github/workflows/havenos-linux-package.yml', '.github/workflows/canvas-rnote-poc.yml',
+                                                '9to1 Workspace/Home/Source/Dulche/llamacpp/benchmark.py',
+                                                '9to1 Workspace/Home/Source/Dulche/llamacpp/tests/test_benchmark.py'))
           result = {
               'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
               'python': platform.python_version(),
+              'git_version': subprocess.check_output(['git', '--version'], text=True).strip(),
               'platform': platform.platform(),
               'files': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(files)},
               'scope': 'Infrastructure invariants only; native/product/release acceptance remains separate.'
