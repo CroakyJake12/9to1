@@ -241,8 +241,12 @@ public sealed class HomeAppsFeature(IHomeAppsFeatureSource provider)
             // Recheck after entering the gate: another refresh or action may have changed state.
             current = Current;
             entry = current.Packages.FirstOrDefault(item => item.PackageId == request.PackageId);
-            if (entry is null || current.IsStale || !entry.SupportedActions.Contains(request.Action))
+            if (entry is null || current.IsStale || current.State is HomeAppsDataState.Failed or HomeAppsDataState.Unavailable ||
+                !entry.SupportedActions.Contains(request.Action))
                 return Rejected(request, "HomeApps.StateChanged", "The app state changed. Refresh and try again.");
+            if (request.ExpectedRevision is not null &&
+                !StringComparer.Ordinal.Equals(request.ExpectedRevision, current.Revision))
+                return Rejected(request, "HomeApps.RevisionChanged", "The app catalogue changed. Refresh it before continuing.");
 
             result = await _provider.ExecuteAsync(request, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidDataException("The Home package service returned no operation result.");

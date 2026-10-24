@@ -175,9 +175,19 @@ namespace HavenOS.Home.Apps
         }
 
         internal Task<HomePackageOriginalReview> RequestAsync(HomePackageActionRequest originalRequest,
+            HomePackageArtifactSelection expectedOriginalSelection, HomePackageDatabaseSnapshot expectedOriginalRegistry,
             CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(originalRequest);
+            ArgumentNullException.ThrowIfNull(expectedOriginalSelection);
+            ArgumentNullException.ThrowIfNull(expectedOriginalRegistry);
+            var expectedRegistry = HomePackageDatabase.CaptureGuardedSnapshot(expectedOriginalRegistry);
+            if (!expectedOriginalSelection.IssuedBy(_platform) ||
+                expectedOriginalSelection.Descriptor.PackageId != originalRequest.PackageId ||
+                (originalRequest.RequestedVersion is not null && expectedOriginalSelection.Descriptor.Version != originalRequest.RequestedVersion) ||
+                (originalRequest.RequestedChannel is not null && expectedOriginalSelection.Descriptor.Channel != originalRequest.RequestedChannel) ||
+                (originalRequest.ExpectedRevision is not null && expectedOriginalSelection.CatalogueRevision != originalRequest.ExpectedRevision))
+                throw new UnauthorizedAccessException("The exact original planned artifact selection is required before package review.");
             var request = originalRequest with { };
             if (!HomePackageArtifactSelection.Identifier(request.PackageId) ||
                 !Enum.IsDefined(request.Action) || !HomePackageArtifactSelection.Text(request.IdempotencyKey, 256) ||
@@ -195,6 +205,13 @@ namespace HavenOS.Home.Apps
                 {
                     if (prior.Request != request)
                         throw new UnauthorizedAccessException("The original package idempotency key cannot name a different request.");
+                    if (prior.RegistryRevision != expectedRegistry.Revision)
+                        throw new UnauthorizedAccessException("The original request belongs to another registry revision; replan before continuing.");
+                    DemandExpectedSelection(prior.Artifact, expectedOriginalSelection);
+                    var currentRegistry = await ReadRegistryAsync(token).ConfigureAwait(false);
+                    if (!JsonSerializer.SerializeToUtf8Bytes(currentRegistry).AsSpan()
+                        .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(expectedRegistry)))
+                        throw new UnauthorizedAccessException("The exact canonical package registry changed; replan before continuing the original review.");
                     await DemandCurrentAsync(prior, token).ConfigureAwait(false);
                     return prior;
                 }
@@ -202,6 +219,9 @@ namespace HavenOS.Home.Apps
                     if (_reviews.Count >= MaximumOriginalReviews)
                         throw new InvalidOperationException("Original package review capacity reached; close this original adapter.");
                 var registry = await ReadRegistryAsync(token).ConfigureAwait(false);
+                if (!JsonSerializer.SerializeToUtf8Bytes(registry).AsSpan()
+                    .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(expectedRegistry)))
+                    throw new UnauthorizedAccessException("The exact canonical package registry changed; replan before requesting package permission.");
                 if (registry.RecentOperations.Any(item => item.IdempotencyKey == request.IdempotencyKey))
                     throw new InvalidOperationException("A canonical recorded operation exists; observe/recover that same effect rather than dispatch again.");
                 if (registry.RecentOperations.Any(item => item.PackageId == request.PackageId &&
@@ -219,6 +239,7 @@ namespace HavenOS.Home.Apps
                 var material = await _platform.ResolveOriginalArtifactAsync(request, registry, token).ConfigureAwait(false)
                     ?? throw new InvalidOperationException("Original trusted package artifact selection is unavailable.");
                 var artifact = HomePackageArtifactSelection.Capture(_platform, material, request);
+                DemandExpectedSelection(artifact, expectedOriginalSelection);
                 var mapped = _platform.ResolveOriginalAction(request.Action, artifact.Descriptor)
                     ?? throw new InvalidOperationException("No trusted owner package action mapping is registered.");
                 if (!HomePackageArtifactSelection.Text(mapped.TargetAppId, 128) ||
@@ -271,6 +292,50 @@ namespace HavenOS.Home.Apps
                 await DemandCurrentAsync(review, token).ConfigureAwait(false);
                 return review;
             }
+        }
+
+        private static void DemandExpectedSelection(HomePackageArtifactSelection observed,
+            HomePackageArtifactSelection expected)
+        {
+            if (observed.SignedDescriptorSha256 != expected.SignedDescriptorSha256 ||
+                observed.DescriptorPayloadSha256 != expected.DescriptorPayloadSha256 ||
+                observed.CatalogueRevision != expected.CatalogueRevision)
+                throw new UnauthorizedAccessException("The original catalogue artifact changed; replan before continuing package lifecycle work.");
+        }
+
+        // A pending approval may outlive its initial catalogue read. This is a read-only
+        // revalidation of the SAME retained review and plan; it creates no new review/grant.
+        internal Task DemandExpectedSelectionCurrentAsync(HomePackageOriginalReview sameOriginalReview,
+            HomePackageArtifactSelection expectedOriginalSelection, HomePackageDatabaseSnapshot expectedOriginalRegistry,
+            CancellationToken cancellationToken = default)
+        {
+            RequireOwned(sameOriginalReview);
+            ArgumentNullException.ThrowIfNull(expectedOriginalSelection);
+            ArgumentNullException.ThrowIfNull(expectedOriginalRegistry);
+            if (Volatile.Read(ref sameOriginalReview.DispatchAttempted) != 0)
+                throw new InvalidOperationException("A possibly dispatched original effect is audit-only, never a fresh selection check.");
+            if (!expectedOriginalSelection.IssuedBy(_platform) ||
+                expectedOriginalSelection.Descriptor.PackageId != sameOriginalReview.Request.PackageId)
+                throw new UnauthorizedAccessException("The same original planned package selection is required for review currentness.");
+            var expectedRegistry = HomePackageDatabase.CaptureGuardedSnapshot(expectedOriginalRegistry);
+            if (sameOriginalReview.RegistryRevision != expectedRegistry.Revision ||
+                sameOriginalReview.OriginalPackageEntryRevision != (expectedRegistry.Packages
+                    .SingleOrDefault(item => item.PackageId == sameOriginalReview.Request.PackageId)?.Revision ?? 0))
+                throw new UnauthorizedAccessException("The original permission review is bound to another package registry state; replan before continuing.");
+            DemandExpectedSelection(sameOriginalReview.Artifact, expectedOriginalSelection);
+            return RetainAsync(async token =>
+            {
+                var current = await ReadRegistryAsync(token).ConfigureAwait(false);
+                if (!JsonSerializer.SerializeToUtf8Bytes(current).AsSpan()
+                    .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(expectedRegistry)))
+                    throw new UnauthorizedAccessException("The exact canonical package registry changed; replan before continuing the original review.");
+                var material = await _platform.ResolveOriginalArtifactAsync(sameOriginalReview.Request, current, token).ConfigureAwait(false)
+                    ?? throw new InvalidOperationException("The original trusted package artifact selection is unavailable.");
+                var artifact = HomePackageArtifactSelection.Capture(_platform, material, sameOriginalReview.Request);
+                DemandExpectedSelection(artifact, expectedOriginalSelection);
+                await DemandCurrentSelectionAsync(artifact, current.Revision, token).ConfigureAwait(false);
+                return true;
+            }, cancellationToken);
         }
 
         internal Task<HomePackageActionResult> ExecuteAsync(HomePackageOriginalReview originalReview,

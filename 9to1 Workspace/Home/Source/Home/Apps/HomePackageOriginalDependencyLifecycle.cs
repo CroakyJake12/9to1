@@ -122,6 +122,8 @@ internal sealed class HomePackageOriginalDependencyLifecycle
             !HomePackageArtifactSelection.Identifier(request.PackageId) ||
             !HomePackageArtifactSelection.Text(request.IdempotencyKey, 128))
             return Refuse("PackageSelectionChanged", "The original package selection is invalid.", request.PackageId);
+        if (request.Action == HomePackageAction.SelectVersion && string.IsNullOrWhiteSpace(request.RequestedVersion))
+            return Refuse("HomeApps.SelectionRequired", "Choose an exact version before selecting a package version.", request.PackageId);
         if (!_selected.TryGetValue(request.PackageId, out var selected))
             return Refuse("DependencyRequired", "The exact trusted package selection is unavailable.", request.PackageId);
         if (request.ExpectedRevision is not null &&
@@ -146,7 +148,7 @@ internal sealed class HomePackageOriginalDependencyLifecycle
         if (request.Action == HomePackageAction.Uninstall)
             return PlanRemoval(request, registry, entries, selected);
         if (request.Action is not (HomePackageAction.Install or HomePackageAction.Update or
-            HomePackageAction.Repair or HomePackageAction.Rollback))
+            HomePackageAction.Repair or HomePackageAction.SelectVersion or HomePackageAction.Rollback))
             return Refuse("HomeApps.ActionUnavailable", "This action is not a dependency lifecycle operation.", request.PackageId);
 
         var steps = new List<HomePackageOriginalLifecycleStep>();
@@ -212,12 +214,17 @@ internal sealed class HomePackageOriginalDependencyLifecycle
             if (selectedTarget && request.Action == HomePackageAction.Install &&
                 entry?.InstalledVersion is not null && !exactInstalled)
             { Fail("PackageDependencyConflict", "Use an explicitly reviewed update or repair for an existing installation.", packageId); return; }
+            // Keep dependency remediation bound to the selected signed version:
+            // same-version unhealthy installs are repaired; version changes are updates.
             var action = selectedTarget ? request.Action :
-                entry?.InstalledVersion is null ? HomePackageAction.Install : HomePackageAction.Update;
+                (entry is null || entry.InstalledVersion is null) ? HomePackageAction.Install :
+                (entry.InstalledVersion == original.Descriptor.Version && !exactInstalled)
+                    ? HomePackageAction.Repair : HomePackageAction.Update;
             var reuse = exactInstalled && (!selectedTarget || request.Action == HomePackageAction.Install);
             if (!reuse && !_policy.SupportsOriginalAction(original, action))
             { Fail("DependencyRequired", "The genuine platform lifecycle adapter for this step is unavailable.", packageId); return; }
-            if (!reuse && action is HomePackageAction.Update or HomePackageAction.Repair or HomePackageAction.Rollback)
+            if (!reuse && action is HomePackageAction.Update or HomePackageAction.Repair or
+                HomePackageAction.SelectVersion or HomePackageAction.Rollback)
             {
                 if (entry?.InstalledVersion is null || entry.LastKnownGoodVersion is null)
                 { Fail("PackageDependencyConflict", "Retain the genuine previous valid installation before replacement.", packageId); return; }

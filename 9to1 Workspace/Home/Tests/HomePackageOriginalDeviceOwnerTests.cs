@@ -24,7 +24,8 @@ public sealed class HomePackageOriginalDeviceOwnerTests
     [Fact]
     public Task Same_accepted_native_caller_requires_manual_approval_then_installs_once() => WithRig(async (rig, failures) =>
     {
-        var review = await rig.Adapter.RequestAsync(rig.Request(), rig.Token);
+        var captured = await rig.CaptureOriginalRequestAsync();
+        var review = await rig.Adapter.RequestAsync(captured.Request, captured.Selection, captured.Registry, rig.Token);
         var observed = await rig.Permissions.ReadRequestObservationAsync(review.Prepared.RequestId, rig.Token);
         Assert.NotNull(observed);
         Assert.Equal("installed:" + rig.Verifier.Peer.InstalledApplicationId.ToString("N"), observed!.Caller.CallerId);
@@ -61,7 +62,8 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         Task<HomePackageActionResult>? original = null;
         Task<HomePackageOriginalOperationObservation>? audit = null;
         Task? adapterClose = null, ownerClose = null;
-        var review = await rig.Adapter.RequestAsync(rig.Request(), rig.Token);
+        var captured = await rig.CaptureOriginalRequestAsync();
+        var review = await rig.Adapter.RequestAsync(captured.Request, captured.Selection, captured.Registry, rig.Token);
         Assert.True((await rig.Permissions.DecideAsync(review.Prepared.RequestId, HomeApprovalChoice.Accept,
             cancellationToken: rig.Token)).Succeeded);
         rig.DevicePersisted.BeforeAcknowledgement = async (id, revision, token) =>
@@ -133,10 +135,11 @@ public sealed class HomePackageOriginalDeviceOwnerTests
     {
         var entered = NewSignal(); var release = NewSignal();
         Task<HomePackageOriginalReview>? original = null;
+        var captured = await rig.CaptureOriginalRequestAsync();
         rig.Artifacts.BeforeResolve = async _ => { entered.TrySetResult(); await release.Task; };
         try
         {
-            original = rig.Adapter.RequestAsync(rig.Request(), rig.Token);
+            original = rig.Adapter.RequestAsync(captured.Request, captured.Selection, captured.Registry, rig.Token);
             await entered.Task.WaitAsync(rig.Token);
             rig.Actors.Current = rig.Actors.Current with { AuthenticationRevision = "retired-original" };
             release.TrySetResult();
@@ -160,6 +163,7 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         OperationCanceledException? exact = null;
         Task<HomePackageOriginalReview>? original = null;
         Task? adapterClose = null, ownerClose = null, sessionClose = null;
+        var captured = await rig.CaptureOriginalRequestAsync();
         rig.Artifacts.BeforeResolve = async token =>
         {
             entered.TrySetResult();
@@ -169,7 +173,7 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         };
         try
         {
-            original = rig.Adapter.RequestAsync(rig.Request(), caller.Token);
+            original = rig.Adapter.RequestAsync(captured.Request, captured.Selection, captured.Registry, caller.Token);
             await entered.Task.WaitAsync(rig.Token);
             caller.Cancel();
             await canceled.Task.WaitAsync(rig.Token);
@@ -202,7 +206,8 @@ public sealed class HomePackageOriginalDeviceOwnerTests
     public Task Root_effect_then_caller_cancel_and_lost_ack_retains_same_known_outcome_without_repeat_dispatch() => WithRig(async (rig, failures) =>
     {
         using var caller = new CancellationTokenSource();
-        var review = await rig.Adapter.RequestAsync(rig.Request(), rig.Token);
+        var captured = await rig.CaptureOriginalRequestAsync();
+        var review = await rig.Adapter.RequestAsync(captured.Request, captured.Selection, captured.Registry, rig.Token);
         Assert.True((await rig.Permissions.DecideAsync(review.Prepared.RequestId, HomeApprovalChoice.Accept, cancellationToken: rig.Token)).Succeeded);
         var lost = new IOException("Controlled original root acknowledgement loss after one effect.");
         rig.Root.AfterEffect = () => { caller.Cancel(); throw lost; };
@@ -228,7 +233,8 @@ public sealed class HomePackageOriginalDeviceOwnerTests
     [Fact]
     public Task Known_root_effect_with_interrupted_canonical_settlement_recovers_only_original_journal_after_retirement() => WithRig(async (rig, failures) =>
     {
-        var review = await rig.Adapter.RequestAsync(rig.Request(), rig.Token);
+        var captured = await rig.CaptureOriginalRequestAsync();
+        var review = await rig.Adapter.RequestAsync(captured.Request, captured.Selection, captured.Registry, rig.Token);
         Assert.True((await rig.Permissions.DecideAsync(review.Prepared.RequestId, HomeApprovalChoice.Accept, cancellationToken: rig.Token)).Succeeded);
         rig.Root.RefuseSettlement = true;
         var original = rig.Adapter.ExecuteAsync(review, rig.Token);
@@ -261,7 +267,8 @@ public sealed class HomePackageOriginalDeviceOwnerTests
     [Fact]
     public Task Ambiguous_original_root_effect_stays_pending_and_close_retains_causes_without_repeat_dispatch() => WithRig(async (rig, failures) =>
     {
-        var review = await rig.Adapter.RequestAsync(rig.Request(), rig.Token);
+        var captured = await rig.CaptureOriginalRequestAsync();
+        var review = await rig.Adapter.RequestAsync(captured.Request, captured.Selection, captured.Registry, rig.Token);
         Assert.True((await rig.Permissions.DecideAsync(review.Prepared.RequestId, HomeApprovalChoice.Accept, cancellationToken: rig.Token)).Succeeded);
         var lost = new IOException("Controlled ambiguous root acknowledgement after one isolated effect.");
         rig.Root.AmbiguousAfterEffect = lost;
@@ -349,8 +356,425 @@ public sealed class HomePackageOriginalDeviceOwnerTests
 
     private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     [Fact]
+    public Task Dependency_run_can_explicitly_retry_cancellation_before_original_dispatch()
+    {
+        return WithRig(async (rig, failures) =>
+        {
+            using var caller = new CancellationTokenSource();
+            var entered = NewSignal();
+            HomePackageOriginalLifecycleRun? run = null;
+            Task<HomePackageActionResult>? original = null;
+            Task? close = null;
+            try
+            {
+                var registry = await rig.ReadDeviceAsync();
+                var request = rig.Request();
+                var platform = (IHomePackageOriginalPlatformOwner)rig.Owner;
+                var material = await platform.ResolveOriginalArtifactAsync(request, registry, rig.Token)
+                    ?? throw new InvalidOperationException("Explicit fixture material missing.");
+                var selection = HomePackageArtifactSelection.Capture(platform, material, request);
+                var planner = new HomePackageOriginalDependencyLifecycle(platform,
+                    new ScriptedLifecyclePolicy(selection), new[] { selection });
+                var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(planner.Plan(request, registry, false).Plan);
+                run = new(rig.Adapter, rig.Owner, planner, plan);
+                rig.Artifacts.BeforeResolve = async token =>
+                {
+                    entered.TrySetResult();
+                    await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                };
+                original = run.ContinueOriginalAsync(caller.Token);
+                await entered.Task.WaitAsync(rig.Token);
+                caller.Cancel();
+                var canceled = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => original!);
+                failures.Observe(canceled);
+                Assert.Equal(HomePackageOperationState.Pending, run.ObserveOriginal().State);
+                Assert.False(run.ObserveOriginal().AuditOnlyAfterAttempt);
+                Assert.Equal(0, rig.Root.Effects);
+
+                // Explicit retry reuses this admitted run and request identity, but does
+                // not dispatch until the ordinary permission flow is completed.
+                rig.Artifacts.BeforeResolve = null;
+                var retry = await run.ContinueOriginalAsync(rig.Token);
+                Assert.Equal(HomePackageOperationState.Pending, retry.State);
+                Assert.NotNull(run.ObserveOriginal().OriginalPermissionRequestId);
+                Assert.Equal(0, rig.Root.Effects);
+                var afterRetry = await rig.ReadDeviceAsync();
+                Assert.Equal(registry.Revision, afterRetry.Revision);
+                Assert.True(JsonSerializer.SerializeToUtf8Bytes(registry.Packages).AsSpan()
+                    .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(afterRetry.Packages)));
+                Assert.Empty(afterRetry.RecentOperations);
+
+                var permissionId = run.ObserveOriginal().OriginalPermissionRequestId!;
+                Assert.Equal(HomePackageOperationState.Pending,
+                    (await run.ContinueOriginalAsync(rig.Token)).State);
+                Assert.Equal(permissionId, run.ObserveOriginal().OriginalPermissionRequestId);
+                Assert.Single((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+                Assert.True((await rig.Permissions.DecideAsync(permissionId, HomeApprovalChoice.Accept,
+                    cancellationToken: rig.Token)).Succeeded);
+                var completed = await run.ContinueOriginalAsync(rig.Token);
+                Assert.Equal(HomePackageOperationState.Succeeded, completed.State);
+                Assert.Equal(1, rig.Root.Effects);
+                Assert.Equal(1, rig.Root.OpenCalls);
+                var installed = await rig.ReadDeviceAsync();
+                var package = Assert.Single(installed.Packages);
+                Assert.Equal("fixture.package", package.PackageId);
+                Assert.Equal("1", package.InstalledVersion);
+                var journal = Assert.Single(installed.RecentOperations);
+                Assert.Equal(HomePackageJournalState.Succeeded, journal.State);
+                Assert.Equal("Install", journal.Action);
+                Assert.Equal(request.IdempotencyKey, journal.IdempotencyKey);
+                Assert.Equal(Assert.Single(run.ObserveOriginal().KnownOriginalResults).OperationId, journal.OperationId);
+            }
+            finally
+            {
+                if (original is not null) await failures.DrainAsync(original);
+                if (run is not null)
+                {
+                    try { close = run.CloseAndDrainAsync(); }
+                    catch (Exception error) { failures.Add(error); }
+                    if (close is not null) await failures.DrainPreviouslyObservedOriginalsAsync(close);
+                }
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData(HomePackageAction.Update)]
+    [InlineData(HomePackageAction.Repair)]
+    [InlineData(HomePackageAction.SelectVersion)]
+    public void Failed_update_repair_or_select_version_must_keep_the_exact_previous_activation_and_verified_install(HomePackageAction action)
+    {
+        var evidence = new HomePackageIntegrityEvidence("1", new string('a', 64), "fixture-signer",
+            HomePackageIntegrityState.Verified, DateTimeOffset.UnixEpoch);
+        var corroboratingEvidence = evidence with { SignerIdentity = "fixture-corroborating-signer" };
+        var activation = JsonSerializer.SerializeToElement(new { rootOperationId = "original-protected-receipt" });
+        var prior = new HomePackageDatabaseEntry("fixture.package", "fixture.app", "Fixture", null,
+            "1", "2", "stable", HomePackageInstallState.Installed, HomePackageCompatibility.Compatible,
+            null, Array.Empty<HomePackageDependency>(), new[] { evidence, corroboratingEvidence }, "1", new[] { "1" }, true, 7)
+        {
+            UnknownFields = new(StringComparer.Ordinal)
+            {
+                [HomePackageOriginalInstalledActivationRecord.Field] = activation
+            }
+        };
+        var failedObservation = prior with { Revision = 8 };
+        var result = new HomePackageActionResult("original-operation", prior.PackageId, action,
+            HomePackageOperationState.Failed, "ControlledActivationFailure", "Previous version retained.",
+            false, true, true, Array.Empty<string>(), new[] { prior.PackageId }, Array.Empty<string>(), Array.Empty<string>());
+
+        HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation, result);
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation with { InstalledVersion = "2" }, result));
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation with { IntegrityEvidence = Array.Empty<HomePackageIntegrityEvidence>() }, result));
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation with { IntegrityEvidence = new[] { evidence } }, result));
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation with { UnknownFields = new(StringComparer.Ordinal) }, result));
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation with
+            {
+                UnknownFields = new(StringComparer.Ordinal)
+                {
+                    [HomePackageOriginalInstalledActivationRecord.Field] = JsonSerializer.SerializeToElement(
+                        new { rootOperationId = "substituted-receipt" })
+                }
+            }, result));
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior with { UnknownFields = null }, failedObservation, result));
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation, result with { PreviousKnownGoodVersionRetained = false }));
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, failedObservation with
+            {
+                UnknownFields = new(StringComparer.Ordinal)
+            }, result with { PreviousKnownGoodVersionRetained = false }));
+        var unavailableObservation = failedObservation with
+        {
+            InstallationState = HomePackageInstallState.Failed,
+            InstalledVersion = null,
+            UnknownFields = new(StringComparer.Ordinal)
+        };
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, prior, unavailableObservation, result with { PreviousKnownGoodVersionRetained = false }));
+        HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(action,
+            prior with { RetainedRollbackVersions = Array.Empty<string>() }, unavailableObservation,
+            result with { PreviousKnownGoodVersionRetained = false });
+        Assert.Throws<InvalidDataException>(() => HomePackageOriginalDeviceOwner.DemandFailedActivationRetainsProtectedState(
+            action, null, failedObservation, result));
+    }
+
+    [Fact]
+    public Task Dependency_run_does_not_renew_permission_or_dispatch_after_denial() => WithRig(async (rig, failures) =>
+    {
+        HomePackageOriginalLifecycleRun? run = null;
+        Task? close = null;
+        try
+        {
+            var registry = await rig.ReadDeviceAsync();
+            var request = rig.Request();
+            var platform = (IHomePackageOriginalPlatformOwner)rig.Owner;
+            var material = await platform.ResolveOriginalArtifactAsync(request, registry, rig.Token)
+                ?? throw new InvalidOperationException("Explicit fixture material missing.");
+            var selection = HomePackageArtifactSelection.Capture(platform, material, request);
+            var planner = new HomePackageOriginalDependencyLifecycle(platform,
+                new ScriptedLifecyclePolicy(selection), new[] { selection });
+            var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(planner.Plan(request, registry, false).Plan);
+            run = new(rig.Adapter, rig.Owner, planner, plan);
+            Assert.Equal(HomePackageOperationState.Pending, (await run.ContinueOriginalAsync(rig.Token)).State);
+            var permissionId = run.ObserveOriginal().OriginalPermissionRequestId!;
+            Assert.True((await rig.Permissions.DecideAsync(permissionId, HomeApprovalChoice.Decline,
+                cancellationToken: rig.Token)).Succeeded);
+            var rejectedTask = run.ContinueOriginalAsync(rig.Token);
+            var rejected = await rejectedTask;
+            Assert.Equal(HomePackageOperationState.Rejected, rejected.State);
+            Assert.Same(rejectedTask, run.ContinueOriginalAsync(rig.Token));
+            Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+            Assert.Equal(0, rig.Root.Effects);
+            var afterDenial = await rig.ReadDeviceAsync();
+            Assert.Equal(registry.Revision, afterDenial.Revision);
+            Assert.Empty(afterDenial.RecentOperations);
+        }
+        finally
+        {
+            if (run is not null)
+            {
+                try { close = run.CloseAndDrainAsync(); }
+                catch (Exception error) { failures.Add(error); }
+                if (close is not null) await failures.DrainPreviouslyObservedOriginalsAsync(close);
+            }
+        }
+    });
+
+    [Fact]
+    public Task Dependency_run_requires_replan_when_signed_artifact_changes_before_retry() => WithRig(async (rig, failures) =>
+    {
+        using var caller = new CancellationTokenSource();
+        var entered = NewSignal();
+        HomePackageOriginalLifecycleRun? run = null;
+        Task<HomePackageActionResult>? original = null;
+        Task? close = null;
+        try
+        {
+            var registry = await rig.ReadDeviceAsync();
+            var request = rig.Request();
+            var platform = (IHomePackageOriginalPlatformOwner)rig.Owner;
+            var material = await platform.ResolveOriginalArtifactAsync(request, registry, rig.Token)
+                ?? throw new InvalidOperationException("Explicit fixture material missing.");
+            var selection = HomePackageArtifactSelection.Capture(platform, material, request);
+            var planner = new HomePackageOriginalDependencyLifecycle(platform,
+                new ScriptedLifecyclePolicy(selection), new[] { selection });
+            var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(planner.Plan(request, registry, false).Plan);
+            run = new(rig.Adapter, rig.Owner, planner, plan);
+            rig.Artifacts.BeforeResolve = async token =>
+            {
+                entered.TrySetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, token);
+            };
+            original = run.ContinueOriginalAsync(caller.Token);
+            await entered.Task.WaitAsync(rig.Token);
+            caller.Cancel();
+            var canceled = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => original!);
+            failures.Observe(canceled);
+            rig.Artifacts.BeforeResolve = null;
+            rig.Artifacts.ChangeSignedPayloadIdentity();
+
+            var changed = run.ContinueOriginalAsync(rig.Token);
+            var refused = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => changed);
+            failures.Observe(refused);
+            Assert.Equal(HomePackageOperationState.Pending, run.ObserveOriginal().State);
+            Assert.False(run.ObserveOriginal().AuditOnlyAfterAttempt);
+            Assert.Equal(0, rig.Root.Effects);
+            Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+            var afterRefusal = await rig.ReadDeviceAsync();
+            Assert.Equal(registry.Revision, afterRefusal.Revision);
+            Assert.Empty(afterRefusal.RecentOperations);
+
+            // Retrying cannot silently replace the pinned plan with the new descriptor.
+            var repeated = run.ContinueOriginalAsync(rig.Token);
+            var repeatedRefusal = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => repeated);
+            failures.Observe(repeatedRefusal);
+            Assert.Equal(0, rig.Root.Effects);
+            Assert.Equal(0, rig.Root.OpenCalls);
+            Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+        }
+        finally
+        {
+            if (original is not null) await failures.DrainAsync(original);
+            if (run is not null)
+            {
+                try { close = run.CloseAndDrainAsync(); }
+                catch (Exception error) { failures.Add(error); }
+                if (close is not null) await failures.DrainPreviouslyObservedOriginalsAsync(close);
+            }
+        }
+    });
+
+    [Fact]
+    public Task Dependency_run_requires_replan_when_exact_registry_snapshot_changes_before_retry() => WithRig(async (rig, failures) =>
+    {
+        using var caller = new CancellationTokenSource();
+        var entered = NewSignal();
+        HomePackageOriginalLifecycleRun? run = null;
+        Task<HomePackageActionResult>? original = null;
+        Task? close = null;
+        try
+        {
+            var registry = await rig.ReadDeviceAsync();
+            var request = rig.Request();
+            var platform = (IHomePackageOriginalPlatformOwner)rig.Owner;
+            var material = await platform.ResolveOriginalArtifactAsync(request, registry, rig.Token)
+                ?? throw new InvalidOperationException("Explicit fixture material missing.");
+            var selection = HomePackageArtifactSelection.Capture(platform, material, request);
+            var planner = new HomePackageOriginalDependencyLifecycle(platform,
+                new ScriptedLifecyclePolicy(selection), new[] { selection });
+            var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(planner.Plan(request, registry, false).Plan);
+            run = new(rig.Adapter, rig.Owner, planner, plan);
+            rig.Artifacts.BeforeResolve = async token =>
+            {
+                entered.TrySetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, token);
+            };
+            original = run.ContinueOriginalAsync(caller.Token);
+            await entered.Task.WaitAsync(rig.Token);
+            caller.Cancel();
+            var canceled = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => original!);
+            failures.Observe(canceled);
+            rig.Artifacts.BeforeResolve = null;
+
+            // Advance only the canonical snapshot revision via its existing database API;
+            // no package row or journal is manufactured for the concurrent writer.
+            var database = ((IHomePackageOriginalPlatformOwner)rig.Owner).Database;
+            Assert.True((await database.SaveAsync(registry, registry.Revision, rig.Token)).Succeeded);
+            var changed = run.ContinueOriginalAsync(rig.Token);
+            var stale = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => changed);
+            failures.Observe(stale);
+            Assert.Equal(HomePackageOperationState.Pending, run.ObserveOriginal().State);
+            Assert.False(run.ObserveOriginal().AuditOnlyAfterAttempt);
+            Assert.Equal(0, rig.Root.Effects);
+            Assert.Equal(0, rig.Root.OpenCalls);
+            Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+            var afterRefusal = await rig.ReadDeviceAsync();
+            Assert.Equal(registry.Revision + 1, afterRefusal.Revision);
+            Assert.Empty(afterRefusal.RecentOperations);
+        }
+        finally
+        {
+            if (original is not null) await failures.DrainAsync(original);
+            if (run is not null)
+            {
+                try { close = run.CloseAndDrainAsync(); }
+                catch (Exception error) { failures.Add(error); }
+                if (close is not null) await failures.DrainPreviouslyObservedOriginalsAsync(close);
+            }
+        }
+    });
+
+    [Fact]
+    public Task Admission_rechecks_registry_after_artifact_resolution_before_creating_permission_review() => WithRig(async (rig, failures) =>
+    {
+        HomePackageOriginalLifecycleRun? run = null;
+        Task<HomePackageActionResult>? original = null;
+        Task? close = null;
+        try
+        {
+            var registry = await rig.ReadDeviceAsync();
+            var request = rig.Request();
+            var platform = (IHomePackageOriginalPlatformOwner)rig.Owner;
+            var material = await platform.ResolveOriginalArtifactAsync(request, registry, rig.Token)
+                ?? throw new InvalidOperationException("Explicit fixture material missing.");
+            var selection = HomePackageArtifactSelection.Capture(platform, material, request);
+            var planner = new HomePackageOriginalDependencyLifecycle(platform,
+                new ScriptedLifecyclePolicy(selection), new[] { selection });
+            var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(planner.Plan(request, registry, false).Plan);
+            run = new(rig.Adapter, rig.Owner, planner, plan);
+            var database = ((IHomePackageOriginalPlatformOwner)rig.Owner).Database;
+            rig.Artifacts.BeforeResolve = async token =>
+            {
+                token.ThrowIfCancellationRequested();
+                // Simulate a concurrent canonical snapshot revision during artifact IO;
+                // package rows and operation journal remain untouched.
+                Assert.True((await database.SaveAsync(registry, registry.Revision, token)).Succeeded);
+            };
+
+            original = run.ContinueOriginalAsync(rig.Token);
+            var stale = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => original!);
+            failures.Observe(stale);
+            Assert.Equal(HomePackageOperationState.Pending, run.ObserveOriginal().State);
+            Assert.False(run.ObserveOriginal().AuditOnlyAfterAttempt);
+            Assert.Equal(0, rig.Root.Effects);
+            Assert.Equal(0, rig.Root.OpenCalls);
+            Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+            var afterRefusal = await rig.ReadDeviceAsync();
+            Assert.Equal(registry.Revision + 1, afterRefusal.Revision);
+            Assert.Empty(afterRefusal.RecentOperations);
+        }
+        finally
+        {
+            if (original is not null) await failures.DrainAsync(original);
+            if (run is not null)
+            {
+                try { close = run.CloseAndDrainAsync(); }
+                catch (Exception error) { failures.Add(error); }
+                if (close is not null) await failures.DrainPreviouslyObservedOriginalsAsync(close);
+            }
+        }
+    });
+
+    [Fact]
+    public Task Existing_pending_review_is_not_reused_after_its_signed_artifact_changes() => WithRig(async (rig, failures) =>
+    {
+        HomePackageOriginalLifecycleRun? run = null;
+        Task? close = null;
+        try
+        {
+            var registry = await rig.ReadDeviceAsync();
+            var request = rig.Request();
+            var platform = (IHomePackageOriginalPlatformOwner)rig.Owner;
+            var material = await platform.ResolveOriginalArtifactAsync(request, registry, rig.Token)
+                ?? throw new InvalidOperationException("Explicit fixture material missing.");
+            var selection = HomePackageArtifactSelection.Capture(platform, material, request);
+            var planner = new HomePackageOriginalDependencyLifecycle(platform,
+                new ScriptedLifecyclePolicy(selection), new[] { selection });
+            var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(planner.Plan(request, registry, false).Plan);
+            run = new(rig.Adapter, rig.Owner, planner, plan);
+            Assert.Equal(HomePackageOperationState.Pending, (await run.ContinueOriginalAsync(rig.Token)).State);
+            var permissionId = run.ObserveOriginal().OriginalPermissionRequestId!;
+            rig.Artifacts.ChangeSignedPayloadIdentity();
+
+            var staleReview = run.ContinueOriginalAsync(rig.Token);
+            var refused = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => staleReview);
+            failures.Observe(refused);
+            Assert.Equal(HomePackageOperationState.Pending, run.ObserveOriginal().State);
+            Assert.False(run.ObserveOriginal().AuditOnlyAfterAttempt);
+            Assert.Equal(permissionId, run.ObserveOriginal().OriginalPermissionRequestId);
+            var pending = Assert.Single((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+            Assert.Equal(permissionId, pending.RequestId);
+            Assert.Equal(0, rig.Root.Effects);
+            Assert.Equal(0, rig.Root.OpenCalls);
+            Assert.Empty((await rig.ReadDeviceAsync()).RecentOperations);
+            Assert.True((await rig.Permissions.DecideAsync(permissionId, HomeApprovalChoice.Decline,
+                cancellationToken: rig.Token)).Succeeded);
+            close = run.CloseAndDrainAsync();
+            await failures.DrainPreviouslyObservedOriginalsAsync(close);
+            Assert.Empty((await rig.Permissions.GetSnapshotAsync(cancellationToken: rig.Token)).PendingRequests);
+        }
+        finally
+        {
+            if (run is not null)
+            {
+                try { close = run.CloseAndDrainAsync(); }
+                catch (Exception error) { failures.Add(error); }
+                if (close is not null) await failures.DrainPreviouslyObservedOriginalsAsync(close);
+            }
+        }
+    });
+
+    [Fact]
     public Task Dependency_run_retains_known_effect_after_lost_ack_and_recovers_without_another_dispatch() => WithRig(async (rig, failures) =>
     {
+        using var caller = new CancellationTokenSource();
         HomePackageOriginalLifecycleRun? run = null;
         Task<HomePackageActionResult>? original = null;
         Task<HomePackageOriginalLifecycleObservation>? audit = null;
@@ -375,10 +799,11 @@ public sealed class HomePackageOriginalDeviceOwnerTests
                 ?? throw new InvalidOperationException("Original permission request absent.");
             Assert.True((await rig.Permissions.DecideAsync(permissionId, HomeApprovalChoice.Accept,
                 cancellationToken: rig.Token)).Succeeded);
-            rig.Root.AfterEffect = () => throw lost;
-            original = run.ContinueOriginalAsync(rig.Token);
+            rig.Root.AfterEffect = () => { caller.Cancel(); throw lost; };
+            original = run.ContinueOriginalAsync(caller.Token);
             var observed = await Assert.ThrowsAsync<IOException>(() => original!);
             Assert.Same(lost, observed); failures.Observe(observed);
+            Assert.True(caller.IsCancellationRequested);
             var retained = run.ObserveOriginal();
             Assert.True(retained.AuditOnlyAfterAttempt);
             var known = Assert.Single(retained.KnownOriginalResults);
@@ -392,8 +817,11 @@ public sealed class HomePackageOriginalDeviceOwnerTests
             Assert.Equal(known.OperationId, Assert.Single(recovered.KnownOriginalResults).OperationId);
             Assert.True(recovered.AuditOnlyAfterAttempt);
             Assert.Equal(1, rig.Root.Effects);
-            Assert.Equal(HomePackageJournalState.Succeeded,
-                Assert.Single((await rig.ReadDeviceAsync()).RecentOperations).State);
+            Assert.Equal(1, rig.Root.OpenCalls);
+            var journal = Assert.Single((await rig.ReadDeviceAsync()).RecentOperations);
+            Assert.Equal(HomePackageJournalState.Succeeded, journal.State);
+            Assert.Equal(request.IdempotencyKey, journal.IdempotencyKey);
+            Assert.Equal(known.OperationId, journal.OperationId);
             var ownerOriginal = rig.Owner.ObserveOriginalOperation(known.OperationId);
             await failures.DrainPreviouslyObservedOriginalsAsync(ownerOriginal.OriginalTask);
             close = run.CloseAndDrainAsync();
@@ -615,6 +1043,17 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         }
         internal HomePackageActionRequest Request() => new("fixture.package", HomePackageAction.Install,
             Guid.NewGuid().ToString("N"), "1", "stable", "catalogue-v1");
+        internal async Task<(HomePackageActionRequest Request, HomePackageArtifactSelection Selection,
+            HomePackageDatabaseSnapshot Registry)> CaptureOriginalRequestAsync()
+        {
+            var request = Request();
+            var registry = HomePackageDatabase.CaptureGuardedSnapshot(await ReadDeviceAsync());
+            var platform = (IHomePackageOriginalPlatformOwner)Owner;
+            var material = await platform.ResolveOriginalArtifactAsync(request, registry, Token)
+                ?? throw new InvalidOperationException("Explicit fixture artifact material missing.");
+            var selection = HomePackageArtifactSelection.Capture(platform, material, request);
+            return (request, selection, registry);
+        }
         internal async Task<HomePackageDatabaseSnapshot> ReadDeviceAsync()
         {
             var result = await ((IHomePackageOriginalPlatformOwner)Owner).Database.ReadAsync(Token);
@@ -705,13 +1144,22 @@ public sealed class HomePackageOriginalDeviceOwnerTests
         internal const string OwnerApp = "fixture-package-owner";
         internal const string Action = "fixture-package-owner.install";
         private readonly RSA _signer = RSA.Create(3072);
-        internal readonly HomePackageArtifactDescriptor Descriptor;
-        internal readonly byte[] Payload, Signed;
+        internal HomePackageArtifactDescriptor Descriptor { get; private set; }
+        internal byte[] Payload { get; private set; }
+        internal byte[] Signed { get; private set; }
         internal Func<CancellationToken, Task>? BeforeResolve;
         internal ArtifactProvider()
         {
             Descriptor = new(1, "fixture.package", "fixture.app", "1", "stable", "native-app", "linux", "x64",
                 [], ["home.core"], new string('a', 64), new string('b', 64), 123);
+            Payload = JsonSerializer.SerializeToUtf8Bytes(Descriptor, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            Signed = JsonSerializer.SerializeToUtf8Bytes(new { schemaVersion = 1, issuerKeyId = "explicit-fixture-key",
+                payload = Convert.ToBase64String(Payload),
+                signature = Convert.ToBase64String(_signer.SignData(Payload, HashAlgorithmName.SHA256, RSASignaturePadding.Pss)) });
+        }
+        internal void ChangeSignedPayloadIdentity()
+        {
+            Descriptor = Descriptor with { PayloadSha256 = new string('c', 64) };
             Payload = JsonSerializer.SerializeToUtf8Bytes(Descriptor, new JsonSerializerOptions(JsonSerializerDefaults.Web));
             Signed = JsonSerializer.SerializeToUtf8Bytes(new { schemaVersion = 1, issuerKeyId = "explicit-fixture-key",
                 payload = Convert.ToBase64String(Payload),

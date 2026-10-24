@@ -53,7 +53,7 @@ internal sealed class HomePackageOriginalLifecyclePolicy : IHomePackageOriginalL
                 actions.Distinct().Count() != actions.Length)
                 throw new InvalidDataException("The original supported action set is invalid.");
             if (actions.Any(action => action is not (HomePackageAction.Install or HomePackageAction.Update or
-                HomePackageAction.Repair or HomePackageAction.Rollback or HomePackageAction.Uninstall)))
+                HomePackageAction.Repair or HomePackageAction.SelectVersion or HomePackageAction.Rollback or HomePackageAction.Uninstall)))
                 throw new InvalidDataException("Only implemented lifecycle actions may be registered.");
             if (row.Classification == HomePackageComponentClass.MandatorySharedCore &&
                 actions.Contains(HomePackageAction.Uninstall))

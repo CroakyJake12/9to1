@@ -30,6 +30,62 @@ public sealed class HomePackageDatabaseTests
     }
 
     [Fact]
+    public async Task Canonical_registry_reopen_preserves_exact_installed_activation_identity_and_receipt()
+    {
+        // Synthetic serialization fixture only; these bytes do not establish a signed
+        // package, enrolled publisher, protected Windows layout, or launch authority.
+        var store = new FakeStateStore();
+        var database = new HomePackageDatabase(store);
+        var descriptor = new byte[] { 1, 2, 3, 4 };
+        var payload = new byte[] { 5, 6, 7, 8 };
+        var activation = new HomePackageOriginalInstalledActivationRecord(1, "fixture.package", "fixture.app",
+            "1.2.3", "linux", "x64", "catalogue-original", Convert.ToBase64String(descriptor),
+            Convert.ToBase64String(payload), "/fixture/installed", "/fixture/installed/receipt.bin",
+            "/fixture/installed/payload.bin", "app.exe",
+            new[] { new HomePackageActivatedFile("app.exe", 4, new string('a', 64)) }, "original-root-operation");
+        var activationJson = JsonSerializer.SerializeToElement(activation);
+        var package = Package("fixture.package") with
+        {
+            AppId = "fixture.app",
+            InstalledVersion = "1.2.3",
+            InstallationState = HomePackageInstallState.Installed,
+            IntegrityEvidence = new[] { new HomePackageIntegrityEvidence("1.2.3", new string('b', 64),
+                "fixture-signer", HomePackageIntegrityState.Verified, DateTimeOffset.UnixEpoch) },
+            LastKnownGoodVersion = "1.2.3",
+            Revision = 1,
+            UnknownFields = new(StringComparer.Ordinal)
+            {
+                [HomePackageOriginalInstalledActivationRecord.Field] = activationJson
+            }
+        };
+        var initial = new HomePackageDatabaseSnapshot(1, 0, DateTimeOffset.UnixEpoch, [package], []);
+
+        Assert.True((await database.SaveAsync(initial, expectedRevision: 0)).Succeeded);
+        var reopened = await new HomePackageDatabase(store).ReadAsync();
+
+        Assert.True(reopened.Succeeded);
+        var reopenedSnapshot = reopened.Snapshot!;
+        Assert.Empty(reopenedSnapshot.RecentOperations);
+        var installed = Assert.Single(reopenedSnapshot.Packages);
+        Assert.Equal("fixture.package", installed.PackageId);
+        Assert.Equal("1.2.3", installed.InstalledVersion);
+        Assert.Equal(HomePackageInstallState.Installed, installed.InstallationState);
+        Assert.Equal("1.2.3", installed.LastKnownGoodVersion);
+        var integrity = Assert.Single(installed.IntegrityEvidence);
+        Assert.Equal(HomePackageIntegrityState.Verified, integrity.State);
+        Assert.Equal(new string('b', 64), integrity.ArtifactSha256);
+        var storedActivation = installed.UnknownFields![HomePackageOriginalInstalledActivationRecord.Field];
+        Assert.True(JsonSerializer.SerializeToUtf8Bytes(activationJson).AsSpan()
+            .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(storedActivation)));
+        var decoded = storedActivation.Deserialize<HomePackageOriginalInstalledActivationRecord>()!;
+        Assert.Equal("original-root-operation", decoded.OriginalRootOperationId);
+        Assert.Equal(Convert.ToBase64String(descriptor), decoded.SignedDescriptorBase64);
+        Assert.Equal(Convert.ToBase64String(payload), decoded.DescriptorPayloadBase64);
+        Assert.Equal("/fixture/installed/receipt.bin", decoded.SignedReceiptPath);
+        Assert.Equal("app.exe", Assert.Single(decoded.ActivatedFiles).RelativePath);
+    }
+
+    [Fact]
     public async Task Compare_and_write_rejects_stale_revision_without_overwriting()
     {
         var store = new FakeStateStore();

@@ -377,6 +377,24 @@ public sealed partial class HomePackageOriginalDeviceOwner : IAsyncDisposable, I
         // erases an already known actual root effect or becomes a fabricated no-effect failure.
         record.CapturedRootResult ??= known;
         record.RootOutcome ??= outcome;
+        var action = record.Request.Action.Action;
+        var priorPackage = record.Reserved?.Packages.SingleOrDefault(item => item.PackageId == record.Request.Action.PackageId);
+        if (outcome.ObservedPackage is null &&
+            (known.State is HomePackageOperationState.Failed or HomePackageOperationState.Rejected or HomePackageOperationState.Cancelled) &&
+            (action is HomePackageAction.Install or HomePackageAction.Update or HomePackageAction.Repair or
+                HomePackageAction.SelectVersion or HomePackageAction.Rollback))
+        {
+            if (known.PreviousKnownGoodVersionRetained)
+            {
+                if (priorPackage is null)
+                    throw new InvalidDataException("A failed activation cannot claim a previous known-good installation that was not recorded.");
+                DemandFailedActivationRetainsProtectedState(action, priorPackage, priorPackage, known);
+            }
+            else if (HasRetainedKnownGoodRollback(priorPackage) ||
+                priorPackage is { InstallationState: HomePackageInstallState.Installed, InstalledVersion: not null } ||
+                priorPackage?.UnknownFields?.ContainsKey(HomePackageOriginalInstalledActivationRecord.Field) == true)
+                throw new InvalidDataException("A failed transition that did not retain the prior installation must explicitly report its unavailable package state.");
+        }
         record.CapturedPackage = outcome.ObservedPackage is null ? null :
             CapturePackage(record, outcome.ObservedPackage, known);
         if (known.State == HomePackageOperationState.Succeeded &&
@@ -399,9 +417,11 @@ public sealed partial class HomePackageOriginalDeviceOwner : IAsyncDisposable, I
             captured.IntegrityEvidence.Any(item => item is null || !Enum.IsDefined(item.State)) ||
             captured.RetainedRollbackVersions.Any(item => !HomePackageArtifactSelection.Text(item, 256)))
             throw new InvalidDataException("Original root package observation does not bind its bounded stable identities.");
+        var action = record.Request.Action.Action;
+        DemandFailedActivationRetainsProtectedState(action,
+            record.Reserved?.Packages.SingleOrDefault(item => item.PackageId == descriptor.PackageId), captured, result);
         if (result.State == HomePackageOperationState.Succeeded)
         {
-            var action = record.Request.Action.Action;
             if (action is HomePackageAction.Install or HomePackageAction.Update or HomePackageAction.Repair or
                 HomePackageAction.SelectVersion or HomePackageAction.Rollback)
             {
@@ -421,6 +441,51 @@ public sealed partial class HomePackageOriginalDeviceOwner : IAsyncDisposable, I
         // It remains in the existing canonical package entry and its guarded transaction.
         return HomePackageOriginalInstalledActivationRecord.CaptureFromOriginalRoot(record.Request,
             record.RootOutcome!, captured, result);
+    }
+
+    internal static void DemandFailedActivationRetainsProtectedState(HomePackageAction action,
+        HomePackageDatabaseEntry? prior, HomePackageDatabaseEntry observed, HomePackageActionResult result)
+    {
+        if (result.State is not (HomePackageOperationState.Failed or HomePackageOperationState.Rejected or HomePackageOperationState.Cancelled) ||
+            action is not (HomePackageAction.Install or HomePackageAction.Update or HomePackageAction.Repair or
+                HomePackageAction.SelectVersion or HomePackageAction.Rollback)) return;
+
+        var priorHasActivation = prior?.UnknownFields?.ContainsKey(HomePackageOriginalInstalledActivationRecord.Field) == true;
+        var observedHasActivation = observed.UnknownFields?.ContainsKey(HomePackageOriginalInstalledActivationRecord.Field) == true;
+        if (!result.PreviousKnownGoodVersionRetained)
+        {
+            if (HasRetainedKnownGoodRollback(prior) || observedHasActivation || observed.InstallationState == HomePackageInstallState.Installed ||
+                observed.InstalledVersion is not null)
+                throw new InvalidDataException("A failed transition that did not retain the prior installation cannot claim installed package state or activation evidence.");
+            return;
+        }
+        if (prior is not { InstallationState: HomePackageInstallState.Installed, InstalledVersion: not null })
+            throw new InvalidDataException("A failed activation cannot claim a previous known-good installation that was not recorded.");
+        if (prior.IntegrityEvidence is null || prior.IntegrityEvidence.Any(item => item is null))
+            throw new InvalidDataException("The prior installed package has invalid verification evidence and cannot be claimed as retained.");
+
+        var priorEvidence = prior.IntegrityEvidence.Where(item => item.Version == prior.InstalledVersion &&
+            item.State == HomePackageIntegrityState.Verified).ToArray();
+        bool activationMatches;
+        if (prior.UnknownFields?.TryGetValue(HomePackageOriginalInstalledActivationRecord.Field,
+            out var priorActivation) == true)
+            activationMatches = observed.UnknownFields?.TryGetValue(
+                HomePackageOriginalInstalledActivationRecord.Field, out var currentActivation) == true &&
+                JsonSerializer.SerializeToUtf8Bytes(priorActivation).AsSpan()
+                    .SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(currentActivation));
+        else activationMatches = observed.UnknownFields?.ContainsKey(
+            HomePackageOriginalInstalledActivationRecord.Field) != true;
+        if (observed.InstallationState != HomePackageInstallState.Installed ||
+            observed.InstalledVersion != prior.InstalledVersion || observed.LastKnownGoodVersion != prior.LastKnownGoodVersion ||
+            priorEvidence.Length == 0 || !priorEvidence.All(previous => observed.IntegrityEvidence.Any(current => current == previous)) ||
+            priorHasActivation != observedHasActivation || !activationMatches)
+            throw new InvalidDataException("A failed package activation must retain the exact previous installed version, verification and activation evidence.");
+    }
+
+    private static bool HasRetainedKnownGoodRollback(HomePackageDatabaseEntry? package)
+    {
+        var version = package?.LastKnownGoodVersion ?? package?.InstalledVersion;
+        return version is not null && package?.RetainedRollbackVersions?.Contains(version, StringComparer.Ordinal) == true;
     }
 
     private async Task ConfirmSameOriginalReservationAsync(OriginalOperation record, CancellationToken token)

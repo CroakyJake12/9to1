@@ -38,6 +38,53 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         Assert.Equal(0, owner.EffectCalls);
     }
 
+    [Fact]
+    public void Required_dependency_with_installed_but_incompatible_original_version_is_repaired_before_parent_retry()
+    {
+        var owner = new ScriptedOwner();
+        var policy = new ScriptedPolicy();
+        var home = Selection(owner, "fixture.home");
+        var dependency = Selection(owner, "fixture.dependency");
+        var app = Selection(owner, "fixture.app", new HomePackageDependency("fixture.dependency", "1.0.0", "2.0.0"));
+        policy.Classify(home, HomePackageComponentClass.MandatorySharedCore);
+        policy.Classify(dependency, HomePackageComponentClass.AppRequiredDependency);
+        policy.Classify(app, HomePackageComponentClass.OptionalApp);
+        var lifecycle = new HomePackageOriginalDependencyLifecycle(owner, policy, new[] { app, dependency, home });
+        var registry = Registry(Installed(home), Installed(dependency) with
+        {
+            Compatibility = HomePackageCompatibility.Incompatible
+        });
+        var original = JsonSerializer.SerializeToUtf8Bytes(registry);
+        var request = Request(app, HomePackageAction.Install);
+        policy.AdaptersAvailable = false;
+        var unavailable = lifecycle.Plan(request, registry, false);
+        Assert.Null(unavailable.Plan);
+        Assert.Equal("DependencyRequired", unavailable.Error!.Code);
+        Assert.Equal("fixture.dependency", unavailable.Error.Target);
+        Assert.Equal(original, JsonSerializer.SerializeToUtf8Bytes(registry));
+
+        policy.AdaptersAvailable = true;
+        var result = lifecycle.Plan(request, registry, false);
+
+        Assert.Null(result.Error);
+        var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(result.Plan);
+        Assert.Equal(request, plan.OriginalRequest);
+        Assert.Equal(new[] { "fixture.home", "fixture.dependency", "fixture.app" },
+            plan.Steps.Select(step => step.OriginalSelection.Descriptor.PackageId));
+        Assert.Equal(new[] { HomePackageAction.Update, HomePackageAction.Repair, HomePackageAction.Install },
+            plan.Steps.Select(step => step.Action));
+        Assert.Equal(new[] { true, false, false }, plan.Steps.Select(step => step.ReuseCompatibleInstallation));
+        var repair = plan.Steps[1];
+        Assert.Same(dependency, repair.OriginalSelection);
+        Assert.Equal(7, repair.OriginalEntryRevision);
+        Assert.Equal("1.0.0", repair.OriginalInstalledVersion);
+        Assert.Equal("1.0.0", repair.OriginalKnownGoodVersion);
+        Assert.Same(app, plan.Steps[2].OriginalSelection);
+        Assert.Equal(new[] { "fixture.dependency", "fixture.app" }, plan.AffectedPackageIds);
+        Assert.Equal(original, JsonSerializer.SerializeToUtf8Bytes(registry));
+        Assert.Equal(0, owner.EffectCalls);
+    }
+
     [Theory]
     [InlineData("missing", "DependencyRequired")]
     [InlineData("unsupported", "DependencyRequired")]
@@ -130,6 +177,56 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
     }
 
     [Fact]
+    public void Select_version_requires_exact_original_selection_and_supported_action_while_preserving_parent_identity()
+    {
+        var owner = new ScriptedOwner();
+        var policy = new ScriptedPolicy();
+        var home = Selection(owner, "fixture.home");
+        var app = Selection(owner, "fixture.app");
+        policy.Classify(home, HomePackageComponentClass.MandatorySharedCore);
+        policy.Classify(app, HomePackageComponentClass.OptionalApp);
+        var lifecycle = new HomePackageOriginalDependencyLifecycle(owner, policy, new[] { home, app });
+        var installedApp = Installed(app) with
+        {
+            InstalledVersion = "0.9.0",
+            AvailableVersion = app.Descriptor.Version,
+            IntegrityEvidence = new[] { new HomePackageIntegrityEvidence("0.9.0", new string('c', 64),
+                "fixture-signer", HomePackageIntegrityState.Verified, DateTimeOffset.UnixEpoch) },
+            LastKnownGoodVersion = "0.9.0",
+            RetainedRollbackVersions = new[] { "0.9.0" }
+        };
+        var registry = Registry(Installed(home), installedApp);
+        var request = new HomePackageActionRequest(app.Descriptor.PackageId, HomePackageAction.SelectVersion,
+            "original-select-version", app.Descriptor.Version, app.Descriptor.Channel, app.CatalogueRevision);
+        var before = JsonSerializer.SerializeToUtf8Bytes(registry);
+
+        var exact = lifecycle.Plan(request, registry, false);
+        Assert.Null(exact.Error);
+        var plan = Assert.IsType<HomePackageOriginalLifecyclePlan>(exact.Plan);
+        Assert.Equal(request, plan.OriginalRequest);
+        var step = Assert.Single(plan.Steps.Where(item => item.OriginalSelection.Descriptor.PackageId == app.Descriptor.PackageId));
+        Assert.Same(app, step.OriginalSelection);
+        Assert.Equal(HomePackageAction.SelectVersion, step.Action);
+        Assert.Equal("0.9.0", step.OriginalInstalledVersion);
+        Assert.Equal("0.9.0", step.OriginalKnownGoodVersion);
+        Assert.False(step.ReuseCompatibleInstallation);
+
+        var missingVersion = lifecycle.Plan(request with { RequestedVersion = null }, registry, false);
+        Assert.Null(missingVersion.Plan);
+        Assert.Equal("HomeApps.SelectionRequired", missingVersion.Error!.Code);
+        var changedVersion = lifecycle.Plan(request with { RequestedVersion = "2.0.0" }, registry, false);
+        Assert.Null(changedVersion.Plan);
+        Assert.Equal("PackageSelectionChanged", changedVersion.Error!.Code);
+        policy.AdaptersAvailable = false;
+        var unsupported = lifecycle.Plan(request, registry, false);
+        Assert.Null(unsupported.Plan);
+        Assert.Equal("DependencyRequired", unsupported.Error!.Code);
+        Assert.Equal(app.Descriptor.PackageId, unsupported.Error.Target);
+        Assert.Equal(before, JsonSerializer.SerializeToUtf8Bytes(registry));
+        Assert.Equal(0, owner.EffectCalls);
+    }
+
+    [Fact]
     public void Unresolved_original_effect_requires_audit_and_never_plans_a_replacement()
     {
         var owner = new ScriptedOwner();
@@ -199,7 +296,8 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         var home = DeclaredSelection(owner, "fixture.home", HomePackageComponentClass.MandatorySharedCore);
         var app = DeclaredSelection(owner, "fixture.app", HomePackageComponentClass.OptionalApp);
         var homeActions = new HashSet<HomePackageAction> { HomePackageAction.Install, HomePackageAction.Update };
-        var appActions = new HashSet<HomePackageAction> { HomePackageAction.Install, HomePackageAction.Uninstall };
+        var appActions = new HashSet<HomePackageAction>
+            { HomePackageAction.Install, HomePackageAction.Uninstall, HomePackageAction.SelectVersion };
         var rows = new List<HomePackageOriginalLifecycleRegistration>
         {
             new(home, HomePackageComponentClass.MandatorySharedCore, homeActions),
@@ -211,6 +309,7 @@ public sealed class HomePackageOriginalDependencyLifecycleTests
         Assert.Equal(HomePackageComponentClass.OptionalApp, policy.ClassifyOriginal(app));
         Assert.True(policy.SupportsOriginalAction(home, HomePackageAction.Install));
         Assert.True(policy.SupportsOriginalAction(app, HomePackageAction.Uninstall));
+        Assert.True(policy.SupportsOriginalAction(app, HomePackageAction.SelectVersion));
         Assert.False(policy.SupportsOriginalAction(app, HomePackageAction.Rollback));
         Assert.Null(policy.ClassifyOriginal(DeclaredSelection(owner, "fixture.app", HomePackageComponentClass.OptionalApp)));
         Assert.Equal(0, owner.EffectCalls);

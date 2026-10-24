@@ -96,10 +96,11 @@ internal sealed class HomePackageOriginalLifecycleRun : IAsyncDisposable
                     lock (_sync) _position++;
                     continue; // Protected/current observation only; no graph readiness is minted.
                 }
+                var continuingExistingReview = _review is not null;
                 if (_review is null)
                 {
                     var request = StepRequest(step);
-                    var original = _admission.RequestAsync(request, linked.Token);
+                    var original = _admission.RequestAsync(request, step.OriginalSelection, _expectedRegistry, linked.Token);
                     lock (_sync) _request = original;
                     var review = await original.ConfigureAwait(false);
                     lock (_sync) _review = review;
@@ -114,6 +115,13 @@ internal sealed class HomePackageOriginalLifecycleRun : IAsyncDisposable
                 {
                     lock (_sync) _auditOnly = true;
                     throw new InvalidOperationException("The SAME attempted effect is audit-only.");
+                }
+                if (continuingExistingReview)
+                {
+                    var current = _admission.DemandExpectedSelectionCurrentAsync(retained,
+                        step.OriginalSelection, _expectedRegistry, linked.Token);
+                    lock (_sync) _reuseObservation = current;
+                    await current.ConfigureAwait(false);
                 }
                 var execute = _admission.ExecuteAsync(retained, linked.Token);
                 lock (_sync) _execute = execute;
@@ -142,8 +150,13 @@ internal sealed class HomePackageOriginalLifecycleRun : IAsyncDisposable
         {
             lock (_sync)
             {
-                _interrupted = true;
-                if (_review is not null) _auditOnly |= Volatile.Read(ref _review.DispatchAttempted) != 0;
+                // Before the root dispatch boundary this is a failed admission, not an
+                // uncertain package effect. Keep the exact plan/review/request identity
+                // available for an explicit caller retry; only a possibly-dispatched
+                // effect becomes audit-only and requires original-outcome recovery.
+                var attempted = _review is not null && Volatile.Read(ref _review.DispatchAttempted) != 0;
+                _interrupted |= attempted;
+                _auditOnly |= attempted;
             }
             // Retain a known historic effect and the exact original body fault independently.
             // A step that never reached the owning device ledger remains explicitly unknown.
