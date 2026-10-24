@@ -297,7 +297,7 @@ def main():
         project_commands['regression']=[str(sdk),'test',PROJECT,'-c','Release','--no-build','--no-restore',
             '--disable-build-servers','--logger','trx;LogFileName=cui-runtime-all.trx','--results-directory',str(evidence/'test-results')]
         state_path=temporary/'sdk-execution-projection.json';execution='github-cui-'+os.environ['GITHUB_RUN_ID']
-        initial=w.initial_state(CHECKOUT,instruction_path)
+        initial=w.initial_state(CHECKOUT,str(instruction_path))
         initial['authority']='Existing native Root remains programme authority. This is its delegated compiler-only host projection; no workers/models/milestones are created.'
         w.initialize(state_path,initial)
         manifest_pin=pin(manifest);runner_pin=pin(Path(__file__))
