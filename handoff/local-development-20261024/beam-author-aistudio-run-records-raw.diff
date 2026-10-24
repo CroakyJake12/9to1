@@ -1,0 +1,482 @@
+diff --git a/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioResourceStore.cs b/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioResourceStore.cs
+--- a/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioResourceStore.cs
++++ b/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioResourceStore.cs
+@@ -1,3 +1,4 @@
++using System.Security.Cryptography;
+ using System.Text.Json;
+ 
+ namespace HavenOS.AIStudio;
+@@ -20,128 +21,235 @@
+ public sealed class JsonStudioResourceStore(string rootPath) : IStudioResourceStore
+ {
+     private const int CurrentSchemaVersion = 1;
+     private readonly string _path = Path.Combine(Path.GetFullPath(rootPath), "resources.v1.json");
+-    private readonly SemaphoreSlim _gate = new(1, 1);
+ 
+-    public async Task<IReadOnlyList<StudioResource>> ListAsync(StudioResourceKind? kind, CancellationToken cancellationToken)
+-    {
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try { return (await ReadAsync(cancellationToken).ConfigureAwait(false)).Resources
+-            .Where(item => item.DeletedAt is null && (kind is null || item.Kind == kind))
+-            .OrderByDescending(item => item.ModifiedAt).ToArray(); }
+-        finally { _gate.Release(); }
+-    }
++    public Task<IReadOnlyList<StudioResource>> ListAsync(StudioResourceKind? kind, CancellationToken cancellationToken) =>
++        Task.Run(() =>
++        {
++            using var lease = PathMutexLease.Acquire(_path, cancellationToken);
++            return Read().Resources
++                .Where(item => item.DeletedAt is null && (kind is null || item.Kind == kind))
++                .OrderByDescending(item => item.ModifiedAt).ToArray();
++        }, cancellationToken);
+ 
+-    public async Task<StudioResource?> GetAsync(Guid id, CancellationToken cancellationToken)
+-    {
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try { return (await ReadAsync(cancellationToken).ConfigureAwait(false)).Resources.FirstOrDefault(item => item.ResourceId == id); }
+-        finally { _gate.Release(); }
+-    }
++    public Task<StudioResource?> GetAsync(Guid id, CancellationToken cancellationToken) =>
++        Task.Run(() =>
++        {
++            using var lease = PathMutexLease.Acquire(_path, cancellationToken);
++            return Read().Resources.FirstOrDefault(item => item.ResourceId == id);
++        }, cancellationToken);
+ 
+-    public async Task<IReadOnlyList<EvaluationRun>> ListEvaluationRunsAsync(Guid suiteId, CancellationToken cancellationToken)
+-    {
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try { return (await ReadAsync(cancellationToken).ConfigureAwait(false)).EvaluationRuns.Where(item => item.EvalSuiteId == suiteId).OrderByDescending(item => item.StartedAt).ToArray(); }
+-        finally { _gate.Release(); }
+-    }
++    public Task<IReadOnlyList<EvaluationRun>> ListEvaluationRunsAsync(Guid suiteId, CancellationToken cancellationToken) =>
++        Task.Run(() =>
++        {
++            using var lease = PathMutexLease.Acquire(_path, cancellationToken);
++            return Read().EvaluationRuns.Where(item => item.EvalSuiteId == suiteId)
++                .OrderByDescending(item => item.StartedAt).ToArray();
++        }, cancellationToken);
+ 
+-    public async Task<IReadOnlyList<TestRun>> ListTestRunsAsync(Guid suiteId, CancellationToken cancellationToken)
+-    {
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try { return (await ReadAsync(cancellationToken).ConfigureAwait(false)).TestRuns.Where(item => item.TestSuiteId == suiteId).OrderByDescending(item => item.StartedAt).ToArray(); }
+-        finally { _gate.Release(); }
+-    }
++    public Task<IReadOnlyList<TestRun>> ListTestRunsAsync(Guid suiteId, CancellationToken cancellationToken) =>
++        Task.Run(() =>
++        {
++            using var lease = PathMutexLease.Acquire(_path, cancellationToken);
++            return Read().TestRuns.Where(item => item.TestSuiteId == suiteId)
++                .OrderByDescending(item => item.StartedAt).ToArray();
++        }, cancellationToken);
+ 
+-    public Task WriteResourceAsync(StudioResource resource, CancellationToken cancellationToken) => MutateAsync(document =>
++    public Task WriteResourceAsync(StudioResource resource, CancellationToken cancellationToken) =>
++        Task.Run(() =>
+     {
+-        var resources = document.Resources.ToList();
+-        var index = resources.FindIndex(item => item.ResourceId == resource.ResourceId);
+-        if (index < 0) resources.Add(resource); else resources[index] = resource;
+-        return document with { Resources = resources };
+-    }, cancellationToken);
++            using var lease = PathMutexLease.Acquire(_path, cancellationToken);
++            var document = Read();
++            var resources = document.Resources.ToList();
++            var index = resources.FindIndex(item => item.ResourceId == resource.ResourceId);
++            if (index < 0) resources.Add(resource); else resources[index] = resource;
++            Write(document with { Resources = resources }, cancellationToken);
++        }, cancellationToken);
+ 
+-    public Task WriteEvaluationRunAsync(EvaluationRun run, CancellationToken cancellationToken) => MutateAsync(document =>
+-        document with { EvaluationRuns = document.EvaluationRuns.Append(run).ToArray() }, cancellationToken);
++    public Task WriteEvaluationRunAsync(EvaluationRun run, CancellationToken cancellationToken) =>
++        Task.Run(() =>
++        {
++            using var lease = PathMutexLease.Acquire(_path, cancellationToken);
++            var document = Read();
++            var existing = document.EvaluationRuns.Where(item => item.RunId == run.RunId).ToArray();
++            if (existing.Length > 1)
++                throw new InvalidDataException("AI Studio resource store contains ambiguous duplicate evaluation run IDs; source data was preserved.");
++            if (existing.Length == 1)
++            {
++                if (EvaluationRunsEquivalent(existing[0], run)) return;
++                throw new IOException("AI Studio resource store already contains a different evaluation run with the same RunID.");
++            }
++            Write(document with { EvaluationRuns = document.EvaluationRuns.Append(run).ToArray() }, cancellationToken);
++        }, cancellationToken);
+ 
+-    public Task WriteTestRunAsync(TestRun run, CancellationToken cancellationToken) => MutateAsync(document =>
+-        document with { TestRuns = document.TestRuns.Append(run).ToArray() }, cancellationToken);
++    public Task WriteTestRunAsync(TestRun run, CancellationToken cancellationToken) =>
++        Task.Run(() =>
++        {
++            using var lease = PathMutexLease.Acquire(_path, cancellationToken);
++            var document = Read();
++            var existing = document.TestRuns.Where(item => item.RunId == run.RunId).ToArray();
++            if (existing.Length > 1)
++                throw new InvalidDataException("AI Studio resource store contains ambiguous duplicate test run IDs; source data was preserved.");
++            if (existing.Length == 1)
++            {
++                if (TestRunsEquivalent(existing[0], run)) return;
++                throw new IOException("AI Studio resource store already contains a different test run with the same RunID.");
++            }
++            Write(document with { TestRuns = document.TestRuns.Append(run).ToArray() }, cancellationToken);
++        }, cancellationToken);
+ 
+-    private async Task MutateAsync(Func<StudioResourceStoreDocument, StudioResourceStoreDocument> mutation,
+-        CancellationToken cancellationToken)
+-    {
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try { await WriteAsync(mutation(await ReadAsync(cancellationToken).ConfigureAwait(false)), cancellationToken).ConfigureAwait(false); }
+-        finally { _gate.Release(); }
+-    }
++    private static StudioResourceStoreDocument Read()
++    {
++        if (!File.Exists(_path)) return new StudioResourceStoreDocument(CurrentSchemaVersion, [], [], []);
++        using var input = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.Read, 16 * 1024,
++            FileOptions.SequentialScan);
++        StudioResourceStoreDocument? document;
++        try { document = JsonSerializer.Deserialize<StudioResourceStoreDocument>(input, StudioJson.Options); }
++        catch (JsonException ex) { throw new InvalidDataException("AI Studio resource store is invalid; source data was preserved.", ex); }
++        if (document is null) throw new InvalidDataException("AI Studio resource store is empty or invalid; source data was preserved.");
++        if (document.SchemaVersion != CurrentSchemaVersion) throw new InvalidDataException($"AI Studio resource store schema {document.SchemaVersion} is unsupported; expected {CurrentSchemaVersion}. No data was changed.");
++        return document;
++    }
+ 
+-    private async Task<StudioResourceStoreDocument> ReadAsync(CancellationToken cancellationToken)
++    private static void Write(StudioResourceStoreDocument document, CancellationToken cancellationToken)
+     {
+-        if (!File.Exists(_path)) return new StudioResourceStoreDocument(CurrentSchemaVersion, [], [], []);
+-        await using var input = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.Read, 16 * 1024,
+-            FileOptions.Asynchronous | FileOptions.SequentialScan);
+-        StudioResourceStoreDocument? document;
+-        try { document = await JsonSerializer.DeserializeAsync<StudioResourceStoreDocument>(input, StudioJson.Options, cancellationToken).ConfigureAwait(false); }
+-        catch (JsonException ex) { throw new InvalidDataException("AI Studio resource store is invalid; source data was preserved.", ex); }
+-        if (document is null) throw new InvalidDataException("AI Studio resource store is empty or invalid; source data was preserved.");
+-        if (document.SchemaVersion != CurrentSchemaVersion) throw new InvalidDataException($"AI Studio resource store schema {document.SchemaVersion} is unsupported; expected {CurrentSchemaVersion}. No data was changed.");
+-        return document;
++        cancellationToken.ThrowIfCancellationRequested();
++        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
++        var temporary = _path + ".tmp-" + Guid.NewGuid().ToString("N");
++        try
++        {
++            using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
++                16 * 1024, FileOptions.WriteThrough))
++            {
++                JsonSerializer.Serialize(output, document, StudioJson.Options);
++                output.Flush(true);
++            }
++            cancellationToken.ThrowIfCancellationRequested();
++            File.Move(temporary, _path, overwrite: true);
++        }
++        finally
++        {
++            try { if (File.Exists(temporary)) File.Delete(temporary); }
++            catch { }
++        }
+     }
+ 
+-    private async Task WriteAsync(StudioResourceStoreDocument document, CancellationToken cancellationToken)
+-    {
+-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+-        var temporary = _path + ".tmp-" + Guid.NewGuid().ToString("N");
+-        try
+-        {
+-            await using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+-                16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough))
+-            {
+-                await JsonSerializer.SerializeAsync(output, document, StudioJson.Options, cancellationToken).ConfigureAwait(false);
+-                await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+-            }
+-            cancellationToken.ThrowIfCancellationRequested();
+-            File.Move(temporary, _path, overwrite: true);
+-        }
+-        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+-    }
++    private static bool EvaluationRunsEquivalent(EvaluationRun left, EvaluationRun right) =>
++        left.RunId == right.RunId &&
++        left.EvalSuiteId == right.EvalSuiteId &&
++        left.TargetRevision == right.TargetRevision &&
++        left.RunProfileId == right.RunProfileId &&
++        left.StartedAt == right.StartedAt &&
++        left.CompletedAt == right.CompletedAt &&
++        left.BaselineComparisonJson == right.BaselineComparisonJson &&
++        left.DependencyRevisions.Count == right.DependencyRevisions.Count &&
++        left.DependencyRevisions.All(pair => right.DependencyRevisions.TryGetValue(pair.Key, out var value) && value == pair.Value) &&
++        left.Results.Count == right.Results.Count &&
++        left.Results.Zip(right.Results).All(pair => EvaluationCaseResultsEquivalent(pair.First, pair.Second));
++
++    private static bool EvaluationCaseResultsEquivalent(EvaluationCaseResult left, EvaluationCaseResult right) =>
++        left.CaseId == right.CaseId &&
++        left.Repetition == right.Repetition &&
++        left.Status == right.Status &&
++        left.DeterministicFacts.SequenceEqual(right.DeterministicFacts) &&
++        left.ModelJudgement == right.ModelJudgement &&
++        left.Score == right.Score &&
++        left.StructuredErrorCode == right.StructuredErrorCode &&
++        left.RunId == right.RunId;
++
++    private static bool TestRunsEquivalent(TestRun left, TestRun right) =>
++        left.RunId == right.RunId &&
++        left.TestSuiteId == right.TestSuiteId &&
++        left.TargetRevision == right.TargetRevision &&
++        left.RunProfileId == right.RunProfileId &&
++        left.StartedAt == right.StartedAt &&
++        left.CompletedAt == right.CompletedAt &&
++        left.Results.Count == right.Results.Count &&
++        left.Results.Zip(right.Results).All(pair => TestCaseResultsEquivalent(pair.First, pair.Second));
++
++    private static bool TestCaseResultsEquivalent(StudioTestCaseResult left, StudioTestCaseResult right) =>
++        left.CaseId == right.CaseId &&
++        left.Status == right.Status &&
++        left.RunId == right.RunId &&
++        left.StructuredErrorCode == right.StructuredErrorCode &&
++        left.ReproductionJson == right.ReproductionJson &&
++        left.Assertions.Count == right.Assertions.Count &&
++        left.Assertions.Zip(right.Assertions).All(pair => TestAssertionResultsEquivalent(pair.First, pair.Second));
++
++    private static bool TestAssertionResultsEquivalent(TestAssertionResult left, TestAssertionResult right) =>
++        left.AssertionId == right.AssertionId &&
++        left.Passed == right.Passed &&
++        left.Message == right.Message &&
++        left.ActualJson == right.ActualJson;
++
++    private sealed class PathMutexLease : IDisposable
++    {
++        private Mutex? _mutex;
++        private bool _disposed;
++
++        private PathMutexLease(Mutex mutex) => _mutex = mutex;
++
++        public static PathMutexLease Acquire(string path, CancellationToken cancellationToken)
++        {
++            var canonical = Path.GetFullPath(path);
++            if (OperatingSystem.IsWindows()) canonical = canonical.ToUpperInvariant();
++            var name = "9to1-state-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
++            var mutex = new Mutex(false, name);
++            try
++            {
++                var deadline = Environment.TickCount64 + 30000;
++                while (true)
++                {
++                    cancellationToken.ThrowIfCancellationRequested();
++                    var remaining = (int)(deadline - Environment.TickCount64);
++                    if (remaining <= 0) throw new TimeoutException("AI Studio resource store is busy.");
++                    var wait = Math.Min(100, remaining);
++                    try
++                    {
++                        if (mutex.WaitOne(wait)) break;
++                    }
++                    catch (AbandonedMutexException)
++                    {
++                        break;
++                    }
++                }
++                return new PathMutexLease(mutex);
++            }
++            catch
++            {
++                mutex.Dispose();
++                throw;
++            }
++        }
++
++        public void Dispose()
++        {
++            if (_disposed) return;
++            _disposed = true;
++            var mutex = _mutex;
++            _mutex = null;
++            if (mutex is null) return;
++            try { mutex.ReleaseMutex(); } catch { }
++            mutex.Dispose();
++        }
++    }
+ }
+
+diff --git a/9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRunStoreRegressionTests.cs b/9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRunStoreRegressionTests.cs
+new file mode 100644
+--- /dev/null
++++ b/9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRunStoreRegressionTests.cs
+@@ -0,0 +1,258 @@
++using HavenOS.AIStudio;
++using Xunit;
++
++namespace HavenOS.AIStudio.Tests;
++
++public sealed class StudioRunStoreRegressionTests : IAsyncLifetime
++{
++    private readonly string _root = Path.Combine(Path.GetTempPath(), "ai-studio-run-store-regression", Guid.NewGuid().ToString("N"));
++    private string StorePath => Path.Combine(_root, "resources.v1.json");
++
++    public Task InitializeAsync() => Task.CompletedTask;
++
++    public Task DisposeAsync()
++    {
++        if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
++        return Task.CompletedTask;
++    }
++
++    private static DateTimeOffset Start => new(2026, 1, 2, 3, 4, 5, TimeSpan.Zero);
++    private static DateTimeOffset End => new(2026, 1, 2, 3, 5, 5, TimeSpan.Zero);
++
++    private static EvaluationRun CreateEvaluationRun(Guid runId, Guid suiteId) => new(
++        runId, suiteId, 7, "profile-1", Start, End,
++        [new EvaluationCaseResult(Guid.NewGuid(), 1, "Passed",
++            ["PASS exact output matches", "PASS latency limit"],
++            "model judgement", 1.0, null, runId)],
++        new Dictionary<string, string>(StringComparer.Ordinal) { ["model"] = "revision-7" },
++        "{\"baseline\":\"comparison\"}");
++
++    private static TestRun CreateTestRun(Guid runId, Guid suiteId) => new(
++        runId, suiteId, 9, "profile-2", Start, End,
++        [new StudioTestCaseResult(Guid.NewGuid(), "Passed",
++            [new TestAssertionResult("assertion-1", true, "Assertion passed.", "{\"actual\":true}")],
++            runId, null, "{\"source\":\"test-contract\"}")]);
++
++    [Fact]
++    public async Task IdenticalEvaluationRunWrittenTwiceYieldsOneRecordAfterReopen()
++    {
++        var store = new JsonStudioResourceStore(_root);
++        var suiteId = Guid.NewGuid();
++        var runId = Guid.NewGuid();
++        var run = CreateEvaluationRun(runId, suiteId);
++        await store.WriteEvaluationRunAsync(run, CancellationToken.None);
++        var bytesAfterFirst = await File.ReadAllBytesAsync(StorePath);
++        await store.WriteEvaluationRunAsync(run, CancellationToken.None);
++        var bytesAfterSecond = await File.ReadAllBytesAsync(StorePath);
++        Assert.Equal(bytesAfterFirst, bytesAfterSecond);
++
++        var reopened = new JsonStudioResourceStore(_root);
++        var runs = await reopened.ListEvaluationRunsAsync(suiteId, CancellationToken.None);
++        Assert.Single(runs);
++        var persisted = runs[0];
++        Assert.Equal(runId, persisted.RunId);
++        Assert.Equal(7, persisted.TargetRevision);
++        Assert.Equal("profile-1", persisted.RunProfileId);
++        Assert.Equal("revision-7", persisted.DependencyRevisions["model"]);
++        Assert.Equal("model judgement", persisted.Results.Single().ModelJudgement);
++    }
++
++    [Fact]
++    public async Task ConflictingEvaluationRunPreservesBytes()
++    {
++        var store = new JsonStudioResourceStore(_root);
++        var suiteId = Guid.NewGuid();
++        var runId = Guid.NewGuid();
++        var run = CreateEvaluationRun(runId, suiteId);
++        await store.WriteEvaluationRunAsync(run, CancellationToken.None);
++        var originalBytes = await File.ReadAllBytesAsync(StorePath);
++        var conflict = run with { RunProfileId = "changed-profile" };
++        await Assert.ThrowsAsync<IOException>(() => store.WriteEvaluationRunAsync(conflict, CancellationToken.None));
++        Assert.Equal(originalBytes, await File.ReadAllBytesAsync(StorePath));
++    }
++
++    [Fact]
++    public async Task IdenticalTestRunWrittenTwiceYieldsOneRecordAfterReopen()
++    {
++        var store = new JsonStudioResourceStore(_root);
++        var suiteId = Guid.NewGuid();
++        var runId = Guid.NewGuid();
++        var run = CreateTestRun(runId, suiteId);
++        await store.WriteTestRunAsync(run, CancellationToken.None);
++        var bytesAfterFirst = await File.ReadAllBytesAsync(StorePath);
++        await store.WriteTestRunAsync(run, CancellationToken.None);
++        var bytesAfterSecond = await File.ReadAllBytesAsync(StorePath);
++        Assert.Equal(bytesAfterFirst, bytesAfterSecond);
++
++        var reopened = new JsonStudioResourceStore(_root);
++        var runs = await reopened.ListTestRunsAsync(suiteId, CancellationToken.None);
++        Assert.Single(runs);
++        var persisted = runs[0];
++        Assert.Equal(runId, persisted.RunId);
++        Assert.Equal(9, persisted.TargetRevision);
++        Assert.Equal("profile-2", persisted.RunProfileId);
++        Assert.Equal("{\"source\":\"test-contract\"}", persisted.Results.Single().ReproductionJson);
++    }
++
++    [Fact]
++    public async Task ConflictingTestRunPreservesBytes()
++    {
++        var store = new JsonStudioResourceStore(_root);
++        var suiteId = Guid.NewGuid();
++        var runId = Guid.NewGuid();
++        var run = CreateTestRun(runId, suiteId);
++        await store.WriteTestRunAsync(run, CancellationToken.None);
++        var originalBytes = await File.ReadAllBytesAsync(StorePath);
++        var conflict = run with { RunProfileId = "changed-profile" };
++        await Assert.ThrowsAsync<IOException>(() => store.WriteTestRunAsync(conflict, CancellationToken.None));
++        Assert.Equal(originalBytes, await File.ReadAllBytesAsync(StorePath));
++    }
++
++    [Fact]
++    public async Task TwoStoreInstancesRetainDistinctEvaluationRuns()
++    {
++        var suiteId = Guid.NewGuid();
++        var firstId = Guid.NewGuid();
++        var secondId = Guid.NewGuid();
++        await new JsonStudioResourceStore(_root).WriteEvaluationRunAsync(CreateEvaluationRun(firstId, suiteId), CancellationToken.None);
++        await new JsonStudioResourceStore(_root).WriteEvaluationRunAsync(CreateEvaluationRun(secondId, suiteId), CancellationToken.None);
++        var runs = await new JsonStudioResourceStore(_root).ListEvaluationRunsAsync(suiteId, CancellationToken.None);
++        Assert.Equal(2, runs.Count);
++        Assert.Contains(runs, run => run.RunId == firstId);
++        Assert.Contains(runs, run => run.RunId == secondId);
++    }
++
++    [Fact]
++    public async Task TwoStoreInstancesRetainDistinctTestRuns()
++    {
++        var suiteId = Guid.NewGuid();
++        var firstId = Guid.NewGuid();
++        var secondId = Guid.NewGuid();
++        await new JsonStudioResourceStore(_root).WriteTestRunAsync(CreateTestRun(firstId, suiteId), CancellationToken.None);
++        await new JsonStudioResourceStore(_root).WriteTestRunAsync(CreateTestRun(secondId, suiteId), CancellationToken.None);
++        var runs = await new JsonStudioResourceStore(_root).ListTestRunsAsync(suiteId, CancellationToken.None);
++        Assert.Equal(2, runs.Count);
++        Assert.Contains(runs, run => run.RunId == firstId);
++        Assert.Contains(runs, run => run.RunId == secondId);
++    }
++
++    [Fact]
++    public async Task MixedEvaluationTestAndResourceWritesPreserveEachOther()
++    {
++        var now = DateTimeOffset.UtcNow;
++        var evalSuiteId = Guid.NewGuid();
++        var testSuiteId = Guid.NewGuid();
++        var resourceId = Guid.NewGuid();
++        await Task.WhenAll(
++            new JsonStudioResourceStore(_root).WriteEvaluationRunAsync(CreateEvaluationRun(Guid.NewGuid(), evalSuiteId), CancellationToken.None),
++            new JsonStudioResourceStore(_root).WriteTestRunAsync(CreateTestRun(Guid.NewGuid(), testSuiteId), CancellationToken.None),
++            new JsonStudioResourceStore(_root).WriteResourceAsync(new StudioResource(resourceId, StudioResourceKind.Schema, "Schema", 1, now, now, "user", "{\"schemaId\":\"mixed.v1\"}", []), CancellationToken.None));
++        var reopened = new JsonStudioResourceStore(_root);
++        Assert.Single(await reopened.ListEvaluationRunsAsync(evalSuiteId, CancellationToken.None));
++        Assert.Single(await reopened.ListTestRunsAsync(testSuiteId, CancellationToken.None));
++        Assert.Single(await reopened.ListAsync(StudioResourceKind.Schema, CancellationToken.None));
++    }
++
++    [Fact]
++    public async Task CanceledEvaluationRunWritePreservesBytes()
++    {
++        var store = new JsonStudioResourceStore(_root);
++        var suiteId = Guid.NewGuid();
++        var run = CreateEvaluationRun(Guid.NewGuid(), suiteId);
++        await store.WriteEvaluationRunAsync(run, CancellationToken.None);
++        var originalBytes = await File.ReadAllBytesAsync(StorePath);
++        using var cts = new CancellationTokenSource();
++        cts.Cancel();
++        var canceledRun = CreateEvaluationRun(Guid.NewGuid(), suiteId);
++        await Assert.ThrowsAsync<OperationCanceledException>(() => store.WriteEvaluationRunAsync(canceledRun, cts.Token));
++        Assert.Equal(originalBytes, await File.ReadAllBytesAsync(StorePath));
++    }
++
++    [Fact]
++    public async Task MalformedStorePreservesBytes()
++    {
++        Directory.CreateDirectory(_root);
++        const string corrupt = "{not-json";
++        await File.WriteAllTextAsync(StorePath, corrupt);
++        await Assert.ThrowsAsync<InvalidDataException>(() => new JsonStudioResourceStore(_root).ListEvaluationRunsAsync(Guid.NewGuid(), CancellationToken.None));
++        Assert.Equal(corrupt, await File.ReadAllTextAsync(StorePath));
++    }
++}

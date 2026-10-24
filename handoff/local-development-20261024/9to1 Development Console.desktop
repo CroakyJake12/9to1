@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=9to1 Development Console
+Comment=Open the verified native 9to1 Task console
+Exec="/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/outputs/Launch 9to1.sh" --console
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;

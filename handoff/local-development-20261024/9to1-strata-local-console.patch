@@ -1,0 +1,65 @@
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.ProviderConfiguration.cs b/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.ProviderConfiguration.cs
+index 746ada59..f0dc3aa7 100644
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.ProviderConfiguration.cs	
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.ProviderConfiguration.cs	
+@@ -8,6 +8,33 @@ public static partial class OriginalLocalTaskConsole
+ {
+     private sealed partial class Host
+     {
++        private async Task ConfigureOriginalStrataProviderAsync(DesktopOriginalWorkLifetime.Original original,
++            string explicitTarget, CancellationToken token)
++        {
++            if (!StrataLoopbackModelProvider.IsAllowedEndpoint(explicitTarget))
++                throw new ArgumentException("Choose an explicit literal-loopback /v1 Strata endpoint without credentials, query or fragment.");
++            var registry = Resolve<IModelProviderRegistry>(original);
++            StrataLoopbackModelProvider? selected = null;
++            Scope(original, () => selected = registry.GetRequired(StrataLoopbackModelProvider.ProviderId) as StrataLoopbackModelProvider
++                ?? throw new InvalidOperationException("The maintained local Strata provider is unavailable."));
++            var source = selected ?? throw new InvalidOperationException("No original Strata provider was captured.");
++            var configurations = Resolve<IProviderConfigurationStore>(original);
++            var endpoint = new Uri(explicitTarget).GetLeftPart(UriPartial.Path).TrimEnd('/') + "/";
++            var requested = new ProviderConfiguration(source.Id, source.Kind, source.DisplayName, endpoint,
++                IsEnabled: true, IsLocal: true, AllowCloudFallback: false,
++                Metadata: new Dictionary<string, string>(), UpdatedAt: DateTimeOffset.UtcNow);
++            await Acquire(original, () => configurations.UpsertAsync(requested, token)).ConfigureAwait(false);
++            var actual = await Acquire(original, () => configurations.GetAsync(source.Id, token)).ConfigureAwait(false);
++            Scope(original, () =>
++            {
++                if (!ReferenceEquals(registry.GetRequired(source.Id), source) || actual is null || actual.Id != source.Id ||
++                    actual.Kind != source.Kind || actual.Endpoint != endpoint || !actual.IsEnabled || !actual.IsLocal || actual.AllowCloudFallback)
++                    throw new InvalidOperationException("The actual loopback configuration readback changed.");
++                Write(new { providerMetadataConfigured = true, configuration = actual,
++                    note = "Existing server connection configured only; no model loaded. Use strata-probe explicitly, then models strata-local and select its actual observed key. File/tool work still requires the canonical Task permissions." });
++            });
++        }
++
+         private async Task ConfigureOriginalLocalProviderAsync(DesktopOriginalWorkLifetime.Original original,
+             string explicitLogicalTarget, CancellationToken token)
+         {
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.cs b/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.cs
+index b2939502..952e8b7c 100644
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.cs	
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Services/OriginalLocalTaskConsole.cs	
+@@ -69,6 +69,7 @@ public static partial class OriginalLocalTaskConsole
+ 
+     private static readonly string[] Help = [
+         "local-configure <explicit loopback logical HTTP/HTTPS URI> | models <provider-id> | probe | model <observed-provider:model-key> | engine Automatic|LlamaCpp|Strata",
++        "strata-configure <literal loopback /v1 URI> | strata-probe (explicit bounded read-only tool-call test; existing server only)",
+         "files-configure <chosen empty absolute directory> | files-status | files-list [observed parent GUID]",
+         "strata-select <explicit nonsecret developer artifact JSON> (configuration only; Task-scoped individual Home READ approval follows; protected Safetensors/CUDA remain required)",
+         "project-register <write or observed destination folder GUID> <existing absolute project path> | container-create <saved workspace GUID> <saved project GUID> <saved root GUID> <name>",
+@@ -312,6 +313,14 @@ public static partial class OriginalLocalTaskConsole
+                     Write(models); break;
+                 }
+                 case "local-configure": await ConfigureOriginalLocalProviderAsync(original, argument, token).ConfigureAwait(false); break;
++                case "strata-configure": await ConfigureOriginalStrataProviderAsync(original, argument, token).ConfigureAwait(false); break;
++                case "strata-probe":
++                {
++                    if (Resolve<IModelProviderRegistry>(original).GetRequired(StrataLoopbackModelProvider.ProviderId) is not StrataLoopbackModelProvider source)
++                        throw new InvalidOperationException("The maintained loopback Strata provider is unavailable.");
++                    Write(await Acquire(original, () => source.ProbeCapabilitiesAsync(token)).ConfigureAwait(false));
++                    break;
++                }
+                 case "probe":
+                 {
+                     var source = Resolve<LlamaCppModelProvider>(original);

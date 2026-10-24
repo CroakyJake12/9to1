@@ -1,0 +1,928 @@
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/ViewModels/ProviderConnectionsViewModel.cs b/9to1 Workspace/shared/src/Haven.Desktop/ViewModels/ProviderConnectionsViewModel.cs
+index 0b97d1e5..90f27635 100644
+--- a/9to1 Workspace/shared/src/Haven.Desktop/ViewModels/ProviderConnectionsViewModel.cs	
++++ b/9to1 Workspace/shared/src/Haven.Desktop/ViewModels/ProviderConnectionsViewModel.cs	
+@@ -10,6 +10,7 @@
+ using System.Collections.ObjectModel;
+ using Haven.Application;
+ using Haven.Core;
++using Haven.Infrastructure;
+ 
+ namespace Haven.Desktop.ViewModels;
+ 
+@@ -92,13 +93,13 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+             var existing = Items.ToDictionary(item => item.Id, StringComparer.OrdinalIgnoreCase);
+             var refreshed = new List<ProviderConnectionItemViewModel>();
+ 
+-            foreach (var provider in _providers.Providers.Where(provider => !provider.IsLocal))
++            foreach (var provider in _providers.Providers.Where(provider => !provider.IsLocal || provider is StrataLoopbackModelProvider))
+             {
+                 var configuration = configurations.FirstOrDefault(item => item.Id.Equals(provider.Id, StringComparison.OrdinalIgnoreCase));
+                 if (configuration is null)
+                     continue;
+ 
+-                var hasSecret = !string.IsNullOrWhiteSpace(await _secrets.GetAsync(provider.Id, "api-key", CancellationToken.None));
++                var hasSecret = provider is StrataLoopbackModelProvider || !string.IsNullOrWhiteSpace(await _secrets.GetAsync(provider.Id, "api-key", CancellationToken.None));
+                 if (!existing.TryGetValue(provider.Id, out var item))
+                 {
+                     item = new ProviderConnectionItemViewModel(
+@@ -128,7 +129,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+ 
+             await RefreshServicesAsync();
+             await RefreshExternalConnectionsAsync();
+-            Status = Items.Count == 0 ? "No cloud model providers are registered." : $"{Items.Count} cloud model providers available.";
++            Status = Items.Count == 0 ? "No model provider connections are registered." : $"{Items.Count} model provider connections available.";
+         }
+         catch (Exception ex)
+         {
+@@ -154,11 +155,14 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+             if (endpoint.Scheme == "http" && !endpoint.IsLoopback)
+                 throw new InvalidOperationException("Remote provider endpoints must use HTTPS. HTTP is allowed only for loopback services on this device.");
+ 
+-            var storedSecret = await _secrets.GetAsync(item.Id, "api-key", CancellationToken.None);
+-            if (string.IsNullOrWhiteSpace(item.ApiKey) && string.IsNullOrWhiteSpace(storedSecret))
++            var localStrata = _providers.GetRequired(item.Id) is StrataLoopbackModelProvider;
++            if (localStrata && !StrataLoopbackModelProvider.IsAllowedEndpoint(endpoint.ToString()))
++                throw new InvalidOperationException("Strata requires literal 127.0.0.1 or ::1 and a /v1 endpoint without credentials, query or fragment.");
++            var storedSecret = localStrata ? null : await _secrets.GetAsync(item.Id, "api-key", CancellationToken.None);
++            if (!localStrata && string.IsNullOrWhiteSpace(item.ApiKey) && string.IsNullOrWhiteSpace(storedSecret))
+                 throw new InvalidOperationException("Enter an API key before connecting.");
+ 
+-            if (!string.IsNullOrWhiteSpace(item.ApiKey))
++            if (!localStrata && !string.IsNullOrWhiteSpace(item.ApiKey))
+             {
+                 await _secrets.SetAsync(item.Id, "api-key", item.ApiKey.Trim(), CancellationToken.None);
+                 item.ApiKey = string.Empty;
+@@ -171,8 +175,8 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+                 item.DisplayName,
+                 endpoint.ToString(),
+                 true,
+-                false,
+-                current?.AllowCloudFallback ?? false,
++                localStrata,
++                !localStrata && (current?.AllowCloudFallback ?? false),
+                 current?.Metadata ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+                 DateTimeOffset.UtcNow);
+ 
+@@ -205,7 +209,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+         try
+         {
+             item.IsBusy = true;
+-            await TestCoreAsync(item);
++            await TestCoreAsync(item, probeLocalTools: true);
+         }
+         catch (Exception ex)
+         {
+@@ -222,7 +226,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+     /// <summary>
+     /// Performs test core asynchronously so I/O does not block the caller's thread.
+     /// </summary>
+-    private async Task TestCoreAsync(ProviderConnectionItemViewModel item)
++    private async Task TestCoreAsync(ProviderConnectionItemViewModel item, bool probeLocalTools = false)
+     {
+         var provider = _providers.GetRequired(item.Id);
+         item.Status = "Testing connection…";
+@@ -237,6 +241,12 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+             return;
+         }
+ 
++        if (probeLocalTools && provider is StrataLoopbackModelProvider local)
++        {
++            var probe = await local.ProbeCapabilitiesAsync(CancellationToken.None);
++            item.IsHealthy = probe.IsHealthy;
++            item.Status = probe.Message;
++        }
+         var models = await provider.GetModelsAsync(CancellationToken.None);
+         item.ModelSummary = models.Count == 1 ? "1 model discovered" : $"{models.Count} models discovered";
+         item.IsConnected = true;
+@@ -254,7 +264,8 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+         try
+         {
+             item.IsBusy = true;
+-            await _secrets.DeleteAsync(item.Id, "api-key", CancellationToken.None);
++            var localStrata = _providers.GetRequired(item.Id) is StrataLoopbackModelProvider;
++            if (!localStrata) await _secrets.DeleteAsync(item.Id, "api-key", CancellationToken.None);
+             var current = await _configurations.GetAsync(item.Id, CancellationToken.None);
+             if (current is not null)
+                 await _configurations.UpsertAsync(current with { IsEnabled = false, UpdatedAt = DateTimeOffset.UtcNow }, CancellationToken.None);
+@@ -263,7 +274,7 @@ public sealed partial class ProviderConnectionsViewModel : ObservableObject
+             item.IsConnected = false;
+             item.IsHealthy = false;
+             item.ModelSummary = "Models not checked yet";
+-            item.Status = "Disconnected. The saved API key was removed from Windows Credential Manager.";
++            item.Status = localStrata ? "Strata connection disabled; existing local server and model were left running." : "Disconnected. The saved API key was removed from Windows Credential Manager.";
+             Status = $"Disconnected {item.DisplayName}.";
+         }
+         catch (Exception ex)
+diff --git a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Settings/SettingsHavenScene.Connections.cs b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Settings/SettingsHavenScene.Connections.cs
+index 5a6b7345..ac1b4b4e 100644
+--- a/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Settings/SettingsHavenScene.Connections.cs	
++++ b/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Settings/SettingsHavenScene.Connections.cs	
+@@ -1,3 +1,4 @@
++using Haven.Infrastructure;
+ using Haven.Application;
+ using Haven.Core;
+ using Haven.UI;
+@@ -498,7 +499,7 @@ internal sealed partial class SettingsHavenScene
+         if (providers.Count == 0)
+         {
+             _providersHost.Add(Muted("Settings.Integrations.ProvidersEmpty",
+-                "No cloud model providers are currently configured."));
++                "No model provider connections are currently configured."));
+             return;
+         }
+ 
+@@ -532,7 +533,10 @@ internal sealed partial class SettingsHavenScene
+             secret.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+             secret.SetValue(HavenProperties.Enabled, !provider.IsBusy);
+             secret.Accessibility.AccessibleName = $"{provider.DisplayName} API key";
+-            card.Add(secret);
++            var localStrata = provider.Id == StrataLoopbackModelProvider.ProviderId;
++            if (localStrata)
++                card.Add(Muted(null, "Uses your existing local Strata service. No API key. The explicit model test runs a bounded read-only tool-call probe; it does not edit files."));
++            else card.Add(secret);
+ 
+             var actions = ActionRow();
+             var update = new HavenButton
+@@ -552,7 +556,7 @@ internal sealed partial class SettingsHavenScene
+             var test = new HavenButton
+             {
+                 Name = $"Settings.Integrations.Provider.{provider.Id}.Test",
+-                Content = "Test connection",
++                Content = provider.Id == StrataLoopbackModelProvider.ProviderId ? "Test generation and tools" : "Test connection",
+                 Variant = ButtonVariant.Secondary
+             };
+             test.SetValue(HavenProperties.Enabled, provider.IsConnected && !provider.IsBusy);
+diff --git a/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs b/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs
+index 2347e89c..dff21327 100644
+--- a/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs	
++++ b/9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs	
+@@ -357,6 +357,9 @@ public static class ServiceCollectionExtensions
+         services.AddSingleton<IModelProvider, OpenAiModelProvider>();
+         services.AddSingleton<IModelProvider, OpenRouterModelProvider>();
+         services.AddSingleton<IModelProvider, CustomOpenAiCompatibleModelProvider>();
++        services.AddHttpClient("Haven.ModelProvider." + StrataLoopbackModelProvider.ProviderId)
++            .ConfigurePrimaryHttpMessageHandler(StrataLoopbackModelProvider.CreateTransportHandler);
++        services.AddSingleton<IModelProvider, StrataLoopbackModelProvider>();
+         services.AddSingleton<IModelProvider, AnthropicModelProvider>();
+         services.AddSingleton<IModelProvider, GeminiModelProvider>();
+         services.AddHavenPreviewLocalLlamaCpp();
+diff --git a/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/ProviderConfigurationStore.cs b/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/ProviderConfigurationStore.cs
+index 245a7057..285ca6b8 100644
+--- a/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/ProviderConfigurationStore.cs	
++++ b/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/ProviderConfigurationStore.cs	
+@@ -409,6 +409,7 @@ public sealed class ProviderConfigurationStore : IProviderConfigurationStore, ID
+             Normalize(new("anthropic", ModelProviderKind.Anthropic, "Anthropic", "https://api.anthropic.com/v1/", false, false, false, new Dictionary<string, string>(), now)),
+             Normalize(new("gemini", ModelProviderKind.Gemini, "Google Gemini", "https://generativelanguage.googleapis.com/v1beta/", false, false, false, new Dictionary<string, string>(), now)),
+             Normalize(new("openrouter", ModelProviderKind.OpenRouter, "OpenRouter", "https://openrouter.ai/api/v1/", false, false, false, new Dictionary<string, string>(), now)),
++            Normalize(new(StrataLoopbackModelProvider.ProviderId, ModelProviderKind.OpenAICompatible, "Strata on this device", StrataLoopbackModelProvider.DefaultUrl, false, true, false, new Dictionary<string, string>(), now)),
+             Normalize(new("openai-compatible", ModelProviderKind.OpenAICompatible, "OpenAI-compatible", string.Empty, false, false, false, new Dictionary<string, string>(), now))
+         ];
+     }
+diff --git a/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs b/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs
+index f9c8fe66..dbe07589 100644
+--- a/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs	
++++ b/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs	
+@@ -116,6 +116,9 @@ public abstract class OpenAiCompatibleModelProviderBase(
+     /// Gets or updates default endpoint, the bindable or domain state represented by this property.
+     /// </summary>
+     protected abstract string DefaultEndpoint { get; }
++    protected virtual bool RequiresApiKey => true;
++    protected virtual void ValidateConfiguration(ProviderConfiguration configuration) { }
++    protected Task<ProviderConfiguration?> ReadConfigurationAsync(CancellationToken token) => configurations.GetAsync(Id, token);
+     /// <summary>
+     /// Reports whether open router applies to the current state.
+     /// </summary>
+@@ -136,7 +139,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
+     /// <summary>
+     /// Reports whether local applies to the current state.
+     /// </summary>
+-    public bool IsLocal => false;
++    public virtual bool IsLocal => false;
+     /// <summary>
+     /// Reports whether manage models applies to the current state.
+     /// </summary>
+@@ -145,7 +148,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
+     /// <summary>
+     /// Performs check health asynchronously so I/O does not block the caller's thread.
+     /// </summary>
+-    public async Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)
++    public virtual async Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)
+     {
+         var started = System.Diagnostics.Stopwatch.GetTimestamp();
+         try
+@@ -168,7 +171,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
+     /// <summary>
+     /// Retrieves models async for the current operation.
+     /// </summary>
+-    public async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
++    public virtual async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
+     {
+         ProviderConfiguration configuration;
+         try { configuration = await ProviderHttp.RequireEnabledAsync(configurations, Id, DefaultEndpoint, cancellationToken).ConfigureAwait(false); }
+@@ -323,19 +326,22 @@ public abstract class OpenAiCompatibleModelProviderBase(
+     /// <summary>
+     /// Creates client async with the invariants required by its callers.
+     /// </summary>
+-    private async Task<HttpClient> CreateClientAsync(CancellationToken cancellationToken) =>
++    protected async Task<HttpClient> CreateClientAsync(CancellationToken cancellationToken) =>
+         await CreateClientAsync(await ProviderHttp.RequireEnabledAsync(configurations, Id, DefaultEndpoint, cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+ 
+     /// <summary>
+     /// Creates client async with the invariants required by its callers.
+     /// </summary>
+-    private async Task<HttpClient> CreateClientAsync(ProviderConfiguration configuration, CancellationToken cancellationToken)
++    protected async Task<HttpClient> CreateClientAsync(ProviderConfiguration configuration, CancellationToken cancellationToken)
+     {
++        ValidateConfiguration(configuration);
+         var client = ProviderHttp.CreateClient(httpClients, "Haven.ModelProvider." + Id, configuration);
+-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await ProviderHttp.RequireSecretAsync(secrets, Id, cancellationToken).ConfigureAwait(false));
+-        if (configuration.Metadata.TryGetValue("organization", out var organization) && organization.Length > 0)
++        if (RequiresApiKey)
++            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await ProviderHttp.RequireSecretAsync(secrets, Id, cancellationToken).ConfigureAwait(false));
++        if (IsLocal) client.Timeout = TimeSpan.FromMinutes(2);
++        if (!IsLocal && configuration.Metadata.TryGetValue("organization", out var organization) && organization.Length > 0)
+             client.DefaultRequestHeaders.TryAddWithoutValidation("OpenAI-Organization", organization);
+-        if (configuration.Metadata.TryGetValue("project", out var project) && project.Length > 0)
++        if (!IsLocal && configuration.Metadata.TryGetValue("project", out var project) && project.Length > 0)
+             client.DefaultRequestHeaders.TryAddWithoutValidation("OpenAI-Project", project);
+         if (IsOpenRouter)
+         {
+@@ -350,7 +356,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
+     /// <summary>
+     /// Builds chat payload from the currently available inputs.
+     /// </summary>
+-    private object BuildChatPayload(OllamaChatRequest request, bool stream)
++    protected virtual object BuildChatPayload(OllamaChatRequest request, bool stream)
+     {
+         var payload = new Dictionary<string, object?>
+         {
+@@ -366,7 +372,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
+     /// <summary>
+     /// Builds tool payload from the currently available inputs.
+     /// </summary>
+-    private static object BuildToolPayload(OllamaToolRequest request) => new
++    protected virtual object BuildToolPayload(OllamaToolRequest request) => new
+     {
+         model = request.Model,
+         messages = BuildToolMessages(request.Messages, request.SystemPrompt),
+diff --git a/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.ToolResponseDispatch.cs b/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.ToolResponseDispatch.cs
+index ce4a5285..2e85e5fd 100644
+--- a/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.ToolResponseDispatch.cs	
++++ b/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.ToolResponseDispatch.cs	
+@@ -62,6 +62,7 @@ public sealed partial class ResilientProviderRoutingModelClient
+         OpenAiModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/OpenAiModelProvider",
+         OpenRouterModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/OpenRouterModelProvider",
+         CustomOpenAiCompatibleModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/CustomOpenAiCompatibleModelProvider",
++        StrataLoopbackModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/StrataLoopbackModelProvider",
+         AnthropicModelProvider => "AnthropicModelProvider.ChatWithToolsAsync",
+         GeminiModelProvider => "GeminiModelProvider.ChatWithToolsAsync",
+         LlamaCppModelProvider => "LlamaCppModelProvider.ChatWithToolsAsync",
+diff --git a/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/StrataLoopbackModelProvider.cs b/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/StrataLoopbackModelProvider.cs
+new file mode 100644
+index 00000000..ab3cc871
+--- /dev/null
++++ b/9to1 Workspace/shared/src/Haven.Infrastructure/Providers/StrataLoopbackModelProvider.cs	
+@@ -0,0 +1,180 @@
++using System.Diagnostics;
++using System.Net;
++using System.Net.Http.Json;
++using System.Net.Sockets;
++using System.Text.Json;
++using Haven.Application;
++using Haven.Core;
++
++namespace Haven.Infrastructure;
++
++/// <summary>Explicit connection to an existing Strata server on this device. Owns no
++/// server, weights or private-context authority. Passive discovery never loads a model.</summary>
++public sealed class StrataLoopbackModelProvider(
++    IHttpClientFactory clients, IProviderConfigurationStore configurations,
++    IProviderSecretStore secrets, ProviderUsageCaptureBuffer usageCapture)
++    : OpenAiCompatibleModelProviderBase(clients, configurations, secrets, usageCapture)
++{
++    public const string ProviderId = "strata-local";
++    public const string DefaultUrl = "http://127.0.0.1:8081/v1/";
++    private string? _toolsFingerprint;
++    public override string Id => ProviderId;
++    public override string DisplayName => "Strata on this device";
++    public override ModelProviderKind Kind => ModelProviderKind.OpenAICompatible;
++    public override bool IsLocal => true;
++    protected override string DefaultEndpoint => DefaultUrl;
++    protected override bool RequiresApiKey => false;
++
++    public static bool IsAllowedEndpoint(string? endpoint) =>
++        Uri.TryCreate(endpoint, UriKind.Absolute, out var uri) &&
++        uri.Scheme is "http" or "https" && string.IsNullOrEmpty(uri.UserInfo) &&
++        string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment) &&
++        IPAddress.TryParse(uri.DnsSafeHost, out var ip) && (ip.Equals(IPAddress.Loopback) || ip.Equals(IPAddress.IPv6Loopback)) &&
++        uri.AbsolutePath.TrimEnd('/') == "/v1";
++
++    protected override void ValidateConfiguration(ProviderConfiguration configuration)
++    {
++        if (configuration.Id != ProviderId || !configuration.IsLocal || configuration.AllowCloudFallback ||
++            !IsAllowedEndpoint(configuration.Endpoint))
++            throw new InvalidOperationException("Strata requires an explicitly local literal-loopback /v1 endpoint with cloud fallback disabled.");
++    }
++
++    public static SocketsHttpHandler CreateTransportHandler() => new()
++    {
++        AllowAutoRedirect = false, UseProxy = false, UseCookies = false,
++        ConnectCallback = async (context, token) =>
++        {
++            if (!IPAddress.TryParse(context.DnsEndPoint.Host, out var address) || !IPAddress.IsLoopback(address))
++                throw new HttpRequestException("Strata transport refused a non-loopback destination.");
++            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
++            try
++            {
++                await socket.ConnectAsync(new IPEndPoint(address, context.DnsEndPoint.Port), token).ConfigureAwait(false);
++                return new NetworkStream(socket, ownsSocket: true);
++            }
++            catch { socket.Dispose(); throw; }
++        }
++    };
++
++    public override async Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)
++    {
++        var started = Stopwatch.GetTimestamp();
++        try
++        {
++            using var client = await CreateClientAsync(cancellationToken).ConfigureAwait(false);
++            var status = await ReadStatusAsync(client, cancellationToken).ConfigureAwait(false);
++            if (!status.Loaded) Volatile.Write(ref _toolsFingerprint, null);
++            return new(Id, true, status.Loaded
++                ? $"Strata is connected; configured model {status.Model} is loaded. Generation and tools require their own checks."
++                : $"Strata is connected; configured model {status.Model} is unloaded. No ready model is offered; passive discovery does not load weights.",
++                Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
++        }
++        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
++        catch (Exception error) when (error is HttpRequestException or InvalidOperationException or JsonException or TaskCanceledException)
++        {
++            Volatile.Write(ref _toolsFingerprint, null);
++            return new(Id, false, error.Message, Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
++        }
++    }
++
++    public override async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
++    {
++        var configuration = await ReadConfigurationAsync(cancellationToken).ConfigureAwait(false);
++        if (configuration is null || !configuration.IsEnabled) return [];
++        using var client = await CreateClientAsync(cancellationToken).ConfigureAwait(false);
++        var status = await ReadStatusAsync(client, cancellationToken).ConfigureAwait(false);
++        if (!status.Loaded) { Volatile.Write(ref _toolsFingerprint, null); return []; }
++        using var response = await client.GetAsync("models", cancellationToken).ConfigureAwait(false);
++        await ProviderHttp.EnsureSuccessAsync(response, DisplayName, cancellationToken).ConfigureAwait(false);
++        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
++        if (!document.RootElement.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array) return [];
++        var models = new List<ProviderModelDescriptor>();
++        foreach (var item in data.EnumerateArray())
++        {
++            var id = Text(item, "id");
++            if (string.IsNullOrWhiteSpace(id) || id.Length > 1024 ||
++                id != status.Model && Text(item, "alias_of") != status.Model) continue;
++            if (item.TryGetProperty("status", out var state) && Text(state, "value") is { } value && value != "loaded") continue;
++            int? context = null;
++            if (item.TryGetProperty("meta", out var meta) && meta.TryGetProperty("n_ctx", out var window) && window.ValueKind == JsonValueKind.Number && window.TryGetInt32(out var actual) && actual > 0) context = actual;
++            context ??= status.Context;
++            var capabilities = new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Streaming };
++            if (status.Fingerprint is { } fingerprint && Volatile.Read(ref _toolsFingerprint) == fingerprint) capabilities.Add(ToolCapability.Tools);
++            // ModelDescriptor's legacy zero-size sentinel means not reported by this HTTP catalogue.
++            models.Add(new(Id, true, new(id, 0, "Strata", "", "", capabilities, DateTimeOffset.UtcNow), context, id));
++        }
++        return models;
++    }
++
++    /// <summary>Explicit, bounded read-only generation probe. It executes no returned tool.
++    /// Never called from passive connection/catalogue refresh. Busy/unloaded models are preserved.</summary>
++    public async Task<ProviderHealthStatus> ProbeCapabilitiesAsync(CancellationToken cancellationToken)
++    {
++        var started = Stopwatch.GetTimestamp();
++        using var client = await CreateClientAsync(cancellationToken).ConfigureAwait(false);
++        var before = await ReadStatusAsync(client, cancellationToken).ConfigureAwait(false);
++        Volatile.Write(ref _toolsFingerprint, null);
++        if (!before.Loaded || before.Fingerprint is null || before.InFlight != 0)
++            return new(Id, false, "Strata must be loaded, idle and report a stable service identity before an explicit capability test.", Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
++        var nonce = Guid.NewGuid().ToString("N");
++        var request = new
++        {
++            model = before.Model,
++            messages = new[] { new { role = "user", content = "Call echo_probe exactly once with marker equal to " + nonce + ". Do not invent a result." } },
++            tools = new[] { new { type = "function", function = new { name = "echo_probe", description = "Read-only protocol probe; no effects are executed.",
++                parameters = new { type = "object", properties = new { marker = new { type = "string" } }, required = new[] { "marker" } } } } },
++            tool_choice = "auto", max_tokens = 128, temperature = 0, reasoning_effort = "none", reasoning_budget_tokens = 0, stream = false
++        };
++        using var response = await client.PostAsJsonAsync("chat/completions", request, ProviderHttp.Json, cancellationToken).ConfigureAwait(false);
++        await ProviderHttp.EnsureSuccessAsync(response, DisplayName, cancellationToken).ConfigureAwait(false);
++        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
++        var valid = MatchesProbe(document.RootElement, nonce);
++        var after = await ReadStatusAsync(client, cancellationToken).ConfigureAwait(false);
++        valid = valid && after.Loaded && after.Fingerprint == before.Fingerprint;
++        if (valid) Volatile.Write(ref _toolsFingerprint, before.Fingerprint);
++        return new(Id, valid, valid ? "Strata returned the exact correlated tool-call probe. No tool effect was executed; project permissions and development checks remain separate."
++            : "Strata did not return the exact tool-call probe, or its service/model changed. Tools remain unavailable.", Stopwatch.GetElapsedTime(started), DateTimeOffset.UtcNow);
++    }
++
++    protected override object BuildChatPayload(OllamaChatRequest request, bool stream) => Bounded(base.BuildChatPayload(request, stream));
++    protected override object BuildToolPayload(OllamaToolRequest request) => Bounded(base.BuildToolPayload(request));
++    private static object Bounded(object payload)
++    {
++        var value = JsonSerializer.SerializeToElement(payload, ProviderHttp.Json).EnumerateObject().ToDictionary(x => x.Name, x => (object?)x.Value.Clone());
++        value["max_tokens"] = 2048; value["reasoning_effort"] = "none"; value["reasoning_budget_tokens"] = 0;
++        return value;
++    }
++
++    private static bool MatchesProbe(JsonElement root, string nonce)
++    {
++        if (!root.TryGetProperty("choices", out var choices) || choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() != 1) return false;
++        var choice = choices[0];
++        if (Text(choice, "finish_reason") != "tool_calls" || !choice.TryGetProperty("message", out var message) ||
++            !message.TryGetProperty("tool_calls", out var calls) || calls.ValueKind != JsonValueKind.Array || calls.GetArrayLength() != 1) return false;
++        var call = calls[0];
++        if (!call.TryGetProperty("function", out var function) || Text(function, "name") != "echo_probe" || Text(function, "arguments") is not { } arguments) return false;
++        try
++        {
++            using var parsed = JsonDocument.Parse(arguments); var args = parsed.RootElement;
++            return args.ValueKind == JsonValueKind.Object && args.EnumerateObject().Count() == 1 && Text(args, "marker") == nonce;
++        }
++        catch (JsonException) { return false; }
++    }
++
++    private sealed record Status(string Model, bool Loaded, long Started, int? Context, int? InFlight)
++    { public string? Fingerprint => Started > 0 ? Started + ":" + Model : null; }
++    private static async Task<Status> ReadStatusAsync(HttpClient client, CancellationToken token)
++    {
++        using var response = await client.GetAsync("status", token).ConfigureAwait(false);
++        await ProviderHttp.EnsureSuccessAsync(response, "Strata", token).ConfigureAwait(false);
++        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token).ConfigureAwait(false)); var root = doc.RootElement;
++        if (Text(root, "service") != "strata" || Text(root, "model") is not { Length: > 0 and <= 1024 } model ||
++            !root.TryGetProperty("loaded", out var loaded) || loaded.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
++            throw new InvalidOperationException("The endpoint did not return a genuine Strata status shape.");
++        long started = root.TryGetProperty("started", out var start) && start.ValueKind == JsonValueKind.Number && start.TryGetInt64(out var time) ? time : 0;
++        int? context = root.TryGetProperty("context", out var ctx) && ctx.TryGetProperty("native", out var native) && native.ValueKind == JsonValueKind.Number && native.TryGetInt32(out var count) && count > 0 ? count : null;
++        int? inFlight = root.TryGetProperty("activity", out var activity) && activity.TryGetProperty("in_flight", out var flight) && flight.ValueKind == JsonValueKind.Number && flight.TryGetInt32(out var requests) && requests >= 0 ? requests : null;
++        return new(model, loaded.GetBoolean(), started, context, inFlight);
++    }
++    private static string? Text(JsonElement element, string property) => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
++}
+diff --git a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj
+index 47c6bf84..03a84c9c 100644
+--- a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj	
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj	
+@@ -54,6 +54,7 @@
+   </ItemGroup>
+   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+     <Compile Include="AssemblyInfo.cs;TestAppBuilder.cs" />
++    <Compile Include="StrataLoopbackProviderSettingsTests.cs" />
+     <Compile Include="HomeLibraryDestinationTests.cs;DeveloperManualDraftRecoveryTests.cs" />
+     <Compile Include="DeveloperManualRecoveryConflictTests.cs" />
+     <Compile Include="OriginalAutomationLibraryGraphEditingTests.cs" />
+diff --git a/9to1 Workspace/shared/tests/Haven.Desktop.Tests/StrataLoopbackProviderSettingsTests.cs b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/StrataLoopbackProviderSettingsTests.cs
+new file mode 100644
+index 00000000..21625a11
+--- /dev/null
++++ b/9to1 Workspace/shared/tests/Haven.Desktop.Tests/StrataLoopbackProviderSettingsTests.cs	
+@@ -0,0 +1,176 @@
++using System.Net;
++using System.Text;
++using Haven.Application;
++using Haven.Core;
++using Haven.Desktop.ViewModels;
++using Haven.Infrastructure;
++
++namespace Haven.Desktop.Tests;
++
++/// <summary>Exercises the actual settings commands with an in-memory HTTP peer, never a model or network.</summary>
++public sealed class StrataLoopbackProviderSettingsTests
++{
++    [Fact]
++    public async Task RefreshOffersTheTypedLocalConnectionWithoutReadingItsSecretsOrGenerating()
++    {
++        await using var fixture = new Fixture();
++        await fixture.ViewModel.RefreshCommand.ExecuteAsync();
++        Assert.Contains(fixture.ViewModel.Items, item => item.Id == "strata-local");
++        Assert.DoesNotContain("strata-local", fixture.Secrets.Reads);
++        Assert.Empty(fixture.Methods);
++    }
++
++    [Fact]
++    public async Task KeylessConnectIsPassiveAndOnlyExplicitTestStartsTheCapabilityProbe()
++    {
++        await using var fixture = new Fixture();
++        var item = fixture.Item("strata-local");
++        await fixture.ViewModel.ConnectCommand.ExecuteAsync(item);
++        var saved = Assert.Single(fixture.Configurations.Saved);
++        Assert.True(saved.IsLocal);
++        Assert.False(saved.AllowCloudFallback);
++        Assert.True(saved.IsEnabled);
++        Assert.True(item.IsConnected);
++        Assert.DoesNotContain("strata-local", fixture.Secrets.Reads);
++        Assert.DoesNotContain("strata-local", fixture.Secrets.Writes);
++        Assert.DoesNotContain("POST", fixture.Methods);
++
++        await fixture.ViewModel.TestCommand.ExecuteAsync(item);
++        Assert.Single(fixture.Methods.Where(method => method == "POST"));
++        // The fixture intentionally returns no tool call. A successful connection must not
++        // turn that failed explicit capability probe into a claim that tools are supported.
++        Assert.False(item.IsHealthy);
++    }
++
++    [Fact]
++    public async Task UnsafeLocalEndpointFailsBeforeSavingConfigurationOrSendingHttp()
++    {
++        await using var fixture = new Fixture();
++        var item = fixture.Item("strata-local");
++        item.Endpoint = "https://remote.example/v1/";
++        await fixture.ViewModel.ConnectCommand.ExecuteAsync(item);
++        Assert.Empty(fixture.Configurations.Saved);
++        Assert.Empty(fixture.Methods);
++        Assert.DoesNotContain("strata-local", fixture.Secrets.Reads);
++        Assert.DoesNotContain("strata-local", fixture.Secrets.Writes);
++        Assert.False(item.IsConnected);
++    }
++
++    [Fact]
++    public async Task ExistingRemoteProviderStillRequiresAndStoresAKeyAndRemainsRemote()
++    {
++        await using var fixture = new Fixture();
++        var item = fixture.Item("openai");
++        await fixture.ViewModel.ConnectCommand.ExecuteAsync(item);
++        Assert.Empty(fixture.Configurations.Saved);
++        Assert.Empty(fixture.Methods);
++        Assert.False(item.IsConnected);
++        item.ApiKey = "fixture-key";
++        await fixture.ViewModel.ConnectCommand.ExecuteAsync(item);
++        var saved = Assert.Single(fixture.Configurations.Saved);
++        Assert.False(saved.IsLocal);
++        Assert.Contains("openai", fixture.Secrets.Writes);
++        Assert.Equal("", item.ApiKey);
++        Assert.True(item.IsConnected);
++    }
++
++    private sealed class Fixture : IHttpClientFactory, IAsyncDisposable
++    {
++        private readonly Handler _handler;
++        public ConfigurationStore Configurations { get; } = new();
++        public SecretStore Secrets { get; } = new();
++        public List<string> Methods { get; } = [];
++        public ProviderConnectionsViewModel ViewModel { get; }
++        public Fixture()
++        {
++            _handler = new Handler(this);
++            IModelProvider[] providers = [new StrataLoopbackModelProvider(this, Configurations, Secrets, new ProviderUsageCaptureBuffer()),
++                new OpenAiModelProvider(this, Configurations, Secrets, new ProviderUsageCaptureBuffer())];
++            ViewModel = new(new ModelProviderRegistry(providers), Configurations, Secrets, new EmptyCalendarRegistry(), new EmptyPlanner());
++        }
++        public ProviderConnectionItemViewModel Item(string id) => Assert.Single(ViewModel.Items, item => item.Id == id);
++        public HttpClient CreateClient(string name) => new(_handler, disposeHandler: false);
++        public async ValueTask DisposeAsync()
++        {
++            await ViewModel.RefreshCommand.DisposeAsync();
++            await ViewModel.ConnectCommand.DisposeAsync();
++            await ViewModel.TestCommand.DisposeAsync();
++            await ViewModel.DisconnectCommand.DisposeAsync();
++            _handler.Dispose();
++        }
++        private sealed class Handler(Fixture fixture) : HttpMessageHandler
++        {
++            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
++            {
++                cancellationToken.ThrowIfCancellationRequested();
++                fixture.Methods.Add(request.Method.Method);
++                var json = request.Method == HttpMethod.Post ? "{\"choices\":[]}" : request.RequestUri?.AbsolutePath == "/v1/status"
++                    ? "{\"service\":\"strata\",\"started\":1792872000,\"model\":\"actual-model\",\"loaded\":true,\"activity\":{\"in_flight\":0}}"
++                    : "{\"data\":[{\"id\":\"actual-model\",\"meta\":{\"n_ctx\":32768}}]}";
++                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
++                    { Content = new StringContent(json, Encoding.UTF8, "application/json") });
++            }
++        }
++    }
++
++    private sealed class ConfigurationStore : IProviderConfigurationStore
++    {
++        private readonly Dictionary<string, ProviderConfiguration> _items = new()
++        {
++            ["strata-local"] = new("strata-local", ModelProviderKind.OpenAICompatible, "Strata local", "http://127.0.0.1:8081/v1/", false, true, false, new Dictionary<string, string>(), DateTimeOffset.UtcNow),
++            ["openai"] = new("openai", ModelProviderKind.OpenAI, "OpenAI", "https://provider.example/v1/", false, false, false, new Dictionary<string, string>(), DateTimeOffset.UtcNow)
++        };
++        public List<ProviderConfiguration> Saved { get; } = [];
++        public Task<IReadOnlyList<ProviderConfiguration>> GetAllAsync(CancellationToken token) => Task.FromResult<IReadOnlyList<ProviderConfiguration>>(_items.Values.ToArray());
++        public Task<ProviderConfiguration?> GetAsync(string id, CancellationToken token) => Task.FromResult<ProviderConfiguration?>(_items.GetValueOrDefault(id));
++        public Task UpsertAsync(ProviderConfiguration configuration, CancellationToken token)
++        { _items[configuration.Id] = configuration; Saved.Add(configuration); return Task.CompletedTask; }
++        public Task DeleteAsync(string id, CancellationToken token) => throw new NotSupportedException();
++    }
++
++    private sealed class SecretStore : IProviderSecretStore
++    {
++        private readonly Dictionary<string, string> _values = [];
++        public List<string> Reads { get; } = [];
++        public List<string> Writes { get; } = [];
++        public Task<string?> GetAsync(string providerId, string name, CancellationToken token)
++        { Reads.Add(providerId); return Task.FromResult<string?>(_values.GetValueOrDefault(providerId)); }
++        public Task SetAsync(string providerId, string name, string value, CancellationToken token)
++        { Writes.Add(providerId); _values[providerId] = value; return Task.CompletedTask; }
++        public Task DeleteAsync(string providerId, string name, CancellationToken token) => throw new NotSupportedException();
++    }
++
++    private sealed class EmptyCalendarRegistry : ICalendarSyncProviderRegistry
++    {
++        public IReadOnlyList<ICalendarSyncProvider> Providers => [];
++        public ICalendarSyncProvider Get(CalendarProviderKind kind) => throw new NotSupportedException();
++    }
++
++    // Settings refresh may observe calendar accounts; any unrelated planner effect fails immediately.
++    private sealed class EmptyPlanner : IPlannerRepository
++    {
++        public Task EnsureDefaultsAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<PlannerCollection>> GetCollectionsAsync(bool includeArchived, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task UpsertCollectionAsync(PlannerCollection collection, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task ArchiveCollectionAsync(Guid id, bool archived, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<PlannerTask?> GetTaskAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<PlannerTask>> GetTasksAsync(PlannerTaskQuery query, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task UpsertTaskAsync(PlannerTask task, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task CompleteTaskAsync(Guid id, DateTimeOffset completedAt, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task DeleteTaskAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<PlannerTaskCompletion>> GetCompletionHistoryAsync(Guid taskId, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<PlannerCalendar>> GetCalendarsAsync(bool visibleOnly, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task UpsertCalendarAsync(PlannerCalendar calendar, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<PlannerEvent>> GetEventsAsync(DateTimeOffset rangeStart, DateTimeOffset rangeEnd, Guid? calendarId, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<PlannerEvent?> GetEventAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task UpsertEventAsync(PlannerEvent plannerEvent, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task DeleteEventAsync(Guid id, DateTimeOffset deletedAt, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<CalendarAccount>> GetCalendarAccountsAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<CalendarAccount>>([]);
++        public Task UpsertCalendarAccountAsync(CalendarAccount account, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<CalendarConflict>> GetUnresolvedConflictsAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task ResolveConflictAsync(Guid id, CalendarConflictResolution resolution, DateTimeOffset resolvedAt, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task<IReadOnlyList<PlannerReminder>> GetDueRemindersAsync(DateTimeOffset now, int limit, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task MarkReminderDeliveredAsync(PlannerReminder reminder, DateTimeOffset deliveredAt, CancellationToken cancellationToken) => throw new NotSupportedException();
++        public Task ApplyProposalAsync(PlannerChangeProposal proposal, CancellationToken cancellationToken) => throw new NotSupportedException();
++    }
++}
+diff --git a/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/StrataLoopbackModelProviderTests.cs b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/StrataLoopbackModelProviderTests.cs
+new file mode 100644
+index 00000000..01c74f32
+--- /dev/null
++++ b/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/StrataLoopbackModelProviderTests.cs	
+@@ -0,0 +1,262 @@
++using System.Net;
++using System.Text;
++using System.Text.Json;
++using Haven.Application;
++using Haven.Core;
++using Haven.Infrastructure;
++
++namespace Haven.Infrastructure.Tests;
++
++/// <summary>Protects the explicit keyless loopback route without a real engine, model, or network.</summary>
++public sealed class StrataLoopbackModelProviderTests
++{
++    [Theory]
++    [InlineData("http://127.0.0.1:8081/v1/")]
++    [InlineData("https://127.0.0.1:8081/v1/")]
++    [InlineData("http://[::1]:8081/v1/")]
++    public void AcceptsOnlyExplicitLiteralLoopbackEndpoints(string endpoint) =>
++        Assert.True(StrataLoopbackModelProvider.IsAllowedEndpoint(endpoint));
++
++    [Theory]
++    [InlineData(null)]
++    [InlineData("")]
++    [InlineData("http://localhost:8081/v1/")]
++    [InlineData("http://127.0.0.2:8081/v1/")]
++    [InlineData("http://0.0.0.0:8081/v1/")]
++    [InlineData("http://192.168.1.2:8081/v1/")]
++    [InlineData("http://127.0.0.1.example.org:8081/v1/")]
++    [InlineData("http://user:secret@127.0.0.1:8081/v1/")]
++    [InlineData("http://127.0.0.1:8081/v1/?key=secret")]
++    [InlineData("http://127.0.0.1:8081/v1/#fragment")]
++    [InlineData("http://127.0.0.1:8081/other/")]
++    [InlineData("ftp://127.0.0.1:8081/v1/")]
++    public void RejectsRemoteAmbiguousOrCredentialBearingEndpoints(string? endpoint) =>
++        Assert.False(StrataLoopbackModelProvider.IsAllowedEndpoint(endpoint));
++
++    [Fact]
++    public async Task PassiveLoadedCatalogueIsLocalKeylessAndUsesActualContextWithoutClaimingTools()
++    {
++        using var fixture = new Fixture();
++        var provider = fixture.Provider;
++        var health = await provider.CheckHealthAsync(CancellationToken.None);
++        var models = await provider.GetModelsAsync(CancellationToken.None);
++
++        Assert.Equal("strata-local", provider.Id);
++        Assert.True(provider.IsLocal);
++        Assert.True(health.IsHealthy);
++        var model = Assert.Single(models);
++        Assert.Equal(fixture.Model, model.Name);
++        Assert.True(model.IsLocal);
++        Assert.Equal(32768, model.ContextWindow);
++        Assert.DoesNotContain(ToolCapability.Tools, model.Capabilities);
++        Assert.Equal(0, fixture.Secrets.Reads);
++        Assert.All(fixture.Requests, request =>
++        {
++            Assert.Equal("GET", request.Method);
++            Assert.Null(request.Authorization);
++            Assert.StartsWith("/v1/", request.Path, StringComparison.Ordinal);
++        });
++    }
++
++    [Fact]
++    public async Task UnloadedStatusDoesNotInventAReadyModelEvenWhenCatalogueRetainsAnEntry()
++    {
++        using var fixture = new Fixture { Loaded = false };
++        var health = await fixture.Provider.CheckHealthAsync(CancellationToken.None);
++        var models = await fixture.Provider.GetModelsAsync(CancellationToken.None);
++
++        Assert.True(health.IsHealthy);
++        Assert.Contains("unloaded", health.Message, StringComparison.OrdinalIgnoreCase);
++        Assert.Empty(models);
++        Assert.Equal(0, fixture.Secrets.Reads);
++        Assert.DoesNotContain(fixture.Requests, request => request.Method == "POST");
++    }
++
++    [Fact]
++    public async Task MissingActualCatalogueDoesNotCreateAConfiguredPlaceholderModel()
++    {
++        using var fixture = new Fixture { EmptyCatalogue = true };
++        Assert.Empty(await fixture.Provider.GetModelsAsync(CancellationToken.None));
++        Assert.DoesNotContain(fixture.Requests, request => request.Method == "POST");
++    }
++
++    [Fact]
++    public async Task CancelledHealthReadPropagatesCancellationWithoutNetworkOrSecrets()
++    {
++        using var fixture = new Fixture();
++        using var cancellation = new CancellationTokenSource();
++        cancellation.Cancel();
++        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
++            fixture.Provider.CheckHealthAsync(cancellation.Token));
++        Assert.Empty(fixture.Requests);
++        Assert.Equal(0, fixture.Secrets.Reads);
++    }
++
++    [Fact]
++    public async Task UnsafeConfigurationCannotReachTheHttpFactoryOrSecretStore()
++    {
++        using var fixture = new Fixture("https://remote.example/v1/");
++        Assert.False((await fixture.Provider.CheckHealthAsync(CancellationToken.None)).IsHealthy);
++        Assert.Empty(fixture.Requests);
++        Assert.Equal(0, fixture.Secrets.Reads);
++    }
++
++    [Fact]
++    public void DedicatedTransportDisablesRedirectsProxiesAndCookies()
++    {
++        using var handler = StrataLoopbackModelProvider.CreateTransportHandler();
++        Assert.False(handler.AllowAutoRedirect);
++        Assert.False(handler.UseProxy);
++        Assert.False(handler.UseCookies);
++        Assert.NotNull(handler.ConnectCallback);
++    }
++
++    [Fact]
++    public async Task ExplicitMatchingNonceProbeEnablesToolsUntilTheObservedServiceRestarts()
++    {
++        using var fixture = new Fixture { AllowProbe = true };
++        await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
++        Assert.Contains(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
++        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
++        fixture.ServiceStarted++;
++        Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
++        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
++        Assert.Equal(0, fixture.Secrets.Reads);
++    }
++
++    [Fact]
++    public async Task WrongNonceNeverAdvertisesTools()
++    {
++        using var fixture = new Fixture { AllowProbe = true, WrongNonce = true };
++        await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
++        Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
++        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
++    }
++
++    [Fact]
++    public async Task RestartDuringProbeCannotCommitStaleCapabilityEvidence()
++    {
++        using var fixture = new Fixture { AllowProbe = true, RestartAfterProbe = true };
++        await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
++        Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
++        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
++    }
++
++    [Fact]
++    public async Task MissingServiceFingerprintCannotStartOrCacheAnExplicitProbe()
++    {
++        using var fixture = new Fixture { AllowProbe = true, ServiceStarted = null };
++        await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
++        Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
++        Assert.DoesNotContain(fixture.Requests, request => request.Method == "POST");
++    }
++
++    [Fact]
++    public async Task BusyServiceCannotStartAnExplicitProbe()
++    {
++        using var fixture = new Fixture { AllowProbe = true, InFlight = 1 };
++        Assert.False((await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None)).IsHealthy);
++        Assert.DoesNotContain(fixture.Requests, request => request.Method == "POST");
++    }
++
++    [Fact]
++    public async Task ChangingTheConfiguredModelInvalidatesPriorToolEvidence()
++    {
++        using var fixture = new Fixture { AllowProbe = true };
++        await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
++        Assert.Contains(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
++        fixture.Model = "different-actual-model";
++        Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
++        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
++    }
++
++    private sealed record RequestRecord(string Method, string Path, string? Authorization, string Body);
++
++    private sealed class Fixture : IHttpClientFactory, IDisposable
++    {
++        private readonly Handler _handler;
++        public string Model { get; set; } = "actual-local-model";
++        public bool Loaded { get; set; } = true;
++        public bool EmptyCatalogue { get; set; }
++        public int InFlight { get; set; }
++        public bool AllowProbe { get; set; }
++        public bool WrongNonce { get; set; }
++        public bool RestartAfterProbe { get; set; }
++        public long? ServiceStarted { get; set; } = 1792872000;
++        public List<RequestRecord> Requests { get; } = [];
++        public SecretStore Secrets { get; } = new();
++        public StrataLoopbackModelProvider Provider { get; }
++
++        public Fixture(string endpoint = "http://127.0.0.1:8081/v1/")
++        {
++            _handler = new Handler(this);
++            Provider = new(this, new ConfigurationStore(endpoint), Secrets, new ProviderUsageCaptureBuffer());
++        }
++
++        public HttpClient CreateClient(string name) => new(_handler, disposeHandler: false);
++        public void Dispose() => _handler.Dispose();
++
++        private sealed class Handler(Fixture owner) : HttpMessageHandler
++        {
++            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
++            {
++                cancellationToken.ThrowIfCancellationRequested();
++                var path = request.RequestUri?.AbsolutePath ?? throw new InvalidOperationException("Missing request URI");
++                var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
++                owner.Requests.Add(new(request.Method.Method, path, request.Headers.Authorization?.ToString(), body));
++                if (request.Method == HttpMethod.Post && path == "/v1/chat/completions" && owner.AllowProbe)
++                {
++                    using var payload = JsonDocument.Parse(body);
++                    Assert.Equal(owner.Model, payload.RootElement.GetProperty("model").GetString());
++                    var tool = payload.RootElement.GetProperty("tools")[0].GetProperty("function");
++                    Assert.Equal("echo_probe", tool.GetProperty("name").GetString());
++                    var nonce = System.Text.RegularExpressions.Regex.Match(body, "[a-f0-9]{32}").Value;
++                    Assert.NotEmpty(nonce);
++                    var arguments = JsonSerializer.Serialize(new { marker = owner.WrongNonce ? "wrong-marker" : nonce });
++                    if (owner.RestartAfterProbe) owner.ServiceStarted++;
++                    return Json(new { choices = new[] { new { finish_reason = "tool_calls", message = new {
++                        content = "", tool_calls = new[] { new { id = "actual-probe-call", type = "function",
++                            function = new { name = "echo_probe", arguments } } } } } } });
++                }
++                if (request.Method != HttpMethod.Get)
++                    throw new InvalidOperationException("Passive provider operation attempted generation");
++                if (path == "/v1/status")
++                {
++                    var status = new Dictionary<string, object?> { ["service"] = "strata", ["model"] = owner.Model,
++                        ["loaded"] = owner.Loaded, ["context"] = new { native = 32768 },
++                        ["activity"] = new { requests = 0, in_flight = owner.InFlight } };
++                    if (owner.ServiceStarted is { } started) status["started"] = started;
++                    return Json(status);
++                }
++                if (path == "/v1/models")
++                    return Json(new { data = owner.EmptyCatalogue ? Array.Empty<object>() :
++                        new object[] { new { id = owner.Model, meta = new { n_ctx = 32768 } } } });
++                throw new InvalidOperationException("Unexpected provider endpoint: " + path);
++            }
++        }
++    }
++
++    private static HttpResponseMessage Json(object value) => new(HttpStatusCode.OK)
++    { Content = new StringContent(JsonSerializer.Serialize(value), Encoding.UTF8, "application/json") };
++
++    private sealed class ConfigurationStore(string endpoint) : IProviderConfigurationStore
++    {
++        private readonly ProviderConfiguration _configuration = new("strata-local", ModelProviderKind.OpenAICompatible,
++            "Strata (local)", endpoint, true, true, false, new Dictionary<string, string>(), DateTimeOffset.UtcNow);
++        public Task<IReadOnlyList<ProviderConfiguration>> GetAllAsync(CancellationToken token)
++        { token.ThrowIfCancellationRequested(); return Task.FromResult<IReadOnlyList<ProviderConfiguration>>([_configuration]); }
++        public Task<ProviderConfiguration?> GetAsync(string providerId, CancellationToken token)
++        { token.ThrowIfCancellationRequested(); return Task.FromResult<ProviderConfiguration?>(providerId == "strata-local" ? _configuration : null); }
++        public Task UpsertAsync(ProviderConfiguration configuration, CancellationToken token) => throw new NotSupportedException();
++        public Task DeleteAsync(string providerId, CancellationToken token) => throw new NotSupportedException();
++    }
++
++    private sealed class SecretStore : IProviderSecretStore
++    {
++        public int Reads { get; private set; }
++        public Task<string?> GetAsync(string providerId, string secretName, CancellationToken token)
++        { Reads++; throw new InvalidOperationException("A local Strata route must not request an API key"); }
++        public Task SetAsync(string providerId, string secretName, string secret, CancellationToken token) => throw new NotSupportedException();
++        public Task DeleteAsync(string providerId, string secretName, CancellationToken token) => throw new NotSupportedException();
++    }
++}

@@ -1,0 +1,11 @@
+9to1 local development access
+
+Desktop: open “9to1 Development.desktop” or run “Launch 9to1.sh”.
+Task console: open “9to1 Development Console.desktop” or run “Launch 9to1.sh --console”.
+Verify the installed build without launching: “Launch 9to1.sh --check”.
+
+The console uses the supported native --local-task-console --data-directory entry. The console requests native personal-task cold capture for saved-project work; normal current Home permission checks still apply. Its command list appears on startup; quit drains its owners and exits. Use the desktop or console one at a time with their shared development profile.
+
+Both entries use the separate persistent profile under work/9to1-development-profile. The launcher changes no primary-profile or Strata-service settings. Starting either entry does not restart Strata.
+
+A verified CI package must first be downloaded and registered. Until then the launcher reports “build has not been installed” and starts nothing. Successful file verification alone does not claim a completed native workflow smoke test.

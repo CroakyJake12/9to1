@@ -1,0 +1,350 @@
+--- /dev/null
++++ b/9to1 Workspace/Canvas/CanvasSharedInkInversePlacement.cs
+@@ -0,0 +1,211 @@
++using System.Linq;
++using Haven.Application;
++
++namespace HavenOS.Apps.Canvas;
++
++public sealed record CanvasSharedInkInversePlacement(Guid ObjectId, Guid StrokeId, Guid LayerId, CanvasTransform Transform)
++{
++    public string? OwnerRevision { get; init; }
++
++    public const double MaximumCoordinate = 100_000;
++    public const int MaximumSamples = 100_000;
++    public const double MinimumScale = 1e-9;
++    public const double MaximumScale = 1e9;
++    public const double MinimumEraserWidth = 1;
++    public const double MaximumEraserWidth = 500;
++
++    public double TranslateX => Transform?.TranslateX ?? double.NaN;
++    public double TranslateY => Transform?.TranslateY ?? double.NaN;
++    public double ScaleX => Transform?.ScaleX ?? double.NaN;
++    public double ScaleY => Transform?.ScaleY ?? double.NaN;
++    public double RotationDegrees => Transform?.RotationDegrees ?? double.NaN;
++    public double Scale => Transform is null ? double.NaN : Transform.ScaleX;
++
++    public bool IsValid => UnsupportedReason is null;
++    public bool IsSupported => IsValid;
++
++    public string? UnsupportedReason
++    {
++        get
++        {
++            if (ObjectId == Guid.Empty) return "ObjectId must be a stable nonempty shared-ink identity.";
++            if (StrokeId != ObjectId) return "StrokeId must equal ObjectId for stable shared-ink binding.";
++            if (LayerId == Guid.Empty) return "LayerId must be a stable nonempty drawing-layer identity.";
++            if (Transform is null) return "A CanvasTransform is required.";
++            if (!double.IsFinite(Transform.TranslateX) || !double.IsFinite(Transform.TranslateY) ||
++                !double.IsFinite(Transform.ScaleX) || !double.IsFinite(Transform.ScaleY) ||
++                !double.IsFinite(Transform.RotationDegrees))
++                return "Transform coordinates, scale and rotation must be finite.";
++            if (Math.Abs(Transform.TranslateX) > MaximumCoordinate || Math.Abs(Transform.TranslateY) > MaximumCoordinate)
++                return "Transform translation exceeds the supported coordinate bounds.";
++            if (Transform.ScaleX <= 0 || Transform.ScaleY <= 0)
++                return "Scale must be positive; zero, negative and reflection transforms are not supported.";
++            if (Transform.ScaleX != Transform.ScaleY)
++                return "Nonuniform scale is not supported by this inverse-placement clause.";
++            var scale = Transform.ScaleX;
++            if (Math.Abs(scale) < MinimumScale || Math.Abs(scale) > MaximumScale)
++                return "Scale is near-singular or outside the supported bounded range.";
++            if (OwnerRevision is not null && string.IsNullOrWhiteSpace(OwnerRevision))
++                return "OwnerRevision must be exact and nonempty when supplied.";
++            return null;
++        }
++    }
++
++    public CanvasSharedInkInversePlacement(Guid objectId, Guid strokeId, Guid layerId, double translateX, double translateY)
++        : this(objectId, strokeId, layerId, new CanvasTransform
++        {
++            TranslateX = translateX,
++            TranslateY = translateY,
++            ScaleX = 1,
++            ScaleY = 1,
++            RotationDegrees = 0
++        })
++    {
++    }
++
++    public CanvasSharedInkInversePlacement(Guid objectId, Guid strokeId, Guid layerId, double translateX, double translateY, double scale, double rotationDegrees)
++        : this(objectId, strokeId, layerId, new CanvasTransform
++        {
++            TranslateX = translateX,
++            TranslateY = translateY,
++            ScaleX = scale,
++            ScaleY = scale,
++            RotationDegrees = rotationDegrees
++        })
++    {
++    }
++
++    public static CanvasSharedInkInversePlacement Create(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null)
++    {
++        if (objectId == Guid.Empty || strokeId != objectId || layerId == Guid.Empty)
++            throw new ArgumentException("Shared ink placement requires stable ObjectId/StrokeId/LayerId binding.", nameof(objectId));
++        if (transform is null) throw new ArgumentNullException(nameof(transform));
++        var placement = new CanvasSharedInkInversePlacement(objectId, strokeId, layerId, transform) { OwnerRevision = ownerRevision };
++        if (!placement.IsValid) throw new NotSupportedException(placement.UnsupportedReason);
++        if (samples is not null) ValidateSamples(samples);
++        return placement;
++    }
++
++    public static CanvasSharedInkInversePlacement Prepare(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null) =>
++        Create(objectId, strokeId, layerId, transform, ownerRevision, samples);
++
++    public static bool TryCreate(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, out CanvasSharedInkInversePlacement placement, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null)
++    {
++        placement = default!;
++        try
++        {
++            placement = Create(objectId, strokeId, layerId, transform, ownerRevision, samples);
++            return true;
++        }
++        catch (Exception error) when (error is ArgumentException or NotSupportedException or InvalidDataException)
++        {
++            placement = default!;
++            return false;
++        }
++    }
++
++    public static bool TryPrepare(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, out CanvasSharedInkInversePlacement placement, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null) =>
++        TryCreate(objectId, strokeId, layerId, transform, out placement, ownerRevision, samples);
++
++    public static CanvasSharedInkInversePlacement FromTransform(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null) =>
++        Create(objectId, strokeId, layerId, transform, ownerRevision, samples);
++
++    public static CanvasSharedInkInversePlacement From(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null) =>
++        Create(objectId, strokeId, layerId, transform, ownerRevision, samples);
++
++    public static CanvasSharedInkInversePlacement FromStroke(CanvasInkStroke stroke, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null)
++    {
++        ArgumentNullException.ThrowIfNull(stroke);
++        if (stroke.StrokeId == Guid.Empty || stroke.LayerId == Guid.Empty)
++            throw new ArgumentException("Shared ink stroke requires stable stroke and layer identities.", nameof(stroke));
++        var validatedSamples = samples ?? stroke.Samples.Select(sample => new RnotePointerSample(sample.X, sample.Y, sample.Pressure, sample.TiltX, sample.TiltY)).ToArray();
++        return Create(stroke.StrokeId, stroke.StrokeId, stroke.LayerId, stroke.Transform, ownerRevision, validatedSamples);
++    }
++
++    public static bool TryFromStroke(CanvasInkStroke stroke, out CanvasSharedInkInversePlacement placement, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null)
++    {
++        placement = default!;
++        try
++        {
++            placement = FromStroke(stroke, ownerRevision, samples);
++            return true;
++        }
++        catch (Exception error) when (error is ArgumentNullException or ArgumentException or NotSupportedException or InvalidDataException)
++        {
++            placement = default!;
++            return false;
++        }
++    }
++
++    public static void ValidateSamples(IReadOnlyList<RnotePointerSample> samples)
++    {
++        ArgumentNullException.ThrowIfNull(samples);
++        if (samples.Count > MaximumSamples) throw new InvalidDataException("The shared ink gesture exceeds the supported sample count.");
++        foreach (var sample in samples)
++        {
++            if (!sample.IsValid) throw new InvalidDataException("Shared ink pointer data must be finite with pressure in 0..1.");
++            if (Math.Abs(sample.X) > MaximumCoordinate || Math.Abs(sample.Y) > MaximumCoordinate)
++                throw new InvalidDataException("Shared ink coordinates exceed the supported bounds.");
++        }
++    }
++
++    public RnotePointerSample ToStrokeCoordinates(RnotePointerSample pageSample)
++    {
++        EnsureValid();
++        if (!pageSample.IsValid) throw new InvalidDataException("Shared ink pointer data must be finite with pressure in 0..1.");
++        if (Math.Abs(pageSample.X) > MaximumCoordinate || Math.Abs(pageSample.Y) > MaximumCoordinate)
++            throw new InvalidDataException("Shared ink page coordinates exceed the supported bounds.");
++        var radians = Transform.RotationDegrees * Math.PI / 180.0;
++        var cosine = Math.Cos(radians);
++        var sine = Math.Sin(radians);
++        var deltaX = pageSample.X - Transform.TranslateX;
++        var deltaY = pageSample.Y - Transform.TranslateY;
++        var scaledX = deltaX * cosine + deltaY * sine;
++        var scaledY = -deltaX * sine + deltaY * cosine;
++        var scale = Transform.ScaleX;
++        var localX = scaledX / scale;
++        var localY = scaledY / scale;
++        if (!double.IsFinite(localX) || !double.IsFinite(localY) ||
++            Math.Abs(localX) > MaximumCoordinate || Math.Abs(localY) > MaximumCoordinate)
++            throw new InvalidDataException("The inverse shared ink placement produced invalid pointer data.");
++        return pageSample with { X = localX, Y = localY };
++    }
++
++    public IReadOnlyList<RnotePointerSample> ToStrokeCoordinates(IReadOnlyList<RnotePointerSample> pageSamples)
++    {
++        ArgumentNullException.ThrowIfNull(pageSamples);
++        if (pageSamples.Count > MaximumSamples) throw new InvalidDataException("The shared ink gesture exceeds the supported sample count.");
++        ValidateSamples(pageSamples);
++        var result = new RnotePointerSample[pageSamples.Count];
++        for (var index = 0; index < pageSamples.Count; index++) result[index] = ToStrokeCoordinates(pageSamples[index]);
++        return Array.AsReadOnly(result);
++    }
++
++    public double ToStrokeWidth(double pageWidth)
++    {
++        EnsureValid();
++        if (!double.IsFinite(pageWidth) || pageWidth < MinimumEraserWidth || pageWidth > MaximumEraserWidth)
++            throw new ArgumentOutOfRangeException(nameof(pageWidth), "Eraser width must be finite and in 1..500.");
++        var result = pageWidth / Transform.ScaleX;
++        if (!double.IsFinite(result) || result < MinimumEraserWidth || result > MaximumEraserWidth)
++            throw new InvalidDataException("The inverse shared ink eraser width is outside the supported bounds.");
++        return result;
++    }
++
++    private void EnsureValid()
++    {
++        if (!IsValid) throw new NotSupportedException(UnsupportedReason ?? "Unsupported shared ink transform.");
++    }
++}
++
++public static class CanvasSharedInkInversePlacementFactory
++{
++    public static CanvasSharedInkInversePlacement Create(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null) =>
++        CanvasSharedInkInversePlacement.Create(objectId, strokeId, layerId, transform, ownerRevision, samples);
++
++    public static bool TryCreate(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, out CanvasSharedInkInversePlacement placement, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null) =>
++        CanvasSharedInkInversePlacement.TryCreate(objectId, strokeId, layerId, transform, out placement, ownerRevision, samples);
++
++    public static CanvasSharedInkInversePlacement Prepare(Guid objectId, Guid strokeId, Guid layerId, CanvasTransform transform, string? ownerRevision = null, IReadOnlyList<RnotePointerSample>? samples = null) =>
++        CanvasSharedInkInversePlacement.Prepare(objectId, strokeId, layerId, transform, ownerRevision, samples);
++}
+--- /dev/null
++++ b/9to1 Workspace/Canvas/NativeUI.Tests/CanvasSharedInkInversePlacementTests.cs
+@@ -0,0 +1,133 @@
++using Haven.Application;
++using Xunit;
++
++namespace HavenOS.Apps.Canvas.NativeUI.Tests;
++
++public sealed class CanvasSharedInkInversePlacementTests
++{
++    private static readonly Guid ObjectId = Guid.Parse("11111111-2222-3333-4444-555555555555");
++    private static readonly Guid LayerId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
++
++    private static CanvasTransform Transform(double translateX = 0, double translateY = 0, double scale = 1, double rotationDegrees = 0) =>
++        new() { TranslateX = translateX, TranslateY = translateY, ScaleX = scale, ScaleY = scale, RotationDegrees = rotationDegrees };
++
++    private static RnotePointerSample Forward(RnotePointerSample local, CanvasTransform transform)
++    {
++        var radians = transform.RotationDegrees * Math.PI / 180.0;
++        var cosine = Math.Cos(radians);
++        var sine = Math.Sin(radians);
++        var scaledX = local.X * transform.ScaleX;
++        var scaledY = local.Y * transform.ScaleY;
++        return new RnotePointerSample(
++            scaledX * cosine - scaledY * sine + transform.TranslateX,
++            scaledX * sine + scaledY * cosine + transform.TranslateY,
++            local.Pressure, local.TiltX, local.TiltY);
++    }
++
++    [Fact]
++    public void Identity_maps_points_unchanged()
++    {
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, Transform());
++        var sample = new RnotePointerSample(12.5, -7.25, .35, .2, -.1);
++        var inverse = placement.ToStrokeCoordinates(sample);
++        Assert.Equal(sample.X, inverse.X, 12);
++        Assert.Equal(sample.Y, inverse.Y, 12);
++        Assert.Equal(sample.Pressure, inverse.Pressure);
++        Assert.Equal(sample.TiltX, inverse.TiltX);
++        Assert.Equal(sample.TiltY, inverse.TiltY);
++    }
++
++    [Fact]
++    public void Translation_maps_page_coordinates_back_to_local_coordinates()
++    {
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, Transform(100, 40));
++        var inverse = placement.ToStrokeCoordinates(new RnotePointerSample(110, 50, .5));
++        Assert.Equal(10, inverse.X, 12);
++        Assert.Equal(10, inverse.Y, 12);
++    }
++
++    [Fact]
++    public void Quarter_turn_round_trips_a_local_point()
++    {
++        var transform = Transform(rotationDegrees: 90);
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, transform);
++        var local = new RnotePointerSample(10, 0, .4, .1, -.2);
++        var page = Forward(local, transform);
++        var inverse = placement.ToStrokeCoordinates(page);
++        Assert.Equal(local.X, inverse.X, 10);
++        Assert.Equal(local.Y, inverse.Y, 10);
++        Assert.Equal(local.Pressure, inverse.Pressure);
++        Assert.Equal(local.TiltX, inverse.TiltX);
++        Assert.Equal(local.TiltY, inverse.TiltY);
++    }
++
++    [Fact]
++    public void Arbitrary_rotation_and_uniform_scale_round_trip()
++    {
++        var transform = Transform(12.5, -7.25, 2, 37);
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, transform);
++        var local = new RnotePointerSample(3, -4, .35, .2, -.1);
++        var page = Forward(local, transform);
++        var inverse = placement.ToStrokeCoordinates(page);
++        Assert.Equal(local.X, inverse.X, 10);
++        Assert.Equal(local.Y, inverse.Y, 10);
++    }
++
++    [Fact]
++    public void Uniform_scale_scales_inverse_eraser_width_consistently()
++    {
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, Transform(scale: 2));
++        Assert.Equal(6, placement.ToStrokeWidth(12), 12);
++        var placement2 = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, Transform(scale: .5));
++        Assert.Equal(24, placement2.ToStrokeWidth(12), 12);
++    }
++
++    [Fact]
++    public void Stable_ids_revision_and_transform_round_trip()
++    {
++        var transform = Transform(1, 2, 2, 30);
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, transform, "source-revision-1");
++        Assert.Equal(ObjectId, placement.ObjectId);
++        Assert.Equal(ObjectId, placement.StrokeId);
++        Assert.Equal(LayerId, placement.LayerId);
++        Assert.Equal("source-revision-1", placement.OwnerRevision);
++        Assert.Equal(transform, placement.Transform);
++    }
++
++    [Fact]
++    public void Invalid_transforms_are_refused()
++    {
++        Assert.False(new CanvasSharedInkInversePlacement(ObjectId, ObjectId, LayerId, Transform(scale: 0)).IsValid);
++        Assert.False(new CanvasSharedInkInversePlacement(ObjectId, ObjectId, LayerId, Transform(scale: 1e-12)).IsValid);
++        Assert.False(new CanvasSharedInkInversePlacement(ObjectId, ObjectId, LayerId, new CanvasTransform { ScaleX = -1, ScaleY = -1 }).IsValid);
++        Assert.False(new CanvasSharedInkInversePlacement(ObjectId, ObjectId, LayerId, new CanvasTransform { ScaleX = 2, ScaleY = 1 }).IsValid);
++        Assert.False(new CanvasSharedInkInversePlacement(ObjectId, ObjectId, LayerId, new CanvasTransform { TranslateX = double.NaN, ScaleX = 1, ScaleY = 1 }).IsValid);
++        Assert.Throws<NotSupportedException>(() => CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, Transform(scale: 0)));
++        Assert.Throws<NotSupportedException>(() => CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, new CanvasTransform { ScaleX = 2, ScaleY = 1 }));
++    }
++
++    [Fact]
++    public void Sample_validation_bounds_and_caller_arrays_are_preserved()
++    {
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, Transform(1, 2, 2, 30));
++        Assert.Throws<InvalidDataException>(() => placement.ToStrokeCoordinates(new RnotePointerSample(double.NaN, 1, .5)));
++        Assert.Throws<InvalidDataException>(() => placement.ToStrokeCoordinates(new RnotePointerSample(200_000, 1, .5)));
++        var samples = Enumerable.Repeat(new RnotePointerSample(1, 1, .5), 100_001).ToArray();
++        Assert.Throws<InvalidDataException>(() => placement.ToStrokeCoordinates(samples));
++        var input = new[] { new RnotePointerSample(1, 2, .5), new RnotePointerSample(3, 4, .5) };
++        var before = input.ToArray();
++        var output = placement.ToStrokeCoordinates(input);
++        Assert.Equal(before, input);
++        Assert.Equal(2, output.Count);
++    }
++
++    [Fact]
++    public void Transform_content_is_not_mutated()
++    {
++        var transform = Transform(1, 2, 2, 30);
++        var before = transform with { };
++        var placement = CanvasSharedInkInversePlacement.Create(ObjectId, ObjectId, LayerId, transform);
++        Assert.Equal(before, transform);
++        Assert.Equal(transform, placement.Transform);
++    }
++}

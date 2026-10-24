@@ -1,0 +1,398 @@
+--- a/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioContracts.cs
++++ b/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioContracts.cs
+@@ -120,1 +120,28 @@
+ public sealed record StudioStoreDocument(int SchemaVersion, IReadOnlyList<StudioProject> Projects);
++
++public enum StudioProjectStoreStatus
++{
++    Success,
++    VersionConflict,
++    AlreadyExists,
++    NotFound,
++    Cancelled,
++    StoreSchemaUnsupported,
++    PersistenceUnavailable
++}
++
++public sealed record StudioProjectStoreResult(bool IsSuccess, StudioProjectStoreStatus Status, StudioProject? Project = null, string? Message = null)
++{
++    public string? ErrorCode => Status switch
++    {
++        StudioProjectStoreStatus.Success => null,
++        StudioProjectStoreStatus.VersionConflict or StudioProjectStoreStatus.AlreadyExists => "RevisionConflict",
++        StudioProjectStoreStatus.Cancelled => "Cancelled",
++        StudioProjectStoreStatus.StoreSchemaUnsupported => "StoreSchemaUnsupported",
++        StudioProjectStoreStatus.PersistenceUnavailable => "PersistenceUnavailable",
++        StudioProjectStoreStatus.NotFound => "ProjectNotFound",
++        _ => null
++    };
++
++    public static implicit operator bool(StudioProjectStoreResult result) => result.IsSuccess;
++}
+--- a/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioProjectStore.cs
++++ b/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/StudioProjectStore.cs
+@@ -8,3 +8,14 @@
+     Task<StudioProject?> GetAsync(Guid id, CancellationToken cancellationToken);
+     Task WriteAsync(StudioProject project, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> WriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> CreateAsync(StudioProject project, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> WriteExpectedVersionAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> WriteIfVersionAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> TryWriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> CasWriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> AtomicWriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> CreateIfAbsentAsync(StudioProject project, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> CreateIfNotExistsAsync(StudioProject project, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> TryCreateAsync(StudioProject project, CancellationToken cancellationToken);
++    Task<StudioProjectStoreResult> InsertIfAbsentAsync(StudioProject project, CancellationToken cancellationToken);
+ }
+@@ -17,11 +17,8 @@
+     public async Task<IReadOnlyList<StudioProject>> ListAsync(bool includeDeleted, CancellationToken cancellationToken)
+     {
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try
+-        {
+-            var items = (await ReadDocumentAsync(cancellationToken).ConfigureAwait(false)).Projects;
+-            return items.Where(item => includeDeleted || !item.IsDeleted)
+-                .OrderByDescending(item => item.ModifiedAt).ThenBy(item => item.ProjectId).ToArray();
+-        }
+-        finally { _gate.Release(); }
++        await using var lease = await AcquireLockAsync(cancellationToken).ConfigureAwait(false);
++        var items = (await ReadDocumentAsync(cancellationToken).ConfigureAwait(false)).Projects;
++        return items.Where(item => includeDeleted || !item.IsDeleted)
++            .OrderByDescending(item => item.ModifiedAt).ThenBy(item => item.ProjectId).ToArray();
+     }
+@@ -30,7 +30,5 @@
+     public async Task<StudioProject?> GetAsync(Guid id, CancellationToken cancellationToken)
+     {
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try { return (await ReadDocumentAsync(cancellationToken).ConfigureAwait(false)).Projects.FirstOrDefault(item => item.ProjectId == id); }
+-        finally { _gate.Release(); }
++        await using var lease = await AcquireLockAsync(cancellationToken).ConfigureAwait(false);
++        return (await ReadDocumentAsync(cancellationToken).ConfigureAwait(false)).Projects.FirstOrDefault(item => item.ProjectId == id);
+     }
+@@ -39,16 +39,13 @@
+     public async Task WriteAsync(StudioProject project, CancellationToken cancellationToken)
+     {
+         ArgumentNullException.ThrowIfNull(project);
+-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+-        try
+-        {
+-            var document = await ReadDocumentAsync(cancellationToken).ConfigureAwait(false);
+-            var items = document.Projects.ToList();
+-            var existing = items.FindIndex(item => item.ProjectId == project.ProjectId);
+-            if (existing < 0) items.Add(project);
+-            else items[existing] = project;
+-            await WriteDocumentAsync(new StudioStoreDocument(CurrentSchemaVersion, items), cancellationToken).ConfigureAwait(false);
+-        }
+-        finally { _gate.Release(); }
++        await using var lease = await AcquireLockAsync(cancellationToken).ConfigureAwait(false);
++        var document = await ReadDocumentAsync(cancellationToken).ConfigureAwait(false);
++        var items = document.Projects.ToList();
++        var existing = items.FindIndex(item => item.ProjectId == project.ProjectId);
++        if (existing < 0) items.Add(project);
++        else items[existing] = project;
++        await WriteDocumentAsync(new StudioStoreDocument(CurrentSchemaVersion, items), cancellationToken).ConfigureAwait(false);
+     }
+@@ -52,3 +52,95 @@
+     }
++
++    public Task<StudioProjectStoreResult> WriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken) =>
++        WriteExpectedVersionCoreAsync(project, expectedVersion, cancellationToken);
++    public Task<StudioProjectStoreResult> WriteExpectedVersionAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken) =>
++        WriteExpectedVersionCoreAsync(project, expectedVersion, cancellationToken);
++    public Task<StudioProjectStoreResult> WriteIfVersionAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken) =>
++        WriteExpectedVersionCoreAsync(project, expectedVersion, cancellationToken);
++    public Task<StudioProjectStoreResult> TryWriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken) =>
++        WriteExpectedVersionCoreAsync(project, expectedVersion, cancellationToken);
++    public Task<StudioProjectStoreResult> CasWriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken) =>
++        WriteExpectedVersionCoreAsync(project, expectedVersion, cancellationToken);
++    public Task<StudioProjectStoreResult> AtomicWriteAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken) =>
++        WriteExpectedVersionCoreAsync(project, expectedVersion, cancellationToken);
++
++    public Task<StudioProjectStoreResult> CreateAsync(StudioProject project, CancellationToken cancellationToken) =>
++        CreateIfAbsentCoreAsync(project, cancellationToken);
++    public Task<StudioProjectStoreResult> CreateIfAbsentAsync(StudioProject project, CancellationToken cancellationToken) =>
++        CreateIfAbsentCoreAsync(project, cancellationToken);
++    public Task<StudioProjectStoreResult> CreateIfNotExistsAsync(StudioProject project, CancellationToken cancellationToken) =>
++        CreateIfAbsentCoreAsync(project, cancellationToken);
++    public Task<StudioProjectStoreResult> TryCreateAsync(StudioProject project, CancellationToken cancellationToken) =>
++        CreateIfAbsentCoreAsync(project, cancellationToken);
++    public Task<StudioProjectStoreResult> InsertIfAbsentAsync(StudioProject project, CancellationToken cancellationToken) =>
++        CreateIfAbsentCoreAsync(project, cancellationToken);
++
++    private async Task<StudioProjectStoreResult> WriteExpectedVersionCoreAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken)
++    {
++        ArgumentNullException.ThrowIfNull(project);
++        try
++        {
++            await using var lease = await AcquireLockAsync(cancellationToken).ConfigureAwait(false);
++            var document = await ReadDocumentAsync(cancellationToken).ConfigureAwait(false);
++            var items = document.Projects.ToList();
++            var index = items.FindIndex(item => item.ProjectId == project.ProjectId);
++            if (index < 0)
++                return new StudioProjectStoreResult(false, StudioProjectStoreStatus.NotFound, null, "The project does not exist.");
++            if (items[index].Version != expectedVersion)
++                return new StudioProjectStoreResult(false, StudioProjectStoreStatus.VersionConflict, null, $"The project is version {items[index].Version}; version {expectedVersion} was submitted.");
++            items[index] = project;
++            await WriteDocumentAsync(new StudioStoreDocument(CurrentSchemaVersion, items), cancellationToken).ConfigureAwait(false);
++            return new StudioProjectStoreResult(true, StudioProjectStoreStatus.Success, project);
++        }
++        catch (OperationCanceledException)
++        {
++            return new StudioProjectStoreResult(false, StudioProjectStoreStatus.Cancelled, null, "The request was cancelled.");
++        }
++        catch (InvalidDataException ex)
++        {
++            return new StudioProjectStoreResult(false, StudioProjectStoreStatus.StoreSchemaUnsupported, null, ex.Message);
++        }
++        catch (IOException ex)
++        {
++            return new StudioProjectStoreResult(false, StudioProjectStoreStatus.PersistenceUnavailable, null, ex.Message);
++        }
++    }
++
++    private async Task<StudioProjectStoreResult> CreateIfAbsentCoreAsync(StudioProject project, CancellationToken cancellationToken)
++    {
++        ArgumentNullException.ThrowIfNull(project);
++        try
++        {
++            await using var lease = await AcquireLockAsync(cancellationToken).ConfigureAwait(false);
++            var document = await ReadDocumentAsync(cancellationToken).ConfigureAwait(false);
++            var items = document.Projects.ToList();
++            if (items.Any(item => item.ProjectId == project.ProjectId))
++                return new StudioProjectStoreResult(false, StudioProjectStoreStatus.AlreadyExists, null, "The project already exists.");
++            items.Add(project);
++            await WriteDocumentAsync(new StudioStoreDocument(CurrentSchemaVersion, items), cancellationToken).ConfigureAwait(false);
++            return new StudioProjectStoreResult(true, StudioProjectStoreStatus.Success, project);
++        }
++        catch (OperationCanceledException)
++        {
++            return new StudioProjectStoreResult(false, StudioProjectStoreStatus.Cancelled, null, "The request was cancelled.");
++        }
++        catch (InvalidDataException ex)
++        {
++            return new StudioProjectStoreResult(false, StudioProjectStoreStatus.StoreSchemaUnsupported, null, ex.Message);
++        }
++        catch (IOException ex)
++        {
++            return new StudioProjectStoreResult(false, StudioProjectStoreStatus.PersistenceUnavailable, null, ex.Message);
++        }
++    }
++
++    private async Task<LockLease> AcquireLockAsync(CancellationToken cancellationToken)
++    {
++        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
++        var lockPath = _path + ".lock";
++        while (true)
++        {
++            cancellationToken.ThrowIfCancellationRequested();
++            try
++            {
++                var stream = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.Asynchronous);
++                return new LockLease(stream);
++            }
++            catch (IOException)
++            {
++            }
++            catch (UnauthorizedAccessException)
++            {
++            }
++            await Task.Delay(10, cancellationToken).ConfigureAwait(false);
++        }
++    }
++
+     private async Task<StudioStoreDocument> ReadDocumentAsync(CancellationToken cancellationToken)
+@@ -110,2 +200,9 @@
+     }
+ }
++    private sealed class LockLease(FileStream stream) : IAsyncDisposable
++    {
++        public ValueTask DisposeAsync()
++        {
++            stream.Dispose();
++            return ValueTask.CompletedTask;
++        }
++    }
+--- a/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AIStudioApi.cs
++++ b/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AIStudioApi.cs
+@@ -128,3 +128,1 @@
+         var updated = current.Value with { Version = current.Value.Version + 1, ModifiedAt = now,
+             DefinitionJson = normalized!, Dependencies = dependencies ?? current.Value.Dependencies,
+             PermissionMetadata = permissionMetadata ?? current.Value.PermissionMetadata, Revisions = revisions };
+-        var write = await SafeWriteAsync(updated, cancellationToken).ConfigureAwait(false);
++        var write = await SafeWriteExpectedAsync(updated, current.Value.Version, cancellationToken).ConfigureAwait(false);
+@@ -166,3 +166,1 @@
+         var updated = current.Value with { Version = current.Value.Version + 1, ModifiedAt = now, ProjectFiles = files,
+             Revisions = current.Value.Revisions.Append(new ProjectRevision(current.Value.Version, now, current.Value.DefinitionJson,
+                 "Project file updated: " + string.Join('/', parts))).ToArray() };
+-        var write = await SafeWriteAsync(updated, cancellationToken).ConfigureAwait(false);
++        var write = await SafeWriteExpectedAsync(updated, current.Value.Version, cancellationToken).ConfigureAwait(false);
+@@ -882,3 +882,1 @@
+         var updated = mutation(current.Value) with { Version = current.Value.Version + 1, ModifiedAt = now,
+             Revisions = current.Value.Revisions.Append(new ProjectRevision(current.Value.Version, now, current.Value.DefinitionJson)).ToArray() };
+-        var write = await SafeWriteAsync(updated, cancellationToken).ConfigureAwait(false);
++        var write = await SafeWriteExpectedAsync(updated, current.Value.Version, cancellationToken).ConfigureAwait(false);
+@@ -894,2 +894,1 @@
+         var updated = mutation(result.Value);
+-        var write = await SafeWriteAsync(updated, cancellationToken).ConfigureAwait(false);
++        var write = await SafeWriteExpectedAsync(updated, result.Value.Version, cancellationToken).ConfigureAwait(false);
+@@ -94,2 +94,1 @@
+         var project = new StudioProject(Guid.NewGuid(), type, name.Trim(), 1, now, now, ownerScope.Trim(),
+             template.TemplateId, template.Version, template.DefinitionJson, template.Dependencies,
+             new Dictionary<string, string>(), [], null, new Dictionary<string, string>(), false);
+-        var write = await SafeWriteAsync(project, cancellationToken).ConfigureAwait(false);
++        var write = await SafeCreateAsync(project, cancellationToken).ConfigureAwait(false);
+@@ -232,3 +232,1 @@
+         var copy = source.Value! with { ProjectId = Guid.NewGuid(), Name = name.Trim(), Version = 1,
+             CreatedAt = now, ModifiedAt = now, Revisions = [], DeletedAt = null };
+-        var write = await SafeWriteAsync(copy, cancellationToken).ConfigureAwait(false);
++        var write = await SafeCreateAsync(copy, cancellationToken).ConfigureAwait(false);
+@@ -322,3 +322,1 @@
+         var definition = imported with { ProjectId = Guid.NewGuid(), Version = 1, CreatedAt = DateTimeOffset.UtcNow,
+             ModifiedAt = DateTimeOffset.UtcNow, Revisions = [], DeletedAt = null };
+-        var write = await SafeWriteAsync(definition, cancellationToken).ConfigureAwait(false);
++        var write = await SafeCreateAsync(definition, cancellationToken).ConfigureAwait(false);
+@@ -930,1 +930,45 @@
+     }
++
++    private async Task<StudioResult<Unit>> SafeWriteExpectedAsync(StudioProject project, int expectedVersion, CancellationToken cancellationToken)
++    {
++        try
++        {
++            var result = await store.WriteAsync(project, expectedVersion, cancellationToken).ConfigureAwait(false);
++            if (result) return StudioResult<Unit>.Success(new Unit());
++            return result.Status switch
++            {
++                StudioProjectStoreStatus.Cancelled => StudioResult<Unit>.Failure("Cancelled", result.Message ?? "The request was cancelled.", project.ProjectId.ToString(), retryable: true),
++                StudioProjectStoreStatus.StoreSchemaUnsupported => StudioResult<Unit>.Failure("StoreSchemaUnsupported", result.Message ?? "The project store is unsupported.", project.ProjectId.ToString(), recoverable: true),
++                StudioProjectStoreStatus.PersistenceUnavailable => StudioResult<Unit>.Failure("PersistenceUnavailable", result.Message ?? "Persistence is unavailable.", project.ProjectId.ToString(), retryable: true),
++                StudioProjectStoreStatus.NotFound => StudioResult<Unit>.Failure("ProjectNotFound", result.Message ?? "The project does not exist.", project.ProjectId.ToString()),
++                _ => StudioResult<Unit>.Failure("RevisionConflict", result.Message ?? "Project version changed.", project.ProjectId.ToString(), recoverable: true)
++            };
++        }
++        catch (OperationCanceledException)
++        {
++            return StudioResult<Unit>.Failure("Cancelled", "The request was cancelled.", project.ProjectId.ToString(), retryable: true);
++        }
++        catch (InvalidDataException ex)
++        {
++            return StudioResult<Unit>.Failure("StoreSchemaUnsupported", ex.Message, project.ProjectId.ToString(), recoverable: true);
++        }
++        catch (IOException ex)
++        {
++            return StudioResult<Unit>.Failure("PersistenceUnavailable", ex.Message, project.ProjectId.ToString(), retryable: true);
++        }
++    }
++
++    private async Task<StudioResult<Unit>> SafeCreateAsync(StudioProject project, CancellationToken cancellationToken)
++    {
++        try
++        {
++            var result = await store.CreateAsync(project, cancellationToken).ConfigureAwait(false);
++            if (result) return StudioResult<Unit>.Success(new Unit());
++            return result.Status switch
++            {
++                StudioProjectStoreStatus.Cancelled => StudioResult<Unit>.Failure("Cancelled", result.Message ?? "The request was cancelled.", project.ProjectId.ToString(), retryable: true),
++                StudioProjectStoreStatus.StoreSchemaUnsupported => StudioResult<Unit>.Failure("StoreSchemaUnsupported", result.Message ?? "The project store is unsupported.", project.ProjectId.ToString(), recoverable: true),
++                StudioProjectStoreStatus.PersistenceUnavailable => StudioResult<Unit>.Failure("PersistenceUnavailable", result.Message ?? "Persistence is unavailable.", project.ProjectId.ToString(), retryable: true),
++                StudioProjectStoreStatus.AlreadyExists => StudioResult<Unit>.Failure("RevisionConflict", result.Message ?? "The project already exists.", project.ProjectId.ToString(), recoverable: true),
++                _ => StudioResult<Unit>.Failure("PersistenceUnavailable", result.Message ?? "Persistence is unavailable.", project.ProjectId.ToString(), retryable: true)
++            };
++        }
++        catch (OperationCanceledException)
++        {
++            return StudioResult<Unit>.Failure("Cancelled", "The request was cancelled.", project.ProjectId.ToString(), retryable: true);
++        }
++        catch (InvalidDataException ex)
++        {
++            return StudioResult<Unit>.Failure("StoreSchemaUnsupported", ex.Message, project.ProjectId.ToString(), recoverable: true);
++        }
++        catch (IOException ex)
++        {
++            return StudioResult<Unit>.Failure("PersistenceUnavailable", ex.Message, project.ProjectId.ToString(), retryable: true);
++        }
++    }
+--- a/9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioProjectApiTests.cs
++++ b/9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioProjectApiTests.cs
+@@ -300,1 +300,75 @@
+     private AIStudioApi CreateApi() => new(new JsonStudioProjectStore(_root), new UnavailableStudioRuntimeAdapter(),
+         new UnavailableCanonicalAgentBuilderAdapter(), new JsonStudioResourceStore(_root),
+         new UnavailableStudioPermissionSimulationAdapter(), new UnavailableStudioContextInspectorAdapter(),
+         new UnavailableStudioReplayAdapter());
++
++    [Fact]
++    public async Task IndependentStoresSerializeSameVersionWritesAndLeaveOneRecoverableConflict()
++    {
++        var created = await _api.CreateHarnessFromTemplateAsync("harness.assistant.v1", "Harness");
++        var secondApi = CreateApi();
++        var first = _api.SaveProjectAsync(created.Value!.ProjectId, 1, created.Value.DefinitionJson);
++        var second = secondApi.SaveProjectAsync(created.Value.ProjectId, 1, created.Value.DefinitionJson);
++        await Task.WhenAll(first, second);
++        var results = new[] { first.Result, second.Result };
++        Assert.Single(results.Where(result => result.IsSuccess));
++        Assert.Single(results.Where(result => result.Error?.Code == "RevisionConflict"));
++        var reopened = await CreateApi().OpenProjectAsync(created.Value.ProjectId);
++        Assert.True(reopened.IsSuccess);
++        Assert.Equal(2, reopened.Value!.Version);
++    }
++
++    [Fact]
++    public async Task RenameAndDeleteRaceLeavesOneSuccessfulMutation()
++    {
++        var created = await _api.CreateHarnessFromTemplateAsync("harness.assistant.v1", "Harness");
++        var secondApi = CreateApi();
++        var rename = _api.RenameProjectAsync(created.Value!.ProjectId, 1, "Renamed");
++        var delete = secondApi.DeleteProjectAsync(created.Value.ProjectId, 1);
++        await Task.WhenAll(rename, delete);
++        var results = new[] { rename.Result, delete.Result };
++        Assert.Single(results.Where(result => result.IsSuccess));
++        Assert.Single(results.Where(result => !result.IsSuccess));
++    }
++
++    [Fact]
++    public async Task SaveAndProjectFileUpdateRaceLeavesOneRecoverableConflict()
++    {
++        var created = await _api.CreateHarnessFromTemplateAsync("harness.assistant.v1", "Harness");
++        var secondApi = CreateApi();
++        var save = _api.SaveProjectAsync(created.Value!.ProjectId, 1, created.Value.DefinitionJson);
++        var file = secondApi.SetProjectFileAsync(created.Value.ProjectId, 1, "src/main.txt", "safe");
++        await Task.WhenAll(save, file);
++        var results = new[] { save.Result, file.Result };
++        Assert.Single(results.Where(result => result.IsSuccess));
++        Assert.Single(results.Where(result => result.Error?.Code == "RevisionConflict"));
++    }
++
++    [Fact]
++    public async Task IndependentStoresPreserveDistinctProjectCreates()
++    {
++        var created = await _api.CreateHarnessFromTemplateAsync("harness.assistant.v1", "Harness");
++        var store = new JsonStudioProjectStore(_root);
++        var project = await store.GetAsync(created.Value!.ProjectId, CancellationToken.None);
++        Assert.NotNull(project);
++        var copy = project! with { ProjectId = Guid.NewGuid(), Version = 1, CreatedAt = DateTimeOffset.UtcNow, ModifiedAt = DateTimeOffset.UtcNow, Revisions = [] };
++        var result = await store.CreateAsync(copy);
++        Assert.True(result);
++        Assert.Equal(2, (await store.ListAsync(false, CancellationToken.None)).Count);
++    }
++
++    [Fact]
++    public async Task SameIdCreateIsRejectedByAtomicStore()
++    {
++        var created = await _api.CreateHarnessFromTemplateAsync("harness.assistant.v1", "Harness");
++        var store = new JsonStudioProjectStore(_root);
++        var project = await store.GetAsync(created.Value!.ProjectId, CancellationToken.None);
++        var collision = await store.CreateAsync(project!);
++        Assert.False(collision);
++    }
++
++    [Fact]
++    public async Task CancelledStoreLockWaitPreservesPriorBytesAndReturnsCancelled()
++    {
++        Directory.CreateDirectory(_root);
++        var lockPath = Path.Combine(Path.GetFullPath(_root), "projects.v1.json.lock");
++        using var holder = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
++        var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
++        var result = await _api.ListProjectsAsync(cancellationToken: cts.Token);
++        Assert.Equal("Cancelled", result.Error!.Code);
++    }

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=9to1 Development
+Comment=Open the verified local 9to1 development build
+Exec="/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/outputs/Launch 9to1.sh"
+Icon=applications-development
+Terminal=true
+Categories=Development;

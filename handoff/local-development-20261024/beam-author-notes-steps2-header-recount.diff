@@ -1,0 +1,195 @@
+--- a/apps/Web/Write/Storage/NotesStorageAcknowledgment.cs
++++ b/apps/Web/Write/Storage/NotesStorageAcknowledgment.cs
+@@ -1,21 +1,44 @@
+-using System.Text.Json;
++using System.Globalization;
++using System.Text.Json;
+ namespace NineToOne.Web.Write.Storage;
+ internal static class NotesStorageAcknowledgment
+ {
+     internal static JsonElement Parse(string action, string json)
+     {
+         JsonElement result;
+         try { using var reply = JsonDocument.Parse(json); result = reply.RootElement.Clone(); }
+         catch (JsonException error)
+         {
+             if (action is "Save" or "Delete") throw new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.", error);
+             throw new IOException("Malformed browser notes response.", error);
+         }
+         if (result.ValueKind != JsonValueKind.Object)
+         {
+             if (action is "Save" or "Delete") throw new NotesCommitOutcomeUnknownException("Non-object storage acknowledgment; inspect durable state before retrying.");
+             throw new IOException("Non-object browser notes response.");
+         }
++        if (action is "Save" or "Delete")
++        {
++            if (!result.TryGetProperty("ok", out var ok) || ok.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
++                throw new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.");
++            if (result.TryGetProperty("committed", out var committed) && committed.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
++                throw new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.");
++            if (!ok.GetBoolean() && result.TryGetProperty("committed", out committed) && committed.ValueKind == JsonValueKind.True)
++                throw new NotesCommitOutcomeUnknownException("Contradictory storage acknowledgment; inspect durable state before retrying.");
++            if (!ok.GetBoolean())
++            {
++                if (!result.TryGetProperty("error", out var error) || error.ValueKind != JsonValueKind.Object ||
++                    !error.TryGetProperty("code", out var code) || code.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(code.GetString()))
++                    throw new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.");
++                if (code.GetString() == "RevisionConflict" &&
++                    (!error.TryGetProperty("documentId", out var documentId) || documentId.ValueKind != JsonValueKind.String || !documentId.TryGetGuid(out _) ||
++                     !error.TryGetProperty("expectedVersion", out var expectedVersion) || expectedVersion.ValueKind != JsonValueKind.String ||
++                     !long.TryParse(expectedVersion.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out _) ||
++                     !error.TryGetProperty("actualVersion", out var actualVersion) || actualVersion.ValueKind != JsonValueKind.String ||
++                     !long.TryParse(actualVersion.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out _)))
++                    throw new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.");
++            }
++        }
+         return result;
+     }
+ }
+--- a/apps/Web/Write/Storage/IndexedDbNotesRepository.cs
++++ b/apps/Web/Write/Storage/IndexedDbNotesRepository.cs
+@@ -24,14 +24,74 @@
+     private async Task<JsonElement> Call(string action, object args, CancellationToken ct)
+     {
+-        var reply = await transport.InvokeAsync(action, Args(args), ct);
+-        if (reply.ValueKind != JsonValueKind.Object || !reply.TryGetProperty("ok", out var ok) || ok.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+-            throw action is "Save" or "Delete" ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed storage response.");
+-        if (ok.GetBoolean()) return reply;
+-        var error = reply.GetProperty("error");
+-        var code = error.GetProperty("code").GetString();
+-        if (code == "Cancelled") throw new OperationCanceledException(ct);
+-        if (code == "RevisionConflict") throw new NotesRevisionConflictException(error.GetProperty("documentId").GetGuid(),
+-            long.Parse(error.GetProperty("expectedVersion").GetString()!, CultureInfo.InvariantCulture), long.Parse(error.GetProperty("actualVersion").GetString()!, CultureInfo.InvariantCulture));
+-        throw new IOException($"Browser notes storage: {code}.");
++        var arguments = Args(args);
++        var reply = await transport.InvokeAsync(action, arguments, ct);
++        var mutation = action is "Save" or "Delete";
++        if (reply.ValueKind != JsonValueKind.Object)
++            throw mutation ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed browser notes response.");
++        if (!reply.TryGetProperty("ok", out var ok) || ok.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
++            throw mutation ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed browser notes response.");
++        bool committed = false;
++        if (reply.TryGetProperty("committed", out var committedElement))
++        {
++            if (committedElement.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
++                throw mutation ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed browser notes response.");
++            committed = committedElement.GetBoolean();
++        }
++        if (!ok.GetBoolean() && committed)
++            throw mutation ? new NotesCommitOutcomeUnknownException("Contradictory storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed browser notes response.");
++        if (ok.GetBoolean())
++        {
++            if (!mutation) ValidateReadReply(action, reply);
++            return reply;
++        }
++        if (!reply.TryGetProperty("error", out var error) || error.ValueKind != JsonValueKind.Object)
++            throw mutation ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed browser notes response.");
++        if (!error.TryGetProperty("code", out var codeElement) || codeElement.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(codeElement.GetString()))
++            throw mutation ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed browser notes response.");
++        var code = codeElement.GetString()!;
++        if (code == "Cancelled") throw new OperationCanceledException(ct);
++        if (code == "RevisionConflict")
++        {
++            if (!error.TryGetProperty("documentId", out var documentIdElement) || documentIdElement.ValueKind != JsonValueKind.String || !documentIdElement.TryGetGuid(out var conflictDocumentId) ||
++                !error.TryGetProperty("expectedVersion", out var expectedVersionElement) || expectedVersionElement.ValueKind != JsonValueKind.String || !long.TryParse(expectedVersionElement.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var conflictExpectedVersion) ||
++                !error.TryGetProperty("actualVersion", out var actualVersionElement) || actualVersionElement.ValueKind != JsonValueKind.String || !long.TryParse(actualVersionElement.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var conflictActualVersion))
++                throw mutation ? new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.") : new IOException("Malformed browser notes response.");
++            if (action == "Delete")
++                throw new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.");
++            if (action == "Save")
++            {
++                Guid? expectedDocumentId = null;
++                long? expectedVersion = null;
++                if (arguments.TryGetProperty("documentId", out var argumentDocumentId) && argumentDocumentId.ValueKind == JsonValueKind.String && argumentDocumentId.TryGetGuid(out var parsedDocumentId))
++                    expectedDocumentId = parsedDocumentId;
++                if (arguments.TryGetProperty("expectedVersion", out var argumentExpectedVersion) && argumentExpectedVersion.ValueKind == JsonValueKind.String && long.TryParse(argumentExpectedVersion.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedExpectedVersion))
++                    expectedVersion = parsedExpectedVersion;
++                if (expectedDocumentId is null || expectedVersion is null ||
++                    conflictDocumentId != expectedDocumentId.Value || conflictExpectedVersion != expectedVersion.Value)
++                    throw new NotesCommitOutcomeUnknownException("Malformed storage acknowledgment; inspect durable state before retrying.");
++            }
++            throw new NotesRevisionConflictException(conflictDocumentId, conflictExpectedVersion, conflictActualVersion);
++        }
++        throw new IOException($"Browser notes storage: {code}.");
+     }
++    private static void ValidateReadReply(string action, JsonElement reply)
++    {
++        if (!reply.TryGetProperty("value", out var value)) throw new IOException("Malformed browser notes response.");
++        switch (action)
++        {
++            case "Load":
++            case "LoadVersion":
++                if (value.ValueKind is not (JsonValueKind.Null or JsonValueKind.Object)) throw new IOException("Malformed browser notes response.");
++                break;
++            case "Versions":
++                if (value.ValueKind != JsonValueKind.Array) throw new IOException("Malformed browser notes response.");
++                break;
++            case "List":
++                if (value.ValueKind != JsonValueKind.Object ||
++                    !value.TryGetProperty("documents", out var documents) || documents.ValueKind != JsonValueKind.Array ||
++                    !value.TryGetProperty("history", out var history) || history.ValueKind != JsonValueKind.Array)
++                    throw new IOException("Malformed browser notes response.");
++                break;
++        }
++    }
+     private static JsonElement Value(JsonElement reply) => reply.GetProperty("value");
+--- a/apps/Web/Write/Storage/Tests/Program.cs
++++ b/apps/Web/Write/Storage/Tests/Program.cs
+@@ -260,5 +260,5 @@
+             case "Load": if (BeforeLoad is not null) await BeforeLoad(); return Ok(Current);
+             case "List": return Ok(new { documents = Current is { } current ? new[] { current } : [], history = Versions });
+             case "Versions": return Ok(Versions);
+             case "LoadVersion": return Ok(Versions.FirstOrDefault(x => x.GetProperty("versionId").GetString() == arguments.GetProperty("versionId").GetString()) is var found && found.ValueKind != JsonValueKind.Undefined ? found : null);
+-            case "Delete": Deletes++; Current = null; Versions.Clear(); return Ok(null, true);
++            case "Delete": Deletes++; Current = null; Versions.Clear(); return AckOverride ?? Ok(null, true);
+@@ -260,4 +260,8 @@
+             case "Load": if (BeforeLoad is not null) await BeforeLoad(); return Ok(Current);
++            case "Load": if (BeforeLoad is not null) await BeforeLoad(); return AckOverride ?? Ok(Current);
+             case "List": return Ok(new { documents = Current is { } current ? new[] { current } : [], history = Versions });
++            case "List": return AckOverride ?? Ok(new { documents = Current is { } current ? new[] { current } : [], history = Versions });
+             case "Versions": return Ok(Versions);
++            case "Versions": return AckOverride ?? Ok(Versions);
+             case "LoadVersion": return Ok(Versions.FirstOrDefault(x => x.GetProperty("versionId").GetString() == arguments.GetProperty("versionId").GetString()) is var found && found.ValueKind != JsonValueKind.Undefined ? found : null);
++            case "LoadVersion": return AckOverride ?? Ok(Versions.FirstOrDefault(x => x.GetProperty("versionId").GetString() == arguments.GetProperty("versionId").GetString()) is var found && found.ValueKind != JsonValueKind.Undefined ? found : null);
+@@ -300,5 +300,41 @@
+     ("pre-cancelled save never reaches transport", async () => {
+         var store = new Memory(); using var cts = new CancellationTokenSource(); cts.Cancel();
+         await Throws<OperationCanceledException>(() => Repo(store).SaveAsync(NotesDocument.Create(), "Save", cts.Token)); Check(store.Calls == 0, "cancel dispatch");
+     }),
++    ("malformed mutation failure envelopes report unknown commit", async () => {
++        foreach (var text in new[] { """{"ok":false,"error":null}""", """{"ok":false,"error":{}}""", """{"ok":false}""" }) {
++            var store = new Memory { AckOverride = JsonDocument.Parse(text).RootElement.Clone() };
++            var doc = NotesDocument.Create("Malformed failure");
++            await Throws<NotesCommitOutcomeUnknownException>(() => Repo(store).SaveAsync(doc, "Save", default));
++            Check(store.Saves == 1 && doc.Version == 0, "malformed failure advanced or retried");
++        }
++    }),
++    ("contradictory failed mutation committed flag reports unknown commit", async () => {
++        var store = new Memory { AckOverride = JsonDocument.Parse("""{"ok":false,"committed":true,"error":{"code":"Cancelled"}}""").RootElement.Clone() };
++        var doc = NotesDocument.Create("Contradictory");
++        await Throws<NotesCommitOutcomeUnknownException>(() => Repo(store).SaveAsync(doc, "Save", default));
++        Check(store.Saves == 1 && doc.Version == 0, "contradictory failure advanced");
++    }),
++    ("foreign revision conflict identity reports unknown commit", async () => {
++        var doc = NotesDocument.Create("Foreign conflict");
++        var foreign = Guid.NewGuid();
++        foreach (var text in new[] {
++            """{"ok":false,"error":{"code":"RevisionConflict","documentId":123,"expectedVersion":"0","actualVersion":"1"}}""",
++            $"""{{"ok":false,"error":{{"code":"RevisionConflict","documentId":"{foreign}","expectedVersion":"0","actualVersion":"1"}}}}""",
++            """{"ok":false,"error":{"code":"RevisionConflict","documentId":"00000000-0000-0000-0000-000000000000","expectedVersion":"99","actualVersion":"1"}}"""
++        }) {
++            var store = new Memory { AckOverride = JsonDocument.Parse(text).RootElement.Clone() };
++            await Throws<NotesCommitOutcomeUnknownException>(() => Repo(store).SaveAsync(doc, "Save", default));
++            Check(store.Saves == 1 && doc.Version == 0, "foreign conflict advanced");
++        }
++    }),
++    ("malformed read replies raise bounded IOException", async () => {
++        foreach (var text in new[] { "null", "[]", "1", """{"ok":true}""", """{"ok":true,"value":17}""" }) {
++            var store = new Memory { AckOverride = JsonDocument.Parse(text).RootElement.Clone() };
++            await Throws<IOException>(() => Repo(store).LoadAsync(Guid.NewGuid(), default));
++            Check(store.Calls == 1, "read malformed not dispatched");
++        }
++        var listStore = new Memory { AckOverride = JsonDocument.Parse("""{"ok":true,"value":{}}""").RootElement.Clone() };
++        await Throws<IOException>(() => Repo(listStore).ListAsync(default));
++    }),
+ };

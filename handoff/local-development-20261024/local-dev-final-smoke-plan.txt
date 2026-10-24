@@ -1,0 +1,197 @@
+LOCAL 9TO1 DEVELOPMENT WORKFLOW — EXACT SOURCE-BASED PTY PLAN
+Prepared read-only from product 3b5babedf28539d721cef48f7f444ac0da1c4761.
+Approved final CI head: c5f7bb450afa4659bb3b2379b38c7d7b161da0d4.
+Expected CI run recorded by launcher preparation: 40133484801.
+STATUS: PLAN ONLY. No application/model request, source edit, build, profile change,
+service control, permission decision, or Task creation was performed for this plan.
+
+1. USE THE VERIFIED ARTIFACT AND EXISTING 512K STRATA
+
+Root must first observe the approved final CI/package outcome and install that
+exact package with the existing verified installer. A launcher --check refusal
+means STOP: do not build again or substitute a different binary. Current source
+and CI identity must match the package manifest and outputs/9to1-local-launch.json.
+
+Actual shell command, in a PTY (retain its session ID and entire native output):
+
+  '/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/outputs/Launch 9to1.sh' --console --check
+
+Then, only for the actual authorised smoke:
+
+  HAVEN_NATIVE_PERSONAL_TASK_COLD_RECOVERY=1 '/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/outputs/Launch 9to1.sh' --console
+
+This uses the separate persistent work/9to1-development-profile. Preserve it.
+The process-local selector is REQUIRED by current production composition for a
+saved-project initial Task and current-project execution. It merely requests
+composition; it does not grant filesystem, model, process or recovery permission.
+Require actual localHomeStarted:true, projectResourcesConfigured:true and
+devExecutionTrust:true. Preserve any cold/protected-store refusal exactly.
+Do not restart/reconfigure 8081, reduce context, select native-engine artifacts,
+touch Thunder, or run another direct component canary. Root already observed the
+existing Strata load/generation at its retained 512k profile.
+
+2. CONFIGURE AND OBSERVE THE REAL LOCAL PROVIDER
+
+Console lines (these are console input, not shell commands):
+
+  strata-configure http://127.0.0.1:8081/v1/
+  strata-probe
+  models strata-local
+  model <EXACT Key from that actual returned catalogue>
+
+Do not guess the Key from model name/alias. strata-configure saves/readbacks
+keyless, local-only, enabled, cloud-fallback=false configuration. strata-probe is
+an EXPLICIT model request: it exercises actual /v1/chat/completions echo_probe
+with a nonce and fresh endpoint/start/model verification. It executes no tool
+effect. Stop if genuine Tools capability is not verified or endpoint status is
+busy/unloaded/changed; never bypass by asserting capability or using raw HTTP.
+The actual model HTTP ID previously observed is 3-8-flash--q3-pro-, but catalogue
+selection must come from the current response. Do NOT use local-configure,
+probe, strata-select or engine Strata: those target different provider/artifact
+paths and do not configure this maintained HTTP provider.
+
+3. REGISTER A SMALL, ISOLATED REAL PROJECT THROUGH FILES/HOME
+
+If this private profile already has a Files root, use files-status and retain it;
+do not reconfigure or clear it. Otherwise choose a new empty absolute directory
+under the task work directory, then enter:
+
+  files-configure <chosen empty absolute Files root>
+  files-status
+  files-list
+
+After configuration creates its genuine Write app folder, Root may seed a NEW
+small smoke project there (never the integration tree or an active worker tree).
+Minimum fixture: an existing smoke.txt containing exactly local-strata-before
+plus LF. Record its exact bytes/hash before model use. Fixture creation is a
+separate explicit local action; this plan did not create it.
+
+  project-register write <actual existing absolute smoke project directory>
+
+Paths are unquoted console arguments: this command preserves the text after its
+first separator. Retain its emitted setupId/workspaceId. While its SAME operation
+waits, use:
+
+  home-requests
+  home-display <actual relevant pending request ID>
+  home-accept <that same displayed ID>
+
+Only accept the displayed operation if its exact source READ, destination and
+setup manifest cover this authorised smoke fixture. A different/broader request
+must be declined or left pending. Do not blanket accept every request. Repeat
+the display/decision sequence only for each actual new required review.
+Wait for originalSetupAcknowledged with every step Acknowledged and savedProject.
+Unknown/pending work must not be replayed with project-register again.
+
+  container-create <saved workspace GUID> <saved project GUID> <saved root GUID> Local Strata smoke
+  project <same workspace GUID> <same project GUID> <same root GUID> <actual originalContainerSaved ID>
+  space-create Local development smoke
+
+Retain actual Space ID. All IDs in this plan are placeholders to be populated
+from genuine outputs, not fabricated GUIDs. Container creation creates no Task.
+
+4. GENERATE, AUTHORISE ONE FILE EDIT, AND RUN ONE BOUNDED CHECK
+
+Enter one bounded actual Task instruction, after Root authorises the smoke:
+
+  task In this selected smoke project only, read smoke.txt, replace its exact local-strata-before line with local-strata-ok followed by one LF using the maintained file-edit tools, then request permission to run exactly this read-only check: python3 -c 'from pathlib import Path; assert Path("smoke.txt").read_bytes() == b"local-strata-ok\n"; print("SMOKE_CHECK_PASS")'. Use timeout_seconds 10. Do not build, install packages, contact a network, edit any other file, or start another task. Report the actual edit and check result; do not claim success if permission or execution is refused.
+
+This is a proposed minimal CHECK workflow, not authorisation for another SDK/CI
+build. The source supports write_file/replace_in_file/apply_change_set and
+run_command/run_tests; it does not expose a console `build` command. The exact
+run_command text above is maintained /bin/sh -c transport in the selected root.
+Only permit its actual source-issued edit/process review after verifying the
+displayed path, original bytes/digest, argv and root. No fabricated permission.
+
+During initial project READ, model generation or effect consent waits, use the
+same home-requests -> home-display -> explicit home-accept sequence above.
+Keep the PTY running: initial work is background and the console remains usable.
+
+  context
+
+Wait for authentic initial source acknowledgement and actual ContextId, TaskId,
+ExecutionId. A request-start message is not a saved/finished Task. Then:
+
+  attach
+  history
+  status
+
+Retain Space ID, actual link/reference ID, TaskId and ExecutionId from the real
+attachment. Require an actual native model response, actual effect ACK/result,
+and exact check exit zero + SMOKE_CHECK_PASS. A prose claim or generated diff is
+not an applied edit. If Tools are denied/unavailable, retain the refusal and do
+not substitute an outside edit or external process as in-app proof.
+
+  read smoke.txt
+
+This itself requests a fresh authorised project READ and execution review; use
+the same explicit Home review path. Require actual returned local-strata-ok LF.
+Also independently compare actual on-disk bytes/hash read-only under Root's
+custody. This cross-check must not change the model-owned result.
+
+NO-FURTHER-BUILD BOUNDARY: no dotnet/npm/compiler/build command or extra CI run
+is authorised. The one approved final CI validates the packaged product source,
+not a later generated file change. This bounded content check is the proposed
+`check` half of the user's build/check workflow. If Root does not authorise that
+single check, or insists on an after-edit compilation, record that gate as
+BLOCKED/NOT_RUN; do not infer that the existing CI validates the new edit.
+
+5. SAVE, CLOSE, REOPEN THE SAME TASK AND VERIFY THE ACTUAL FILE
+
+After actual task/effect settlement and attachment persistence, retain IDs and:
+
+  history
+  quit
+
+Wait for healthy exit and source shutdown; preserve unknown/incomplete state.
+Relaunch the SAME verified --console command with the SAME process-local selector
+and SAME persistent profile; do not re-register, create another container/Space,
+or start a new Task to stand in for persistence.
+
+  spaces
+  open <same Space GUID> <same saved link/reference GUID> <same Task GUID> <same Run/Execution GUID>
+  history
+  status
+  read smoke.txt
+
+Require the same saved project, actual Task/Run/context and edit/check history,
+plus actual persisted file bytes through fresh current Home permission. `open`
+does not itself invoke a model. A fresh live resume is not a cold-recovery proof.
+Only if actual continuation is needed and separately authorised, observe
+`cold-input` then use `cold-resume` after its genuine current capsule/ownership/
+permission admission. Never reconstruct a claim or replay unknown work.
+
+6. EVIDENCE AND CONCRETE PRODUCTION TRAPS
+
+Record: exact product/package SHA and approved CI result; launcher/PTY identity;
+provider catalogue and nonce proof (no credentials); actual Home decision IDs;
+project/setup/container/Space/Task/Run/link IDs; before/after bytes+hashes; genuine
+tool/process ACK, exit/output; same-profile restart/open/history/read results.
+
+Known traps from full surrounding production source:
+* Default selector absent/0 omits project input and execution bridge even though
+  localHomeStarted can be true; 1 requests real source composition, not readiness.
+* A protected personal-store, OS-identity, held-root or Home permission refusal
+  is a real blocker. Configuration/status strings do not override it.
+* Tools become usable only after this actual endpoint/start/model capability
+  proof and normal request authority; local descriptor alone grants nothing.
+* Registration, initial Task and document reads launch asynchronous source work;
+  no retry/repost just because an ACK has not appeared yet.
+* Same saved project root/container and authentic initial acknowledgement are
+  mandatory before attach. `open` takes exactly four genuine IDs.
+* Manual console `read` also uses source-issued current READ/process review.
+* A model response, saved Task or final CI alone does not prove a file effect,
+  check execution, or successful persisted reopen.
+
+Source references (all under current product's 9to1 Workspace/shared/src):
+Haven.Desktop/Program.cs (--local-task-console route);
+Haven.Desktop/Services/OriginalLocalTaskConsole.cs (startup, commands, Task/attach/open);
+OriginalLocalTaskConsole.Project.cs (ProjectConfigurationRequested + project input);
+OriginalLocalTaskConsole.DeveloperSetup.cs (registration/ACK/container);
+OriginalLocalTaskConsole.CommandRead.cs (current execution composition and read);
+Haven.Infrastructure/Execution/NativePersonalTaskColdRecoveryHost.cs (selector1);
+Haven.Infrastructure/Workspace/WorkspaceToolService.Originals.cs (exact effects);
+Haven.Application/Tools/WorkspaceToolProcessRequestFactory.cs (fixed /bin/sh transport).
+
+Assessment confidence: high for exact source/command contract; live workflow
+unverified by this task. No success is claimed until all actual steps pass.
