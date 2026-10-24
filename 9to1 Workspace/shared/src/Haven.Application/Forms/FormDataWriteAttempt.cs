@@ -11,7 +11,8 @@ internal static class FormDataWriteAttemptValidation
 {
     public static FormDataWriteAttempt Capture(FormDataWriteAttempt value, Guid formID, Guid responseID, Guid versionID, long responseRevision, Guid sourceStoreID)
     {
-        if (value is null || value.Operation is null || value.Revision < 1
+        if (value is null || value.Operation is null || value.Operation.Values is null || value.Revision < 1
+            || ((value.Status is FormsDataWriteStatus.Succeeded or FormsDataWriteStatus.Conflict) && value.Revision < 2)
             || value.Status is not (FormsDataWriteStatus.Pending or FormsDataWriteStatus.Succeeded or FormsDataWriteStatus.Conflict))
             throw new InvalidDataException("Invalid Forms Data write attempt.");
         DataRecordUpdateIntent intent;

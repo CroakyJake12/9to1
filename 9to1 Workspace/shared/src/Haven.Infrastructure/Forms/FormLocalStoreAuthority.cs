@@ -14,13 +14,18 @@ public sealed class FormLocalStoreEvidenceProvider(IVersionedSettingsStore setti
     public async ValueTask<HomeLocalStoreEvidence?> ReadAsync(string storeId, CancellationToken cancellationToken)
     {
         if (!Guid.TryParse(storeId, out var id) || id == Guid.Empty) return null;
-        var identity = await identities.GetStoreIdentityAsync(cancellationToken).ConfigureAwait(false);
-        if (identity.SchemaVersion != 1 || identity.StoreId != id) return null;
         // The successful durable read is the actual accessibility proof for this store. A store that
         // cannot be read is reported as unknown evidence, never as accessible evidence.
+        ResourceStoreIdentity identity;
         SettingsExportManifest manifest;
-        try { manifest = await settings.ExportAsync(cancellationToken).ConfigureAwait(false); }
-        catch (IOException) { return null; }
+        try
+        {
+            identity = await identities.GetStoreIdentityAsync(cancellationToken).ConfigureAwait(false);
+            if (identity.SchemaVersion != 1 || identity.StoreId != id) return null;
+            manifest = await settings.ExportAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return null; }
+        cancellationToken.ThrowIfCancellationRequested();
         if (manifest.StoreIdentity is not { SchemaVersion: 1 } root || root.StoreId != id) return null;
         return new(ResourceKind, id.ToString("D"), manifest.Version.ToString(CultureInfo.InvariantCulture),
             identity.NewlyCreated, manifest.Settings.Count == 0, true);

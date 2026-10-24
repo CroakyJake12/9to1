@@ -26,9 +26,11 @@ public static class FormTableInput
         var columns = new HashSet<Guid>();
         foreach (var column in definition.Columns)
         {
-            if (column.ColumnID == Guid.Empty || !columns.Add(column.ColumnID) || string.IsNullOrWhiteSpace(column.Label)
+            if (column is null || column.ColumnID == Guid.Empty || !columns.Add(column.ColumnID) || string.IsNullOrWhiteSpace(column.Label)
                 || !Enum.IsDefined(column.Type) || column.Minimum > column.Maximum)
                 throw new ArgumentException("Invalid table column identity, type or limits.");
+            // Schema v1 previously persisted optional constraints even when this cell type did not
+            // consume them. Keep that data interpretable until an explicit schema migration exists.
             if (column.Type == FormTableCellType.Choice && (column.ChoiceIDs is not { Length: > 0 }
                 || column.ChoiceIDs.Any(string.IsNullOrWhiteSpace) || column.ChoiceIDs.Distinct(StringComparer.Ordinal).Count() != column.ChoiceIDs.Length))
                 throw new ArgumentException("Choice columns require unique stable option IDs.");
@@ -50,6 +52,10 @@ public static class FormTableInput
         ArgumentNullException.ThrowIfNull(response);
         var issues = new List<FormTableValidationIssue>();
         void Issue(string code, Guid? row = null, Guid? column = null) => issues.Add(new(code, definition.FieldID, row, column));
+        // These records are also read from persisted/serialized response payloads. A non-nullable
+        // C# annotation is not a runtime schema check: reject malformed collections as typed issues
+        // instead of leaking NullReferenceException out of the Data persistence adapter.
+        if (response.Rows is null) { Issue("MissingRows"); return issues; }
         if (response.FieldID != definition.FieldID) { Issue("FieldIdentityMismatch"); return issues; }
         if (response.Rows.Count < definition.MinimumRows || response.Rows.Count > definition.MaximumRows) Issue("RowCountOutOfRange");
         if (response.Rows.Count > 10000) return issues; // No unbounded processing after a rejected oversized response.
@@ -60,8 +66,21 @@ public static class FormTableInput
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var row in response.Rows)
         {
+            if (row is null) { Issue("InvalidRowIdentity"); continue; }
             if (row.RowID == Guid.Empty || !rowIDs.Add(row.RowID)) Issue("InvalidRowIdentity", row.RowID);
             if (!definition.AllowAddedRows && !fixedRows.Contains(row.RowID)) Issue("AddedRowsNotAllowed", row.RowID);
+            if (row.Cells is null)
+            {
+                Issue("MissingCells", row.RowID);
+                continue;
+            }
+            // The schema bounds the maximum useful cell count. Refuse oversize rows before
+            // enumerating unknown keys; retain the row identity and make no lossy projection.
+            if (row.Cells.Count > definition.Columns.Count)
+            {
+                Issue("UnexpectedCellCount", row.RowID);
+                continue;
+            }
             foreach (var key in row.Cells.Keys)
                 if (!columns.ContainsKey(key)) Issue("UnknownColumn", row.RowID, key);
             foreach (var column in definition.Columns)
@@ -89,21 +108,35 @@ public static class FormTableInput
         if (value.ValueKind == JsonValueKind.String) return "string:" + value.GetString();
         if (value.ValueKind == JsonValueKind.Object && value.TryGetProperty("tableID", out var table)
             && table.ValueKind == JsonValueKind.String && table.TryGetGuid(out var id)
-            && value.TryGetProperty("recordID", out var record) && record.ValueKind == JsonValueKind.String)
-            return "reference:" + JsonSerializer.Serialize(new[] { id.ToString("N"), record.GetString() });
+            && id != Guid.Empty && value.TryGetProperty("recordID", out var record)
+            && record.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(record.GetString()))
+        {
+            var recordValue = record.GetString()!;
+            // Schema v1 historically allowed stable non-Guid record locators. Normalize current
+            // Guid identifiers across textual formats without changing those persisted legacy keys.
+            var canonicalRecordID = Guid.TryParse(recordValue, out var recordID) && recordID != Guid.Empty
+                ? recordID.ToString("N") : recordValue;
+            return "reference:" + JsonSerializer.Serialize(new[] { id.ToString("N"), canonicalRecordID });
+        }
         return value.ValueKind + ":" + value.GetRawText();
     }
     private static bool ValidCell(FormTableColumn column, JsonElement value) => column.Type switch
     {
-        FormTableCellType.Text => value.ValueKind == JsonValueKind.String && value.GetString()!.Length <= 65536 && (!column.Required || value.GetString()!.Length > 0),
+        FormTableCellType.Text => value.ValueKind == JsonValueKind.String && value.GetString()!.Length <= 65536
+            && (!column.Required || !string.IsNullOrWhiteSpace(value.GetString())),
         FormTableCellType.Number => value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out var number)
             && (column.Minimum is null || number >= column.Minimum) && (column.Maximum is null || number <= column.Maximum),
         FormTableCellType.Boolean => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
         FormTableCellType.Date => value.ValueKind == JsonValueKind.String && DateOnly.TryParseExact(value.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _),
         FormTableCellType.Choice => value.ValueKind == JsonValueKind.String && column.ChoiceIDs!.Contains(value.GetString(), StringComparer.Ordinal),
-        FormTableCellType.Reference => value.ValueKind == JsonValueKind.Object && value.TryGetProperty("tableID", out var table)
-            && table.ValueKind == JsonValueKind.String && table.TryGetGuid(out var tableID) && tableID == column.ReferencedTableID
-            && value.TryGetProperty("recordID", out var record) && record.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(record.GetString()),
+        FormTableCellType.Reference => ValidReference(column, value),
         _ => false
     };
+
+    private static bool ValidReference(FormTableColumn column, JsonElement value) =>
+        value.ValueKind == JsonValueKind.Object && value.TryGetProperty("tableID", out var table)
+        && table.ValueKind == JsonValueKind.String && table.TryGetGuid(out var tableID)
+        && tableID != Guid.Empty && tableID == column.ReferencedTableID
+        && value.TryGetProperty("recordID", out var record) && record.ValueKind == JsonValueKind.String
+        && !string.IsNullOrWhiteSpace(record.GetString());
 }

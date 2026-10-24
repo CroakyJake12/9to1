@@ -18,6 +18,7 @@ public sealed class FormDataResponseWriteService(FormDataRecordPreparationServic
         responses.ReadDataWritesAsync(formID, responseID, cancellationToken);
 
     public Task<FormDataWriteJournalResult> ReconcileAsync(Guid formID, Guid responseID, Guid operationID,
-        CancellationToken cancellationToken = default) =>
-        responses.ReconcileDataWriteAsync(formID, responseID, operationID, receipts, cancellationToken);
+        CancellationToken cancellationToken = default) => operationID == Guid.Empty
+        ? Task.FromResult(new FormDataWriteJournalResult(false, "InvalidArgument", null))
+        : responses.ReconcileDataWriteAsync(formID, responseID, operationID, receipts, cancellationToken);
 }

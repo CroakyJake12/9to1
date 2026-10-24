@@ -10,20 +10,24 @@ public static class FormResponseSubmissionProjection
 {
     public static FormsSubmission Create(FormProject project, FormResponse response)
     {
-        var captured = FormProjectCodec.Capture(project);
+        ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(response);
+        var captured = FormProjectCodec.Capture(project);
         if (response.FormID != captured.FormID || response.ProjectRevision != captured.Revision || response.FormVersionID == Guid.Empty
             || response.ResponseID == Guid.Empty || response.State != FormResponseState.Submitted || response.SubmittedAt is null
             || response.Revision < 1 || response.Revision > int.MaxValue || response.StartedAt == default || response.SubmittedAt < response.StartedAt)
             throw new InvalidDataException("The submitted response does not match the pinned canonical form/version.");
-        if (response.Answers.Count > FormsSubmissionLogic.MaxAnswersPerSubmission || response.Answers.Select(answer => answer.FieldID).Distinct().Count() != response.Answers.Count)
+        if (response.Answers is null || response.Answers.Count > FormsSubmissionLogic.MaxAnswersPerSubmission
+            || response.Answers.Any(answer => answer is null)
+            || response.Answers.Select(answer => answer.FieldID).Distinct().Count() != response.Answers.Count)
             throw new InvalidDataException("Response exceeds the configured Data response storage capability or repeats field identity.");
         var fields = captured.Fields.ToDictionary(field => field.FieldID);
         var answers = new Dictionary<string, FormsAnswer>(StringComparer.Ordinal);
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var answer in response.Answers)
         {
-            if (!fields.TryGetValue(answer.FieldID, out var field) || FormAnswerValidation.Validate(field, answer.Value) is not null)
+            if (!fields.TryGetValue(answer.FieldID, out var field) || answer.Value.ValueKind == JsonValueKind.Undefined
+                || FormAnswerValidation.Validate(field, answer.Value) is not null)
                 throw new InvalidDataException("The answer does not match its published field schema.");
             var key = answer.FieldID.ToString("D");
             var binding = field.DataBindingID is { } bindingID ? captured.DataBindings.Single(item => item.BindingID == bindingID) : null;
