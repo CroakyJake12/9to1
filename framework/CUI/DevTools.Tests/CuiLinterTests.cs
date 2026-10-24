@@ -23,6 +23,14 @@ public sealed class CuiLinterTests
     }
 
     [Fact]
+    public void Comment_markers_inside_quoted_attributes_are_not_linted_as_comments()
+    {
+        var source = "<Cui>\n    <Page>\n        <Text Text=\"literal <# marker <# value #> #>\" />\n    </Page>\n</Cui>\n";
+
+        Assert.DoesNotContain(Linter.Lint(source, Parse(source)), item => item.Rule.Code == "CUIL001");
+    }
+
+    [Fact]
     public void Underscored_and_spaced_symbol_in_the_same_scope_is_ambiguous()
     {
         var source = "<Cui>\n    <Templates>\n        <Template name=\"Vertical_Stack\"><Text id=\"a\">a</Text></Template>\n        <Template name=\"Vertical Stack\"><Text id=\"b\">b</Text></Template>\n    </Templates>\n    <Page>\n        <Vertical_Stack />\n        <Vertical Stack />\n    </Page>\n</Cui>\n";
@@ -81,11 +89,40 @@ public sealed class CuiLinterTests
     }
 
     [Fact]
+    public void Action_event_selector_diagnostic_targets_its_visual_owner()
+    {
+        var source = "<Cui>\n    <Actions><Action Name=\"Save\" Command=\"save\" /></Actions>\n    <Page>\n        <Button><ActionEvent Type=\"Clicked\" Action=\"Save\" /></Button>\n    </Page>\n</Cui>";
+
+        var finding = Assert.Single(Linter.Lint(source, Parse(source)), item => item.Rule.Code == "CUIL007");
+
+        Assert.Equal(4, finding.Diagnostic.Span.Start.Line);
+        Assert.Contains("Button", finding.Diagnostic.Message);
+    }
+
+    [Fact]
     public void Semantically_targeted_clean_fixture_produces_no_findings()
     {
         var source = "<Cui>\n    <Page>\n        <Button id=\"save\" role=\"button\" accessibility-name=\"Save\" action=\"save\" />\n    </Page>\n</Cui>\n";
 
         Assert.Empty(Linter.Lint(source, Parse(source)));
+    }
+
+    [Fact]
+    public void Automation_id_is_a_stable_selector_for_an_action()
+    {
+        var source = "<Cui>\n    <Page>\n        <Button automation-id=\"save\" action=\"save\" />\n    </Page>\n</Cui>\n";
+
+        Assert.DoesNotContain(Linter.Lint(source, Parse(source)), item => item.Rule.Code == "CUIL007");
+    }
+
+    [Theory]
+    [InlineData("role=\"button\"")]
+    [InlineData("accessibility-name=\"Save\"")]
+    public void Role_or_accessible_name_is_a_stable_selector_for_an_action(string selector)
+    {
+        var source = $"<Cui>\n    <Page>\n        <Button {selector} action=\"save\" />\n    </Page>\n</Cui>\n";
+
+        Assert.DoesNotContain(Linter.Lint(source, Parse(source)), item => item.Rule.Code == "CUIL007");
     }
 
     [Fact]

@@ -153,11 +153,21 @@ public sealed class CuiLiveTreeInspector
     {
         var diagnostic = GetAuthored(id);
         if (diagnostic is null || !_controls.TryGetValue(id, out var control)) return [];
+        // The runtime diagnostic availability/registration values describe the single
+        // command stored on the native control. A component may author several action
+        // routes, so applying that one command's status to every route would fabricate
+        // routing evidence. Keep the per-action route status unknown in that case.
+        var (registered, available) = ResolveActionRouteStatus(
+            diagnostic.Actions.Count, diagnostic.ActionRegistered, diagnostic.ActionAvailable);
         return Array.AsReadOnly(diagnostic.Actions.Select(pair => new CuiActionTrace(
             pair.Key, pair.Value.Name, Source(pair.Value.Span, diagnostic.AuthoredId),
             diagnostic.DispatcherConnected, diagnostic.ActionsWired,
-            control.IsEnabled, diagnostic.ActionRegistered, diagnostic.ActionAvailable)).ToArray());
+            control.IsEnabled, registered, available)).ToArray());
     }
+
+    internal static (bool? Registered, bool? Available) ResolveActionRouteStatus(
+        int authoredRouteCount, bool? registered, bool? available) =>
+        authoredRouteCount == 1 ? (registered, available) : (null, null);
 
     public IReadOnlyList<CuiVisualPropertyTrace> GetVisualProperties(ElementId id)
     {

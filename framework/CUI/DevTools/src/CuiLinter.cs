@@ -120,9 +120,17 @@ public sealed class CuiLinter
         var index = 0;
         while (index < source.Length)
         {
-            if (!source.AsSpan(index).StartsWith("<#", StringComparison.Ordinal))
+            if (source[index] != '<')
             {
                 index++;
+                continue;
+            }
+
+            if (!source.AsSpan(index).StartsWith("<#", StringComparison.Ordinal))
+            {
+                var tagEnd = TagEnd(source, index);
+                if (tagEnd < 0) yield break;
+                index = tagEnd + 1;
                 continue;
             }
 
@@ -139,6 +147,25 @@ public sealed class CuiLinter
             if (end < 0) yield break;
             index = end + 2;
         }
+    }
+
+    private static int TagEnd(string source, int start)
+    {
+        var quote = '\0';
+        for (var index = start + 1; index < source.Length; index++)
+        {
+            var character = source[index];
+            if (quote != '\0')
+            {
+                if (character == quote && source[index - 1] != '\\') quote = '\0';
+                continue;
+            }
+
+            if (character is '"' or '\'') quote = character;
+            else if (character == '>') return index;
+        }
+
+        return -1;
     }
 
     private static List<UserSymbol> CollectSymbols(CuiDocument document)
@@ -255,11 +282,17 @@ public sealed class CuiLinter
     {
         foreach (var component in document.Components.SelectMany(item => item.DescendantsAndSelf()))
         {
-            if (component.Actions.Count == 0 || component.Name is not null) continue;
+            if (CuiActionEventContract.IsActionEvent(component)) continue;
+
+            var hasOwnedActionEvent = component.Children.Any(child =>
+                CuiActionEventContract.IsActionEvent(child) && child.Actions.ContainsKey("action"));
+            if ((component.Actions.Count == 0 && !hasOwnedActionEvent)
+                || component.Name is not null
+                || HasCanonicalProperty(component, "AutomationId")) continue;
 
             var hasRole = HasCanonicalProperty(component, "Role");
             var hasAccessibleName = HasCanonicalProperty(component, "AccessibleName");
-            if (hasRole && hasAccessibleName) continue;
+            if (hasRole || hasAccessibleName) continue;
 
             yield return Finding(MissingSemanticSelector, component.Span,
                 $"Element '{component.Type}' exposes an action but has no id, role or accessible name, so automated tests fall back to raw coordinates. Add an id, and a role or accessible name where the default role is not sufficient.");

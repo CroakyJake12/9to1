@@ -213,6 +213,56 @@ public sealed class CuiThemeResourceInspectorTests
     }
 
     [Fact]
+    public void Resource_used_by_an_action_parameter_is_not_reported_unreferenced()
+    {
+        var document = Parse("<Cui><Resources><Resource Key=\"message\" Value=\"Hello\" /></Resources><Actions><Action Name=\"Save\" Command=\"save\" Parameter=\"{Resource message}\" /></Actions><Page /></Cui>");
+
+        var inspection = Inspector.Inspect(document);
+
+        var resource = Assert.Single(inspection.Resources);
+        Assert.Contains(new ElementId("action:Save"), resource.ReferencedBy);
+        Assert.DoesNotContain(inspection.Findings, item => item.Rule.Code == "CUIT006");
+    }
+
+    [Fact]
+    public void Resource_used_only_inside_a_template_is_not_reported_unreferenced()
+    {
+        var document = Parse("<Cui><Resources><Resource Key=\"accent\" Value=\"Blue\" /></Resources><Templates><Template Name=\"Card\"><Text ID=\"title\" Foreground=\"{Resource accent}\">Title</Text></Template></Templates><Page><Card /></Page></Cui>");
+
+        var inspection = Inspector.Inspect(document);
+
+        var resource = Assert.Single(inspection.Resources);
+        Assert.Contains(new ElementId("template:Card"), resource.ReferencedBy);
+        Assert.DoesNotContain(inspection.Findings, item => item.Rule.Code == "CUIT006");
+    }
+
+    [Fact]
+    public void Resource_references_in_supported_conditions_are_accounted_for()
+    {
+        var document = Parse("<Cui><Resources><Resource Key=\"enabled\" Value=\"True\" /></Resources><Variable Type=\"bool\" ID=\"Ready\">False</Variable><Actions><Action Name=\"Complete\" Command=\"complete\"><Set Target=\"Ready\" Value=\"True\" When=\"{Resource enabled}\" /></Action></Actions><Effects><Effect Name=\"completion\" Condition=\"{Resource enabled}\" Action=\"Complete\" /></Effects><Page><If ID=\"conditional\" Condition=\"{Resource enabled}\"><Text>Visible</Text></If></Page></Cui>");
+
+        var inspection = Inspector.Inspect(document);
+        var resource = Assert.Single(inspection.Resources);
+
+        Assert.Contains(new ElementId("id:conditional"), resource.ReferencedBy);
+        Assert.Contains(new ElementId("action:Complete"), resource.ReferencedBy);
+        Assert.Contains(new ElementId("effect:completion"), resource.ReferencedBy);
+        Assert.DoesNotContain(inspection.Findings, item => item.Rule.Code == "CUIT006");
+    }
+
+    [Fact]
+    public void Resource_used_by_a_property_region_is_not_reported_unreferenced()
+    {
+        var document = Parse("<Cui><Resources><Resource Key=\"accent\" Value=\"Blue\" /></Resources><Page><Property Property=\"Foreground\" Value=\"{Resource accent}\"><Text ID=\"title\">Title</Text></Property></Page></Cui>");
+
+        var inspection = Inspector.Inspect(document);
+
+        var resource = Assert.Single(inspection.Resources);
+        Assert.Contains(IdOf(document, "Property", null), resource.ReferencedBy);
+        Assert.DoesNotContain(inspection.Findings, item => item.Rule.Code == "CUIT006");
+    }
+
+    [Fact]
     public void Resource_reference_to_an_undeclared_key_is_reported()
     {
         var document = Parse("<Cui>\n    <Resources>\n        <Resource key=\"accent\" value=\"{Resource missing}\" />\n    </Resources>\n    <Page>\n        <Text id=\"t\" Text=\"{Resource accent}\">x</Text>\n    </Page>\n</Cui>\n");
@@ -268,6 +318,37 @@ public sealed class CuiThemeResourceInspectorTests
     }
 
     [Fact]
+    public void Style_snapshot_includes_authored_component_classes()
+    {
+        var document = Parse("<Cui><Styles><Style selector=\"accent\"><Setter property=\"Foreground\" value=\"Blue\" /></Style></Styles><Page><Text ID=\"title\" Class=\"accent compact\">Title</Text></Page></Cui>");
+        var inspection = Inspector.Inspect(document);
+
+        var snapshot = inspection.SnapshotFor(IdOf(document, "Text", "title"));
+
+        Assert.Equal(["accent", "compact"], snapshot.Classes);
+        Assert.Empty(snapshot.PseudoClasses);
+        var setter = Assert.Single(snapshot.Values);
+        Assert.Equal("Foreground", setter.Property);
+        Assert.Equal("Blue", setter.Value);
+        Assert.Equal("accent", setter.Rule);
+    }
+
+    [Fact]
+    public void Duplicate_style_selectors_merge_and_report_the_source_order_winner()
+    {
+        var document = Parse("<Cui><Styles><Style selector=\"{::title}\"><Setter property=\"Color\" value=\"Red\" /></Style><Style selector=\"{::title}\"><Setter property=\"Foreground\" value=\"Blue\" /></Style></Styles><Page><Text ID=\"title\">Title</Text></Page></Cui>");
+        var inspection = Inspector.Inspect(document);
+        var titleId = IdOf(document, "Text", "title");
+
+        Assert.Equal(2, inspection.Styles.Count);
+        Assert.Equal(2, inspection.Style("{::title}")!.Setters.Count);
+        var values = inspection.SnapshotFor(titleId).Values;
+        Assert.Equal(2, values.Count);
+        Assert.Contains(values, value => value.Value == "Red" && value.IsOverridden);
+        Assert.Contains(values, value => value.Value == "Blue" && !value.IsOverridden);
+    }
+
+    [Fact]
     public void Precedence_resolves_from_the_highest_level_present()
     {
         var overlay = Parse("<Cui>\n    <Styles>\n        <Style selector=\"{::t}\"><Setter property=\"Color\" value=\"Pink\" /></Style>\n    </Styles>\n    <Page>\n        <Text id=\"t\" Color=\"Green\">x</Text>\n    </Page>\n</Cui>\n");
@@ -284,8 +365,14 @@ public sealed class CuiThemeResourceInspectorTests
             Inspector.Inspect(instance).PrecedenceLevelOf(new ElementId("id:t"), "Color"));
 
         var definition = Parse("<Cui>\n    <Text (Definition) ID=\"Callout\" Color=\"Green\">x</Text>\n    <Page>\n        <Callout ID=\"inst\" />\n    </Page>\n</Cui>\n");
+        var definitionInspection = Inspector.Inspect(definition);
         Assert.Equal(CuiThemeResourceInspector.PrecedenceDefinitionDefault,
-            Inspector.Inspect(definition).PrecedenceLevelOf(new ElementId("id:inst"), "Color"));
+            definitionInspection.PrecedenceLevelOf(new ElementId("id:inst"), "Color"));
+        var definitionId = IdOf(definition, "Text", "Callout");
+        Assert.Equal(CuiThemeResourceInspector.PrecedenceDefinitionDefault,
+            definitionInspection.PrecedenceLevelOf(definitionId, "Color"));
+        Assert.Equal(CuiThemeResourceInspector.PrecedenceBuiltInDefault,
+            definitionInspection.PrecedenceLevelOf(definitionId, "FontSize"));
 
         var catalog = new CuiThemeDefinitionCatalog();
         catalog.Add(new CuiThemeDefinition("Rainbow", "Professional", [

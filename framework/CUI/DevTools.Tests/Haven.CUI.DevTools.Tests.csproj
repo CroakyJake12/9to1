@@ -8,6 +8,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Runtime.Tests\CakeOS.Cui.Runtime.Tests.csproj" />
     <ProjectReference Include="..\Compiler\CakeOS.Cui.Compiler.csproj" />
     <ProjectReference Include="..\DevTools\src\Haven.CUI.DevTools.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

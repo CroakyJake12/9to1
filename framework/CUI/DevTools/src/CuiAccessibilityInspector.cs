@@ -83,8 +83,15 @@ public sealed class CuiAccessibilityInspector
                 .Select(pair => pair.Key)
                 .Order(StringComparer.Ordinal)
                 .ToArray();
-            var actions = component.Actions.Keys.Order(StringComparer.Ordinal).ToArray();
-            var hasStableSelector = component.Name is not null || role is not null || name is not null;
+            var actions = component.Actions.Keys
+                .Concat(component.Children
+                    .Where(child => CuiActionEventContract.IsActionEvent(child)
+                                    && child.Actions.ContainsKey("action"))
+                    .Select(ActionEventIdentity))
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+            var hasStableSelector = component.Name is not null || automationId is not null
+                                    || role is not null || name is not null;
             var elementId = new ElementId(component.StableId);
 
             var node = new CuiAccessibilityNode(elementId, component.Type, component.Name, role, name, description,
@@ -101,15 +108,22 @@ public sealed class CuiAccessibilityInspector
                     LocationOf(document.SourceName, component.Span, component.Name)));
 
             var children = component.Children.Concat(component.ElseChildren)
-                .Where(child => !child.IsDefinition)
+                .Where(child => !child.IsDefinition && !CuiActionEventContract.IsActionEvent(child))
                 .Select(Build);
             return new CuiElementNode(elementId, component.Type, component.Name, component.Classes, component.Text,
                 children, automationId, name, role, focusable, hidden);
         }
 
         var root = new CuiElementNode(new ElementId("document"), "Cui", null, [], null,
-            document.Components.Select(Build), null, null, null, false, false);
+            document.Components.Where(component => !CuiActionEventContract.IsActionEvent(component)).Select(Build),
+            null, null, null, false, false);
         return new CuiAccessibilityInspection(new CuiElementTree(root, revision), nodes, findings);
+    }
+
+    private static string ActionEventIdentity(CuiComponent actionEvent)
+    {
+        actionEvent.TryGetLiteralAttribute("Type", out var eventType);
+        return string.IsNullOrWhiteSpace(eventType) ? "ActionEvent" : $"ActionEvent:{eventType}";
     }
 
     private static Dictionary<string, CuiValue> Canonicalize(CuiComponent component)

@@ -87,7 +87,8 @@ public sealed class CuiThemeResourceInspection
         }
         foreach (var scope in Scopes) _effectiveTheme[scope.ElementId] = scope.EffectiveTheme;
         _resources = Resources.ToDictionary(resource => resource.Key, StringComparer.Ordinal);
-        _styles = Styles.ToDictionary(style => style.Selector, StringComparer.Ordinal);
+        _styles = Styles.GroupBy(style => style.Selector, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, MergeStyles, StringComparer.Ordinal);
     }
 
     public CuiDocument Document { get; }
@@ -138,9 +139,13 @@ public sealed class CuiThemeResourceInspection
         if (!component.IsDefinition && component.Properties.Any(pair => EqualsCanonical(pair.Key, canonical)))
             return CuiThemeResourceInspector.PrecedenceExplicitInstance;
 
-        if (component.IsDefinition ||
-            _definitions.TryGetValue(component.Type, out var definition) &&
-            definition.Properties.Any(pair => EqualsCanonical(pair.Key, canonical)))
+        if (component.IsDefinition
+            && component.Properties.Any(pair => EqualsCanonical(pair.Key, canonical)))
+            return CuiThemeResourceInspector.PrecedenceDefinitionDefault;
+
+        if (!component.IsDefinition
+            && _definitions.TryGetValue(component.Type, out var definition)
+            && definition.Properties.Any(pair => EqualsCanonical(pair.Key, canonical)))
             return CuiThemeResourceInspector.PrecedenceDefinitionDefault;
 
         var theme = _effectiveTheme.GetValueOrDefault(elementId);
@@ -164,17 +169,38 @@ public sealed class CuiThemeResourceInspection
 
     public StyleSnapshot SnapshotFor(ElementId elementId)
     {
-        var values = Styles.Where(style => style.MatchedElements.Contains(elementId))
-            .SelectMany(style => style.Setters.Select(setter => new StyleValueSnapshot(
-                setter.Property,
-                setter.Value,
-                style.Selector,
-                setter.PrecedenceLevel == CuiThemeResourceInspector.PrecedenceStyleOverlay,
-                setter.PrecedenceLevel == CuiThemeResourceInspector.PrecedenceInheritedTheme)))
+        var component = _components.GetValueOrDefault(elementId);
+        var setters = Styles.Where(style => style.MatchedElements.Contains(elementId))
+            .SelectMany(style => style.Setters.Select(setter => (Style: style, Setter: setter)))
+            .ToArray();
+        var lastSetterByRuleAndProperty = new Dictionary<(string Rule, string Property), int>();
+        for (var index = 0; index < setters.Length; index++)
+            lastSetterByRuleAndProperty[(setters[index].Style.Selector,
+                CanonicalName(setters[index].Setter.Property))] = index;
+
+        var values = setters.Select((entry, index) => new StyleValueSnapshot(
+                entry.Setter.Property,
+                entry.Setter.Value,
+                entry.Style.Selector,
+                lastSetterByRuleAndProperty[(entry.Style.Selector, CanonicalName(entry.Setter.Property))] != index,
+                entry.Setter.PrecedenceLevel == CuiThemeResourceInspector.PrecedenceInheritedTheme))
             .OrderBy(value => value.Property, StringComparer.Ordinal)
             .ToArray();
 
-        return new StyleSnapshot(elementId.Value, [], [], Array.AsReadOnly(values));
+        return new StyleSnapshot(elementId.Value,
+            DiagnosticsCollections.Copy(component?.Classes), [], Array.AsReadOnly(values));
+    }
+
+    private static CuiStyleInspection MergeStyles(IEnumerable<CuiStyleInspection> styles)
+    {
+        var declarations = styles.ToArray();
+        var latest = declarations[^1];
+        return latest with
+        {
+            Setters = DiagnosticsCollections.Copy(declarations.SelectMany(style => style.Setters)),
+            MatchedElements = DiagnosticsCollections.Copy(
+                declarations.SelectMany(style => style.MatchedElements).Distinct())
+        };
     }
 
     internal static string CanonicalName(string property) =>
@@ -368,18 +394,53 @@ public sealed class CuiThemeResourceInspector
             if (!list.Contains(id)) list.Add(id);
         }
 
+        void RecordValue(CuiValue? value, ElementId id)
+        {
+            if (value is CuiResourceValue resource) Record(resource.Key, id);
+        }
+
+        void RecordCondition(CuiCondition? condition, ElementId id) =>
+            RecordValue(condition?.Test, id);
+
         foreach (var component in document.Components.SelectMany(item => item.DescendantsAndSelf()))
         {
             var id = new ElementId(component.StableId);
             foreach (var value in component.Properties.Values)
-                if (value is CuiResourceValue resource) Record(resource.Key, id);
+                RecordValue(value, id);
             foreach (var part in component.TextParts)
-                if (part is CuiExpressionTextPart expression && expression.Value is CuiResourceValue resource) Record(resource.Key, id);
+                if (part is CuiExpressionTextPart expression) RecordValue(expression.Value, id);
+            RecordCondition(component.Condition, id);
+            if (component.PropertyRegion is { } propertyRegion) RecordValue(propertyRegion.Value, id);
+            if (component.Repeat is { } repeat) RecordValue(repeat.Source, id);
         }
+
+        foreach (var template in document.Templates.Values)
+        foreach (var component in template.Content.SelectMany(item => item.DescendantsAndSelf()))
+        {
+            var id = new ElementId($"template:{template.Name}");
+            foreach (var value in component.Properties.Values)
+                RecordValue(value, id);
+            foreach (var part in component.TextParts)
+                if (part is CuiExpressionTextPart expression) RecordValue(expression.Value, id);
+            RecordCondition(component.Condition, id);
+            if (component.PropertyRegion is { } propertyRegion) RecordValue(propertyRegion.Value, id);
+            if (component.Repeat is { } repeat) RecordValue(repeat.Source, id);
+        }
+
+        foreach (var action in document.Actions.Values)
+        {
+            var id = new ElementId($"action:{action.Name}");
+            RecordValue(action.Parameter, id);
+            foreach (var set in action.Sets ?? Array.Empty<CuiSetDirective>())
+                RecordCondition(set.When, id);
+        }
+
+        foreach (var effect in document.Effects)
+            RecordCondition(effect.Condition, new ElementId($"effect:{effect.Name}"));
 
         foreach (var style in document.Styles)
         foreach (var setter in style.Setters)
-            if (setter.Value is CuiResourceValue resource) Record(resource.Key, new ElementId("style:" + style.Selector));
+            RecordValue(setter.Value, new ElementId("style:" + style.Selector));
 
         var result = new List<CuiResourceInspection>();
         var reportedCycles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

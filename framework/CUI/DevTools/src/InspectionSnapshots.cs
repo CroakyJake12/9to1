@@ -11,6 +11,9 @@ public sealed record LayoutSnapshot(
     bool ClipsToBounds,
     string? Transform);
 
+/// <summary>One authored style setter. IsOverridden is true when a later declaration using the
+/// same selector sets the same canonical property and wins by source order; differing selector
+/// specificity is not inferred by this source-only snapshot.</summary>
 public sealed record StyleValueSnapshot(string Property, string Value, string? Rule, bool IsOverridden, bool IsInherited);
 
 public sealed record StyleSnapshot(
