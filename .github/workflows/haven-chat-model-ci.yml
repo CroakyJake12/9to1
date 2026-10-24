@@ -348,6 +348,8 @@ jobs:
           (evidence/'sdk-install.json').write_text(json.dumps(receipt,sort_keys=True)+'\n')
           print(json.dumps(receipt,sort_keys=True))
           PYCODE
+      # Optional Notes checks are selected only by the hash-pinned Root delegation.
+      # The same SDK1 owner, source export, bounds and CUI regression stages apply.
       - name: Observe actual CI host then adopt only delegated SDK1 and run owning checks
         shell: bash
         env:

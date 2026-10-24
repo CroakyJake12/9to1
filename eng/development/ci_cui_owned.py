@@ -18,6 +18,8 @@ BASE = '9505fcb85c640e8f444fb9bef842574d6df56a5c'
 ANCHOR = '4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522'
 PRODUCT = os.environ.get('EXPECTED_PRODUCT_COMMIT', '')
 PROJECT = 'framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj'
+NOTES_PROJECT = 'apps/Web/Write/Storage/Tests/BrowserNotes.Storage.Tests.csproj'
+CHECK_SCOPES = ('cui', 'cui-and-notes')
 FILTER = 'FullyQualifiedName~CakeOS.Cui.Runtime.Tests.CuiIconMenuTests|FullyQualifiedName~CakeOS.Cui.Runtime.Tests.CuiKeyboardTooltipHostTests'
 WORKFLOW = '.github/workflows/haven-chat-model-ci.yml'
 HARNESS = 'eng/development/ci_cui_owned.py'
@@ -244,6 +246,35 @@ def actual_test_classes(path):
     return counts
 
 
+
+def check_scope(value):
+    need(type(value) is str and value in CHECK_SCOPES, 'Unknown owning check scope; only cui or cui-and-notes is delegated')
+    return value
+
+
+def notes_commands(scope, sdk, source):
+    check_scope(scope)
+    if scope == 'cui': return {}
+    return {
+        'notes-restore':[str(sdk),'restore',NOTES_PROJECT,'--configfile','NuGet.Config','--disable-build-servers','--disable-parallel','-p:Configuration=Release','-p:UseSharedCompilation=false','-p:BuildInParallel=false'],
+        'notes-build':[str(sdk),'build',NOTES_PROJECT,'-c','Release','--no-restore','--disable-build-servers','-m:1','-nodeReuse:false','-p:UseSharedCompilation=false'],
+        # Execute the exact previously built owning executable, without another build.
+        'notes-test':[str(sdk),str(source/Path(NOTES_PROJECT).parent/'bin/Release/net10.0/BrowserNotes.Storage.Tests.dll')]
+    }
+
+
+def actual_notes_tests(path):
+    text=path.read_text()
+    summaries=re.findall(r'^Discovered=(\d+) Executed=(\d+) Passed=(\d+) Failed=(\d+) Skipped=(\d+) Scope=UNIT canonical repository \+ scripted platform transport$',text,re.M)
+    passed=re.findall(r'^PASS (.+)$',text,re.M)
+    need(len(summaries)==1 and not re.search(r'^FAIL ',text,re.M), 'Notes owning executable did not report one successful complete test summary')
+    discovered,executed,success,failed,skipped=map(int,summaries[0])
+    need(discovered>=27 and discovered==executed==success==len(passed)==len(set(passed)) and failed==skipped==0,
+        'Notes owning executable omitted, failed, skipped or duplicated required cases')
+    return {'result':'PASS','discovered':discovered,'executed':executed,'passed':success,'failed':failed,'skipped':skipped,
+        'scope':'Actual canonical repository and scripted browser-transport owning executable; actual browser NOT_RUN'}
+
+
 def main():
     evidence=Path(os.environ['RUNNER_TEMP'])/'9to1-cui-evidence';evidence.mkdir(mode=0o700,exist_ok=True)
     temporary=Path(os.environ['RUNNER_TEMP'])/'9to1-cui-context';temporary.mkdir(mode=0o700)
@@ -261,6 +292,8 @@ def main():
         need(instruction.get('schema')=='9to1.root-live/v1' and instruction.get('issuer',{}).get('owner')==OWNER
              and product_revision(instruction.get('candidate'))==PRODUCT and instruction.get('delegation',{}).get('sdk_host_observed_adoption') is True,
              'Actual native Root SDK delegation is missing')
+        scope=check_scope(instruction.get('owning_check_scope','cui'))
+        receipt['owning_check_scope']=scope
         native=instruction['native_sdk_reservation']
         need(native.get('id')==os.environ.get('EXPECTED_RESERVATION_ID') and re.fullmatch('[A-Za-z0-9._:-]{8,160}',native['id'])
              and type(native.get('adopted_generation')) is int and native['adopted_generation']>0
@@ -302,6 +335,9 @@ def main():
             'test':[str(sdk),'test',PROJECT,'-c','Release','--no-build','--no-restore','--disable-build-servers','--filter',FILTER,'--logger','trx;LogFileName=cui-owning.trx','--results-directory',str(evidence/'test-results')]}
         project_commands['regression']=[str(sdk),'test',PROJECT,'-c','Release','--no-build','--no-restore',
             '--disable-build-servers','--logger','trx;LogFileName=cui-runtime-all.trx','--results-directory',str(evidence/'test-results')]
+        project_commands.update(notes_commands(scope,sdk,source))
+        stages=[('version',30),('restore',300),('build',900),('test',180),('regression',300)]
+        if scope=='cui-and-notes': stages.extend([('notes-restore',300),('notes-build',900),('notes-test',180)])
         state_path=temporary/'sdk-execution-projection.json';execution='github-cui-'+os.environ['GITHUB_RUN_ID']
         initial=w.initial_state(CHECKOUT,str(instruction_path))
         initial['authority']='Existing native Root remains programme authority. This is its delegated compiler-only host projection; no workers/models/milestones are created.'
@@ -326,13 +362,14 @@ def main():
                 w.apply_checkpoint(state,{'development_candidates':{execution:candidate},'execution_custody':{execution:custody},
                     'recovery_assets':{'latest-root-checkpoint':proof_pin},'last_root_checkpoint_observed':proof_pin})
             receipt.update(actual_host=host,source_manifest=manifest_pin,SDK_adoption=proof_pin,SDK_environment=GC_ENV)
-            for stage,timeout in [('version',30),('restore',300),('build',900),('test',180),('regression',300)]:
+            for stage,timeout in stages:
                 need({'device':source.stat().st_dev,'inode':source.stat().st_ino}==host['source_directory_identity'],
                     'Actual frozen SDK source directory identity changed')
                 validate_source(source,manifest,PRODUCT);require_resources(source)
                 def admission():
                     require_resources(source)
                     return w.execution_admission(state_path,execution,source,PRODUCT,manifest,manifest_pin['sha256'],Path(__file__).resolve())
+                notes_build_output=pin(Path(project_commands[stage][1])) if stage=='notes-test' else None
                 item=monitored(project_commands[stage],source,evidence/(stage+'.log'),timeout,env,admission,deadline)
                 item['stage']=stage;receipt['stages'].append(item);w.atomic(evidence/'receipt.json',receipt)
                 item['source_after']=validate_source(source,manifest,PRODUCT)
@@ -343,9 +380,13 @@ def main():
                     if stage=='test':item['test_classes']=actual_test_classes(trx)
                     else:item['scope']='Full same owning Runtime.Tests project, without a test filter; no acceptance claim'
                     item['status']=item['tests']['result']
+                if stage=='notes-test' and item['status']=='PROCESS_SUCCEEDED':
+                    item['tests']=actual_notes_tests(evidence/'notes-test.log')
+                    item['built_executable']=notes_build_output
+                    item['status']=item['tests']['result']
                 w.atomic(evidence/'receipt.json',receipt)
                 need(item['status'] in ('PROCESS_SUCCEEDED','PASS'),'Actual owning '+stage+' failed; raw diagnostic retained')
-            receipt.update(result='PASS_PARTIAL_NOT_REUSABLE',classification='OWNING_CUI_DEVELOPMENT_CHECK')
+            receipt.update(result='PASS_PARTIAL_NOT_REUSABLE',classification='OWNING_CUI_AND_NOTES_DEVELOPMENT_CHECK' if scope=='cui-and-notes' else 'OWNING_CUI_DEVELOPMENT_CHECK')
     except Exception as error:
         receipt.update(result='BLOCKED',reason=str(error),classification='INFRASTRUCTURE_OR_ACTUAL_CHECK_FAILURE')
     finally:
