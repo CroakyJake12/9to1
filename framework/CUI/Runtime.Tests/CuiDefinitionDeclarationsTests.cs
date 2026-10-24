@@ -374,10 +374,10 @@ public sealed class CuiDefinitionDeclarationsTests
             var page = Assert.IsType<Panel>(root);
             var first = Assert.IsType<CuiContainerControl>(page.Children[0]);
             var second = Assert.IsType<CuiContainerControl>(page.Children[1]);
-            var firstHost = Assert.IsType<StackPanel>(Assert.Single(first.AuthoredChildren));
-            var secondHost = Assert.IsType<StackPanel>(Assert.Single(second.AuthoredChildren));
-            var firstItem = Assert.IsType<Panel>(Assert.Single(firstHost.Children));
-            var secondItem = Assert.IsType<Panel>(Assert.Single(secondHost.Children));
+            // A canonical Repeat contributes its keyed children directly to the
+            // owning Container; only explicit legacy Panel= introduces a host.
+            var firstItem = Assert.IsType<Panel>(Assert.Single(first.AuthoredChildren));
+            var secondItem = Assert.IsType<Panel>(Assert.Single(second.AuthoredChildren));
             var firstCell = Assert.IsType<TextBlock>(Assert.Single(firstItem.Children));
             var secondCell = Assert.IsType<TextBlock>(Assert.Single(secondItem.Children));
             Assert.NotNull(firstCell.Text);
