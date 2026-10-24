@@ -14,10 +14,13 @@ internal static class SpaceLayoutEditorAdapter
 {
     public static NodeEditorDocument ToEditor(SpaceLayoutDocument? document)
     {
-        document ??= SpaceLayoutDocument.Empty;
+        document ??= new SpaceLayoutDocument([], []);
+        if (document.GraphId == Guid.Empty) document = document with { GraphId = Guid.NewGuid() };
         return new NodeEditorDocument(
             document.Nodes.Select(node => new NodeEditorNode(node.Id, node.Category, node.Title)
             {
+                TypeId = node.TypeId,
+                SchemaVersion = node.SchemaVersion,
                 Subtitle = node.Subtitle,
                 X = node.X,
                 Y = node.Y,
@@ -36,7 +39,17 @@ internal static class SpaceLayoutEditorAdapter
                 Label = edge.Label,
                 Branch = edge.Branch,
                 Metadata = edge.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)
-            }).ToArray());
+            }).ToArray())
+        {
+            GraphId = document.GraphId,
+            SchemaVersion = document.SchemaVersion,
+            Revision = document.Revision,
+            State = (NodeEditorRevisionState)document.State,
+            ConnectionProfileId = document.ConnectionProfileId,
+            Groups = document.Groups.Select(group => new NodeEditorGroup(group.Id, group.Title, group.NodeIds.ToArray(), group.Color)).ToArray(),
+            Comments = document.Comments.Select(comment => new NodeEditorComment(comment.Id, comment.Text,
+                comment.X, comment.Y, comment.Width, comment.Height)).ToArray()
+        };
     }
 
     public static SpaceLayoutDocument FromEditor(NodeEditorDocument document)
@@ -45,6 +58,8 @@ internal static class SpaceLayoutEditorAdapter
         return new SpaceLayoutDocument(
             document.Nodes.Select(node => new SpaceLayoutNode(node.Id, node.Category, node.Title)
             {
+                TypeId = node.TypeId,
+                SchemaVersion = node.SchemaVersion,
                 Subtitle = node.Subtitle,
                 X = node.X,
                 Y = node.Y,
@@ -63,7 +78,17 @@ internal static class SpaceLayoutEditorAdapter
                 Label = edge.Label,
                 Branch = edge.Branch,
                 Metadata = edge.Metadata.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal)
-            }).ToArray());
+            }).ToArray())
+        {
+            GraphId = document.GraphId,
+            SchemaVersion = document.SchemaVersion,
+            Revision = document.Revision,
+            State = (SpaceLayoutRevisionState)document.State,
+            ConnectionProfileId = document.ConnectionProfileId,
+            Groups = document.Groups.Select(group => new SpaceLayoutGroup(group.Id, group.Title, group.NodeIds.ToArray(), group.Color)).ToArray(),
+            Comments = document.Comments.Select(comment => new SpaceLayoutComment(comment.Id, comment.Text,
+                comment.X, comment.Y, comment.Width, comment.Height)).ToArray()
+        };
     }
 }
 
@@ -79,6 +104,7 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
     private SpaceDefinition _space;
     private bool _disposed;
     private bool _saving;
+    private long _editEpoch;
 
     public SpaceLayoutEditorPage(SpaceRegistry registry, SpaceDefinition space)
     {
@@ -124,9 +150,10 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         Editor.Document = SpaceLayoutEditorAdapter.ToEditor(space.LayoutDocument);
         root.Add(Editor);
 
-        Status = new HavenText(Editor.Document.Nodes.Count == 0
-            ? "Add logic nodes, connect their ports, then save."
-            : $"Loaded {Editor.Document.Nodes.Count} nodes and {Editor.Document.Edges.Count} connections.")
+        Status = new HavenText(Editor.Document.Nodes.Count == 0 && Editor.Document.Edges.Count == 0 &&
+                               Editor.Document.Groups.Count == 0 && Editor.Document.Comments.Count == 0
+            ? "Add logic nodes and connect ports; saving does not activate or execute the graph."
+            : LayoutSummary("Loaded", Editor.Document))
         { Name = "Spaces.Layout.Status", Level = TextLevel.Caption };
         Status.SetValue(HavenProperties.Row, 2);
         Status.SetValue(HavenProperties.Foreground, "TextSecondary");
@@ -173,21 +200,40 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
 
     private void AddNode(NodeEditorTemplate template)
     {
+        if (_disposed) return;
+        if (Editor.Document.Nodes.Count >= SpaceLayoutDocument.MaximumNodes)
+        {
+            Status.Content = $"This layout has reached its {SpaceLayoutDocument.MaximumNodes}-node limit. Remove a node before adding another.";
+            return;
+        }
         var offset = Editor.Document.Nodes.Count * 28d;
         Editor.AddNode(template, 60d + offset, 70d + offset);
     }
 
-    private void OnDeleteSelection(object? sender, EventArgs e) => Editor.DeleteSelection();
-    private void OnResetView(object? sender, EventArgs e) => Editor.ResetViewport();
+    private void OnDeleteSelection(object? sender, EventArgs e)
+    {
+        if (!_disposed) Editor.DeleteSelection();
+    }
+
+    private void OnResetView(object? sender, EventArgs e)
+    {
+        if (!_disposed) Editor.ResetViewport();
+    }
 
     private void OnDocumentChanged(NodeEditorDocument document)
     {
-        Status.Content = $"Unsaved changes · {document.Nodes.Count} nodes · {document.Edges.Count} connections";
+        _editEpoch++;
+        Status.Content = LayoutSummary("Unsaved changes", document);
     }
 
     private async void OnSave(object? sender, EventArgs e)
     {
         if (_saving || _disposed) return;
+        if (!CanSaveLayout(_space.LayoutDocument?.State))
+        {
+            Status.Content = "The active layout is preserved. Draft/Active publishing is not available here, so these edits remain unsaved.";
+            return;
+        }
         var diagnostics = Editor.ValidateDocument();
         if (diagnostics.Count > 0)
         {
@@ -195,24 +241,36 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
             return;
         }
 
+        var submittedEditEpoch = _editEpoch;
         _saving = true;
         Save.SetValue(HavenProperties.Enabled, false);
         Save.SetState(HavenElementState.Disabled, true);
         Status.Content = "Saving layout…";
         try
         {
-            _space = await _registry.SetLayoutAsync(_space.Id, SpaceLayoutEditorAdapter.FromEditor(Editor.Document), CancellationToken.None);
-            Status.Content = $"Saved {_space.LayoutDocument?.Nodes.Count ?? 0} nodes and {_space.LayoutDocument?.Edges.Count ?? 0} connections.";
+            _space = await _registry.SetLayoutAsync(_space.Id, SpaceLayoutEditorAdapter.FromEditor(Editor.Document),
+                CancellationToken.None, _space.Revision);
+            if (_disposed) return;
+            Status.Content = _editEpoch == submittedEditEpoch
+                ? LayoutSummary("Saved", Editor.Document)
+                : "Earlier layout saved; newer editor changes remain unsaved.";
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
+                                           InvalidOperationException or ArgumentException or System.Text.Json.JsonException)
         {
-            Status.Content = $"Layout could not be saved: {exception.Message}";
+            if (_disposed) return;
+            Status.Content = exception is SpaceRevisionConflictException
+                ? $"Layout could not be saved: {exception.Message} Your local edits remain unsaved; reopen the layout to review the latest saved version."
+                : $"Layout could not be saved: {exception.Message}";
         }
         finally
         {
             _saving = false;
-            Save.SetValue(HavenProperties.Enabled, true);
-            Save.SetState(HavenElementState.Disabled, false);
+            if (!_disposed)
+            {
+                Save.SetValue(HavenProperties.Enabled, true);
+                Save.SetState(HavenElementState.Disabled, false);
+            }
         }
     }
 
@@ -223,6 +281,18 @@ internal sealed class SpaceLayoutEditorPage : UserControl, IDisposable
         button.SetValue(HavenProperties.MinHeight, HavenLength.Px(38));
         return button;
     }
+
+    internal static string LayoutSummary(string prefix, NodeEditorDocument document)
+    {
+        var summary = $"{prefix} {document.Nodes.Count} nodes, {document.Edges.Count} connections, {document.Groups.Count} groups and {document.Comments.Count} comments.";
+        var untypedWarning = document.Nodes.Any(node => string.IsNullOrWhiteSpace(node.TypeId))
+            ? " Untyped nodes are not executable."
+            : string.Empty;
+        return summary + untypedWarning + " Layout only; this editor does not activate or execute graphs.";
+    }
+
+    internal static bool CanSaveLayout(SpaceLayoutRevisionState? stored) =>
+        stored != SpaceLayoutRevisionState.Active;
 
     public void Dispose()
     {

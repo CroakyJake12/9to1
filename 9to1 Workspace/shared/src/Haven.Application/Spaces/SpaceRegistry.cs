@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Haven.Application;
@@ -71,7 +73,7 @@ public sealed partial class SpaceRegistry
         return spaces.FirstOrDefault(space => space.Id == id);
     }
 
-    /// <summary>Reads only an existing stored Space; never seeds, migrates or writes settings.
+    /// <summary>Reads only an existing stored Space; never seeds, persists migrations or writes settings.
     /// This snapshot grants no access: callers retain their actual owner/resource authority checks.</summary>
     public async Task<SpaceDefinition?> ReadExistingAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -85,7 +87,7 @@ public sealed partial class SpaceRegistry
     }
 
     /// <summary>Reads a bounded census of active existing stored Spaces only. Never seeds,
-    /// reconciles, migrates, changes current selection or grants access. Over-bound inventories
+    /// reconciles, persists migrations, changes current selection or grants access. Over-bound inventories
     /// require an explicitly narrower owning selection; this method never silently truncates.</summary>
     public async Task<IReadOnlyList<SpaceDefinition>> ReadExistingPageAsync(int maximumSpaces = 64,
         CancellationToken cancellationToken = default)
@@ -193,7 +195,10 @@ public sealed partial class SpaceRegistry
                 Kind = existing.IsBuiltIn ? existing.Kind : updated.Kind,
                 Instructions = existing.IsBuiltIn ? existing.Instructions : updated.Instructions,
                 ThinkingMode = existing.IsBuiltIn ? existing.ThinkingMode : updated.ThinkingMode,
-                LayoutDocument = existing.IsBuiltIn ? CloneLayout(existing.LayoutDocument) : CloneLayout(updated.LayoutDocument),
+                // Profile/details edits cannot replace a last-known-good Active graph through this generic update path.
+                LayoutDocument = existing.IsBuiltIn || existing.LayoutDocument?.State == SpaceLayoutRevisionState.Active
+                    ? CloneLayout(existing.LayoutDocument)
+                    : CloneLayout(updated.LayoutDocument),
                 CreatedAt = existing.CreatedAt,
                 IsArchived = existing.IsBuiltIn ? existing.IsArchived : updated.IsArchived,
                 ParentSpaceId = existing.ParentSpaceId,
@@ -357,13 +362,35 @@ public sealed partial class SpaceRegistry
             await SetCurrentSpaceIdAsync(null, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task<SpaceDefinition> SetLayoutAsync(Guid id, SpaceLayoutDocument? layout, CancellationToken cancellationToken = default)
+    public Task<SpaceDefinition> SetLayoutAsync(Guid id, SpaceLayoutDocument? layout, CancellationToken cancellationToken = default) =>
+        SetLayoutCoreAsync(id, layout, expectedRevision: null, cancellationToken: cancellationToken);
+
+    public Task<SpaceDefinition> SetLayoutAsync(Guid id, SpaceLayoutDocument? layout, CancellationToken cancellationToken,
+        long expectedRevision) =>
+        SetLayoutCoreAsync(id, layout, expectedRevision, cancellationToken);
+
+    private Task<SpaceDefinition> SetLayoutCoreAsync(Guid id, SpaceLayoutDocument? layout, long? expectedRevision,
+        CancellationToken cancellationToken)
     {
+        if (expectedRevision is < 1) throw new ArgumentOutOfRangeException(nameof(expectedRevision));
+        if (layout is { GraphId: var graphId } && graphId == Guid.Empty)
+            layout = layout with { GraphId = CreateStableGraphId(id) };
         if (layout is not null) ValidateLayout(layout);
+        // Detach caller-owned collections before waiting for the registry writer;
+        // otherwise queued edits can persist a graph different from the one validated.
+        var layoutSnapshot = CloneLayout(layout);
+        if (layoutSnapshot is not null) ValidateLayout(layoutSnapshot);
         return MutateSpaceAsync(id, (space, _) =>
         {
             if (space.IsBuiltIn) throw new InvalidOperationException("Built-in Space graphs are protected.");
-            return space with { LayoutDocument = CloneLayout(layout), UpdatedAt = _clock() };
+            // A layout editor is a long-lived snapshot. Do not let an old editor
+            // silently replace a newer layout (or other Space edits) on save.
+            if (expectedRevision is { } expected && space.Revision != expected)
+                throw new SpaceRevisionConflictException(space.Id, expected, space.Revision);
+            // This API saves one draft layout; it cannot publish a replacement Active revision.
+            if (space.LayoutDocument?.State == SpaceLayoutRevisionState.Active)
+                throw new InvalidOperationException("An Active Space layout cannot be replaced through the draft-only save API.");
+            return space with { LayoutDocument = CloneLayout(layoutSnapshot), UpdatedAt = _clock() };
         }, cancellationToken);
     }
 
@@ -466,7 +493,7 @@ public sealed partial class SpaceRegistry
         ValidateDeletionState(state);
         var spaces = state.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
-        var changed = state.Version != CurrentVersion;
+        var changed = state.Version != CurrentVersion || NeedsGraphIdentityMigration(state.Spaces);
         foreach (var builtIn in BuiltIns())
         {
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
@@ -508,7 +535,7 @@ public sealed partial class SpaceRegistry
         ValidateDeletionState(stored);
         var spaces = stored.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
-        var changed = stored.Version != CurrentVersion;
+        var changed = stored.Version != CurrentVersion || NeedsGraphIdentityMigration(stored.Spaces);
         foreach (var builtIn in BuiltIns())
         {
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
@@ -558,6 +585,14 @@ public sealed partial class SpaceRegistry
     private static SpaceLayoutDocument? CloneLayout(SpaceLayoutDocument? layout)
     {
         if (layout is null) return null;
+        if (layout.Nodes is null || layout.Edges is null || layout.Groups is null || layout.Comments is null)
+            throw new InvalidDataException("Space layout collections are missing.");
+        if (layout.Nodes.Count > SpaceLayoutDocument.MaximumNodes || layout.Edges.Count > SpaceLayoutDocument.MaximumEdges)
+            throw new InvalidDataException("Stored Space layout exceeds node or edge limits.");
+        if (layout.Nodes.Any(node => node is null || node.Ports is null || node.Metadata is null) ||
+            layout.Edges.Any(edge => edge is null || edge.Metadata is null) ||
+            layout.Groups.Any(group => group is null || group.NodeIds is null || group.NodeIds.Count > SpaceLayoutDocument.MaximumNodes))
+            throw new InvalidDataException("Space layout contains incomplete node, edge, or group data.");
         var nodes = layout.Nodes.Select(node => node with
         {
             Ports = node.Ports.ToArray(),
@@ -567,7 +602,18 @@ public sealed partial class SpaceRegistry
         {
             Metadata = new Dictionary<string, string>(edge.Metadata, StringComparer.Ordinal)
         }).ToArray();
-        return new SpaceLayoutDocument(nodes, edges);
+        var groups = layout.Groups.Select(group => group with { NodeIds = group.NodeIds.ToArray() }).ToArray();
+        var comments = layout.Comments.ToArray();
+        return new SpaceLayoutDocument(nodes, edges)
+        {
+            GraphId = layout.GraphId,
+            SchemaVersion = layout.SchemaVersion,
+            Revision = layout.Revision,
+            State = layout.State,
+            ConnectionProfileId = layout.ConnectionProfileId,
+            Groups = groups,
+            Comments = comments
+        };
     }
 
     private IReadOnlyList<SpaceDefinition> BuiltIns()
@@ -625,7 +671,7 @@ public sealed partial class SpaceRegistry
         Shares = space.Shares?.ToArray() ?? [],
         Files = space.Files?.ToArray() ?? [],
         ExamplePairs = space.ExamplePairs?.ToArray() ?? [],
-        LayoutDocument = CloneLayout(space.LayoutDocument),
+        LayoutDocument = NormalizeLayoutGraphId(CloneLayout(space.LayoutDocument), space.Id),
         ModelPolicy = (space.ModelPolicy ?? new SpaceModelPolicy(space.ModelName)) with
         {
             RequiredCapabilities = space.ModelPolicy?.RequiredCapabilities?.ToArray()
@@ -638,15 +684,37 @@ public sealed partial class SpaceRegistry
 
     private static SpaceDefinition CloneSpace(SpaceDefinition space) => NormalizeStoredSpace(space);
 
+    private static bool NeedsGraphIdentityMigration(IReadOnlyList<SpaceDefinition>? spaces) =>
+        spaces?.Any(space => space is not null && space.LayoutDocument is { GraphId: var graphId } && graphId == Guid.Empty) == true;
+
+    private static SpaceLayoutDocument? NormalizeLayoutGraphId(SpaceLayoutDocument? layout, Guid spaceId) =>
+        layout is { GraphId: var graphId } && graphId == Guid.Empty
+            ? layout with { GraphId = CreateStableGraphId(spaceId) }
+            : layout;
+
+    private static Guid CreateStableGraphId(Guid spaceId)
+    {
+        // Use a versioned domain prefix so read-only and migrating paths derive the same identity.
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"9to1.space-layout.graph.v1:{spaceId:D}"));
+        return new Guid(bytes.AsSpan(0, 16));
+    }
+
     private static void ValidateLayout(SpaceLayoutDocument layout)
     {
-        if (layout.Nodes is null || layout.Edges is null || layout.Nodes.Count > 500 || layout.Edges.Count > 2000)
-            throw new ArgumentException("Space layout graph is missing collections or exceeds supported bounds.", nameof(layout));
-        var nodes = new Dictionary<Guid, SpaceLayoutNode>();
+        // Guid.Empty is the legacy missing-GraphID sentinel and is normalized by the owning Space registry.
+        if (layout.SchemaVersion < 1 || layout.SchemaVersion > SpaceLayoutDocument.CurrentSchemaVersion ||
+            layout.Revision < 0 || !Enum.IsDefined(layout.State) ||
+            (layout.ConnectionProfileId is { } profileId && string.IsNullOrWhiteSpace(profileId)) ||
+            layout.Nodes is null || layout.Edges is null || layout.Groups is null || layout.Comments is null ||
+            layout.Nodes.Count > SpaceLayoutDocument.MaximumNodes || layout.Edges.Count > SpaceLayoutDocument.MaximumEdges)
+            throw new ArgumentException($"Space layout identity, schema, revision, state, profile, or collections are invalid; limits are {SpaceLayoutDocument.MaximumNodes} nodes and {SpaceLayoutDocument.MaximumEdges} edges.", nameof(layout));
+            var nodes = new Dictionary<Guid, SpaceLayoutNode>();
         foreach (var node in layout.Nodes)
         {
             if (node is null || node.Id == Guid.Empty || string.IsNullOrWhiteSpace(node.Category) ||
-                string.IsNullOrWhiteSpace(node.Title) || !double.IsFinite(node.X) || !double.IsFinite(node.Y) ||
+                string.IsNullOrWhiteSpace(node.Title) || node.TypeId is null ||
+                (node.TypeId.Length > 0 && string.IsNullOrWhiteSpace(node.TypeId)) ||
+                node.SchemaVersion < 1 || !double.IsFinite(node.X) || !double.IsFinite(node.Y) ||
                 !double.IsFinite(node.Width) || !double.IsFinite(node.Height) || node.Width <= 0 || node.Height <= 0 ||
                 node.Ports is null || node.Metadata is null || !nodes.TryAdd(node.Id, node))
                 throw new ArgumentException("Space layout nodes must have unique IDs and valid geometry.", nameof(layout));
@@ -666,6 +734,17 @@ public sealed partial class SpaceRegistry
             if (from?.Direction != SpaceLayoutPortDirection.Output || to?.Direction != SpaceLayoutPortDirection.Input)
                 throw new ArgumentException($"Layout edge '{edge.Id}' must connect an output port to an input port.", nameof(layout));
         }
+        if (layout.Groups.Any(group => group is null || group.Id == Guid.Empty || string.IsNullOrWhiteSpace(group.Title) ||
+                group.NodeIds is null || group.NodeIds.Any(id => id == Guid.Empty) ||
+                group.NodeIds.Count > SpaceLayoutDocument.MaximumNodes ||
+                group.NodeIds.Distinct().Count() != group.NodeIds.Count) ||
+            layout.Groups.Select(group => group.Id).Distinct().Count() != layout.Groups.Count)
+            throw new ArgumentException("Space layout groups must have unique IDs, titles, and valid member references.", nameof(layout));
+        if (layout.Comments.Any(comment => comment is null || comment.Id == Guid.Empty || string.IsNullOrWhiteSpace(comment.Text) ||
+                !double.IsFinite(comment.X) || !double.IsFinite(comment.Y) || !double.IsFinite(comment.Width) ||
+                !double.IsFinite(comment.Height) || comment.Width <= 0 || comment.Height <= 0) ||
+            layout.Comments.Select(comment => comment.Id).Distinct().Count() != layout.Comments.Count)
+            throw new ArgumentException("Space layout comments must have unique IDs, text, and valid geometry.", nameof(layout));
     }
 
     private static void ValidateRegistry(IReadOnlyList<SpaceDefinition> spaces)
