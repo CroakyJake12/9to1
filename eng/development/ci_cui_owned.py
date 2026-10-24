@@ -395,7 +395,11 @@ def main():
         project_commands.update(desktop_commands(scope,sdk,desktop_package))
         stages=[('version',30),('restore',300),('build',900),('test',180),('regression',300)]
         if scope in ('cui-and-notes','cui-notes-desktop'): stages.extend([('notes-restore',300),('notes-build',900),('notes-test',180)])
-        if scope=='cui-notes-desktop': stages.extend([('desktop-restore',300),('desktop-build',900),('strata-infrastructure-test',300),('strata-desktop-test',300),('desktop-publish',180)])
+        if scope=='cui-notes-desktop':
+            # Build/check the independent desktop before unrelated CUI assertions.
+            # The full CUI suite still runs and its actual failure remains fatal.
+            stages=[stage for stage in stages if stage[0] not in ('test','regression')]
+            stages.extend([('desktop-restore',300),('desktop-build',900),('strata-infrastructure-test',300),('strata-desktop-test',300),('desktop-publish',180),('test',180),('regression',300)])
         state_path=temporary/'sdk-execution-projection.json';execution='github-cui-'+os.environ['GITHUB_RUN_ID']
         initial=w.initial_state(CHECKOUT,str(instruction_path))
         initial['authority']='Existing native Root remains programme authority. This is its delegated compiler-only host projection; no workers/models/milestones are created.'
@@ -450,9 +454,9 @@ def main():
                     evidence.joinpath(trx_name).write_bytes(result_path.read_bytes())
                 w.atomic(evidence/'receipt.json',receipt)
                 need(item['status'] in ('PROCESS_SUCCEEDED','PASS'),'Actual owning '+stage+' failed; raw diagnostic retained')
-            if scope=='cui-notes-desktop':
-                receipt['desktop_package']=package_desktop(desktop_package,ci_commit,deadline)
-                w.atomic(evidence/'desktop-package.json',receipt['desktop_package'])
+                if stage=='desktop-publish':
+                    receipt['desktop_package']=package_desktop(desktop_package,ci_commit,deadline)
+                    w.atomic(evidence/'desktop-package.json',receipt['desktop_package'])
             receipt.update(result='PASS_PARTIAL_NOT_REUSABLE',classification='OWNING_CUI_NOTES_DESKTOP_DEVELOPMENT_CHECK' if scope=='cui-notes-desktop' else 'OWNING_CUI_AND_NOTES_DEVELOPMENT_CHECK' if scope=='cui-and-notes' else 'OWNING_CUI_DEVELOPMENT_CHECK')
     except Exception as error:
         receipt.update(result='BLOCKED',reason=str(error),classification='INFRASTRUCTURE_OR_ACTUAL_CHECK_FAILURE')
