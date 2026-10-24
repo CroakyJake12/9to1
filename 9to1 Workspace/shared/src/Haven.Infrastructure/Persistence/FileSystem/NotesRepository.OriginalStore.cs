@@ -70,14 +70,21 @@ public sealed partial class NotesRepository : INotesOriginalScopedStoreSource, I
         IsIssuedOriginalStoreObservation(actual.StoreObservation);
 
     private sealed class OriginalLibraryReadRequest(NotesRepository issuer, OriginalObservation observation,
-        Guid? documentId) : INotesOriginalLibraryReadRequest
+        Guid? documentId, NotesOriginalReadKind kind = NotesOriginalReadKind.LibrarySnapshot,
+        string? versionId = null) : INotesOriginalLibraryReadRequest
     {
         internal NotesRepository Issuer { get; } = issuer;
         public Guid OperationId { get; } = Guid.NewGuid();
         public Guid? DocumentId { get; } = documentId;
+        public NotesOriginalReadKind Kind { get; } = kind;
+        public string? VersionId { get; } = versionId;
         public INotesOriginalStoreObservation StoreObservation { get; } = observation;
-        public JsonElement Arguments => JsonSerializer.SerializeToElement(new { operationId = OperationId,
-            storeId = observation.StoreIdentity.StoreId, storeRevision = observation.Revision, documentId = DocumentId });
+        public JsonElement Arguments => Kind == NotesOriginalReadKind.LibrarySnapshot
+            ? JsonSerializer.SerializeToElement(new { operationId = OperationId,
+                storeId = observation.StoreIdentity.StoreId, storeRevision = observation.Revision, documentId = DocumentId })
+            : JsonSerializer.SerializeToElement(new { operationId = OperationId,
+                storeId = observation.StoreIdentity.StoreId, storeRevision = observation.Revision, documentId = DocumentId,
+                kind = Kind == NotesOriginalReadKind.VersionHistory ? "history" : "saved-version", versionId = VersionId });
         internal int ExecutionStarted;
         internal OriginalLibraryReadOutcome? Outcome;
         internal NotesOriginalLibrarySnapshot? ReturnedSnapshot;
@@ -92,6 +99,19 @@ public sealed partial class NotesRepository : INotesOriginalScopedStoreSource, I
         if (documentId == Guid.Empty) throw new ArgumentException("The requested document ID cannot be empty.", nameof(documentId));
         var observed = await ObserveOriginalStoreCoreAsync(initialise: false, cancellationToken).ConfigureAwait(false);
         return new OriginalLibraryReadRequest(this, observed, documentId);
+    }
+
+    /// <summary>Prepare one exact history-list or saved-version read. This observes metadata
+    /// only; the same original Home review, one-use claim and Notes read-only transaction are required.</summary>
+    public async ValueTask<INotesOriginalLibraryReadRequest> PrepareOriginalVersionReadAsync(Guid documentId,
+        string? versionId = null, CancellationToken cancellationToken = default)
+    {
+        if (documentId == Guid.Empty) throw new ArgumentException("A canonical Notes document ID is required.", nameof(documentId));
+        if (versionId is not null && !NotesOriginalVersionIdentity.IsVersionId(versionId))
+            throw new ArgumentException("An exact canonical Notes saved-version ID is required.", nameof(versionId));
+        var observed = await ObserveOriginalStoreCoreAsync(initialise: false, cancellationToken).ConfigureAwait(false);
+        return new OriginalLibraryReadRequest(this, observed, documentId,
+            versionId is null ? NotesOriginalReadKind.VersionHistory : NotesOriginalReadKind.Version, versionId);
     }
 
     public bool IsIssuedOriginalLibraryReadRequest(INotesOriginalLibraryReadRequest request) =>

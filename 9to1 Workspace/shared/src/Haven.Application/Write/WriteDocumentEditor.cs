@@ -16,13 +16,21 @@ public sealed partial class WriteDocumentEditor
 
     public WriteDocumentEditor(NotesDocument document) : this(document, null) { }
 
-    public WriteDocumentEditor(NotesDocument document, Guid? pageScopeId)
+    public WriteDocumentEditor(NotesDocument document, Guid? pageScopeId) : this(document, pageScopeId, false) { }
+
+    /// <summary>Explicit selection-only initialization for read/navigation surfaces.
+    /// This changes no permission or edit capability and never normalizes live source runs.</summary>
+    public WriteDocumentEditor(NotesDocument document, Guid? pageScopeId, bool initializeWithoutNormalization)
     {
         Document = document ?? throw new ArgumentNullException(nameof(document));
         if (pageScopeId is { } pageId && !document.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId))
             throw new ArgumentException("The editor page must belong to this document.", nameof(pageScopeId));
         PageScopeId = pageScopeId;
-        if (Blocks().FirstOrDefault() is { } first) SelectBlock(first.Id);
+        if (Blocks().FirstOrDefault() is { } first)
+        {
+            if (initializeWithoutNormalization) SelectWithoutNormalization(first, 0, 0);
+            else SelectBlock(first.Id); // Existing constructor behavior remains unchanged.
+        }
     }
 
     public event EventHandler? Changed;
@@ -407,9 +415,56 @@ public sealed partial class WriteDocumentEditor
     public void SetPageNumbers(bool value) { if (Document.PageSetup.ShowPageNumbers == value) return; Mutate(() => Document.PageSetup.ShowPageNumbers = value, "Changed page numbers"); }
     public void SetLayout(NotesLayoutMode value) { if (Document.LayoutMode == value) return; Mutate(() => Document.LayoutMode = value, "Changed document layout"); }
 
-    public IReadOnlyList<WriteFindResult> Find(string query)
+    public IReadOnlyList<WriteFindResult> Find(string query) => Find(query, int.MaxValue);
+
+    /// <summary>The same canonical search text, offsets and ordering with a strict result bound.</summary>
+    public IReadOnlyList<WriteFindResult> Find(string query, int maximumResults)
     {
-        if (string.IsNullOrWhiteSpace(query)) return []; var results = new List<WriteFindResult>(); foreach (var block in Blocks()) { var text = SearchText(block); var start = 0; while ((start = text.IndexOf(query, start, StringComparison.OrdinalIgnoreCase)) >= 0) { var left = Math.Max(0, start - 25); var length = Math.Min(text.Length - left, query.Length + 50); results.Add(new WriteFindResult(block.Id, block.Kind.ToString(), text.Substring(left, length), start)); start += Math.Max(1, query.Length); } } return results;
+        if (maximumResults < 1) throw new ArgumentOutOfRangeException(nameof(maximumResults));
+        if (string.IsNullOrWhiteSpace(query)) return [];
+        var results = new List<WriteFindResult>();
+        foreach (var block in Blocks())
+        {
+            var text = SearchText(block); var start = 0;
+            while ((start = text.IndexOf(query, start, StringComparison.OrdinalIgnoreCase)) >= 0)
+            {
+                var left = Math.Max(0, start - 25); var length = Math.Min(text.Length - left, query.Length + 50);
+                results.Add(new WriteFindResult(block.Id, block.Kind.ToString(), text.Substring(left, length), start));
+                if (results.Count == maximumResults) return results;
+                start += Math.Max(1, query.Length);
+            }
+        }
+        return results;
+    }
+
+    /// <summary>Rechecks an actual current match before semantic navigation. Search
+    /// observations are not grants. List/table/media matches select the whole block;
+    /// text matches select their exact range without initializing or splitting runs.</summary>
+    public bool SelectFindResult(WriteFindResult result, string query)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        if (string.IsNullOrWhiteSpace(query)) return false;
+        var block = Blocks().FirstOrDefault(value => value.Id == result.BlockId);
+        if (block is null || result.Kind != block.Kind.ToString()) return false;
+        var text = SearchText(block);
+        if (result.Offset < 0 || query.Length > text.Length || result.Offset > text.Length - query.Length ||
+            !text.AsSpan(result.Offset, query.Length).Equals(query.AsSpan(), StringComparison.OrdinalIgnoreCase)) return false;
+        if (IsTextBlock(block)) SelectWithoutNormalization(block, result.Offset, result.Offset + query.Length);
+        else SelectWithoutNormalization(block, 0, 0);
+        return true;
+    }
+
+    private void SelectWithoutNormalization(NotesBlock block, int start, int end)
+    {
+        SelectedBlockId = block.Id; SelectedTableCellId = null;
+        CaretIndex = end; SelectionStart = start; SelectionEnd = end;
+        ActiveRunIndex = 0; var offset = 0;
+        for (var index = 0; index < block.Runs.Count; index++)
+        {
+            offset += block.Runs[index].Text.Length; ActiveRunIndex = index;
+            if (end <= offset) break;
+        }
+        _documentCaret = new WriteDocumentPosition(block.Id, end); _documentAnchor = null;
     }
 
     public int ReplaceAll(string query, string replacement)

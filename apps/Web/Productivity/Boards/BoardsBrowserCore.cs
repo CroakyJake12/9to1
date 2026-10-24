@@ -100,6 +100,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     internal void AbandonUnadmittedPresentation()
     {
         if (!_presentationPending || IsBusy || _operations.CurrentCount != 1) throw new InvalidOperationException("An active core cannot be abandoned.");
+        InvalidateBoardFind();
         UnbindRichEditor(); _document = null; _disposed = true;
     }
     public Task<HomeCoreOperationResult<Guid>> OpenAsync(Guid id, bool readOnly = false, CancellationToken token = default) => Operate(async ct =>
@@ -204,6 +205,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     {
         if (_presentationPending) return Failure<bool>("PresentationNotAdmitted", "This prepared view is not active.");
         if (!await SaveBeforeLeaving(ct)) return Failed<bool>();
+        InvalidateBoardFind();
         UnbindRichEditor(); _document = null; ActivePageId = null; DurableRevision = 0; IsDirty = false; IsReadOnly = false; Status = "Choose a board or create a new one"; return Success(true);
     }, token);
     private async Task<bool> SaveBeforeLeaving(CancellationToken ct)
@@ -216,6 +218,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     }
     private void Attach(NotesDocument document, bool readOnly)
     {
+        InvalidateBoardFind();
         var sameBoard = _document?.Id == document.Id;
         UnbindRichEditor(); _document = document; DurableRevision = document.Version; IsReadOnly = readOnly; IsDirty = false;
         if (!sameBoard || !VisiblePages.Any(page => page.Id == ActivePageId)) ActivePageId = VisiblePages.FirstOrDefault()?.Id;
@@ -249,6 +252,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
         // Browser callers retain their existing browser-data notice; native composition supplies
         // its genuine device-store description without forking the shared CUI workspace.
         if (path == "StorageDetail" && _storageDetail is not null) { value = _storageDetail; return true; }
+        if (TryGetFindValue(path, out value)) return true;
         if (TryGetWorkspaceValue(path, out value)) return true;
         value = path switch
         {
@@ -270,11 +274,14 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
             "Create" or "Open" or "Refresh" => true, "Save" => _document is not null && !IsReadOnly,
             "Close" => _document is not null, "Inspect" => _pending is not null,
             "Bold" => RichEditingPermitted, "Undo" => RichEditingPermitted && _richEditor?.CanUndo == true,
-            "Redo" => RichEditingPermitted && _richEditor?.CanRedo == true, _ => IsWorkspaceActionAvailable(command)
+            "Redo" => RichEditingPermitted && _richEditor?.CanRedo == true,
+            "ToggleFind" or "FindBoard" or "OpenFindMatch" => _document is not null,
+            _ => IsWorkspaceActionAvailable(command)
         });
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (IsActionAvailable(command) != true) { Failure<bool>("OperationDenied", "This notebook action is unavailable."); Notify(); return; }
+        if (await DispatchFindAsync(command, parameter, cancellationToken)) return;
         if (await DispatchWorkspaceAsync(command, parameter, cancellationToken)) return;
         switch (command)
         {
@@ -291,7 +298,11 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
             default: Failure<bool>("InvalidArgument", "Choose a currently listed notebook."); Notify(); break;
         }
     }
-    private void Notify() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    private void Notify()
+    {
+        InvalidateChangedBoardFind();
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
     private HomeCoreOperationResult<T> Success<T>(T value) => new(true, "Succeeded", Status, value, Revision: DurableRevision);
     private HomeCoreOperationResult<T> Failed<T>() => new(false, ErrorCode ?? "ProviderUnavailable", Status);
     private HomeCoreOperationResult<T> Failure<T>(string code, string message) { ErrorCode = code; Status = message; return new(false, code, message); }
@@ -305,7 +316,7 @@ public sealed partial class BoardsBrowserCore : ICuiWritableBindingContext, ICui
     public async ValueTask DisposeAsync()
     {
         await _operations.WaitAsync();
-        try { if (_disposed) return; if (IsDirty || _pending is not null) throw new InvalidOperationException("Save or resolve this notebook before disposal."); UnbindRichEditor(); _document = null; _disposed = true; }
+        try { if (_disposed) return; if (IsDirty || _pending is not null) throw new InvalidOperationException("Save or resolve this notebook before disposal."); InvalidateBoardFind(); UnbindRichEditor(); _document = null; _disposed = true; }
         finally { _operations.Release(); }
     }
     private sealed record PendingCommit(NotesDocument Snapshot, long BaseRevision, long Generation);

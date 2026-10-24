@@ -119,6 +119,7 @@
     <!-- Native and web Boards compile the SAME owning core/presentation and retain the
          original shared Write renderer. No web executable or parallel app is referenced. -->
     <Compile Include="../../../../apps/Web/Productivity/Boards/BoardsBrowserCore.cs" Link="Boards/Shared/BoardsBrowserCore.cs" />
+    <Compile Include="../../../../apps/Web/Productivity/Boards/BoardsBrowserCore.Find.cs" Link="Boards/Shared/BoardsBrowserCore.Find.cs" />
     <Compile Include="../../../../apps/Web/Productivity/Boards/BoardsBrowserCore.RichText.cs" Link="Boards/Shared/BoardsBrowserCore.RichText.cs" />
     <Compile Include="../../../../apps/Web/Productivity/Boards/BoardsBrowserCore.Workspace.cs" Link="Boards/Shared/BoardsBrowserCore.Workspace.cs" />
     <Compile Include="../../../../apps/Web/Productivity/Boards/BoardsCuiWorkspacePresentation.cs" Link="Boards/Shared/BoardsCuiWorkspacePresentation.cs" />

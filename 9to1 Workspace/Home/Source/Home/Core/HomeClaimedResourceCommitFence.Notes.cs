@@ -113,6 +113,15 @@ public sealed partial class HomeClaimedResourceCommitFence
             originalRequest.StoreObservation.StoreIdentity is not { SchemaVersion: 1 } identity || identity.StoreId == Guid.Empty ||
             originalRequest.OperationId == Guid.Empty || originalRequest.DocumentId == Guid.Empty)
             return Deny();
+        var validSelection = originalRequest.Kind switch
+        {
+            NotesOriginalReadKind.LibrarySnapshot => originalRequest.VersionId is null,
+            NotesOriginalReadKind.VersionHistory => originalRequest.DocumentId is not null && originalRequest.VersionId is null,
+            NotesOriginalReadKind.Version => originalRequest.DocumentId is not null &&
+                NotesOriginalVersionIdentity.IsVersionId(originalRequest.VersionId),
+            _ => false
+        };
+        if (!validSelection) return Deny();
         var admission = broker.CaptureClaimedAttestation(originalCapability);
         var scope = new ResourceScope(HomeNotesResourceAdmissionSource.ScopeKind, identity.StoreId.ToString("D"),
             originalRequest.StoreObservation.Revision, ResourceAccess.Read);
@@ -130,7 +139,12 @@ public sealed partial class HomeClaimedResourceCommitFence
                 admission.Submission.Impact.ArgumentsDigest != Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(arguments.GetRawText()))))
                 return Deny();
             var names = arguments.EnumerateObject().Select(value => value.Name).Order(StringComparer.Ordinal).ToArray();
-            if (!names.SequenceEqual(new[] { "documentId", "operationId", "storeId", "storeRevision" }) ||
+            // Existing library requests retain their original four-key wire contract. History
+            // selectors add exactly two reviewed fields; a digest alone cannot widen the read.
+            var expectedNames = originalRequest.Kind == NotesOriginalReadKind.LibrarySnapshot
+                ? new[] { "documentId", "operationId", "storeId", "storeRevision" }
+                : new[] { "documentId", "kind", "operationId", "storeId", "storeRevision", "versionId" };
+            if (!names.SequenceEqual(expectedNames) ||
                 arguments.GetProperty("operationId").GetGuid() != originalRequest.OperationId ||
                 arguments.GetProperty("storeId").GetGuid() != identity.StoreId ||
                 arguments.GetProperty("storeRevision").GetString() != scope.Revision)
@@ -139,6 +153,18 @@ public sealed partial class HomeClaimedResourceCommitFence
             if (originalRequest.DocumentId is { } requested ? document.ValueKind == JsonValueKind.Null ||
                 document.GetGuid() != requested : document.ValueKind != JsonValueKind.Null)
                 return Deny();
+            if (originalRequest.Kind != NotesOriginalReadKind.LibrarySnapshot)
+            {
+                var kind = arguments.GetProperty("kind");
+                var version = arguments.GetProperty("versionId");
+                if (kind.ValueKind != JsonValueKind.String ||
+                    kind.GetString() != (originalRequest.Kind == NotesOriginalReadKind.VersionHistory ? "history" : "saved-version"))
+                    return Deny();
+                if (originalRequest.Kind == NotesOriginalReadKind.VersionHistory
+                    ? version.ValueKind != JsonValueKind.Null
+                    : version.ValueKind != JsonValueKind.String || version.GetString() != originalRequest.VersionId)
+                    return Deny();
+            }
         }
         catch (Exception error) when (error is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException)
         { return Deny(); }

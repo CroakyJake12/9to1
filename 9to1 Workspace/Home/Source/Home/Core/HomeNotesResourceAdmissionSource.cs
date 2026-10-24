@@ -206,6 +206,7 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
             !_notes.IsIssuedOriginalStoreObservation(request.StoreObservation) ||
             !await IsStoreCurrentAsync(source, request.StoreObservation, cancellationToken).ConfigureAwait(false))
             throw new UnauthorizedAccessException("Prepare this library request with the original Notes owner first.");
+        var preview = DescribeOriginalLibraryRead(request);
         var actor = await ReadActorAsync(source, cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original Home actor is unavailable.");
         var scope = new ResourceScope(ScopeKind, request.StoreObservation.StoreIdentity.StoreId.ToString("D"),
@@ -213,11 +214,27 @@ public sealed class HomeNotesResourceAdmissionSource : ICanonicalResourceAccessR
         if (!(await EvaluateCoreAsync(source, actor, ReadAction, scope, cancellationToken).ConfigureAwait(false)).Allowed)
             throw new UnauthorizedAccessException("Set up or explicitly import this original Notes store in Home first.");
         var authorization = await AuthorizeReviewAsync(source, actor, ReadAction, [scope],
-            request.Arguments, request.DocumentId is { } selected
-                ? $"Read this Boards library's summaries and document {selected:D}."
-                : "Read this Boards library's summaries without requesting a document body.",
+            request.Arguments, preview,
             null, sessionId, cancellationToken).ConfigureAwait(false);
         return new(this, request, actor, scope, authorization);
+    }
+
+    private static string DescribeOriginalLibraryRead(INotesOriginalLibraryReadRequest request)
+    {
+        if (request.Kind == NotesOriginalReadKind.LibrarySnapshot && request.VersionId is null)
+            return request.DocumentId is { } selected
+                ? $"Read this Boards library's summaries and document {selected:D}."
+                : "Read this Boards library's summaries without requesting a document body.";
+        if (request.DocumentId is not { } documentId || documentId == Guid.Empty)
+            throw new UnauthorizedAccessException("An original saved-version read requires its exact document identity.");
+        return request.Kind switch
+        {
+            NotesOriginalReadKind.VersionHistory when request.VersionId is null =>
+                $"Read and verify saved-version metadata for Boards document {documentId:D}. No saved document body is requested.",
+            NotesOriginalReadKind.Version when NotesOriginalVersionIdentity.IsVersionId(request.VersionId) =>
+                $"Read saved version {request.VersionId} of Boards document {documentId:D}. This does not restore or modify the document.",
+            _ => throw new UnauthorizedAccessException("The original Notes read kind and saved-version identity do not match.")
+        };
     }
 
     public Task<HomePermissionAuthorization> GetLibrarySnapshotAuthorizationAsync(HomeNotesLibraryReadReview review,
@@ -753,11 +770,25 @@ public sealed class HomeNotesLibraryReadAdmission
             _retainedOutcome ??= outcome;
             HomeObjectReference[] affected = outcome.Succeeded ? new[] { new HomeObjectReference(HomeNotesResourceAdmissionSource.ScopeKind,
                 _request.StoreObservation.StoreIdentity.StoreId.ToString("D")) } : [];
+            var completedMessage = _request.Kind switch
+            {
+                NotesOriginalReadKind.LibrarySnapshot => "The original Notes owner observed its reviewed library snapshot without recovery writes.",
+                NotesOriginalReadKind.VersionHistory => "The original Notes owner verified its reviewed saved-version metadata without recovery writes.",
+                NotesOriginalReadKind.Version => "The original Notes owner observed its reviewed saved document version without recovery writes.",
+                _ => "The original Notes owner observed its reviewed read without recovery writes."
+            };
+            var refusedMessage = _request.Kind switch
+            {
+                NotesOriginalReadKind.LibrarySnapshot => "The original Notes owner did not return a library snapshot; any recovery needs separate authority.",
+                NotesOriginalReadKind.VersionHistory => "The original Notes owner did not return saved-version metadata; any recovery needs separate authority.",
+                NotesOriginalReadKind.Version => "The original Notes owner did not return the selected saved document version; any recovery needs separate authority.",
+                _ => "The original Notes owner did not return the reviewed read; any recovery needs separate authority."
+            };
             var terminal = outcome.Succeeded
                 ? new HomeExecutionOutcome(HomePermissionRequestState.Succeeded, "NOTES_READ_COMPLETED",
-                    "The original Notes owner observed its reviewed library snapshot without recovery writes.", affected)
+                    completedMessage, affected)
                 : new HomeExecutionOutcome(HomePermissionRequestState.Failed, "NOTES_READ_REFUSED",
-                    "The original Notes owner did not return a library snapshot; any recovery needs separate authority.", []);
+                    refusedMessage, []);
             var completed = await (callbacks is null ? _broker.CompleteExecutionAsync(_capability, terminal, cancellationToken)
                 : callbacks.Read(() => _broker.CompleteSetupExecutionWithinOriginalSourceAsync(_capability, terminal, callbacks.Scope, callbacks.Retain, cancellationToken))).ConfigureAwait(false);
             if (completed.Succeeded) Volatile.Write(ref _completionAudited, 1);

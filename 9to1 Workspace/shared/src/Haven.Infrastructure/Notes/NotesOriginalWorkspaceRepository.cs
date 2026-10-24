@@ -183,17 +183,21 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
             HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Cancelled;
 
     private async Task<(INotesOriginalLibraryReadRequest Request, NotesOriginalLibrarySnapshot Snapshot,
-        HomeNotesLibraryReadAdmission Home)> ReadAsync(Guid? id, CancellationToken token, OriginalWorkspaceSources? source)
+        HomeNotesLibraryReadAdmission Home)> ReadAsync(Guid? id, CancellationToken token, OriginalWorkspaceSources? source,
+        NotesOriginalReadKind kind = NotesOriginalReadKind.LibrarySnapshot, string? versionId = null)
     {
         if (_pendingSaveReview is not null)
             throw new UnauthorizedAccessException("Resolve the retained original save review before reading another snapshot.");
-        if (_pendingReadReview is { } previous && previous.Request.DocumentId != id)
-            throw new UnauthorizedAccessException("Resolve the retained original document review before selecting another document.");
+        if (_pendingReadReview is { } previous && (previous.Request.DocumentId != id ||
+            previous.Request.Kind != kind || previous.Request.VersionId != versionId))
+            throw new UnauthorizedAccessException("Resolve the retained original exact document/version review before selecting another read.");
         INotesOriginalLibraryReadRequest request; HomeNotesLibraryReadReview review;
         if (_pendingReadReview is { } retained) { request = retained.Request; review = retained.Review; }
         else
         {
-            request = await _notes.PrepareOriginalLibraryReadAsync(id, token).ConfigureAwait(false);
+            request = kind == NotesOriginalReadKind.LibrarySnapshot
+                ? await _notes.PrepareOriginalLibraryReadAsync(id, token).ConfigureAwait(false)
+                : await _notes.PrepareOriginalVersionReadAsync(id!.Value, versionId, token).ConfigureAwait(false);
             review = await (source is null ? _home.RequestLibrarySnapshotAsync(request, _sessionId, token)
                 : _home.RequestLibrarySnapshotWithinOriginalSourceAsync(request, _sessionId, source.Scope, source.Retain, token)).ConfigureAwait(false);
             _pendingReadReview = (request, review);
@@ -265,14 +269,26 @@ public sealed class NotesOriginalWorkspaceRepository : INotesRepository, IBoards
         }
     }
 
-    // These operations need their own genuine original recovery/history/delete admissions.
+    // These mutations and full-content search still need their own genuine original admissions.
     // Refuse before IO; absence is a full-scope acceptance blocker, never empty/success data.
     public Task DeleteAsync(Guid documentId, CancellationToken cancellationToken)
         => Task.FromException(new NotSupportedException("Original physical delete admission is not implemented."));
     public Task<IReadOnlyList<NotesVersionInfo>> GetVersionsAsync(Guid documentId, CancellationToken cancellationToken)
-        => Task.FromException<IReadOnlyList<NotesVersionInfo>>(new NotSupportedException("Original version-history read admission is not implemented."));
+    {
+        if (documentId == Guid.Empty) throw new ArgumentException("A canonical Notes document ID is required.", nameof(documentId));
+        return RunAsync(async (token, source) =>
+            (await ReadAsync(documentId, token, source, NotesOriginalReadKind.VersionHistory).ConfigureAwait(false)).Snapshot.Versions,
+            cancellationToken);
+    }
     public Task<NotesDocument?> LoadVersionAsync(Guid documentId, string versionId, CancellationToken cancellationToken)
-        => Task.FromException<NotesDocument?>(new NotSupportedException("Original version read admission is not implemented."));
+    {
+        if (documentId == Guid.Empty) throw new ArgumentException("A canonical Notes document ID is required.", nameof(documentId));
+        if (!NotesOriginalVersionIdentity.IsVersionId(versionId))
+            throw new ArgumentException("An exact canonical Notes saved-version ID is required.", nameof(versionId));
+        return RunAsync(async (token, source) =>
+            (await ReadAsync(documentId, token, source, NotesOriginalReadKind.Version, versionId).ConfigureAwait(false)).Snapshot.SelectedDocument,
+            cancellationToken);
+    }
     public Task<NotesDocument?> RecoverLatestAsync(Guid documentId, CancellationToken cancellationToken)
         => Task.FromException<NotesDocument?>(new NotSupportedException("Original recovery needs separate mutation authority."));
     public Task<IReadOnlyList<NotesSearchHit>> SearchAsync(string query, CancellationToken cancellationToken)

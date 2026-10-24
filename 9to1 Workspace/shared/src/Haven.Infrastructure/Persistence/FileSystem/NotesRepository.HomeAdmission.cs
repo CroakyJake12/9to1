@@ -201,6 +201,9 @@ public sealed partial class NotesRepository
                     throw new UnauthorizedAccessException("The original Home read actor, ownership or review changed.");
                 try
                 {
+                    if (request.Kind != NotesOriginalReadKind.LibrarySnapshot)
+                        return await ReadOriginalHistoryWithinTransactionAsync(transaction, request, originalHome,
+                            originalVerified, fence, cancellationToken).ConfigureAwait(false);
                     using var library = root.OpenLibraryCustody();
                     var libraryVersion = library.SnapshotVersion;
                     var summaries = new List<NotesDocumentSummary>();
@@ -292,6 +295,7 @@ public sealed partial class NotesRepository
     {
         ArgumentNullException.ThrowIfNull(originalHome); ArgumentNullException.ThrowIfNull(originalSnapshot);
         if (originalRequest is not OriginalLibraryReadRequest request || !ReferenceEquals(request.Issuer, this) ||
+            request.Kind != NotesOriginalReadKind.LibrarySnapshot ||
             !ReferenceEquals(request.ReturnedSnapshot, originalSnapshot) || !ReferenceEquals(request.ReadAdmission, originalHome) ||
             request.Outcome is not { Succeeded: true } || request.ReadWitness is null || request.ObservedMetadata is null ||
             originalSnapshot.AuditWarning is not null)
@@ -490,6 +494,13 @@ public sealed partial class NotesRepository
             if (NamedStat(OriginalNotesRoot.Fd(_document), leaf, 0x100, 1, metadata) == 0) return true;
             if (Marshal.GetLastPInvokeError() == 2) return false;
             throw Error("Observe original Notes pending metadata without following links");
+        }
+        internal IReadOnlyList<string> EnumerateVersionLeaves()
+        {
+            DemandCurrent();
+            string[] names = _versions is null ? [] : Directory.EnumerateFileSystemEntries(OriginalNotesRoot.Alias(_versions))
+                .Select(path => Path.GetFileName(path)!).Take(MaximumVersionsPerDocument * 2 + 1).Order(StringComparer.Ordinal).ToArray();
+            DemandCurrent(); return names;
         }
         internal bool HasVersionArtifacts => _versions is not null &&
             Directory.EnumerateFileSystemEntries(OriginalNotesRoot.Alias(_versions)).Any();

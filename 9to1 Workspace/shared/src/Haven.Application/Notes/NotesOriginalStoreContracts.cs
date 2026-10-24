@@ -1,4 +1,5 @@
 using Haven.Core;
+using System.Globalization;
 using System.Text.Json;
 
 namespace Haven.Application;
@@ -86,9 +87,30 @@ public interface INotesOriginalSaveOutcome
     string DiagnosticCode { get; }
 }
 
-/// <summary>Original immutable metadata-only request; descriptive copies cannot authorise IO.</summary>
+public enum NotesOriginalReadKind { LibrarySnapshot, VersionHistory, Version }
+
+/// <summary>The existing Notes version-store leaf identity, never a path or a grant.</summary>
+public static class NotesOriginalVersionIdentity
+{
+    public static bool IsVersionId(string? value)
+    {
+        if (value is null || value.Length is < 30 or > 39 || value[0] != 'v') return false;
+        var dash = value.IndexOf('-', 1);
+        if (dash is < 11 or > 20 || !long.TryParse(value.AsSpan(1, dash - 1), NumberStyles.None,
+            CultureInfo.InvariantCulture, out var revision) || revision <= 0 ||
+            !DateTime.TryParseExact(value[(dash + 1)..], "yyyyMMdd-HHmmssfff", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var timestamp)) return false;
+        return value == "v" + revision.ToString("D10", CultureInfo.InvariantCulture) + "-" +
+            timestamp.ToString("yyyyMMdd-HHmmssfff", CultureInfo.InvariantCulture);
+    }
+}
+
+/// <summary>Original immutable read request; descriptive copies cannot authorise IO.
+/// History and saved-version reads are explicitly narrower tuples, never current-library grants.</summary>
 public interface INotesOriginalLibraryReadRequest
 {
+    NotesOriginalReadKind Kind => NotesOriginalReadKind.LibrarySnapshot;
+    string? VersionId => null;
     Guid OperationId { get; }
     Guid? DocumentId { get; }
     INotesOriginalStoreObservation StoreObservation { get; }
@@ -114,6 +136,7 @@ public sealed record NotesOriginalLibrarySnapshot(ResourceStoreIdentity StoreIde
     IReadOnlyList<NotesDocumentSummary> Documents, NotesDocument? SelectedDocument)
 {
     public IReadOnlyList<NotesOriginalDocumentMetadata> Metadata { get; init; } = [];
+    public IReadOnlyList<NotesVersionInfo> Versions { get; init; } = [];
     public string? AuditWarning { get; init; }
 }
 

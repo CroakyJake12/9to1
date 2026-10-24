@@ -11,7 +11,7 @@ namespace Haven.Infrastructure.Tests;
 
 // Physical Linux identity and genuine same-host Home-reviewed save controls.
 // These are not native app, packaged platform or full Boards acceptance.
-public sealed class NotesOriginalStoreTests
+public sealed partial class NotesOriginalStoreTests
 {
     [LinuxNotesFact]
     public async Task Original_setup_probe_is_read_only_and_its_missing_result_is_not_a_foreign_owner_capability()
@@ -1274,8 +1274,8 @@ public sealed class NotesOriginalStoreTests
         Assert.Equal(0, document.Version); Assert.False(Directory.Exists(rig.Documents));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => adapter.LoadAsync(document.Id, rig.Token));
         await Assert.ThrowsAsync<NotSupportedException>(() => adapter.DeleteAsync(document.Id, rig.Token));
-        await Assert.ThrowsAsync<NotSupportedException>(() => adapter.GetVersionsAsync(document.Id, rig.Token));
-        await Assert.ThrowsAsync<NotSupportedException>(() => adapter.LoadVersionAsync(document.Id, "unknown", rig.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => adapter.GetVersionsAsync(document.Id, rig.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => adapter.LoadVersionAsync(document.Id, "v0000000001-20260101-000000000", rig.Token));
         await Assert.ThrowsAsync<NotSupportedException>(() => adapter.RecoverLatestAsync(document.Id, rig.Token));
         await Assert.ThrowsAsync<NotSupportedException>(() => adapter.SearchAsync("revision", rig.Token));
         await rig.AssertNotesFilesUnchangedAsync(before);

@@ -12,5 +12,6 @@
     <ProjectReference Include="../../../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../../../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="../../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <Compile Include="BoardsFindRegression.cs;../BoardsBrowserCore.Find.cs" Link="Production/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
   <Variable Type="commandstate" ID="BoardsHostResult" />
   <Variable Type="commandstate" ID="BoardsStoreResult" />
   <Variable Type="commandstate" ID="BoardsOpenResult" />
+  <Variable Type="string" ID="BoardsFindQuery"></Variable>
   <Actions>
     <Action name="ObserveBoardsHost" command="boards.host.observe" result="BoardsHostResult">
       <Set Target="BoardsWorkspaceVisible" Value="True" When="{Binding BoardsHostResult.Value.UsesProvidedWorkspace}" />
@@ -21,6 +22,8 @@
     <Action name="OpenSavedNotebook" command="Open" parameter="{Binding savedNotebook}" />
     <Action name="ChoosePage" command="SelectPage" parameter="{Binding page}" />
     <Action name="RecoverPage" command="RestorePage" parameter="{Binding deletedPage}" />
+    <Action name="FindInBoard" command="FindBoard" parameter="{Binding BoardsFindQuery}" />
+    <Action name="OpenBoardFindMatch" command="OpenFindMatch" parameter="{Binding findMatch}" />
   </Actions>
   <Effects>
     <Effect name="observe-owning-host" Condition="True" Action="ObserveBoardsHost" />
@@ -90,6 +93,9 @@
               <If condition="{Binding HasBoard}">
                 <Input content="Edit" accessible-name="Edit page; off means View mode" Type="Checkbox" Checked="{Binding IsEditMode, mode=TwoWay}" Interactive="{Binding CanChangeBoard}" />
               </If>
+              <If condition="{Binding HasBoard}">
+                <Button content="Find" action="ToggleFind" accessible-name="Find text in this board" />
+              </If>
               <Button content="Save" action="Save" Interactive="{Binding CanSave}" />
             </Container>
           </Container>
@@ -99,6 +105,23 @@
             <If condition="{Binding HasBoard}">
               <Container margin="24,18,24,8" Type="Vertical Stack" CellGap="12">
                 <Input accessible-name="Page title" font-size="28" font-weight="Bold" Type="Text" Value="{Binding PageTitle, mode=TwoWay}" Interactive="{Binding CanEditPage}" />
+                <If condition="{Binding ShowBoardFind}">
+                  <Container id="boards-find" Type="Vertical Stack" CellGap="6" accessible-name="Find in the current board">
+                    <Container Type="Wrap" CellGap="6">
+                      <Input id="boards-find-query" Type="Text" Value="{Binding BoardsFindQuery, mode=TwoWay}" PlaceholderText="Find text in this board" accessible-name="Text to find in the current board" min-width="180" />
+                      <Button id="boards-find-run" content="Find in board" action="FindInBoard" />
+                      <Button content="Close find" action="ToggleFind" />
+                    </Container>
+                    <Text id="boards-find-status" text="{Binding BoardFindStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                    <Container Type="Vertical Stack" VerticalScrolling="True" max-height="220">
+                      <Repeat Source="{Binding BoardFindMatches}" As="findMatch" Key="{Binding findMatch.Key}">
+                        <Button id="boards-find-match" action="OpenBoardFindMatch" accessible-name="{Binding findMatch.AccessibleName}" Interactive="{Binding findMatch.CanOpen}" horizontal-content-alignment="Left">
+                          <Text text="{Binding findMatch.Label}" text-wrapping="Wrap" />
+                        </Button>
+                      </Repeat>
+                    </Container>
+                  </Container>
+                </If>
                 <If condition="{Binding IsEditMode}">
                   <Container background="{Resource CuiPanelBrush}" padding="8" corner-radius="8" horizontal-alignment="Left" Type="Overlay">
                     <Container Type="Wrap">
