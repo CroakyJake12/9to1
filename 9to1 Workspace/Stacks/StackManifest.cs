@@ -257,15 +257,16 @@ public sealed partial class JsonFileStackProjectStore : IStackOriginalSourceProj
         }
 
         StackDomainRecord[] mains = manifest.Domains.Where(static domain => domain.Kind == StackDomainKind.Main).ToArray();
-        if (mains.Length != 1 || mains[0].Id != manifest.MainDomainId || mains[0].ParentId is not null)
+        if (mains.Length != 1 || mains[0].Id != manifest.MainDomainId || mains[0].ParentId is not null || mains[0].IsDeleted)
         {
-            throw new StackFailureException(StackFailureCode.SourceCorrupt, "A Stack manifest must contain exactly one parentless Main domain matching MainDomainId.", ManifestRelativePath, recoverable: true);
+            throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                "A Stack manifest must contain exactly one live parentless Main domain matching MainDomainId.", ManifestRelativePath, recoverable: true);
         }
 
-        var ids = new HashSet<Guid>();
+        var domainsById = new Dictionary<Guid, StackDomainRecord>();
         foreach (StackDomainRecord domain in manifest.Domains)
         {
-            if (domain.Id == Guid.Empty || domain.ProjectId != manifest.ProjectId || !ids.Add(domain.Id))
+            if (domain.Id == Guid.Empty || domain.ProjectId != manifest.ProjectId || !domainsById.TryAdd(domain.Id, domain))
             {
                 throw new StackFailureException(StackFailureCode.SourceCorrupt, "The Stack manifest contains an empty or duplicate DomainID.", ManifestRelativePath, recoverable: true);
             }
@@ -279,12 +280,37 @@ public sealed partial class JsonFileStackProjectStore : IStackOriginalSourceProj
             }
         }
 
+        foreach (StackDomainRecord parent in manifest.Domains)
+        {
+            var uniqueChildren = new HashSet<Guid>();
+            foreach (Guid childId in parent.ChildDomainIds)
+            {
+                if (!uniqueChildren.Add(childId) || !domainsById.TryGetValue(childId, out StackDomainRecord? child) ||
+                    child is null || child.IsDeleted || child.ParentId != parent.Id)
+                {
+                    throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                        "A Stack parent contains a duplicate, deleted, missing or mismatched child link.", parent.Id.ToString("D"), recoverable: true);
+                }
+            }
+        }
+
         foreach (StackDomainRecord domain in manifest.Domains.Where(static domain => domain.Kind != StackDomainKind.Main))
         {
             StackDomainRecord? parent = manifest.Domains.FirstOrDefault(candidate => candidate.Id == domain.ParentId);
             if (parent is null || !StackHierarchy.IsAllowed(parent.Kind, domain.Kind))
             {
                 throw new StackFailureException(StackFailureCode.SourceCorrupt, "A Stack domain has a missing or invalid parent type.", domain.Id.ToString("D"), recoverable: true);
+            }
+
+            bool isListedByParent = parent.ChildDomainIds.Contains(domain.Id);
+            if (domain.IsDeleted == isListedByParent)
+                throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                    "A Stack domain's deleted state disagrees with its parent's active child links.", domain.Id.ToString("D"), recoverable: true);
+
+            if (parent.IsDeleted && !domain.IsDeleted)
+            {
+                throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                    "A live Stack domain cannot have a deleted parent; source recovery is required.", domain.Id.ToString("D"), recoverable: true);
             }
         }
     }

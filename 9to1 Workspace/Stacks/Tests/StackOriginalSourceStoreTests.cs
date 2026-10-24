@@ -22,8 +22,8 @@ public sealed class StackOriginalSourceStoreTests
     [Fact]
     public async Task Independent_engine_stale_working_write_and_commit_are_refused_before_any_source_or_journal_change()
     {
-        var (first, directory) = await ProjectAsync(); var main = await first.OpenProjectAsync();
-        var second = new StackEngine(new JsonFileStackProjectStore(directory)); await second.OpenProjectAsync();
+        var (first, directory) = await ProjectAsync(); var main = await first.OpenProjectAsync(Actor);
+        var second = new StackEngine(new JsonFileStackProjectStore(directory)); await second.OpenProjectAsync(Actor);
         await first.ApplyChangeAsync(main.Id, Text("source.txt", "accepted first working bytes"), Actor);
         var accepted = await File.ReadAllBytesAsync(PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath));
         var roots = await File.ReadAllBytesAsync(PathAt(directory, JsonFileStackProjectStore.RootsRelativePath));
@@ -35,17 +35,17 @@ public sealed class StackOriginalSourceStoreTests
         Assert.Equal(accepted, await File.ReadAllBytesAsync(PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath)));
         Assert.Equal(roots, await File.ReadAllBytesAsync(PathAt(directory, JsonFileStackProjectStore.RootsRelativePath)));
         Assert.Equal(journalCount, Directory.GetDirectories(PathAt(directory, JsonFileStackProjectStore.OriginalJournalRelativePath)).Length);
-        var reopened = await second.OpenProjectAsync();
+        var reopened = await second.OpenProjectAsync(Actor);
         Assert.Equal("accepted first working bytes", Encoding.UTF8.GetString(Assert.Single(reopened.WorkingChanges).Resource!.Content));
         await second.CreateCommitAsync(main.Id, "Commit the actually reopened source", Actor);
-        var saved = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync();
+        var saved = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync(Actor);
         Assert.Empty(saved.WorkingChanges); Assert.Equal("accepted first working bytes", Encoding.UTF8.GetString(Assert.Single(saved.LocalChanges).Resource!.Content));
     }
 
     [Fact]
     public async Task Actual_working_change_invalidates_full_source_even_when_commit_revision_sequence_did_not_advance()
     {
-        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync();
+        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync(Actor);
         var source = new JsonFileStackProjectStore(directory); var loaded = await source.LoadOriginalAsync();
         var revision = loaded.Manifest.RevisionSequence;
         await engine.ApplyChangeAsync(main.Id, Text("pending.txt", "working"), Actor);
@@ -74,7 +74,7 @@ public sealed class StackOriginalSourceStoreTests
         var roots = JsonNode.Parse(await File.ReadAllBytesAsync(rootsPath))!.AsObject(); roots["futureRoots"] = new JsonArray("keep", 42);
         await File.WriteAllTextAsync(rootsPath, roots.ToJsonString());
         var before = await File.ReadAllBytesAsync(manifestPath); var beforeRoots = await File.ReadAllBytesAsync(rootsPath);
-        var engine = new StackEngine(new JsonFileStackProjectStore(directory)); var main = await engine.OpenProjectAsync();
+        var engine = new StackEngine(new JsonFileStackProjectStore(directory)); var main = await engine.OpenProjectAsync(Actor);
         // A real no-change source read keeps exact raw bytes, including unknown properties and whitespace.
         await engine.GetEffectiveTreeAsync(main.Id, Actor);
         Assert.Equal(before, await File.ReadAllBytesAsync(manifestPath)); Assert.Equal(beforeRoots, await File.ReadAllBytesAsync(rootsPath));
@@ -87,7 +87,7 @@ public sealed class StackOriginalSourceStoreTests
         Assert.Equal("keep resource data", saved["domains"]![0]!["localChanges"]!["unknowns.txt"]!["resource"]!["futureResource"]!.GetValue<string>());
         var rootsAfter = JsonNode.Parse(await File.ReadAllBytesAsync(rootsPath))!;
         Assert.True(JsonNode.DeepEquals(roots["futureRoots"], rootsAfter["futureRoots"]));
-        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync();
+        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync(Actor);
         Assert.Equal(main.ProjectId, cold.ProjectId); Assert.Equal("second", Encoding.UTF8.GetString(Assert.Single(cold.LocalChanges).Resource!.Content));
     }
 
@@ -107,7 +107,7 @@ public sealed class StackOriginalSourceStoreTests
     [Fact]
     public async Task Journal_preserves_full_accepted_predecessor_bytes_and_completed_actual_source_reopens_without_replay()
     {
-        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync();
+        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync(Actor);
         var manifestPath = PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath); var rootsPath = PathAt(directory, JsonFileStackProjectStore.RootsRelativePath);
         var before = await File.ReadAllBytesAsync(manifestPath); var rootsBefore = await File.ReadAllBytesAsync(rootsPath);
         await engine.ApplyChangeAsync(main.Id, Text("journal.txt", "retained"), Actor);
@@ -116,7 +116,7 @@ public sealed class StackOriginalSourceStoreTests
         Assert.Equal(rootsBefore, await File.ReadAllBytesAsync(Path.Combine(journal, "roots.before.json")));
         Assert.Equal(await File.ReadAllBytesAsync(Path.Combine(journal, "intent.json")), await File.ReadAllBytesAsync(Path.Combine(journal, "completed.json")));
         var after = await File.ReadAllBytesAsync(manifestPath);
-        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync();
+        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync(Actor);
         Assert.Equal(main.ProjectId, cold.ProjectId); Assert.Single(cold.WorkingChanges);
         Assert.Equal(after, await File.ReadAllBytesAsync(manifestPath)); Assert.Equal(before, await File.ReadAllBytesAsync(Path.Combine(journal, "manifest.before.json")));
     }
@@ -143,7 +143,7 @@ public sealed class StackOriginalSourceStoreTests
     [Fact]
     public async Task Completed_journal_does_not_acknowledge_a_lost_actual_latest_publication_or_replay_its_retained_output()
     {
-        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync();
+        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync(Actor);
         var path = PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath); var predecessor = await File.ReadAllBytesAsync(path);
         await engine.ApplyChangeAsync(main.Id, Text("accepted.txt", "latest accepted bytes"), Actor);
         var journal = Assert.Single(Directory.GetDirectories(PathAt(directory, JsonFileStackProjectStore.OriginalJournalRelativePath)));
@@ -173,7 +173,7 @@ public sealed class StackOriginalSourceStoreTests
     [Fact]
     public async Task Read_only_snapshot_mutation_cannot_change_cached_source_or_persist_its_bytes()
     {
-        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync();
+        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync(Actor);
         await engine.ApplyChangeAsync(main.Id, Text("committed.txt", "accepted committed bytes"), Actor);
         await engine.CreateCommitAsync(main.Id, "Accept original committed bytes", Actor);
         await engine.ApplyChangeAsync(main.Id, Text("working.txt", "accepted working bytes"), Actor);
@@ -181,7 +181,7 @@ public sealed class StackOriginalSourceStoreTests
         var rootsPath = PathAt(directory, JsonFileStackProjectStore.RootsRelativePath);
         var before = await File.ReadAllBytesAsync(path); var beforeRoots = await File.ReadAllBytesAsync(rootsPath);
         // Open returns a snapshot over the actual cached manifest. Every byte array must detach.
-        var snapshot = await engine.OpenProjectAsync();
+        var snapshot = await engine.OpenProjectAsync(Actor);
         foreach (var change in snapshot.LocalChanges) Array.Fill(change.Resource!.Content, (byte)'x');
         foreach (var change in snapshot.WorkingChanges) Array.Fill(change.Resource!.Content, (byte)'y');
         var reader = new StackActor("view-only-source-fixture", new HashSet<StackCapability> { StackCapability.ViewSource });
@@ -189,8 +189,124 @@ public sealed class StackOriginalSourceStoreTests
         Assert.Equal("accepted committed bytes", Encoding.UTF8.GetString(actual.Files["committed.txt"].Content));
         Assert.Equal("accepted working bytes", Encoding.UTF8.GetString(actual.Files["working.txt"].Content));
         Assert.Equal(before, await File.ReadAllBytesAsync(path)); Assert.Equal(beforeRoots, await File.ReadAllBytesAsync(rootsPath));
-        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync();
+        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync(Actor);
         Assert.Equal("accepted working bytes", Encoding.UTF8.GetString(Assert.Single(cold.WorkingChanges).Resource!.Content));
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"schemaVersion\":1}")]
+    [InlineData("{\"schemaVersion\":1,\"roots\":[{}]}")]
+    public async Task Lineage_projection_maps_missing_root_metadata_to_typed_source_corruption(string malformedRoots)
+    {
+        var (_, directory) = await ProjectAsync();
+        string manifestPath = PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath);
+        string rootsPath = PathAt(directory, JsonFileStackProjectStore.RootsRelativePath);
+        JsonObject malformed = JsonNode.Parse(malformedRoots)!.AsObject();
+        if (malformed.ContainsKey("schemaVersion")) malformed["schemaVersion"] = StackManifest.CurrentSchemaVersion;
+        await File.WriteAllTextAsync(rootsPath, malformed.ToJsonString());
+        byte[] originalManifest = await File.ReadAllBytesAsync(manifestPath);
+        byte[] originalRoots = await File.ReadAllBytesAsync(rootsPath);
+
+        StackFailureException failure = await Assert.ThrowsAsync<StackFailureException>(
+            () => new StackEngine(new JsonFileStackProjectStore(directory)).GetLineagePageAsync(Actor, 0, 10));
+
+        Assert.Equal(StackFailureCode.SourceCorrupt, failure.Code);
+        Assert.Equal(originalManifest, await File.ReadAllBytesAsync(manifestPath));
+        Assert.Equal(originalRoots, await File.ReadAllBytesAsync(rootsPath));
+    }
+
+    [Fact]
+    public async Task Lineage_projection_skips_resource_hydration_and_keeps_source_bytes_unchanged()
+    {
+        var (_, directory) = await ProjectAsync();
+        string manifestPath = PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath);
+        JsonObject source = JsonNode.Parse(await File.ReadAllBytesAsync(manifestPath))!.AsObject();
+        JsonObject main = source["domains"]!.AsArray()[0]!.AsObject();
+        main["baseTree"]!["unhydrated.bin"] = JsonNode.Parse(
+            "{\"content\":\"not-valid-base64\",\"visibility\":\"private\",\"isBinary\":true}");
+        await File.WriteAllTextAsync(manifestPath, source.ToJsonString());
+        byte[] originalBytes = await File.ReadAllBytesAsync(manifestPath);
+
+        var cold = new StackEngine(new JsonFileStackProjectStore(directory));
+        StackProjectSummary summary = await cold.GetProjectSummaryAsync(Actor);
+        Assert.Equal("Original source", summary.Name);
+        var page = await cold.GetLineagePageAsync(Actor, 0, 10);
+
+        Assert.Single(page.Entries);
+        Assert.Equal("main", page.Entries[0].Name);
+        Assert.Equal(originalBytes, await File.ReadAllBytesAsync(manifestPath));
+        StackFailureException fullOpen = await Assert.ThrowsAsync<StackFailureException>(
+            () => new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync(Actor));
+        Assert.Equal(StackFailureCode.SourceCorrupt, fullOpen.Code);
+        Assert.Equal(originalBytes, await File.ReadAllBytesAsync(manifestPath));
+    }
+
+    [Fact]
+    public async Task Lineage_projection_refuses_source_bytes_that_changed_after_engine_open()
+    {
+        var (engine, directory) = await ProjectAsync();
+        await engine.OpenProjectAsync(Actor);
+        string manifestPath = PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath);
+        JsonObject source = JsonNode.Parse(await File.ReadAllBytesAsync(manifestPath))!.AsObject();
+        source["futureLineageMetadata"] = new JsonObject { ["preserve"] = true };
+        await File.WriteAllTextAsync(manifestPath, source.ToJsonString());
+        byte[] externalBytes = await File.ReadAllBytesAsync(manifestPath);
+
+        StackFailureException stale = await Assert.ThrowsAsync<StackFailureException>(
+            () => engine.GetLineagePageAsync(Actor, 0, 10));
+
+        Assert.Equal(StackFailureCode.RevisionConflict, stale.Code);
+        Assert.Equal(externalBytes, await File.ReadAllBytesAsync(manifestPath));
+        await engine.OpenProjectAsync(Actor);
+        Assert.Single((await engine.GetLineagePageAsync(Actor, 0, 10)).Entries);
+        Assert.Equal(externalBytes, await File.ReadAllBytesAsync(manifestPath));
+    }
+
+    [Fact]
+    public async Task Proposal_pages_skip_unselected_resource_hydration_and_hydrate_only_requested_proposal()
+    {
+        var (engine, directory) = await ProjectAsync();
+        Guid main = (await engine.OpenProjectAsync(Actor)).Id;
+        await engine.ApplyChangeAsync(main, Text("proposal.txt", "base"), Actor);
+        await engine.CreateCommitAsync(main, "Seed proposal", Actor);
+        Guid projectId = (await engine.GetProjectSummaryAsync(Actor)).ProjectId;
+        StackDomainSnapshot branch = await engine.CreateBranchAsync(projectId, "Proposal page", Actor);
+        await engine.ApplyChangeAsync(branch.Id, Text("proposal.txt", "local"), Actor);
+        await engine.CreateCommitAsync(branch.Id, "Commit local proposal side", Actor);
+        await engine.ApplyChangeAsync(main, Text("proposal.txt", "incoming"), Actor);
+        await engine.CreateCommitAsync(main, "Create proposal conflict", Actor);
+        _ = await engine.GetEffectiveTreeAsync(branch.Id, Actor);
+        StackConflict conflict = Assert.Single(await engine.GetConflictsAsync(branch.Id, Actor));
+        StackConflictProposal corrupt = await engine.ProposeConflictResolutionAsync(conflict.Id,
+            "Corrupt but unselected", Text("proposal.txt", "corrupt" ).Resource, "fixture", Actor);
+        StackConflictProposal valid = await engine.ProposeConflictResolutionAsync(conflict.Id,
+            "Selected valid proposal", Text("proposal.txt", "selected").Resource, "fixture", Actor);
+
+        string manifestPath = PathAt(directory, JsonFileStackProjectStore.ManifestRelativePath);
+        JsonObject manifest = JsonNode.Parse(await File.ReadAllBytesAsync(manifestPath))!.AsObject();
+        JsonObject corruptProposal = manifest["conflictProposals"]!.AsArray().Select(node => node!.AsObject())
+            .Single(node => Guid.Parse(node["id"]!.GetValue<string>()) == corrupt.Id);
+        corruptProposal["proposedResource"]!["content"] = "not-valid-base64";
+        await File.WriteAllTextAsync(manifestPath, manifest.ToJsonString());
+        byte[] unchanged = await File.ReadAllBytesAsync(manifestPath);
+
+        var cold = new StackEngine(new JsonFileStackProjectStore(directory));
+        StackConflictProposalPage list = await cold.GetConflictProposalsPageAsync(Actor, branch.Id, 1, 1);
+        Assert.Equal(2, list.TotalCount);
+        Assert.Equal(valid.Id, Assert.Single(list.Entries).Id);
+        Assert.Null(list.RequestedProposal);
+        StackConflictProposalPage selected = await cold.GetConflictProposalsPageAsync(
+            Actor, branch.Id, 0, 1, valid.Id, locateRequestedProposal: true);
+        Assert.Equal(1, selected.PageIndex);
+        Assert.Equal(valid.Id, Assert.Single(selected.Entries).Id);
+        Assert.Equal("selected", Encoding.UTF8.GetString(selected.RequestedProposal!.ProposedResource!.Content));
+        Assert.Equal(unchanged, await File.ReadAllBytesAsync(manifestPath));
+
+        StackFailureException corruptSelection = await Assert.ThrowsAsync<StackFailureException>(
+            () => cold.GetConflictProposalsPageAsync(Actor, branch.Id, 0, 1, corrupt.Id));
+        Assert.Equal(StackFailureCode.SourceCorrupt, corruptSelection.Code);
+        Assert.Equal(unchanged, await File.ReadAllBytesAsync(manifestPath));
     }
 
     [Fact]

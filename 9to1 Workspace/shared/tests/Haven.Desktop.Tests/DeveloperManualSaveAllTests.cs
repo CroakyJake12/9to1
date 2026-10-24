@@ -102,6 +102,100 @@ public sealed class DeveloperManualSaveAllTests
     }
 
     [Fact]
+    public async Task Cancellation_after_write_admission_is_failed_inspectable_outcome_not_no_effect_cancelled()
+    {
+        var request = Request("a.cui", "before", "after"); using var cancellation = new CancellationTokenSource();
+        var reads = 0; var writes = 0;
+        var outcomes = await DeveloperManualSourceEditOwner.ExecuteReviewedBatchAsync([request],
+            (_, _) =>
+            {
+                writes++; cancellation.Cancel();
+                return Task.FromCanceled<string>(cancellation.Token);
+            },
+            (_, _) => { reads++; return Task.FromResult((request.BaselineText, request.BeforeSha256)); },
+            action => action(), cancellation.Token);
+
+        var outcome = Assert.Single(outcomes);
+        Assert.Equal(DeveloperManualSaveState.Failed, outcome.State);
+        Assert.True(outcome.WriteStarted);
+        Assert.Null(outcome.SavedSha256);
+        Assert.Contains("outcome needs inspection", outcome.Detail);
+        Assert.Equal(1, reads); Assert.Equal(1, writes);
+        Assert.All(outcome.OriginalSources, source => Assert.True(source.IsCompleted));
+    }
+
+    [Fact]
+    public async Task Cancellation_after_baseline_read_but_before_write_admission_is_cancelled_without_write()
+    {
+        var request = Request("a.cui", "before", "after"); using var cancellation = new CancellationTokenSource();
+        var reads = 0; var writes = 0;
+        var outcomes = await DeveloperManualSourceEditOwner.ExecuteReviewedBatchAsync([request],
+            (_, _) => { writes++; return Task.FromResult(request.AfterSha256); },
+            (_, _) =>
+            {
+                reads++; cancellation.Cancel();
+                return Task.FromResult((request.BaselineText, request.BeforeSha256));
+            }, action => action(), cancellation.Token);
+
+        var outcome = Assert.Single(outcomes);
+        Assert.Equal(DeveloperManualSaveState.Cancelled, outcome.State);
+        Assert.False(outcome.WriteStarted); Assert.Null(outcome.SavedSha256);
+        Assert.Equal(1, reads); Assert.Equal(0, writes);
+        Assert.All(outcome.OriginalSources, source => Assert.True(source.IsCompletedSuccessfully));
+    }
+
+    [Fact]
+    public async Task Concurrent_cancellation_does_not_hide_a_source_refusal_before_write_admission()
+    {
+        var request = Request("a.cui", "before", "after"); using var cancellation = new CancellationTokenSource();
+        var refusal = new IOException("Original source refused the baseline read"); var writes = 0;
+        var outcomes = await DeveloperManualSourceEditOwner.ExecuteReviewedBatchAsync([request],
+            (_, _) => { writes++; return Task.FromResult(request.AfterSha256); },
+            (_, _) => { cancellation.Cancel(); throw refusal; }, action => action(), cancellation.Token);
+
+        var outcome = Assert.Single(outcomes);
+        Assert.Equal(DeveloperManualSaveState.Failed, outcome.State);
+        Assert.False(outcome.WriteStarted); Assert.Equal(0, writes);
+        Assert.Contains(outcome.OriginalFailures, error => ReferenceEquals(error, refusal));
+    }
+
+    [Fact]
+    public async Task Source_edit_and_nested_cleanup_failures_retain_each_original_cause_and_close_every_lease()
+    {
+        var writeFailure = new IOException("Reviewed source write failed");
+        var editCloseFailure = new IOException("Original WRITE close failed");
+        var readCloseFailure = new IOException("Original READ close failed");
+        bool editClosed = false, readClosed = false;
+        Task<int> Write() => Task.FromException<int>(writeFailure);
+        ValueTask CloseEdit()
+        { editClosed = true; return new(Task.FromException(editCloseFailure)); }
+        ValueTask CloseRead()
+        { readClosed = true; return new(Task.FromException(readCloseFailure)); }
+
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => DeveloperManualSourceEditOwner.WithOriginalCleanupAsync(
+            () => DeveloperManualSourceEditOwner.WithOriginalCleanupAsync(Write, CloseEdit), CloseRead));
+
+        Assert.True(editClosed); Assert.True(readClosed);
+        var causes = failure.Flatten().InnerExceptions;
+        Assert.Contains(causes, cause => ReferenceEquals(cause, writeFailure));
+        Assert.Contains(causes, cause => ReferenceEquals(cause, editCloseFailure));
+        Assert.Contains(causes, cause => ReferenceEquals(cause, readCloseFailure));
+    }
+
+    [Fact]
+    public async Task Successful_source_edit_is_not_acknowledged_when_original_permission_close_fails()
+    {
+        var closeFailure = new IOException("Original WRITE close failed"); bool closed = false;
+        var observed = await Assert.ThrowsAsync<IOException>(() => DeveloperManualSourceEditOwner.WithOriginalCleanupAsync(
+            () => Task.FromResult("written revision"), () =>
+            {
+                closed = true;
+                return new(Task.FromException(closeFailure));
+            }));
+        Assert.Same(closeFailure, observed); Assert.True(closed);
+    }
+
+    [Fact]
     public async Task Batch_capacity_or_duplicate_identity_refuses_before_original_source_calls()
     {
         var request = Request("a.cui", "before", "after"); var calls = 0;

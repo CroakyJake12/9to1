@@ -11,7 +11,7 @@ public sealed partial class StackNativeWorkspaceTests
     [Fact]
     public async Task Actual_CUI_browsing_history_and_inactive_working_edit_preserve_default_until_explicit_SetActive()
     {
-        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync();
+        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync(Actor);
         var branch = await engine.CreateDomainAsync(main.Id, "Independent feature", Actor);
         await using var session = HeadlessUnitTestSession.StartNew(typeof(StackNativeTestApplication));
         Assert.True(await session.Dispatch<bool>(async () =>
@@ -39,10 +39,12 @@ public sealed partial class StackNativeWorkspaceTests
                 await ClickAsync(loader, workspace, NamedButton(root, "StacksApplyText"));
                 Assert.Equal(branch.Id, workspace.DomainId); Assert.Equal(main.Id, workspace.ActiveDomainId);
                 var beforeActivation = new StackEngine(new JsonFileStackProjectStore(directory));
-                Assert.Equal(main.Id, (await beforeActivation.OpenProjectAsync()).Id);
-                var actualInactive = Assert.Single(await beforeActivation.GetLineageAsync(), domain => domain.Id == branch.Id);
+                Assert.Equal(main.Id, (await beforeActivation.OpenProjectAsync(Actor)).Id);
+                Assert.Contains((await beforeActivation.GetLineagePageAsync(Actor, 0, 100)).Entries,
+                    entry => entry.Id == branch.Id);
+                StackDomainChanges actualInactive = await beforeActivation.GetDomainChangesAsync(branch.Id, Actor);
                 Assert.Equal(Encoding.UTF8.GetBytes("working bytes in the browsed inactive branch\n"),
-                    Assert.Single(actualInactive.WorkingChanges).Resource!.Content);
+                    Assert.Single(actualInactive.Changes).Resource!.Content);
                 Assert.False((await beforeActivation.GetEffectiveTreeAsync(main.Id, Actor)).Files.ContainsKey("inactive-feature.txt"));
                 Assert.True(workspace.IsActionAvailable("9to1.Stacks.SetActive"));
                 await ClickAsync(loader, workspace, NamedButton(root, "StacksSetActive"));
@@ -50,7 +52,7 @@ public sealed partial class StackNativeWorkspaceTests
                 Assert.Contains("Independent feature", Assert.IsType<string>(Value(workspace, "ActiveDomainLabel")));
                 Assert.False(workspace.IsActionAvailable("9to1.Stacks.SetActive"));
                 var cold = new StackEngine(new JsonFileStackProjectStore(directory));
-                var reopened = await cold.OpenProjectAsync();
+                var reopened = await cold.OpenProjectAsync(Actor);
                 Assert.Equal(main.ProjectId, reopened.ProjectId); Assert.Equal(branch.Id, reopened.Id);
                 Assert.Equal(Encoding.UTF8.GetBytes("working bytes in the browsed inactive branch\n"),
                     Assert.Single(reopened.WorkingChanges).Resource!.Content);
@@ -64,7 +66,7 @@ public sealed partial class StackNativeWorkspaceTests
     [Fact]
     public async Task Two_native_surfaces_keep_independent_browsed_domains_when_same_engine_active_context_changes()
     {
-        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync();
+        var (engine, directory) = await ProjectAsync(); var main = await engine.OpenProjectAsync(Actor);
         var branch = await engine.CreateDomainAsync(main.Id, "Feature", Actor);
         var first = await WorkspaceAsync(engine); var second = await WorkspaceAsync(engine);
         await OpenAsync(first); await OpenAsync(second);
@@ -84,7 +86,7 @@ public sealed partial class StackNativeWorkspaceTests
         await first.DispatchAsync("9to1.Stacks.Refresh", null);
         Assert.Equal(branch.Id, first.DomainId); Assert.Equal(main.Id, first.ActiveDomainId);
         Assert.Equal(main.Id, second.DomainId); Assert.Equal(main.Id, second.ActiveDomainId);
-        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync();
+        var cold = await new StackEngine(new JsonFileStackProjectStore(directory)).OpenProjectAsync(Actor);
         Assert.Equal(main.Id, cold.Id); Assert.Equal(main.ProjectId, cold.ProjectId);
         await first.CloseOriginalAsync(); await second.CloseOriginalAsync();
     }

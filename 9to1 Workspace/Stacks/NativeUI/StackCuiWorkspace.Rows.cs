@@ -11,16 +11,21 @@ public sealed partial class StackCuiWorkspace
     private const int PageSize = 100;
     private abstract record RowTarget(StackCuiWorkspace Owner, object Snapshot);
     private sealed record ProjectTarget(StackCuiWorkspace Owner, object Snapshot, ProjectTab Tab) : RowTarget(Owner, Snapshot);
-    private sealed record DomainTarget(StackCuiWorkspace Owner, object Snapshot, ProjectTab Tab, StackDomainSnapshot Domain) : RowTarget(Owner, Snapshot);
+    private sealed record DomainTarget(StackCuiWorkspace Owner, object Snapshot, ProjectTab Tab, Guid DomainId) : RowTarget(Owner, Snapshot);
     private sealed record FileTarget(StackCuiWorkspace Owner, object Snapshot, ProjectTab Tab, string Path) : RowTarget(Owner, Snapshot);
+    private sealed record ConflictProposalTarget(StackCuiWorkspace Owner, object Snapshot, ProjectTab Tab,
+        Guid DomainId, Guid ConflictId, Guid ProposalId) : RowTarget(Owner, Snapshot);
     private readonly HashSet<object> _issuedRows = new(ReferenceEqualityComparer.Instance);
-    private IReadOnlyList<StackNativeRow> _tabRows = [], _projectRows = [], _domainRows = [], _fileRows = [];
-    private IReadOnlyList<StackNativeDiffRow> _diffRows = [];
+    private IReadOnlyList<StackNativeRow> _tabRows = [], _projectRows = [], _domainRows = [], _fileRows = [], _proposalRows = [];
+    private IReadOnlyList<StackNativeDiffRow> _diffRows = [], _reviewDiffRows = [];
+    private ConflictProposalTarget? _reviewTarget;
     private T DemandRow<T>(object? parameter) where T : RowTarget
     {
         if (parameter is not T target || !ReferenceEquals(target.Owner, this) || !ReferenceEquals(target.Snapshot, _snapshot) || !_issuedRows.Contains(target))
             throw new InvalidOperationException("This Stacks row belongs to a previous view or another workspace.");
-        if (target is DomainTarget domain && !ReferenceEquals(domain.Tab, _tab) || target is FileTarget file && !ReferenceEquals(file.Tab, _tab))
+        if (target is DomainTarget domain && !ReferenceEquals(domain.Tab, _tab) ||
+            target is FileTarget file && !ReferenceEquals(file.Tab, _tab) ||
+            target is ConflictProposalTarget proposal && (!ReferenceEquals(proposal.Tab, _tab) || proposal.DomainId != _tab?.Domain?.Id))
             throw new InvalidOperationException("This Stacks row belongs to another project tab.");
         return target;
     }
@@ -31,33 +36,34 @@ public sealed partial class StackCuiWorkspace
         _issuedRows.Clear();
         _projectRows = _projects.Where(p => p.Summary is not null).Select(p => Issue(p.Summary!.ProjectId.ToString("D"), p.Summary.Name,
             new ProjectTarget(this, _snapshot, p))).ToArray();
-        _tabRows = _projectRows;
-        if (_tab is null) _domainRows = [];
+        _tabRows = _openedTabs.Where(tab => tab.Summary is not null).Select(tab => Issue(tab.Summary!.ProjectId.ToString("D"),
+            tab.Summary.Name + (ReferenceEquals(tab, _tab) ? " · current" : ""), new ProjectTarget(this, _snapshot, tab))).ToArray();
+        _reviewTarget = null;
+        if (_tab is null) { _domainRows = []; _proposalRows = []; }
         else
         {
-            var ordered = OrderedDomains(_tab.Domains);
-            _tab.DomainPage = Math.Clamp(_tab.DomainPage, 0, Math.Max(0, (ordered.Count - 1) / PageSize));
-            _domainRows = ordered.Skip(_tab.DomainPage * PageSize).Take(PageSize).Select(item => Issue(item.Domain.Id.ToString("D"),
-                $"{new string(' ', item.Depth * 2)}{item.Domain.Kind} · {item.Domain.Name}{(item.Domain.IsActive ? " · active" : "")}{(item.Domain.WorkingChanges.Count > 0 ? " ↑" : "")}",
-                new DomainTarget(this, _snapshot, _tab, item.Domain))).ToArray();
+            _domainRows = _tab.Domains.Select(item => Issue(item.Id.ToString("D"),
+                $"{new string(' ', item.Depth * 2)}{item.Kind} · {item.Name}{(item.IsActive ? " · active" : "")}{(item.WorkingChangeCount > 0 ? " ↑" : "")}",
+                new DomainTarget(this, _snapshot, _tab, item.Id))).ToArray();
+            var conflicts = _tab.Conflicts.ToDictionary(conflict => conflict.Id);
+            var proposals = _tab.ConflictProposals.Where(proposal => conflicts.ContainsKey(proposal.ConflictId)).ToArray();
+            _proposalRows = proposals.Select(proposal =>
+                {
+                    StackConflictSummary conflict = conflicts[proposal.ConflictId];
+                    var target = new ConflictProposalTarget(this, _snapshot, _tab, _tab.Domain!.Id, conflict.Id, proposal.Id);
+                    if (_tab.SelectedProposalId == proposal.Id) _reviewTarget = target;
+                    return Issue($"{conflict.Id:D}/{proposal.Id:D}",
+                        $"{conflict.Path} · proposal {proposal.Id:D} · {proposal.State} · {proposal.Summary}", target);
+                }).ToArray();
+            if (_reviewTarget is null && _tab.ReviewProposal is { } selectedProposal &&
+                conflicts.TryGetValue(selectedProposal.ConflictId, out StackConflictSummary? selectedConflict))
+            {
+                _reviewTarget = new ConflictProposalTarget(this, _snapshot, _tab, _tab.Domain!.Id,
+                    selectedConflict.Id, selectedProposal.Id);
+                _issuedRows.Add(_reviewTarget);
+            }
         }
-        PublishFileRows(); PublishDiffRows();
-    }
-    private static IReadOnlyList<(StackDomainSnapshot Domain, int Depth)> OrderedDomains(IReadOnlyList<StackDomainSnapshot> domains)
-    {
-        var live = domains.Where(d => !d.IsDeleted).ToArray();
-        var children = live.Where(d => d.ParentId is not null).GroupBy(d => d.ParentId!.Value).ToDictionary(g => g.Key,
-            g => g.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToArray());
-        var ordered = new List<(StackDomainSnapshot, int)>(); var seen = new HashSet<Guid>();
-        void Add(StackDomainSnapshot domain, int depth)
-        {
-            if (depth > 3 || !seen.Add(domain.Id)) throw new InvalidDataException("The actual domain hierarchy is cyclic or exceeds Main/Branch/Twig/Leaf.");
-            ordered.Add((domain, depth));
-            if (children.TryGetValue(domain.Id, out var nested)) foreach (var child in nested) Add(child, depth + 1);
-        }
-        foreach (var root in live.Where(d => d.ParentId is null)) Add(root, 0);
-        if (ordered.Count != live.Length) throw new InvalidDataException("The actual domain hierarchy has an unavailable parent.");
-        return ordered;
+        PublishFileRows(); PublishDiffRows(); PublishReviewDiffRows();
     }
     private IReadOnlyList<string> FilteredFiles()
     {
@@ -87,6 +93,18 @@ public sealed partial class StackCuiWorkspace
         if (_tab is not null) _tab.DiffPage = Math.Clamp(_tab.DiffPage, 0, Math.Max(0, (lines.Count - 1) / PageSize));
         _diffRows = lines.Skip((_tab?.DiffPage ?? 0) * PageSize).Take(PageSize).Select((line, index) => new StackNativeDiffRow(
             ((_tab?.DiffPage ?? 0) * PageSize + index).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            line.BeforeLineNumber?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
+            line.AfterLineNumber?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
+            line.BeforeText ?? "", line.AfterText ?? "", line.Kind switch
+            { SourceTextDiffKind.Added => "+", SourceTextDiffKind.Removed => "−", _ => "" })).ToArray();
+    }
+    private void PublishReviewDiffRows()
+    {
+        var lines = _tab?.ReviewDiff?.Lines ?? [];
+        if (_tab is not null) _tab.ReviewDiffPage = Math.Clamp(_tab.ReviewDiffPage, 0, Math.Max(0, (lines.Count - 1) / PageSize));
+        int page = _tab?.ReviewDiffPage ?? 0;
+        _reviewDiffRows = lines.Skip(page * PageSize).Take(PageSize).Select((line, index) => new StackNativeDiffRow(
+            (page * PageSize + index).ToString(System.Globalization.CultureInfo.InvariantCulture),
             line.BeforeLineNumber?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             line.AfterLineNumber?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             line.BeforeText ?? "", line.AfterText ?? "", line.Kind switch

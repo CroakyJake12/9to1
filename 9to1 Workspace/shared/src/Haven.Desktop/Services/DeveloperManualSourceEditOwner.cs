@@ -59,18 +59,29 @@ public sealed class DeveloperManualSourceEditOwner(
             ?? throw new UnauthorizedAccessException("The original configured Files workspace is unavailable.");
         var selection = await selections.SelectOriginalRegisteredProjectAsync(configuration.StoreId, project, token).ConfigureAwait(false);
         var readAdmission = await reads.AcquireOriginalAsync(selection, token).ConfigureAwait(false);
-        try
+        return await WithOriginalCleanupAsync(async () =>
         {
             var captured = await selections.CaptureOriginalAsync(selection, readAdmission, token).ConfigureAwait(false);
             var edit = await edits.AcquireOriginalEditAsync(selection, captured, relativePath, expectedSha256, newText, token).ConfigureAwait(false);
-            try
-            {
-                return await capture.ApplyOriginalCapturedFileEditAsync(captured, readAdmission, edit,
-                    relativePath, expectedSha256, newText, token).ConfigureAwait(false);
-            }
-            finally { await edit.DisposeAsync().ConfigureAwait(false); }
-        }
-        finally { await readAdmission.DisposeAsync().ConfigureAwait(false); }
+            return await WithOriginalCleanupAsync(
+                () => capture.ApplyOriginalCapturedFileEditAsync(captured, readAdmission, edit,
+                    relativePath, expectedSha256, newText, token), edit.DisposeAsync).ConfigureAwait(false);
+        }, readAdmission.DisposeAsync).ConfigureAwait(false);
+    }
+
+    // Every acquired permission is closed independently. A cleanup failure must
+    // not replace the operation failure or prevent sibling cleanup from running.
+    internal static async Task<T> WithOriginalCleanupAsync<T>(Func<Task<T>> operation, Func<ValueTask> cleanup)
+    {
+        ArgumentNullException.ThrowIfNull(operation); ArgumentNullException.ThrowIfNull(cleanup);
+        var failures = new List<Exception>(); T? result = default;
+        try { result = await operation().ConfigureAwait(false); }
+        catch (Exception failure) { failures.Add(failure); }
+        try { await cleanup().ConfigureAwait(false); }
+        catch (Exception failure) { failures.Add(failure); }
+        if (failures.Count == 1) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        if (failures.Count > 1) throw new AggregateException("The source-edit operation and original cleanup did not all complete successfully.", failures);
+        return result!;
     }
 
     // Inputs are private editor snapshots, never Files identities or authority.
@@ -149,8 +160,12 @@ public sealed class DeveloperManualSourceEditOwner(
                 // The ledger has independently joined every raw child, including
                 // one issued before a finite callback refused. Keep direct causes.
                 originals.Retain(error);
-                var canceled = businessToken.IsCancellationRequested && originals.OriginalTasks.Any(actual => actual.IsCanceled) &&
-                    originals.OriginalTasks.All(actual => !actual.IsFaulted);
+                // Once a write was issued, cancellation cannot establish that no
+                // side effect occurred. Keep that result inspectable as Failed;
+                // Cancelled is reserved for work stopped before write admission.
+                var canceled = !writeStarted && businessToken.IsCancellationRequested &&
+                    originals.OriginalTasks.All(actual => !actual.IsFaulted) &&
+                    originals.OriginalErrors.All(IsCancellationFailure);
                 state = canceled ? DeveloperManualSaveState.Cancelled : DeveloperManualSaveState.Failed;
                 var cause = originals.OriginalErrors.FirstOrDefault(value => value is not AggregateException) ?? error;
                 var message = cause.Message.Length > 240 ? cause.Message[..240] + "…" : cause.Message;
@@ -215,6 +230,12 @@ public sealed class DeveloperManualSourceEditOwner(
 
     internal static string Sha256(string text) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     private static bool IsHash(string value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
+    private static bool IsCancellationFailure(Exception error) => error switch
+    {
+        OperationCanceledException => true,
+        AggregateException aggregate => aggregate.InnerExceptions.Count != 0 && aggregate.InnerExceptions.All(IsCancellationFailure),
+        _ => false
+    };
     private static void DemandSafeProjectRelativePath(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);

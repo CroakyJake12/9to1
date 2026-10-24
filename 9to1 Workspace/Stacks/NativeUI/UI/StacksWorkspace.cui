@@ -4,6 +4,10 @@
     <Action name="OpenTab" command="9to1.Stacks.OpenProject" parameter="{Binding tab.Target}" />
     <Action name="SelectDomain" command="9to1.Stacks.SelectDomain" parameter="{Binding domain.Target}" />
     <Action name="SelectFile" command="9to1.Stacks.SelectFile" parameter="{Binding file.Target}" />
+    <Action name="SelectConflictProposal" command="9to1.Stacks.SelectConflictProposal" parameter="{Binding proposal.Target}" />
+    <Action name="RejectConflictProposal" command="9to1.Stacks.RejectConflictProposal" parameter="{Binding ReviewTarget}" />
+    <Action name="AcceptConflictProposalWithoutMerge" command="9to1.Stacks.AcceptConflictProposalWithoutMerge" parameter="{Binding ReviewTarget}" />
+    <Action name="AcceptConflictProposalAndMerge" command="9to1.Stacks.AcceptConflictProposalAndMerge" parameter="{Binding ReviewTarget}" />
   </Actions>
   <Page>
     <Container margin="12" Type="Grid" RowSizes="Auto Auto 1fr Auto">
@@ -44,6 +48,47 @@
             <Button name="StacksSetActive" action="9to1.Stacks.SetActive" content="Set selected domain active" />
             <Text text="{Binding Counts}" text-wrapping="Wrap" />
             <Text text="{Binding Conflicts}" />
+            <Text text="Conflict proposal review" font-size="16" />
+            <Container max-height="120" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
+              <Container Type="Vertical Stack" CellGap="4">
+                <Repeat source="{Binding ConflictProposals}" as="proposal" key="{Binding proposal.Key}">
+                  <Button name="StacksSelectConflictProposal" action="SelectConflictProposal" content="{Binding proposal.Label}" accessible-name="{Binding proposal.Label}" />
+                </Repeat>
+              </Container>
+            </Container>
+            <Text text="{Binding ProposalPageLabel}" />
+            <Container Type="Horizontal Stack" CellGap="6">
+              <Button action="9to1.Stacks.PreviousConflictProposals" content="Previous proposals" />
+              <Button action="9to1.Stacks.NextConflictProposals" content="Next proposals" />
+            </Container>
+            <Text name="StacksReviewIdentity" text="{Binding ReviewIdentity}" text-wrapping="Wrap" />
+            <Text text="{Binding ReviewSummary}" text-wrapping="Wrap" />
+            <Text text="{Binding ReviewDiffDescription}" text-wrapping="Wrap" />
+            <Text text="{Binding ReviewDiffPageLabel}" />
+            <Container Type="Grid" ColumnSizes="40 1fr 40 1fr">
+              <Text text="Current local source" Column="1" />
+              <Text text="Proposed resolution" Column="3" />
+            </Container>
+            <Repeat source="{Binding ReviewDiffLines}" as="reviewLine" key="{Binding reviewLine.Key}">
+              <Container margin="0,2" Type="Grid" ColumnSizes="40 1fr 40 1fr">
+                <Text text="{Binding reviewLine.BeforeNumber}" />
+                <Text text="{Binding reviewLine.BeforeText}" text-wrapping="Wrap" Column="1" />
+                <Text text="{Binding reviewLine.AfterNumber}" Column="2" />
+                <Container Type="Horizontal Stack" Column="3" CellGap="4">
+                  <Text text="{Binding reviewLine.Change}" />
+                  <Text text="{Binding reviewLine.AfterText}" text-wrapping="Wrap" />
+                </Container>
+              </Container>
+            </Repeat>
+            <Container Type="Horizontal Stack" CellGap="6">
+              <Button action="9to1.Stacks.PreviousReviewDiff" content="Previous proposal diff" />
+              <Button action="9to1.Stacks.NextReviewDiff" content="Next proposal diff" />
+            </Container>
+            <Container Type="Horizontal Stack" CellGap="6">
+              <Button name="StacksRejectConflictProposal" action="RejectConflictProposal" content="Reject proposal" />
+              <Button name="StacksAcceptConflictProposalWithoutMerge" action="AcceptConflictProposalWithoutMerge" content="Accept without merging" />
+              <Button name="StacksAcceptConflictProposalAndMerge" action="AcceptConflictProposalAndMerge" content="Accept and merge" />
+            </Container>
             <Text text="{Binding DomainPageLabel}" />
             <Container max-height="140" Type="Overlay" VerticalScrolling="True" HorizontalScrolling="False">
               <Container Type="Vertical Stack" CellGap="4">

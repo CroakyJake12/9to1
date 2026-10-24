@@ -190,6 +190,9 @@ public sealed record StackConflict(
     bool IsResolved = false,
     bool MergeCompleted = false);
 
+public sealed record StackConflictSummary(Guid Id, Guid ProjectId, Guid DomainId, string Path,
+    Guid BaseRevisionId, Guid IncomingRevisionId, DateTimeOffset CreatedAt, bool IsResolved, bool MergeCompleted);
+
 public sealed record StackConflictProposal(
     Guid Id,
     Guid ConflictId,
@@ -198,6 +201,13 @@ public sealed record StackConflictProposal(
     StackConflictProposalState State,
     DateTimeOffset CreatedAt,
     string ProposedBy);
+
+public sealed record StackConflictProposalSummary(Guid Id, Guid ConflictId, string Summary,
+    StackConflictProposalState State, DateTimeOffset CreatedAt, string ProposedBy);
+
+public sealed record StackConflictProposalPage(int PageIndex, int PageSize, int TotalCount,
+    Guid? RequestedProposalId, bool RequestedProposalFound, StackConflictProposal? RequestedProposal,
+    IReadOnlyList<StackConflictProposalSummary> Entries);
 
 public sealed record StackRoot(
     Guid Id,
@@ -261,6 +271,11 @@ public sealed record StackDomainSnapshot(
     // Optional read projection; existing positional callers and persisted manifest formats remain unchanged.
     public IReadOnlyList<StackMutation> WorkingChanges { get; init; } = [];
 }
+
+public sealed record StackLineageEntry(Guid Id, Guid ProjectId, string Name, StackDomainKind Kind,
+    Guid? ParentId, bool IsActive, int WorkingChangeCount, int Depth);
+public sealed record StackLineagePage(int PageIndex, int PageSize, int TotalCount,
+    Guid? RequestedDomainId, bool RequestedDomainFound, IReadOnlyList<StackLineageEntry> Entries);
 
 public sealed record StackDomainChanges(int Added, int Deleted, int Modified, int Renamed, IReadOnlyList<StackMutation> Changes);
 

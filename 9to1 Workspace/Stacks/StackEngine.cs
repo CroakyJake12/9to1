@@ -70,8 +70,9 @@ public sealed class StackEngine
         }
     }
 
-    public async Task<StackDomainSnapshot> OpenProjectAsync(CancellationToken cancellationToken = default)
+    public async Task<StackDomainSnapshot> OpenProjectAsync(StackActor actor, CancellationToken cancellationToken = default)
     {
+        Demand(actor, StackCapability.ViewSource, "project");
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -87,17 +88,134 @@ public sealed class StackEngine
         }
     }
 
-    public async Task<IReadOnlyList<StackDomainSnapshot>> GetLineageAsync(CancellationToken cancellationToken = default)
+    public async Task<StackLineagePage> GetLineagePageAsync(StackActor actor, int pageIndex, int pageSize,
+        Guid? requestedDomainId = null, bool locateRequestedDomain = false, CancellationToken cancellationToken = default)
     {
+        Demand(actor, StackCapability.ViewSource, "project");
+        if (pageIndex < 0) throw new ArgumentOutOfRangeException(nameof(pageIndex));
+        if (pageSize is < 1 or > 200) throw new ArgumentOutOfRangeException(nameof(pageSize));
+        if (pageIndex > int.MaxValue / pageSize) throw new ArgumentOutOfRangeException(nameof(pageIndex));
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
-            return state.Domains.Where(static domain => !domain.IsDeleted)
-                .OrderBy(static domain => domain.Kind)
-                .ThenBy(static domain => domain.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(ToSnapshot)
-                .ToArray();
+            if (_originalSourceNeedsReopen)
+                throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "Reopen the original project source before continuing.", JsonFileStackProjectStore.ManifestRelativePath,
+                    recoverable: true, retryable: true);
+            if (_store is JsonFileStackProjectStore jsonStore)
+            {
+                try
+                {
+                    // Lineage is a metadata-only projection. Keep the actual manifest
+                    // and all resource payloads unmaterialized when a caller only asks
+                    // for a page; an existing receipt still binds this read to its CAS.
+                    return await jsonStore.ReadLineagePageOriginalAsync(_originalSourceRevision,
+                        pageIndex, pageSize, requestedDomainId, locateRequestedDomain, cancellationToken).ConfigureAwait(false);
+                }
+                catch (StackFailureException failure) when (failure.Code == StackFailureCode.RevisionConflict)
+                {
+                    _originalSourceNeedsReopen = true;
+                    throw;
+                }
+            }
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
+            var domainsById = new Dictionary<Guid, StackDomainRecord>(state.Domains.Count);
+            foreach (StackDomainRecord domain in state.Domains)
+                if (!domainsById.TryAdd(domain.Id, domain))
+                    throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                        "The Stack lineage contains a duplicate DomainID.", domain.Id.ToString("D"), recoverable: true);
+            int totalCount = domainsById.Values.Count(static domain => !domain.IsDeleted);
+            if (totalCount == 0)
+                throw new StackFailureException(StackFailureCode.SourceCorrupt, "A Stack project has no live Main domain.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true);
+
+            int requestedIndex = -1;
+            int resolvedPage = pageIndex;
+            StackLineageEntry[] CollectPage(int offset)
+            {
+                var entries = new List<StackLineageEntry>(Math.Min(pageSize, Math.Max(0, totalCount - offset)));
+                var recent = new Queue<StackLineageEntry>(pageSize);
+                var seen = new HashSet<Guid>();
+                int index = 0;
+                int targetOffset = offset;
+                bool locatedPage = false;
+                void Visit(StackDomainRecord domain, int depth)
+                {
+                    if (depth > 3 || !seen.Add(domain.Id))
+                        throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                            "The live Stack domain hierarchy is cyclic or exceeds Main/Branch/Twig/Leaf.", domain.Id.ToString("D"), recoverable: true);
+                    if (requestedDomainId == domain.Id)
+                    {
+                        requestedIndex = index;
+                        if (locateRequestedDomain)
+                        {
+                            resolvedPage = index / pageSize;
+                            targetOffset = checked(resolvedPage * pageSize);
+                            entries.Clear();
+                            int historyIndex = index - recent.Count;
+                            foreach (StackLineageEntry prior in recent)
+                            {
+                                if (historyIndex >= targetOffset) entries.Add(prior);
+                                historyIndex++;
+                            }
+                            locatedPage = true;
+                        }
+                    }
+                    var entry = new StackLineageEntry(domain.Id, domain.ProjectId, domain.Name, domain.Kind,
+                        domain.ParentId, domain.IsActive, domain.WorkingChanges.Count, depth);
+                    int activeOffset = locateRequestedDomain && locatedPage ? targetOffset : offset;
+                    if (index >= activeOffset && entries.Count < pageSize) entries.Add(entry);
+                    if (recent.Count == pageSize) recent.Dequeue();
+                    recent.Enqueue(entry);
+                    index++;
+                    var children = new List<StackDomainRecord>(domain.ChildDomainIds.Count);
+                    foreach (Guid childId in domain.ChildDomainIds)
+                    {
+                        if (!domainsById.TryGetValue(childId, out StackDomainRecord? child) || child is null ||
+                            child.IsDeleted || child.ParentId != domain.Id)
+                            throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                                "The Stack lineage contains a missing, deleted or mismatched child link.", domain.Id.ToString("D"), recoverable: true);
+                        children.Add(child);
+                    }
+                    foreach (StackDomainRecord child in children.OrderBy(static child => child.Name, StringComparer.OrdinalIgnoreCase))
+                        Visit(child, depth + 1);
+                }
+
+                if (!domainsById.TryGetValue(state.MainDomainId, out StackDomainRecord? main) || main is null)
+                    throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                        "The Stack lineage has no Main domain.", state.MainDomainId.ToString("D"), recoverable: true);
+                if (main.IsDeleted || main.ParentId is not null)
+                    throw new StackFailureException(StackFailureCode.SourceCorrupt, "The live Stack hierarchy has no valid Main root.", main.Id.ToString("D"), recoverable: true);
+                Visit(main, 0);
+                if (index != totalCount)
+                    throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                        "The live Stack domain hierarchy contains an unavailable parent.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true);
+                return entries.ToArray();
+
+            }
+
+            StackLineageEntry[] entries = CollectPage(checked(resolvedPage * pageSize));
+            bool requestedFound = requestedDomainId is null || requestedIndex >= 0;
+            return new StackLineagePage(resolvedPage, pageSize, totalCount, requestedDomainId, requestedFound, entries);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>Loads content for one explicitly selected domain; lineage pages remain metadata-only.</summary>
+    public async Task<StackDomainSnapshot> GetDomainSnapshotAsync(Guid domainId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
+            StackDomainRecord domain = FindDomain(state, domainId);
+            if (domain.IsDeleted)
+                throw Failure(StackFailureCode.DomainNotFound, "The requested Stack domain is deleted.", domainId);
+            return ToSnapshot(domain);
         }
         finally
         {
@@ -149,6 +267,8 @@ public sealed class StackEngine
 
     public async Task<StackDomainSnapshot> CreateBranchAsync(Guid projectId, string name, StackActor actor, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(actor);
+        Demand(actor, StackCapability.CreateDomain, projectId.ToString("D"));
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         Guid mainId;
         try
@@ -358,6 +478,7 @@ public sealed class StackEngine
 
             StackMutation[] changes = domain.LocalChanges.Values.Concat(domain.WorkingChanges.Values)
                 .OrderBy(static mutation => mutation.Path, StringComparer.OrdinalIgnoreCase)
+                .Select(static mutation => mutation with { Resource = mutation.Resource?.Copy() })
                 .ToArray();
             int renamed = changes.Count(static mutation => mutation.Kind == StackMutationKind.Rename);
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
@@ -375,8 +496,44 @@ public sealed class StackEngine
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
-            return state.Conflicts.Where(conflict => domainId is null || conflict.DomainId == domainId).ToArray();
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
+            return state.Conflicts.Where(conflict => domainId is null || conflict.DomainId == domainId)
+                .Select(CloneConflict).ToArray();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<IReadOnlyList<StackConflictSummary>> GetConflictSummariesAsync(Guid domainId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
+            return state.Conflicts.Where(conflict => conflict.DomainId == domainId)
+                .Select(conflict => new StackConflictSummary(conflict.Id, conflict.ProjectId, conflict.DomainId,
+                    conflict.Path, conflict.BaseRevisionId, conflict.IncomingRevisionId, conflict.CreatedAt,
+                    conflict.IsResolved, conflict.MergeCompleted)).ToArray();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<StackConflict> GetConflictSnapshotAsync(Guid conflictId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, conflictId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StackConflict conflict = FindConflict(await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false), conflictId);
+            return CloneConflict(conflict);
         }
         finally
         {
@@ -390,8 +547,105 @@ public sealed class StackEngine
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
-            return state.ConflictProposals.ToArray();
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
+            return state.ConflictProposals.Select(CloneConflictProposal).ToArray();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<StackConflictProposalPage> GetConflictProposalsPageAsync(StackActor actor, Guid domainId,
+        int pageIndex, int pageSize, Guid? requestedProposalId = null, bool locateRequestedProposal = false,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        if (pageIndex < 0) throw new ArgumentOutOfRangeException(nameof(pageIndex));
+        if (pageSize is < 1 or > 200) throw new ArgumentOutOfRangeException(nameof(pageSize));
+        if (pageIndex > int.MaxValue / pageSize) throw new ArgumentOutOfRangeException(nameof(pageIndex));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (_originalSourceNeedsReopen)
+                throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "Reopen the original project source before continuing.", JsonFileStackProjectStore.ManifestRelativePath,
+                    recoverable: true, retryable: true);
+            if (_store is JsonFileStackProjectStore jsonStore)
+            {
+                try
+                {
+                    return await jsonStore.ReadConflictProposalsPageOriginalAsync(_originalSourceRevision,
+                        domainId, pageIndex, pageSize, requestedProposalId, locateRequestedProposal,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                catch (StackFailureException failure) when (failure.Code == StackFailureCode.RevisionConflict)
+                {
+                    _originalSourceNeedsReopen = true;
+                    throw;
+                }
+            }
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
+            HashSet<Guid> conflicts = state.Conflicts.Where(conflict => conflict.DomainId == domainId)
+                .Select(conflict => conflict.Id).ToHashSet();
+            int initialOffset = checked(pageIndex * pageSize);
+            var entries = new List<StackConflictProposalSummary>(pageSize);
+            var recent = new Queue<StackConflictProposalSummary>(pageSize);
+            int totalCount = 0, requestedIndex = -1, resolvedPage = pageIndex;
+            int targetOffset = initialOffset;
+            StackConflictProposal? requestedProposal = null;
+            bool locatedPage = false;
+            foreach (StackConflictProposal proposal in state.ConflictProposals)
+            {
+                if (!conflicts.Contains(proposal.ConflictId)) continue;
+                if (requestedProposalId == proposal.Id)
+                {
+                    requestedIndex = totalCount;
+                    requestedProposal = proposal;
+                    if (locateRequestedProposal)
+                    {
+                        resolvedPage = totalCount / pageSize;
+                        targetOffset = checked(resolvedPage * pageSize);
+                        entries.Clear();
+                        int historyIndex = totalCount - recent.Count;
+                        foreach (StackConflictProposalSummary prior in recent)
+                        {
+                            if (historyIndex >= targetOffset) entries.Add(prior);
+                            historyIndex++;
+                        }
+                        locatedPage = true;
+                    }
+                }
+                int activeOffset = locateRequestedProposal && locatedPage ? targetOffset : initialOffset;
+                var summary = new StackConflictProposalSummary(proposal.Id, proposal.ConflictId, proposal.Summary,
+                    proposal.State, proposal.CreatedAt, proposal.ProposedBy);
+                if (totalCount >= activeOffset && entries.Count < pageSize) entries.Add(summary);
+                if (recent.Count == pageSize) recent.Dequeue();
+                recent.Enqueue(summary);
+                totalCount++;
+            }
+            bool requestedFound = requestedProposalId is null || requestedIndex >= 0;
+            return new StackConflictProposalPage(resolvedPage, pageSize, totalCount, requestedProposalId,
+                requestedFound, requestedProposal is null ? null : CloneConflictProposal(requestedProposal),
+                entries.ToArray());
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<StackConflictProposal> GetConflictProposalSnapshotAsync(Guid proposalId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, proposalId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
+            StackConflictProposal proposal = state.ConflictProposals.FirstOrDefault(item => item.Id == proposalId)
+                ?? throw Failure(StackFailureCode.DomainNotFound, "The conflict proposal was not found.", proposalId);
+            return CloneConflictProposal(proposal);
         }
         finally
         {
@@ -486,7 +740,7 @@ public sealed class StackEngine
             state.ConflictProposals.Add(proposal);
             AddAudit(state, actor, "ConflictProposalCreated", state.ProjectId, proposal.Id, conflict.BaseRevisionId, conflict.IncomingRevisionId, "PendingReview");
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-            return proposal;
+            return proposal with { ProposedResource = proposal.ProposedResource?.Copy() };
         }
         finally
         {
@@ -523,6 +777,23 @@ public sealed class StackEngine
             }
 
             StackDomainRecord domain = FindDomain(state, conflict.DomainId);
+            EnsureWritableDomain(domain);
+            EnsureNotFrozen(state, domain, conflict.Path, actor);
+            EnsureRootEditable(state, domain, conflict.Path);
+            StackDomainRecord parent = domain.ParentId is { } parentId
+                ? FindDomain(state, parentId)
+                : throw Failure(StackFailureCode.InvalidHierarchy, "A conflict proposal requires a parent domain.", domain.Id);
+            Guid currentIncomingRevision = parent.HeadRevisionId ?? parent.BaseRevisionId;
+            StackResource? currentBase = domain.BaseTree.GetValueOrDefault(conflict.Path);
+            StackResource? currentLocal = BuildEffectiveTree(state, domain.Id, conflict.Id).GetValueOrDefault(conflict.Path);
+            StackResource? currentIncoming = BuildEffectiveTree(state, parent.Id).GetValueOrDefault(conflict.Path);
+            if (currentIncomingRevision != conflict.IncomingRevisionId ||
+                !Equivalent(currentBase, conflict.Base) || !Equivalent(currentLocal, conflict.Local) ||
+                !Equivalent(currentIncoming, conflict.Incoming))
+                throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "The incoming revision or conflict path's base, local or incoming source changed after this proposal was prepared. Refresh the conflict and create a proposal for its current source.",
+                    conflict.Id.ToString("D"), recoverable: true, retryable: true);
+
             domain.BaseTree[conflict.Path] = conflict.Incoming?.Copy();
             domain.WorkingChanges[conflict.Path] = proposal.ProposedResource is null
                 ? new StackMutation(StackMutationKind.Delete, conflict.Path)
@@ -577,7 +848,7 @@ public sealed class StackEngine
             state.Roots.Add(root);
             AddAudit(state, actor, "RootCreated", state.ProjectId, root.Id, null, null, "Succeeded", string.Join(",", normalized));
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-            return root;
+            return root with { Paths = root.Paths.ToArray() };
         }
         finally
         {
@@ -676,7 +947,7 @@ public sealed class StackEngine
             state.Subroots.Add(subroot);
             AddAudit(state, actor, "SubrootCreated", state.ProjectId, subroot.Id, owner.HeadRevisionId, owner.HeadRevisionId, "Succeeded");
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-            return subroot;
+            return CloneSubroot(subroot);
         }
         finally
         {
@@ -736,7 +1007,7 @@ public sealed class StackEngine
             subroot = subroot with { CompletedChecks = completed };
             Replace(state.Subroots, subroot);
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-            return subroot;
+            return CloneSubroot(subroot);
         }
         finally
         {
@@ -756,7 +1027,7 @@ public sealed class StackEngine
             Replace(state.Subroots, updated);
             AddAudit(state, reviewer, "SubrootApproved", state.ProjectId, subrootId, null, null, "Succeeded");
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-            return updated;
+            return CloneSubroot(updated);
         }
         finally
         {
@@ -868,7 +1139,7 @@ public sealed class StackEngine
             state.Freezes.Add(freeze);
             AddAudit(state, actor, "FreezeCreated", state.ProjectId, freeze.Id, null, null, "Active", targetPath);
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
-            return freeze;
+            return freeze with { DescendantDomainIds = freeze.DescendantDomainIds.ToHashSet() };
         }
         finally
         {
@@ -969,9 +1240,17 @@ public sealed class StackEngine
                 throw Failure(StackFailureCode.RestoreIncomplete, "The configured recovery retention period has elapsed.", domainId);
             }
 
+            StackDomainRecord? parent = null;
+            if (domain.ParentId is Guid parentId)
+            {
+                parent = FindDomain(state, parentId);
+                if (parent.IsDeleted)
+                    throw new StackFailureException(StackFailureCode.RestoreIncomplete,
+                        "Restore the parent domain before restoring this child.", parentId.ToString("D"), recoverable: true, retryable: true);
+            }
+
             domain.IsDeleted = false;
             domain.DeletedAt = null;
-            StackDomainRecord? parent = domain.ParentId is Guid parentId ? FindDomain(state, parentId) : null;
             parent?.ChildDomainIds.Add(domain.Id);
             AddAudit(state, actor, "DomainRestored", state.ProjectId, domain.Id, domain.HeadRevisionId, domain.HeadRevisionId, "Succeeded");
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
@@ -1015,7 +1294,11 @@ public sealed class StackEngine
             domain.DeletedAt = DateTimeOffset.UtcNow;
             domain.IsActive = false;
             if (domain.ParentId is Guid parentId) FindDomain(state, parentId).ChildDomainIds.Remove(domainId);
-            if (state.ActiveDomainId == domainId) state.ActiveDomainId = state.MainDomainId;
+            if (state.ActiveDomainId == domainId)
+            {
+                state.ActiveDomainId = state.MainDomainId;
+                FindDomain(state, state.MainDomainId).IsActive = true;
+            }
             AddAudit(state, actor, "DomainPruned", state.ProjectId, domainId, domain.HeadRevisionId, domain.HeadRevisionId, "RecoverableDeleted");
             await SaveAsync(state, cancellationToken).ConfigureAwait(false);
         }
@@ -1031,7 +1314,17 @@ public sealed class StackEngine
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            if (_originalSourceNeedsReopen)
+                throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "Reopen the original project source before continuing.", JsonFileStackProjectStore.ManifestRelativePath,
+                    recoverable: true, retryable: true);
+            if (_store is JsonFileStackProjectStore jsonStore)
+            {
+                try { return await jsonStore.ReadProjectSummaryOriginalAsync(_originalSourceRevision, cancellationToken).ConfigureAwait(false); }
+                catch (StackFailureException failure) when (failure.Code == StackFailureCode.RevisionConflict)
+                { _originalSourceNeedsReopen = true; throw; }
+            }
+            StackManifest state = await GetReadOnlyQueryStateAsync(cancellationToken).ConfigureAwait(false);
             return new StackProjectSummary(state.ProjectId, state.Name, state.StorageMode, state.AuthorityMode,
                 state.ActiveDomainId ?? state.MainDomainId, state.Domains.Count(static domain => !domain.IsDeleted),
                 state.Conflicts.Count(static conflict => !conflict.IsResolved), state.Freezes.Count(static freeze => freeze.State == StackFreezeState.Active),
@@ -1084,6 +1377,25 @@ public sealed class StackEngine
 
     private async Task<StackManifest> GetStateAsync(CancellationToken cancellationToken)
     {
+        StackManifest state = await GetValidatedStateAsync(cancellationToken).ConfigureAwait(false);
+        byte[] cloneBytes = JsonSerializer.SerializeToUtf8Bytes(state);
+        return JsonSerializer.Deserialize<StackManifest>(cloneBytes)
+            ?? throw new StackFailureException(StackFailureCode.SourceCorrupt, "The in-memory Stack manifest could not be copied for an atomic operation.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true);
+    }
+
+    private async Task<StackManifest> GetReadOnlyQueryStateAsync(CancellationToken cancellationToken)
+    {
+        // The JSON store transfers a newly deserialized manifest to this engine,
+        // which owns its cached instance. Read-only projections can inspect that
+        // instance under _gate without cloning every resource/content byte array.
+        // Unknown IStackProjectStore implementations retain the defensive clone.
+        if (_store is not JsonFileStackProjectStore)
+            return await GetStateAsync(cancellationToken).ConfigureAwait(false);
+        return await GetValidatedStateAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<StackManifest> GetValidatedStateAsync(CancellationToken cancellationToken)
+    {
         if (_originalSourceNeedsReopen) throw new StackFailureException(StackFailureCode.RevisionConflict,
             "Reopen the original project source before continuing.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true, retryable: true);
         _manifest ??= await LoadOriginalStateAsync(cancellationToken).ConfigureAwait(false);
@@ -1091,9 +1403,7 @@ public sealed class StackEngine
             try { await original.ValidateOriginalRevisionAsync(_originalSourceRevision, cancellationToken).ConfigureAwait(false); }
             catch { _originalSourceNeedsReopen = true; throw; }
         ValidateProjectState(_manifest);
-        byte[] cloneBytes = JsonSerializer.SerializeToUtf8Bytes(_manifest);
-        return JsonSerializer.Deserialize<StackManifest>(cloneBytes)
-            ?? throw new StackFailureException(StackFailureCode.SourceCorrupt, "The in-memory Stack manifest could not be copied for an atomic operation.", JsonFileStackProjectStore.ManifestRelativePath, recoverable: true);
+        return _manifest;
     }
 
     private async Task<StackManifest> LoadOriginalStateAsync(CancellationToken cancellationToken)
@@ -1166,7 +1476,8 @@ public sealed class StackEngine
         }
     }
 
-    private static Dictionary<string, StackResource> BuildEffectiveTree(StackManifest state, Guid domainId)
+    private static Dictionary<string, StackResource> BuildEffectiveTree(StackManifest state, Guid domainId,
+        Guid? excludedConflictId = null)
     {
         StackDomainRecord domain = FindDomain(state, domainId);
         var tree = new Dictionary<string, StackResource>(StringComparer.OrdinalIgnoreCase);
@@ -1180,7 +1491,8 @@ public sealed class StackEngine
             ApplyToTree(tree, mutation);
         }
 
-        foreach (StackConflict conflict in state.Conflicts.Where(conflict => conflict.DomainId == domainId && !conflict.IsResolved))
+        foreach (StackConflict conflict in state.Conflicts.Where(conflict => conflict.DomainId == domainId &&
+            !conflict.IsResolved && conflict.Id != excludedConflictId))
         {
             if (conflict.Local is null) tree.Remove(conflict.Path);
             else tree[conflict.Path] = conflict.Local.Copy();
@@ -1325,7 +1637,7 @@ public sealed class StackEngine
         var revision = new StackRevision(Guid.NewGuid(), ++state.RevisionSequence, domain.Id, domain.HeadRevisionId ?? domain.BaseRevisionId,
             DateTimeOffset.UtcNow, actor.ActorId, message, paths.ToArray());
         state.Revisions.Add(revision);
-        return revision;
+        return revision with { ChangedPaths = revision.ChangedPaths.ToArray() };
     }
 
     private static void EnsureWritableDomain(StackDomainRecord domain)
@@ -1385,6 +1697,23 @@ public sealed class StackEngine
     {
         WorkingChanges = domain.WorkingChanges.Values.OrderBy(change => change.Path, StringComparer.OrdinalIgnoreCase)
             .Select(change => change with { Resource = change.Resource?.Copy() }).ToArray(),
+    };
+
+    private static StackConflict CloneConflict(StackConflict conflict) => conflict with
+    {
+        Base = conflict.Base?.Copy(), Local = conflict.Local?.Copy(), Incoming = conflict.Incoming?.Copy(),
+    };
+
+    private static StackConflictProposal CloneConflictProposal(StackConflictProposal proposal) => proposal with
+    { ProposedResource = proposal.ProposedResource?.Copy() };
+
+    private static StackSubroot CloneSubroot(StackSubroot subroot) => subroot with
+    {
+        RootIds = subroot.RootIds.ToArray(),
+        ProposedChanges = subroot.ProposedChanges.Select(static change => change with { Resource = change.Resource?.Copy() }).ToArray(),
+        RequiredChecks = subroot.RequiredChecks.ToHashSet(StringComparer.Ordinal),
+        CompletedChecks = subroot.CompletedChecks.ToHashSet(StringComparer.Ordinal),
+        Approvals = subroot.Approvals.ToHashSet(StringComparer.Ordinal),
     };
 
     private static IReadOnlyDictionary<string, StackResource?> CloneNullableTree(IReadOnlyDictionary<string, StackResource?> source) =>
