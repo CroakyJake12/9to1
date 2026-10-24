@@ -152,7 +152,7 @@ internal sealed class DeveloperTaskDraftRecoveryOwner(
         return new(profile, taskId, runId, contextId);
     }
     public Task<DeveloperManualRecoveryState> RestoreAsync(DeveloperResolvedProject project, Action<Action> scope,
-        CancellationToken token) => Start(scope, async sources =>
+        CancellationToken token) => Start<DeveloperManualRecoveryState>(scope, async sources =>
     {
         DeveloperManualSourceReadOwner.DemandOriginalRecoveryKeys(keys, paths);
         var current = await CurrentAsync(sources, null, token).ConfigureAwait(false);
@@ -220,7 +220,7 @@ internal sealed class DeveloperTaskDraftRecoveryOwner(
         {
             Scope(sources, () => reservation = execution.AcquireOriginalMetadataRebindUpdate(before));
             Scope(sources, () => mutation = source.BeginOriginalInitialInputMetadataMutation(initial, before));
-            sources.Track(mutation!.OriginalSettlement);
+            Retain(sources, mutation!.OriginalSettlement);
             var saved = await Observe(sources, () => store.PrepareAndSaveDraftRecoveryAsync(project, partition, expected,
                 async (recordsExist, ct) =>
                 {
