@@ -1,6 +1,7 @@
 ﻿<Cui id="home" product="9-1" version="1">
   <Actions>
     <Action name="ApplyHomeAppearanceOption" command="ApplyHomeAppearance" parameter="{Binding option.Target}" />
+    <Action name="OpenHomeLibraryArtifact" command="OpenHomeLibraryArtifact" parameter="{Binding artifact.Target}" />
     <Action name="SelectHomeEvent" command="SelectEventObject" parameter="{Binding activity.EventId}" />
   </Actions>
   <Theme Name="user_preference">
@@ -118,19 +119,36 @@
                   </Container>
                 </If>
                 <If Condition="{Binding IsLibrary}">
-                  <Container id="library-page" Type="Vertical Stack">
-                    <Text text="Library" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-                    <Text text="Find authorised artifacts across your apps. Items stay in their owning app." foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 14" />
-                    <Container Type="Horizontal Stack">
-                      <Input id="library-search" placeholder-text="Search artifacts" accessible-name="Search Library" width="360" Type="Text" />
-                      <Button id="library-search-submit" action="SearchLibrary" content="Search" margin="12 0 0 0" />
+                  <Container id="library-page" Type="Vertical Stack" VerticalScrolling="True" HorizontalScrolling="False" CellGap="12">
+                    <Text Text="Library" FontSize="28" FontWeight="Bold" />
+                    <Text Text="Authorised references to your artifacts. Items open in their owning app." TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Container Type="Wrap" CellGap="8">
+                      <Input id="library-search" placeholder-text="Search artifacts" accessible-name="Search Library" width="280" Type="Text" />
+                      <Button id="library-search-submit" action="SearchLibrary" Content="Search" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
+                      <Button id="library-refresh" action="RefreshLibrary" Content="Refresh" IsEnabled="{Binding CanSearchLibrary, fallback=false}" />
                     </Container>
-                    <Text id="library-status" text="{Binding LibrarySummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 12" />
-                    <Text id="library-results" text="{Binding LibraryItemsSummary}" foreground="{Resource CuiTextBrush}" />
-                    <Container margin="0 12 0 0" Type="Horizontal Stack">
-                      <Button id="library-open-selected" action="OpenLibraryItem" content="Open selected" margin="0 0 8 0" />
-                      <Button id="library-pin-selected" action="PinSelectedLibraryItem" content="Pin selected" margin="0 0 8 0" />
-                      <Button id="library-unpin-selected" action="UnpinSelectedLibraryItem" content="Unpin selected" />
+                    <Text id="library-status" Text="{Binding LibrarySummary}" TextWrapping="Wrap" Foreground="{Resource CuiTextSoftBrush}" />
+                    <Container id="library-results" Type="Vertical Stack" CellGap="8" role="list" accessible-name="Authorised artifacts">
+                      <Repeat id="home-library-rows" Source="{Binding LibraryRows}" As="artifact" Key="{Binding artifact.Key}">
+                        <Button id="home-library-item" action="OpenHomeLibraryArtifact" IsEnabled="{Binding CanOpenHomeLibraryArtifact, fallback=false}" HorizontalAlignment="Stretch" Padding="12" accessible-name="{Binding artifact.DisplayName}">
+                          <Container Type="Vertical Stack" CellGap="5" HorizontalAlignment="Stretch">
+                            <Text Text="{Binding artifact.DisplayName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <Container Type="Wrap" CellGap="10">
+                              <Text Text="{Binding artifact.OwnerApp}" />
+                              <Text Text="{Binding artifact.ArtifactType}" />
+                              <Text Text="{Binding artifact.LastModified}" Foreground="{Resource CuiTextSoftBrush}" />
+                            </Container>
+                            <Text Text="{Binding artifact.Location}" Foreground="{Resource CuiTextSoftBrush}" />
+                            <Text Text="{Binding artifact.Owner}" Foreground="{Resource CuiTextSoftBrush}" />
+                            <If Condition="{Binding artifact.IsPinned}"><Text Text="Pinned" Foreground="{Resource CuiTextSoftBrush}" /></If>
+                          </Container>
+                        </Button>
+                      </Repeat>
+                    </Container>
+                    <Container Type="Wrap" CellGap="8">
+                      <Button id="library-previous" action="PreviousLibraryPage" Content="Previous" IsEnabled="{Binding CanPreviousLibraryPage, fallback=false}" />
+                      <Text Text="{Binding LibraryPageSummary}" />
+                      <Button id="library-next" action="NextLibraryPage" Content="Next" IsEnabled="{Binding CanNextLibraryPage, fallback=false}" />
                     </Container>
                   </Container>
                 </If>

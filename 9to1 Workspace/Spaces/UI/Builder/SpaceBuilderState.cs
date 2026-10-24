@@ -17,13 +17,22 @@ public sealed record SpaceBuilderDraft(
     Haven.Application.SpaceCapabilityCategoryPolicy CategoryPolicy,
     IReadOnlyList<Haven.Application.SpaceCapabilityBinding> CapabilityBindings)
 {
+    // These are projections of the same canonical Space record. The Builder never
+    // clones sources/capabilities or grants access merely by editing these policies.
+    public SpaceContextPolicy ContextPolicy { get; init; } = new();
+    public SpaceInheritancePolicy Inheritance { get; init; } = new();
+
     public static SpaceBuilderDraft Empty { get; } = new("", "", "", "",
         new Haven.Application.SpaceCapabilityCategoryPolicy(), []);
 
     internal static SpaceBuilderDraft From(SpaceDefinition space) =>
         new(space.Name, space.Description, space.IconKey, space.Instructions,
             space.CapabilityCategoryPolicy ?? new Haven.Application.SpaceCapabilityCategoryPolicy(),
-            space.CapabilityBindings?.ToArray() ?? []);
+            space.CapabilityBindings?.ToArray() ?? [])
+        {
+            ContextPolicy = space.ContextPolicy ?? new SpaceContextPolicy(),
+            Inheritance = space.Inheritance ?? new SpaceInheritancePolicy()
+        };
 }
 
 public sealed record SpaceBuilderState(

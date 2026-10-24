@@ -37,6 +37,16 @@ public sealed class SpaceBuilderController
                 SpaceBuilderField.Description => _state.Draft with { Description = value },
                 SpaceBuilderField.IconKey => _state.Draft with { IconKey = value },
                 SpaceBuilderField.Instructions => _state.Draft with { Instructions = value },
+                SpaceBuilderField.SourceOnly => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with { SourceOnly = ReadBoolean(value) } },
+                SpaceBuilderField.IncludeCurrentSelection => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with { IncludeCurrentSelection = ReadBoolean(value) } },
+                SpaceBuilderField.WebAccess => _state.Draft with { ContextPolicy = _state.Draft.ContextPolicy with { WebAccess = ReadWebAccess(value) } },
+                SpaceBuilderField.InheritSources => _state.Draft with { Inheritance = _state.Draft.Inheritance with { Sources = ReadBoolean(value) } },
+                SpaceBuilderField.InheritConnectedApps => _state.Draft with { Inheritance = _state.Draft.Inheritance with { ConnectedApps = ReadBoolean(value) } },
+                SpaceBuilderField.InheritModelPolicy => _state.Draft with { Inheritance = _state.Draft.Inheritance with { ModelPolicy = ReadBoolean(value) } },
+                SpaceBuilderField.InheritMemoryPolicy => _state.Draft with { Inheritance = _state.Draft.Inheritance with { MemoryPolicy = ReadBoolean(value) } },
+                SpaceBuilderField.InheritPlugins => _state.Draft with { Inheritance = _state.Draft.Inheritance with { Plugins = ReadBoolean(value) } },
+                SpaceBuilderField.InheritSkills => _state.Draft with { Inheritance = _state.Draft.Inheritance with { Skills = ReadBoolean(value) } },
+                SpaceBuilderField.InheritAgents => _state.Draft with { Inheritance = _state.Draft.Inheritance with { Agents = ReadBoolean(value) } },
                 _ => throw new ArgumentOutOfRangeException(nameof(field))
             };
             if (draft == _state.Draft) return true;
@@ -145,15 +155,17 @@ public sealed class SpaceBuilderController
             }
             if (current.Revision != saving.DraftRevision)
                 throw new SpaceRevisionConflictException(current.Id, saving.DraftRevision!.Value, current.Revision);
-            // Patch the canonical registry record with the Basic fields; policy/resource rules are
-            // persisted through the same canonical Space revision (incremental: advanced/expert
-            // policy wiring follows). Registry checks the SAME expected revision again.
+            // Patch only this editor projection's fields on the canonical Space revision.
+            // Unexposed model/memory/graph configuration survives; the registry checks the
+            // SAME expected revision again. Saving preferences does not claim activation.
             var saved = await _registry.UpdateAsync(current with
             {
                 Name = saving.Draft.Name, Description = saving.Draft.Description,
                 IconKey = saving.Draft.IconKey, Instructions = saving.Draft.Instructions,
                 CapabilityCategoryPolicy = saving.Draft.CategoryPolicy,
-                CapabilityBindings = saving.Draft.CapabilityBindings
+                CapabilityBindings = saving.Draft.CapabilityBindings,
+                ContextPolicy = saving.Draft.ContextPolicy,
+                Inheritance = saving.Draft.Inheritance
             }, saving.DraftRevision, cancellationToken).ConfigureAwait(false);
             Change(state =>
             {
@@ -237,6 +249,13 @@ public sealed class SpaceBuilderController
         return true;
     }
 
+    private static bool ReadBoolean(string value) => bool.TryParse(value, out var parsed)
+        ? parsed : throw new ArgumentException("A Space policy switch requires a boolean value.", nameof(value));
+
+    private static SpaceWebAccessPolicy ReadWebAccess(string value) =>
+        Enum.TryParse<SpaceWebAccessPolicy>(value, out var parsed) && Enum.IsDefined(parsed)
+            ? parsed : throw new ArgumentException("A supported web access policy is required.", nameof(value));
+
     private void Change(Func<SpaceBuilderState, SpaceBuilderState> update)
     {
         SpaceBuilderState next;
@@ -245,5 +264,11 @@ public sealed class SpaceBuilderController
     }
 }
 
-public enum SpaceBuilderField { Name, Description, IconKey, Instructions }
+public enum SpaceBuilderField
+{
+    Name, Description, IconKey, Instructions,
+    SourceOnly, IncludeCurrentSelection, WebAccess,
+    InheritSources, InheritConnectedApps, InheritModelPolicy, InheritMemoryPolicy,
+    InheritPlugins, InheritSkills, InheritAgents
+}
 public enum SpaceBuilderCategory { Skills, Plugins, Apps, Models, Memory }

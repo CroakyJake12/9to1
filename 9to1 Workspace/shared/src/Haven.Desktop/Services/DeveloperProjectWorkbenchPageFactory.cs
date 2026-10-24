@@ -70,7 +70,8 @@ public sealed class DeveloperProjectWorkbenchPageFactory(
             files.DemandExternalOriginalDeveloperReadJoin, explicitBusinessCancellationToken,
             originalPage => { page = originalPage; retainOriginalChild(originalPage); },
             createOriginalReadinessChild, manualRead, manualEdit, services.GetService<FileDeveloperWorkspaceStore>(),
-            services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>());
+            services.GetService<FilesDeveloperOriginalCurrentProjectExecutionBridge>(),
+            services.GetService<IProviderSecretStore>(), services.GetService<IAppPaths>());
     }
 
     /// <summary>Creates a genuine presentation child bound to this exact Dev host, independent

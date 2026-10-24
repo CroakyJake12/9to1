@@ -25,6 +25,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private readonly Func<HomeDiscoverPage> _createDiscover;
     private readonly Func<HomeEventsDestinationPage>? _createEvents;
     private readonly Func<HomeSettingsDestinationPage>? _createSettings;
+    private readonly Func<HomeLibraryDestinationPage>? _createLibrary;
     private readonly Func<BrowseNavigationIntent, Task, bool> _queue;
     private readonly Func<string, CancellationToken, Task<AppContentAddress>> _prepareAiDraft;
     private readonly bool _aiAvailable;
@@ -45,6 +46,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private HomeDiscoverPage? _discover;
     private HomeEventsDestinationPage? _events;
     private HomeSettingsDestinationPage? _settings;
+    private HomeLibraryDestinationPage? _library;
     private Control? _appsView;
     private string _section;
     private long _selection;
@@ -59,16 +61,17 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         Func<BrowseNavigationIntent, Task, bool> queue,
         Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft, bool aiAvailable = true,
         Func<HomeEventsDestinationPage>? createEvents = null,
-        Func<HomeSettingsDestinationPage>? createSettings = null)
+        Func<HomeSettingsDestinationPage>? createSettings = null,
+        Func<HomeLibraryDestinationPage>? createLibrary = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _request = request; _modes = modes; _createDashboard = createDashboard;
-        _createDiscover = createDiscover; _queue = queue; _createEvents = createEvents; _createSettings = createSettings; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
+        _createDiscover = createDiscover; _queue = queue; _createEvents = createEvents; _createSettings = createSettings; _createLibrary = createLibrary; _prepareAiDraft = prepareAiDraft; _aiAvailable = aiAvailable;
         _section = request.Address.Authority switch
         {
             "newtab" => "newtab",
             _ when request.Address.ResourceSegments.Count == 1 &&
-                request.Address.ResourceSegments[0] is "models" or "events" or "settings" => request.Address.ResourceSegments[0],
+                request.Address.ResourceSegments[0] is "models" or "events" or "settings" or "library" => request.Address.ResourceSegments[0],
             _ => "apps"
         };
         _work = new(StopAsync, CleanupAsync);
@@ -120,7 +123,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     }
 
     public bool? IsActionAvailable(string command) => IsAlive && (command == "home.events"
-        ? _createEvents is not null : command == "home.settings" ? _createSettings is not null : command is
+        ? _createEvents is not null : command == "home.settings" ? _createSettings is not null :
+        command == "home.library" ? _createLibrary is not null : command is
         "home.apps" or "home.dashboard" or "home.models" or "home.newtab" or "home.submit" or
         "home.library" or "home.events" or "home.mesh" or "home.settings" or "home.account" or
         "home.notifications" or "home.open-app" or "home.set-app-query" or "home.clear-app-query");
@@ -144,6 +148,11 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                     if (_request.Address.Authority == "newtab") Queue(AppContentAddress.Parse("browse://home/settings"), original, false);
                     else await SelectAsync("settings", original, linked.Token);
                     break;
+                case "home.library":
+                    if (_createLibrary is null) throw new InvalidOperationException("The Home Library owner is unavailable.");
+                    if (_request.Address.Authority == "newtab") Queue(AppContentAddress.Parse("browse://home/library"), original, false);
+                    else await SelectAsync("library", original, linked.Token);
+                    break;
                 case "home.newtab":
                     if (_request.Address.Authority == "newtab") await SelectAsync("newtab", original, linked.Token);
                     else Queue(AppContentAddress.Parse("browse://newtab"), original, true);
@@ -164,7 +173,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
     private static string HeadingFor(string section) => section switch
     {
         "newtab" => "New Tab", "models" => "Models / Discover", "dashboard" => "Dashboard",
-        "events" => "Events", "settings" => "Settings", _ => "Apps"
+        "events" => "Events", "settings" => "Settings", "library" => "Library", _ => "Apps"
     };
 
     private async Task SelectAsync(string section, DesktopOriginalWorkLifetime.Original original, CancellationToken token)
@@ -209,9 +218,21 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             if (!original.IsAcceptedPublicationCurrent) return;
             prepared = settings;
         }
+        if (section == "library")
+        {
+            if (_library is null)
+                original.RunAcceptedPublicationCallback(() => _library = (_createLibrary
+                    ?? throw new InvalidOperationException("The Home Library owner is unavailable."))());
+            if (!original.IsAcceptedPublicationCurrent) return;
+            var library = _library ?? throw new InvalidOperationException("The Home Library owner was not acquired.");
+            await original.AwaitAsync(library.ActivateAsync(token));
+            if (!original.IsAcceptedPublicationCurrent) return;
+            prepared = library;
+        }
         _dashboard?.Deactivate(); _discover?.Deactivate();
         if (section != "events") _events?.Deactivate();
         if (section != "settings") _settings?.Deactivate();
+        if (section != "library") _library?.Deactivate();
         _section = section;
         _railBindings.Refresh();
         Set(_searchRow!, "IsVisible", section == "newtab");
@@ -234,7 +255,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
                 .ToArray();
             UpdateAppsState();
         }
-        else if (section is "events" or "settings")
+        else if (section is "events" or "settings" or "library")
         {
             _viewport.Child = prepared!;
         }
@@ -426,7 +447,8 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
             if (_dashboard is not null && !await original.AwaitAsync(_dashboard.TryPrepareToCloseAsync(linked.Token))) return false;
             if (_discover is not null && !await original.AwaitAsync(_discover.TryPrepareToCloseAsync(linked.Token))) return false;
             if (_events is not null && !await original.AwaitAsync(_events.TryPrepareToCloseAsync(linked.Token))) return false;
-            return _settings is null || await original.AwaitAsync(_settings.TryPrepareToCloseAsync(linked.Token));
+            if (_settings is not null && !await original.AwaitAsync(_settings.TryPrepareToCloseAsync(linked.Token))) return false;
+            return _library is null || await original.AwaitAsync(_library.TryPrepareToCloseAsync(linked.Token));
         });
         start.SetResult(); return _preparation;
     }
@@ -450,6 +472,7 @@ internal sealed class UnifiedHomePage : UserControl, ICuiActionDispatcher, ICuiA
         if (_discover is not null) Acquire(_discover.CloseAndDrainAsync);
         if (_events is not null) Acquire(_events.CloseAndDrainAsync);
         if (_settings is not null) Acquire(_settings.CloseAndDrainAsync);
+        if (_library is not null) Acquire(_library.CloseAndDrainAsync);
         Acquire(_loader.WhenActionsIdleAsync); Acquire(_appsLoader.WhenActionsIdleAsync);
         foreach (var actual in _stopSources)
             try { await actual; }

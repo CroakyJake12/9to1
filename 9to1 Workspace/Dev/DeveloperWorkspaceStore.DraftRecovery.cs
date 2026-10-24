@@ -5,7 +5,7 @@ namespace HavenOS.Apps.Dev;
 
 /// <summary>Recovery partition, not authority. The host must observe the SAME actual Home
 /// profile and canonical Task/Run/context before protecting, saving or disclosing a draft.</summary>
-public sealed record DeveloperDraftRecoveryScope(Guid ProfileId, Guid TaskId, Guid ExecutionId, Guid ContextId);
+public sealed record DeveloperDraftRecoveryScope(Guid ProfileId, Guid TaskId, Guid ExecutionId, Guid ContextId, bool IsManual = false);
 
 /// <summary>Only the unsaved text is retained. Recovery requires a new authorised source read
 /// whose hash matches OriginalSha256; neither a path nor this hash confers Files permission.</summary>
@@ -140,7 +140,7 @@ public sealed partial class FileDeveloperWorkspaceStore
     /// The host must retain its original source/execution reservation and verify actual task and
     /// protected-key admission around this call. This primitive grants neither and never invokes
     /// Files writes. No old snapshot is evicted; an oversized/conflicting save preserves it.</summary>
-    public async Task<DeveloperOperationResult<DeveloperDraftRecoverySnapshot>> SaveDraftRecoveryAsync(
+    public Task<DeveloperOperationResult<DeveloperDraftRecoverySnapshot>> SaveDraftRecoveryAsync(
         DeveloperResolvedProject project, DeveloperDraftRecoverySnapshot snapshot, long expectedGeneration,
         CancellationToken cancellationToken = default)
     {
@@ -149,8 +149,27 @@ public sealed partial class FileDeveloperWorkspaceStore
             snapshot.ProjectReference != project.Reference ||
             !StringComparer.Ordinal.Equals(snapshot.ProjectStamp, EditorProjectStamp(project)) ||
             !ValidRecoverySnapshot(snapshot, project.Reference.WorkspaceId))
+            return Task.FromResult(EditorFailure<DeveloperDraftRecoverySnapshot>(DeveloperOperationErrorCode.InvalidInput,
+                "An exact current project and valid protected next-generation recovery snapshot are required.", project?.Reference.WorkspaceId ?? Guid.Empty));
+        return PrepareAndSaveDraftRecoveryAsync(project, snapshot.Scope, expectedGeneration,
+            (_, _) => Task.FromResult(snapshot), cancellationToken);
+    }
+
+    /// <summary>Trusted-host preparation under the SAME cross-process canonical workspace lock.
+    /// The Boolean reports whether this profile already has recovery records and is NOT authority.
+    /// It lets the actual OS credential owner refuse missing-key recovery instead of resetting a
+    /// key, and prevents racing Get/null/Set from stranding an acknowledged ciphertext. The host
+    /// still owns original Home/source/execution admission, all raw child tasks and key lifetime.
+    /// This method never invokes a model, writes source, or creates its own credential store.</summary>
+    public async Task<DeveloperOperationResult<DeveloperDraftRecoverySnapshot>> PrepareAndSaveDraftRecoveryAsync(
+        DeveloperResolvedProject project, DeveloperDraftRecoveryScope actualScope, long expectedGeneration,
+        Func<bool, CancellationToken, Task<DeveloperDraftRecoverySnapshot>> prepareWithinOriginalKeyOwner,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(prepareWithinOriginalKeyOwner);
+        if (!ValidEditorProject(project) || !ValidRecoveryScope(actualScope) || expectedGeneration < 0 || expectedGeneration == long.MaxValue)
             return EditorFailure<DeveloperDraftRecoverySnapshot>(DeveloperOperationErrorCode.InvalidInput,
-                "An exact current project and valid protected next-generation recovery snapshot are required.", project?.Reference.WorkspaceId ?? Guid.Empty);
+                "A current project, actual recovery partition and expected generation are required.", project?.Reference.WorkspaceId ?? Guid.Empty);
         var acquired = await AcquireWriteLockAsync(project.Reference.WorkspaceId, cancellationToken).ConfigureAwait(false);
         if (acquired.Error is not null) return CopyEditorError<DeveloperDraftRecoverySnapshot>(acquired.Error);
         await using var writeLock = acquired.Lock!;
@@ -161,14 +180,22 @@ public sealed partial class FileDeveloperWorkspaceStore
             var document = loaded.Value!;
             if (!SameEditorWorkspace(document.Workspace, project)) return EditorConflict<DeveloperDraftRecoverySnapshot>(project.Reference.WorkspaceId);
             var recoveries = (document.DraftRecoveries ?? []).ToList();
-            var old = recoveries.SingleOrDefault(value => SameRecoveryKey(value, project.Reference, snapshot.Scope));
+            var old = recoveries.SingleOrDefault(value => SameRecoveryKey(value, project.Reference, actualScope));
             if ((old?.Generation ?? 0) != expectedGeneration ||
-                old is not null && !StringComparer.Ordinal.Equals(old.ProjectStamp, snapshot.ProjectStamp))
+                old is not null && !StringComparer.Ordinal.Equals(old.ProjectStamp, EditorProjectStamp(project)))
                 return EditorFailure<DeveloperDraftRecoverySnapshot>(DeveloperOperationErrorCode.RevisionConflict,
                     "Another editor changed this recovery generation or project. The saved draft was preserved; reload before retrying.", project.Reference.WorkspaceId);
             if (old is null && recoveries.Count >= MaximumDraftRecoverySnapshots)
                 return EditorFailure<DeveloperDraftRecoverySnapshot>(DeveloperOperationErrorCode.CapabilityUnavailable,
                     "The bounded protected recovery catalogue is full. No prior draft was removed.", project.Reference.WorkspaceId);
+            cancellationToken.ThrowIfCancellationRequested();
+            var snapshot = await prepareWithinOriginalKeyOwner(recoveries.Any(value => value.Scope.ProfileId == actualScope.ProfileId), cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (snapshot is null || snapshot.Scope != actualScope || snapshot.ProjectReference != project.Reference ||
+                snapshot.Generation != expectedGeneration + 1 || !StringComparer.Ordinal.Equals(snapshot.ProjectStamp, EditorProjectStamp(project)) ||
+                !ValidRecoverySnapshot(snapshot, project.Reference.WorkspaceId))
+                return EditorFailure<DeveloperDraftRecoverySnapshot>(DeveloperOperationErrorCode.InvalidInput,
+                    "The original key owner did not return the exact protected next-generation snapshot. Prior state was preserved.", project.Reference.WorkspaceId);
             if (old is null) recoveries.Add(snapshot); else recoveries[recoveries.IndexOf(old)] = snapshot;
             var next = document with { DraftRecoveries = Array.AsReadOnly(recoveries.ToArray()) };
             if (JsonSerializer.SerializeToUtf8Bytes(next, JsonOptions).Length > 1024 * 1024)
@@ -183,7 +210,9 @@ public sealed partial class FileDeveloperWorkspaceStore
     }
 
     private static bool ValidRecoveryScope(DeveloperDraftRecoveryScope? value) => value is not null &&
-        value.ProfileId != Guid.Empty && value.TaskId != Guid.Empty && value.ExecutionId != Guid.Empty && value.ContextId != Guid.Empty;
+        value.ProfileId != Guid.Empty && (value.IsManual
+            ? value.TaskId == Guid.Empty && value.ExecutionId == Guid.Empty && value.ContextId == Guid.Empty
+            : value.TaskId != Guid.Empty && value.ExecutionId != Guid.Empty && value.ContextId != Guid.Empty);
     private static bool SameRecoveryProject(DeveloperProjectReference? left, DeveloperProjectReference right) => left is not null &&
         left.WorkspaceId == right.WorkspaceId && left.ProjectId == right.ProjectId &&
         left.RootId == right.RootId && left.RepositoryBindingId == right.RepositoryBindingId;

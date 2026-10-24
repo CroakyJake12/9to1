@@ -20,7 +20,7 @@ namespace Haven.Desktop.Views.Pages.Development;
 /// withdraws this view only, never the global Dev service or canonical work. The shell owns
 /// constructor acquisition and the real frame/readiness producer for this exact host.
 /// </summary>
-public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePage,
+public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActivatablePage,
     ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged,
     IDesktopOriginalRetirementParticipant, IDesktopOriginalRetirementJoinGuard, IAsyncDisposable
 {
@@ -194,7 +194,9 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         DeveloperManualSourceReadOwner manualReader,
         DeveloperManualSourceEditOwner? manualEditor = null,
         FileDeveloperWorkspaceStore? editorSessionStore = null,
-        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null)
+        FilesDeveloperOriginalCurrentProjectExecutionBridge? editorSessionExecution = null,
+        IProviderSecretStore? originalRecoveryKeys = null,
+        IAppPaths? originalRecoveryPaths = null)
     {
         _development = development ?? throw new ArgumentNullException(nameof(development));
         _canonical = canonical ?? throw new ArgumentNullException(nameof(canonical));
@@ -209,6 +211,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         _manual = true;
         _manualReader = manualReader ?? throw new ArgumentNullException(nameof(manualReader));
         _manualEditor = manualEditor; // Optional: without it manual preview/apply fail closed (genuine owners unconfigured).
+        _manualRecoveryKeys = originalRecoveryKeys;
+        _manualRecoveryPaths = originalRecoveryPaths;
         _editorSessionStore = editorSessionStore;
         _editorSessionExecution = editorSessionExecution;
         _review = null; // No AI Task-backed review session; manual edits route through the genuine edit admission + kernel.
@@ -250,9 +254,12 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         ReferenceEquals(exactHost, _host) && IsCurrent(originalGeneration);
     /// <summary>True while the workbench holds unsaved authored work or an in-flight Dev command,
     /// so a tab owner can veto retirement instead of silently discarding it. A manual (no-AI)
-    /// draft is equally unsaved work: it must veto close until it is applied or reverted.</summary>
-    internal bool HasUnsavedWork { get { lock (_gate) return _pending || _sourceTabs.Any(IsTabDirty) ||
-        _editor is { IsDirty: true } || (_manual && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline)); } }
+    /// draft vetoes close until applied, reverted, or its exact latest complete protected
+    /// recovery is acknowledged. An older acknowledged snapshot never clears a newer draft.</summary>
+    internal bool HasUnsavedWork { get { lock (_gate) return _pending ||
+        (_sourceTabs.Any(IsTabDirty) || _editor is { IsDirty: true } ||
+            (_manual && !StringComparer.Ordinal.Equals(_manualDraftText, _manualDraftBaseline))) &&
+        !HasExactProtectedManualRecovery(); } }
     public new event PropertyChangedEventHandler? PropertyChanged;
     public DeveloperActionObservation? OriginalDeveloperObservation { get; private set; }
     public DeveloperSourceChangePass? OriginalSourcePass { get; private set; }
@@ -282,6 +289,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             var project = await ResolveProjectAsync(original, scope.Token).ConfigureAwait(false);
             await PublishAsync(original, () => { _project = project; _status = "Existing project opened. Source reads use its current Home permissions."; }).ConfigureAwait(false);
             await RestoreCleanSessionAsync(original, project, scope.Token).ConfigureAwait(false);
+            await RestoreManualRecoveryAsync(original, project, scope.Token).ConfigureAwait(false);
             Task? show = null;
             var dispatcher = Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -419,6 +427,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             });
             NotifyOriginal(original);
         });
+        if (path == "DraftText") ScheduleManualRecoverySave();
         return true;
     }
     public bool? IsActionAvailable(string command)
@@ -1060,6 +1069,9 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     private async Task SaveCleanSessionAsync(DesktopOriginalWorkLifetime.Original original,
         DeveloperResolvedProject project, CancellationToken token)
     {
+        // Coalesce the same current tab payload after open/pin/close/apply. Its driver
+        // waits for this command fence, so the two canonical metadata writes cannot race.
+        ScheduleManualRecoverySave();
         IReadOnlyList<DeveloperCleanEditorTab>? tabs = null;
         string? selected = null; long expected = 0;
         await PublishAsync(original, () =>

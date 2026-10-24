@@ -232,10 +232,11 @@ public sealed partial class SpaceBuilderPage : UserControl, IDesktopOriginalReti
         if (command == "space-builder.plugin.attach" && parameter is string pluginId)
         {
             var plugin = _installedPlugins.FirstOrDefault(p => p.Manifest.PackageId == pluginId);
-            if (plugin is not null && plugin.Manifest.Capabilities.Count > 0)
+            if (plugin is not null)
             {
-                var cap = plugin.Manifest.Capabilities[0];
-                var binding = new SpaceCapabilityBinding($"extension.{pluginId}.{cap.Id}", SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Inherit, plugin.Manifest.Version);
+                // Space attachment references the canonical package. Sidebar-only Plugins do
+                // not need a tool capability; resolution/permissions remain with their owners.
+                var binding = new SpaceCapabilityBinding(plugin.Manifest.PackageId, SpaceCapabilityKind.Plugin, SpaceCapabilityOverride.Inherit, plugin.Manifest.Version);
                 TryAttachCapability(binding);
             }
             return;

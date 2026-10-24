@@ -59,11 +59,12 @@ internal sealed partial class HomeApp
         var layouts = new HomeDashboardLayoutService(new HomeCoreDashboardLayoutStore(store),
             new CoreTileRegistry(_homeCore));
         var activity = new HomePermissionActivitySource(_nativeComposition.Permissions, _nativeComposition.Profiles, actor);
-        _controller = new HomeCuiController(_dashboard, layoutService: layouts,
+        InitializeOriginalLibrary(actor);
+        _controller = new HomeCuiController(_dashboard, layoutService: layouts, libraryService: _homeLibrary,
             eventsService: new HomeEventsService([activity], activity), featureNavigation: _featureNavigation);
         _workspaceActor = actor;
         await InitializeHomeAppearanceAsync(actor).ConfigureAwait(false);
-        foreach (var route in new[] { HomeRoute.Dashboard, HomeRoute.Events, HomeRoute.Settings, HomeRoute.Permissions })
+        foreach (var route in new[] { HomeRoute.Dashboard, HomeRoute.Events, HomeRoute.Settings, HomeRoute.Permissions, HomeRoute.Library })
         {
             var registered = _featureNavigation.Register(new OwnedRoute(this, HomeRouteIds.For(route)));
             if (!registered.Succeeded) throw new InvalidOperationException(registered.Message);
@@ -196,6 +197,7 @@ internal sealed partial class HomeApp
             RegisterWorkspaceAction(command, () => DispatchWorkspaceAsync(command));
         foreach (var command in LayoutActions)
             RegisterWorkspaceAction(command, () => DispatchWorkspaceAsync(command));
+        RegisterOriginalLibraryActions();
         RegisterWorkspaceAction("RefreshHomePermissions", RefreshWorkspacePermissionsAsync);
         RegisterWorkspaceAction("RefreshHomeAppearance", RefreshHomeAppearanceAsync);
         _viewModel.On("ApplyHomeAppearance", parameter => _ = RunOriginalNativeWork(() =>
@@ -309,6 +311,7 @@ internal sealed partial class HomeApp
             "NavigateSettings" => HomeRoute.Settings,
             "NavigateEvents" => HomeRoute.Events,
             "NavigatePermissions" => HomeRoute.Permissions,
+            "NavigateLibrary" => HomeRoute.Library,
             _ => (HomeRoute?)null
         };
         if (route.HasValue)
@@ -317,6 +320,7 @@ internal sealed partial class HomeApp
             _controller.Surface.SetNavigationStatus($"{navigation.Code}: {navigation.Message}");
             if (_controller.Navigation.Current == HomeRoute.Permissions) await RefreshWorkspacePermissionsAsync();
             if (_controller.Navigation.Current == HomeRoute.Events) await RefreshWorkspaceEventsAsync();
+            if (_controller.Navigation.Current == HomeRoute.Library) await RefreshOriginalLibraryAsync();
             return;
         }
         var layout = _controller.Surface.Layout ?? (await _controller.RefreshLayoutAsync()).Layout;
@@ -484,6 +488,7 @@ internal sealed partial class HomeApp
         loader.BindAuthoredControl("home-permission-requests", permissionRequests);
         loader.BindAuthoredControl("home-permission-accept", reviewButton);
         loader.BindAuthoredControl("home-permission-decline", reviewButton);
+        RegisterOriginalLibraryControls(loader);
         ApplyWorkspaceBindings();
     }
 
@@ -539,6 +544,7 @@ internal sealed partial class HomeApp
         var surface = _controller.Surface;
         _viewModel.Set(nameof(HomeCuiSurface.IsDashboard), surface.IsDashboard);
         _viewModel.Set(nameof(HomeCuiSurface.IsLibrary), surface.IsLibrary);
+        ApplyOriginalLibraryBindings();
         _viewModel.Set(nameof(HomeCuiSurface.IsEvents), surface.IsEvents);
         _viewModel.Set("IsSettings", surface.CurrentRoute == HomeRoute.Settings);
         _viewModel.Set("IsPermissions", surface.CurrentRoute == HomeRoute.Permissions);

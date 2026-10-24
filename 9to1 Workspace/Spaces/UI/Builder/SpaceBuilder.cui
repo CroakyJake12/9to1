@@ -19,6 +19,50 @@
           <Text text="Custom instructions" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-instructions" Type="Text" AcceptsReturn="True" MinHeight="120" Value="{Binding builder.instructions, mode=TwoWay}" accessible-name="Space custom instructions" />
         </Container>
+        <Container Type="Vertical Stack" CellGap="8" Interactive="{Binding builder.canEdit}">
+          <Text text="Sources and privacy" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="Saved policy preferences; request activation is not available yet. Changing a setting does not grant permission, retrieve sources or enable outside web access." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Text text="Outside web access" foreground="{Resource CuiTextBrush}" />
+          <Input id="space-builder-web-access" Type="Select" ItemsSource="{Binding builder.context.webAccessOptions}" SelectedIndex="{Binding builder.context.webAccess, mode=TwoWay}" accessible-name="Outside web access policy" />
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-source-only" Type="Switch" Checked="{Binding builder.context.sourceOnly, mode=TwoWay}" accessible-name="Use attached sources only" />
+            <Text text="Use attached sources only" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-include-selection" Type="Switch" Checked="{Binding builder.context.includeSelection, mode=TwoWay}" accessible-name="Include current selection as context" />
+            <Text text="Include current selection as context" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Text text="Inherit from parent Space" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <Text text="When this Space is nested, choose the parent settings and references to inherit. Explicit parent restrictions still apply. Canonical sources, packages and Agents keep their original owners." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-inherit-sources" Type="Switch" Checked="{Binding builder.inherit.sources, mode=TwoWay}" accessible-name="Inherit sources and context policy" />
+            <Text text="Sources and context policy" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-inherit-apps" Type="Switch" Checked="{Binding builder.inherit.apps, mode=TwoWay}" accessible-name="Inherit connected apps" />
+            <Text text="Connected apps" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-inherit-models" Type="Switch" Checked="{Binding builder.inherit.models, mode=TwoWay}" accessible-name="Inherit model policy" />
+            <Text text="Model policy" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-inherit-memory" Type="Switch" Checked="{Binding builder.inherit.memory, mode=TwoWay}" accessible-name="Inherit memory policy" />
+            <Text text="Memory policy" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-inherit-plugins" Type="Switch" Checked="{Binding builder.inherit.plugins, mode=TwoWay}" accessible-name="Inherit plugins" />
+            <Text text="Plugins" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-inherit-skills" Type="Switch" Checked="{Binding builder.inherit.skills, mode=TwoWay}" accessible-name="Inherit skills" />
+            <Text text="Skills" foreground="{Resource CuiTextBrush}" />
+          </Container>
+          <Container Type="Horizontal Stack" CellGap="8">
+            <Input id="space-builder-inherit-agents" Type="Switch" Checked="{Binding builder.inherit.agents, mode=TwoWay}" accessible-name="Inherit agents" />
+            <Text text="Agents" foreground="{Resource CuiTextBrush}" />
+          </Container>
+        </Container>
         <Container Type="Vertical Stack" CellGap="4">
           <Text text="Capability categories" font-size="18" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <Text text="Inherited / Enabled / Disabled. Disabled restricts; Enabled never grants permission beyond policy." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
@@ -41,7 +85,7 @@
             <Container id="space-builder-installed-skill-row" Type="Horizontal Stack" CellGap="8">
               <Text id="space-builder-skill-name" text="{Binding skill.name}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-skill-status" text="{Binding skill.status}" foreground="{Resource CuiTextSoftBrush}" />
-              <Button id="space-builder-attach-skill" content="Attach" action="space-builder.skill.attach" Interactive="{Binding builder.canEdit}" accessible-name="Attach skill" />
+              <Button id="space-builder-attach-skill" content="Attach" action="AttachSkill" Interactive="{Binding builder.canEdit}" accessible-name="Attach skill" />
             </Container>
           </Repeat>
         </Container>
@@ -51,7 +95,7 @@
             <Container id="space-builder-installed-plugin-row" Type="Horizontal Stack" CellGap="8">
               <Text id="space-builder-plugin-name" text="{Binding plugin.name}" foreground="{Resource CuiTextBrush}" />
               <Text id="space-builder-plugin-state" text="{Binding plugin.state}" foreground="{Resource CuiTextSoftBrush}" />
-              <Button id="space-builder-attach-plugin" content="Attach" action="space-builder.plugin.attach" Interactive="{Binding builder.canEdit}" accessible-name="Attach plugin" />
+              <Button id="space-builder-attach-plugin" content="Attach" action="AttachPlugin" Interactive="{Binding builder.canEdit}" accessible-name="Attach plugin" />
             </Container>
           </Repeat>
         </Container>

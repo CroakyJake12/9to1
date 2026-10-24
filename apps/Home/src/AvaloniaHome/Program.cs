@@ -115,7 +115,10 @@ internal sealed partial class HomeApp : Application
     private IClassicDesktopStyleApplicationLifetime? _desktop;
     private bool _nativeInitializationFailed;
 
-    public HomeApp() : this(HomeNativeWindowsComposition.CreateCandidate()) { }
+    public HomeApp() : this(CreateOriginalLibraryCandidate()) { }
+
+    private HomeApp(StandaloneLibraryComposition composition) : this(composition.Home)
+    { _ownedLibraryDiagnostics = composition.Diagnostics; }
 
     internal HomeApp(HomeNativeWindowsComposition originalComposition, INativeCakeAccountSession? borrowedAccountSession = null)
     {
@@ -369,10 +372,12 @@ internal sealed partial class HomeApp : Application
 
     private Task RequestOriginalHostShutdownAsync()
     {
+        Haven.Application.CloudflareOriginalExecutionGuard.DemandExternalJoin(this);
         // The account owner publishes/seals its close and stops actual auth/helper sources
         // BEFORE the parent waits for admitted native actions. A self-join refuses first.
         _ = PrepareOriginalNativeAccountClose(); // SAME task remains retained by its owning field.
         _ = PrepareOriginalHomeAppearanceClose(); // Seal/cancel source before joining admitted native actions.
+        PrepareOriginalLibraryRetirement(); // Seal new Library actions; actual sources join after admitted work.
         return _originalLifetime.RequestShutdownAsync();
     }
 
@@ -394,6 +399,8 @@ internal sealed partial class HomeApp : Application
             foreach (var observation in write.PostCommitObservations)
                 if (observation.Source is { } source) HomeNativeCakeCauses.AddTask(failures, source, observation.Cause);
                 else HomeNativeCakeCauses.Add(failures, observation.Cause);
+        try { await CloseOriginalLibraryAsync().ConfigureAwait(false); }
+        catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
         try { accountClose = _nativeCakeAccount.CloseAndDrainAsync(); }
         catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
         try { coreClose = _nativeComposition.CloseAndDrainAsync(); }
@@ -401,6 +408,9 @@ internal sealed partial class HomeApp : Application
         // Start both original owners independently, then preserve every original fault.
         if (accountClose is not null) await HomeNativeCakeCauses.JoinAsync(accountClose, failures).ConfigureAwait(false);
         if (coreClose is not null) await HomeNativeCakeCauses.JoinAsync(coreClose, failures).ConfigureAwait(false);
+        if (_ownedLibraryDiagnostics is { } diagnostics)
+            try { await diagnostics.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception error) { HomeNativeCakeCauses.Add(failures, error); }
         HomeNativeCakeCauses.Throw(failures);
     }
 

@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Haven.Application;
 using Haven.Browser;
 using Haven.Core;
@@ -18,6 +19,8 @@ using Haven.Desktop.Views.Shell;
 using HavenOS.Apps.Browse;
 using HavenOS.Home;
 using HavenOS.Home.Core;
+using HavenOS.Home.NativeUI;
+using HavenOS.Home.PermissionsTrustNotifications;
 using HavenOS.Home.Discover;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -401,7 +404,8 @@ public sealed partial class App
                         token => AdmitHomeAsync(request, token));
                 },
                 settings: request => new HomeSettingsDestinationPage(actualTheme,
-                    token => AdmitHomeSettingsAsync(request, token)));
+                    token => AdmitHomeSettingsAsync(request, token)),
+                library: request => CreateHomeLibraryPage(request, actualTheme.Context));
             IBrowseEngineHostFactory? engines = null;
             if (!OperatingSystem.IsWindows())
                 engines = new ChromiumEngineFactory(
@@ -664,6 +668,56 @@ public sealed partial class App
                 throw new UnauthorizedAccessException("The Home tab does not belong to the current authenticated profile.");
             var ready = await CheckAsync(token).ConfigureAwait(false);
             if (ready.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(ready.Message);
+        }
+
+        private HomeLibraryDestinationPage CreateHomeLibraryPage(BrowseAppContentRequest request, CuiThemePreferenceContext theme)
+        {
+            DemandCurrent();
+            var actor = _actor ?? throw new UnauthorizedAccessException("The original Library profile is unavailable.");
+            if (request.Privacy != BrowserTabPrivacy.Standard || request.ProfileId != actor.ProfileId)
+                throw new UnauthorizedAccessException("Library belongs to the actual standard Home profile.");
+            var approvals = _services.GetRequiredService<HomeNativeApprovalWindowOwner>();
+            if (!approvals.IsBoundToOriginalComposition(_home))
+                throw new UnauthorizedAccessException("Retain the original Home review-window owner.");
+            HomeLibraryDestinationPage? page = null;
+            Task Admit(CancellationToken token)
+            { token.ThrowIfCancellationRequested(); DemandAppearanceOwner(); return Task.CompletedTask; }
+            var source = new NativeHomeArtifactLibrarySource(_home,
+                _services.GetRequiredService<Haven.Infrastructure.NotesRepository>(),
+                _services.GetRequiredService<Haven.Infrastructure.VerifiedNotesRepository>(),
+                _services.GetRequiredService<HomeNotesResourceAdmissionSource>(), actor,
+                "home-library:" + request.TabId.ToString("D"),
+                (authorization, token) => PresentHomeLibraryReviewAsync(approvals, authorization, token), Admit,
+                body => (page ?? throw new InvalidOperationException("Retain the actual Library page before source work.")).InvokeOriginalSource(body),
+                () => !_closed && !_appLifetime.IsCancellationRequested && !_windowLifetime.IsCancellationRequested);
+            page = new(source.CreateService, source.RevalidateAsync, (link, settlement) =>
+            {
+                if (link.OwnerApp != "boards" || link.TargetRouteId != "boards.notebook" ||
+                    !Guid.TryParseExact(link.ObjectId, "D", out var id) || id == Guid.Empty || link.ObjectId != id.ToString("D"))
+                    return false;
+                return IsCurrent && _workspace is { } workspace && workspace.QueueNavigation(
+                    new(request.TabId, AppContentAddress.Parse("9to1://boards/notebooks/" + id.ToString("D")), true), settlement);
+            }, source, theme);
+            return page;
+        }
+        private async Task PresentHomeLibraryReviewAsync(HomeNativeApprovalWindowOwner approvals,
+            HomePermissionAuthorization authorization, CancellationToken token)
+        {
+            var originals = new CloudflareOriginalTaskLedger(); originals.BindOriginalOwner(this);
+            originals.BindOriginalCallerCallback(body => CloudflareOriginalExecutionGuard.InvokeOriginal(this,
+                () => { DemandAppearanceOwner(); body(); return true; }));
+            await originals.RunToOriginalSettlementAsync(async () =>
+            {
+                var dispatch = originals.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task<HomeNativeApprovalDecisionObservation>>(
+                    () => approvals.OpenAndObserveDecisionOriginalAsync(authorization.RequestId, token)).GetTask());
+                var actual = await originals.AwaitAsync(dispatch).ConfigureAwait(false);
+                var decision = await originals.AwaitAsync(actual).ConfigureAwait(false);
+                if (decision.RequestId != authorization.RequestId)
+                    throw new InvalidDataException("The actual Home review observation belongs to another request.");
+                // This records no grant: the original Notes admission still checks the broker
+                // decision through BeginLibrarySnapshot, including dismissal or explicit denial.
+                return true;
+            }).ConfigureAwait(false);
         }
 
         private async Task AdmitHomeSettingsAsync(BrowseAppContentRequest request, CancellationToken token)

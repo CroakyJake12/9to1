@@ -35,7 +35,7 @@ public sealed record DeveloperProjectTreeEntry(string RelativePath, bool IsDirec
 /// file text uses the kernel one-file read surface. No process execution, restore/build, terminal or
 /// inference occurs here.
 /// </summary>
-public sealed class DeveloperManualSourceReadOwner(
+public sealed partial class DeveloperManualSourceReadOwner(
     NativeFilesWorkspaceService files,
     FilesDeveloperOriginalSourceSelection selections,
     IDeveloperProjectOriginalReadAdmissionSource reads,

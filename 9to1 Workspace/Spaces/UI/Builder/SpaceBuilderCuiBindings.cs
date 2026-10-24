@@ -19,6 +19,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
     private readonly Func<bool> _isCurrent;
     private readonly Func<bool> _canGoBack;
     private static readonly string[] CategoryOptions = ["Inherited", "Enabled", "Disabled"];
+    private static readonly string[] WebAccessOptions = ["Allowed", "Ask", "Disabled"];
 
     public SpaceBuilderCuiBindings(Func<SpaceBuilderState> state, Action<SpaceBuilderField, string> edit,
         Action<SpaceBuilderCategory, SpaceCapabilityCategoryState> setCategory,
@@ -68,6 +69,17 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
             "builder.description" => state.Draft.Description,
             "builder.icon" => state.Draft.IconKey,
             "builder.instructions" => state.Draft.Instructions,
+            "builder.context.sourceOnly" => state.Draft.ContextPolicy.SourceOnly,
+            "builder.context.includeSelection" => state.Draft.ContextPolicy.IncludeCurrentSelection,
+            "builder.context.webAccess" => (int)state.Draft.ContextPolicy.WebAccess,
+            "builder.context.webAccessOptions" => WebAccessOptions,
+            "builder.inherit.sources" => state.Draft.Inheritance.Sources,
+            "builder.inherit.apps" => state.Draft.Inheritance.ConnectedApps,
+            "builder.inherit.models" => state.Draft.Inheritance.ModelPolicy,
+            "builder.inherit.memory" => state.Draft.Inheritance.MemoryPolicy,
+            "builder.inherit.plugins" => state.Draft.Inheritance.Plugins,
+            "builder.inherit.skills" => state.Draft.Inheritance.Skills,
+            "builder.inherit.agents" => state.Draft.Inheritance.Agents,
             "builder.capabilities" => state.Draft.CapabilityBindings.Select(b => new
             {
                 id = b.CapabilityId,
@@ -82,7 +94,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
                 name = s.Name,
                 version = s.PackageVersion,
                 status = s.IsAvailable ? "Available" : "Unavailable",
-                attached = state.Draft.CapabilityBindings.Any(b => b.CapabilityId == s.SkillId)
+                attached = state.Draft.CapabilityBindings.Any(b => b.Kind == SpaceCapabilityKind.Skill && b.CapabilityId == s.SkillId)
             }).ToArray(),
             "builder.installedPlugins" => _installedPlugins().Select(p => new
             {
@@ -90,7 +102,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
                 name = p.Manifest.DisplayName,
                 version = p.Manifest.Version,
                 state = p.State.ToString(),
-                attached = state.Draft.CapabilityBindings.Any(b => b.CapabilityId == p.Manifest.PackageId)
+                attached = state.Draft.CapabilityBindings.Any(b => b.Kind == SpaceCapabilityKind.Plugin && b.CapabilityId == p.Manifest.PackageId)
             }).ToArray(),
             "builder.category.options" => CategoryOptions,
             "builder.category.skills" => CategoryIndex(SpaceBuilderCategory.Skills),
@@ -123,6 +135,29 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         if (field is not null && value is string text)
         {
             _edit(field.Value, text);
+            return true;
+        }
+        SpaceBuilderField? policySwitch = path switch
+        {
+            "builder.context.sourceOnly" => SpaceBuilderField.SourceOnly,
+            "builder.context.includeSelection" => SpaceBuilderField.IncludeCurrentSelection,
+            "builder.inherit.sources" => SpaceBuilderField.InheritSources,
+            "builder.inherit.apps" => SpaceBuilderField.InheritConnectedApps,
+            "builder.inherit.models" => SpaceBuilderField.InheritModelPolicy,
+            "builder.inherit.memory" => SpaceBuilderField.InheritMemoryPolicy,
+            "builder.inherit.plugins" => SpaceBuilderField.InheritPlugins,
+            "builder.inherit.skills" => SpaceBuilderField.InheritSkills,
+            "builder.inherit.agents" => SpaceBuilderField.InheritAgents,
+            _ => null
+        };
+        if (policySwitch is not null && value is bool enabled)
+        {
+            _edit(policySwitch.Value, enabled ? "true" : "false");
+            return true;
+        }
+        if (path == "builder.context.webAccess" && value is int web && web >= 0 && web < WebAccessOptions.Length)
+        {
+            _edit(SpaceBuilderField.WebAccess, ((SpaceWebAccessPolicy)web).ToString());
             return true;
         }
         SpaceBuilderCategory? cat = path switch
@@ -165,6 +200,7 @@ public sealed class SpaceBuilderCuiBindings : ICuiWritableBindingContext, ICuiAc
         "space-builder.reload" => _isCurrent() && _state().CanReload,
         "space-builder.back" => _isCurrent() && _canGoBack(),
         "space-builder.capability.remove" => _isCurrent() && _state().CanEdit,
+        "space-builder.skill.attach" or "space-builder.plugin.attach" => _isCurrent() && _state().CanEdit,
         _ => null
     };
 
