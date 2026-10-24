@@ -1,5 +1,7 @@
 using System.IO;
 using System.Text;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Haven.Application;
 using HavenOS.Apps.Dev;
 using HavenOS.Files;
@@ -87,31 +89,55 @@ public sealed class DeveloperManualSourceReadOwner(
         return sb.Length == 0 ? "(empty project folder)" : sb.ToString().TrimEnd();
     }
 
+    // Compatibility facade keeps the existing ordinal, one-hit-per-line literal output.
     public async Task<string> SearchAsync(DeveloperResolvedProject project, string query, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(query)) throw new ArgumentException("A literal search query is required.", nameof(query));
         if (query.Length > 4000) throw new ArgumentOutOfRangeException(nameof(query));
-        await using var lease = await AcquireAsync(project, token).ConfigureAwait(false);
-        var sb = new StringBuilder(); var count = 0;
-        foreach (var file in lease.Capture.OriginalFiles.OrderBy(value => value.RelativePath, StringComparer.Ordinal))
+        var result = await SearchMatchesAsync(project, query, new(), token).ConfigureAwait(false);
+        if (result.Matches.Count == 0) return "(no literal matches)";
+        return string.Join('\n', result.Matches.Select(hit =>
         {
-            if (count >= MaximumSearchResults) break;
-            var text = await capture.ReadOriginalCapturedFileTextAsync(lease.Capture, lease.Admission,
-                file.RelativePath, token).ConfigureAwait(false);
-            if (text is null) continue;
-            var lineNumber = 0;
-            using var reader = new StringReader(text);
-            while (reader.ReadLine() is { } current)
+            var line = $"{hit.RelativePath}:{hit.LineNumber}:{hit.LineText}";
+            return line.Length > 4096 ? line[..4096] : line;
+        })).TrimEnd();
+    }
+
+    /// <summary>Structured observations from the SAME genuine capture and Home READ lease.
+    /// Match coordinates/hashes are comparisons, never Files identity or permission grants.
+    /// A failed/denied/timed-out source never returns truncated or fabricated successful results.</summary>
+    public async Task<DeveloperProjectSearchResult> SearchMatchesAsync(DeveloperResolvedProject project,
+        string query, DeveloperProjectSearchOptions options, CancellationToken token)
+    {
+        var matcher = new DeveloperProjectSearchMatcher(query, options); // validate before acquiring permission
+        var lease = await AcquireAsync(project, token).ConfigureAwait(false);
+        Exception? originalFailure = null;
+        try
+        {
+            var matches = new List<DeveloperProjectSearchMatch>(); var readable = 0; var skipped = 0;
+            foreach (var file in lease.Capture.OriginalFiles.OrderBy(value => value.RelativePath, StringComparer.Ordinal))
             {
-                lineNumber++;
-                if (!current.Contains(query, StringComparison.Ordinal)) continue;
-                var row = $"{file.RelativePath}:{lineNumber}:{current}";
-                if (row.Length > 4096) row = row[..4096];
-                sb.Append(row).Append('\n'); count++;
-                if (count >= MaximumSearchResults) break;
+                token.ThrowIfCancellationRequested();
+                DemandSafeProjectRelativePath(file.RelativePath);
+                var text = await capture.ReadOriginalCapturedFileTextAsync(lease.Capture, lease.Admission,
+                    file.RelativePath, token).ConfigureAwait(false);
+                if (text is null) { skipped++; continue; }
+                readable++;
+                matches.AddRange(matcher.MatchText(file.RelativePath, text, MaximumSearchResults + 1 - matches.Count, token));
+                if (matches.Count > MaximumSearchResults) break; // sentinel proves actual truncation
             }
+            await lease.Admission.RevalidateOriginalAsync(token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            return new(Guid.NewGuid(), project.Reference, query, options,
+                Array.AsReadOnly(matches.Take(MaximumSearchResults).ToArray()), matches.Count > MaximumSearchResults, readable, skipped);
         }
-        return count == 0 ? "(no literal matches)" : sb.ToString().TrimEnd();
+        catch (Exception error) { originalFailure = error; throw; }
+        finally
+        {
+            try { await lease.DisposeAsync().ConfigureAwait(false); }
+            catch (Exception cleanup) when (originalFailure is not null)
+            { throw new AggregateException("Project search and its exact Home READ close both failed.", originalFailure, cleanup); }
+        }
     }
 
     public async Task<string> ReadFileAsync(DeveloperResolvedProject project, string relativePath, CancellationToken token)
@@ -267,5 +293,79 @@ public sealed class DeveloperManualSourceReadOwner(
         if (Path.IsPathRooted(path) || path.Length > 2048 || path.IndexOf('\0') >= 0 ||
             path.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries).Any(value => value is "." or ".."))
             throw new ArgumentException("A safe project-relative source path is required.", nameof(path));
+    }
+}
+
+
+/// <summary>Explicit deterministic per-line matching. No language semantics, IO, store or grants.</summary>
+public sealed record DeveloperProjectSearchOptions(bool UseRegex = false, bool MatchCase = true);
+public sealed record DeveloperProjectSearchMatch(string RelativePath, int LineNumber, int ColumnNumber,
+    int CharacterOffset, int Length, string LineText, string Preview, string ContentSha256);
+public sealed record DeveloperProjectSearchResult(Guid ObservationId, DeveloperProjectReference Project,
+    string Query, DeveloperProjectSearchOptions Options, IReadOnlyList<DeveloperProjectSearchMatch> Matches,
+    bool HasMore, int ReadableFiles, int SkippedFiles);
+
+/// <summary>Pure bounded search used by the genuine source owner, independently testable without
+/// pretending a fixture issued Home admission. One hit per matching line matches existing search.</summary>
+public sealed class DeveloperProjectSearchMatcher
+{
+    private readonly string _query;
+    private readonly DeveloperProjectSearchOptions _options;
+    private readonly Regex? _regex;
+    private TimeSpan _matchingElapsed;
+    public DeveloperProjectSearchMatcher(string query, DeveloperProjectSearchOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Length > 4000)
+            throw new ArgumentException("Use a literal or per-line regular expression of 1–4000 characters.", nameof(query));
+        _query = query; _options = options ?? throw new ArgumentNullException(nameof(options));
+        if (options.UseRegex)
+        {
+            _regex = new(query, RegexOptions.CultureInvariant | (options.MatchCase ? RegexOptions.None : RegexOptions.IgnoreCase),
+                TimeSpan.FromMilliseconds(100));
+            var empty = _regex.Match("");
+            if (empty.Success && empty.Length == 0) throw new ArgumentException("Zero-width regular expressions are not supported by project search.", nameof(query));
+        }
+    }
+    public IReadOnlyList<DeveloperProjectSearchMatch> MatchText(string relativePath, string text, int maximumResults,
+        CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (maximumResults is < 1 or > 201) throw new ArgumentOutOfRangeException(nameof(maximumResults));
+        var started = Stopwatch.GetTimestamp();
+        try
+        {
+            var results = new List<DeveloperProjectSearchMatch>();
+            var hash = DeveloperManualSourceEditOwner.Sha256(text); var begin = 0; var lineNumber = 1;
+            while (begin < text.Length)
+            {
+                token.ThrowIfCancellationRequested();
+                if (_regex is not null && _matchingElapsed + Stopwatch.GetElapsedTime(started) > TimeSpan.FromSeconds(5))
+                    throw new TimeoutException("Project regular-expression search exceeded its five-second matching budget.");
+                var end = begin;
+                while (end < text.Length && text[end] is not '\r' and not '\n') end++;
+                var line = text[begin..end];
+                int offset, length;
+                if (_regex is { } regex)
+                {
+                    var match = regex.Match(line); offset = match.Success ? match.Index : -1; length = match.Length;
+                    if (match.Success && length == 0) throw new ArgumentException("Zero-width regular-expression matches are not supported by project search.");
+                }
+                else { offset = line.IndexOf(_query, _options.MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase); length = _query.Length; }
+                token.ThrowIfCancellationRequested();
+                if (offset >= 0)
+                {
+                    var start = Math.Max(0, offset - 60); var available = Math.Min(240, line.Length - start);
+                    var preview = (start > 0 ? "…" : "") + line.Substring(start, available) + (start + available < line.Length ? "…" : "");
+                    results.Add(new(relativePath, lineNumber, offset + 1, begin + offset, length,
+                        line.Length > 4096 ? line[..4096] : line, preview, hash));
+                    if (results.Count == maximumResults) break;
+                }
+                if (end < text.Length && text[end] == '\r') end++;
+                if (end < text.Length && text[end] == '\n') end++;
+                begin = end; lineNumber++;
+            }
+            return results.AsReadOnly();
+        }
+        finally { _matchingElapsed += Stopwatch.GetElapsedTime(started); }
     }
 }

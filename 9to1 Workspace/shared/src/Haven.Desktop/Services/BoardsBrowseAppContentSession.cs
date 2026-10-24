@@ -15,7 +15,7 @@ namespace Haven.Desktop.Services;
 /// renderer. Home/Notes are borrowed. Real initialization, action, preparation and retirement
 /// tasks remain owned even when publication fails. Private reversible close preparation freezes
 /// the actual clean core; a rejected preparation restores the same editor and document.</summary>
-internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSession,
+internal sealed partial class BoardsBrowseAppContentSession : IBrowseNativeAppContentSession,
     IBrowseAppContentClosePreparationParticipant, ICuiResultReportingDispatcher, ICuiActionAvailability
 {
     internal const string CuiResourceName = "Haven.Desktop.Boards.cui";
@@ -114,6 +114,10 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         NineToOne.Web.BrowserCanonicalIcons.Register(registry);
         registry.RegisterObjectRenderer("BoardsNotebookSurface", _ => _presentation?.Control
             ?? throw new InvalidOperationException("The original Boards content has not been admitted."));
+        registry.RegisterObjectRenderer("BoardsHistorySurface", _ => _presentation?.HistoryControl
+            ?? throw new InvalidOperationException("The original Boards history has not been admitted."));
+        registry.RegisterObjectRenderer("BoardsSharedInkSurface", _ => _presentation?.SharedInkControl
+            ?? throw new InvalidOperationException("The original Boards drawing has not been admitted."));
         _host = new CuiSceneHost(registry);
         _show = _host.ShowAsync(new("boards", "Boards", "Boards", document, _bindings, this, _route)
         { ThemePreference = _theme, ControlRegistry = registry,
@@ -157,6 +161,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         }
         DemandAlive(); token.ThrowIfCancellationRequested(); _route.DemandPublicationCurrent();
         _presentation ??= new BoardsCuiWorkspacePresentation(_core, _reduceMotion);
+        InitializeSharedInkMount();
         _core.AdmitPresentation(); _core.NotifySelectionChanged();
     }
 
@@ -169,12 +174,16 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             if (path == "OriginalStoreGateRequired") { value = owner._route is IBoardsOriginalStoreSetupRoute; return true; }
             if (path == "StorageSourceBusy") { value = owner._activeDispatches > 0; return true; }
             if (path == "StorageSourceIdle") { value = owner._activeDispatches == 0; return true; }
+            if (path == "SharedInkStatus") { value = owner._sharedInkStatus; return true; }
             if (owner._core is { } core) return core.TryGetValue(path, out value);
             value = null; return false;
         }
         public bool TrySetValue(string path, object? value) => owner._core?.TrySetValue(path, value) == true;
         internal void ForwardOriginalChange(object? sender, PropertyChangedEventArgs args) =>
-            CloudflareOriginalExecutionGuard.InvokeOriginal(owner, () => { PropertyChanged?.Invoke(this, args); return true; });
+            CloudflareOriginalExecutionGuard.InvokeOriginal(owner, () =>
+            { owner.RefreshSharedInk(); PropertyChanged?.Invoke(this, args); return true; });
+        internal void DrawingChanged() => CloudflareOriginalExecutionGuard.InvokeOriginal(owner, () =>
+        { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SharedInkStatus")); return true; });
         internal void SourcesChanged()
         {
             ForwardOriginalChange(this, new PropertyChangedEventArgs("StorageSourceBusy"));
@@ -186,7 +195,8 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
     public bool? IsActionAvailable(string command) => !_closing && !_token.IsCancellationRequested &&
         !_preparing && _prepared is null && _route.IsAlive &&
         (command == "boards.host.observe" ? _host is not null : IsStorageCommand(command) ? _route is IBoardsOriginalStoreSetupRoute && _host is not null && _activeDispatches == 0 :
-            IsPublicationCurrent && _activeDispatches == 0 && _core?.IsActionAvailable(command) == true);
+            IsPublicationCurrent && _activeDispatches == 0 && (IsSharedInkCommand(command)
+                ? IsSharedInkActionAvailable(command) : _core?.IsActionAvailable(command) == true));
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) =>
         new(DispatchWithOutcomeAsync(command, parameter, cancellationToken).AsTask());
@@ -241,6 +251,9 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
                 value = await route.ExecuteOriginalStoreSetupAsync(operation, parameter as BoardsOriginalStoreSetupBackend.Snapshot, scope.Token);
             }
         }
+        else if (IsSharedInkCommand(command)) domainOutcome = ExecuteSharedInkCommand(command);
+        else if (command == "InsertSharedDrawing" && !ProbeSharedDrawingInsertion())
+            domainOutcome = new(false, false, "SharedEngineUnavailable", _sharedInkStatus, null);
         else domainOutcome = await _core!.DispatchWithOutcomeAsync(command, parameter, scope.Token);
         await RevalidateOriginalAsync(scope.Token);
         DemandAlive(); _route.DemandPublicationCurrent();
@@ -316,10 +329,12 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
                 while (true)
                 {
                     var version = _acceptedDispatchVersion;
+                    var ink = CaptureSharedInkSubmissions();
                     Task[] accepted;
                     lock (_gate) accepted = _actions.ToArray();
                     var frontier = new CloudflareOriginalTaskLedger(); frontier.BindOriginalOwner(this);
                     foreach (var action in accepted) _ = frontier.Track(action);
+                    foreach (var submission in ink) _ = frontier.Track(submission);
                     // Direct dispatches are owned by the session and may be absent from
                     // the loader snapshot. Retain them BEFORE capture callbacks and join
                     // their actual originals even if loader acquisition/settlement fails.
@@ -328,12 +343,15 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
                         var actual = frontier.Invoke(() => host.CaptureOriginalActionSettlement(show));
                         await frontier.AwaitAsync(actual);
                         foreach (var action in accepted) await frontier.AwaitAsync(action);
+                        foreach (var submission in ink) await frontier.AwaitAsync(submission);
                     });
                     DemandAlive(); scope.Token.ThrowIfCancellationRequested();
-                    if (version == _acceptedDispatchVersion && _activeDispatches == 0) break;
+                    if (version == _acceptedDispatchVersion && _activeDispatches == 0 &&
+                        ink.Length == CaptureSharedInkSubmissions().Length) break;
                 }
             }
             _preparing = true;
+            RefreshSharedInk();
             await RevalidateOriginalAsync(scope.Token);
             var core = _core; var restore = core?.IsPresentationAdmitted == true;
             if (restore)
@@ -347,7 +365,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
             if (restore && !core!.TrySuspendPreparedPresentation(id, revision, generation)) return null;
             return _prepared = new Preparation(this, core, restore, id, revision, generation);
         }
-        finally { _preparing = false; }
+        finally { _preparing = false; RefreshSharedInk(); }
     }
     private sealed class Preparation(BoardsBrowseAppContentSession owner, BoardsBrowserCore? originalCore,
         bool restoreCore, Guid? id, long revision, long generation)
@@ -432,6 +450,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         var originals = new CloudflareOriginalTaskLedger();
         async Task Join(Task? actual)
         { if (actual is null) return; try { await originals.AwaitAsync(actual); } catch (Exception error) { originals.Capture(actual, error); } }
+        try { BeginSharedInkRetirement(); } catch (Exception error) { originals.Retain(error); }
         try { _lifetime.Cancel(); } catch (Exception error) { originals.Retain(error); }
         await Join(OriginalInitialization);
         await Join(_initializationDispatch); await Join(_initializationWork);
@@ -439,6 +458,7 @@ internal sealed class BoardsBrowseAppContentSession : IBrowseNativeAppContentSes
         lock (_gate) { preparations = _preparations.ToArray(); actions = _actions.ToArray(); }
         foreach (var preparation in preparations) await Join(preparation);
         foreach (var action in actions) await Join(action);
+        await Join(_sharedInkClose);
         if (_host is not null)
             try { await Join(_host.CloseOriginalAsync()); } catch (Exception error) { originals.Retain(error); }
         if (_core is not null)

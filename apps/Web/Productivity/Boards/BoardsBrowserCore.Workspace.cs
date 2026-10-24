@@ -19,7 +19,7 @@ public sealed partial class BoardsBrowserCore
     private NotesSection? ActiveSection => _document?.Sections.FirstOrDefault(section => section.Pages.Any(page => page.Id == ActivePageId));
     private bool CanChangeBoard => _document is not null && !_disposed && !_presentationPending && !IsBusy && !IsReadOnly && !IsHistoryPreview && _pending is null;
 
-    internal void NotifySelectionChanged() => Notify();
+    internal void NotifySelectionChanged() { checked { ++_sharedInkSelectionEpoch; } Notify(); }
     internal void SetViewportWidth(double width)
     {
         var compact = width < 760;
@@ -71,8 +71,14 @@ public sealed partial class BoardsBrowserCore
             "PagePosition" => ActivePage is null ? string.Empty : $"{VisiblePages.Count()} pages · {ActivePage.Blocks.Count} blocks",
             "SelectionLabel" => _richEditor?.SelectedBlock is { } block ? block.Kind.ToString() : "Page",
             "IsChecklistSelected" => _richEditor?.SelectedBlock?.List is { Kind: NotesListKind.Checklist },
+            "SharedInkAvailable" => SharedInkAvailable,
+            "SharedInkUnavailable" => !SharedInkAvailable,
+            "HasSharedDrawings" => ActivePage?.Blocks.Any(block => block.SharedProductivityBundles is not null) == true,
+            "HasSelectedSharedDrawing" => CaptureSharedDrawing() is not null,
+            "SharedDrawingRows" => ActivePage?.Blocks.Where(block => block.SharedProductivityBundles is not null)
+                .Select((block, index) => new BoardsDrawingRow(block.Id, $"Drawing {index + 1}")).ToArray() ?? [],
             "HasUnsupportedPageContent" => ActivePage is { } current && (current.CanvasObjects.Count > 0 || current.Blocks.Any(block =>
-                block.Kind is NotesBlockKind.Canvas or NotesBlockKind.HtmlWidget)),
+                block.Kind == NotesBlockKind.HtmlWidget || block.Kind == NotesBlockKind.Canvas && block.SharedProductivityBundles is null)),
             "ChecklistItems" => _richEditor?.SelectedBlock is { List: { } list } checklist && ActivePageId is { } checklistPage
                 ? list.Items.Select(item => new BoardsChecklistRow(this, checklistPage, checklist.Id, item.Id, item.Text, item.Checked)).ToArray() : [],
             "CanMovePageUp" => CanMovePage(-1),
@@ -81,7 +87,7 @@ public sealed partial class BoardsBrowserCore
             "DetailsLabel" => _showDetails ? "Hide details" : "Storage and capabilities",
             "StorageLabel" => "Saved in this browser",
             "StorageDetail" => "Boards on this device use local storage. Account sign-in does not sync them. Keep browser data to retain these copies.",
-            "CapabilitiesDetail" => "This preview supports native text pages, headings, tables, checklists and page recovery. Nested pages, shared Data views, drawing and Chat pages are not connected here yet. Existing unsupported content is preserved.",
+            "CapabilitiesDetail" => "Native text, headings, tables, checklists and page recovery use the shared editor. Compatible native hosts also support shared inline drawing. Page-wide ink layers, nested pages, shared Data views and Chat pages are not connected here yet. Existing unsupported content is preserved.",
             "CanRestorePage" => CanChangeBoard,
             "IsViewMode" => ActivePageId is { } viewId && _document is not null && (IsReadOnly || _boards.GetEditMode(_document, viewId) == BoardsPageEditMode.View),
             _ => null
@@ -90,6 +96,7 @@ public sealed partial class BoardsBrowserCore
             or "BoardSearch" or "ShowBoardPicker" or "ShowPageTree" or "ShowTrash" or "ShowDetails" or "CanChangeBoard"
             or "CanEditPage" or "IsEditMode" or "LayoutUnlocked" or "EditModeLabel" or "PageRows" or "DeletedPages"
             or "HasDeletedPages" or "PagePosition" or "SelectionLabel" or "IsChecklistSelected" or "HasUnsupportedPageContent" or "ChecklistItems" or "CanMovePageUp" or "CanMovePageDown" or "CanDeletePage"
+            or "SharedInkAvailable" or "SharedInkUnavailable" or "HasSharedDrawings" or "HasSelectedSharedDrawing" or "SharedDrawingRows"
             or "DetailsLabel" or "StorageLabel" or "StorageDetail" or "CapabilitiesDetail" or "CanRestorePage" or "IsViewMode";
     }
 
@@ -176,6 +183,8 @@ public sealed partial class BoardsBrowserCore
         "MovePageUp" => CanMovePage(-1), "MovePageDown" => CanMovePage(1),
         "Italic" or "Underline" or "InsertParagraph" or "InsertHeading" or "InsertChecklist" or "InsertTable" => RichEditingPermitted,
         "AddChecklistItem" => RichEditingPermitted && _richEditor?.SelectedBlock?.List is not null,
+        "InsertSharedDrawing" => SharedInkAvailable && RichEditingPermitted,
+        "SelectSharedDrawing" => _document is not null && !IsHistoryPreview,
         _ => false
     };
 
@@ -209,6 +218,9 @@ public sealed partial class BoardsBrowserCore
             case "Italic": await RichOperation(editor => { editor.ToggleSelectionCharacter(WriteCharacterFormat.Italic); return true; }, token); return true;
             case "Underline": await RichOperation(editor => { editor.ToggleSelectionCharacter(WriteCharacterFormat.Underline); return true; }, token); return true;
             case "AddChecklistItem": await RichOperation(editor => { editor.AddListItem(); return true; }, token); return true;
+            case "InsertSharedDrawing": await InsertSharedDrawingAsync(token); return true;
+            case "SelectSharedDrawing" when parameter is BoardsDrawingRow drawing:
+                await SelectSharedDrawingAsync(drawing.Id, token); return true;
             case "InsertParagraph": case "InsertHeading": case "InsertChecklist": case "InsertTable":
                 if (ActivePageId is not { } insertPage) return true;
                 var kind = command switch { "InsertHeading" => NotesBlockKind.Heading, "InsertChecklist" => NotesBlockKind.List,
@@ -241,4 +253,10 @@ public sealed record BoardsPageRow(Guid Id, string Title, string Section, bool S
             "Label" => (Selected ? "●  " : "▤  ") + Title, _ => null };
         return path is "Id" or "Title" or "Section" or "Selected" or "Label";
     }
+}
+
+public sealed record BoardsDrawingRow(Guid Id, string Label) : ICuiBindingContext
+{
+    public bool TryGetValue(string path, out object? value)
+    { value = path switch { "Id" => Id, "Label" => Label, _ => null }; return path is "Id" or "Label"; }
 }

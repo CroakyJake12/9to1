@@ -21,6 +21,8 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
     private TopLevel? _topLevel;
     public WriteRetainedSceneControl Control { get; }
     public WriteRetainedSceneControl HistoryControl { get; }
+    // Typed low-level slot only. App controls, labels and state remain in Boards.cui.
+    public Panel SharedInkControl { get; } = new();
     public CuiControlRegistry ControlRegistry { get; }
     public BoardsCuiWorkspacePresentation(BoardsBrowserCore core, Func<bool> reduceMotion)
     {
@@ -38,6 +40,7 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
             BrowserCanonicalIcons.Register(ControlRegistry);
             ControlRegistry.RegisterObjectRenderer("BoardsNotebookSurface", _ => Control);
             ControlRegistry.RegisterObjectRenderer("BoardsHistorySurface", _ => HistoryControl);
+            ControlRegistry.RegisterObjectRenderer("BoardsSharedInkSurface", _ => SharedInkControl);
         }
         catch (Exception primary)
         {
@@ -119,6 +122,7 @@ public sealed class BoardsCuiWorkspacePresentation : IDisposable
         Control.SelectionChanged -= SelectionChanged;
         Control.AttachedToVisualTree -= Attached;
         _topLevel = null;
+        SharedInkControl.Children.Clear();
         try { Control.Dispose(); } finally { HistoryControl.Dispose(); }
     }
 }

@@ -158,5 +158,7 @@
     <!-- Lane4 shared header/Assistants rail read projections (source-only, NOT RUN). -->
     <Compile Include="AssistantRailIconProjectionTests.cs" />
     <Compile Include="HavenAppHeaderBindingsTests.cs" />
-  </ItemGroup>
+      <Compile Include="DeveloperProjectSearchTests.cs" />
+    <Compile Include="BoardsSharedInkCoreTests.cs" />
+</ItemGroup>
 </Project>

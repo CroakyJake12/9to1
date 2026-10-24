@@ -3,6 +3,7 @@
     <Action name="dev.open-project-entry" command="dev.open-project-entry" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.select-source-tab" command="dev.select-source-tab" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.close-source-tab" command="dev.close-source-tab" parameter="{Binding item.SelectionKey}" />
+    <Action name="dev.open-search-result" command="dev.open-search-result" parameter="{Binding searchHit.SelectionKey}" />
   </Actions>
   <Page>
     <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
@@ -36,8 +37,19 @@
       <Input id="dev-source-path" placeholdertext="Select an existing project file" accessible-name="Project-relative source file" Type="Text" Value="{Binding SourcePath}" />
       <Button id="dev-open-source" action="dev.open-source" content="Open source" Interactive="{Binding CanOpenSource}" />
       <Input id="dev-search-query" placeholdertext="Search project text" accessible-name="Project search query" Type="Text" Value="{Binding SearchQuery}" />
-      <Button id="dev-search" action="dev.search" content="Search files" />
+      <Container Type="Wrap" CellGap="8">
+        <Input id="dev-search-match-case" Type="Checkbox" content="Match case" Checked="{Binding SearchMatchCase, mode=TwoWay}" Interactive="{Binding CanStructuredSearch}" />
+        <Input id="dev-search-regex" Type="Checkbox" content="Regular expression" Checked="{Binding SearchUseRegex, mode=TwoWay}" Interactive="{Binding CanStructuredSearch}" accessible-name="Search saved source with a per-line regular expression" />
+        <Button id="dev-search" action="dev.search" content="Search files" />
+      </Container>
       <Text text="{Binding SearchResults}" text-wrapping="Wrap" accessible-name="Actual file search results" />
+      <Container Type="Vertical Stack" CellGap="4" max-height="240" VerticalScrolling="True" accessible-name="Matching saved source files">
+        <Repeat id="dev-search-matches" Source="{Binding ProjectSearchMatches}" As="searchHit" Key="{Binding searchHit.SelectionKey}">
+          <Button id="dev-open-search-result" action="dev.open-search-result" accessible-name="{Binding searchHit.AccessibleName}" Interactive="{Binding searchHit.CanOpen}" horizontal-content-alignment="Left">
+            <Text text="{Binding searchHit.Label}" text-wrapping="Wrap" />
+          </Button>
+        </Repeat>
+      </Container>
       <Container Type="Wrap" CellGap="6" accessible-name="Open source documents">
         <Repeat id="dev-source-tabs" Source="{Binding SourceTabs}" As="item" Key="{Binding item.SelectionKey}">
           <Container Type="Horizontal Stack" CellGap="2">

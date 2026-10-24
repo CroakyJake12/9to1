@@ -26,6 +26,7 @@
     <Action name="OpenBoardFindMatch" command="OpenFindMatch" parameter="{Binding findMatch}" />
     <Action name="PreviewSavedBoardVersion" command="PreviewHistory" parameter="{Binding savedVersion}" />
     <Action name="ChooseHistoryPage" command="SelectHistoryPage" parameter="{Binding historyPage}" />
+    <Action name="ChooseSharedDrawing" command="SelectSharedDrawing" parameter="{Binding sharedDrawing}" />
   </Actions>
   <Effects>
     <Effect name="observe-owning-host" Condition="True" Action="ObserveBoardsHost" />
@@ -167,6 +168,7 @@
                           <Button action="InsertHeading" Type="Menu Item" Content="Heading" />
                           <Button action="InsertChecklist" Type="Menu Item" Content="Checklist" />
                           <Button action="InsertTable" Type="Menu Item" Content="Table" />
+                          <Button action="InsertSharedDrawing" Type="Menu Item" Content="Drawing" AccessibleDescription="Shared drawing requires a compatible Home drawing engine in this host." />
                         </Button>
                       </Container>
                       <Button content="B" accessible-name="Bold selection" font-weight="Bold" action="Bold" margin="6,0,0,0" />
@@ -227,6 +229,35 @@
                 </If>
                 <If condition="{Binding ShowCurrentBoard}">
                   <Object Type="BoardsNotebookSurface" />
+                  <If condition="{Binding HasSharedDrawings}">
+                    <Container Type="Vertical Stack" CellGap="8" padding="20" accessible-name="Shared drawings on this page">
+                      <Container Type="Wrap" CellGap="6">
+                        <Repeat Source="{Binding SharedDrawingRows}" As="sharedDrawing" Key="{Binding sharedDrawing.Id}">
+                          <Button content="{Binding sharedDrawing.Label}" action="ChooseSharedDrawing" />
+                        </Repeat>
+                      </Container>
+                      <If condition="{Binding SharedInkUnavailable}">
+                        <Text text="Shared drawing input is unavailable in this host. The editable original is preserved." text-wrapping="Wrap" />
+                      </If>
+                      <If condition="{Binding HasSelectedSharedDrawing}">
+                        <If condition="{Binding SharedInkAvailable}">
+                          <If condition="{Binding CanEditPage}">
+                          <Container Type="Wrap" CellGap="6">
+                            <Button content="Pen" action="boards.ink.pen" />
+                            <Button content="Highlighter" action="boards.ink.marker" />
+                            <Button content="Black" action="boards.ink.black" />
+                            <Button content="Blue" action="boards.ink.blue" />
+                            <Button content="Thin" action="boards.ink.thin" />
+                            <Button content="Thick" action="boards.ink.thick" />
+                          </Container>
+                          </If>
+                          <Button content="Refresh drawing" action="boards.ink.refresh" horizontal-alignment="Left" />
+                          <Text text="{Binding SharedInkStatus}" text-wrapping="Wrap" foreground="{Resource CuiTextSoftBrush}" />
+                          <Object Type="BoardsSharedInkSurface" Height="540" min-height="200" accessible-name="Shared drawing. Draw with pen, mouse or touch. Undo removes a stroke." />
+                        </If>
+                      </If>
+                    </Container>
+                  </If>
                 </If>
                 <If condition="{Binding IsHistoryPreview}">
                   <Object Type="BoardsHistorySurface" />

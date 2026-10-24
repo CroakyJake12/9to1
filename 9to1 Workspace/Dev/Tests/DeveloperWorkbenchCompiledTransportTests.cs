@@ -94,7 +94,7 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
             "dev.run-stage", "dev.create-branch", "dev.switch-branch",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
-            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next"];
+            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
 
         // Genuinely stateless: no document-root local variables.
@@ -114,7 +114,7 @@ public sealed class DeveloperWorkbenchCompiledTransportTests
             "dev.search", "dev.preview-edit", "dev.apply-edit", "dev.save-reviewed", "dev.revert-pass", "dev.run-command", "dev.run-tests",
             "dev.run-stage", "dev.create-branch", "dev.switch-branch",
             "dev.select-source-tab", "dev.close-source-tab", "dev.toggle-source-tab-pin",
-            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next"];
+            "dev.open-project-entry", "dev.project-folder-up", "dev.project-entries-previous", "dev.project-entries-next", "dev.open-search-result"];
         Assert.Equal(expected.OrderBy(value => value), commands.OrderBy(value => value));
     }
 

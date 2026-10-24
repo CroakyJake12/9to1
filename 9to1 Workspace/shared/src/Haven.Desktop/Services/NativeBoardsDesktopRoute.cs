@@ -26,6 +26,11 @@ internal interface IBoardsOriginalPresentationOwnerRoute
     void BindOriginalPresentationOwner(BoardsBrowseAppContentSession originalOwner);
 }
 
+internal interface IBoardsOriginalSharedInkRoute
+{
+    HomeProductivityEngine BorrowOriginalSharedInkEngine();
+}
+
 internal interface IBoardsOriginalStoreSetupRoute : IBoardsOriginalPresentationOwnerRoute
 {
     Task<BoardsOriginalStoreSetupBackend.Snapshot> ExecuteOriginalStoreSetupAsync(
@@ -37,7 +42,7 @@ internal interface IBoardsOriginalStoreSetupRoute : IBoardsOriginalPresentationO
 /// Every content read/save still uses HomeNotesResourceAdmissionSource plus the original Notes
 /// transaction/fence. A runtime observation or native approval-window observation is no grant.
 /// Store ownership/setup/import is never manufactured here, and shared owners are never closed.</summary>
-internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IBoardsOriginalStoreSetupRoute
+internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IBoardsOriginalStoreSetupRoute, IBoardsOriginalSharedInkRoute
 {
     private readonly IServiceProvider _provider;
     private readonly HomeNativeWindowsComposition _home;
@@ -106,6 +111,12 @@ internal sealed class NativeBoardsDesktopRoute : IBoardsOriginalDesktopRoute, IB
         });
 
     public bool IsAlive { get { lock (_gate) return !_retiring && !_lifetime.IsCancellationRequested && !_appLifetime.IsCancellationRequested; } }
+    public HomeProductivityEngine BorrowOriginalSharedInkEngine()
+    {
+        DemandPublicationCurrent();
+        WindowsHomeSameProcessRuntimeObservation.DemandOriginalBinding(_provider, _home);
+        return _home.Productivity.Engine;
+    }
     public BoardsBrowserCore AcquireOriginalCore()
     {
         lock (_gate)

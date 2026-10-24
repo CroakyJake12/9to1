@@ -83,6 +83,12 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     private string _sourcePath = "", _searchQuery = "", _command = "", _testCommand = "";
     private string _stageTaskId = "", _stageId = "", _branchName = "";
     private string _files = "", _searchResults = "", _status = "", _processStatus = "", _processOutput = "";
+    private bool _searchUseRegex, _searchMatchCase = true;
+    private long _searchGeneration;
+    private DeveloperProjectSearchResult? _structuredSearch;
+    private readonly Dictionary<string, DeveloperProjectSearchMatch> _searchMatches = [];
+    private sealed record SearchResultItem(string SelectionKey, string Label, string AccessibleName, bool CanOpen);
+    private sealed record SearchSelection(DeveloperProjectSearchResult Observation, DeveloperProjectSearchMatch Match, long Generation);
     private string _saveReviewedStatus = "";
     internal IReadOnlyList<DeveloperManualSaveOutcome> OriginalManualSaveBatch { get; private set; } = [];
     private readonly List<IReadOnlyList<DeveloperManualSaveOutcome>> _originalManualSaveBatches = [];
@@ -307,6 +313,11 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                     ? $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nManual open — no AI task or model. Reads and reviewed edits use the current Home permissions; process execution requires separate execution authority."
                     : $"Workspace {_project.Reference.WorkspaceId:D} / revision {_project.Reference.WorkspaceRevision}\nProject {_project.Reference.ProjectId:D} / revision {_project.Reference.ProjectRevision}\nRoot {_project.Reference.RootId:D}; {_project.Root.EnvironmentId}\nRepository {_project.Repository?.CanonicalRepositoryId ?? "not configured"}\nTask {_taskId:D}; run {_runId:D}",
                 "Files" => _files, "SourcePath" => _sourcePath, "SearchQuery" => _searchQuery, "SearchResults" => _searchResults,
+                "CanStructuredSearch" => !_pending && _manualReader is not null,
+                "SearchUseRegex" => _searchUseRegex, "SearchMatchCase" => _searchMatchCase,
+                "ProjectSearchMatches" => (_structuredSearch?.Project == _project.Reference ? _searchMatches : new Dictionary<string, DeveloperProjectSearchMatch>()).Select(pair => new SearchResultItem(pair.Key,
+                    $"{pair.Value.RelativePath}:{pair.Value.LineNumber}:{pair.Value.ColumnNumber} — {pair.Value.Preview}",
+                    $"Open matched saved source {pair.Value.RelativePath}, line {pair.Value.LineNumber}, column {pair.Value.ColumnNumber}", !_pending)).ToArray(),
                 "EditorTitle" => _manual
                     ? CurrentSourceTab() is not { } manualSource ? "Choose an existing registered source document to read it."
                         : $"{manualSource.Path}; manual source tab. Reviewed edits use the current Home write permission."
@@ -343,7 +354,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 "CanSaveReviewed" => IsActionAvailable("dev.save-reviewed"), "SaveReviewedStatus" => _saveReviewedStatus, _ => null
             };
         }
-        return path is "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
+        return path is "CanStructuredSearch" or "SearchUseRegex" or "SearchMatchCase" or "ProjectSearchMatches" or
+            "ProjectTitle" or "ProjectSummary" or "Files" or "SourcePath" or "SearchQuery" or "SearchResults" or
             "EditorTitle" or "DraftText" or "ReviewSummary" or "BeforeText" or "AfterText" or "Command" or "TestCommand" or
             "StageTaskId" or "StageId" or "BranchName" or "ProcessStatus" or "ProcessOutput" or "Status" or "CanOpenSource" or "CanPreview" or "CanApply" or "CanRevert" or
             "SourceTabs" or "SourceTabPinLabel" or "CanPinSourceTab" or "CanEditSource" or "SourceTabsStatus" or
@@ -352,6 +364,22 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
     }
     public bool TrySetValue(string path, object? value)
     {
+        if (path is "SearchUseRegex" or "SearchMatchCase")
+        {
+            if (value is not bool enabled || _manualReader is null) return false;
+            long optionGeneration; lock (_gate) optionGeneration = _generation;
+            _work.RunSynchronous(original =>
+            {
+                original.BindPublicationGuard(() => IsCurrent(optionGeneration)); original.DemandPublication();
+                lock (_gate)
+                {
+                    if (path == "SearchUseRegex") _searchUseRegex = enabled; else _searchMatchCase = enabled;
+                    InvalidateProjectSearch();
+                }
+                NotifyOriginal(original);
+            });
+            return true;
+        }
         if (value is not string text || path is not ("SourcePath" or "SearchQuery" or "DraftText" or "Command" or "TestCommand" or "StageTaskId" or "StageId" or "BranchName")) return false;
         long generation; lock (_gate) generation = _generation;
         _work.RunSynchronous(original =>
@@ -368,7 +396,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                             // Its tab retains the exact draft/review; manual apply is unavailable
                             // until the path once again names the actually open source.
                             StoreSelectedTab(); _sourcePath = text; break;
-                        case "SearchQuery": _searchQuery = text; break;
+                        case "SearchQuery": if (!StringComparer.Ordinal.Equals(_searchQuery, text)) { _searchQuery = text; InvalidateProjectSearch(); } break;
                         case "DraftText":
                             if (_manual && _editor is null)
                             {
@@ -401,6 +429,7 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
             if (command is "dev.select-source-tab" or "dev.close-source-tab") return _sourceTabs.Count > 0;
             if (command == "dev.toggle-source-tab-pin") return CurrentSourceTab() is not null;
             if (command == "dev.open-project-entry") return _manualReader is not null && _projectEntries is not null;
+            if (command == "dev.open-search-result") return _manualReader is not null && _structuredSearch?.Project == _project.Reference && _searchMatches.Count > 0;
             if (command == "dev.project-folder-up") return _projectEntries is not null && !string.IsNullOrEmpty(_projectFolder);
             if (command == "dev.project-entries-previous") return _projectEntries is not null && _projectEntryPage > 0;
             if (command == "dev.project-entries-next") return _projectEntries is not null &&
@@ -445,6 +474,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         Guid? requestedTab = null;
         string? projectFolder = null, entryPath = null;
         IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed = null;
+        SearchSelection? searchSelection = null;
+        DeveloperProjectSearchOptions searchOptions; long searchGeneration;
         lock (_gate)
         {
             if (IsActionAvailable(command) != true) throw new InvalidOperationException("This Dev operation is unavailable.");
@@ -462,6 +493,15 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 if (entry.IsDirectory) projectFolder = entry.RelativePath;
                 else { entryPath = entry.RelativePath; command = "dev.open-source"; }
             }
+            if (command == "dev.open-search-result")
+            {
+                if (parameter is not string searchKey || _structuredSearch is not { } observation ||
+                    !_searchMatches.TryGetValue(searchKey, out var match))
+                    throw new InvalidOperationException("Choose an original result from the current project search.");
+                searchSelection = new(observation, match, _searchGeneration);
+                entryPath = match.RelativePath; command = "dev.open-source";
+            }
+            searchOptions = new(_searchUseRegex, _searchMatchCase); searchGeneration = _searchGeneration;
             if (command == "dev.project-folder-up")
             {
                 var separator = _projectFolder.LastIndexOf('/'); projectFolder = separator < 0 ? "" : _projectFolder[..separator];
@@ -491,7 +531,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 return DispatchTabPresentationAsync(command, requestedTab, generation);
             if (_manual)
                 return DispatchManualAsync(command, path, query, manualBeforeText, manualDraftText, manualBeforeSha256,
-                    manualAfterSha256, manualReviewed, manualReviewRevision, saveReviewed, generation, cancellationToken);
+                    manualAfterSha256, manualReviewed, manualReviewRevision, saveReviewed, generation,
+                    searchOptions, searchGeneration, searchSelection, cancellationToken);
             return new(_work.RunAsync(async original =>
             {
                 original.BindPublicationGuard(() => IsCurrent(generation));
@@ -506,6 +547,11 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         var entries = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader.ListEntriesAsync(project, cancellationToken))).ConfigureAwait(false);
                         await PublishAsync(original, () => { _project = project; PublishProjectTree(entries); }).ConfigureAwait(false); return;
                     }
+                    if (command == "dev.search" && _manualReader is not null)
+                    {
+                        var results = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader.SearchMatchesAsync(project, query, searchOptions, cancellationToken))).ConfigureAwait(false);
+                        await PublishAsync(original, () => PublishProjectSearch(project, results, searchGeneration)).ConfigureAwait(false); return;
+                    }
                     if (command == "dev.revert-pass")
                     {
                         original.DemandPublication();
@@ -518,13 +564,16 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                     {
                         // A tab switch performs the same genuine authorized fresh read as Open;
                         // it never discloses a cached document merely from a copied view ID.
+                        if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
                         var document = await original.AwaitAsync(InvokeOriginalSource(() => _resolveDocument(project, path, cancellationToken))).ConfigureAwait(false);
                         if (!document.Succeeded || document.Value is null) throw new InvalidOperationException(document.Error?.Message ?? "No current registered document identity was resolved.");
                         original.DemandPublication();
                         var opened = await original.AwaitAsync(InvokeOriginalSource(() => _review!.OpenAsync(project.Reference, context, document.Value, _businessToken))).ConfigureAwait(false);
                         var value = DemandValue(opened);
+                        if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, value.OriginalText);
                         await PublishAsync(original, () =>
                         {
+                            if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
                             StoreSelectedTab();
                             var tab = _sourceTabs.SingleOrDefault(item => item.Editor?.EditorId == value.EditorId);
                             if (tab is null)
@@ -534,7 +583,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                             }
                             else tab.Editor = value;
                             _project = project; SelectTab(tab);
-                            _status = "Complete source opened through its current owner. Other tabs retain their drafts and review state.";
+                            _status = searchSelection is null ? "Complete source opened through its current owner. Other tabs retain their drafts and review state."
+                                : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
                         }).ConfigureAwait(false);
                         await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
                     }
@@ -593,13 +643,50 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
         }
         catch { lock (_gate) _pending = false; throw; }
     }
+    private void InvalidateProjectSearch()
+    {
+        ++_searchGeneration; _structuredSearch = null; _searchMatches.Clear();
+        _searchResults = "Search changed. Run Search files to observe current saved source.";
+    }
+    private void PublishProjectSearch(DeveloperResolvedProject project, DeveloperProjectSearchResult result, long queryGeneration)
+    {
+        if (_searchGeneration != queryGeneration || !StringComparer.Ordinal.Equals(_searchQuery, result.Query) ||
+            result.Options != new DeveloperProjectSearchOptions(_searchUseRegex, _searchMatchCase) ||
+            project.Reference != result.Project || _project.Reference != project.Reference)
+            throw new InvalidOperationException("The project or search changed while reading. Previous source tabs are preserved; search again.");
+        _project = project; _structuredSearch = result; _searchMatches.Clear();
+        for (var i = 0; i < result.Matches.Count; i++)
+            _searchMatches.Add(result.ObservationId.ToString("D") + ":" + i, result.Matches[i]);
+        _searchResults = (result.HasMore ? "Showing the first 200 matching lines; narrow the query." : $"{result.Matches.Count} matching saved-source lines.") +
+            $" Read {result.ReadableFiles} text files; {result.SkippedFiles} non-text/unavailable captured files skipped. " +
+            (result.Options.UseRegex ? "Per-line regular expression. " : "Literal text. ") + "Open a match to read its current saved source.";
+        _status = "Searched saved project files. Your unsaved drafts are preserved.";
+    }
+    private void DemandSearchSelection(SearchSelection selection, DeveloperResolvedProject project)
+    {
+        lock (_gate)
+        {
+            if (!ReferenceEquals(_structuredSearch, selection.Observation) || _searchGeneration != selection.Generation ||
+                selection.Observation.Project != project.Reference || _project.Reference != project.Reference ||
+                !_searchMatches.Values.Any(value => ReferenceEquals(value, selection.Match)))
+                throw new InvalidOperationException("This search result is stale. Search again before opening its source.");
+        }
+    }
+    private void DemandSearchOpenedContent(SearchSelection selection, DeveloperResolvedProject project, string text)
+    {
+        DemandSearchSelection(selection, project);
+        if (!StringComparer.Ordinal.Equals(DeveloperManualSourceEditOwner.Sha256(text), selection.Match.ContentSha256))
+            throw new InvalidOperationException("The matched saved source changed. Its existing draft is preserved; search again.");
+    }
+
     /// <summary>Manual (no-AI) action dispatch: confined read/tree/search over the saved project root
     /// plus refresh. Every other action is unavailable and fails closed with no effects — mutations
     /// and process execution require a separate current authorized Task/execution authority.</summary>
     private ValueTask DispatchManualAsync(string command, string path, string query,
         string manualBeforeText, string manualDraftText, string manualBeforeSha256, string manualAfterSha256,
         bool manualReviewed, long manualReviewRevision, IReadOnlyList<DeveloperManualSaveRequest>? saveReviewed,
-        long generation, CancellationToken cancellationToken)
+        long generation, DeveloperProjectSearchOptions searchOptions, long searchGeneration,
+        SearchSelection? searchSelection, CancellationToken cancellationToken)
     {
         return new(_work.RunAsync(async original =>
         {
@@ -617,15 +704,18 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                 }
                 if (command == "dev.search")
                 {
-                    var results = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.SearchAsync(project, query, cancellationToken))).ConfigureAwait(false);
-                    await PublishAsync(original, () => { _project = project; _searchResults = results; _status = "Manual literal search over the genuine saved-project capture."; }).ConfigureAwait(false); return;
+                    var results = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.SearchMatchesAsync(project, query, searchOptions, cancellationToken))).ConfigureAwait(false);
+                    await PublishAsync(original, () => PublishProjectSearch(project, results, searchGeneration)).ConfigureAwait(false); return;
                 }
                 if (command is "dev.open-source" or "dev.select-source-tab")
                 {
+                    if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
                     var text = await original.AwaitAsync(InvokeOriginalSource(() => _manualReader!.ReadFileAsync(project, path, cancellationToken))).ConfigureAwait(false);
+                    if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, text);
                     var beforeSha = DeveloperManualSourceEditOwner.Sha256(text);
                     await PublishAsync(original, () =>
                     {
+                        if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
                         StoreSelectedTab();
                         var tab = _sourceTabs.SingleOrDefault(item => StringComparer.Ordinal.Equals(item.Path, path));
                         if (tab?.Manual is { } retained && !StringComparer.Ordinal.Equals(retained.Baseline, text))
@@ -639,7 +729,8 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                             _sourceTabs.Add(tab);
                         }
                         _project = project; SelectTab(tab);
-                        _status = "Manual source opened through the genuine Home read owner. Other tabs retain their drafts and review state.";
+                        _status = searchSelection is null ? "Manual source opened through the genuine Home read owner. Other tabs retain their drafts and review state."
+                            : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
                     }).ConfigureAwait(false);
                     await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
                 }

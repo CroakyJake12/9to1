@@ -38,6 +38,9 @@ public sealed class BoardsBrowseAppContentSessionTests
         await using var rig = new Rig();
         await using var core = new BoardsBrowserCore(rig.Notes);
         using var presentation = new BoardsCuiWorkspacePresentation(core, () => true);
+        Assert.Empty(presentation.SharedInkControl.Children);
+        Assert.False(core.SharedInkAvailable);
+        Assert.False(core.IsActionAvailable("InsertSharedDrawing"));
         using var stream = typeof(BoardsBrowseAppContentSession).Assembly.GetManifestResourceStream(BoardsBrowseAppContentSession.CuiResourceName)
             ?? throw new InvalidOperationException("The actual shared Boards CUI resource is unavailable.");
         using var reader = new StreamReader(stream);

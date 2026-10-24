@@ -27,6 +27,20 @@
     "main_index_packages_xz_sha256": "aaf83990835a2ff2126d2d5d6cd66042c672b561d07f0315170d130867b86f77",
     "sources_index_packages_xz_sha256": "91e029199d2d107f01d21c7085494bd666329318fa9718166bcf7d521518c3ab"
   },
+  "archive_snapshots": {
+    "schema": "9to1.chromium-native.archive-snapshots/v1",
+    "purpose": "Acquire the unchanged155 payloads from immutable official signed metadata after rotating security indexes removed155. Signed Date and Valid-Until remain mandatory checks; this is not perpetual old-release reproducibility.",
+    "debian": {
+      "base_url": "https://snapshot.debian.org/archive/debian/20261021T000000Z",
+      "inrelease_sha256": "0584fba32e13e0ab8285fb16c27adea1ec03a73669c18702821094fd6ca86675",
+      "inrelease_bytes": 140421
+    },
+    "security": {
+      "base_url": "https://snapshot.debian.org/archive/debian-security/20261021T000000Z",
+      "inrelease_sha256": "4ac49185ca56f0a08333aec9d484e56a8d73a0d64b002f494a83a7bdfb7f4e4a",
+      "inrelease_bytes": 43409
+    }
+  },
   "packages": [
     {
       "debian_package": "chromium",

@@ -24,7 +24,10 @@ Nothing here installs packages, runs a browser, or mutates system apt state.
 from __future__ import annotations
 
 import argparse
+import datetime
+import email.utils
 import lzma
+import re
 import subprocess
 import sys
 import tempfile
@@ -45,8 +48,6 @@ from chromium_native_common import (  # noqa: E402
     verify_inrelease_strict,
 )
 
-DEBIAN_POOL = "https://deb.debian.org/debian"
-DEBIAN_SECURITY = "https://security.debian.org/debian-security"
 ARCH = "arm64"
 
 # Pinned trust anchors (public constants, from the official keyring package).
@@ -62,15 +63,72 @@ ARCHIVE_KEYRING = {
     "security": (KEYRING_TRIXIE_SECURITY_AUTOMATIC, PINNED_TRIXIE_SECURITY_KEY_FPR),
 }
 
-# Suite -> archive base.
-SUITE_BASE = {
-    "trixie-security": DEBIAN_SECURITY,
-    "trixie": DEBIAN_POOL,
-}
-
-
 def _provider_of_suite(suite: str) -> str:
     return "security" if suite == "trixie-security" else "debian"
+
+
+def archive_origins(pinned: dict) -> dict[str, dict]:
+    """Require explicit immutable official snapshots, never rotating indexes."""
+    snapshots = pinned.get("archive_snapshots")
+    if not isinstance(snapshots, dict) or snapshots.get("schema") != \
+            "9to1.chromium-native.archive-snapshots/v1":
+        raise RuntimeError("missing pinned official archive snapshots")
+    origins = {}
+    for provider, archive in (("debian", "debian"), ("security", "debian-security")):
+        pin = snapshots.get(provider)
+        if not isinstance(pin, dict):
+            raise RuntimeError(f"missing archive snapshot pin for {provider}")
+        base = pin.get("base_url")
+        match = re.fullmatch(
+            rf"https://snapshot\.debian\.org/archive/{archive}/(\d{{8}}T\d{{6}}Z)",
+            base if isinstance(base, str) else "")
+        if not match:
+            raise RuntimeError(f"invalid official immutable snapshot for {provider}")
+        try:
+            stamp = datetime.datetime.strptime(match[1], "%Y%m%dT%H%M%SZ").replace(
+                tzinfo=datetime.timezone.utc)
+        except ValueError as exc:
+            raise RuntimeError(f"invalid snapshot timestamp for {provider}") from exc
+        if stamp > datetime.datetime.now(datetime.timezone.utc):
+            raise RuntimeError(f"future snapshot timestamp for {provider}")
+        if not isinstance(pin.get("inrelease_sha256"), str) or not re.fullmatch(
+                r"[0-9a-f]{64}", pin["inrelease_sha256"]):
+            raise RuntimeError(f"invalid InRelease SHA256 pin for {provider}")
+        size = pin.get("inrelease_bytes")
+        if type(size) is not int or size <= 0:
+            raise RuntimeError(f"invalid InRelease byte-size pin for {provider}")
+        origins[provider] = pin
+    return origins
+
+
+def validate_release_window(text: str, suite: str,
+                            now: datetime.datetime | None = None) -> dict:
+    """Check dates only after signature authentication; security must expire."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    fields = {}
+    for name in ("Date", "Valid-Until"):
+        values = re.findall(rf"^{name}:[ \t]*(.*)$", text, flags=re.MULTILINE)
+        if len(values) > 1 or (name == "Date" and not values) or \
+                (name == "Valid-Until" and suite == "trixie-security" and not values):
+            raise RuntimeError(f"missing/duplicate signed {name} for {suite}")
+        if not values:
+            fields[name] = None  # Stable trixie does not publish Valid-Until.
+            continue
+        try:
+            value = email.utils.parsedate_to_datetime(values[0])
+            if value.tzinfo is None:
+                raise ValueError("timezone missing")
+            fields[name] = value.astimezone(datetime.timezone.utc)
+        except (ValueError, TypeError, OverflowError) as exc:
+            raise RuntimeError(f"invalid signed {name} for {suite}") from exc
+    if fields["Date"] > now:
+        raise RuntimeError(f"future signed Date for {suite}")
+    expiry = fields["Valid-Until"]
+    if expiry is not None and (expiry <= fields["Date"] or now >= expiry):
+        raise RuntimeError(f"expired/invalid signed Valid-Until for {suite}")
+    return {"date": fields["Date"].isoformat(),
+            "valid_until": expiry.isoformat() if expiry is not None else None,
+            "checked_at": now.isoformat()}
 
 
 # --------------------------------------------------------------------------- #
@@ -115,18 +173,24 @@ def check_pinned_keyrings(keyrings: dict[str, Path]) -> dict[str, bool]:
 # Index fetch/verify
 # --------------------------------------------------------------------------- #
 def fetch_inrelease(base: str, suite: str, evidence: Path, keyring: Path,
-                    required_fpr: str, offline: bool) -> dict:
+                    required_fpr: str, offline: bool, pin: dict) -> dict:
     dest = evidence / f"InRelease.{suite}"
     if offline:
         if not dest.exists():
             raise RuntimeError(f"--offline: cached InRelease missing for {suite}")
     else:
-        download_atomic(f"{base}/dists/{suite}/InRelease", dest, reserve_bytes=0)
+        download_atomic(f"{base}/dists/{suite}/InRelease", dest,
+                        pin["inrelease_sha256"], pin["inrelease_bytes"], reserve_bytes=0)
+    if dest.stat().st_size != pin["inrelease_bytes"] or \
+            sha256_file(dest) != pin["inrelease_sha256"]:
+        raise RuntimeError(f"pinned InRelease bytes mismatch for {suite}")
     chk = verify_inrelease_strict(keyring, dest, required_fpr)
     if not chk["verified"]:
         raise RuntimeError(f"InRelease signature verification failed for {suite}: "
                            f"{chk['reason']} (exit={chk['exit']})")
-    return {"url": f"{base}/dists/{suite}/InRelease", "path": dest, "check": chk}
+    window = validate_release_window(dest.read_text(), suite)
+    return {"url": f"{base}/dists/{suite}/InRelease", "path": dest, "check": chk,
+            "release_window": window}
 
 
 def fetch_index(base: str, suite: str, component: str, kind: str,
@@ -163,6 +227,10 @@ def main(argv=None) -> int:
     evidence.mkdir(parents=True, exist_ok=True)
     pinned = load_json(args.pinned_manifest)
     source_pins = load_json(args.source_pins)
+    origins = archive_origins(pinned)
+    debian_pool = origins["debian"]["base_url"]
+    debian_security = origins["security"]["base_url"]
+    suite_base = {"trixie": debian_pool, "trixie-security": debian_security}
 
     sel = pinned["selected_version"]
     pinned_version = sel["binary_package_version"]
@@ -177,7 +245,7 @@ def main(argv=None) -> int:
     keyring_pkg = evidence / keyring_name
     if not ensure_input(args.offline, keyring_pkg, keyring_sha,
                         pinned["archive_trust"]["keyring_package"].get("bytes"),
-                        f"{DEBIAN_POOL}/pool/main/d/debian-archive-keyring/{keyring_name}"):
+                        f"{debian_pool}/pool/main/d/debian-archive-keyring/{keyring_name}"):
         raise RuntimeError("keyring package could not be verified")
     keyrings = extract_keyrings(keyring_pkg, evidence)
     pinned_status = check_pinned_keyrings(keyrings)
@@ -186,23 +254,25 @@ def main(argv=None) -> int:
         raise RuntimeError(f"pinned archive key fingerprint(s) not found: {failed_fpr}")
 
     # 2. InReleases ------------------------------------------------------
-    sec_inrel = fetch_inrelease(DEBIAN_SECURITY, "trixie-security", evidence,
+    sec_inrel = fetch_inrelease(debian_security, "trixie-security", evidence,
                                 keyrings[KEYRING_TRIXIE_SECURITY_AUTOMATIC],
-                                PINNED_TRIXIE_SECURITY_KEY_FPR, args.offline)
-    main_inrel = fetch_inrelease(DEBIAN_POOL, "trixie", evidence,
+                                PINNED_TRIXIE_SECURITY_KEY_FPR, args.offline,
+                                origins["security"])
+    main_inrel = fetch_inrelease(debian_pool, "trixie", evidence,
                                  keyrings[KEYRING_TRIXIE_AUTOMATIC],
-                                 PINNED_TRIXIE_MAIN_KEY_FPR, args.offline)
+                                 PINNED_TRIXIE_MAIN_KEY_FPR, args.offline,
+                                 origins["debian"])
     sec_text = sec_inrel["path"].read_text(errors="replace")
     main_text = main_inrel["path"].read_text(errors="replace")
 
     # 3. Indexes ----------------------------------------------------------
-    sec_pkg_xz = fetch_index(DEBIAN_SECURITY, "trixie-security", "main", "binary",
+    sec_pkg_xz = fetch_index(debian_security, "trixie-security", "main", "binary",
                              evidence, sec_text, args.offline)
-    main_pkg_xz = fetch_index(DEBIAN_POOL, "trixie", "main", "binary",
+    main_pkg_xz = fetch_index(debian_pool, "trixie", "main", "binary",
                               evidence, main_text, args.offline)
-    sec_src_xz = fetch_index(DEBIAN_SECURITY, "trixie-security", "main", "source",
+    sec_src_xz = fetch_index(debian_security, "trixie-security", "main", "source",
                              evidence, sec_text, args.offline)
-    main_src_xz = fetch_index(DEBIAN_POOL, "trixie", "main", "source",
+    main_src_xz = fetch_index(debian_pool, "trixie", "main", "source",
                               evidence, main_text, args.offline)
 
     sec_pkgs = lzma.decompress(sec_pkg_xz.read_bytes()).decode("utf-8", errors="replace")
@@ -238,7 +308,7 @@ def main(argv=None) -> int:
                                f"pinned {inp['sha256']}/{inp['bytes']}")
         local = evidence / "source" / inp["name"]
         chromium_directory = chromium_src.get("Directory") or "pool/updates/main/c/chromium"
-        url = f"{DEBIAN_SECURITY}/{chromium_directory}/{inp['name']}"
+        url = f"{debian_security}/{chromium_directory}/{inp['name']}"
         if not ensure_input(args.offline, local, inp["sha256"], inp["bytes"], url):
             raise RuntimeError(f"source download failed: {inp['name']}")
         chromium_inputs.append({"name": inp["name"], "url": url, "bytes": inp["bytes"],
@@ -266,7 +336,7 @@ def main(argv=None) -> int:
     # bytes + SHA256 against the signed Sources list, and record actual local paths.
     for f in jpeg_src_entries:
         local = evidence / "source" / f["name"]
-        url = f"{DEBIAN_POOL}/{jpeg_directory}/{f['name']}"
+        url = f"{debian_pool}/{jpeg_directory}/{f['name']}"
         if not ensure_input(args.offline, local, f["sha256"], f["size"], url):
             raise RuntimeError(f"JPEG source download failed: {f['name']}")
         jpeg_inputs.append({
@@ -307,7 +377,7 @@ def main(argv=None) -> int:
                                    f"sources {entry['sha256']}/{entry['size']} vs "
                                    f"pinned {inp['sha256']}/{inp['bytes']}")
             local = evidence / "source" / inp["name"]
-            url = f"{DEBIAN_POOL}/{directory}/{inp['name']}"
+            url = f"{debian_pool}/{directory}/{inp['name']}"
             if not ensure_input(args.offline, local, inp["sha256"], inp["bytes"], url):
                 raise RuntimeError(f"source download failed: {inp['name']}")
             inputs.append({"name": inp["name"], "url": url, "bytes": inp["bytes"],
@@ -347,7 +417,7 @@ def main(argv=None) -> int:
         if size != pin["bytes"]:
             raise RuntimeError(f"size mismatch for {pkg}: index {size} vs pinned {pin['bytes']}")
         filename = stanza["Filename"]
-        base = SUITE_BASE[suite]
+        base = suite_base[suite]
         url = f"{base}/{filename}"
         local = evidence / "chromium-debs" / Path(filename).name
         if not ensure_input(args.offline, local, sha, size, url):
@@ -371,6 +441,9 @@ def main(argv=None) -> int:
             "pinned_key_status": pinned_status,
             "trixie_security_signature": sec_inrel["check"],
             "trixie_main_signature": main_inrel["check"],
+            "trixie_security_release_window": sec_inrel["release_window"],
+            "trixie_main_release_window": main_inrel["release_window"],
+            "archive_snapshots": origins,
         },
         "source_graph": source_graph,
         "packages": packages,
