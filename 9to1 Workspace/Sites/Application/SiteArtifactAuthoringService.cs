@@ -21,13 +21,25 @@ public sealed class SiteArtifactAuthoringService(SiteProjectService projects,str
         var inputRoot=Path.Combine(root,"inputs");Directory.CreateDirectory(inputRoot);
         if((File.GetAttributes(inputRoot)&FileAttributes.ReparsePoint)!=0)throw new IOException("Linked build input directories are unsupported.");
         var source=Path.Combine(inputRoot,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(source);
+        Exception? preparationFailure=null;
         try
         {
             await File.WriteAllTextAsync(Path.Combine(source,"site.project.json"),JsonSerializer.Serialize(project),cancellationToken);
             var pipeline=new NativeSiteBuildPipeline(Path.Combine(root,"artifacts"),secretScanner);
             return await pipeline.BuildAndPackageAsync(new(siteID,Guid.NewGuid(),new(project.Source.SourceRevision,
-                configurationRevision,project.Source.FrameworkId,source,true,true),Guid.NewGuid()),(_,_)=>ValueTask.CompletedTask,cancellationToken);
+                configurationRevision,project.Source.FrameworkId,source,true,true),Guid.NewGuid(),project.ProjectId,project.Revision,
+                project.Source.StackDomainId),
+                (_,_)=>ValueTask.CompletedTask,cancellationToken);
         }
-        finally{Directory.Delete(source,true);}
+        catch(Exception failure){preparationFailure=failure;throw;}
+        finally
+        {
+            try{Directory.Delete(source,true);}
+            catch(Exception cleanupFailure) when(cleanupFailure is IOException or UnauthorizedAccessException)
+            {
+                if(preparationFailure is null)throw;
+                throw new AggregateException("Sites artifact preparation and temporary input cleanup both failed.",preparationFailure,cleanupFailure);
+            }
+        }
     }
 }

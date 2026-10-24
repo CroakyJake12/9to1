@@ -13,6 +13,19 @@ public sealed record SiteNativeAuthoringPage(IReadOnlyList<SiteProject> Projects
 public sealed record SiteNativeAuthoringOutcome(SiteApiResult<SiteProject>? Result,
     bool AwaitingHomeReview, bool AuditRecorded, string Message);
 
+/// <summary>Retains the last successful public render when a later authoring preview fails.</summary>
+public sealed class SitePreviewBuffer
+{
+    public SiteRenderResult? Current { get; private set; }
+    public bool TryReplace(SiteRenderResult candidate)
+    {
+        ArgumentNullException.ThrowIfNull(candidate);
+        if(candidate.Diagnostics.Any(diagnostic=>diagnostic.IsError))return false;
+        Current=candidate;return true;
+    }
+    public void Clear()=>Current=null;
+}
+
 /// <summary>Native semantic authoring over the SAME explicit Files workspace and Home broker.
 /// Displayed records are observations; only actual Home admission and the maintained Sites
 /// coordinator may write. No caller root, identity, provider or replacement intent is accepted.</summary>
@@ -103,42 +116,66 @@ public sealed class SiteNativeAuthoringSession(ISiteNativeWorkspaceAuthority wor
     public Task<PreparedEdit> PrepareAsync(SiteNativeAuthoringPage samePage, SiteProject? sameProject,
         SitePage? sameSitePage, SiteComponent? sameComponent, AuthenticatedResourceActor originalActor,
         string operation, string name, string path, string text, Func<bool> originalLifetime, string sessionId,
-        CancellationToken token = default) => PublishAsync(() => PrepareCoreAsync(samePage, sameProject, sameSitePage,
-            sameComponent, originalActor, operation, name, path, text, originalLifetime, sessionId, token));
+        CancellationToken token = default,string? seoTitle=null,string? metaDescription=null) => PublishAsync(() => PrepareCoreAsync(samePage, sameProject, sameSitePage,
+            sameComponent, originalActor, operation, name, path, text, originalLifetime, sessionId, token,seoTitle,metaDescription));
 
     private async Task<PreparedEdit> PrepareCoreAsync(SiteNativeAuthoringPage page, SiteProject? project,
         SitePage? selectedPage, SiteComponent? component, AuthenticatedResourceActor actor,
-        string operation, string name, string path, string text, Func<bool> lifetime, string sessionId, CancellationToken token)
+        string operation, string name, string path, string text, Func<bool> lifetime, string sessionId, CancellationToken token,
+        string? seoTitle,string? metaDescription)
     {
         ArgumentNullException.ThrowIfNull(lifetime);
         if (!lifetime() || string.IsNullOrWhiteSpace(sessionId) || sessionId.Length > 256 || text.Length > 65536
+            || (seoTitle?.Length??0)>65536 || (metaDescription?.Length??0)>65536
             || name.Length > 120 || path.Length > 256)
             throw new ArgumentException("Retain the live Sites view and bounded original edit.");
         var source = RequirePage(page, actor);
         await RevalidateCoreAsync(page, actor, token).ConfigureAwait(false);
         if (operation != "create" && (project is null || !page.Projects.Any(item => ReferenceEquals(item, project))))
             throw new UnauthorizedAccessException("Select a project from the SAME privately issued Sites page.");
-        if ((operation is "heading" or "text") && (selectedPage is null || !project!.Pages.Any(item => ReferenceEquals(item, selectedPage))))
+        if(operation!="create"&&(project!.Source.StackProjectId.HasValue||project.Source.StackDomainId.HasValue))
+            throw new SiteOperationException(new SiteApiError("CapabilityUnavailable","This source-backed project must be edited through its owning Build domain; Sites-only writes are blocked.",project.ProjectId.ToString(),true));
+        if ((operation is "heading" or "text" or "route-create") && (selectedPage is null || !project!.Pages.Any(item => ReferenceEquals(item, selectedPage))))
             throw new UnauthorizedAccessException("Select an original page in this project.");
+        if ((operation is "page-rename" or "page-seo") && (selectedPage is null || !project!.Pages.Any(item => ReferenceEquals(item, selectedPage))))
+            throw new UnauthorizedAccessException("Select an original page before renaming it.");
         if (operation == "save-text" && (component is null || !project!.Components.Any(item => ReferenceEquals(item, component))
-            || component.ComponentType is not ("heading" or "text")))
+            || (!string.Equals(component.ComponentType,"heading",StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(component.ComponentType,"text",StringComparison.OrdinalIgnoreCase))))
             throw new UnauthorizedAccessException("Select an original heading or text component.");
+        if ((operation is "responsive-width" or "responsive-padding" or "reset-responsive") && (component is null || !project!.Components.Any(item => ReferenceEquals(item, component))))
+            throw new UnauthorizedAccessException("Select an original component before changing its responsive layout.");
         var properties = new Dictionary<string, JsonElement>(StringComparer.Ordinal) { ["text"] = JsonSerializer.SerializeToElement(text) };
         if (operation == "heading") properties["level"] = JsonSerializer.SerializeToElement(2);
         SiteNativeWriteIntent intent = operation switch
         {
             "create" => SiteNativeWriteIntent.Create(source.Binding, name, "9to1-native", path),
-            "page" => SiteNativeWriteIntent.CreatePage(source.Binding, project!.SiteId, project.Revision, name, path),
+            "page" => SiteNativeWriteIntent.CreatePage(source.Binding, project!.SiteId, project.Revision, name, path,project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
+            "page-rename" => SiteNativeWriteIntent.UpdatePage(source.Binding,project!.SiteId,project.Revision,selectedPage!.PageId,name,project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
+            "page-seo" => SiteNativeWriteIntent.UpdatePageSeo(source.Binding,project!.SiteId,project.Revision,selectedPage!.PageId,seoTitle,metaDescription,project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
+            "route-create" => SiteNativeWriteIntent.CreateRoute(source.Binding,project!.SiteId,project.Revision,selectedPage!.PageId,path,project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
             "heading" or "text" => SiteNativeWriteIntent.AddComponent(source.Binding, project!.SiteId,
-                project.Revision, selectedPage!.PageId, null, operation == "heading" ? "heading" : "text", properties),
+                project.Revision, selectedPage!.PageId, null, operation == "heading" ? "heading" : "text", properties,project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
             "save-text" => SiteNativeWriteIntent.UpdateProperties(source.Binding, project!.SiteId, project.Revision,
                 component!.ComponentId, component.Properties.ToDictionary(pair => pair.Key,
                     pair => pair.Key == "text" ? JsonSerializer.SerializeToElement(text) : pair.Value.Clone(), StringComparer.Ordinal)
-                    .AppendIfMissingText(text)),
+                    .AppendIfMissingText(text),project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
+            "responsive-width" => SiteNativeWriteIntent.SetResponsiveOverride(source.Binding, project!.SiteId, project.Revision,
+                component!.ComponentId, path, new Dictionary<string, JsonElement>(StringComparer.Ordinal)
+                { ["width"] = JsonSerializer.SerializeToElement(text) },project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
+            "responsive-padding" => SiteNativeWriteIntent.SetResponsiveOverride(source.Binding, project!.SiteId, project.Revision,
+                component!.ComponentId, path, new Dictionary<string, JsonElement>(StringComparer.Ordinal)
+                { ["padding"] = JsonSerializer.SerializeToElement(text) },project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
+            "reset-responsive" => SiteNativeWriteIntent.SetResponsiveOverride(source.Binding, project!.SiteId, project.Revision,
+                component!.ComponentId, path, null,project.ProjectId,project.Source.SourceRevision,project.Source.StackDomainId,project.Source.StackProjectId),
             _ => throw new ArgumentException("Choose an implemented Sites edit.")
         };
         var description = operation switch { "create" => "Create project: " + name, "page" => "Create page: " + name,
-            "save-text" => "Save selected text", _ => "Add " + operation };
+            "page-rename" => "Rename page: " + name,
+            "route-create" => "Add route to page: " + path,
+            "save-text" => "Save selected text", "responsive-width" => $"Set responsive width at {path}",
+            "responsive-padding" => $"Set responsive padding at {path}",
+            "reset-responsive" => $"Reset responsive overrides at {path}", "page-seo" => "Update selected page SEO metadata", _ => "Add " + operation };
         var approval = await ObserveAsync(broker.AuthorizeForActorAsync(actor, "sites", intent.ActionId,
             intent.Scopes, intent.Arguments, description, null, sessionId, token)).ConfigureAwait(false);
         await RevalidateCoreAsync(page, actor, token).ConfigureAwait(false);

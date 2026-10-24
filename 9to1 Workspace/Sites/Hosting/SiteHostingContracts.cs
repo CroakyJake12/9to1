@@ -27,9 +27,12 @@ public sealed record SiteHostingProviderDescriptor(
 
 public sealed record SiteSourceRevisionRequest(Guid SiteId, Guid ProjectId, Guid? StackDomainId, string SourceRevision);
 public sealed record SiteCanonicalSource(string SourceRevision, string ConfigurationRevision, string FrameworkId, string RootReference, bool IsWorkingTreeClean, bool IsCodeDefinedContentPreserved);
-public sealed record SiteBuildRequest(Guid SiteId, Guid DeploymentId, SiteCanonicalSource Source, Guid EnvironmentId);
-public sealed record SiteBuildArtifact(Guid ArtifactId, string SourceRevision, string ConfigurationRevision, string FrameworkId, string ContentHash, string ArtifactReference, long SizeBytes, bool SecretScanPassed);
-public sealed record SiteBuildValidation(bool IsValid, IReadOnlyList<SiteApiError> Diagnostics);
+public sealed record SiteBuildRequest(Guid SiteId, Guid DeploymentId, SiteCanonicalSource Source, Guid EnvironmentId,
+    Guid? ProjectId = null, long? ProjectRevision = null, Guid? DomainId = null);
+public sealed record SiteBuildArtifact(Guid ArtifactId, string SourceRevision, string ConfigurationRevision, string FrameworkId, string ContentHash, string ArtifactReference, long SizeBytes, bool SecretScanPassed,
+    Guid? SiteId = null, Guid? ProjectId = null, long? ProjectRevision = null, Guid? DomainId = null);
+public sealed record SiteBuildValidation(bool IsValid, IReadOnlyList<SiteApiError> Diagnostics,
+    Guid? SiteId=null,Guid? ProjectId=null,Guid? DomainId=null,long? ProjectRevision=null);
 public sealed record SitePipelineUpdate(SiteDeploymentStageKind Stage, SiteStageState State, string? Code = null, string? Message = null);
 public sealed record SiteCandidateDeployment(Guid ProviderDeploymentId, Uri PreviewUrl, string SourceRevision, string ConfigurationRevision, string ArtifactId);
 public sealed record SiteProviderVerification(bool IsReachable, bool ContentMatches, string SourceRevision, string ArtifactId, SiteTlsState TlsState, IReadOnlyList<SiteApiError> Diagnostics);

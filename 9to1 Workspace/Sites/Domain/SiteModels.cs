@@ -157,7 +157,8 @@ public sealed record SiteDeployment(
     string? Initiator,
     string? FailureCode,
     string? FailureMessage,
-    Guid? RolledBackFromDeploymentId = null);
+    Guid? RolledBackFromDeploymentId = null,
+    long ProjectRevision = 0);
 
 public enum SiteDeploymentState { Queued, Building, Validating, Packaging, Deploying, Verifying, Succeeded, Failed, Cancelled, RollingBack }
 public enum SiteDeploymentStageKind { Restore, Build, Validate, Package, Deploy, Verify, Route }

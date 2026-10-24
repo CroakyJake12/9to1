@@ -15,20 +15,29 @@ public sealed class SiteNativeWriteIntent
     public const string TargetAppId = "sites";
     private readonly JsonElement _arguments;
     private readonly JsonElement _payload;
-    private SiteNativeWriteIntent(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, string operation, JsonElement payload)
+    private SiteNativeWriteIntent(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, string operation, JsonElement payload,
+        Guid? projectID=null,Guid? domainID=null,string? sourceRevision=null,Guid? sourceBindingProjectID=null)
     {
         if (binding.FilesFolderId == Guid.Empty || string.IsNullOrWhiteSpace(binding.FolderRevision)) throw new ArgumentException("A current Files folder is required.");
         if (operation != "create" && (siteID == Guid.Empty || revision < 1)) throw new ArgumentException("The current Sites identity and revision are required.");
-        Binding = binding; SiteID = siteID; Revision = revision; Operation = operation; _payload = payload.Clone();
+        if(projectID==Guid.Empty||domainID==Guid.Empty||sourceBindingProjectID==Guid.Empty||domainID.HasValue&&!projectID.HasValue||operation!="create"&&!projectID.HasValue)
+            throw new ArgumentException("A valid canonical Build project/domain binding is required for this Sites edit.");
+        if(operation!="create"&&string.IsNullOrWhiteSpace(sourceRevision))throw new ArgumentException("A captured Build source revision is required.");
+        Binding = binding; SiteID = siteID; Revision = revision; ProjectID=projectID;DomainID=domainID;SourceRevision=sourceRevision;
+        SourceBindingProjectID=sourceBindingProjectID;Operation = operation; _payload = payload.Clone();
         ActionId = operation == "create" ? "sites.project.create" : "sites.project.save";
         var scopes = new List<ResourceScope> { new("files.item", binding.FilesFolderId.ToString(), binding.FolderRevision, ResourceAccess.Write) };
         if (operation != "create") scopes.Add(new("sites.project", siteID.ToString(), revision.ToString(CultureInfo.InvariantCulture), ResourceAccess.Write));
         Scopes = scopes.AsReadOnly();
-        _arguments = JsonSerializer.SerializeToElement(new { operation, siteID, revision, filesFolderID = binding.FilesFolderId, folderRevision = binding.FolderRevision, payload = _payload });
+        _arguments = JsonSerializer.SerializeToElement(new { operation, siteID, projectID, domainID, sourceRevision, sourceBindingProjectID, revision, filesFolderID = binding.FilesFolderId, folderRevision = binding.FolderRevision, payload = _payload });
     }
     internal SiteNativeWorkspaceBinding Binding { get; }
     internal JsonElement Payload => _payload;
     public Guid SiteID { get; }
+    public Guid? ProjectID { get; }
+    public Guid? DomainID { get; }
+    public string? SourceRevision { get; }
+    public Guid? SourceBindingProjectID { get; }
     public long Revision { get; }
     public string Operation { get; }
     public string ActionId { get; }
@@ -36,18 +45,24 @@ public sealed class SiteNativeWriteIntent
     public JsonElement Arguments => _arguments.Clone();
     public static SiteNativeWriteIntent Create(SiteNativeWorkspaceBinding binding, string name, string frameworkID, string relativePath)
         => new(binding, Guid.Empty, 0, "create", JsonSerializer.SerializeToElement(new { name, frameworkID, relativePath }));
-    public static SiteNativeWriteIntent Rename(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, string name)
-        => new(binding, siteID, revision, "rename", JsonSerializer.SerializeToElement(new { name }));
-    public static SiteNativeWriteIntent CreatePage(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, string name, string path)
-        => new(binding, siteID, revision, "page.create", JsonSerializer.SerializeToElement(new { name, path }));
-    public static SiteNativeWriteIntent AddComponent(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid pageID, Guid? parentID, string type, IReadOnlyDictionary<string, JsonElement> properties)
-        => new(binding, siteID, revision, "component.add", JsonSerializer.SerializeToElement(new { pageID, parentID, type, properties }));
-    public static SiteNativeWriteIntent UpdateProperties(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid componentID, IReadOnlyDictionary<string, JsonElement> properties)
-        => new(binding, siteID, revision, "component.properties", JsonSerializer.SerializeToElement(new { componentID, properties }));
-    public static SiteNativeWriteIntent MoveComponent(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid componentID, Guid pageID, Guid? parentID, int position)
-        => new(binding, siteID, revision, "component.move", JsonSerializer.SerializeToElement(new { componentID, pageID, parentID, position }));
-    public static SiteNativeWriteIntent SetResponsiveOverride(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid componentID, string breakpoint, IReadOnlyDictionary<string, JsonElement>? properties)
-        => new(binding, siteID, revision, "component.responsive", JsonSerializer.SerializeToElement(new { componentID, breakpoint, properties }));
+    public static SiteNativeWriteIntent Rename(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, string name,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding, siteID, revision, "rename", JsonSerializer.SerializeToElement(new { name }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent CreatePage(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, string name, string path,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding, siteID, revision, "page.create", JsonSerializer.SerializeToElement(new { name, path }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent UpdatePage(SiteNativeWorkspaceBinding binding,Guid siteID,long revision,Guid pageID,string name,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding,siteID,revision,"page.update",JsonSerializer.SerializeToElement(new { pageID,name }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent UpdatePageSeo(SiteNativeWorkspaceBinding binding,Guid siteID,long revision,Guid pageID,string? seoTitle,string? metaDescription,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding,siteID,revision,"page.seo",JsonSerializer.SerializeToElement(new { pageID,seoTitle,metaDescription }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent CreateRoute(SiteNativeWorkspaceBinding binding,Guid siteID,long revision,Guid pageID,string pattern,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding,siteID,revision,"route.create",JsonSerializer.SerializeToElement(new { pageID,pattern }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent AddComponent(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid pageID, Guid? parentID, string type, IReadOnlyDictionary<string, JsonElement> properties,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding, siteID, revision, "component.add", JsonSerializer.SerializeToElement(new { pageID, parentID, type, properties }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent UpdateProperties(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid componentID, IReadOnlyDictionary<string, JsonElement> properties,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding, siteID, revision, "component.properties", JsonSerializer.SerializeToElement(new { componentID, properties }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent MoveComponent(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid componentID, Guid pageID, Guid? parentID, int position,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding, siteID, revision, "component.move", JsonSerializer.SerializeToElement(new { componentID, pageID, parentID, position }),projectID,domainID,sourceRevision,sourceBindingProjectID);
+    public static SiteNativeWriteIntent SetResponsiveOverride(SiteNativeWorkspaceBinding binding, Guid siteID, long revision, Guid componentID, string breakpoint, IReadOnlyDictionary<string, JsonElement>? properties,Guid projectID,string sourceRevision,Guid? domainID=null,Guid? sourceBindingProjectID=null)
+        => new(binding, siteID, revision, "component.responsive", JsonSerializer.SerializeToElement(new { componentID, breakpoint, properties }),projectID,domainID,sourceRevision,sourceBindingProjectID);
 }
 
 /// <summary>Home approval is consumed by the owning Sites write, followed by its atomic revision transaction.
@@ -63,7 +78,19 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
             if (await workspace.GetCurrentAsync(ct).ConfigureAwait(false) != intent.Binding)
                 throw new UnauthorizedAccessException("The canonical Sites Files/profile binding changed.");
         }
-        try { await CheckBinding(cancellationToken).ConfigureAwait(false); }
+        try
+        {
+            await CheckBinding(cancellationToken).ConfigureAwait(false);
+            if(intent.Operation!="create")
+            {
+                var current=await new SiteProjectService(new FileSiteWorkspaceStore(intent.Binding.RootDirectory))
+                    .GetProjectAsync(intent.SiteID,cancellationToken).ConfigureAwait(false);
+                if(!current.IsSuccess||current.Value is not { } project||intent.ProjectID!=project.ProjectId||intent.DomainID!=project.Source.StackDomainId||
+                    intent.SourceBindingProjectID!=project.Source.StackProjectId||intent.SourceRevision!=project.Source.SourceRevision||intent.Revision!=project.Revision)
+                    throw new UnauthorizedAccessException("The captured Sites write identity no longer matches the current Build project/domain/revision.");
+                await CheckBinding(cancellationToken).ConfigureAwait(false);
+            }
+        }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
             await RejectAdmissionAsync(capability, error, SiteNativeAdmissionAuditKind.UnclaimedAbort).ConfigureAwait(false);
@@ -124,6 +151,11 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
                     ? throw new SiteOperationException(new("InvalidInput", "Project name must have 1–120 characters.", "name", false))
                     : project with { Name = Text("name").Trim() }, cancellationToken).ConfigureAwait(false),
             "page.create" => await authoring.CreatePageAsync(intent.SiteID, intent.Revision, Text("name"), Text("path"), cancellationToken).ConfigureAwait(false),
+            "page.update" => await authoring.RenamePageAsync(intent.SiteID,intent.Revision,payload.GetProperty("pageID").GetGuid(),Text("name"),cancellationToken).ConfigureAwait(false),
+            "page.seo" => await authoring.SetPageSeoAsync(intent.SiteID,intent.Revision,payload.GetProperty("pageID").GetGuid(),
+                payload.GetProperty("seoTitle").ValueKind==JsonValueKind.Null?null:payload.GetProperty("seoTitle").GetString(),
+                payload.GetProperty("metaDescription").ValueKind==JsonValueKind.Null?null:payload.GetProperty("metaDescription").GetString(),cancellationToken).ConfigureAwait(false),
+            "route.create" => await authoring.CreateRouteAsync(intent.SiteID,intent.Revision,payload.GetProperty("pageID").GetGuid(),Text("pattern"),cancellationToken).ConfigureAwait(false),
             "component.add" => await authoring.AddComponentAsync(intent.SiteID, intent.Revision, payload.GetProperty("pageID").GetGuid(),
                 payload.GetProperty("parentID").ValueKind == JsonValueKind.Null ? null : payload.GetProperty("parentID").GetGuid(), Text("type"),
                 payload.GetProperty("properties").EnumerateObject().ToDictionary(p => p.Name, p => p.Value.Clone()), cancellationToken).ConfigureAwait(false),

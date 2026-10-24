@@ -90,9 +90,17 @@ public sealed class SiteProjectService(FileSiteWorkspaceStore store)
                 var current = state.Projects[index];
                 if (current.Revision != expectedRevision)
                     throw new SiteOperationException(new SiteApiError("RevisionConflict", "The Sites project changed since it was opened. Reload it before saving.", siteId.ToString(), true));
+                if(current.Source.StackProjectId.HasValue||current.Source.StackDomainId.HasValue)
+                    throw new SiteOperationException(new SiteApiError("CapabilityUnavailable","Source-backed Sites edits require the owning Build-domain writer; no Sites-only divergent write is permitted.",siteId.ToString(),true));
                 var updated = update(current);
-                if (updated.SiteId != current.SiteId || updated.ProjectId != current.ProjectId || updated.Source.FilesDirectoryId != current.Source.FilesDirectoryId)
-                    throw new SiteOperationException(new SiteApiError("IdentityMutationBlocked", "Stable SiteID, ProjectID, and Files identity cannot be changed by a project update.", siteId.ToString(), false));
+                // Canonical Build/Files source bindings change only through their owning rebind actions.
+                if (updated is null || updated.Source is null || updated.SiteId != current.SiteId || updated.ProjectId != current.ProjectId ||
+                    updated.Source.FilesDirectoryId != current.Source.FilesDirectoryId ||
+                    updated.Source.StackProjectId != current.Source.StackProjectId || updated.Source.StackDomainId != current.Source.StackDomainId ||
+                    !string.Equals(updated.Source.SourceRevision,current.Source.SourceRevision,StringComparison.Ordinal) ||
+                    !string.Equals(updated.Source.FrameworkId,current.Source.FrameworkId,StringComparison.Ordinal) ||
+                    !string.Equals(updated.Source.RelativeProjectPath,current.Source.RelativeProjectPath,StringComparison.Ordinal))
+                    throw new SiteOperationException(new SiteApiError("IdentityMutationBlocked", "Stable SiteID, Build ProjectID/DomainID, Files identity and source binding/revision cannot be changed by a generic project update.", siteId.ToString(), false));
                 updated = updated with { Revision = checked(current.Revision + 1), UpdatedAt = DateTimeOffset.UtcNow };
                 var projects = state.Projects.ToArray();
                 projects[index] = updated;
@@ -117,6 +125,8 @@ public sealed class SiteProjectService(FileSiteWorkspaceStore store)
             throw Input("A canonical Files directory identity is required.", "filesDirectoryId");
         if (request.StackDomainId.HasValue != request.StackProjectId.HasValue)
             throw Input("Stack ProjectID and DomainID must be supplied together.", "sourceBinding");
+        if (request.StackProjectId == Guid.Empty || request.StackDomainId == Guid.Empty)
+            throw Input("Build ProjectID and DomainID must be non-empty canonical identities.", "sourceBinding");
         if (string.IsNullOrWhiteSpace(request.SourceRevision))
             throw Input("The source revision must be explicit.", "sourceRevision");
         if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Trim().Length > 120)

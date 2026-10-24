@@ -30,12 +30,22 @@ public sealed class R2NativeSiteArtifactReader : IDisposable
         client=new(transport ?? new SocketsHttpHandler{AllowAutoRedirect=false},true);
     }
 
-    public async Task<SiteArtifactManifest> VerifyAsync(SiteBuildArtifact artifact, Guid siteId, Guid projectId,
-        long projectRevision, CancellationToken cancellationToken = default)
+    public async Task<SiteArtifactManifest> VerifyAsync(SiteBuildArtifact artifact,Guid siteId,Guid projectId,long projectRevision,
+        CancellationToken cancellationToken=default)
     {
         ArgumentNullException.ThrowIfNull(artifact);
+        return await VerifyWithDomainAsync(artifact,siteId,projectId,projectRevision,artifact.DomainId,cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<SiteArtifactManifest> VerifyWithDomainAsync(SiteBuildArtifact artifact, Guid siteId, Guid projectId,
+        long projectRevision,Guid? domainId,CancellationToken cancellationToken=default)
+    {
+        ArgumentNullException.ThrowIfNull(artifact);
+        var carriesIdentity=artifact.SiteId.HasValue||artifact.ProjectId.HasValue||artifact.ProjectRevision.HasValue||artifact.DomainId.HasValue;
         if (string.IsNullOrWhiteSpace(artifact.SourceRevision) || string.IsNullOrWhiteSpace(artifact.ConfigurationRevision) ||
             siteId==Guid.Empty || projectId==Guid.Empty || projectRevision<1 || artifact.ArtifactId==Guid.Empty ||
+            carriesIdentity&&((artifact.SiteId.HasValue&&artifact.SiteId!=siteId)||(artifact.ProjectId.HasValue&&artifact.ProjectId!=projectId)||
+                (artifact.ProjectRevision.HasValue&&artifact.ProjectRevision!=projectRevision)||(artifact.DomainId.HasValue&&artifact.DomainId!=domainId)) ||
             !artifact.SecretScanPassed || artifact.FrameworkId!="9to1-native" || artifact.SizeBytes<0 || artifact.SizeBytes>outputLimit ||
             !Hash(artifact.ContentHash) || !prefixes.TryGetValue(artifact.ArtifactReference,out var prefix))
             throw new InvalidDataException("Retained native artifact and explicit mapping are required.");
@@ -43,7 +53,7 @@ public sealed class R2NativeSiteArtifactReader : IDisposable
         RequireHash(bytes,artifact.ContentHash);
         var manifest=JsonSerializer.Deserialize<SiteArtifactManifest>(bytes) ?? throw new InvalidDataException("Manifest is unavailable.");
         if (manifest.SchemaVersion!=1 || manifest.SiteID!=siteId || manifest.ProjectID!=projectId ||
-            manifest.ProjectRevision!=projectRevision || manifest.ArtifactID!=artifact.ArtifactId ||
+            manifest.ProjectRevision!=projectRevision || manifest.DomainID!=domainId || manifest.ArtifactID!=artifact.ArtifactId ||
             manifest.SourceRevision!=artifact.SourceRevision || manifest.ConfigurationRevision!=artifact.ConfigurationRevision ||
             manifest.Files is null || manifest.Files.Count==0 || manifest.Files.Count>20000)
             throw new InvalidDataException("Manifest provenance differs from the retained native build.");

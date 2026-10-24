@@ -4,23 +4,48 @@
       <Container orientation="Horizontal" Type="Wrap">
         <Button content="Refresh" action="9to1.Sites.Refresh" accessible-name="Reload original Sites projects" Interactive="{Binding CanRefresh}" />
         <Input accessible-name="Project or page name" Type="Text" id="sites-name-input" />
-        <Input accessible-name="Project folder or page route" Type="Text" id="sites-path-input" />
+        <Input accessible-name="Relative project folder or absolute page route" Type="Text" id="sites-path-input" />
         <Button content="New project" action="9to1.Sites.CreateProject" accessible-name="Review new Sites project in Home" Interactive="{Binding CanCreateProject}" />
         <Button content="New page" action="9to1.Sites.CreatePage" accessible-name="Review new page in Home" Interactive="{Binding CanCreatePage}" />
+        <Button content="Add route" action="9to1.Sites.AddRoute" accessible-name="Review adding a route to the selected page in Home" Interactive="{Binding CanAddRoute}" />
       </Container>
-      <Text text="{Binding Selection}" accessible-name="Selected project and saved revision" Row="1" />
+      <Container Type="Vertical Stack" Row="1">
+        <Text text="{Binding Selection}" accessible-name="Selected SiteID, ProjectID, source-binding ID, domain and revisions" />
+        <Text text="{Binding SourceEditStatus}" accessible-name="Whether this Sites project can be edited here or must be edited through Build" />
+      </Container>
       <Container accessible-name="Project pages and content" Type="Grid" Row="2" ColumnSizes="1fr 1fr 1fr">
         <Input accessible-name="Sites projects" Type="List" id="sites-projects" Column="0" />
         <Input accessible-name="Selected project pages" Type="List" id="sites-pages" Column="1" />
-        <Input accessible-name="Selected page headings and text" Type="List" id="sites-components" Column="2" />
+        <Input accessible-name="Selected page components and layers" Type="List" id="sites-components" Column="2" />
       </Container>
       <Container Type="Vertical Stack" Row="3">
+        <Text text="{Binding SelectedPageRoute}" accessible-name="Selected page and its canonical route" />
+        <Container orientation="Horizontal" Type="Wrap">
+          <Input accessible-name="Selected page name" Type="Text" id="sites-page-rename-input" />
+          <Button content="Rename page" action="9to1.Sites.RenamePage" accessible-name="Review renaming the selected page in Home" Interactive="{Binding CanRenamePage}" />
+        </Container>
+        <Container orientation="Horizontal" Type="Wrap">
+          <Input accessible-name="Page SEO title" Type="Text" id="sites-seo-title-input" />
+          <Input accessible-name="Page meta description" Type="Text" id="sites-meta-description-input" />
+          <Button content="Save SEO metadata" action="9to1.Sites.SetPageSeo" accessible-name="Review page SEO metadata update in Home" Interactive="{Binding CanSetPageSeo}" />
+        </Container>
         <Input accessible-name="Heading or text content" Type="Text" id="sites-text-input" />
+        <Container orientation="Horizontal" Type="Wrap">
+          <Text text="{Binding Breakpoints}" accessible-name="Available project responsive breakpoints" />
+          <Text text="{Binding ResponsiveWidthState}" accessible-name="Whether responsive width is inherited or overridden" />
+          <Text text="{Binding ResponsivePaddingState}" accessible-name="Whether responsive padding is inherited or overridden" />
+          <Input accessible-name="Declared responsive breakpoint" Type="Text" id="sites-breakpoint-input" />
+          <Input accessible-name="Responsive width value" Type="Text" id="sites-responsive-width-input" />
+          <Button content="Set responsive width" action="9to1.Sites.SetResponsiveWidth" accessible-name="Review responsive width change in Home" Interactive="{Binding CanSetResponsiveWidth}" />
+          <Input accessible-name="Responsive padding value" Type="Text" id="sites-responsive-padding-input" />
+          <Button content="Set responsive padding" action="9to1.Sites.SetResponsivePadding" accessible-name="Review responsive padding change in Home" Interactive="{Binding CanSetResponsivePadding}" />
+          <Button content="Reset breakpoint" action="9to1.Sites.ResetResponsiveOverrides" accessible-name="Review resetting selected component breakpoint overrides in Home" Interactive="{Binding CanResetResponsiveOverrides}" />
+        </Container>
         <Container orientation="Horizontal" Type="Wrap">
           <Button content="Add heading" action="9to1.Sites.AddHeading" accessible-name="Review adding a heading in Home" Interactive="{Binding CanAdd}" />
           <Button content="Add text" action="9to1.Sites.AddText" accessible-name="Review adding text in Home" Interactive="{Binding CanAdd}" />
           <Button content="Save text" action="9to1.Sites.SaveText" accessible-name="Review saving selected text in Home" Interactive="{Binding CanSaveText}" />
-          <Button content="Preview" action="9to1.Sites.Preview" accessible-name="Preview saved page headings text and HTML" Interactive="{Binding CanPreview}" />
+          <Button content="Preview" action="9to1.Sites.Preview" accessible-name="Preview saved page content responsive styles and generated HTML" Interactive="{Binding CanPreview}" />
         </Container>
       </Container>
       <Container orientation="Horizontal" Type="Wrap" Row="4">

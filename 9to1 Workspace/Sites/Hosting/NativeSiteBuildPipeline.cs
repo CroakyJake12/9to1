@@ -8,7 +8,7 @@ namespace HavenOS.Apps.Sites.Hosting;
 
 public sealed record SiteOutputFile(string RelativePath,string SHA256,long Bytes);
 public sealed record SiteArtifactManifest(int SchemaVersion,Guid SiteID,Guid ProjectID,Guid ArtifactID,string SourceRevision,
-    string ConfigurationRevision,IReadOnlyList<SiteOutputFile> Files,long ProjectRevision=0);
+    string ConfigurationRevision,IReadOnlyList<SiteOutputFile> Files,long ProjectRevision=0,Guid? DomainID=null);
 
 public interface ISiteArtifactSecretScanner
 {
@@ -28,7 +28,11 @@ public sealed class NativeSiteBuildPipeline(string artifactRoot,ISiteArtifactSec
         var project=await JsonSerializer.DeserializeAsync<SiteProject>(source,cancellationToken:ct)
             ??throw Failure("BuildFailed","Native site metadata is invalid.");
         if(project.SchemaVersion!=SiteProjectFormat.CurrentSchemaVersion)throw Failure("SchemaVersionUnsupported","Native site schema is unsupported.");
-        if(project.SiteId!=request.SiteId || project.Source.SourceRevision!=request.Source.SourceRevision)
+        if(!request.ProjectId.HasValue||request.ProjectId.Value==Guid.Empty||!request.ProjectRevision.HasValue||request.ProjectRevision.Value<1)
+            throw Failure("RevisionConflict","Native build preparation requires the exact Build ProjectID and project revision.");
+        if(project.SiteId!=request.SiteId || project.Source.SourceRevision!=request.Source.SourceRevision
+            ||project.ProjectId!=request.ProjectId.Value||project.Revision!=request.ProjectRevision.Value
+            ||project.Source.StackDomainId!=request.DomainId)
             throw Failure("RevisionConflict","Build source is not the requested site/revision.");
         var outputRoot=Path.GetFullPath(artifactRoot);Directory.CreateDirectory(outputRoot);
         if((File.GetAttributes(outputRoot)&FileAttributes.ReparsePoint)!=0)throw Failure("ArtifactCorrupt","Linked artifact directories are unsupported.");
@@ -50,14 +54,16 @@ public sealed class NativeSiteBuildPipeline(string artifactRoot,ISiteArtifactSec
                 files.Add(await DescribeAsync(directory,relative,ct));
             }
             if(files.Count==0)throw Failure("BuildFailed","Site has no routes.");
-            var manifest=new SiteArtifactManifest(1,project.SiteId,project.ProjectId,artifactID,request.Source.SourceRevision,request.Source.ConfigurationRevision,files,project.Revision);
+            var manifest=new SiteArtifactManifest(1,project.SiteId,project.ProjectId,artifactID,request.Source.SourceRevision,
+                request.Source.ConfigurationRevision,files,project.Revision,project.Source.StackDomainId);
             var manifestPath=Path.Combine(directory,"artifact.manifest.json");
             await File.WriteAllTextAsync(manifestPath,JsonSerializer.Serialize(manifest),ct);
             var hash=Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(manifestPath,ct))).ToLowerInvariant();
             await progress(new(SiteDeploymentStageKind.Build,SiteStageState.Succeeded),ct);
             await progress(new(SiteDeploymentStageKind.Package,SiteStageState.Succeeded),ct);
             return new(artifactID,manifest.SourceRevision,manifest.ConfigurationRevision,"9to1-native",hash,directory,
-                files.Sum(f=>f.Bytes),secretScanner is not null && await secretScanner.ScanAsync(directory,files,ct));
+                files.Sum(f=>f.Bytes),secretScanner is not null && await secretScanner.ScanAsync(directory,files,ct),
+                manifest.SiteID,manifest.ProjectID,manifest.ProjectRevision,manifest.DomainID);
         }
         catch { Directory.Delete(directory,true);throw; }
     }
@@ -68,7 +74,14 @@ public sealed class NativeSiteBuildPipeline(string artifactRoot,ISiteArtifactSec
             var path=Path.Combine(artifact.ArtifactReference,"artifact.manifest.json");var bytes=await File.ReadAllBytesAsync(path,ct);
             if(Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant()!=artifact.ContentHash)throw Failure("ArtifactCorrupt","Artifact manifest hash does not match.");
             var manifest=JsonSerializer.Deserialize<SiteArtifactManifest>(bytes)??throw Failure("ArtifactCorrupt","Artifact manifest is invalid.");
-            if(manifest.ProjectRevision<1||manifest.SchemaVersion!=1||manifest.ArtifactID!=artifact.ArtifactId||manifest.SourceRevision!=artifact.SourceRevision||manifest.ConfigurationRevision!=artifact.ConfigurationRevision)
+            var carriesIdentity=artifact.SiteId.HasValue||artifact.ProjectId.HasValue||artifact.ProjectRevision.HasValue||artifact.DomainId.HasValue;
+            if(artifact.FrameworkId!="9to1-native"||manifest.ProjectRevision<1||manifest.SchemaVersion!=1||manifest.ArtifactID!=artifact.ArtifactId
+                ||manifest.SiteID==Guid.Empty||manifest.ProjectID==Guid.Empty
+                ||carriesIdentity&&((artifact.SiteId.HasValue&&artifact.SiteId!=manifest.SiteID)
+                    ||(artifact.ProjectId.HasValue&&artifact.ProjectId!=manifest.ProjectID)
+                    ||(artifact.ProjectRevision.HasValue&&artifact.ProjectRevision!=manifest.ProjectRevision)
+                    ||(artifact.DomainId.HasValue&&artifact.DomainId!=manifest.DomainID))
+                ||manifest.SourceRevision!=artifact.SourceRevision||manifest.ConfigurationRevision!=artifact.ConfigurationRevision)
                 throw Failure("ArtifactCorrupt","Artifact provenance does not match.");
             if(manifest.Files.Select(f=>f.RelativePath).Distinct(StringComparer.Ordinal).Count()!=manifest.Files.Count)
                 throw Failure("ArtifactCorrupt","Artifact contains duplicate file entries.");
@@ -85,7 +98,7 @@ public sealed class NativeSiteBuildPipeline(string artifactRoot,ISiteArtifactSec
                 var actual=await DescribeAsync(artifact.ArtifactReference,file.RelativePath,ct);
                 if(actual!=file)throw Failure("ArtifactCorrupt","Output hash/length does not match manifest.");
             }
-            return new(true,[]);
+            return new(true,[],manifest.SiteID,manifest.ProjectID,manifest.DomainID,manifest.ProjectRevision);
         }
         catch(SiteDeploymentException error){return new(false,[error.Error]);}
         catch(IOException){return new(false,[new("ArtifactUnavailable","Artifact output is unavailable.","artifact",true)]);}

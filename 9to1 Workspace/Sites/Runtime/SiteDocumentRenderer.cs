@@ -17,6 +17,12 @@ public sealed class SiteDocumentRenderer
         "width","height","min-width","max-width","min-height","max-height","grid-template-columns","grid-template-rows",
         "position","top","right","bottom","left","overflow","aspect-ratio","font-size","font-weight","line-height",
         "color","background-color","border-radius","border","box-shadow","text-align","opacity" };
+    public static bool IsSupportedStyleValue(string property,JsonElement value)
+    {
+        if(!CssProperties.Contains(property)||value.ValueKind==JsonValueKind.Undefined)return false;
+        var text=value.ValueKind==JsonValueKind.String?value.GetString()??"":value.ToString();
+        return !string.IsNullOrWhiteSpace(text)&&SafeCssValue(text);
+    }
     public SiteRenderResult Render(SiteProject project,Guid pageID,SiteRenderContext context)
     {
         if(context==SiteRenderContext.EditorShell) throw new InvalidOperationException("Public renderer cannot own editor chrome.");
@@ -132,7 +138,7 @@ public sealed class SiteDocumentRenderer
     private static string? Get(SiteComponent c,string key)=>c.Properties.TryGetValue(key,out var value)?value.ValueKind==JsonValueKind.String?value.GetString():value.GetRawText():null;
     private static string E(string value)=>HtmlEncoder.Default.Encode(value);
     private static bool SafeIdentifier(string value)=>value.Length>0&&value.All(c=>char.IsAsciiLetterOrDigit(c)||c=='-');
-    private static bool SafeCssValue(string value)=>value.Length<=512&&!value.Any(c=>c is '<' or '>' or '{' or '}' or ';' or '\\')&&!value.Contains("url(",StringComparison.OrdinalIgnoreCase)&&!value.Contains("expression",StringComparison.OrdinalIgnoreCase);
+    private static bool SafeCssValue(string value)=>!string.IsNullOrWhiteSpace(value)&&value.Length<=512&&!value.Any(c=>c is '<' or '>' or '{' or '}' or ';' or '\\')&&!value.Contains("url(",StringComparison.OrdinalIgnoreCase)&&!value.Contains("expression",StringComparison.OrdinalIgnoreCase);
     private static bool SafeUrl(string value)=>!value.StartsWith("//",StringComparison.Ordinal)&&!value.Contains('\\')&&(value.StartsWith('/')||value.StartsWith('#')||
         Uri.TryCreate(value,UriKind.Absolute,out var uri)&&uri.Scheme is "https" or "http" or "mailto");
     private static void AppendStyle(StringBuilder css,string selector,IReadOnlyDictionary<string,JsonElement> properties,List<SiteDiagnostic> diagnostics,Guid pageID,Guid componentID)

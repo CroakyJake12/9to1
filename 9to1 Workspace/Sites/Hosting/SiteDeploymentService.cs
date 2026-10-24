@@ -55,6 +55,8 @@ public sealed class SiteDeploymentService(
             var source = await sourceResolver.ResolveAsync(new SiteSourceRevisionRequest(context.project.SiteId, context.project.ProjectId, context.project.Source.StackDomainId, request.SourceRevision), cancellationToken).ConfigureAwait(false);
             if (!string.Equals(source.SourceRevision, request.SourceRevision, StringComparison.Ordinal))
                 return Failure("RevisionConflict", "The canonical source resolver returned a different revision than requested.", request.SourceRevision);
+            if (!string.Equals(source.FrameworkId,context.project.Source.FrameworkId,StringComparison.Ordinal))
+                return Failure("CapabilityUnavailable","The canonical source resolver did not negotiate the project's registered framework.",context.project.Source.FrameworkId);
             if (!context.environment.IsProduction && !context.project.Source.StackDomainId.HasValue && !source.IsWorkingTreeClean)
                 return Failure("RevisionConflict", "A preview deployment must be pinned to a committed or otherwise immutable source revision.", request.SourceRevision);
 
@@ -66,25 +68,35 @@ public sealed class SiteDeploymentService(
                 Guid.NewGuid(), context.project.SiteId, context.project.ProjectId, context.project.Source.StackDomainId, source.SourceRevision, source.ConfigurationRevision,
                 context.environment.EnvironmentId, provider.Descriptor.ProviderId, "", null, SiteDeploymentState.Queued,
                 Enum.GetValues<SiteDeploymentStageKind>().Select(kind => new SiteDeploymentStage(kind, SiteStageState.Pending, now, null, null, null)).ToArray(),
-                now, now, request.Initiator, null, null);
+                now, now, request.Initiator, null, null,ProjectRevision:context.project.Revision);
             await SaveDeploymentAsync(deployment, cancellationToken).ConfigureAwait(false);
             activeDeploymentId = deployment.DeploymentId;
 
             var artifact = await buildPipeline.BuildAndPackageAsync(
-                new SiteBuildRequest(deployment.SiteId, deployment.DeploymentId, source, context.environment.EnvironmentId),
+                new SiteBuildRequest(deployment.SiteId, deployment.DeploymentId, source, context.environment.EnvironmentId,
+                    deployment.ProjectId, context.project.Revision, deployment.StackDomainId),
                 (update, token) => new ValueTask(SetStageAsync(deployment.DeploymentId, update.Stage, update.State, update.Code, update.Message, token)),
                 cancellationToken).ConfigureAwait(false);
-            if (artifact.ArtifactId == Guid.Empty || !string.Equals(artifact.SourceRevision, source.SourceRevision, StringComparison.Ordinal) ||
+            if (artifact.ArtifactId == Guid.Empty || artifact.FrameworkId != source.FrameworkId ||
+                !MatchesBuildIdentity(artifact,deployment.SiteId,deployment.ProjectId,deployment.StackDomainId,context.project.Revision,
+                    requireIdentity: source.FrameworkId == "9to1-native") ||
+                !string.Equals(artifact.SourceRevision, source.SourceRevision, StringComparison.Ordinal) ||
                 !string.Equals(artifact.ConfigurationRevision, source.ConfigurationRevision, StringComparison.Ordinal))
-                throw new SiteDeploymentException(new SiteApiError("BuildFailed", "The build artifact is not pinned to the requested source and configuration revisions.", deployment.DeploymentId.ToString(), false));
+                throw new SiteDeploymentException(new SiteApiError("BuildFailed", "The build artifact is not pinned to the negotiated framework, requested Build identity/revision, source and configuration.", deployment.DeploymentId.ToString(), false));
             if (!artifact.SecretScanPassed)
                 throw new SiteDeploymentException(new SiteApiError("PrivateDataExposureBlocked", "The artifact did not pass secret and private-data checks; it was not uploaded.", deployment.DeploymentId.ToString(), false));
-            await artifactArchive.SaveAsync(artifact, cancellationToken).ConfigureAwait(false);
-
             var validation = await buildPipeline.ValidateArtifactAsync(artifact, cancellationToken).ConfigureAwait(false);
             if (!validation.IsValid)
                 throw new SiteDeploymentException(validation.Diagnostics.FirstOrDefault() ?? new SiteApiError("BuildValidationFailed", "The build artifact failed validation.", deployment.DeploymentId.ToString(), false));
+            var artifactCarriesIdentity=artifact.SiteId.HasValue||artifact.ProjectId.HasValue||artifact.ProjectRevision.HasValue||artifact.DomainId.HasValue;
+            var validationCarriesIdentity=validation.SiteId.HasValue||validation.ProjectId.HasValue||validation.ProjectRevision.HasValue||validation.DomainId.HasValue;
+            var requireValidatedIdentity=source.FrameworkId=="9to1-native"||artifactCarriesIdentity||validationCarriesIdentity;
+            if (requireValidatedIdentity &&
+                !MatchesValidatedBuildIdentity(validation,deployment.SiteId,deployment.ProjectId,deployment.StackDomainId,
+                    context.project.Revision,requireIdentity:requireValidatedIdentity))
+                throw new SiteDeploymentException(new SiteApiError("BuildValidationFailed","The validated artifact identity is missing or differs from the requested Build identity and revision.",deployment.DeploymentId.ToString(),false));
             await SetStageAsync(deployment.DeploymentId, SiteDeploymentStageKind.Validate, SiteStageState.Succeeded, null, null, cancellationToken).ConfigureAwait(false);
+            await artifactArchive.SaveAsync(artifact, cancellationToken).ConfigureAwait(false);
 
             var candidate = await provider.UploadCandidateAsync(artifact, deployment.SiteId, deployment.EnvironmentId, deployment.DeploymentId, cancellationToken).ConfigureAwait(false);
             if (candidate.ProviderDeploymentId == Guid.Empty || !string.Equals(candidate.SourceRevision, source.SourceRevision, StringComparison.Ordinal) ||
@@ -167,18 +179,31 @@ public sealed class SiteDeploymentService(
             if (artifact is null) return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("ArtifactUnavailable", "The deployment artifact is no longer available. Sites will not rebuild from the live website.", target.ArtifactId, false));
             if (artifact.ArtifactId != retainedArtifactId || artifact.SourceRevision != target.SourceRevision || artifact.ConfigurationRevision != target.ConfigurationRevision)
                 return Failure("RollbackTargetInvalid", "The retained artifact does not match the successful deployment source and configuration.", deploymentId.ToString());
+            var historicalProjectRevision=target.ProjectRevision>0?target.ProjectRevision:artifact.ProjectRevision;
+            var carriesIdentity=artifact.SiteId.HasValue||artifact.ProjectId.HasValue||artifact.ProjectRevision.HasValue||artifact.DomainId.HasValue;
+            if (carriesIdentity&&!MatchesBuildIdentity(artifact,target.SiteId,target.ProjectId,target.StackDomainId,historicalProjectRevision,
+                    requireIdentity:false))
+                return Failure("RollbackTargetInvalid", "The retained artifact does not match the historical deployment SiteID, Build ProjectID/DomainID and project revision.", deploymentId.ToString());
             if (!artifact.SecretScanPassed)
                 return Failure("PrivateDataExposureBlocked", "The retained artifact did not pass secret and private-data checks; no rollback was attempted.", deploymentId.ToString());
             var validation = await buildPipeline.ValidateArtifactAsync(artifact, cancellationToken).ConfigureAwait(false);
             if (!validation.IsValid)
                 return SiteApiResult<SiteDeployment>.Failure(validation.Diagnostics.FirstOrDefault() ?? new SiteApiError("BuildValidationFailed", "The retained deployment artifact failed validation.", deploymentId.ToString(), false));
+            var validationCarriesIdentity=validation.SiteId.HasValue||validation.ProjectId.HasValue||validation.ProjectRevision.HasValue||validation.DomainId.HasValue;
+            var requireValidatedIdentity=artifact.FrameworkId=="9to1-native"||carriesIdentity||validationCarriesIdentity;
+            if (requireValidatedIdentity &&
+                !MatchesValidatedBuildIdentity(validation,target.SiteId,target.ProjectId,target.StackDomainId,
+                    target.ProjectRevision>0?target.ProjectRevision:null,requireIdentity:requireValidatedIdentity))
+                return Failure("RollbackTargetInvalid","The retained validated artifact does not match the historical deployment identity/revision.",deploymentId.ToString());
             var project = await store.ReadAsync(state => state.Projects.SingleOrDefault(candidate => candidate.SiteId == target.SiteId), cancellationToken).ConfigureAwait(false);
             var environment = project?.Environments.SingleOrDefault(candidate => candidate.EnvironmentId == target.EnvironmentId);
-            if (project is null || environment is null || !environment.IsProduction || !environment.IsEnabled)
-                return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("RollbackTargetInvalid", "The selected deployment is not bound to a configured production environment.", deploymentId.ToString(), false));
+            if (project is null || project.ProjectId!=target.ProjectId || environment is null || !environment.IsProduction || !environment.IsEnabled)
+                return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("RollbackTargetInvalid", "The selected deployment is not bound to its historical Build project and a configured production environment.", deploymentId.ToString(), false));
             var provider = providers.Find(target.ProviderId);
             if (provider is null || !provider.Descriptor.IsConnected)
                 return SiteApiResult<SiteDeployment>.Failure(new SiteApiError("ProviderUnavailable", "The deployment provider is unavailable; no rollback was attempted.", target.ProviderId, true));
+            if (!provider.Descriptor.SupportedFrameworkIds.Contains(artifact.FrameworkId,StringComparer.Ordinal))
+                return Failure("CapabilityUnavailable","The retained artifact framework is not supported by its original provider.",target.ProviderId);
             var auth = await authorizer.RequestAsync(new SiteAuthorizationRequest("sites.deployment.rollback", SiteActionRisk.ExternalConsequence,
                 [target.SiteId.ToString("D"), target.DeploymentId.ToString("D"), artifact.ArtifactId.ToString("D")], ["sites.deployment.rollback", "sites.deployment.promote"],
                 $"Re-deploy the successful source revision {target.SourceRevision} from deployment {target.DeploymentId} to production. Newer source history will be retained."), cancellationToken).ConfigureAwait(false);
@@ -245,8 +270,13 @@ public sealed class SiteDeploymentService(
     {
         var action = environment.IsProduction ? "sites.deployment.production" : "sites.deployment.preview";
         var risk = SiteActionRisk.ExternalConsequence;
-        var impact = $"Build and deploy SiteID {project.SiteId} from revision {source.SourceRevision} to {environment.Name} via a revision-pinned provider artifact. Current production history will be retained.";
-        var decision = await authorizer.RequestAsync(new SiteAuthorizationRequest(action, risk, [project.SiteId.ToString("D"), environment.EnvironmentId.ToString("D")], [action], impact), cancellationToken).ConfigureAwait(false);
+        var domain=project.Source.StackDomainId?.ToString("D")??"none (unbound)";
+        var sourceProject=project.Source.StackProjectId?.ToString("D")??"none (unbound)";
+        var impact = $"Build and deploy SiteID {project.SiteId:D}, ProjectID {project.ProjectId:D}, source binding ProjectID {sourceProject}, DomainID {domain}, source revision {source.SourceRevision} to {environment.Name} via a revision-pinned provider artifact. Current production history will be retained.";
+        var objects=new List<string> { project.SiteId.ToString("D"),project.ProjectId.ToString("D"),environment.EnvironmentId.ToString("D") };
+        if(project.Source.StackDomainId is { } domainId)objects.Add(domainId.ToString("D"));
+        if(project.Source.StackProjectId is { } sourceProjectId)objects.Add(sourceProjectId.ToString("D"));
+        var decision = await authorizer.RequestAsync(new SiteAuthorizationRequest(action, risk, objects.AsReadOnly(), [action], impact), cancellationToken).ConfigureAwait(false);
         return decision.State == SiteAuthorizationState.Allowed
             ? SiteApiResult<bool>.Success(true)
             : SiteApiResult<bool>.Failure(new SiteApiError(decision.State == SiteAuthorizationState.Denied ? "PermissionDenied" : decision.State == SiteAuthorizationState.PendingApproval ? "PermissionRequired" : "HomeServiceUnavailable", decision.Reason ?? "Home did not authorize this deployment.", action, decision.State is SiteAuthorizationState.PendingApproval or SiteAuthorizationState.Unavailable, Detail: decision.RequestId));
@@ -321,6 +351,28 @@ public sealed class SiteDeploymentService(
 
     private static SiteApiResult<SiteDeployment> Failure(string code, string message, string target, bool recoverable = false) =>
         SiteApiResult<SiteDeployment>.Failure(new SiteApiError(code, message, target, recoverable));
+
+    private static bool MatchesBuildIdentity(SiteBuildArtifact artifact,Guid siteId,Guid projectId,Guid? domainId,long? projectRevision,bool requireIdentity)
+    {
+        var hasIdentity=artifact.SiteId.HasValue||artifact.ProjectId.HasValue||artifact.ProjectRevision.HasValue||artifact.DomainId.HasValue;
+        if(!hasIdentity)return !requireIdentity;
+        if(requireIdentity)return artifact.SiteId==siteId&&artifact.ProjectId==projectId&&artifact.DomainId==domainId
+            &&projectRevision.HasValue&&artifact.ProjectRevision==projectRevision;
+        return (!artifact.SiteId.HasValue||artifact.SiteId==siteId)&&(!artifact.ProjectId.HasValue||artifact.ProjectId==projectId)
+            &&(!artifact.DomainId.HasValue||artifact.DomainId==domainId)&&(!artifact.ProjectRevision.HasValue||artifact.ProjectRevision==projectRevision);
+    }
+
+    private static bool MatchesValidatedBuildIdentity(SiteBuildValidation validation,Guid siteId,Guid projectId,Guid? domainId,
+        long? projectRevision,bool requireIdentity)
+    {
+        var hasIdentity=validation.SiteId.HasValue||validation.ProjectId.HasValue||validation.ProjectRevision.HasValue||validation.DomainId.HasValue;
+        if(!hasIdentity)return !requireIdentity;
+        if(requireIdentity)return validation.SiteId==siteId&&validation.ProjectId==projectId&&validation.DomainId==domainId
+            &&validation.ProjectRevision is >0&&(!projectRevision.HasValue||validation.ProjectRevision==projectRevision);
+        return (!validation.SiteId.HasValue||validation.SiteId==siteId)&&(!validation.ProjectId.HasValue||validation.ProjectId==projectId)
+            &&(!validation.DomainId.HasValue||validation.DomainId==domainId)
+            &&(!validation.ProjectRevision.HasValue||!projectRevision.HasValue||validation.ProjectRevision==projectRevision);
+    }
 
     private static int IndexOf<T>(IReadOnlyList<T> values, Func<T, bool> predicate)
     {
