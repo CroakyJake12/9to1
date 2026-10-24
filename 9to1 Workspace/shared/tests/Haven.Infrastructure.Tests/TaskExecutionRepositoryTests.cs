@@ -198,7 +198,7 @@ public sealed class TaskExecutionRepositoryTests : IDisposable
             checkpoints.Record.Id, cancellation.Token);
         try
         {
-            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
             cancellation.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelled);
         }
@@ -260,11 +260,11 @@ public sealed class TaskExecutionRepositoryTests : IDisposable
             checkpoints.Record.Id, cancellation.Token);
         try
         {
-            await observationEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            await observationEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
             cancellation.Cancel();
             Assert.False(lateWrite.IsCompleted);
             releaseObservation.TrySetResult();
-            await lookupEntered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            await lookupEntered.Task.WaitAsync(TimeSpan.FromSeconds(10));
             releaseLookup.TrySetResult();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => lateWrite);
         }

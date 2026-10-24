@@ -117,10 +117,10 @@ public sealed class StrataLoopbackModelProviderTests
         using var fixture = new Fixture { AllowProbe = true };
         await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
         Assert.Contains(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
-        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
+        Assert.Single(fixture.Requests, request => request.Method == "POST");
         fixture.ServiceStarted++;
         Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
-        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
+        Assert.Single(fixture.Requests, request => request.Method == "POST");
         Assert.Equal(0, fixture.Secrets.Reads);
     }
 
@@ -130,7 +130,7 @@ public sealed class StrataLoopbackModelProviderTests
         using var fixture = new Fixture { AllowProbe = true, WrongNonce = true };
         await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
         Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
-        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
+        Assert.Single(fixture.Requests, request => request.Method == "POST");
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public sealed class StrataLoopbackModelProviderTests
         using var fixture = new Fixture { AllowProbe = true, RestartAfterProbe = true };
         await fixture.Provider.ProbeCapabilitiesAsync(CancellationToken.None);
         Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
-        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
+        Assert.Single(fixture.Requests, request => request.Method == "POST");
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public sealed class StrataLoopbackModelProviderTests
         Assert.Contains(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
         fixture.Model = "different-actual-model";
         Assert.DoesNotContain(ToolCapability.Tools, Assert.Single(await fixture.Provider.GetModelsAsync(CancellationToken.None)).Capabilities);
-        Assert.Single(fixture.Requests.Where(request => request.Method == "POST"));
+        Assert.Single(fixture.Requests, request => request.Method == "POST");
     }
 
     private sealed record RequestRecord(string Method, string Path, string? Authorization, string Body);
