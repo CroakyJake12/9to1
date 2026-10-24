@@ -218,9 +218,11 @@ public sealed class CuiIconMenuTests
                 Assert.Equal(string.Empty, radioMark.Text);
                 radioItem.IsChecked = true;
                 Assert.Equal("●", radioMark.Text);
-                radioItem.ToggleType = MenuItemToggleType.None;
+                CuiPropertyPresentation.Set(radioItem, "ToggleType", MenuItemToggleType.None,
+                    CuiPropertyLevel.Instance, "host menu mode update");
                 Assert.False(radioMark.IsVisible);
-                radioItem.ToggleType = MenuItemToggleType.Radio;
+                CuiPropertyPresentation.Set(radioItem, "ToggleType", MenuItemToggleType.Radio,
+                    CuiPropertyLevel.Instance, "host menu mode update");
                 Assert.True(radioMark.IsVisible);
                 Assert.Equal("●", radioMark.Text);
                 var checkToggle = Assert.IsAssignableFrom<IToggleProvider>(
@@ -591,6 +593,7 @@ public sealed class CuiIconMenuTests
                 editor.CaretIndex = editor.Text!.Length;
                 var menu = editor.ContextMenu!;
                 window.KeyPress(Avalonia.Input.Key.Apps, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.None, null);
+                window.KeyRelease(Avalonia.Input.Key.Apps, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.None, null);
                 Dispatcher.UIThread.RunJobs();
                 window.UpdateLayout();
                 Assert.True(menu.IsOpen);
