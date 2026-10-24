@@ -27,17 +27,26 @@ public sealed partial class TaskExecutionCoordinator
         Guid taskId, Guid expectedExecutionId, CancellationToken cancellationToken) =>
         StartOriginalProcessStage("observe-original-run-controls", cancellationToken, async token =>
         {
+            var stage = RequireOriginalProcessStage();
             var current = await RequireOriginalProcessSnapshotAsync(taskId, token).ConfigureAwait(false);
             RequireRun(current, expectedExecutionId);
+            if (TryGetOriginalRunControlSource(current) is null
+                && await HasOriginalColdRunResumeBoundaryAsync(stage, current, token).ConfigureAwait(false))
+                return new TaskRunOriginalRunControlAvailability(OriginalRunControlContext(current), false, false, false)
+                { CanResumeColdOriginal = true };
             await ValidateOriginalProcessCommandAsync(current, "task:observe-original-controls", token).ConfigureAwait(false);
             current = await RequireOriginalProcessSnapshotAsync(taskId, token).ConfigureAwait(false);
             RequireRun(current, expectedExecutionId);
             await ValidateOriginalProcessCommandAsync(current, "task:observe-original-controls", token).ConfigureAwait(false);
             var live = TryGetOriginalRunControlSource(current);
             var canWithdraw = live is not null && current.State is not (TaskExecutionLifecycle.Completed or TaskExecutionLifecycle.Cancelled);
+            var canResumeCold = live is null && await HasOriginalColdRunResumeBoundaryAsync(stage, current, token).ConfigureAwait(false);
             return new TaskRunOriginalRunControlAvailability(OriginalRunControlContext(current), canWithdraw, canWithdraw,
                 live is not null && HasOriginalUnstartedRunResume(live, current))
-            { CanResumeOriginalToolCheckpoint = live is not null && HasOriginalToolCheckpointRunResume(live, current) };
+            {
+                CanResumeOriginalToolCheckpoint = live is not null && HasOriginalToolCheckpointRunResume(live, current),
+                CanResumeColdOriginal = canResumeCold
+            };
         });
 
     public Task<TaskRunOriginalRunControlResult> PauseOriginalRunAsync(
@@ -205,6 +214,62 @@ public sealed partial class TaskExecutionCoordinator
             || binding.TaskId != current.TaskId || binding.ContextId != current.ContextId || binding.ExecutionId != current.ExecutionId
             || binding.OwnerBinding != current.OwnerBinding) return null;
         return original;
+    }
+
+    /// <summary>Observes a restorable durable boundary without consuming its journal claim.
+    /// Availability is not permission: the start path independently claims the SAME entry
+    /// and performs fresh domain, actor and provider admission.</summary>
+    private async Task<bool> HasOriginalColdRunResumeBoundaryAsync(TaskRunProcessStageCustody stage,
+        TaskExecutionSnapshot current, CancellationToken token, ChatSessionService? sameConfiguredChat = null)
+    {
+        if (current.State != TaskExecutionLifecycle.Suspended || current.RecoveryObservation is null
+            || current.OwnerBinding is null || _coldRecoveryJournal is not { } journal
+            || _coldRecoveryContext is not { } context
+            || _admissionAuthority is not ITaskRunColdOwnerAuthority authority)
+            return false;
+        sameConfiguredChat ??= GetOriginalColdRecoveryChatSource(stage);
+        if (sameConfiguredChat is null) return false;
+        lock (_processProducerGate)
+            if (_originalInvocations.ContainsKey(current.TaskId)) return false;
+        if (!stage.Invoke(() => authority.HasOriginalColdRecoveryComposition(journal, context))) return false;
+
+        async Task<ITaskRunColdJournalEntry?> ReadIssuedBoundaryAsync()
+        {
+            var operation = new AgentRuntimeOriginalCustody { OriginalProcessOwner = this };
+            var read = operation.Start(async work =>
+            {
+                var entry = await work.AwaitAsync(() => journal.ReadOriginalAsync(current.TaskId, current.ExecutionId,
+                    new TaskRunColdOriginalSourceScope(work), token)).ConfigureAwait(false);
+                if (entry is not null && !journal.IsIssuedOriginalEntry(entry))
+                    throw new UnauthorizedAccessException("The configured journal did not issue the cold resume observation.");
+                return entry;
+            });
+            stage.RetainSource(read);
+            return await stage.Await(() => read).ConfigureAwait(false);
+        }
+
+        var observed = await ReadIssuedBoundaryAsync().ConfigureAwait(false);
+        if (observed is null) return false;
+        var latest = await stage.Await(() => repository.GetAsync(current.TaskId, token)).ConfigureAwait(false);
+        if (latest is null || System.Text.Json.JsonSerializer.Serialize(current)
+            != System.Text.Json.JsonSerializer.Serialize(latest)) return false;
+        try { TaskRunColdRecoveryBoundary.DemandRestorableBoundary(observed.Capsule, latest); }
+        catch (InvalidOperationException) { return false; }
+
+        // Ordinary live command validation ties AuthenticationRevision to the prior
+        // process. Cold availability instead re-reads the SAME protected capsule, whose
+        // journal validates the stable current native principal without granting effects.
+        var confirmed = await ReadIssuedBoundaryAsync().ConfigureAwait(false);
+        if (confirmed is null || System.Text.Json.JsonSerializer.Serialize(observed.Capsule)
+            != System.Text.Json.JsonSerializer.Serialize(confirmed.Capsule)) return false;
+        var final = await stage.Await(() => repository.GetAsync(current.TaskId, token)).ConfigureAwait(false);
+        if (final is null || System.Text.Json.JsonSerializer.Serialize(latest)
+            != System.Text.Json.JsonSerializer.Serialize(final)) return false;
+        try { TaskRunColdRecoveryBoundary.DemandRestorableBoundary(confirmed.Capsule, final); }
+        catch (InvalidOperationException) { return false; }
+        lock (_processProducerGate)
+            if (_originalInvocations.ContainsKey(current.TaskId)) return false;
+        return stage.Invoke(() => authority.HasOriginalColdRecoveryComposition(journal, context));
     }
 
     private bool HasOriginalUnstartedRunResume(TaskRunInvocationCustody original, TaskExecutionSnapshot current)

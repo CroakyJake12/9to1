@@ -28,7 +28,8 @@ public sealed partial class SpaceTaskWidgetPage
         {
             "task.pause" => available.CanPause,
             "task.stop" => available.CanStop,
-            "task.resume-original" => available.CanResumeUnstartedOriginal || available.CanResumeOriginalToolCheckpoint,
+            "task.resume-original" => available.CanResumeUnstartedOriginal || available.CanResumeOriginalToolCheckpoint
+                || available.CanResumeColdOriginal,
             _ => false
         }; // Detached availability is never a command grant; the owner freshly validates every call.
     }
@@ -121,7 +122,7 @@ public sealed partial class SpaceTaskWidgetPage
                     _status = command == "task.resume-original"
                         ? OriginalRunResumeObservation is null || OriginalRunResumeObservation.Disposition == TaskRunOriginalResumeObservationDisposition.ObservationDetached
                             ? "This observation detached. The durable producer remains owned by its service."
-                            : $"The real resumed producer returned its terminal observation: {OriginalRunResumeObservation.State}."
+                            : $"The real {(OriginalRunResumeObservation.WasColdRecovery ? "cold" : "retained-original")} resumed producer returned its terminal observation: {OriginalRunResumeObservation.State}."
                         : AcknowledgedOriginalRunControl is { } result
                             ? $"Original {result.Kind}: {result.Disposition}; {result.State}." : "No actual original control acknowledgment was returned.";
                     NotifyOriginal(original, generation);

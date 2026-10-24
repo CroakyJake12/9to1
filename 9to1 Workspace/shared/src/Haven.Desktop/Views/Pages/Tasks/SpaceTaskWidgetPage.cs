@@ -251,10 +251,13 @@ public sealed partial class SpaceTaskWidgetPage : UserControl, IActivatablePage,
             "Checkpoint" => view?.Projection?.CheckpointId is { } checkpoint ? $"Acknowledged checkpoint {checkpoint:D}" : "No acknowledged checkpoint is recorded.",
             "Attempts" => task is null || task.Attempts.Count == 0 ? "No provider attempt is recorded." : string.Join("\n", task.Attempts.Select(attempt =>
                 $"{attempt.Id:D}: {attempt.Candidate.ProviderId}/{attempt.Candidate.ModelId}; {attempt.State}; retry of {attempt.RetryOfAttemptId}")),
-            "Recovery" => view?.RecoveryObservation ?? "No recovery observation has been loaded.",
+            "Recovery" => view?.Snapshot?.RecoveryObservation is null
+                && view?.Projection?.RecoveryHistory.LastOrDefault() is { } priorRecovery
+                    ? $"Prior recovered boundary: {priorRecovery.ReasonCode}; iterator {priorRecovery.IteratorOutcome}; settlement {priorRecovery.SettlementOutcome}. This history does not authorize replay."
+                    : view?.RecoveryObservation ?? "No recovery observation has been loaded.",
             "Continuation" => _runControlAvailability is null
                 ? "The genuine original run controls are unavailable. Saved state or approval cannot authorize replay."
-                : $"Original-owner observation: pause {_runControlAvailability.CanPause}; stop {_runControlAvailability.CanStop}; same-input unstarted resume {_runControlAvailability.CanResumeUnstartedOriginal}. Every command revalidates fresh authority; accepted/invoked checkpoint continuation is unavailable.",
+                : $"Original-owner observation: pause {_runControlAvailability.CanPause}; stop {_runControlAvailability.CanStop}; same-input unstarted resume {_runControlAvailability.CanResumeUnstartedOriginal}; live tool checkpoint resume {_runControlAvailability.CanResumeOriginalToolCheckpoint}; protected cold-journal resume {_runControlAvailability.CanResumeColdOriginal}. Every command revalidates fresh authority.",
             "CanPauseOriginal" => IsActionAvailable("task.pause") == true,
             "CanStopOriginal" => IsActionAvailable("task.stop") == true,
             "CanResumeOriginal" => IsActionAvailable("task.resume-original") == true,
