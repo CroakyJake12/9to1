@@ -1,3 +1,23 @@
+## Local OpenCode teams — owner decision, 24 October 2026
+
+Read [the team runtime procedure](docs/development/opencode-teams.md) and
+[the portable source handoff](docs/development/local-handoff.md) before team
+activation or reassignment. The owner requests GPT-6 Luna implementation workers
+under GPT-6.1 Sol leaders, each owning three or four surfaces, and one GPT-6 Astra
+supervisor. Sol checks every five minutes; Astra reviews every thirty minutes
+with a five-minute cooperative checkpoint budget. Busy activations coalesce.
+Use real OpenCode session tabs for the team leaders, preserving the web view.
+
+Verify the installed API, exact provider/model entitlement, isolated worktree,
+current source, exclusive paths and genuine session receipts before activating.
+Never silently substitute models, revive Mercury or enable paid fallbacks. The
+team adjunct extends the existing coordination ledger; it is not proof of local
+write access, session creation or work execution. Root retains current source
+custody until the receiving worker ACKs its exact revision and scopes. Complete
+priority apps and dependencies first, then remaining canonical apps. Full
+independent acceptance stays paused until all implementation is complete or the
+owner explicitly resumes it; genuine basic compilation and smoke checks continue.
+
 ## Current execution priority and fresh basic builds
 
 Acceptance remains PAUSED until ALL canonical apps are fully implemented or the owner explicitly resumes it. The latest24October owner override below supersedes the historical timed03:00 resumption. Continue implementation and genuine basic checks.

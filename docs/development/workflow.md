@@ -508,3 +508,18 @@ The [24 October direct owner override](../specification/owner-references/2026-10
 ## Fresh implementation checks during the acceptance pause
 
 The current owner pauses full acceptance until all canonical apps are fully implemented or explicit resumption. Run affected fresh normal compilation and focused genuine smoke checks promptly. The complete reviewed toolchain/dependency closure in the `reusable()` section governs evidence reuse; it must not become an acceptance-only gate in front of every fresh Layer1 compile. Keep source/custody/current SDK host and exact command, normal dependency/copy and private writer checks, and the existing memory/disk/time/process safeguards. A fresh result with partial dependency coverage is explicitly PARTIAL and NOT REUSABLE. It grants no product/native/release acceptance and cannot stand in for mandatory future checks. Keep parallel implementation moving while the one physical SDK source is briefly frozen for its actual command.
+
+## Visible local teams
+
+The [OpenCode team adjunct](opencode-teams.md) uses real team-leader session tabs,
+Luna child workers and one Astra supervisor in the existing coordinator ledger.
+Its five-minute leader and thirty-minute supervisor ticks coalesce when busy.
+Astra's five-minute budget is cooperative because the inspected native API has
+no hard per-prompt deadline; do not describe it as enforced. Reconcile uncertain
+creation or prompt receipts before retrying, and revalidate source, scope, model,
+provider and capacity immediately before dispatch. A configured team is not a
+running worker. Follow the [portable handoff](local-handoff.md) and exact source
+receipt; never pull blindly over an active checkout or interrupt Thunder services.
+See the team procedure for commands, native capability limits and actual launch
+gates. This extends the existing CAS projection and coordinator, with no second
+programme supervisor or replacement milestone database.

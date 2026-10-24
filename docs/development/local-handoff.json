@@ -1,0 +1,370 @@
+{
+  "schema": "9to1.local-implementation-handoff/v2",
+  "status": "SOURCE77_PUBLISHED_VERIFIED; SOURCE78_HANDOFF_ATTACHMENT_RECEIPT_PENDING",
+  "proposed_repository_paths": [
+    "docs/development/local-handoff.md",
+    "docs/development/local-handoff.json"
+  ],
+  "payload_source_revision": "395a312170f9ae9900996b8dc82d050f7778c340",
+  "payload_source_tree": "98d69d439998a7f160415ae059cf11911b674683",
+  "handoff_document_commit": "Record separately after Source78 commit with git rev-parse HEAD; do not self-reference this commit inside the payload.",
+  "source77": {
+    "branch": "refs/heads/codex/product-implementation77-20261024",
+    "packets_composed": 9,
+    "composition_status": "SOURCE77_NINE_COMPLETED_PACKETS_COMPOSED_BASIC_COMPILERS_PENDING_ACCEPTANCE_PAUSED",
+    "CSharp_compilation": "NOT RUN",
+    "native_checks": "NOT RUN",
+    "current_App_Den_Runtime_basic_checks": "NOT RUN",
+    "publication": "PUSH VERIFIED by Root",
+    "publication_verified_by": "Root"
+  },
+  "source76_historical_only": {
+    "revision": "9db888cf3e89ea5593dc8edd3492461b62a91651",
+    "tree": "c7be64d89d05c90563a424a449217960a55279f8",
+    "App_seconds": 14.512,
+    "Den_seconds": 3.222,
+    "Runtime_seconds": 4.328,
+    "classification": "historical basic passes with partial coverage; NOT REUSABLE; not Source77 evidence or acceptance"
+  },
+  "canonical_specification_sha256": "3724566ec5f564164b55bab6c7370f780766bafbb2279dee6b1835fb66806f96",
+  "acceptance": {
+    "mode": "IMPLEMENTATION_AND_BASIC_SMOKE_ONLY",
+    "full_acceptance": "PAUSED until every canonical app is 100% implemented or explicit owner resume",
+    "accepted_percentages": "FROZEN",
+    "basic_checks": "continue fresh affected compilation and genuine focused smoke checks",
+    "release_or_acceptance": "none inferred; all specification and native/install/persistence/shutdown/delivery gates remain"
+  },
+  "canonical_priority_phases": [
+    {
+      "priority": 1,
+      "scope": [
+        "Haven/Home Shell",
+        "CUI, nodes/Action Graphs, settings, Home Core services, Dulche, shared runtime, permissions, package lifecycle, model routing"
+      ],
+      "status": "Home Shell rough source estimate 65%; framework/service closure remains incomplete; full Haven acceptance outstanding."
+    },
+    {
+      "priority": 2,
+      "scope": [
+        "Spaces (including Study, Tasks, Assistants, Research, Shopping, Translate, Space Builder)",
+        "Voice & Vision"
+      ],
+      "status": "Spaces rough estimate 65%; Voice & Vision not individually estimated in Source77; complete both and dependencies."
+    },
+    {
+      "priority": 3,
+      "scope": [
+        "Build (including Dev, Sites, Stacks as workspaces, not separate apps)"
+      ],
+      "status": "Build rough estimate 67%; published capsule recovery and broader IDE scope remain open."
+    },
+    {
+      "priority": 4,
+      "scope": [
+        "Automations"
+      ],
+      "status": "Rough estimate 49%; core graph editing/publication, canonical Run owner/runtime adapter and tests remain open."
+    },
+    {
+      "priority": 5,
+      "scope": [
+        "Write",
+        "Present",
+        "Boards",
+        "Canvas",
+        "Data/shared productivity engine"
+      ],
+      "status": "Tracked estimates: Write 63%, Present 64%, Boards 84%, Canvas 66%, Data 58%; all relevant compiler/native/runtime and remaining feature gaps remain."
+    },
+    {
+      "priority": 6,
+      "scope": [
+        "Files",
+        "web services, accounts, cloud storage"
+      ],
+      "status": "Files rough estimate 60%; new-recipient sharing/account/hosted access producers and full C#/native checks remain open."
+    },
+    {
+      "priority": 7,
+      "scope": [
+        "Planner",
+        "Connect (Mail is its first-class mode/subsystem)"
+      ],
+      "status": "Not individually estimated in Source77; required spec scope remains, untracked does not mean complete."
+    },
+    {
+      "priority": 8,
+      "scope": [
+        "Cards"
+      ],
+      "status": "Not individually estimated in Source77; required spec scope remains."
+    },
+    {
+      "priority": 9,
+      "scope": [
+        "Forms"
+      ],
+      "status": "Not individually estimated in Source77; required spec scope remains."
+    },
+    {
+      "priority": 10,
+      "scope": [
+        "AI Studio"
+      ],
+      "status": "Rough estimate 25%; real Dulche/Den/permissions/context/Replay adapters, canonical CUI and independent acceptance remain open."
+    },
+    {
+      "priority": 11,
+      "scope": [
+        "Picture",
+        "Wave",
+        "Motion"
+      ],
+      "status": "Not individually estimated in Source77; required spec scope remains."
+    },
+    {
+      "priority": 12,
+      "scope": [
+        "Games",
+        "Play"
+      ],
+      "status": "Not individually estimated in Source77; required spec scope remains."
+    },
+    {
+      "priority": 13,
+      "scope": [
+        "Mini Computer"
+      ],
+      "status": "Not individually estimated in Source77; required app remains distinct from shared computer-use/runtime dependencies."
+    },
+    {
+      "priority": 14,
+      "scope": [
+        "Remaining independently specified apps, including Link, Prototype, Paths, Replay and other retained products"
+      ],
+      "status": "Not individually estimated in Source77; identify exact retained products from the canonical spec, preserve absorbed-product ownership, and complete applicable scope."
+    }
+  ],
+  "source77_rough_estimates": [
+    {
+      "app": "Home Shell",
+      "rough_implementation_percent": 65,
+      "frozen_accepted_percent": 15,
+      "source77_basis_and_open_gaps": "Source76 canonical Library lists supported text/code files alongside folders/Boards, resolves exact private source-issued targets and opens same Files previews in Haven and standalone. Rough62->65 source implementation only; new currentUI/native NOT RUN. Browser/native/account/onboarding broader scope remains open."
+    },
+    {
+      "app": "Spaces",
+      "rough_implementation_percent": 65,
+      "frozen_accepted_percent": 15,
+      "source77_basis_and_open_gaps": "Source77 durable protected Assistant Main creation/reopening and actual per-reply Stop now join the same original Chat/Den pipeline. Binding retains definition identity before provisioning; Stop rejects foreign/late requests. Source estimate60->65; native/C# checks NOT RUN. Partial-output persistence, assistant rail activity, Voice/selection and broader Spaces scope remain open."
+    },
+    {
+      "app": "Build",
+      "rough_implementation_percent": 67,
+      "frozen_accepted_percent": 10,
+      "source77_basis_and_open_gaps": "Source77 changed-baseline protected task recovery tray inspects original source and requires explicit adoption with current task/attempt and dirty/capacity guards. Source65->67; no new compiler or native PASS. Published capsule recovery and broader IDE scope remain open."
+    },
+    {
+      "app": "Automations",
+      "rough_implementation_percent": 49,
+      "frozen_accepted_percent": 0,
+      "source77_basis_and_open_gaps": "Source77 original canonical definition archive/restore now uses separate real Home reviews, full-row CAS, truthful lifetime and restore disabled/no next-run. Source45->49; tests authored NOT RUN. Genuine core graph edit/publication in progress; canonical Run owner/runtime adapter still missing."
+    },
+    {
+      "app": "Write",
+      "rough_implementation_percent": 63,
+      "frozen_accepted_percent": 20,
+      "source77_basis_and_open_gaps": "Source77 same shared donor ink whole-stroke eraser with undo/save/close, and CUI-owned drawing tools slot; existing layout/options preserved. Source60->63; resource XML structurally checked; C#/native drawing NOT RUN."
+    },
+    {
+      "app": "Present",
+      "rough_implementation_percent": 64,
+      "frozen_accepted_percent": 15,
+      "source77_basis_and_open_gaps": "Source77 same-engine ink pen/highlighter colour/width and selected-object colour action, plus Linux entry into same Home/Present route. Source60->64; Windows original route preserved; earlier missing-Windows-engine conclusion corrected. Native/editor/save/restart checks NOT RUN."
+    },
+    {
+      "app": "Boards",
+      "rough_implementation_percent": 84,
+      "frozen_accepted_percent": 15,
+      "source77_basis_and_open_gaps": "Source76 persisted nested topic pages, collapsible navigation/breadcrumbs, child creation, indent/outdent, sibling ordering and subtree-safe move/trash recovery use SAME Notes metadata/editor/undo/CAS. Rough80->84 source implementation only; hierarchy basic smoke authored NOT RUN. Dedicated structure undo, Data/Chat-page and remaining spec breadth open."
+    },
+    {
+      "app": "Canvas",
+      "rough_implementation_percent": 66,
+      "frozen_accepted_percent": 25,
+      "source77_basis_and_open_gaps": "Source72SAMEsharednativeCanvas now has actualmappedstrokepointer/cycle selection, drag/nudge preview, explicitHome-reviewedkeyedmove/delete, exactdonorpenpathselectioncontour+translatedpreviewwithcurrentviewport/CUIaccent. Rough60->66. FivegenuinenativecontrolsauthoredNOTRUN. Singlemappednativeink scope; fullobject/multi/lasso/resize/rotation/clipboardparity remainsopen, producer/native72notrun."
+    },
+    {
+      "app": "Data",
+      "rough_implementation_percent": 58,
+      "frozen_accepted_percent": 15,
+      "source77_basis_and_open_gaps": "Source77 shared donor whole-stroke eraser result revalidated against same sheet, lock, nonink, undo and save guards. Source55->58; focused tests authored NOT RUN. Broader Data spreadsheet/drawing integration remains open."
+    },
+    {
+      "app": "Files",
+      "rough_implementation_percent": 60,
+      "frozen_accepted_percent": 15,
+      "source77_basis_and_open_gaps": "Source77 existing genuine recipient role/expiry editing joins Home review, fenced apply, ACK and audit for the same stable principal/email; source57->60. New-recipient scoped email sharing still needs actual account/recipient/hosted access producers. C#/native NOT RUN."
+    },
+    {
+      "app": "AI Studio",
+      "rough_implementation_percent": 25,
+      "frozen_accepted_percent": 0,
+      "source77_basis_and_open_gaps": "Project/resource persistence, templates/history/import/export/validation exist. Real Dulche/Den/permissions/context/Replay adapters, canonical CUI and independent product acceptance remain open."
+    }
+  ],
+  "packets": [
+    {
+      "label": "BuildTray7",
+      "scope": "Build changed-baseline protected task recovery tray; explicit adoption and task/attempt/dirty/capacity guards"
+    },
+    {
+      "label": "FilesScope7",
+      "scope": "Existing recipient role/expiry editing with Home review, fenced apply, acknowledgement and audit"
+    },
+    {
+      "label": "Main9",
+      "scope": "Protected canonical Assistant Main creation/reopening in original Chat/Den pipeline"
+    },
+    {
+      "label": "Stop8",
+      "scope": "Per-reply Stop behavior in the original assistant conversation pipeline"
+    },
+    {
+      "label": "Data3",
+      "scope": "Shared donor whole-stroke eraser; sheet/lock/non-ink/undo/save guards"
+    },
+    {
+      "label": "Present4",
+      "scope": "Shared-engine ink pen/highlighter colour and width plus selected-object colour"
+    },
+    {
+      "label": "PresentLinux5",
+      "scope": "Linux entry to the same Home/Present route"
+    },
+    {
+      "label": "Auto9",
+      "scope": "Canonical Automation archive/restore with Home reviews, row CAS and restore safeguards"
+    },
+    {
+      "label": "Write5",
+      "scope": "Shared donor whole-stroke eraser and CUI-owned drawing tools slot"
+    }
+  ],
+  "opencode_team_runtime": {
+    "installed_version_reported": "OpenCode cloud v2.1.0",
+    "runtime_state": "NOT RUN: native entitlement, local window, sessions and runtime activation are unverified",
+    "native_activation": "NOT VERIFIED / NOT CLAIMED",
+    "model_ids": "UNKNOWN",
+    "entitlement": "NOT RUN / UNKNOWN",
+    "architecture_request": {
+      "lead": "Sol 6.1",
+      "workers": "Luna, three to four scoped surfaces",
+      "supervisor": "Astra every 30 minutes with five-minute review budget",
+      "lead_wake": "every five minutes",
+      "visibility": "OpenCode webview team tabs"
+    },
+    "checks_before_reliance": [
+      "verify documented supported native API and actual entitlement",
+      "verify live sessions and webview tabs using observed output",
+      "verify isolated worktrees and exclusive path scopes",
+      "verify scheduling, wake cadence, budget, supervision, completion/error records and restart recovery",
+      "preserve existing busy Thunder worker/services/gateway/queue/usage controls"
+    ],
+    "launcher_implementation": "v2 implementation exists privately; 26 offline checks",
+    "architecture_status": "Intended team design; actual invocation/workflow not yet verified",
+    "bootstrap": "Root cannot message or start the local worker via current toolset. One-time local start may be needed through installed OpenCode; verify session before relying on it."
+  },
+  "read_order": [
+    "AGENTS.md",
+    "docs/development/workflow.md",
+    "canonical spec at pinned SHA",
+    "current owner decision and supported coordination state",
+    "this handoff and Source77 packet summaries"
+  ],
+  "coordination": {
+    "cloud_boundary": "Root retains cloud physical source and cloud integration until exact-scope ACK and custody transfer",
+    "local_worker_authority": "After ACK, Sol lead may own a local branch, isolated worktree, scoped commits, and serialize local builds under explicit local SDK allocation",
+    "sdk_boundary": "Local SDK allocation applies only to the acknowledged local worker and scope; does not authorize access to or interruption of unrelated Thunder services",
+    "ledger": "Worker does not directly write global ledger. Supported team adapter may coordinate; authorized coordinator may CAS existing ledger. Shared JSON is a nonportable projection, not a writable local ledger.",
+    "ledger_projection": "/workspace/shared/9to1-context/development-workflow-state.json (projection; local worker must not edit or replace)",
+    "required_ack": [
+      "exact Source78 handoff commit and tree",
+      "new isolated worktree path and claimed paths",
+      "starting hashes and exclusive scope",
+      "local SDK/build custody and serialization boundary"
+    ],
+    "preserve": [
+      "original dirty worktrees",
+      "all checkpoints and packet evidence",
+      "failure artifacts",
+      "existing unrelated workers/services/gateway/queue/usage controls"
+    ],
+    "local_bootstrap": "Local bootstrap may be needed to start authorized Sol lead; require actual-session verification and exact Source78 scope/custody ACK before edits or builds."
+  },
+  "verified_git_only_checkout": {
+    "planned_handoff_ref": "refs/heads/codex/local-team-handoff78-20261024",
+    "receipt_values_required": [
+      "HANDOFF_COMMIT and HANDOFF_TREE from separate post-Source78 attachment receipt; receipt records git rev-parse HEAD and git rev-parse HEAD^{tree}"
+    ],
+    "caller_supplied_values": [
+      "GIT_REPO: actual existing local clone path",
+      "REMOTE: configured remote name observed by inspection",
+      "WORKTREE: fresh local destination path"
+    ],
+    "inspect_actual_host_repo_remote_first": [
+      "hostname",
+      "uname -a",
+      "git -C \"$GIT_REPO\" rev-parse --show-toplevel",
+      "git -C \"$GIT_REPO\" remote"
+    ],
+    "commands": [
+      "set -eu",
+      ": \"${GIT_REPO:?set the actual existing local clone path}\"",
+      ": \"${REMOTE:?set a configured remote name found by inspection}\"",
+      ": \"${WORKTREE:?set a fresh local worktree destination}\"",
+      ": \"${HANDOFF_COMMIT:?set the Source 78 commit from its attachment receipt}\"",
+      ": \"${HANDOFF_TREE:?set the Source 78 tree from its attachment receipt}\"",
+      "HANDOFF_REF=refs/heads/codex/local-team-handoff78-20261024",
+      "hostname",
+      "uname -a",
+      "git -C \"$GIT_REPO\" rev-parse --show-toplevel",
+      "git -C \"$GIT_REPO\" remote",
+      "git -C \"$GIT_REPO\" remote get-url \"$REMOTE\" >/dev/null",
+      "git -C \"$GIT_REPO\" fetch --no-tags \"$REMOTE\" \"$HANDOFF_REF\"",
+      "test \"$(git -C \"$GIT_REPO\" rev-parse 'FETCH_HEAD^{commit}')\" = \"$HANDOFF_COMMIT\"",
+      "test \"$(git -C \"$GIT_REPO\" rev-parse \"$HANDOFF_COMMIT^{tree}\")\" = \"$HANDOFF_TREE\"",
+      "test ! -e \"$WORKTREE\"",
+      "git -C \"$GIT_REPO\" worktree add --detach \"$WORKTREE\" \"$HANDOFF_COMMIT\"",
+      "test \"$(git -C \"$WORKTREE\" rev-parse HEAD)\" = \"$HANDOFF_COMMIT\"",
+      "test \"$(git -C \"$WORKTREE\" rev-parse 'HEAD^{tree}')\" = \"$HANDOFF_TREE\""
+    ]
+  },
+  "constraints": [
+    "Mercury permanently revoked",
+    "no paid fallback",
+    "no credentials or private cloud receipt contents in Git",
+    "no mutation of active checkout, Root source, SDK or ledger",
+    "no model/service/worker/gateway/queue/usage-control launch or stop",
+    "do not infer ETA, acceptance, release readiness, model entitlement, or OpenCode runtime success",
+    "no direct global ledger writes by the local worker; use the supported coordinator/team adapter and authorized CAS"
+  ],
+  "checks_by_packet_author": {
+    "authored_product_checks": [],
+    "read_only_checks": [
+      "root AGENTS.md and workflow read",
+      "current ledger projection read",
+      "Source77 estimate and composition records read",
+      "canonical product identity and priority sections read"
+    ],
+    "JSON_parse_validation": "PASS",
+    "Root basic docs check": "PENDING; Root to perform after Source78 integration",
+    "Root_basic_docs_check": "Root confirmed Source77 source identity and push PASS; review of this final Source78 attachment postimage remains pending after integration."
+  },
+  "team_launcher": {
+    "implementation": "v2 implemented privately; 26 offline checks",
+    "native_status": "entitlement, local window, sessions, and runtime activation NOT RUN",
+    "activation": "NOT CLAIMED",
+    "bootstrap": "Root cannot message/start local worker with current toolset; one-time local start via installed OpenCode may be needed. Verify actual session, then require exact Source78 scope/custody ACK before edits/builds."
+  }
+}
