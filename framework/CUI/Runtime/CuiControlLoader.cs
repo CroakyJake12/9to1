@@ -60,6 +60,7 @@ public sealed partial class CuiControlLoader : IDisposable
     private readonly Dictionary<Control, ContextMenu> _ownedContextMenus = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, (EventHandler<AvaloniaPropertyChangedEventArgs> Opening, EventHandler<RoutedEventArgs> Closed)> _contextMenuFocusHandlers = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<ContextMenu, Task> _contextMenuCloses = new(ReferenceEqualityComparer.Instance);
+    private CuiKeyboardTooltipHost? _keyboardTooltipHost;
     private readonly Dictionary<string, CuiComponent> _typeDefinitions = new(StringComparer.Ordinal);
     private const string LocalToggleCommand = "cui.local-toggle";
     private const string LocalSetCommand = "cui.local-set";
@@ -360,6 +361,9 @@ public sealed partial class CuiControlLoader : IDisposable
             ClearFloatingCloseGestures();
             _wiredActions.Clear();
             _actionInvocations.Clear();
+            var keyboardTooltipHost = _keyboardTooltipHost;
+            _keyboardTooltipHost = null;
+            if (keyboardTooltipHost is not null) Attempt(keyboardTooltipHost.Dispose);
             foreach (var owner in _ownedContextMenus.Keys.ToArray()) Attempt(() => CloseOwnedContextMenu(owner));
             foreach (var control in _authoredControls.Keys.ToArray()) Attempt(() => DetachPresentation(control));
             _inputPresentation.Clear();
@@ -570,6 +574,9 @@ public sealed partial class CuiControlLoader : IDisposable
         var mountingFrame = _committedActionFrame;
         _effectsReady = false; // a rejected preflight leaves prior effects operational
         _effectRoot = null; // a failed replacement must not reactivate the retired root
+        var retiredKeyboardTooltipHost = _keyboardTooltipHost;
+        _keyboardTooltipHost = null;
+        retiredKeyboardTooltipHost?.Dispose();
         // Close attached native menus before replacing their authored control lineage.
         foreach (var owner in _ownedContextMenus.Keys.ToArray()) CloseOwnedContextMenu(owner);
         // Reusing a loader must not leak definitions or live controls from a prior document.
@@ -656,6 +663,9 @@ public sealed partial class CuiControlLoader : IDisposable
         _effects = document.Effects ?? Array.Empty<CuiEffectDefinition>();
         _effectFired = new bool[_effects.Count];
         _effectRoot = root;
+        // Keyboard-visible authored tooltips are a shared CUI capability, so every loaded
+        // standalone or embedded root owns the same focus/placement lifecycle.
+        _keyboardTooltipHost = CuiKeyboardTooltipHost.Attach(root);
 
         return root;
 
@@ -4528,4 +4538,3 @@ public sealed partial class CuiControlLoader : IDisposable
         return true;
     }
 }
-
