@@ -71,9 +71,9 @@
           <Text text="Inherited / Enabled / Disabled. Disabled restricts; Enabled never grants permission beyond policy." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
         </Container>
         <Container Type="Vertical Stack" CellGap="6">
-          <Text text="Skills" foreground="{Resource CuiTextBrush}" />
+          <Text id="space-builder-category-skills-label" text="Skills" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-skills" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.skills, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Skills category state" />
-          <Text text="Plugins" foreground="{Resource CuiTextBrush}" />
+          <Text id="space-builder-category-plugins-label" text="Plugins" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-plugins" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.plugins, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Plugins category state" />
           <Text text="Apps" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-category-apps" Type="Select" ItemsSource="{Binding builder.category.options}" SelectedIndex="{Binding builder.category.apps, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Apps category state" />
@@ -104,7 +104,7 @@
           <Text text="Maximum retrieved items (empty for no policy limit; 0 includes no source bodies)" foreground="{Resource CuiTextBrush}" />
           <Input id="space-builder-context-limit" Type="Text" Value="{Binding builder.context.maximumRetrievedItems, mode=TwoWay}" Interactive="{Binding builder.canEdit}" accessible-name="Maximum retrieved context items" />
           <Text text="The original source currently supports up to 32 selected items, subject to text bounds. Strict policies exclude unqualified page attachments and tool retrieval." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
-          <Container Type="Vertical Stack" Visible="{Binding builder.hasLegacyFiles}" CellGap="4">
+          <Container Type="Vertical Stack" IsVisible="{Binding builder.hasLegacyFiles}" CellGap="4">
             <Text text="Legacy file references" font-size="16" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
             <Text text="These paths remain saved but cannot be used as reviewed source bodies under strict policies. Remove the reference to migrate this Space; the original file is not deleted." foreground="{Resource CuiTextSoftBrush}" TextWrapping="Wrap" />
             <Repeat id="space-builder-legacy-files" Source="{Binding builder.legacyFiles}" As="legacy" Key="{Binding legacy.path}">

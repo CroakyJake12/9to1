@@ -5,6 +5,7 @@ using Haven.Application.Automations;
 using Haven.Application.NodeGraph;
 using Haven.Core;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace Haven.Infrastructure;
 
