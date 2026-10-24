@@ -1165,8 +1165,8 @@
     "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/DirectX/directx.Generated.cs": "6ccc43b7d2049b9e4985eb9a2fd27e4c9966770dc36c69624f94decfc4ee1e3d",
     "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Win32Com/Win32.Generated.cs": "047dd9009d85816e3d34886edfef507bae9c82eb1a436b0ee6bc840d4989c32c",
     "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/WinRT/WinRT.Generated.cs": "b91bf301b7df62b053413be386de1ba79ca099efded3557a535d7e16122c9032",
-    "work/coordination/local-teams/BOOTSTRAP-GRANT.json": "509042bb9afdbcbd41d189a5db01b02c28a0dd9e9d4fc18d5b80367a4c02919e",
-    "work/coordination/local-teams/README.md": "41704bdd0727f5b6d59c45d163f37f03b84bd41605d91e098d34783b66e9b571",
+    "work/coordination/local-teams/BOOTSTRAP-GRANT.json": "8a1457e8a6ed4c2e1046bec9d2c2a0891768f1927bd39e5f253261cbbf274b77",
+    "work/coordination/local-teams/README.md": "4e0af2bf543bd94c432d646889bf6df1ff7115db5d9833c3e979653aeef39906",
     "work/pc-worker/thunder-benchmark/test_thunder_artifact_audit.py": "8a07ef42a6c21b9f07894d98e1d5f44e36afc94c10b1476bed3da6e32a77ccef"
   },
   "current_candidate_input_contract": {
@@ -1175,8 +1175,8 @@
     "changed_gitlinks": {},
     "generation": {
       "git_version": "git version 2.52.0",
-      "input_commit": "3c22e3ee41e952d4d4291062c4f2ded57682f233",
-      "prior_identity_blob": "ff2b30cd39b2af7431162f496380f6fd6e1350e1",
+      "input_commit": "ac22e0ac3f3c7a7e1352a64f65040586a7c90fc3",
+      "prior_identity_blob": "8c0d49416ce41272bb1c59ef04896072bc2b5511",
       "product_diff_excludes": [
         ".github"
       ],
@@ -1897,7 +1897,7 @@
     "worktree_status_sha256": "011b900de828a475f7f9593395159f58bd6212dfd36d84e270880dfbb3a36058"
   },
   "patch_digest_scope": "SHA256 of canonical git diff --binary --full-index --no-renames 2596258c3282e6c0d058cc7a4fb5f410b7fed06d INPUT_COMMIT -- . :(exclude).github; external diff/textconv disabled; committed attributes, myers/indent-heuristic, context3 and a/b prefixes. Excludes all .github metadata and native identity to avoid circular hashes.",
-  "patch_sha256": "fb927fa19449ca73e9f1c2fb8366c47919c5cd36cda46d794522650effd6e634",
+  "patch_sha256": "c5804e905e365279b3e244198b594157a5e3a7b39b2f857bab938cfdc48e230b",
   "predecessor_exact_source_commit": "d15c6cd85bad30bf35bf939611cb83117bec738b",
   "predecessor_product_patch_sha256": "00c1ab28e822a516e3543c65e8fb3699bbfaa8c38ad015df0122d619374d2d1c",
   "prepared_at": "2026-10-24T01:43:39.211683+00:00",
