@@ -988,6 +988,30 @@ def recovery_checkpoint(state):
             "recorded_in_generation": state["generation"], "ledger_updated_at": state["updated_at"]}
 
 
+def recovery_next_actions(state, checkpoint):
+    """Select actionable guidance from the exact verified checkpoint, retaining legacy history."""
+    modern = ("last_root_checkpoint_observed" in state
+              or "latest-root-checkpoint" in state.get("recovery_assets", {}))
+    if checkpoint is None:
+        if modern:
+            raise Refusal("Current ROOT-LIVE checkpoint is not verified; refusing projection action fallback")
+        return list(state.get("next_actions", [])), {
+            "source": "projection-history", "reason": "legacy state has no newer checkpoint observation"}
+    payload = read(checkpoint["path"])
+    if not isinstance(payload, dict):
+        raise Refusal("Selected ROOT-LIVE checkpoint must be a JSON object")
+    if "next_actions" not in payload:
+        return list(state.get("next_actions", [])), {
+            "source": "projection-history", "reason": "selected legacy ROOT-LIVE checkpoint has no next_actions"}
+    actions = payload["next_actions"]
+    if (not isinstance(actions, list)
+            or any(not isinstance(action, str) or not action.strip() for action in actions)):
+        raise Refusal("Selected ROOT-LIVE next_actions must be an array of nonempty strings")
+    return list(actions), {"source": "root-live-checkpoint", "path": checkpoint["path"],
+                           "sha256": checkpoint["sha256"], "selection": checkpoint["selection"],
+                           "recorded_in_generation": checkpoint["recorded_in_generation"]}
+
+
 def check_execution_context(state, repo, execution):
     custody = state.get("execution_custody", {})
     if not isinstance(custody, dict): raise Refusal("Execution custody must be a named object")
@@ -1044,12 +1068,24 @@ def recovery(state, repo, execution=None):
     try: checkpoint = recovery_checkpoint(state)
     except (OSError, KeyError, TypeError, Refusal) as error:
         discrepancies.append("ROOT-LIVE selection unavailable/changed: " + str(error))
+    next_actions = list(state.get("next_actions", []))
+    next_actions_provenance = {"source": "projection-history", "reason": "legacy checkpoint has no next_actions"}
+    try:
+        next_actions, next_actions_provenance = recovery_next_actions(state, checkpoint)
+    except (OSError, ValueError, TypeError, Refusal) as error:
+        discrepancies.append("Pinned ROOT-LIVE next_actions unavailable or invalid: " + str(error))
+        next_actions = []
+        next_actions_provenance = {"source": "invalid-pinned-root-checkpoint",
+                                   "path": checkpoint["path"] if checkpoint else None,
+                                   "sha256": checkpoint["sha256"] if checkpoint else None}
     return {"schema": SCHEMA, "recovered_at": now(), "generation": state["generation"], "actual_revision": revision,
             "read_first": ["AGENTS.md", "docs/development/workflow.md", "docs/specification/9to1-development-specification-v2.md"] + ([checkpoint["path"]] if checkpoint else []),
             "root_checkpoint": checkpoint, "projection_origin": state["projection_of"],
             "workers": state["workers"], "tasks": state["tasks"], "blockers": state["blockers"],
             "outstanding_acceptance": state["outstanding_acceptance"], "release_readiness": release_ready(state),
-            "next_actions": state["next_actions"], "discrepancies": discrepancies, "recovery_status": "BLOCKED" if discrepancies else "CHECKPOINT",
+            "next_actions": next_actions, "next_actions_provenance": next_actions_provenance,
+            "projection_next_actions": state.get("next_actions", []),
+            "discrepancies": discrepancies, "recovery_status": "BLOCKED" if discrepancies else "CHECKPOINT",
             "git_object_closure": object_closure, "canonical_repository": state["repository"],
             "requested_repository": str(repo), "selected_execution": execution, "execution_custody": declared,
             "execution_next_actions": {name: c["next_actions"] for name, c in declared["candidates"].items()},
