@@ -62,6 +62,7 @@ public sealed partial class ResilientProviderRoutingModelClient
         OpenAiModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/OpenAiModelProvider",
         OpenRouterModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/OpenRouterModelProvider",
         CustomOpenAiCompatibleModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/CustomOpenAiCompatibleModelProvider",
+        StrataLoopbackModelProvider => "OpenAiCompatibleModelProviderBase.ChatWithToolsAsync/StrataLoopbackModelProvider",
         AnthropicModelProvider => "AnthropicModelProvider.ChatWithToolsAsync",
         GeminiModelProvider => "GeminiModelProvider.ChatWithToolsAsync",
         LlamaCppModelProvider => "LlamaCppModelProvider.ChatWithToolsAsync",

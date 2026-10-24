@@ -116,6 +116,9 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// Gets or updates default endpoint, the bindable or domain state represented by this property.
     /// </summary>
     protected abstract string DefaultEndpoint { get; }
+    protected virtual bool RequiresApiKey => true;
+    protected virtual void ValidateConfiguration(ProviderConfiguration configuration) { }
+    protected Task<ProviderConfiguration?> ReadConfigurationAsync(CancellationToken token) => configurations.GetAsync(Id, token);
     /// <summary>
     /// Reports whether open router applies to the current state.
     /// </summary>
@@ -136,7 +139,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// <summary>
     /// Reports whether local applies to the current state.
     /// </summary>
-    public bool IsLocal => false;
+    public virtual bool IsLocal => false;
     /// <summary>
     /// Reports whether manage models applies to the current state.
     /// </summary>
@@ -145,7 +148,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// <summary>
     /// Performs check health asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)
+    public virtual async Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)
     {
         var started = System.Diagnostics.Stopwatch.GetTimestamp();
         try
@@ -168,7 +171,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// <summary>
     /// Retrieves models async for the current operation.
     /// </summary>
-    public async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
+    public virtual async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken)
     {
         ProviderConfiguration configuration;
         try { configuration = await ProviderHttp.RequireEnabledAsync(configurations, Id, DefaultEndpoint, cancellationToken).ConfigureAwait(false); }
@@ -323,19 +326,22 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// <summary>
     /// Creates client async with the invariants required by its callers.
     /// </summary>
-    private async Task<HttpClient> CreateClientAsync(CancellationToken cancellationToken) =>
+    protected async Task<HttpClient> CreateClientAsync(CancellationToken cancellationToken) =>
         await CreateClientAsync(await ProviderHttp.RequireEnabledAsync(configurations, Id, DefaultEndpoint, cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 
     /// <summary>
     /// Creates client async with the invariants required by its callers.
     /// </summary>
-    private async Task<HttpClient> CreateClientAsync(ProviderConfiguration configuration, CancellationToken cancellationToken)
+    protected async Task<HttpClient> CreateClientAsync(ProviderConfiguration configuration, CancellationToken cancellationToken)
     {
+        ValidateConfiguration(configuration);
         var client = ProviderHttp.CreateClient(httpClients, "Haven.ModelProvider." + Id, configuration);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await ProviderHttp.RequireSecretAsync(secrets, Id, cancellationToken).ConfigureAwait(false));
-        if (configuration.Metadata.TryGetValue("organization", out var organization) && organization.Length > 0)
+        if (RequiresApiKey)
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await ProviderHttp.RequireSecretAsync(secrets, Id, cancellationToken).ConfigureAwait(false));
+        if (IsLocal) client.Timeout = TimeSpan.FromMinutes(2);
+        if (!IsLocal && configuration.Metadata.TryGetValue("organization", out var organization) && organization.Length > 0)
             client.DefaultRequestHeaders.TryAddWithoutValidation("OpenAI-Organization", organization);
-        if (configuration.Metadata.TryGetValue("project", out var project) && project.Length > 0)
+        if (!IsLocal && configuration.Metadata.TryGetValue("project", out var project) && project.Length > 0)
             client.DefaultRequestHeaders.TryAddWithoutValidation("OpenAI-Project", project);
         if (IsOpenRouter)
         {
@@ -350,7 +356,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// <summary>
     /// Builds chat payload from the currently available inputs.
     /// </summary>
-    private object BuildChatPayload(OllamaChatRequest request, bool stream)
+    protected virtual object BuildChatPayload(OllamaChatRequest request, bool stream)
     {
         var payload = new Dictionary<string, object?>
         {
@@ -366,7 +372,7 @@ public abstract class OpenAiCompatibleModelProviderBase(
     /// <summary>
     /// Builds tool payload from the currently available inputs.
     /// </summary>
-    private static object BuildToolPayload(OllamaToolRequest request) => new
+    protected virtual object BuildToolPayload(OllamaToolRequest request) => new
     {
         model = request.Model,
         messages = BuildToolMessages(request.Messages, request.SystemPrompt),

@@ -409,6 +409,7 @@ public sealed class ProviderConfigurationStore : IProviderConfigurationStore, ID
             Normalize(new("anthropic", ModelProviderKind.Anthropic, "Anthropic", "https://api.anthropic.com/v1/", false, false, false, new Dictionary<string, string>(), now)),
             Normalize(new("gemini", ModelProviderKind.Gemini, "Google Gemini", "https://generativelanguage.googleapis.com/v1beta/", false, false, false, new Dictionary<string, string>(), now)),
             Normalize(new("openrouter", ModelProviderKind.OpenRouter, "OpenRouter", "https://openrouter.ai/api/v1/", false, false, false, new Dictionary<string, string>(), now)),
+            Normalize(new(StrataLoopbackModelProvider.ProviderId, ModelProviderKind.OpenAICompatible, "Strata on this device", StrataLoopbackModelProvider.DefaultUrl, false, true, false, new Dictionary<string, string>(), now)),
             Normalize(new("openai-compatible", ModelProviderKind.OpenAICompatible, "OpenAI-compatible", string.Empty, false, false, false, new Dictionary<string, string>(), now))
         ];
     }
