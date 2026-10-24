@@ -269,9 +269,6 @@ jobs:
       EXPECTED_CI_COMMIT: ${{ inputs.cui_expected_ci_commit }}
       EXPECTED_DELEGATION_SHA256: ${{ inputs.cui_delegation_sha256 }}
       EXPECTED_RESERVATION_ID: ${{ inputs.cui_native_reservation }}
-      DOTNET_INSTALL_DIR: ${{ runner.temp }}/9to1-cui-dotnet
-      DOTNET_CLI_HOME: ${{ runner.temp }}/9to1-cui-context/dotnet-cli
-      NUGET_PACKAGES: ${{ runner.temp }}/9to1-cui-context/nuget
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
       DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
@@ -303,12 +300,15 @@ jobs:
             framework/CUI/vendor/Avalonia/external/Avalonia.DBus
       - name: Install exact official isolated SDK
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/9to1-cui-dotnet
         with:
           dotnet-version: '10.0.301'
       - name: Observe actual CI host then adopt only delegated SDK1 and run owning checks
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/9to1-cui-dotnet
         run: python3 -B eng/development/ci_cui_owned.py
       - name: Retain actual source pins, host observations, logs, TRX and failures
         if: always()
