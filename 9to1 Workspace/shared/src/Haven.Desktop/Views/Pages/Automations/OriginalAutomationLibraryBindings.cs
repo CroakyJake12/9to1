@@ -75,7 +75,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
             "CanEditName" => CanEditDraft, "CanEditContent" => CanEditDraft && !_editGraph,
             "HasEditDay" => _selectedTarget?.Row.Value.ScheduleKind == AutomationScheduleKind.Weekly,
             "CanSaveEdits" => IsActionAvailable("save-edits") == true,
-            "CanDiscardEdits" => IsActionAvailable("discard-edits") == true, _ => CreationValue(path) ?? GraphValue(path)
+            "CanDiscardEdits" => IsActionAvailable("discard-edits") == true, _ => CreationValue(path) ?? GraphValue(path) ?? RunsValue(path)
         };
         return value is not null;
     }
@@ -102,11 +102,12 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
         "recover" or "disable" => !HasUnsubmittedEdits && _writer is not null && IsCurrentSelection,
         "save-edits" => CanEditDraft && EditValuesChanged,
         "discard-edits" => HasUnsubmittedEdits,
-        _ => CreationActionAvailable(command) || GraphActionAvailable(command)
+        _ => CreationActionAvailable(command) || GraphActionAvailable(command) || RunsActionAvailable(command)
     });
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (command is "refresh-runs" or "older-runs") return new(StartRuns(command, parameter));
         if (command is "create-draft" or "recover-creation" or "refresh-creations" or "discard-new")
             return new(StartCreationAction(command, parameter));
         if (command is "graph-node" or "graph-back" or "graph-next" or "graph-links-back" or "graph-links-next" or "graph-diagnostics-back" or "graph-diagnostics-next")
@@ -169,6 +170,7 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
                             command.Run(() => DemandActualRow(target, actor));
                             var saved = target.Row.Value;
                             _selectedTarget = target; _selectedName = saved.Name; _instruction = saved.Instruction;
+                            ClearRunHistory();
                             _selectedSchedule = saved.ScheduleKind + " · " + saved.ScheduleJson;
                             _selectedState = DescribeState(saved); _changeStatus = ""; LoadEditDraft(saved); LoadGraphInspection(target);
                             if (canonical is not null) LoadCanonicalGraphInspection(target, canonical);
@@ -243,12 +245,12 @@ internal sealed partial class OriginalAutomationLibraryBindings : ICuiWritableBi
     private static string DescribeState(AutomationDefinition definition) => definition.ArchivedAt is not null
         ? "Archived" : definition.IsEnabled ? "Enabled in saved settings" : "Disabled in saved settings";
     private void ClearSelection()
-    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; ClearEditDraft(); ClearGraphInspection(); }
+    { _selectedTarget = null; _selectedName = "Select a saved automation"; _instruction = _selectedSchedule = _selectedState = _review = ""; ClearEditDraft(); ClearGraphInspection(); ClearRunHistory(); }
     private void Changed() => CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
     { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); return true; });
     public bool TryGetItemValue(object item, string path, out object? value)
     {
-        if (TryGetCreationItemValue(item, path, out value) || TryGetGraphItemValue(item, path, out value)) return true;
+        if (TryGetCreationItemValue(item, path, out value) || TryGetGraphItemValue(item, path, out value) || TryGetRunItemValue(item, path, out value)) return true;
         value = item is LibraryRow row && _rows.Any(current => ReferenceEquals(current, row)) ? path switch
         { "Key" => row.Key, "Name" => row.Name, "Status" => row.Status, "Schedule" => row.Schedule, "Target" => row.Target,
           "CanOpen" => !_retiring && !_busy && !HasUnsubmittedEdits && row.Target is RowTarget target &&

@@ -327,7 +327,16 @@ public sealed partial class App
                     await conversations.UpsertConversationAsync(conversation, token).ConfigureAwait(false);
                     return AppContentAddress.Parse("9to1://spaces");
                 },
-                AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false);
+                AdmitHomeAsync, () => IsCurrent, _windowLifetime, aiAvailable: false,
+                events: request =>
+                {
+                    DemandCurrent();
+                    var actor = _actor ?? throw new UnauthorizedAccessException("The original Home profile is unavailable.");
+                    var activity = new HavenOS.Home.PermissionsTrustNotifications.HomePermissionActivitySource(
+                        _home.Permissions, _home.Profiles, actor);
+                    return new HomeEventsDestinationPage(new HomeEventsService([activity], activity),
+                        token => AdmitHomeAsync(request, token));
+                });
             IBrowseEngineHostFactory? engines = null;
             if (!OperatingSystem.IsWindows())
                 engines = new ChromiumEngineFactory(
@@ -539,22 +548,23 @@ public sealed partial class App
         private bool IsAcceptedStartupRetirement(CancellationToken token)
             => (_startupRetirement || _closed || OriginalClose is not null) && token.IsCancellationRequested;
 
-        /// <summary>Compiled Canvas entry after the SAME Home/onboarding/workspace startup.
-        /// Selection is not authority; the existing Browse registration and Canvas owner admit it.</summary>
-        internal Task? TryAcquireInitialCanvasRoute(CancellationToken token)
+        /// <summary>Compiled Canvas/Boards entry after the SAME Home/onboarding/workspace startup.
+        /// Selection is not authority; the existing Browse registration and owning app admit it.</summary>
+        internal Task? TryAcquireInitialUnifiedProductRoute(OriginalUnifiedProduct product, CancellationToken token)
         {
+            var route = OriginalUnifiedProductRoute(product);
             Dispatcher.UIThread.VerifyAccess(); DemandExternalOriginalRetirementJoin();
             lock (_gate)
             {
                 if (_startupRetirement || _closed || OriginalClose is not null) return null;
                 if (_initialization is not { IsCompletedSuccessfully: true } || _chrome is not { } chrome || _workspace is not { IsReady: true })
-                    throw new InvalidOperationException("The actual unified workspace must complete startup before Canvas navigation.");
+                    throw new InvalidOperationException("The actual unified workspace must complete startup before native product navigation.");
                 return RunObservation(async ledger =>
                 {
                     var dispatch = ledger.Invoke(() => Dispatcher.UIThread.InvokeAsync<Task>(() =>
                     {
                         DemandCurrent(); token.ThrowIfCancellationRequested();
-                        return ledger.Invoke(() => chrome.NavigateAsync("9to1://canvas", token));
+                        return ledger.Invoke(() => chrome.NavigateAsync(route, token));
                     }).GetTask());
                     var original = await ledger.AwaitAsync(dispatch).ConfigureAwait(false);
                     await ledger.AwaitAsync(original).ConfigureAwait(false);

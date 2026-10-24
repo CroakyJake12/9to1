@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Follow the original Desktop producer's supported targets on this platform. -->
+    <TargetFramework />
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net10.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>HavenOS.Boards.Host</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Boards</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Entry only: the original Home process supplies all app resources,
+         canonical Notes/services, onboarding, native window and close ownership.
+         No previous standalone source/data or shipping package is replaced here. -->
+    <ProjectReference Include="../../shared/src/Haven.Desktop/Haven.Desktop.csproj" />
+  </ItemGroup>
+</Project>

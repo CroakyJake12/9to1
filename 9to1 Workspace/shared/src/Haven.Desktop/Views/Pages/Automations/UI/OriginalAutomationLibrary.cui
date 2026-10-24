@@ -47,6 +47,23 @@
         <Text Text="{Binding SelectedState}" TextWrapping="Wrap" />
         <Text Text="{Binding SelectedSchedule}" TextWrapping="Wrap" />
         <Text Text="{Binding Instruction}" TextWrapping="Wrap" />
+        <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasRunHistorySource}">
+          <Text Text="Saved run history" FontSize="20" FontWeight="SemiBold" />
+          <Button id="automation-library-refresh-runs" action="refresh-runs" Interactive="{Binding CanRefreshRuns}">Refresh run history</Button>
+          <Text Text="{Binding RunHistoryPageLabel}" FontWeight="SemiBold" />
+          <Text id="automation-library-run-history-status" Text="{Binding RunHistoryStatus}" TextWrapping="Wrap" AccessibleName="Saved run history status" />
+          <Repeat Source="{Binding RunHistoryRows}" As="savedRun" Key="{Binding savedRun.Key}">
+            <Container Type="Vertical Stack" CellGap="4" Margin="0,0,0,12">
+              <Text Text="{Binding savedRun.Status}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Text Text="{Binding savedRun.Identity}" TextWrapping="Wrap" />
+              <Text Text="{Binding savedRun.Timing}" TextWrapping="Wrap" />
+              <Text Text="{Binding savedRun.Revision}" TextWrapping="Wrap" />
+              <Text Text="{Binding savedRun.Content}" TextWrapping="Wrap" />
+            </Container>
+          </Repeat>
+          <Button id="automation-library-older-runs" action="older-runs" Interactive="{Binding CanOlderRuns}">Older saved runs</Button>
+          <Text Text="Saved lifecycle facts are shown with their original Run IDs and pinned revisions. Result and error contents, inputs, outputs and continuation details are hidden here. Reading history does not run, retry or change a workflow." TextWrapping="Wrap" />
+        </Container>
         <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasStoredGraph}">
           <Text Text="Saved graph" FontSize="20" FontWeight="SemiBold" />
           <Text Text="Inspect the actual saved snapshot. These controls do not edit, activate, test or run the workflow." TextWrapping="Wrap" />

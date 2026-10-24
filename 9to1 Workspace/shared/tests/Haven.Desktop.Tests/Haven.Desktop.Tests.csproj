@@ -160,5 +160,10 @@
     <Compile Include="HavenAppHeaderBindingsTests.cs" />
       <Compile Include="DeveloperProjectSearchTests.cs" />
     <Compile Include="BoardsSharedInkCoreTests.cs" />
+    <Compile Include="../../../Dev/Tests/DeveloperSourceOpenPublicationTests.cs" Link="Dev/DeveloperSourceOpenPublicationTests.cs" />
+    <Compile Include="../../../Dev/Tests/DeveloperTaskWorkspaceServiceTests.cs" Link="Dev/DeveloperTaskWorkspaceServiceTests.cs" />
+    <Compile Include="DeveloperWorkbenchSearchPublicationTests.cs" />
+    <Compile Include="OriginalAutomationLibraryRunsTests.cs" />
+    <Compile Include="UnifiedBoardsInitialRouteTests.cs" />
 </ItemGroup>
 </Project>

@@ -568,25 +568,49 @@ public sealed class DeveloperProjectWorkbenchPage : UserControl, IActivatablePag
                         var document = await original.AwaitAsync(InvokeOriginalSource(() => _resolveDocument(project, path, cancellationToken))).ConfigureAwait(false);
                         if (!document.Succeeded || document.Value is null) throw new InvalidOperationException(document.Error?.Message ?? "No current registered document identity was resolved.");
                         original.DemandPublication();
-                        var opened = await original.AwaitAsync(InvokeOriginalSource(() => _review!.OpenAsync(project.Reference, context, document.Value, _businessToken))).ConfigureAwait(false);
-                        var value = DemandValue(opened);
-                        if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, value.OriginalText);
-                        await PublishAsync(original, () =>
+                        var preparedReply = await original.AwaitAsync(InvokeOriginalSource(() => _review!.PrepareOpenAsync(
+                            project.Reference, context, document.Value, _businessToken))).ConfigureAwait(false);
+                        var prepared = DemandValue(preparedReply); Exception? openFailure = null;
+                        try
                         {
-                            if (searchSelection is not null) DemandSearchSelection(searchSelection, project);
-                            StoreSelectedTab();
-                            var tab = _sourceTabs.SingleOrDefault(item => item.Editor?.EditorId == value.EditorId);
-                            if (tab is null)
+                            if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, prepared.Snapshot.OriginalText);
+                            var published = false;
+                            await PublishAsync(original, () =>
                             {
-                                tab = new(value.EditorId, value.Document.RelativePath, value, null); _sourceTabs.Add(tab);
-                                ReplaceCleanPreview(tab);
-                            }
-                            else tab.Editor = value;
-                            _project = project; SelectTab(tab);
-                            _status = searchSelection is null ? "Complete source opened through its current owner. Other tabs retain their drafts and review state."
-                                : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
-                        }).ConfigureAwait(false);
-                        await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false); return;
+                                original.DemandPublication();
+                                if (searchSelection is not null) DemandSearchOpenedContent(searchSelection, project, prepared.Snapshot.OriginalText);
+                                StoreSelectedTab();
+                                var tab = _sourceTabs.SingleOrDefault(item => item.Editor is { } owned && owned.Project == project.Reference &&
+                                    owned.Document == prepared.Snapshot.Document);
+                                var preview = tab is null ? _sourceTabs.FirstOrDefault(item => !item.IsPinned && !IsTabDirty(item)) : null;
+                                if (tab is null && _sourceTabs.Count - (preview is null ? 0 : 1) >= DeveloperSourceReviewSession.MaximumOpenDocuments)
+                                    throw new InvalidOperationException("Close a saved source tab before opening another document.");
+                                if (preview is not null && preview.Editor is null)
+                                    throw new InvalidOperationException("The preview has no current original source editor owner.");
+                                // All view/query/hash/capacity checks precede enrollment. The owner
+                                // atomically exchanges only this exact clean, settled preview.
+                                var value = DemandValue(InvokeOriginalSource(() => _review!.AcceptPreparedOpen(prepared, preview?.Editor)));
+                                if (tab is null)
+                                {
+                                    tab = new(value.EditorId, value.Document.RelativePath, value, null);
+                                    if (preview is not null) _sourceTabs.Remove(preview);
+                                    _sourceTabs.Add(tab);
+                                }
+                                else tab.Editor = value;
+                                _project = project; SelectTab(tab); published = true;
+                                _status = searchSelection is null ? "Complete source opened through its current owner. Other tabs retain their drafts and review state."
+                                    : $"Opened matched saved source at line {searchSelection.Match.LineNumber}; any existing unsaved draft is preserved and may differ from the saved match.";
+                            }).ConfigureAwait(false);
+                            if (published) await SaveCleanSessionAsync(original, project, cancellationToken).ConfigureAwait(false);
+                            return;
+                        }
+                        catch (Exception error) { openFailure = error; throw; }
+                        finally
+                        {
+                            try { InvokeOriginalSource(() => { _review!.AbandonPreparedOpen(prepared); return true; }); }
+                            catch (Exception cleanup) when (openFailure is not null)
+                            { throw new AggregateException("Source open refusal and pending observation cleanup both failed.", openFailure, cleanup); }
+                        }
                     }
                     if (command is "dev.preview-edit" or "dev.apply-edit")
                     {

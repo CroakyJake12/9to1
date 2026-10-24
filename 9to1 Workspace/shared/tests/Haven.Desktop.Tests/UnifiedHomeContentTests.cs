@@ -21,6 +21,7 @@ using Haven.Desktop.Events;
 using Haven.Desktop.Views.Pages.Home;
 using HavenOS.Apps.Browse;
 using HavenOS.Home.Discover;
+using HavenOS.Home;
 using HomeDiscoverPage = Haven.Desktop.Views.Pages.Home.HomeDiscoverPage;
 
 namespace Haven.Desktop.Tests;
@@ -33,12 +34,172 @@ public sealed class UnifiedHomeContentTests
     private static UnifiedHomeContentFactory Factory(Registry source, CancellationToken lifetime,
         Func<BrowseNavigationIntent, Task, bool>? navigation = null,
         Func<BrowseAppContentRequest, CancellationToken, Task>? admission = null, bool aiAvailable = true,
-        Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null) => new(source,
+        Func<NewDashboardPage>? dashboard = null, Func<HomeDiscoverPage>? discover = null,
+        Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null) => new(source,
             dashboard ?? (() => throw new InvalidOperationException("Apps must not construct an unused dashboard.")),
             discover ?? (() => throw new InvalidOperationException("Apps must not construct an unused model catalogue.")),
             navigation ?? ((_, _) => true),
             (_, _) => throw new InvalidOperationException("Search must not implicitly invoke AI."),
-            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable);
+            admission ?? ((_, _) => Task.CompletedTask), () => true, lifetime, aiAvailable, events);
+
+    [AvaloniaFact]
+    public async Task Authored_Events_rail_uses_canonical_source_and_retains_its_destination_between_sections()
+    {
+        using var lifetime = new CancellationTokenSource();
+        var activity = new HomeActivityFixture();
+        HomeEventsDestinationPage? destination = null;
+        var navigations = 0;
+        var session = Assert.IsAssignableFrom<IBrowseNativeAppContentSession>(Factory(new(), lifetime.Token,
+            navigation: (_, _) => { navigations++; return true; },
+            events: _ => destination = new HomeEventsDestinationPage(new HomeEventsService([activity], activity),
+                _ => Task.CompletedTask)).CreateSession(Request()));
+        Window? window = null;
+        try
+        {
+            await session.InitializeAsync();
+            var page = Assert.IsType<UnifiedHomePage>(session.OriginalNativeView);
+            window = Show(page);
+            var rail = page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-events");
+            rail.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await page.WhenActionsIdleAsync();
+            Assert.NotNull(destination);
+            Assert.Contains(page.GetVisualDescendants().OfType<HomeEventsDestinationPage>(), item => ReferenceEquals(item, destination));
+            var observed = Assert.Single(destination!.Current!.Items);
+            Assert.Equal(activity.Event, observed);
+            Assert.True(activity.Reads > 0);
+            Assert.Equal(0, navigations);
+            var row = destination.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "home-event-row");
+            row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await destination.WhenActionsIdleAsync();
+            Assert.Equal(activity.Event.EventId, destination.SelectedEventId);
+            var open = destination.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "events-open-selected");
+            Assert.False(open.IsEnabled);
+            Assert.DoesNotContain(destination.GetVisualDescendants(), control => control is ListBox);
+            await page.DispatchAsync("home.apps", null);
+            await page.DispatchAsync("home.events", null);
+            Assert.Same(destination, Assert.Single(page.GetVisualDescendants().OfType<HomeEventsDestinationPage>()));
+            Assert.Equal(activity.Event.EventId, destination.SelectedEventId);
+            Assert.True(await session.TryPrepareToCloseAsync());
+        }
+        finally { await session.CloseAndDrainAsync(); window?.Close(); }
+        Assert.True(session.CanRetireOriginalView);
+        Assert.NotNull(destination!.OriginalClose);
+        Assert.True(destination.OriginalClose!.IsCompletedSuccessfully);
+    }
+
+    [AvaloniaFact]
+    public async Task Central_Browse_dispatch_admits_real_Home_Events_but_refuses_newtab_and_nested_event_routes()
+    {
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var paths = new LayoutPaths();
+        var activity = new HomeActivityFixture();
+        BrowseChrome? chrome = null;
+        HomeEventsDestinationPage? events = null;
+        try
+        {
+            chrome = await BrowseChrome.CreateAsync(paths,
+                internalContentFactory: Factory(new(), lifetime.Token,
+                    events: _ => events = new HomeEventsDestinationPage(new HomeEventsService([activity], activity),
+                        _ => Task.CompletedTask)),
+                homeProfileId: "central-events-profile", cancellationToken: lifetime.Token);
+            var admitted = await chrome.NavigateAsync("browse://home/events", lifetime.Token);
+            Assert.Equal("browse://home/events", admitted.SelectedTab.Address.Value);
+            Assert.Equal(BrowseEngineState.NativeApp, admitted.SelectedTab.EngineState);
+            Assert.NotNull(events);
+            Assert.Equal(activity.Event, Assert.Single(events!.Current!.Items));
+            var refusedNewTab = await chrome.NavigateAsync("browse://newtab/events", lifetime.Token);
+            Assert.Equal("browse://home/events", refusedNewTab.SelectedTab.Address.Value);
+            var refusedNested = await chrome.NavigateAsync("browse://home/events/arbitrary", lifetime.Token);
+            Assert.Equal("browse://home/events", refusedNested.SelectedTab.Address.Value);
+            Assert.Contains("not registered", refusedNested.Status, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (chrome is not null)
+            {
+                var preparation = await chrome.PrepareCloseAsync(lifetime.Token);
+                Assert.NotNull(preparation);
+                await preparation!.BeginClose();
+            }
+            Directory.Delete(paths.DataDirectory, true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Events_refresh_rechecks_canonical_authorization_and_removes_revoked_rows()
+    {
+        var activity = new HomeActivityFixture();
+        var page = new HomeEventsDestinationPage(new HomeEventsService([activity], activity), _ => Task.CompletedTask);
+        Window? window = null;
+        try
+        {
+            await page.ActivateAsync(TestContext.Current.CancellationToken);
+            window = Show(page);
+            Assert.Single(page.Current!.Items);
+            activity.Allowed = false;
+            await page.DispatchAsync("RefreshEvents", null, TestContext.Current.CancellationToken);
+            Assert.Empty(page.Current!.Items);
+            Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), button => button.Name == "home-event-row");
+            var open = page.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "events-open-selected");
+            Assert.False(open.IsEnabled);
+            Assert.False(page.IsActionAvailable("OpenEventObject"));
+            Assert.True(await page.TryPrepareToCloseAsync(TestContext.Current.CancellationToken));
+        }
+        finally { await page.CloseAndDrainAsync(); window?.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Home_Events_close_joins_the_actual_pending_source_and_accepts_its_owner_cancellation()
+    {
+        var source = new HeldHomeActivityFixture();
+        var page = new HomeEventsDestinationPage(new HomeEventsService([source], source), _ => Task.CompletedTask);
+        var activation = page.ActivateAsync(TestContext.Current.CancellationToken);
+        await source.Entered.Task.WaitAsync(TimeSpan.FromSeconds(20));
+        var close = page.CloseAndDrainAsync();
+        Assert.Same(close, page.CloseAndDrainAsync());
+        Assert.False(close.IsCompleted);
+        source.Release.SetResult();
+        await activation.WaitAsync(TimeSpan.FromSeconds(20));
+        await close.WaitAsync(TimeSpan.FromSeconds(20));
+        Assert.Same(close, page.OriginalClose);
+        Assert.True(source.Completed);
+        Assert.True(close.IsCompletedSuccessfully);
+    }
+
+    private sealed class HeldHomeActivityFixture : IHomeActivitySource, IHomeActivityAuthorization
+    {
+        internal readonly TaskCompletionSource Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal bool Completed;
+        public string SourceId => "fixture.held.activity";
+        public async Task<IReadOnlyList<HomeActivityEvent>> ReadAsync(HomeEventsQuery query, CancellationToken token)
+        {
+            Entered.SetResult();
+            try { await Release.Task; token.ThrowIfCancellationRequested(); return []; }
+            finally { Completed = true; }
+        }
+        public Task<HomeActivityEvent?> GetByIdAsync(string eventId, CancellationToken token) =>
+            throw new InvalidOperationException("This fixture only owns the held read.");
+        public Task<bool> CanReadAsync(HomeActivityEvent activity, CancellationToken token) =>
+            throw new InvalidOperationException("The held source returns no events.");
+    }
+
+    private sealed class HomeActivityFixture : IHomeActivitySource, IHomeActivityAuthorization
+    {
+        internal bool Allowed = true;
+        internal int Reads;
+        public string SourceId => "fixture.activity";
+        internal HomeActivityEvent Event { get; } = new("durable-event-id", new DateTimeOffset(2026, 10, 24, 1, 0, 0, TimeSpan.Zero),
+            "fixture.activity", "ArtifactChanged", "original-actor", "Original actor",
+            [new HomeDeepLink(HomeRoute.Library, "files", "canonical-artifact", TargetRouteId: "app.files")], "info", "artifact",
+            "An existing canonical artifact changed.");
+        public Task<IReadOnlyList<HomeActivityEvent>> ReadAsync(HomeEventsQuery query, CancellationToken token)
+        { token.ThrowIfCancellationRequested(); Reads++; return Task.FromResult<IReadOnlyList<HomeActivityEvent>>([Event]); }
+        public Task<HomeActivityEvent?> GetByIdAsync(string eventId, CancellationToken token)
+        { token.ThrowIfCancellationRequested(); return Task.FromResult<HomeActivityEvent?>(eventId == Event.EventId ? Event : null); }
+        public Task<bool> CanReadAsync(HomeActivityEvent activity, CancellationToken token)
+        { token.ThrowIfCancellationRequested(); return Task.FromResult(Allowed && activity == Event); }
+    }
 
     [AvaloniaFact]
     public async Task Unavailable_AI_retains_input_does_not_invoke_draft_and_keeps_Search_and_close_usable()

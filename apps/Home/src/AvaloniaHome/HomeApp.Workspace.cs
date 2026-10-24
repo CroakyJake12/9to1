@@ -21,7 +21,6 @@ internal sealed partial class HomeApp
 {
     private ListBox _workspaceTiles = new();
     private ListBox _workspaceRequests = new();
-    private ListBox _workspaceEvents = new();
     private AuthenticatedResourceActor? _workspaceActor;
     private Window? _workspaceWindow;
     private bool _workspaceBusy;
@@ -79,6 +78,17 @@ internal sealed partial class HomeApp
         RegisterWorkspaceAction("RefreshHomeWorkspace", RefreshWorkspaceAsync);
         RegisterWorkspaceAction("RefreshEvents", RefreshWorkspaceEventsAsync);
         RegisterWorkspaceAction("OpenEventObject", OpenWorkspaceEventAsync);
+        _viewModel.On("SelectEventObject", parameter => _ = RunOriginalNativeWork(() => RunWorkspaceActionAsync(() =>
+        {
+            if (parameter is string eventId && _controller.Surface.SelectEventObject(eventId, 0))
+                _controller.Surface.SetNavigationStatus("Selected activity: " + _controller.Surface.EventItems.Single(item => item.EventId == eventId).Summary);
+            else
+            {
+                if (_controller.Surface.EventsPage is { } current) _controller.Surface.ApplyEventsPage(current);
+                _controller.Surface.SetNavigationStatus("This activity has no available linked object.");
+            }
+            return Task.CompletedTask;
+        })));
         // Approval is native owning-window intent, not a Home CUI/AI action capability.
         _viewModel.SetActionAvailability("AcceptHomePermission", false);
         _viewModel.SetActionAvailability("DeclineHomePermission", false);
@@ -312,26 +322,6 @@ internal sealed partial class HomeApp
         loader.BindAuthoredControl("home-permission-requests", permissionRequests);
         loader.BindAuthoredControl("home-permission-accept", reviewButton);
         loader.BindAuthoredControl("home-permission-decline", reviewButton);
-        loader.BindAuthoredControl("events-page-items", _ =>
-        {
-            var list = new ListBox();
-            list.ItemTemplate = new FuncDataTemplate<HomeActivityEvent>((activity, _) => new TextBlock
-            {
-                Text = activity is null ? "" : $"{activity.Timestamp:g} · {activity.Summary}",
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
-            });
-            list.SelectionChanged += (_, _) =>
-            {
-                if (!ReferenceEquals(_workspaceWindow, window) || list.SelectedItem is not HomeActivityEvent selected ||
-                    !_controller.Surface.EventItems.Any(item => ReferenceEquals(item, selected))) return;
-                _controller.Surface.SelectEventObject(selected.EventId, 0);
-                ApplyWorkspaceBindings();
-                _loader?.RefreshBindings();
-            };
-            _workspaceEvents = list;
-            ApplyWorkspaceBindings();
-            return list;
-        });
         ApplyWorkspaceBindings();
     }
 
@@ -395,13 +385,24 @@ internal sealed partial class HomeApp
         _viewModel.Set("DashboardTilesSummary", surface.DashboardTilesSummary);
         _viewModel.Set("EventsSummary", surface.EventsSummary);
         _viewModel.Set("EventItemsSummary", surface.EventItemsSummary);
-        if (_workspaceEvents.ItemsSource != surface.EventItems)
+        _viewModel.Set("EventItems", surface.EventItems.Select(item => new Dictionary<string, object?>
         {
-            _workspaceEvents.ItemsSource = surface.EventItems;
-            _workspaceEvents.SelectedItem = surface.EventItems.FirstOrDefault(item => item.EventId == surface.SelectedEventObject?.EventId);
-        }
-        _viewModel.SetActionAvailability("OpenEventObject", _workspaceInitialized && !_workspaceBusy && surface.SelectedEventObject is not null);
+            ["EventId"] = item.EventId, ["Timestamp"] = item.Timestamp.ToString("g"),
+            ["SourceApp"] = item.SourceApp, ["EventType"] = item.EventType,
+            ["ActorDisplayName"] = item.ActorDisplayName ?? item.ActorIdentity ?? "Unknown actor",
+            ["Severity"] = item.Severity, ["Category"] = item.Category, ["Summary"] = item.Summary,
+            ["IsSelected"] = surface.SelectedEventObject?.EventId == item.EventId
+        }).ToArray());
+        var selectedEvent = surface.EventItems.FirstOrDefault(item => item.EventId == surface.SelectedEventObject?.EventId);
+        var selectedLink = selectedEvent?.Objects.ElementAtOrDefault(surface.SelectedEventObject?.ObjectIndex ?? -1);
+        var canOpen = _workspaceInitialized && !_workspaceBusy && selectedLink is not null &&
+            _featureNavigation.AvailableRoutes.Contains(selectedLink.TargetRouteId ?? HomeRouteIds.For(selectedLink.Destination));
+        _viewModel.Set("CanOpenEventObject", canOpen);
+        _viewModel.Set("CanRefreshEvents", _workspaceInitialized && !_workspaceBusy);
+        _viewModel.Set("CanSelectEventObject", _workspaceInitialized && !_workspaceBusy);
+        _viewModel.SetActionAvailability("OpenEventObject", canOpen);
         _viewModel.SetActionAvailability("RefreshEvents", _workspaceInitialized && !_workspaceBusy);
+        _viewModel.SetActionAvailability("SelectEventObject", _workspaceInitialized && !_workspaceBusy);
         _viewModel.Set("HomeProfileSummary", _workspaceActor is null ? "Local profile is unavailable." :
             $"Device profile {_workspaceActor.ProfileId}. CAKE ID sign-in is separate from Home permissions. Open CAKE ID account to connect your session.");
         _viewModel.Set("HomeLayoutSummary", surface.Layout is null ? "Dashboard preferences have not loaded." :

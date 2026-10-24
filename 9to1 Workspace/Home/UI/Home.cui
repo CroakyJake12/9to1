@@ -1,4 +1,7 @@
 ﻿<Cui id="home" product="9-1" version="1">
+  <Actions>
+    <Action name="SelectHomeEvent" command="SelectEventObject" parameter="{Binding activity.EventId}" />
+  </Actions>
   <Theme Name="user_preference">
     <Page>
       <Container id="home-root" background="{Resource CuiBackgroundBrush}" Type="Vertical Stack">
@@ -134,10 +137,26 @@
                   <Container id="events-page" Type="Vertical Stack">
                     <Text text="Events" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
                     <Text text="Activity from your authorised apps and services." foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 14" />
-                    <Button id="events-refresh" action="RefreshEvents" content="Refresh activity" />
+                    <Button id="events-refresh" action="RefreshEvents" content="Refresh activity" IsEnabled="{Binding CanRefreshEvents, fallback=false}" />
                     <Text id="events-page-status" text="{Binding EventsSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 12" />
-                    <Input id="events-page-items" Type="List" height="320" accessible-name="Activity items" />
-                    <Button id="events-open-selected" action="OpenEventObject" content="Open selected activity item" margin="0 12 0 0" />
+                    <Container id="events-page-items" Type="Vertical Stack" MaxHeight="480" VerticalScrolling="True" HorizontalScrolling="False" CellGap="8" role="list" accessible-name="Activity items">
+                      <Repeat id="home-events-rows" Source="{Binding EventItems}" As="activity" Key="{Binding activity.EventId}">
+                        <Button id="home-event-row" action="SelectHomeEvent" Selected="{Binding activity.IsSelected}" IsEnabled="{Binding CanSelectEventObject, fallback=false}" accessible-name="{Binding activity.Summary}" HorizontalAlignment="Stretch" Padding="12" Margin="0 0 0 8">
+                          <Container Type="Vertical Stack" CellGap="4" HorizontalAlignment="Stretch">
+                            <Text Text="{Binding activity.Summary}" TextWrapping="Wrap" />
+                            <Container Type="Wrap" CellGap="8">
+                              <Text Text="{Binding activity.Timestamp}" Foreground="{Resource CuiTextSoftBrush}" />
+                              <Text Text="{Binding activity.SourceApp}" Foreground="{Resource CuiTextSoftBrush}" />
+                              <Text Text="{Binding activity.EventType}" Foreground="{Resource CuiTextSoftBrush}" />
+                              <Text Text="{Binding activity.ActorDisplayName}" Foreground="{Resource CuiTextSoftBrush}" />
+                              <Text Text="{Binding activity.Severity}" Foreground="{Resource CuiTextSoftBrush}" />
+                              <Text Text="{Binding activity.Category}" Foreground="{Resource CuiTextSoftBrush}" />
+                            </Container>
+                          </Container>
+                        </Button>
+                      </Repeat>
+                    </Container>
+                    <Button id="events-open-selected" action="OpenEventObject" content="Open selected activity item" IsEnabled="{Binding CanOpenEventObject, fallback=false}" margin="0 12 0 0" />
                     <Text text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 0" />
                   </Container>
                 </If>

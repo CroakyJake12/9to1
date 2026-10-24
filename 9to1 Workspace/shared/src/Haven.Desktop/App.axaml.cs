@@ -146,7 +146,7 @@ public sealed partial class App : Avalonia.Application
             }
             preferences.ApplyAppearance(preferences.Appearance, save: false);
             // Linux uses the Browse-based unified host now that the Home composition runs.
-            if (OriginalInitialProduct is null or "canvas")
+            if (OriginalInitialProduct is null or "canvas" or "boards")
             {
                 var window = new MainWindow(preferences) { Title = "9to1", PreserveWorkspaceSessionOnClose = true };
                 UnifiedWorkspaceHost? workspace = null;

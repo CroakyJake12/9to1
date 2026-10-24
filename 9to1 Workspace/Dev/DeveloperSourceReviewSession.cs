@@ -37,6 +37,7 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
     public const int MaximumTextCharacters = 2_000_000;
     private readonly object _gate = new();
     private readonly Dictionary<Guid, Entry> _editors = [];
+    private readonly Dictionary<Guid, DeveloperPreparedSourceOpen> _preparedOpens = [];
     private readonly Dictionary<Guid, DeveloperSourceChangePass> _passes = [];
     private readonly Dictionary<Guid, Original> _originals = [];
     private readonly AsyncLocal<Original?> _executing = new();
@@ -168,6 +169,99 @@ public sealed class DeveloperSourceReviewSession(DeveloperTaskWorkspaceService d
                 }
                 finally { lock (_gate) _opening--; }
             });
+
+    /// <summary>Performs the SAME genuine read without enrolling an editor. The caller must
+    /// accept this exact issued preparation inside its current publication guard, or abandon it.
+    /// Prepared text is an authorised observation, never a Files or execution grant.</summary>
+    public Task<DeveloperOperationResult<DeveloperPreparedSourceOpen>> PrepareOpenAsync(
+        DeveloperProjectReference project, DeveloperCanonicalActionContext context, DeveloperCodeDocument document,
+        CancellationToken businessCancellationToken = default) => AdmitAsync(context.ActionId,
+            Digest(new { operation = "prepare-open", project, context, document }), async () =>
+            {
+                lock (_gate)
+                {
+                    if (_preparedOpens.Count + _opening >= MaximumRetainedPasses)
+                        throw new InvalidOperationException("Pending source-open custody is full; finish the admitted opens first.");
+                    var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == project && value.Snapshot.Document == document);
+                    if (existing is not null) DemandSameTask(existing.Snapshot.OriginalObservation.OriginalContext, context);
+                    _opening++;
+                }
+                try
+                {
+                    var read = await ObserveOwnedAsync(() => development.ReadFileAsync(project, context, document, businessCancellationToken)).ConfigureAwait(false);
+                    if (!read.Succeeded || read.Value is null) return new(read.RequestId, null, read.Error);
+                    DemandCompletedObservation(read.Value, "read_file");
+                    var text = read.Value.OriginalToolResult?.OriginalReadText;
+                    if (text is null) return Fail<DeveloperPreparedSourceOpen>(DeveloperOperationErrorCode.CapabilityUnavailable,
+                        "The host did not return complete original source text; no editor was prepared.", document.FileId);
+                    DemandText(text);
+                    var snapshot = new DeveloperEditorSnapshot(Guid.NewGuid(), project, document, text, text,
+                        Sha256(text), 1, null, null, read.Value);
+                    var prepared = new DeveloperPreparedSourceOpen(Guid.NewGuid(), snapshot);
+                    lock (_gate) _preparedOpens.Add(prepared.PreparationId, prepared);
+                    return DeveloperOperationResult<DeveloperPreparedSourceOpen>.Success(prepared, context.ActionId);
+                }
+                finally { lock (_gate) _opening--; }
+            });
+
+    /// <summary>Synchronous publication admission. A replacement must be the SAME owned clean,
+    /// settled snapshot; dirty buffers and source/pass evidence are never discarded. This is not
+    /// source write authority. Old preview removal and new editor enrollment are atomic.</summary>
+    public DeveloperOperationResult<DeveloperEditorSnapshot> AcceptPreparedOpen(DeveloperPreparedSourceOpen prepared,
+        DeveloperEditorSnapshot? replaceCleanEditor = null)
+    {
+        ArgumentNullException.ThrowIfNull(prepared);
+        lock (_gate)
+        {
+            DemandAdmission();
+            if (!_preparedOpens.TryGetValue(prepared.PreparationId, out var issued) || !ReferenceEquals(issued, prepared))
+                throw new InvalidOperationException("Only this session's exact pending source-open preparation may be accepted.");
+            var snapshot = prepared.Snapshot;
+            var existing = _editors.Values.SingleOrDefault(value => value.Snapshot.Project == snapshot.Project && value.Snapshot.Document == snapshot.Document);
+            if (existing is not null)
+            {
+                if (replaceCleanEditor is not null) throw new InvalidOperationException("Refocusing an owned editor cannot replace another tab.");
+                DemandSameTask(existing.Snapshot.OriginalObservation.OriginalContext, snapshot.OriginalObservation.OriginalContext);
+                if (existing.Snapshot.OriginalSha256 != snapshot.OriginalSha256)
+                    return Fail<DeveloperEditorSnapshot>(DeveloperOperationErrorCode.RevisionConflict,
+                        "The source changed outside this editor. Its retained draft is preserved.", snapshot.Document.FileId);
+                existing.Snapshot = existing.Snapshot with { OriginalObservation = snapshot.OriginalObservation };
+                _preparedOpens.Remove(prepared.PreparationId);
+                return DeveloperOperationResult<DeveloperEditorSnapshot>.Success(existing.Snapshot,
+                    snapshot.OriginalObservation.OriginalContext.ActionId);
+            }
+            Entry? replacement = null;
+            if (replaceCleanEditor is not null)
+            {
+                replacement = DemandEntry(replaceCleanEditor.EditorId);
+                if (!ReferenceEquals(replacement.Snapshot, replaceCleanEditor) || replacement.Snapshot.IsDirty || replacement.PendingApply is not null)
+                    throw new InvalidOperationException("The preview changed or is dirty; it cannot be replaced.");
+                if (replacement.Snapshot.Project != snapshot.Project)
+                    throw new UnauthorizedAccessException("A source preview replacement must stay in this exact project.");
+                DemandSameTask(replacement.Snapshot.OriginalObservation.OriginalContext, snapshot.OriginalObservation.OriginalContext);
+                if (_opening != 0 || _originals.Values.Any(value => !value.Task.IsCompletedSuccessfully))
+                    throw new InvalidOperationException("Source operations must settle before replacing a preview; failed outcomes remain retained.");
+            }
+            if (_editors.Count + _opening - (replacement is null ? 0 : 1) >= MaximumOpenDocuments)
+                throw new InvalidOperationException("Source editor document custody is full. Close a saved tab first.");
+            // Add first: an acquisition failure must preserve the original clean preview.
+            _editors.Add(snapshot.EditorId, new(snapshot));
+            if (replacement is not null) _editors.Remove(replaceCleanEditor!.EditorId);
+            _preparedOpens.Remove(prepared.PreparationId);
+            return DeveloperOperationResult<DeveloperEditorSnapshot>.Success(snapshot,
+                snapshot.OriginalObservation.OriginalContext.ActionId);
+        }
+    }
+
+    /// <summary>Releases only an unaccepted issued observation, including after view retirement.
+    /// It never removes an editor, dirty text, pass, source Task or original failure evidence.</summary>
+    public void AbandonPreparedOpen(DeveloperPreparedSourceOpen prepared)
+    {
+        ArgumentNullException.ThrowIfNull(prepared);
+        lock (_gate)
+            if (_preparedOpens.TryGetValue(prepared.PreparationId, out var issued) && ReferenceEquals(issued, prepared))
+                _preparedOpens.Remove(prepared.PreparationId);
+    }
 
     public DeveloperEditorSnapshot UpdateDraft(Guid editorId, long expectedDraftRevision, string completeText)
     {
@@ -373,4 +467,15 @@ public sealed class DeveloperSourceOutcomeUnresolvedException(DeveloperSourceCha
     : InvalidOperationException("The source action has an unresolved original owner outcome. Inspect that original; do not replay it.")
 {
     public DeveloperSourceChangePass OriginalPass { get; } = originalPass;
+}
+
+
+/// <summary>Exact pending original-read observation, not an enrolled editor or authority grant.
+/// Constructor visibility does not confer issuance: the owning session requires reference membership.</summary>
+public sealed class DeveloperPreparedSourceOpen
+{
+    internal DeveloperPreparedSourceOpen(Guid preparationId, DeveloperEditorSnapshot snapshot)
+    { PreparationId = preparationId; Snapshot = snapshot; }
+    internal Guid PreparationId { get; }
+    public DeveloperEditorSnapshot Snapshot { get; }
 }

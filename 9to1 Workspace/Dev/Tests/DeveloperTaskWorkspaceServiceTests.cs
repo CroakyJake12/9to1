@@ -903,12 +903,18 @@ public sealed partial class DeveloperTaskWorkspaceServiceTests
     {
         public int ReadCalls; public int WriteCalls; public string TextValue = "original source"; public Task? BeforeWrite; public int ProcessCalls; public ProcessRequest? LastProcessRequest; public ProcessResult Process = new(0, "observed", "", TimeSpan.Zero, false);
         public bool PhysicalFiles; public Action? OnWrite;
+        public Task? BeforeFileRead; public Action? ReadEntered;
         public string ResolveWorkspacePath(string root, string path) => Path.GetFullPath(Path.Combine(root, path));
         // The synthetic store answers its own existence so it cannot disagree with the content it returns.
         public bool FileExists(string root, string path) => PhysicalFiles ? File.Exists(ResolveWorkspacePath(root, path)) : true;
         public bool DirectoryExists(string root, string path) => PhysicalFiles ? Directory.Exists(ResolveWorkspacePath(root, path)) : false;
         public async Task<string> ReadTextAsync(string root, string path, CancellationToken token)
-        { ReadCalls++; token.ThrowIfCancellationRequested(); return PhysicalFiles ? await File.ReadAllTextAsync(ResolveWorkspacePath(root, path), token) : TextValue; }
+        {
+            ReadCalls++; token.ThrowIfCancellationRequested(); ReadEntered?.Invoke();
+            if (BeforeFileRead is not null) await BeforeFileRead;
+            token.ThrowIfCancellationRequested();
+            return PhysicalFiles ? await File.ReadAllTextAsync(ResolveWorkspacePath(root, path), token) : TextValue;
+        }
         public async Task WriteTextAtomicAsync(string root, string path, string content, CancellationToken token)
         {
             if (BeforeWrite is not null) await BeforeWrite; token.ThrowIfCancellationRequested(); OnWrite?.Invoke();

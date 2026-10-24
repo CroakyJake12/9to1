@@ -21,12 +21,14 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
     private readonly Func<bool> _hostIsCurrent;
     private readonly CancellationToken _hostLifetime;
     private readonly bool _aiAvailable;
+    private readonly Func<BrowseAppContentRequest, HomeEventsDestinationPage>? _events;
 
     internal UnifiedHomeContentFactory(IModeRegistry modes, Func<NewDashboardPage> dashboard,
         Func<HomeDiscoverPage> discover, Func<BrowseNavigationIntent, Task, bool> queue,
         Func<string, CancellationToken, Task<AppContentAddress>> prepareAiDraft,
         Func<BrowseAppContentRequest, CancellationToken, Task> admit,
-        Func<bool> hostIsCurrent, CancellationToken hostLifetime, bool aiAvailable = true)
+        Func<bool> hostIsCurrent, CancellationToken hostLifetime, bool aiAvailable = true,
+        Func<BrowseAppContentRequest, HomeEventsDestinationPage>? events = null)
     {
         _modes = modes ?? throw new ArgumentNullException(nameof(modes));
         _dashboard = dashboard ?? throw new ArgumentNullException(nameof(dashboard));
@@ -36,7 +38,7 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         _admit = admit ?? throw new ArgumentNullException(nameof(admit));
         _hostIsCurrent = hostIsCurrent ?? throw new ArgumentNullException(nameof(hostIsCurrent));
         if (!hostLifetime.CanBeCanceled) throw new ArgumentException("Retain the original host lifetime.", nameof(hostLifetime));
-        _hostLifetime = hostLifetime; _aiAvailable = aiAvailable;
+        _hostLifetime = hostLifetime; _aiAvailable = aiAvailable; _events = events;
     }
 
     public IBrowseAppContentSession CreateSession(BrowseAppContentRequest request)
@@ -44,16 +46,17 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
         ArgumentNullException.ThrowIfNull(request); _hostLifetime.ThrowIfCancellationRequested();
         if (!_hostIsCurrent()) throw new InvalidOperationException("The original Home host is no longer current.");
         if (request.Address.Namespace != AppContentNamespace.Browse)
-            throw new NotSupportedException("This owner admits only Home, New Tab and Home Models.");
+            throw new NotSupportedException("This owner admits only registered Home destinations and New Tab.");
         if (request.Address.Authority is not ("home" or "newtab"))
-            throw new NotSupportedException("This owner admits only Home, New Tab and Home Models.");
+            throw new NotSupportedException("This owner admits only registered Home destinations and New Tab.");
         var segments = request.Address.ResourceSegments;
-        // The models route is scoped to the Home authority only; it is not admissible under New Tab.
+        // Feature routes belong to Home only, and each requires its genuine composed owner.
         var isHome = request.Address.Authority == "home";
         var admissibleSegments = segments.Count == 0 ||
-            (isHome && segments.Count == 1 && segments[0].Equals("models", StringComparison.Ordinal));
+            (isHome && segments.Count == 1 && (segments[0].Equals("models", StringComparison.Ordinal) ||
+                _events is not null && segments[0].Equals("events", StringComparison.Ordinal)));
         if (!admissibleSegments)
-            throw new NotSupportedException("This owner admits only Home and New Tab; the models route is available only under Home.");
+            throw new NotSupportedException("This Home destination is unavailable or belongs to another authority.");
         if (request.TabId == Guid.Empty || string.IsNullOrWhiteSpace(request.ProfileId))
             throw new UnauthorizedAccessException("Retain the original Home profile and tab identity.");
         if (request.Privacy != BrowserTabPrivacy.Standard)
@@ -113,7 +116,8 @@ internal sealed class UnifiedHomeContentFactory : IBrowseInternalContentFactory
                         DemandCurrent(); linked.Token.ThrowIfCancellationRequested();
                         CloudflareOriginalExecutionGuard.InvokeOriginal(this, () =>
                             _page = new UnifiedHomePage(_request, _owner._modes, _owner._dashboard,
-                                _owner._discover, _owner._queue, _owner._prepareAiDraft, _owner._aiAvailable));
+                                _owner._discover, _owner._queue, _owner._prepareAiDraft, _owner._aiAvailable,
+                                _owner._events is null ? null : () => _owner._events(_request)));
                         DemandCurrent();
                         var page = _page ?? throw new InvalidOperationException("The original Home page was not acquired.");
                         await original.AwaitAsync(page.InitializeAsync(linked.Token));
