@@ -287,7 +287,7 @@ def desktop_commands(scope, sdk, package):
         'strata-desktop-test':[str(sdk),'test',DESKTOP_TESTS,'-c','Release','-f','net10.0','--disable-build-servers','-m:1','-p:UseSharedCompilation=false','--filter','FullyQualifiedName~StrataLoopbackProviderSettingsTests|FullyQualifiedName~TaskRunCoordinatorRecoveryTests|FullyQualifiedName~TaskRunOriginalRunControlTests|FullyQualifiedName~SpaceTaskCheckpointResumeAffordanceTests','--logger','trx;LogFileName=strata-desktop.trx','--results-directory',str(package/'test-results')],
         'desktop-restore':[str(sdk),'restore',DESKTOP_PROJECT,'--configfile','NuGet.Config','-r','linux-x64','-p:SelfContained=false','--disable-build-servers','--disable-parallel','-p:Configuration=Release','-p:UseSharedCompilation=false','-p:BuildInParallel=false'],
         'desktop-build':[str(sdk),'build',DESKTOP_PROJECT,'-c','Release','-f','net10.0','-r','linux-x64','-p:SelfContained=false','--no-restore','--disable-build-servers','-m:1','-nodeReuse:false','-p:UseSharedCompilation=false'],
-        'desktop-publish':[str(sdk),'publish',DESKTOP_PROJECT,'-c','Release','-f','net10.0','-r','linux-x64','--self-contained','false','--no-build','--no-restore','-o',str(package/'publish'),'-p:UseSharedCompilation=false','-p:BuildInParallel=false']
+        'desktop-publish':[str(sdk),'publish',DESKTOP_PROJECT,'-c','Release','-f','net10.0','-r','linux-x64','--self-contained','false','--no-restore','-o',str(package/'publish'),'-p:UseSharedCompilation=false','-p:BuildInParallel=false']
     }
 
 
