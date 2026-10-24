@@ -314,6 +314,7 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         {
             // Preserve source/outcome evidence in its actual owner; a withdrawn binding cannot disclose it.
             if (!_active || _work.IsRetiring) { value = null; return false; }
+            if (TryGetManualRecoveryConflictValue(path, out value)) return true;
             value = path switch
             {
                 "ProjectTitle" => _project.Project.Name,
@@ -435,6 +436,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
         lock (_gate)
         {
             if (!_active || _work.IsRetiring || _pending) return false;
+            if (command == "dev.inspect-recovered-draft") return _manual && _manualReader is not null && _manualRecoveryCandidates.Count > 0;
+            if (command == "dev.reconcile-recovered-draft") return _manual && _manualReader is not null && SelectedManualRecoveryCandidate() is not null;
             if (command is "dev.select-source-tab" or "dev.close-source-tab") return _sourceTabs.Count > 0;
             if (command == "dev.toggle-source-tab-pin") return CurrentSourceTab() is not null;
             if (command == "dev.open-project-entry") return _manualReader is not null && _projectEntries is not null;
@@ -478,6 +481,8 @@ public sealed partial class DeveloperProjectWorkbenchPage : UserControl, IActiva
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        if (command is "dev.inspect-recovered-draft" or "dev.reconcile-recovered-draft")
+            return DispatchManualRecoveryConflictAsync(command, parameter, cancellationToken);
         long generation; string path, query, terminal, test, stageTask, stage, branch; DeveloperEditorSnapshot? editor; DeveloperSourceChangePass? pass;
         string manualBeforeText, manualDraftText, manualBeforeSha256, manualAfterSha256; bool manualReviewed; long manualReviewRevision;
         Guid? requestedTab = null;

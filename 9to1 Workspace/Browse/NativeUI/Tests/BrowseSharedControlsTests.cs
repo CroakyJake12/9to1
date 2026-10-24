@@ -450,6 +450,71 @@ public sealed partial class BrowseNativeUiTests
         catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
     }
 
+    /// <summary>Owner-requested boolean menu control uses the SAME real tab-placement
+    /// operation and persistence. Native pointer input must not apply a second toggle when
+    /// the bound value is already current; retry/unsaved state remains owned by Browse.</summary>
+    [AvaloniaFact]
+    public async Task Profile_pin_switch_updates_real_tab_state_in_both_directions_and_restores_the_saved_pin()
+    {
+        var paths = new Paths(); var factory = new FixtureFactory();
+        var chrome = await BrowseChrome.CreateAsync(paths, factory);
+        var workspace = new BrowseNativeWorkspace(chrome, _ => true);
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            Assert.False(chrome.State.SelectedTab.IsHome);
+            await Observe(workspace.DispatchAsync("9to1.Browse.EnableTabRestore", null).AsTask(), window);
+            await Click(window, workspace, Find(window, "HavenProfileButton"));
+            await Click(window, workspace, Find(window, "BrowseWebToolsHeader"));
+            var toggle = Assert.IsType<ToggleSwitch>(Authored(window, "BrowsePinTabSwitch"));
+            Assert.True(toggle.IsEnabled); Assert.Equal(false, toggle.IsChecked);
+            var selected = chrome.State.SelectedTab.Id;
+            await ClickPopupsSwitch(window, workspace, toggle); // Same actual pointer/TwoWay/retained-command helper.
+            Assert.True(chrome.State.SelectedTab.IsPinned); Assert.Equal(true, toggle.IsChecked);
+            var original = workspace.OriginalCommand;
+            Assert.True(workspace.TrySetValue("TabPinned", true)); // Same desired state is idempotent.
+            Assert.Same(original, workspace.OriginalCommand);
+            await ClickPopupsSwitch(window, workspace, toggle);
+            Assert.False(chrome.State.SelectedTab.IsPinned); Assert.Equal(false, toggle.IsChecked);
+            await ClickPopupsSwitch(window, workspace, toggle);
+            Assert.True(chrome.State.SelectedTab.IsPinned);
+            Assert.False(chrome.HasUnsavedTabPlacement);
+            await Retire(window);
+            var restored = await BrowseChrome.CreateAsync(paths, new FixtureFactory());
+            try { Assert.Contains(restored.State.Tabs, tab => tab.Id == selected && tab.IsPinned); }
+            finally { await restored.DisposeAsync(); }
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
+    [AvaloniaFact]
+    public async Task Profile_pin_switch_refuses_the_actual_host_policy_without_mutating_tab_or_creating_a_command()
+    {
+        var chrome = await BrowseChrome.CreateAsync(new Paths(), new FixtureFactory());
+        var workspace = new BrowseNativeWorkspace(chrome, command => command != "9to1.Browse.ToggleTabPinned");
+        var window = BrowseNativeSurface.CreateWindow(workspace, new FixtureReadiness());
+        RegisterProductionImageResolver(window);
+        try
+        {
+            window.Show(); await Observe(window.InitializeAsync(), window);
+            await Click(window, workspace, Find(window, "HavenProfileButton"));
+            await Click(window, workspace, Find(window, "BrowseWebToolsHeader"));
+            var toggle = Assert.IsType<ToggleSwitch>(Authored(window, "BrowsePinTabSwitch"));
+            Assert.False(toggle.IsEnabled);
+            var before = workspace.OriginalCommand; var pinned = chrome.State.SelectedTab.IsPinned;
+            PointerClickPopupsSwitch(window, toggle);
+            await Observe(Loader(window).WhenActionsIdleAsync(), window); Settle(window);
+            Assert.False(workspace.TrySetValue("TabPinned", !pinned));
+            Assert.Same(before, workspace.OriginalCommand);
+            Assert.Equal(pinned, chrome.State.SelectedTab.IsPinned);
+            Assert.Equal(pinned, toggle.IsChecked);
+            await Retire(window);
+        }
+        catch (Exception failure) { RetainedFailedOwners.Add((window, failure)); throw; }
+    }
+
     private static void PointerClickPopupsSwitch(BrowseNativeWindow window, ToggleSwitch toggle)
     {
         Settle(window); toggle.BringIntoView(); Settle(window);

@@ -8,7 +8,11 @@ using HavenOS.Files.NativeHost;
 namespace Haven.Desktop.Services;
 
 /// <summary>Fresh authorised source plus its unreviewed protected draft; never an apply grant.</summary>
-public sealed record DeveloperRestoredDirtyEditorTab(DeveloperDraftRecoveryTab Draft, string FreshBaselineText);
+public sealed record DeveloperRestoredDirtyEditorTab(DeveloperDraftRecoveryTab Draft, string FreshBaselineText)
+{
+    public string FreshSourceSha256 => DeveloperManualSourceEditOwner.Sha256(FreshBaselineText);
+    public bool BaselineMatches => StringComparer.OrdinalIgnoreCase.Equals(FreshSourceSha256, Draft.OriginalSha256);
+}
 public sealed record DeveloperManualRecoveryState(DeveloperDraftRecoveryScope Scope, long Generation,
     IReadOnlyList<DeveloperRestoredDirtyEditorTab> Tabs, string? SelectedRelativePath, bool HasSavedSnapshot);
 
@@ -25,8 +29,9 @@ public sealed partial class DeveloperManualSourceReadOwner
     }
 
     /// <summary>Fresh original Home/Files/kernel admission before any protected draft is
-    /// disclosed. Every baseline must still match before returning the complete restore.
-    /// Damaged/missing keys, changed source or denied actors preserve all encrypted evidence.</summary>
+    /// disclosed. Every source is freshly read before returning the complete observation.
+    /// Changed baselines remain explicit conflicts, never automatic editor enrollments.
+    /// Damaged/missing keys, unreadable source or denied actors preserve encrypted evidence.</summary>
     public async Task<DeveloperOperationResult<DeveloperManualRecoveryState>> RestoreManualDraftRecoveryAsync(
         FileDeveloperWorkspaceStore store, IProviderSecretStore keys, IAppPaths actualPaths,
         DeveloperResolvedProject project, CancellationToken token)
@@ -57,9 +62,12 @@ public sealed partial class DeveloperManualSourceReadOwner
             foreach (var tab in payload.Tabs)
             {
                 var source = await capture.ReadOriginalCapturedFileTextAsync(lease.Capture, lease.Admission, tab.RelativePath, token).ConfigureAwait(false);
-                if (source is null || !StringComparer.OrdinalIgnoreCase.Equals(DeveloperManualSourceEditOwner.Sha256(source), tab.OriginalSha256))
+                if (source is null)
                     return DeveloperOperationResult<DeveloperManualRecoveryState>.Failure(DeveloperOperationErrorCode.RevisionConflict,
-                        "A protected draft's source is missing or changed. No partial recovery was published; the encrypted draft remains saved.", project.Reference.ProjectId.ToString("D"));
+                        "A protected draft's source is missing or unreadable. No partial recovery was published; the encrypted draft remains saved.", project.Reference.ProjectId.ToString("D"));
+                // A changed readable baseline is a conflict observation, never permission to
+                // replace it automatically. The shared workbench requires fresh READ again and
+                // an explicit user reconciliation before enrolling this unreviewed draft.
                 restored.Add(new(tab, source));
             }
             await lease.Admission.RevalidateOriginalAsync(token).ConfigureAwait(false);

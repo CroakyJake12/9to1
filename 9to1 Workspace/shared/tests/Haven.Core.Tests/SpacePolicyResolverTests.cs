@@ -272,6 +272,103 @@ public sealed class SpacePolicyResolverTests
         Assert.Null(policy.Model.DefaultModelId);
     }
 
+    [Fact]
+    public async Task Ancestor_context_restrictions_survive_sources_inheritance_off_at_each_level()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Private parent", cancellationToken: token);
+        var source = new SpaceContextReference(Guid.NewGuid(), SpaceContextReferenceKind.WriteArtifact,
+            "write", "parent-artifact", "revision-1", SpaceContextPermission.Read, SpaceContextIndexState.Ready,
+            false, DateTimeOffset.UnixEpoch);
+        parent = await registry.UpdateAsync(parent with
+        {
+            ContextPolicy = new(SpaceWebAccessPolicy.Disabled, true, false, 2),
+            ContextReferences = [source]
+        }, parent.Revision, token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        child = await registry.UpdateAsync(child with
+        {
+            Inheritance = new(Sources: false),
+            ContextPolicy = new(SpaceWebAccessPolicy.Allowed, false, true, 12)
+        }, child.Revision, token);
+        var grandchild = await registry.CreateAsync("Grandchild", null, child.Id, token);
+        grandchild = await registry.UpdateAsync(grandchild with
+        {
+            Inheritance = new(Sources: false),
+            ContextPolicy = new(SpaceWebAccessPolicy.Allowed, false, true)
+        }, grandchild.Revision, token);
+        var resolver = new SpacePolicyResolver(files.ReopenRegistry());
+        foreach (var id in new[] { child.Id, grandchild.Id })
+        {
+            var effective = await resolver.ResolveAsync(id, token);
+            Assert.Equal(new SpaceContextPolicy(SpaceWebAccessPolicy.Disabled, true, false, 2), effective.Context);
+            Assert.Empty(effective.Sources); // Restriction inheritance does not copy parent content.
+        }
+        Assert.Equal(JsonSerializer.Serialize(parent), JsonSerializer.Serialize(await files.ReopenRegistry().ReadExistingAsync(parent.Id, token)));
+    }
+
+    [Fact]
+    public async Task A_stricter_child_keeps_its_own_source_references_and_does_not_change_the_parent()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Parent", cancellationToken: token);
+        var parentSource = new SpaceContextReference(Guid.NewGuid(), SpaceContextReferenceKind.WriteArtifact,
+            "write", "parent", "r1", SpaceContextPermission.Read, SpaceContextIndexState.Ready, false, DateTimeOffset.UnixEpoch);
+        var ownSource = parentSource with { ContextId = Guid.NewGuid(), CanonicalEntityId = "child" };
+        parent = await registry.UpdateAsync(parent with
+        {
+            ContextPolicy = new(SpaceWebAccessPolicy.Ask, false, true, 8), ContextReferences = [parentSource]
+        }, parent.Revision, token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        child = await registry.UpdateAsync(child with
+        {
+            Inheritance = new(Sources: false),
+            ContextPolicy = new(SpaceWebAccessPolicy.Disabled, true, false, 3), ContextReferences = [ownSource]
+        }, child.Revision, token);
+        var resolver = new SpacePolicyResolver(files.ReopenRegistry());
+        var effective = await resolver.ResolveAsync(child.Id, token);
+        Assert.Equal(new SpaceContextPolicy(SpaceWebAccessPolicy.Disabled, true, false, 3), effective.Context);
+        Assert.Equal(ownSource.ContextId, Assert.Single(effective.Sources).ContextId);
+        Assert.DoesNotContain(effective.Sources, item => item.ContextId == parentSource.ContextId);
+        var stillParent = await resolver.ResolveAsync(parent.Id, token);
+        Assert.Equal(parent.ContextPolicy, stillParent.Context);
+        Assert.Equal(parentSource.ContextId, Assert.Single(stillParent.Sources).ContextId);
+    }
+
+    [Fact]
+    public async Task Fresh_resolution_applies_new_parent_restrictions_without_relaxing_the_old_ask_baseline()
+    {
+        using var files = new IsolatedSettingsFiles();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var token = deadline.Token;
+        var registry = files.OpenRegistry();
+        var parent = await registry.CreateAsync("Parent", cancellationToken: token);
+        parent = await registry.UpdateAsync(parent with { ContextPolicy = new(SpaceWebAccessPolicy.Allowed) }, parent.Revision, token);
+        var child = await registry.CreateAsync("Child", null, parent.Id, token);
+        child = await registry.UpdateAsync(child with
+        {
+            Inheritance = new(Sources: false), ContextPolicy = new(SpaceWebAccessPolicy.Allowed)
+        }, child.Revision, token);
+        var first = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(child.Id, token);
+        Assert.Equal(SpaceWebAccessPolicy.Ask, first.Context.WebAccess); // Preserve existing non-inherited baseline.
+        Assert.False(first.Context.SourceOnly);
+        Assert.True(first.Context.IncludeCurrentSelection);
+        Assert.Null(first.Context.MaximumRetrievedItems);
+        parent = await files.ReopenRegistry().UpdateAsync(parent with
+        {
+            ContextPolicy = new(SpaceWebAccessPolicy.Disabled, true, false, 1)
+        }, parent.Revision, token);
+        var next = await new SpacePolicyResolver(files.ReopenRegistry()).ResolveAsync(child.Id, token);
+        Assert.Equal(new SpaceContextPolicy(SpaceWebAccessPolicy.Disabled, true, false, 1), next.Context);
+        Assert.Equal(child.Revision, (await files.ReopenRegistry().ReadExistingAsync(child.Id, token))!.Revision);
+    }
+
     private sealed class IsolatedSettingsFiles : IAppPaths, IDisposable
     {
         public IsolatedSettingsFiles()

@@ -4,6 +4,7 @@
     <Action name="dev.select-source-tab" command="dev.select-source-tab" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.close-source-tab" command="dev.close-source-tab" parameter="{Binding item.SelectionKey}" />
     <Action name="dev.open-search-result" command="dev.open-search-result" parameter="{Binding searchHit.SelectionKey}" />
+    <Action name="dev.inspect-recovered-draft" command="dev.inspect-recovered-draft" parameter="{Binding recovered.SelectionKey}" />
   </Actions>
   <Page>
     <Container id="dev-workbench" margin="16" accessible-name="Development project workspace" Type="Vertical Stack" CellGap="12">
@@ -61,6 +62,18 @@
       </Container>
       <Text text="{Binding SourceTabsStatus}" foreground="{Resource CuiTextSoftBrush}" text-wrapping="Wrap" accessible-name="Open source document status" />
       <Text text="{Binding EditorTitle}" text-wrapping="Wrap" accessible-name="Selected source and draft revision" />
+      <Container Type="Vertical Stack" CellGap="8" IsVisible="{Binding HasRecoveredConflicts}" accessible-name="Protected drafts requiring explicit reconciliation">
+        <Text text="Your saved drafts are safe. Source changed while they were closed." font-size="18" text-wrapping="Wrap" />
+        <Repeat id="dev-recovered-drafts" Source="{Binding RecoveredDraftCandidates}" As="recovered" Key="{Binding recovered.SelectionKey}">
+          <Button id="dev-inspect-recovered-draft" action="dev.inspect-recovered-draft" content="{Binding recovered.Label}" accessible-name="{Binding recovered.AccessibleName}" Interactive="{Binding recovered.CanInspect}" />
+        </Repeat>
+        <Text text="{Binding RecoveredDraftSummary}" text-wrapping="Wrap" accessible-name="Current source and retained draft revision identities" />
+        <Text text="Current source" />
+        <Object type="ReadOnlyText" id="dev-recovery-current" text="{Binding RecoveredCurrentSource}" font-family="monospace" min-height="100" accessible-name="Freshly authorised current source for recovery comparison" />
+        <Text text="Your retained draft" />
+        <Object type="ReadOnlyText" id="dev-recovery-retained" text="{Binding RecoveredRetainedDraft}" font-family="monospace" min-height="100" accessible-name="Protected unsaved draft for recovery comparison" />
+        <Button id="dev-reconcile-recovered-draft" action="dev.reconcile-recovered-draft" content="Use recovered draft against current source" accessible-name="Explicitly reconcile this retained draft against freshly read current source; review is still required before writing" Interactive="{Binding CanReconcileRecoveredDraft}" />
+      </Container>
       <Input id="dev-code-editor" font-family="monospace" min-height="280" accessible-name="Complete source editor" Type="Text" Value="{Binding DraftText}" Multiline="true" Interactive="{Binding CanEditSource}" />
       <Container Type="Wrap">
         <Button id="dev-preview-edit" action="dev.preview-edit" content="Review this edit" Interactive="{Binding CanPreview}" />

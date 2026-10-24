@@ -27,7 +27,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
         left.Tabs.SequenceEqual(right.Tabs);
 
     private bool HasExactProtectedManualRecovery() => _manual && _manualRecoveryReady && !_manualRecoveryBlocked &&
-        SameManualRecoveryPayload(_manualRecoveryAcknowledged, CaptureManualRecoveryPayload());
+        _manualRecoveryCandidates.Count == 0 && SameManualRecoveryPayload(_manualRecoveryAcknowledged, CaptureManualRecoveryPayload());
 
     private async Task RestoreManualRecoveryAsync(DesktopOriginalWorkLifetime.Original original,
         DeveloperResolvedProject project, CancellationToken token)
@@ -57,6 +57,12 @@ public sealed partial class DeveloperProjectWorkbenchPage
             _manualRecoveryScope = restored.Scope; _manualRecoveryGeneration = restored.Generation;
             _manualRecoveryReady = true;
             if (!restored.HasSavedSnapshot) return;
+            if (restored.Tabs.Any(value => !value.BaselineMatches))
+            {
+                StageManualRecoveryConflicts(restored);
+                _status = "Saved source changed while drafts were closed. Your protected drafts are preserved; inspect and explicitly reconcile them against current source.";
+                return;
+            }
             // The original source owner already verified every baseline under the SAME actual
             // Home/Files/kernel read. These are unreviewed drafts, with no approval/change set.
             var prepared = restored.Tabs.Select(value => new SourceTab(Guid.NewGuid(), value.Draft.RelativePath, null,
@@ -78,18 +84,18 @@ public sealed partial class DeveloperProjectWorkbenchPage
     /// <summary>One page-owned coalesced driver, never one unobserved task/timer per keypress.
     /// Later typing replaces the requested immutable payload; an older physical save only
     /// acknowledges its own captured payload. Business work retains its original token.</summary>
-    private void ScheduleManualRecoverySave()
+    private void ScheduleManualRecoverySave(bool forceCompleteSnapshot = false)
     {
         long generation;
         lock (_gate)
         {
-            if (!_manual || !_manualRecoveryReady || _manualRecoveryBlocked || _manualRecoveryScope is null ||
+            if (!_manual || !_manualRecoveryReady || _manualRecoveryBlocked || _manualRecoveryCandidates.Count != 0 || _manualRecoveryScope is null ||
                 _editorSessionStore is null || _editorSessionExecution is null || _manualReader is null ||
                 _manualRecoveryKeys is null || _manualRecoveryPaths is null || _work.IsRetiring) return;
             StoreSelectedTab();
             // Do not generate a protected key/copy clean source merely because a project was
             // opened. Once recovery exists, later clean/empty snapshots replace obsolete drafts.
-            if (_manualRecoveryAcknowledged is null && !_sourceTabs.Any(IsTabDirty)) return;
+            if (_manualRecoveryAcknowledged is null && !_sourceTabs.Any(IsTabDirty) && !forceCompleteSnapshot) return;
             var payload = CaptureManualRecoveryPayload();
             if (SameManualRecoveryPayload(payload, _manualRecoveryRequested)) return;
             _manualRecoveryRequested = payload; _manualRecoverySerial++;
@@ -122,7 +128,7 @@ public sealed partial class DeveloperProjectWorkbenchPage
                     bool busy;
                     lock (_gate)
                     {
-                        if (_manualRecoveryBlocked || !_manualRecoveryReady) return;
+                        if (_manualRecoveryBlocked || !_manualRecoveryReady || _manualRecoveryCandidates.Count != 0) return;
                         if (serial != _manualRecoverySerial) break; // Restart quiet period around the newer payload.
                         busy = _pending;
                         if (!busy)

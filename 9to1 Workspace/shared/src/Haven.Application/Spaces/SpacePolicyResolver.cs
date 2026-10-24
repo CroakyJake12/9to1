@@ -80,11 +80,14 @@ public sealed class SpacePolicyResolver(SpaceRegistry registry)
 
         var ownContext = child.ContextPolicy ?? new SpaceContextPolicy();
         var inheritedContext = inheritance.Sources ? parent.Context : new SpaceContextPolicy();
+        // Sources inheritance chooses reference/default availability; it cannot lift an
+        // ancestor's explicit privacy or retrieval restrictions. Keep the old non-inherited
+        // Ask baseline while intersecting every descendant with the effective ancestor.
         var context = new SpaceContextPolicy(
-            MoreRestrictive(inheritedContext.WebAccess, ownContext.WebAccess),
-            inheritedContext.SourceOnly || ownContext.SourceOnly,
-            inheritedContext.IncludeCurrentSelection && ownContext.IncludeCurrentSelection,
-            MinBudget(inheritedContext.MaximumRetrievedItems, ownContext.MaximumRetrievedItems));
+            MoreRestrictive(parent.Context.WebAccess, MoreRestrictive(inheritedContext.WebAccess, ownContext.WebAccess)),
+            parent.Context.SourceOnly || inheritedContext.SourceOnly || ownContext.SourceOnly,
+            parent.Context.IncludeCurrentSelection && inheritedContext.IncludeCurrentSelection && ownContext.IncludeCurrentSelection,
+            MinBudget(parent.Context.MaximumRetrievedItems, MinBudget(inheritedContext.MaximumRetrievedItems, ownContext.MaximumRetrievedItems)));
 
         var ownMemory = child.MemoryPolicy ?? new SpaceMemoryPolicy([SpaceMemoryScope.Conversation]);
         var inheritedMemory = inheritance.MemoryPolicy ? parent.Memory : new SpaceMemoryPolicy(ownMemory.AllowedScopes, ownMemory.DefaultScope);

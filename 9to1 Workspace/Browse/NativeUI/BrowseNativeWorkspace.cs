@@ -106,6 +106,7 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
             "Tabs" => _tabRows,
             "SelectedTabTarget" => _tabRows.FirstOrDefault(row => row.Selected)?.Target,
             "PinTabLabel" => selected.IsPinned ? "Unpin selected tab" : "Pin selected tab",
+            "TabPinned" => selected.IsPinned,
             "HasUnsavedTabPlacement" => _chrome.HasUnsavedTabPlacement,
             "ToolsOpen" => _toolsOpen,
             "IsLoading" => selected.IsLoading,
@@ -228,6 +229,17 @@ public sealed partial class BrowseNativeWorkspace : ICuiWritableBindingContext, 
                     : (enabled ? "9to1.Browse.EnableTabRestore" : "9to1.Browse.DisableTabRestore");
                 if (IsActionAvailable(settingCommand) != true) return false;
                 _ = DispatchAsync(settingCommand, null);
+                return true;
+            case "TabPinned":
+                if (value is not bool pinned) return false;
+                // Capture the real issued row BEFORE any borrowed action-policy callback.
+                // Revalidate the original tab, row epoch and complete placement stamp after it;
+                // DispatchAsync checks the SAME target again before the real persistence action.
+                var pinTarget = _tabRows.FirstOrDefault(row => row.Selected)?.Target;
+                if (IsActionAvailable("9to1.Browse.ToggleTabPinned") != true) return false;
+                if (!IsCurrentSelectedTabTarget(pinTarget)) { Changed(); return false; }
+                if (((TabSelection)pinTarget!).IsPinned == pinned) return true;
+                _ = DispatchAsync("9to1.Browse.ToggleTabPinned", pinTarget);
                 return true;
             case "AllowPopups":
                 // The site-popups control is a genuine boolean bound to the real effective

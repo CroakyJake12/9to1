@@ -205,7 +205,10 @@
         <Container id="BrowseWebToolsGroup" Type="Vertical Stack" CellGap="6" IsVisible="{Binding ToolsOpen}" Padding="4 2 4 8">
           <Text Text="Arrange selected tab" FontWeight="Bold" />
           <Container Type="Wrap" CellGap="4">
-            <Button id="BrowsePinTabButton" action="ToggleTabPinned" Text="{Binding PinTabLabel}" AccessibleName="{Binding PinTabLabel}" Interactive="{Binding Can.ToggleTabPinned}" />
+            <Container Type="Horizontal Stack" CellGap="8">
+              <Text Text="Pin selected tab" VerticalAlignment="Center" />
+              <Input Type="Switch" id="BrowsePinTabSwitch" Checked="{Binding TabPinned, Mode=TwoWay}" Interactive="{Binding Can.ToggleTabPinned}" AccessibleName="Pin selected tab" />
+            </Container>
             <Button id="BrowseMoveTabLeftButton" action="MoveTabLeft" AccessibleName="Move selected tab left within its section" Interactive="{Binding Can.MoveTabLeft}">Move left</Button>
             <Button id="BrowseMoveTabRightButton" action="MoveTabRight" AccessibleName="Move selected tab right within its section" Interactive="{Binding Can.MoveTabRight}">Move right</Button>
           </Container>
