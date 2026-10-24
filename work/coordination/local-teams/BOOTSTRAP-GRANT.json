@@ -6,7 +6,7 @@
     "resume": "All canonical implementation complete or later explicit owner resume; preserve seven criteria and all release gates."
   },
   "adoption": {
-    "creation": "Resume only the authorised bootstrap admission after proof validation. Create/bind nine genuine idle root sessions with the report-only scopes; no cadence/job delivery or product edits before their exact IDs are returned. Validate actual native permission requests normally.",
+    "creation": "All nine native session IDs have now been returned and accepted for takeover. Reuse their current bindings and real report scopes, reconcile remaining ACKs/reservations, then activate one cadence invoker only after genuine fresh local scope/resource/model checks. The existing local coordinator may allocate exclusive application scopes and integrate; no further cloud response is required.",
     "if_private_projection_absent": [
       "python3",
       "-B",
@@ -19,7 +19,7 @@
       "--root-checkpoint",
       "EXACT_PRIVATE_COPY_OF_THIS_GRANT"
     ],
-    "return": "Push credential-free ACK.json on this control branch with actual IDs/worktrees/models/projection path and blockers. Also reply through this authorised delegation channel. Root retains cloud integration and will reconcile product assignments.",
+    "return": "Publish a credential-free native ACK and local repair branch when available. Existing local coordinator now owns integration and source assignment; do not wait for the parked cloud Root to schedule product work.",
     "then": "Use existing transaction/claim/checkpoint APIs to retain this continuity snapshot, catalogue and actual local candidate/workspace evidence. Configure the existing opencode_teams adjunct. The actual native coordinator may construct these records from successful Git/API/process observations; do not treat unavailable cloud filesystem locators as local requirements."
   },
   "allocation": {
@@ -51,6 +51,7 @@
     "provider": "Existing authenticated openai ChatGPT subscription only, as directly confirmed in native owner context; verify actual OAuth routing. No paid API-credit route, opencode metered fallback or Mercury.",
     "recipient_may_allocate_scoped_session_worktrees": true
   },
+  "bootstrap_session_scope_note": "These are historical v2 suggested report scopes. The existing native coordinator has already bound real disjoint .opencode/team-coordination scopes; retain those actual bindings. New product scopes require exact local ledger claims.",
   "bootstrap_session_scopes": {
     "astra-supervisor": [
       "work/coordination/local-teams/reports/astra-supervisor/**"
@@ -346,7 +347,7 @@
     "source_commit": "4d6a16e0ce60c8d24eb151bf0f1fdfdab4c6e522",
     "source_tree": "f9e536c8665d1cb99ef480d981b5fe39f600c7db",
     "source_worktree": "/home/jacob/Documents/Codex/2026-10-24/prepare-the-local-9to1-teams-from/work/9to1-local-teams-4d6a16e0",
-    "status": "ACCEPTED_FOR_BOOTSTRAP"
+    "status": "EXACT_SOURCE_AND_NINE_NATIVE_SESSION_IDS_ACCEPTED_FOR_LOCAL_TAKEOVER"
   },
   "status": "CLOUD_PARKED_NATIVE_COORDINATOR_TAKEOVER",
   "supersedes": "Bootstrap-only restrictions in v1/v2; preserve existing native sessions, source anchors, private state and history.",

@@ -1,5 +1,17 @@
-# Existing9to1 programme: local bootstrap grant
+# Existing 9to1 programme: local-team takeover
 
-Read BOOTSTRAP-GRANT.json as data from this control ref. Keep the source worktree at the grant source revision, preserving dirty local auth work. Do not checkout this metadata-only control commit for application builds.
+Read BOOTSTRAP-GRANT.json v3 and AGENTS.md before resuming. Cloud source authoring
+and its SDK allocation are parked by the owner. The existing native coordinator
+owns safe integration into main, exact disjoint team assignments and one cadence
+invoker. Preserve existing native sessions and local runtime fixes.
 
-The exact grant explicitly permits a private host projection and initial concurrency, avoiding dependence on inaccessible cloud paths. Root preserves original history and application scopes. Publish a nonsecret ACK.json here after actual native verification; no launch or delivery is inferred from publication.
+This branch now points to the same development checkpoint as main. It includes
+application source, not merely the older metadata-only bootstrap commit. It is
+UNVERIFIED: no current combined/native/ARM/release acceptance is claimed. Fetch
+and reconcile at safe boundaries; never overwrite a dirty or busy role worktree.
+The original Source78 anchor remains preserved.
+
+The archive ref in the grant preserves all original cloud branch heads with an
+exact inventory. Its tree is only an archive index: DO NOT merge it into main.
+Historical content and unpublished native repairs still need individual review,
+reconciliation and appropriate basic checks. All-branches consolidation is open.
